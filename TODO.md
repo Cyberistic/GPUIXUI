@@ -1578,6 +1578,12 @@ not report a broken one; `theme.dimensions` gains the nine fields with two
 increasing drawer ladders, a viewport floor of one `density.rowHeight`, a
 carousel floor of its idle dot and a runnable copy-and-own example, with no
 colour, pair, floor or existing metric moving (plan 530)
+`[x]` Hold the numeric contract's "every numeric member is finite" claim — the
+finite pass was a hand-maintained list per group, so plan 530 had to add
+nine `Dimensions` members by hand and the next field would ship ungoverned while
+both checks returned `[]`; the pass now walks each group's value, `metricMembers`
+publishes the ordered domain, and an unlisted-member regression fails on the
+hand-list code (plan 531)
 `[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
 `drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
 (`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and

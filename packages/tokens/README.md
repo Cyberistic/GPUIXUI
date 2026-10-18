@@ -633,7 +633,10 @@ strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ship
 `elevation.overlay`), while a level a consumer defines is held to the same rules
 because `elevationShadow` paints its first entry. Every shipped theme, platform
 variant and recipe passes.
-`metricGroups` is the ordered index a settings row iterates. `metricRules` is
+`metricGroups` is the ordered index a settings row iterates, and `metricMembers`
+is the ordered index of every numeric member inside those groups — the finite
+check walks a group's values instead of a hand-written list, so a new field is
+governed when it ships. `metricRules` is
 the ordered index of the nine rules a failure can carry, so a diagnostics view
 does not retype the union. A runnable example
 lives in [`src/metrics.example.ts`](./src/metrics.example.ts).

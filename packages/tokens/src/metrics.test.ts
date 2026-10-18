@@ -182,7 +182,9 @@ describe("theme metric contract", () => {
     expect(failures).toHaveLength(1);
     expect(failures[0]?.group).toBe("elevation");
     expect(failures[0]?.member).toBe("md[0].alpha");
-    expect(failures[0]?.rule).toBe("within");
+    // The finite walk owns "not a number"; `within` is for a finite fraction
+    // outside 0…1, so a NaN is reported once, not as a range failure.
+    expect(failures[0]?.rule).toBe("finite");
     expect(failures[0]?.actual).toBeNaN();
 
     expect(

@@ -1920,7 +1920,10 @@ flat theme is a design. Every other numeric metric — a type size, leading or
 weight, a border width, a density or dimension metric, an icon, avatar, radius or
 spacing step, and every motion timing — must be a **finite** number too, because
 the renderer casts each to a 32-bit float and an infinity becomes invalid layout
-it paints as nothing, with no error. A weight is also held to `1…1000`: a zero,
+it paints as nothing, with no error. The check walks each group's values instead
+of a hand-written list, so a member added to a group is governed the moment it
+ships; a non-finite value is reported as `finite`, while a finite value outside
+its range keeps `within`. A weight is also held to `1…1000`: a zero,
 a negative or a `NaN` selects no weight, so the text system has nothing to
 paint. `radius` and the motion timings are
 deliberately non-decreasing rather than strict: Linux and Windows ship
@@ -1932,6 +1935,13 @@ and recipe passes, so the check moves no value; it guards the next edit.
 
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.
+`metricMembers` is the ordered index of every numeric member inside those groups
+— the numeric sibling of `colorRoles` — derived from each group's default object
+and ordered indexes (`dimensions`, `controlSizes`, `elevationLevels`,
+`motionLevels`, `motionPhases`), so a diagnostics table iterates the walked
+domain. An elevation entry names the field once per level (`md.offsetX`) because
+every entry in the level is read, while a failure names the one it measured
+(`md[0].offsetX`).
 `metricRules` is the ordered index of the nine rules a `MetricFailure` can
 carry, beside `metricGroups`, so a diagnostics table or a rule reference
 iterates it instead of retyping the union.

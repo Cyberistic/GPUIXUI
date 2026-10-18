@@ -707,7 +707,9 @@ returned `[]` from the colour check. Every shipped theme, platform variant and
 recipe passes, so the checker exists for the theme a consumer edits, not to
 change a value. Every numeric metric must be a **finite** number: the renderer
 casts each to a 32-bit float, and an infinity is invalid layout it paints as
-nothing, silently.
+nothing, silently. The check walks each group's values rather than a
+hand-written list, so a member added to a group is governed when it ships, and
+`metricMembers` is the published index of that domain.
 
 The **format** check is `themeColorFailures(theme)`: every one of the 70 roles
 must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and

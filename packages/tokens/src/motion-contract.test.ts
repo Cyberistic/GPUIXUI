@@ -79,7 +79,10 @@ describe("motion contract", () => {
     });
     expect(x).toHaveLength(1);
     expect(x[0]?.member).toBe("ease.enter[0]");
-    expect(x[0]?.rule).toBe("within");
+    // Finiteness is the walk's rule; `within` only reports a finite x value
+    // outside 0…1, so a NaN is named once and cannot be mistaken for a range
+    // choice.
+    expect(x[0]?.rule).toBe("finite");
     expect(x[0]?.actual).toBeNaN();
 
     const y = failuresOf({

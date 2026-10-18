@@ -12,9 +12,21 @@
  * variant and recipe.
  */
 
-import type { Elevation } from "./elevation.js";
-import type { MotionEasing } from "./motion.js";
-import { controlSizes } from "./scale.js";
+import {
+  elevationLevels,
+  lightElevation,
+  type Elevation,
+} from "./elevation.js";
+import { motionLevels, motionPhases, type MotionEasing } from "./motion.js";
+import {
+  avatarSize,
+  borderWidth,
+  controlSizes,
+  dimensions,
+  iconSize,
+  radius,
+  spacing,
+} from "./scale.js";
 import type { Theme } from "./theme.js";
 import {
   codeLadder,
@@ -61,6 +73,55 @@ export const metricRules = [
 
 /** The rule a metric missed. */
 export type MetricRule = (typeof metricRules)[number];
+
+/** The numeric fields of one elevation shape, taken from the shipped level. */
+const shadowFields = Object.keys(lightElevation.sm[0] ?? {});
+
+/** The fields of a type role that carry a number. */
+const typeFields = ["fontSize", "lineHeight", "fontWeight"] as const;
+
+/** The four control points of a cubic-bezier easing. */
+const easingPoints = [0, 1, 2, 3] as const;
+
+/**
+ * Every numeric member the contract governs, one ordered list per group — the
+ * numeric sibling of `colorRoles`, so a diagnostics table or a reference row
+ * iterates the domain instead of retyping it.
+ *
+ * Each list derives from the group's own default object or its ordered index
+ * (`dimensions`, `controlSizes`, `elevationLevels`, `motionLevels`,
+ * `motionPhases`), so a member added to the interface and its default ships in
+ * the index. An elevation entry names the shape's field without the array index
+ * (`md.offsetX`): the rule reads every entry in a level, while a failure names
+ * the one it measured (`md[0].offsetX`). The easing points are listed even
+ * though the shipped easings are named strings, because a theme may replace a
+ * phase with a tuple.
+ */
+export const metricMembers = {
+  typography: textRoles.flatMap((role) =>
+    typeFields.map((field) => `${role}.${field}`),
+  ),
+  borderWidth: Object.keys(borderWidth),
+  density: [
+    ...controlSizes.map((size) => `controlHeight.${size}`),
+    ...controlSizes.map((size) => `controlPaddingX.${size}`),
+    "rowHeight",
+  ],
+  dimensions: Object.keys(dimensions),
+  iconSize: Object.keys(iconSize),
+  avatarSize: Object.keys(avatarSize),
+  radius: Object.keys(radius),
+  spacing: Object.keys(spacing),
+  elevation: elevationLevels.flatMap((level) =>
+    shadowFields.map((field) => `${level}.${field}`),
+  ),
+  motion: [
+    ...motionLevels,
+    ...motionPhases.flatMap((phase) =>
+      easingPoints.map((point) => `ease.${phase}[${point}]`),
+    ),
+  ],
+} satisfies Record<MetricGroup, ReadonlyArray<string>>;
 
 /** One metric that misses a rule in a theme. */
 export interface MetricFailure {
@@ -135,27 +196,25 @@ const atMost = (
   actual <= bound ? [] : [failure(group, member, "at-most", actual, bound)];
 
 /**
- * An elevation alpha is a fraction, and `alpha()` falls back to the tint
- * unchanged on a value it cannot parse, so a `NaN` or an out-of-range alpha
- * would paint an opaque shadow.
+ * An elevation alpha is a fraction. Finiteness is the walk's job, so this rule
+ * only reports a finite value outside `0…1`; `alpha()` clamps such a value, but
+ * a fraction the theme did not design is still a broken level.
  */
 const fraction = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual) && actual >= 0 && actual <= 1
-    ? []
-    : [failure(group, member, "within", actual, 1)];
+  Number.isFinite(actual) && (actual < 0 || actual > 1)
+    ? [failure(group, member, "within", actual, 1)]
+    : [];
 
 /**
- * A cubic-bezier easing the renderer can interpolate. The pinned `MotionEase`
- * accepts four plain numbers, but the runtime's `validate_ease` rejects a
- * transition whose control point is not finite or whose x value falls outside
+ * A cubic-bezier easing the renderer can interpolate. Finiteness is the walk's
+ * job; the runtime's `validate_ease` additionally rejects an x value outside
  * `0…1`, and a curve outside that range has no progress function. A y value may
- * overshoot — a spring-like curve is a design choice, not breakage — so only the
- * two x values take the `within` rule. A named easing is constrained by
- * `MotionEasing` itself.
+ * overshoot — a spring-like curve is a design choice, not breakage. A named
+ * easing is constrained by `MotionEasing` itself.
  */
 const easing = (
   group: MetricGroup,
@@ -166,16 +225,14 @@ const easing = (
     ? []
     : [
         ...fraction(group, `ease.${phase}[0]`, value[0]),
-        ...finite(group, `ease.${phase}[1]`, value[1]),
         ...fraction(group, `ease.${phase}[2]`, value[2]),
-        ...finite(group, `ease.${phase}[3]`, value[3]),
       ];
 
 /**
- * A font weight is a number in the CSS weight range. The runtime selects the
- * nearest weight the family provides, so a weight outside `1…1000` names no
- * weight at all; a non-finite value cannot be compared and is reported as
- * `finite` alone.
+ * A font weight is a number in the CSS weight range. Finiteness is the walk's
+ * job, so this rule only reports a finite value the range cannot select: the
+ * runtime chooses the nearest weight the family provides, and a weight outside
+ * `1…1000` names none.
  */
 const weighable = (
   member: string,
@@ -186,7 +243,7 @@ const weighable = (
         ...atLeast("typography", member, actual, 1),
         ...atMost("typography", member, actual, 1000),
       ]
-    : [failure("typography", member, "finite", actual, 0)];
+    : [];
 
 /**
  * A ladder of named steps. Every step must be a non-negative number and, from
@@ -225,15 +282,39 @@ const ladder = (
   });
 
 /**
- * Every member of a group must be a number the renderer can paint. A ladder's
- * last step and a standalone metric have no later rule to catch an infinity, so
- * the check is its own pass.
+ * Every numeric leaf of a group value, addressed the way a failure names it.
+ * The walk is what makes the contract total: a member added to a group is
+ * finite-checked when it ships, without a list to update. Strings — the density
+ * preset name, a named easing — and other non-numbers are not metrics.
  */
-const finiteMembers = (
+const numericMembers = (
+  value: unknown,
+  prefix: string,
+): ReadonlyArray<readonly [string, number]> => {
+  if (typeof value === "number") {
+    return [[prefix, value]];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry, index) =>
+      numericMembers(entry, `${prefix}[${index}]`),
+    );
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.entries(value).flatMap(([key, entry]) =>
+      numericMembers(entry, prefix === "" ? key : `${prefix}.${key}`),
+    );
+  }
+  return [];
+};
+
+/** Every numeric member of a group, held to the `finite` rule. */
+const finiteGroup = (
   group: MetricGroup,
-  members: ReadonlyArray<readonly [string, number]>,
+  value: unknown,
 ): ReadonlyArray<MetricFailure> =>
-  members.flatMap(([member, value]) => finite(group, member, value));
+  numericMembers(value, "").flatMap(([member, actual]) =>
+    finite(group, member, actual),
+  );
 
 /**
  * A documented size ladder walked from its smallest step upwards, because the
@@ -341,10 +422,12 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *
  * The level is not a parameter: these rules are the same at every contrast
  * setting, because they describe shapes, not colour. Every numeric member of
- * every group must also be **finite**: the renderer casts each one to a 32-bit
- * float, and an infinity becomes invalid layout it paints as nothing, silently.
- * `elevation` and `motion` carry that rule in their own groups (plans 360 and
- * 364); this function applies it to the other eight.
+ * every group is also **finite**, and that half is walked from the group value
+ * instead of a hand-written list: a member added to a group is governed the
+ * moment it ships, because the renderer casts each one to a 32-bit float and an
+ * infinity becomes invalid layout it paints as nothing, silently. A non-finite
+ * value is reported as `finite`; a finite value outside its range is `within`.
+ * {@link metricMembers} is the published index of the walked domain.
  *
  * @example
  * ```ts
@@ -372,13 +455,7 @@ export function themeMetricFailures(
     motion,
   } = theme;
   return [
-    ...finiteMembers(
-      "typography",
-      textRoles.flatMap((role) => [
-        [`${role}.fontSize`, typography[role].fontSize] as const,
-        [`${role}.lineHeight`, typography[role].lineHeight] as const,
-      ]),
-    ),
+    ...finiteGroup("typography", typography),
     ...textRoles.flatMap((role) => [
       ...positive("typography", `${role}.fontSize`, typography[role].fontSize),
       ...atLeast(
@@ -417,23 +494,10 @@ export function themeMetricFailures(
     ...textRoles.flatMap((role) =>
       weighable(`${role}.fontWeight`, typography[role].fontWeight),
     ),
-    ...finiteMembers("borderWidth", [
-      ["thin", borderWidth.thin],
-      ["strong", borderWidth.strong],
-    ]),
+    ...finiteGroup("borderWidth", borderWidth),
     ...nonNegative("borderWidth", "thin", borderWidth.thin),
     ...positive("borderWidth", "strong", borderWidth.strong),
-    ...finiteMembers("density", [
-      ...controlSizes.map(
-        (size) =>
-          [`controlHeight.${size}`, density.controlHeight[size]] as const,
-      ),
-      ...controlSizes.map(
-        (size) =>
-          [`controlPaddingX.${size}`, density.controlPaddingX[size]] as const,
-      ),
-      ["rowHeight", density.rowHeight],
-    ]),
+    ...finiteGroup("density", density),
     ...ladder(
       "density",
       controlSizes.map(
@@ -499,12 +563,7 @@ export function themeMetricFailures(
       density.rowHeight,
       density.controlHeight.md,
     ),
-    ...finiteMembers(
-      "iconSize",
-      (["xs", "sm", "md", "lg", "xl"] as const).map(
-        (size) => [size, iconSize[size]] as const,
-      ),
-    ),
+    ...finiteGroup("iconSize", iconSize),
     ...ladder(
       "iconSize",
       (["xs", "sm", "md", "lg", "xl"] as const).map(
@@ -519,12 +578,7 @@ export function themeMetricFailures(
     // sizes are bounded by the theme's own leading — not by a house literal.
     ...atMost("iconSize", "xs", iconSize.xs, typography.caption.lineHeight),
     ...atMost("iconSize", "sm", iconSize.sm, typography.label.lineHeight),
-    ...finiteMembers(
-      "avatarSize",
-      (["xs", "sm", "md", "lg"] as const).map(
-        (size) => [size, avatarSize[size]] as const,
-      ),
-    ),
+    ...finiteGroup("avatarSize", avatarSize),
     ...ladder(
       "avatarSize",
       (["xs", "sm", "md", "lg"] as const).map(
@@ -537,14 +591,7 @@ export function themeMetricFailures(
     // its height at `density.rowHeight` and documents its leading slot for an
     // avatar, so a mark taller than the row cannot fit the row it leads.
     ...atMost("avatarSize", "xs", avatarSize.xs, density.rowHeight),
-    ...finiteMembers("radius", [
-      ["none", radius.none],
-      ["sm", radius.sm],
-      ["md", radius.md],
-      ["lg", radius.lg],
-      ["xl", radius.xl],
-      ["full", radius.full],
-    ]),
+    ...finiteGroup("radius", radius),
     ...zero("radius", "none", radius.none),
     ...ladder(
       "radius",
@@ -556,23 +603,7 @@ export function themeMetricFailures(
     ...atLeast("radius", "full", radius.full, radius.xl),
     ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
     ...atLeast("radius", "full", radius.full, avatarSize.lg / 2),
-    ...finiteMembers(
-      "spacing",
-      (
-        [
-          "2xs",
-          "xs",
-          "sm",
-          "md",
-          "lg",
-          "xl",
-          "2xl",
-          "3xl",
-          "4xl",
-          "5xl",
-        ] as const
-      ).map((step) => [step, spacing[step]] as const),
-    ),
+    ...finiteGroup("spacing", spacing),
     ...ladder(
       "spacing",
       (
@@ -591,27 +622,7 @@ export function themeMetricFailures(
       ).map((step) => [step, spacing[step]] as const),
       "non-decreasing",
     ),
-    ...finiteMembers("dimensions", [
-      ["overlayMinWidth", dimensions.overlayMinWidth],
-      ["overlayWidth", dimensions.overlayWidth],
-      ["overlayMaxHeight", dimensions.overlayMaxHeight],
-      ["fieldMinWidth", dimensions.fieldMinWidth],
-      ["fieldAdornmentSize", dimensions.fieldAdornmentSize],
-      ["chipMinWidth", dimensions.chipMinWidth],
-      ["toastWidth", dimensions.toastWidth],
-      ["previewCardMinWidth", dimensions.previewCardMinWidth],
-      ["previewCardMaxWidth", dimensions.previewCardMaxWidth],
-      ["keycapSize", dimensions.keycapSize],
-      ["drawerWidthSm", dimensions.drawerWidthSm],
-      ["drawerWidthMd", dimensions.drawerWidthMd],
-      ["drawerWidthLg", dimensions.drawerWidthLg],
-      ["drawerHeightSm", dimensions.drawerHeightSm],
-      ["drawerHeightMd", dimensions.drawerHeightMd],
-      ["drawerHeightLg", dimensions.drawerHeightLg],
-      ["chatViewportMinHeight", dimensions.chatViewportMinHeight],
-      ["carouselIndicatorSize", dimensions.carouselIndicatorSize],
-      ["carouselIndicatorActiveWidth", dimensions.carouselIndicatorActiveWidth],
-    ]),
+    ...finiteGroup("dimensions", dimensions),
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
     ...positive("dimensions", "overlayMaxHeight", dimensions.overlayMaxHeight),
@@ -731,7 +742,8 @@ export function themeMetricFailures(
       dimensions.carouselIndicatorActiveWidth,
       dimensions.carouselIndicatorSize,
     ),
-    ...(["sm", "md", "lg", "overlay"] as const).flatMap((level) => {
+    ...finiteGroup("elevation", elevation),
+    ...elevationLevels.flatMap((level) => {
       const shapes = elevation[level];
       if (shapes.length === 0) {
         return level === "overlay"
@@ -739,39 +751,25 @@ export function themeMetricFailures(
           : [failure("elevation", level, "at-least", shapes.length, 1)];
       }
       return shapes.flatMap((shape, index) => [
-        ...finite("elevation", `${level}[${index}].offsetX`, shape.offsetX),
-        ...finite("elevation", `${level}[${index}].offsetY`, shape.offsetY),
-        ...finite(
-          "elevation",
-          `${level}[${index}].blurRadius`,
-          shape.blurRadius,
-        ),
         ...nonNegative(
           "elevation",
           `${level}[${index}].blurRadius`,
           shape.blurRadius,
         ),
-        ...finite(
-          "elevation",
-          `${level}[${index}].spreadRadius`,
-          shape.spreadRadius,
-        ),
         ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
       ]);
     }),
     ...featherLadder(elevation),
+    ...finiteGroup("motion", motion),
     ...zero("motion", "none", motion.none),
-    ...(["step", "fast", "normal", "slow", "pulse"] as const).flatMap((level) =>
-      finite("motion", level, motion[level]),
-    ),
     ...ladder(
       "motion",
-      (["step", "fast", "normal", "slow", "pulse"] as const).map(
-        (level) => [level, motion[level]] as const,
-      ),
+      motionLevels
+        .filter((level) => level !== "none")
+        .map((level) => [level, motion[level]] as const),
       "non-decreasing",
     ),
-    ...(["standard", "enter", "exit", "linear"] as const).flatMap((phase) =>
+    ...motionPhases.flatMap((phase) =>
       easing("motion", phase, motion.ease[phase]),
     ),
   ];
