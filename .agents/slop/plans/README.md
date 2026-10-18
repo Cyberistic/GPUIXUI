@@ -154,6 +154,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [355](./355-documented-snippets.md) | The documented snippets nothing compiles | F | 056, 066, 324, 350 | done |
 | [356](./356-jsdoc-example-guard.md) | The source JSDoc examples are unguarded | F | 324, 350, 355 | done |
 | [357](./357-wash-state-steps.md) | The generic wash ladder's press | F | 071, 097, 306, 309, 334, 342, 354, 356 | done |
+| [358](./358-metric-contract.md) | The numeric half of an editable theme | F | 010–019, 050–072, 071, 086, 089, 096, 342, 353, 355–357 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1219,6 +1220,25 @@ resting `secondary` fill and hover `hover` fill are the same value in 19 of the
 `accent` and presses to `active`, measuring 1.004:1 in identity dark. The
 designed `secondaryHover`/`secondaryActive` and `accentActive` families already
 exist and are measured.
+
+358 closes the other half of the extension guarantee plan 071 opened. The
+package promises that a consumer can copy a platform style, edit it and ship
+their own look, and it hands them `themeContrastFailures` so the edited
+**colours** are held to the library's floors. Nothing held the **numbers**: every
+metric invariant — type leading above its size, ordered spacing/radius/icon/
+avatar/density/motion ladders, positive dimensions, elevation alphas inside
+`0…1` — lived in test-only code asserted on the shipped constants. The measured
+worst case is not hypothetical: `focusRing` spreads by `borderWidth.strong`, and
+that shadow is the only focus indicator GPUix 0.10.0 can draw, so an edited theme
+with `strong: 0` had no focus ring at all while `themeContrastFailures` returned
+`[]`; the same edit path clipped a type role by shrinking its leading or the
+smallest control below one label line, and inverted a ladder's meaning. The
+audit also rejected two rules the shipped styles themselves would fail: strict
+radius ladders (Linux and Windows ship `lg === xl`) and strict motion ladders
+(Windows ships `fast === step`), so the contract asks for non-decreasing steps.
+`themeMetricFailures` and `metricGroups` publish the ten groups; every shipped
+identity theme, platform variant and recipe already passes, so no token value
+moves, and a coverage case keeps a future group from shipping unmeasured.
 
 ### Reference adoption (block `200–299`)
 
