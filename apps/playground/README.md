@@ -29,7 +29,8 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 (`nested-layer-dismiss`), the shipped Tier 2 catalogue
 (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
 `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
-`tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the shell
+`tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the data
+toolbar probe (`data-toolbar`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -73,7 +74,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (82/82 green); -> 2 on a host with no binding
+# -> 0 here (83/83 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -610,7 +611,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `33/33`.
+exact, and focus/Escape and the close button hold. The live suite is `34/34`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -719,6 +720,34 @@ collapse into a menu (`ref` + `renderer.getElementBounds` is available, as
 `docking-layout` measured, but needs a first-layout pass); the shell is
 fixed-size; no native menu bar exists in 0.10.0 (`command-palette` records the
 in-window alternative).
+
+## Data toolbars (plan `377`)
+
+`data-toolbar` composes the two Tier 3 rows that had no runtime evidence: a
+toolbar whose controls mutate the table under it, and the metric cards that
+must follow. 61 checks; live twin `live-data-toolbar` (24 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| cards | three 160 × 64 cards (`Total`, `Showing`, `Selected`) read `60/60/0` at rest; showing follows the filter (`20`) and search (`11`), selected follows the selection |
+| search | `item 1` narrows 60 → 11 rows and paints the first match at the viewport top |
+| filter | `paused` narrows to 20 and paints only paused rows; active and archived rows are absent |
+| sort | `id` → `status` (paused first) puts row 1 at the top and unpaints row 0; a second click restores |
+| columns | hiding `owner` unpaints its header and every owner cell while `name` stays |
+| selection | rows 2 and 5 paint `colors.accent`, survive a scroll away and back, and the selected card reads 2; a filter clears the selection |
+| archive | removes the selected rows (`total 60 → 58`, `archived=2`, `selected=0`) and the cards follow |
+| anchor | a wheel to row 30, then a filter: the renderer resets to 0 but the `onVisibleRange` readout stays 30 — the component mirrors the reset |
+| a11y | `Toolbar:Data toolbar`, `TextInput:Search` |
+
+**Measured trap:** the virtual list resets its own anchor when a filtered
+re-render shrinks the set, but it does **not** report that through
+`onVisibleRange`; an app-owned anchor readout is stale until re-read (or
+`scrollToItem(0)` plus a state mirror, as here). That qualifies plan `338`'s
+"must reset" rule.
+
+Limits: the toolbar fits its width (overflow is `app-chrome`'s scroller +
+reveal); columns are fixed widths (`data-grid-columns` owns resize); the view
+uses segmented controls, not menus; no view state is persisted.
 
 ## Multi-pane editor (plan `376`)
 
@@ -917,7 +946,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 82-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 83-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1092,10 +1121,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **82/82 green** here (`exit 0`, 2500 checks):
+The suite is **83/83 green** here (`exit 0`, 2561 checks):
 
 ```
-82/82 scenarios passed · capabilities: layout=verified text=verified
+83/83 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1107,7 +1136,7 @@ toast=verified grid=verified data-grid=verified columns=verified
 chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified grid-layout=verified typography=verified
-inspector=verified editor=verified
+inspector=verified editor=verified data-toolbar=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1215,6 +1244,7 @@ src/scenarios/column-resize-model.test.ts the pure width rules
 src/scenarios/data-grid-columns.tsx header-drag column resize over the virtual body
 src/scenarios/app-chrome.tsx toolbar, pinned status bar and a breadcrumb trail
 src/scenarios/multi-pane-editor.tsx two tabbed panes with scrolling code and a live split
+src/scenarios/data-toolbar.tsx a data toolbar over a virtual table, with derived cards
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1262,7 +1292,7 @@ narrower. Each deviation is deliberate and measured:
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (82/82), with a written report and
+  pass in real GPUix 0.10.0 on this host (83/83), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1270,12 +1300,12 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 33/33 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 34/34 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
-  **message scroller**, the **Tier 2 choice and form families**, and the
-  **multi-pane editor** — including the modal's
+  **message scroller**, the **Tier 2 choice and form families**, the
+  **multi-pane editor** and the **data toolbar** — including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
   frame (plan `192`), a pointer-placed menu in a scrolled container (plan

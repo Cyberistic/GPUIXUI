@@ -58,9 +58,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 72/76 plans-and-harness
+`[x]` `[██████████]` 73/77 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` and `376` written and indexed for the playground workstream; the next plan takes `377` (`351`–`374` are held by the components and tokens workstreams)
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`377` written and indexed for the playground workstream; the next plan takes `378` (`351`–`375` are held by the components and tokens workstreams)
+`[x]` Probe the **data toolbar and statistic cards** per plan `377`:
+      `data-toolbar` (61 checks) and `live-data-toolbar` (24): a 40 px
+      `role="toolbar"` over a 60-row `<virtual-list>`, with a native search,
+      status filters, sort, column toggles, a selection count and a bulk
+      archive. `item 1` narrows to 11 rows and puts the first match at the
+      viewport top; paused narrows to 20; the status sort (paused first) unpaints
+      the previous first row; hiding `owner` unpaints its header and every cell;
+      selected rows paint `colors.accent` and survive a scroll; a filter clears
+      the selection; archive removes them (`total 60 → 58`, `archived=2`). The
+      three 160 × 64 cards derive `Total`/`Showing`/`Selected` and follow every
+      change; the toolbar is `Toolbar:Data toolbar` and the search
+      `TextInput:Search`. Suite `82 → 83` (`2500 → 2561`), live `33 → 34`
+      (`586 → 610`), exit `0`, `data-toolbar=verified`; seven mutation + one
+      reverse proof. Measured: **the virtual list resets its own anchor on a
+      filtered re-render but does not report it**, so the `onVisibleRange`
+      readout stays stale (30) until the component mirrors the reset.
 `[x]` Probe the **multi-pane editing layout** per plan `376`:
       `multi-pane-editor` (55 checks) and `live-editor` (19): two tabbed panes
       around one live split, each a 28 px `userSelect: none` strip over a 372 px

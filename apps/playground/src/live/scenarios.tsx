@@ -49,6 +49,7 @@ import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
+import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3493,6 +3494,152 @@ const appChrome: LiveScenario = {
     }),
 };
 
+const dataToolbar: LiveScenario = {
+  id: "live-data-toolbar",
+  title: "Live data toolbar: search, filter, sort, columns and archive",
+  capability: "data-toolbar",
+  view: dataToolbarScenario.view,
+  ready: "tb-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectEqual(
+        "the live cards start at the source counts",
+        yield* textOf(ctx, "tb-card-total-value"),
+        "60",
+      );
+
+      // A real search narrows the list and the cards.
+      yield* ctx.host.click("tb-search");
+      yield* ctx.host.key("i t e m space 1");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "showing=11");
+      yield* ctx.expectEqual(
+        "the live showing card follows",
+        yield* textOf(ctx, "tb-card-showing-value"),
+        "11",
+      );
+      const match = yield* boxOf(ctx, "tb-row-1");
+      const viewport = yield* boxOf(ctx, "tb-viewport");
+      yield* ctx.expectNear(
+        "the first live match is at the top",
+        match.y,
+        viewport.y,
+        1,
+      );
+      const hidden = yield* ctx.host.bounds("tb-row-0");
+      yield* ctx.expectEqual(
+        "a non-matching row is unpainted live",
+        hidden === null,
+        true,
+      );
+
+      // A filter after a wheel resets the live anchor.
+      yield* ctx.host.click("tb-clear");
+      yield* settle;
+      yield* ctx.host.wheel("tb-viewport", 0, -840);
+      yield* settle;
+      yield* waitForAnchor(ctx, "tb-list", "30,0");
+      yield* ctx.host.click("tb-filter-paused");
+      yield* settle;
+      yield* waitForAnchor(ctx, "tb-list", "0,0");
+      yield* waitForText(ctx, "tb-state", "anchor=0");
+      yield* ctx.expectEqual(
+        "the live filter resets the anchor",
+        Option.getOrElse(
+          Option.map(
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("tb-list")),
+            (anchor) => anchor[0],
+          ),
+          () => -1,
+        ),
+        0,
+      );
+
+      // A real filter click narrows and clears the selection.
+      yield* ctx.host.click("tb-clear");
+      yield* settle;
+      yield* ctx.host.click("tb-row-2");
+      yield* ctx.host.click("tb-row-5");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "selected=2");
+      yield* ctx.host.click("tb-filter-paused");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "filter=paused");
+      yield* ctx.expectContains(
+        "the live filter narrows the rows",
+        yield* textOf(ctx, "tb-state"),
+        "showing=20",
+      );
+      yield* ctx.expectContains(
+        "the live filter clears the selection",
+        yield* textOf(ctx, "tb-state"),
+        "selected=0",
+      );
+      yield* ctx.expectEqual(
+        "the live showing card follows the filter",
+        yield* textOf(ctx, "tb-card-showing-value"),
+        "20",
+      );
+
+      // A real sort moves a paused row to the top.
+      yield* ctx.host.click("tb-clear");
+      yield* settle;
+      yield* ctx.host.click("tb-sort");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "sort=status");
+      const sorted = yield* boxOf(ctx, "tb-row-1");
+      yield* ctx.expectNear(
+        "the live status sort puts a paused row first",
+        sorted.y,
+        (yield* boxOf(ctx, "tb-viewport")).y,
+        1,
+      );
+
+      // A real column toggle unpaints the header and its cells.
+      yield* ctx.host.click("tb-clear");
+      yield* settle;
+      yield* ctx.host.click("tb-cols-owner");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "cols=status");
+      const owner = yield* ctx.host.bounds("tb-row-0-owner");
+      yield* ctx.expectEqual(
+        "the live owner cell is unpainted",
+        owner === null,
+        true,
+      );
+      yield* ctx.host.click("tb-cols-owner");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "cols=status,owner");
+
+      // Selection feeds the live bulk action and the cards.
+      yield* ctx.host.click("tb-row-2");
+      yield* ctx.host.click("tb-row-5");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "selected=2");
+      yield* ctx.host.click("tb-archive");
+      yield* settle;
+      yield* waitForText(ctx, "tb-state", "total=58");
+      yield* ctx.expectContains(
+        "the live archive clears the selection",
+        yield* textOf(ctx, "tb-state"),
+        "selected=0",
+      );
+      yield* ctx.expectEqual(
+        "the live total card follows the archive",
+        yield* textOf(ctx, "tb-card-total-value"),
+        "58",
+      );
+      const archived = yield* ctx.host.bounds("tb-row-5");
+      yield* ctx.expectEqual(
+        "the archived row is unpainted live",
+        archived === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${dataToolbar.id}.png`);
+    }),
+};
+
 const multiPaneEditor: LiveScenario = {
   id: "live-editor",
   title: "Live editor: two panes, a scrolling code surface and a live split",
@@ -3621,4 +3768,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   dataGridColumns,
   appChrome,
   multiPaneEditor,
+  dataToolbar,
 ];

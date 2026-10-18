@@ -60,7 +60,7 @@ owners cycle three names.
 | sort | `tb-sort` flips `id` → `status` (paused first); the first paused row paints at the top while row 0 moves down; a second click restores `id` |
 | filter | `tb-filter-paused` narrows `showing` to 20 and paints only paused rows; `all` restores 60 |
 | search | typing `item 1` narrows to 11 rows, paints row 1 at the top, unpaints row 0, and updates the showing card |
-| anchor reset | a wheel to row 30 is undone by a search: the anchor reads `0` and the filtered first row paints at the top |
+| anchor reset | a filter after a wheel leaves the renderer's anchor at 0 but the `onVisibleRange` readout stale at 30; the component mirrors the reset and paints the filtered first row at the top |
 | column visibility | `tb-cols-owner` removes the owner header and every owner cell from the tree; `name` stays; toggling restores them |
 | selection | clicking rows 2 and 5 sets `selected=2`, paints their accent background, and updates the selected card; the selection survives a wheel away and back |
 | selection reset | a filter or search clears the selection (a hidden selection is a lie) |
@@ -222,7 +222,7 @@ are gone from the model, so `clear` does not bring them back.
 | # | Mutation | Must fail with |
 | - | -------- | -------------- |
 | M1 | the showing card counts the source rows, not the filtered set | "the showing card follows the search" |
-| M2 | `changeView` does not call `scrollToItem` | "a search resets the list anchor" (anchor stays near 30) |
+| M2 | `changeView` does not mirror the row-set reset into the readout | "the reset reaches the readout" (it stays 30) |
 | M3 | the sort click does not change the order | "status sort moves a paused row to the top" |
 | M4 | the status filter is ignored | "the paused filter narrows the rows" |
 | M5 | the owner column toggle leaves the cells mounted | "hiding a column unpaints its cells" |
@@ -241,9 +241,10 @@ Run each mutation with `--only data-toolbar`, record the exact failure, revert.
 
 ## 7. STOP conditions
 
-- **A row-set change leaves the virtual list on the old anchor** even after
-  `scrollToItem(0)`. Record what the runtime does; if `scrollToItem` is not the
-  route, amend §4 and the mutation proof.
+- **A row-set change leaves the readout stale even though the runtime resets
+  the anchor.** Record both reads; the component must mirror the reset. If the
+  runtime does not reset at all, `scrollToItem(0)` is the route; amend §4 and
+  the mutation proof.
 - **`onVisibleRange` never fires after a filter** so the readout cannot name the
   anchor. Read `getListScrollTop` from a ref in the click/key handler instead,
   and amend §4.
@@ -261,7 +262,79 @@ Run each mutation with `--only data-toolbar`, record the exact failure, revert.
 
 ## 8. Measured results
 
-_To be filled by the executor after the runs in §5._
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `data-toolbar` (headless) | 61 | pass — suite `82 → 83`, `2500 → 2561`, exit `0`, `data-toolbar=verified` |
+| `live-data-toolbar` | 24 | pass — live `33 → 34`, `586 → 610`, exit `0`, one screenshot |
+
+### 8.1 Facts that changed the plan
+
+- **The renderer resets its own anchor on a filtered re-render, but the
+  `onVisibleRange` readout does not learn about it.** The first mutation of the
+  anchor rule removed `scrollToItem(0)`; the renderer still read `0` while the
+  readout stayed `30`. So the runtime's filter path is safe, and the
+  component's obligation is to **mirror** the reset into app state. The probe
+  keeps `scrollToItem(0)` for determinism and asserts the readout. This
+  qualifies plan `338`'s "must reset" rule: the virtual list does it when the
+  row set shrinks, but an app-owned anchor is still stale until re-read.
+- **A status reorder can move the previous first row out of the painted
+  window.** With paused-first order, `row 0` (active) is the 21st row, so the
+  check is its absence, not a larger `y`; asserting a painted `y` would have
+  been a coincidence of the viewport height.
+- **The selection paint is the exact token value.** A selected row's
+  `paintedStyle.backgroundColor` equals `palettes.dark.colors.accent` (the
+  smoke runner's theme), so the paint is asserted by role, not by a screenshot.
+- **`"space"` types a space through `simulateKeystrokes`.** `"i t e m space 1"`
+  produced the query `item 1` and the expected 11 rows.
+
+### 8.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| cards | three 160 × 64 cards; `60/60/0` at rest; showing follows the filter (`20`) and search (`11`); selected follows the selection and returns to 0 |
+| toolbar | 40 px, under the cards; `Toolbar:Data toolbar`; search is `TextInput:Search` |
+| sort | `id` → `status` (paused first) puts row 1 at the viewport top and unpaints row 0; a second click restores row 0 at the top |
+| filter | paused narrows 60 → 20 and paints only paused rows; active/archived rows are absent |
+| search | `item 1` narrows to 11 and paints row 1 at the top |
+| anchor | the wheel reaches row 30; a filter returns the renderer to 0; the readout reports 0 only when the component mirrors it |
+| columns | hiding owner removes its header and every owner cell; name stays; toggling restores |
+| selection | rows 2 and 5 give `selected=2`, the card 2, and the accent background; the pair survives a scroll away and back |
+| reset | a filter clears the selection to 0 |
+| archive | removes rows 2 and 5: `total=58`, `showing=58`, `archived=2`, `selected=0`; `Item 6` still paints |
+| clear | resets query/filter/sort/columns/selection and the anchor, but keeps the archive (`archived=2`) |
+
+### 8.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only data-toolbar`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | the showing card counts `rows` | `the showing card follows the filter` |
+| M2 | `changeView` does not mirror the reset | `the reset reaches the readout: expected "0", got "30"` |
+| M3 | `ordered` ignores the sort | `status sort moves a paused row to the top` |
+| M4 | the status filter is ignored | `the paused filter narrows the rows` |
+| M5 | the owner toggle is a no-op | `the owner column leaves the state` |
+| M6 | archive keeps the rows | `archive removes the selected rows` |
+| M7 | a row-set change keeps the selection | `a filter clears the selection` |
+
+Reverse proof (consumer wiring): the row's `onClick` removed →
+`two rows are selected` fails.
+
+### 8.4 Limits recorded
+
+- The toolbar fits its width; overflow is `app-chrome`'s measured scroller +
+  reveal, not repeated here.
+- Columns are declared widths, not resizable; resize is `data-grid-columns`
+  (`349`).
+- The view has no menu or popover: filters and column toggles are segmented
+  controls, so the probe does not duplicate the overlay contracts.
+- The cards are `div` + `<text>` compositions (the row's own definition); the
+  shipped `Card` is exercised by `tier2-foundation`.
+- No persisted view state: a workspace restore is plans `167`/`339`.
+
 
 ## 9. Acceptance
 
