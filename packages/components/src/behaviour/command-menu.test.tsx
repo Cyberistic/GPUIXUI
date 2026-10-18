@@ -547,4 +547,20 @@ describe("CommandMenu", () => {
 
     palette.unmount();
   });
+
+  /**
+   * Focus visibility (plan 523). The bug this guards, measured: the palette
+   * autoFocuses its field, the runtime focuses it after React's effects, and the
+   * field painted no ring — so the surface the user typed into was invisible.
+   */
+  it("paints the focus ring on the search field", () => {
+    const palette = renderComponent(<Palette perform={() => undefined} />);
+
+    expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+    expect(
+      palette.renderer.findByTestId("command-input")?.style.boxShadow,
+    ).toBeDefined();
+
+    palette.unmount();
+  });
 });

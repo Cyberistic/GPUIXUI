@@ -223,7 +223,8 @@ filters a local array in `onQueryChange`, which is where a request would go.
 The popup closes one layer per event: inside a dialog, the first Escape or
 outside press closes the popup and leaves the dialog open.
 
-The search input keeps focus; the highlighted row is visual. **No
+The search input keeps focus and paints the token focus ring while it holds it
+(plan 523); the highlighted row is visual. **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
 
@@ -290,8 +291,9 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (36 tests):
-open + input focus, a centred popup and a near-bottom popup that opens above its
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (37 tests):
+open + input focus and its focus ring (which follows focus away and returns on
+reopen), a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi

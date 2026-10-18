@@ -905,4 +905,37 @@ describe("Combobox", () => {
 
     picker.unmount();
   });
+
+  /**
+   * Focus visibility (plan 523). The bug this guards, measured: opening the
+   * popup focuses the search field natively, but the field painted no ring, so
+   * the surface the user typed into was invisible. The ring must follow focus
+   * away and come back on a reopen.
+   */
+  it("paints the focus ring on the search field", async () => {
+    const picker = renderComponent(<Picker />);
+    await open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+    expect(
+      picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
+    ).toBeDefined();
+
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("combobox-trigger")?.id ?? -1,
+    );
+    expect(
+      picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
+    ).toBeUndefined();
+
+    picker.renderer.simulateKeystrokes("escape");
+    await settle();
+    await open(picker);
+
+    expect(
+      picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
+    ).toBeDefined();
+
+    picker.unmount();
+  });
 });

@@ -45,7 +45,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
+import {
+  controlHeight,
+  focusRing,
+  textStyle,
+  useTheme,
+} from "./internal/theme.js";
 import { MenuLabel, menuRowStyle } from "./menu/item.js";
 import { fuzzyMatches, rankByGroup } from "./menu/fuzzy.js";
 import {
@@ -273,6 +278,9 @@ export const CommandMenuInput = ({
   const theme = useTheme();
   const { query, setQuery, runActive, handleKeyDown, registerInput } =
     useCommandMenu();
+  // The palette always `autoFocus`es this field and the runtime focuses it after
+  // React's effects, so `onFocus` never runs on mount (plans 388, 523).
+  const [focused, setFocused] = useState(true);
 
   return (
     <input
@@ -285,6 +293,8 @@ export const CommandMenuInput = ({
       onChange={(event) => setQuery(event.value ?? "")}
       onSubmit={runActive}
       onKeyDown={handleKeyDown}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={{
         ...textStyle(theme, "body"),
         height: controlHeight(theme, "md"),
@@ -295,6 +305,7 @@ export const CommandMenuInput = ({
         borderWidth: theme.borderWidth.thin,
         borderColor: theme.colors.border,
         borderRadius: theme.radius.md,
+        ...(focused ? focusRing(theme) : {}),
       }}
     />
   );

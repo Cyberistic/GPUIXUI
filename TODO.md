@@ -375,6 +375,14 @@ retired once both branches are one
       `MentionInput`/`TagInput` seed the group ring from `autoFocus`; 9 native
       cases (behaviour 686), nine mutation proofs; docs, `COMPONENTS.md` and the
       inventory synced
+    - [x] The overlay search fields paint the focus ring — plan 523. Measured:
+      the command palette's always-`autoFocus` input and the combobox's
+      open-focused input both took native focus and painted no ring. Both now
+      own a `focused` state seeded from `autoFocus`/`open` and paint
+      `focusRing`, tracking later focus changes; the combobox root's open effect
+      was proven not to dispatch React's `onFocus`; 2 native cases (Command menu
+      21, Combobox 37, behaviour 688), three mutation proofs; docs,
+      `COMPONENTS.md` and the inventory synced
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page

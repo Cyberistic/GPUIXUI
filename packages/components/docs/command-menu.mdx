@@ -43,7 +43,8 @@ no keys.
 
 ## Focus and the highlight
 
-The search input keeps focus the whole time. The active row is **highlighted,
+The search input keeps focus the whole time and paints the token focus ring
+(plan 523). The active row is **highlighted,
 not focused**: focusing a row would take typing away from the input after the
 first arrow key. That is why this palette does not reuse the menu registry, only
 the pure `menu/logic.ts` arithmetic.
@@ -162,17 +163,17 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (20 tests):
-focus landing on the input, typing filtering the list while focus stays put,
-ArrowDown + Enter running the second match and closing, a clicked row, the empty
-label, a custom filter, a disabled action refusing to run, Escape closing, a
-non-contiguous query matching initials, ranking deciding the default `Enter`
-target, group order surviving ranking, an empty query keeping declaration order,
-a caller-supplied empty state, the input's placeholder/name coming from the
-part, a caller-composed row running its `onClick` before the action, and recents:
-a run command shown first on reopen, recency order without a duplicate row,
-`defaultRecent`, normal ranking while a query is typed, and a controlled list
-that reports without moving.
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (21 tests):
+focus landing on the input, the input's focus ring, typing filtering the list
+while focus stays put, ArrowDown + Enter running the second match and closing, a
+clicked row, the empty label, a custom filter, a disabled action refusing to run,
+Escape closing, a non-contiguous query matching initials, ranking deciding the
+default `Enter` target, group order surviving ranking, an empty query keeping
+declaration order, a caller-supplied empty state, the input's placeholder/name
+coming from the part, a caller-composed row running its `onClick` before the
+action, and recents: a run command shown first on reopen, recency order without a
+duplicate row, `defaultRecent`, normal ranking while a query is typed, and a
+controlled list that reports without moving.
 
 `src/command-menu/logic.test.ts` covers recording (front insert, dedupe, cap,
 head no-op) and the empty-query ordering (recent group, declaration order,

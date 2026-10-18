@@ -87,6 +87,7 @@ import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   elevationShadow,
+  focusRing,
   textStyle,
   useTheme,
   type Theme,
@@ -607,7 +608,10 @@ export const ComboboxInput = ({
   onChange,
 }: ComboboxInputProps) => {
   const theme = useTheme();
-  const { noteEscape, noteQueryChange } = useCombobox();
+  const { noteEscape, noteQueryChange, open } = useCombobox();
+  // The field mounts with the popup and the root focuses it natively after
+  // React's effects, so `onFocus` does not run on open (plans 388, 523).
+  const [focused, setFocused] = useState(open);
 
   return (
     <HeadlessInput
@@ -620,6 +624,8 @@ export const ComboboxInput = ({
         noteQueryChange(event.value ?? "");
         onChange?.(event);
       }}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onKeyDown={(event) => {
         // Offer Escape to the stack from the focused surface itself: GPUix's
         // handler closes this popup but cannot claim the event, and the runtime
@@ -640,6 +646,7 @@ export const ComboboxInput = ({
         borderRadius: theme.radius.sm,
         borderWidth: theme.borderWidth.thin,
         borderColor: theme.colors.border,
+        ...(focused ? focusRing(theme) : {}),
       }}
     />
   );
