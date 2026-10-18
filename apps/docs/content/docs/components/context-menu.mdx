@@ -36,7 +36,9 @@ import {
 ## Variants
 
 The same parts as Dropdown menu: trigger, content, item, checkbox item,
-separator, label and group. There is no separate visual variant.
+separator, label, group, and the submenu trio `ContextMenuSub` /
+`ContextMenuSubTrigger` / `ContextMenuSubContent`. There is no separate visual
+variant.
 
 ## Sizes
 
@@ -73,8 +75,14 @@ The context-menu example opens a file's actions at the pointer:
 | Escape | close |
 | Tab | close and move on |
 
-The surface takes focus on open; the highlighted row is the focused row. There is
-no keyboard path to open a context menu — it is a pointer gesture.
+The surface takes focus on open; the highlighted row is the focused row.
+`Shift+F10` opens the menu at the trigger's bottom-left for a keyboard user,
+while a pointer opens it at the click point. Escape and activation return focus to
+the trigger only when the menu was opened from the keyboard.
+
+Submenus behave as they do in Dropdown menu: one secondary level, opened with
+`Enter`, `Space`, `ArrowRight` or a hover, closed by `ArrowLeft` or `Escape`.
+Type-ahead is the same case-insensitive 500 ms prefix match.
 
 ## Theming
 
@@ -88,9 +96,10 @@ card-like box with a border and `spacing.md` padding.
   is a plain region with no `aria-haspopup`.
 - There is no portal: the surface is a sibling painted at window coordinates, so
   a scroll container does not clip it.
-- No submenus and no type-ahead in v1.
-- No keyboard path to open; for keyboard-first action lists use Dropdown menu or
-  Command menu.
+- One level of submenus is tested; a submenu opens right only and there is no
+  left-side flip. Type-ahead is a prefix match with no fuzzy scoring.
+- The trigger is a region, so `Shift+F10` is the only keyboard way in; it opens
+  at the trigger's bottom-left rather than at a chosen row.
 - No live scene ships for this component yet; the example and source are real.
 
 ## Dependencies

@@ -9,9 +9,11 @@ description: A list of actions from a trigger.
 
 <ComponentPreview slug="dropdown-menu" />
 
-`DropdownMenu` shows a short list of actions next to its trigger. The surface is
-an anchored GPUix layer, so it flips and shifts to stay inside the window; the
-component owns the open state, the highlight, dismissal and focus return.
+`DropdownMenu` shows a short list of actions next to its trigger. GPUix's
+anchored layer snaps inside the window but does not flip, so the component opens
+the surface on the opposite side when snapping would cover the trigger and
+measures `align="center"` from real bounds. It owns the open state, the
+highlight, dismissal and focus return.
 
 ## Usage
 
@@ -34,9 +36,11 @@ import {
 
 ## Variants
 
-Parts: trigger, content, item, checkbox item, separator, label and group.
-Checkbox rows stay open after toggling; `tone="destructive"` paints a row in the
-destructive role but is not a confirmation step.
+Parts: trigger, content, item, checkbox item, separator, label, group, and the
+submenu trio `DropdownMenuSub` / `DropdownMenuSubTrigger` /
+`DropdownMenuSubContent`. Checkbox rows stay open after toggling;
+`tone="destructive"` paints a row in the destructive role but is not a
+confirmation step.
 
 ## Sizes
 
@@ -58,6 +62,26 @@ The dropdown example is a real file-actions menu with a destructive item:
   ../../../../../packages/components/examples/dropdown-menu.example.tsx
 </include>
 
+## Submenus
+
+A submenu groups actions behind one secondary level:
+
+```tsx
+<DropdownMenuSub>
+  <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
+  <DropdownMenuSubContent label="Share">
+    <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
+    <DropdownMenuItem onSelect={email}>Email</DropdownMenuItem>
+  </DropdownMenuSubContent>
+</DropdownMenuSub>;
+```
+
+Clicking, `Enter`, `Space`, `ArrowRight` or hovering the trigger opens it and
+focuses its first row. Only one submenu is open at a time; `ArrowLeft` or
+`Escape` inside it closes that level and returns focus to its trigger. The
+secondary surface opens to the right and relies on `fit="snap"` to stay inside
+the window.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/dropdown-menu.tsx" name="DropdownMenuProps" />
@@ -70,11 +94,17 @@ The dropdown example is a real file-actions menu with a destructive item:
 | ArrowDown / ArrowUp | next / previous enabled row, wrapping |
 | Home / End | first / last enabled row |
 | Enter / Space | run the highlighted row and close |
+| letter keys | jump to the next enabled row whose label starts with the typed prefix |
 | Escape | close and return focus to the trigger |
 | Tab | close and move on; a menu is not modal |
 
 Menus share the dismiss stack with Dialog and Popover: the topmost layer closes
 first.
+
+Type-ahead is a case-insensitive prefix match over the row's plain-text label (or
+its `textValue` when the label is composed). The prefix lives for 500 ms; typing
+the same letter again cycles to the next matching row, and a prefix that matches
+nothing leaves the highlight where it was.
 
 ## Theming
 
@@ -88,8 +118,12 @@ destructive tone uses `colors.destructive`.
   `aria-expanded` on the trigger.
 - **No `aria-haspopup`, `aria-controls`, `aria-checked` or
   `aria-activedescendant`** in 0.10.0; checkbox rows use `aria-selected`.
-- No submenus and no type-ahead in v1. A correct type-ahead needs a timed buffer
-  on the Effect clock, not `setTimeout`.
+- One level of submenus is tested; a nested submenu follows the same rule but no
+  suite exercises it. Submenus open right only — there is no left-side flip.
+- The root surface flips once per open from measured bounds. A surface taller
+  than both sides can still cover its trigger, and `align="center"` is clamped
+  by the snap margin near a window edge.
+- Type-ahead is a prefix match with no fuzzy scoring.
 - A hover does not preview the highlight; a click activates directly.
 
 ## Dependencies

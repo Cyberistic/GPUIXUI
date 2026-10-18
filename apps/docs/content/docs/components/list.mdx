@@ -11,7 +11,9 @@ description: A vertical collection of selectable rows.
 
 `List` presents rows. With `selectionMode="single"` it becomes a listbox: arrow
 keys move a roving tab stop, a click selects, and the list behaves as one tab stop
-instead of one per row.
+instead of one per row. `selectionMode="multiple"` keeps that keyboard model and
+adds the desktop selection modifiers — Shift ranges, `Cmd`/`Ctrl` toggles and
+select-all. Typing a row's first letters jumps to it in both modes.
 
 ## Usage
 
@@ -37,9 +39,11 @@ import {
 | --------------- | ---- | -------- |
 | `none` (default) | `list` / `listitem` | none — rows are not focusable |
 | `single` | `listbox` / `option` | exactly one row |
+| `multiple` | `listbox` / `option` | exactly one row |
 
 `dense` reduces the row height; `leading` and `trailing` slots take an avatar or
-a badge. There is no multi-select mode.
+a badge. The value type follows the mode: `single` takes a string, `multiple` an
+array, and the compiler rejects the wrong one.
 
 ## Sizes
 
@@ -54,6 +58,12 @@ Controlled (`value`) and uncontrolled (`defaultValue`) both work. A disabled row
 is skipped by arrows, `Home`/`End` and clicks, and can never be selected. In
 controlled mode the list reports the change and leaves `aria-selected` where the
 consumer put it.
+
+In `multiple` mode a plain click selects only that row and moves the anchor;
+`Shift`+click selects the enabled range from the anchor; `Cmd`/`Ctrl`+click
+toggles one row and moves the anchor. Values are reported in selection order
+without duplicates, and a range never includes a disabled row. Select-all
+(`Cmd`/`Ctrl+A`) makes the first enabled row the new anchor.
 
 ## Composition
 
@@ -77,6 +87,17 @@ The list example is a real file list with leading avatars and trailing badges:
 | `Ctrl+N` / `Ctrl+P` | the desktop equivalents |
 | `Home` / `End` | focus the first / last enabled row |
 | `Enter` / `Space` | select the focused row |
+| letter keys | jump to the next enabled row whose `textValue` starts with the typed prefix |
+
+In `multiple` mode `Space`/`Enter` toggle the focused row instead of replacing
+the selection, `Shift`+`↓`/`↑` extend a range from the anchor, and `Cmd`/`Ctrl+A`
+selects every enabled row. Type-ahead moves focus and re-anchors without changing
+the selection.
+
+Type-ahead is a case-insensitive prefix search over `ListItem`'s `textValue`, not
+a fuzzy match. It searches from the current row, wraps, cycles on a repeated
+letter and skips disabled rows and rows without `textValue`. The typed prefix
+lives for 500 ms.
 
 A disabled row is skipped everywhere. The focused row's ring shows for a click
 too, because 0.10.0 has no `focusVisible`.
@@ -90,11 +111,13 @@ Roles: `colors.selected`/`selectedForeground` for selection,
 ## Accessibility and limitations
 
 - Roles are `list`/`listitem` without selection and `listbox`/`option` with it.
-- `aria-selected` is set on every row in single mode.
-- Rows are one tab stop in single mode; Tab does not stop at every row.
-- Single selection only: no multi-select, type-ahead, reorder, group headers or
-  nested rows.
+- `aria-selected` is set on every row in `single` and `multiple` mode.
+- Rows are one tab stop in both selectable modes; Tab does not stop at every row.
+- No drag reorder, no group headers, no nested rows and no
+  `aria-multiselectable` in multiple mode.
 - No virtualisation: every row mounts. Long collections belong in `virtual-list`.
+- `onActivate` is rejected at the type level in `multiple` mode: a range gesture
+  would otherwise run it by accident.
 - No live scene ships for this component yet; the example and source are real.
 
 ## Dependencies

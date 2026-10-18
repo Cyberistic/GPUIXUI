@@ -11,7 +11,14 @@ import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
-const READY_TIMEOUT_MS = 30_000;
+/**
+ * The merged toolchain starts `vite preview` through wrangler/workerd, and on
+ * this host a cold start was measured at 45 s (`apps/docs/.wrangler` absent,
+ * no competing preview). 30 s reported "could not verify" for a site that was
+ * fine; the budget is 90 s so a slow start is still a pass but a hung one is
+ * still a failure.
+ */
+const READY_TIMEOUT_MS = 90_000;
 
 /** The CLI boundary: a setup failure is reported, never mistaken for a pass. */
 export class SetupError extends Error {}

@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { components } from "@/component-meta/registry";
 import { LIVE_SCENES, SCENE_TEXT } from "../../../preview/scenes";
+import { NO_LIVE_SCENE } from "./gaps";
 
 /**
  * Guards the live-scene contract (plan 456) at the two points it can drift
@@ -30,48 +31,6 @@ const interactionScenes = new Map([
   ["popover", "popover"],
   ["command-menu", "command-menu"],
   ["confirm-dialog", "confirm-dialog"],
-]);
-
-/**
- * Pages that carry neither a live scene nor a tier-A illustration, with the
- * measured reason (plan 458). A new page that falls into that hole, or a record
- * that gains a scene while still listed here, fails the guard — the list is the
- * claim that every remaining gap is an API or evidence limit, not an omission.
- */
-const noLiveScene = new Map([
-  [
-    "combobox",
-    "the wrapper owns the popup's open state and exposes no defaultOpen",
-  ],
-  [
-    "context-menu",
-    "the surface paints at an internal point no prop can set (plan 457)",
-  ],
-  ["date-picker", "the picker owns its open state and exposes no defaultOpen"],
-  [
-    "drawer",
-    "the panel exists only while open and is anchored by its trigger; an approximation would show a button, not the drawer",
-  ],
-  [
-    "hotkey-input",
-    "the field's content is a captured chord, which needs a real key event rather than a static layout",
-  ],
-  [
-    "mention-input",
-    "the suggestion list exists only while a query is open and no prop opens it",
-  ],
-  [
-    "navigation-menu",
-    "the panel exists only while open; the rest state is a trigger row that proves nothing about the menu",
-  ],
-  [
-    "toast",
-    "a scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene",
-  ],
-  [
-    "tooltip",
-    "the wrapper exposes no open state, and a headless check cannot prove a hover-opened tip",
-  ],
 ]);
 
 const pagesDirectory = new URL(
@@ -140,7 +99,7 @@ describe("interaction records", () => {
         ? [entry.slug]
         : [],
     );
-    expect(gaps.toSorted()).toEqual([...noLiveScene.keys()].toSorted());
+    expect(gaps.toSorted()).toEqual([...NO_LIVE_SCENE.keys()].toSorted());
   });
 
   it("never tell a reader a page with a scene cannot render it live", () => {

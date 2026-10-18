@@ -28,7 +28,9 @@ import {
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
 
-describe("search", () => {
+// The first query builds the Fumadocs index for every page; on a cold checkout
+// that exceeds vitest's 5s default.
+describe("search", { timeout: 30_000 }, () => {
   it("returns the matching page for a title query", async () => {
     const results = await search("Installation", 5);
     expect(results.map((result) => result.url)).toContain("/docs/installation");

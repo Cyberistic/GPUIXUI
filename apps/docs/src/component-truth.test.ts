@@ -81,6 +81,98 @@ const pageImports = (
   });
 };
 
+describe("inventory features the pages must not deny", () => {
+  /**
+   * `master` grew the components after plan 425 wrote the 22 original Tier 2
+   * pages — list multi-select, submenus, type-ahead, accordion header keys, toast
+   * actions and corrected floating placement (plan 463). A page keeps building
+   * while telling the reader a shipped feature does not exist, so each entry
+   * pairs the evidence the page must now document with the denial that must not
+   * survive. `COMPONENTS.md` and the component's own `docs/*.mdx` are the source
+   * of truth; the pages are the copy that drifted.
+   */
+  const shippedFeatures: ReadonlyArray<{
+    readonly slug: string;
+    readonly evidence: RegExp;
+    readonly denial: RegExp;
+  }> = [
+    {
+      slug: "list",
+      evidence: /selectionMode="multiple"/,
+      denial: /no multi-select/i,
+    },
+    {
+      slug: "list",
+      evidence: /textValue/,
+      denial: /\bno [^.\n]*type-ahead/i,
+    },
+    {
+      slug: "accordion",
+      evidence: /between enabled headers/i,
+      denial: /no arrow-key/i,
+    },
+    {
+      slug: "dropdown-menu",
+      evidence: /DropdownMenuSubContent/,
+      denial: /no submenus/i,
+    },
+    {
+      slug: "dropdown-menu",
+      evidence: /type-ahead/i,
+      denial: /no type-ahead/i,
+    },
+    {
+      slug: "dropdown-menu",
+      evidence: /does not flip/i,
+      denial: /\bGPUix[^.;\n]{0,60}\bflips\b/i,
+    },
+    {
+      slug: "context-menu",
+      evidence: /ContextMenuSubContent/,
+      denial: /no submenus/i,
+    },
+    {
+      slug: "context-menu",
+      evidence: /Shift\+F10/,
+      denial: /no keyboard path/i,
+    },
+    {
+      slug: "command-menu",
+      evidence: /subsequence/i,
+      denial: /case-insensitive substring/i,
+    },
+    {
+      slug: "toast",
+      evidence: /onAction/,
+      denial: /no pause-on-hover/i,
+    },
+    {
+      slug: "popover",
+      evidence: /does not flip/i,
+      denial: /\bGPUix[^.;\n]{0,60}\bflips\b/i,
+    },
+    {
+      slug: "combobox",
+      evidence: /does not flip/i,
+      denial: /\bGPUix[^.;\n]{0,60}\bflips\b/i,
+    },
+  ];
+
+  it("documents the shipped feature on its page", () => {
+    const missing = shippedFeatures
+      .filter(({ slug, evidence }) => !evidence.test(readPage(`${slug}.mdx`)))
+      .map(({ slug, evidence }) => `${slug}: no ${String(evidence)}`);
+    expect(missing).toEqual([]);
+  });
+
+  it("does not deny a feature its inventory row ships", () => {
+    const denied = shippedFeatures
+      .filter(({ slug, denial }) => denial.test(readPage(`${slug}.mdx`)))
+      .map(({ slug, denial }) => `${slug}: still denies ${String(denial)}`);
+    expect(denied).toEqual([]);
+  });
+});
+
 describe("component page truth", () => {
   it("covers every delivered component, so the guard cannot pass on an empty directory", () => {
     const delivered = components.filter(

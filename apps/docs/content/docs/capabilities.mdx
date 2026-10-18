@@ -39,7 +39,7 @@ changed at least one component in this library.
 | Wheel `deltaY` is **negative** to scroll down | plan 140 | Scroll deltas are the opposite sign of the DOM; `ScrollArea` maps them before calling your handler |
 | `<virtual-list>` retains every row but paints a window | plan 140, plan 152 | Hit-test and assert on the painted rows, not the tree |
 | An `<anchored>` layer paints no surface of its own | plan 112 | Overlay handlers belong on the content element, and the veil is its own anchored layer |
-| `align="center"` is off by half the panel; `fit="snap"` clamps without flipping | plan 156 | Prefer `align="start"` or an explicit side near the window edge |
+| `align="center"` is off by half the panel; `fit="snap"` clamps without flipping | plan 156, plan 323 | Our overlays compensate: they open on the opposite side when snapping would cover the trigger and measure centre alignment from real bounds. A raw `<anchored>` still has both limits, so prefer `align="start"` or an explicit side near a window edge |
 | Tab wraps inside a modal surface | plan 155 | A dialog traps focus with `focusNextWithin` / `focusPreviousWithin`, and Escape closes only the topmost layer |
 | There is no `focusVisible` and no `outline*` | plan 017 | Focus is a zero-blur spread `boxShadow` in the `ring` role |
 | `onVisibleRange` lags the painted window by one gesture | plan 152 | Read the painted rows, not the event, as the current window |

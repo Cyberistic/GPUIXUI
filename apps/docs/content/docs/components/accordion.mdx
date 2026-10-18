@@ -62,8 +62,10 @@ The accordion example is a real FAQ/advanced-settings stack:
 
 ## Keyboard and focus
 
-The trigger is a button: Tab reaches it, Enter and Space toggle it. There is no
-arrow-key navigation between headers in v1.
+The trigger is a button: Tab reaches it, Enter and Space toggle it. `↓`/`↑`
+move focus between enabled headers with wrapping, and `Home`/`End` jump to the
+first or last one; moving focus never toggles a section. A disabled header is
+skipped by every arrow.
 
 ## Theming
 
@@ -76,7 +78,7 @@ text glyph (`⌄` / `⌃`) because 0.10.0's style has no `transform` for rotatio
 - `aria-expanded` on each trigger; the trigger names its section.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
 - The indicator carries `aria-label="Expand"` / `"Collapse"`.
-- No arrow-key movement between headers and no height animation.
+- No height animation; the content mounts and unmounts.
 - No live scene ships for this component yet; the example and source are real.
 
 ## Dependencies

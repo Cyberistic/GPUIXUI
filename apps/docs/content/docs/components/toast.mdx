@@ -35,7 +35,8 @@ toast.push({
 ## Variants
 
 `tone` is `info` (default), `success`, `warning` or `danger`; each paints a 3px
-left bar and a glyph (`i`, `✓`, `!`, `✕`) until an icon set lands.
+left bar and a text glyph (`i`, `✓`, `!`, `✕`). The glyph stays text until the
+icon set's marks replace it.
 
 ## Sizes
 
@@ -46,8 +47,27 @@ The stack holds 3 cards by default (`max`); a fourth drops the oldest. Cards are
 
 Auto-dismiss is 5 seconds by default, configurable per toast with
 `duration: Duration.seconds(6)`. A zero or infinite duration never dismisses.
-Ids are monotonic (`"1"`, `"2"`, …) and never reused; a dismissed toast cancels
-its timer so a stale one cannot remove its successor.
+Hovering a card pauses its clock, and so does keyboard focus anywhere inside it;
+neither resumes until both the pointer and focus have left, and the remaining
+time is kept across the pause. Ids are monotonic (`"1"`, `"2"`, …) and never
+reused; a dismissed toast cancels its timer so a stale one cannot remove its
+successor.
+
+## Actions
+
+A toast may carry one action, such as Undo. The label is data in the draft and
+the handler is passed beside it, so a toast never holds a closure in the store:
+
+```tsx
+toast.push(
+  { title: "Message archived", action: { label: "Undo" } },
+  { onAction: () => restore() },
+);
+```
+
+Pressing the action runs `onAction` once and dismisses the toast. A label with no
+handler draws nothing — never a dead control. A toast has at most one action; more
+than one is a composition decision.
 
 ## Composition
 
@@ -92,9 +112,8 @@ the tone's colour from the shared status palette.
   supported announcement.
 - **No progress indicator** for remaining time; the card does not animate the
   deadline.
-- No pause-on-hover. Use `duration: Duration.infinity` and a manual dismiss when a
-  toast must stay.
 - No portal: render the viewport last at the app root (GPUix has no `zIndex`).
+- One action per toast; an action label without a handler renders no control.
 - No live scene ships for this component yet; the example and source are real.
 
 ## Dependencies

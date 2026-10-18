@@ -81,8 +81,12 @@ input uses `colors.input`/`inputForeground`; rows use the shared `hover` plus 2p
 - **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relation
   between input and highlighted row is visual only for assistive technology.
 - The `input` is the host element until the primitives input lands.
-- No fuzzy matching and no recent-commands memory in v1; the default is a
-  case-insensitive substring, replaceable with `filter`.
+- The default matcher is a case-insensitive **subsequence**: the query's
+  characters must appear in order, so initials like `opfl` find **Open file**.
+  Scoring rewards word starts, ranks within each group and keeps the caller's
+  group order. Pass `filter` to replace it with a boolean predicate, which keeps
+  declaration order.
+- No recent-commands memory; a command runs once and the palette closes.
 
 ## Dependencies
 

@@ -8,9 +8,10 @@ description: A non-modal floating surface anchored to a trigger.
 <NativePreview slug="popover" />
 
 `Popover` floats a surface next to its trigger without making the rest of the
-window modal. Positioning is GPUix's own `anchored` layer, so it flips and snaps
-to stay inside the window; the component owns the open state, the dismissal
-rules and the trigger's re-open guard.
+window modal. GPUix's `anchored` layer snaps inside the window but does not flip,
+so the component opens on the opposite side when snapping would cover the
+trigger and measures `align="center"` from real bounds. It owns the open state,
+the dismissal rules and the trigger's re-open guard.
 
 ## Usage
 

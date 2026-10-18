@@ -82,7 +82,9 @@ selected check is `colors.primary`.
 - **No `aria-activedescendant`** in 0.10.0: the input→row relationship is visual
   only for assistive technology.
 - No async option loading, create-new or grouping headers in v1.
-- The popup is an anchored layer, not a portal; it flips to stay in the window.
+- The popup is an anchored layer, not a portal. GPUix snaps it but does not flip;
+  the component corrects the placement, so a near-bottom popup opens above its
+  trigger.
 - The trigger is a `div` with button semantics (the primitives stand-in), not a
   native button.
 - No live scene ships for this component yet; the example and source are real.

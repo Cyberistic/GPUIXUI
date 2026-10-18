@@ -189,17 +189,25 @@ the source for a component that is no longer `planned`.
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton and Loading indicators — chosen because a still cannot
   prove the point: an open overlay and its focus entry, a grouped palette, real
-  SVG markup tinted by the theme, wheel scrolling, or a pulse. Five records
-  remain with neither a live scene nor an illustration, each for a measured
-  reason and never for convenience:
-  - **Context menu** paints at its internal `{ x: 0, y: 0 }` point and has no
-    prop to set it;
-  - **Date picker**, **Combobox** and **Select** own their open state behind a
-    wrapper with no `open`/`defaultOpen`, although GPUix's own primitives expose
-    one (`Select` already has a tier-A resting preview, so only its open state is
-    missing);
-  - **Tooltip**'s wrapper has no open state, and a headless check cannot prove a
-    hover-opened tip is in GPUI's tree;
-  - **Toast** must push on mount and race its own dismissal, and its provider
-    pulls the Effect runtime into the shared scene bundle every scene loads.
-  The API asks are recorded in `TODO.md`; a scene is never faked.
+  SVG markup tinted by the theme, wheel scrolling, or a pulse.
+
+**Nine records remain** with neither a live scene nor an illustration, each for
+a measured reason and never for convenience. This table is the same set
+`apps/docs/src/components/preview/gaps.ts` declares; `preview-gaps.test.ts`
+fails when the document and the code disagree.
+
+### The pages without a live scene
+
+| Component | Why it has no live scene |
+| --------- | ------------------------ |
+| `combobox` | The wrapper owns the popup's open state and exposes no `defaultOpen`. |
+| `context-menu` | The surface paints at an internal point no prop can set. |
+| `date-picker` | The picker owns its open state and exposes no `defaultOpen`. |
+| `drawer` | The panel exists only while open and is anchored by its trigger; an approximation would show a button, not the drawer. |
+| `hotkey-input` | The field's content is a captured chord, which needs a real key event rather than a static layout. |
+| `mention-input` | The suggestion list exists only while a query is open and no prop opens it. |
+| `navigation-menu` | The panel exists only while open; the rest state is a trigger row that proves nothing about the menu. |
+| `toast` | A scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene. |
+| `tooltip` | The wrapper exposes no open state, and a headless check cannot prove a hover-opened tip. |
+
+The API asks are recorded in `TODO.md`; a scene is never faked.
