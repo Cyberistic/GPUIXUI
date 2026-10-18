@@ -107,8 +107,11 @@ cd /Users/cyberistic/GPUIXUI/workspaces/primitives
 nub run --filter @gpuixui/primitives test:runtime
 ```
 
-Expected: the new file reports **62 passing cases** (31 × 2 palettes) and the
-suite total rises from 422 to **484**; exit `0`; no other file changes status.
+Expected: the new file reports **32 passing tests** (one per component, each
+mounting both palettes in its own two windows, plus the parity test) and the
+suite total rises from 422 to **454**; exit `0`; no other file changes status.
+Measured wall time 77–129 s on this host, versus 62 s before — the matrix is the
+largest addition to the opt-in native suite.
 
 ```sh
 nub run --filter @gpuixui/primitives check-types
