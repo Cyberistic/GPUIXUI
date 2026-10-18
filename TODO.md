@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 64/65
+`[~]` `[██████████]` 65/66
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -468,6 +468,12 @@ retired once both branches are one
       variant is unaffected). 4 core + 1 element-tree + 1 runtime case across
       `Input`/`TextArea`, plus the OTP cell's fill; both directions measured
       (plan 091)
+`[x]` `packages/primitives`: **the examples suite did not mount every example** —
+      the test named "mounts every registered example" iterated a hand-written
+      list of 10 while the registry had 12, so `rating` and `toggle` escaped both
+      the mount and the dark-palette pass, and a new example needed no record.
+      `SCREENS` now has all 12 and a registry-parity test fails on a missing or
+      stale record; both directions measured (plan 092)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

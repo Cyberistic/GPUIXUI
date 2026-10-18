@@ -17,6 +17,8 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
@@ -37,6 +39,8 @@ const SCREENS = [
     headline: "Export settings",
   },
   { id: "otp", root: "otp-example", headline: "Two-factor verification" },
+  { id: "rating", root: "rating-example", headline: "Rate this release" },
+  { id: "toggle", root: "toggle-example", headline: "Canvas toolbar" },
   {
     id: "toggleGroup",
     root: "toggle-group-example",
@@ -59,6 +63,18 @@ const renderExample = (
     </Surface>,
   );
 };
+
+it("records a screen for every registered example", () => {
+  // The registry is the list (plan 092). Without this, a new example mounts in
+  // no test — or, worse, the "every example" test keeps its name while missing
+  // one, and the dark-palette pass misses it too.
+  expect(Arr.sort(R.keys(examples), Order.String)).toEqual(
+    Arr.sort(
+      Arr.map(SCREENS, (screen) => screen.id),
+      Order.String,
+    ),
+  );
+});
 
 it("mounts every registered example and paints its headline", async () => {
   const runtime = await openWindow();
