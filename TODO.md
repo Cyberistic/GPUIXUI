@@ -437,7 +437,10 @@ on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
 sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
 wash (≥5.28:1). The token contract checks `destructiveText` on
 `background`/`card`/`popover` and, since plan 083, on the `hover`/`active`
-washes the menu item paints (plan 079 audit; owner: `components`)
+washes the menu item paints. `primitives` paints the same fill as text through
+`TEXT_TONES.destructive` (`src/core/style.ts`), so its `Text tone="destructive"`
+and any icon taking that tone need `destructiveText` too (plan 079 audit; owner:
+`components`, `primitives`)
 `[ ]` Cross-team: `primitives` paints `primary` as text — the Link variant
 (`src/core/variants.ts`, `foreground`) and the `primary` text tone
 (`src/core/style.ts`, `TEXT_TONES`) — and `components` follows through its
