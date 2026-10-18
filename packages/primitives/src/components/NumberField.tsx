@@ -9,7 +9,10 @@
  *
  * The steppers are pointer affordances, not tab stops: a keyboard user presses
  * Up/Down on the field itself, which is what a native spinner does and keeps the
- * tab order to one stop per field.
+ * tab order to one stop per field. PageUp/PageDown page. The caret keys are the
+ * native editor's: GPUix consumes Left/Right/Home/End on key down before a
+ * component handler sees them (measured, plan 338), so the field neither steps
+ * on them nor offers a bound jump.
  */
 
 import { useRef, useState, type ReactElement } from "react";

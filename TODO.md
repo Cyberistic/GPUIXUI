@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 85/85
+`[x]` `[██████████]` 86/86
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -674,6 +674,15 @@ retired once both branches are one
       nothing moved; a `ref` handle's `scrollTo` moves the region and reports the
       clamped result; the inspector example's readout proves the chain in the
       runtime (plan 337).
+
+`[x]` `packages/primitives`: **`NumberField` advertised caret keys it never
+      receives** — measured (2026-10-18): `ArrowLeft`/`ArrowRight`/`Home`/`End`
+      never reach the field's handler, because GPUI's editor consumes those key
+      downs to move the caret (`12` + `Left` + `3` paints `132`, not a step to
+      `11`), so the documented Left/Right steps and Home/End bound jumps did not
+      exist. The contract is now exactly the delivered keys
+      (`Up`/`Down`/`PageUp`/`PageDown`/`Enter`), the dead rule and its assertions
+      are gone, and the docs state the missing bound shortcut (plan `338`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

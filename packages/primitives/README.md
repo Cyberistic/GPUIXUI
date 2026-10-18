@@ -271,7 +271,9 @@ rests at the layout painter's two ends (plan 329), and a bare `<Skeleton circle 
 that paints a square rather than a full-width pill (plan 330), and a
 "disabled after focus" matrix over thirteen controls that act while enabled, keep
 native focus across the disable, and then act no more, with fifteen controls
-painting no ring once disabled (plan 332).
+painting no ring once disabled (plan 332), and a number field whose
+`ArrowLeft`/`ArrowRight`/`Home`/`End` were measured to move the native caret and
+report no value, while Up/Down/PageUp/PageDown still step (plan 338).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

@@ -2,9 +2,10 @@
  * `NumberField`'s text and step rules.
  *
  * The guarded defects are the ones a hand-rolled number field ships: a comma
- * decimal silently read as a thousands separator, `"0x10"` read as 16, a field
- * with no maximum jumping to an invented one on End, a step of 0 freezing the
- * arrows, and a draft that outlives the value it belongs to (plan `325`).
+ * decimal silently read as a thousands separator, `"0x10"` read as 16, a step of
+ * 0 freezing the arrows, a draft that outlives the value it belongs to (plan
+ * `325`), and a documented step for a key the native editor consumes instead
+ * (plan `338`).
  */
 
 import { describe, expect, it } from "vitest";
@@ -106,26 +107,22 @@ describe("stepNumber", () => {
 describe("decideNumberKey", () => {
   it("steps with the arrows and pages with PageUp/PageDown", () => {
     expect(decideNumberKey(50, RANGE, "up")).toStrictEqual(Option.some(51));
-    expect(decideNumberKey(50, RANGE, "right")).toStrictEqual(Option.some(51));
     expect(decideNumberKey(50, RANGE, "down")).toStrictEqual(Option.some(49));
-    expect(decideNumberKey(50, RANGE, "left")).toStrictEqual(Option.some(49));
     expect(decideNumberKey(50, RANGE, "pageup")).toStrictEqual(Option.some(60));
     expect(decideNumberKey(50, RANGE, "pagedown")).toStrictEqual(
       Option.some(40),
     );
   });
 
-  it("jumps only to a bound the field actually has", () => {
-    expect(decideNumberKey(50, RANGE, "home")).toStrictEqual(Option.some(0));
-    expect(decideNumberKey(50, RANGE, "end")).toStrictEqual(Option.some(100));
-    // The bug guarded: End in an unbounded field must do nothing rather than
-    // jump to a number this component made up.
-    expect(decideNumberKey(50, { step: 1 }, "end")).toStrictEqual(
-      Option.none(),
-    );
-    expect(decideNumberKey(50, { step: 1 }, "home")).toStrictEqual(
-      Option.none(),
-    );
+  it("leaves the caret keys to the native editor", () => {
+    // Measured (plan 338): the editor consumes these key downs to move the
+    // caret, so the handler never sees them. Answering them here would advertise
+    // a step that cannot fire — and re-add one the day the runtime dispatches
+    // them, stealing the caret.
+    expect(decideNumberKey(50, RANGE, "left")).toStrictEqual(Option.none());
+    expect(decideNumberKey(50, RANGE, "right")).toStrictEqual(Option.none());
+    expect(decideNumberKey(50, RANGE, "home")).toStrictEqual(Option.none());
+    expect(decideNumberKey(50, RANGE, "end")).toStrictEqual(Option.none());
   });
 
   it("leaves an unrelated key alone", () => {

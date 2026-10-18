@@ -156,6 +156,41 @@ it("steps with the arrow keys, and pages ten at a time", async () => {
   expect(lastValue(field.values)).toBe(41);
 });
 
+const CARET_KEYS = [
+  { key: "left", typed: "132" },
+  { key: "right", typed: "123" },
+  { key: "home", typed: "312" },
+  { key: "end", typed: "123" },
+] as const;
+
+it.each(Arr.map(CARET_KEYS, (testCase) => [testCase.key, testCase] as const))(
+  "leaves %s to the caret instead of stepping",
+  async (_name, { key, typed }) => {
+    // The bug guarded (plan 338): the docs advertised Left/Right as steps and
+    // Home/End as bound jumps. Measured, the native editor consumes those key
+    // downs to move the caret, so the field never sees them — and the edit that
+    // follows lands where the caret moved (`12` + `left` + `3` is `132`).
+    const field = recorder();
+    const runtime = await mount(
+      <NumberField
+        testId="nf"
+        label="Quantity"
+        autoFocus
+        defaultValue={12}
+        min={0}
+        max={999}
+        onValueChange={field.onValueChange}
+      />,
+    );
+    const input = inputOf(runtime, "nf");
+    runtime.renderer.nativeSimulateKeyDown(input.id, key);
+    expect(field.values).toStrictEqual([]);
+    runtime.type("3");
+    expect(lastValue(field.values)).toBe(Number(typed));
+    expect(runtime.paintedText()).toContain(typed);
+  },
+);
+
 it("steps a decimal field to an exact decimal", async () => {
   const field = recorder();
   const runtime = await mount(

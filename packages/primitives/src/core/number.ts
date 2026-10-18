@@ -89,16 +89,20 @@ export const draftApplies = (draft: NumberDraft, value: number): boolean =>
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,
-  right: 1,
   down: -1,
-  left: -1,
 };
 
 /**
  * The keyboard contract.
  *
- * Home/End only answer when the field has the bound they would jump to: a
- * field with no maximum must not jump to a number the component invented.
+ * Only the keys GPUI actually delivers to a field are here. The native editor
+ * consumes `ArrowLeft`/`ArrowRight`/`Home`/`End` on key down to move the caret
+ * (measured, plan `338`), so they must stay unhandled: on a text field the caret
+ * is the more valuable contract, and a step that never fires is worse than no
+ * step at all.
+ *
+ * Home/End never answer, not even for a bounded field: a bound jump would have
+ * to take those keys from the caret to exist.
  */
 export const decideNumberKey = (
   value: number,
@@ -106,14 +110,6 @@ export const decideNumberKey = (
   key: string,
   pageSteps = 10,
 ): Option.Option<number> => {
-  if (key === "home")
-    return range.min === undefined
-      ? Option.none()
-      : Option.some(clampNumeric(range.min, range));
-  if (key === "end")
-    return range.max === undefined
-      ? Option.none()
-      : Option.some(clampNumeric(range.max, range));
   const steps =
     key === "pageup"
       ? pageSteps

@@ -10,6 +10,7 @@
 
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -84,11 +85,11 @@ describe("NumberField", () => {
     ).toBe("1.");
   });
 
-  it("moves one step with the arrow keys and a page at a time", () => {
+  it("routes only the keys the runtime delivers", () => {
     const onValue = vi.fn();
     const onCommit = vi.fn();
     const { input } = partsOf(
-      render({ min: 0, max: 100 }, 50, "50", idle, { onValue, onCommit }),
+      render({ min: 0, max: 999 }, 50, "50", idle, { onValue, onCommit }),
     );
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("up"));
     expect(onValue).toHaveBeenCalledWith(51);
@@ -96,24 +97,32 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledWith(49);
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("pageup"));
     expect(onValue).toHaveBeenCalledWith(60);
-    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("end"));
-    expect(onValue).toHaveBeenCalledWith(100);
+    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("pagedown"));
+    expect(onValue).toHaveBeenCalledWith(40);
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("enter"));
     expect(onCommit).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the caret keys unhandled", () => {
+    // Measured (plan 338): the native editor consumes these key downs to move
+    // the caret, so the field never sees them — and if it did, stepping would
+    // steal the caret. The handler must answer none of them.
+    const onValue = vi.fn();
+    const { input } = partsOf(
+      render({ min: 0, max: 100 }, 50, "50", idle, {
+        onValue,
+      }),
+    );
+    Arr.forEach(["left", "right", "home", "end"], (key) => {
+      expectSome(hostHandler(input, "onKeyDown"))(keyEvent(key));
+    });
+    expect(onValue).toHaveBeenCalledTimes(0);
   });
 
   it("leaves an unrelated key to the form", () => {
     const onValue = vi.fn();
     const { input } = partsOf(render({}, 5, "5", idle, { onValue }));
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("a"));
-    expect(onValue).toHaveBeenCalledTimes(0);
-  });
-
-  it("jumps nowhere with Home/End when the field has no bound", () => {
-    const onValue = vi.fn();
-    const { input } = partsOf(render({}, 5, "5", idle, { onValue }));
-    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("home"));
-    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("end"));
     expect(onValue).toHaveBeenCalledTimes(0);
   });
 

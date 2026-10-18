@@ -63,15 +63,21 @@ remains a display rule — it never rounds the value a caller receives.
 
 | Key | Effect |
 | --- | ------ |
-| `ArrowUp` / `ArrowRight` | + one step |
-| `ArrowDown` / `ArrowLeft` | − one step |
+| `ArrowUp` | + one step |
+| `ArrowDown` | − one step |
 | `PageUp` / `PageDown` | ± ten steps |
-| `Home` / `End` | `min` / `max` — only when the field has that bound |
 | `Enter` | commit and reformat |
 
+`ArrowLeft`, `ArrowRight`, `Home` and `End` move the **native caret**. GPUix
+0.10.0 consumes those key downs inside the editor before a component handler
+sees them (measured: `12` + `Left` + `3` paints `132`, plan `338`), so they
+cannot step and there is **no keyboard shortcut to a bound** — type the bound,
+or hold `PageUp`/`PageDown`. That is the right split for a text field: the
+caret keys are how a user edits the digits they already typed.
+
 The spin buttons are pointer affordances, **not tab stops**: the field is one
-tab stop and the arrows are the keyboard path, as in a native spinner. A click
-on a stepper returns focus to the input so the next arrow works.
+tab stop and Up/Down are the keyboard path, as in a native spinner. A click on a
+stepper returns focus to the input so the next arrow works.
 
 ## Accessibility
 
@@ -115,6 +121,8 @@ after the wrapper's chrome:
 - **No drag-to-scrub.** A scrub could keep tracking outside the field — the
   runtime captures the pressed element (measured in plan 063) — but the gesture
   is not implemented; the steppers are the honest input for now.
+- **No keyboard jump to `min`/`max`.** `Home`/`End` belong to the native caret
+  (plan `338`); type the bound instead.
 
 ## Verification
 
@@ -124,15 +132,19 @@ after the wrapper's chrome:
   invalid) reaching the painted style.
 
 - `src/core/number.test.ts` — decimal-only parsing, clamping, precision,
-  stepping, Home/End only with a bound, and an exact decimal step (plan `077`).
-- `src/components/NumberField.test.tsx` — the draft value, the key contract, the
-  raw edit report, steppers as presentation, one tab stop, disabled/invalid.
+  stepping, the caret keys left unhandled, and an exact decimal step (plans
+  `077`, `338`).
+- `src/components/NumberField.test.tsx` — the draft value, the delivered key
+  contract, the raw edit report, steppers as presentation, one tab stop,
+  disabled/invalid.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a decimal step reports `0.3` (not binary noise);
-  a hit-tested stepper press steps and refocuses; the chrome ring paints from
-  mount with `autoFocus`; a disabled field refuses text, keys and clicks.
-  Measured 2026-10-17 (plans 054 §9, 064 §6 and 077 §7).
+  `ArrowLeft`/`ArrowRight`/`Home`/`End` move the caret and report no value (plan
+  `338`); a hit-tested stepper press steps and refocuses; the chrome ring paints
+  from mount with `autoFocus`; a disabled field refuses text, keys and clicks.
+  Measured 2026-10-17 (plans 054 §9, 064 §6 and 077 §7) and 2026-10-18 (plan
+  `338`).
 
 ```sh
 nub run --filter @gpuixui/primitives test
