@@ -3,7 +3,9 @@
  *
  * Positioning is GPUix's `FloatingLayer` through the shared measured placement
  * rule (as in Popover), and dismissal shares the package's dismiss stack, so
- * Escape closes only the topmost overlay.
+ * Escape closes only the topmost overlay. A dismissal that restores focus to
+ * the trigger must not re-open the card — the restored focus is not the user
+ * focusing the trigger (plan 515).
  *
  * The card is **hoverable**: it may contain a link or a small action, which is
  * what separates it from a tooltip. The pointer may travel from the trigger into
@@ -48,6 +50,8 @@ interface PreviewCardContextValue {
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly hover: HoverTravel;
+  /** Set while a dismissal restores focus, so that focus does not re-open. */
+  readonly suppressFocusOpen: RefObject<boolean>;
 }
 
 const PreviewCardContext = createContext<PreviewCardContextValue | undefined>(
@@ -91,6 +95,7 @@ export const PreviewCard = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
+  const suppressFocusOpen = useRef(false);
   const hover = useHoverTravel({
     isOpen: () => open,
     close: () => setOpen(false),
@@ -99,7 +104,7 @@ export const PreviewCard = ({
   });
 
   const context = useMemo<PreviewCardContextValue>(
-    () => ({ open, setOpen, trigger, hover }),
+    () => ({ open, setOpen, trigger, hover, suppressFocusOpen }),
     [hover, open, setOpen],
   );
 
@@ -114,7 +119,7 @@ export const PreviewCard = ({
 
 /** Opens the card on hover, focus or press. */
 export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
-  const { open, setOpen, trigger, hover } = usePreviewCard();
+  const { open, setOpen, trigger, hover, suppressFocusOpen } = usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -135,6 +140,11 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
         rest.onFocus?.(event);
         hover.cancel();
         if (rest.disabled === true) return;
+        // A dismissal that restored focus must not re-open the card (plan 515).
+        if (suppressFocusOpen.current) {
+          suppressFocusOpen.current = false;
+          return;
+        }
         setOpen(true);
       }}
       onClick={(event) => {
@@ -182,7 +192,7 @@ export const PreviewCardContent = ({
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, hover } = usePreviewCard();
+  const { open, setOpen, trigger, hover, suppressFocusOpen } = usePreviewCard();
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -201,17 +211,21 @@ export const PreviewCardContent = ({
   });
 
   // One dismiss layer for the card, as Popover does: Escape closes the topmost
-  // overlay only, and returns focus to the trigger.
+  // overlay only, and returns focus to the trigger. The restored focus is not
+  // the user focusing the trigger, so it must not re-open the card (plan 515).
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
       close.current();
-      if (event.eventType === "keyDown") {
-        const target = trigger.current;
-        if (target !== null) renderer?.focusElement?.(target.id);
+      if (event.eventType !== "keyDown") return;
+      const target = trigger.current;
+      if (target === null) return;
+      if (renderer?.getFocusedElementId?.() !== target.id) {
+        suppressFocusOpen.current = true;
       }
+      renderer?.focusElement?.(target.id);
     });
-  }, [open, renderer, trigger]);
+  }, [open, renderer, suppressFocusOpen, trigger]);
 
   if (!open) return null;
 

@@ -7,8 +7,9 @@
  * closes the wrong layer; an unnamed surface; a controlled card that opens on
  * its own; a centre-aligned card 180 px off its trigger; a card at the window's
  * bottom edge covering the trigger instead of flipping above it; a disabled
- * trigger that opened on hover and on focus; and an Escape that closed the card
- * and the dialog around it (plan 514).
+ * trigger that opened on hover and on focus; an Escape that closed the card
+ * and the dialog around it (plan 514); and a dismissal that restored focus and
+ * re-opened the card (plan 515).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -210,6 +211,49 @@ describe("PreviewCard", () => {
 
     nested.renderer.simulateKeystrokes("escape");
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
+  });
+
+  it("does not re-open when a dismissal restores focus to the trigger", async () => {
+    // Before plan 515 the restored focus ran the trigger's onFocus, which
+    // re-opened the card, so Escape appeared to do nothing.
+    const nested = renderComponent(<WorkspaceInDialog />);
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("trigger")?.id ?? -1,
+    );
+    expect(nested.renderer.findByTestId("preview")).toBeDefined();
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("preview")?.id ?? -1,
+    );
+
+    nested.renderer.simulateKeystrokes("escape");
+    await after(20);
+
+    expect(nested.renderer.findByTestId("preview")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+    expect(focusedTestId(nested)).toEqual(Option.some("trigger"));
+
+    nested.unmount();
+  });
+
+  it("does not re-open from a control inside the card", async () => {
+    // The realistic composed card: focus is on an action, and the dismissal
+    // hands it back to the trigger (plan 515).
+    const nested = renderComponent(<WorkspaceInDialog />);
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("trigger")?.id ?? -1,
+    );
+    nested.renderer.focusElement(
+      nested.renderer.findByTestId("inside")?.id ?? -1,
+    );
+
+    nested.renderer.simulateKeystrokes("escape");
+    await after(20);
+
+    expect(nested.renderer.findByTestId("preview")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+    expect(focusedTestId(nested)).toEqual(Option.some("trigger"));
 
     nested.unmount();
   });
