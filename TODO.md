@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 75/79 plans-and-harness
+`[x]` `[██████████]` 76/81 plans-and-harness
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378` and `381` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `382`
 

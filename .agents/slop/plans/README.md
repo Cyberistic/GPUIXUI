@@ -185,8 +185,8 @@ reservations — `330`–`350` are indexed and landed, `351`–`374` were claime
 the components and tokens workstreams, `375` by the components workstream (the
 date picker), this workstream takes `376` and `377`, and `378` is the
 query-builder probe; `379`/`380` were claimed by the components and tokens
-workstreams, this workstream took `381` (the notification centre) and takes
-`382` (the live reveal wait).
+workstreams, this workstream took `381` (the notification centre) and `382` (the live
+reveal wait); the next playground plan takes `383`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
