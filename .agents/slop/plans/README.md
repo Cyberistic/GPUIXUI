@@ -204,6 +204,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [506](./506-selected-row-title-selection.md) | The selected row's title through the text-selection wash | F | 081, 087, 312, 363, 381, 387, 391 | done |
 | [507](./507-dialog-face-on-scrim.md) | The dialog's face on the scrim | F | 099, 359, 375, 395, 505, 506 | done |
 | [508](./508-solid-chip-on-scrim.md) | The solid status chip on the scrim | F | 099, 359, 375, 395, 399, 504, 507 | done |
+| [509](./509-elevation-persistent-surfaces.md) | The elevation shadow over the persistent selected row and the field a drop-up opens over | F | 085, 099, 359, 505, 507 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2085,6 +2086,19 @@ while the checker returned `[]` (`destructive` is already an action fill). The
 three join the list (15 → 18 scrim pairs); every shipped set already clears
 1.05:1 — high-contrast dark `info` is tightest at **1.0599:1** — so no colour
 moves and that figure becomes the scrim contract's published tightest.
+
+Plan `509` gives the elevation walk the two persistent surfaces plan `359`
+added to the scrim. `elevationSurfaces` named the canvas, a card, the quiet
+panel and a floating surface, so a context menu or preview card opened over a
+selected row had no shadow pair, and neither did a popover flipped above its
+trigger, whose shadow lands on the field's `input` fill. `layoutSurfaces` is
+already the six persistent page surfaces, so the elevation list now derives
+from it rather than repeating four of them; the walk moves from twelve to
+eighteen painted pairs (three levels over six surfaces), every shipped set
+already clears 1.05:1 (1.109:1 at the tightest, macOS dark `sm` on `input`),
+and no colour moves. The suite that proves the shipped guarantee drops its own
+hand-typed four-surface copy for the public list, and a regression case holds a
+`shadow` equal to `selected` or `input` to the checker.
 
 ## How to use a plan
 
