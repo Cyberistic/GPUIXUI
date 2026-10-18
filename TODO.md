@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 104/104
+`[x]` `[██████████]` 105/105
+
+`[x]` **A token role is findable from ⌘K (plan 504)** — the colour, type, scale
+      and platform tables are rendered React from `@gpuixui/tokens`, so
+      `destructiveSoft` returned zero results and `primaryForeground` never
+      reached Theming; one index document per generated surface now derives its
+      content from the package, exact distinctive token names are promoted like
+      component titles, and `token-search.test.ts` proves `input` and `label`
+      still reach their component pages.
 
 `[x]` **Getting started starts with the library (plan 503)** — the first app
       mounts a primitives provider and renders a real component, the install

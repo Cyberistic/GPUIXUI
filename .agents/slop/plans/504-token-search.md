@@ -1,6 +1,6 @@
 # 504 — A token role is findable from ⌘K (the generated catalogue joins search)
 
-**Status:** planned · **Phase:** F (search / theming truth) · **Owner:** docs-site
+**Status:** implemented (2026-10-18) · **Phase:** F (search / theming truth) · **Owner:** docs-site
 **Depends on:** `410`, `416`, `419`, `430`, `431`, `447`, `490`, `500`; the
 shipped `@gpuixui/tokens` package.
 
@@ -22,7 +22,8 @@ Measured against the production build on 2026-10-18 (`vite preview`, `/api/searc
 | `destructiveSoft` | **`[]` — zero results** | `/docs/theming#semantic-roles` |
 | `primaryForeground` | badge, button, pagination, date-picker prose | `/docs/theming#semantic-roles` (first) |
 | `bodyStrong` | the Text component page | `/docs/typography` |
-| `spacing.2` | `/docs/tokens-api` | `/docs/theming#scales-and-control-metrics` |
+| `spacing.md` | List and Button group prose | `/docs/theming#scales-and-control-metrics` |
+| `elevation.overlay` | `/docs/tokens-api` | `/docs/theming#scales-and-control-metrics` |
 
 So a consumer who reads a role in the package and pastes it into search is told
 the library has no such token. That contradicts `MISSION.md`'s "component
@@ -62,7 +63,7 @@ Builds the search documents from the package, one per rendered surface:
 | ----- | --- | ------- |
 | `Colour roles` | `/docs/theming#semantic-roles` | `role: <light hex> (light), <dark hex> (dark)` for every `colorRoles` entry |
 | `Type scale` | `/docs/typography` | `role: 14px/20px 400` for every text role, plus the two family fields |
-| `Scales and control metrics` | `/docs/theming#scales-and-control-metrics` | `spacing.4: 16px`, `radius.md: …`, `borderWidth.strong: 2px`, `iconSize.lg: 20px`, every density metric, `elevation.sm: …` |
+| `Scales and control metrics` | `/docs/theming#scales-and-control-metrics` | `spacing.md: 8px`, `radius.md: …`, `borderWidth.strong: 2px`, `iconSize.lg: 20px`, every density metric, `elevation.sm: …` |
 | `Platform styles` | `/docs/theming#platform-styles` | `macOS (darwin): Menlo`, `Linux (linux): DejaVu Sans Mono`, `Windows (win32): Consolas`, `Default (default): Menlo` |
 
 Exports:
@@ -73,7 +74,7 @@ Exports:
 - `tokenRank(url, query): number | undefined` — `0` only when the query is an
   **exact, case-insensitive match for a *distinctive* token name**: a name with
   an uppercase letter (`destructiveSoft`, `bodyStrong`) or a dot
-  (`spacing.2`, `elevation.overlay`). Plain lowercase words (`input`, `label`,
+  (`spacing.md`, `elevation.overlay`). Plain lowercase words (`input`, `label`,
   `body`, `ring`) are deliberately **not** promoted, so the Text inputs and
   Labels component pages keep the top result (the regression this rule exists to
   avoid).
@@ -116,7 +117,7 @@ Assertions derive their expectations **independently of production helpers**
 4. `search("destructiveSoft")[0]?.url` is `/docs/theming#semantic-roles`;
 5. `search("primaryForeground")[0]?.url` is the same (the measured bug);
 6. `search("bodyStrong")[0]?.url` is `/docs/typography`;
-7. `search("spacing.2")[0]?.url` is `/docs/theming#scales-and-control-metrics`;
+7. `search("spacing.md")[0]?.url` is `/docs/theming#scales-and-control-metrics`;
 8. `search(lightTheme.colors.destructiveSoft)[0]?.url` is the colour table
    (a pasted value finds its role);
 9. **no regression:** `search("input")[0]?.url` is
@@ -150,7 +151,7 @@ Add one production search check next to the `Spinner` one:
 
 - `apps/docs/README.md` § Search: state that the token catalogue (colour roles,
   type roles, scales, platform styles) is indexed from `@gpuixui/tokens`, so a
-  role such as `destructiveSoft` or a scale token such as `spacing.2` reaches its
+  role such as `destructiveSoft` or a scale token such as `spacing.md` reaches its
   table.
 - `content/docs/theming.mdx`: one sentence after the generated colour table —
   every role on the page is searchable by name (and by its value) from any page.
@@ -197,11 +198,11 @@ Do not claim the smoke passed without running it.
 
 ## 5. STOP conditions
 
-- **Fumadocs' simple index splits dotted names** so `spacing.2` cannot be a
-  query: do not invent a second search client. Index the readable form
-  (`spacing 2`) in `keywords` and assert the query the reader actually types
-  works; if neither works, STOP and record the tokenizer's behaviour before
-  changing the design.
+- **Fumadocs' simple index cannot answer a dotted token name** (measured: a
+  real key such as `spacing.md` does not reach the scale document): do not invent
+  a second search client. Index the readable form (`spacing md`) in `keywords`
+  and assert the query the reader actually types works; if neither works, STOP and
+  record the tokenizer's behaviour before changing the design.
 - **A token document outranks a component page for an ordinary word** after the
   ranking change: STOP — the distinctive-name rule is the invariant, not a
   preference.
@@ -230,3 +231,51 @@ Do not claim the smoke passed without running it.
 
 No library surface and no component status changes. This is a docs-search fix;
 the inventory is untouched.
+
+## 8. Results (2026-10-18)
+
+Implemented on `agent/docs-site`. The suite is
+`apps/docs/src/lib/token-search.test.ts` (14 tests) and the docs suite is
+**58 files / 394 tests passing**, up from 57 / 380.
+
+### What changed beyond the plan
+
+- **`radius.md` is a real key but `spacing.2` was not**: the first draft used
+  `spacing.2`, which the token set does not ship (`2xs`, `xs`, `sm`, `md`, `lg`,
+  `xl`, `2xl`). The scale test derives its keys from `lightTheme`, so the guess
+  failed immediately; the query is now `spacing.md`. This is why the test does
+  not reuse `scaleGroups` for its expectations.
+- **The first Theming sentence named `destructiveSoft` in prose**, which made the
+  `destructiveSoft` query reach Theming through the page index even with the
+  token documents removed — proof 1 exposed it. The sentence now names no token,
+  so only the generated index can satisfy the query.
+- The `tokenRank` promotion is also pinned by a direct unit test
+  (`promotes a distinctive name and leaves a plain word alone`), because the
+  end-to-end `input`/`label` checks are additionally protected by the title-length
+  tie-break and would pass if the rule were widened.
+
+### Two-direction proofs
+
+Each break was made, the suite run, and the file restored immediately.
+
+| Break | Failure |
+| ----- | ------- |
+| Removed the four token documents from `registrySearch` | five tests: `finds a colour role that appears on no authored page`, `puts the colour table ahead of component prose for a camelCase role`, `finds a type role instead of a component that samples it`, `finds a scale token in its own table`, `finds the role that owns a pasted light-theme value` — each `expected undefined to be '/docs/theming#semantic-roles'` (or the typing/scale URL) |
+| Filtered `destructiveSoft` out of the colour content | `lists every colour role the package ships` — `expected [ 'destructiveSoft' ] to deeply equal []`; `keeps the two theme values beside each colour role` — `expected 'background: #F6F8FA (light), #11141A …' to contain 'destructiveSoft: #FFE0E0 (light), #5C…'` |
+| Removed the `spacing` group from `scaleGroups` | `lists every scale token from the real theme, group by group` — `expected [ 'spacing.2xs', 'spacing.xs', …(8) ] to deeply equal []` |
+| Widened `tokenRank` to every name (dropped the distinctive rule) | `promotes a distinctive name and leaves a plain word alone` — `expected +0 to be undefined` |
+| Renamed `## Semantic roles` to `## Roles` in `theming.mdx` | `points every token result at a heading the page renders` — `expected [ '/docs/theming#semantic-roles' ] to deeply equal []` |
+| Production `/api/search` before the fix | `destructiveSoft` → `[]` (zero results); `primaryForeground` → badge/button/pagination prose; `bodyStrong` → Text; `spacing.md` → List and Button group prose |
+| Production `/api/search` after the fix | `destructiveSoft` → `/docs/theming#semantic-roles` first; `primaryForeground` → the same first; `bodyStrong` → `/docs/typography`; `spacing.md` → `/docs/theming#scales-and-control-metrics`; `input` → `/docs/components/text-input`; `label` → `/docs/components/label` |
+
+All temporary edits were restored byte-for-byte; `git diff` showed only the
+intended files afterwards.
+
+### Commands
+
+- `nub run --filter docs test` → `58 passed (58)`, `394 passed (394)`.
+- `nub run check` → test quality, lint, format and every workspace's
+  `check-types` exit `0`.
+- `nub run --filter docs smoke:build` → build and the production crawl exit `0`
+  (`90 pages`, `109 links`, `1145 anchors`, search and robots checked), including
+  the new `destructiveSoft` query.
