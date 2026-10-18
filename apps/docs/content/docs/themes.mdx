@@ -1,0 +1,32 @@
+---
+title: Theme
+description: A live editor for the library's semantic tokens — preview, copy and share.
+---
+
+Edit the semantic tokens the library ships and watch them apply to a preview in
+real time. The editor reads its defaults from `@gpuixui/tokens` and emits the
+same `createTheme` shape the library consumes; it invents no palette of its own.
+
+<ThemeEditor />
+
+## How it works
+
+The editor edits the shadcn-core roles — `background`, `foreground`, `card`,
+`popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`,
+`input` and `ring` — plus `radius.md` and the `sans` family. Light and dark are
+independent; pick the mode, edit, and the preview follows. Edits persist to the
+URL (shareable) and to `localStorage`; **Reset** restores the built-in themes.
+
+## The token bridge
+
+`@gpuixui/tokens` ships TypeScript objects, not CSS variables, and the library
+paints through GPUix. This preview is CSS, so the editor exposes each role as
+the shadcn variable name (`--primary`, `--background`, …) on the preview
+element, maps `radius.md` to `--radius`, and maps `.SystemUIFont` to a CSS
+system stack because GPUI resolves that sentinel natively and the browser
+cannot. The bridge exists only for this preview.
+
+## Copy theme
+
+**Copy theme** emits a `createTheme` module — one theme per mode — in the exact
+format `@gpuixui/tokens` consumes, plus a one-line usage note.

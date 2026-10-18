@@ -1,0 +1,269 @@
+/*
+ * Block recipe previews: browser renderings of page-level compositions.
+ * The surface and the control paints reuse `.gx-demo` and the `.gx-btn` /
+ * `.gx-field` rules in `demos.css`; these classes only lay out the recipe.
+ */
+
+.gx-block-demo {
+  min-height: 420px;
+}
+
+.gx-block-card-thumb {
+  min-height: 0;
+  height: 210px;
+  padding: 20px 16px;
+  align-items: flex-start;
+}
+
+.gx-block-login,
+.gx-block-settings {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+}
+
+.gx-block-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, 100%);
+  padding: 24px;
+  border: 1px solid #2a303b;
+  border-radius: 12px;
+  background: #191d25;
+}
+
+.gx-block-mark {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #a7a9ff;
+  border-radius: 6px;
+}
+
+.gx-block-mark::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 2px;
+  background: #a7a9ff;
+}
+
+.gx-block-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.gx-block-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #a1a9b7;
+}
+
+.gx-block-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #7c8595;
+}
+
+.gx-block-field {
+  width: 100%;
+}
+
+.gx-block-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #e1e5ec;
+}
+
+.gx-block-check {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #a7a9ff;
+  position: relative;
+}
+
+.gx-block-check::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #11141a;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.gx-block-submit {
+  width: 100%;
+}
+
+.gx-block-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #7c8595;
+}
+
+.gx-block-divider::before,
+.gx-block-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #2a303b;
+}
+
+/* ---- settings ---- */
+
+.gx-block-settings .gx-block-card {
+  width: min(560px, 100%);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.gx-block-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #2a303b;
+}
+
+.gx-block-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #2a303b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.gx-block-profile-text {
+  flex: 1;
+}
+
+.gx-block-badge {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: #a7a9ff;
+  color: #11141a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gx-block-tabs {
+  padding: 0 22px;
+}
+
+.gx-block-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+}
+
+.gx-block-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gx-block-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: 36px;
+  height: 20px;
+  border-radius: 9999px;
+  background: #a7a9ff;
+}
+
+.gx-block-switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #11141a;
+}
+
+.gx-block-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid #2a303b;
+}
+
+/* ---- index cards ---- */
+
+.gx-block-index {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 1.5rem 0;
+}
+
+.gx-block-card-link {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.gx-block-card-link:hover {
+  border-color: var(--ring);
+}
+
+.gx-block-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.gx-block-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.gx-block-card-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-block-card-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}

@@ -21,7 +21,7 @@ The terminal is also the surface where a headless result is least trustworthy:
 - Plan `345` measured that a live window routes a key to the **focused element**
   and that a real click focuses natively **without running React's `onFocus`** —
   neither of which the offscreen `simulateKeystrokes` path exercises.
-- Plan `525` measured that `keyChar` is absent on a plain `div` headless and
+- Plan `533` measured that `keyChar` is absent on a plain `div` headless and
   present on a text field, so a terminal's `keyChar ?? key` fallback is only
   proven by a probe that types into a real surface.
 - A `<virtual-list>` is not a live wheel target (plan `350`), so the scrollback's

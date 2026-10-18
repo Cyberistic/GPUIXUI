@@ -1,0 +1,12 @@
+{
+  "title": "Components",
+  "pages": [
+    "---Actions---",
+    "button",
+    "---Overlays---",
+    "dialog",
+    "popover",
+    "---Navigation---",
+    "tabs"
+  ]
+}

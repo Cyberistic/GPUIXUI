@@ -1,6 +1,6 @@
 # `@gpuixui/icons`
 
-The icon set for the GPUixUI library, plus its sizing and accessibility rules.
+The icon set for the GPUIxUI library, plus its sizing and accessibility rules.
 
 Icons are **data**, not components: each one is a self-contained 24x24
 monochrome SVG markup string. GPUix's host `<svg>` element renders raw markup

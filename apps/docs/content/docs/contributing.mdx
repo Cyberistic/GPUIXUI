@@ -1,0 +1,73 @@
+---
+title: Contributing
+description: The checks, the worktree rules and what a component has to ship with before it is done.
+---
+
+GPUIxUI is a native component library first and a documentation site second. A
+change is finished when the native behaviour is proven, the docs page exists and
+the inventory agrees — not when the preview looks right.
+
+Read [`AGENTS.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/AGENTS.md)
+for the full rule set. This page is the short version.
+
+## Set up
+
+```sh
+git clone https://github.com/Cyberistic/GPUIXUI.git
+cd GPUIXUI
+nub install
+nub run check
+```
+
+Node 24.18.0 and [`nub`](https://nub.dev) are pinned. Use `nub` for every
+workspace command.
+
+## Work in a worktree
+
+One writer per tree. Agents work in their own `git worktree` under
+`workspaces/<workstream>/` on branch `agent/<workstream>`; the shared checkout's
+`main` is the integration branch. Resolve conflicts in your own branch, never on
+`main`.
+
+## Checks
+
+```sh
+nub run check        # tests-can-fail gate, lint, format, types
+nub run test         # unit tests
+nub run test:behaviour
+```
+
+A test must be able to fail. `nub run check:tests` rejects a test that asserts
+nothing, compares a value with itself, or asserts back what the test stubbed.
+That is the floor: a regression fix lands with a test that fails without the fix
+and passes with it, proven in both directions.
+
+## What a component ships with
+
+- One responsibility, a typed public API and sensible defaults.
+- Predicted variants and sizes, with every interaction state.
+- A behaviour test that runs in the real GPUix renderer.
+- At least one working example.
+- A docs page under `apps/docs/content/docs/components` in the Preview/Code
+  pattern, with an API table and the measured limitations.
+- An inventory row in `COMPONENTS.md`.
+
+A browser preview is documentation. It never replaces the native test, and it is
+never presented as the shipped component.
+
+## Honesty rule
+
+Where GPUix 0.10.0 lacks a capability, record the limitation and give the
+strongest working alternative. Do not implement a DOM/CSS look-alike and call it
+native, and do not fake a component to fill a docs page. The components on this
+site are real workspace packages; the pages that show a browser rendering say so.
+
+## Docs conventions
+
+- Pages are MDX under `apps/docs/content/docs`.
+- Navigation is declared in `meta.json` beside the pages.
+- Frontmatter supplies `title` and `description`; the page template renders them
+  and builds the "On this page" table of contents from the headings.
+- Component pages use `<ComponentPreview>`, `<Install>` and
+  `<ComponentSource>` so every page has the same anatomy.
+- Do not replace the landing page at `/`; docs live under `/docs`.

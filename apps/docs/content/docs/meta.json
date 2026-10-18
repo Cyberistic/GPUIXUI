@@ -1,0 +1,16 @@
+{
+  "title": "Docs",
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "installation",
+    "theming",
+    "dark-mode",
+    "themes",
+    "components",
+    "---Blocks---",
+    "blocks",
+    "---Contributing---",
+    "contributing"
+  ]
+}

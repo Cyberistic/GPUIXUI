@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Foundational render primitives and Tier 1 components for GPUixUI.",
+  "description": "Foundational render primitives and Tier 1 components for GPUIxUI.",
   "exports": {
     ".": {
       "types": "./src/index.ts",

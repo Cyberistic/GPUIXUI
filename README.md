@@ -19,10 +19,20 @@ The design tokens and theming layer (light, dark, high-contrast, density) is
 landed. Tier 1, data presentation, workspace and specialised components are
 tracked in `TODO.md`.
 
+The docs site follows shadcn/ui's anatomy: a sectioned sidebar (Getting Started,
+Components, Contributing), a reusable component page with Preview/Code tabs, a
+`nub` install block, Usage, Composition and API reference, plus the "On this
+page" table of contents and the previous/next pager. Button, Dialog, Popover and
+Tabs are the pattern pages; their previews are labelled browser renderings of
+the native components, and the Code tab plus **Component source** show the real
+implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) and
+the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
+the library and a live token editor backed by `@gpuixui/tokens`.
+
 ## Layout
 
 ```
-apps/docs          Fumadocs documentation + showcase
+apps/docs          Fumadocs docs: landing at `/`, documentation under `/docs`
 apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
@@ -30,6 +40,7 @@ packages/tokens     Design tokens, themes and the React theme provider
 packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
+packages/tw         shadcn class recipes → GPUix StyleDesc (with `cn`)
 packages/testing   Platform-free smoke suite: checks, runner, report, preflight
 docs/              Design-system and architecture documents (source of truth)
 examples/          Runnable example apps
@@ -44,6 +55,8 @@ Cloned read-only into `references/` (gitignored) and used as references, never
 edited:
 
 - GPUix — https://github.com/remorses/gpuix
+- GPUI transform branch — https://github.com/0xErwin1/zed, `feature/53306-07-text-raster-subpixel-regressions` (audited in plan 525; treeless clone at `references/transform-zed`)
+- GPUI Community Edition — https://github.com/gpui-ce/gpui-ce, `main` @ `a8d3969` (audited in plan 537; Apache-2.0; full clone at `references/gpui-ce`)
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs

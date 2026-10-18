@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Runnable GPUixUI example: the Tier 1 set composed into one settings workflow.",
+  "description": "Runnable GPUIxUI example: the Tier 1 set composed into one settings workflow.",
   "scripts": {
     "check-types": "tsc --noEmit",
     "dev": "bun src/main.tsx"

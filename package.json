@@ -12,7 +12,7 @@
     "fmt:fix": "oxfmt --write --ignore-path .oxfmtrc-ignore",
     "check:tests": "nub scripts/check-tests.ts",
     "check": "nub run check:tests && nub run lint && nub run fmt && nub run check-types",
-    "dev:docs": "nub run --filter docs dev",
+    "dev:docs": "nub run --filter @gpuixui/docs dev",
     "dev:playground": "nub run --filter playground dev",
     "deploy:docs": "nub run --filter @gpuixui/deploy deploy:docs"
   },
@@ -42,13 +42,22 @@
       "@effect/platform-node": "4.0.5",
       "@effect/vitest": "4.0.5",
       "@gpuix/react": "0.10.0",
+      "@tailwindcss/vite": "^4.3.2",
+      "@tanstack/react-router": "^1.170.44",
+      "@tanstack/react-start": "^1.169.2",
       "@types/react": "^19.2.0",
+      "@vitejs/plugin-react": "^6.0.3",
       "alchemy": "2.0.0-beta.83",
       "effect": "4.0.5",
+      "fumadocs-core": "^16.17.4",
+      "fumadocs-mdx": "^15.4.7",
+      "fumadocs-ui": "^16.17.4",
       "oxfmt": "^0.57.0",
       "oxlint": "^1.78.0",
       "react": "^19.2.4",
+      "tailwindcss": "^4.3.2",
       "typescript": "^7",
+      "vite": "^8.3.4",
       "vitest": "^5.0.3"
     }
   }

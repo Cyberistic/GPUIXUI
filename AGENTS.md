@@ -72,6 +72,12 @@ context compaction and restarts.
   with `nub run --filter <pkg> test`.
 - **Never claim a test passed unless it ran.** Never fake completion to satisfy
   the inventory.
+- **Verification is scoped.** While iterating, run only the affected smoke
+  scenario(s) with `--only <id>` (repeatable). The full headless suite is the
+  end-of-task check for a cross-cutting change. The full live suite is a
+  merge/release gate: run it only before merging the branch, or when a plan
+  explicitly needs a live capability total. Derive scenario counts from the
+  registry instead of paying for a full live run.
 
 ## 4. UI and components
 

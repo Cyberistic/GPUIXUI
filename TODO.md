@@ -188,7 +188,7 @@ focused id is `live-frames`.
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components (and `524` by the `tw` workstream), and the next plan takes `526`
 
-`[x]` Probe the **input payload contract** per plan `525` — the last unmeasured
+`[x]` Probe the **input payload contract** per plan `533` — the last unmeasured
       fields of the event the library's handlers receive: `input-payload`
       (39 checks) and `live-input-payload` (12), six mutation proofs. A
       **double click is not observable** (`clickCount` is always `1`, headless
@@ -208,7 +208,7 @@ focused id is `live-frames`.
       `1` on this host in both harnesses, so List/Tree/Grid keep the
       second-press rule; if a double click is wanted, the component owns the
       interval and a test can only assert the two presses (owner: `components`;
-      evidence: plan `525` §2/§8)
+      evidence: plan `533` §2/§8)
 
 `[x]` Probe the **app root** per plan `522` — the rule every consumer's
       top-level tree sits on (surfaced by `components` plan `510`):
@@ -580,7 +580,21 @@ focused id is `live-frames`.
 `[ ]` **packages/docking** (owner: docking): implement the contract plan `184` measured — a recursive layout tree, 48 px edge drop zones from the surface rectangle, right/bottom-secondary and left/top-primary splits, prune/collapse of emptied groups, `key={node.id}` on every split, `Region`/`TabList`/`TabPanel` semantics, and app-owned JSON restore. The playground's `docking-layout` is the acceptance evidence.
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
-`[ ]` **Promote the playground workstream to the integration branch**: `origin/master` still carries only the `apps/playground/README.md` placeholder — none of the commits ahead (plans `100`–`182` + `518`–`531`, `packages/testing`, the playground, ADR 0001–0003) are on it. `agent/playground` is **39 behind** `origin/master` (the zindex/transform/docs commits landed there on 2026-10-18 without this workstream's plans), so the promotion is now a **merge**, not a fast-forward; conflicts in `apps/playground`, `TODO.md` and the plan index must be resolved **on this branch** first (AGENTS §6). The workstream's own instruction is *never push to master*, so an owner/supervisor performs the merge. **The merge/release gate was green (2026-10-18):** headless `101/101` (`3536` checks, measured again after plan `531`) and live `50/50` (`1014` checks, plan `529`), both exit `0`, on the locally built `0.10.0` binding; `nub run check` and `nub run test` pass.
+`[ ]` **Promote the playground workstream to the integration branch** —
+      **prepared on this branch 2026-10-19:** `agent/playground` merged
+      `origin/master` (43 commits: the docs site and its Blocks/Theme Editor,
+      `@gpuixui/tw`, the zIndex patch and the transform work). The six
+      conflicts were resolved here: `apps/playground/src/smoke/run.ts` and its
+      test keep the shared `scenario-selection.ts` rule (master had an earlier
+      single-value `--only`), `scripts/swarm-supervisor.sh` takes master's
+      scoped-verification text, `TODO.md` and both READMEs take the union of the
+      two truths, and the plan-number collision on `525` is fixed by renumbering
+      the input-payload plan to **`533`**. The branch now contains every commit
+      of `origin/master`, so the promotion is a fast-forward. Merge/release gate
+      re-run after the merge: headless **101/101** (`3536` checks) and live
+      **51/51** (`1062` checks), both exit `0`; `nub run check` and
+      `nub run test` pass (1,384 tests). The workstream's own instruction is
+      *never push to master*, so an owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
@@ -664,10 +678,12 @@ interactive session, so this needs the plan `022` §5 fix in `scripts/`.
 
 ## Phase B — working foundation
 
-`[~]` `[████░░░░░░]` 4/6
+`[x]` `[██████████]` 10/10
 
-`[ ]` Land the workspace, boundaries and package scaffolding that has real content
+`[x]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
+`[x]` Land the `@gpuixui/tw` extension registry, luma `cn-*` aliases and state
+variants (plan 524)
 `[x]` Land the primitives package
 `[x]` **Native smoke test**: layout, input, focus, overlay, scroll, panel and virtual-list primitives verified in real GPUix 0.10.0 on this host (11/11, plan `140` §4)
 `[x]` Land one fully working component running in GPUix — all 19 Tier 1
@@ -675,7 +691,18 @@ interactive session, so this needs the plan `022` §5 fix in `scripts/`.
       after plan 055), and the playground drives the shipped package through the
       token theme (`primitives-actions`, `primitives-fields`,
       `primitives-display`, plan `168`)
-`[ ]` Land the docs shell and document that component in Fumadocs
+`[x]` Land the docs shell and the component page pattern in Fumadocs — the
+sectioned sidebar (Getting Started / Components / Contributing), the reusable
+Preview/Code template, the `nub` install block, the "On this page" TOC, the
+previous/next pager, and the Button, Dialog, Popover and Tabs pages are deployed
+under <https://gpuixui.sudokw.com/docs>
+`[x]` Land the Blocks and Theme Editor docs surfaces (plan 436) — the
+`/docs/blocks` index with Login/Settings recipes and the `/docs/themes` live
+token editor, deployed under <https://gpuixui.sudokw.com/docs>
+`[x]` Land the marketing landing page at `/` (plan 434) — Hunter License
+identity, stacked-native deck hero, library grid, proof, attribution
+`[x]` Deploy the Fumadocs app (landing + getting started) to
+<https://gpuixui.sudokw.com> on Cloudflare Workers via the alchemy stack
 
 ### Design tokens and theming (`tokens-theme`)
 

@@ -1,0 +1,233 @@
+diff --git a/packages/native/js/host.ts b/packages/native/js/host.ts
+index 47a3fac..18e6e64 100644
+--- a/packages/native/js/host.ts
++++ b/packages/native/js/host.ts
+@@ -162,6 +162,10 @@ export interface StyleDesc {
+   right?: number
+   bottom?: number
+   left?: number
++  /** Stacking level among `absolute`/`fixed` siblings: higher paints later and
++   *  hit-tests first. In-flow children keep their tree order and paint under
++   *  the positioned ones. */
++  zIndex?: number
+ 
+   background?: string | LinearGradientBackground
+   backgroundColor?: string
+diff --git a/packages/native/src/renderer.rs b/packages/native/src/renderer.rs
+index ac0c500..76cf1bd 100644
+--- a/packages/native/src/renderer.rs
++++ b/packages/native/src/renderer.rs
+@@ -5212,8 +5212,8 @@ pub(crate) fn build_element(
+ 
+         // Polymorphic dispatch for all custom elements.
+         custom_type => {
+-            let custom_children: Vec<gpui::AnyElement> = element
+-                .children
++            let custom_children: Vec<gpui::AnyElement> = tree
++                .paint_order(&element.children)
+                 .iter()
+                 .copied()
+                 .filter(|child_id| ctx.tree.elements.contains_key(child_id))
+@@ -5802,8 +5802,10 @@ pub(crate) fn build_host_container(
+         el = el.child(text_content(element, content, ctx));
+     }
+ 
+-    // Children
+-    for &child_id in &element.children {
++    // Children paint in `paint_order`: tree order for in-flow boxes, then the
++    // positioned ones by `zIndex`. Only out-of-flow children can move, so the
++    // flex layout of the rest is untouched.
++    for &child_id in ctx.tree.paint_order(&element.children).iter() {
+         let child = build_element(child_id, ctx, window, cx);
+         el = if overflow_x_only {
+             el.child(gpui::div().flex_none().child(child))
+diff --git a/packages/native/src/retained_tree.rs b/packages/native/src/retained_tree.rs
+index ee95967..a600a2a 100644
+--- a/packages/native/src/retained_tree.rs
++++ b/packages/native/src/retained_tree.rs
+@@ -6,6 +6,7 @@
+ ///
+ /// All IDs are u64 — JS generates them with an incrementing counter,
+ /// passes them as numbers across napi (no string allocation).
++use std::borrow::Cow;
+ use std::collections::{HashMap, HashSet};
+ use std::hash::{Hash, Hasher};
+ use std::sync::{Arc, LazyLock};
+@@ -594,14 +595,57 @@ impl RetainedTree {
+         self.to_json_detail(bounds, false)
+     }
+ 
++    /// Paint order of a parent's children, bottom to top.
++    ///
++    /// In-flow children keep their tree order and paint first; `absolute` and
++    /// `fixed` children paint after them, stable-sorted by `zIndex` (unset is
++    /// 0). While no positioned child declares a `zIndex`, the tree order comes
++    /// back untouched, so existing trees paint exactly as they did and nothing
++    /// pays for a sort it does not use.
++    ///
++    /// Layout is unaffected: only out-of-flow children move, and their position
++    /// comes from their insets, not their index.
++    pub fn paint_order<'a>(&self, children: &'a [u64]) -> Cow<'a, [u64]> {
++        let style = |id: u64| {
++            self.elements
++                .get(&id)
++                .and_then(|element| element.style.as_deref())
++        };
++        let out_of_flow = |id: u64| {
++            matches!(
++                style(id).and_then(|style| style.position.as_deref()),
++                Some("absolute" | "fixed")
++            )
++        };
++        let z_index = |id: u64| {
++            style(id)
++                .filter(|_| out_of_flow(id))
++                .and_then(|style| style.z_index)
++        };
++
++        if !children.iter().any(|id| z_index(*id).is_some()) {
++            return Cow::Borrowed(children);
++        }
++
++        let (in_flow, positioned): (Vec<u64>, Vec<u64>) = children
++            .iter()
++            .copied()
++            .partition(|id| !out_of_flow(*id));
++        let mut positioned = positioned;
++        positioned.sort_by_key(|id| z_index(*id).unwrap_or(0));
++        let mut ordered = in_flow;
++        ordered.extend(positioned);
++        Cow::Owned(ordered)
++    }
++
+     /// The elements whose painted box holds the point, topmost first: the DOM's
+     /// `elementsFromPoint`.
+     ///
+-    /// There is no z-index, so tree order is paint order. Walking each
+-    /// element's children last to first, and the element after them, yields
+-    /// the topmost element first. The exception is a deferred `anchored`
+-    /// layer, which gpui paints after the tree by `priority` and without the
+-    /// clip of the elements around it: its hits come first.
++    /// Walking each element's children in reverse paint order, and the element
++    /// after them, yields the topmost element first. The exception is a
++    /// deferred `anchored` layer, which gpui paints after the tree by
++    /// `priority` and without the clip of the elements around it: its hits come
++    /// first.
+     ///
+     /// `painted_box` is the last frame's box. An element that was not painted
+     /// (hidden, or outside a virtual list's window) has none and is never hit,
+@@ -686,7 +730,7 @@ impl RetainedTree {
+                     .and_then(|value| value.as_u64())
+                     .unwrap_or(1);
+                 let mut layer = Vec::new();
+-                for &child in element.children.iter().rev() {
++                for &child in self.paint_order(&element.children).iter().rev() {
+                     self.collect_hits(child, none, false, walk, &mut layer);
+                 }
+                 walk.layers.push((priority, layer));
+@@ -694,7 +738,7 @@ impl RetainedTree {
+             }
+         }
+ 
+-        for &child in element.children.iter().rev() {
++        for &child in self.paint_order(&element.children).iter().rev() {
+             self.collect_hits(child, none, clipped, walk, hits);
+         }
+         if !clipped && !none && own_box.is_some_and(|bounds| inside(&bounds, true, true)) {
+@@ -1297,6 +1341,81 @@ mod tests {
+         assert_eq!(tree.elements_at(10.0, 10.0, &boxed(&boxes)), vec![5, 3, 1]);
+     }
+ 
++    /// Guards the `zIndex` extension: a positioned sibling paints above the
++    /// in-flow children, and positioned siblings sort by level while the
++    /// in-flow ones keep their tree order.
++    #[test]
++    fn z_index_orders_positioned_siblings_above_in_flow() {
++        let mut tree = RetainedTree::new();
++        for id in 1..=4 {
++            tree.create_element(id, "div".to_string());
++        }
++        for child in [2, 3, 4] {
++            tree.append_child(1, child);
++        }
++        tree.set_style(2, style_json(r#"{"position":"absolute","zIndex":2}"#));
++        tree.set_style(3, style_json(r#"{"width":100}"#));
++        tree.set_style(4, style_json(r#"{"position":"absolute","zIndex":1}"#));
++
++        assert_eq!(
++            tree.paint_order(&[2, 3, 4]).as_ref(),
++            &[3, 4, 2],
++            "in-flow first, then the positioned boxes by level"
++        );
++    }
++
++    /// A tree that never declares a `zIndex` must paint exactly as before:
++    /// a positioned child keeps its place in tree order.
++    #[test]
++    fn no_z_index_leaves_the_paint_order_alone() {
++        let mut tree = RetainedTree::new();
++        for id in 1..=4 {
++            tree.create_element(id, "div".to_string());
++        }
++        for child in [2, 3, 4] {
++            tree.append_child(1, child);
++        }
++        tree.set_style(2, style_json(r#"{"position":"absolute"}"#));
++        tree.set_style(3, style_json(r#"{"width":100}"#));
++        tree.set_style(4, style_json(r#"{"position":"fixed"}"#));
++
++        assert_eq!(tree.paint_order(&[2, 3, 4]).as_ref(), &[2, 3, 4]);
++    }
++
++    /// The hit walk must reverse the renderer's order, or a click lands on the
++    /// later tree sibling instead of the element painted on top.
++    #[test]
++    fn z_index_hit_order_is_reverse_paint_order() {
++        let mut tree = RetainedTree::new();
++        for id in 1..=4 {
++            tree.create_element(id, "div".to_string());
++        }
++        tree.set_root(1);
++        for child in [2, 3, 4] {
++            tree.append_child(1, child);
++        }
++        let full = style_json(r#"{"width":100,"height":100}"#);
++        tree.set_style(1, full.clone());
++        tree.set_style(2, style_json(r#"{"position":"absolute","zIndex":2}"#));
++        tree.set_style(3, full);
++        tree.set_style(4, style_json(r#"{"position":"absolute","zIndex":1}"#));
++        let boxes = [
++            (1, (0.0, 0.0, 100.0, 100.0)),
++            (2, (0.0, 0.0, 100.0, 100.0)),
++            (3, (0.0, 0.0, 100.0, 100.0)),
++            (4, (0.0, 0.0, 100.0, 100.0)),
++        ];
++
++        assert_eq!(
++            tree.elements_at(50.0, 50.0, &boxed(&boxes)),
++            vec![2, 4, 3, 1]
++        );
++    }
++
++    fn style_json(json: &str) -> Arc<StyleDesc> {
++        Arc::new(serde_json::from_str(json).expect("valid style"))
++    }
++
+     #[test]
+     fn cold_event_and_prop_storage_is_released_when_empty() {
+         let mut tree = tree_with_child();
+diff --git a/packages/native/src/style.rs b/packages/native/src/style.rs
+index 5c2aba8..bde0fd2 100644
+--- a/packages/native/src/style.rs
++++ b/packages/native/src/style.rs
+@@ -198,6 +198,10 @@ pub struct StyleDesc {
+     pub right: Option<f64>,
+     pub bottom: Option<f64>,
+     pub left: Option<f64>,
++    /// Stacking level among positioned siblings. It orders paint and hits only:
++    /// `absolute`/`fixed` children paint after the in-flow ones, sorted by this
++    /// value, and no in-flow child ever moves.
++    pub z_index: Option<i64>,
+ 
+     // Background & Colors
+     pub background: Option<BackgroundValue>,
