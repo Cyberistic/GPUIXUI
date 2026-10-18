@@ -289,6 +289,9 @@ retired once both branches are one
       run. The dismiss check now tests every enclosing menu surface; 4 dropdown
       + 1 context native tests, both-direction proof (behaviour 583); docs,
       examples and inventory synced
+    - [ ] Combobox group headers — plan 395: `ComboboxOption.group`, one
+      heading per contiguous run, ranking scoped to the run, the create row
+      ungrouped
     - [x] Disabled means inert — plan 394: measured five leaks (a disabled
       Button/IconButton kept its hover/press fill, InlineEdit painted a ring and
       a hover with `disabled` + `autoFocus`, `CollapsibleTrigger` had no
