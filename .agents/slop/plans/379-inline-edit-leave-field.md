@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `313` (inline edit), `326`/`327` (behaviour harness), `333`/`335` (docs truth), `347` §8.2 (the live finding) |
-| Status | planned |
+| Status | done — `Tab` and an outside press finish the edit; the outside press restores the display only when it focused nothing. InlineEdit 11 → 14 native tests (behaviour 554). Both-direction proof: removing the outside handler, removing the `Tab` branch, and an unconditional refocus each fail their assertion. |
 
 ## 1. The problem
 
@@ -32,6 +32,12 @@ Two more facts, measured on this host 2026-10-18 in the real `TestRenderer`:
 | edit, type, then click a **non-focusable** area | focus stays on the input, `onCommit` is **not** called (no blur is dispatched: the runtime only moves focus to another focus handle) |
 | edit, type, then press `Tab` | the input keeps focus, no commit (the element sees the key; the renderer does not traverse, per the plan-140 note) |
 | an `onMouseDownOutside` handler on a sibling | fires for a press on a third element (measured **2 calls** for a down/up pair; the commit guard already makes that harmless) |
+| an `onMouseDownOutside` handler on the **`<input>` itself** | **never fires** (measured 0 calls for a press on a non-focusable sibling); the same handler on a wrapping `div` fires once |
+| an `onMouseDownOutside` handler on a wrapping `div` | fires for the same press; a press inside the wrapper's input is inside the element |
+| outside press with an unconditional display refocus | the display **stole focus** from a pressed focusable sibling (read `name`, not `elsewhere`) |
+
+The input measurement is why §3.1 puts the outside handler on a wrapper
+`div` around the input instead of on the input itself.
 
 The tab probe is the second half of the live contract: a keyboard user who tabs
 out must also finish the edit, and in a window the native focus change does not
@@ -82,24 +88,40 @@ deliver React's blur either.
 
    The focus goes wherever Tab takes it; do not pull it back to the display.
 
-4. On the `<input>`, add the outside-press handler after `onBlur`:
+4. In edit mode, wrap the `<input>` in a layout-neutral `div` and put the
+   outside handler on the wrapper:
 
    ```tsx
-   onMouseDownOutside={(event) => {
-     onMouseDownOutside?.(event);
-     finish(true, true);
-   }}
+   <div
+     style={{
+       display: "flex",
+       flexDirection: "row",
+       alignSelf: "flex-start",
+     }}
+     onMouseDownOutside={(event) => {
+       onMouseDownOutside?.(event);
+       finish(true, true);
+     }}
+   >
+     <input ... />
+   </div>
    ```
 
-   `finish`'s `finished` guard makes the runtime's repeated dispatch (measured
-   twice per down/up pair) call `onCommit` at most once.
+   Measured (see §1): `onMouseDownOutside` on an `<input>` itself never fires in
+   0.10.0; on a `div` it does. The wrapper is layout-neutral (`flex-row`,
+   `alignSelf: "flex-start"`) and keeps the input carrying `{...rest}` and the
+   caller's `ref`/`testId`.
 
-   The `refocus: true` argument returns focus to the display when the press
-   landed on a non-focusable area; when the press lands on another control, that
-   control takes focus — both cases are asserted in §3.3. If measurement shows
-   the display's refocus wins over a pressed control's focus, flip this argument
-   to `false`, assert the pressed control keeps focus in test 1, and record the
-   decision in the docs (STOP condition 4).
+   `finish`'s `finished` guard makes repeated dispatch (measured twice per
+   down/up pair on a sibling) call `onCommit` at most once.
+
+   Focus must not be stolen from the pressed control. Measured: with an
+   unconditional refocus the display won over a pressed focusable sibling
+   (`focusedTestId` read `name`, not `elsewhere`), so the outside press asks for
+   `"displayIfUnfocused"`: `finish` records the intent, and the existing
+   post-swap effect focuses the display only when the renderer reports no focus
+   or still reports the unmounted input's id. The press on a focusable control
+   keeps its own focus; a press on dead space restores the display.
 
 5. Update the module header: the commit rule becomes "Enter, `Tab` or a press
    outside commits; Escape cancels; an unchanged draft calls nothing. Blur still
@@ -135,7 +157,9 @@ exit leaving the editor open.
      assert `onCommit` was called once with `"outside"`, the input is gone, and
      `focusedTestId` is `some("name")` (the display). Pass a host
      `onMouseDownOutside` spy through `Harness` and assert it was called, proving
-     caller composition.
+     caller composition. Then start a second edit, press the focusable
+     `"elsewhere"` sibling, and assert the new draft committed and focus stayed
+     on `"elsewhere"` — the display must not steal it.
    - **commits on Tab so a keyboard exit closes the editor** — start editing,
      type `"tabbed"`, `simulateKeystrokes("tab")`, then assert one commit with
      `"tabbed"` and no input. If `simulateKeystrokes("tab")` is consumed before
@@ -217,7 +241,7 @@ nub run test
 
 After the suite is green, prove each assertion can fail:
 
-1. Remove the `onMouseDownOutside` handler from the input and run
+1. Remove the wrapper's `onMouseDownOutside` handler (keep the wrapper) and run
    `nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/inline-edit.test.tsx`
    from `packages/components`. Expected: "commits when a press lands outside the
    field" fails (`onCommit` never called; the input stays) — this is the measured
@@ -232,16 +256,17 @@ Record the failing assertion names in the commit message body.
 Stop and report with evidence instead of improvising if:
 
 - the runtime does not deliver `onMouseDownOutside` to the **input** (only to a
-  sibling), so the press path cannot be owned by the field;
+  sibling), so the press path cannot be owned by the field — **measured**: it
+  does not; the wrapper in §3.1 step 4 is the answer, and it was measured firing;
 - the outside-press handler fires for a press **inside** the input, so it cannot
   distinguish leaving from editing;
 - `simulateKeystrokes("tab")` neither reaches the input nor traverses, and
   `nativeSimulateKeyDown(input.id, "tab")` does not either — record the measured
   reality; do not add a window-level key listener just for a test;
 - focus after the outside press cannot both (a) return to the display on a
-  non-focusable press and (b) stay on a pressed control — then choose the
-  non-stealing option, flip `refocus` to `false`, and update this plan and the
-  docs before continuing;
+  non-focusable press and (b) stay on a pressed control — **measured**: an
+  unconditional refocus fails (b), and the `"displayIfUnfocused"` rule in §3.1
+  step 4 satisfies both (asserted in the outside-press test);
 - any file outside §3 must change;
 - a gate fails twice for the same reason.
 

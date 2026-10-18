@@ -4,15 +4,21 @@
  * The bugs these guard: a swap that leaves focus outside the input; Enter that
  * commits twice (keyDown and submit); Escape that commits the draft; an
  * unchanged draft that still calls `onCommit`; a disabled control that opens;
- * a controlled edit state the component overrides; and Space starting the edit
- * on key down instead of on release.
+ * a controlled edit state the component overrides; Space starting the edit
+ * on key down instead of on release; and an edit that stays open when the user
+ * leaves the field, because a live window does not deliver React's `onBlur` for
+ * a native focus change (plan 379).
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { InlineEdit, type InlineEditProps } from "../inline-edit.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -48,6 +54,7 @@ const Harness = ({
       <div testId="elsewhere" tabIndex={0} style={{ height: 20 }}>
         Elsewhere
       </div>
+      <div testId="backdrop" style={{ height: 120, width: 600 }} />
     </div>
   );
 };
@@ -152,6 +159,78 @@ describe("InlineEdit", () => {
     );
 
     expect(onCommit).toHaveBeenCalledWith("blurred");
+
+    edit.unmount();
+  });
+
+  it("commits when a press lands outside the field", () => {
+    const onCommit = vi.fn();
+    const onMouseDownOutside = vi.fn();
+    const edit = renderComponent(
+      <Harness onCommit={onCommit} host={{ onMouseDownOutside }} />,
+    );
+
+    startEditing(edit);
+    type(edit, "outside");
+
+    const backdrop = requireBounds(edit, "backdrop");
+    const x = backdrop.x + backdrop.width / 2;
+    const y = backdrop.y + backdrop.height / 2;
+    edit.renderer.nativeSimulateMouseDown(x, y);
+    edit.renderer.nativeSimulateMouseUp(x, y);
+
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith("outside");
+    expect(onMouseDownOutside).toHaveBeenCalled();
+    expect(edit.renderer.findByType("input")).toHaveLength(0);
+    expect(focusedTestId(edit)).toEqual(Option.some("name"));
+
+    // A press on another focusable control keeps focus there: the commit must
+    // not pull it back to the display.
+    startEditing(edit);
+    type(edit, "!");
+    clickCentreOf(edit, "elsewhere");
+
+    expect(onCommit).toHaveBeenLastCalledWith("outside!");
+    expect(focusedTestId(edit)).toEqual(Option.some("elsewhere"));
+
+    edit.unmount();
+  });
+
+  it("commits on Tab so a keyboard exit closes the editor", () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(<Harness onCommit={onCommit} />);
+
+    startEditing(edit);
+    type(edit, "tabbed");
+    edit.renderer.simulateKeystrokes("tab");
+
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith("tabbed");
+    expect(edit.renderer.findByType("input")).toHaveLength(0);
+
+    edit.unmount();
+  });
+
+  it("does not commit when the press is inside the field", () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(<Harness onCommit={onCommit} />);
+
+    startEditing(edit);
+    type(edit, "inside");
+
+    const bounds = requireBounds(edit, "name");
+    edit.renderer.nativeSimulateMouseDown(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+    edit.renderer.nativeSimulateMouseUp(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.renderer.findByType("input")).toHaveLength(1);
 
     edit.unmount();
   });
