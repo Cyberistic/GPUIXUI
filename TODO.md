@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 106/106
+`[x]` `[██████████]` 107/107
+
+`[x]` **The search palette is usable end to end (plan 506)** — ⌘K opens it,
+      typing lists the real Installation page, Enter navigates, an unknown
+      query shows "No results found", and Escape now returns focus to the
+      search trigger instead of leaving it on `<body>` (the controlled Radix
+      dialog had no trigger to restore to). `smoke:search` guards the whole
+      path; both regression directions were measured.
 
 `[x]` **A scenario id finds the capability page (plan 505)** — the measured
       matrix is rendered React, so `modal-focus-trap` returned Command menu prose

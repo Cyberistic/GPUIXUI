@@ -7,6 +7,7 @@ import {
 import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import appCss from "@/styles/app.css?url";
 import { PlatformProvider } from "@/platform/platform-provider";
+import { SearchFocusRestore } from "@/search/search-focus";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -33,6 +34,7 @@ function RootComponent() {
       </head>
       <body className="flex min-h-screen flex-col">
         <RootProvider>
+          <SearchFocusRestore />
           <PlatformProvider>
             <Outlet />
           </PlatformProvider>

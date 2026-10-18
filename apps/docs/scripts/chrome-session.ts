@@ -40,6 +40,10 @@ export interface Session {
   readonly setViewport: (width: number, height: number) => Promise<void>;
   /** Dispatch one real key press, so focus traversal and activation are the browser's. */
   readonly press: (key: SessionKey) => Promise<void>;
+  /** Dispatch a real platform shortcut (`Meta` on macOS), e.g. `pressShortcut("k")`. */
+  readonly pressShortcut: (key: ShortcutKey) => Promise<void>;
+  /** Type text through the browser's insertion path, as a keyboard would. */
+  readonly type: (text: string) => Promise<void>;
   /** Whether `expression` became `true` within the timeout; polls every 100 ms. */
   readonly waitFor: (
     expression: string,
@@ -50,12 +54,27 @@ export interface Session {
 }
 
 /** The keys the smokes drive; the numeric codes are the Windows virtual keys. */
-export type SessionKey = "Tab" | "Enter";
+export type SessionKey = "Tab" | "Enter" | "Escape" | "ArrowDown" | "ArrowUp";
+
+/** The only shortcut a smoke needs: the search palette's `⌘K` / `Ctrl+K`. */
+export type ShortcutKey = "k";
 
 const KEY_CODES: Readonly<Record<SessionKey, number>> = {
   Tab: 9,
   Enter: 13,
+  Escape: 27,
+  ArrowDown: 40,
+  ArrowUp: 38,
 };
+
+const SHORTCUT_CODES: Readonly<
+  Record<ShortcutKey, { readonly code: string; readonly virtualKey: number }>
+> = {
+  k: { code: "KeyK", virtualKey: 75 },
+};
+
+/** CDP's modifier bitmask: Meta is what macOS calls the command key. */
+const META_MODIFIER = 4;
 
 const freePort = (): Promise<number> =>
   new Promise((resolve, reject) => {
@@ -243,6 +262,27 @@ export const startSession = async (
     await send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
   };
 
+  // The search palette listens for a platform shortcut, so the event must carry
+  // the modifier rather than only the letter.
+  const pressShortcut = async (key: ShortcutKey): Promise<void> => {
+    const { code, virtualKey } = SHORTCUT_CODES[key];
+    const base = {
+      key,
+      code,
+      modifiers: META_MODIFIER,
+      windowsVirtualKeyCode: virtualKey,
+      nativeVirtualKeyCode: virtualKey,
+    };
+    await send("Input.dispatchKeyEvent", { type: "rawKeyDown", ...base });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", ...base });
+  };
+
+  // `insertText` goes through the same editing pipeline as a keystroke, so the
+  // controlled input's React handler runs; setting `.value` would not.
+  const type = async (text: string): Promise<void> => {
+    await send("Input.insertText", { text });
+  };
+
   const captureScreenshot = async (): Promise<string> => {
     const result = await send("Page.captureScreenshot", { format: "png" });
     return typeof result === "object" &&
@@ -259,6 +299,8 @@ export const startSession = async (
     setColorScheme,
     setViewport,
     press,
+    pressShortcut,
+    type,
     waitFor,
     captureScreenshot,
     stop,
