@@ -438,9 +438,12 @@ carry the Windows dark palette, because neither Windows version shipped a dark
 mode.
 
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
-applies only the families and shape, because a platform accent must not drop the
-AAA floors. To ship your own look, copy a style file and apply it, or extend the
-resolved theme:
+applies the families and shape — radii, density, motion and the platform's
+elevation levels — while the AAA colour set stays, because a platform accent must
+not drop those floors. Elevation carries no colour of its own: a level is
+geometry plus an alpha over the theme's `shadow` tint, so the AAA tint stays
+while the platform's depth applies (plan 345). To ship your own look, copy a style
+file and apply it, or extend the resolved theme:
 
 ```ts
 import {
@@ -542,8 +545,9 @@ persisted theme at its own boundary, where `Schema` belongs.
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
 - Platform variants express platform conventions with our own values; they do not
-  ship a vendor's design system. At high contrast the AAA colour set is kept and
-  only families and shape are applied, because accessibility outranks resemblance.
+  ship a vendor's design system. At high contrast the families and shape,
+  elevation included, apply while the AAA colour set stays, because accessibility
+  outranks resemblance.
 - `.SystemUIFont` is verified against GPUI's documentation of the name, and the
   playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role,
   including the family the runtime reports. A visual per-platform comparison is

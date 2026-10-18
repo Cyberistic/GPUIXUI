@@ -440,6 +440,10 @@ const platformOverrides = (
     radius: style.structure.radius,
     density: style.structure.density,
     motion: style.structure.motion,
+    // A level is geometry plus an alpha over the base's `shadow` tint (plan
+    // 085), so it carries no colour: the platform's depth applies at every
+    // contrast level while an AAA base keeps its own tint.
+    elevation: style.elevation[base.mode],
   };
   if (contrast === "high") {
     return structural;
@@ -451,11 +455,10 @@ const platformOverrides = (
   return {
     ...structural,
     colors,
-    contrast: appliesColors ? "default" : base.contrast,
     // The declaration follows the palette: a defined platform colour is an
     // override designed at the default floors, while an undefined one inherits
     // the base role and leaves the base's level alone.
-    elevation: style.elevation[base.mode],
+    contrast: appliesColors ? "default" : base.contrast,
   };
 };
 
@@ -463,9 +466,11 @@ const platformOverrides = (
  * Apply any platform style — shipped or copied and edited — to a base theme.
  *
  * The contrast level defaults to the one the base declares, so applying a
- * copied style to a high-contrast theme keeps the AAA palette. At `"high"` only
- * the families and shape are applied, because a platform accent must not drop
- * those floors. The result declares the level of the palette it carries:
+ * copied style to a high-contrast theme keeps the AAA palette. At `"high"` the
+ * families and shape are applied — radii, density, motion and the platform's
+ * elevation levels — while the base keeps its colour set, the `shadow` tint
+ * included, because a platform accent must not drop those floors. The result
+ * declares the level of the palette it carries:
  * naming `"default"` on an AAA base applies the platform colours and returns a
  * `default` theme, while a style with no colour overrides keeps the base's
  * level. The result is a normal {@link Theme}, so it composes through

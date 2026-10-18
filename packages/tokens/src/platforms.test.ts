@@ -363,6 +363,9 @@ describe("high contrast platform variants", () => {
     expect(themed.typography.mono).toBe("Consolas");
     expect(themed.radius.lg).toBe(platformStyles.win32.structure.radius?.lg);
     expect(themed.density.name).toBe("comfortable");
+    // A level is geometry plus an alpha over the base's `shadow` tint, so the
+    // platform's depth applies without touching the AAA palette (plan 345).
+    expect(themed.elevation.md).toEqual(platformStyles.win32.elevation.dark.md);
   });
 });
 

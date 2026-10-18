@@ -1214,6 +1214,12 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(families), families).toBe(true);
   });
 
+  it("states that a high-contrast platform keeps its elevation levels", () => {
+    const sentence =
+      "At high contrast the families and shape apply — each platform's radii, density, motion and elevation levels — while the AAA colour set, the `shadow` tint included, wins over platform resemblance.";
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
   it("states the icon-to-label gap the spacing scale defines", () => {
     const sentence = `The gap between icon and label is \`spacing.sm\` (${spacing.sm}px).`;
     expect(designSystem.includes(sentence), sentence).toBe(true);

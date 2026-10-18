@@ -497,8 +497,11 @@ import { ThemeProvider } from "@gpuixui/tokens/react";
 ```
 
 **High contrast wins over resemblance.** `getPlatformTheme(platform, mode,
-"high")` applies only the families and shape to the high-contrast colour set,
-because a platform accent must not drop the AAA floors.
+"high")` applies the families, radii, density, motion and each platform's
+elevation levels to the high-contrast colour set, because a platform accent must
+not drop the AAA floors. Elevation carries no colour of its own — a level is
+geometry plus an alpha over the theme's `shadow` tint (plan `085`) — so the AAA
+tint stays while the platform's depth applies (plan `345`).
 
 To ship your own look, copy a style file and edit it, or extend the resolved
 theme — no component source changes:
@@ -545,14 +548,14 @@ applyPlatformStyle(getTheme("dark", "high"), contosoStyle); // keeps the AAA pal
 The result declares the level of the palette it carries, the way every theme
 does. Naming `"default"` on a high-contrast base applies the platform colours, so
 the returned theme declares `default` — the AAA palette is no longer there.
-Naming `"high"` on a default base applies only families and shape, so the theme
-stays `default`; a style with no colour overrides keeps the base's level because
-it changes no colour. A colour key set to `undefined` is not an override either:
-the role inherits and the declaration stays with the base (plan `323`). A style
-overrides only the roles it names, so a mixed palette can still miss a
-default-floor pair — for example the AAA `border` it does not override on an
-inherited soft tint — and `themeContrastFailures` reports it rather than
-rewriting the consumer's palette (plan `301`).
+Naming `"high"` on a default base applies only families, shape and elevation
+levels, so the theme stays `default`; a style with no colour overrides keeps the
+base's level because it changes no colour. A colour key set to `undefined` is
+not an override either: the role inherits and the declaration stays with the base
+(plan `323`). A style overrides only the roles it names, so a mixed palette can
+still miss a default-floor pair — for example the AAA `border` it does not
+override on an inherited soft tint — and `themeContrastFailures` reports it
+rather than rewriting the consumer's palette (plan `301`).
 
 ### Authoring a platform style
 

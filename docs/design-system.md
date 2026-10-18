@@ -150,8 +150,10 @@ families, radii, density, motion, surfaces, accent and shadows so a preview read
 as that platform; the Default variant returns the identity unchanged. The shared
 status, disabled and scale tokens stay put, so the default identity remains the
 system and the platform looks are variants of it, never four design systems. At
-high contrast only families and shape are applied: the AAA colour set wins over
-platform resemblance. The docs toggle and a native build call the same function.
+high contrast the families and shape apply — each platform's radii, density,
+motion and elevation levels — while the AAA colour set, the `shadow` tint
+included, wins over platform resemblance. The docs toggle and a native build call
+the same function.
 
 Two **recipes** ship beside those variants: Windows XP (Luna) and Windows 7
 (Aero), in `platformRecipes`. A recipe is an edition of a platform, not a fifth

@@ -25,3 +25,13 @@ export const resolveDensePlatformTheme = (
   platform: PlatformName,
 ): Theme =>
   extendTheme(resolvePlatformTheme(mode, platform), { density: "compact" });
+
+/**
+ * Resolve a high-contrast platform preview: the AAA palette stays, while the
+ * platform's radii, density, motion and elevation levels still apply. A docs
+ * contrast switch and a native accessibility preview both call this.
+ */
+export const resolveHighContrastPlatformTheme = (
+  mode: ThemeMode,
+  platform: PlatformName,
+): Theme => getPlatformTheme(platform, mode, "high");

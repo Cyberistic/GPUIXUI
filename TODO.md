@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 112/148
+`[x]` `[████████░░]` 113/149
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -302,6 +302,12 @@ dark, macOS light and dark, Linux light, Windows light and Aero light);
 `selectionFillPairs`/`selectionFillWashPairs` hold the three families to their
 floors with no colour change (6.10:1 text and 1.105:1 wash at the tightest)
 (plan 344)
+`[x]` Keep a platform's elevation at high contrast — plan 063 skipped it because
+a level then carried a colour, but plan 085 made a level geometry plus an alpha
+over the `shadow` tint, so every AAA platform variant painted the identity's
+shadows while the docs toggle promised a platform preview; the levels now ride
+with the structural overrides and the AAA tint stays, so no colour or pair moves
+(plan 345)
 `[ ]` Cross-team: `components` applies `selectionStyle(theme, "fill")` — or
 `theme.colors.selectionOnFill` — to the user `Message` bubble in `message.tsx`
 `bubble()`, which paints body text on `primary`; the accent-tinted `selection`
