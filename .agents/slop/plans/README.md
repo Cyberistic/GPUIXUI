@@ -245,6 +245,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [548](./548-soft-status-tone-index.md) | The soft-status lists retype the tone index | F | 014, 057, 090, 091, 300, 307, 347, 394, 503, 508, 546, 547 | done |
 | [549](./549-status-text-tone-index.md) | The status-text pairs retype the tone index | F | 014, 057, 083, 314, 546–548 | done |
 | [550](./550-border-width-ladder.md) | The strong border may not be thinner than the thin one | F | 017, 358, 360, 372, 523, 533 | done |
+| [551](./551-undefined-platform-colour-palette.md) | An `undefined` platform colour inherits the palette it asked for | F | 301, 321, 323, 373, 545 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2655,6 +2656,29 @@ now a public index (`statusTextSurfaces`) and the pairs derive from it and
 so the probe that adds a fifth tone fails before the change (`4 × 8` pairs where
 the index asks for `5 × 8`) and passes after it. No colour, pair or floor moves
 and the contract still holds 404 plain pairs; 133 files / 5653 tests pass.
+
+Plan `550` closes the last ungoverned relation between two numeric roles:
+`borderWidth.strong` is the spread of the only focus indicator in GPUix 0.10.0
+(there is no `outline*`), and `borderWidth.thin` is a decorative divider, but
+`themeMetricFailures` held each on its own, so a copied theme with `thin: 1` and
+`strong: 0.5` returned `[]` from all seven checks while every focus ring painted
+a sub-pixel spread thinner than a border. `strong` is now at least `thin` —
+equality stays a design — every shipped set already passes, so no value moves,
+and the catalogue, design system, README and ledger state the rule.
+
+Plan `551` closes the seam between two rules plan `323` and plan `373` stated
+separately. `applyPlatformStyle` rebased a forced `"default"` request on the
+default-level palette, but it spread the style's colour object verbatim: a key
+the copied style set to `undefined` was copied over the palette and then treated
+as omitted by `extendTheme`, which fell back to the AAA **base**. A style with
+`{ primary: undefined, background: "#FAFAFA" }` applied to an AAA base therefore
+took its `primary` from AAA and its `primaryHover` from the default identity,
+and `themeFailures` reported a `direction` failure for the theme the builder had
+just returned. The palette merge now uses `mergeDefined`, so an `undefined`
+colour inherits from the requested level's palette — the base still wins when
+the style contributes no colour at all, which is plan 323's case, and a
+same-level base keeps its edits. No colour, pair, floor, metric, theme, platform
+style or recipe value moves; 135 files / 5663 tests pass.
 
 ## How to use a plan
 
