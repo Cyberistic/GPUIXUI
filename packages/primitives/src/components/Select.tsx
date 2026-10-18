@@ -13,6 +13,10 @@
  * list over the trigger (plan 066). The trigger's measured box and the list's
  * estimated height choose the side; an explicit `side` always wins.
  *
+ * A list beside its trigger (`side="left"`/`"right"`) is capped to the window's
+ * height and scrolls, because that axis is bounded by the window rather than by
+ * the trigger (measured, plan 098).
+ *
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
  * for anything the data shape cannot express.
@@ -513,15 +517,15 @@ export const Select = (props: SelectProps): ReactElement => {
   const side =
     props.side ??
     Option.getOrUndefined(Option.map(request, decideVerticalSide));
-  const verticalSide = side === "top" || side === "bottom" ? side : undefined;
   const maxHeight = Option.getOrUndefined(
-    Option.flatMap(request, (measurement) => {
-      if (verticalSide === undefined) return Option.none();
-      const space = availableOn(measurement, verticalSide);
-      return measurement.layerHeight > space
-        ? Option.some(Math.max(space, 0))
-        : Option.none();
-    }),
+    Option.flatMap(request, (measurement) =>
+      Option.flatMap(Option.fromNullishOr(side), (resolvedSide) => {
+        const space = availableOn(measurement, resolvedSide);
+        return measurement.layerHeight > space
+          ? Option.some(Math.max(space, 0))
+          : Option.none();
+      }),
+    ),
   );
   return renderSelect(
     props,

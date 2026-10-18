@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 70/70
+`[x]` `[██████████]` 71/71
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -499,12 +499,24 @@ retired once both branches are one
       in a layout effect and never passes the runtime's own centre through. A
       runtime case on a 400 px trigger centres within 1 px (the old direction was
       176.5 px left). 3 core + 1 element-tree + 1 runtime tests (plan 095)
+`[x]` `packages/primitives`: **the floating rule assumed every layer sits above
+      or below its trigger.** `Tooltip` and `Select` accept all four
+      `FloatingSide` values, but `align="center"` was corrected with a *width*
+      difference on every side, so a left/right tooltip painted 90 px below its
+      trigger (measured tip `y 139` for a true `49`), and only the vertical
+      sides computed a `maxHeight`, so a left/right select list painted 908 px
+      from `y 12` in an 800 px window, unscrollable, with the last option at
+      `y 888.5`. One axis-aware `resolveAlign` (widths above/below, heights
+      beside), `availableOn` over all four sides, and a tip-height measurement
+      in `Tooltip`. 5 offline + 3 runtime tests, both directions proven
+      (plan 098)
 `[ ]` **components workstream**: `internal/placement.ts` and
       `packages/primitives/src/core/floating.ts` now both know how to correct a
-      centre alignment. The primitives rule is horizontal (its layers are all
-      top/bottom); the components one also handles left/right. Hoist the full
-      rule into primitives and import it there when the two next change, so the
-      library has one answer again (plans 323, 095). Owner: components.
+      centre alignment. **Updated 2026-10-18 (plan 098):** the primitives rule is
+      no longer horizontal-only — `resolveAlign` takes the difference on the
+      layer's own axis (widths above/below, heights beside) and is exported from
+      `@gpuixui/primitives/core`. Import it there and delete the local copy so
+      the library has one answer again (plans 323, 095, 098). Owner: components.
 `[x]` `packages/primitives`: **`ButtonGroup` was the one group that could not
       stack** — `CheckboxGroup`, `RadioGroup` and `ToggleGroup` all take
       `orientation`, but `ButtonGroup` was hard-coded to a centred row, so a

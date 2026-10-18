@@ -1,18 +1,22 @@
 /**
- * The rule `Select` uses to keep its list off its own trigger.
+ * The rules `Select` and `Tooltip` use to keep a floating layer readable.
  *
- * The bug it guards: GPUix's `FloatingLayer` is `side="bottom"` and
- * `fit="snap"`, and snap clamps the layer into the window without flipping it
- * (measured, plan 156 §8). A select at the window's bottom edge therefore
- * opened its list over the trigger (plan 066 §1). The side is chosen here.
+ * The bugs they guard, both measured on this host (plans 066, 095, 098):
+ * GPUix's `FloatingLayer` is `side="bottom"` and `fit="snap"`, and snap clamps
+ * the layer into the window without flipping it, so a select at the bottom edge
+ * opened over its trigger; and its `align="center"` puts the layer's end on the
+ * anchor's centre line, half a layer off **on whichever axis the side uses** — so
+ * the correction must take the difference on that axis (widths above/below,
+ * heights beside).
  */
 
 import { describe, expect, it } from "vitest";
 import {
   availableOn,
   decideVerticalSide,
+  type LayerSide,
   type PlacementRequest,
-  resolveHorizontalAlign,
+  resolveAlign,
 } from "./floating.js";
 
 const room = (overrides: Partial<PlacementRequest> = {}): PlacementRequest => ({
@@ -84,44 +88,82 @@ describe("decideVerticalSide", () => {
     expect(availableOn(room(), "bottom")).toBe(360);
     expect(availableOn(room(), "top")).toBe(392);
   });
+
+  it("bounds a layer beside the trigger by the window, not the trigger", () => {
+    // The bug guarded (plan 098): a left/right list was never capped because
+    // only the vertical sides had a space rule; 30 options painted 908 px from
+    // y 8 in an 800 px window and the last row was unreachable. The runtime's
+    // `align="start"` puts the layer's top edge on the trigger's, so the free
+    // space is the window below that edge, inside the margin.
+    expect(
+      availableOn(room({ triggerTop: 12, triggerBottom: 44 }), "left"),
+    ).toBe(780);
+    expect(
+      availableOn(room({ triggerTop: 12, triggerBottom: 44 }), "right"),
+    ).toBe(780);
+    expect(availableOn(room(), "left")).toBe(392);
+  });
 });
 
-describe("resolveHorizontalAlign", () => {
-  it("leaves start and end alone", () => {
-    expect(
-      resolveHorizontalAlign({
-        align: "start",
-        triggerWidth: 400,
-        layerWidth: 42,
-      }),
-    ).toStrictEqual({ align: "start", offset: 0 });
-    expect(
-      resolveHorizontalAlign({
-        align: "end",
-        triggerWidth: 400,
-        layerWidth: 42,
-      }),
-    ).toStrictEqual({ align: "end", offset: 0 });
+describe("resolveAlign", () => {
+  const request = (side: LayerSide, align: "start" | "center" | "end") => ({
+    side,
+    align,
+    triggerWidth: 400,
+    triggerHeight: 100,
+    layerWidth: 42,
+    layerHeight: 26,
   });
 
-  it("turns center into start plus half the difference", () => {
+  it.each(["top", "right", "bottom", "left"] as const)(
+    "leaves start and end alone on %s",
+    (side) => {
+      expect(resolveAlign(request(side, "start"))).toStrictEqual({
+        align: "start",
+        offset: 0,
+      });
+      expect(resolveAlign(request(side, "end"))).toStrictEqual({
+        align: "end",
+        offset: 0,
+      });
+    },
+  );
+
+  it("centres a layer above/below by width", () => {
     // The bug guarded (plan 095): the runtime's centre puts a 42-wide tip's end
     // on a 400-wide trigger's centre line, 179 px left of true centre.
-    expect(
-      resolveHorizontalAlign({
-        align: "center",
-        triggerWidth: 400,
-        layerWidth: 42,
-      }),
-    ).toStrictEqual({ align: "start", offset: 179 });
+    expect(resolveAlign(request("bottom", "center"))).toStrictEqual({
+      align: "start",
+      offset: 179,
+    });
   });
 
-  it("shifts left when the layer is wider than its trigger", () => {
+  it("centres a layer beside the trigger by height", () => {
+    // The bug guarded (plan 098): a width difference was handed to the runtime
+    // as a vertical offset, so a `center` tip painted 90 px below its trigger.
+    expect(resolveAlign(request("left", "center"))).toStrictEqual({
+      align: "start",
+      offset: 37,
+    });
+    expect(resolveAlign(request("right", "center"))).toStrictEqual({
+      align: "start",
+      offset: 37,
+    });
+  });
+
+  it("shifts the other way when the layer is larger than its trigger", () => {
     expect(
-      resolveHorizontalAlign({
-        align: "center",
+      resolveAlign({
+        ...request("bottom", "center"),
         triggerWidth: 100,
         layerWidth: 140,
+      }),
+    ).toStrictEqual({ align: "start", offset: -20 });
+    expect(
+      resolveAlign({
+        ...request("left", "center"),
+        triggerHeight: 20,
+        layerHeight: 60,
       }),
     ).toStrictEqual({ align: "start", offset: -20 });
   });

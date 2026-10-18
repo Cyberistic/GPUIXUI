@@ -45,10 +45,13 @@ trigger, in a column **and** a row parent.
 
 The runtime's own `center` is not usable: it puts the panel's **end** on the
 trigger's centre line, half a panel off (plans `060` §0, `156` §8). The wrapper
-never passes it through — it maps `center` to `start` plus
-`(triggerWidth − tipWidth) / 2`, measured from the trigger and the open tip. The
-correction is applied in a layout effect, before the frame is painted, so a
-centre tip does not visibly jump (plan `095`).
+never passes it through — it maps `center` to `start` plus half the difference
+between the trigger and the open tip. The difference is taken on the **layer's
+own axis**: above/below aligns horizontally, so widths; `side="left"`/`"right"`
+aligns vertically, so heights (measured, plan `098`: a width difference handed to
+the vertical axis painted the tip 90 px below its trigger). The correction is
+applied in a layout effect, before the frame is painted, so a centre tip does not
+visibly jump (plans `095`, `098`).
 
 `side` decides which side of the trigger the tip opens on. It prefers **above**,
 and flips **below** when the tip does not fit above — the runtime's layer is
@@ -56,7 +59,10 @@ and flips **below** when the tip does not fit above — the runtime's layer is
 (plan `156` §8), so at the top edge the tip used to open at `y 8..34` over a
 trigger at `y 12..30` (plan `067` §1). The wrapper measures its root and
 estimates the tip's height from `tooltipStyle` (padding, one caption line,
-border); an explicit `side` skips that decision.
+border); an explicit `side` skips that decision. Automatic side choice is
+vertical only, and an explicit `side` is never flipped: near a window edge the
+runtime clamps it, which may cover the trigger — pick the other side if that
+matters.
 
 ## API
 
@@ -101,9 +107,9 @@ dismisses it. A click dismisses it.
 
 - The trigger must be a focusable host element (above).
 - **A `center` tip measures once.** The runtime has no layout callback, so the
-  tip's width is known only after its first layout; the offset is applied in a
-  layout effect before paint, so there is no visible jump. A tip that changes
-  width while open (it cannot, with `whiteSpace: nowrap`) would not re-centre.
+  tip's box is known only after its first layout; the offset is applied in a
+  layout effect before paint, so there is no visible jump. A tip whose size
+  changes while open (it cannot, with `whiteSpace: nowrap`) would not re-centre.
 - **The flip sees one line.** The side is chosen from an estimated height
   (padding + one caption line + border), which is exact for the tip this wrapper
   paints and for `whiteSpace: nowrap`; a multi-line tip is a popover. A `side`
@@ -122,7 +128,8 @@ dismisses it. A click dismisses it.
   `tooltipStyle`, and the description/name mapping for string and non-string
   content (plan `071`).
 - `src/core/floating.test.ts` — the shared side rule, including a preferred
-  `top` and its fallback below.
+  `top` and its fallback below, and the alignment rule on both axes (widths
+  above/below, heights beside — plan `098`).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)
@@ -132,6 +139,10 @@ dismisses it. A click dismisses it.
   **Placement (067):** at the top edge the tip opens below its trigger
   (`8 >= 30` fails without the decision), a tip with room above stays above, and
   the painted height equals the estimate.
+  **Horizontal sides (098):** `side="right"` and `side="left"` with
+  `align="center"` centre the tip on the trigger's vertical centre within 1 px
+  (the failing direction was 90 px low), and the left case has real room instead
+  of the runtime's clamp.
   **Description (071):** the trigger's accessibility node carries the content as
   its description while the tip is closed, and the open tip is a named `Tooltip`
   node — the failing direction had neither.

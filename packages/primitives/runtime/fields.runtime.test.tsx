@@ -31,8 +31,9 @@ import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip, tooltipHeight } from "../src/components/Tooltip.js";
+import { FLOATING_MARGIN } from "../src/core/floating.js";
 import { a11yNode, type Bounds, type Runtime } from "./harness.js";
-import { SURFACE, Surface, openWindow, testTheme } from "./fixture.js";
+import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -1124,6 +1125,122 @@ it("keeps a Tooltip above a trigger with room", async () => {
   const tip = boundsOf(runtime, "tip");
   const target = boundsOf(runtime, "target");
   expect(tip.y + tip.height).toBeLessThanOrEqual(target.y);
+});
+
+it("centres a Tooltip beside its trigger", async () => {
+  // The bug guarded (plan 098): `align="center"` was corrected with a *width*
+  // difference on every side, but a left/right layer aligns vertically, so the
+  // runtime painted the tip 90 px below the trigger's centre (measured: tip
+  // y 139 for a 100 px trigger whose true centre is y 49).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="right" align="center" testId="tip">
+        <div
+          testId="target"
+          tabIndex={0}
+          style={{ width: 300, height: 100, display: "flex" }}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.x).toBeGreaterThanOrEqual(target.x + target.width);
+  expect(
+    Math.abs(tip.y + tip.height / 2 - (target.y + target.height / 2)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("centres a Tooltip on the left side of a right-aligned trigger", async () => {
+  // The other axis direction: the left side must have real room, so the trigger
+  // ends a 900 px row. Both sides use the same height-based rule.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+          width: 900,
+        }}
+      >
+        <Tooltip content="A hint" side="left" align="center" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ width: 300, height: 100, display: "flex" }}
+          />
+        </Tooltip>
+      </Box>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.x + tip.width).toBeLessThanOrEqual(target.x);
+  expect(
+    Math.abs(tip.y + tip.height / 2 - (target.y + target.height / 2)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("caps a long Select list beside its trigger", async () => {
+  // The bug guarded (plan 098): only the vertical sides computed a `maxHeight`,
+  // so a left/right list was never capped — 30 options painted 908 px from y 8
+  // in an 800 px window, the list did not scroll, and the last row sat at
+  // y 888.5, outside the window.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Many"
+        placeholder="Pick"
+        side="left"
+        options={Arr.map(Arr.range(1, 30), (index) => ({
+          value: `value-${index}`,
+          label: `Option ${index}`,
+        }))}
+      />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  const listId = selectListId(runtime, "Option 1");
+  const list = selectListBounds(runtime, "Option 1");
+  // The layer starts at the trigger's top edge (the runtime's `align="start"`)
+  // and must stop at the window's bottom margin.
+  expect(list.y).toBeLessThanOrEqual(triggerBox.y + 1);
+  expect(list.y + list.height).toBeLessThanOrEqual(
+    WINDOW.height - FLOATING_MARGIN,
+  );
+  expect(runtime.renderer.getScrollOffset(listId)).not.toBeNull();
+  const focusedId = Option.getOrElse(
+    Option.map(runtime.focusedElement(), (element) => element.id),
+    () => expect.fail("the open list holds no focus"),
+  );
+  Arr.forEach(Arr.range(1, 29), () => {
+    runtime.renderer.nativeSimulateKeyDown(focusedId, "down");
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  const last = Option.getOrElse(
+    Arr.findFirst(runtime.all(), (element) => element.text === "Option 30"),
+    () => expect.fail("the last option vanished"),
+  );
+  const lastBounds = Option.getOrElse(runtime.boundsOfId(last.id), () =>
+    expect.fail("the last option painted no box"),
+  );
+  expect(lastBounds.y + lastBounds.height).toBeLessThanOrEqual(
+    list.y + list.height,
+  );
 });
 
 it("opens a Tooltip on hover and dismisses it on click", async () => {

@@ -158,10 +158,10 @@ fails by file and line if a component, page or example reintroduces it.
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed. A **labelled** area is a named focusable `region` whose arrows/page/Home/End scroll it through the runtime's `scrollTo`; the handler only fires when the region itself holds focus, so fields inside keep their keys (plan `072`). |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
-| an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger and defaults `align` to the exact `start`; the runtime's `center` is half a panel off, so the wrapper maps it to `start` plus a measured `(trigger − tip) / 2` offset (plans `060`, `095`) |
+| an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger and defaults `align` to the exact `start`; the runtime's `center` is half a panel off, so the wrapper maps it to `start` plus a measured half-difference **on the layer's own axis** — widths above/below, heights beside (plans `060`, `095`, `098`) |
 | percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
 | a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger, and a top-side one can cover it at the top edge | `Select` measures its trigger, estimates the list height from its own styles, and opens above when the list does not fit below; `Tooltip` measures its root and flips below when the tip does not fit above. An explicit `side` still wins in both (plans 066, 067) |
-| no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068) |
+| no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068). The cap covers all four sides: beside the trigger the free space runs from the layer's top edge to the window's bottom margin (plan 098) |
 | a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives | `Select` scrolls the newly highlighted option into view through the renderer's `scrollIntoView`, so the arrows keep the active option visible (plan 069) |
 | `aria-invalid` | absent | a failed validation is paint only; `invalid` marks the empty selection or field border and the app pairs it with an error `Text` |
 | a clamp that belongs to one element | the runtime keeps one shaped text layout per string, font and width for the whole window; `lineClamp` is applied to that layout but is **not** in the key, so the first copy of a string decides the clamp for every identical copy at that width (measured: a clamped copy followed by a plain one painted `36 / 36` px; the reverse painted `108 / 108` px) | `Text.clamp` is the element's own `maxHeight` (`clamp ×` the role's line height) plus `overflow: hidden`, which no cache can share. The trade is a hard cut with no ellipsis; `truncate` keeps the one-line ellipsis because the wrap mode *is* in the key (plan `082`) |
@@ -187,9 +187,10 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **39 files, 505 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **39 files, 510 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
-on every part (plan `097`).
+on every part (plan `097`) and the axis-aware floating alignment rule
+(plan `098`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render
@@ -204,7 +205,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **21 files, 304 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **21 files, 307 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -244,7 +245,9 @@ Tier 1 nodes, that no interactive node in a composed scene is unnamed, and that
 the presentational primitives invent no role (plan 093), and a rating whose
 hover preview paints the prospective value without changing the committed value
 or its announcement (plan 094), and a `TextArea` whose painted height follows a
-caller's `style.height` instead of its rows (plan 097).
+caller's `style.height` instead of its rows (plan 097), and a tooltip beside its
+trigger centred on the layer's own axis with a left/right select list capped to
+the window and scrollable (plan 098).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

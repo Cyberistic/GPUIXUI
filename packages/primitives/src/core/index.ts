@@ -28,8 +28,18 @@ export {
   availableOn,
   decideVerticalSide,
   FLOATING_MARGIN,
+  isHorizontalSide,
+  resolveAlign,
 } from "./floating.js";
-export type { PlacementRequest, VerticalSide } from "./floating.js";
+export type {
+  AlignRequest,
+  HorizontalSide,
+  LayerAlign,
+  LayerSide,
+  PlacementRequest,
+  ResolvedAlign,
+  VerticalSide,
+} from "./floating.js";
 
 export {
   clampNumeric,

@@ -17,6 +17,10 @@
  * (plan 060). That root is also what the wrapper measures to choose a side: the
  * runtime's layer is `fit="snap"`, which clamps without flipping, so a tooltip
  * at the window's top edge opened over its trigger (plan 067).
+ *
+ * The two corrections meet on the layer's own axis: a `left`/`right` side aligns
+ * **vertically**, so the wrapper measures the tip's height too and centres on
+ * heights, not widths (plan 098).
  */
 
 import {
@@ -40,7 +44,7 @@ import {
 import {
   decideVerticalSide,
   FLOATING_MARGIN,
-  resolveHorizontalAlign,
+  resolveAlign,
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -58,7 +62,9 @@ export interface TooltipProps {
   readonly side?: FloatingSide;
   /**
    * Defaults to `start`, which is the value the runtime places exactly.
-   * `center` is off by half the panel (plan 060 §0) and `end` is exact.
+   * `center` is off by half the panel (plan 060 §0) and `end` is exact; the
+   * wrapper corrects it on the layer's own axis, so a `left`/`right` tip is
+   * centred vertically (plan 098).
    */
   readonly align?: FloatingAlign;
   /** Milliseconds before the tip opens on hover. Defaults to the provider's. */
@@ -108,7 +114,7 @@ export interface TooltipHandlers {
   readonly ref?: Ref<PublicInstance>;
   /** When the tip opens, so the side is decided from a fresh measurement. */
   readonly onOpenChange?: (open: boolean) => void;
-  /** The tip itself, so the wrapper can measure its width for `center`. */
+  /** The tip itself, so the wrapper can measure its box for `center`. */
   readonly contentRef?: Ref<PublicInstance>;
   /**
    * The alignment the wrapper resolved from its measurements. Absent in the
@@ -163,12 +169,14 @@ export const renderTooltip = (
   );
 };
 
-/** The trigger's measured extent, and the tip's width once it is painted. */
+/** The trigger's measured box, and the tip's box once it is painted. */
 interface TooltipBox {
   readonly top: number;
   readonly bottom: number;
   readonly width: number;
+  readonly height: number;
   readonly tipWidth?: number;
+  readonly tipHeight?: number;
 }
 
 /** A short label shown when its trigger is hovered or focused. */
@@ -197,10 +205,15 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
       top: bounds.y,
       bottom: bounds.y + bounds.height,
       width: bounds.width,
+      height: bounds.height,
       tipWidth:
         tipBounds === null || tipBounds === undefined || tipBounds.width <= 0
           ? undefined
           : tipBounds.width,
+      tipHeight:
+        tipBounds === null || tipBounds === undefined || tipBounds.height <= 0
+          ? undefined
+          : tipBounds.height,
     });
   }, [renderer, open]);
   const side = Option.match(Option.fromNullishOr(box), {
@@ -226,12 +239,15 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const placement = Option.match(Option.fromNullishOr(box), {
     onNone: () => unmeasured,
     onSome: (measured) =>
-      measured.tipWidth === undefined
+      measured.tipWidth === undefined || measured.tipHeight === undefined
         ? unmeasured
-        : resolveHorizontalAlign({
+        : resolveAlign({
+            side,
             align: requested,
             triggerWidth: measured.width,
+            triggerHeight: measured.height,
             layerWidth: measured.tipWidth,
+            layerHeight: measured.tipHeight,
           }),
   });
   return renderTooltip({ ...props, side }, theme, {

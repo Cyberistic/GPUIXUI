@@ -11,8 +11,18 @@
  * box it measured and the list height it derived from its own styles.
  */
 
-/** The vertical sides a layer can open on. */
+/** The sides whose layer sits above or below its trigger. */
 export type VerticalSide = "top" | "bottom";
+
+/** The sides whose layer sits beside its trigger. */
+export type HorizontalSide = "left" | "right";
+
+/** Every side a layer can open on — the runtime's own set. */
+export type LayerSide = VerticalSide | HorizontalSide;
+
+/** Whether the side places the layer beside its trigger rather than above/below. */
+export const isHorizontalSide = (side: LayerSide): side is HorizontalSide =>
+  side === "left" || side === "right";
 
 /**
  * The gap the runtime's floating layer keeps from the window edge.
@@ -68,28 +78,40 @@ export const decideVerticalSide = ({
  * A layer taller than this would be clamped by the runtime with no way to reach
  * the far end, so it becomes a capped scroll container at exactly this height.
  * The side decision uses the same subtraction, so both agree (plan 068).
+ *
+ * A layer beside its trigger is constrained by the window on its **height**, not
+ * by the trigger: the runtime's `align="start"` places its top edge on the
+ * trigger's, so the free space runs from there to the bottom margin (measured,
+ * plan 098). Its horizontal axis decides width, not height.
  */
 export const availableOn = (
   request: Pick<
     PlacementRequest,
     "triggerTop" | "triggerBottom" | "viewportHeight" | "margin"
   >,
-  side: VerticalSide,
+  side: LayerSide,
 ): number =>
   side === "top"
     ? request.triggerTop - request.margin
-    : request.viewportHeight - request.margin - request.triggerBottom;
+    : side === "bottom"
+      ? request.viewportHeight - request.margin - request.triggerBottom
+      : request.viewportHeight - request.margin - request.triggerTop;
 
-/** The horizontal alignment values the runtime accepts. */
-export type HorizontalAlign = "start" | "center" | "end";
+/** The alignment values the runtime accepts, on either axis. */
+export type LayerAlign = "start" | "center" | "end";
 
-/** The widths a true centre is derived from. */
+/** The boxes a true centre is derived from. */
 export interface AlignRequest {
-  readonly align: HorizontalAlign;
+  readonly side: LayerSide;
+  readonly align: LayerAlign;
   /** The anchor's painted width. */
   readonly triggerWidth: number;
+  /** The anchor's painted height. */
+  readonly triggerHeight: number;
   /** The layer's painted width. */
   readonly layerWidth: number;
+  /** The layer's painted height. */
+  readonly layerHeight: number;
 }
 
 /** The runtime's `align` plus the offset that makes it the requested one. */
@@ -99,19 +121,30 @@ export interface ResolvedAlign {
 }
 
 /**
- * Turn the requested horizontal alignment into one the runtime places exactly.
+ * Turn the requested alignment into one the runtime places exactly.
  *
  * The runtime's `center` is not usable: it puts the layer's **end** on the
  * anchor's centre line, half a layer off (measured, plans `060` §0 and `323`).
- * Mapping `center` to `start` plus `(triggerWidth - layerWidth) / 2` is the
- * exact placement; `start` and `end` need no offset. The caller guards a
- * non-positive measurement, so the arithmetic here is total.
+ * Mapping `center` to `start` plus half the difference between the anchor and
+ * the layer is the exact placement — and the difference is taken on the layer's
+ * **own axis**: a top/bottom layer aligns horizontally, so widths; a left/right
+ * layer aligns vertically, so heights (measured, plan `098`). `start` and `end`
+ * need no offset on either axis. The caller guards a non-positive measurement,
+ * so the arithmetic here is total.
  */
-export const resolveHorizontalAlign = ({
+export const resolveAlign = ({
+  side,
   align,
   triggerWidth,
+  triggerHeight,
   layerWidth,
+  layerHeight,
 }: AlignRequest): ResolvedAlign =>
   align === "center"
-    ? { align: "start", offset: (triggerWidth - layerWidth) / 2 }
+    ? {
+        align: "start",
+        offset: isHorizontalSide(side)
+          ? (triggerHeight - layerHeight) / 2
+          : (triggerWidth - layerWidth) / 2,
+      }
     : { align, offset: 0 };

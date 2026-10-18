@@ -181,6 +181,14 @@ its last option at `y 888` in an 800 px window and no way to reach it (plan
 `068` §1). Rows keep their height inside the cap (`flexShrink: 0`), so the list
 scrolls instead of squashing the options.
 
+A list opened **beside** the trigger (`side="left"`/`"right"`) is capped on the
+other axis: the runtime's `align="start"` puts its top edge on the trigger's, so
+the free space runs from there to the window's bottom margin. Only the vertical
+sides computed a cap before plan `098`, so a left/right list painted 908 px from
+`y 12` in an 800 px window with the last option unreachable; the same cap now
+applies to all four sides (measured: 780 px, scrollable, last option inside).
+An explicit `side` is never flipped — near an edge the runtime clamps it.
+
 ## Style by state
 
 `style` takes an object or a callback over `SelectState` — the runtime's own
@@ -261,7 +269,8 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   nothing, and disabled flags survive the flatten.
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
   below but fits above, the collision margin, an exact fit, the more-room
-  fallback, a preferred side, and the space on each side.
+  fallback, a preferred side, and the space on each side — including the height
+  a left/right layer may use (plan `098`).
 - `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
   named `ComboBox` with `expanded: false` and the placeholder as its value;
   opening flips `expanded` to `true` and paints a named `ListBox` of named
@@ -276,7 +285,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   (068):** a 30-option list is capped to the window margin, is a scroller, the
   wheel moves its offset, and the last option is reachable after scrolling
   (without the cap the layer is 916 px tall); dropping `overflowY` leaves it
-  unscrollable, and dropping `flexShrink` squashes the rows instead. **Keyboard
+  unscrollable, and dropping `flexShrink` squashes the rows instead. **Beside
+  the trigger (098):** a 30-option `side="left"` list is capped to the window's
+  bottom margin (measured 780 px from `y 12`, scrollable), the arrows still reach
+  "Option 30" inside it, and the failing direction painted 908 px with the last
+  row at `y 888.5`. **Keyboard
   (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
   leave the highlighted "Option 39" inside the list (without the wrapper's
   `scrollIntoView` the offset stays `0`); opening on "Option 49" scrolls to
