@@ -36,6 +36,7 @@ import { rootSingleChildScenario, rootWrapperScenario } from "./root.js";
 import { textScenario } from "./text.js";
 import { typographyScenario } from "./typography.js";
 import { inputScenario } from "./input.js";
+import { inputPayloadScenario } from "./input-payload.js";
 import { textEntryScenario } from "./text-entry.js";
 import { pointerEntryScenario } from "./pointer-entry.js";
 import { focusScenario } from "./focus.js";
@@ -188,6 +189,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   textScenario,
   typographyScenario,
   inputScenario,
+  inputPayloadScenario,
   textEntryScenario,
   pointerEntryScenario,
   focusScenario,

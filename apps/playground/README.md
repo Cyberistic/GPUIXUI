@@ -1188,6 +1188,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | -------- | ------------------------------ |
 | `live-shell` | `app-shell` fills the 1100 × 720 window; clicking a sidebar entry mounts that view and paints its own text; `Enter` on a focused entry switches the stage |
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
+| `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `524`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
@@ -1303,6 +1304,26 @@ after typing, so a test observes `onChange` and `getPaintedText`. And there is
 mask, so a typed secret is held, announced and painted in clear. A password
 field is an app-owned OS prompt, not a component; the shipped library must not
 pretend otherwise.
+
+## Input payloads (plan `524`)
+
+`input-payload` (headless) and `live-input-payload` (a real window) read the
+event fields behind every handler, rather than the field's value:
+
+| Field | Measured |
+| ----- | -------- |
+| `clickCount` | **always `1`** — three clicks 100 ms apart, press/release pairs 80 ms apart, and two real `mouse.click`s in a window all report `1`; a double click cannot be observed, so a component owns a second-press rule and must not expose `onDoubleClick` |
+| click `x`/`y` | exact window coordinates of the target's centre |
+| `button` | `0` for a primary click (`2` for a right click, `context-menu-pointer`) |
+| `keyChar` on a text field | the produced character: `é`, `日`, and a space for the `space` key (`key` stays `space`) |
+| `keyChar` on a plain `div` | absent — a focusable `div` reads `event.key` only |
+| `isHeld` | `false` for a first press, `true` for a repeat (the host's `keyDown` gained an optional third argument) |
+| `cmd-a` in a field | **consumed by the native editor**: it never reaches React's `onKeyDown`, while the next character still replaces the whole value |
+| wheel `precise` / `touchPhase` | `true` / `"moved"` for a simulated wheel, headless and live — it cannot stand in for a line wheel |
+
+The negative is the important half: a grid, list or tree that wants
+"double-click to rename" cannot verify it here, and `Grid`'s existing
+second-press rule is the honest pattern.
 
 ## The shipped Tier 2 catalogue (plans `330`, `344`)
 
@@ -1707,7 +1728,9 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 46/46 — layout, **root**, input, scroll,
+  The **real-window** suite (`smoke:live`) was last run at 46/46 (929 checks);
+  plan `524` added `live-input-payload` (12/12 in a focused run), so the registry
+  is now 47 and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the

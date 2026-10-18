@@ -23,6 +23,7 @@ import { contextMenuScenario } from "../scenarios/context-menu.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
 import { inputScenario } from "../scenarios/input.js";
+import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
@@ -331,6 +332,68 @@ const input: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${input.id}.png`);
+    }),
+};
+
+const inputPayload: LiveScenario = {
+  id: "live-input-payload",
+  title: "Live input payloads: click counts, key chars and precise scroll",
+  capability: "input",
+  view: inputPayloadScenario.view,
+  ready: "payload-target",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("payload-target");
+      yield* Effect.sleep(Duration.millis(80));
+      yield* ctx.host.click("payload-target");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "two live clicks are two clicks",
+        yield* textOf(ctx, "payload-clicks"),
+        "2",
+      );
+      yield* ctx.expectEqual(
+        "no live click is a double click",
+        yield* textOf(ctx, "payload-counts"),
+        "1,1",
+      );
+
+      yield* ctx.host.click("payload-field");
+      yield* settle;
+      yield* ctx.host.key("é");
+      yield* settle;
+      yield* ctx.host.key("日");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live editor receives non-ASCII text",
+        yield* textOf(ctx, "payload-value"),
+        "é日",
+      );
+      yield* ctx.expectEqual(
+        "the live field reports each produced character",
+        yield* textOf(ctx, "payload-keys"),
+        "é:é|日:日",
+      );
+
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("space");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live native editor consumes select-all",
+        yield* textOf(ctx, "payload-value"),
+        " ",
+      );
+
+      yield* ctx.host.wheel("payload-target", 0, 40);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live wheel is a precise gesture",
+        yield* textOf(ctx, "payload-wheel"),
+        "40/true/moved",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${inputPayload.id}.png`);
     }),
 };
 
@@ -5577,6 +5640,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
   rootProbe,
   input,
+  inputPayload,
   scroll,
   panel,
   motion,

@@ -190,10 +190,10 @@ export const createHost = (
     verb(`key ${keystroke}`, () =>
       app.call("keystrokes", { keys: keystroke }).then(() => undefined),
     ),
-  keyDown: (testId, key) =>
+  keyDown: (testId, key, isHeld) =>
     verb(`keyDown ${testId} ${key}`, () =>
       idOf(app, testId).then((elementId) =>
-        app.call("keyDown", { key, elementId }).then(() => undefined),
+        app.call("keyDown", { key, elementId, isHeld }).then(() => undefined),
       ),
     ),
   keyUp: (testId, key) =>

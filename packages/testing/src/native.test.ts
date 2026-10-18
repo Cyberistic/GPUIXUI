@@ -332,6 +332,12 @@ describe("input", () => {
     expect(renderer.calls).toEqual(["keyDown:2:space:false", "keyUp:2:space"]);
   });
 
+  it("forwards a held key so a repeat is distinguishable", () => {
+    const renderer = rendererOf();
+    createHost(renderer).keyDown("panel", "a", true);
+    expect(renderer.calls).toEqual(["keyDown:2:a:true"]);
+  });
+
   it("dispatches focus events before repainting on traversal", () => {
     const renderer = rendererOf();
     const host = createHost(renderer);

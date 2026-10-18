@@ -366,9 +366,10 @@ export interface SmokeHost {
    *
    * `key` runs the renderer's keystroke parser; a control whose contract is
    * "Space activates on key **up**" needs the two halves separately, exactly as
-   * a physical keyboard delivers them.
+   * a physical keyboard delivers them. `isHeld` marks a repeat, as the runtime
+   * reports it on a held key (plan `524`).
    */
-  readonly keyDown: (testId: string, key: string) => void;
+  readonly keyDown: (testId: string, key: string, isHeld?: boolean) => void;
   /** Delivers the key up matching {@link SmokeHost.keyDown}. */
   readonly keyUp: (testId: string, key: string) => void;
   /** Native focus traversal (`window.focus_next`). */
@@ -550,6 +551,7 @@ export interface AsyncSmokeHost {
   readonly keyDown: (
     testId: string,
     key: string,
+    isHeld?: boolean,
   ) => Effect.Effect<void, SmokeHostError>;
   readonly keyUp: (
     testId: string,

@@ -71,15 +71,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`520` and `522` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, `521` and `523` were taken by components, and the next plan takes `525`
 
-`[~]` Probe the **input payload contract** per plan `524` — the last unmeasured
-      fields of the event the library's handlers receive. Reconnaissance: a
-      double click is **not observable** (`clickCount` is always `1`, headless
-      and live, even for real press/release pairs 80 ms apart), `keyChar` is
-      absent on a plain `div` but carries `é`/`日`/`" "` on a text field, `cmd-a`
-      is consumed by the native editor before React's handler, and a synthetic
-      wheel always reports `precise=true`/`touchPhase=moved`. Adds `input-payload`
-      + `live-input-payload` and an optional `isHeld` host argument (§2); result
-      pending
+`[x]` Probe the **input payload contract** per plan `524` — the last unmeasured
+      fields of the event the library's handlers receive: `input-payload`
+      (39 checks) and `live-input-payload` (12), six mutation proofs. A
+      **double click is not observable** (`clickCount` is always `1`, headless
+      and live, even for real press/release pairs 80 ms apart), so a component
+      owns a second-press rule. `keyChar` is absent on a plain `div` but carries
+      `é`/`日`/`" "` on a text field; `isHeld` is populated and the host gained
+      an optional third `keyDown` argument to force a repeat; `cmd-a` is
+      consumed by the native editor before React's handler; a synthetic wheel
+      always reports `precise=true`/`touchPhase=moved`. Headless suite
+      `97 → 98` (`3389 → 3428` checks), exit `0`; the live twin is `12/12` green
+      and the registry now lists 47 live scenarios. The **full live suite is a
+      merge/release gate and was not run for this task** (never claim its
+      total). D64 and the Text inputs row record the contract.
+
+`[ ]` **Cross-team:** `@gpuixui/components` must not expose an
+      `onDoubleClick`/double-click activation contract — `clickCount` is always
+      `1` on this host in both harnesses, so List/Tree/Grid keep the
+      second-press rule; if a double click is wanted, the component owns the
+      interval and a test can only assert the two presses (owner: `components`;
+      evidence: plan `524` §2/§8)
 
 `[x]` Probe the **app root** per plan `522` — the rule every consumer's
       top-level tree sits on (surfaced by `components` plan `510`):

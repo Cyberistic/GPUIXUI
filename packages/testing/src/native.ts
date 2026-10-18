@@ -284,8 +284,10 @@ export const createHost = (renderer: NativeRenderer): SmokeHost => ({
   key: (keystroke) => renderer.simulateKeystrokes(keystroke),
   // The two halves matter for a control whose contract is "activate on Space
   // up": `key` is a parser for typed text and named keys, not a key pair.
-  keyDown: (testId, key) =>
-    withId(renderer, testId, (id) => renderer.nativeSimulateKeyDown(id, key)),
+  keyDown: (testId, key, isHeld) =>
+    withId(renderer, testId, (id) =>
+      renderer.nativeSimulateKeyDown(id, key, isHeld),
+    ),
   keyUp: (testId, key) =>
     withId(renderer, testId, (id) => renderer.nativeSimulateKeyUp(id, key)),
   // `focusNext`/`focusPrevious` are raw native calls: unlike the `simulate*`

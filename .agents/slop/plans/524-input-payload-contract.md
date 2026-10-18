@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned — reconnaissance measured (§2); implementation and results pending |
+| Status | landed — `input-payload` 39 checks + `live-input-payload` 12; six mutation proofs (§6); headless total in §8, the full live suite is a merge gate |
 | Phase | B→F (input contract / component API) |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `100` (harness), `140` (0.10.0 runs here), `160` (a11y dump), `163` (selection), `188` (text entry), `343` (pointer entry), `387` (a second press enters an edit) |
@@ -107,7 +107,7 @@ version's log is why this plan exists, not the shipped probe).
 | 12 | the field reports the character, not the key name | `key("space")`: `payload-field-key` = `space: ` (a **space**, not `space`) |
 | 13 | non-ASCII typing reaches React | `key("é")` and `key("日")`: `payload-value` = `hé日 ` |
 | 14 | every typed key is reported | `payload-keys` = `h:h\|é:é\|日:日\|space: ` |
-| 15 | the native editor consumes select-all | `key("cmd-a")`: `payload-keys` still ends at `space: ` (no `cmd-a` entry) |
+| 15 | the native editor consumes select-all | `key("cmd-a")`: `payload-keys` is still exactly `h:h\|space: \|é:é\|日:日` (no `cmd-a` entry) |
 | 16 | the selection was real | `key("space")`: `payload-value` = `" "` (the whole value replaced) |
 | 17 | a synthetic wheel is precise | `wheel("payload-target", 0, 40)`: `payload-wheel` = `40/true/moved` |
 | 18 | an option chord types nothing | click the target, `key("alt-s")`: `payload-key` = `s/-/down/-` and the field value is unchanged |
@@ -174,10 +174,10 @@ From the repository root:
 ```sh
 nub run --filter playground build
 nub apps/playground/dist/smoke/run.js --only input-payload
-# expect: 1/1 scenario, 18/18 checks, exit 0, input = verified
+# expect: 1/1 scenario, 39/39 checks (18 assertions + presence checks), exit 0, input = verified
 nub apps/playground/dist/live/run.js --list          # live-input-payload listed
 nub apps/playground/dist/live/run.js --only live-input-payload
-# expect: 1/1 live scenario, 9 checks, exit 0, one screenshot
+# expect: 1/1 live scenario, 12 checks, exit 0, one screenshot
 nub run --filter @gpuixui/testing test               # the held-key adapter test
 ```
 
@@ -194,11 +194,13 @@ the host contract:
 
 ```sh
 nub apps/playground/dist/smoke/run.js
-nub apps/playground/dist/live/run.js --all
+# The full live suite is a merge/release gate, not a per-task check. Do not run
+# `--all` for this task; the focused `live-input-payload` run is the evidence.
 ```
 
-Record both totals in §8 and in `apps/playground/README.md`. The full live run is
-the last step, never an iteration loop.
+Record the headless total in §8 and in `apps/playground/README.md`. The live
+registry gains one scenario (47); its full-suite total is only recorded when a
+merge gate actually runs it.
 
 ## 6. Mutation proofs (the two-direction requirement)
 
@@ -208,7 +210,7 @@ Apply each, run the focused scenario, record the observed message, revert.
 | - | -------- | ---------------- |
 | M1 | `onMouseDown` logs `2` instead of `event.clickCount` | #6 "a press reports one click" — `expected "1", got "2"` |
 | M2 | the field logs `event.key` where `keyChar` belongs | #12 — `expected "space: ", got "space:space"` |
-| M3 | seed `payload-keys` with `cmd-a:a` | #15 — the log now contains `cmd-a` |
+| M3 | expect `cmd-a:a` in the log (the reverse of the measured absence) | #15 — `expected "…\|cmd-a:a", got "h:h\|space: \|é:é\|日:日"` |
 | M4 | log `isHeld` as `false` unconditionally | #9 — `expected "a/-/held/-", got "a/-/down/-"` |
 | M5 | log `precise` as `false` | #17 — `expected "40/true/moved", got "40/false/moved"` |
 | M6 | drop the `isHeld` argument in `Native.createHost` | the `packages/testing` adapter test fails: the fake renderer recorded `undefined`, expected `true` |
@@ -243,9 +245,15 @@ the full-suite totals, and the exact scenario ids that were run.
 | Item | Result |
 | ---- | ------ |
 | reconnaissance | `clickCount` always `1` (3 clicks/2.4 s headless, 2 clicks live, press/release pairs); `keyChar` absent on a `div`, `é`/`日`/`space` on a field; `cmd-a` consumed by the editor; synthetic wheel `precise=true`, `touchPhase=moved` |
-| `input-payload` | pending |
-| `live-input-payload` | pending |
-| `packages/testing` | pending |
-| full headless | pending |
-| full live | pending |
+| `input-payload` | **39/39 checks**, exit `0`, `input=verified`; 18 assertions plus one presence check per readout |
+| `live-input-payload` | **12/12 checks**, exit `0`, real window, one screenshot |
+| `packages/testing` | the held-key adapter test passes; `SmokeHost`/`AsyncSmokeHost`/`Native`/live host forward `isHeld` |
+| M1 | press logged `2` → "a press reports one click: expected \"1\", got \"2\"", exit `1` |
+| M2 | field logged `key` as the character → "expected \"space: \", got \"space:space\"", exit `1` |
+| M3 | expected `cmd-a:a` in the log → "expected \"h:h\|space: \|é:é\|日:日\|cmd-a:a\", got \"h:h\|space: \|é:é\|日:日\"", exit `1` |
+| M4 | phase forced to `down` → "a forced repeat is held: expected \"a/-/held/-\", got \"a/-/down/-\"", exit `1` |
+| M5 | wheel `precise` forced to `false` → "expected \"40/true/moved\", got \"40/false/moved\"", exit `1` |
+| M6 | adapter dropped `isHeld` → the adapter test expects `keyDown:2:a:true`, got `keyDown:2:a:false` |
+| full headless | `98/98` scenarios, **3428 checks**, exit `0` (one run, at the end; `input-payload` is 39 of them) |
+| full live | **not run — merge gate.** The registry lists 47 scenarios; the focused `live-input-payload` run is 12/12 green. No full-suite total is claimed. |
 | gates | pending |
