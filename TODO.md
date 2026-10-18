@@ -1328,6 +1328,16 @@ opaque fills, both lists derive from it (4 + 4 → 8 + 8), the AAA dark
 `softAction` moves one step darker (`#3A414D` → `#343B47`) so its white label
 keeps 7:1 through the veil (7.165:1) while clearing 1.071:1 on every AAA soft
 tint, and `statusSolidStyles` paints the veil (plan 504)
+`[ ]` Hold the elevation tint on the AAA dark canvas — every high-contrast
+dark set ships `shadow: #000000` over `background: #000000`, so
+`elevationShadow` resolves `sm`/`md`/`lg` to **1.000:1** on the canvas (and
+`sm` to 1.031:1 on the card) while `docs/design-system.md` §7 says the AAA
+modal is separated by "a light wash, its own edge and elevation". A dark tint
+cannot darken pure black: either give the AAA dark set a light tint with its
+own alphas — and keep it through the platform elevation plan 345 applies at
+high contrast — or correct the claim and document the edge as the elevation
+cue. No contract pair measures `shadow` today (plan 371 covers only its hex
+form)
 
 ## Phase C — Tier 1–2 components
 
