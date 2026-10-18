@@ -65,3 +65,18 @@ nub run --filter docs studio
 ```
 
 `apps/docs/README.md` carries the editor's contract and the round-trip guard.
+
+### Generated pages
+
+[Values API](/docs/api-values) is generated from the packages' real entry
+points, not written by hand. After an export, its doc comment or a
+classification changes:
+
+```sh
+nub run --filter docs api:values
+```
+
+The command refuses to write an export with no summary, or a package that is
+neither indexed nor excluded. `nub run --filter docs test` then fails while the
+committed index is stale, so the generated file is never the only copy of the
+truth.

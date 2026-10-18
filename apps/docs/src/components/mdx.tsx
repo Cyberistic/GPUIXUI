@@ -19,6 +19,7 @@ import { RelatedComponents } from "./related-components";
 import { PlatformValues } from "./platform-values";
 import { TokenColors } from "./token-colors";
 import { TokenScales } from "./token-scales";
+import { ValueIndex } from "./value-index";
 import { PlatformTypes, TypeScale } from "./type-scale";
 
 export function getMDXComponents(components?: MDXComponents) {
@@ -43,6 +44,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TypeScale,
     PlatformTypes,
     TokenScales,
+    ValueIndex,
     PlatformValues,
     ThemeCaptures,
     ...components,

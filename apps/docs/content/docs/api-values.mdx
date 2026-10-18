@@ -1,0 +1,87 @@
+---
+title: Values API
+description: Every function, hook, class, constant and inventory record the documented packages export, generated from their real entry points.
+---
+
+The component pages document props; this page documents the **values** a
+consumer can import — the decision helpers, hooks, icon data, theme data and
+inventory records. Every row is generated from the packages' real entry points
+by `apps/docs/scripts/api-values.ts`, so a helper cannot exist only in the
+source, and the page cannot list something the package does not export.
+
+Not every API is here, by design:
+
+- Component props and their types are on the [API reference](/docs/api-reference).
+- The colour, type, spacing and elevation values are on [Theming](/docs/theming).
+- The theme shapes, extension helpers and the React provider are on the
+  [Tokens API](/docs/tokens-api).
+- How the decision layer is designed, and where a new decision belongs, is on
+  [Extending](/docs/extending).
+
+<ValueIndex />
+
+## How the index is generated
+
+The page has no hand-written rows. The generator walks each package's public
+entry, follows `export *` and re-export aliases to the declaration, and reads
+the declaration's summary from its own doc comment:
+
+| Kind | What it is | Example |
+| ---- | ---------- | ------- |
+| `function` | a pure decision, resolver or formatter | `normalizeRange`, `iconPixels` |
+| `hook` | a React hook the package exports | `useToast`, `useTheme` |
+| `class` | a value class or error type | `ToastInput`, `MissingThemeProviderError` |
+| `constant` | a data table, scale or value list | `ICON_SIZES`, `BUTTON_VARIANTS` |
+| `record` | a component's inventory record (`*Meta`) | `tabsMeta` |
+
+Components are not rows: a PascalCase renderer is documented on its component
+page. Types are not rows either: they are generated into the prop tables and
+the [Tokens API](/docs/tokens-api).
+
+Two things are deliberately outside the index, and each reason is recorded in
+the policy file: `@gpuixui/primitives/core` (the same objects the package root
+already exports) and `@gpuixui/testing` (the native smoke harness, built to
+`dist` and not a dependency of this site).
+
+`internal` marks an export that exists so the package's own modules can compose
+it. It is listed so the surface is complete, not as a compatibility promise.
+
+This is the whole contract — the policy, the reader and the guard's rules:
+
+<include lang="ts" meta='title="apps/docs/src/lib/api-values.ts"'>
+  ../../src/lib/api-values.ts
+</include>
+
+Regenerate it after an export, a doc comment or a classification changes:
+
+```sh
+nub run --filter docs api:values
+```
+
+The command refuses to write when an export has no summary or a package is
+neither indexed nor excluded. `nub run --filter docs test` fails when the
+committed index is stale, so a new export cannot land undocumented.
+
+## Importing a helper
+
+Decision helpers are exported from the package root; the `core` subpath of
+`@gpuixui/primitives` exposes the same objects for code that wants only the
+decision layer.
+
+```ts
+import { checkboxState, numberRange } from "@gpuixui/primitives";
+import { iconPixels, ICON_SIZES } from "@gpuixui/icons";
+import { useToast } from "@gpuixui/components";
+```
+
+A helper is worth importing when it decides something you also need outside the
+component — the same `numberRange` a `NumberField` clamps with, the same
+`iconPixels` an icon paints at. It is not a second API to memorise: the
+component pages show where each one is used.
+
+## Doc comments and overrides
+
+The index reads the declaration's own doc comment first. Where the package has
+not annotated an export yet, the docs policy carries a one-line summary and the
+guard fails as soon as the source gains a comment, so the override cannot
+outlive the gap.

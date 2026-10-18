@@ -22,6 +22,7 @@ nub run --filter docs smoke:build   # build, serve and crawl the production outp
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
+nub run --filter docs api:values    # regenerate the generated Values API index
 nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-only)
 nub run check                       # repo gate: test quality, lint, format, types
 ```
