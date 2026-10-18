@@ -95,7 +95,7 @@ describe("a selected row's title through the selection wash", () => {
     );
 
     expect(matches).toEqual([pair]);
-    expect(selectionPairs).toHaveLength(20);
+    expect(selectionPairs).toHaveLength(26);
     expect(selectionPairs).toContainEqual([
       "selectedForeground",
       "selected",

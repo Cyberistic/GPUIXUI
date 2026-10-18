@@ -461,6 +461,12 @@ describe("themeContrastFailures", () => {
       ["selectedForeground", "selected"],
       ["cardForeground", "card"],
       ["foreground", "selected"],
+      ["popoverForeground", "hover"],
+      ["popoverForeground", "active"],
+      ["popoverForeground", "selected"],
+      ["selectedForeground", "hover"],
+      ["selectedForeground", "active"],
+      ["selectedForeground", "accent"],
       ...selectionSurfaces.map((surface) => ["mutedForeground", surface]),
       ...selectionStatusPairs.map(([foreground, background]) => [
         foreground,
@@ -582,7 +588,7 @@ describe("themeContrastFailures", () => {
     ]);
     // Nine surfaces with their own body role, a card's second role, a selected
     // row's title, and the same nine at secondary strength.
-    expect(selectionPairs.length).toBe(20);
+    expect(selectionPairs.length).toBe(26);
     expect(selectionStatusPairs).toHaveLength(36);
     expect(selectionWashPairs.length).toBe(10);
     expect(selectionSoftPairs.length).toBe(16);

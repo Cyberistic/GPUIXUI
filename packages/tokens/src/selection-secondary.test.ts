@@ -44,7 +44,7 @@ const measureSelected = (
 
 describe("selected secondary text", () => {
   it("holds every text pair through the wash, secondary included", () => {
-    expect(selectionPairs).toHaveLength(20);
+    expect(selectionPairs).toHaveLength(26);
     expect(
       selectionPairs.filter(([foreground]) => foreground === "mutedForeground"),
     ).toHaveLength(selectionSurfaces.length);

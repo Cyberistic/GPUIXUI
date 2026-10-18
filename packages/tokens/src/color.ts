@@ -493,7 +493,9 @@ export const darkColors = {
  * while pressed (plan 318). The status text roles sit a half-step between their
  * ramp steps, so a label keeps the 7:1 floor when it is selected with the row
  * around it (plan 366). The selected row is a step past the `accent` wash a
- * selectable row hovers with, so the click is perceivable (plan 381).
+ * selectable row hovers with, so the click is perceivable (plan 381). Its
+ * inherited label is iris 950, so it keeps 7:1 through the selection wash on the
+ * pressed row a reader drags across (plan 525).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -559,7 +561,7 @@ export const highContrastLightColors = {
   hover: "#E8E8E8",
   active: "#D6D6D6",
   selected: "#D8DBFF",
-  selectedForeground: "#2E2370",
+  selectedForeground: palette.iris[950],
   disabled: "#E8E8E8",
   disabledForeground: "#444444",
   skeleton: "#B0B0B0",

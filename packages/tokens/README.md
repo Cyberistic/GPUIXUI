@@ -364,7 +364,9 @@ own `cardForeground` is measured beside the default `foreground`, because both
 Windows recipes ship the two apart
 (plan 363), and a selected row's title (`foreground`) is measured beside its
 inherited `selectedForeground`, because the title is the brighter of the two
-roles (plan 506). High-contrast dark shipped at 6.48:1 on `hover`
+roles (plan 506). A menu row's `popoverForeground` is measured on the three
+washes it highlights with and the selected row's inherited `selectedForeground`
+on all four fills it keeps (plan 525). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
 `active`, until plan 081 darkened the three wash bases. An Alert or Badge
 is measured the same way: the tone's `xSoftForeground` is held to the body floor

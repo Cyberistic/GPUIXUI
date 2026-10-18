@@ -545,7 +545,8 @@ Colour is checked, not assumed. The token suite enforces:
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes, the `accent`/`selected` row fills and the four soft status fills a link in a status panel sits on | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`, a card's own `cardForeground` on `card` and a selected row's title `foreground` on `selected`) | 7:1 | 7:1 |
 | text selection on a soft status fill (`xSoftForeground`, `foreground`, `softActionForeground` and `mutedForeground` over the wash on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 7:1 / 4.5:1 | 7:1 / 7:1 |
-| text selection of a selected row's inherited label (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
+| text selection of a selected row's inherited label (`selectedForeground` over the wash on `selected`, the `accent` wash a hovered selectable row paints and the `hover`/`active` pointer washes) | 4.5:1 | 7:1 |
+| text selection of a menu row's label (`popoverForeground` over the composited `selection` wash on `hover`/`active`/`selected`) | 4.5:1 | 7:1 |
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection of a status label (`xText` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`, the `disabled` fill and the four soft status fills) | 1.05:1 | 1.05:1 |

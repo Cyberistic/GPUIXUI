@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 189/251
+`[x]` `[███████░░░]` 190/252
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1506,6 +1506,16 @@ the four soft fills, so a theme whose `selection` equalled its `disabled`
 returned `[]` for the composition while the highlight was gone; the pair joins
 the list (9 → 10 wash pairs) and every shipped set already clears the 1.05:1
 floor (1.125:1 at the tightest, high-contrast dark), so no colour moves (plan 524)
+`[x]` Hold the row's own text through a text selection — `selectionPairs`
+assumed one body role per surface, so a menu row's `popoverForeground` on the
+`hover`/`active`/`selected` washes and a selected row's inherited
+`selectedForeground` on `hover`/`active`/`accent` were measured at rest but
+never through the composited wash; high-contrast light's inherited label
+measured **6.693:1** on the pressed row, under 7:1, in all six AAA light sets
+while every check returned `[]`. The role moves one iris step to `#1C1547`
+(8.533:1 at the tightest of its four fills), the six pairs join the list
+(20 → 26), and every shipped set passes (4.898:1 macOS light at the tightest)
+(plan 525)
 
 ## Phase C — Tier 1–2 components
 

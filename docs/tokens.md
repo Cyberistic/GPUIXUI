@@ -546,7 +546,7 @@ carries, so it cannot claim another.
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
-| `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
+| `selectedForeground` | `#1C1547` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#444444` | `#D0D0D0` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
@@ -1253,7 +1253,15 @@ own tone with `xSoftForeground`, its description with `foreground`, its panel
 action with `softActionForeground` and its caption with `mutedForeground`. A card
 carries two text roles — the default `foreground` a `CardTitle` paints and its
 own `cardForeground`, which a context menu trigger sets on its `card` fill — so
-both are measured through the wash.
+both are measured through the wash. A surface can carry a second body role. A
+menu row paints `popoverForeground` on the `hover`, `active` and `selected`
+fills, and a selected row keeps its inherited `selectedForeground` on `hover`,
+`active` and the `accent` a selectable row hovers, so `selectionPairs` measures
+both through the wash beside the `foreground` the list-row title uses. The audit
+found high-contrast light's inherited label at **6.693:1** on the pressed row's
+wash, under 7:1, while every check returned `[]`; the value moves one iris step
+(`#2E2370` → `#1C1547`) and the four fills measure **8.533:1** at the tightest,
+no other colour moving.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
 message timestamp is selected with the body copy around it. The soft surfaces
@@ -1290,8 +1298,9 @@ dark's selected fill one step (`#2B4F76` → `#27476A`) because its wash had no
 alpha window left. `selectionSurfaces` is the list of plain surfaces,
 `selectionPairs` holds each surface's body and secondary text pairs, a card's
 second text role
-(`cardForeground` beside `foreground`) and a selected row's title (`foreground`)
-beside its inherited label, and `selectionWashPairs` holds the wash itself to the
+(`cardForeground` beside `foreground`), a menu row's `popoverForeground` on the
+three washes it paints and a selected row's title (`foreground`) beside its
+inherited label on all four fills it keeps, and `selectionWashPairs` holds the wash itself to the
 1.05:1 perceivability floor on each surface, so a highlight that is technically
 readable but invisible fails the check too.
 
@@ -1613,8 +1622,9 @@ it paints, with both text roles each surface carries: the body role over
 secondary and body floors; and `mutedForeground` on all nine surfaces
 at the secondary floor — reported with `wash: "selection"`. `selectionPairs` is
 the text list; it names both of a card's text roles, the default `foreground` and
-`cardForeground`, and both of a selected row's, the title `foreground` and the
-inherited `selectedForeground`. The four status labels join it through
+`cardForeground`, a menu row's `popoverForeground` on the three washes it paints,
+and both of a selected row's, the title `foreground` and the inherited
+`selectedForeground` on all four fills it keeps. The four status labels join it through
 `selectionStatusPairs`,
 because `xText` is the role a status label, icon or dot paints on the four washes
 a row uses, and a selectable row's label is dragged over with the copy around
@@ -2631,6 +2641,15 @@ returned `[]`. `selectionFillInactivePairs` publishes the one resting
 composition, identity dark `disabledForeground` moves `#A1A9B7` → `#B0B8C6`
 (3.317:1) and AAA dark `#B0B0B0` → `#D0D0D0` (4.645:1), and every shipped set
 passes; `contrastPairs` stays **396**.
+Plan `525` measures the row's own text through the selection wash:
+`selectionPairs` assumed one body role per surface, so a menu row's
+`popoverForeground` on `hover`/`active`/`selected` and a selected row's inherited
+`selectedForeground` on `hover`/`active`/`accent` were unmeasured. High-contrast
+light's `selectedForeground` measured **6.693:1** through the wash on `active`,
+under 7:1, while all six checks returned `[]`; the role moves one iris step
+(`#2E2370` → `#1C1547`), the six pairs join the list (20 → **26**), every shipped
+set passes (4.898:1 macOS light at the tightest), and `contrastPairs` stays
+**396**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2809,7 +2828,9 @@ carries actions — a field, a don't-show-again checkbox — whose edge must sta
 visible.
 Text selection is measured in both directions: `selectionPairs` holds the body
 role each surface uses and `mutedForeground` on all nine `selectionSurfaces` to
-their floors, and `selectionWashPairs` holds the wash itself to the 1.05:1
+their floors, a menu row's `popoverForeground` on the three washes it paints, and
+a selected row's inherited `selectedForeground` on all four fills it keeps, and
+`selectionWashPairs` holds the wash itself to the 1.05:1
 perceivability floor on each plain surface and on the `disabled` fill an
 unavailable label keeps, because a highlight can be readable and still be
 invisible. Windows dark and both high-contrast sets already cleared the secondary

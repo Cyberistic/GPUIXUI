@@ -219,6 +219,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [522](./522-inline-avatar-row-fit.md) | The inline avatar must fit the dense row it leads | F | 054, 358, 360, 372, 386, 521 | done |
 | [523](./523-control-horizontal-padding.md) | A control's horizontal padding is a shape, not a number | F | 089, 358, 368, 372, 384, 517 | done |
 | [524](./524-disabled-selection-wash.md) | The selection wash on the unavailable control's fill | F | 071, 081, 087, 306, 307, 510 | done |
+| [525](./525-row-text-selection.md) | The row's own text through a text selection | F | 071, 081, 087, 312, 316, 363, 506, 510 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2308,6 +2309,20 @@ as it was at rest, so the text pair passed — while the highlight was gone. The
 pair joins the wash list (9 → 10 wash pairs; `contrastPairs` stays 396); every
 shipped set already clears the 1.05:1 floor (1.125:1 at the tightest,
 high-contrast dark), so no colour moves.
+
+Plan `525` closes the second body role a surface can carry. `selectionPairs`
+named one role per surface — `foreground` on the washes, `popoverForeground` on
+`popover`, `selectedForeground` on `selected` — but a menu row paints
+`popoverForeground` on `hover`/`active`/`selected` (plan `312`) and a selected
+row keeps its inherited `selectedForeground` on `hover`/`active`/`accent`
+(plan `316`). Both are selectable text and `selectionColor` inherits into them,
+yet no pair measured either through the wash. The audit found a shipped defect:
+high-contrast light's `selectedForeground` (`#2E2370`) measured **6.693:1**
+through the wash on `active`, under the 7:1 floor in all six AAA light sets,
+while all six checks returned `[]`. The role moves one iris step to
+`palette.iris[950]` (`#1C1547`, 8.533:1 at the tightest of the four fills), the
+six pairs join `selectionPairs` (20 → 26), and every shipped set passes (4.898:1
+macOS light at the tightest); `contrastPairs` stays **396**.
 
 ## How to use a plan
 

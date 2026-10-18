@@ -1318,6 +1318,14 @@ const selectionForegrounds: Readonly<
  * secondary floor. A row description or a message timestamp is selected with
  * the body copy around it, so it carries the secondary floor through the same
  * wash.
+ *
+ * A surface can carry more than the one body role the map names: a menu row
+ * paints `popoverForeground` on the three washes it highlights with, and a
+ * selected row keeps its inherited `selectedForeground` on the `hover`/`active`
+ * fills and the `accent` a selectable row hovers, so those six compositions are
+ * named explicitly beside the map. The shipped high-contrast light set measured
+ * **6.693:1** on `selectedForeground` through the wash on `active`, under the
+ * 7:1 floor, while every check returned `[]` (plan 525).
  */
 export const selectionPairs: readonly ContrastPair[] = [
   ...selectionSurfaces.map(
@@ -1331,6 +1339,16 @@ export const selectionPairs: readonly ContrastPair[] = [
   // A selected row's title is the brighter of its two roles; only the inherited
   // label was measured through the wash before plan 506.
   ["foreground", "selected", "body"],
+  // A menu row's own label on the washes it paints (plan 312): its body role is
+  // `popoverForeground`, not `foreground`.
+  ["popoverForeground", "hover", "secondary"],
+  ["popoverForeground", "active", "secondary"],
+  ["popoverForeground", "selected", "secondary"],
+  // A selected row's inherited label on the other fills the pointer crosses
+  // (plan 316); `selected` is already the surface pair above.
+  ["selectedForeground", "hover", "secondary"],
+  ["selectedForeground", "active", "secondary"],
+  ["selectedForeground", "accent", "secondary"],
   ...selectionSurfaces.map(
     (surface): ContrastPair => ["mutedForeground", surface, "secondary"],
   ),
@@ -1744,7 +1762,10 @@ const elevationFailures = (
  *   (`inactivePanelActionPairs`).
  * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
- *   the wash's own perceivability through the composited `selection` colour.
+ *   the wash's own perceivability through the composited `selection` colour. A
+ *   menu row's `popoverForeground` on the three washes it paints and a selected
+ *   row's inherited `selectedForeground` on `hover`, `active` and `accent` are
+ *   part of the same list.
  * - `selectionInactivePairs` — the unavailable label through the same wash, on
  *   `inactiveSurfaces`; the floor is the library's own inactive design floor,
  *   because a disabled control is still read.

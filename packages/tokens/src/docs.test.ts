@@ -1023,12 +1023,35 @@ describe("docs/tokens.md quoted figures", () => {
     [
       "`selectionSurfaces` is the list of plain surfaces",
       "`selectionPairs` holds each surface's body and secondary text pairs",
+      "`selectionPairs` holds the body role each surface uses",
+      "a menu row's `popoverForeground` on the three washes it paints",
+      "a selected row's inherited `selectedForeground` on all four fills it keeps",
       "`selectionWashPairs` holds the wash itself",
       "`selectionSoftPairs` measures all four text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",
     ].forEach((claim) => {
       expect(markdownProse, claim).toContain(claim);
     });
+  });
+
+  it("holds the row's own text to the selection figures it quotes", () => {
+    const sentence =
+      "A surface can carry a second body role. A menu row paints " +
+      "`popoverForeground` on the `hover`, `active` and `selected` fills, and a " +
+      "selected row keeps its inherited `selectedForeground` on `hover`, `active` " +
+      "and the `accent` a selectable row hovers, so `selectionPairs` measures both " +
+      "through the wash beside the `foreground` the list-row title uses.";
+    expect(markdownProse).toContain(sentence);
+
+    const high = highContrastThemes.light.colors;
+    const washedActive = compositeOver(high.selection, high.active);
+    const regressed = contrastRatio("#2E2370", washedActive);
+    const shipped = contrastRatio(high.selectedForeground, washedActive);
+
+    expect(regressed).toBeCloseTo(6.693, 3);
+    expect(shipped).toBeCloseTo(8.533, 3);
+    expect(markdownProse).toContain(`**${regressed.toFixed(3)}:1**`);
+    expect(markdownProse).toContain(`**${shipped.toFixed(3)}:1**`);
   });
 
   it("quotes the two selection regressions and the fixes", () => {
@@ -2234,7 +2257,8 @@ describe("docs/design-system.md", () => {
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`, a card's own \`cardForeground\` on \`card\` and a selected row's title \`foreground\` on \`selected\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\`, \`softActionForeground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
-      `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`, the \`accent\` wash a hovered selectable row paints and the \`hover\`/\`active\` pointer washes) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection of a menu row's label (\`popoverForeground\` over the composited \`selection\` wash on \`hover\`/\`active\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`, the \`disabled\` fill and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
