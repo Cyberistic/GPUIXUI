@@ -729,11 +729,12 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      re-run on the final branch (after plan `536`): headless **101/101**
-      (`3536` checks) and live **53/53** (`1133` checks), both exit `0`;
-      `nub run check` and `nub run test` pass (1,384 tests). The workstream's
-      own instruction is *never push to master*, so an owner/supervisor
-      performs the final merge.
+      **re-run on the final branch 2026-10-19 (after plan `559`):** headless
+      **101/101** (`3536` checks) and live **61/61** (`1375` checks), both exit
+      `0`; `nub run check`, `nub run lint` and `nub run test` pass (playground
+      408 tests; components 308; primitives 282). The workstream's own
+      instruction is *never push to master*, so an owner/supervisor performs the
+      final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
@@ -1308,7 +1309,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 ## Swarm-owned blockers (fix these)
 
-- **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and the native suite is 60/60 on this host (plan `140`, ADR 0003).
+- **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and both native suites are green on this host (headless 101/101, live 61/61; plan `140`, ADR 0003).
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
 Both are specified in ; each fix starts with a plan under .

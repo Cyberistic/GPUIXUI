@@ -95,13 +95,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **101/101 green here** (exit `0`, `.artifacts/smoke-report.json`,
-**3536 checks**). The live suite last ran in full at **53/53**
-(`live-report.json`, **1133 checks**, exit `0`) in the 2026-10-19 merge gate,
-which included the plan `532` terminal twin, the plan `534` variable-row twin
-and the plan `535`/`536` pointer twins. Focused additions since then — plan
-`554`'s select/combobox/tooltip, plan `556`'s grid, plan `557`'s
-states/truncation and plan `558`'s layers — bring the live registry to **60**;
-no full-suite total is claimed for them. Both `host` lines carry the
+**3536 checks**). The live suite ran in full at **61/61**
+(`live-report.json`, **1375 checks**, exit `0`) in the 2026-10-19 merge gate,
+which included every focused addition through plan `559`'s `live-tree`; the
+live registry is **61**. Both `host` lines carry the
 pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
 and a borderless size — is what every geometry check now asserts.
 

@@ -198,6 +198,7 @@ All §4 commands matched (2026-10-19):
 | `nub apps/playground/dist/live/run.js --only live-input` | **1/1**, `input=verified`, exit `0` (the window and pinned binding are healthy) |
 | `nub apps/playground/dist/smoke/run.js --only virtualized-tree` | **1/1**, `tree=verified`, exit `0` |
 | `nub apps/playground/dist/smoke/run.js` | **101/101**, **3536 checks**, exit `0` (the `vtree-viewport` testId adds no assertion) |
+| `nub apps/playground/dist/live/run.js --all` (merge gate) | **61/61**, **1375 checks**, exit `0` |
 | `nub run check` / `lint` / `test` | exit `0` each; playground **32 files / 408 tests**, components 308, primitives 282 |
 
 Three mutation proofs, each observed with `--only live-tree` and reverted:

@@ -1851,14 +1851,12 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **53/53** on
-  2026-10-19 (1133 checks, exit `0`, the merge gate) — the plan `532` terminal
-  twin, the plan `534` variable-row twin and the plan `535`/`536` pointer twins
-  are all included. The registry is now **60**: the plan `554` select, combobox
-  and tooltip twins, the plan `556` `live-grid` twin, the plan `557`
-  `live-states`/`live-truncation` twins and the plan `558` `live-layers` twin
-  join them, each with a focused run and no full-suite total claimed after the
-  addition. The full suite is a **merge/release gate** —
+  The **real-window** suite (`smoke:live`) ran in full at **61/61** on
+  2026-10-19 (1375 checks, exit `0`, the merge gate) — the plan `532` terminal
+  twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
+  plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
+  `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers` and plan
+  `559`'s `live-tree` are all included. The registry is **61**. The full suite is a **merge/release gate** —
   layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
