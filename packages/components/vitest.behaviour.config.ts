@@ -25,6 +25,11 @@ export default defineConfig({
     // Unmount whatever root a test left behind, so one failing assertion cannot
     // cascade into "a root is still mounted" for every later test (plan 326).
     setupFiles: ["./src/behaviour/setup.ts"],
+    // A native first paint is seconds, not milliseconds, and this host also runs
+    // other workstreams' GPUix suites; the default 5 s produced false timeouts
+    // (measured: the date picker took 7.6 s under load). Assertions still fail
+    // on their own merits.
+    testTimeout: 20_000,
     // The renderer paints through one retained tree; a second worker would race
     // on the window and on the native module.
     pool: "forks",

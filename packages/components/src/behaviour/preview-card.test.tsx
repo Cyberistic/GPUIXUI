@@ -33,6 +33,24 @@ const hoverCard = (root: ReturnType<typeof renderComponent>): void => {
 const after = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Wait until the tree shows the expected state, at most ~2 s. React commits and
+ * the native tree update can lag a timer under load, so a fixed sleep is a coin
+ * flip; the assertion that follows is still what fails when it never happens.
+ */
+const until = async (check: () => boolean): Promise<void> => {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (check()) return;
+    await after(20);
+  }
+};
+
+/** Whether the tree currently contains `testId`. */
+const isShown = (
+  root: ReturnType<typeof renderComponent>,
+  testId: string,
+): boolean => root.renderer.findByTestId(testId) !== undefined;
+
 /** A document link with a hoverable preview card. */
 const Workspace = ({
   open,
@@ -83,7 +101,7 @@ describe("PreviewCard", () => {
 
     hoverCentreOf(card, "trigger");
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
-    await after(40);
+    await until(() => isShown(card, "preview"));
     expect(card.renderer.findByTestId("preview")).toBeDefined();
     card.unmount();
 
@@ -99,7 +117,7 @@ describe("PreviewCard", () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await until(() => isShown(card, "preview"));
     hoverCard(card);
     await after(40);
 
@@ -112,10 +130,10 @@ describe("PreviewCard", () => {
     const card = renderComponent(<Workspace />);
 
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await until(() => isShown(card, "preview"));
     hoverCard(card);
     hoverCentreOf(card, "elsewhere");
-    await after(40);
+    await until(() => !isShown(card, "preview"));
 
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
 
@@ -138,7 +156,7 @@ describe("PreviewCard", () => {
   it("closes on an outside press", async () => {
     const card = renderComponent(<Workspace />);
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await until(() => isShown(card, "preview"));
 
     card.renderer.nativeSimulateClick(12, 12);
 
@@ -150,7 +168,7 @@ describe("PreviewCard", () => {
   it("names the surface and reports the trigger's expanded state", async () => {
     const card = renderComponent(<Workspace />);
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await until(() => isShown(card, "preview"));
 
     expect(card.renderer.findByTestId("preview")?.customProps).toMatchObject({
       role: "group",
@@ -170,7 +188,7 @@ describe("PreviewCard", () => {
     );
 
     hoverCentreOf(card, "trigger");
-    await after(40);
+    await until(() => onOpenChange.mock.calls.length > 0);
 
     expect(onOpenChange).toHaveBeenCalledWith(true);
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
