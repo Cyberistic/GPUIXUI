@@ -73,6 +73,15 @@ The list example is a real file list with leading avatars and trailing badges:
   ../../../../../packages/components/examples/list.example.tsx
 </include>
 
+## State and ownership
+
+`List` owns the roving tab stop, the multiple-selection anchor and the
+uncontrolled selection; the selection is controlled (`value`) or uncontrolled
+(`defaultValue`). The consumer owns the rows, their `textValue` for type-ahead
+and any `onActivate` action. In multiple mode a plain click selects one row,
+Cmd/Ctrl toggles and Shift extends from the anchor; a controlled change is
+reported, not applied until the parent re-renders.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/list.tsx" name="ListProps" />

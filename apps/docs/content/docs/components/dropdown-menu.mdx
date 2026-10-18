@@ -62,6 +62,14 @@ The dropdown example is a real file-actions menu with a destructive item:
   ../../../../../packages/components/examples/dropdown-menu.example.tsx
 </include>
 
+## State and ownership
+
+`DropdownMenu` owns the open flag, the highlighted row, dismissal, focus
+return and the single open submenu level. The consumer owns a controlled
+`open` and every row's action. The highlighted row is the focused row, so Enter
+runs what looks active. Escape and choosing a row return focus to the trigger;
+an outside press closes without stealing focus.
+
 ## Submenus
 
 A submenu groups actions behind one secondary level:

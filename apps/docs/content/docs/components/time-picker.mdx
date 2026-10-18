@@ -67,6 +67,14 @@ The real example drives a controlled value with a quarter-hour arrow step:
   ../../../../../packages/components/examples/time-picker.example.tsx
 </include>
 
+## State and ownership
+
+`TimePicker` keeps the two segment drafts and reports a canonical `HH:mm`
+value; the value is controlled (`value`) or uncontrolled (`defaultValue`). The
+consumer owns the value and what it means. Typing clamps per segment, arrows
+carry across the hour and wrap at midnight, blur pads the draft, and `clearable`
+is the only reset — there is no seconds or timezone state.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/time-picker.tsx" name="TimePickerProps" />

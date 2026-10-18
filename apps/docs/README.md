@@ -320,9 +320,12 @@ required list is `sectionsFor(pattern)` in `src/component-meta/contract.ts`, and
 ## Persistence
 ```
 
-- `stateful` (a data grid, a split host, tabs) adds **State and ownership**
-  directly after **Composition**. It names the state the component owns and the
-  state the consumer owns.
+- `stateful` (Tabs, Dialog, Combobox, List, a data grid, a split host) adds
+  **State and ownership** directly after **Composition**. It names the state the
+  component owns and the state the consumer owns. Every interactive compound
+  record is `stateful` (plan 480); a presentational compound (Card, Alert,
+  Breadcrumb, Field, Fieldset, Keycap) or a display-only one (Stepper, Timeline)
+  stays `static` even though it declares parts.
 - `workspace` (panels, docking, a workspace) also adds **Anatomy** directly
   after **Usage** and **Persistence** directly after **State and ownership**.
   **Anatomy** names the parts and the one-way ownership relationship;

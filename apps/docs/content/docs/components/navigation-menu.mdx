@@ -65,6 +65,14 @@ The real example is a two-item product nav with links:
   ../../../../../packages/components/examples/navigation-menu.example.tsx
 </include>
 
+## State and ownership
+
+`NavigationMenu` owns the one open panel (`value` is controllable) and its
+dismiss layer. The consumer owns the triggers, panel content, links and the
+meaning of a value. Only one panel is open at a time; arrows, Home and End move
+between triggers, and Escape closes and returns focus to the trigger that opened
+the panel while an outside press closes it.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/navigation-menu.tsx" name="NavigationMenuProps" />

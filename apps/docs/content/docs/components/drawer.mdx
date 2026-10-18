@@ -66,6 +66,13 @@ The real example is a filters drawer with a header, a body and actions:
   ../../../../../packages/components/examples/drawer.example.tsx
 </include>
 
+## State and ownership
+
+`Drawer` owns the same modal state as `Dialog` through `internal/modal.ts`:
+uncontrolled open, one dismiss layer, focus entry and return, and the Tab trap.
+The consumer owns a controlled `open`, the content and the close decision. Side
+and size are presentation, and the component persists neither.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/drawer.tsx" name="DrawerProps" />

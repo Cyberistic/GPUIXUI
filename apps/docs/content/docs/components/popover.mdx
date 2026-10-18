@@ -55,6 +55,14 @@ The popover example is a real column-picker anchored to a toolbar control:
   ../../../../../packages/components/examples/popover.example.tsx
 </include>
 
+## State and ownership
+
+`Popover` owns the open flag when uncontrolled, the dismiss layer and focus
+return on Escape; a controlled `open` is available. The consumer owns the
+trigger, the content and the open decision. Escape closes it and returns focus
+to the trigger; an outside press closes it without moving focus. The trigger's
+press guard stops the same gesture from immediately re-opening it.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/popover.tsx" name="PopoverProps" />

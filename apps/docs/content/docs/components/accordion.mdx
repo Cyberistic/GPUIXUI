@@ -56,6 +56,15 @@ The accordion example is a real FAQ/advanced-settings stack:
   ../../../../../packages/components/examples/accordion.example.tsx
 </include>
 
+## State and ownership
+
+`Accordion` owns the uncontrolled open set and the registry of trigger
+ids it uses for arrow, Home and End focus. In `type="single"` the value is one
+item or `null`, and `collapsible` decides whether the open section may close;
+`type="multiple"` keeps an array. The consumer owns a controlled `value` and the
+section content: a controlled change is reported, not applied until the parent
+re-renders. A disabled item is skipped by every path.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/accordion.tsx" name="AccordionProps" />

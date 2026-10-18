@@ -65,6 +65,14 @@ The real example narrows a list of people and inserts a name:
   ../../../../../packages/components/examples/mention-input.example.tsx
 </include>
 
+## State and ownership
+
+`MentionInput` owns the text when uncontrolled, the suggestion list's open
+flag, the ranked query and the highlight. The consumer owns the candidate list
+and what an inserted `@name ` means: `onValueChange` reports the new text and
+`onSelect` the chosen candidate. The query is the last `@` token in the text,
+not the caret (0.10.0 exposes no caret API), and Escape closes only the list.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/mention-input.tsx" name="MentionInputProps" />

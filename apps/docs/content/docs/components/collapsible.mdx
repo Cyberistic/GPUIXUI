@@ -52,6 +52,13 @@ The collapsible example is an advanced-options block inside a settings card:
   ../../../../../packages/components/examples/collapsible.example.tsx
 </include>
 
+## State and ownership
+
+`Collapsible` owns the uncontrolled open flag; the consumer owns a controlled
+`open` and the content. `CollapsibleContent` unmounts while closed, so a
+collapsed subtree loses its local state. A controlled root reports every toggle
+and changes only when the parent re-renders.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/collapsible.tsx" name="CollapsibleProps" />

@@ -72,6 +72,15 @@ The real example appends rows and streams a reply token by token:
   ../../../../../packages/components/examples/message-scroller.example.tsx
 </include>
 
+## State and ownership
+
+`MessageScroller` owns whether the viewport is pinned to the end and the unread
+count while it is not; `defaultPinned` sets the initial pin. The consumer owns
+the message rows and passes them as children. A taller streamed row re-anchors
+while pinned; scrolling up leaves the reader's offset untouched and counts
+arrivals; the jump-to-latest control returns to the end. Every row renders in
+v1 — the component does not virtualize.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/message-scroller.tsx" name="MessageScrollerProps" />

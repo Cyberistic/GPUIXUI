@@ -47,6 +47,14 @@ The pagination example pages a real result set with a live count:
   ../../../../../packages/components/examples/pagination.example.tsx
 </include>
 
+## State and ownership
+
+`Pagination` owns **no page state**: the consumer owns `page` and
+`onPageChange`, and the component derives the clamped current page and the
+visible window from them. Every part reads that one derived context, so the
+window cannot disagree with the current page. A control that would move to the
+current page does nothing, and `pageCount <= 0` renders nothing.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/pagination.tsx" name="PaginationProps" />

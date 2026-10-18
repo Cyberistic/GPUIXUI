@@ -62,6 +62,14 @@ The dialog example is a complete delete-workspace workflow, not a floating box:
   ../../../../../packages/components/examples/dialog.example.tsx
 </include>
 
+## State and ownership
+
+`Dialog` owns the open flag when uncontrolled, its dismiss-layer registration
+(Escape and the veil), focus entry and focus return to the trigger. The consumer
+owns a controlled `open`, the content and the decision to close — `DialogClose`
+is a convenience, not an obligation. Only the topmost layer consumes a
+dismissal, so a nested popover closes before its dialog.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/dialog.tsx" name="DialogProps" />

@@ -58,6 +58,14 @@ The real example keeps a controlled list with a removable chip per token:
   ../../../../../packages/components/examples/tag-input.example.tsx
 </include>
 
+## State and ownership
+
+`TagInput` is **controlled**: the consumer owns the token array and
+`onValueChange`; the field owns only the draft text and its focus. Enter or a
+typed comma commits through the shared add rule (duplicates refused unless
+`allowDuplicates`, capped by `max`), and a chip's control calls the remove
+callback. The component never mutates the array it was given.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/tag-input.tsx" name="TagInputProps" />

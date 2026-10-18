@@ -784,6 +784,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/list.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/list.test.tsx",
@@ -989,6 +990,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/dialog.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "dialog",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1048,6 +1050,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/popover.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "popover",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1127,6 +1130,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/menu/sub.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "dropdown-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1207,6 +1211,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/menu/sub.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/context-menu.test.tsx",
@@ -1258,6 +1263,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/command-menu.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "command-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1332,6 +1338,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/accordion.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/accordion.test.tsx",
@@ -1373,6 +1380,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/collapsible.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/collapsible.test.tsx",
@@ -1483,6 +1491,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/pagination.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/pagination.test.tsx",
@@ -1567,6 +1576,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/combobox.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/combobox.test.tsx",
@@ -1613,6 +1623,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/date-picker.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/date-picker.test.tsx",
@@ -1667,6 +1678,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/time-picker.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/time-picker.test.tsx",
@@ -1714,6 +1726,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/message-scroller.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/message-scroller.test.tsx",
@@ -1832,6 +1845,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/navigation-menu.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "navigation-menu",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1869,6 +1883,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/preview-card.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "preview-card",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -1924,6 +1939,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/drawer.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "drawer",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -2040,6 +2056,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/tag-input.tsx",
         },
       ],
+      pattern: "stateful",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/tag-input.test.tsx",
@@ -2086,6 +2103,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
           sourcePath: "packages/components/src/mention-input.tsx",
         },
       ],
+      pattern: "stateful",
       liveScene: "mention-input",
       runtime: nativeSuite(
         "@gpuixui/components",
@@ -2170,6 +2188,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         sourcePath: "packages/components/src/carousel.tsx",
       },
     ],
+    pattern: "stateful",
     runtime: nativeSuite(
       "@gpuixui/components",
       "src/behaviour/carousel.test.tsx",

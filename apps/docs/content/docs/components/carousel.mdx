@@ -70,6 +70,14 @@ The real example steps through three workspace previews with controls:
   ../../../../../packages/components/examples/carousel.example.tsx
 </include>
 
+## State and ownership
+
+`Carousel` owns the active index when uncontrolled, the slide count the track
+registers, and the clamp-or-wrap rule. The consumer owns a controlled `value`
+and the slide content. Every slide stays mounted and is hidden with `display`,
+so a slide keeps its local state while it is not visible. The component owns no
+timer: there is no autoplay.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/carousel.tsx" name="CarouselProps" />

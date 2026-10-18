@@ -51,6 +51,14 @@ The combobox example is a real assignee picker with ranked matches:
   ../../../../../packages/components/examples/combobox.example.tsx
 </include>
 
+## State and ownership
+
+`Combobox` owns the open flag, the typed query and the highlighted row. The
+selection is controlled (`value`) or uncontrolled (`defaultValue`); the consumer
+owns the option list, the trigger label and what a selection means. In single
+mode choosing a row closes the popup; in multiple mode the popup stays open and
+the value toggles. Escape closes the popup and returns focus to the trigger.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/combobox.tsx" name="ComboboxProps" />

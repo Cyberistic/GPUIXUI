@@ -50,6 +50,15 @@ The command-menu example is a real palette with grouped commands and shortcuts:
   ../../../../../packages/components/examples/command-menu.example.tsx
 </include>
 
+## State and ownership
+
+`CommandMenu` is **controlled**: the app owns `open` and `onOpenChange`,
+because a palette is usually opened by an application shortcut rather than by a
+control. The palette owns the query, the ranked rows and the highlight, and
+clears the query and highlight when it closes. The consumer owns the action list
+and the effects of `perform` — the palette never navigates, fetches or toasts on
+its own.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/command-menu.tsx" name="CommandMenuProps" />

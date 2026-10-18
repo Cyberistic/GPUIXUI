@@ -48,6 +48,14 @@ The date-picker example is a real due-date field with a deterministic today:
   ../../../../../packages/components/examples/date-picker.example.tsx
 </include>
 
+## State and ownership
+
+`DatePicker` owns the popup's open flag and the visible month. The selected
+day is controlled (`value`) or uncontrolled (`defaultValue`). Browsing months
+changes the view, not the value — only Enter, Space or a click selects. The
+consumer owns the bounds (`min`/`max`), the `today` anchor and what the ISO day
+means; choosing a day closes the popup and returns focus to the trigger.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/date-picker.tsx" name="DatePickerProps" />

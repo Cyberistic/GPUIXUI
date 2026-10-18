@@ -61,6 +61,14 @@ The context-menu example opens a file's actions at the pointer:
   ../../../../../packages/components/examples/context-menu.example.tsx
 </include>
 
+## State and ownership
+
+`ContextMenu` owns the open flag, the pointer point and the dismiss layer; a
+controlled `open` is available. The trigger records the point from a right click
+or `Shift+F10`. A pointer-opened menu leaves focus where it went; a
+keyboard-opened menu returns focus to the trigger on close. The consumer owns
+the rows and their `onSelect` effects; one open submenu level is internal.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/context-menu.tsx" name="ContextMenuProps" />

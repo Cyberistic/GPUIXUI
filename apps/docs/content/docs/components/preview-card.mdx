@@ -60,6 +60,14 @@ The real example previews a file row with a title and a sentence:
   ../../../../../packages/components/examples/preview-card.example.tsx
 </include>
 
+## State and ownership
+
+`PreviewCard` owns the two delay timers and the open flag when uncontrolled;
+`open`, `openDelay` and `closeDelay` make both controllable. The consumer owns
+the trigger and the card content. Hover opens after the delay, keyboard focus
+opens immediately, travelling from the trigger into the card keeps it open, and
+Escape closes and returns focus.
+
 ## API reference
 
 <auto-type-table path="../../../../../packages/components/src/preview-card.tsx" name="PreviewCardProps" />
