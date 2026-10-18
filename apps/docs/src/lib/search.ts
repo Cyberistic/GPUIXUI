@@ -6,6 +6,7 @@ import {
 } from "fumadocs-core/search/server";
 import { components } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
+import { valueExports } from "./api-values.generated";
 import { source } from "./source";
 
 export const DEFAULT_SEARCH_LIMIT = 10;
@@ -51,8 +52,26 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
 
 const pageSearch = createFromSource(source);
 
+/**
+ * The generated value index is rendered React, not MDX prose, so the page index
+ * never sees its rows — the same reason the component registry has its own
+ * index (plans 419, 490). One document keeps every helper, hook, record and
+ * icon value findable from ⌘K and sends the reader to the page that lists it.
+ */
+export const valueSearchIndex: Index = {
+  title: "Values API",
+  description:
+    "Every function, hook, class, constant and inventory record the documented packages export.",
+  content: valueExports
+    .map((value) => `${value.name}: ${value.summary}`)
+    .join("\n"),
+  url: "/docs/api-values",
+  breadcrumbs: ["API"],
+  keywords: valueExports.map((value) => value.name).join(" "),
+};
+
 const registrySearch = createSearchAPI("simple", {
-  indexes: components.map(componentSearchIndex),
+  indexes: [...components.map(componentSearchIndex), valueSearchIndex],
 });
 
 /** A component URL (page or filtered index) back to the record that owns it. */

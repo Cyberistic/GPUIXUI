@@ -483,9 +483,10 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       primitives, components, icons) with each summary read from its TSDoc and
       its real source path; `@gpuixui/primitives/core` and `@gpuixui/testing`
       are excluded with written reasons and `useFieldsetDisabled` is the one
-      internal export. `src/api-values.test.ts` fails on an export with no doc
+      internal export. `/api/search` indexes the page, so ⌘K finds a helper by
+      name from any page. `src/api-values.test.ts` fails on an export with no doc
       comment, a stale generated file, a stale classification, or a package
-      that is neither indexed nor excluded; four two-direction proofs recorded
+      that is neither indexed nor excluded; five two-direction proofs recorded
       in plan 490 §9.
 
 `[x]` **The License page names the real record (plan 489)** — it had said "none

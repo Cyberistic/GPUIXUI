@@ -318,6 +318,14 @@ asserts a value it stubbed.
   `/docs/theming`, `/docs/tokens-api` and `/docs/extending`; `meta.json`
   contains `"api-values"`.
 
+### `src/lib/search.test.ts` and `scripts/smoke-build.ts`
+
+- The page's rows are rendered React, not MDX prose, so the Fumadocs page index
+  never sees them (the same gap plan 419 closed for components). Add one
+  `valueSearchIndex` document to `/api/search` and prove it twice: a unit test
+  that `search("checkboxState")` returns `/docs/api-values`, and a production
+  query in the built-site smoke with the same name.
+
 ### `src/components/value-index.test.tsx`
 
 - Registered in the MDX map (`getMDXComponents().ValueIndex === ValueIndex`),
@@ -412,17 +420,22 @@ the only `internal` export.
    → failed with
    `INTERNAL_EXPORTS names @gpuixui/components#useFieldsetGone, which no entry exports (a stale classification)`;
    restored → passed.
+5. Dropped `valueSearchIndex` from `/api/search` → `finds a helper on the
+   generated values page` failed (no result); restored → 22 search tests pass.
+6. The production query `checkboxState` → `/docs/api-values` is in
+   `smoke:build`, so the built index, not only the source test, proves the
+   page is findable by a helper name.
 
 **Commands.**
 
 | Command | Result |
 | --- | --- |
 | `nub run --filter docs api:values` | exit `0`, `190 exports from 5 entries` |
-| `nub run --filter docs test` | exit `0`, 51 files / 335 tests |
+| `nub run --filter docs test` | exit `0`, 51 files / 336 tests |
 | `nubx vitest run src/api-values.test.ts src/components/value-index.test.tsx` | exit `0`, 18 tests |
 | `nub run --filter docs check-types` | exit `0` |
 | `nub run --filter docs build` | exit `0` |
-| `nub run --filter docs smoke:build` | exit `0` — 89 sitemap pages (was 88), 108 links, search and 404 checked |
+| `nub run --filter docs smoke:build` | exit `0` — 89 sitemap pages (was 88), 108 links, four search queries (including `checkboxState` → `/docs/api-values`), 404 checked |
 | `nub run check` | exit `0` (check:tests, lint, fmt, every workspace's types) |
 | `nub run test` | exit `0` (all workspaces) |
 

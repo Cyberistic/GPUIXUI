@@ -21,10 +21,12 @@ import {
  * was appended after a full page-result list, so `button` could return ten
  * prose hits and never `/docs/components/button`; (3) an empty query returned
  * arbitrary prose instead of `[]`; (4) a delivered component was listed twice,
- * once from its page and once from its registry record. These tests fail if the
- * registry index is dropped, if a title match is not promoted, if the empty
- * guard is removed, if page results are not deduplicated, or if the response
- * becomes unbounded.
+ * once from its page and once from its registry record; (5) the generated
+ * Values API renders its rows rather than authoring them, so a helper name such
+ * as `checkboxState` had no index entry at all (plan 490). These tests fail if
+ * the registry index is dropped, if a title match is not promoted, if the empty
+ * guard is removed, if page results are not deduplicated, if the value index is
+ * dropped, or if the response becomes unbounded.
  */
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
@@ -107,6 +109,11 @@ describe("search", { timeout: 120_000 }, () => {
   it("finds a component by one of its part names", async () => {
     const results = await search("DialogTitle", 5);
     expect(results[0]?.url).toBe("/docs/components/dialog");
+  });
+
+  it("finds a helper on the generated values page", async () => {
+    const results = await search("checkboxState", 5);
+    expect(results[0]?.url).toBe("/docs/api-values");
   });
 
   it("does not invent a part that no record declares", async () => {

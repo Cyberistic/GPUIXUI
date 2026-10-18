@@ -280,6 +280,11 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       expected: "/docs/components/dialog",
       what: "an exported part name from the registry",
     },
+    {
+      query: "checkboxState",
+      expected: "/docs/api-values",
+      what: "a helper name from the generated value index",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
