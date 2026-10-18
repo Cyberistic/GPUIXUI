@@ -333,6 +333,9 @@ retired once both branches are one
       focus relocation only when the list held focus; 6 native cases
       (List 50, behaviour 642), four mutation proofs; docs, `COMPONENTS.md` and
       the inventory synced
+    - [~] Tabs: a tab that turns disabled must not keep focus or the ring —
+      plan 511. Measured: a disabled focused tab kept native focus and the
+      focus ring while the tab stop moved off it.
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
