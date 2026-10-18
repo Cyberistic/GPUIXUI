@@ -1002,7 +1002,10 @@ shadow cannot darken it. `colors.shadow` is `#FFFFFF` there and
 `highContrastDarkElevation` carries the set's own alphas — 10%, 14% and 18% —
 the way the AAA scrim already veils with light (plan `099`). A black tint
 measured **1.000:1** at every level on that canvas. `elevationSurfaces` is the
-four surfaces a raised element floats over, and every defined level is measured
+six persistent page surfaces a raised element floats over — the canvas, a card,
+the quiet `muted` panel, the `input` fill a flipped popover opens over, the
+`selected` fill a context menu or preview card opens over and a floating
+surface — and every defined level is measured
 composited at its own alpha over them (`elevationLevels` is the ordered index,
 the reserved `overlay` included): the tightest shipped pair is **1.061:1**
 (identity dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**
@@ -1614,8 +1617,11 @@ paints **1.035:1** and pure black reaches only **1.042:1**, under the floor.
 The elevation is measured as the painted shadow it is: `themeContrastFailures`
 walks every defined level of `elevationLevels`, composites
 `elevationShadow(theme, level).color` over each surface in `elevationSurfaces` —
-`background`, `card`, `muted` and `popover`, the surfaces a raised card, menu or
-popover floats over — and holds the result to the same 1.05:1 `surface` floor.
+`background`, `card`, `muted`, `input`, `selected` and `popover`, the six
+persistent page surfaces a raised card, menu, popover or preview card floats
+over, because a selected row stays chosen under its context menu and a field
+keeps its fill under a popover flipped above it — and holds the result to the
+same 1.05:1 `surface` floor.
 A dialog is the exception: its shadow lands on the scrim, which the face
 paragraph above measures instead.
 The reserved empty `overlay` paints nothing and is skipped; a defined one is
@@ -2441,6 +2447,13 @@ solid status chips a Badge paints (`info`, `success`, `warning`; `destructive` i
 already an action fill), taking `overlaySurfaces` from fifteen to eighteen. Every
 shipped set clears the floor (1.060:1 at the tightest, high-contrast dark `info`),
 so no colour moves and `contrastPairs` stays **394**.
+Plan `509` adds the two persistent surfaces the elevation list omitted:
+`selected`, the fill a chosen row keeps while a context menu or preview card
+opens over it, and `input`, the fill a popover flipped above its trigger opens
+over. `elevationSurfaces` now derives from the six page layout surfaces, taking
+the walk from twelve to eighteen painted pairs; every shipped set clears 1.05:1
+(1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour moves and
+`contrastPairs` stays **394**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract

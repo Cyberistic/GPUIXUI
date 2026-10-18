@@ -97,8 +97,11 @@ The AAA dark set is the exception to a dark tint: its canvas is pure black, so
 `shadow` is `#FFFFFF` and `highContrastDarkElevation` applies the set's own
 alphas (10%, 14% and 18%), the way its scrim already veils with light. A black
 tint measured **1.000:1** at every level there. `elevationLevels` is the ordered
-level index and `elevationSurfaces` the four surfaces the contrast check
-composites each defined level over; the tightest shipped pair is **1.061:1**
+level index and `elevationSurfaces` the six persistent page surfaces the
+contrast check composites each defined level over — the canvas, a card, the
+quiet panel, the `input` fill a flipped popover opens over, the `selected` fill
+a context menu opens over and a floating surface; the tightest shipped pair is
+**1.061:1**
 (identity dark, `sm` on `background`). At high contrast a platform style
 contributes a level's geometry and the base keeps the opacity its tint was
 designed with.

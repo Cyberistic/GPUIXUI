@@ -78,3 +78,18 @@ export const quietPressTheme = extendTheme(getTheme("light"), {
 
 /** The generic press pair the quiet theme misses. */
 export const quietPressFailures = themeContrastFailures(quietPressTheme);
+
+/**
+ * A theme whose elevation tint is the selected row: a context menu or preview
+ * card opened over a chosen row paints a shadow that composites to that row, so
+ * it has no shadow there. Plan 509's `selected` elevation surface is what
+ * reports it — the fill persists while the raised surface is open, exactly like
+ * the scrim over the same row.
+ */
+export const quietShadowTheme = extendTheme(getTheme("light"), {
+  name: "Quiet shadow",
+  colors: { shadow: getTheme("light").colors.selected },
+});
+
+/** The three elevation levels the quiet shadow erases on the selected row. */
+export const quietShadowFailures = themeContrastFailures(quietShadowTheme);

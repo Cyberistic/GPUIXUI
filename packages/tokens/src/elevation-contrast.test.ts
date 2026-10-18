@@ -18,10 +18,18 @@
  * Every case below fails on the pre-fix tree: the shipped AAA dark sets measure
  * 1.000:1 on `background`, `themeContrastFailures` has no elevation pair, and a
  * high-contrast platform resolves the style's own alpha.
+ *
+ * Plan 509 replaces this suite's hand-typed four-surface list with the public
+ * `elevationSurfaces`, which now derives from the six persistent page surfaces:
+ * a context menu or preview card opens over a selected row and a flipped
+ * popover over its trigger's field, so the shadow is measured on `selected` and
+ * `input` too. Every shipped set clears 1.05:1 (1.109:1 at the tightest), so no
+ * colour moves.
  */
 
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
+import { quietShadowTheme } from "./contrast.example.js";
 import {
   compositeOver,
   contrastFloors,
@@ -33,12 +41,11 @@ import {
   getPlatformTheme,
   getTheme,
   platformStyles,
+  elevationSurfaces,
 } from "./index.js";
 import { elevationLevels } from "./elevation.js";
 
 const paintedLevels = elevationLevels.filter((level) => level !== "overlay");
-
-const surfaces = ["background", "card", "muted", "popover"] as const;
 
 describe("the elevation contract", () => {
   it("keeps every shipped set's painted shadow above the surface floor", () => {
@@ -48,7 +55,7 @@ describe("the elevation contract", () => {
         if (shadow === undefined) {
           return [];
         }
-        return surfaces.flatMap((surface) =>
+        return elevationSurfaces.flatMap((surface) =>
           contrastRatio(
             compositeOver(shadow.color, theme.colors[surface]),
             theme.colors[surface],
@@ -120,7 +127,37 @@ describe("the elevation contract", () => {
           opacity,
           ratio,
         ]),
-    ).toEqual(surfaces.map((surface) => ["md", surface, 0, 1]));
+    ).toEqual(elevationSurfaces.map((surface) => ["md", surface, 0, 1]));
+  });
+
+  it("reports a shadow that erases the persistent surfaces it opens over", () => {
+    const base = getTheme("light");
+    const themes = [
+      ["selected", quietShadowTheme],
+      ["input", extendTheme(base, { colors: { shadow: base.colors.input } })],
+    ] as const;
+
+    themes.forEach(([surface, theme]) => {
+      const failures = themeContrastFailures(theme).filter(
+        ({ foreground, background }) =>
+          foreground === "shadow" && background === surface,
+      );
+
+      expect(
+        failures.map(({ level, opacity, ratio, wash, pairClass }) => [
+          level,
+          opacity,
+          ratio,
+          wash,
+          pairClass,
+        ]),
+        surface,
+      ).toEqual([
+        ["sm", 0.08, 1, "shadow", "surface"],
+        ["md", 0.12, 1, "shadow", "surface"],
+        ["lg", 0.16, 1, "shadow", "surface"],
+      ]);
+    });
   });
 
   it("keeps the AAA alpha while taking a platform's geometry", () => {

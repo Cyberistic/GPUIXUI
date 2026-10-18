@@ -2131,6 +2131,9 @@ describe("docs/design-system.md", () => {
   });
 
   it("states the floors the contrast checker enforces", () => {
+    const elevationSurfaceNames = elevationSurfaces
+      .map((surface) => `\`${surface}\``)
+      .join("/");
     const rows = [
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills an Alert's description paints; typed text on \`input\` and on the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
@@ -2160,7 +2163,7 @@ describe("docs/design-system.md", () => {
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, and its dim pulse frame at \`skeletonPulseOpacity\` on the same eight surfaces (\`skeletonPulsePairs\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
-      `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on \`background\`/\`card\`/\`muted\`/\`popover\`, the surfaces \`elevationSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on ${elevationSurfaceNames}, the surfaces \`elevationSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 174/228
+`[x]` `[███████░░░]` 175/228
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1375,6 +1375,14 @@ composited to one of them left the Badge undimmed while every check returned
 `[]`. The three join `overlaySurfaces` (15 → 18 scrim pairs), every shipped set
 already clears 1.05:1 (1.060:1 at the tightest, high-contrast dark `info`), the
 checker's new tightest is that pair, and no colour moves (plan 508)
+`[x]` Hold the elevation shadow over the two persistent surfaces a raised element
+opens over — `elevationSurfaces` named the canvas, a card, the quiet panel and a
+floating surface, so a context menu or preview card over a selected row and a
+popover flipped above its trigger's `input` fill had no shadow pair while the
+checker returned `[]`; the list now derives from the six page layout surfaces
+(twelve → eighteen painted pairs), every shipped set already clears 1.05:1
+(1.109:1 at the tightest, macOS dark `sm` on `input`), no colour moves and
+`contrastPairs` stays 394 (plan 509)
 
 ## Phase C — Tier 1–2 components
 

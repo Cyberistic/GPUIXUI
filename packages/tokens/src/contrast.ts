@@ -1477,22 +1477,22 @@ export const dialogSurfacePairs: readonly ContrastPair[] = layoutSurfaces.map(
 );
 
 /**
- * The surfaces a raised element's shadow is painted over. A card (`sm`) and a
- * menu or popover (`md`) float above the canvas, another card, the quiet panel or
- * a floating surface, so every one is measured. A dialog is the exception: its
- * `lg` shadow lands on the modal scrim, which cannot separate it in the default
- * dark sets (pure black over the identity dark scrim reaches only 1.0421:1), so
- * the dialog's face is measured through the scrim instead
- * (`dialogSurfacePairs`). The pointer-state washes are excluded for the same
- * reason the scrim excludes them, and the reserved empty `overlay` paints no
- * shadow.
+ * The surfaces a raised element's shadow is painted over: the same six
+ * persistent page surfaces a modal covers (`layoutSurfaces`) — the canvas, a
+ * card, the quiet panel, the field fill a popover flipped above its trigger
+ * opens over, the `selected` fill a context menu or preview card opens over and
+ * a floating surface. A card (`sm`) and a menu or popover (`md`) float above
+ * each of them, and the two surfaces plan 359 added to the scrim are persistent
+ * in exactly the same way: a selected row stays chosen while its context menu
+ * is open, and a field keeps its fill while the popover it anchors is open.
+ * A dialog is the exception: its `lg` shadow lands on the modal scrim, which
+ * cannot separate it in the default dark sets (pure black over the identity
+ * dark scrim reaches only 1.0421:1), so the dialog's face is measured through
+ * the scrim instead (`dialogSurfacePairs`). The pointer-state washes are
+ * excluded for the same reason the scrim excludes them, and the reserved empty
+ * `overlay` paints no shadow.
  */
-export const elevationSurfaces = [
-  "background",
-  "card",
-  "muted",
-  "popover",
-] as const;
+export const elevationSurfaces = layoutSurfaces;
 
 /**
  * The scrim composited over the surfaces it covers. The pointer washes

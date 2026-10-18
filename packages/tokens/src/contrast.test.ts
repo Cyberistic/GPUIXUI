@@ -157,6 +157,14 @@
  * holds `active` one perceivable `step` from `hover` at both contrast levels.
  * Every shipped set already clears 1.05:1 (identity dark is tightest at
  * 1.059:1), so no colour moves.
+ *
+ * Plan 509 gives the elevation walk the two persistent surfaces plan 359 added
+ * to the scrim: a context menu or preview card opens over the `selected` fill a
+ * chosen row keeps, and a popover flipped above its trigger lands its shadow on
+ * the field's `input` fill. `elevationSurfaces` derives from `layoutSurfaces`,
+ * so the two compositions cannot be omitted again; every shipped set clears
+ * 1.05:1 (1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour
+ * moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -782,6 +790,8 @@ describe("the elevation shadow", () => {
       "background",
       "card",
       "muted",
+      "input",
+      "selected",
       "popover",
     ]);
   });
