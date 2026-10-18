@@ -30,6 +30,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | Capability | Scenario | Verdict |
 | ---------- | -------- | ------- |
 | layout | `layout-flex`, `shell-navigation`, `shell-selection` | verified |
+| grid-layout | `layout-grid` | verified |
 | text | `text-native` | verified |
 | input | `input-edit`, `text-entry` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus` | verified |
@@ -71,8 +72,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | states | `declared-styles` | verified |
 | truncation | `text-truncation` | verified |
 
-The suite is **69/69 green here** (exit `0`, `.artifacts/smoke-report.json`,
-1848 checks).
+The suite is **70/70 green here** (exit `0`, `.artifacts/smoke-report.json`,
+1923 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **22/22 green
@@ -636,7 +637,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |
-| Stack / layout primitives | wip | yes | [stack](packages/primitives/docs/stack.mdx) · [grid](packages/primitives/docs/grid.mdx) · layout | **Runtime (041):** row and column gaps equal the theme step. The runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. |
+| Stack / layout primitives | wip | yes | [stack](packages/primitives/docs/stack.mdx) · [grid](packages/primitives/docs/grid.mdx) · layout · grid-layout | **Runtime (041):** row and column gaps equal the theme step. The runtime's grid is **numeric only** (`columns`, `rowHeight`); there is no auto-flow and no named areas. **Grid + wrap (`layout-grid`, plan `341`):** three tracks in 300 px split `93.5 / 93 / 93.5` with exact 10 px gaps; explicit rows split a fixed height (`145×95` cells) and stretch an unsized child, while a declared height wins (`10` in a `26.5` track); auto rows follow their tallest child; **only the default and `gridColumnMin: "zero"` give equal tracks** — `min-content` fills the container with unequal tracks (`104 / 186`) and `max-content` leaves the remainder unused (`38 / 186`, 66 px free); a nested grid resolves against its cell; a child wider than its track **overflows** (500 px) and does not resize the neighbour; `flexGrow` makes a grid fill a flex row; `justifyContent: "center"` centres a content-sized track set. **Wrap:** a fixed-height wrapping row **stretches its line boxes** (third 30 px child at y 104 in a 200 px box) unless it declares `alignContent: "flex-start"` (y 38), and an auto-height row is exact (68 px). |
 | Boxes / containers | wip | yes | [box](packages/primitives/docs/box.mdx) · layout | **Runtime (041):** padding equals the theme's step; density moves height and leaves colour alone. Every primitive merges a caller's `style` last; `Box` is where an app overrides a surface. |
 | Scrollable containers | wip | partial | [scroll-area](packages/primitives/docs/scroll-area.mdx) · layout | **Runtime (041/048):** a wheel with `deltaY -100` leaves the offset at `y -100`, and a caller's `onScroll` receives that delta. **Horizontal (playground `tab-strip-overflow`, plan `173`):** `overflowX: "scroll"` pans, `getScrollOffset` reports `x`, `deltaX -240` moves it to `-240`, and `renderer.scrollTo(id, x, 0)` is exact. **No `scrollbarColor`, no `scrollbarWidth`, no fade mask** in 0.10.0, so the thumb is platform-themed and cannot be tinted; there is no absolute offset (`onScrollChange`). |
 | Buttons | wip | ours | [button](packages/primitives/docs/button.mdx) · form | **Runtime (041):** a hit-tested click activates once; Enter on key **down**, Space on key **up**, a held key ignored; `disabled` refuses both; `loading` refuses both and announces `Loading`. `@gpuix/react` publishes **no `./button`**, so the keyboard contract is this package's. Variants merged here: Floating action button and Copy button (adabraka `floating_action_button`, `copy_button`). |

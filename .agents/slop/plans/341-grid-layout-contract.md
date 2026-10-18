@@ -234,10 +234,30 @@ for a real style regression. Prove both directions before declaring done:
 `check-tests` does not scan scenario files (they are not `*.test.ts`), which is
 the same convention as every other probe.
 
-## 8. Result (filled in after the run)
+## 8. Result (measured 2026-10-18)
 
-_(executor records the exact failing strings from M1–M3, the final suite count
-and check count here)_
+`--only layout-grid`: **75 checks, exit `0`**. Full suite: **70/70
+scenarios, 1923 checks**, exit `0`; `grid-layout=verified` in the capability
+line. Three mutation proofs, each run separately with the fixture restored
+between them:
+
+| Mutation | Measured failure | Exit |
+| -------- | ---------------- | ---- |
+| M1: `grid-equal` columns `3 → 2` | `first track width: expected 93.33 ± 1, got 145` | 1 |
+| M2: `wrap-start` loses `alignContent: "flex-start"` | `alignContent start keeps one gap: expected 38 ± 1, got 104` | 1 |
+| M3: `grid-rows` gains `alignItems: "flex-start"` | `row cell height: expected 95 ± 1, got 0` | 1 |
+
+One expectation was corrected against measurement while writing the probe: the
+`max-content` pair's right edge is **234** (38 + 10 gap + 186), not 224; the
+unused remainder is still 66 px. Recorded so a re-run does not "fix" the check
+back to the wrong number.
+
+The live suite is unchanged at 22/22: this probe is geometry-only, and the
+window already proves layout in `live-shell`/`live-panel`.
+
+Follow-up recorded in `TODO.md` (owner `primitives`): `Stack`'s `wrap` should
+set `alignContent: "flex-start"`, because the measured default stretches a
+fixed-height row's line boxes.
 
 ## 9. STOP conditions
 
