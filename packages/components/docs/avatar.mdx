@@ -80,8 +80,10 @@ without forking the component.
   picture and the fallback are announced identically — a screen reader never
   reads "AL" as a word.
 - The image also carries `alt={name}`.
-- The presence dot is **purely visual**: it is not announced. A status that
-  matters should also be text (see the example, which prints the status).
+- A `status` is described through `aria-description` — the one description
+  0.10.0 supports — so the dot is announced while the name stays the person's.
+  The caller's own `aria-description` wins. The example still prints the status
+  as visible text.
 - An avatar is not interactive and takes no tab stop.
 
 ## Theming
@@ -103,8 +105,10 @@ status roles, and the dot's rim `colors.card` (the surface it sits on) at
 
 ## Verification
 
-`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (7 tests) plus
-`src/avatar/logic.test.ts` (8 tests) for the initials rules.
+`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (9 tests) plus
+`src/avatar/logic.test.ts` (8 tests) for the initials rules. The suite covers the
+initials and picture paths, the accessible name, a status as its description
+(authored descriptions winning), dot colours, sizes and the caller's style.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

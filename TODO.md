@@ -499,6 +499,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
     interactive nodes across 22 examples and now finds none. 9 pure + 1 native
     case (behaviour 596), both-direction proof (30 failures with Button's name
     removed); docs and inventory synced
+  - [x] Avatar announces its presence state — plan 392: `status` is delivered as
+    `aria-description`, the caller's description wins and the accessible name
+    stays the person's; 2 native cases (Avatar 9, behaviour 598), both-direction
+    proof; docs and inventory synced
   - [x] Docs verification truth: every component docs page states its real
     native-test count in one canonical line, checked for all 41 pages rather
     than only those that happened to adopt the sentence — plan 335; 14 pages
