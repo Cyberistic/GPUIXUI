@@ -220,6 +220,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [523](./523-control-horizontal-padding.md) | A control's horizontal padding is a shape, not a number | F | 089, 358, 368, 372, 384, 517 | done |
 | [524](./524-disabled-selection-wash.md) | The selection wash on the unavailable control's fill | F | 071, 081, 087, 306, 307, 510 | done |
 | [525](./525-row-text-selection.md) | The row's own text through a text selection | F | 071, 081, 087, 312, 316, 363, 506, 510 | done |
+| [526](./526-dialog-face-on-content.md) | The dialog's face over the content a window shows | F | 099, 359, 371, 375, 383, 395, 507, 508, 509, 525 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2323,6 +2324,20 @@ while all six checks returned `[]`. The role moves one iris step to
 `palette.iris[950]` (`#1C1547`, 8.533:1 at the tightest of the four fills), the
 six pairs join `selectionPairs` (20 → 26), and every shipped set passes (4.898:1
 macOS light at the tightest); `contrastPairs` stays **396**.
+
+Plan `526` closes the face plan `507` measured over half the window. A dialog's
+face was held to the surface floor on the six page layout surfaces only, with the
+rationale that macOS dark's face met the scrim over its `primary` at **1.021:1**
+and the dialog's `border` carried that patch at 1.495:1. The excluded pair was a
+real failure the checker could not see, and the edge does not carry the rest of
+the content: the same `border` measures **1.006:1** over Windows dark's scrimmed
+`success` chip, under the divider floor, so a dialog over a Badge had neither a
+face nor an edge. The face is the carrier — `dialogSurfacePairs` now derives from
+`overlaySurfaces` (6 → 18 pairs) — and macOS dark's scrim deepens to 82%
+(`#000000D0`) so the scrimmed content sits below the face. Every shipped set
+passes (1.079:1 at the tightest, Linux dark on `destructive`), the executed brand
+example deepens its own scrim to 85% because its darker accent put the inherited
+one at 1.038:1, and `contrastPairs` stays **396**.
 
 ## How to use a plan
 
