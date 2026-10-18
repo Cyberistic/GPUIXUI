@@ -800,4 +800,21 @@ describe("the row that owns the pointer paints its feedback", () => {
       wash(expectSome(Arr.get(elementChildren(element), 0))),
     ).toMatchObject({ backgroundColor: "#654321" });
   });
+
+  it("shrinks its rows so a horizontal group contains a long label", () => {
+    // The bug guarded (plan 380): a horizontal group's row kept the automatic
+    // content floor, so it stayed at its max-content width and a long label
+    // painted past the group (measured: 492 px outside a 220 px group).
+    const element = renderRadioGroup(
+      { options, orientation: "horizontal" },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    Arr.forEach(elementChildren(element), (row) => {
+      expect(expectSome(hostStyle(row, "minWidth"))).toBe(0);
+    });
+  });
 });

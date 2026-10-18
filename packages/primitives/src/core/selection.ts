@@ -174,6 +174,11 @@ export const selectionRowStyle = (
     gap: theme.spacing.sm,
     borderRadius: theme.radius.sm,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    // A row is a flex item of the group, so it already shrinks; the automatic
+    // content floor is what kept a long label at max-content and painted it
+    // outside a horizontal group. Removing the floor lets the row shrink and
+    // the label wrap (the D40 containment rule, measured in plan 380).
+    minWidth: 0,
   };
   if (spec.disabled !== true) {
     style.hover = { backgroundColor: theme.colors.hover };

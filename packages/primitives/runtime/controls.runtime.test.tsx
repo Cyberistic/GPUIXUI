@@ -827,6 +827,40 @@ it("moves a RadioGroup's selection with the arrow keys", async () => {
   expect(announced(runtime, "Beta")).toBe("checked");
 });
 
+it("contains its options in a horizontal group", async () => {
+  // The bug guarded (plan 380): a horizontal group's option row is a flex item
+  // that kept its max-content width, so a long label painted 492 px outside a
+  // 220 px group and the group stayed one line tall. The row now shrinks and
+  // the label wraps, instead of the text escaping the control (D40).
+  const runtime = await openWindow();
+  const long = "A very long option label that should wrap inside its control";
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        orientation="horizontal"
+        style={{ width: 220 }}
+        options={[
+          { value: "a", label: long },
+          { value: "b", label: long },
+        ]}
+      />
+    </Surface>,
+  );
+  const group = boundsOf(runtime, "rg");
+  const rows = [boundsOf(runtime, "rg-a"), boundsOf(runtime, "rg-b")];
+  Arr.forEach(rows, (row) => {
+    expect(row.x).toBeGreaterThanOrEqual(group.x);
+    expect(row.x + row.width).toBeLessThanOrEqual(group.x + group.width);
+    // A wrapped label is taller than one line; a clipped one would stay short.
+    expect(row.height).toBeGreaterThan(testTheme.typography.body.lineHeight);
+  });
+  expect(group.height).toBeGreaterThanOrEqual(
+    Math.max(...Arr.map(rows, (row) => row.height)),
+  );
+});
+
 it("wraps a RadioGroup's arrow navigation at the end", async () => {
   const runtime = await openWindow();
   runtime.render(
