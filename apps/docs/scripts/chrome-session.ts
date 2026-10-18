@@ -54,7 +54,14 @@ export interface Session {
 }
 
 /** The keys the smokes drive; the numeric codes are the Windows virtual keys. */
-export type SessionKey = "Tab" | "Enter" | "Escape" | "ArrowDown" | "ArrowUp";
+export type SessionKey =
+  | "Tab"
+  | "Enter"
+  | "Escape"
+  | "ArrowDown"
+  | "ArrowUp"
+  | "ArrowLeft"
+  | "ArrowRight";
 
 /** The only shortcut a smoke needs: the search palette's `⌘K` / `Ctrl+K`. */
 export type ShortcutKey = "k";
@@ -65,6 +72,8 @@ const KEY_CODES: Readonly<Record<SessionKey, number>> = {
   Escape: 27,
   ArrowDown: 40,
   ArrowUp: 38,
+  ArrowLeft: 37,
+  ArrowRight: 39,
 };
 
 const SHORTCUT_CODES: Readonly<

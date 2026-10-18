@@ -17,6 +17,7 @@
     "build:preview": "nub scripts/build-preview.ts",
     "smoke:preview": "nub scripts/smoke-live-preview.ts",
     "smoke:keyboard": "nub scripts/smoke-keyboard.ts",
+    "smoke:platform": "nub scripts/smoke-platform.ts",
     "smoke:search": "nub scripts/smoke-search.ts",
     "smoke:responsive": "nub scripts/smoke-responsive.ts",
     "studio": "fumadocs-studio"
