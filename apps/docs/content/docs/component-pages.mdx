@@ -92,6 +92,91 @@ chooses a tier by hand.
 - A component with no suite is not given a tier V badge; `<NativePreview>`
   reports it as unverified instead.
 
+## Live scenes
+
+A live scene is a real GPUix surface: the component's own source, on the
+published WebAssembly renderer, inside the isolated preview document. It is the
+only tier a reader can interact with on the page, and it never replaces the
+native evidence beneath it. A scene is expected when the record is `stateful`
+(plan 508) — an exception is a written, test-pinned reason — or when the state
+the page documents is one a still cannot prove; a static page uses a labelled
+tier-A illustration instead. A scene is never a browser reimplementation of the
+component — it mounts the package.
+
+The registry ships 42 scenes today, and four files own the mechanism:
+
+| Path | What it owns |
+| ---- | ------------ |
+| `src/component-meta/entries.ts` | the record field `liveScene`, which opts a page in |
+| `preview/scenes.ts` | `LIVE_SCENES`, `SCENE_TEXT`, `SCENE_GESTURE`, `SCENE_INTERACTION`, `SCENE_TEXT_IS_SCENE_PROSE` |
+| `preview/scene-views.tsx` | `LIVE_SCENE_VIEWS`: one real composition per scene |
+| `preview/main.tsx` | the isolated document, both theme providers and the readiness contract |
+
+The expectation table is the contract, not decoration:
+
+| Export | What it decides |
+| ------ | --------------- |
+| `LIVE_SCENES` | every scene key the build ships; a record's `liveScene` must be one of them |
+| `SCENE_TEXT` | the text the smoke looks for in GPUI's tree |
+| `SCENE_GESTURE` | the steps that produce a state the component does not start in |
+| `SCENE_INTERACTION` | the sentence shown above the surface and in the document |
+| `SCENE_TEXT_IS_SCENE_PROSE` | the measured exception for a component that paints no text |
+
+### The gesture vocabulary
+
+A scene that needs an interaction declares steps instead of mounting the state
+directly. The smoke runs them through the renderer's own automation API, asserts
+the expectation is **absent before** the steps and **present after** them, and
+fails naming the scene when either half is wrong.
+
+| Kind | Drives | Fields |
+| ---- | ------ | ------ |
+| `hover` | a tooltip or preview card opening | `testId` |
+| `click` | a press, including a right click | `testId`, optional `button: 2` |
+| `click-text` | an option that owns no test id | `text`, `within` (the control's test id) |
+| `press` | a key on a focused control | `testId`, `keys` |
+| `fill` | typing through the renderer's keyboard path | `testId`, `text` |
+| `wheel` | a real scroll away from a tail | `testId`, `deltaY` (positive scrolls up) |
+
+### The readiness contract
+
+`preview/renderer-ready.ts` asks the renderer for its window handle.
+`render()` returning and the DOM canvas both happen before asynchronous
+graphics init, so neither is a readiness signal; a scene that focuses on mount
+fails without the handle. The smoke waits for a canvas larger than 1×1, forces
+the colour scheme and the platform, and proves the whole page follows them.
+A scene mounts inside both theme providers with the same resolved theme:
+`@gpuixui/primitives` owns its context and `@gpuixui/components` reads
+`@gpuixui/tokens/react`, so one provider leaves half the composition light on a
+dark page (plan 457 §9).
+
+### The scene guards
+
+| Check | What it proves |
+| ----- | -------------- |
+| `src/components/preview/scene-contract.test.ts` | every expectation occurs in the view, every gesture targets a painted id, a stateful record has a scene or a measured reason |
+| `src/components/preview/preview-gaps.test.ts` | `docs/preview-strategy.md` names the same gaps as the code |
+| `src/preview-pages.test.ts` | the hydrated smoke finds every page that carries a live surface |
+| `src/component-meta/registry.test.ts` | every declared `liveScene` is a key the build ships |
+| `src/component-pages.test.ts` | the page carries the blocks and sections this template requires |
+
+### Adding a scene
+
+1. Add `liveScene: "<key>"` to the record and the page's previews; the key is
+   the component's slug by convention.
+2. Add the key to `LIVE_SCENES`, its expectation to `SCENE_TEXT`, and — when
+   the state needs an interaction — the steps to `SCENE_GESTURE` and the
+   reader's sentence to `SCENE_INTERACTION`.
+3. Compose the real component in `LIVE_SCENE_VIEWS`, importing Tier 2 parts by
+   subpath (the package root pulls the Toast provider's Effect runtime into a
+   20 MB browser bundle).
+4. Give every gesture target a `testId` the composition really paints, and keep
+   the expectation out of the scene's own heading: it must be text the component
+   paints.
+5. Run `nub run --filter docs test` and
+   `nub run --filter docs smoke:preview`; update
+   `docs/preview-strategy.md` only when a tier claim changes.
+
 ## The guards
 
 | Check | What it proves |

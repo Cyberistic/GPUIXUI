@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–516)
+## Docs site workstream (plans 410–499, plus 500–517)
 
-`[x]` `[██████████]` 117/117
+`[x]` `[██████████]` 118/118
+
+`[x]` **The component-page template teaches live-scene authoring (plan 517)** —
+      `/docs/component-pages` gains `## Live scenes`: when a scene is required,
+      the four files that own it, the scene-field and gesture tables, the
+      readiness contract and its two-provider rule, the guard table and a
+      five-step checklist. Three tests in `component-page-docs.test.tsx` derive
+      the gesture set from the `SceneStep` union, resolve ten real paths, and
+      compare every scene total with `LIVE_SCENES.length`; five two-direction
+      proofs recorded in §7, 67 files / 465 docs tests.
 
 `[x]` **The tab and install surface ship (plan 516)** — plan 510's head named an
       SVG favicon as its only icon and no manifest, so Safari had no tab icon

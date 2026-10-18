@@ -79,7 +79,10 @@ Studio preserves them verbatim and they are edited in the source pane.
 The contributor-facing copy of the component-page template is
 `/docs/component-pages` (plan 487); its section list is generated from
 `src/component-meta/contract.ts`, while the `## ` headings below stay the file
-`component-pages.test.ts` reads.
+`component-pages.test.ts` reads. Its **Live scenes** section (plan 517) is the
+authoring guide for a tier-L surface: the record field, the four files, the
+gesture vocabulary, the readiness contract and the guards, every fact checked
+against `preview/scenes.ts` and the real files.
 
 The extension half is `/docs/extending` (plan 488): the `core/` layer, the real
 `Toggle` source and the theme example. `src/extending.test.ts` reads
