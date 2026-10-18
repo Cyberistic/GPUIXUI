@@ -154,7 +154,15 @@ Record the exact failure messages in §8.
     `card: Usage has no @gpuixui example`;
   - `timeline.mdx` without `<include>` → failed with
     `timeline: Source has no <include>`.
-- `nub run --filter docs test`: 42 files / 259 tests green; `check-types`,
-  `build`, `nub run check`, `nub run lint` and `nub run fmt` green.
+- `nub run --filter docs test`: 42 files / 262 tests green (measured at
+  `359455f`, after plans 465, 468 and 469 had landed); `check-types`, `build`,
+  `nub run check`, `nub run lint` and `nub run fmt` green.
+- **Plan 469 corrected this plan's guard before it reached a gate.** The first
+  version tested the fence with `/^```(tsx|ts)\b/m`; `scripts/check-tests.ts`
+  read the leading slash as division and the backticks as template delimiters,
+  so `nub run check:tests` rejected the block. The fence is now tested line by
+  line (`line.trimStart().startsWith("```tsx")`), with the same failure message
+  and the same two-direction proof; the helper lives outside the test body so
+  the checker sees one assertion. Plan 469 records the checker's false positive.
 - `apps/docs/README.md` states that the template guard checks blocks, not only
   headings.
