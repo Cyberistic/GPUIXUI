@@ -187,13 +187,22 @@ Implemented and run on this host, 2026-10-18:
 | `nub run --filter @gpuixui/primitives test` | **46 files, 671 tests**, green (670 before) |
 | `nub run --filter @gpuixui/primitives check-types` | clean |
 | `nub run --filter @gpuixui/primitives test:runtime runtime/separator.runtime.test.tsx` | **12 passed** (scoped) |
-| `nub run --filter @gpuixui/primitives test:runtime runtime/layout.runtime.test.tsx -t "Separator"` | **2 passed** |
+| `nub run --filter @gpuixui/primitives test:runtime runtime/layout.runtime.test.tsx` | **28 passed** (the existing rule cases unchanged) |
+| `nub run --filter @gpuixui/primitives test:runtime runtime/layout.runtime.test.tsx -t "Separator"` | **2 passed**, 26 skipped |
 | `nub run check` | green |
 | `nub run lint` | green |
 | `nub run test` | green |
 
-The live suite collects **634 tests in 34 files** (621 in 33 before). The
-measured boxes after the fix, in the same 40 × 40 sibling frame as §0:
+The live suite collects **633 tests in 34 files** (621 in 33 before). The same
+run passed **523 and failed 110 across 19 files** in its second half — the host's
+window-accumulation degradation (plan `379` §6), not this change: the failing
+files are the focus- and window-dependent ones (`fields`, `activation`,
+`disabled`, `focus-ring`, `overlay-trigger`, …), the new `separator` file passed
+12/12 inside that run, and `layout.runtime.test.tsx` — the file with the existing
+rule cases — passed **28/28** in a fresh process. Re-run the full suite from a
+fresh session before merging.
+
+The measured boxes after the fix, in the same 40 × 40 sibling frame as §0:
 
 | Orientation | Stack | `align` | Before | After |
 | ----------- | ----- | ------- | ------ | ----- |
@@ -206,15 +215,15 @@ regression.
 
 Mutation outcomes:
 
-| Mutation | Failing case | Failure |
-| -------- | ------------ | ------- |
-| `alignSelf` removed | runtime "fills a column's width under every alignment" (start) | `expected 0 to be 1256` |
-| `alignSelf` removed | runtime "fills a row's height under every alignment" (start) | `expected 0 to be 40` |
-| `alignSelf` removed | element "draw a rule on the border role" | `alignSelf` is `undefined` |
-| vertical branch only | runtime horizontal matrix | `expected 0 to be 1256` (three cases) |
+| Mutation | Observed failure |
+| -------- | ---------------- |
+| `alignSelf` removed from both branches | `runtime/separator.runtime.test.tsx`: **7 failed** of 12 — the three column and three row cases, and `inset` (`expected +0 to be 1256`, `+0 to be 40`, `+0 to be 28`) |
+| `alignSelf` kept only on the vertical branch | the same file: **3 failed** — `fills a column's width under align=start/center/end` (`expected +0 to be 1256`) |
+| `alignSelf` removed from the horizontal branch | `presentational.test.tsx`: **1 failed** — `stretch a rule across the stack's cross axis` (the horizontal `alignSelf` is `None`) |
 
-The full live suite was not re-run in this session (plan `379` §6): the scoped
-files above are the evidence, and the full suite is re-run before merging.
+The full live suite ran once (633 tests, §above) and showed the host degradation,
+so the scoped files are the evidence and the full suite is re-run from a fresh
+session before merging.
 
 ## 8. Acceptance
 
