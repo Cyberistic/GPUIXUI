@@ -33,6 +33,21 @@ export const requireBounds = (
     throw new Error(`behaviour: no element with testId "${testId}"`);
   });
 
+/**
+ * Complete a running enter/exit motion, then paint the result. GPUix keeps its
+ * motion clock paused under the test renderer; the default 100 ms matches the
+ * dialog/popover recipe (plan 525).
+ */
+export const finishMotion = (
+  root: ComponentTestRoot,
+  milliseconds = 100,
+): void => {
+  root.renderer.flush();
+  root.renderer.clockFastForward(milliseconds);
+  root.renderer.dispatchNativeEvents();
+  root.renderer.flush();
+};
+
 /** Click the centre of `testId` through the runtime's real hit testing.
  *  `modifiers` is the native keystroke syntax (`"shift"`, `"cmd"`), forwarded so
  *  a suite can prove the modifier branches rather than calling them directly. */

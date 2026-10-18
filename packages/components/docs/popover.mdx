@@ -93,6 +93,15 @@ The surface paints `colors.popover` / `colors.popoverForeground`,
 `radius.lg`, `borderWidth.thin` in `colors.border`, the `md` elevation and
 `spacing.lg` padding, with a 200px minimum width.
 
+## Motion
+
+`PopoverContent` runs `motionFromClasses` from `@gpuixui/tw` through
+`AnimatePresence`: a 100 ms opacity fade plus the shadcn
+`slide-in-from-*` offset for the resolved side (bottom → from top, left → from
+right, and so on). The panel stays mounted for the exit and is inert while it
+leaves. `zoom-in-95`/`zoom-out-95` are recorded as unsupported: GPUI has no
+transform, so no scale is faked.
+
 ## Accessibility and limitations
 
 - `aria-expanded` on the trigger.
@@ -117,7 +126,7 @@ The surface paints `colors.popover` / `colors.popoverForeground`,
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (19 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
@@ -128,8 +137,9 @@ control, opening focus on the first control, Tab walking the panel's controls
 after the trigger, Shift+Tab walking backwards and leaving before the first
 control, closing rather than trapping when the first tab stop is removed, a
 controlled popover reporting `onOpenChange` while staying as the consumer says
-(including an inline consumer that keeps it closed), both themes, and a caller
-trigger `ref`.
+(including an inline consumer that keeps it closed), both themes, a caller
+trigger `ref`, the 100 ms fade + side slide, and the panel remaining through its
+exit before it unmounts.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

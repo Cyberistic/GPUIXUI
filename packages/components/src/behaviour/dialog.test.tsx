@@ -28,6 +28,7 @@ import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
   clickCentreOf,
+  finishMotion,
   focusedTestId,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -134,6 +135,7 @@ describe("Dialog", () => {
     clickCentreOf(dialog, "behind");
 
     expect(onBehind).not.toHaveBeenCalled();
+    finishMotion(dialog);
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
 
     dialog.unmount();
@@ -153,6 +155,7 @@ describe("Dialog", () => {
     clickCentreOf(dialog, "open");
 
     dialog.renderer.simulateKeystrokes("escape");
+    finishMotion(dialog);
 
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
@@ -167,11 +170,13 @@ describe("Dialog", () => {
     expect(nested.renderer.findByTestId("panel")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
 
     expect(nested.renderer.findByTestId("panel")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
 
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
@@ -198,6 +203,7 @@ describe("Dialog", () => {
     expect(dialog.renderer.findByTestId("dialog")).toBeDefined();
 
     dialog.renderer.nativeSimulateClick(12, 12);
+    finishMotion(dialog);
 
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
 
@@ -292,6 +298,7 @@ describe("Dialog", () => {
     const dialog = renderComponent(<Workspace />);
     clickCentreOf(dialog, "open");
     clickCentreOf(dialog, "dialog-close");
+    finishMotion(dialog);
 
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
 
@@ -311,6 +318,43 @@ describe("Dialog", () => {
     expect(ref.current?.id).toBe(dialog.renderer.findByTestId("dialog")?.id);
     // The internal ref still focuses the surface.
     expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
+
+    dialog.unmount();
+  });
+
+  it("enters with the 100 ms dialog motion", () => {
+    const dialog = renderComponent(<Workspace />);
+    clickCentreOf(dialog, "open");
+
+    const animated = dialog.renderer
+      .findByType("div")
+      .filter((element) => element.customProps?.motion !== undefined);
+
+    expect(animated).toHaveLength(1);
+    expect(animated[0]?.customProps?.motion).toEqual(
+      expect.objectContaining({
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { duration: 0.1, ease: "easeOut" },
+      }),
+    );
+
+    dialog.unmount();
+  });
+
+  it("keeps the surface for its exit, then unmounts it", () => {
+    const dialog = renderComponent(<Workspace />);
+    clickCentreOf(dialog, "open");
+
+    dialog.renderer.simulateKeystrokes("escape");
+
+    // The dialog is closed (focus is back), but the exit ghost is still painted.
+    expect(focusedTestId(dialog)).toEqual(Option.some("open"));
+    expect(dialog.renderer.findByTestId("dialog")).toBeDefined();
+
+    finishMotion(dialog);
+
+    expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
 
     dialog.unmount();
   });

@@ -21,6 +21,7 @@ import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
   clickCentreOf,
+  finishMotion,
   focusedTestId,
   requireBounds,
 } from "../internal/interaction.js";
@@ -148,6 +149,7 @@ describe("Popover", () => {
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     const trigger = boundsOf(popover, "trigger");
     const panel = boundsOf(popover, "panel");
@@ -166,6 +168,7 @@ describe("Popover", () => {
   it("honours the side it is given", () => {
     const popover = renderComponent(<Filters side="right" />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     const trigger = boundsOf(popover, "trigger");
     const panel = boundsOf(popover, "panel");
@@ -183,6 +186,7 @@ describe("Popover", () => {
   it("centres a requested panel on its trigger", () => {
     const popover = renderComponent(<CentredPopover />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
@@ -200,6 +204,7 @@ describe("Popover", () => {
   it("opens above a trigger near the window bottom instead of covering it", () => {
     const popover = renderComponent(<LowPopover />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     const trigger = requireBounds(popover, "trigger");
     const panel = requireBounds(popover, "panel");
@@ -214,8 +219,10 @@ describe("Popover", () => {
   it("closes on Escape and gives focus back to the trigger", () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     popover.renderer.simulateKeystrokes("escape");
+    finishMotion(popover);
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(popover)).toEqual(Option.some("trigger"));
@@ -226,8 +233,10 @@ describe("Popover", () => {
   it("closes on an outside press without re-opening on the following click", async () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     clickCentreOf(popover, "elsewhere");
+    finishMotion(popover);
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
@@ -236,6 +245,7 @@ describe("Popover", () => {
     await Promise.resolve();
 
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     expect(popover.renderer.findByTestId("panel")).toBeDefined();
 
@@ -245,6 +255,7 @@ describe("Popover", () => {
   it("stays open on a press inside the panel", () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     clickCentreOf(popover, "panel-text");
 
@@ -256,10 +267,12 @@ describe("Popover", () => {
   it("closes on Tab and gives focus to the next app control", () => {
     const popover = renderComponent(<Filters />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     expect(focusedTestId(popover)).toEqual(Option.some("panel"));
 
     popover.renderer.simulateKeystrokes("tab");
+    finishMotion(popover);
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     // The surface is unmounted, so leaving focus on it would strand the user.
@@ -271,6 +284,7 @@ describe("Popover", () => {
   it("opens with focus on the panel's first tab stop", () => {
     const popover = renderComponent(<Columns />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     expect(focusedTestId(popover)).toEqual(Option.some("first"));
 
@@ -280,6 +294,7 @@ describe("Popover", () => {
   it("moves to the next control on Tab and keeps the panel open", () => {
     const popover = renderComponent(<Columns />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     popover.renderer.simulateKeystrokes("tab");
     expect(focusedTestId(popover)).toEqual(Option.some("second"));
@@ -294,10 +309,12 @@ describe("Popover", () => {
   it("closes past the last control and continues after the trigger", () => {
     const popover = renderComponent(<Columns />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     popover.renderer.simulateKeystrokes("tab");
     popover.renderer.simulateKeystrokes("tab");
     popover.renderer.simulateKeystrokes("tab");
+    finishMotion(popover);
 
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
@@ -308,6 +325,7 @@ describe("Popover", () => {
   it("walks backwards on Shift+Tab and leaves before the first control", () => {
     const popover = renderComponent(<Columns />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     popover.renderer.simulateKeystrokes("tab");
     expect(focusedTestId(popover)).toEqual(Option.some("second"));
@@ -317,6 +335,7 @@ describe("Popover", () => {
     expect(popover.renderer.findByTestId("panel")).toBeDefined();
 
     popover.renderer.simulateKeystrokes("shift-tab");
+    finishMotion(popover);
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(popover)).toEqual(Option.some("before"));
 
@@ -326,6 +345,7 @@ describe("Popover", () => {
   it("closes instead of trapping when the first tab stop is removed", () => {
     const popover = renderComponent(<Removable />);
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     popover.renderer.simulateKeystrokes("tab");
     expect(focusedTestId(popover)).toEqual(Option.some("remove"));
@@ -334,6 +354,7 @@ describe("Popover", () => {
     expect(popover.renderer.findByTestId("first")).toBeUndefined();
 
     popover.renderer.simulateKeystrokes("tab");
+    finishMotion(popover);
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
 
@@ -345,6 +366,7 @@ describe("Popover", () => {
     const popover = renderComponent(<Controlled onOpenChange={onOpenChange} />);
 
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     expect(onOpenChange).toHaveBeenCalledTimes(1);
     expect(popover.renderer.findByTestId("panel")).toBeDefined();
@@ -356,10 +378,10 @@ describe("Popover", () => {
     const assertTheme = (theme: TestTheme, popover: string): void => {
       const rendered = renderComponent(<Filters />, theme);
       clickCentreOf(rendered, "trigger");
+      finishMotion(rendered);
 
-      expect(
-        rendered.renderer.findByTestId("panel")?.style.backgroundColor,
-      ).toBe(popover);
+      const surface = rendered.renderer.findByTestId("panel");
+      expect(surface?.style.backgroundColor).toBe(popover);
 
       rendered.unmount();
     };
@@ -375,6 +397,7 @@ describe("Popover", () => {
     );
 
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
 
     expect(onOpenChange).toHaveBeenCalledWith(true);
     expect(popover.renderer.findByTestId("panel")).toBeUndefined();
@@ -399,8 +422,47 @@ describe("Popover", () => {
 
     // The internal ref still works: Escape returns focus to the trigger.
     clickCentreOf(popover, "trigger");
+    finishMotion(popover);
     popover.renderer.simulateKeystrokes("escape");
     expect(focusedTestId(popover)).toEqual(Option.some("trigger"));
+
+    popover.unmount();
+  });
+
+  it("enters with the 100 ms fade and the side slide", () => {
+    const popover = renderComponent(<Filters />);
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+
+    const animated = popover.renderer
+      .findByType("div")
+      .filter((element) => element.customProps?.motion !== undefined);
+
+    expect(animated).toHaveLength(1);
+    expect(animated[0]?.customProps?.motion).toEqual(
+      expect.objectContaining({
+        initial: { opacity: 0, top: -8 },
+        animate: { opacity: 1, top: 0 },
+        transition: { duration: 0.1, ease: "easeOut" },
+      }),
+    );
+
+    popover.unmount();
+  });
+
+  it("keeps the panel for its exit, then unmounts it", () => {
+    const popover = renderComponent(<Filters />);
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+
+    popover.renderer.simulateKeystrokes("escape");
+
+    expect(focusedTestId(popover)).toEqual(Option.some("trigger"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    finishMotion(popover);
+
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
     popover.unmount();
   });

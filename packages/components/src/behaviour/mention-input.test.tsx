@@ -18,7 +18,11 @@ import {
   type MentionInputItemProps,
   type MentionInputProps,
 } from "../mention-input.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import {
   renderComponent,
@@ -196,6 +200,7 @@ describe("MentionInput", () => {
 
     nested.renderer.simulateKeystrokes("escape");
 
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

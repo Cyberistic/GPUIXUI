@@ -20,9 +20,10 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
-import { useGpuix, useWindowSize } from "@gpuix/react";
+import { AnimatePresence, motion, useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import { dialogMotion } from "@gpuixui/tw";
 import {
   createContext,
   useCallback,
@@ -32,6 +33,7 @@ import {
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { motionProps } from "./internal/motion.js";
 import {
   handleModalKeyDown,
   useModalFocus,
@@ -193,8 +195,20 @@ const surfaceStyle = (
  * The modal surface: a full-window veil plus the dialog box, rendered while the
  * dialog is open. Focus enters the surface, Tab stays inside it, Escape and an
  * outside press close it, and closing returns focus to whatever had it before.
+ * The exit is animated by `AnimatePresence`; the surface is inert until it
+ * unmounts (plan 525).
  */
-export const DialogContent = ({
+export const DialogContent = (props: DialogContentProps) => {
+  const { open } = useDialogContext();
+  return (
+    <AnimatePresence initial={false}>
+      {open ? <DialogSurface key="dialog" {...props} /> : null}
+    </AnimatePresence>
+  );
+};
+
+/** The surface itself; mounted while open and through its exit motion. */
+const DialogSurface = ({
   size = "md",
   label,
   showClose = true,
@@ -221,9 +235,7 @@ export const DialogContent = ({
     ref,
   );
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus);
-
-  if (!open) return null;
+  useModalFocus(open ? contentId : undefined, initialFocus);
 
   const close = () => setOpen(false);
 
@@ -232,68 +244,73 @@ export const DialogContent = ({
   };
 
   return (
-    <anchored
-      position={{ x: 0, y: 0 }}
-      occlude
-      style={{ position: "absolute" }}
+    <motion.div
+      {...motionProps(dialogMotion(theme))}
+      style={{ pointerEvents: open ? undefined : "none" }}
     >
-      <div
-        testId="dialog-backdrop"
-        style={{
-          width: window.width,
-          height: window.height,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: theme.spacing["3xl"],
-          backgroundColor: theme.colors.overlay,
-          pointerEvents: "auto",
-        }}
+      <anchored
+        position={{ x: 0, y: 0 }}
+        occlude
+        style={{ position: "absolute" }}
       >
         <div
-          role="dialog"
-          aria-label={label}
-          tabIndex={-1}
-          {...rest}
-          ref={setContentElement}
-          testId={testId}
-          onMouseDownOutside={(event) => {
-            onMouseDownOutside?.(event);
-            dismissTopLayer(event);
+          testId="dialog-backdrop"
+          style={{
+            width: window.width,
+            height: window.height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: theme.spacing["3xl"],
+            backgroundColor: theme.colors.overlay,
+            pointerEvents: "auto",
           }}
-          onKeyDown={handleKeyDown}
-          style={mergeStyles(
-            {
-              ...surfaceStyle(
-                theme,
-                size,
-                window.width - 2 * theme.spacing["3xl"],
-              ),
-              maxHeight: window.height - 2 * theme.spacing["3xl"],
-              overflow: "scroll",
-            },
-            style,
-          )}
         >
-          {children}
-          {showClose ? (
-            <IconButton
-              label="Close"
-              size="sm"
-              testId="dialog-close"
-              onClick={close}
-              style={{
-                position: "absolute",
-                top: theme.spacing.lg,
-                right: theme.spacing.lg,
-              }}
-            >
-              <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
-            </IconButton>
-          ) : null}
+          <div
+            role="dialog"
+            aria-label={label}
+            tabIndex={-1}
+            {...rest}
+            ref={setContentElement}
+            testId={testId}
+            onMouseDownOutside={(event) => {
+              onMouseDownOutside?.(event);
+              dismissTopLayer(event);
+            }}
+            onKeyDown={handleKeyDown}
+            style={mergeStyles(
+              {
+                ...surfaceStyle(
+                  theme,
+                  size,
+                  window.width - 2 * theme.spacing["3xl"],
+                ),
+                maxHeight: window.height - 2 * theme.spacing["3xl"],
+                overflow: "scroll",
+              },
+              style,
+            )}
+          >
+            {children}
+            {showClose ? (
+              <IconButton
+                label="Close"
+                size="sm"
+                testId="dialog-close"
+                onClick={close}
+                style={{
+                  position: "absolute",
+                  top: theme.spacing.lg,
+                  right: theme.spacing.lg,
+                }}
+              >
+                <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
+              </IconButton>
+            ) : null}
+          </div>
         </div>
-      </div>
-    </anchored>
+      </anchored>
+    </motion.div>
   );
 };
 
@@ -426,6 +443,7 @@ export const dialogMeta = {
   limitations: [
     "no aria-modal and no aria-labelledby in 0.10.0: the dialog is named with aria-label and its title is a heading",
     "the veil is an anchored element at window coordinates because the release ships no portal; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
+    "zoom-in-95/zoom-out-95 are unsupported: GPUI has no transform, so the dialog fades for 100 ms and never scales",
   ],
   docs: "docs/dialog.mdx",
   example: "examples/dialog.example.tsx",

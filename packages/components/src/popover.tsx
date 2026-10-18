@@ -25,7 +25,12 @@
  */
 
 import type { PublicInstance } from "@gpuix/react";
-import { useGpuix, type NativeRenderer } from "@gpuix/react";
+import {
+  AnimatePresence,
+  motion,
+  useGpuix,
+  type NativeRenderer,
+} from "@gpuix/react";
 import * as Arr from "effect/Array";
 import {
   FloatingLayer,
@@ -33,6 +38,7 @@ import {
   mergeStyles,
   type FloatingContentProps,
 } from "@gpuix/react/floating";
+import { motionFromClasses } from "@gpuixui/tw";
 import { Match } from "effect";
 import {
   createContext,
@@ -46,6 +52,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isTab } from "./internal/key.js";
+import { motionProps } from "./internal/motion.js";
 import {
   assertParts,
   type PartChildren,
@@ -197,12 +204,31 @@ const firstTabStopOf = (
     : null;
 };
 
+/** The side-specific shadcn slide class (the zoom is unsupported by GPUI). */
+const SLIDE: Readonly<Record<"top" | "right" | "bottom" | "left", string>> = {
+  bottom: "data-open:slide-in-from-top-2",
+  top: "data-open:slide-in-from-bottom-2",
+  left: "data-open:slide-in-from-right-2",
+  right: "data-open:slide-in-from-left-2",
+};
+
 /**
  * The floating surface, rendered while the popover is open. Focus moves to its
  * first tab stop on open; Tab walks those stops and leaves at either end, where
- * focus continues with the app control after the trigger.
+ * focus continues with the app control after the trigger. The exit is animated
+ * by `AnimatePresence`; the surface is inert until it unmounts (plan 525).
  */
-export const PopoverContent = ({
+export const PopoverContent = (props: PopoverContentProps) => {
+  const { open } = usePopoverContext();
+  return (
+    <AnimatePresence initial={false}>
+      {open ? <PopoverSurface key="popover" {...props} /> : null}
+    </AnimatePresence>
+  );
+};
+
+/** The surface itself; mounted while open and through its exit motion. */
+const PopoverSurface = ({
   side = "bottom",
   align = "start",
   sideOffset = 6,
@@ -227,7 +253,9 @@ export const PopoverContent = ({
   const visitedForward = useRef<ReadonlyArray<number>>([]);
   const visitedBackward = useRef<ReadonlyArray<number>>([]);
   const placement = usePlacement({
-    open,
+    // The surface exists only while open or exiting, so a close must not reset
+    // the measured placement and make the exit ghost jump (plan 525).
+    open: true,
     side,
     align,
     margin: collisionPadding,
@@ -278,8 +306,6 @@ export const PopoverContent = ({
       });
     });
   }, [dismissedByOutsidePress, open, renderer, trigger]);
-
-  if (!open) return null;
 
   /** Close and hand focus to the app control after (or before) the trigger. */
   const leave = (backwards: boolean): void => {
@@ -351,6 +377,58 @@ export const PopoverContent = ({
     visitedForward.current = Arr.append(visitedForward.current, next);
   };
 
+  const surfaceMotion = motionProps(
+    motionFromClasses(
+      `data-open:animate-in data-closed:animate-out data-open:fade-in-0 data-closed:fade-out-0 ${SLIDE[placement.side]} duration-100`,
+      theme,
+    ),
+  );
+
+  // The anchored host is the position measured against the popover root, so the
+  // motion wrapper must live *inside* it: wrapping the host moves the anchor.
+  const motionSurface = (
+    <motion.div {...surfaceMotion}>
+      <div
+        {...rest}
+        ref={setSurface}
+        tabIndex={rest.tabIndex ?? -1}
+        onMouseDownOutside={(event) => {
+          onMouseDownOutside?.(event);
+          dismissTopLayer(event);
+        }}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          Match.value(event).pipe(
+            Match.when(isDismiss, (value) => {
+              dismissTopLayer(value);
+            }),
+            Match.when(isTab, (value) => {
+              handleTab(value.modifiers?.shift === true);
+            }),
+            Match.orElse(() => undefined),
+          );
+        }}
+        style={mergeStyles(
+          {
+            ...textStyle(theme, "body"),
+            minWidth: 200,
+            padding: theme.spacing.lg,
+            backgroundColor: theme.colors.popover,
+            color: theme.colors.popoverForeground,
+            borderRadius: theme.radius.lg,
+            borderWidth: theme.borderWidth.thin,
+            borderColor: theme.colors.border,
+            boxShadow: elevationShadow(theme, "md"),
+            pointerEvents: open ? "auto" : "none",
+          },
+          style,
+        )}
+      >
+        {children}
+      </div>
+    </motion.div>
+  );
+
   return (
     <FloatingLayer
       side={placement.side}
@@ -360,41 +438,9 @@ export const PopoverContent = ({
       collisionPadding={collisionPadding}
       tabIndex={-1}
       autoFocus={false}
-      ref={setSurface}
-      {...rest}
-      onMouseDownOutside={(event) => {
-        onMouseDownOutside?.(event);
-        dismissTopLayer(event);
-      }}
-      onKeyDown={(event) => {
-        onKeyDown?.(event);
-        Match.value(event).pipe(
-          Match.when(isDismiss, (value) => {
-            dismissTopLayer(value);
-          }),
-          Match.when(isTab, (value) => {
-            handleTab(value.modifiers?.shift === true);
-          }),
-          Match.orElse(() => undefined),
-        );
-      }}
-      style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
-          minWidth: 200,
-          padding: theme.spacing.lg,
-          backgroundColor: theme.colors.popover,
-          color: theme.colors.popoverForeground,
-          borderRadius: theme.radius.lg,
-          borderWidth: theme.borderWidth.thin,
-          borderColor: theme.colors.border,
-          boxShadow: elevationShadow(theme, "md"),
-          pointerEvents: "auto",
-        },
-        style,
-      )}
+      style={{ backgroundColor: "transparent" }}
     >
-      {children}
+      {motionSurface}
     </FloatingLayer>
   );
 };
@@ -424,6 +470,7 @@ export const popoverMeta = {
     'the runtime\'s `align="center"` centres on the containing block, so the component maps it to a measured `start` offset; the snap margin wins near a window edge',
     "an outside press gives focus to whatever was pressed, so focus is not returned to the trigger (Escape is)",
     "Tab walks the surface's tab stops; the first stop is measured once on open, and a first control removed while open makes Tab close instead of cycle",
+    "zoom-in-95/zoom-out-95 are unsupported: GPUI has no transform, so the panel fades and slides on top/left instead of scaling",
   ],
   docs: "docs/popover.mdx",
   example: "examples/popover.example.tsx",

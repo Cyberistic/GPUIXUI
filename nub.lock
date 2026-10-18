@@ -139,6 +139,9 @@ importers:
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
+      '@gpuixui/tw':
+        specifier: workspace:*
+        version: link:../tw
       effect:
         specifier: 'catalog:'
         version: 4.0.5

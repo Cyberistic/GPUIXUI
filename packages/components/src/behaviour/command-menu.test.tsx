@@ -13,6 +13,7 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  finishMotion,
   clickCentreOf,
   focusedTestId,
   requireBounds,
@@ -228,6 +229,7 @@ describe("CommandMenu", () => {
 
     expect(perform).toHaveBeenCalledTimes(1);
     expect(perform).toHaveBeenCalledWith("open-recent");
+    finishMotion(palette);
     expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
 
     palette.unmount();
@@ -240,6 +242,7 @@ describe("CommandMenu", () => {
     clickCentreOf(palette, "command-save");
 
     expect(perform).toHaveBeenCalledWith("save");
+    finishMotion(palette);
     expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
 
     palette.unmount();
@@ -289,6 +292,7 @@ describe("CommandMenu", () => {
 
     palette.renderer.simulateKeystrokes("escape");
 
+    finishMotion(palette);
     expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
 
     palette.unmount();
@@ -427,6 +431,7 @@ describe("CommandMenu", () => {
     palette.renderer.simulateKeystrokes("enter");
     await Promise.resolve();
     expect(perform).toHaveBeenCalledWith("open-file");
+    finishMotion(palette);
     expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
     expect(onRecentChange).toHaveBeenCalledWith(["open-file"]);
 

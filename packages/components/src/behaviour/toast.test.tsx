@@ -19,6 +19,7 @@ import { Button } from "../internal/button.js";
 import {
   boundsOf,
   clickCentreOf,
+  finishMotion,
   hoverCentreOf,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -125,6 +126,11 @@ const settle = async (): Promise<void> => {
   await Promise.resolve();
 };
 
+/** Complete the 500 ms toast exit and paint the result. */
+const finishExit = (root: ComponentTestRoot): void => {
+  finishMotion(root, 500);
+};
+
 /** The measured y of a toast card, or a broken-fixture failure. */
 const toastY = (root: ComponentTestRoot, testId: string): number =>
   Option.getOrElse(boundsOf(root, testId), () => {
@@ -175,6 +181,7 @@ describe("Toast", () => {
 
     clickCentreOf(page, "toast-dismiss");
     await settle();
+    finishExit(page);
 
     expect(page.renderer.getAllText()).not.toContain("Saved changes");
     expect(page.renderer.getAllText()).toContain("Disk nearly full");
@@ -192,6 +199,7 @@ describe("Toast", () => {
 
     clickCentreOf(page, "dismiss-all");
     await settle();
+    finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
     expect(page.renderer.findByTestId("toast-2")).toBeUndefined();
@@ -263,6 +271,7 @@ describe("Toast", () => {
     hoverCentreOf(page, "elsewhere");
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
+    finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
@@ -289,6 +298,7 @@ describe("Toast", () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
+    finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
@@ -317,6 +327,7 @@ describe("Toast", () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
+    finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
@@ -334,6 +345,7 @@ describe("Toast", () => {
 
     clickCentreOf(page, "toast-action");
     await settle();
+    finishExit(page);
 
     expect(onAction).toHaveBeenCalledTimes(1);
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
@@ -387,6 +399,47 @@ describe("Toast", () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
+    finishExit(page);
+
+    expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("enters with the 500 ms toast motion", async () => {
+    const page = renderComponent(<Harness />);
+
+    clickCentreOf(page, "push");
+    await settle();
+
+    const animated = page.renderer
+      .findByType("div")
+      .filter((element) => element.customProps?.motion !== undefined);
+
+    expect(animated).toHaveLength(1);
+    expect(animated[0]?.customProps?.motion).toEqual(
+      expect.objectContaining({
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+      }),
+    );
+
+    page.unmount();
+  });
+
+  it("keeps a dismissed card for its exit, then removes it", async () => {
+    const page = renderComponent(<Harness />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    clickCentreOf(page, "toast-dismiss");
+    await settle();
+
+    // The store has dropped it, but the animated card is still on screen.
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+
+    finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 

@@ -112,6 +112,14 @@ string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration 
 | `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
 | `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id) }` |
 
+## Motion
+
+Cards enter and leave through `AnimatePresence` with `toastMotion(theme)` from
+`@gpuixui/tw`: 500 ms with `cubic-bezier(0.22, 1, 0.36, 1)`, fading opacity
+only. The card stays mounted for the exit, so a dismissal is visible rather than
+an instant pop, while the store's queue drops immediately. 0.10.0 exposes no
+reduced-motion preference, so the recipe is not switchable.
+
 ## Theming
 
 Cards paint `colors.popover` with `colors.popoverForeground`, a
@@ -147,13 +155,14 @@ palette Alert and Badge use). Width is 380px.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, and action decoding
   (present, absent, empty label).
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (14 tests): push
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (16 tests): push
 and the card's status name, stacking order, dismissing one card, `dismissAll`,
 the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
 hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
 pointer leaving, the action running once and dismissing, no control for an
-unhandled label, no control without an action, and the action holding focus.
+unhandled label, no control without an action, the action holding focus, the
+500 ms enter recipe, and the card remaining through its exit before it leaves.
 
 ```sh
 nub run --filter @gpuixui/components test

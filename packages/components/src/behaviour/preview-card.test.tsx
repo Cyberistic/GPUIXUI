@@ -23,6 +23,7 @@ import {
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Button } from "../internal/button.js";
 import {
+  finishMotion,
   focusedTestId,
   hoverCentreOf,
   requireBounds,
@@ -210,6 +211,7 @@ describe("PreviewCard", () => {
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

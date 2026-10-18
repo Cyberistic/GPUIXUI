@@ -13,7 +13,11 @@ import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ConfirmDialog } from "../confirm-dialog.js";
 import { darkTheme } from "../internal/theme.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
 /** A caller that owns the open state, exactly as the API requires. */
@@ -58,6 +62,7 @@ describe("ConfirmDialog", () => {
     );
 
     confirm.renderer.simulateKeystrokes("enter");
+    finishMotion(confirm);
 
     expect(onConfirm).not.toHaveBeenCalled();
     expect(confirm.renderer.findByTestId("confirm-cancel")).toBeUndefined();

@@ -96,6 +96,14 @@ paints `colors.overlay`. The surface caps its height at the window minus two
 `spacing["3xl"]` and scrolls interior overflow, so a long body cannot push the
 actions off screen.
 
+## Motion
+
+`DialogContent` runs `dialogMotion(theme)` from `@gpuixui/tw` through
+`AnimatePresence`: a 100 ms opacity fade on open and close. The surface stays
+mounted for the exit and is inert while it leaves (`pointerEvents: none`), so
+focus, Tab and dismissal end at close. `zoom-in-95`/`zoom-out-95` are recorded
+as unsupported: GPUI has no transform, so no scale is faked.
+
 ## Accessibility and limitations
 
 - `role="dialog"` with the required `label` as its accessible name.
@@ -148,14 +156,15 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (14 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (16 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
 entering and returning, Escape and backdrop dismissal, a popover inside the dialog
 closed by the first Escape with the dialog kept open, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, both themes reading
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
 dismissals, a controlled dialog staying closed, the caller's own close control,
-and a caller content `ref`. Plus `src/internal/dismiss-layer.test.ts` for the
+a caller content `ref`, the 100 ms enter recipe, and the surface remaining for
+its exit before it unmounts. Plus `src/internal/dismiss-layer.test.ts` for the
 stack's own rules, including one keystroke arriving as two payload copies.
 
 ```sh

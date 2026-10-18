@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { InlineEdit, type InlineEditProps } from "../inline-edit.js";
 import {
+  finishMotion,
   clickCentreOf,
   focusedTestId,
   requireBounds,
@@ -176,6 +177,7 @@ describe("InlineEdit", () => {
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

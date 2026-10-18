@@ -14,7 +14,11 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { HotkeyRecorder } from "../hotkey-recorder.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -120,6 +124,7 @@ describe("HotkeyRecorder", () => {
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

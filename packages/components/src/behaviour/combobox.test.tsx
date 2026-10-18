@@ -29,6 +29,7 @@ import * as Option from "effect/Option";
 import { useState } from "react";
 import { nodesWithRole, type A11yNode } from "../internal/a11y.js";
 import {
+  finishMotion,
   clickCentreOf,
   focusedTestId,
   requireBounds,
@@ -445,6 +446,7 @@ describe("Combobox", () => {
     nested.renderer.simulateKeystrokes("escape");
     await settle();
 
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();
@@ -463,6 +465,7 @@ describe("Combobox", () => {
     nested.renderer.nativeSimulateClick(12, 12);
     await settle();
 
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

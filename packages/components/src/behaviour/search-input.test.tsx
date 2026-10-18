@@ -17,7 +17,11 @@ import type { PublicInstance } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { createRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -167,6 +171,7 @@ describe("SearchInput", () => {
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();
@@ -180,6 +185,7 @@ describe("SearchInput", () => {
 
     nested.renderer.simulateKeystrokes("escape");
 
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();

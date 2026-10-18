@@ -262,6 +262,7 @@ B1, so it is planned, not done.
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
+| [525](./525-motion-slice.md) | The first motion slice: Toast, Dialog and Popover consume `@gpuixui/tw` motion | C/F | 110, 112, 115, 117, 323, 366, 398, 524 | done — `AnimatePresence` + keyed `motion.div`: Toast `toastMotion(theme)` 500 ms cubic-bezier, Dialog `dialogMotion(theme)` 100 ms fade, Popover `motionFromClasses` 100 ms fade + side slide; `zoom-*` recorded unsupported. 6 new native cases (Toast 16, Dialog 16, Popover 19; behaviour 694), entry props + exit presence pinned, exit ghost inert; live 2/2 with a scratch wait for the stale toast assertion |
 
 ## How to use a plan
 

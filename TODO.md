@@ -351,6 +351,13 @@ retired once both branches are one
       message; 6 pure + 12 native cases (unit 404, behaviour 668), mutation proof
       (removing it from Button, FieldInput and ComboboxTrigger fails 4 cases);
       docs, `COMPONENTS.md` and the inventory synced
+    - [x] The first motion slice — plan 525: Toast uses `toastMotion(theme)`
+      (500 ms cubic-bezier) with `AnimatePresence` and keyed cards, Dialog uses
+      `dialogMotion(theme)` and Popover `motionFromClasses` (100 ms fade + side
+      slide); `zoom-*` stays unsupported, and focus/dismiss behaviour is gated
+      at close so the exit ghost is inert. 6 new native cases (Toast 16, Dialog
+      16, Popover 19; behaviour 694); live 2/2 once the scratch toast scenario
+      waits for the 500 ms exit
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook
@@ -545,6 +552,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Playground can drop `apps/playground/tsconfig.vendor.json` and import `@gpuixui/components` from source: the `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` cause is gone (plan 380) | playground | pending — hand-off recorded |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | Plan 347's Carousel scenario expected an inactive slide to stay hit-testable; plan 365 fixes the component, so that step should assert the fixed behaviour | playground | resolved in `packages/components`; the playground assertion needs updating |
+| `live-tier2-toast` checks `bounds("toast-5") === null` immediately after the queue count drops; the 500 ms toast exit (plan 525) keeps the card painted, so the check needs a ~650 ms wait | playground | pending — measured on 2026-10-18; the component side is correct and the scratch run passes with the wait |
 | Plan 347 §8.2 found InlineEdit's blur commit is headless-only (live `onBlur` is never delivered for a native focus change) | playground → components | **resolved** in `packages/components` — `Tab` and an outside press finish the edit, and the press restores the display only when it focused nothing (plan 379); the playground live scenario can now assert click-away |
 | Plan 347 §8.2 found TagInput's chip removal control has no `testId`, so the live harness could only assert the chip's presence | playground → components | **resolved** — the control is named `<chip testId>-remove` (plan 381) |
 | Plan 302 §2 measured that `<virtual-list>` retains 3 host nodes per row and `<code>` reparses only when its document key changes | playground → components (COMPONENTS.md) | **resolved** — folded into the Tier 3 rows |

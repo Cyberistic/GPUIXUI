@@ -7,13 +7,16 @@
  */
 
 import type { Props } from "@gpuix/react";
+import { AnimatePresence, motion } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
+import { toastMotion } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useRef, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
+import { motionProps } from "../internal/motion.js";
 import {
   elevationShadow,
   textStyle,
@@ -207,6 +210,7 @@ export const ToastViewport = ({
 }: ToastViewportProps) => {
   const theme = useTheme();
   const { toasts } = useToast();
+  const cardMotion = motionProps(toastMotion(theme));
 
   return (
     <div
@@ -230,9 +234,13 @@ export const ToastViewport = ({
       )}
     >
       {children}
-      {Arr.map(toasts, (toast) => (
-        <ToastCard key={toast.id} toast={toast} />
-      ))}
+      <AnimatePresence initial={false}>
+        {Arr.map(toasts, (toast) => (
+          <motion.div key={toast.id} {...cardMotion}>
+            <ToastCard toast={toast} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 };
@@ -246,6 +254,7 @@ export const toastMeta = {
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no progress indicator for the remaining auto-dismiss time",
+    "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

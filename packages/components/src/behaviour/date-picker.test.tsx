@@ -15,7 +15,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import {
@@ -125,6 +129,7 @@ describe("DatePicker", () => {
     clickCentreOf(picker, "date-day-2026-10-20");
 
     expect(onValueChange).toHaveBeenCalledWith("2026-10-20");
+    finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
     expect(picker.renderer.getAllText()).toContain("20 October 2026");
     expect(picker.renderer.getAllText()).not.toContain("Pick a date");
@@ -192,6 +197,7 @@ describe("DatePicker", () => {
 
     picker.renderer.simulateKeystrokes("escape");
 
+    finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
@@ -228,6 +234,7 @@ describe("DatePicker", () => {
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith("2026-10-31");
     expect(picker.renderer.getAllText()).toContain("31 October 2026");
+    finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
 
     picker.unmount();
@@ -304,6 +311,7 @@ describe("DatePicker", () => {
 
     open(picker);
 
+    finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
 
     picker.unmount();
@@ -379,6 +387,7 @@ describe("DatePicker", () => {
 
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith(null);
+    finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
     expect(picker.renderer.getAllText()).toContain("Pick a date");
     expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));

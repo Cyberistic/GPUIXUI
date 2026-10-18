@@ -18,7 +18,7 @@ import { Chat, ChatComposer, ChatEmpty, ChatMessages } from "../chat.js";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Message, MessageContent } from "../message.js";
 import { nodesWithRole } from "../internal/a11y.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, finishMotion } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -254,6 +254,7 @@ describe("Chat", () => {
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
     nested.renderer.simulateKeystrokes("escape");
+    finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();
