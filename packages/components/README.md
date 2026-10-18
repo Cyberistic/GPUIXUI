@@ -72,7 +72,8 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `@gpuixui/icons` | every component-owned fixed mark (close, clear, chevron, check, toast tone) — plan 324 |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
-| `src/perf/list.test.tsx` | the large-collection ceiling: 1,000 rows, a focus move and a re-render; `docs/performance.md` records the baseline and the known limitation |
+| `src/perf/list.test.tsx` | the large-collection ceiling: 1,000 rows, a focus move and a re-render; `docs/performance.md` records the baseline and the remaining limit |
+| `src/list/row-state.ts` | the per-row bit-mask store behind `List`'s row-level subscriptions (plan 339) |
 | `examples/index.ts` | the example registry (`id → example`) a native host iterates; the id is the module's basename, with a page at `docs/<id>.mdx` (plan 330) |
 
 ## Commands

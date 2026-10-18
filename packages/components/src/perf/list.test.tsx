@@ -9,7 +9,8 @@
  * rather than ordinary machine load.
  *
  * This is not a gate. `docs/performance.md` records the baseline, the method
- * and the known limitation.
+ * and the remaining limit. The deterministic paint contract — a focus move
+ * repaints two rows — is asserted in the behaviour suite (plan 339).
  */
 
 import * as Arr from "effect/Array";

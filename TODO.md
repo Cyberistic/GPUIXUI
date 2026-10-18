@@ -451,9 +451,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       both-direction proven
     - `[x]` `test:perf` + `src/perf/list.test.tsx` + `docs/performance.md`; the
       1,000-row cost and the row-repaint limitation are recorded
-    - `[ ]` Row-level subscription for `List` (`useSyncExternalStore` + a stable
-      actions context) so one focus move repaints two rows, not all 1,000 —
-      follow-up to plan 338; needs its own plan and a measured before/after
+    - `[x]` Plan 339 — row-level subscription for `List`: a per-row mask store and
+      a stable actions context, so one focus move repaints exactly the two rows
+      that changed; the style-count test fails with all six fixture rows on the
+      old code; List 39, behaviour 518 (owner: components)
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

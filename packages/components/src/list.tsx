@@ -24,6 +24,7 @@ import {
 } from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import {
   createContext,
@@ -31,9 +32,18 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
+import {
+  ACTIVE,
+  createRowMasks,
+  SELECTED,
+  TABBABLE,
+  type RowMasks,
+} from "./list/row-state.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -77,9 +87,8 @@ interface Row {
 interface ListContextValue {
   readonly selectable: boolean;
   readonly dense: boolean;
-  readonly selected: ReadonlyArray<string>;
-  readonly active: Option.Option<string>;
-  readonly tabbable: Option.Option<string>;
+  /** The row's own paint state: active, selected and tab stop (plan 339). */
+  readonly rowMasks: RowMasks;
   /** Focus and select `value` if it is enabled — what a click does. */
   readonly activate: (value: string, event: EventPayload) => void;
   /** Note that `value` now holds focus, so keys move on from it. */
@@ -89,6 +98,12 @@ interface ListContextValue {
 }
 
 const ListContext = createContext<ListContextValue | undefined>(undefined);
+
+/** The stable half of the context: the actions a row calls. */
+type ListActions = Pick<
+  ListContextValue,
+  "activate" | "noteFocus" | "register"
+>;
 
 /** The list a {@link ListItem} belongs to. Throws when there is none. */
 const useListContext = (): ListContextValue => {
@@ -292,6 +307,7 @@ export const List = (props: ListProps) => {
   const [anchor, setAnchor] = useState<Option.Option<string>>(Option.none());
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<Row>>([]);
+  const [rowMasks] = useState(createRowMasks);
 
   const commit = useCallback(
     (next: ReadonlyArray<string>) => {
@@ -313,21 +329,32 @@ export const List = (props: ListProps) => {
     [setRows],
   );
 
+  const setActiveIfChanged = useCallback((value: string) => {
+    setActive((current) =>
+      Option.exists(current, (candidate) => candidate === value)
+        ? current
+        : Option.some(value),
+    );
+  }, []);
+
   const focusRow = useCallback(
     (row: Row) => {
-      setActive(Option.some(row.value));
+      setActiveIfChanged(row.value);
       renderer?.focusElement?.(row.nativeId);
     },
-    [renderer],
+    [renderer, setActiveIfChanged],
   );
 
   /**
    * Adopt focus the row already got — from Tab, or from the consumer focusing it
    * — so the first arrow key moves on from where the user is, not from the top.
    */
-  const noteFocus = useCallback((value: string) => {
-    setActive(Option.some(value));
-  }, []);
+  const noteFocus = useCallback(
+    (value: string) => {
+      setActiveIfChanged(value);
+    },
+    [setActiveIfChanged],
+  );
 
   /**
    * Move focus one enabled row. A plain move re-anchors; a Shift move in
@@ -523,18 +550,56 @@ export const List = (props: ListProps) => {
     );
   };
 
-  const context = useMemo<ListContextValue>(
+  const tabbable = useMemo(
+    () => tabbableValue(rows, active, selected, selectable),
+    [active, rows, selectable, selected],
+  );
+
+  // The per-row paint state. `rowMasks.replace` notifies a row only when one of
+  // its own bits changes, so a focus move re-renders the two rows that moved —
+  // not the whole list (plan 339).
+  const flags = useMemo(() => {
+    const selectedSet = HashSet.fromIterable(selected);
+    const isActive = (value: string) =>
+      Option.exists(active, (candidate) => candidate === value);
+    const isTabbable = (value: string) =>
+      Option.exists(tabbable, (candidate) => candidate === value);
+    return Arr.map(
+      rows,
+      (row) =>
+        [
+          row.value,
+          (isActive(row.value) ? ACTIVE : 0) |
+            (HashSet.has(selectedSet, row.value) ? SELECTED : 0) |
+            (isTabbable(row.value) ? TABBABLE : 0),
+        ] as const,
+    );
+  }, [active, rows, selected, tabbable]);
+
+  useLayoutEffect(() => {
+    rowMasks.replace(flags);
+  }, [flags, rowMasks]);
+
+  // The actions close over the latest state, but the context object that carries
+  // them must never change — a changing context re-renders every row, which is
+  // exactly the cost this design removes. The ref is updated after commit and
+  // before any event can call through it.
+  const handlers = useRef({ activate, noteFocus, register });
+  useLayoutEffect(() => {
+    handlers.current = { activate, noteFocus, register };
+  });
+  const actions = useMemo<ListActions>(
     () => ({
-      selectable,
-      dense,
-      selected,
-      active,
-      tabbable: tabbableValue(rows, active, selected, selectable),
-      activate,
-      noteFocus,
-      register,
+      activate: (value, event) => handlers.current.activate(value, event),
+      noteFocus: (value) => handlers.current.noteFocus(value),
+      register: (row) => handlers.current.register(row),
     }),
-    [activate, active, dense, noteFocus, register, rows, selectable, selected],
+    [],
+  );
+
+  const context = useMemo<ListContextValue>(
+    () => ({ selectable, dense, rowMasks, ...actions }),
+    [actions, dense, rowMasks, selectable],
   );
 
   assertParts(listRoot, children);
@@ -608,16 +673,8 @@ export const ListItem = ({
   ...rest
 }: ListItemProps) => {
   const theme = useTheme();
-  const {
-    selectable,
-    dense,
-    selected,
-    active,
-    tabbable,
-    activate,
-    noteFocus,
-    register,
-  } = useListContext();
+  const { selectable, dense, rowMasks, activate, noteFocus, register } =
+    useListContext();
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -642,12 +699,14 @@ export const ListItem = ({
     });
   }, [disabled, instance, register, textValue, value]);
 
-  const isSelected = selectable && Arr.contains(value)(selected);
-  const isActive = Option.exists(active, (candidate) => candidate === value);
-  const isTabbable = Option.exists(
-    tabbable,
-    (candidate) => candidate === value,
+  // Only this row's own bits: a focus move notifies every subscriber, but React
+  // re-renders a row only when its snapshot actually changed (plan 339).
+  const mask = useSyncExternalStore(rowMasks.subscribe, () =>
+    rowMasks.get(value),
   );
+  const isSelected = selectable && (mask & SELECTED) !== 0;
+  const isActive = (mask & ACTIVE) !== 0;
+  const isTabbable = (mask & TABBABLE) !== 0;
   const state: ListItemState = {
     active: isActive,
     disabled,

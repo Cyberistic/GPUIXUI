@@ -112,6 +112,7 @@ workstream declares in its own section below.
 | [336](./336-documented-subpath-exports.md) | Packaging truth: every documented subpath import resolves | F | 110, 115, 117, 330, 335 | done — `docs/field.mdx`'s `@gpuixui/components/validation/logic` mapped to a missing `.tsx`; explicit export + a resolution/index check (unit 337); both-direction proof |
 | [337](./337-component-api-truth.md) | Component API truth: the documented parts are the exported parts | F | 200, 304, 305, 330, 333, 335, 336 | done — the §8 "planned" rows named three landed components, the Avatar opening claim contradicted its limitations, and five "until primitives lands" notes were stale; 3 new contract checks (unit 340), both-direction proof |
 | [338](./338-package-surface-and-performance.md) | Package surface truth and a performance baseline: explicit exports, manifest check, measured large-list cost | F | 110, 117, 330, 336, 337 | done — wildcard exports removed (42 modules + `validation/logic`), 6 export + 3 manifest checks, `test:perf` records the 1,000-row cost (unit 348, behaviour 517); both-direction proof |
+| [339](./339-list-row-subscriptions.md) | List row subscriptions: a focus move repaints the rows that changed | F | 111, 120, 125, 130, 134, 338 | done — per-row mask store + stable context; style-count test fails with all 6 fixture rows on the old code and passes with 2; List 39, behaviour 518; wall clock measured, noise documented |
 
 Interlocks this workstream depends on and does not own:
 

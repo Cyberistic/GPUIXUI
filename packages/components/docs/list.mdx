@@ -256,16 +256,20 @@ is on.
   composition, so the list cannot read its text. An omitted `textValue` makes the
   row unsearchable rather than guessing.
 - No `aria-multiselectable` in 0.10.0 (see Accessibility).
-- No virtualisation: a `List` renders every row. Long collections belong in
+- No virtualisation: a `List` renders every row. A roving-focus move repaints
+  only the two rows that changed, but the runtime still reconciles the whole
+  collection and re-focuses natively — a 1,000-row list costs ≈0.6–2.5 s per
+  move on this host (`docs/performance.md`). Long collections belong in
   `virtual-list`, which is a separate component with its own API.
 - The rows are not accessible by index: the API is `value`-based.
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (38 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (39 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
-`src/internal/typeahead.test.ts` for the shared prefix matching, and
-`src/list/selection.test.ts` for the multiple-selection rules: the modes and
+`src/internal/typeahead.test.ts` for the shared prefix matching,
+`src/list/selection.test.ts` for the multiple-selection rules, and
+`src/list/row-state.test.ts` for the row-mask store: the modes and
 their roles, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both, real focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
@@ -275,7 +279,9 @@ click (and not by `Space`, a disabled row, a plain list without the prop, or a
 held `Enter` repeating), the
 arrow key reaching the row that activates, and — in multiple mode —
 plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow` ranges, `Cmd`/`Ctrl`+A
-selecting every enabled row, and a disabled row never entering a selection.
+selecting every enabled row, and a disabled row never entering a selection. A
+focus move repaints exactly the two rows that changed, counted through the
+public `style` function.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

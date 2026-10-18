@@ -25,10 +25,15 @@
  * a disabled row won the match, an uppercase letter never matched, a missed
  * prefix poisoned the next search, and a typed jump must not change the
  * selection in multiple mode.
+ *
+ * Paint cost (plan 339): a roving-focus move used to re-render every row. The
+ * list repaints only the row that lost the ring and the row that gained it;
+ * the style-function count pins that contract.
  */
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Order from "effect/Order";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -283,6 +288,41 @@ describe("List", () => {
     list.renderer.simulateKeystrokes("up");
 
     expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+
+    list.unmount();
+  });
+
+  it("repaints only the rows whose state changed when focus moves", () => {
+    // Plan 339: before the row subscriptions, one arrow move re-rendered every
+    // row — a 1,000-row list spent ~1–2 s per key press. A row re-renders when
+    // its `style` function is called, so the count is the paint contract.
+    const paints = new Map<string, number>();
+    const values = ["a", "b", "c", "d", "e", "f"];
+    const counted = (
+      <List testId="list" selectionMode="single">
+        {Arr.map(values, (value) => (
+          <ListItem
+            key={value}
+            testId={`row-${value}`}
+            value={value}
+            style={() => {
+              paints.set(value, (paints.get(value) ?? 0) + 1);
+              return {};
+            }}
+          >
+            <ListItemTitle>{value}</ListItemTitle>
+          </ListItem>
+        ))}
+      </List>
+    );
+    const list = renderComponent(counted);
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    paints.clear();
+    list.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-b"));
+    expect(Arr.sort([...paints.keys()], Order.String)).toEqual(["a", "b"]);
 
     list.unmount();
   });
