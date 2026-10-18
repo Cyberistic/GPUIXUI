@@ -125,6 +125,7 @@ import {
   getPlatformTheme,
   getTheme,
   highContrastThemes,
+  themeContrasts,
   themeModes,
   themes,
   type Theme,
@@ -314,6 +315,98 @@ describe("docs/design-system.md elevation paragraph", () => {
     expect(elevation).toContain("`elevationShadows`");
     expect(elevation).toContain("at most one entry");
     expect(elevation).not.toContain("exactly one shadow");
+  });
+});
+
+/**
+ * Plan 377: the design-system's §9 explanation quotes two figures derived from
+ * the shipped palette — the tightest scrim pair over the fourteen surfaces and
+ * 24 colour sets, and the cost of an accent-toned link through the AAA light
+ * selection wash. Neither was read by a test, so a palette edit that stayed
+ * above every floor could leave the page quoting a ratio the package no longer
+ * produces, the class plan 336 fixed in the catalogue.
+ */
+describe("docs/design-system.md current figures", () => {
+  const platformLabels: Readonly<Record<PlatformName, string>> = {
+    darwin: "macOS",
+    linux: "Linux",
+    win32: "Windows",
+    default: "Default",
+  };
+
+  const recipeLabels: Readonly<Record<PlatformRecipeName, string>> = {
+    xp: "XP",
+    aero: "Aero",
+  };
+
+  const scrimSets: ReadonlyArray<readonly [string, Theme]> = [
+    ...themeModes.flatMap((mode) =>
+      themeContrasts.map((contrast): readonly [string, Theme] => [
+        contrast === "high" ? `high-contrast ${mode}` : `identity ${mode}`,
+        getTheme(mode, contrast),
+      ]),
+    ),
+    ...platformNames
+      .filter((platform) => platform !== "default")
+      .flatMap((platform) =>
+        themeModes.flatMap((mode) =>
+          themeContrasts.map((contrast): readonly [string, Theme] => [
+            `${platformLabels[platform]} ${mode}${contrast === "high" ? " high" : ""}`,
+            getPlatformTheme(platform, mode, contrast),
+          ]),
+        ),
+      ),
+    ...platformRecipeNames.flatMap((recipe) =>
+      themeModes.flatMap((mode) =>
+        themeContrasts.map((contrast): readonly [string, Theme] => [
+          `${recipeLabels[recipe]} ${mode}${contrast === "high" ? " high" : ""}`,
+          getPlatformRecipeTheme(recipe, mode, contrast),
+        ]),
+      ),
+    ),
+  ];
+
+  it("quotes the tightest modal scrim pair", () => {
+    const tightest = scrimSets
+      .flatMap(([label, theme]) =>
+        overlaySurfaces.map((surface) => ({
+          label,
+          surface,
+          ratio: contrastRatio(
+            compositeOver(theme.colors.overlay, theme.colors[surface]),
+            theme.colors[surface],
+          ),
+        })),
+      )
+      .reduce((worst, current) =>
+        current.ratio < worst.ratio ? current : worst,
+      );
+
+    expect(scrimSets).toHaveLength(24);
+    expect([
+      tightest.label,
+      tightest.surface,
+      tightest.ratio.toFixed(3),
+    ]).toEqual(["high-contrast dark", "primary", "1.075"]);
+    expect(designSystem).toContain(
+      `**${tightest.ratio.toFixed(3)}:1** (${tightest.label}, \`overlay\` on \`${tightest.surface}\`)`,
+    );
+  });
+
+  it("quotes the AAA wash-link cost", () => {
+    const aaa = getTheme("light", "high").colors;
+    const washed = (surface: "muted" | "active"): number =>
+      contrastRatio(
+        aaa.primaryText,
+        compositeOver(aaa.selection, aaa[surface]),
+      );
+    const muted = washed("muted").toFixed(2);
+    const active = washed("active").toFixed(2);
+
+    expect([muted, active]).toEqual(["6.75", "5.48"]);
+    expect(designSystem).toContain(
+      `does not clear 7:1 through the AAA light wash (${muted}:1 on the \`muted\` panel and ${active}:1 on \`active\`)`,
+    );
   });
 });
 
