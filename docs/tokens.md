@@ -1413,31 +1413,31 @@ type role's leading must not be shorter than its size; the two documented type
 ladders (`proseLadder` and `codeLadder`) must not be inverted — a role below
 another may not render larger — and `bodyStrong`, the weight variant of `body`,
 may not shrink below it and must stay heavier, because an emphasis role the
-reader cannot distinguish from body text is not emphasis; the smallest control must
-fit one `label` line plus its two borders; a row must fit one `body` line and the
-default `md` control it holds; `radius.none` must be square; `radius.full` must
-round the largest radius and half of the taller of the largest control and the
-largest avatar — a 40px avatar painted at a smaller radius is a rounded square,
-not a circle; every named ladder —
-`spacing`, `radius`, `iconSize`, `avatarSize`, `controlHeight`, `controlPaddingX`
-and the motion timings — must not step backwards, and a timing must also be
-finite; an icon and a field adornment must fit the smallest control; a chip must
-fit in a field; an overlay's `overlayMaxHeight` must fit one `density.rowHeight`,
-because a list viewport shorter than a row clips every option; a cubic-bezier
-easing must be four finite control points with both x values inside `0…1`,
-because the runtime drops a transition it cannot interpolate; and an elevation level
-must hold a shadow whose alpha is a fraction, because `alpha()` falls back to the
-opaque tint on a value it cannot parse, and whose two offsets, blur and spread
-are finite — a negative offset or spread is a direction, a `NaN` is a shadow the
-renderer cannot paint. Every other numeric metric — a type size, leading or
-weight, a border width, a density or dimension metric, an icon, avatar, radius
-or spacing step, and every motion timing — must be a **finite** number too,
-because the renderer casts each to a 32-bit float and an infinity becomes
-invalid layout it paints as nothing, with no error. Two ladders are deliberately non-decreasing rather than
-strict: Linux and Windows ship `radius.lg === radius.xl`, and Windows ships
-`motion.fast === motion.step`. `elevation.overlay` is exempt because it is
-reserved and empty. Every shipped theme, platform variant and recipe passes, so
-the check moves no value; it guards the next edit.
+reader cannot distinguish from body text is not emphasis; the smallest control
+must fit one `label` line plus its two borders; a row must fit one `body` line
+and the default `md` control it holds; `radius.none` must be square; `radius.full`
+must round the largest radius and half of the taller of the largest control and
+the largest avatar — a 40px avatar painted at a smaller radius is a rounded
+square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
+`avatarSize`, `controlHeight`, `controlPaddingX` and the motion timings — must
+not step backwards, and a timing must also be finite; an icon and a field
+adornment must fit the smallest control; a chip must fit in a field; an
+overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
+viewport shorter than a row clips every option; a cubic-bezier easing must be
+four finite control points with both x values inside `0…1`, because the runtime
+drops a transition it cannot interpolate; and an elevation level must hold a
+shadow whose alpha is a fraction, because `alpha()` falls back to the opaque
+tint on a value it cannot parse, and whose two offsets, blur and spread are
+finite — a negative offset or spread is a direction, a `NaN` is a shadow the
+renderer cannot paint. Every other numeric metric — a type size or leading, a
+border width, a density or dimension metric, an icon, avatar, radius or spacing
+step, and every motion timing — must be a **finite** number too, because the
+renderer casts each to a 32-bit float and an infinity becomes invalid layout it
+paints as nothing, with no error. `radius` and the motion timings are
+deliberately non-decreasing rather than strict: Linux and Windows ship
+`radius.lg === radius.xl`, and Windows ships `motion.fast === motion.step`. `elevation.overlay` is exempt
+because it is reserved and empty. Every shipped theme, platform variant and
+recipe passes, so the check moves no value; it guards the next edit.
 
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.
