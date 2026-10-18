@@ -142,6 +142,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [343](./343-field-pressed-edge.md) | The field's pressed edge in the public contract | F | 071, 084, 325, 340–342 | done |
 | [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | done |
 | [345](./345-contrast-platform-elevation.md) | A high-contrast platform variant keeps its elevation | F | 063, 073, 085, 301, 311, 323 | done |
+| [346](./346-soft-panel-text.md) | The caption and link inside a status panel | F | 071, 076, 082, 088, 307, 320, 339 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1099,6 +1100,18 @@ public checker still returns `[]`. `platform-contrast-elevation.test.ts` states
 the regression and the tint/geometry split, and the docs, README and ledger now
 say that a high-contrast variant keeps its platform's elevation while the AAA
 colour set wins.
+
+346 closes the last two text roles the soft status fills were never measured
+for. Plans 307, 320, 092, 093, 095 and 340 hold the inactive label, body text,
+the control boundary, the focus ring and the divider on those fills, but not the
+quiet caption (`mutedForeground`) or a brand-toned link (`primaryText`).
+`AlertDescription` is documented as a container that may hold an action, and the
+primitives `Link` paints `primaryText`, so both compositions are invited by the
+shipped API. `softPanelTextPairs` adds the two roles on all four fills at the
+secondary floor (315 → 323); every shipped set already passes (6.61:1 and
+5.26:1 at the tightest), so no colour moves, and
+`soft-panel-text.test.ts` states the erased-caption and erased-link
+regressions.
 
 ### Reference adoption (block `200–299`)
 
