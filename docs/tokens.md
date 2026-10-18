@@ -1162,6 +1162,11 @@ would silently render only the first, so
 `elevation-tint.test.ts` fails if editing `colors.shadow` stops retinting a
 level.
 
+The reserved `overlay` level is empty in every shipped theme; a consumer that
+defines it places a level above `lg`, and the numeric contract holds it to that
+order. A runnable example is
+[`src/elevation-overlay.example.ts`](../packages/tokens/src/elevation-overlay.example.ts).
+
 ## Motion
 
 There is no `transition` and no `animation` in the runtime: motion exists only
@@ -2016,10 +2021,11 @@ shadow whose alpha is a fraction, because `alpha()` falls back to the opaque
 tint on a value it cannot parse, and whose two offsets, blur and spread are
 finite — a negative offset or spread is a direction, a `NaN` is a shadow the
 renderer cannot paint. A level's **first** entry is the shadow the runtime
-paints, so `sm` → `md` → `lg` must not get a smaller `blurRadius` as the level
-rises — a dialog that feathers less than a resting card makes "lg" a shallower
-level than "sm". Opacity is not part of the ladder: a fainter large shadow or a
-flat theme is a design. Every other numeric metric — a type size, leading or
+paints, so the defined levels in `elevationLevels` order — `sm` → `md` → `lg`,
+and a defined `overlay` above them — must not get a smaller `blurRadius` as the
+level rises — a dialog that feathers less than a resting card makes "lg" a
+shallower level than "sm". Opacity is not part of the ladder: a fainter large
+shadow or a flat theme is a design. Every other numeric metric — a type size, leading or
 weight, a border width, a density or dimension metric, an icon, avatar, radius or
 spacing step, and every motion timing — must be a **finite** number too, because
 the renderer casts each to a 32-bit float and an infinity becomes invalid layout
@@ -2033,7 +2039,9 @@ deliberately non-decreasing rather than strict: Linux and Windows ship
 `radius.lg === radius.xl`, and Windows ships `motion.fast === motion.step`. An
 empty elevation level is exempt — `elevation.overlay` ships reserved and empty —
 but a level a consumer defines, `overlay` included, is held to the same rules,
-because `elevationShadow` will paint it. Every shipped theme, platform variant
+because `elevationShadow` will paint it; the feather ladder reads
+`elevationLevels` itself, so a level added to the index joins it without a second
+edit. Every shipped theme, platform variant
 and recipe passes, so the check moves no value; it guards the next edit.
 
 `metricGroups` is the ordered index of the ten governed groups, so a

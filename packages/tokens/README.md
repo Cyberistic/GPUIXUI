@@ -673,6 +673,7 @@ elevation level's feather below the level under it, or hand
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
 `motion.fast === motion.step`; an empty elevation level is exempt (the shipped
 `elevation.overlay`), while a level a consumer defines is held to the same rules
+and joins the feather ladder in `elevationLevels` order, `overlay` included,
 because `elevationShadow` paints its first entry. Every shipped theme, platform
 variant and recipe passes.
 `metricGroups` is the ordered index a settings row iterates, and `metricMembers`

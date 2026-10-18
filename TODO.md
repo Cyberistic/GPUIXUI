@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 227/293
+`[x]` `[████████░░]` 228/294
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1860,6 +1860,15 @@ join the type with nothing to notice it had no role; `colorForms` is the
 ordered index, `ColorForm` derives from it, and `rolesByForm` in the executed
 example groups every role by its form. No guard ships — a form is a diagnostics
 payload, never an input (plan 565)
+
+`[x]` Put a defined `overlay` on the elevation feather ladder — the design
+system says the level names are an order and plans 369/390 made a consumer's
+`overlay` a governed level, but `featherLadder` walked a hand-typed
+`sm`/`md`/`lg`, so a defined `overlay` with a 0px feather sat above the shipped
+40px `lg` while `themeMetricFailures` returned `[]`; the ladder now walks
+`elevationLevels`, keeps the shipped empty `overlay` exempt, and the example,
+JSDoc, catalogue, design system, README and ledger state the rule. No colour,
+pair, floor, metric or shipped theme moves (plan 566)
 
 ## Phase C — Tier 1–2 components
 

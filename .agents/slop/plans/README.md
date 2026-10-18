@@ -257,6 +257,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [563](./563-caret-mark-list.md) | The caret mark outside the mark list | F | 332, 341, 351, 399, 557 | done |
 | [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | done |
 | [565](./565-colour-form-index.md) | The alpha form owns its two members | F | 540, 543, 558 | done |
+| [566](./566-overlay-feather-ladder.md) | A defined `overlay` joins the elevation feather ladder | F | 369, 390, 552 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2847,6 +2848,19 @@ Role opacity paragraph derive their members from the index, `color-forms.test.ts
 proves every form has a role and the example partitions the palette exactly once,
 and a temporary third form fails the guard. No colour, pair, floor, metric or
 shipped theme moves.
+
+Plan `566` puts the defined `overlay` back on the elevation ladder plan `390`
+built. Plans `369` and `390` together say a consumer-defined `overlay` takes
+every range rule and that the level names are an order, but `featherLadder`
+walked a hand-typed `sm`/`md`/`lg`, so a defined `overlay` could feather at 0px
+above a 40px `lg` while `themeMetricFailures` returned `[]` — a command palette
+closer to the surface than a resting card, against `docs/design-system.md` §7
+("each level's painted feather … no smaller than the level below it") and the
+catalogue's "`overlay` included". The ladder now walks `elevationLevels` and
+compares the defined levels in that order, so the shipped empty `overlay` stays
+exempt and a future level joins one place; `elevation-overlay.example.ts` ships
+the valid topmost edit and `elevation-overlay.test.ts` proves both directions.
+No colour, pair, floor, metric or shipped theme moves.
 
 ## How to use a plan
 

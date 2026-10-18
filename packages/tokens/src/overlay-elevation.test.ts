@@ -17,11 +17,11 @@ import { elevationShadow, type ElevationShape } from "./elevation.js";
 import { themeMetricFailures } from "./metrics.js";
 import { extendTheme, lightTheme, type Theme } from "./theme.js";
 
-/** A complete level, so one field varies at a time. */
+/** A complete level, so one field varies at a time. The feather clears `lg`. */
 const shape: ElevationShape = {
   offsetX: 0,
   offsetY: 4,
-  blurRadius: 12,
+  blurRadius: 48,
   spreadRadius: 0,
   alpha: 0.12,
 };
@@ -98,8 +98,13 @@ describe("a defined overlay elevation level", () => {
 
   it("still governs the three designed levels", () => {
     (["sm", "md", "lg"] as const).forEach((level) => {
+      const [own] = lightTheme.elevation[level];
+      expect(own, level).toBeDefined();
+      if (own === undefined) {
+        return;
+      }
       const broken = extendTheme(lightTheme, {
-        elevation: { [level]: [{ ...shape, offsetX: Number.NaN }] },
+        elevation: { [level]: [{ ...own, offsetX: Number.NaN }] },
       });
       expect(themeMetricFailures(broken)).toEqual([
         {

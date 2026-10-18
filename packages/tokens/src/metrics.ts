@@ -380,15 +380,17 @@ const sizeSteps = (
 
 /**
  * The elevation feather is the level's height. A level's first entry is the
- * shadow the native runtime paints, so `sm` → `md` → `lg` may not get a smaller
- * blur as it rises. Opacity is deliberately not a step: a fainter dialog shadow
- * or a flat theme is a design, while a dialog that feathers less than a resting
- * card makes "lg" a shallower level than "sm". A feather the range rules already
- * reject — non-finite or negative — is not compared, so one bad level keeps one
- * diagnostic instead of cascading into its neighbour.
+ * shadow the native runtime paints, so every **defined** level, in
+ * `elevationLevels` order — `sm` → `md` → `lg`, and a defined `overlay` above
+ * them — may not get a smaller blur as it rises. Opacity is deliberately not a
+ * step: a fainter dialog shadow or a flat theme is a design, while a dialog that
+ * feathers less than a resting card makes "lg" a shallower level than "sm". A
+ * feather the range rules already reject — non-finite or negative — is not
+ * compared, so one bad level keeps one diagnostic instead of cascading into its
+ * neighbour.
  */
 const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
-  const steps = (["sm", "md", "lg"] as const).flatMap((level) => {
+  const steps = elevationLevels.flatMap((level) => {
     const [shape] = elevation[level];
     return shape === undefined ? [] : [[level, shape.blurRadius] as const];
   });
@@ -469,12 +471,14 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **spacing**: a ladder.
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
- *   fraction, and each level's painted feather (`blurRadius`) is no smaller than
- *   the level below it — a dialog that feathers less than a resting card makes
- *   "lg" a shallower level than "sm". Opacity is not a step: a fainter large
- *   level and a flat theme are designs. `overlay` ships reserved and empty, and
- *   an empty level is exempt; a level a consumer defines — `overlay` included —
- *   is held to the same rules, because `elevationShadow` will paint it.
+ *   fraction, and each **defined** level's painted feather (`blurRadius`) is no
+ *   smaller than the defined level below it, in `elevationLevels` order — a
+ *   defined `overlay` joins the ladder above `lg` — because the level names are
+ *   an order: a dialog that feathers less than a resting card makes "lg" a
+ *   shallower level than "sm". Opacity is not a step: a fainter large level and
+ *   a flat theme are designs. `overlay` ships reserved and empty, and an empty
+ *   level is exempt; a level a consumer defines — `overlay` included — is held
+ *   to the same rules, because `elevationShadow` will paint it.
  * - **motion**: `none` is zero, the timings are a finite non-decreasing ladder,
  *   and a cubic-bezier easing holds four finite control points with both x
  *   values inside `0…1` — the runtime rejects the whole transition otherwise. A

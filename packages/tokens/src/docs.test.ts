@@ -486,6 +486,39 @@ describe("docs/design-system.md elevation paragraph", () => {
     expect(elevation).not.toContain("exactly one shadow");
   });
 
+  it("states the feather order a defined overlay follows", () => {
+    const elevation = paragraph(
+      "The level names are an order",
+      "Overlay layering uses the",
+    );
+    const light = getTheme("light");
+    const top = elevationLevels
+      .filter((level) => light.elevation[level].length > 0)
+      .at(-1);
+    const feather =
+      top === undefined ? 0 : (light.elevation[top][0]?.blurRadius ?? 0);
+    const edited = extendTheme(light, {
+      elevation: {
+        overlay: [
+          {
+            offsetX: 0,
+            offsetY: 32,
+            blurRadius: feather > 0 ? feather - 1 : 0,
+            spreadRadius: -12,
+            alpha: 0.2,
+          },
+        ],
+      },
+    });
+    const [failure] = themeMetricFailures(edited).filter(
+      ({ group }) => group === "elevation",
+    );
+    expect(failure?.member).toBe("overlay[0].blurRadius");
+    expect(elevation).toContain("`elevationLevels`");
+    expect(elevation).toContain("`overlay`");
+    expect(elevation).toContain("defined level");
+  });
+
   it("states the AAA dark elevation and the platform rule", () => {
     const elevation = paragraph(
       "On the high-contrast dark theme's pure black canvas",
