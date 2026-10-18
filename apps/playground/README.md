@@ -44,7 +44,9 @@ selecting an entry, the keyboard contract and the palette switch.
 ```sh
 nub run dev:playground              # from the repo root: opens the playground window
 nub run --filter playground smoke   # the native smoke suite, headless
-nub run --filter playground smoke:live  # a real window, driven by automation
+nub run --filter playground smoke:live  # the full live suite (explicit --all)
+nub apps/playground/dist/live/run.js --only live-tier2-toast  # one window, one scenario
+nub apps/playground/dist/live/run.js --list                    # ids, no window
 ```
 
 `dev` and `smoke` both **preflight first**: they import the native binding only
@@ -1153,6 +1155,11 @@ a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
 live pass is citable evidence rather than a second log format.
+
+A live run is **scoped**. `--only <id[,id]>` (repeatable) runs just those
+scenarios; `--all` runs the full suite; a bare command is a usage error, never a
+silent full run. Use `--only` while iterating and `--all` only at the final
+gate: the full suite opens a real window and takes about nine minutes.
 
 | Scenario | What it asserts in the window |
 | -------- | ------------------------------ |
