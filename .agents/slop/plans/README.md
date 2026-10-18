@@ -159,6 +159,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [360](./360-metric-completeness.md) | The numeric contract's last ungoverned members | F | 077, 353, 358, 359 | done |
 | [361](./361-pill-rounds-largest-avatar.md) | The pill radius must round the largest avatar | F | 054, 353, 358, 360 | done |
 | [362](./362-selection-status-panel-text.md) | Text selection in a status panel | F | 091, 320, 346, 351 | done |
+| [363](./363-selection-card-foreground.md) | The card's own foreground through a text selection | F | 071, 081, 087, 362 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1301,6 +1302,18 @@ stays 338). Accent-toned text stays the documented omission: macOS light's
 `primaryText` measures 4.16–4.32:1 through the wash on the four fills, under the
 default secondary floor, and every AAA light set 5.38–5.90:1 under 7:1, so no
 perceivable wash can carry a link there.
+
+363 closes the one surface whose *own* text role the selection map never named.
+A card carries two: the default `foreground` a `CardTitle` paints and its public
+`cardForeground`, which `components/context-menu.tsx` sets on the trigger's
+`card` fill. The static pair measured it on the card, but nothing measured it
+through the selection wash, and the two roles are not aliases: both Windows
+recipes ship them apart (`xp` light `#191D25` / `#1A1A1A`, `aero` light
+`#191D25` / `#101828`). `selectionPairs` grows 18 → 19 (the plain
+`contrastPairs` count stays 338); every shipped set already clears the body
+floor through the wash — Windows dark is the tightest at **9.07:1** — so no
+colour moves, and the regression case sets `cardForeground` to the composited
+wash to prove the pair is reported.
 
 ### Reference adoption (block `200–299`)
 
