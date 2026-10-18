@@ -11,8 +11,11 @@
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
+  canCreate,
+  createValue,
   filterOptions,
   labelOf,
+  parseCreateValue,
   selectedLabel,
   toggledSelection,
   type ComboboxOption,
@@ -112,5 +115,43 @@ describe("selectedLabel", () => {
     expect(selectedLabel(catalogue, Option.some("nope"))).toEqual(
       Option.none(),
     );
+  });
+});
+
+describe("canCreate", () => {
+  it("offers creation for a new non-blank query", () => {
+    expect(canCreate(catalogue, "Design")).toBe(true);
+    expect(canCreate(catalogue, "Cal")).toBe(true);
+    expect(canCreate(catalogue, "photos taken")).toBe(true);
+  });
+
+  it("refuses a query that already names an option", () => {
+    expect(canCreate(catalogue, "Calendar")).toBe(false);
+    expect(canCreate(catalogue, "calendar")).toBe(false);
+    expect(canCreate(catalogue, "  CALENDAR  ")).toBe(false);
+    expect(canCreate(catalogue, "c1")).toBe(false);
+  });
+
+  it("is false for a blank query and true for any text with no options", () => {
+    expect(canCreate(catalogue, "")).toBe(false);
+    expect(canCreate(catalogue, "   ")).toBe(false);
+    expect(canCreate([], "anything")).toBe(true);
+  });
+});
+
+describe("createValue", () => {
+  it("round-trips the typed query", () => {
+    expect(parseCreateValue(createValue("Design"))).toEqual(
+      Option.some("Design"),
+    );
+  });
+
+  it("does not mistake a real value for the sentinel", () => {
+    expect(parseCreateValue("design")).toEqual(Option.none());
+    expect(parseCreateValue("")).toEqual(Option.none());
+  });
+
+  it("keeps the sentinel distinct from the query", () => {
+    expect(createValue("Design")).not.toBe("Design");
   });
 });

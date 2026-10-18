@@ -98,3 +98,39 @@ export const selectedLabel = (
       labelOf,
     ),
   );
+
+/**
+ * The prefix of the synthetic "create" item. A NUL cannot appear in an option
+ * value a caller types, so the sentinel can never collide with real data.
+ */
+export const CREATE_PREFIX = "\u0000gpuixui:create:";
+
+/** The synthetic item value carrying the query a create row would make. */
+export const createValue = (query: string): string =>
+  `${CREATE_PREFIX}${query}`;
+
+/** The query behind a synthetic item, or `None` for a real option value. */
+export const parseCreateValue = (value: string): Option.Option<string> =>
+  Str.startsWith(CREATE_PREFIX)(value)
+    ? Option.some(value.slice(CREATE_PREFIX.length))
+    : Option.none();
+
+/**
+ * Whether a create row should be offered: the trimmed query is non-empty and no
+ * option already carries it as its label or value (case-insensitive).
+ */
+export const canCreate = (
+  options: ReadonlyArray<ComboboxOption>,
+  query: string,
+): boolean => {
+  const needle = normalise(query);
+  return (
+    Str.isNonEmpty(needle) &&
+    !Arr.some(
+      options,
+      (option) =>
+        normalise(labelOf(option)) === needle ||
+        normalise(option.value) === needle,
+    )
+  );
+};

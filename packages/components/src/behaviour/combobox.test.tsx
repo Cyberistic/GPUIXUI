@@ -50,6 +50,8 @@ const Picker = ({
   empty,
   triggerPlaceholder,
   triggerLabel = "Assign reviewer",
+  onCreate,
+  createLabel,
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
@@ -59,9 +61,13 @@ const Picker = ({
   readonly empty?: string;
   readonly triggerPlaceholder?: string;
   readonly triggerLabel?: string;
+  readonly onCreate?: (query: string) => void;
+  readonly createLabel?: (query: string) => string;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
+      onCreate={onCreate}
+      createLabel={createLabel}
       options={
         disabledCamera === true
           ? options.map((option) =>
@@ -436,6 +442,131 @@ describe("Combobox", () => {
         "aria-label"
       ],
     ).toBe("Reviewer");
+
+    picker.unmount();
+  });
+
+  it("offers a create row after the ranked matches", async () => {
+    const picker = renderComponent(<Picker onCreate={() => {}} />);
+    await open(picker);
+
+    type(picker, "Des");
+    await settle();
+
+    const match = requireBounds(picker, "combobox-option-desk");
+    const create = requireBounds(picker, "combobox-option-create");
+    expect(create.y).toBeGreaterThan(match.y);
+    expect(picker.renderer.getAllText()).toContain("Create “Des”");
+
+    picker.unmount();
+  });
+
+  it("creates the typed value with Enter and reports it once", async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker onCreate={onCreate} onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    type(picker, "Design");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledWith("Design");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("Design");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(picker.renderer.getAllText()).toContain("Design");
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+
+    picker.unmount();
+  });
+
+  it("does not offer creation for an existing option", async () => {
+    const picker = renderComponent(<Picker onCreate={() => {}} />);
+    await open(picker);
+
+    type(picker, "calendar");
+    await settle();
+
+    expect(
+      picker.renderer.findByTestId("combobox-option-create"),
+    ).toBeUndefined();
+    expect(picker.renderer.getAllText()).not.toContain("Create “calendar”");
+
+    picker.unmount();
+  });
+
+  it("creates in multiple mode without storing the sentinel", async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker multiple onCreate={onCreate} onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    type(picker, "cal");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+    expect(onValueChange.mock.calls).toEqual([[["calendar"]]]);
+    type(picker, "Design");
+    await settle();
+    expect(
+      picker.renderer.findByTestId("combobox-option-create"),
+    ).toBeDefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+
+    expect(onCreate).toHaveBeenCalledWith("Design");
+    expect(onValueChange.mock.calls.at(-1)).toEqual([["calendar", "Design"]]);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    expect(
+      picker.renderer.findByTestId("combobox-option-create"),
+    ).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("creates from a pointer press", async () => {
+    const onCreate = vi.fn();
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker onCreate={onCreate} onValueChange={onValueChange} />,
+    );
+    await open(picker);
+
+    type(picker, "Design");
+    await settle();
+    clickCentreOf(picker, "combobox-option-create");
+    await settle();
+
+    expect(onCreate).toHaveBeenCalledWith("Design");
+    expect(onValueChange).toHaveBeenCalledWith("Design");
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+
+    picker.unmount();
+  });
+
+  it("takes the create row's text from createLabel", async () => {
+    const picker = renderComponent(
+      <Picker
+        onCreate={() => {}}
+        createLabel={(query) => `Start “${query}”`}
+      />,
+    );
+    await open(picker);
+
+    type(picker, "Design");
+    await settle();
+
+    expect(picker.renderer.getAllText()).toContain("Start “Design”");
+    expect(picker.renderer.getAllText()).not.toContain("Create “Design”");
 
     picker.unmount();
   });

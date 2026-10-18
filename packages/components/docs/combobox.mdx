@@ -67,6 +67,50 @@ onValueChange?: (value: string | null | ReadonlyArray<string>) => void;
 
 `null` is "nothing selected" in single mode; `undefined` means uncontrolled.
 
+## Creating values
+
+A picker whose options come from a fixed list can still accept a new name. Pass
+`onCreate`; while the trimmed query matches no option exactly, one create row is
+appended after the ranked matches.
+
+```tsx
+<Combobox
+  options={projects}
+  onCreate={(query) =>
+    setProjects((current) =>
+      current.some((option) => option.value === query)
+        ? current
+        : [...current, { value: query, label: query }],
+    )
+  }
+  onValueChange={(value) =>
+    setProject(typeof value === "string" ? value : null)
+  }
+>
+  <ComboboxTrigger label="Project" />
+  <ComboboxContent>
+    <ComboboxInput label="Search projects" />
+    <ComboboxList label="Projects" />
+  </ComboboxContent>
+</Combobox>
+```
+
+| Prop | Meaning |
+| ---- | ------- |
+| `onCreate?: (query: string) => void` | Called once with the trimmed query after the create row is selected. |
+| `createLabel?: (query: string) => string` | The row's text. Default `Create “<query>”`. |
+
+The row appears only when the trimmed query is non-empty and no option's label or
+value already equals it (case-insensitive). In single mode selecting it reports
+the trimmed query as the value, closes the popup and returns focus to the
+trigger, exactly like a real option. In multiple mode it adds the trimmed query
+to the selection once and keeps the popup open. The synthetic row never reaches
+`onValueChange`: the callback sees the query, never an internal value.
+
+Creation is synchronous. `onCreate` is the caller's cue to append the option (or
+persist it); async loading of the list itself remains the caller's concern and is
+not handled by the component.
+
 ## Ranking
 
 The filter is our pure `combobox/logic.ts`, not GPUix's order-preserving
@@ -128,7 +172,8 @@ same shape for a row composed by hand.
 
 ## Limitations
 
-- No async option loading, no "create new option", no grouping headers in v1.
+- No async option loading, no grouping headers in v1. Create-new is a
+  synchronous caller callback (`onCreate`), not a loading or persistence layer.
 - The popup is an anchored layer, not a portal. The runtime snaps it inside the
   window but does not flip it, so the component opens it on the opposite side
   when snapping would cover the trigger; `align="center"` is measured from the
@@ -139,18 +184,21 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (23 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
 trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
 add/remove with order, the disabled row, Escape restoring focus,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
 option, toggling several while skipping a disabled one, closing on an outside
-press — a caller-supplied empty state, and the trigger's placeholder/name coming
-from the part.
+press — a caller-supplied empty state, the trigger's placeholder/name coming
+from the part, and the create row: its position after the matches, its absence
+for an exact option, Enter and pointer selection with focus return, multiple
+selection without the sentinel, and a caller-supplied label.
 
-`src/combobox/logic.test.ts` covers the ranking table, `labelOf` and
-`toggledSelection`.
+`src/combobox/logic.test.ts` covers the ranking table, `labelOf`,
+`toggledSelection`, and the create rules (`canCreate` plus the synthetic value's
+round-trip).
 
 ```sh
 nub run --filter @gpuixui/components test

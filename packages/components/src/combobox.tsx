@@ -12,6 +12,10 @@
  * proven in its own suite and reimplementing them here would be a second, worse
  * copy. The parts own the trigger label, the ranking adapter and the selection
  * payload, and a part is never given a duplicated `value` prop.
+ *
+ * `onCreate` appends one synthetic trailing item over the typed query, so the
+ * create path reuses the runtime's highlight and Enter semantics. The synthetic
+ * value never reaches `onValueChange`; see `combobox/logic.ts`.
  */
 
 import {
@@ -38,6 +42,7 @@ import {
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import {
   createContext,
   useContext,
@@ -48,8 +53,11 @@ import {
   type RefObject,
 } from "react";
 import {
+  canCreate,
+  createValue,
   labelOf,
   filterOptions,
+  parseCreateValue,
   type ComboboxOption,
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -112,6 +120,13 @@ export interface ComboboxProps {
   /** Default `false`: one value and the popup closes on select. */
   readonly multiple?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Offer a trailing "create" row when the trimmed query names no option. The
+   * callback receives the trimmed query after the row is selected.
+   */
+  readonly onCreate?: (query: string) => void;
+  /** The create row's text. Default `Create “<query>”`. */
+  readonly createLabel?: (query: string) => string;
   readonly children?: PartChildren;
 }
 
@@ -136,6 +151,9 @@ const optionOf = (
   value: string,
 ): Option.Option<ComboboxOption> =>
   Arr.findFirst(options, (option) => option.value === value);
+
+/** The create row's default text. */
+const defaultCreateLabel = (query: string): string => `Create “${query}”`;
 
 /** The row's look in each interaction state. */
 const rowStyle = (theme: Theme, state: ComboboxItemState): StyleDesc => ({
@@ -171,6 +189,8 @@ export const Combobox = ({
   onValueChange,
   multiple = false,
   disabled = false,
+  onCreate,
+  createLabel = defaultCreateLabel,
   children,
 }: ComboboxProps) => {
   const renderer = useGpuix().renderer;
@@ -194,14 +214,30 @@ export const Combobox = ({
       : [selected];
 
   const visible = filterOptions(options, query);
-  const items = Arr.map(visible, (option) => option.value);
+  const creatable =
+    onCreate !== undefined && canCreate(options, Str.trim(query));
+  const create = creatable
+    ? Option.some(createValue(Str.trim(query)))
+    : Option.none();
+  const items = Option.match(create, {
+    onNone: () => Arr.map(visible, (option) => option.value),
+    onSome: (value) =>
+      Arr.append(
+        Arr.map(visible, (option) => option.value),
+        value,
+      ),
+  });
 
   assertParts(comboboxRoot, children);
 
   const labelFor = (value: string): string =>
-    Option.match(optionOf(options, value), {
-      onNone: () => value,
-      onSome: labelOf,
+    Option.match(parseCreateValue(value), {
+      onSome: createLabel,
+      onNone: () =>
+        Option.match(optionOf(options, value), {
+          onNone: () => value,
+          onSome: labelOf,
+        }),
     });
 
   /** Close, restoring focus only for the paths that should (Escape, select). */
@@ -243,6 +279,32 @@ export const Combobox = ({
         items={items}
         value={selected}
         onValueChange={(next) => {
+          const nextValues: ReadonlyArray<string> =
+            typeof next === "string" ? [next] : (next ?? []);
+          const created = Option.flatMap(
+            Arr.findFirst(nextValues, (value) =>
+              Option.isSome(parseCreateValue(value)),
+            ),
+            parseCreateValue,
+          );
+          if (Option.isSome(created)) {
+            onCreate?.(created.value);
+            if (multiple) {
+              const kept = Arr.filter(selectedValues, (value) =>
+                Option.isNone(parseCreateValue(value)),
+              );
+              setSelected(
+                Arr.contains(kept, created.value)
+                  ? kept
+                  : Arr.append(kept, created.value),
+              );
+              setQuery("");
+              return;
+            }
+            restoreFocus.current = true;
+            setSelected(created.value);
+            return;
+          }
           restoreFocus.current = !multiple;
           setSelected(next);
         }}
@@ -518,6 +580,7 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
   const { options, selectedValues, labelFor, isDisabled } = useCombobox();
   const option = optionOf(options, value);
   const selected = Arr.contains(selectedValues, value);
+  const creates = Option.isSome(parseCreateValue(value));
 
   return (
     <HeadlessItem
@@ -525,7 +588,7 @@ export const ComboboxItem = ({ value, style }: ComboboxItemProps) => {
       role="option"
       aria-selected={selected}
       disabled={isDisabled(value)}
-      testId={`combobox-option-${value}`}
+      testId={creates ? "combobox-option-create" : `combobox-option-${value}`}
       style={(state) =>
         mergeStyles(rowStyle(theme, state), resolveStyle(style, state)) ??
         rowStyle(theme, state)
@@ -642,7 +705,7 @@ export const comboboxMeta = {
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",
     "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
-    "no async options or create-new-option affordance in v1",
+    "no async option loading; create-new is a synchronous caller callback",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
   ],
   docs: "docs/combobox.mdx",
