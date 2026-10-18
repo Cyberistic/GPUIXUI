@@ -195,6 +195,12 @@ B1, so it is planned, not done.
 > and are merged into `main` as each workstream completes; this index is the
 > union.
 
+### Cross-cutting styling conformance
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.
