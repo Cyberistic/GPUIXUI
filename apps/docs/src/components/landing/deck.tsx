@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { platforms, repo } from "./data";
 import type { Platform } from "./data";
 
-const SHUFFLE_MS = 4500;
+const SHUFFLE_MS = 1600;
 
 /**
- * The hero: copy on the left, the stacked native-window deck and platform
- * switch on the right. Owns the shuffle state so the "Certified on …" line
- * always tracks the top card.
+ * The hero: a centered headline with the platform switch as the segmented
+ * control above it, and the deck presented as a product window below. Owns the
+ * shuffle state so the "Certified on …" line always tracks the top card.
  */
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -40,45 +40,61 @@ export function Hero() {
 
   return (
     <header className="landing-hero">
-      <div className="landing-hero-copy">
+      <div className="landing-hero-badge">
+        <span className="landing-pill">New</span>
         <p className="landing-eyebrow">GPUix + React · native components</p>
-        <h1 className="landing-title">
-          One library.
-          <br />
-          Three native <em>looks</em>.
-        </h1>
-        <p className="landing-sub">
-          Components that run on GPUix, styled to feel at home on macOS, Windows
-          11 and Linux — with the source in your hands, like shadcn.
-        </p>
-        <p className="landing-cert">
-          Certified on <strong>{current.label}</strong>
-        </p>
-        <div className="landing-actions">
-          <a
-            className="landing-btn landing-btn-primary"
-            href="/docs/getting-started"
-          >
-            Get started
-          </a>
-          <a
-            className="landing-btn landing-btn-ghost"
-            href={repo}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            GitHub
-          </a>
-        </div>
       </div>
 
+      <PlatformSwitch onChange={select} value={top} />
+
+      <h1 className="landing-title">
+        One library.
+        <br />
+        Three native <em>looks</em>.
+      </h1>
+
+      <p className="landing-sub">
+        Components that run on GPUix, styled to feel at home on macOS, Windows
+        11 and Linux — with the source in your hands.
+      </p>
+
+      <div className="landing-actions">
+        <a
+          className="landing-btn landing-btn-primary"
+          href="/docs/getting-started"
+        >
+          Get started
+        </a>
+        <a
+          className="landing-btn landing-btn-ghost"
+          href={repo}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          GitHub
+        </a>
+      </div>
+
+      <p className="landing-cert">
+        Certified on <strong>{current.label}</strong>
+      </p>
+
       <div
-        className="landing-hero-visual"
+        className="landing-window"
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
+        <div aria-hidden="true" className="landing-window-bar">
+          <span className="landing-window-dots">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="landing-window-name">GPUIxUI</span>
+          <span className="landing-window-spacer" />
+        </div>
         <div aria-hidden="true" className="landing-deck">
           {platforms.map((platform, index) => (
             <DialogCard
@@ -88,13 +104,12 @@ export function Hero() {
             />
           ))}
         </div>
-
-        <PlatformSwitch onChange={select} value={top} />
-        <p className="landing-deck-note">
-          Illustrative — the same Dialog component on each platform. Native
-          captures land with the playground gallery.
-        </p>
       </div>
+
+      <p className="landing-deck-note">
+        Illustrative — the same Dialog component on each platform. Native
+        captures land with the playground gallery.
+      </p>
     </header>
   );
 }

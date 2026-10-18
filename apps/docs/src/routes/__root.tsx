@@ -42,7 +42,7 @@ function RootComponent() {
         <HeadContent />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
-        <RootProvider theme={{ defaultTheme: "dark", enableSystem: false }}>
+        <RootProvider>
           <Outlet />
         </RootProvider>
         <Scripts />

@@ -8,11 +8,11 @@ export const Route = createFileRoute("/")({
   component: Page,
   head: () => ({
     meta: [
-      { title: "GPUixUI — one library, three native looks" },
+      { title: "GPUIxUI — one library, three native looks" },
       {
         name: "description",
         content:
-          "GPUixUI is a native UI component library for GPUix + React — one component set that looks at home on macOS, Windows 11 and Linux.",
+          "GPUIxUI is a native UI component library for GPUix + React — one component set that looks at home on macOS, Windows 11 and Linux.",
       },
     ],
     links: [{ rel: "stylesheet", href: landingCss }],
