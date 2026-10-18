@@ -182,6 +182,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [385](./385-typeface-contract.md) | The typeface half of an editable theme | F | 011, 051, 070, 324, 358, 371, 383 | done |
 | [386](./386-body-line-fit.md) | The smallest field must fit a body line | F | 011, 353, 358, 360, 367, 384 | done |
 | [387](./387-shipped-theme-enumeration.md) | The shipped-theme enumeration the package owns | F | 063, 305, 311, 380, 383 | done |
+| [388](./388-shipped-list-migration.md) | Every "every shipped set" suite enumerates the one shipped set | F | 387 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1690,6 +1691,24 @@ enumerate it, `shipped-themes.example.ts` is the copyable loop, `docs.test.ts`
 holds the page's derived count, `readme.test.ts` holds the front door's, and the
 reference, design system, README and ledger name the enumeration. No colour,
 role, pair, floor, metric, platform style, recipe or theme value moves.
+
+388 finishes the migration plan 387 started. The first audit moved the three
+largest lists; this one finds sixty more suites whose guard case says "every
+shipped theme" while building its own matrix — **4** (identity only: `focus`,
+`motion`), **10** (identity and the styled variants: `control-boundary`,
+`wash-text`, and eighteen more), **14** (variants and recipes at the default
+contrast only: `filled-states`, `typeface`, and four more), **16** with the
+identity counted twice, **20** or **28** with `default` folded back in, and one
+(`elevation-tint`) that also misses every AAA variant and recipe. The missing
+half is almost always the **AAA recipe** — eight real editable sets the docs
+toggle offers — and `motion.test.ts` went further, asserting that every shipped
+theme shares the identity's motion, which Windows' `fast === step` falsifies.
+Every full-set claim now maps `shippedThemes` and labels a set with
+`theme.name`; the three `quoted` subsets stay because they are the figures the
+catalogue quotes. A new guard in `shipped-themes.test.ts` reads every suite and
+fails when a case title claims "every shipped set/theme" without importing the
+enumeration, with synthetic sources proving both directions. No assertion,
+colour, pair, floor or metric changes.
 
 ### Reference adoption (block `200–299`)
 
