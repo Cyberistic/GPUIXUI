@@ -10,6 +10,9 @@
 # are enough. See .agents/adr/0003-darwin-x64-source-build.md and
 # .agents/slop/plans/140-gpuix-native-darwin-x64-build.md.
 #
+# apps/playground/patches/gpuix-zindex.patch adds `StyleDesc.zIndex` (paint and
+# hit order) to the pinned source; step 4 applies it idempotently.
+#
 # Everything lands under .agents/slop/scratch/ (agent state, gitignored); only
 # the final .node is copied into node_modules (also gitignored).
 #
@@ -66,11 +69,24 @@ if ! grep -q 'runtime_shaders' "$manifest"; then
     echo "could not apply the runtime_shaders feature to $manifest" >&2; exit 1; }
 fi
 
-# 4. Build. LTO off so the codegen units parallelise; the crate sets lto = true.
+# 4. The zIndex extension: `StyleDesc.zIndex` orders paint and hit testing.
+#    The reference clone is read-only, so the change travels as a patch and is
+#    applied after the copy. Reverse-dry-run first, so a rebuild is idempotent.
+patch_file="$root/apps/playground/patches/gpuix-zindex.patch"
+if ( cd "$scratch/gpuix" && patch -p1 -R --dry-run -s < "$patch_file" 2>/dev/null ); then
+  echo "gpuix-zindex.patch already applied"
+elif ( cd "$scratch/gpuix" && patch -p1 -s < "$patch_file" ); then
+  echo "applied $(basename "$patch_file")"
+else
+  echo "cannot apply $patch_file to $scratch/gpuix" >&2
+  exit 1
+fi
+
+# 5. Build. LTO off so the codegen units parallelise; the crate sets lto = true.
 ( cd "$scratch/gpuix/packages/native" &&
   CARGO_PROFILE_RELEASE_LTO=false cargo build --release --locked --target "$target" )
 
-# 5. Install the artifact where the package's own loader looks for it.
+# 6. Install the artifact where the package's own loader looks for it.
 lib="$scratch/gpuix/packages/native/target/$target/release/libgpuix_native.dylib"
 dest="$app/node_modules/@gpuix/native"
 [ -d "$dest" ] || { echo "run 'nub install' first: $dest is missing" >&2; exit 1; }

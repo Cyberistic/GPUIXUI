@@ -112,8 +112,10 @@ sh apps/playground/scripts/build-native-binding.sh
 ```
 
 It installs Rust 1.97.1 and the pinned zed tree under
-`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), builds the
-cdylib with `runtime_shaders`, and drops it at
+`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), applies
+`apps/playground/patches/gpuix-zindex.patch` (the binding's `StyleDesc.zIndex`,
+which orders paint and hit testing among `absolute`/`fixed` siblings — plan
+`530`), builds the cdylib with `runtime_shaders`, and drops it at
 `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`. The recipe, commands,
 STOP conditions and the measured per-capability facts are in
 `.agents/slop/plans/140-gpuix-native-darwin-x64-build.md`; the decision is
