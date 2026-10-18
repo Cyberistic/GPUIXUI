@@ -8,8 +8,9 @@
  *
  * The protocol has no focus, highlight or virtual-list verb, so those three
  * read the **renderer** this runner created (`getFocusedElementId`,
- * `getPaintedHighlights`, `getListScrollTop`/`scrollToItem`) — plans `190` and
- * `197`. Style and accessibility stay absent because `GpuixRenderer` exposes no
+ * `focusNext`/`focusPrevious`, `getPaintedHighlights`,
+ * `getListScrollTop`/`scrollToItem`) — plans `190`, `197` and `565`. Style and
+ * accessibility stay absent because `GpuixRenderer` exposes no
  * such method; those assertions belong to the `TestRenderer` suite.
  */
 import { Duration, Effect } from "effect";
@@ -83,6 +84,8 @@ export const createHost = (
   renderer: Pick<
     GpuixRenderer,
     | "getFocusedElementId"
+    | "focusNext"
+    | "focusPrevious"
     | "getPaintedHighlights"
     | "getListScrollTop"
     | "scrollToItem"
@@ -198,6 +201,17 @@ export const createHost = (
             Option.getOrNull,
           ),
       });
+    }),
+  focusNext: () =>
+    Effect.try({
+      try: () => renderer.focusNext(),
+      catch: (cause) => new Smoke.SmokeHostError({ verb: "focusNext", cause }),
+    }),
+  focusPrevious: () =>
+    Effect.try({
+      try: () => renderer.focusPrevious(),
+      catch: (cause) =>
+        new Smoke.SmokeHostError({ verb: "focusPrevious", cause }),
     }),
   selectText: (fromTestId, toTestId) =>
     Effect.gen(function* () {

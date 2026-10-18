@@ -80,6 +80,8 @@ import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
 import { listReorderScenario } from "../scenarios/reorder.js";
 import { treeReorderScenario } from "../scenarios/tree-reorder.js";
+import { tabOverflowScenario } from "../scenarios/tab-overflow.js";
+import { tabFocusScenario } from "../scenarios/tab-focus.js";
 import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
 import { terminalScenario } from "../scenarios/terminal.js";
 import { fieldOf } from "../scenarios/probes.js";
@@ -153,6 +155,19 @@ const walkFocus = (ctx: LiveContext, key: string, times: number) =>
     () =>
       Effect.gen(function* () {
         yield* ctx.host.key(key);
+        yield* settle;
+        return yield* ctx.host.focused();
+      }),
+    { concurrency: 1 },
+  );
+
+/** Walks the renderer's own focus traversal, settling after each step. */
+const walkRendererFocus = (ctx: LiveContext, times: number) =>
+  Effect.forEach(
+    Arr.range(1, times),
+    () =>
+      Effect.gen(function* () {
+        yield* ctx.host.focusNext();
         yield* settle;
         return yield* ctx.host.focused();
       }),
@@ -7114,6 +7129,300 @@ const liveTree: LiveScenario = {
 };
 
 /**
+ * The tab strip's horizontal contract in a real window (plan `565`).
+ *
+ * Plan `173` measured it offscreen. A real window reports a scroller's own box
+ * in the scrolled frame and the live tree has no style, so the transfer is not
+ * free: the offset is the authority for the pan, and each reveal compares boxes
+ * read in the same frame.
+ */
+const tabOverflow: LiveScenario = {
+  id: "live-tab-overflow",
+  title: "Live tab strip: a horizontal pan, a clipped tab and the reveal",
+  capability: "scroll",
+  view: tabOverflowScenario.view,
+  ready: "tab-strip",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const atRest = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectEqual("the live strip starts at the left", atRest.x, 0);
+      yield* ctx.expectEqual("the live strip starts at the top", atRest.y, 0);
+
+      const strip = yield* boxOf(ctx, "tab-strip");
+      const first = yield* boxOf(ctx, "tab-0");
+      yield* ctx.expectEqual(
+        "the first tab paints inside the strip",
+        first.x >= strip.x - 1 && first.x <= strip.x + strip.width + 1,
+        true,
+      );
+
+      const lastAtRest = Option.fromNullishOr(yield* ctx.host.bounds("tab-9"));
+      const lastPosition = Option.match(lastAtRest, {
+        onNone: () => "absent from the live tree",
+        onSome: (bounds) => `painted at x=${Math.round(bounds.x)}`,
+      });
+      yield* ctx.expectEqual(
+        `the last tab is outside the strip at rest (${lastPosition})`,
+        Option.match(lastAtRest, {
+          onNone: () => true,
+          onSome: (bounds) =>
+            bounds.x >= strip.x + strip.width - 1 ||
+            bounds.x + bounds.width <= strip.x + 1,
+        }),
+        true,
+      );
+
+      yield* ctx.host.wheel("tab-strip", -240, 0);
+      yield* settle;
+      const panned = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectNear(
+        `a real deltaX wheel pans the strip (x=${panned.x})`,
+        panned.x,
+        -240,
+        12,
+      );
+      yield* ctx.expectEqual(
+        "the horizontal wheel leaves y alone",
+        panned.y,
+        0,
+      );
+      yield* ctx.expectContains(
+        "onScroll reports the wheel axes",
+        yield* textOf(ctx, "tab-wheel"),
+        "dx=-240",
+      );
+
+      yield* ctx.host.wheel("tab-strip", 0, -240);
+      yield* settle;
+      const vertical = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectEqual(
+        "a vertical wheel leaves the strip alone",
+        vertical.x,
+        panned.x,
+      );
+      yield* ctx.expectEqual(
+        "a vertical wheel leaves y at zero",
+        vertical.y,
+        0,
+      );
+
+      const reveal = () =>
+        Effect.gen(function* () {
+          yield* ctx.host.click("tab-reveal-last");
+          yield* settle;
+          const offset = yield* offsetOf(ctx, "tab-strip");
+          const box = yield* boxOf(ctx, "tab-9");
+          return { offset, box };
+        });
+
+      const revealed = yield* reveal();
+      yield* ctx.expectEqual(
+        `the reveal pans further left (x=${revealed.offset.x})`,
+        revealed.offset.x < panned.x,
+        true,
+      );
+      // The scroller's own reported box moves with its scroll (plan 556), so the
+      // viewport is the box read at rest. The reveal leaves the last tab at the
+      // trailing edge (4 px past it here, the strip's padding), as offscreen
+      // (plan 173) left it 1 px past.
+      yield* ctx.expectEqual(
+        `the reveal puts the last tab at the trailing edge (x=${Math.round(revealed.box.x)} edge=${Math.round(strip.x + strip.width)})`,
+        revealed.box.x >= strip.x + strip.width - 1 &&
+          revealed.box.x < strip.x + strip.width + 72,
+        true,
+      );
+
+      yield* ctx.host.click("tab-8");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a revealed tab is clickable",
+        yield* awaitedTextOf(ctx, "tab-active", "active=8"),
+        "active=8",
+      );
+      yield* waitForFocus(ctx, "tab-8");
+      yield* ctx.expectEqual(
+        "the click focused the revealed tab",
+        yield* focusedOf(ctx),
+        "tab-8",
+      );
+
+      yield* ctx.host.click("tab-pan-end");
+      yield* settle;
+      const exactPan = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectNear(
+        `component code pans to an exact offset (x=${exactPan.x})`,
+        exactPan.x,
+        -400,
+        2,
+      );
+
+      yield* ctx.host.click("tab-6");
+      yield* settle;
+      yield* waitForFocus(ctx, "tab-6");
+      yield* ctx.host.key("home");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Home selects the first tab",
+        yield* awaitedTextOf(ctx, "tab-active", "active=0"),
+        "active=0",
+      );
+      yield* waitForFocus(ctx, "tab-0");
+      yield* ctx.expectEqual(
+        "Home focuses the first tab",
+        yield* focusedOf(ctx),
+        "tab-0",
+      );
+      const homeOffset = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectEqual(
+        `Home returns to the start region (x=${homeOffset.x})`,
+        homeOffset.x > -72,
+        true,
+      );
+
+      yield* ctx.host.key("end");
+      yield* settle;
+      yield* ctx.expectContains(
+        "End selects the last tab",
+        yield* awaitedTextOf(ctx, "tab-active", "active=9"),
+        "active=9",
+      );
+      yield* waitForFocus(ctx, "tab-9");
+      const endOffset = yield* offsetOf(ctx, "tab-strip");
+      yield* ctx.expectEqual(
+        `End reveals the last tab (x=${endOffset.x})`,
+        endOffset.x < -72,
+        true,
+      );
+      const endBox = yield* boxOf(ctx, "tab-9");
+      yield* ctx.expectEqual(
+        "the keyboard-revealed last tab sits at the trailing edge",
+        endBox.x >= strip.x + strip.width - 1 &&
+          endBox.x < strip.x + strip.width + 72,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tabOverflow.id}.png`);
+    }),
+};
+
+/**
+ * The tab strip's focus model in a real window (plan `565`).
+ *
+ * Plan `174` measured the naive and roving strips offscreen. A real window
+ * traverses on `Tab` (plan `190`), so the walk is the reader's own, and the
+ * question is whether focus reveals a clipped tab there.
+ */
+const tabFocus: LiveScenario = {
+  id: "live-tab-focus",
+  title: "Live tab strip focus: clipped stops, one roving stop and reveal",
+  capability: "focus",
+  view: tabFocusScenario.view,
+  ready: "naive-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("naive-0");
+      yield* settle;
+      yield* waitForFocus(ctx, "naive-0");
+      yield* ctx.expectEqual(
+        "the naive strip takes focus on its first tab",
+        yield* focusedOf(ctx),
+        "naive-0",
+      );
+      const start = yield* offsetOf(ctx, "naive-strip");
+      yield* ctx.expectEqual("the naive strip starts at the left", start.x, 0);
+
+      // The automation key verb reaches the focused element; it does not itself
+      // traverse (measured in plan `565`; the modal in plan `190` passes only
+      // because its own handler calls `focusNextWithin`). The renderer's
+      // traversal is the tab-order contract, so it drives this walk.
+      yield* ctx.host.key("tab");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a synthetic tab reaches the tab but does not traverse",
+        yield* focusedOf(ctx),
+        "naive-0",
+      );
+
+      const walked = yield* walkRendererFocus(ctx, 9);
+      const ids = Arr.getSomes(Arr.map(walked, Option.fromNullishOr));
+      yield* ctx.expectEqual(
+        `the renderer traversal visited ${Arr.length(Arr.dedupe(ids))} tabs [${Arr.join(ids, ",")}]`,
+        Arr.length(Arr.dedupe(ids)),
+        9,
+      );
+      yield* ctx.expectEqual(
+        "the traversal reached the last clipped tab",
+        yield* focusedOf(ctx),
+        "naive-9",
+      );
+
+      const afterWalk = yield* offsetOf(ctx, "naive-strip");
+      yield* ctx.expectEqual(
+        `focus does not reveal a clipped tab (x=${afterWalk.x})`,
+        afterWalk.x,
+        start.x,
+      );
+
+      const past = yield* walkRendererFocus(ctx, 1);
+      yield* ctx.expectEqual(
+        "the naive traversal continues past the strip",
+        Arr.getSomes(Arr.map(past, Option.fromNullishOr))[0] ?? "none",
+        "naive-after",
+      );
+
+      yield* ctx.host.click("roving-0");
+      yield* settle;
+      yield* waitForFocus(ctx, "roving-0");
+      const oneStop = yield* walkRendererFocus(ctx, 1);
+      yield* ctx.expectEqual(
+        "one traversal step leaves the roving strip",
+        Arr.getSomes(Arr.map(oneStop, Option.fromNullishOr))[0] ?? "none",
+        "roving-after",
+      );
+
+      yield* ctx.host.click("roving-3");
+      yield* settle;
+      yield* waitForFocus(ctx, "roving-3");
+      yield* ctx.host.key("end");
+      yield* settle;
+      yield* ctx.expectContains(
+        "End selects the last roving tab",
+        yield* awaitedTextOf(ctx, "roving-active", "active=9"),
+        "active=9",
+      );
+      yield* waitForFocus(ctx, "roving-9");
+      yield* ctx.expectEqual(
+        "End focuses the last roving tab",
+        yield* focusedOf(ctx),
+        "roving-9",
+      );
+      const endOffset = yield* offsetOf(ctx, "roving-strip");
+      yield* ctx.expectEqual(
+        `End reveals the last tab (x=${endOffset.x})`,
+        endOffset.x < -72,
+        true,
+      );
+
+      yield* ctx.host.key("home");
+      yield* settle;
+      yield* waitForFocus(ctx, "roving-0");
+      yield* ctx.expectEqual(
+        "Home focuses the first roving tab",
+        yield* focusedOf(ctx),
+        "roving-0",
+      );
+      const homeOffset = yield* offsetOf(ctx, "roving-strip");
+      yield* ctx.expectEqual(
+        `Home returns to the start region (x=${homeOffset.x})`,
+        homeOffset.x > -72,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tabFocus.id}.png`);
+    }),
+};
+
+/**
  * The waveform seek in a real window (plan `520`).
  *
  * The headless probe measures what only a renderer report can: the a11y value,
@@ -7790,10 +8099,12 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   inputPayload,
   pointerEntry,
   scroll,
+  tabOverflow,
   panel,
   motion,
   overlay,
   focus,
+  tabFocus,
   selection,
   contextMenu,
   docking,

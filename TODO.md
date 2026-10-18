@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 97/97 plans-and-harness
+`[x]` `[██████████]` 98/98 plans-and-harness
 
 `[x]` Give the playground's native captures **provenance** per plan `564`:
       `--capture <dir>` writes one frame per selected scenario plus a
@@ -79,6 +79,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       PNG clear removed → a stale frame survives), each observed and reverted.
       Full headless stays **101/101**; `check`/`lint`/`test` green. The docs
       contract is plan `412` §5; the sidecar decodes against plan `433`'s schema.
+
+`[x]` Prove the **tab strip in a real window** per plan `565`: `live-tab-overflow`
+      (35 checks) and `live-tab-focus` (18) reuse plans `173`/`174`'s views in
+      the real 1100×720 window. A real `deltaX` wheel pans `-240` (a vertical
+      wheel leaves the strip alone), the clipped `tab-9` keeps painted bounds,
+      the component reveal lands it at the trailing edge (**4 px** past — the
+      strip's padding; offscreen lands 1 px past), the revealed neighbour
+      click/focus works, the component pan reaches exactly `-400`, and
+      `Home`/`End` move selection, native focus and the reveal together. The
+      load-bearing measurement: **the automation `tab` key reaches the focused
+      element but does not traverse**, so the tab-order contract is driven by
+      the runner's own `renderer.focusNext()` (new async host verbs
+      `focusNext`/`focusPrevious`, D35) — nine steps reach the last clipped tab
+      with the strip's offset **unchanged** (focus does not reveal), the next
+      step leaves the strip, and one step leaves the roving strip. Live
+      registry `61 → 63`; headless stays **101/101**; three mutation proofs (M1
+      no reveal → `Home returns to the start region (x=-400)`; M2 roving
+      tabindex `() => 0` → `expected "roving-after", got "roving-1"`; M3
+      `overflowX: "hidden"` → `tab-strip reports an offset: none`). Focused ids
+      run: `live-tab-overflow`, `live-tab-focus`; `check`/`lint`/`test` green.
 
 `[ ]` **Cross-team:** the docs' component pages still need **per-component
       screens** — the capture mechanism is now publishable, but the registry
@@ -758,12 +778,13 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      **re-run on the final branch 2026-10-19 (after plan `559`):** headless
-      **101/101** (`3536` checks) and live **61/61** (`1375` checks), both exit
-      `0`; `nub run check`, `nub run lint` and `nub run test` pass (playground
-      408 tests; components 308; primitives 282). The workstream's own
-      instruction is *never push to master*, so an owner/supervisor performs the
-      final merge.
+      **re-run on the final branch 2026-10-19 at `0f95783` (after plan `564`):**
+      headless **101/101** (`3536` checks, 64 capabilities) and live **61/61**
+      (`1375` checks, 48 capabilities, 692 s), both exit `0`; `nub run check`,
+      `nub run lint` and `nub run test` pass (playground 417 tests; components
+      308; primitives 282; tokens 196; testing 61; tw 103; icons 19; docs 7).
+      The workstream's own instruction is *never push to master*, so an
+      owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

@@ -1310,7 +1310,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 61 scenarios. `smoke:live` opens
+live registry lists 63 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1328,10 +1328,12 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `533`) |
 | `live-pointer-entry` | where a live click puts the caret and what a real press-move-release selects: a click at `x + 25` lands inside `abcdef` (index 1–5), a right-edge click appends, a left-edge click prepends, a drag selects all six and typing replaces them, a plain click clears the selection, `shift`-click extends it, a `<textarea>` takes a newline and autosizes to 64 px, and Up returns to the previous line — 22 checks (plans `535`, `536`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
+| `live-tab-overflow` | a horizontal tab strip in a window: a real `deltaX` wheel pans `-240`, a vertical wheel is inert, the clipped last tab keeps painted bounds, the component reveal lands it at the trailing edge (4 px past — the strip's padding), the revealed neighbour click/focus works, the exact `scrollTo` reaches `-400`, and Home/End move selection, native focus and the reveal together — 35 checks (plan `565`) |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
 | `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
+| `live-tab-focus` | the tab strip's focus model in a window: a synthetic `tab` key reaches the focused tab but does not traverse (so the live tab-order proof uses the renderer's own `focusNext`), nine traversal steps reach the last clipped tab with the strip's offset unchanged (focus does not reveal), one more leaves the strip, the roving strip is one stop, and End/Home move selection, focus and the reveal — 18 checks (plan `565`) |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
 | `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
@@ -1425,7 +1427,10 @@ modal Tab/Shift-Tab trap, focus return, a nested popover's Escape, a real drag
 copy, a painted find wash and an exact virtual-list anchor are therefore
 measured **in the window**, not only headless. A synthetic `tab` still does not
 traverse in a live window (measured: `a`, `tab`, `x` left the field reading
-`value=ax` in plan `189`) — traversal is component code (`focusNextWithin`).
+`value=ax` in plan `189`; nine tab presses stayed on the first tab in plan
+`565`) — traversal is component code (`focusNextWithin`), and the live
+tab-order proof drives the renderer's own `focusNext`/`focusPrevious` verbs
+(plan `565`).
 `live-motion` proves the live clock controls a tween and that a removed
 surface's `bounds` becomes `null`, but `onExitComplete` fires **twice** there
 for one exit, so the exit check asserts removal (and that at least one

@@ -672,6 +672,10 @@ export interface AsyncSmokeHost {
     testId: string,
     key: string,
   ) => Effect.Effect<void, SmokeHostError>;
+  /** Advances native focus through the renderer's own traversal (plan `565`). */
+  readonly focusNext: () => Effect.Effect<void, SmokeHostError>;
+  /** Retreats native focus through the renderer's own traversal (plan `565`). */
+  readonly focusPrevious: () => Effect.Effect<void, SmokeHostError>;
   readonly wheel: (
     testId: string,
     deltaX: number,
