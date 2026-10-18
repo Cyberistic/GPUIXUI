@@ -61,6 +61,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` `[██████████]` 73/77 plans-and-harness
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`377` written and indexed for the playground workstream; the next plan takes `378` (`351`–`375` are held by the components and tokens workstreams)
+`[~]` Plan `378`: probe a **filter-rule builder** (Tier 5 Advanced filtering / query
+      builders) over a virtualized table — a pure rule model with unit tests, a
+      scrolled strip of native `Select` rows, append focus/reveal, `all`/`any`,
+      numeric bounds, the empty state and a live twin. Plan:
+      `.agents/slop/plans/378-query-builder.md`
 `[x]` Probe the **data toolbar and statistic cards** per plan `377`:
       `data-toolbar` (61 checks) and `live-data-toolbar` (24): a 40 px
       `role="toolbar"` over a 60-row `<virtual-list>`, with a native search,
