@@ -77,6 +77,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (`839 → 858`), exit `0`, `reorder=verified`; five mutation proofs
       (plan `391` §9).
 
+`[ ]` Probe **hierarchical drag reorder** (a file tree) — the remaining
+      composition the flat reorder leaves open for the Tier 5 `Virtualized
+      hierarchical data` row: dropping a node **into** a folder versus between
+      rows, refusing a drop into the node's own descendant, the derived
+      flattened index after a move, expand-on-hover, and the virtual list's
+      anchor. Plan `165` measured the flattened tree and plan `391` the flat
+      reorder; this one needs its own plan (`392`) before implementation.
+
+
 `[x]` Probe a **notification centre** per plan `381`: `notification-centre`
       (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a
       derived badge (`Button:Notifications, 3 unread`) opens a 320 × 360
