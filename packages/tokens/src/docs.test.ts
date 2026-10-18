@@ -1574,6 +1574,17 @@ describe("docs/tokens.md runtime reach", () => {
     );
     expect(styles).toContain("does not read this property");
   });
+
+  it("states the caret the native field reads and the default it replaces", () => {
+    expect(markdown).toContain("`nativeFieldTheme(theme)`");
+    expect(markdownProse).toContain(
+      `${contrastRatio("#7C86FF", Tokens.highContrastLightTheme.colors.input).toFixed(3)}:1`,
+    );
+    expect(markdownProse).toContain(
+      `${contrastRatio("#7C86FF", Tokens.highContrastLightTheme.colors.muted).toFixed(3)}:1`,
+    );
+    expect(designSystem).toContain("`nativeFieldTheme(theme)`");
+  });
 });
 
 describe("docs/tokens.md public values", () => {

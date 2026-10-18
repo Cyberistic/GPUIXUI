@@ -369,6 +369,12 @@ pressed edge on the field's fill. The pressed edge was the last field pair to
 join the contract (plan `343`); every shipped theme already cleared it, so no
 colour moved.
 
+A native field's caret is the accent as well: `nativeFieldTheme(theme)` is the
+`theme` prop GPUix 0.10.0 reads for `caret`, and the accent is already a
+measured mark on the `input` fill and the four surface tones a transparent field
+sits on. Without it the built-in dark caret measures **2.795:1** on the AAA light
+quiet panel, under the 4.5:1 mark floor.
+
 A filled control steps through its own family — `x` → `xHover` → `xActive` — so
 the state is an editable, measured fill, not a translucent tint that takes its
 colour from the surface behind it. `primary`, `secondary`, `destructive` and

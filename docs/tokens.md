@@ -105,6 +105,7 @@ missing here is not public.
 | `MotionLevel` | A timing level name, `none` to `pulse`. |
 | `MotionPhase` | `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
+| `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
 | `PlatformShippedTheme` | A styled platform set in `shippedThemes`, with the variant it came from. |
@@ -1336,6 +1337,27 @@ A field that must carry the theme's hint colour draws a `<text>` hint over the
 input and hides the native placeholder; until a consumer does that, the native
 grey and wash stand. Evidence: `@gpuix/native@0.10.0` (`9fcd628`),
 `packages/native/src/custom_elements/input.rs`.
+
+The one paint the theme can reach is the caret. `nativeFieldTheme(theme)` returns
+the runtime `theme` prop a field reads — `{ caret: theme.colors.primary }` —
+because the accent is already held to the `mark` floor on the `input` fill and on
+the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on
+(`markPairs`), so there is no second role for the same colour. Without the prop
+the field keeps the runtime's built-in dark caret (`#7C86FF`), which measures
+**3.129:1** on the AAA light `input` and **2.795:1** on its quiet panel, under
+the 4.5:1 mark floor the AAA theme declares. Apply it beside the field's style; a
+consumer that wants a different caret replaces the field of the returned object.
+A runnable example lives in
+[`src/native-field.example.ts`](./src/native-field.example.ts).
+
+```tsx
+import { nativeFieldTheme } from "@gpuixui/tokens";
+
+<input
+  style={{ color: theme.colors.inputForeground }}
+  theme={nativeFieldTheme(theme)}
+/>;
+```
 
 ### Scrollbars
 
@@ -2822,10 +2844,11 @@ checker reports a solid fill that matches its panel, and the mark class stays
   reserved for the release that does. Text selection **is** supported through
   `selectionColor`; see [Text selection](#text-selection).
 - No themeable native field placeholder or selection: GPUix 0.10.0's
-  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`) and
-  reads only `theme.caret`. The `placeholder` role covers a hint the consumer
-  renders, and `selectionColor` covers app text; see
-  [Native text fields](#native-text-fields).
+  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`). The
+  caret **is** themeable: `nativeFieldTheme(theme)` supplies it from the accent
+  through the `theme` prop, the only field that prop reaches. The `placeholder`
+  role covers a hint the consumer renders, and `selectionColor` covers app text;
+  see [Native text fields](#native-text-fields).
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.

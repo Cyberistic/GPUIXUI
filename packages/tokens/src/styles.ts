@@ -302,3 +302,39 @@ export function selectionStyle(
       on === "fill" ? theme.colors.selectionOnFill : theme.colors.selection,
   };
 }
+
+/** The runtime `theme` prop subset a native text field reads. */
+export interface NativeFieldTheme {
+  /** The text-insertion caret the native editor paints. */
+  readonly caret: string;
+}
+
+/**
+ * The `theme` prop for a native `<input>`/`<textarea>`.
+ *
+ * GPUix 0.10.0's editor takes typed text from the element's `style.color`,
+ * paints its own fixed placeholder and selection, and reads exactly one field
+ * from its `theme` prop: `caret`. The caret is the accent — `primary` — because
+ * `primary` is already held to the `mark` floor on the `input` fill and the
+ * four `Surface` tones a transparent field sits on, so there is no second role
+ * for the same colour and a copied theme that collapses its accent is reported
+ * by `themeContrastFailures`.
+ *
+ * Without this prop the field keeps the runtime's built-in dark caret, which
+ * measures 3.129:1 on the AAA light `input` and 2.795:1 on its quiet panel,
+ * under the 4.5:1 mark floor. A consumer that wants a different caret replaces
+ * the field of the returned object.
+ *
+ * @example
+ * ```tsx
+ * import { nativeFieldTheme } from "@gpuixui/tokens";
+ *
+ * <input
+ *   style={{ color: theme.colors.inputForeground }}
+ *   theme={nativeFieldTheme(theme)}
+ * />;
+ * ```
+ */
+export function nativeFieldTheme(theme: Theme): NativeFieldTheme {
+  return { caret: theme.colors.primary };
+}

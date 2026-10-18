@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 176/228
+`[x]` `[███████░░░]` 177/230
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1393,6 +1393,16 @@ and 3.430 / 4.357:1 in the AAA sets while all six checks returned `[]`;
 (`#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` → `#B0B0B0`) and every
 shipped set passes at 3.177:1 or better (4.722:1 at AAA), with `contrastPairs`
 staying 394 (plan 510)
+`[x]` Own the native field's caret — the pinned editor reads exactly one field
+from its `theme` prop (`caret`), but the package shipped no value, so a field
+kept the runtime's built-in dark `#7C86FF`: **3.129:1** on the AAA light `input`
+and **2.795:1** on its quiet panel, under the 4.5:1 mark floor, while every
+check returned `[]`. `nativeFieldTheme(theme)` returns the prop from the accent,
+which `markPairs` already holds on the `input` fill and the four `Surface` tones,
+so no role is duplicated and a copied style follows its own accent (plan 511)
+`[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
+`<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
+of the runtime's built-in dark value (owner: `primitives`; plan 511)
 
 ## Phase C — Tier 1–2 components
 

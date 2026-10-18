@@ -206,6 +206,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [508](./508-solid-chip-on-scrim.md) | The solid status chip on the scrim | F | 099, 359, 375, 395, 399, 504, 507 | done |
 | [509](./509-elevation-persistent-surfaces.md) | The elevation shadow over the persistent selected row and the field a drop-up opens over | F | 085, 099, 359, 505, 507 | done |
 | [510](./510-inactive-label-selection-wash.md) | The unavailable label through the text-selection wash | F | 306, 087, 091, 362, 366, 392, 506 | done |
+| [511](./511-native-field-caret.md) | The native field's caret is the accent | F | 337, 332, 315–319, 350, 387 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2122,6 +2123,22 @@ inactive tier does not collapse into secondary text. Every shipped set passes
 failures by class alone now name the role and the wash they mean.
 `selection-inactive.test.ts` states the erased-label regression, the at-rest
 passes that hid it, and the live AAA edge one step lighter.
+
+Plan `511` closes the one paint the theme could reach but never owned. Plan `337`
+established that a pinned native `<input>`/`<textarea>` reads exactly one field
+from its `theme` prop — `caret` — and the package shipped no value or helper for
+it, so every field kept the runtime's built-in dark caret (`#7C86FF`). Measured
+with the library's own `contrastRatio`, that caret is **3.129:1** on the AAA
+light `input` and **2.795:1** on its quiet panel, under the 4.5:1 mark floor the
+AAA theme declares, while every check returned `[]` because no pair paints the
+runtime default. The fix adds no role: the caret is the accent, and `markPairs`
+already holds `primary` on the `input` fill and the four `Surface` tones a
+transparent field sits on. `nativeFieldTheme(theme)` returns the runtime `theme`
+prop from `theme.colors.primary`, so a copied platform style or brand theme
+follows its own accent and `themeContrastFailures` already reports a collapsed
+one; a consumer that wants another caret replaces the field. A cross-team row
+asks `primitives` to pass the helper to the fields it renders. No colour, pair or
+floor moves.
 
 ## How to use a plan
 

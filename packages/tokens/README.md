@@ -617,10 +617,16 @@ inherited `selectionColor`; apply it once on the app root. Chrome that must not
 be selectable sets `userSelect: "none"`. A native `<input>`/`<textarea>` is a
 custom element that paints its own fixed wash (`#7C86FF59`) and placeholder
 (`#8F8F8F`) in GPUix 0.10.0 and reads only `theme.caret`, so the theme's wash
-does not reach a native field. Content painted on an opaque filled surface — a
-filled action such as `softAction`, or a solid status chip — uses
-`selectionStyle(theme, "fill")`: the accent-tinted wash composites to 1.000:1 on
-`primary` in six shipped palettes, so `selectionOnFill` is a neutral 15% veil.
+does not reach a native field. The caret is themeable:
+`nativeFieldTheme(theme)` returns that `theme` prop from the accent, and the
+built-in dark caret it replaces measures **3.129:1** on the AAA light `input`
+and **2.795:1** on its quiet panel, under the 4.5:1 mark floor. A runnable
+example lives in
+[`src/native-field.example.ts`](./src/native-field.example.ts). Content painted
+on an opaque filled surface — a filled action such as `softAction`, or a solid
+status chip — uses `selectionStyle(theme, "fill")`: the accent-tinted wash
+composites to 1.000:1 on `primary` in six shipped palettes, so `selectionOnFill`
+is a neutral 15% veil.
 `selectionFillPairs` and `selectionFillWashPairs` hold every opaque fill's
 (`primary`, `secondary`, `destructive`, `accent`, `info`, `success`, `warning`,
 `softAction`, indexed by `selectionFillRoles`) foreground and the veil itself to
@@ -826,10 +832,11 @@ persisted theme at its own boundary, where `Schema` belongs.
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.
 - No themeable native field hint or selection: GPUix 0.10.0's
-  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`) and reads
-  only `theme.caret`. The `placeholder` role covers a hint the consumer renders;
-  `selectionColor` covers app text. The fixed grey measures 3.23:1 on the
-  identity light `input`, under the 4.5:1 secondary floor.
+  `<input>`/`<textarea>` paints both itself (`#8F8F8F` and `#7C86FF59`). The
+  caret is themeable: `nativeFieldTheme(theme)` supplies it from the accent
+  through the `theme` prop. The `placeholder` role covers a hint the consumer
+  renders; `selectionColor` covers app text. The fixed grey measures 3.23:1 on
+  the identity light `input`, under the 4.5:1 secondary floor.
 - Exports point at `src/`: the package is private, so a consumer compiles it
   directly and no build step is required. Phase G flips `exports` to `dist` when
   the package is published.
