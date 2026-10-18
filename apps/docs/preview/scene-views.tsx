@@ -60,6 +60,11 @@ import {
   MentionInputList,
 } from "@gpuixui/components/mention-input";
 import {
+  PreviewCard,
+  PreviewCardContent,
+  PreviewCardTrigger,
+} from "@gpuixui/components/preview-card";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -502,6 +507,28 @@ const MentionInputScene = (): ReactElement => (
   </Stack>
 );
 
+/**
+ * The card exists only while open; `defaultOpen` mounts the real anchored card
+ * and its content (plan 478). The hover policy cannot be proven without a
+ * pointer, so the native suite remains the interaction evidence.
+ */
+const PreviewCardScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">File preview</Text>
+    <PreviewCard defaultOpen>
+      <PreviewCardTrigger>design-system.md</PreviewCardTrigger>
+      <PreviewCardContent label="design-system.md">
+        <Stack direction="column" gap="sm">
+          <Text role="label">Design system</Text>
+          <Text role="body" tone="muted">
+            Tokens, semantic roles and the theme extension mechanism.
+          </Text>
+        </Stack>
+      </PreviewCardContent>
+    </PreviewCard>
+  </Stack>
+);
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -518,6 +545,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     drawer: DrawerScene,
     "navigation-menu": NavigationMenuScene,
     "mention-input": MentionInputScene,
+    "preview-card": PreviewCardScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

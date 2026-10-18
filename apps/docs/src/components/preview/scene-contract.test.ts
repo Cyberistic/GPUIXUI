@@ -38,6 +38,7 @@ const interactionScenes = new Map([
   ["drawer", "drawer"],
   ["navigation-menu", "navigation-menu"],
   ["mention-input", "mention-input"],
+  ["preview-card", "preview-card"],
 ]);
 
 const pagesDirectory = new URL(

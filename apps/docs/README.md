@@ -78,8 +78,8 @@ renderer (the browser's GPU backend) and exports one document per scene:
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus,
   Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable
-  containers, Skeletons, Loading indicators, Drawers, Navigation menus and
-  Mention inputs. A page with neither a live scene
+  containers, Skeletons, Loading indicators, Drawers, Navigation menus,
+  Mention inputs and Preview cards. A page with neither a live scene
   nor an illustration must be one of the reasons `scene-contract.test.ts` lists
   (plan 458) — a new gap fails the suite instead of shipping silently.
 - `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,

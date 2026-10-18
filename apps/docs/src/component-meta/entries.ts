@@ -1372,6 +1372,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/preview-card.tsx",
       api: ["PreviewCardProps", "PreviewCardContentProps"],
+      liveScene: "preview-card",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/preview-card.test.tsx",

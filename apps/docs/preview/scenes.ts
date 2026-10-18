@@ -21,6 +21,7 @@ export const LIVE_SCENES = [
   "drawer",
   "navigation-menu",
   "mention-input",
+  "preview-card",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -49,6 +50,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   drawer: "Narrow the result set, then apply.",
   "navigation-menu": "Runtime",
   "mention-input": "@alice",
+  "preview-card": "Tokens, semantic roles and the theme extension mechanism.",
 };
 
 /**

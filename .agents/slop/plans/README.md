@@ -237,6 +237,7 @@ tables and the inventory reconciliation.
 | [`475-scene-surface-sized-canvas.md`](./475-scene-surface-sized-canvas.md) | A live scene's canvas must be sized, not merely non-zero: the scene half of plan 473's rule | F/G | 455–458, 473, 474 | implemented — `dropdown-menu` passed on a 1×1 canvas before; every scene now waits for a sized canvas, and a forced threshold fails the first scene with `timeout` (§7) |
 | [`476-drawer-navigation-live-scenes.md`](./476-drawer-navigation-live-scenes.md) | Drawer and Navigation menu join the live surface: the open props their gap reasons denied | F | 455–458, 461, 475 | implemented — two scenes, gap set nine → seven; removing `defaultOpen`/`value` fails the smoke by scene name (§7) |
 | [`477-mention-input-live-scene.md`](./477-mention-input-live-scene.md) | Mention input's suggestion list is a live scene: the text, not a prop, opens it | F | 455–458, 461, 475, 476 | implemented — one scene, gap set seven → six; removing the initial token leaves only the heading in the tree (§7) |
+| [`478-preview-card-live-scene.md`](./478-preview-card-live-scene.md) | Preview card gets a live scene through its `defaultOpen`; the hover policy stays with the native suite | F | 455–458, 461, 475, 476 | implemented — one scene, fifteen total; removing `defaultOpen` leaves only the trigger (§7) |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

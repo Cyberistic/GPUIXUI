@@ -471,7 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 75/76
+`[~]` `[██████████]` 76/77
+
+`[x]` **Preview card gets a live scene (plan 478)** — `defaultOpen` mounts the real anchored card, so an interaction-only page now shows the component on GPUix's wasm renderer instead of only a static approximation; the hover policy stays with the native suite
 
 `[x]` **Mention input's suggestion list is a live scene (plan 477)** — the gap reason said no prop opens the list, but the query comes from the field's text: an initial `@tok` mounts the real ranked list, so the page now renders it on GPUix's wasm renderer; the gap set falls from seven to six
 
