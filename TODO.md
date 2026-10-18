@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 161/219
+`[x]` `[███████░░░]` 162/219
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1228,6 +1228,12 @@ so a scrim that composited to the Alert's "Try again" button left it undimmed
 while `themeContrastFailures` returned `[]`; the fill joins the scrim contract
 (14 → 15 pairs), every shipped set already clears 1.05:1 (1.5519:1 at the
 tightest, AAA dark) and the plain 360 pairs do not move (plan 395)
+`[x]` Hold the type index's counts and weight claims — plan 394 moved the palette
+66 → 70 roles but the `ThemeColors` row and the colour-format paragraph still
+said 66, and both the `FontWeight` row and the Typography prose claimed a shipped
+`700` no type role uses (the shipped weights are 400, 500 and 600); the counts,
+the weight set and the avatar/icon ranges are now derived from `colorRoles`,
+`textRoles`, `motion`, `typography`, `avatarSize` and `iconSize` (plan 396)
 `[ ]` Cross-team: `primitives` paints a clipped ButtonGroup's focus ring as an
 inset border in `ring` on the button's own fill (`core/style.ts`
 `clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` equals

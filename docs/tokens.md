@@ -91,7 +91,7 @@ missing here is not public.
 | `FilledControlFamily` | A filled control family from `filledControlFamilies`. |
 | `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
-| `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500`, `600` and `700`. |
+| `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500` and `600`. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `IdentityShippedTheme` | An identity set in `shippedThemes`, with no platform style. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
@@ -123,7 +123,7 @@ missing here is not public.
 | `TextTierFailure` | A text tier that is not one step below the tier above it, with both ratios and the step. |
 | `Theme` | A complete resolved theme. |
 | `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
-| `ThemeColors` | The 66 semantic colour roles. |
+| `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy` or `metric`. |
@@ -521,7 +521,7 @@ carries, so it cannot claim another.
 
 Families come from the platform table: `sans` is `systemUiFont` (GPUI's
 `.SystemUIFont` sentinel) and `mono` is the current platform's family. The
-shipped weights are `400`, `500`, `600` and `700`; `FontWeight` is a number in
+shipped weights are `400`, `500` and `600`; `FontWeight` is a number in
 the CSS range `1…1000`, so a brand may name an intermediate weight its installed
 family provides. GPUix has no `letterSpacing` field, so the scale does not
 define tracking.
@@ -1641,7 +1641,7 @@ and `#RRGGBBAA` and false for every other CSS colour. The runtime is broader —
 GPUix delegates colour parsing to `csscolorparser`, so a name, `rgb(…)`, `hsl(…)`
 or `#RGB` is paintable — but `alpha`, `compositeOver` and `contrastRatio` can
 only read hex, and the theme is authored data in the package's own convention.
-`themeColorFailures(theme)` walks all 66 `colorRoles` and returns the role and
+`themeColorFailures(theme)` walks all 70 `colorRoles` and returns the role and
 the value of every entry outside that form:
 
 ```ts

@@ -11,13 +11,15 @@ the palette from 66 to 70 roles), 395 (the last role-count edit).
 ## 1. The measured gap
 
 `docs/tokens.md` has two places that are still written against the pre-394
-palette, and one claim about the type scale that was never true:
+palette, and a claim about the type scale that was never true — written twice,
+in the type index and in the Typography prose:
 
 | # | Location | Says | Ships |
 | - | -------- | ---- | ----- |
 | 1 | `## Types`, row `ThemeColors` (line 126) | “The **66** semantic colour roles.” | `colorRoles.length` = **70** |
 | 2 | `### Colour format` (line 1644) | “`themeColorFailures(theme)` walks all **66** `colorRoles`” | 70 |
 | 3 | `## Types`, row `FontWeight` (line 94) | “the shipped scale uses `400`, `500`, `600` and **`700`**” | the ten `typography` roles use **`400`, `500`, `600`** only |
+| 4 | `## Typography` prose (line 524) | “The shipped weights are `400`, `500`, `600` and **`700`**” | the same three weights |
 
 Plan 394 added four roles (`softAction`, `softActionHover`,
 `softActionActive`, `softActionForeground`) and updated the sentences
@@ -59,6 +61,8 @@ the `## Types` table at all, so a count written there is unguarded.
    - `Motion` → the timing levels and easing phases of `motion`;
    - `FontWeight` → the distinct weights the ten `typography` roles use;
    - `AvatarSize` / `IconSize` → the first and last key of the scale record.
+   The same weight set is held to the “shipped weights are …” sentence in the
+   Typography prose, which repeats the table's claim.
 
    The weight case compares the **set** of backticked numbers in the row with
    the set the roles use, so adding a `700` role forces the sentence to grow and
@@ -92,6 +96,9 @@ Rejected alternatives:
     `400`, `500`, `600` and `700`. |` →
     `| `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses
     `400`, `500` and `600`. |`
+- In `## Typography`:
+  - “The shipped weights are `400`, `500`, `600` and `700`;” →
+    “The shipped weights are `400`, `500` and `600`;”.
 - In `### Colour format`:
   - “`themeColorFailures(theme)` walks all 66 `colorRoles`” →
     “`themeColorFailures(theme)` walks all 70 `colorRoles`”.
@@ -162,10 +169,14 @@ describe("docs/tokens.md type index", () => {
       (match) => Number(match[1]),
     );
     expect(new Set(claimed)).toEqual(new Set(shippedWeights));
+    const quoted = shippedWeights.map((weight) => `\`${weight}\``);
+    expect(markdownProse).toContain(
+      `shipped weights are ${quoted.slice(0, -1).join(", ")} and ${quoted.at(-1)}`,
+    );
   });
 
   it("states the shipped range of the avatar and icon scales", () => {
-    const range = (scale: Readonly<Record<string, number>>): string => {
+    const range = (scale: object): string => {
       const keys = Object.keys(scale);
       return `\`${keys[0]}\` to \`${keys.at(-1)}\``;
     };

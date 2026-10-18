@@ -1837,11 +1837,12 @@ tightest, AAA dark), so no colour moves.
 Plan `396` closes the documentation drift plan `394` left behind. The palette
 moved 66 → 70 roles and the two sentences `color.test.ts` already read were
 updated, but the `ThemeColors` row of the type index and the colour-format
-paragraph still said 66, and the `FontWeight` row claimed a shipped `700` no
-`typography` role uses (the scale's strongest weight is 600). `docs.test.ts`
-never parsed the type table, so the page disagreed with the package while every
-suite stayed green. The two counts and the weight sentence are corrected, and a
-new case derives every count and ordered range in the type table from
+paragraph still said 66, and the `FontWeight` row and the Typography prose
+claimed a shipped `700` no `typography` role uses (the scale's strongest weight
+is 600). `docs.test.ts` never parsed the type table, so the page disagreed with
+the package while every suite stayed green. The two counts and the two weight
+sentences are corrected, and a new case derives every count and ordered range in
+the type table from
 `colorRoles`, `textRoles`, `motion`, `typography`, `avatarSize` and `iconSize`,
 so a future value edit has to take the document with it.
 

@@ -60,6 +60,14 @@
  * elevation level fully opaque while the two older checks returned `[]`. The
  * page now names `isHexColor`, `themeColorFailures` and `ColorFailure`, and the
  * design-system's invalid-colour row names the check that holds it.
+ *
+ * Plan 396 guards the type index plan 324 added: it held every public type to a
+ * row, but not the claim inside the row. Plan 394 moved the palette from 66 to
+ * 70 roles and updated the two sentences `color.test.ts` read, leaving the
+ * `ThemeColors` row and the colour-format paragraph at 66, while the
+ * `FontWeight` row claimed a shipped `700` no `typography` role uses. The
+ * counts, the weight set and the two size ranges are derived here from the
+ * runtime owners, so a value edit has to take the table with it.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -283,6 +291,66 @@ describe("docs/tokens.md contract counts", () => {
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain("plans `076`–`348` closed");
+  });
+});
+
+/** The `## Types` row for `name`, or a failure naming it. */
+const typeRow = (name: string): string => {
+  const line = markdown
+    .split("\n")
+    .find((candidate) => candidate.startsWith(`| \`${name}\` |`));
+  expect(line, name).toBeDefined();
+  return line ?? "";
+};
+
+const timingLevels = Object.keys(motion).filter((key) => key !== "ease");
+const easingPhases = Object.keys(motion.ease);
+const shippedWeights = [
+  ...new Set(textRoles.map((role) => typography[role].fontWeight)),
+].toSorted((left, right) => left - right);
+const documentedWeight = /`(\d{2,4})`/g;
+
+describe("docs/tokens.md type index", () => {
+  it("states the colour and type-role counts the package ships", () => {
+    expect(typeRow("ThemeColors")).toContain(
+      `The ${colorRoles.length} semantic colour roles.`,
+    );
+    expect(typeRow("Typography")).toContain(
+      `${countWord(textRoles.length)} type roles`,
+    );
+  });
+
+  it("states the motion levels and phases the scale ships", () => {
+    expect(typeRow("Motion").toLowerCase()).toContain(
+      `${countWord(timingLevels.length)} timing levels and ` +
+        `${countWord(easingPhases.length)} easing phases.`,
+    );
+  });
+
+  it("names exactly the font weights the type roles use", () => {
+    const claimed = [...typeRow("FontWeight").matchAll(documentedWeight)].map(
+      (match) => Number(match[1]),
+    );
+    expect(new Set(claimed)).toEqual(new Set(shippedWeights));
+    const quoted = shippedWeights.map((weight) => `\`${weight}\``);
+    expect(markdownProse).toContain(
+      `shipped weights are ${quoted.slice(0, -1).join(", ")} and ${quoted.at(-1)}`,
+    );
+  });
+
+  it("states the shipped range of the avatar and icon scales", () => {
+    const range = (scale: object): string => {
+      const keys = Object.keys(scale);
+      return `\`${keys[0]}\` to \`${keys.at(-1)}\``;
+    };
+    expect(typeRow("AvatarSize")).toContain(range(avatarSize));
+    expect(typeRow("IconSize")).toContain(range(iconSize));
+  });
+
+  it("states the colour-format walk over every role", () => {
+    expect(markdownProse).toContain(
+      `walks all ${colorRoles.length} \`colorRoles\``,
+    );
   });
 });
 
