@@ -125,6 +125,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       moved it 16 px, so the geometry must not read a baseline stage; the
       gesture lives in a `ref` so a move sees the press before the commit
 
+`[~]` Probe a **multi-step form (wizard)** per plan `386` — the last
+      `todo | ?` inventory row. Measures step focus, per-step validation, draft
+      survival, the unmount-vs-hide step strategy, Enter as a step submit and
+      the derived `aria-selected`; adds the `wizard` capability, `wizard-flow` +
+      `live-wizard`, and a pure `wizard-model.ts`.
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
       and an accessible label, a non-modal `align="end"` panel, grouped
