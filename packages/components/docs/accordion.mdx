@@ -133,22 +133,24 @@ has no `transform` — a rotation is not available.
   switch and its controls leave the tab order.
 - The measured natural height is re-measured on open, not on a width change, so a
   rewrap while collapsed can correct once on the next open.
-- Closing a section with focus inside its body (for example a controlled close
-  from elsewhere) leaves focus on the hidden element: 0.10.0 has no focus-within
-  event or `inert`, so the component cannot tell that case apart from a close
-  where focus is already on the header. A consumer that closes a section while
-  its body owns focus should move focus itself.
+- Closing a section with focus inside its body returns focus to that section's
+  header, so a controlled close no longer strands the keyboard on a hidden
+  control. The check compares the focused box's centre with the body's bounds;
+  0.10.0 reports no parent chain and no focus-within event, so a control
+  scrolled out of the visible body is not recognised.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (22 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
 activation, Space on release, a held Enter toggling only once, the controlled
 contract including the `null` close, arrow / `Home` / `End` movement between
 headers (wrapping past a disabled one, without opening it), a caller header
-`ref`, the closed/open tab order, state surviving a switch, and the
-measured-height tween (plus the `animate={false}` snap).
+`ref`, the closed/open tab order, state surviving a switch, the measured-height
+tween (plus the `animate={false}` snap), and a close that began inside a body
+returning focus to its header while a close that began outside does not steal
+focus.
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.

@@ -9,7 +9,9 @@
  * Space toggling on key down instead of on release; a body that snapped
  * instead of tweening to its measured height; and a `disabled` trigger that
  * stayed in the tab order, kept its hover fill and still toggled, or that
- * painted a ring from `autoFocus` (plan 394).
+ * painted a ring from `autoFocus` (plan 394). A close that began with focus
+ * inside the body used to leave focus on the hidden control; it now returns to
+ * the trigger (plan 386).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -108,6 +110,51 @@ const Measured = ({ animate = true }: { readonly animate?: boolean }) => (
     <div testId="after" style={{ height: 20 }} />
   </div>
 );
+
+/** A section whose own body closes it (plan 386). */
+const SelfClosing = ({ animate = true }: { readonly animate?: boolean }) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger testId="trigger">Advanced options</CollapsibleTrigger>
+      <CollapsibleContent testId="content" animate={animate}>
+        <div
+          role="button"
+          tabIndex={0}
+          testId="done"
+          onClick={() => setOpen(false)}
+        >
+          Done
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+/** An open section closed from a control outside its body (plan 386). */
+const ClosedFromOutside = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <div testId="root">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger testId="trigger">
+          Advanced options
+        </CollapsibleTrigger>
+        <CollapsibleContent testId="content">
+          <input testId="draft" />
+        </CollapsibleContent>
+      </Collapsible>
+      <div
+        role="button"
+        tabIndex={0}
+        testId="close"
+        onClick={() => setOpen(false)}
+      >
+        Close
+      </div>
+    </div>
+  );
+};
 
 describe("Collapsible", () => {
   it("opens and closes on a click, keeping the body mounted", () => {
@@ -391,6 +438,56 @@ describe("Collapsible", () => {
       section.renderer.findByTestId("trigger")?.style.boxShadow,
     ).toBeDefined();
 
+    section.unmount();
+  });
+
+  it("returns focus to the trigger when a close starts inside the body", () => {
+    const section = renderComponent(<SelfClosing />);
+    section.renderer.clockPause();
+    settle(section);
+    section.renderer.focusElement(
+      section.renderer.findByTestId("done")?.id ?? -1,
+    );
+
+    clickCentreOf(section, "done");
+    settle(section);
+
+    expect(isHidden(section, "content")).toBe(true);
+    expect(focusedTestId(section)).toEqual(Option.some("trigger"));
+    expect(
+      section.renderer.findByTestId("trigger")?.style.boxShadow,
+    ).toBeDefined();
+
+    section.renderer.clockResume();
+    section.unmount();
+  });
+
+  it("returns focus to the trigger on a snapping close", () => {
+    const section = renderComponent(<SelfClosing animate={false} />);
+    section.renderer.focusElement(
+      section.renderer.findByTestId("done")?.id ?? -1,
+    );
+
+    clickCentreOf(section, "done");
+
+    expect(isHidden(section, "content")).toBe(true);
+    expect(focusedTestId(section)).toEqual(Option.some("trigger"));
+
+    section.unmount();
+  });
+
+  it("keeps focus outside the body when another control closes the section", () => {
+    const section = renderComponent(<ClosedFromOutside />);
+    section.renderer.clockPause();
+    settle(section);
+
+    clickCentreOf(section, "close");
+    settle(section);
+
+    expect(isHidden(section, "content")).toBe(true);
+    expect(focusedTestId(section)).toEqual(Option.some("close"));
+
+    section.renderer.clockResume();
     section.unmount();
   });
 });

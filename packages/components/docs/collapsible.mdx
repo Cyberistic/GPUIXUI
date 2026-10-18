@@ -110,22 +110,24 @@ of its own, so it inherits the card or panel around it.
   reachable, then it leaves.
 - The natural height is re-measured on open, not on a width change, so a rewrap
   while collapsed can correct once on the next open.
-- Closing with focus inside the body (for example a controlled close from
-  elsewhere) leaves focus on the hidden element: 0.10.0 has no focus-within event
-  or `inert`, so the component cannot tell a programmatic close from one where
-  focus is already on the trigger. A consumer that closes a section while its
-  body owns focus should move focus itself.
+- Closing with focus inside the body returns focus to the trigger, so a
+  controlled close no longer strands the keyboard on a hidden control. The
+  check compares the focused box's centre with the body's bounds; 0.10.0
+  reports no parent chain and no focus-within event, so a control scrolled out
+  of the visible body is not recognised.
 - No `aria-controls` in 0.10.0 (`HostProps`), so the trigger→body relationship
   is positional.
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (16 tests):
 click toggling with the body kept mounted, `aria-expanded` following the body,
 Enter on press and Space on release, the controlled contract in both directions,
 the closed and open tab order, state surviving a close and a re-open, the
-measured-height tween (plus the `animate={false}` snap), and a disabled trigger
-that stays inert by pointer and key and paints no ring from `autoFocus`.
+measured-height tween (plus the `animate={false}` snap), a disabled trigger that
+stays inert by pointer and key and paints no ring from `autoFocus`, and a close
+that began inside the body returning focus to the trigger (tween and snap) while
+a close that began outside does not steal focus.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

@@ -10,7 +10,9 @@
  * header was discarded; a held Enter toggled twice; Space toggled on key down.
  * A closed section used to unmount its body, so its state vanished; a clipped
  * body also stayed in the tab order (plan 372 §2). The body now tweens to its
- * measured height, and these tests guard that tween.
+ * measured height, and these tests guard that tween. A close that began with
+ * focus inside a body used to leave focus on the hidden control; it now returns
+ * to that section's header (plan 386).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -124,6 +126,59 @@ const Stateful = () => {
         </AccordionContent>
       </AccordionItem>
     </Accordion>
+  );
+};
+
+/** A section whose own body closes it (plan 386). */
+const SelfClosing = () => {
+  const [value, setValue] = useState<string | null>("one");
+  return (
+    <Accordion type="single" collapsible value={value} onValueChange={setValue}>
+      <AccordionItem value="one">
+        <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+        <AccordionContent testId="content-one">
+          <div
+            role="button"
+            tabIndex={0}
+            testId="done"
+            onClick={() => setValue(null)}
+          >
+            Done
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+};
+
+/** Two open sections, the first closed from a control outside both (plan 386). */
+const ClosedFromOutside = () => {
+  const [value, setValue] = useState<ReadonlyArray<string>>(["one", "two"]);
+  return (
+    <div testId="root">
+      <Accordion type="multiple" value={value} onValueChange={setValue}>
+        <AccordionItem value="one">
+          <AccordionTrigger testId="trigger-one">One</AccordionTrigger>
+          <AccordionContent testId="content-one">
+            <text>Body one</text>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="two">
+          <AccordionTrigger testId="trigger-two">Two</AccordionTrigger>
+          <AccordionContent testId="content-two">
+            <input testId="draft-two" />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+      <div
+        role="button"
+        tabIndex={0}
+        testId="close-one"
+        onClick={() => setValue(["two"])}
+      >
+        Close one
+      </div>
+    </div>
   );
 };
 
@@ -530,6 +585,41 @@ describe("Accordion", () => {
       faq.renderer.findByTestId("trigger-one")?.style.boxShadow,
     ).toBeDefined();
 
+    faq.unmount();
+  });
+
+  it("returns focus to the header when a close starts inside its body", () => {
+    const faq = renderComponent(<SelfClosing />);
+    faq.renderer.clockPause();
+    settle(faq);
+    faq.renderer.focusElement(faq.renderer.findByTestId("done")?.id ?? -1);
+
+    clickCentreOf(faq, "done");
+    settle(faq);
+
+    expect(isHidden(faq, "content-one")).toBe(true);
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-one"));
+    expect(
+      faq.renderer.findByTestId("trigger-one")?.style.boxShadow,
+    ).toBeDefined();
+
+    faq.renderer.clockResume();
+    faq.unmount();
+  });
+
+  it("leaves focus alone when a different section closes", () => {
+    const faq = renderComponent(<ClosedFromOutside />);
+    faq.renderer.clockPause();
+    settle(faq);
+
+    clickCentreOf(faq, "close-one");
+    settle(faq);
+
+    expect(isHidden(faq, "content-one")).toBe(true);
+    expect(isHidden(faq, "content-two")).toBe(false);
+    expect(focusedTestId(faq)).toEqual(Option.some("close-one"));
+
+    faq.renderer.clockResume();
     faq.unmount();
   });
 });

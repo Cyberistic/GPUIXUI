@@ -317,6 +317,15 @@ retired once both branches are one
       shifted on arrows). 9 native cases (Button 13, InlineEdit 16, Collapsible
       13, SearchInput 11, List 44, TagInput 11, TimePicker 12, behaviour 611),
       eight mutation proofs; docs, `COMPONENTS.md` and the inventory synced
+    - [x] A disclosure close returns focus to its trigger — plan 386: measured
+      that a controlled close from a control inside the body left focus on the
+      hidden control (body `visibility: hidden`, focused id still the inner
+      control). `Reveal` now compares the focused box's centre with the closing
+      body's bounds and hands focus back to the registered trigger, on both the
+      tween and the snap path; a close that began outside does not steal focus.
+      5 native cases (Collapsible 16, Accordion 22, behaviour 636), both-direction
+      proof (3 fail without the restore, the 2 outside cases pass); docs,
+      `COMPONENTS.md` and the inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

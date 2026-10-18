@@ -7,13 +7,21 @@
  * still took keyboard focus (plan 372 §2).
  */
 
-import type { Props } from "@gpuix/react";
+import { useGpuix, type Props, type PublicInstance } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { createContext, useContext, useState } from "react";
+import * as Option from "effect/Option";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { controlName } from "./internal/name.js";
@@ -23,6 +31,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import { Reveal } from "./internal/reveal.js";
 import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 
@@ -30,6 +39,8 @@ import { focusRing, textStyle, useTheme } from "./internal/theme.js";
 interface CollapsibleContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** The trigger's native instance, so a close can return focus to it. */
+  readonly trigger: RefObject<Option.Option<PublicInstance>>;
 }
 
 const CollapsibleContext = createContext<CollapsibleContextValue | undefined>(
@@ -70,8 +81,10 @@ export const Collapsible = ({
   });
   assertParts(collapsibleRoot, children);
 
+  const trigger = useRef<Option.Option<PublicInstance>>(Option.none());
+
   return (
-    <CollapsibleContext.Provider value={{ open, setOpen }}>
+    <CollapsibleContext.Provider value={{ open, setOpen, trigger }}>
       <div
         style={{
           display: "flex",
@@ -112,12 +125,20 @@ export const CollapsibleTrigger = ({
   autoFocus = false,
   style,
   children,
+  ref,
   ...rest
 }: CollapsibleTriggerProps) => {
   const theme = useTheme();
-  const { open, setOpen } = useCollapsibleContext();
+  const { open, setOpen, trigger } = useCollapsibleContext();
   const name = controlName(rest["aria-label"], children);
   const [focused, setFocused] = useState(autoFocus && !disabled);
+  const attach = useCallback(
+    (next: PublicInstance | null) => {
+      trigger.current = Option.fromNullishOr(next);
+    },
+    [trigger],
+  );
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
   const state: CollapsibleTriggerState = {
     open,
     closed: !open,
@@ -135,6 +156,7 @@ export const CollapsibleTrigger = ({
       aria-expanded={open}
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
+      ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : 0}
       onClick={
@@ -202,12 +224,20 @@ export const CollapsibleContent = ({
   ...rest
 }: CollapsibleContentProps) => {
   const theme = useTheme();
-  const { open } = useCollapsibleContext();
+  const renderer = useGpuix().renderer;
+  const { open, trigger } = useCollapsibleContext();
+  const restoreFocus = useCallback(() => {
+    Option.match(trigger.current, {
+      onNone: () => undefined,
+      onSome: (element) => renderer?.focusElement?.(element.id),
+    });
+  }, [renderer, trigger]);
 
   return (
     <Reveal
       open={open}
       animate={animate}
+      restoreFocus={restoreFocus}
       {...rest}
       style={mergeStyles(
         {
@@ -251,6 +281,7 @@ export const collapsibleMeta = {
   limitations: [
     "hidden by `visibility` while closed, so it leaves the tab order; a rewrap while closed is not re-measured until the next open",
     "no `aria-controls` in 0.10.0, so the trigger→body relationship is positional",
+    "a close that began with focus inside the body returns focus to the trigger by box containment; a control clipped out of the visible body is not recognised",
   ],
   docs: "docs/collapsible.mdx",
   example: "examples/collapsible.example.tsx",

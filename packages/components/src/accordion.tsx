@@ -27,7 +27,9 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
+  type RefObject,
 } from "react";
 import {
   initial,
@@ -90,6 +92,8 @@ const useAccordionContext = (): AccordionContextValue => {
 interface AccordionItemContextValue {
   readonly value: string;
   readonly disabled: boolean;
+  /** The section header's native instance, so a close can return focus to it. */
+  readonly trigger: RefObject<Option.Option<PublicInstance>>;
 }
 
 const AccordionItemContext = createContext<
@@ -334,10 +338,11 @@ export const AccordionItem = ({
 }: AccordionItemProps) => {
   const theme = useTheme();
   const { lastValue } = useAccordionContext();
+  const trigger = useRef<Option.Option<PublicInstance>>(Option.none());
 
   const item = useMemo<AccordionItemContextValue>(
-    () => ({ value, disabled }),
-    [disabled, value],
+    () => ({ value, disabled, trigger }),
+    [disabled, trigger, value],
   );
   const isLast = Option.contains(lastValue, value);
   assertParts(accordionItem, children);
@@ -396,7 +401,7 @@ export const AccordionTrigger = ({
   const theme = useTheme();
   const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
     useAccordionContext();
-  const { value, disabled } = useAccordionItemContext();
+  const { value, disabled, trigger } = useAccordionItemContext();
   const name = controlName(rest["aria-label"], children);
   const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
@@ -407,9 +412,13 @@ export const AccordionTrigger = ({
 
   // Stable identity: a fresh ref callback each render would re-register the row
   // on every paint (ListItem has the same constraint).
-  const attach = useCallback((next: PublicInstance | null) => {
-    setInstance(next ?? undefined);
-  }, []);
+  const attach = useCallback(
+    (next: PublicInstance | null) => {
+      trigger.current = Option.fromNullishOr(next);
+      setInstance(next ?? undefined);
+    },
+    [trigger],
+  );
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
@@ -528,13 +537,21 @@ export const AccordionContent = ({
   ...rest
 }: AccordionContentProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
   const { isOpen } = useAccordionContext();
-  const { value } = useAccordionItemContext();
+  const { value, trigger } = useAccordionItemContext();
+  const restoreFocus = useCallback(() => {
+    Option.match(trigger.current, {
+      onNone: () => undefined,
+      onSome: (element) => renderer?.focusElement?.(element.id),
+    });
+  }, [renderer, trigger]);
 
   return (
     <Reveal
       open={isOpen(value)}
       animate={animate}
+      restoreFocus={restoreFocus}
       {...rest}
       style={mergeStyles(
         {
@@ -585,6 +602,7 @@ export const accordionMeta = {
   limitations: [
     "the chevron swaps direction: 0.10.0's StyleDesc has no transform",
     "closed bodies stay mounted and are hidden by `visibility`; a rewrap while closed is not re-measured until the next open",
+    "a close that began with focus inside the body returns focus to its header by box containment; a control clipped out of the visible body is not recognised",
   ],
   docs: "docs/accordion.mdx",
   example: "examples/accordion.example.tsx",
