@@ -1588,7 +1588,8 @@ hand-list code (plan 531)
 reported the finite failure and then blamed the overlay height and the message
 viewport, and a non-finite spacing step or drawer width blamed its neighbour;
 a ladder or bound now skips a comparison whose side the finite rule rejects, so
-the cause is the one entry (`-Infinity` still reports its sign too) (plan 532)
+the cause is not blamed on its neighbour (`-Infinity` still reports its sign as
+an independent defect) (plan 532)
 `[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
 `drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
 (`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and

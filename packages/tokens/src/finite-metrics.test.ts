@@ -100,6 +100,18 @@ describe("the finite metric rule", () => {
     ]);
   });
 
+  it("reports a NaN step once, as finite rather than as a sign", () => {
+    expect(failuresOf({ spacing: { sm: Number.NaN } })).toEqual([
+      {
+        group: "spacing",
+        member: "sm",
+        rule: "finite",
+        actual: Number.NaN,
+        bound: 0,
+      },
+    ]);
+  });
+
   it("reports a non-finite surface dimension", () => {
     expect(failuresOf({ dimensions: { toastWidth: Infinity } })).toEqual([
       infinite("dimensions", "toastWidth"),

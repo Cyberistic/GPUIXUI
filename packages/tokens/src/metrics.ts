@@ -145,19 +145,24 @@ const failure = (
   bound: number,
 ): MetricFailure => ({ group, member, rule, actual, bound });
 
+/**
+ * Sign rules describe a value that is a number: a size at or below zero paints
+ * nothing, and a negative step points the wrong way. A `NaN` is the finite
+ * rule's diagnostic, so these comparisons are written to stay silent for it.
+ */
 const positive = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual > 0 ? [] : [failure(group, member, "positive", actual, 0)];
+  actual <= 0 ? [failure(group, member, "positive", actual, 0)] : [];
 
 const nonNegative = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual >= 0 ? [] : [failure(group, member, "non-negative", actual, 0)];
+  actual < 0 ? [failure(group, member, "non-negative", actual, 0)] : [];
 
 const zero = (
   group: MetricGroup,

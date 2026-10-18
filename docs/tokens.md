@@ -1950,8 +1950,9 @@ A failure is a `MetricFailure`: the `MetricGroup`, the dotted `member`
 value and the `bound` it missed. A `MetricRule` is one of `positive`,
 `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`,
 `at-most` or `within`. A value the `finite` rule rejects is not compared by a
-ladder or a bound, so one bad number keeps one diagnostic — a `-Infinity` is
-still both non-finite and negative, which are independent defects.
+ladder or a bound, so a bad number is not blamed on its neighbour; a `NaN` is
+the finite rule's one diagnostic, while a `-Infinity` also fails a sign rule,
+because it is non-finite and negative — independent defects.
 
 #### Colour format
 

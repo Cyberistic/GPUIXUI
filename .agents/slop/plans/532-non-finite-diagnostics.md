@@ -37,7 +37,9 @@ can paint:
 
 The sign rules stay as they are: `-Infinity` is both non-finite and negative,
 and the existing case that asserts both diagnostics is a deliberate statement
-about direction. One value can still be wrong in two independent ways.
+about direction. A `NaN`, which is neither, is the finite rule's diagnostic
+alone; the sign comparison is written as `actual <= 0` / `actual < 0` so it does
+not fire for it.
 
 ## Files
 
@@ -57,6 +59,8 @@ about direction. One value can still be wrong in two independent ways.
      comparing.
    - `atLeast` / `atMost`: add a guard at the top returning `[]` when either
      number is non-finite.
+   - `positive` / `nonNegative`: write the comparison as `actual <= 0` /
+     `actual < 0` so a `NaN` does not fail a sign rule; a `-Infinity` still does.
 2. Update the JSDoc above `ladder` and the bounds: "a value the finite rule
    rejects is not compared by a range rule, so one bad value keeps one
    diagnostic".
@@ -65,6 +69,7 @@ about direction. One value can still be wrong in two independent ways.
    - Add `spacing: { sm: Infinity }` → only `spacing.sm:finite`.
    - Add `dimensions: { drawerWidthSm: Infinity }` →
      only `dimensions.drawerWidthSm:finite`.
+   - Add `spacing: { sm: NaN }` → only `spacing.sm:finite`, not a sign failure.
    - Keep the `-Infinity` case that asserts both `finite` and `non-negative`
      (a sign is an independent defect).
 4. Add the sentence to `docs/tokens.md` beside the `MetricFailure` paragraph.
