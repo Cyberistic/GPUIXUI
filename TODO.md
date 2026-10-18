@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 139/189
+`[x]` `[███████░░░]` 139/190
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -499,6 +499,10 @@ preview changes" does not survive the merge (owner: `docs-site`; plans 420 and
 `[ ]` Cross-team: `docs-site` imports `platformNames` and `isPlatformName` from
 `@gpuixui/tokens` and deletes its local copies in
 `src/platform/platform.ts` (owner: `docs-site`; plan 067)
+`[ ]` Cross-team: `docs-site` calls `themeColorFailures(theme)` beside
+`themeContrastFailures` and `themeMetricFailures` on the Theming page, so the
+copy-and-own path it teaches holds an edited theme to all three checks, and
+`isHexColor` is named for a single stored role (owner: `docs-site`; plan 371)
 `[x]` Expose `textRoles` and guard it against the `Typography` interface
 (plan 059)
 `[x]` Guard every documented colour pair — muted text on plain surfaces, input
