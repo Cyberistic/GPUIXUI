@@ -3,12 +3,16 @@
  *
  * The bugs these guard: the window grew at the edges so the control changed
  * width as the user paged (page 1 of 10 rendering two numbers, page 5 rendering
- * three); a crop could omit the current page; and an out-of-range `page` or
- * `pageCount <= 0` produced a list containing pages that do not exist.
+ * three); a crop could omit the current page; an out-of-range `page` or
+ * `pageCount <= 0` produced a list containing pages that do not exist; and an
+ * ellipsis stood for a single hidden page (a 7-page list was windowed even
+ * though all seven numbers fit).
  */
 
 import { describe, expect, it } from "vitest";
+import { pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import { pageWindow, type PageItem } from "./logic.js";
 
@@ -70,20 +74,29 @@ describe("pageWindow", () => {
 
   it("widens the window with siblingCount", () => {
     expect(pageWindow({ page: 5, pageCount: 20, siblingCount: 2 })).toEqual([
-      ...pages(1),
-      gap("start"),
-      ...pages(3, 4, 5, 6, 7),
+      ...pages(1, 2, 3, 4, 5, 6, 7),
       gap("end"),
       ...pages(20),
     ]);
   });
 
-  it("keeps the head inside range when siblingCount is large", () => {
-    const entries = pageWindow({ page: 1, pageCount: 10, siblingCount: 4 });
+  it("renders the whole list when siblingCount covers every page", () => {
+    expect(pageWindow({ page: 1, pageCount: 10, siblingCount: 4 })).toEqual(
+      pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+    );
+    // A wide window near the end must not leave an ellipsis with no page behind
+    // it (the old threshold drew one between pages 1 and 2).
+    expect(pageWindow({ page: 9, pageCount: 10, siblingCount: 4 })).toEqual(
+      pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+    );
+  });
+
+  it("keeps a wide sibling window inside range", () => {
+    const entries = pageWindow({ page: 5, pageCount: 14, siblingCount: 4 });
     expect(entries).toEqual([
-      ...pages(1, 2, 3, 4, 5, 6, 7, 8),
+      ...pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
       gap("end"),
-      ...pages(10),
+      ...pages(14),
     ]);
     expect(entries.some((entry) => entry.kind === "ellipsis")).toBe(true);
   });
@@ -138,5 +151,80 @@ describe("pageWindow", () => {
     expect(numbers).toEqual(Arr.sort(numbers, Order.Number));
     expect(new Set(numbers).size).toBe(numbers.length);
     expect(numbers.every((value) => value >= 1 && value <= 40)).toBe(true);
+  });
+
+  it("renders a page instead of an ellipsis when only one is hidden", () => {
+    expect(pageWindow({ page: 4, pageCount: 7 })).toEqual(
+      pages(1, 2, 3, 4, 5, 6, 7),
+    );
+    expect(pageWindow({ page: 4, pageCount: 8 })).toEqual([
+      ...pages(1, 2, 3, 4, 5),
+      gap("end"),
+      ...pages(8),
+    ]);
+    expect(pageWindow({ page: 3, pageCount: 6, siblingCount: 0 })).toEqual([
+      ...pages(1, 2, 3),
+      gap("end"),
+      ...pages(6),
+    ]);
+    expect(pageWindow({ page: 4, pageCount: 6, siblingCount: 0 })).toEqual([
+      ...pages(1),
+      gap("start"),
+      ...pages(4, 5, 6),
+    ]);
+  });
+
+  it("never hides exactly one page behind an ellipsis", () => {
+    /** The sizes of the runs each ellipsis stands for, in render order. */
+    const hiddenRuns = (
+      entries: ReadonlyArray<PageItem>,
+    ): ReadonlyArray<number> =>
+      Arr.flatMap(entries, (entry, index) => {
+        if (entry.kind !== "ellipsis") return [];
+        const previous = Arr.findLast(
+          Arr.take(entries, index),
+          (candidate): candidate is { kind: "page"; page: number } =>
+            candidate.kind === "page",
+        );
+        const next = Arr.findFirst(
+          Arr.drop(entries, index + 1),
+          (candidate): candidate is { kind: "page"; page: number } =>
+            candidate.kind === "page",
+        );
+        return pipe(
+          previous,
+          Option.match({
+            onNone: () => [],
+            onSome: (before) =>
+              pipe(
+                next,
+                Option.match({
+                  onNone: () => [],
+                  onSome: (after) => [after.page - before.page - 1],
+                }),
+              ),
+          }),
+        );
+      });
+
+    const cases = Arr.flatMap(Arr.range(1, 40), (pageCount) =>
+      Arr.flatMap(Arr.range(0, 3), (siblingCount) =>
+        Arr.map(Arr.range(1, pageCount), (page) =>
+          pageWindow({ page, pageCount, siblingCount }),
+        ),
+      ),
+    );
+
+    expect(
+      Arr.every(cases, (entries) =>
+        Arr.every(hiddenRuns(entries), (size) => size >= 2),
+      ),
+    ).toBe(true);
+    // Without this, a window that never drew an ellipsis would also pass.
+    expect(
+      Arr.some(cases, (entries) =>
+        Arr.some(entries, (entry) => entry.kind === "ellipsis"),
+      ),
+    ).toBe(true);
   });
 });

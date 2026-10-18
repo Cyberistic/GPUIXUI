@@ -338,6 +338,13 @@ retired once both branches are one
       focus ring while the tab stop moved off it. Focus now hands over to the
       tab stop without selecting; 5 native cases (Tabs 22, behaviour 647), four
       mutation proofs; docs, `COMPONENTS.md` and the inventory synced
+    - [x] Pagination never hides a single page behind an ellipsis — plan 513.
+      Measured: a 7-page list was windowed although all seven numbers fit, and
+      a gap of one page rendered `…` instead of the page (also a zero-page
+      ellipsis with a wide `siblingCount`). The threshold is the maximum window
+      (`2 * siblingCount + 5`) and a single-page start gap is promoted; 15
+      window tests + 13 native tests (behaviour 648), three mutation proofs;
+      docs, `COMPONENTS.md` and the inventory synced
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

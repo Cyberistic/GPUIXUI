@@ -60,7 +60,7 @@ export const pageWindow = ({
   const right = Math.min(current + siblings, pageCount);
 
   if (!showEdges) return pages(left, right);
-  if (siblings + 5 >= pageCount) return pages(1, pageCount);
+  if (2 * siblings + 5 >= pageCount) return pages(1, pageCount);
 
   const showStart = left > 2;
   const showEnd = right < pageCount - 2;
@@ -68,7 +68,9 @@ export const pageWindow = ({
   if (showStart && showEnd) {
     return [
       page(1),
-      ellipsis("start"),
+      // A gap that stands for one page is not worth an ellipsis: render the
+      // page so the user need not page through a marker to reach a neighbour.
+      left === 3 ? page(2) : ellipsis("start"),
       ...pages(left, right),
       ellipsis("end"),
       page(pageCount),

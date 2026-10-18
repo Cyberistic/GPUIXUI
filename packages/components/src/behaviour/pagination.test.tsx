@@ -4,8 +4,9 @@
  * The bugs these guard: previous/next staying pressable at the first and last
  * page; `onPageChange` reporting an index instead of the page number, or firing
  * on the current page; an ellipsis that was a focus stop; a current page that
- * was not painted with the primary role; and a root that ignored the parts the
- * caller composed.
+ * was not painted with the primary role; a root that ignored the parts the
+ * caller composed; and a single hidden page reached through an ellipsis instead
+ * of being rendered.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -125,6 +126,33 @@ describe("Pagination", () => {
     expect(ellipsis?.customProps?.tabIndex).toBeUndefined();
 
     pager.unmount();
+  });
+
+  it("renders a single hidden page instead of an ellipsis", () => {
+    const seven = renderComponent(
+      <Pager page={4} pageCount={7} onPageChange={vi.fn()} />,
+    );
+
+    // All seven numbers fit, so there is no gap to mark.
+    expect(seven.renderer.findByText("…")).toBeUndefined();
+    expect(seven.renderer.findByText("2")).toBeDefined();
+    expect(seven.renderer.getAllText()).toContain("7");
+
+    seven.unmount();
+
+    const eight = renderComponent(
+      <Pager page={4} pageCount={8} onPageChange={vi.fn()} />,
+    );
+
+    // Page 2 is the only page the start gap would hide, so it is drawn; the end
+    // gap still hides pages 6 and 7 behind one ellipsis.
+    expect(eight.renderer.findByText("2")).toBeDefined();
+    expect(
+      eight.renderer.getAllText().filter((text) => text === "…"),
+    ).toHaveLength(1);
+    expect(eight.renderer.getAllText()).toContain("8");
+
+    eight.unmount();
   });
 
   it("activates a page from Enter on the focused button", () => {
