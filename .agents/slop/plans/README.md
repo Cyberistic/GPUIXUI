@@ -253,6 +253,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | done |
 | [557](./557-native-field-caret-mark.md) | The native field's caret is ink, not a fill | F | 082, 332, 337, 511, 527, 546 | done |
 | [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
+| [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2791,6 +2792,22 @@ both directions: with the parser reverted three cases fail, with a permissive
 parser the partial-alpha guard and the contrast suite's `NaN` case fail. No
 colour, pair, floor, metric, theme, platform style or recipe value moves; 139
 files / 5,713 tests pass.
+
+Plan `559` closes the last value a copied platform style cannot own. Plan `389`
+gave `structure` the type scale, spacing, borders, icon/avatar sizes and
+component dimensions, so the copy-and-own file owned the whole shape — but
+`structure.motion` was typed `Partial<Omit<Motion, "ease">>`, and its own JSDoc
+said "easings are shared". `extendTheme` already merges a partial `ease` phase
+by phase, so the one path the reference teaches for owning a look was the one
+that rejected a platform's curve; a style naming one failed `check-types`
+(TS2353) although `platformOverrides` forwards `structure.motion` unchanged.
+`MotionOverrides` is the one shape now used by `ThemeOverrides` and
+`PlatformStyleStructure`, the authored example names a timing and an easing, and
+`platform-motion.test.ts` proves the phase merge, the inherited phases, the
+curve contract on a copied style, the shipped styles' unchanged easings and the
+example end to end. No shipped value moves; only the capability and its
+documentation.
+
 
 ## How to use a plan
 
