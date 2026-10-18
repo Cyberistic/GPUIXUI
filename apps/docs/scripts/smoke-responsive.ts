@@ -4,7 +4,7 @@
  *
  * MISSION.md lists responsive layout as part of showcase quality, but every
  * other check reads the source tree or a ≥640 px viewport. This check gives the
- * site a phone: a 390×844 layout viewport, six page shapes, and one real
+ * site a phone: a 390×844 layout viewport, every sitemap page, and one real
  * interaction.
  *
  * - No page scrolls sideways: `documentElement.scrollWidth` stays at the
@@ -42,16 +42,6 @@ interface Options {
 
 const usage =
   "usage: nub scripts/smoke-responsive.ts [--base-url <url>] [--chrome <path>] [--no-build]";
-
-/** One page per layout shape: landing, prose, index, tables, sources, tokens. */
-const targets: ReadonlyArray<string> = [
-  "/",
-  "/docs",
-  "/docs/components",
-  "/docs/components/button",
-  "/docs/api-reference",
-  "/docs/theming",
-];
 
 const navPath = "/docs/components/button";
 const navTarget = "/docs/installation";
@@ -92,6 +82,35 @@ const parseOptions = (argv: ReadonlyArray<string>): Options => {
   }
 
   return { baseUrl, build, chrome };
+};
+
+/**
+ * Every page, derived from the sitemap, so a new page joins the check by
+ * existing rather than by a remembered list (the same rule as `smoke:browser`).
+ */
+const sitemapPaths = async (
+  baseUrl: string,
+): Promise<ReadonlyArray<string>> => {
+  const response = await fetch(`${baseUrl}/sitemap.xml`, {
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!response.ok) {
+    throw new SetupError(`/sitemap.xml answered ${response.status}`);
+  }
+  const body = await response.text();
+  const paths = [...body.matchAll(/<loc>([^<]+)<\/loc>/g)].flatMap((match) => {
+    const loc = match[1];
+    if (loc === undefined) return [];
+    try {
+      return [new URL(loc).pathname];
+    } catch {
+      return [];
+    }
+  });
+  if (paths.length === 0) {
+    throw new SetupError("/sitemap.xml has no <loc> entries");
+  }
+  return paths;
 };
 
 interface Geometry {
@@ -242,14 +261,13 @@ const main = async (): Promise<number> => {
     await session.setViewport(WIDTH, HEIGHT);
     console.log(`smoke: viewport ${WIDTH}x${HEIGHT}`);
 
+    const paths = await sitemapPaths(baseUrl);
     const problems: Array<{ where: string; what: string }> = [];
-    for (const path of targets) {
+    for (const path of paths) {
       const failures = await checkWidth(session, baseUrl, path);
       problems.push(...failures.map((what) => ({ where: path, what })));
-      if (failures.length === 0) {
-        console.log(`smoke: ${path} responsive checked`);
-      }
     }
+    console.log(`smoke: ${paths.length} pages responsive checked`);
 
     const navFailures = await checkNavigation(session, baseUrl);
     problems.push(...navFailures.map((what) => ({ where: navPath, what })));

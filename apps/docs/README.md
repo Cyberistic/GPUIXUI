@@ -199,10 +199,9 @@ or the server was missing — never a pass.
 ## Responsive layout
 
 `smoke:responsive` gives the site a **390×844** layout viewport through CDP
-(`Emulation.setDeviceMetricsOverride`, so the media queries see it) and checks
-six page shapes: the landing page, the introduction, the component index, a
-component page with generated tables and source includes, the API reference and
-Theming. For each it asserts:
+(`Emulation.setDeviceMetricsOverride`, so the media queries see it) and crawls
+**every sitemap page** — landing, prose, the component index, generated tables,
+source includes, token tables and the rest. For each it asserts:
 
 1. `documentElement.scrollWidth` stays at the viewport — the page never scrolls
    sideways;

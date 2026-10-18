@@ -47,18 +47,12 @@ New file `apps/docs/scripts/smoke-responsive.ts`, cloned from
 
 - `WIDTH = 390`, `HEIGHT = 844` — a phone viewport; the number is named once
   and printed.
-- Six targets cover every layout shape in the site:
-
-  | Path | What it adds |
-  | ---- | ------------ |
-  | `/` | the landing layout, not the docs shell |
-  | `/docs` | the introduction page |
-  | `/docs/components` | the index grid |
-  | `/docs/components/button` | generated API tables, source include, previews |
-  | `/docs/api-reference` | the widest generated table set |
-  | `/docs/theming` | token tables and the platform toggle |
-
-- For each target: set the viewport, navigate, wait for hydration
+- **Every sitemap page**, derived from `/sitemap.xml` like `smoke:browser`'s
+  page list, so a new page joins the check by existing. The recon set was one
+  page per layout shape — `/`, `/docs`, `/docs/components`,
+  `/docs/components/button`, `/docs/api-reference`, `/docs/theming` — and the
+  shipped check covers those plus the other 84.
+- For each page: set the viewport, navigate, wait for hydration
   (`document.documentElement?.dataset.platform !== undefined` and
   `location.pathname` equal to the target). Then read one snapshot:
 
@@ -83,7 +77,8 @@ New file `apps/docs/scripts/smoke-responsive.ts`, cloned from
   a visible `a[href="/docs/installation"]` exists, clicks it, and waits for
   `location.pathname === "/docs/installation"`. A missing button, an overlay
   that never opens and a link that does not navigate each fail by name.
-- Prints `smoke: <path> responsive checked`, then `smoke: ok` when clean.
+- Prints `smoke: <n> pages responsive checked` and
+  `smoke: mobile navigation checked`, then `smoke: ok` when clean.
 
 ### 2.3 The layout fix the check found
 
@@ -188,24 +183,19 @@ page's sentence still clipped. The fixed rule is the general one in §2.3
 (`:where(:not(pre) > code) { overflow-wrap: anywhere }`), after which the
 Buttons page reports `responsive checked`.
 
-**A full sweep.** A one-off pass over the **90 sitemap pages** at 390×844 after
-the fix reported `checked 90 pages; 0 clip`, so the six-page sample stands for a
-clean site rather than a clean sample.
-
-**Baseline** (`nub apps/docs/scripts/smoke-responsive.ts --no-build`) — exit
-`0`:
+**A full sweep.** The shipped check crawls every sitemap page, not a sample: the
+page list comes from `/sitemap.xml` the way `smoke:browser`'s list comes from
+the MDX tree. After the fix it reports:
 
 ```
 smoke: viewport 390x844
-smoke: / responsive checked
-smoke: /docs responsive checked
-smoke: /docs/components responsive checked
-smoke: /docs/components/button responsive checked
-smoke: /docs/api-reference responsive checked
-smoke: /docs/theming responsive checked
+smoke: 90 pages responsive checked
 smoke: mobile navigation checked
 smoke: ok
 ```
+
+Before it was generalised, a one-off pass over the same 90 pages at 390×844
+reported `checked 90 pages; 0 clip` — the fix is not a sample-specific win.
 
 **Direction 2 — the mobile nav is load-bearing.** At a 1200×900 viewport the
 same script exits `1`:
