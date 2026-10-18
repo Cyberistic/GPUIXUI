@@ -224,6 +224,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [527](./527-field-text-row-washes.md) | The field's typed text and hint on the row washes | F | 071, 081, 087, 306, 315, 317, 319, 392, 500, 506 | done |
 | [528](./528-link-through-text-selection.md) | The link through a text selection | F | 071, 081, 082, 087, 314, 346, 351, 362, 366, 377, 391, 500, 506, 510, 525, 527 | done |
 | [529](./529-shareable-theme-choice.md) | A shareable theme choice: the URL boundary | F | 067, 068, 096, 305, 311, 380, 383, 387 | done |
+| [530](./530-drawer-chat-carousel-dimensions.md) | The fixed surface metrics plan 353 left in consumers | B | 353, 358, 368, 384, 389, 396 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2392,6 +2393,18 @@ supplies its fallback preset. `themeChoiceKeys` is the key order and the clear
 list, so a link cannot keep an axis the new choice replaced. The full matrix
 round-trips through a real URL, no colour, pair, floor, metric, platform style,
 recipe or theme moves, and `contrastPairs` stays **404**.
+
+Plan `530` finishes the surface half of plan `353`. Six fixed surface metrics
+still live in `packages/components`: the drawer's 320/400/560 width and
+240/320/420 height maps (`drawer.tsx:57-67`), the 160px message viewport
+(`chat.tsx:168`) and the carousel's 8px idle / 18px active marks
+(`carousel.tsx:399-400`). None can be changed through a theme, a copied
+`PlatformStyle` cannot own them, and the numeric contract cannot report a broken
+one. The nine fields join `theme.dimensions` at today's pixels; the drawer trios
+are increasing ladders, the chat viewport is held to one `density.rowHeight`, the
+active carousel mark to its idle dot, and a runnable example owns the merge. The
+three consumer migrations are recorded cross-team. No colour, pair, floor or
+existing metric moves.
 
 ## How to use a plan
 
