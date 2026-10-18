@@ -491,6 +491,14 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `Breadcrumb`, `HotkeyRecorder`, the `InlineEdit` display, the `TagInput`
     chip); plan 334 — 9 native tests; the hotkey clear control now claims its
     key, so a keyboard clear no longer starts a recording
+  - [x] Accessible names for every role-bearing part — plan 391: 0.10.0 reports
+    no name from a control's text child, so `internal/name.ts` derives
+    `aria-label` from plain-text children (authored labels win) on `Button`,
+    `TabsTrigger`, `AccordionTrigger`, `CollapsibleTrigger` and
+    `BreadcrumbLink`; a new all-example native contract found 43 unnamed
+    interactive nodes across 22 examples and now finds none. 9 pure + 1 native
+    case (behaviour 596), both-direction proof (30 failures with Button's name
+    removed); docs and inventory synced
   - [x] Docs verification truth: every component docs page states its real
     native-test count in one canonical line, checked for all 41 pages rather
     than only those that happened to adopt the sentence — plan 335; 14 pages

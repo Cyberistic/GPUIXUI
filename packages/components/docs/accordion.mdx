@@ -124,6 +124,8 @@ has no `transform` — a rotation is not available.
 ## Accessibility and limitations
 
 - `aria-expanded` on each trigger; the trigger names the section.
+- A plain-text header names itself (`aria-label`), because 0.10.0 reports no
+  name from contents; a header composed from elements passes `aria-label`.
 - **No `aria-controls`** in 0.10.0; the relationship is positional.
 - The indicator is decorative: `aria-expanded` on the trigger carries the state.
 - Arrow keys move focus between enabled headers; they do not activate them.

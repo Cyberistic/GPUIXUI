@@ -150,6 +150,15 @@ Do not invent `aria-checked`, `aria-valuenow`, `aria-labelledby`,
 does not accept them. Record the gap as a limitation and use the strongest
 supported alternative (`aria-selected`, `aria-valuetext`, a required `label`).
 
+**A part that draws an interactive role names itself.** 0.10.0 reports no
+accessible name for a `div role="button"` (or tab, link, …) whose label is only a
+text child — measured for menu rows in plan `387` and for every example in plan
+`391`. A part therefore supplies `aria-label` from its plain-text children, and
+the caller's authored `aria-label` always wins. `internal/name.ts` owns the rule;
+`src/behaviour/accessibility.test.tsx` mounts every example and fails on an
+unnamed interactive node. A label composed from elements is not plain text, so
+that caller passes `aria-label` itself.
+
 ## 6. Translation table
 
 | `base-gpui` (Rust) | Our React |
