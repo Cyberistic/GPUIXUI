@@ -184,6 +184,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [387](./387-shipped-theme-enumeration.md) | The shipped-theme enumeration the package owns | F | 063, 305, 311, 380, 383 | done |
 | [388](./388-shipped-list-migration.md) | Every "every shipped set" suite enumerates the one shipped set | F | 387 | done |
 | [389](./389-platform-style-numeric-groups.md) | A platform style carries every numeric scale | B | 051, 063, 311, 321, 353, 358 | done |
+| [390](./390-elevation-ladder.md) | The elevation ladder | F | 085, 358, 368, 369 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1724,6 +1725,21 @@ Every shipped style omits them, so no theme, platform variant, recipe, colour,
 pair, floor or shipped metric moves; `platform-extension.example.ts` is the
 copyable file and `platform-extension.test.ts` proves each group applies, omitted
 groups inherit and an explicit `undefined` is ignored.
+
+390 closes the one named scale plan 358's ladder list left out: elevation. The
+design system publishes `sm` → `md` → `lg` as increasing heights (resting cards,
+menus, dialogs), and `elevationShadow` paints a level's first entry, but
+`themeMetricFailures` compared only the range of a single shadow — four finite
+geometry fields, a non-negative blur and an alpha inside `0…1`. A probe on the
+shipped light theme returned `[]` for setting the largest level to the resting
+card's feather and for a `lg` with a 0px feather, so a copied theme could make
+"large elevation" the closest to the surface while every check stayed green. The
+rule compares the painted entry's `blurRadius` across `sm`, `md` and `lg` and
+holds it non-decreasing; opacity is deliberately not a step, because a fainter
+large shadow and a flat theme are designs. Every shipped identity theme, platform
+variant and recipe is monotone in the feather (identity 2 → 12 → 40 light,
+2 → 24 → 56 dark; the three platform styles and both recipes likewise), so no
+token value, colour, pair, floor or metric moves.
 
 ### Reference adoption (block `200–299`)
 
