@@ -844,9 +844,11 @@ declares and `themeContrastFailures` returns `[]` for every shipped style
 (plan 373). A same-level base keeps its own colours, edits included, and
 `applyPlatformStyle(highBase, style)` therefore keeps the AAA palette and the
 `high` claim. A shape-only style changes no colour, so it keeps the base's level.
-A colour key set to `undefined` is not an override either: the role inherits and
-the level stays with the base (plan 323). The result's name always names the
-palette it carries, because a preview prints it. Re-applying the style a theme
+A colour key set to `undefined` is not an override either: it inherits from the
+palette the request resolved — the base when the style contributes no colour,
+the requested level's palette otherwise (plans 323 and 551). The result's name
+always names the palette it carries, because a preview prints it. Re-applying
+the style a theme
 already ends with is a no-op on every field, the name included (plan 545),
 while a different style appends its own label because the palette keeps the
 roles the first style did not name. A runnable example lives in

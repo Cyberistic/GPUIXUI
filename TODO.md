@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 215/281
+`[x]` `[████████░░]` 216/282
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1768,6 +1768,13 @@ while every focus ring painted a sub-pixel spread thinner than a border;
 `strong` is now at least `thin` (equality stays a design), every shipped set
 already passes, so no value moves, and the catalogue, design system, README and
 ledger state the rule (plan 550)
+
+`[x]` Make an `undefined` platform colour inherit the palette it asked for — a
+copied style with one defined colour and one `undefined` colour applied to an
+AAA base at `"default"` spread the `undefined` key over the default palette and
+then let `extendTheme` fall back to the AAA base, so the result mixed two primary
+families and `themeFailures` reported a direction failure; the palette merge now
+drops the key before the base sees it (plan 551)
 
 ## Phase C — Tier 1–2 components
 

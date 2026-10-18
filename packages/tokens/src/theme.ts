@@ -545,13 +545,15 @@ const platformOverrides = (
           )
         : style.elevation[base.mode],
     // AAA floors win over a style's colours, which are designed at the default
-    // level. A same-level base keeps its own palette, edits included.
+    // level. A same-level base keeps its own palette, edits included. An
+    // undefined colour is unnamed, so it inherits from the requested palette,
+    // never from the AAA base the request is leaving (plan 551).
     colors:
       level === "high"
         ? palette === base
           ? undefined
           : palette.colors
-        : { ...palette.colors, ...styleColors },
+        : mergeDefined(palette.colors, styleColors),
     contrast: palette === base ? undefined : level,
   };
 };

@@ -713,7 +713,9 @@ platform still contributes its geometry and the AAA `shadow` tint keeps the
 opacity designed against it. A `"default"` request builds the default palette
 when the style contributes colours, taking the roles it does not name from the
 default-level identity of the same mode, so the result is a whole palette rather
-than half of one (plan `373`). Omitting the argument, or naming the level the
+than half of one (plan `373`). A role the style sets to `undefined` is unnamed
+too: it inherits from that palette, never from the AAA base the request is
+leaving (plan `551`). Omitting the argument, or naming the level the
 base already declares, keeps the base's palette: a consumer's edits and a style's
 unnamed roles survive, and the result keeps the base's name. The name always
 follows the palette — a rebased palette brings the identity's name, because the
