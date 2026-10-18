@@ -16,6 +16,7 @@ import {
 import { createContext, useContext, useState } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -106,10 +107,12 @@ export const CollapsibleTrigger = ({
   onBlur,
   autoFocus = false,
   style,
+  children,
   ...rest
 }: CollapsibleTriggerProps) => {
   const theme = useTheme();
   const { open, setOpen } = useCollapsibleContext();
+  const name = controlName(rest["aria-label"], children);
   const [focused, setFocused] = useState(autoFocus);
   const state: CollapsibleTriggerState = {
     open,
@@ -124,6 +127,7 @@ export const CollapsibleTrigger = ({
       role="button"
       aria-expanded={open}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       autoFocus={autoFocus}
       tabIndex={0}
       onClick={(event) => {
@@ -160,7 +164,9 @@ export const CollapsibleTrigger = ({
         },
         resolveStyle(style, state),
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 

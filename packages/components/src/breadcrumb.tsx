@@ -22,6 +22,7 @@ import {
 } from "react";
 import { collapse, type Crumb } from "./breadcrumb/logic.js";
 import { activationHandlers } from "./internal/activate.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -231,19 +232,26 @@ export const BreadcrumbLink = ({
   onBlur,
   autoFocus = false,
   style,
+  children,
   ...rest
 }: BreadcrumbLinkProps) => {
   const theme = useTheme();
   const [focused, setFocused] = useState(autoFocus);
+  const name = controlName(rest["aria-label"], children);
 
   if (current) {
-    return <BreadcrumbPage {...rest} style={style} />;
+    return (
+      <BreadcrumbPage {...rest} style={style}>
+        {children}
+      </BreadcrumbPage>
+    );
   }
 
   return (
     <div
       role="link"
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       autoFocus={autoFocus}
       tabIndex={0}
       onClick={(event) => {
@@ -272,7 +280,9 @@ export const BreadcrumbLink = ({
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 

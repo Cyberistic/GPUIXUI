@@ -39,6 +39,7 @@ import {
   type CollectionItem,
 } from "./internal/collection.js";
 import { useControllableState } from "./internal/controllable.js";
+import { controlName } from "./internal/name.js";
 import {
   isDown,
   isFirst,
@@ -431,10 +432,12 @@ export const TabsTrigger = ({
   onFocus,
   onBlur,
   style,
+  children,
   ref,
   ...rest
 }: TabsTriggerProps) => {
   const theme = useTheme();
+  const name = controlName(rest["aria-label"], children);
   const {
     selected,
     active,
@@ -480,6 +483,7 @@ export const TabsTrigger = ({
       role="tab"
       aria-selected={isSelected}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : isTabbable ? 0 : -1}
@@ -538,7 +542,9 @@ export const TabsTrigger = ({
         },
         resolveStyle(style, state),
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 

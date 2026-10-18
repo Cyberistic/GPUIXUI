@@ -36,6 +36,7 @@ import {
   type AccordionState,
 } from "./accordion/logic.js";
 import { activationHandlers } from "./internal/activate.js";
+import { controlName } from "./internal/name.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -396,6 +397,7 @@ export const AccordionTrigger = ({
   const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
     useAccordionContext();
   const { value, disabled } = useAccordionItemContext();
+  const name = controlName(rest["aria-label"], children);
   const [focused, setFocused] = useState(autoFocus && !disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
@@ -445,6 +447,7 @@ export const AccordionTrigger = ({
       role="button"
       aria-expanded={open}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       ref={setElement}
       autoFocus={autoFocus && !disabled}
       tabIndex={disabled ? -1 : 0}

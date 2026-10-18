@@ -20,6 +20,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { useState } from "react";
 import { activationHandlers } from "./activate.js";
+import { controlName } from "./name.js";
 import {
   alpha,
   controlHeight,
@@ -147,16 +148,19 @@ export const Button = ({
   onFocus,
   onBlur,
   style,
+  children,
   ...rest
 }: ButtonProps) => {
   const theme = useTheme();
   const [focused, setFocused] = useState(autoFocus && !disabled);
+  const name = controlName(rest["aria-label"], children);
 
   return (
     <div
       role="button"
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
@@ -175,7 +179,9 @@ export const Button = ({
         },
         style,
       )}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
