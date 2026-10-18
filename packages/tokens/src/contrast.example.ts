@@ -51,3 +51,17 @@ export const quietRingTheme = extendTheme(getTheme("light"), {
 
 /** Every pair the quiet ring misses, the selected row included. */
 export const quietRingFailures = themeContrastFailures(quietRingTheme);
+
+/**
+ * A theme whose progress segment is its own track: `primary` is the quiet
+ * panel's value, so a filled bar, a rating star or a slider's rail has no shape
+ * while every interactive-fill pair still passes at 1.05:1. Plan 332's `mark`
+ * pairs are what catch it.
+ */
+export const quietMarkTheme = extendTheme(getTheme("light"), {
+  name: "Quiet mark",
+  colors: { primary: "#FBFCFD" },
+});
+
+/** Every mark pair the quiet theme misses — the card, panel, popover and field. */
+export const quietMarkFailures = themeContrastFailures(quietMarkTheme);

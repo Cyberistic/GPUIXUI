@@ -15,6 +15,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { quietMarkFailures } from "./contrast.example.js";
 import {
   colorRoles,
   contrastFloors,
@@ -137,6 +138,15 @@ describe("the mark contract", () => {
       pairClass: "mark",
       floor: contrastFloors.default.mark,
     });
+  });
+
+  it("is the check the executed quiet-mark example demonstrates", () => {
+    expect(
+      quietMarkFailures
+        .filter(({ pairClass }) => pairClass === "mark")
+        .map(({ background }) => background)
+        .toSorted(),
+    ).toEqual(["background", "card", "input", "muted", "popover"]);
   });
 
   it("reports a success segment that vanishes into its track", () => {
