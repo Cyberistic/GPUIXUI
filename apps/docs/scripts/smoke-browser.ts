@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Hydrated-preview smoke check (plan 446).
+ * Hydrated-preview smoke check (plans 446, 495).
  *
  * `smoke:build` reads the server HTML; this check lets a real browser hydrate
  * the production build and reads the **live** DOM. It is the guard for the bugs
@@ -8,39 +8,34 @@
  * `?platform=` link keeping the default platform. Both are invisible to every
  * Node test because they depend on hydration order.
  *
+ * Every component page that carries a labelled preview is read in **both**
+ * schemes (plan 495): the surface reads the mode and platform the providers
+ * publish, so one page outside the providers or one surface that ignores the
+ * published state must fail here by name. The page list comes from the MDX
+ * tree; `component-preview.test.tsx` keeps it equal to the preview registry.
+ *
  *   nub scripts/smoke-browser.ts [--base-url <url>] [--chrome <path>] [--no-build]
  *
  * Exit `0` pass, `1` the site is wrong, `2` the check could not run (build,
  * server or Chrome) — "unverified" is never a pass.
  */
 
-import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   darkTheme,
   lightTheme,
   platformTheme,
   platformTypes,
   themes,
+  type Theme,
 } from "@gpuixui/tokens";
+import { findChrome, startSession, type Session } from "./chrome-session.ts";
+import { previewPageSlugs } from "./preview-pages.ts";
 import {
   SetupError,
   startDocsPreview,
   type PreviewServer,
 } from "./preview-server.ts";
-
-const CHROME_TIMEOUT_MS = 60_000;
-const VIRTUAL_TIME_MS = 10_000;
-
-const CHROME_CANDIDATES = [
-  process.env.CHROME_PATH,
-  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  "/usr/bin/google-chrome",
-  "/usr/bin/chromium",
-  "/usr/bin/chromium-browser",
-].flatMap((candidate) => (candidate === undefined ? [] : [candidate]));
 
 interface Options {
   readonly baseUrl: string | null;
@@ -48,10 +43,18 @@ interface Options {
   readonly chrome: string | null;
 }
 
+/** What the hydrated document says about itself and its preview surfaces. */
+interface DomState {
+  readonly className: string;
+  readonly platform: string;
+  readonly surfaces: readonly string[];
+  readonly note: string;
+}
+
 interface Check {
   readonly path: string;
   readonly dark: boolean;
-  readonly problems: (dom: string) => ReadonlyArray<string>;
+  readonly problems: (dom: DomState) => ReadonlyArray<string>;
 }
 
 const usage =
@@ -95,76 +98,78 @@ const parseOptions = (argv: ReadonlyArray<string>): Options => {
   return { baseUrl, build, chrome };
 };
 
-const findChrome = (requested: string | null): string => {
-  const candidates = requested === null ? CHROME_CANDIDATES : [requested];
-  const found = candidates.find((candidate) => existsSync(candidate));
-  if (found !== undefined) return found;
-  throw new SetupError(
-    `no Chrome found (tried ${candidates.join(", ")}); set CHROME_PATH or pass --chrome`,
-  );
-};
+/** Every value of a `--preview-*` variable in one surface's style attribute. */
+const previewVars = (style: string, name: string): ReadonlyArray<string> =>
+  [
+    ...style.matchAll(new RegExp(`--preview-${name}\\s*:\\s*([^;"]+)`, "g")),
+  ].flatMap((match) => {
+    const value = match[1]?.trim();
+    return value === undefined ? [] : [value];
+  });
 
-/** Every capture of a `--preview-*` variable — a page may show several. */
-const previewVars = (dom: string, name: string): ReadonlyArray<string> =>
-  [...dom.matchAll(new RegExp(`--preview-${name}:\\s*([^;"]+)`, "g"))].flatMap(
-    (match) => {
-      const value = match[1]?.trim();
-      return value === undefined ? [] : [value];
-    },
-  );
-
-const htmlClass = (dom: string): string =>
-  dom.match(/<html[^>]*\bclass="([^"]*)"/)?.[1] ?? "";
-
-const documentPlatform = (dom: string): string =>
-  dom.match(/<html[^>]*\bdata-platform="([^"]*)"/)?.[1] ?? "";
-
-/** One problem string per surface that disagrees; empty means the page agrees. */
+/** One problem string per surface that disagrees; empty means every surface agrees. */
 const everySurface = (
-  dom: string,
+  dom: DomState,
   name: string,
   expected: string,
 ): ReadonlyArray<string> => {
-  const values = previewVars(dom, name);
-  if (values.length === 0)
+  if (dom.surfaces.length === 0)
     return [`no preview surface carries --preview-${name}`];
-  return values
-    .filter((value) => value !== expected)
-    .map((value) => `--preview-${name} is ${value}, expected ${expected}`);
+  return dom.surfaces.flatMap((style, index) => {
+    const value = previewVars(style, name)[0];
+    return value === expected
+      ? []
+      : [
+          `--preview-${name} is ${value ?? "absent"}, expected ${expected} (surface ${index + 1} of ${dom.surfaces.length})`,
+        ];
+  });
 };
 
-const checks: ReadonlyArray<Check> = [
-  {
-    path: "/docs/components/button",
-    dark: true,
-    problems: (dom) => [
-      ...(htmlClass(dom).includes("dark")
-        ? []
-        : [`<html class="${htmlClass(dom)}"> is not dark`]),
-      ...everySurface(dom, "color-background", darkTheme.colors.background),
-    ],
-  },
-  {
-    path: "/docs/components/button",
-    dark: false,
-    problems: (dom) => [
-      ...(htmlClass(dom).includes("light")
-        ? []
-        : [`<html class="${htmlClass(dom)}"> is not light`]),
-      ...everySurface(dom, "color-background", lightTheme.colors.background),
-    ],
-  },
+const modeProblems = (dom: DomState, dark: boolean): ReadonlyArray<string> =>
+  dom.className.split(/\s+/).includes(dark ? "dark" : "light")
+    ? []
+    : [`<html class="${dom.className}"> is not ${dark ? "dark" : "light"}`];
+
+const platformProblems = (
+  dom: DomState,
+  platform: string,
+): ReadonlyArray<string> =>
+  dom.platform === platform
+    ? []
+    : [`data-platform is "${dom.platform}", expected ${platform}`];
+
+/**
+ * Every preview page owes both schemes: its surfaces read the mode the
+ * providers publish, so a dark page must paint the dark palette on all of them.
+ */
+const previewChecks = (slugs: ReadonlyArray<string>): ReadonlyArray<Check> =>
+  slugs.flatMap((slug) =>
+    [true, false].map((dark): Check => {
+      const theme: Theme = dark ? darkTheme : lightTheme;
+      return {
+        path: `/docs/components/${slug}`,
+        dark,
+        problems: (dom) => [
+          ...modeProblems(dom, dark),
+          ...everySurface(dom, "color-background", theme.colors.background),
+        ],
+      };
+    }),
+  );
+
+const darkPalette = themes.dark;
+
+/** The three pages that prove the platform override reaches every surface. */
+const platformChecks: ReadonlyArray<Check> = [
   {
     path: "/docs/components/button?platform=win32",
     dark: true,
     problems: (dom) => [
-      ...(documentPlatform(dom) === "win32"
-        ? []
-        : [`data-platform is "${documentPlatform(dom)}", expected win32`]),
+      ...platformProblems(dom, "win32"),
       ...everySurface(
         dom,
         "font-mono",
-        platformTheme(themes.dark, "win32").typography.mono,
+        platformTheme(darkPalette, "win32").typography.mono,
       ),
     ],
   },
@@ -172,13 +177,11 @@ const checks: ReadonlyArray<Check> = [
     path: "/docs/components/badge?platform=win32",
     dark: true,
     problems: (dom) => [
-      ...(documentPlatform(dom) === "win32"
-        ? []
-        : [`data-platform is "${documentPlatform(dom)}", expected win32`]),
+      ...platformProblems(dom, "win32"),
       ...everySurface(
         dom,
         "font-mono",
-        platformTheme(themes.dark, "win32").typography.mono,
+        platformTheme(darkPalette, "win32").typography.mono,
       ),
     ],
   },
@@ -186,76 +189,74 @@ const checks: ReadonlyArray<Check> = [
     path: "/docs/theming?platform=linux",
     dark: true,
     problems: (dom) => [
-      ...(dom.includes(platformTypes.linux.label)
+      ...platformProblems(dom, "linux"),
+      ...(dom.note.includes(platformTypes.linux.label)
         ? []
         : [`the platform note does not name ${platformTypes.linux.label}`]),
       ...everySurface(
         dom,
         "font-mono",
-        platformTheme(themes.dark, "linux").typography.mono,
+        platformTheme(darkPalette, "linux").typography.mono,
       ),
     ],
   },
 ];
 
-const dumpDom = (chrome: string, url: string, dark: boolean): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const profile = mkdtempSync(join(tmpdir(), "gpuixui-chrome-"));
-    const child = spawn(
-      chrome,
-      [
-        "--headless=new",
-        "--disable-gpu",
-        "--no-sandbox",
-        "--hide-scrollbars",
-        `--virtual-time-budget=${VIRTUAL_TIME_MS}`,
-        `--blink-settings=preferredColorScheme=${dark ? 0 : 1}`,
-        `--user-data-dir=${profile}`,
-        "--dump-dom",
-        url,
-      ],
-      { stdio: ["ignore", "pipe", "pipe"] },
-    );
-    let output = "";
-    let errors = "";
-    const clean = (): void => rmSync(profile, { recursive: true, force: true });
-    const timer = setTimeout(() => {
-      child.kill("SIGKILL");
-      clean();
-      reject(
-        new SetupError(
-          `chrome did not finish ${url} in ${CHROME_TIMEOUT_MS}ms`,
-        ),
-      );
-    }, CHROME_TIMEOUT_MS);
+const pageDirectory = fileURLToPath(
+  new URL("../content/docs/components/", import.meta.url),
+);
 
-    child.stdout?.on("data", (chunk: Buffer) => {
-      output += chunk.toString();
-    });
-    child.stderr?.on("data", (chunk: Buffer) => {
-      errors += chunk.toString();
-    });
-    child.once("error", (error) => {
-      clearTimeout(timer);
-      clean();
-      reject(new SetupError(`cannot run ${chrome}: ${error.message}`));
-    });
-    child.once("exit", (code) => {
-      clearTimeout(timer);
-      clean();
-      if (output.includes("<html")) resolve(output);
-      else {
-        reject(
-          new SetupError(
-            `chrome exited ${code} without a DOM for ${url}\n${errors}`,
-          ),
-        );
-      }
-    });
-  });
+const checks: ReadonlyArray<Check> = [
+  ...previewChecks(previewPageSlugs(pageDirectory)),
+  ...platformChecks,
+];
+
+const readDom = async (session: Session): Promise<DomState> =>
+  JSON.parse(
+    String(
+      await session.evaluate(`JSON.stringify({
+        className: document.documentElement.className,
+        platform: document.documentElement.dataset.platform ?? "",
+        surfaces: [...document.querySelectorAll("[data-preview-surface]")].map((element) => element.getAttribute("style") ?? ""),
+        note: document.querySelector("[data-platform-previews] p")?.textContent ?? "",
+      })`),
+    ),
+  ) as DomState;
+
+/**
+ * Navigate, wait until the new document owns the address bar, has hydrated and
+ * its preview surfaces have re-rendered into the emulated scheme, then read it.
+ * Without the address check a check can pass on the **previous** page's
+ * document; without the settled check the previews can still be the server's
+ * light snapshot for a frame after the providers publish the mode.
+ */
+const openPage = async (
+  session: Session,
+  baseUrl: string,
+  check: Check,
+  label: string,
+  theme: Theme,
+): Promise<DomState> => {
+  const url = new URL(check.path, baseUrl);
+  await session.setColorScheme(check.dark ? "dark" : "light");
+  await session.navigate(url.href);
+  const arrived = await session.waitFor(
+    `location.pathname + location.search === ${JSON.stringify(url.pathname + url.search)}`,
+  );
+  if (!arrived) throw new SetupError(`${label} did not load`);
+  const expected = JSON.stringify(theme.colors.background);
+  // A page that never settles is reported by the check below with the value it
+  // actually painted, not by a timeout with no evidence. The attribute is
+  // serialized with or without a space after the colon, so the test parses it.
+  await session.waitFor(
+    `document.documentElement.dataset.platform !== undefined && document.documentElement.classList.contains(${JSON.stringify(check.dark ? "dark" : "light")}) && [...document.querySelectorAll("[data-preview-surface]")].length > 0 && [...document.querySelectorAll("[data-preview-surface]")].every((element) => (element.getAttribute("style") ?? "").match(/--preview-color-background\\s*:\\s*([^;]+)/)?.[1]?.trim() === ${expected})`,
+  );
+  return readDom(session);
+};
 
 const main = async (): Promise<number> => {
   let preview: PreviewServer | null = null;
+  let session: Session | null = null;
   try {
     const options = parseOptions(process.argv.slice(2));
     const chrome = findChrome(options.chrome);
@@ -276,10 +277,18 @@ const main = async (): Promise<number> => {
       throw new SetupError(`${baseUrl} did not answer; nothing was verified`);
     }
 
+    session = await startSession(chrome);
+
     const problems: Array<{ where: string; what: string }> = [];
     for (const check of checks) {
       const label = `${check.path} (${check.dark ? "dark" : "light"})`;
-      const dom = await dumpDom(chrome, baseUrl + check.path, check.dark);
+      const dom = await openPage(
+        session,
+        baseUrl,
+        check,
+        label,
+        check.dark ? darkTheme : lightTheme,
+      );
       const failures = check.problems(dom);
       problems.push(...failures.map((what) => ({ where: label, what })));
       if (failures.length === 0) console.log(`smoke: ${label} checked`);
@@ -298,6 +307,7 @@ const main = async (): Promise<number> => {
     }
     throw error;
   } finally {
+    if (session !== null) await session.stop();
     if (preview !== null) await preview.stop();
   }
 };

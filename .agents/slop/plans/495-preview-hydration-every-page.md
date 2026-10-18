@@ -203,16 +203,39 @@ Run on this host, 2026-10-18.
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter docs test` | <!-- fill --> |
-| `nub run --filter docs smoke:browser` | <!-- fill: pages checked, seconds, exit --> |
-| `nub run --filter docs smoke:preview --no-build` | <!-- fill --> |
-| `nub run check` | <!-- fill --> |
-| `nub run lint` | <!-- fill --> |
-| `nub run test` | <!-- fill --> |
+| `nub run --filter docs test` | **53 files / 349 tests** pass (three new fixture tests; `component-page-docs.test.tsx` also names the new guard, so `/docs/component-pages` gained one row) |
+| `nub run --filter docs smoke:browser --no-build` | exit `0`, **101 checks** (49 preview pages × 2 schemes + 3 platform URLs) in **75 s** |
+| `nub run --filter docs smoke:browser` | exit `0`, 101 checks in **3 m 28 s** including the production build |
+| `nub run --filter docs smoke:preview --no-build` | exit `0` — every scene, every live-scene page, the light-mode Button check and the Windows platform check |
+| `nub run check` | pass (tests quality, lint, format, every workspace type-check) |
+| `nub run lint` | exit `0` |
+| `nub run test` | exit `0` — tokens 197, testing 19, icons 19, playground 11, components 308, primitives 282, docs 349 |
+
+Two measured facts changed the implementation:
+
+1. One `chrome --headless=new --dump-dom` costs **~3.9 s** here (five runs in
+   19.4 s), so 98 URLs by process spawning is about six minutes. One CDP session
+   navigates the same pages in **75 s**.
+2. The hydrated `style` attribute serializes **without** a space after the colon
+   (`--preview-color-background:#F6F8FA`), and the providers publish the mode a
+   frame before the preview subtree re-renders. The settle wait therefore parses
+   the value (`/--preview-color-background\s*:\s*([^;]+)/`) instead of matching a
+   string — a first version with `includes(": #11141A")` timed out on every light
+   page and read the pre-hydration snapshot on dark ones.
 
 Two-direction proofs:
 
-<!-- fill each: forced defect, exact failure line, restore, green -->
+1. `scripts/preview-pages.ts`, the block regex changed to `<PreviewBlock` →
+   `src/preview-pages.test.ts` failed **3/3** (the fixture tests and the real-tree
+   count). Restored → 3/3 pass.
+2. `scripts/smoke-browser.ts`, the dark check forced to `lightTheme` → exit `1`
+   with `FAIL /docs/components/accordion (dark): --preview-color-background is
+   #11141A, expected #F6F8FA (surface 1 of 1)`; 49 dark failures. Restored → exit
+   `0`, 101 checked.
+3. `scripts/smoke-browser.ts`, the Button/Badge platform expectation changed to
+   the default family → exit `1` with `FAIL /docs/components/button?platform=win32
+   (dark): --preview-font-mono is Consolas, expected Menlo (surface 1 of 1)` and
+   the same for Badge. Restored → exit `0`.
 
 ## 9. Acceptance checklist
 

@@ -154,6 +154,16 @@ the URL the docs build for it, so the toggle reaches the real renderer too. Its
 scene is drawn from the whole active `Theme`, so new platform values need no
 docs edit either.
 
+**Every page that carries a labelled preview is checked hydrated, in both
+modes** (plan 495). `smoke:browser` derives the page list from the MDX tree, so a
+new component page joins the gate with its `<ComponentPreview>` block, and opens
+each page in dark and light from one Chrome session. A surface that still shows
+the server's light snapshot after the providers publish the mode fails by page
+and surface name; the three platform URLs (Button, Badge, Theming) prove the
+override reaches the surfaces. The gate reads the settled document — the class,
+`data-platform` and every surface's `--preview-color-background` — because the
+providers publish the mode a frame before the preview subtree re-renders.
+
 A browser approximation may show the mono family a platform style resolves to,
 because a browser can render it. It must not claim to show `.SystemUIFont`: that
 sentinel resolves only inside GPUI, so the UI face of a browser approximation is

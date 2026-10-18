@@ -471,13 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–492)
 
-`[x]` `[██████████]` 95/95
+`[x]` `[██████████]` 96/96
 
-`[~]` **The hydrated-preview smoke covers every preview page (plan 495)** — it
-      checks five URLs today while 49 component pages carry a labelled preview,
-      so a page could paint light previews on a dark page and still pass the
-      release gate; the smoke will visit every preview page in both modes from
-      one Chrome session, with the page list derived from the MDX tree
+`[x]` **The hydrated-preview smoke covers every preview page (plan 495)** — it
+      checked five URLs while 49 component pages carry a labelled preview, so a
+      page could paint light previews on a dark page and still pass the release
+      gate; the smoke now visits every preview page in both modes from one Chrome
+      session (101 checks), with the page list derived from the MDX tree and a
+      shared CDP session in `scripts/chrome-session.ts`
 
 `[x]` **The preview counts stop being remembered (plan 494)** — the document's
       scene total and both documents' gesture total are now digits derived from

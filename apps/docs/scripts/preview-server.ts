@@ -9,6 +9,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { createServer } from "node:net";
 import { fileURLToPath } from "node:url";
+import { SetupError } from "./setup-error.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
 /**
@@ -21,7 +22,7 @@ const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const READY_TIMEOUT_MS = 90_000;
 
 /** The CLI boundary: a setup failure is reported, never mistaken for a pass. */
-export class SetupError extends Error {}
+export { SetupError };
 
 export interface PreviewServer {
   readonly baseUrl: string;

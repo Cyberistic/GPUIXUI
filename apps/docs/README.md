@@ -139,6 +139,13 @@ reads the live DOM; it is the guard for the preview mode and platform bugs
 (plans 444/445): a dark page must paint the dark palette, and a shared
 `?platform=win32` link must paint that platform on every preview surface.
 
+**Every page that carries a labelled preview is read in both modes** (plan 495).
+The page list is derived from the MDX tree (`scripts/preview-pages.ts`), so a new
+component page joins the gate by shipping its `<ComponentPreview>` block; the
+smoke opens each page once in dark and once in light, from one Chrome session,
+and fails naming the page and the surface that disagreed. A surface still
+showing the server's light snapshot after hydration is exactly what this catches.
+
 ```sh
 nub run --filter docs smoke:browser
 # or against a server that is already running:
@@ -149,7 +156,9 @@ It finds Chrome via `CHROME_PATH`, then the macOS app path, `google-chrome`,
 `chromium` or `chromium-browser`; pass `--chrome <path>` to override. Exit `1`
 means the site is wrong (`FAIL <url>: <what>`), exit `2` means the check could
 not run (no build, no server, no Chrome) — never a pass. Expected values come
-from `@gpuixui/tokens`, so the script carries no colour or font literal.
+from `@gpuixui/tokens`, so the script carries no colour or font literal. The
+Chrome session itself (`scripts/chrome-session.ts`) is shared with
+`smoke:preview`, which drives the live GPUix scenes.
 
 
 ## Search
