@@ -1007,7 +1007,9 @@ export const contrastFloors: Readonly<
  * and a disabled label from an enabled one. The last pair is a **state** rather
  * than a hierarchy: the unavailable label of a filled status-panel action must
  * stay a perceivable step below the enabled `softActionForeground` on the fill
- * they share. `selectedForeground` is not a body
+ * they share.
+ *
+ * `selectedForeground` is not a body
  * role: it is the secondary-strength tint an inherited label keeps inside a
  * selected row, whose title is painted with `foreground`. The step is the same
  * 1.05:1 the filled families and the wash ladder publish, applied to roles a
