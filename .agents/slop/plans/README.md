@@ -181,7 +181,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330`–`337` are landed and `338` is the
+tokens-theme (`300–328`) reservations — `330`–`340` are landed and `341` is the
 next free number.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -256,6 +256,7 @@ next free number.
 | [338](./338-data-grid-virtual.md) | Tier 3 feasibility: row virtualization under a horizontal pan, with a frozen column, sort and filter | B → D | 100, 110, 120, 140, 152, 166, 185 | **landed** — `data-grid-virtual`: a wide `<virtual-list>` inside one plain horizontal scroller pans the header and every row within 1 px (`-90`, `-400`); a `deltaX` wheel over a header cell pans while the same wheel over a body cell is swallowed by the list; a frozen column placed from `getListScrollTop` in `onVisibleRange` aligns within 1 px (the payload left the anchor at 0 after a 280 px wheel); sort/filter from anchor 45 must reset with `scrollToItem(0)`; a panned cell hits and takes native focus. 59 checks, suite `68 → 69`, 1789 → 1848 checks, exit `0`; five mutation proofs (§8) |
 | [339](./339-live-restore.md) | The workspace restore in a real window | F | 100, 110, 140, 167, 189, 197 | **landed** — `live-restore` repeats the shipped probe in a real window: a paced divider drag (320 → 400 painted), a tab activation, `scrollToItem(120, 16)`, then save → reset → restore with the anchor exact at `[120,16]`, row 120 painted and row 0 absent; native focus is not restored and the restored list still takes a click. Live `20 → 21`, exit `0`; two mutation proofs (§6) |
 | [340](./340-live-table-sort.md) | Table sort and selection in a real window | F | 100, 110, 130, 189, 197 | **landed** — `live-table-sort` mounts the shipped `table-select-sort` view in a real window: a wheel moves the body (`y ≈ -200`), the sort reorders the row the automation tree points at (`table-first` → `Item 199`), a real click selects `r199`, and the selection survives a re-sort. Live `21 → 22`, exit `0`; three mutation proofs (§6) |
+| [341](./341-grid-layout-contract.md) | The grid and wrapping layout contract | B → D | 100, 110, 120, 140, `layout-flex` | **planned** — measures equal tracks and the fractional remainder, explicit rows filling a fixed height, auto rows following content, the three `gridColumnMin` modes, `justifyContent` centring a content-sized track set, nested grids, an oversized child overflowing instead of resizing a track, a grid growing as a flex child, and the wrapping-flex line stretch (default vs `alignContent: "flex-start"`). Adds the `grid-layout` capability |
 
 Cross-cutting records:
 
