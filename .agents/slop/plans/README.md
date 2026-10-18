@@ -235,6 +235,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [538](./538-tier-surface-counts.md) | The tier paragraph's surface counts | F | 392, 500, 527, 537 | done |
 | [539](./539-disabled-dim-figure.md) | The disabled dim's documented figure | F | 306, 336, 537, 538 | done |
 | [540](./540-colour-role-opacity-form.md) | The alpha form of a colour role | F | 371, 383, 398, 505, 508, 509 | done |
+| [541](./541-applied-level-palette-name-elevation.md) | The applied theme's level, name, palette and elevation agree | F | 073, 301, 323, 373, 505 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2506,6 +2507,23 @@ the total rule), and a value the hex parser cannot read stays the colour check's
 diagnostic. The docs' "third check" ordinal and the README's claim that the
 composition suites run three separate checks are corrected in the same pass. No
 colour, pair, floor or metric moves.
+
+Plan `541` makes the requested contrast level total. `applyPlatformStyle`
+derived four level-dependent outputs from three inputs: the palette came from the
+style's colours, the name from the base, the elevation opacity from the
+`contrast` argument and the declaration from the palette. Three documented calls
+returned a theme that lied about itself: a `"high"` request on a default base
+returned a `default` theme while `themeContrastFailures(result, "high")` reported
+**180** pairs; a `"default"` request on an AAA base returned the default palette
+under the name **"High contrast light · macOS"**; and a shape-only style kept the
+AAA palette (plan 301) while taking the style's default-level alpha, painting
+**`#FFFFFFA6`** — the near-white halo plan 505 forbids — with every check
+returning `[]`. The level now decides the palette, and the palette decides the
+name, the declaration and the elevation's opacity; a same-level base keeps its
+own palette, name and edits, a shape-only style keeps the base's level, and a
+high request always builds the AAA set, which a platform's colours never
+repaint. No shipped name, colour, pair, floor or metric moves.
+
 
 ## How to use a plan
 
