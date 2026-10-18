@@ -1508,6 +1508,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/mention-input.tsx",
       api: ["MentionInputProps", "MentionInputItemProps"],
+      liveScene: "mention-input",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/mention-input.test.tsx",

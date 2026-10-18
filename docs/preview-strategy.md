@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -189,14 +189,15 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **Thirteen scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **Fourteen scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
-  containers, Skeleton, Loading indicators, Drawer and Navigation menu — chosen
+  containers, Skeleton, Loading indicators, Drawer, Navigation menu and
+  Mention input — chosen
   because a still cannot prove the point: an open overlay and its focus entry, a
   grouped palette, real SVG markup tinted by the theme, wheel scrolling, a
   pulse, or an edge panel.
 
-**Seven records remain** with neither a live scene nor an illustration, each for
+**Six records remain** with neither a live scene nor an illustration, each for
 a measured reason and never for convenience. This table is the same set
 `apps/docs/src/components/preview/gaps.ts` declares; `preview-gaps.test.ts`
 fails when the document and the code disagree.
@@ -209,7 +210,6 @@ fails when the document and the code disagree.
 | `context-menu` | The surface paints at an internal point no prop can set. |
 | `date-picker` | The picker owns its open state and exposes no `defaultOpen`. |
 | `hotkey-input` | The field's content is a captured chord, which needs a real key event rather than a static layout. |
-| `mention-input` | The suggestion list exists only while a query is open and no prop opens it. |
 | `toast` | A scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene. |
 | `tooltip` | The wrapper exposes no open state, and a headless check cannot prove a hover-opened tip. |
 

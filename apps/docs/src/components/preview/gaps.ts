@@ -23,10 +23,6 @@ export const NO_LIVE_SCENE: ReadonlyMap<string, string> = new Map([
     "the field's content is a captured chord, which needs a real key event rather than a static layout",
   ],
   [
-    "mention-input",
-    "the suggestion list exists only while a query is open and no prop opens it",
-  ],
-  [
     "toast",
     "a scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene",
   ],

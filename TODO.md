@@ -471,7 +471,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–473)
 
-`[~]` `[██████████]` 74/75
+`[~]` `[██████████]` 75/76
+
+`[x]` **Mention input's suggestion list is a live scene (plan 477)** — the gap reason said no prop opens the list, but the query comes from the field's text: an initial `@tok` mounts the real ranked list, so the page now renders it on GPUix's wasm renderer; the gap set falls from seven to six
 
 `[x]` **Drawer and Navigation menu get live scenes (plan 476)** — both ship the open prop their gap reason denied (`Drawer.defaultOpen`, `NavigationMenu.value`), so the two pages now render the real open surface on GPUix's wasm renderer; the gap set falls from nine to seven and the document, the code and the records agree
 

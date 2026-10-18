@@ -20,6 +20,7 @@ export const LIVE_SCENES = [
   "spinner",
   "drawer",
   "navigation-menu",
+  "mention-input",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -47,6 +48,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   spinner: "Writing 3 files…",
   drawer: "Narrow the result set, then apply.",
   "navigation-menu": "Runtime",
+  "mention-input": "@alice",
 };
 
 /**

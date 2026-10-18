@@ -55,6 +55,11 @@ import {
   NavigationMenuTrigger,
 } from "@gpuixui/components/navigation-menu";
 import {
+  MentionInput,
+  MentionInputItem,
+  MentionInputList,
+} from "@gpuixui/components/mention-input";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -480,6 +485,23 @@ const NavigationMenuScene = (): ReactElement => (
   </Stack>
 );
 
+/**
+ * The suggestion list is derived from the field's text, so an initial `@token`
+ * opens the real ranked list (plan 477). No prop toggles it; the text does.
+ */
+const MentionInputScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Comment composer</Text>
+    <MentionInput label="Comment" defaultValue="@ali">
+      <MentionInputList>
+        <MentionInputItem value="alice" label="@alice" />
+        <MentionInputItem value="alicia" />
+        <MentionInputItem value="bob" />
+      </MentionInputList>
+    </MentionInput>
+  </Stack>
+);
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -495,6 +517,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     spinner: SpinnerScene,
     drawer: DrawerScene,
     "navigation-menu": NavigationMenuScene,
+    "mention-input": MentionInputScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

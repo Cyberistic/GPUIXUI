@@ -37,6 +37,7 @@ const interactionScenes = new Map([
   ["confirm-dialog", "confirm-dialog"],
   ["drawer", "drawer"],
   ["navigation-menu", "navigation-menu"],
+  ["mention-input", "mention-input"],
 ]);
 
 const pagesDirectory = new URL(
