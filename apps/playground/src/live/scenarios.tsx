@@ -13,7 +13,7 @@
  * window under a keyed `Fragment` — the live twin of plan `182`'s isolation.
  */
 import type { ReactNode } from "react";
-import { Duration, Effect } from "effect";
+import { Duration, Effect, Schedule } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
@@ -33,6 +33,9 @@ import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
+import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
+import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
+import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
 import { scenarios } from "../scenarios/index.js";
 
 /** Window size the runner opens. A check compares the shell against it. */
@@ -1554,6 +1557,348 @@ const scroller: LiveScenario = {
     }),
 };
 
+/** Every element the shipped dialogs may focus (the headless view's contract). */
+const TIER2_FOCUSABLE: ReadonlyArray<string> = [
+  "dialog-content",
+  "dialog-field",
+  "dialog-field-2",
+  "dialog-cancel",
+  "dialog-save",
+  "dialog-close",
+  "confirm-cancel",
+  "confirm-accept",
+];
+
+/** Waits up to 3 s for the toast readout to report `count`. */
+const waitForToastCount = (ctx: LiveContext, count: number) =>
+  ctx.host.text("tier2-toast-readout").pipe(
+    Effect.flatMap((text) =>
+      text !== null && Str.includes(`count=${count}`)(text)
+        ? Effect.void
+        : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("100 millis").pipe(Schedule.upTo({ duration: "3 seconds" })),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+const tier2Dialog: LiveScenario = {
+  id: "live-tier2-dialog",
+  title: "Live Tier 2: the shipped Dialog and ConfirmDialog",
+  capability: "tier2",
+  view: tier2DialogScenario.view,
+  ready: "dialog-open",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the dialog starts closed",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "open=false",
+      );
+
+      yield* ctx.host.click("dialog-open");
+      yield* ctx.host.waitFor("dialog-content");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the trigger opens the dialog",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "open=true",
+      );
+      const surface = yield* boxOf(ctx, "dialog-content");
+      yield* ctx.expectNear(
+        "the surface is centred horizontally",
+        surface.x + surface.width / 2,
+        WINDOW.width / 2,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the surface is centred vertically",
+        surface.y + surface.height / 2,
+        WINDOW.height / 2,
+        2,
+      );
+      yield* ctx.expectEqual(
+        "focus entered the surface",
+        yield* focusedOf(ctx),
+        "dialog-content",
+      );
+
+      const walk = yield* walkFocus(ctx, "tab", 5);
+      const inside = Arr.every(
+        Arr.filter(walk, (id): id is string => id !== null),
+        (id) => Arr.contains(TIER2_FOCUSABLE, id),
+      );
+      yield* ctx.expectEqual(
+        "Tab stays inside the dialog in a real window",
+        inside,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "Tab moved the focus",
+        Arr.length(Arr.dedupe(walk)) > 1,
+        true,
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape closed the dialog",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "open=false",
+      );
+      yield* ctx.expectEqual(
+        "focus returned to the trigger",
+        yield* focusedOf(ctx),
+        "dialog-open",
+      );
+
+      yield* ctx.host.click("confirm-open");
+      yield* ctx.host.waitFor("dialog-content");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Cancel holds initial focus in a real window",
+        yield* focusedOf(ctx),
+        "confirm-cancel",
+      );
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Enter on Cancel cancels",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "confirm=false",
+      );
+      yield* ctx.expectContains(
+        "cancelling confirmed nothing",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "confirms=0",
+      );
+
+      yield* ctx.host.click("confirm-open");
+      yield* settle;
+      yield* ctx.host.click("confirm-accept");
+      yield* settle;
+      yield* ctx.expectContains(
+        "confirm ran once",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "confirms=1",
+      );
+      yield* ctx.expectContains(
+        "confirm left the dialog open",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "confirm=true",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape closed the confirmed dialog",
+        yield* textOf(ctx, "tier2-dialog-readout"),
+        "confirm=false",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Dialog.id}.png`);
+    }),
+};
+
+const tier2Menu: LiveScenario = {
+  id: "live-tier2-menu",
+  title: "Live Tier 2: the shipped DropdownMenu and ContextMenu",
+  capability: "tier2",
+  view: tier2MenuScenario.view,
+  ready: "menu-open",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("menu-open");
+      yield* ctx.host.waitFor("menu-content");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the menu surface owns focus",
+        yield* focusedOf(ctx),
+        "menu-content",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the first arrow lands on the first row",
+        yield* focusedOf(ctx),
+        "menu-rename",
+      );
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Enter ran the row once",
+        yield* textOf(ctx, "tier2-menu-readout"),
+        "selected=Rename",
+      );
+      yield* ctx.expectEqual(
+        "the menu closed after activation",
+        (yield* ctx.host.bounds("menu-content")) === null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "focus returned to the trigger",
+        yield* focusedOf(ctx),
+        "menu-open",
+      );
+
+      yield* ctx.host.click("menu-open");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the second arrow skipped the disabled row",
+        yield* focusedOf(ctx),
+        "menu-delete",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Escape closed the menu",
+        (yield* ctx.host.bounds("menu-content")) === null,
+        true,
+      );
+
+      const target = yield* boxOf(ctx, "menu-target");
+      yield* ctx.host.rightClick("menu-target");
+      yield* ctx.host.waitFor("context-content");
+      yield* settle;
+      const menu = yield* boxOf(ctx, "context-content");
+      yield* ctx.expectNear(
+        "the context menu opens at the pointer's x",
+        menu.x,
+        target.x + target.width / 2,
+        12,
+      );
+      yield* ctx.expectNear(
+        "the context menu opens at the pointer's y",
+        menu.y,
+        target.y + target.height / 2,
+        12,
+      );
+      yield* ctx.host.click("context-copy");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a pressed row ran once",
+        yield* textOf(ctx, "tier2-menu-readout"),
+        "copies=1",
+      );
+
+      yield* ctx.host.rightClick("menu-target");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Escape closed the context menu",
+        (yield* ctx.host.bounds("context-content")) === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Menu.id}.png`);
+    }),
+};
+
+const tier2Toast: LiveScenario = {
+  id: "live-tier2-toast",
+  title: "Live Tier 2: the shipped Toast provider and viewport",
+  capability: "tier2",
+  view: tier2ToastScenario.view,
+  ready: "toast-push",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the queue starts empty",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "count=0",
+      );
+
+      yield* ctx.host.click("toast-push");
+      yield* ctx.host.waitFor("toast-1");
+      yield* settle;
+      const card = yield* boxOf(ctx, "toast-1");
+      yield* ctx.expectNear(
+        "the card is inset from the right",
+        WINDOW.width - (card.x + card.width),
+        16,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the card is inset from the bottom",
+        WINDOW.height - (card.y + card.height),
+        16,
+        1,
+      );
+      yield* ctx.expectNear("the card is 380 px wide", card.width, 380, 1);
+
+      yield* ctx.host.click("toast-dismiss");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the dismiss control removed its card",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "count=0",
+      );
+
+      yield* ctx.host.click("toast-push-action");
+      yield* ctx.host.waitFor("toast-2");
+      yield* settle;
+      yield* ctx.host.click("toast-action");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the action ran exactly once",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "actions=1",
+      );
+      yield* ctx.expectContains(
+        "the action dismissed its card",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "count=0",
+      );
+
+      yield* ctx.host.click("toast-push");
+      yield* settle;
+      yield* ctx.host.click("toast-push");
+      yield* settle;
+      const older = yield* boxOf(ctx, "toast-3");
+      const newest = yield* boxOf(ctx, "toast-4");
+      yield* ctx.expectEqual(
+        "the older card sits above the newest",
+        older.y + older.height <= newest.y,
+        true,
+      );
+      yield* ctx.expectNear(
+        "the newest card owns the bottom inset",
+        WINDOW.height - (newest.y + newest.height),
+        16,
+        1,
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape is not a toast shortcut",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "count=2",
+      );
+
+      yield* ctx.host.click("toast-push-short");
+      yield* waitForToastCount(ctx, 2);
+      yield* ctx.expectContains(
+        "the short toast dismissed itself in real time",
+        yield* textOf(ctx, "tier2-toast-readout"),
+        "count=2",
+      );
+      yield* ctx.expectEqual(
+        "the short toast left the tree",
+        (yield* ctx.host.bounds("toast-5")) === null,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Toast.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -1572,4 +1917,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   highlights,
   preview,
   scroller,
+  tier2Dialog,
+  tier2Menu,
+  tier2Toast,
 ];
