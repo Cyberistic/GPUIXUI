@@ -130,11 +130,13 @@ Record the exact failure messages in §9.
 - `NO_LIVE_SCENE` moved to `apps/docs/src/components/preview/gaps.ts`; both
   `scene-contract.test.ts` and the new `preview-gaps.test.ts` import it.
 - `docs/preview-strategy.md` now names all nine gaps in a table the guard reads.
-- Two-direction proofs, measured and reverted:
-  - deleting the `drawer` row → `preview-gaps.test.ts` failed with
-    `document is missing: drawer`;
-  - adding a `select` row → failed with `document lists a gap the code does not
-    enforce: select`;
-  - blanking the `toast` reason → failed with `toast: reason is empty`.
-- `nub run --filter docs test`: 42 files / 260 tests green; `check-types`,
-  `build`, `nub run check` and `nub run lint` green.
+- Two-direction proofs, measured and reverted (the assertion prints the two
+  differences rather than one sentence):
+  - deleting the `drawer` row → failed with
+    `expected { missing: [ 'drawer' ], extra: [] } to deeply equal { missing: [], extra: [] }`;
+  - adding a `select` row → failed with
+    `expected { missing: [], extra: [ 'select' ] } …`;
+  - blanking the `toast` reason → failed with `expected [ 'toast' ] to deeply equal []`.
+- `nub run --filter docs test`: 42 files / 260 tests green; on a clean detached
+  worktree `check-types`, `build`, `nub run check`, `nub run lint`, `nub run
+  test` and `smoke:build` are all exit 0 (85 pages crawled).

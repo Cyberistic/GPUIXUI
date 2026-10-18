@@ -132,4 +132,9 @@ The template guard still runs over the corrected pages.
 - `READY_TIMEOUT_MS` is 90 s with the measured cold-start note; no test, with
   the reason in §4.
 - Measured on this tree after the corrections: `nub run --filter docs test`
-  42 files / 260 tests green; `check-types` green.
+  42 files / 260 tests green; `check-types` green. Re-verified on a clean
+  detached worktree at the merge commit: `nub run check` exit 0, `nub run lint`
+  exit 0, `nub run test` exit 0 (docs 260, components 308, primitives 282,
+  tokens 197, testing 19, icons 19, playground 11) and
+  `nub run --filter docs smoke:build` exit 0 — 85 pages, 104 links, search,
+  404 and robots all checked.
