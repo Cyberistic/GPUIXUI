@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 185/247
+`[x]` `[███████░░░]` 186/248
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1482,6 +1482,16 @@ box"; a theme with `iconSize.xs` 17, or with a tighter `caption.lineHeight`,
 returned `[]` from every check while a caption line grew to hold the glyph. Two
 `at-most` rules bound the inline sizes by the theme's own leading; every shipped
 set passes and no value moves (plan 521)
+
+`[x]` Hold an inline avatar to the dense row it leads — `scale.ts` calls
+`avatarSize.xs` the inline tier and `ListItem` fixes a dense row at
+`density.rowHeight` with its leading slot documented for an avatar, but the
+contract never compared them; a theme whose whole avatar ladder rose to
+40/44/48/52 returned `[]` from all six checks while the 40px mark could not fit
+a 28–32px row. One `at-most` rule bounds `xs` by the theme's own row; the other
+three tiers stay unbounded because `md` in a dense row is a composition
+decision, not a size error. Every shipped set passes and no value moves
+(plan 522)
 
 ## Phase C — Tier 1–2 components
 

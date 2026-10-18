@@ -777,6 +777,21 @@ describe("docs/tokens.md numeric tables", () => {
     });
   });
 
+  it("states the inline avatar's row bound", () => {
+    const prose: ReadonlyArray<readonly [string, string]> = [
+      ["docs/tokens.md", markdownProse],
+      ["docs/design-system.md", designSystem],
+      ["packages/tokens/README.md", readmeSource.replace(/\s+/g, " ")],
+    ];
+
+    prose.forEach(([file, text]) => {
+      expect(text, file).toContain("inline avatar");
+    });
+    [markdownProse, designSystem].forEach((text) => {
+      expect(text).toContain("`density.rowHeight`");
+    });
+  });
+
   it("lists every component dimension", () => {
     Object.entries(dimensions).forEach(([token, pixels]) => {
       expect(markdown, `dimensions.${token}`).toContain(

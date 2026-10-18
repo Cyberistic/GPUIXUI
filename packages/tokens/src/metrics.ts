@@ -310,7 +310,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
- *   line, `sm` a `label` line), because a taller glyph raises that line.
+ *   line, `sm` a `label` line), because a taller glyph raises that line. The
+ *   inline avatar tier (`xs`) fits a dense row (`density.rowHeight`), because a
+ *   `ListItem` fixes that row's height and documents its leading slot for an
+ *   avatar.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
  *   the largest radius, half the largest control and half the largest avatar —
  *   a 40px avatar at a smaller radius is a rounded square.
@@ -511,6 +514,13 @@ export function themeMetricFailures(
       "non-decreasing",
       "positive",
     ),
+    // The `xs` tier is the inline avatar (`scale.ts`): a dense `ListItem` fixes
+    // its height at `density.rowHeight` and documents its leading slot for an
+    // avatar, so a mark taller than the row cannot fit the row it leads.
+    ...atMost("avatarSize", "xs", avatarSize.xs, density.rowHeight),
+    // The `xs` tier is the inline avatar (`scale.ts`): a dense `ListItem` fixes
+    // its height at `density.rowHeight` and documents its leading slot for an
+    // avatar, so a mark taller than the row cannot fit the row it leads.
     ...finiteMembers("radius", [
       ["none", radius.none],
       ["sm", radius.sm],

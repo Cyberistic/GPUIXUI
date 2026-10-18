@@ -186,6 +186,12 @@ describe("COMPONENTS.md design-system rows", () => {
     });
   });
 
+  it("names the inline avatar's row bound", () => {
+    const metrics = row("Theme metric check");
+    expect(metrics).toContain("inline avatar");
+    expect(metrics).toContain("`rowHeight`");
+  });
+
   it("states the checks from the index, never a subset", () => {
     const total = row("Total theme check");
     expect(total).toContain("`themeChecks`");

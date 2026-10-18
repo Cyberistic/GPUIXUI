@@ -1180,6 +1180,11 @@ metrics: a 26px person chip is not a density decision. See
 [Spacing](#spacing) and [Density](#density) for the scales that density does
 move.
 
+The smallest tier is the inline avatar: `avatarSize.xs` sits in a dense row,
+which `ListItem` fixes at `density.rowHeight`, so the metric contract bounds it
+by that row. The other three tiers are a facepile mark, the default and a
+profile header; they are not row marks.
+
 ## Focus
 
 GPUix 0.10.0's `StyleDesc` has **no `outline*` properties and no `focusVisible`
@@ -1801,7 +1806,11 @@ is not a size; the two inline icon sizes are bounded by the line box they share
 with text — `iconSize.xs` by `typography.caption.lineHeight` and `iconSize.sm`
 by `typography.label.lineHeight`, the partners `scale.ts` names — because a
 glyph taller than its line raises the row the icon is centred in, while the
-colour, typeface and contrast checks stay empty; a timing
+colour, typeface and contrast checks stay empty; the inline avatar tier is
+bounded the same way by the row it leads — `avatarSize.xs` by
+`density.rowHeight` — because a dense `ListItem` fixes its height at that value
+and its leading slot carries an avatar or an icon, so a person mark taller than
+the row cannot fit it; a timing
 must also be finite; a chip must fit inside the field's content box — the
 minimum width less the field's two borders and its `controlPaddingX.md` padding —
 because a chip equal to the outer width has no room for the chrome painted

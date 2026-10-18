@@ -216,6 +216,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [519](./519-motion-scale-indexes.md) | The motion scale's ordered indexes | F | 019, 064, 096, 305, 364, 372, 387, 518 | done |
 | [520](./520-disabled-panel-action-selection.md) | The disabled panel action through the inverse selection veil | F | 306, 344, 394, 397, 399, 504, 510, 512, 513, 514 | done |
 | [521](./521-inline-icon-line-fit.md) | The inline icon must fit its line box | F | 353, 358, 367, 372, 384, 386 | done |
+| [522](./522-inline-avatar-row-fit.md) | The inline avatar must fit the dense row it leads | F | 054, 358, 360, 372, 386, 521 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2266,6 +2267,22 @@ glyph is reported; equality stays legal, because the rule is "does not raise the
 line box". Every shipped identity theme, platform variant and recipe passes
 (12 ≤ 16, 14 ≤ 18), so no colour, pair, floor or metric moves and `contrastPairs`
 stays **396**.
+
+Plan `522` closes the row half of the same rule. `scale.ts` calls `avatarSize.xs`
+the inline tier ("inline with a dense row") and a shipped `ListItem` fixes a
+dense row at `theme.density.rowHeight`, with its leading slot documented for "an
+avatar, an icon" — but `themeMetricFailures` only held the avatar ladder positive
+and ordered, and related `radius.full` to the largest tier. A probe whose whole
+ladder rose to 40/44/48/52 (so no other rule fired) returned `[]` from all six
+checks while the inline mark was 12–20px taller than the 28px row the macOS and XP
+presets ship and taller still than any row it could lead: a mark centred in a
+fixed-height row paints outside it. One `at-most` rule now bounds `avatarSize.xs`
+by the theme's own `density.rowHeight`, so a roomier density raises the allowance
+and equality stays legal; the other three tiers stay unbounded, because `md` in a
+dense row is a composition decision — bounding it would reject the shipped macOS
+compact variant — recorded as a cross-team note instead. Every shipped set passes
+(20 ≤ 28), so no colour, pair, floor or metric moves and `contrastPairs` stays
+**396**.
 
 ## How to use a plan
 

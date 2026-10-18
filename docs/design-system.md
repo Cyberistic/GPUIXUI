@@ -219,6 +219,12 @@ icons take `xs` so they do not raise the line box, control icons `md`, and
 toolbar or navigation icons `lg` or `xl`. The icon set owns its markup rules; the
 design system owns the size tier and the alignment.
 
+The inline avatar follows the same rule one row over: `avatarSize.xs` is
+bounded by `density.rowHeight`, because a dense `ListItem` fixes its height at
+`rowHeight` and documents its leading slot for an avatar. A mark taller than
+the row it leads is not inline; the `md` tier is the default face for a card
+header or a message, not a row mark.
+
 Component dimensions are **fixed**, not density metrics: overlay surfaces take a
 180px minimum and a 220px default width, and a long list scrolls at 320px; a
 toast is 380px wide, a preview card runs 240–360px, and an icon or clear control
@@ -678,7 +684,8 @@ The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink the smallest control below one label line or one body line plus its
-borders, raise an inline icon above the caption or label line it sits in, clip a
+borders, raise an inline icon above the caption or label line it sits in, raise
+an inline avatar above the dense row it leads, clip a
 row
 below the default `md` control it holds, round a "square" corner, leave the
 largest avatar a rounded square, invert a named size ladder, name a zero-size
