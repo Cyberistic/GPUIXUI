@@ -70,6 +70,7 @@ export const CAPABILITIES = [
   "data-toolbar",
   "query",
   "notification",
+  "crop",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

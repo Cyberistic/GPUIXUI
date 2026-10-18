@@ -48,6 +48,7 @@ import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
+import { cropScenario } from "../scenarios/crop.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
@@ -3571,6 +3572,97 @@ const columnConfig: LiveScenario = {
     }),
 };
 
+const cropArea: LiveScenario = {
+  id: "live-crop-area",
+  title: "Live crop area: the image box, masks, a handle drag and a key",
+  capability: "crop",
+  view: cropScenario.view,
+  ready: "crop-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The stage is the coordinate space and the crop starts centred.
+      const stage = yield* boxOf(ctx, "crop-stage");
+      const box = yield* boxOf(ctx, "crop-box");
+      yield* ctx.expectNear(
+        "the live crop starts 64 px from the stage's left",
+        box.x - stage.x,
+        64,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live crop starts 40 px below the stage's top",
+        box.y - stage.y,
+        40,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live crop starts 192 px wide",
+        box.width,
+        192,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live crop starts 120 px tall",
+        box.height,
+        120,
+        1,
+      );
+      yield* waitForText(ctx, "crop-readout", "w=192 h=120");
+
+      // 2. A real paced drag on the SE handle resizes both edges.
+      yield* ctx.host.drag("crop-handle-se", 40, 20);
+      yield* settle;
+      yield* waitForText(ctx, "crop-readout", "w=232 h=140");
+      const resized = yield* boxOf(ctx, "crop-handle-se");
+      yield* ctx.expectNear(
+        "the live SE handle follows the resized corner",
+        resized.x + resized.width / 2,
+        box.x + 232,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live SE handle stays on the bottom edge",
+        resized.y + resized.height / 2,
+        box.y + 140,
+        1,
+      );
+
+      // 3. Pass-through and blocking, at the stage's top mask.
+      yield* ctx.host.clickWindow(stage.x + 160, stage.y + 10);
+      yield* settle;
+      yield* waitForText(ctx, "crop-readout", "image=1 blocked=0");
+      yield* ctx.host.click("crop-mask-mode");
+      yield* settle;
+      yield* waitForText(ctx, "crop-readout", "mask=auto");
+      yield* ctx.host.clickWindow(stage.x + 160, stage.y + 10);
+      yield* settle;
+      yield* waitForText(ctx, "crop-readout", "image=1 blocked=1");
+
+      // 4. The box takes native focus and an arrow moves it.
+      yield* ctx.host.click("crop-box");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live click focuses the crop box",
+        yield* focusedOf(ctx),
+        "crop-box",
+      );
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "crop-readout", "x=65");
+
+      // 5. A reset restores the initial geometry.
+      yield* ctx.host.click("crop-reset");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "crop-readout",
+        "x=64 y=40 w=192 h=120 fit=contain mask=none image=0 blocked=0",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${cropArea.id}.png`);
+    }),
+};
+
 const appChrome: LiveScenario = {
   id: "live-app-chrome",
   title: "Live application chrome: toolbar, pinned status bar and breadcrumb",
@@ -4384,6 +4476,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   inspector,
   dataGridColumns,
   columnConfig,
+  cropArea,
   appChrome,
   multiPaneEditor,
   dataToolbar,
