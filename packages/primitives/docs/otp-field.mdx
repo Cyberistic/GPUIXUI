@@ -42,7 +42,7 @@ leaving a hole.
 | `value` | `string` | — | controlled code, normalised to letters/digits |
 | `defaultValue` | `string` | — | initial code when uncontrolled |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
-| `onComplete` | `(value: string) => void` | — | fires when an edit makes the code full |
+| `onComplete` | `(value: string) => void` | — | fires after an edit that leaves the code full, with the new code |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | cell height and width, from the density scale |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
@@ -57,6 +57,11 @@ code longer than `length` is truncated rather than partially applied. An edit
 that carries no letter or digit — a typed separator, a space — **leaves the cell
 as it was**, so a code a provider prints with hyphens can be typed without
 losing a digit (plan `358`).
+
+`onComplete` is not a one-shot event: every edit that leaves the code full
+reports the new code, including a correction made inside a code that was already
+full. That is what lets the usual `onComplete={(code) => verify(code)}` verify a
+mistyped digit again without the user clearing a cell first (plan `360`).
 
 ## Keyboard
 
@@ -176,7 +181,8 @@ or `filled`.
   square geometry, disabled guards, and **exactly one `tabIndex={0}`** on the
   first empty / focused cell.
 - `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
-  cells and complete once; focus advances and moves back with the arrow keys;
+  cells and complete once; a correction inside a full code reports the new code
+  again and a half-deleted code reports nothing (plan `360`); focus advances and moves back with the arrow keys;
   Backspace clears backwards on an empty cell and only one character on a
   filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
   every cell; one ring, painted from mount with `autoFocus`; disabled refuses

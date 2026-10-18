@@ -73,7 +73,11 @@ export interface OTPFieldProps {
   readonly defaultValue?: string;
   /** Called with the code after every edit, only when it actually changed. */
   readonly onValueChange?: (value: string) => void;
-  /** Called once when an edit makes the code complete. */
+  /**
+   * Called after an edit that leaves the code full, with the new code, so a
+   * corrected digit is verified again. An edit that leaves the code incomplete
+   * reports nothing here.
+   */
   readonly onComplete?: (value: string) => void;
   /** Defaults to `md`. */
   readonly size?: ControlSize;

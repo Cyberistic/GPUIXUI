@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 103/103
+`[x]` `[██████████]` 104/104
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -837,6 +837,16 @@ retired once both branches are one
       reachable from an unrated tab stop. A new runtime matrix (deferring parent,
       keys delivered to the element the component focused) fails by case name in
       four directions; offline 593 → 601, runtime 537 → 552 (plan `359`).
+
+`[x]` `packages/primitives`: **`OTPField.onComplete` promised "once" and fires
+      on every full-code edit** — measured (2026-10-18): correcting a digit
+      inside a full code (`defaultValue="123456"`, type `9` in cell 3) reports
+      `"129456"` again. The repeated report is the useful contract (the docs' own
+      `onComplete={(code) => verify(code)}` snippet needs it), so the false claim
+      was what changed: source JSDoc and the page now say "after every edit that
+      leaves the code full", and a runtime guard proves a corrected full code
+      re-reports while an edit that shortens the code reports nothing; it fails
+      under the rejected transition-only rule (runtime 552 → 553; plan `360`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts

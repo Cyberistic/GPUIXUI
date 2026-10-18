@@ -85,6 +85,37 @@ it("fills the code one key at a time and completes once", async () => {
   expect(field.complete).toStrictEqual(["123456"]);
 });
 
+it("reports a corrected full code to onComplete again", async () => {
+  // The contract guarded (plan 360): `onComplete` is not one-shot. An edit that
+  // leaves the code full reports the new code, so `verify(code)` runs again
+  // after a mistyped digit is corrected in place. The old wording ("once when
+  // an edit makes the code complete") promised the opposite of what the docs'
+  // own usage snippet needs.
+  const field = recorder();
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      defaultValue="123456"
+      onValueChange={field.onValueChange}
+      onComplete={field.onComplete}
+    />,
+  );
+  runtime.click("otp-cell-3");
+  runtime.type("9");
+  expect(field.complete).toStrictEqual(["129456"]);
+  // A second correction, in a different cell, while the code is still full.
+  runtime.click("otp-cell-4");
+  runtime.type("8");
+  expect(lastValue(field.values)).toBe("129856");
+  expect(field.complete).toStrictEqual(["129456", "129856"]);
+  // An edit that leaves the code incomplete reports nothing.
+  runtime.keyDown("otp-cell-4", "backspace");
+  runtime.keyUp("otp-cell-4", "backspace");
+  expect(lastValue(field.values)).toBe("12956");
+  expect(field.complete).toStrictEqual(["129456", "129856"]);
+});
+
 it("paints the first cell's ring from mount when autoFocus is set", async () => {
   // The runtime focuses the first cell without dispatching `onFocus`, so the
   // per-cell focus state starts on cell 0 and clears on blur.
