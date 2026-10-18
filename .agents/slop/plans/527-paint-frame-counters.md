@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed — `frame-stats` 67 checks + `live-frames` 29; suite `99 → 100` (3455 → 3522 checks), `frames=verified`, exit `0`; six mutation + one reverse proof (§6/§8) |
 | Phase | B→F (runtime diagnostics — the last supported surface with no contract) |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `100` (harness), `110`/`120` (suite + shell), `140` (0.10.0 runs here), `182` (keyed remount), `197` (the live host reads the renderer it owns), `302` (the cost model) |
@@ -193,7 +193,7 @@ View (tokens only, one root):
 | 16 | the overlay never intercepts input | with `full` on, clicking `fs-counter` gives `paints 2` |
 | 17 | cycle order is hidden → minimal → full | from `full`: `hidden`, `minimal`, `full`, `hidden` |
 | 18 | setting the same mode is idempotent | `setOverlayMode("minimal")` twice: both `minimal` |
-| 19 | the ring is bounded at 1000 samples | `resetFrameStats()` then 1100 `paint()`: `samples` = `1000`, `frames > samples` |
+| 19 | the ring is bounded at 1000 samples | `resetFrameStats()` then 1005 `paint()`: `samples` = `1000`, `frames > samples` |
 | 20 | the cap preserves the timing order | after the fill, `p90 ≤ p99 ≤ max` |
 | 21 | the overlay is hidden again at the end | `setOverlayMode("hidden")` = `hidden` |
 
@@ -201,8 +201,8 @@ Check 14 uses `retainedElements()`, which is `Option`-shaped on the host
 (`ctx.expectSome`); check 15 compares the joined painted text because array
 identity is not the claim.
 
-The 1100-paint loop is synchronous and measured at ~1.4 s; it is the only way
-to prove the documented 1000-sample bound.
+The 1005-paint loop is synchronous (measured 1.5–1.8 s; up to 6.6 s under a
+loaded machine); it is the only way to prove the documented 1000-sample bound.
 
 ### 3.6 Live twin — `live-frames` (in `apps/playground/src/live/scenarios.tsx`)
 
@@ -350,10 +350,40 @@ Stop and report; do not improvise:
 - Adding `"frames"` breaks `apps/docs`' capability test. Do not edit
   `apps/docs`; record the exact assertion in `TODO.md` (§4).
 - The 1100-paint loop makes the focused scenario take longer than ~5 s. Reduce
-  to 1005 and record the measured duration.
+  to 1005 and record the measured duration. *(It did: 6.6 s once under load; the
+  loop is now 1005 paints and the normal run is 1.5–1.8 s.)*
 
 ## 8. Results
 
-_To be filled after execution: the two focused runs, the full headless total,
-the mutation outputs, the gate results, and any measured value that changed the
-plan._
+Executed 2026-10-18. Both focused scenarios ran (headless `frame-stats` and live
+`live-frames`); the full headless suite ran once (the change touches the
+capability model, both host interfaces and the registry). The full live suite is
+the merge gate and was **not** run; no live total is claimed.
+
+| Item | Result |
+| ---- | ------ |
+| `frame-stats` | **67/67 checks**, exit `0`, `frames=verified`, 1.5–1.8 s (6.6 s once under load); `flush()` `+1` frame/`+1` sample; a click and a `-60` wheel repainted (`offset.y = -60`); reset left `samples = 1` with `p90 = p99 = max = current`; the 1005-paint loop ended at `samples = 1000` with `frames` ahead; the overlay added no host node and changed no painted text; a click under `full` still gave `paints 2`; the cycle was `hidden,minimal,full,hidden` |
+| `live-frames` | **29/29 checks**, exit `0`, `frames=verified`, 0.9 s, one screenshot (`live-frames.png`, taken with the overlay `full`); an idle 300 ms did not repaint; a click grew the count (3 frames); a live reset left `samples = 1`; the overlay changed no painted text and a click underneath it gave `paints 2`; the cycle was `hidden,minimal,full` |
+| M1 | `paint` → `advanceTime(0)` → "one forced paint costs exactly one frame: expected 7, got 6", exit `1` |
+| M2 | `resetFrameStats` a no-op in `native.ts` → "reset clears the ring to its own paint: expected 1, got 16", exit `1` |
+| M3 | `overlayMode` constant `"hidden"` → "get agrees with the mode just set: expected \"minimal\", got \"hidden\"", exit `1` |
+| M4 | `cycleOverlayMode` constant `"hidden"` → "the cycle order …: expected \"hidden,minimal,full,hidden\", got \"hidden,hidden,hidden,hidden\"", exit `1` |
+| M5 | the cap loop 100 times → "the sample ring is bounded at 1000 samples: expected 1000, got 101", exit `1` |
+| M6 | `resetFrameStats` a no-op in `live/host.ts` → "a live reset clears the ring to its own paint: expected 1, got 14", exit `1` |
+| reverse proof | an absolute, full-size sibling with `pointerEvents: "auto"` over `fs-counter` made the first click miss ("the click repaints its counter: expected \"paints 1\", got \"paints 0\""), proving the no-capture check is not vacuous; reverted |
+| full headless | `100/100` scenarios, **3522 checks**, exit `0` (`99 → 100`, `3455 → 3522`) |
+| gates | `nub run check` = `0`, `nub run lint` = `0`, `nub run test` = `0`; `packages/testing` 57 tests (+3), playground 389 tests |
+
+Measured notes that shaped the implementation:
+
+- The recon's `nativeSimulateScrollWheel` cost **2** frames and
+  `dispatchScrollWheel` **1**, so the probe asserts "the wheel paints", not a
+  fixed delta: the number depends on which input path a host uses.
+- `resetDebugFrameOverlayStats()` itself paints: `samples` is **1** after it,
+  never 0, in both harnesses. The plan's STOP condition did not trigger.
+- A live click cost 3 frames (headless 4) because the React commit and the
+  input flush differ by one paint; the live checks assert growth, not a delta.
+- The live window repainted a few times **after** the overlay toggles and two
+  screenshots (3 frames over 1.2 s in the recon), so the idle assertion runs
+  before any overlay change.
+
