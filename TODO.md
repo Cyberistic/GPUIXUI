@@ -471,16 +471,22 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–489)
 
-`[x]` `[██████████]` 90/90
+`[x]` `[██████████]` 91/91
 
-`[ ]` **The public value exports still have no generated API index.** The
-      component pages document props, and `/docs/extending` shows the `core/`
-      surface as source; the helpers a consumer can import (`checkboxState`,
-      `numberRange`, `otpCellLabel`, `initialActiveIndex`, `sliderValueText`,
-      `iconPixels`, `ICON_SIZES`, `useToast`, …) and the `*Meta` inventory
-      records are not indexed, so their only documentation is the source. Needs
-      an explicit public/internal classification plus a guard that a new export
-      is not silently undocumented; owner: docs-site
+`[x]` **The public value exports have a generated API index (plan 490)** — the
+      component pages document props and `/docs/extending` shows the `core/`
+      surface as source, so the helpers a consumer can import
+      (`checkboxState`, `numberRange`, `otpCellLabel`, `initialActiveIndex`,
+      `sliderValueText`, `iconPixels`, `ICON_SIZES`, `useToast`, …) and the
+      `*Meta` inventory records had no index. `/docs/api-values` now derives
+      190 value exports from five real entry points (tokens, tokens/react,
+      primitives, components, icons) with each summary read from its TSDoc and
+      its real source path; `@gpuixui/primitives/core` and `@gpuixui/testing`
+      are excluded with written reasons and `useFieldsetDisabled` is the one
+      internal export. `src/api-values.test.ts` fails on an export with no doc
+      comment, a stale generated file, a stale classification, or a package
+      that is neither indexed nor excluded; four two-direction proofs recorded
+      in plan 490 §9.
 
 `[x]` **The License page names the real record (plan 489)** — it had said "none
       is written yet" while `LICENSES/README.md` and `LICENSES/base-gpui.md`
@@ -684,6 +690,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[x]` Docs site: the first real component page — Buttons shows its source via `<include>`, generates its API table from `ButtonProps`, sits in `content/docs/components/meta.json` and the sitemap, and relates to a planned component without a 404 link (plan 422)
 `[ ]` Primitives: the `packages/primitives/docs/tooltip.mdx` usage snippet imports `Icon` from `@gpuixui/primitives`; it lives in `@gpuixui/icons`. The docs-site page was corrected during the truth pass (plan 424); fix the package page too
 `[ ]` **Primitives**: declare `effect` as a runtime dependency — `RadioGroup`, `Select` and `Spinner` import `effect/Array` / `effect/Option` at runtime, but `packages/primitives/package.json` lists `effect` only in `devDependencies`. Found while deriving the docs dependency lists (plan 428)
+`[ ]` **Primitives / components**: annotate the twelve exports that carry no TSDoc (`BUTTON_GROUP_MODES`, `BUTTON_VARIANTS`, `buttonVariants`, `ENTER_KEY`, `PROGRESS_TONES`, `SELECTION_STATES`, `SPACE_KEY`, `STACK_DIRECTIONS`, `SURFACE_TONES`, `surfaceStyle`, `textStyle`, `TOGGLE_VARIANTS`) and replace the `*Meta` summaries that cite a plan number (`COMPONENTS.md (plan 117 §2)`) with reader-facing prose. The Values API (plan 490) shows them today through a docs-owned `SUMMARIES` override, and its guard fails the moment the source gains a comment, so the override cannot outlive the gap
 `[ ]` **Examples**: `examples/basic-app`'s `dev` script runs `bun src/main.tsx`; Bun is not installed on this host and AGENTS pins nub as the toolchain, so the documented quick start (`nub run --filter @gpuixui/basic-app dev`) fails before it reaches GPUix. Replace the runner (nub/tsx) and verify, or document Bun as a prerequisite. The Examples page now states the current truth
 `[x]` Canonical and OpenGraph URLs are absolute — resolved in the docs workstream by plan 418: `SITE_URL` defaults to the deploy domain (`docs.gpuixui.dev`) and is overridable with `VITE_SITE_URL`; no change to `packages/deploy` was needed
 `[ ]` **Plan numbering collision in the docs block**: `origin/master` adds

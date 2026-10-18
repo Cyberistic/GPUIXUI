@@ -384,8 +384,55 @@ the server is unavailable, record it in §9 rather than claiming green.
 
 ## 9. Results
 
-_(Filled in during implementation: the real export count, the two-direction
-proof outputs, and every command's exit code.)_
+Implemented 2026-10-18.
+
+**The index.** `nub run --filter docs api:values` derives **190 value exports
+from 5 entries** (tokens 36, tokens/react 1, primitives 106, components 43,
+icons 4). Every row has a summary; 12 came from the docs-owned `SUMMARIES`
+override because the package source has no doc comment yet (recorded as a
+cross-team task in `TODO.md`). `@gpuixui/primitives/core` and
+`@gpuixui/testing` are excluded with written reasons; `useFieldsetDisabled` is
+the only `internal` export.
+
+**Two-direction proofs.**
+
+1. Deleted the TSDoc above `sliderValueText` (`packages/primitives/src/components/Slider.tsx`)
+   → `api-values.test.ts` failed with
+   `undocumented export sliderValueText (packages/primitives/src/components/Slider.tsx) has no doc comment`
+   (2 failed / 11 passed); restored → 13 passed. Package file reverted.
+2. Appended `/** … */ export const temporaryProbe = 1;` to
+   `packages/tokens/src/scale.ts` without regenerating → failed with
+   `the generated index is stale; … (added: @gpuixui/tokens#temporaryProbe; removed: none)`
+   and the exact-text test named the missing row; `api:values` wrote 191 rows
+   and the suite passed; reverted and regenerated to 190. Package file
+   reverted.
+3. Removed `<ValueIndex />` from the page → the page test failed
+   (`expected … to contain '<ValueIndex />'`); restored → passed.
+4. Renamed the internal classification to `@gpuixui/components#useFieldsetGone`
+   → failed with
+   `INTERNAL_EXPORTS names @gpuixui/components#useFieldsetGone, which no entry exports (a stale classification)`;
+   restored → passed.
+
+**Commands.**
+
+| Command | Result |
+| --- | --- |
+| `nub run --filter docs api:values` | exit `0`, `190 exports from 5 entries` |
+| `nub run --filter docs test` | exit `0`, 51 files / 335 tests |
+| `nubx vitest run src/api-values.test.ts src/components/value-index.test.tsx` | exit `0`, 18 tests |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs build` | exit `0` |
+| `nub run --filter docs smoke:build` | exit `0` — 89 sitemap pages (was 88), 108 links, search and 404 checked |
+| `nub run check` | exit `0` (check:tests, lint, fmt, every workspace's types) |
+| `nub run test` | exit `0` (all workspaces) |
+
+`smoke:browser` and `smoke:preview` were not re-run: this change adds no preview
+surface and the built-site crawl covers the new page. They remain in the
+release gate for any change that touches a preview.
+
+One formatting note: `api-values.generated.ts` is emitted in `oxfmt`'s own
+shape (one field per line, summaries wrapped at 80 columns), because the
+committed file is compared byte-for-byte with the generator's output.
 
 ## 10. STOP conditions
 
