@@ -286,6 +286,41 @@ describe("theme metric contract", () => {
     ]);
   });
 
+  it("reports an inverted drawer ladder and a collapsed carousel mark", () => {
+    expect(failuresOf({ dimensions: { drawerWidthLg: 380 } })).toEqual([
+      {
+        group: "dimensions",
+        member: "drawerWidthLg",
+        rule: "increasing",
+        actual: 380,
+        bound: 400,
+      },
+    ]);
+    expect(
+      failuresOf({ dimensions: { carouselIndicatorActiveWidth: 6 } }),
+    ).toEqual([
+      {
+        group: "dimensions",
+        member: "carouselIndicatorActiveWidth",
+        rule: "at-least",
+        actual: 6,
+        bound: 8,
+      },
+    ]);
+  });
+
+  it("reports a message viewport shorter than a row", () => {
+    expect(failuresOf({ dimensions: { chatViewportMinHeight: 20 } })).toEqual([
+      {
+        group: "dimensions",
+        member: "chatViewportMinHeight",
+        rule: "at-least",
+        actual: 20,
+        bound: lightTheme.density.rowHeight,
+      },
+    ]);
+  });
+
   it("reports a control that cannot fit the default icon", () => {
     // The icon ladder must still step, so the size is raised with its larger
     // neighbours; the control's content box is two borders shorter than its

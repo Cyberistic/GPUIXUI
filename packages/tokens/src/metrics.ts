@@ -309,8 +309,11 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   a minimum below its default, a chip fits in the field's content box — its
  *   minimum width less the field's two borders and horizontal padding — the
  *   overlay scroll height fits one row, because a list viewport shorter than a
- *   row clips every option, and a keycap's content box holds one caption line
- *   plus its two borders, because `Keycap` paints caption text inside it.
+ *   row clips every option, the message viewport fits one row for the same
+ *   reason, a keycap's content box holds one caption line plus its two borders,
+ *   because `Keycap` paints caption text inside it, the drawer widths and
+ *   heights each grow from `sm` to `lg`, and a carousel's active mark is at
+ *   least as wide as its idle dot.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -599,6 +602,15 @@ export function themeMetricFailures(
       ["previewCardMinWidth", dimensions.previewCardMinWidth],
       ["previewCardMaxWidth", dimensions.previewCardMaxWidth],
       ["keycapSize", dimensions.keycapSize],
+      ["drawerWidthSm", dimensions.drawerWidthSm],
+      ["drawerWidthMd", dimensions.drawerWidthMd],
+      ["drawerWidthLg", dimensions.drawerWidthLg],
+      ["drawerHeightSm", dimensions.drawerHeightSm],
+      ["drawerHeightMd", dimensions.drawerHeightMd],
+      ["drawerHeightLg", dimensions.drawerHeightLg],
+      ["chatViewportMinHeight", dimensions.chatViewportMinHeight],
+      ["carouselIndicatorSize", dimensions.carouselIndicatorSize],
+      ["carouselIndicatorActiveWidth", dimensions.carouselIndicatorActiveWidth],
     ]),
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
@@ -630,6 +642,27 @@ export function themeMetricFailures(
       dimensions.previewCardMaxWidth,
     ),
     ...positive("dimensions", "keycapSize", dimensions.keycapSize),
+    ...positive("dimensions", "drawerWidthSm", dimensions.drawerWidthSm),
+    ...positive("dimensions", "drawerWidthMd", dimensions.drawerWidthMd),
+    ...positive("dimensions", "drawerWidthLg", dimensions.drawerWidthLg),
+    ...positive("dimensions", "drawerHeightSm", dimensions.drawerHeightSm),
+    ...positive("dimensions", "drawerHeightMd", dimensions.drawerHeightMd),
+    ...positive("dimensions", "drawerHeightLg", dimensions.drawerHeightLg),
+    ...positive(
+      "dimensions",
+      "chatViewportMinHeight",
+      dimensions.chatViewportMinHeight,
+    ),
+    ...positive(
+      "dimensions",
+      "carouselIndicatorSize",
+      dimensions.carouselIndicatorSize,
+    ),
+    ...positive(
+      "dimensions",
+      "carouselIndicatorActiveWidth",
+      dimensions.carouselIndicatorActiveWidth,
+    ),
     // A keycap paints the caption role inside a fixed surface: its two borders
     // are inside `keycapSize`, so a caption leading that grows past the content
     // box clips the shortcut label.
@@ -655,6 +688,24 @@ export function themeMetricFailures(
       ],
       "increasing",
     ),
+    ...ladder(
+      "dimensions",
+      [
+        ["drawerWidthSm", dimensions.drawerWidthSm],
+        ["drawerWidthMd", dimensions.drawerWidthMd],
+        ["drawerWidthLg", dimensions.drawerWidthLg],
+      ],
+      "increasing",
+    ),
+    ...ladder(
+      "dimensions",
+      [
+        ["drawerHeightSm", dimensions.drawerHeightSm],
+        ["drawerHeightMd", dimensions.drawerHeightMd],
+        ["drawerHeightLg", dimensions.drawerHeightLg],
+      ],
+      "increasing",
+    ),
     // The chip sits inside the field's content box: the field's two borders
     // and its horizontal control padding are inside `fieldMinWidth`.
     ...atLeast(
@@ -664,6 +715,21 @@ export function themeMetricFailures(
       dimensions.chipMinWidth +
         2 * density.controlPaddingX.md +
         2 * borderWidth.thin,
+    ),
+    // A message viewport shorter than one row clips every message it holds.
+    ...atLeast(
+      "dimensions",
+      "chatViewportMinHeight",
+      dimensions.chatViewportMinHeight,
+      density.rowHeight,
+    ),
+    // The active carousel mark may elongate; it may not shrink below the idle
+    // dot it replaces.
+    ...atLeast(
+      "dimensions",
+      "carouselIndicatorActiveWidth",
+      dimensions.carouselIndicatorActiveWidth,
+      dimensions.carouselIndicatorSize,
     ),
     ...(["sm", "md", "lg", "overlay"] as const).flatMap((level) => {
       const shapes = elevation[level];

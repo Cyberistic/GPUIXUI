@@ -138,6 +138,10 @@ one. Neither mutates its base. Typography merges field by field, density
 metrics size by size, component dimensions field by field, elevation levels
 replace whole arrays, and the mode is not overridable. An explicitly `undefined`
 value is treated as omitted, so a partial config spread cannot erase a token.
+Component dimensions include the drawer ladders, the shortest message viewport
+and the carousel marks; they merge field by field with the rest of the group. A
+runnable example lives in
+[`src/dimensions.example.ts`](./src/dimensions.example.ts).
 
 ```ts
 import { createTheme } from "@gpuixui/tokens";

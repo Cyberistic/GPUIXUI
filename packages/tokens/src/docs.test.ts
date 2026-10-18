@@ -2283,6 +2283,11 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the drawer, chat and carousel dimensions", () => {
+    const sentence = `A drawer opens ${dimensions.drawerWidthSm}/${dimensions.drawerWidthMd}/${dimensions.drawerWidthLg}px wide, or ${dimensions.drawerHeightSm}/${dimensions.drawerHeightMd}/${dimensions.drawerHeightLg}px tall from the bottom; a message viewport never shrinks below ${dimensions.chatViewportMinHeight}px, and a carousel's active dot is ${dimensions.carouselIndicatorActiveWidth}px beside an idle ${dimensions.carouselIndicatorSize}px one.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
   it("names the platform families the implementation ships", () => {
     const sentinel = `Sans is GPUI's \`${systemUiFont}\` sentinel`;
     expect(designSystem.includes(sentinel), sentinel).toBe(true);

@@ -85,7 +85,7 @@ missing here is not public.
 | `Density` | Resolved control heights, padding and row height for a preset. |
 | `DensityName` | A preset name from `densityNames`. |
 | `DensityOverrides` | Partial density metrics; they merge size by size. |
-| `Dimensions` | Fixed surface metrics: overlay, field, toast and preview-card sizes. |
+| `Dimensions` | Fixed surface metrics: overlay, field, toast, preview-card, drawer, chat and carousel sizes. |
 | `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`, derived from `elevationLevels`. |
@@ -987,10 +987,24 @@ every density.
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
+| `dimensions.drawerWidthSm` | 320 | narrowest drawer |
+| `dimensions.drawerWidthMd` | 400 | default drawer width |
+| `dimensions.drawerWidthLg` | 560 | widest drawer |
+| `dimensions.drawerHeightSm` | 240 | shortest bottom drawer |
+| `dimensions.drawerHeightMd` | 320 | default bottom drawer height |
+| `dimensions.drawerHeightLg` | 420 | tallest bottom drawer |
+| `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
+| `dimensions.carouselIndicatorSize` | 8 | inactive carousel indicator |
+| `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
 
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
 whose caption leading outgrows it.
+
+A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
+so a theme cannot make "large" narrower than "medium". A carousel's active mark
+may elongate but never shrink below its idle dot, and a message viewport holds at
+least one row.
 
 A metric override merges field by field, like the spacing and radius scales:
 
@@ -1001,6 +1015,9 @@ const wider = extendTheme(lightTheme, {
   dimensions: { toastWidth: 420 },
 });
 ```
+
+A runnable example lives in
+[`src/dimensions.example.ts`](../packages/tokens/src/dimensions.example.ts).
 
 `dimensions` is inherited by every platform variant and recipe: overlay widths,
 field chrome, card widths and the keycap size are shared surface metrics, not

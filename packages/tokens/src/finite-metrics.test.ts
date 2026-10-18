@@ -80,8 +80,9 @@ describe("the finite metric rule", () => {
   });
 
   it("reports a non-finite row height", () => {
-    // The row also stops fitting the overlay's scroll height, which the
-    // existing bound reports: raising a row must not clip every menu option.
+    // The row also stops fitting the overlay's scroll height and the message
+    // viewport, which the existing bounds report: raising a row must clip
+    // neither a menu option nor a message.
     expect(failuresOf({ density: { rowHeight: Infinity } })).toEqual([
       infinite("density", "rowHeight"),
       {
@@ -91,6 +92,13 @@ describe("the finite metric rule", () => {
         actual: dimensions.overlayMaxHeight,
         bound: Infinity,
       },
+      {
+        group: "dimensions",
+        member: "chatViewportMinHeight",
+        rule: "at-least",
+        actual: dimensions.chatViewportMinHeight,
+        bound: Infinity,
+      },
     ]);
   });
 
@@ -98,6 +106,14 @@ describe("the finite metric rule", () => {
     expect(failuresOf({ dimensions: { toastWidth: Infinity } })).toEqual([
       infinite("dimensions", "toastWidth"),
     ]);
+  });
+
+  it("reports a non-finite chat viewport", () => {
+    // A standalone metric with only a lower bound has no later rule to catch
+    // an infinity, so only the finite pass reports it.
+    expect(
+      failuresOf({ dimensions: { chatViewportMinHeight: Infinity } }),
+    ).toEqual([infinite("dimensions", "chatViewportMinHeight")]);
   });
 
   it("reports a negative infinity as non-finite, not merely negative", () => {

@@ -107,8 +107,8 @@ export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
 /**
  * Fixed surface metrics shared by components. Unlike `Density`, these do not
- * change with the control size: an overlay keeps its width and a field its
- * adornment when the workspace gets denser.
+ * change with density: an overlay keeps its width and a field its adornment
+ * when the workspace gets denser.
  */
 export interface Dimensions {
   /** 180px — the narrowest menu surface. */
@@ -131,6 +131,24 @@ export interface Dimensions {
   readonly previewCardMaxWidth: number;
   /** 20px — the fixed keycap a shortcut label sits in. */
   readonly keycapSize: number;
+  /** 320px — a small drawer's width. */
+  readonly drawerWidthSm: number;
+  /** 400px — the default drawer width. */
+  readonly drawerWidthMd: number;
+  /** 560px — a large drawer's width. */
+  readonly drawerWidthLg: number;
+  /** 240px — a small bottom drawer's height. */
+  readonly drawerHeightSm: number;
+  /** 320px — the default bottom drawer's height. */
+  readonly drawerHeightMd: number;
+  /** 420px — a large bottom drawer's height. */
+  readonly drawerHeightLg: number;
+  /** 160px — the shortest message viewport. */
+  readonly chatViewportMinHeight: number;
+  /** 8px — an inactive carousel indicator. */
+  readonly carouselIndicatorSize: number;
+  /** 18px — the active carousel indicator's width. */
+  readonly carouselIndicatorActiveWidth: number;
 }
 
 /** Default component dimensions. */
@@ -145,6 +163,15 @@ export const dimensions: Dimensions = {
   previewCardMinWidth: 240,
   previewCardMaxWidth: 360,
   keycapSize: 20,
+  drawerWidthSm: 320,
+  drawerWidthMd: 400,
+  drawerWidthLg: 560,
+  drawerHeightSm: 240,
+  drawerHeightMd: 320,
+  drawerHeightLg: 420,
+  chatViewportMinHeight: 160,
+  carouselIndicatorSize: 8,
+  carouselIndicatorActiveWidth: 18,
 };
 
 /**

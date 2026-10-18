@@ -236,7 +236,9 @@ toast is 380px wide, a preview card runs 240–360px, and an icon or clear contr
 inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
 dialog or a toast without touching component source. A keycap is 20px and holds
 one `caption` line plus its two borders; the metric contract reports a theme
-whose caption leading outgrows it.
+whose caption leading outgrows it. A drawer opens 320/400/560px wide, or
+240/320/420px tall from the bottom; a message viewport never shrinks below 160px,
+and a carousel's active dot is 18px beside an idle 8px one.
 
 ## 7. Radii, borders and elevation
 

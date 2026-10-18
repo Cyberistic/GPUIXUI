@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 194/256
+`[x]` `[███████░░░]` 195/257
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1570,6 +1570,24 @@ the platform it overrides, a stored density is always written because the
 platform supplies the preset), and the exported key order is the clear list that
 stops a stale axis surviving; the full matrix round-trips through a real
 `URLSearchParams` and `contrastPairs` stays 404 (plan 529)
+`[x]` Ship the fixed surface metrics plan 353 left in consumers — the drawer's
+320/400/560 width and 240/320/420 height triples, the 160px message viewport and
+the carousel's 18/8 mark were still literals in `packages/components`, so no
+theme or copied `PlatformStyle` could own them and the numeric contract could
+not report a broken one; `theme.dimensions` gains the nine fields with two
+increasing drawer ladders, a viewport floor of one `density.rowHeight`, a
+carousel floor of its idle dot and a runnable copy-and-own example, with no
+colour, pair, floor or existing metric moving (plan 530)
+`[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
+`drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
+(`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and
+240/320/420 (owner: `components`; plan 530)
+`[ ]` Cross-team: `components` reads `theme.dimensions.chatViewportMinHeight`
+for `ChatMessages`' 160px viewport minimum
+(`packages/components/src/chat.tsx:168`) (owner: `components`; plan 530)
+`[ ]` Cross-team: `components` reads `theme.dimensions.carouselIndicatorSize`
+and `carouselIndicatorActiveWidth` for the carousel's 8px/18px marks
+(`packages/components/src/carousel.tsx:399-400`) (owner: `components`; plan 530)
 
 ## Phase C — Tier 1–2 components
 
