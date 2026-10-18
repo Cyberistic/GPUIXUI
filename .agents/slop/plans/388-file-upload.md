@@ -160,7 +160,8 @@ A 680 × 520 surface:
 
 - **Drop zone** `upload-zone` (640 × 150, `borderWidth: 1`, muted fill,
   `onFileDrop`). Inside it: `upload-hint` (a `<text>`, **no** handler) and
-  `upload-inner` (a 120 × 24 div **with** the same `onFileDrop`). The zone also
+  `upload-inner` (a 120 × 24 div with its **own** `onFileDrop` that records the
+  hit). The zone also
   has `onClick`.
 - A **summary strip** `upload-summary` (`role="status"`): `2 files · 3 done · 4.2 MB · 50%`.
 - A **rejected line** `upload-rejected` when a drop was refused.
@@ -171,7 +172,9 @@ A 680 × 520 surface:
   with `role="button"`): `Start` when queued, `Cancel` when uploading,
   `Retry` when canceled/error, absent when done.
 - A **state readout** `upload-state`:
-  `files=2 drops=1 clicks=1 picker=0 dup=0 last=drop`.
+  `files=2 events=1 clicks=1 picker=0 dup=0 inner=0 last=add`. `last` names the
+  last model operation (`add`, `duplicate`, `rejected`, `drop`, `picker`,
+  `start`, …), so it is a diagnostic, not the drop gesture.
 - The dropped path is mapped to a known size through a **fixed fixture**
   (`/tmp/report.png` → 2 048, `/tmp/data.csv` → 1 536 000); any other path is
   `Option.none()`. That is the app's `stat` boundary; the view never reads the
