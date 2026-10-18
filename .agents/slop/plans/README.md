@@ -185,6 +185,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [388](./388-shipped-list-migration.md) | Every "every shipped set" suite enumerates the one shipped set | F | 387 | done |
 | [389](./389-platform-style-numeric-groups.md) | A platform style carries every numeric scale | B | 051, 063, 311, 321, 353, 358 | done |
 | [390](./390-elevation-ladder.md) | The elevation ladder | F | 085, 358, 368, 369 | done |
+| [391](./391-contrast-reference.md) | The contrast reference names its lists | F | 071, 086, 307, 344, 375, 382 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1740,6 +1741,22 @@ large shadow and a flat theme are designs. Every shipped identity theme, platfor
 variant and recipe is monotone in the feather (identity 2 → 12 → 40 light,
 2 → 24 → 56 dark; the three platform styles and both recipes likewise), so no
 token value, colour, pair, floor or metric moves.
+
+391 closes the same class of drift one surface over: the published JSDoc for
+`themeContrastFailures` — the paragraph a doc generator renders and a consumer
+reads before trusting the check — restated the contract's surfaces and families
+instead of naming its lists, and had gone false twice. It still said "the nine
+surfaces a disabled control paints" after plan 307 grew `inactiveSurfaces` to
+thirteen, and called the inverse `selectionOnFill` veil "measured on `primary`,
+`secondary` and `destructive`" after plan 382 derived both veil lists from
+`filledControlFamilies` and added `accent`. `snippets.test.ts` guards the
+`@example` fences and `docs.test.ts` the two Markdown pages, so nothing read
+this prose. The paragraph now names the nine lists the function applies — the
+`contrastPairs` union, the five selection lists, the two inverse-veil lists and
+`overlayWashPairs` — plus `filledControlFamilies` and `themeColorFailures`, and
+states no count. `contrast-reference.test.ts` reads the source, slices the block
+and fails if a list loses its name, a family literal returns or a count is
+restated. No role, pair, floor, metric or function body changes.
 
 ### Reference adoption (block `200–299`)
 
