@@ -471,7 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–511)
 
-`[x]` `[██████████]` 112/112
+`[x]` `[██████████]` 113/113
+
+`[x]` **The site is accessibility-checked in a real browser (plan 512)** — no
+      gate ran a conformance rule set over a whole page, so a `<ul>` with
+      overridden child roles, two keyboard-unreachable scroll regions and four
+      preview captions dimmed to 2.86:1 all shipped. `smoke:a11y` runs
+      axe-core 4.10.2 over every sitemap page in light **and** dark (180
+      documents) and fails per violating element; the first sweep found the 11
+      defects, all now fixed. The dark pass exposed a second bug: previews
+      repaint *after* the document's `dark` class, so the gate waits for each
+      surface to paint the scheme's background token instead of a fixed delay.
+      Four two-direction proofs in plan 512 §8.
 
 `[x]` **The theme switch is operated, not assumed (plan 511)** — every browser
       smoke forced the colour scheme through CDP, so none pressed the control a
@@ -825,6 +836,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
+`[ ]` **Licensing**: record the MPL-2.0 licence for `axe-core@4.10.2`, the dev-only accessibility engine `smoke:a11y` injects into the browser (plan 512). It is not in the shipped bundle, but it is a direct dev dependency; owner: licensing
 `[ ]` **Licensing**: `LICENSES/README.md` still ends "Nothing is recorded yet", but `LICENSES/base-gpui.md` is a verified record (plan 489 corrected the site's License page to match). Update the README line; owner: licensing
 `[-]` **Components**: expose `ContextMenu.point` and `DatePicker.defaultOpen` —
       superseded by plan 486: the docs' live scenes drive the real right-click
