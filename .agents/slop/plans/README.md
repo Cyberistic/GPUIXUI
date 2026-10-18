@@ -171,6 +171,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [372](./372-positive-named-sizes.md) | A named size is a positive size, and the rule index is the type | F | 054, 058, 358, 360–371 | done |
 | [373](./373-applied-default-palette.md) | The default palette a caller asked for | F | 011, 063, 073, 301, 323, 345 | done |
 | [374](./374-platform-style-over-platform.md) | A platform style applied over another platform's theme | F | 063, 071, 073, 091, 301, 311, 328, 373 | done |
+| [375](./375-scrim-over-filled-actions.md) | The modal scrim over the filled actions and status panels a window shows | F | 071, 099, 309, 311, 359 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1495,6 +1496,20 @@ applies every shipped style and recipe to every shipped base — identity,
 and both requested levels, and holds each result to all three public checks, so
 a future style that changes a role another style does not name fails the
 cross-product instead of shipping a hybrid.
+
+375 closes the last scrim composition plan 359's list left out. The contract
+composited `overlay` over the layout — canvas, card, quiet panel, field fill,
+persistent selected row and floating surface — but a window also shows filled
+actions and status panels, and a dialog opens over both. An edited theme whose
+scrim composited to `primary` or to a soft status fill left the control or the
+Alert undimmed while `themeContrastFailures` returned `[]`. The probe over the
+24 shipped colour sets finds every proposed surface already clears 1.05:1 —
+high-contrast dark is the tightest at **1.075:1** on `primary` — so no colour
+moves; the four filled actions (`primary`, `secondary`, `accent`, `destructive`)
+and the four soft status panels join `overlaySurfaces` (6 → 14 scrim pairs).
+The transient pointer washes and the filled families' hover/press steps stay
+out, as do `disabled`, `skeleton` and `track`; none is the content a dialog
+opens over.
 
 ### Reference adoption (block `200–299`)
 
