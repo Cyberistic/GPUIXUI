@@ -620,8 +620,9 @@ returns `[]`. `successText`/`infoText`/`destructiveText` are the roles held on
 `card` (6.63:1, 8.42:1 and 7.21:1 in the identity light set).
 `[ ]` Cross-team: `components` uses `destructiveText` for every error signal it
 paints as text — the `FieldError` and `FieldLabel`'s required asterisk
-(`field.tsx`), the `Form` error list (`form.tsx`), and the destructive Menu item
-label (`menu/item.tsx`). The solid `destructive` is a fill: it measures 4.04–4.28:1
+(`field.tsx`), the shared `ErrorSummary` block (`internal/error-summary.tsx`,
+painted by both `form.tsx` and `multi-step-form.tsx`), and the destructive Menu
+item label (`menu/item.tsx`). The solid `destructive` is a fill: it measures 4.04–4.28:1
 on the hover wash and 3.29–3.86:1 on the active wash across the shipped light
 sets, under the 4.5:1 secondary floor, while `destructiveText` clears every
 wash (≥5.28:1). The token contract checks `destructiveText` on
