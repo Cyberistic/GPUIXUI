@@ -116,6 +116,7 @@ missing here is not public.
 | `TextStyle` | Font size, line height and weight for one role. |
 | `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
 | `Theme` | A complete resolved theme. |
+| `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
 | `ThemeColors` | The 66 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
@@ -1267,6 +1268,32 @@ their guards — `themeModes` and `themeContrasts` — so a settings row or a do
 toggle iterates them instead of retyping `"light" | "dark"`. They narrow a
 choice; decoding a whole theme object from a file or URL is still the
 application's boundary and belongs to its `Schema`.
+
+The composition is the package's too: `resolveThemeChoice(choice)` turns a
+persisted row into a theme. `mode` and `contrast` select the variant, `recipe`
+or `platform` styles it, and a stored `density` is applied last, so it wins over
+the platform's own preset — macOS carries `compact`, Linux and Windows
+`comfortable`. A recipe is an edition of a platform offered beside the platform
+axis, so it wins when a stored object carries both. Every axis is `unknown` and
+falls back rather than failing: an unknown mode is `light`, an unknown contrast
+is `default`, an unknown platform is the identity, an unknown recipe falls back
+to the platform, and an unknown density keeps the resolved theme's preset. A
+value from an older release must not stop a settings screen from opening.
+
+```ts
+import { resolveThemeChoice } from "@gpuixui/tokens";
+
+const theme = resolveThemeChoice({
+  mode: storedMode,
+  contrast: storedContrast,
+  platform: storedPlatform,
+  density: storedDensity,
+});
+```
+
+The object's shape is still the application's `Schema` boundary; the unions and
+the precedence are the package's. The executed example is
+[`src/theme-choice.example.ts`](../packages/tokens/src/theme-choice.example.ts).
 
 Merge rules:
 

@@ -171,6 +171,14 @@ so a consumer never retypes a union; the ordered indexes — `platformNames`,
 `controlSizes` — are what a settings row or docs toggle iterates. A whole theme
 object loaded from a file is still the application’s `Schema` boundary.
 
+`resolveThemeChoice(choice)` resolves the whole row in one call: mode and
+contrast select the variant, `recipe` or `platform` styles it, and a stored
+density is applied last so it beats the platform's preset (macOS is `compact`).
+A recipe wins over a stray platform key, and every unknown axis keeps a readable
+default — an unknown density keeps the resolved theme's preset. A runnable
+example lives in
+[`src/theme-choice.example.ts`](./src/theme-choice.example.ts).
+
 ```ts
 import { isControlSize, isDensityName, isPlatformName } from "@gpuixui/tokens";
 
