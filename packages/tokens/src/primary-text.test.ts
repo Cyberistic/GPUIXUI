@@ -22,6 +22,7 @@ import {
   themeModes,
   type Theme,
 } from "./index.js";
+import { primaryTextStyles } from "./primary-text.example.js";
 
 const surfaces = [
   "background",
@@ -138,5 +139,26 @@ describe("brand-toned text", () => {
         ({ pairClass, floor }) => pairClass === "secondary" && floor === 4.5,
       ),
     ).toBe(true);
+  });
+
+  it("runs the documented example against the role it teaches", () => {
+    const theme = getTheme("light");
+    const styles = primaryTextStyles(theme);
+
+    expect(styles.link.color).toBe(theme.colors.primaryText);
+    expect(styles.link.color).not.toBe(theme.colors.primary);
+    expect(styles.hovered).toEqual({
+      backgroundColor: theme.colors.hover,
+      color: theme.colors.primaryText,
+    });
+    expect(styles.pressed).toEqual({
+      backgroundColor: theme.colors.active,
+      color: theme.colors.primaryText,
+    });
+    expect(styles.icon).toEqual({
+      width: theme.iconSize.md,
+      height: theme.iconSize.md,
+      color: theme.colors.primaryText,
+    });
   });
 });

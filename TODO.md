@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 117/162
+`[x]` `[███████░░░]` 118/163
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -85,6 +85,11 @@ assertion built a `Set` of tuple arrays, which compares identity, so a repeated
 report a composition twice; each published list is now checked by content and
 the guard has a case that proves it can fail. The high-contrast palette's JSDoc
 still said 64 roles (66 ship) and is now held to `colorRoles.length` (plan 349)
+`[x]` Make the package's own examples honest — `primary-text.example.ts` shipped
+in plan 082 with no test importing it and no document linking it, so the snippet
+could drift while every gate stayed green; it now runs in `primary-text.test.ts`
+and is linked from the reference and README, and a new guard fails if a future
+`*.example.ts` is imported by no suite (plan 350)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

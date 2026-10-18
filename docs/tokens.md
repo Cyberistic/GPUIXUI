@@ -156,6 +156,9 @@ status fills a link in a status panel sits on. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
 on the pressed wash, while its text step `#0055B3` clears both.
 
+A runnable example lives in
+[`src/primary-text.example.ts`](../packages/tokens/src/primary-text.example.ts).
+
 | Role | Light | Dark | Use |
 | ---- | ----- | ---- | --- |
 | `background` | `#F6F8FA` | `#11141A` | window and application canvas |

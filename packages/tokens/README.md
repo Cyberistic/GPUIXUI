@@ -75,6 +75,8 @@ is held to the text floor on the plain surfaces, the `hover`/`active` washes a
 link paints, the `accent`/`selected` fills a link sits on inside a row
 (plan 314) and the four soft status fills a link in a status panel sits on
 (plan 346). A brand that changes `primary` should set `primaryText` beside it.
+A runnable example lives in
+[`src/primary-text.example.ts`](./src/primary-text.example.ts).
 
 ## Shadows
 
