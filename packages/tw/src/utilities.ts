@@ -230,6 +230,22 @@ export const resolveUtility = (
       ? undefined
       : { paddingTop: value, paddingBottom: value };
   }
+  if (name.startsWith("pl-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined ? undefined : { paddingLeft: value };
+  }
+  if (name.startsWith("pr-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined ? undefined : { paddingRight: value };
+  }
+  if (name.startsWith("pt-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined ? undefined : { paddingTop: value };
+  }
+  if (name.startsWith("pb-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined ? undefined : { paddingBottom: value };
+  }
   if (name.startsWith("mx-")) {
     const value = spacingValue(name.slice(3));
     return value === undefined

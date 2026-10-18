@@ -2,8 +2,9 @@
  * React wrappers that accept shadcn class strings.
  *
  * `Tw.div` / `Tw.text` / `Tw.input` resolve the classes against the nearest
- * `@gpuixui/tokens` theme and merge the caller's `style` last. They are the
- * bridge for the first slice; a JSX runtime can make this automatic later.
+ * `@gpuixui/tokens` theme and registry, and merge the caller's `style` last.
+ * They are the bridge for the first slice; a JSX runtime can make this
+ * automatic later.
  */
 
 import { forwardRef, type ReactElement } from "react";
@@ -15,9 +16,11 @@ import type {
 } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import { classesToStyle, mergeTwStyle } from "./classes.js";
+import { useTwRegistry } from "./host.js";
+import type { TwState } from "./registry.js";
 
 /** State a class string can target that the native element cannot infer. */
-export interface TwStateProps {
+export interface TwStateProps extends TwState {
   readonly focused?: boolean;
   readonly invalid?: boolean;
   readonly disabled?: boolean;
@@ -33,7 +36,8 @@ const resolve = (
   state: TwStateProps,
 ): TwResolution => {
   const theme = useTheme();
-  const tw = classesToStyle(className, theme);
+  const registry = useTwRegistry();
+  const tw = classesToStyle(className, theme, registry, state);
   const interaction = mergeTwStyle(
     mergeTwStyle(
       state.disabled === true ? tw.disabled : {},
@@ -51,8 +55,32 @@ export interface TwDivProps extends Props, TwStateProps {
 
 /** A GPUix `div` that accepts a shadcn class string. */
 export const TwDiv = forwardRef<PublicInstance, TwDivProps>(
-  ({ className, focused, invalid, disabled, style, ...rest }, ref) => {
-    const tw = resolve(className, { focused, invalid, disabled });
+  (
+    {
+      className,
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+      style,
+      ...rest
+    },
+    ref,
+  ) => {
+    const tw = resolve(className, {
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+    });
     return (
       <div {...rest} ref={ref} style={mergeTwStyle(tw.style, style ?? {})} />
     );
@@ -67,8 +95,32 @@ export interface TwTextProps extends Props, TwStateProps {
 
 /** A GPUix `text` that accepts a shadcn class string. */
 export const TwText = forwardRef<PublicInstance, TwTextProps>(
-  ({ className, focused, invalid, disabled, style, ...rest }, ref) => {
-    const tw = resolve(className, { focused, invalid, disabled });
+  (
+    {
+      className,
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+      style,
+      ...rest
+    },
+    ref,
+  ) => {
+    const tw = resolve(className, {
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+    });
     return (
       <text {...rest} ref={ref} style={mergeTwStyle(tw.style, style ?? {})} />
     );
@@ -83,8 +135,32 @@ export interface TwInputProps extends InputProps, TwStateProps {
 
 /** A GPUix `input` that accepts a shadcn class string. */
 export const TwInput = forwardRef<PublicInstance, TwInputProps>(
-  ({ className, focused, invalid, disabled, style, ...rest }, ref) => {
-    const tw = resolve(className, { focused, invalid, disabled });
+  (
+    {
+      className,
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+      style,
+      ...rest
+    },
+    ref,
+  ) => {
+    const tw = resolve(className, {
+      focused,
+      invalid,
+      disabled,
+      hasIcon,
+      iconSide,
+      expanded,
+      behind,
+      limited,
+    });
     return (
       <input {...rest} ref={ref} style={mergeTwStyle(tw.style, style ?? {})} />
     );
@@ -98,6 +174,8 @@ export const Tw = {
   text: TwText,
   input: TwInput,
 } as const;
+
+export { TwProvider, useTwRegistry } from "./host.js";
 
 /** Kept for callers that want the element type without the wrapper. */
 export type TwElement = ReactElement;

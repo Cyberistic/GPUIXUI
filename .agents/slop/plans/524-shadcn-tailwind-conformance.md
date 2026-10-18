@@ -195,4 +195,15 @@ are still present in `references/ui`; Input resolves to 36/12/4/6/14.
   `nub run check` and `nub run test` pass.
 - Integration into `packages/primitives` (Input/Button) and
   `packages/components` (Toast/Dialog/Popover) is the next slice.
+- **Extension registry + luma aliases (2026-10-18):** `createTwRegistry` /
+  `createTw` accept custom utilities (`(theme, value?)`), variant resolvers
+  (`(variants, state)`), recipe aliases and unsupported reasons. `classesToStyle`
+  takes the registry third and `TwState` fourth; `TwProvider` / `TwHost` carry a
+  registry through React. `BASE_ALIASES` expands the luma `cn-*` blocks before
+  `cn` conflict resolution, so `cn-input` resolves to the filled 24px-radius
+  preset and `cn-input px-6` keeps the caller's padding. State variants
+  `has-[>svg]`, `has-data-[icon=inline-start|inline-end]`, `data-expanded`,
+  `data-behind`, `data-limited` and `aria-expanded` now resolve from explicit
+  component state; transform/calc/group variants stay unsupported with reasons.
+  103 package tests pass; `nub run check` and `nub run test` pass.
 
