@@ -31,7 +31,10 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * with, and its readable text step moves with it — no deeper selection keeps
  * the old blue at 4.5:1 (plan 381). The accent's own foreground is that same
  * readable step, so selecting the label on the pale accent fill keeps its floor
- * through the inverse veil (plan 382).
+ * through the inverse veil (plan 382). The dark scrim is deeper than the
+ * identity's (82%) so the floating face separates from every content fill a
+ * dialog can open over; the shipped `primary` patch measured 1.021:1 under the
+ * identity scrim (plan 526).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -106,6 +109,13 @@ export const macosPlatformStyle = {
       selected: "#1A4568",
       selectedForeground: "#CFE8FF",
       placeholder: "#9A9AA0",
+      // The modal scrim is 82%: the floating face (#2C2C2E) met the scrim over
+      // the dark accent at 1.021:1 (plan 507) and the edge could not stand in —
+      // a dialog's border measures 1.006:1 over the scrimmed status chips in the
+      // Windows palette. At 82% the scrimmed content sits below the face and
+      // every face pair clears 1.05:1 (warning, the brightest, at 1.083:1;
+      // plan 526).
+      overlay: "#000000D0",
       destructiveSoft: darkColors.destructiveSoft,
       shadow: "#000000",
     },

@@ -227,8 +227,10 @@ export interface ThemeColors {
    * Modal scrim. Translucent, because the surfaces beneath it must stay
    * recognisable. A pure black canvas cannot be darkened, so the high-contrast
    * dark theme veils with light instead of black. The face a dialog paints on it
-   * is measured through the wash (`dialogSurfacePairs`), because a scrim that
-   * meets its own floating surface leaves a dialog with only its edge.
+   * is measured through the wash (`dialogSurfacePairs`) on every surface a
+   * window shows, because a scrim that meets its own floating surface — or a
+   * bright status chip — leaves a dialog with only its edge, which is not always
+   * visible either.
    */
   readonly overlay: string;
   /** Hover wash for ghost and subtle surfaces; a filled control uses `xHover`. */

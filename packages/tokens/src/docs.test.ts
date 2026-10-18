@@ -572,37 +572,42 @@ describe("docs/design-system.md current figures", () => {
         : contrastRatio(compositeOver(shadow.color, scrim), scrim);
     const cap = contrastRatio("#000000", scrim);
 
-    expect([tightest.name, tightest.surface]).toEqual(["Dark", "selected"]);
+    expect([tightest.name, tightest.surface]).toEqual([
+      "Dark · Linux",
+      "destructive",
+    ]);
     expect(scrim).toBe("#060709");
     expect(
       [tightest.ratio, painted, cap].map((ratio) => ratio.toFixed(3)),
-    ).toEqual(["1.210", "1.035", "1.042"]);
+    ).toEqual(["1.079", "1.035", "1.042"]);
     [tightest.ratio, painted, cap].forEach((ratio) =>
       expect(designSystem).toContain(`${ratio.toFixed(3)}:1`),
     );
   });
 
-  it("quotes the content patch and the scrim trade", () => {
-    const macosDark = getPlatformTheme("darwin", "dark");
-    const patch = compositeOver(
-      macosDark.colors.overlay,
-      macosDark.colors.primary,
+  it("quotes the edge that cannot carry a content patch and the scrim that does", () => {
+    const windows = getPlatformTheme("win32", "dark");
+    const successPatch = compositeOver(
+      windows.colors.overlay,
+      windows.colors.success,
     );
-    const raised = extendTheme(macosDark, { colors: { overlay: "#000000B3" } });
-    const face = (surface: "primary" | "destructive"): number =>
-      contrastRatio(
-        raised.colors.popover,
-        compositeOver(raised.colors.overlay, raised.colors[surface]),
-      );
+    const macosDark = getPlatformTheme("darwin", "dark");
+    const warningPatch = compositeOver(
+      macosDark.colors.overlay,
+      macosDark.colors.warning,
+    );
+    const aaa = getTheme("light", "high");
+    const aaaCanvas = compositeOver(aaa.colors.overlay, aaa.colors.background);
     const figures = [
-      contrastRatio(macosDark.colors.popover, patch),
-      contrastRatio(macosDark.colors.border, patch),
-      face("primary"),
-      face("destructive"),
+      contrastRatio(windows.colors.border, successPatch),
+      contrastRatio(aaa.colors.border, aaaCanvas),
+      contrastRatio(macosDark.colors.popover, warningPatch),
     ].map((ratio) => ratio.toFixed(3));
 
-    expect(figures).toEqual(["1.021", "1.495", "1.077", "1.019"]);
+    expect(macosDark.colors.overlay).toBe("#000000D0");
+    expect(figures).toEqual(["1.006", "1.074", "1.083"]);
     figures.forEach((figure) => expect(designSystem).toContain(`${figure}:1`));
+    expect(designSystem).toContain("1.021:1");
   });
 });
 
@@ -2434,7 +2439,7 @@ describe("docs/design-system.md", () => {
     );
   });
 
-  it("names every layout surface in the dialog face's floor row", () => {
+  it("names every surface in the dialog face's floor row", () => {
     const row = tableRow("dialog face (");
     expect(row).toContain("`dialogSurfacePairs`");
     dialogSurfacePairs.forEach(([, surface]) => {

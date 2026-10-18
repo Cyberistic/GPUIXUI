@@ -1520,7 +1520,7 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * The page layout a modal covers: the canvas, a card, the quiet panel, the
  * field fill a form paints, the persistent `selected` fill a table or list keeps
  * and the floating surface a nested dialog opens on. The scrim's perceivability
- * and a dialog's face are both measured on this list.
+ * and a raised element's shadow are both measured on this list.
  */
 const layoutSurfaces = [
   "background",
@@ -1536,12 +1536,9 @@ const layoutSurfaces = [
  * actions, the three solid status chips a Badge paints (`destructive` is already
  * an action family), the raised action a status panel carries and the four soft
  * status panels. The scrim's own perceivability is measured on them
- * (`overlayWashPairs`); a dialog's face is not, because the four soft fills sit in
- * one narrow luminance band and a face can meet the scrim over a bright action
- * patch (macOS dark measures 1.0213:1 on `primary`, where the dialog's `border`
- * carries the silhouette). No `popover` value leaves that band — lightening the
- * face breaks the soft fills beside it and raising the scrim trades the `primary`
- * patch for `destructive` (plan 507).
+ * (`overlayWashPairs`), and so is the dialog's face (`dialogSurfacePairs`): a
+ * dialog opens over a status chip or an action as easily as over the page
+ * layout, and the face — not the 1px edge — is what separates it.
  */
 const contentFillSurfaces = [
   "primary",
@@ -1589,19 +1586,20 @@ export const overlaySurfaces = [
 /**
  * The dialog's face on the scrim. A dialog, drawer or command palette paints
  * `popover` over the modal scrim, so the surface a reader sees is the `overlay`
- * wash composited over the page layout — not `popover` on a page surface, which
- * is a different composition. `overlayWashPairs` measures the scrim itself; this
- * list measures what sits on it, because a theme whose scrim composites to its
- * own floating surface ships a dialog with no face and only a 1px edge (plan
- * 507).
+ * wash composited over whatever the window showed at that spot — not `popover`
+ * on a page surface. `overlayWashPairs` measures the scrim itself; this list
+ * measures what sits on it, on every surface `overlaySurfaces` names, because a
+ * dialog opens over a status chip or an action as easily as over the canvas.
  *
- * The layout list is {@link layoutSurfaces}, the six page surfaces
- * {@link overlaySurfaces} begins with. The content fills are deliberately
- * absent: a face meets the scrim over a bright action patch, and no `popover`
- * value clears the whole band the scrim compresses the page into, so the edge
- * carries that patch and the scrim's own perceivability there stays measured.
+ * macOS dark's face met its own scrim over its `primary` at **1.021:1** while
+ * the list named only the page layout, and the edge cannot stand in: a dialog's
+ * `border` measures **1.006:1** over Windows dark's scrimmed `success` chip,
+ * under the divider floor. The face is the carrier, so that set's scrim is
+ * deeper and every shipped face clears the surface floor (1.079:1 at the
+ * tightest). The list derives from `overlaySurfaces`, so a fifth content fill
+ * joins one place.
  */
-export const dialogSurfacePairs: readonly ContrastPair[] = layoutSurfaces.map(
+export const dialogSurfacePairs: readonly ContrastPair[] = overlaySurfaces.map(
   (background): ContrastPair => ["popover", background, "surface"],
 );
 
@@ -1786,8 +1784,10 @@ const elevationFailures = (
  * - `overlayWashPairs` — the modal scrim composited over every surface a window
  *   shows.
  * - `dialogSurfacePairs` — the dialog's face, `popover` composited over the
- *   `overlay` scrim the page layout is veiled with, because a theme whose scrim
- *   meets its own floating surface ships a dialog with no face.
+ *   `overlay` scrim on every surface a window shows (`overlaySurfaces`), because
+ *   a theme whose scrim meets its own floating surface ships a dialog with no
+ *   face and, over a bright status chip, with an edge that is under the divider
+ *   floor too.
  * - `elevationLevels` above `elevationSurfaces` — each defined level's painted
  *   shadow, composited at its own alpha over the surfaces a raised element can
  *   sit on. A level that composites to the surface beneath it has no shadow;

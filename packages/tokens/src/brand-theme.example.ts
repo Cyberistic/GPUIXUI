@@ -16,6 +16,13 @@ import { createTheme, darkTheme } from "./index.js";
  * dark enough to keep the mark at 3:1 and to clear the washes and status tints
  * the rail is painted on; the identity groove leaves this fill at 2.67:1.
  * `#20202E` is the brand's own neutral step.
+ *
+ * The scrim moves with the brand as well (plan 526). A dialog's face is measured
+ * on the scrim over every surface a window shows, and this fill is darker than
+ * the identity accent, so the inherited 65% scrim left the floating face at
+ * 1.038:1 over the brand's own primary action. At 85% the face clears the floor
+ * over every content fill. A brand with a lighter accent can keep the base
+ * scrim; a darker one deepens it, like the macOS dark style does.
  */
 export const brandTheme = createTheme({
   mode: "dark",
@@ -28,6 +35,7 @@ export const brandTheme = createTheme({
     primaryText: "#C9BDFF",
     ring: "#9B8CFF",
     track: "#20202E",
+    overlay: "#000000D9",
   },
   radius: { md: 8 },
   density: "compact",

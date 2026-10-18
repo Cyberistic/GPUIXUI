@@ -102,7 +102,8 @@ describe("modal scrim", () => {
     });
     expect(
       themeContrastFailures(regressed).filter(
-        ({ background }) => background === "background",
+        ({ foreground, background }) =>
+          foreground === "overlay" && background === "background",
       ),
     ).toEqual([
       {
@@ -152,7 +153,8 @@ describe("modal scrim", () => {
     });
     expect(
       themeContrastFailures(regressed).filter(
-        ({ background }) => background === "selected",
+        ({ foreground, background }) =>
+          foreground === "overlay" && background === "selected",
       ),
     ).toEqual([
       {
@@ -173,7 +175,8 @@ describe("modal scrim", () => {
       });
       expect(
         themeContrastFailures(regressed).filter(
-          ({ background }) => background === surface,
+          ({ foreground, background }) =>
+            foreground === "overlay" && background === surface,
         ),
         surface,
       ).toEqual([
@@ -206,7 +209,8 @@ describe("modal scrim", () => {
       });
       expect(
         themeContrastFailures(regressed).filter(
-          ({ background }) => background === chip,
+          ({ foreground, background }) =>
+            foreground === "overlay" && background === chip,
         ),
         chip,
       ).toEqual([

@@ -1,25 +1,22 @@
 /**
- * Guards the defect plan 507 fixes: `overlayWashPairs` measures the modal scrim
- * against everything it covers, but nothing measured the element that sits *on*
- * the scrim — the dialog's own face. A dialog, drawer or command palette paints
- * `popover` over the scrim (`components/dialog.tsx` paints the surface at :181
- * and the scrim at :248), so a theme whose `overlay` composites to its `popover`
- * ships a dialog with no face and only a 1px `border`, while every check
- * returned `[]`.
+ * Guards the defect plans 507 and 526 fix: `overlayWashPairs` measures the modal
+ * scrim against everything it covers, but nothing measured the element that sits
+ * *on* the scrim — the dialog's own face.
  *
- * The elevation contract does not cover it: plan 505 measures each level's
- * shadow over the four page surfaces, and a dialog's shadow lands on the scrim.
- * On the identity dark scrim (`#060709`) the `lg` tint measures **1.0353:1**,
- * and no black tint can clear the floor — pure black over that scrim reaches
- * only **1.0421:1**. The surface is the modal's separation, so it is measured.
+ * Plan 507 measured it over the six page layout surfaces only, excluding the
+ * twelve content fills behind the scrim with the rationale that macOS dark's
+ * face met the scrim over its `primary` at **1.0213:1** and the dialog's `border`
+ * carried that patch at 1.4954:1. Both halves were wrong: the excluded pair is a
+ * failure the checker could not see, and the edge carries only that one patch —
+ * over Windows dark's scrimmed `success` chip the same `border` measures
+ * **1.0057:1**, under the divider floor. A dialog over a Badge therefore had
+ * neither a face nor an edge while every check returned `[]`.
  *
- * The content fills behind the scrim are deliberately not a face pair: macOS
- * dark's face meets the scrim over a `primary` action at **1.0213:1** (its
- * `border` carries that patch at 1.4954:1), and no `popover` value leaves the
- * band the scrim compresses the page into. Raising the scrim to 70% clears
- * `primary` (1.0775:1) and collapses `destructive` (1.0185:1). The case below
- * pins that trade so the documents' rationale cannot drift into a palette edit
- * that only moves the collision.
+ * The scrim's own opacity is the lever. At the shipped 65% the content band sits
+ * around the floating face on macOS dark; raising it to 70% moves the collision
+ * to `destructive` (1.0185:1), but the scrimmed content darkens past the face as
+ * the alpha rises, so 82% (`#000000D0`) puts the whole band below it. The cases
+ * below pin the border, the two rejected alphas and the shipped tightest pair.
  */
 
 import { describe, expect, it } from "vitest";
@@ -49,7 +46,20 @@ const darkestFace = (theme: Theme): number =>
     ...dialogSurfacePairs.map(([, surface]) => faceRatio(theme, surface)),
   );
 
-const layoutSurfaces = dialogSurfacePairs.map(([, surface]) => surface);
+const faceSurfaces = dialogSurfacePairs.map(([, surface]) => surface);
+
+const tightestFace = () =>
+  shippedThemes
+    .flatMap(({ theme }) =>
+      dialogSurfacePairs.map(([, surface]) => ({
+        name: theme.name,
+        surface,
+        ratio: faceRatio(theme, surface),
+      })),
+    )
+    .reduce((worst, current) =>
+      current.ratio < worst.ratio ? current : worst,
+    );
 
 describe("the dialog's face on the scrim", () => {
   it("keeps every shipped face above the surface floor", () => {
@@ -62,9 +72,15 @@ describe("the dialog's face on the scrim", () => {
           : [`${theme.name} on ${surface}: ${ratio.toFixed(3)}`];
       });
     });
+    const tightest = tightestFace();
 
     expect(failures).toEqual([]);
-    expect(darkestFace(getTheme("dark"))).toBeCloseTo(1.21, 3);
+    expect(darkestFace(getTheme("dark"))).toBeCloseTo(1.1993, 3);
+    expect([tightest.name, tightest.surface]).toEqual([
+      "Dark · Linux",
+      "destructive",
+    ]);
+    expect(tightest.ratio).toBeCloseTo(1.0785, 3);
   });
 
   it("reports a scrim that erases the face", () => {
@@ -95,11 +111,9 @@ describe("the dialog's face on the scrim", () => {
     });
   });
 
-  it("measures the page layout the scrim splits off, not the content fills", () => {
-    expect(layoutSurfaces).toEqual(
-      overlaySurfaces.slice(0, dialogSurfacePairs.length),
-    );
-    expect(new Set(layoutSurfaces).size).toBe(dialogSurfacePairs.length);
+  it("measures every surface a window shows", () => {
+    expect(faceSurfaces).toEqual(overlaySurfaces);
+    expect(new Set(faceSurfaces).size).toBe(overlaySurfaces.length);
   });
 
   it("records why the shadow cannot be the modal's separation", () => {
@@ -119,27 +133,61 @@ describe("the dialog's face on the scrim", () => {
     expect(contrastRatio("#000000", scrim)).toBeLessThan(floor);
   });
 
-  it("records the content-patch band no scrim opacity can clear", () => {
-    const macosDark = getPlatformTheme("darwin", "dark");
-    const primaryPatch = compositeOver(
-      macosDark.colors.overlay,
-      macosDark.colors.primary,
+  it("records why the edge cannot carry a content patch", () => {
+    const windows = getPlatformTheme("win32", "dark");
+    const successPatch = compositeOver(
+      windows.colors.overlay,
+      windows.colors.success,
+    );
+    const aaa = getTheme("light", "high");
+    const scrimmedCanvas = compositeOver(
+      aaa.colors.overlay,
+      aaa.colors.background,
     );
 
-    expect(faceRatio(macosDark, "primary")).toBeCloseTo(1.0213, 3);
-    expect(contrastRatio(macosDark.colors.border, primaryPatch)).toBeCloseTo(
-      1.4954,
+    expect(contrastRatio(windows.colors.border, successPatch)).toBeCloseTo(
+      1.0057,
       3,
     );
+    expect(contrastRatio(aaa.colors.border, scrimmedCanvas)).toBeCloseTo(
+      1.0736,
+      3,
+    );
+    expect(contrastFloors.high.divider).toBeGreaterThan(
+      contrastRatio(aaa.colors.border, scrimmedCanvas),
+    );
+  });
 
-    const raised = extendTheme(macosDark, {
-      colors: { overlay: "#000000B3" },
+  it("records the scrim opacity that keeps the face outside the content band", () => {
+    const macosDark = getPlatformTheme("darwin", "dark");
+    const regressed = extendTheme(macosDark, {
+      colors: { overlay: "#000000A6" },
+    });
+    const tooLight = extendTheme(macosDark, {
+      colors: { overlay: "#000000CC" },
     });
 
-    expect(faceRatio(raised, "primary")).toBeCloseTo(1.0775, 3);
-    expect(faceRatio(raised, "destructive")).toBeCloseTo(1.0185, 3);
-    expect(contrastFloors.default.surface).toBeGreaterThan(
-      faceRatio(raised, "destructive"),
-    );
+    expect(macosDark.colors.overlay).toBe("#000000D0");
+    expect(faceRatio(macosDark, "warning")).toBeCloseTo(1.0826, 3);
+    expect(faceRatio(tooLight, "warning")).toBeCloseTo(1.0383, 3);
+    expect(faceRatio(regressed, "primary")).toBeCloseTo(1.0213, 3);
+    expect(
+      themeContrastFailures(regressed).filter(
+        (failure) =>
+          failure.foreground === "popover" && failure.wash === "overlay",
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        background: "primary",
+        pairClass: "surface",
+        floor: contrastFloors.default.surface,
+        ratio: expect.closeTo(1.0213, 3),
+      }),
+    ]);
+    expect(
+      themeContrastFailures(macosDark).filter(
+        (failure) => failure.foreground === "popover",
+      ),
+    ).toEqual([]);
   });
 });
