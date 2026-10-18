@@ -168,7 +168,7 @@ Every Tier 1 component has a page and a composed example beside the source:
 
 - `docs/` — one page per component (`docs/README.md` indexes them) with usage,
   API, keyboard, accessibility, theming, limitations and verification;
-- `examples/` — eleven realistic compositions plus the icon set, registered in
+- `examples/` — twelve realistic compositions plus the icon set, registered in
   `examples/index.ts` for `apps/playground`;
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
@@ -196,7 +196,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **21 files, 301 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **21 files, 303 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override

@@ -352,6 +352,56 @@ it("keeps a ButtonGroup attached with no gap and separated by the theme's gap", 
   expect(await gapOf("separated")).toBe(testTheme.spacing.sm);
 });
 
+it("stacks a vertical ButtonGroup into full-width rows", async () => {
+  // The gap guarded (plan 096): ButtonGroup was hard-coded to one centred row,
+  // so a vertical action stack — which every other group supports — hugged each
+  // label and left the group ragged. The axis is layout only: the clip, the
+  // radius and the gap rules stay the ones plan 078 measured.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ButtonGroup
+        orientation="vertical"
+        mode="attached"
+        label="Actions"
+        testId="g"
+      >
+        <Button testId="one">One</Button>
+        <Button testId="two">Two</Button>
+        <Button testId="three">Three</Button>
+      </ButtonGroup>
+    </Surface>,
+  );
+  const group = boundsOf(runtime, "g");
+  const one = boundsOf(runtime, "one");
+  const two = boundsOf(runtime, "two");
+  const three = boundsOf(runtime, "three");
+  expect([one.y, two.y, three.y]).toStrictEqual([
+    group.y,
+    group.y + one.height,
+    group.y + one.height + two.height,
+  ]);
+  expect([one.width, two.width, three.width]).toStrictEqual([
+    group.width,
+    group.width,
+    group.width,
+  ]);
+  const radiusOf = (id: string): unknown =>
+    Option.getOrUndefined(
+      Option.map(
+        runtime.element(id),
+        (element) => element.style["borderRadius"],
+      ),
+    );
+  expect(["one", "two", "three"].map(radiusOf)).toStrictEqual([0, 0, 0]);
+  expect(radiusOf("g")).toBe(testTheme.radius.md);
+  expect(
+    Option.getOrUndefined(
+      Option.map(runtime.element("g"), (element) => element.style["overflow"]),
+    ),
+  ).toBe("hidden");
+});
+
 it("squares the buttons of an attached group so a shared edge has no notch", async () => {
   // The bug guarded (plan 078): every child kept radius.md inside a zero-gap
   // group, so two attached buttons met with a rounded notch between them; the

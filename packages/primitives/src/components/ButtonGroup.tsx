@@ -7,7 +7,8 @@
  * `attached` asks every `Button` to be square (through `GroupShapeContext`) and
  * rounds and clips the **group** instead. The clip supplies the outer corners,
  * so no shared edge has a double-rounded notch (measured: plan `078`). A
- * button's explicit `radius` still wins.
+ * button's explicit `radius` still wins. The axis is `orientation`: a vertical
+ * group stacks its buttons and stretches them to the group's width (plan `096`).
  */
 
 import type { ReactElement, ReactNode } from "react";
@@ -21,9 +22,17 @@ import { useTheme } from "./ThemeProvider.js";
 export const BUTTON_GROUP_MODES = ["attached", "separated"] as const;
 export type ButtonGroupMode = (typeof BUTTON_GROUP_MODES)[number];
 
+export const BUTTON_GROUP_AXES = ["horizontal", "vertical"] as const;
+export type ButtonGroupOrientation = (typeof BUTTON_GROUP_AXES)[number];
+
 export interface ButtonGroupProps {
   /** Defaults to `attached`. */
   readonly mode?: ButtonGroupMode;
+  /**
+   * Defaults to `horizontal`. A vertical group stacks its buttons and stretches
+   * each to the group's width, so a column of actions does not look ragged.
+   */
+  readonly orientation?: ButtonGroupOrientation;
   /** A gap on the theme's spacing scale, for `separated`. Defaults to `sm`. */
   readonly gap?: keyof PrimitiveTheme["spacing"];
   /**
@@ -39,6 +48,7 @@ export interface ButtonGroupProps {
 export const renderButtonGroup = (
   {
     mode = "attached",
+    orientation = "horizontal",
     gap = "sm",
     label,
     style,
@@ -47,10 +57,11 @@ export const renderButtonGroup = (
   }: ButtonGroupProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
+  const vertical = orientation === "vertical";
   const base: StyleDesc = {
     display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: vertical ? "column" : "row",
+    alignItems: vertical ? "stretch" : "center",
     gap: mode === "attached" ? 0 : theme.spacing[gap],
   };
   if (mode === "attached") {
@@ -69,7 +80,7 @@ export const renderButtonGroup = (
   );
 };
 
-/** A row of related buttons. */
+/** Related actions: one row by default, one column when vertical. */
 export const ButtonGroup = (props: ButtonGroupProps): ReactElement => {
   const theme = useTheme();
   return (

@@ -27,6 +27,11 @@ import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
 /** The root and the headline each example must paint. */
 const SCREENS = [
   { id: "layout", root: "layout-example", headline: "Inspector" },
+  {
+    id: "buttonGroup",
+    root: "button-group-example",
+    headline: "Document actions",
+  },
   { id: "typography", root: "typography-example", headline: "Version 0.10.0" },
   { id: "form", root: "form-example", headline: "Project settings" },
   { id: "selection", root: "selection-example", headline: "Notifications" },
@@ -96,6 +101,16 @@ it("composes the layout example around a scrolling property list", async () => {
   expect(Option.isSome(runtime.element("layout-example-properties"))).toBe(
     true,
   );
+});
+
+it("runs the button-group example's stacked action", async () => {
+  // The vertical group is the shape plan 096 added; this proves the example
+  // wires a press through to caller-owned state, not just that it paints.
+  const runtime = await openWindow();
+  renderExample(runtime, "buttonGroup");
+  expect(runtime.allText()).toContain("No action yet.");
+  runtime.click("button-group-example-archive");
+  expect(runtime.allText()).toContain("Archived the document.");
 });
 
 it("creates through the form example's busy action", async () => {

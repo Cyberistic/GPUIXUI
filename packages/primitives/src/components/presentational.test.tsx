@@ -151,6 +151,27 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.some(testTheme.spacing.sm));
   });
 
+  it("lay a row by default and a column when vertical", () => {
+    // The gap guarded (plan 096): every other group takes `orientation`, but
+    // ButtonGroup was hard-coded to one centred row, so a vertical action stack
+    // hugged each label instead of filling the group.
+    const horizontal = renderButtonGroup({}, testTheme);
+    expect(expectSome(stringIn(horizontal, "flexDirection"))).toBe("row");
+    expect(expectSome(stringIn(horizontal, "alignItems"))).toBe("center");
+
+    const vertical = renderButtonGroup({ orientation: "vertical" }, testTheme);
+    expect(expectSome(stringIn(vertical, "flexDirection"))).toBe("column");
+    expect(expectSome(stringIn(vertical, "alignItems"))).toBe("stretch");
+  });
+
+  it("let the caller override the group's axis", () => {
+    const overridden = renderButtonGroup(
+      { orientation: "vertical", style: { alignItems: "center" } },
+      testTheme,
+    );
+    expect(expectSome(stringIn(overridden, "alignItems"))).toBe("center");
+  });
+
   it("give the group a name when it is labelled", () => {
     const named = renderButtonGroup(
       { mode: "attached", label: "Text alignment" },

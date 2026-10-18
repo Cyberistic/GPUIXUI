@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 68/69
+`[~]` `[██████████]` 69/70
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -505,6 +505,14 @@ retired once both branches are one
       top/bottom); the components one also handles left/right. Hoist the full
       rule into primitives and import it there when the two next change, so the
       library has one answer again (plans 323, 095). Owner: components.
+`[x]` `packages/primitives`: **`ButtonGroup` was the one group that could not
+      stack** — `CheckboxGroup`, `RadioGroup` and `ToggleGroup` all take
+      `orientation`, but `ButtonGroup` was hard-coded to a centred row, so a
+      vertical action stack hugged each label (measured: 45/45/56 px buttons in
+      a 1256 px group). It now takes the same prop; `vertical` stacks the
+      buttons and stretches each to the group's width under the same clip. 2
+      element-tree + 1 runtime + 1 example test, both directions measured (plan
+      096)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

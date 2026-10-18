@@ -31,8 +31,16 @@ export type { ButtonFocus, ButtonProps, ButtonState } from "./Button.js";
 export { IconButton } from "./IconButton.js";
 export type { IconButtonProps } from "./IconButton.js";
 
-export { ButtonGroup, BUTTON_GROUP_MODES } from "./ButtonGroup.js";
-export type { ButtonGroupMode, ButtonGroupProps } from "./ButtonGroup.js";
+export {
+  ButtonGroup,
+  BUTTON_GROUP_AXES,
+  BUTTON_GROUP_MODES,
+} from "./ButtonGroup.js";
+export type {
+  ButtonGroupMode,
+  ButtonGroupOrientation,
+  ButtonGroupProps,
+} from "./ButtonGroup.js";
 
 export { pressedValueText, Toggle } from "./Toggle.js";
 export type { ToggleProps, ToggleState } from "./Toggle.js";

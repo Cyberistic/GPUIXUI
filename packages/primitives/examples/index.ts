@@ -8,6 +8,7 @@
  */
 
 import type { ComponentType } from "react";
+import { ButtonGroupExample } from "./button-group.example.js";
 import { FeedbackExample } from "./feedback.example.js";
 import { FormExample } from "./form.example.js";
 import { IconsExample } from "./icons.example.js";
@@ -23,6 +24,7 @@ import { ValueExample } from "./value.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
+  buttonGroup: ButtonGroupExample,
   feedback: FeedbackExample,
   form: FormExample,
   icons: IconsExample,
