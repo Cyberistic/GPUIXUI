@@ -471,9 +471,10 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–469)
 
-`[~]` `[██████████]` 66/67
+`[~]` `[██████████]` 67/68
 
 `[x]` **The page template checks content, not only headings (plan 466)** — every delivered page must keep a `tsx`/`ts` example importing `@gpuixui/` under Usage, an `<auto-type-table>` under API reference and an `<include>` under Source; each rule fails on a real page when its block is removed
+`[x]` **Fumadocs Studio authors the pages (plan 467)** — a dev-only `studio` command opens `content/docs`; every one of the 84 pages round-trips byte-for-byte, a parse failure names the page, no editor module reaches `dist`, and Studio serves `200`
 `[x]` **Tier 2 page truth (plan 463)** — eight pages stop denying features the components ship: accordion header keys, list multi-select and type-ahead, dropdown/context submenus and 500 ms type-ahead, command-menu subsequence ranking, toast pause and one action, the real reason the dialog/search glyph is text; `preview-server.ts` waits 90 s so a 45 s cold start is not reported unverified
 `[x]` **`docs/preview-strategy.md` gap truth (plan 464)** — the document names all nine pages with neither a live scene nor an illustration, `gaps.ts` owns the set, and `preview-gaps.test.ts` fails when the document and the code disagree
 `[x]` **The record's limitations stop denying shipped features (plan 465)** — the `shippedFeatures` table now also reads each record's limitations, so the status block above a page cannot contradict the prose below it; seven stale strings corrected (list, toast, dropdown, two context, command, accordion)
@@ -560,8 +561,9 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[~]` `[██░░░░░░░░]` 6/28
+`[~]` `[██░░░░░░░░]` 6/29
 
+`[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
 `[ ]` **Components**: expose the two props the remaining live scenes need — `ContextMenu.point` (its surface paints at an internal `{ x: 0, y: 0 }` set only by the trigger's aux click) and `DatePicker.defaultOpen` (it owns its open state). Plans 457 and the preview strategy record why both stay at their native tier until then
 `[ ]` **Components/primitives**: expose the open state the wrappers hide, so a live scene can prove it — `Select` and `Tooltip` (primitives) and `Combobox` (components) have no `open`/`defaultOpen`, while GPUix's primitives do; a headless check cannot prove a hover- or click-opened surface. Plan 458 records the three asks; no scene is faked meanwhile
 `[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs

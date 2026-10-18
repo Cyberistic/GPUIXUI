@@ -1,6 +1,6 @@
-# 465 — Fumadocs Editor for authoring the docs (plan 435b)
+# 467 — Fumadocs Editor for authoring the docs (plan 435b)
 
-**Phase:** F · **Owner:** docs-site · **Status:** planned
+**Phase:** F · **Owner:** docs-site · **Status:** implemented
 **Depends on:** 410 (the site), 414 (real source includes), 423/425/461 (the pages)
 **Source queue item:** `.agents/slop/plans/435-pele-fumadocs-editor-rtl.md` §435b.
 
@@ -102,6 +102,21 @@ the boundary (same pattern as `content-references.test.ts`).
 
 ## 8. Progress
 
-_To be filled by the executor: install result, guard output, Studio start and
-the measured one-line diff, two-direction failure messages, build isolation
-grep, gate results._
+- **Installed** `@fumadocs-editor/core@0.4.1`, `ui@0.5.1` and `studio@0.2.4`
+  as exact devDependencies; `studio.config.ts` opens `content/docs` with the
+  Fumadocs UI components and the admonition spec.
+- **The guard passes for all 84 pages** (`src/editor-roundtrip.test.ts`, 3
+  tests): byte-for-byte serialization, the non-empty tree assertion, and an
+  edited-heading test that asserts only the edited line changes.
+- **Two directions, measured and reverted:**
+  - appending `<Unclosed>` to `installation.mdx` failed with
+    `installation.mdx: 1:1: Expected a closing tag for <Unclosed>` — a parse
+    throw is reported as that page's failure, not a bare position;
+  - pointing the walk at an empty directory failed with
+    `expected 0 to be greater than or equal to 60`.
+- **Production isolation:** after `nub run --filter docs build`, grepping
+  `apps/docs/dist` for `fumadocs-editor` returns nothing.
+- **Studio:** `nub run --filter docs studio --no-open --port 5189` starts on this
+  host, reads `content/docs` and serves `200`; it was stopped after the check.
+- The `LICENSES/` row for the MIT dev-only dependency is recorded as a
+  cross-team task in `TODO.md` (`LICENSES/` belongs to the licensing workstream).

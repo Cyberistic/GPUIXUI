@@ -22,8 +22,28 @@ nub run --filter docs smoke:build   # build, serve and crawl the production outp
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
+nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-only)
 nub run check                       # repo gate: test quality, lint, format, types
 ```
+
+## Authoring
+
+Component pages are edited in **Fumadocs Studio** (`nub run --filter docs
+studio`), a dev-only terminal command that opens `content/docs` in the editor
+from `@fumadocs-editor/*`. It is deliberately not a route: the deployed Worker
+has no writing surface, and nothing in `src/` imports the editor, so no editor
+code reaches the production bundle (verified by grepping `apps/docs/dist`).
+
+The editor's contract is byte-for-byte: an untouched block serializes back to the
+same source, so a one-sentence edit is a one-line diff.
+`src/editor-roundtrip.test.ts` proves it over every `.mdx` page, and names the
+page when a parse throws. This site's own MDX components (`<ComponentState>`,
+`<NativePreview>`, `<include>`, `<TokenScales>`, …) have no editor spec yet, so
+Studio preserves them verbatim and they are edited in the source pane.
+
+The editor packages are exact-pinned devDependencies: the ecosystem is pre-v1, so
+a minor bump may change the serialization contract the guard proves. Re-run the
+suite before bumping.
 
 ## Built-site smoke check
 
