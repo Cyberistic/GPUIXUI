@@ -146,7 +146,7 @@ const paintedText = async (
  * One gesture step, driven through the `App` the browser renderer installs on
  * the page (plan 486). The locator resolves the element's painted centre and the
  * input goes through GPUI's own hit testing, so this is the same path a reader's
- * pointer or keyboard takes.
+ * pointer, keyboard or wheel takes.
  */
 const runStep = async (session: Session, step: SceneStep): Promise<void> => {
   // An option that carries no test id is targeted by its label, scoped to the
@@ -164,7 +164,9 @@ const runStep = async (session: Session, step: SceneStep): Promise<void> => {
           ? `await ${target}.fill(${JSON.stringify(step.text)})`
           : step.kind === "press"
             ? `await ${target}.press(${JSON.stringify(step.keys)})`
-            : `await ${target}.click(${step.button === undefined ? "" : `{ button: ${step.button} }`})`;
+            : step.kind === "wheel"
+              ? `await ${target}.wheel(${step.deltaX ?? 0}, ${step.deltaY})`
+              : `await ${target}.click(${step.button === undefined ? "" : `{ button: ${step.button} }`})`;
   try {
     await session.evaluate(`(async () => { ${action}; })()`);
   } catch (error) {

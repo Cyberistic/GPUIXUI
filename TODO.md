@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–511)
+## Docs site workstream (plans 410–499, plus 500–513)
 
-`[x]` `[██████████]` 113/113
+`[x]` `[██████████]` 114/114
+
+`[x]` **The last stateful page gets a live scene (plan 513)** — Message scroller
+      was the one `stateful` record without one, behind a written reason that
+      `SceneStep` had no wheel. The renderer's automation API does expose
+      `Locator.wheel`; the scene grammar gains the step, the live transcript
+      leaves its tail on a real wheel and paints the component's `Jump to
+      latest` affordance, and `STATEFUL_NO_LIVE_SCENE` empties. Three
+      two-direction proofs in plan 513 §4 and the measured result in §6.
 
 `[x]` **The site is accessibility-checked in a real browser (plan 512)** — no
       gate ran a conformance rule set over a whole page, so a `<ul>` with

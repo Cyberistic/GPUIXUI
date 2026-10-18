@@ -145,6 +145,12 @@ import {
   CarouselTrack,
 } from "@gpuixui/components/carousel";
 import {
+  MessageScroller,
+  MessageScrollerItem,
+  MessageScrollerJumpToLatest,
+  MessageScrollerViewport,
+} from "@gpuixui/components/message-scroller";
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -1136,6 +1142,46 @@ const TimePickerScene = (): ReactElement => {
   );
 };
 
+/** A transcript longer than its viewport, so a wheel has somewhere to go. */
+const MESSAGE_ROWS = [
+  "09:41  Build started on main",
+  "09:41  Installing 412 packages",
+  "09:42  Type-check passed",
+  "09:42  Docs suite passed",
+  "09:43  Native smoke suite passed",
+  "09:43  Bundle written: 812 kB",
+  "09:44  Preview build started",
+  "09:44  Wasm renderer copied",
+  "09:45  Preview build finished",
+  "09:45  Deploy started",
+  "09:46  Worker uploaded",
+  "09:46  Cache purged",
+  "09:47  Smoke: build crawled 90 pages",
+  "09:47  Deploy finished on production",
+] as const;
+
+const MessageScrollerScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Deploy log</Text>
+    <Text role="caption" tone="muted">
+      The real MessageScroller. It starts at the tail; wheel up to leave it.
+    </Text>
+    <MessageScroller label="Deploy log">
+      <MessageScrollerViewport
+        testId="scene-message-viewport"
+        style={{ height: 180 }}
+      >
+        {MESSAGE_ROWS.map((row) => (
+          <MessageScrollerItem key={row}>
+            <Text role="body">{row}</Text>
+          </MessageScrollerItem>
+        ))}
+      </MessageScrollerViewport>
+      <MessageScrollerJumpToLatest label="Jump to latest" />
+    </MessageScroller>
+  </Stack>
+);
+
 const CarouselScene = (): ReactElement => {
   const [index, setIndex] = useState(0);
   return (
@@ -1213,6 +1259,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     pagination: PaginationScene,
     "time-picker": TimePickerScene,
     carousel: CarouselScene,
+    "message-scroller": MessageScrollerScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

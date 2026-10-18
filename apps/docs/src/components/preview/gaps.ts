@@ -21,11 +21,8 @@ export const NO_LIVE_SCENE: ReadonlyMap<string, string> = new Map();
  * Stateful pages whose documented state no gesture step can reach yet (plan
  * 508). This is the second measured set, not a parking space: a scene that
  * becomes possible must move out of it, and `scene-contract.test.ts` compares
- * both directions with the real registry.
+ * both directions with the real registry. **Empty since plan 513**, which gave
+ * `SceneStep` a wheel and moved Message scroller's unpinned affordance onto the
+ * live surface; the set stays so the next stateful record cannot ship silently.
  */
-export const STATEFUL_NO_LIVE_SCENE: ReadonlyMap<string, string> = new Map([
-  [
-    "message-scroller",
-    "The pinned follow needs a scroll away from the tail and then an arrival; SceneStep has no wheel step and the viewport has no initial offset.",
-  ],
-]);
+export const STATEFUL_NO_LIVE_SCENE: ReadonlyMap<string, string> = new Map();

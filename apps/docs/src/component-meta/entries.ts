@@ -1724,6 +1724,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "Keeps a transcript on new content while the reader stays in control.",
     {
       gpuix: "partial",
+      liveScene: "message-scroller",
       sourcePath: "packages/components/src/message-scroller.tsx",
       api: [
         "MessageScrollerProps",

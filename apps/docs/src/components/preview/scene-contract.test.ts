@@ -56,6 +56,7 @@ const interactionScenes = new Map([
   ["search-input", "search-input"],
   ["text-input", "text-input"],
   ["text-area", "text-area"],
+  ["message-scroller", "message-scroller"],
 ]);
 
 const pagesDirectory = new URL(

@@ -203,14 +203,14 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **41 scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **42 scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
   input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
   Hotkey input, Select, Checkbox, Switch, Radio group, Slider, Range slider,
   Search input, Text input, Text area, Accordion, Number field, OTP field,
-  Rating, Tag input, Toggle, List, Collapsible, Pagination, Time picker and
-  Carousel — chosen because a still cannot prove
+  Rating, Tag input, Toggle, List, Collapsible, Pagination, Time picker,
+  Carousel and Message scroller — chosen because a still cannot prove
   the point: an open overlay and its focus entry, a grouped palette, real SVG
   markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a transient
   message, an opened list, a checked control, a value a key reaches, typed text,
@@ -223,11 +223,12 @@ the source for a component that is no longer `planned`.
 
 ## Gestures are proved, not implied
 
-19 scenes document state only a gesture produces: a component that owns its
+20 scenes document state only a gesture produces: a component that owns its
 open state and exposes no `defaultOpen`, a list that opens on a click, controls
-whose checked paint is not text, a value a key moves, a row a reader selects and
-a field a reader types into. They are not opened by a prop: the smoke drives the
-same gesture a reader performs through the automation surface the renderer
+whose checked paint is not text, a value a key moves, a row a reader selects, a
+field a reader types into and a transcript a reader wheels away from its tail.
+They are not opened by a prop: the smoke drives the same gesture a reader
+performs through the automation surface the renderer
 installs (`globalThis.gpuix` in the preview document), and `smoke:preview`
 asserts the scene's text is **absent before** the gesture and **present after**
 it. A prop that quietly opened, checked or filled the surface would fail that
@@ -254,6 +255,7 @@ first assertion, and a broken gesture fails the second.
 | Pagination | press next three times | the current page and its window move |
 | Time pickers | click the hour field, press Up | an arrow key commits a new value |
 | Carousels | press the next control | the active slide replaces the first |
+| Message scrollers | wheel up in the viewport | the scroller leaves the tail and paints its "Jump to latest" affordance |
 
 Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
 is the same path a reader's keyboard takes. A typed character arrives without a
@@ -270,13 +272,10 @@ to carry is the same set `apps/docs/src/components/preview/gaps.ts` declares —
 empty since plan 486 — and `preview-gaps.test.ts` fails when the document and the
 code disagree.
 
-**Message scroller is the one stateful page without a live scene.** Its
-documented state is pinned follow after a scroll away from the tail and a new
-arrival; the scene grammar has no wheel step and the viewport has no initial
-offset, so a scene would be a frame that never leaves the tail. The native suite
-proves the rule set; the exception is pinned in
-`apps/docs/src/components/preview/gaps.ts` and compared with the registry in
-both directions.
+Every stateful page now has a live scene: Message scroller's wheel step (plan
+513) leaves the tail and paints the affordance a still cannot show. Pinned
+follow after a new arrival remains the native suite's claim — the scene proves
+the unpinned state, not a follow, and the page says so.
 
 ### Pages with neither a live scene nor an illustration
 

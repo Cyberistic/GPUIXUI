@@ -48,6 +48,7 @@ export const LIVE_SCENES = [
   "pagination",
   "time-picker",
   "carousel",
+  "message-scroller",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -103,6 +104,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   pagination: "Showing results 31–40",
   "time-picker": "Reminder at 10:30",
   carousel: "Release notes slide 2 of 2",
+  "message-scroller": "Jump to latest",
 };
 
 /**
@@ -126,7 +128,14 @@ export type SceneStep =
     }
   | { readonly kind: "press"; readonly testId: string; readonly keys: string }
   /** Types through the renderer's keyboard path; the field's own edit path. */
-  | { readonly kind: "fill"; readonly testId: string; readonly text: string };
+  | { readonly kind: "fill"; readonly testId: string; readonly text: string }
+  /** Wheels over an element's painted centre; positive Y scrolls up. */
+  | {
+      readonly kind: "wheel";
+      readonly testId: string;
+      readonly deltaY: number;
+      readonly deltaX?: number;
+    };
 
 export const SCENE_GESTURE: Readonly<
   Partial<Record<LiveScene, readonly SceneStep[]>>
@@ -163,6 +172,9 @@ export const SCENE_GESTURE: Readonly<
     { kind: "press", testId: "scene-time-hours", keys: "up" },
   ],
   carousel: [{ kind: "click", testId: "scene-carousel-next" }],
+  "message-scroller": [
+    { kind: "wheel", testId: "scene-message-viewport", deltaY: 600 },
+  ],
 };
 
 /**
@@ -189,6 +201,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   pagination: "Press next three times to reach page four.",
   "time-picker": "Click the hour field, then press Up.",
   carousel: "Press the next control to see the second slide.",
+  "message-scroller": "Wheel up in the log to leave the tail.",
 };
 
 /**
