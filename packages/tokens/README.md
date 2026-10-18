@@ -564,6 +564,15 @@ and `themeContrastFailures` returns `[]` for every shipped style. A base that
 already declares the level keeps its own colours, so this is not a rewrite of a
 consumer's edits (plan 373).
 
+A style is an override set over the base it is applied to, so it names the
+canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
+dark `skeleton`, because Linux owns a darker tint (plan 091) and a style applied
+over another platform's theme must not keep that platform's tint.
+`platform-composition.test.ts` applies every shipped base and style pair in both
+modes, both contrasts and both requested levels and holds each result to
+`themeContrastFailures`, `themeMetricFailures` and `themeColorFailures`
+(plan 374).
+
 ## Custom typefaces
 
 **Unavailable in the pinned runtime.** GPUix `0.10.0` has no `registerFont`, so a

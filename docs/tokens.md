@@ -512,11 +512,13 @@ built-in identity.
 The Default variant has no overrides — `getPlatformTheme("default", mode)`
 returns the identity unchanged. Each real variant changes its type family,
 radii, density, motion, surfaces (including the loading skeleton), accent and
-shadows; roles it does not name (status, disabled, scrollbar) and every
-non-colour scale inherit the identity, so the default stays the design system
-the library is built on. The dark variants carry their own `skeleton`, because a
-loading placeholder is a surface on that platform's card and row washes, not a
-fixed grey.
+shadows; roles it does not name (the other status roles, disabled, scrollbar) and
+every non-colour scale inherit the identity, so the default stays the design
+system the library is built on. The dark variants carry their own `skeleton`,
+because a loading placeholder is a surface on that platform's card and row
+washes, not a fixed grey, and they also name their dark `destructiveSoft` — the
+identity tint they already paint — so applying one style over another platform's
+theme cannot keep the previous canvas's tint (plan `374`).
 
 `getPlatformTheme` never mutates its base, keeps the requested mode and returns
 a normal `Theme`:
@@ -630,6 +632,15 @@ wash selects text in another hue (plan `331`).
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not
 test.
+
+A style is also an override set over whatever base it is applied to, so a style
+that changes a canvas role another shipped style also changes must name that
+role. The shipped dark styles name `destructiveSoft` for exactly that reason:
+Linux owns a darker tint (plan `091`) and the others name the identity tint they
+paint, so neither can leave the other's value behind on its own canvas.
+`platform-composition.test.ts` applies every shipped style and recipe to every
+shipped base in both modes, both contrasts and both requested levels and holds
+each result to all three checks (plan `374`).
 
 ### Platform recipes
 

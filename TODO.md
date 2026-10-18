@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 141/192
+`[x]` `[███████░░░]` 142/193
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1018,6 +1018,15 @@ checker rejected four shipped combinations (light macOS 1.0248:1, Linux light
 for a level now replaces the palette as a set, taking the unnamed roles from the
 default-level identity of the same mode; a same-level base keeps its edits and a
 style still overrides only what it names, so no token value moves (plan 373)
+`[x]` Make a platform style own its dark soft destructive tint — applying macOS
+dark, Windows dark, XP or Aero over a Linux dark theme kept Linux's
+`destructiveSoft` (`#3A0B0D`, plan 091) on the new canvas, measuring **1.0005:1**
+on macOS dark's background and 1.0448:1 on Windows', under the 1.05:1 surface
+floor, so the documented call produced an invisible Alert; the two dark sets now
+name the identity tint they already paint, no shipped pixel moves, and
+`platform-composition.test.ts` holds every shipped base × style pair to all
+three checks in both modes, both contrasts and both requested levels
+(plan 374)
 
 ## Phase C — Tier 1–2 components
 

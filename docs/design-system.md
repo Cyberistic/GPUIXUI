@@ -589,6 +589,13 @@ name come from the identity at that level — a forced default palette is whole,
 not half of one — while a base already at that level keeps its own colours,
 edits included.
 
+A style is also an override set over the base it is applied to, so it names the
+canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their
+dark `skeleton`, and every shipped base and style pair is applied and held to all
+three checks (`platform-composition.test.ts`, plan `374`). A style applied over
+another platform's theme therefore keeps its own canvas's tint rather than the
+previous one's.
+
 Overrides merge by group; typography merges field by field, density metrics size
 by size, motion timing by timing and easing by easing; elevation levels are
 replaced as whole arrays; the mode is immutable. An explicit `undefined` is
