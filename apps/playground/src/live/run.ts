@@ -17,8 +17,10 @@ import type * as PlatformError from "effect/PlatformError";
 import { NodeFileSystem } from "@effect/platform-node";
 import { Report, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
+import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment } from "react";
 import { palettes } from "../palettes.js";
+import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
 import { createHost } from "./host.js";
 import {
   LIVE_ARTIFACTS,
@@ -87,6 +89,18 @@ export const program: Effect.Effect<
   FileSystem.FileSystem
 > = Effect.gen(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
+  // The app-level window key handler, exactly as `src/smoke/run.ts` wires it:
+  // GPUix delivers window keys only through `render({ onKeyDown })`, so the
+  // runner is the "app" that forwards to whatever the mounted view registered
+  // through `useWindowKey` (plan `345`).
+  const windowKey: { current: Option.Option<WindowKeyHandler> } = {
+    current: Option.none(),
+  };
+  const registerWindowKey = (
+    handler: Option.Option<WindowKeyHandler>,
+  ): void => {
+    windowKey.current = handler;
+  };
 
   const modules = yield* Effect.tryPromise({
     try: async () => {
@@ -118,6 +132,11 @@ export const program: Effect.Effect<
       renderer,
       title: TITLE,
       ...WINDOW,
+      onKeyDown: (event: EventPayload) =>
+        Option.match(windowKey.current, {
+          onNone: () => {},
+          onSome: (handler) => handler(event),
+        }),
     }),
   );
 
@@ -149,7 +168,7 @@ export const program: Effect.Effect<
                 createElement(
                   ThemeProvider,
                   { theme: palettes.dark },
-                  live.view(),
+                  withWindowKeyProvider(registerWindowKey, live.view()),
                 ),
               ),
             ),

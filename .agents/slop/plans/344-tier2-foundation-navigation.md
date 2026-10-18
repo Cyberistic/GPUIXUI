@@ -257,36 +257,39 @@ Reverse proofs:
 ### 8.1 Live parity
 
 The same two views now run in the real 1100×720 window as
-`live-tier2-foundation` (15 checks) and `live-tier2-navigation` (17 checks).
+`live-tier2-foundation` (18 checks) and `live-tier2-navigation` (17 checks).
 Live suite `22 → 24`, checks `373 → 405`, exit `0`, two screenshots.
 
-The live run found two behaviours the offscreen `TestRenderer` hides. Both have
-one root cause worth stating plainly: **a real window delivers a key to the
-focused element only**, and a **native click focuses without running React's
-`onFocus`**.
+The first live run failed the List arrow check and the Tabs arrow check. Plan
+`345` then isolated the cause with a dedicated key-routing probe, and the two
+failures turned out to have different causes:
 
-1. A key reaches the focused List row (a probe counter on the row fires,
-   `keys=1`) but the List root's `onKeyDown` never runs, so `Down` leaves focus
-   on the row. The headless arrow contract passes because the `TestRenderer`
-   bubbles.
-2. A click focuses a Tabs trigger natively but the roving `active` stays empty,
-   so an arrow starts from the first enabled tab. The `TabsList` ancestor
-   handler would not be reached live for the same bubbling reason.
+1. **List was a harness race, not a component defect.** The key was sent before
+   the click's React commit, so the list moved from the previous active row.
+   With a `settle` after the click (the runner's own rule) `Down` moves focus,
+   skips the disabled row and `Enter` selects — the headless contract holds in a
+   window. `live-tier2-foundation` gained those three checks.
+2. **Tabs is a real component issue.** A live click focuses a trigger natively
+   but does **not** run React's `onFocus` (plan `345` measured the same on two
+   plain divs: `innerFocus=0`, `outerFocus=0` after clicks). `Tabs` sets its
+   roving `active` only in `onFocus`, so after a click an arrow starts from the
+   first enabled tab. The headless suite focuses the trigger explicitly, so it
+   never covered click-then-arrow.
 
-This is a **shipped-component defect**, not a harness limitation: a user with a
-focused row or tab gets no keyboard navigation in a real window. The fix belongs
-to the components workstream — attach the roving handler to each focusable item
-(or use the window key handler), and set `active` on a clicked trigger. The two
-live scenarios assert the measured behaviour as characterization checks; they
-must be flipped to the expected next-item assertions when the component changes.
-Recorded in `TODO.md` and in the `List`/`Tabs` rows of `COMPONENTS.md`.
+The live scenario asserts the measured Tabs behaviour as a characterization
+check; it must be flipped to the expected next-tab assertion when `Tabs` sets
+`active` on click. Recorded in `TODO.md` and the `Tabs` row of `COMPONENTS.md`.
+Plan `345` also established the positive rule: a key reaches the focused
+element, bubbles through every ancestor, and then reaches the window handler —
+so an ancestor handler is a valid component path.
 
 ## 9. Acceptance
 
 - Both scenarios are green alone and in the full suite; the suite is `74/74`
   with exit `0` and the check total is recorded.
-- Both live twins are green in a real window; the live suite is `24/24` with
-  exit `0`, and the measured keyboard limitation is recorded.
+- Both live twins are green in a real window; the live suite is `25/25` with
+  exit `0` (the follow-up key-routing probe is plan `345`), and the measured
+  click/`onFocus` limitation is recorded.
 - `tier2=verified` still holds, now backed by five headless and five live
   scenarios.
 - The mutation and reverse proofs in §6 are recorded with the exact failing
@@ -301,8 +304,8 @@ Recorded in `TODO.md` and in the `List`/`Tabs` rows of `COMPONENTS.md`.
   scroll): those have their own probes.
 - It does not add docs pages for the components (`apps/docs` is the docs-site
   workstream).
-- It does not fix the keyboard defect in the shipped List/Tabs. The two live
-  scenarios assert the measured limit; the fix is a `TODO.md` cross-team task
-  with the evidence in §8.1.
+- It does not fix the click/`onFocus` issue in the shipped Tabs. The live
+  scenario asserts the measured limit; the fix is a `TODO.md` cross-team task
+  with the evidence in §8.1 and plan `345`.
 - It cannot fix any other defect found in a shipped component. Those become
   `TODO.md` cross-team tasks with the measured evidence.

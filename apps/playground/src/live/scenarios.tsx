@@ -41,6 +41,7 @@ import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
 import { tier2NavigationScenario } from "../scenarios/tier2-navigation.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
+import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
 /** Window size the runner opens. A check compares the shell against it. */
@@ -1983,6 +1984,92 @@ const tier2Toast: LiveScenario = {
     }),
 };
 
+const keyRouting: LiveScenario = {
+  id: "live-key-routing",
+  title: "Live key routing: the focused element, its ancestor and the window",
+  capability: "focus",
+  view: () => <KeyRoutingView />,
+  ready: "key-inner",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "key-routing-readout", "inner=0");
+      yield* ctx.expectEqual(
+        "autoFocus took native focus",
+        yield* focusedOf(ctx),
+        "key-inner",
+      );
+
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* waitForText(ctx, "key-routing-readout", "inner=1");
+      yield* ctx.expectContains(
+        "the focused element and every ancestor receive the key",
+        yield* textOf(ctx, "key-routing-readout"),
+        "inner=1 middle=1 outer=1",
+      );
+      yield* ctx.expectContains(
+        "the app-level window handler receives it too",
+        yield* textOf(ctx, "key-routing-readout"),
+        "window=1",
+      );
+      yield* ctx.expectContains(
+        "autoFocus does not run React's onFocus",
+        yield* textOf(ctx, "key-routing-readout"),
+        "innerFocus=0",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "key-routing-readout", "inner=2");
+      yield* ctx.expectContains(
+        "a named key reaches the focused element and every ancestor",
+        yield* textOf(ctx, "key-routing-readout"),
+        "inner=2 middle=2 outer=2",
+      );
+
+      yield* ctx.host.click("key-outer");
+      yield* waitForFocus(ctx, "key-outer");
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* waitForText(ctx, "key-routing-readout", "outer=1");
+      yield* ctx.expectContains(
+        "delivery follows the new focus",
+        yield* textOf(ctx, "key-routing-readout"),
+        "inner=2 middle=2 outer=3",
+      );
+      yield* ctx.expectContains(
+        "the window handler sees it again",
+        yield* textOf(ctx, "key-routing-readout"),
+        "window=2",
+      );
+
+      yield* ctx.host.click("key-inner");
+      yield* waitForFocus(ctx, "key-inner");
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* waitForText(ctx, "key-routing-readout", "inner=3");
+      yield* ctx.expectContains(
+        "clicking the child returns delivery to it",
+        yield* textOf(ctx, "key-routing-readout"),
+        "inner=3 middle=3 outer=4",
+      );
+      yield* ctx.expectContains(
+        "the window sees every key",
+        yield* textOf(ctx, "key-routing-readout"),
+        "window=3",
+      );
+      yield* ctx.expectContains(
+        "a live click focuses natively without running React's onFocus",
+        yield* textOf(ctx, "key-routing-readout"),
+        "innerFocus=0 outerFocus=0",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${keyRouting.id}.png`);
+    }),
+};
+
 const tier2Foundation: LiveScenario = {
   id: "live-tier2-foundation",
   title: "Live Tier 2: the foundation parts and the List selection",
@@ -2032,27 +2119,36 @@ const tier2Foundation: LiveScenario = {
 
       yield* ctx.host.click("list-row-inbox");
       yield* waitForFocus(ctx, "list-row-inbox");
-      // Measured: the focused row receives the key (the probe counter moves),
-      // but the List root's `onKeyDown` never fires. The live runtime delivers
-      // a key to the focused element only; ancestor React handlers are not on
-      // the path. The headless `TestRenderer` bubbles here, which is why the
-      // headless List contract passes. Recorded as a components defect.
-      yield* ctx.host.key("down");
       yield* settle;
       yield* ctx.expectContains(
-        "the focused row receives the key",
+        "a click selects the row and makes it the active one",
         yield* textOf(ctx, "tier2-foundation-readout"),
-        "keys=1",
-      );
-      yield* ctx.expectEqual(
-        "a key does not reach the List root in a live window (measured limit)",
-        yield* focusedOf(ctx),
-        "list-row-inbox",
+        "selected=inbox",
       );
 
-      yield* ctx.host.click("list-row-trash");
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Down moves native focus one row live",
+        yield* focusedOf(ctx),
+        "list-row-starred",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Down skips the disabled row live",
+        yield* focusedOf(ctx),
+        "list-row-trash",
+      );
+      yield* ctx.host.key("enter");
       yield* settle;
       yield* waitForText(ctx, "tier2-foundation-readout", "selected=trash");
+      yield* ctx.expectContains(
+        "Enter selects the focused row live",
+        yield* textOf(ctx, "tier2-foundation-readout"),
+        "selected=trash",
+      );
+
       yield* ctx.host.click("list-row-spam");
       yield* settle;
       yield* ctx.expectContains(
@@ -2498,6 +2594,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Dialog,
   tier2Menu,
   tier2Toast,
+  keyRouting,
   tier2Foundation,
   tier2Navigation,
   replace,
