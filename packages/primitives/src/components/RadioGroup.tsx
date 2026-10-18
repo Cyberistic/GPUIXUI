@@ -170,11 +170,28 @@ export const renderRadioGroup = (
       onNone: () => false,
       onSome: navigate,
     });
+  /**
+   * The option an activation key selects.
+   *
+   * The focused option, not the value-derived tab stop: a controlled parent may
+   * defer or reject an arrow's move, leaving focus on one option and the value
+   * on another (measured, plan 353). `focusedIndex` is the same state the ring
+   * paints from, so the keyboard and the ring always name one option. With no
+   * option focused — a key delivered to the group itself — the tab stop is the
+   * honest fallback.
+   */
+  const activationIndex = Option.getOrElse(
+    focus.focusedIndex,
+    () => activeIndex,
+  );
+  const activate = (phase: "down" | "up", event: EventPayload): void => {
+    if (decideActivation(event.key ?? "", phase, event.isHeld === true))
+      select(activationIndex);
+  };
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";
     if (move(key) || jump(key)) return;
-    if (decideActivation(key, "down", event.isHeld === true))
-      select(activeIndex);
+    activate("down", event);
   };
   return (
     <div
@@ -182,6 +199,7 @@ export const renderRadioGroup = (
       aria-label={props.label}
       testId={props.testId}
       onKeyDown={onKeyDown}
+      onKeyUp={(event) => activate("up", event)}
       style={resolvePartStyle(
         {
           display: "flex",

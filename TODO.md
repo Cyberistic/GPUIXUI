@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 100/100
+`[x]` `[██████████]` 101/101
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -776,6 +776,17 @@ retired once both branches are one
       literal equal to the light role, a `Text` with no colour, and a stray
       component export — and each fails by name; offline 574, runtime 454
       (plan `352`).
+
+`[x]` `packages/primitives`: **`RadioGroup`'s Space key did nothing, and Enter
+      selected the wrong option** — measured: with a controlled parent that keeps
+      `value="a"`, `ArrowDown` moved focus to Beta and reported it, but `Space`
+      down/up reported nothing (the group wired only a key-down path, and
+      `decideActivation` ignores Space down), and `Enter` re-selected the
+      already-selected Alpha instead of the focused Beta, so the shared no-op
+      guard made the key look dead. Activation now resolves one target from
+      `focus.focusedIndex` — the same state the ring paints from, falling back to
+      the tab stop — and runs on both key phases. 3 runtime tests, both
+      directions proven (offline 574, runtime 457; plan `353`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open

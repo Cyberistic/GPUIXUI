@@ -810,6 +810,90 @@ it("wraps a RadioGroup's arrow navigation at the end", async () => {
   expect(announced(runtime, "Alpha")).toBe("checked");
 });
 
+it("activates the focused radio on Space up, not the value's tab stop", async () => {
+  const runtime = await openWindow();
+  const calls: string[] = [];
+  // A controlled parent that records every request but keeps `value="a"`: a
+  // deferred or rejected selection, the state where focus and value diverge.
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        value="a"
+        onValueChange={(next) => calls.push(next)}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  expect(runtime.focused()).toStrictEqual(Option.some("rg-a"));
+  runtime.keyDown("rg-a", "down");
+  runtime.flush();
+  expect(runtime.focused()).toStrictEqual(Option.some("rg-b"));
+  expect(announced(runtime, "Alpha")).toBe("checked");
+  // Space acts on key up: the down phase must report nothing.
+  runtime.keyDown("rg-b", "space");
+  runtime.flush();
+  expect(calls).toStrictEqual(["b"]);
+  runtime.keyUp("rg-b", "space");
+  runtime.flush();
+  // The focused radio, not the value-derived tab stop (which is still Alpha).
+  expect(calls).toStrictEqual(["b", "b"]);
+});
+
+it("activates the focused radio on Enter, not the value's tab stop", async () => {
+  const runtime = await openWindow();
+  const calls: string[] = [];
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        value="a"
+        onValueChange={(next) => calls.push(next)}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.keyDown("rg-a", "down");
+  runtime.flush();
+  runtime.keyDown("rg-b", "enter");
+  runtime.flush();
+  // Enter re-selecting Alpha is a no-op the shared notify rule suppresses, so
+  // the old handler made the key look dead instead of choosing Beta.
+  expect(calls).toStrictEqual(["b", "b"]);
+});
+
+it("selects the tab stop on an activation key with no focused option", async () => {
+  const runtime = await openWindow();
+  const calls: string[] = [];
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rg"
+        label="Pick"
+        onValueChange={(next) => calls.push(next)}
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  // No item has taken focus: a key delivered to the group itself still acts.
+  runtime.keyUp("rg", "space");
+  runtime.flush();
+  expect(calls).toStrictEqual(["a"]);
+});
+
 it("exposes a named RadioGroup of named RadioButtons", async () => {
   const runtime = await openWindow();
   runtime.render(

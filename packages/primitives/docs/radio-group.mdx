@@ -65,6 +65,13 @@ Arrows and Home/End **select as they move** and take focus with them, matching
 the platform radio contract. The tab stop is the selection: a controlled
 `value` change from the parent moves the tab stop with it.
 
+`Enter` and `Space` act on the option that **holds focus**, which is not always
+the selected one: a controlled parent can defer or reject an arrow's move (a
+validation step, a permission check), leaving focus ahead of the value. The key
+then reports the focused option, so the keyboard and the focus ring always name
+the same radio (plan `353`). Space acts on key **up**, Enter on key **down**, and
+a held key does nothing — the shared contract in `core/keyboard.ts`.
+
 ## Accessibility
 
 - Roles: `RadioGroup` and `RadioButton` in AccessKit.
@@ -153,7 +160,9 @@ the option row:
   option paints the ring and no other does; arrows move native focus with the
   selection and a controlled value moves the tab stop (plan 049); a click on the
   circle selects; `invalid` paints the measured `borderColor` and the same tree
-  without it paints the input role (plan 061).
+  without it paints the input role (plan 061); `Space` up and `Enter` activate
+  the option that holds focus, not the value's stale tab stop, and an activation
+  key with no focused option still selects the tab stop (plan 353).
 
 ```sh
 nub run --filter @gpuixui/primitives test

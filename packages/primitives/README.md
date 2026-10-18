@@ -243,7 +243,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **25 files, 454 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **25 files, 457 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -306,7 +306,8 @@ painting no ring once disabled (plan 332), and a number field whose
 `ArrowLeft`/`ArrowRight`/`Home`/`End` were measured to move the native caret and
 report no value, while Up/Down/PageUp/PageDown still step (plan 338), and a
 number field whose Enter commits `1.5` to `1.50` before calling the caller's
-`onSubmit` (plan 339).
+`onSubmit` (plan 339), and a radio group whose Space and Enter activate the
+option holding focus rather than the value's stale tab stop (plan 353).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
