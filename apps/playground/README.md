@@ -72,7 +72,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (76/76 green); -> 2 on a host with no binding
+# -> 0 here (78/78 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -609,7 +609,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `27/27`.
+exact, and focus/Escape and the close button hold. The live suite is `29/29`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -973,10 +973,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **76/76 green** here (`exit 0`, 2163 checks):
+The suite is **78/78 green** here (`exit 0`, 2270 checks):
 
 ```
-76/76 scenarios passed · capabilities: layout=verified text=verified
+78/78 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1127,7 +1127,7 @@ narrower. Each deviation is deliberate and measured:
   catalogue** (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (76/76), with a written report and
+  pass in real GPUix 0.10.0 on this host (78/78), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1135,7 +1135,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 27/27 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 29/29 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the

@@ -181,8 +181,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330`–`346` are indexed, `346` is
-planned, and `347` is the next free number.
+tokens-theme (`300–328`) reservations — `330`–`347` are indexed and landed, and
+`348` is the next free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |

@@ -640,7 +640,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | pending — **blocking nothing meanwhile**: `internal/button.tsx` is the local `Button`/`IconButton` stand-in (plan 110 §7 amendment), to be deleted when the package lands |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
-| Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending |
+| Playground mounts the Tier 2 catalogue and runs it headless and live | playground | **resolved** — plans `330`, `331`, `344`–`347`: nine `tier2-*` headless scenarios and nine live twins, `78/78` + `29/29` |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
