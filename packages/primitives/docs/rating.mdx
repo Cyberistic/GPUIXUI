@@ -88,6 +88,13 @@ the stars that are still missing.
 `starStyle`'s `filled` follows the paint, not the committed value, so a custom
 star style cannot disagree with the icon beside it.
 
+A star declares **no `hover` style rule**: the preview *is* its pointer feedback,
+and it is stronger than a wash — the paint answers which value the click would
+set, not merely that the pointer arrived. This is the one recorded exception to
+the library's "an element that owns a pointer gesture declares its feedback"
+rule (`runtime/pointer-feedback.runtime.test.tsx`, plan `361`); a star still
+declares `cursor: "pointer"` and keeps the press contract.
+
 ## Accessibility
 
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star

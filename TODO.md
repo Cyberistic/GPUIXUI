@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 104/104
+`[x]` `[██████████]` 105/105
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -849,6 +849,17 @@ retired once both branches are one
       under the rejected transition-only rule (runtime 552 → 553; plan `360`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
+      across the whole Tier 1 set: every pointer-interactive element declares
+      `hover`/`active` except the `Slider` and `RangeSlider` **tracks**, which own
+      the press, the captured drag and `cursor: "pointer"` and declared neither
+      (the thumb is `pointerEvents: "none"` by design, so it cannot carry it).
+      `sliderTrackStyle` now paints the theme's `hover`/`active` wash, and none
+      while disabled; a 31-case `runtime/pointer-feedback.runtime.test.tsx`
+      matrix holds the rule across fifteen controls (enabled → a visible change,
+      disabled → none) with `Rating`'s preview recorded as the one exception.
+      Three docs pages corrected (the rail, not the track, is `colors.muted`),
+      both directions proven by name (plan `361`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`

@@ -554,4 +554,22 @@ describe("value controls", () => {
     expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
     expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
+
+  it("gives the track — the element that owns the press — a hover and press wash", () => {
+    // The bug guarded (plan 361): the track carries the cursor, the press and
+    // the captured drag, yet declared no pointer feedback, so the only control
+    // in the library that answered a hover with nothing was a slider.
+    const track = sliderTrackStyle(spec, testTheme);
+    expect(track.hover?.backgroundColor).toBe(testTheme.colors.hover);
+    expect(track.active?.backgroundColor).toBe(testTheme.colors.active);
+    expect(track.borderRadius).toBe(testTheme.radius.sm);
+  });
+
+  it("declares no wash on a disabled track, which cannot act", () => {
+    const track = sliderTrackStyle({ ...spec, disabled: true }, testTheme);
+    expect(track.hover).toBeUndefined();
+    expect(track.active).toBeUndefined();
+    expect(track.opacity).toBe(0.5);
+    expect(track.cursor).toBe("not-allowed");
+  });
 });

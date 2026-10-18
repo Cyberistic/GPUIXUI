@@ -224,7 +224,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **43 files, 591 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **43 files, 603 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), and a guard that every documented `theme.…` path and
@@ -243,7 +243,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **27 files, 535 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **29 files, 584 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -314,7 +314,10 @@ activation matrix over eight button-shaped controls × nine sequences — Enter
 up/down/pair/held, Space up/down/pair/held, primary click — that fails by case
 name when one control loses a key phase, a held key starts activating, or a
 group activates the value's stale tab stop instead of the focused item
-(plan 354).
+(plan 354), and a pointer-feedback matrix over fifteen controls that requires a
+pointer-owned gesture to change something on hover and on press — and requires a
+disabled control to change nothing in either state — with `Rating`'s preview
+recorded as the one exception (plan 361).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

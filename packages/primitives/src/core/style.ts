@@ -525,10 +525,15 @@ export const sliderInset = (size: ControlSize, theme: PrimitiveTheme): number =>
 /**
  * The slider's hit area.
  *
- * It paints nothing — the rail is the only visible chrome, so a slider does not
- * become a bar as tall as the control — and it still takes presses: GPUI makes a
- * hitbox for an element with mouse handlers (measured in plan 053 §11; an
- * unpositioned, unfilled box with handlers receives the press).
+ * At rest it paints nothing — the rail is the only visible chrome, so a slider
+ * does not become a bar as tall as the control — and it still takes presses:
+ * GPUI makes a hitbox for an element with mouse handlers (measured in plan 053
+ * §11; an unpositioned, unfilled box with handlers receives the press).
+ *
+ * Because the track is the element that owns the press and the captured drag,
+ * it is also the element that owes the pointer feedback: a hover wash and a
+ * press wash, and neither while disabled (plan `361`). The thumb cannot carry
+ * it — it is `pointerEvents: "none"` so a press on it reaches this track.
  */
 export const sliderTrackStyle = (
   spec: SliderSpec,
@@ -543,9 +548,15 @@ export const sliderTrackStyle = (
     height: theme.density.controlHeight[spec.size],
     paddingLeft: inset,
     paddingRight: inset,
+    borderRadius: theme.radius.sm,
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
   };
-  if (spec.disabled === true) style.opacity = 0.5;
+  if (spec.disabled === true) {
+    style.opacity = 0.5;
+  } else {
+    style.hover = { backgroundColor: theme.colors.hover };
+    style.active = { backgroundColor: theme.colors.active };
+  }
   return style;
 };
 

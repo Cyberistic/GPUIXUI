@@ -83,11 +83,15 @@ slider is a single tab stop, and the focus ring is painted on the thumb.
 
 ## Theming
 
-The track is `colors.muted`, the fill `colors.primary` (or `colors.destructive`
-when invalid), and the thumb `colors.input` with a `colors.primary` border. The
-track's height is `density.controlHeight[size]`, the thumb `iconSize[size]`, its
-border `borderWidth.strong`, and the focus ring is `@gpuixui/tokens`'
-`focusRing`. Nothing in the component names a literal.
+The **rail** is `colors.muted` — the track itself paints no surface at rest, so
+a slider does not become a bar as tall as the control. The fill is
+`colors.primary` (or `colors.destructive` when invalid), and the thumb
+`colors.input` with a `colors.primary` border. The track's height is
+`density.controlHeight[size]`, the thumb `iconSize[size]`, its border
+`borderWidth.strong`, and the focus ring is `@gpuixui/tokens`' `focusRing`.
+Hovering or pressing the track paints a `colors.hover` / `colors.active` wash on
+the track itself (rounded by `radius.sm`), and a disabled slider paints neither.
+Nothing in the component names a literal.
 
 ## Pointer behaviour
 
@@ -96,6 +100,13 @@ the usable span is inset by half a thumb at each end, so the thumb's centre land
 exactly on the pointer and on the ends without hanging off the track. Only the
 **primary button** starts a gesture: a right or middle click neither moves the
 value nor takes focus.
+
+The **track is the hit area, so the track carries the pointer feedback**: the
+hover and press wash belongs to the element that owns the gesture. The rail, the
+fill and the thumb are all `pointerEvents: "none"` — deliberately, so a press on
+the thumb reaches the track — which is why the thumb cannot paint a hover state
+of its own, and why the focus ring (on the thumb) and the wash (on the track)
+are two signals from one control rather than two controls (plan `361`).
 
 A drag keeps updating **after the pointer leaves the track** — the runtime
 captures the pressed element (measured, plan 063) — and clamps at `min`/`max`.
@@ -157,7 +168,11 @@ the thumb:
   stop list that includes `max` when the step does not divide the span (plan
   `331`).
 - `src/core/style.test.ts` — the inset/negative-margin geometry, the hit-test
-  children, the fill fraction, the ring.
+  children, the fill fraction, the ring, and the track's pointer wash (plan
+  `361`).
+- `runtime/pointer-feedback.runtime.test.tsx` — the cross-control matrix: an
+  element that owns a pointer gesture changes something on hover and on press,
+  and a disabled control changes nothing in either state (plan `361`).
 - `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint.
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
