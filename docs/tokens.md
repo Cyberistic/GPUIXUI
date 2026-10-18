@@ -1288,6 +1288,18 @@ the tightest (macOS dark, `accentForeground` on `accent`), above the 4.5:1 the
 on-colour role already has, and `selectionFillWashPairs` holds the veil itself at
 **1.060:1** at the tightest (identity dark high, `selectionOnFill` on `info`),
 above the 1.05:1 perceivability floor.
+
+The veil is measured on each fill's **resting** value. A filled control steps to
+`xHover`/`xActive` under the pointer, and its label is chrome: at the shipped 15%
+veil **60 of the 360** shipped filled-family label pairs measure under the
+on-colour floor (worst **3.353:1**, macOS dark `accentActive`), and no single
+neutral alpha keeps both that floor and the 1.05:1 veil floor on the
+high-contrast light set. A state-fill pair would promise a floor the AAA palette
+cannot meet, so those fills stay out of `selectionFillRoles`; a control that must
+not be selectable sets `userSelect: "none"` on its chrome, the same opt-out a
+toolbar uses, and the resting pairs cover content that keeps its fill — a message
+bubble, a solid chip, the panel action. `filledActionChrome` in the examples is
+the copyable version.
 `selectionStyle(theme, "fill")` applies it to a subtree, and
 `filledContentStyle` and `statusSolidStyles` in the examples are the copyable
 versions:

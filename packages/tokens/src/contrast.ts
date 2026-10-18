@@ -1348,15 +1348,24 @@ export const selectionWashPairs: readonly ContrastPair[] =
  * a chip's label is painted on (`info`, `success`, `warning`; `destructive` is
  * already an action family), and `softAction`, the raised action a tone-tinted
  * status panel carries. Every one is a filled surface a reader can drag a
- * selection over, and the accent wash is under the perceivability floor on
- * fourteen shipped compositions — identity light `success` 1.046:1, Windows
- * light `info` 1.011:1 and every high-contrast dark `softAction` 1.047:1 — so
- * the inverse veil is the wash. Both lists derive from this index, so a fifth
- * family, a fifth status tone or a new panel action cannot ship with no
- * selection pair: the veil is held to the perceivability floor on each fill, and
- * each fill's own foreground to the floor it already has on that fill.
- * `statusTones` owns the tone list, so a fifth tone joins here with no second
- * edit.
+ * selection over, and the accent wash cannot stand in for the veil: it *is* the
+ * accent, so it paints nothing on `primary`, and it sits in the same narrow
+ * luminance band as the solid chips and the panel action. Both lists derive from
+ * this index, `selectionFillRoles`, so a fifth family, a fifth status tone or a
+ * new panel action cannot ship with no selection pair:
+ * `selectionFillWashPairs` holds the veil to
+ * the perceivability floor on each fill, and `selectionFillPairs` holds each
+ * fill's own foreground to the floor it already has on that fill. `statusTones`
+ * owns the tone list, so a fifth tone joins here with no second edit.
+ *
+ * The index is the **resting** fills. A filled control steps to `xHover` and
+ * `xActive` under the pointer, and its label is chrome: the shipped 15% veil
+ * cannot hold the on-colour floor there (60 of the 360 shipped filled-family
+ * label pairs miss it, worst 3.353:1 on macOS dark `accentActive`), and no single
+ * neutral alpha clears both that floor and the 1.05:1 veil floor on the
+ * high-contrast light set. A state-fill pair would promise a floor the AAA
+ * palette cannot meet, so a control opts its label out with `userSelect: "none"`
+ * and the resting pairs cover the content that keeps its fill.
  */
 export const selectionFillRoles = [
   ...filledControlFamilies,

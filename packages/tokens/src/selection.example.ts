@@ -15,3 +15,14 @@ export const filledContentStyle = (theme: Theme) => ({
   backgroundColor: theme.colors.primary,
   color: theme.colors.primaryForeground,
 });
+
+/**
+ * A filled control's chrome: the label is not selectable. Its fill steps to
+ * `xHover`/`xActive` under the pointer, where one neutral veil cannot hold the
+ * label at every contrast level; selectable content keeps its resting fill
+ * (`filledContentStyle`).
+ */
+export const filledActionChrome = (theme: Theme) => ({
+  ...selectionStyle(theme, "fill"),
+  ...chromeStyle,
+});

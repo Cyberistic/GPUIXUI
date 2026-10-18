@@ -1,9 +1,9 @@
 /**
  * Guards the defect plan 344 fixes: a user message bubble paints body text on
  * `primary` (`components/message.tsx` `bubble()`), and the accent-tinted
- * `selection` wash composites to **1.000:1** there in seven shipped sets —
- * identity dark, macOS light and dark, Linux light, Windows light, Aero light and
- * the `default` platform dark — so selecting a sent message shows no highlight.
+ * `selection` wash composites to **1.000:1** there in six shipped sets —
+ * identity dark, macOS light and dark, Linux light and the two Windows light
+ * sets — so selecting a sent message shows no highlight.
  * The contract measured selection on nine content surfaces and the four soft
  * status fills, but never on a filled action.
  *
@@ -24,14 +24,27 @@
  * (its `Solid fill` pair is published, plan 399) and the status panel's
  * `softAction` (plan 394) both carry their own on-colour, and both are missing
  * from `filledControlFamilies`. The accent-tinted wash is under the perceivability
- * floor on fourteen of their shipped compositions — identity light `success`
- * 1.046:1, Windows light `info` 1.011:1 and every high-contrast dark
- * `softAction` 1.047:1 — so selecting a chip's label or a Retry action showed no
+ * floor on eleven shipped chip/panel compositions — identity light `success` and
+ * `destructive`, the Windows light `info` chip and both dark `info`/`success`
+ * fills among them — so selecting a chip's label or a Retry action showed no
  * highlight while the checker returned `[]`. `selectionFillRoles` is the index
  * (the four families, the three solid status chips, `softAction`) and both lists
- * derive from it.
+ * derive from it. Plans 506 and 510 later moved the selection washes, so
+ * seventeen of the 192 shipped compositions across the eight fills are under the
+ * floor today: six are the accent wash on `primary` and eleven are the
+ * chip/panel family. The AAA dark `softAction` moved out of the list when plan
+ * 504 darkened it — its veil now measures 1.574:1, not 1.047:1.
+ *
+ * Plan 513 measures the composition the resting lists cannot cover: a filled
+ * control's label can be selected while its fill is `xHover`/`xActive`, and at
+ * the shipped 15% veil 60 of the 360 filled-family label pairs miss the
+ * on-colour floor (worst 3.353:1, macOS dark `accentActive`). No single neutral
+ * alpha clears both that floor and the 1.05:1 veil floor on the high-contrast
+ * light set, so the state fills stay out of `selectionFillRoles` and the
+ * documents recommend `userSelect: "none"` on a control's chrome.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import {
@@ -49,7 +62,7 @@ import {
   themeContrastFailures,
   type Theme,
 } from "./index.js";
-import { filledContentStyle } from "./selection.example.js";
+import { filledActionChrome, filledContentStyle } from "./selection.example.js";
 import { statusSolidStyles } from "./status-tone.example.js";
 
 const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
@@ -344,5 +357,132 @@ describe("the selection veil on a filled action", () => {
         ).toMatchObject(selectionStyle(theme, "fill"));
       });
     });
+  });
+
+  it("opts a filled control's chrome out of text selection", () => {
+    variants.forEach(([label, theme]) => {
+      expect(filledActionChrome(theme), label).toEqual({
+        ...selectionStyle(theme, "fill"),
+        userSelect: "none",
+      });
+    });
+  });
+
+  it("measures the state-fill label the one neutral veil cannot cover", () => {
+    const familyPairs = [
+      ...filledControlFamilies.flatMap((family) => [
+        [family, `${family}Foreground`] as const,
+        [`${family}Hover`, `${family}Foreground`] as const,
+        [`${family}Active`, `${family}Foreground`] as const,
+      ]),
+      ["softAction", "softActionForeground"] as const,
+      ["softActionHover", "softActionForeground"] as const,
+      ["softActionActive", "softActionForeground"] as const,
+    ] satisfies ReadonlyArray<
+      readonly [keyof Theme["colors"], keyof Theme["colors"]]
+    >;
+
+    const measured = shippedThemes.flatMap(({ theme }) =>
+      familyPairs.map(([fill, foreground]) => ({
+        name: theme.name,
+        fill,
+        ratio: contrastRatio(
+          theme.colors[foreground],
+          compositeOver(theme.colors.selectionOnFill, theme.colors[fill]),
+        ),
+        floor: contrastFloors[theme.contrast].secondary,
+      })),
+    );
+    const failing = measured.filter(({ ratio, floor }) => ratio < floor);
+    const worst = failing.toSorted((a, b) => a.ratio - b.ratio)[0];
+
+    expect(measured).toHaveLength(360);
+    expect(failing).toHaveLength(60);
+    expect(new Set(failing.map(({ name }) => name)).size).toBe(20);
+    expect([worst?.name, worst?.fill, Number(worst?.ratio.toFixed(3))]).toEqual(
+      ["Dark · macOS", "accentActive", 3.353],
+    );
+    expect(failing.map(({ fill }) => fill)).not.toContain("primaryHover");
+    expect(failing.map(({ fill }) => fill)).not.toContain("destructiveActive");
+  });
+
+  it("cannot repair the state fills with one neutral alpha at high contrast", () => {
+    const theme = getTheme("light", "high");
+    const floors = contrastFloors.high;
+    const statePairs = [
+      ...filledControlFamilies.flatMap((family) => [
+        [`${family}Hover`, `${family}Foreground`] as const,
+        [`${family}Active`, `${family}Foreground`] as const,
+      ]),
+      ["softActionHover", "softActionForeground"] as const,
+      ["softActionActive", "softActionForeground"] as const,
+    ] satisfies ReadonlyArray<
+      readonly [keyof Theme["colors"], keyof Theme["colors"]]
+    >;
+    const hexAlpha = (base: string, percent: number): string =>
+      `${base}${Math.round((percent / 100) * 255)
+        .toString(16)
+        .padStart(2, "0")
+        .toUpperCase()}`;
+
+    const feasible = (["#000000", "#FFFFFF"] as const).flatMap((base) =>
+      Array.from({ length: 30 }, (_, index) => index + 1).filter((percent) => {
+        const veil = hexAlpha(base, percent);
+        const text = statePairs.every(
+          ([fill, foreground]) =>
+            contrastRatio(
+              theme.colors[foreground],
+              compositeOver(veil, theme.colors[fill]),
+            ) >= floors.secondary,
+        );
+        const wash = statePairs.every(
+          ([fill]) =>
+            contrastRatio(
+              compositeOver(veil, theme.colors[fill]),
+              theme.colors[fill],
+            ) >= floors.surface,
+        );
+        return text && wash;
+      }),
+    );
+
+    expect(feasible).toEqual([]);
+  });
+
+  it("keeps the state fills out of the resting-fill index", () => {
+    const stateFills = [
+      ...filledControlFamilies.flatMap((family) => [
+        `${family}Hover`,
+        `${family}Active`,
+      ]),
+      "softActionHover",
+      "softActionActive",
+    ];
+    stateFills.forEach((fill) => {
+      expect(selectionFillRoles).not.toContain(fill);
+    });
+  });
+
+  it("keeps the role's rationale off a stale count and example", () => {
+    // node:fs is deliberate: this is a source guard over the package's own
+    // module, and the package ships zero runtime dependencies by design.
+    const source = readFileSync(
+      new URL("./contrast.ts", import.meta.url),
+      "utf8",
+    );
+    const start = source.lastIndexOf(
+      "/**",
+      source.indexOf("export const selectionFillRoles"),
+    );
+    const end = source.indexOf("*/", start);
+    const rationale = source.slice(start, end).replace(/\s+/g, " ");
+
+    expect(rationale).not.toContain("fourteen");
+    expect(rationale).not.toContain("1.047");
+    expect(rationale).not.toContain("every high-contrast dark");
+    expect(rationale).toContain("selectionFillRoles");
+    expect(rationale).toContain("selectionFillPairs");
+    expect(rationale).toContain("selectionFillWashPairs");
+    expect(rationale).toContain("userSelect");
   });
 });

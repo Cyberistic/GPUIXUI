@@ -129,10 +129,13 @@
  * Plan 344 closes the last content surface the selection contract never
  * reached: a user message bubble paints body text on `primary`
  * (`components/message.tsx`), where the accent-tinted `selection` wash
- * composites to 1.000:1 in seven shipped sets. `selectionFillPairs` and
+ * composites to 1.000:1 in six shipped sets (the exact list is in
+ * `selection-on-fill.test.ts`). `selectionFillPairs` and
  * `selectionFillWashPairs` hold the neutral `selectionOnFill` veil on
  * `primary`, `secondary` and `destructive`; every shipped set clears the
- * floors, so no colour moves. Plan 382 derives both lists from
+ * floors, so no colour moves. The veil is measured on each fill's resting value;
+ * a filled control's `xHover`/`xActive` fills are documented as outside its
+ * reach and its label opts out with `userSelect: "none"` (plan 513). Plan 382 derives both lists from
  * `filledControlFamilies`, which also covers `accent`, and moves the macOS
  * light and Linux dark accent foregrounds one step so the fourth family clears
  * the veil.

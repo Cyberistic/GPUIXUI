@@ -630,7 +630,12 @@ is a neutral 15% veil.
 `selectionFillPairs` and `selectionFillWashPairs` hold every opaque fill's
 (`primary`, `secondary`, `destructive`, `accent`, `info`, `success`, `warning`,
 `softAction`, indexed by `selectionFillRoles`) foreground and the veil itself to
-their floors. A runnable example lives in
+their floors. The veil is measured on each fill's resting value: a filled
+control steps to `xHover`/`xActive` under the pointer, where the 15% veil leaves
+**60 of 360** filled-family label pairs under the on-colour floor (worst
+**3.353:1**, macOS dark `accentActive`) and no neutral alpha clears both floors
+at AAA light, so a control's chrome sets `userSelect: "none"` and the resting
+pairs cover content that keeps its fill. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts); the solid chip's
 copyable style in [`src/status-tone.example.ts`](./src/status-tone.example.ts)
 applies the same veil.

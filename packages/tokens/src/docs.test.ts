@@ -157,7 +157,7 @@ import {
   spacing,
 } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
-import { statusTones } from "./styles.js";
+import { filledControlFamilies, statusTones } from "./styles.js";
 import { typefaceRules } from "./typeface.js";
 import {
   extendTheme,
@@ -1261,6 +1261,47 @@ describe("docs/tokens.md quoted tightest figures", () => {
     expect(markdownProse).toContain(
       "**1.060:1** at the tightest (identity dark high, `selectionOnFill` on `info`)",
     );
+  });
+
+  it("states the pointer-state gap the inverse veil cannot cover", () => {
+    const statePairs = [
+      ...filledControlFamilies.flatMap((family) => [
+        [family, `${family}Foreground`] as const,
+        [`${family}Hover`, `${family}Foreground`] as const,
+        [`${family}Active`, `${family}Foreground`] as const,
+      ]),
+      ["softAction", "softActionForeground"] as const,
+      ["softActionHover", "softActionForeground"] as const,
+      ["softActionActive", "softActionForeground"] as const,
+    ] satisfies ReadonlyArray<readonly [keyof ThemeColors, keyof ThemeColors]>;
+
+    const measured = shippedThemes.flatMap(({ theme }) =>
+      statePairs.map(([fill, foreground]) => ({
+        name: theme.name,
+        fill,
+        ratio: contrastRatio(
+          theme.colors[foreground],
+          compositeOver(theme.colors.selectionOnFill, theme.colors[fill]),
+        ),
+        floor: contrastFloors[theme.contrast].secondary,
+      })),
+    );
+    const failing = measured.filter(({ ratio, floor }) => ratio < floor);
+    const worst = failing.toSorted((a, b) => a.ratio - b.ratio)[0];
+
+    expect(measured).toHaveLength(360);
+    expect(failing).toHaveLength(60);
+    expect(new Set(failing.map(({ name }) => name)).size).toBe(20);
+    expect([worst?.name, worst?.fill, Number(worst?.ratio.toFixed(3))]).toEqual(
+      ["Dark · macOS", "accentActive", 3.353],
+    );
+
+    expect(markdownProse).toContain("60 of the 360");
+    expect(markdownProse).toContain("**3.353:1**");
+    expect(markdownProse).toContain('`userSelect: "none"`');
+    expect(designSystem).toContain("60 of 360");
+    expect(designSystem).toContain("3.353:1");
+    expect(readmeSource).toContain('userSelect: "none"');
   });
 
   it("quotes the status label the selection wash can erase", () => {

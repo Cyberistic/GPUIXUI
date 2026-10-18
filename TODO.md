@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 178/231
+`[x]` `[███████░░░]` 179/237
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1408,9 +1408,25 @@ through the wash on `destructiveSoft` while every check returned `[]`; the four
 soft fills join the list (12 → 16), every shipped set clears 8.667:1 at the
 tightest so no colour moves, and the stale `softAction` JSDoc that still
 recommended the canvas washes is corrected (plan 512)
+`[x]` Hold the inverse veil's pointer-state gap and its stale rationale — a
+filled control's label can be selected while its fill steps to
+`xHover`/`xActive`, and at the shipped 15% veil **60 of the 360** filled-family
+label pairs miss the on-colour floor (worst **3.353:1**, macOS dark
+`accentActive`, 20 of 24 sets) while no single neutral alpha clears both that
+floor and the 1.05:1 veil floor on the AAA light set; the state fills stay out
+of `selectionFillRoles`, the documents state the gap and recommend
+`userSelect: "none"` on a control's chrome, and the role's JSDoc no longer says
+"fourteen" or that the AAA dark `softAction` measures 1.047:1 (it is 1.574:1
+after plan 504); no colour, pair or floor moves (plan 513)
 `[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
 `<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
 of the runtime's built-in dark value (owner: `primitives`; plan 511)
+`[ ]` Cross-team: `primitives` `controlStyle` and `components`
+`internal/button.tsx` set `userSelect: "none"` on a filled control's chrome, so
+its label is not selectable while the fill is `xHover`/`xActive`, where the 15%
+veil measures **60 of 360** label pairs under the on-colour floor (worst
+3.353:1, macOS dark `accentActive`) and no neutral alpha holds both floors at
+AAA light (owner: those workstreams; plan 513)
 
 ## Phase C — Tier 1–2 components
 
