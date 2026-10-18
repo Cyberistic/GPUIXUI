@@ -13,6 +13,15 @@
  * already have a documented pair and reports a tier that is not one 1.05:1 step
  * below the one above it. The surfaces are derived from `contrastPairs`, so this
  * suite derives its expectations the same way rather than retyping them.
+ *
+ * Plan 500 adds the body role each surface paints. A card, menu/dialog and field
+ * use `cardForeground`, `popoverForeground` and `inputForeground`, but the tiers
+ * compared secondary text only with the default `foreground`, so setting one of
+ * those roles to `mutedForeground` returned `[]` from every check: identity
+ * light's secondary text measures 9.671:1 on a card and on a field, above the
+ * 7:1 body floor. `selectedForeground` is deliberately not a body tier — it is
+ * the secondary-strength tint an inherited label keeps inside a selected row,
+ * whose title is `foreground`.
  */
 
 import { describe, expect, it } from "vitest";
@@ -81,6 +90,37 @@ describe("text hierarchy", () => {
     expect(
       themeFailures(inverted).some((failure) => failure.kind === "hierarchy"),
     ).toBe(true);
+  });
+
+  it("reports a surface body role flattened to its secondary text", () => {
+    const identity = getTheme("light");
+    const bodyRoles = [
+      "cardForeground",
+      "popoverForeground",
+      "inputForeground",
+    ] as const;
+
+    bodyRoles.forEach((role) => {
+      const flattened = extendTheme(identity, {
+        colors: { [role]: identity.colors.mutedForeground },
+      });
+
+      // The floor check cannot see it: identity light's secondary text measures
+      // 9.671:1 on a card and on a field, above the 7:1 body floor.
+      expect(themeContrastFailures(flattened), role).toEqual([]);
+      expect(themeTextTierFailures(flattened), role).toContainEqual(
+        expect.objectContaining({
+          dimmer: "mutedForeground",
+          brighter: role,
+        }),
+      );
+      expect(
+        themeFailures(flattened).some(
+          (failure) => failure.kind === "hierarchy",
+        ),
+        role,
+      ).toBe(true);
+    });
   });
 
   it("can fail every tier in the published list", () => {

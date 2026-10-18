@@ -962,16 +962,23 @@ export const contrastFloors: Readonly<
 
 /**
  * The text tiers the library documents, each held a perceivable step below the
- * tier above it, as `[dimmer, brighter]`: body copy, then secondary text, then
- * the two roles below it — an unavailable label and a field's hint. A tier that
- * is only *at least* as readable as the one above it is not a tier; the reader
- * uses the difference to tell a caption from body copy, a hint from a caption
- * and a disabled label from an enabled one. The step is the same 1.05:1 the
- * filled families and the wash ladder publish, applied to roles a reader
- * compares side by side.
+ * tier above it, as `[dimmer, brighter]`: the body role each surface paints —
+ * `foreground` on the canvas and the row washes, `cardForeground` on a card,
+ * `popoverForeground` on a menu, dialog or toast, `inputForeground` in a field —
+ * then secondary text, then the two roles below it, an unavailable label and a
+ * field's hint. A tier that is only *at least* as readable as the one above it
+ * is not a tier; the reader uses the difference to tell a caption from body copy
+ * and a disabled label from an enabled one. `selectedForeground` is not a body
+ * role: it is the secondary-strength tint an inherited label keeps inside a
+ * selected row, whose title is painted with `foreground`. The step is the same
+ * 1.05:1 the filled families and the wash ladder publish, applied to roles a
+ * reader compares side by side.
  */
 export const textTiers = [
   ["mutedForeground", "foreground"],
+  ["mutedForeground", "cardForeground"],
+  ["mutedForeground", "popoverForeground"],
+  ["mutedForeground", "inputForeground"],
   ["disabledForeground", "mutedForeground"],
   ["placeholder", "mutedForeground"],
 ] as const satisfies ReadonlyArray<
