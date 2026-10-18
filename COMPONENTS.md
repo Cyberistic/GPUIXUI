@@ -740,10 +740,10 @@ clicks and Pagination's page/Next/Prev. Live `22 → 24`, checks `373 → 405`,
 exit `0`, two screenshots. They also measured the live focus rule (plan `345`):
 a key reaches the focused element, bubbles through every ancestor and then the
 window handler; `autoFocus` and a click focus natively **without running React's
-`onFocus`**. `live-key-routing` isolates it (19 checks) and wires `useWindowKey`
-into the live runner, so app-level shortcuts now have live coverage too. The
-Tabs arrow after a click is the one remaining live-only defect (see the Tabs
-row).
+`onFocus`**. `live-key-routing` isolates it (23 checks), including a live
+`cmd-k` chord, and wires `useWindowKey` into the live runner, so app-level
+shortcuts now have live coverage too. The Tabs arrow after a click is the one
+remaining live-only defect (see the Tabs row).
 
 ## Tier 2 — composition and feedback
 

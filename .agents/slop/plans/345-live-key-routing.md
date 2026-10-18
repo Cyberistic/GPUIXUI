@@ -137,6 +137,7 @@ binding (ADR 0003). `live-key-routing`, 19 checks:
 | 3 | `key("down")` | `inner=2 middle=2 outer=2 window=1` — named keys follow the same path |
 | 4 | click `key-outer`, then `key("x")` | native focus moves; `outer=3`, `inner=2`, `middle=2`, `window=2`; `outerFocus=0` — **a live click focuses natively without running React's `onFocus`** |
 | 5 | click `key-inner`, then `key("x")` | `inner=3 middle=3 outer=4 window=3`; `innerFocus=0` |
+| 6 | `key("cmd-k")` | `chords=1` — a chord reaches the window handler with `modifiers.cmd` set; the focused element receives it too (`inner=4`) and the `x` counter stays `window=3` |
 
 **The contract.** A key is delivered to the focused element, bubbles through
 every React ancestor, and finally reaches the app-level window handler. An
@@ -146,7 +147,7 @@ run React's `onFocus`. A component that tracks "the item the user is on" in
 `onFocus` therefore loses a click, while a component that calls its own
 `focusElement`/state update on click (as `List` does) is correct.
 
-Live suite `24 → 25`, checks `405 → 427`, exit `0`.
+Live suite `24 → 25`, checks `405 → 431`, exit `0` (23 checks in the probe).
 
 Mutation proofs (temporary edit, full live run, reverted):
 
@@ -188,6 +189,6 @@ in `onFocus`, and a clicked tab never reaches that handler.
 
 - It does not fix the List/Tabs keyboard defect; it gives the components
   workstream the contract and the workaround. The fix stays in `TODO.md`.
-- It does not measure modifier handling (plan `176` covers `cmd-k` headless);
-  the probe uses an unmodified letter and a named arrow key.
-- It does not prove window keys on platforms other than this host.
+- It does not prove window keys on platforms other than this host. It does
+  measure one live chord (`cmd-k`) reaching the window handler with
+  `modifiers.cmd`.

@@ -2066,6 +2066,20 @@ const keyRouting: LiveScenario = {
         "innerFocus=0 outerFocus=0",
       );
 
+      yield* ctx.host.key("cmd-k");
+      yield* settle;
+      yield* waitForText(ctx, "key-routing-readout", "chords=1");
+      yield* ctx.expectContains(
+        "a modifier chord reaches the window handler with its modifier",
+        yield* textOf(ctx, "key-routing-readout"),
+        "window=3",
+      );
+      yield* ctx.expectContains(
+        "the focused element receives the chord too",
+        yield* textOf(ctx, "key-routing-readout"),
+        "inner=4",
+      );
+
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${keyRouting.id}.png`);
     }),
 };

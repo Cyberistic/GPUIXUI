@@ -28,9 +28,13 @@ export const KeyRoutingView = () => {
   const [innerFocus, setInnerFocus] = useState(0);
   const [outerFocus, setOuterFocus] = useState(0);
   const [windowKeys, setWindowKeys] = useState(0);
+  const [chords, setChords] = useState(0);
 
   useWindowKey((event) => {
     if (event.key === "x") setWindowKeys((count) => count + 1);
+    if (event.key === "k" && event.modifiers?.cmd === true) {
+      setChords((count) => count + 1);
+    }
   });
 
   return (
@@ -72,7 +76,7 @@ export const KeyRoutingView = () => {
         </div>
       </div>
       <Readout testId="key-routing-readout">
-        {`inner=${inner} middle=${middle} outer=${outer} innerFocus=${innerFocus} outerFocus=${outerFocus} window=${windowKeys}`}
+        {`inner=${inner} middle=${middle} outer=${outer} innerFocus=${innerFocus} outerFocus=${outerFocus} window=${windowKeys} chords=${chords}`}
       </Readout>
     </div>
   );
