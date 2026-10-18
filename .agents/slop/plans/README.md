@@ -167,6 +167,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [368](./368-finite-metrics.md) | Every numeric metric must be paint | F | 358, 360, 364, 367 | done |
 | [369](./369-defined-overlay-elevation.md) | A defined elevation level is a level, `overlay` included | F | 085, 358, 360, 368 | done |
 | [370](./370-font-weight-metric.md) | A type weight is a paintable number | F | 058, 358, 364, 367, 368 | done |
+| [371](./371-colour-role-format.md) | Every colour role is a hex colour the helpers parse | F | 011, 014, 071, 085, 099, 306 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1425,6 +1426,22 @@ is a numeric CSS weight in `1…1000`, and every role takes a `weighable` rule
 (finite, at-least 1, at-most 1000), reported once for a non-finite value instead
 of three times. The shipped four weights are a scale choice, not a type
 boundary, so no shipped value, pair, floor, platform style or recipe moves.
+
+371 closes the last role the colour contract left exempt without a format
+guarantee. `shadow` is a tint rather than a pair, and plan 085 made every
+elevation level an alpha applied to it, so the role is read by `alpha()` — which
+parses only `#RRGGBB`/`#RRGGBBAA` and returns an unparseable value unchanged
+(plan 077's fallback). The pinned runtime accepts every CSS form
+(`csscolorparser` handles `rebeccapurple`, `rgb(…)` and `#f00f`), so a copied
+theme with `shadow: "black"` painted a **fully opaque** shadow at every level —
+0.08, 0.12 and 0.16 all gone — while both checkers returned `[]`, and
+`docs/design-system.md` claimed "tests restrict roles to hex" with nothing
+holding the exempt role. Measured roles are caught incidentally as `NaN` by
+`contrastRatio`; the two tints were not. `isHexColor` publishes the predicate,
+`themeColorFailures(theme)` walks all 66 roles and names each value outside the
+form, and the ledger, both documents and the README state the format half beside
+the contrast and metric halves. All 24 shipped sets are hex, so no token value,
+colour, pair or floor moves.
 
 ### Reference adoption (block `200–299`)
 

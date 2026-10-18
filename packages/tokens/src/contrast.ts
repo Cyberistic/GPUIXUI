@@ -8,7 +8,7 @@
  * the documented contract and the tests that enforce it cannot drift.
  */
 
-import type { ThemeColors } from "./color.js";
+import { colorRoles, isHexColor, type ThemeColors } from "./color.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
@@ -842,6 +842,42 @@ export const contrastFloors: Readonly<
     divider: 3,
   },
 };
+
+/** A colour role whose value the token helpers cannot parse. */
+export interface ColorFailure {
+  /** The role, named the way the catalogue names it. */
+  readonly role: keyof ThemeColors;
+  /** The value the theme carried. */
+  readonly value: string;
+}
+
+/**
+ * Every colour role whose value is not a six- or eight-digit hex colour.
+ *
+ * The theme's maths — {@link contrastRatio}, `compositeOver` and `alpha` — parse
+ * only that form. A role in another CSS form is painted by the runtime but
+ * invisible to the helpers; for a measured role the contrast check then reports
+ * `NaN`, but the tint roles have no pair: a `shadow` of `"black"` makes every
+ * elevation level fully opaque because `alpha` returns an unparseable tint
+ * unchanged, and no other check sees it.
+ *
+ * @example
+ * ```ts
+ * import { extendTheme, getTheme, themeColorFailures } from "@gpuixui/tokens";
+ *
+ * const tinted = extendTheme(getTheme("light"), {
+ *   colors: { shadow: "black" },
+ * });
+ *
+ * themeColorFailures(tinted); // [{ role: "shadow", value: "black" }]
+ * ```
+ */
+export function themeColorFailures(theme: Theme): ReadonlyArray<ColorFailure> {
+  return colorRoles.flatMap((role) => {
+    const value = theme.colors[role];
+    return isHexColor(value) ? [] : [{ role, value }];
+  });
+}
 
 const opaqueHex = /^#([0-9A-Fa-f]{6})$/;
 const translucentHex = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})$/;

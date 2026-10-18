@@ -53,6 +53,13 @@
  * loading row named four of eight surfaces and the focus row named none. Every
  * state row now names its roles, and each case derives its surfaces from the
  * pair list that enforces them.
+ *
+ * Plan 371 guards the format half of the editable-theme guarantee: the page
+ * teaches that a copied theme can change any role, and `shadow` is read by
+ * `alpha()` rather than by a contrast pair, so an unparseable tint made every
+ * elevation level fully opaque while the two older checks returned `[]`. The
+ * page now names `isHexColor`, `themeColorFailures` and `ColorFailure`, and the
+ * design-system's invalid-colour row names the check that holds it.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -1094,6 +1101,26 @@ describe("docs/tokens.md contrast contract", () => {
       "A status indicator is not a mark: the solid `warning` is **1.78:1** on " +
         "the light canvas, so a status dot uses `xText`",
     );
+  });
+});
+
+describe("docs/tokens.md colour format contract", () => {
+  it("names the predicate, the check and the failure type", () => {
+    ["isHexColor", "themeColorFailures", "ColorFailure"].forEach((name) => {
+      expect(markdown).toContain(name);
+    });
+  });
+
+  it("states the form and the tint consequence", () => {
+    expect(markdownProse).toContain("six- or eight-digit hex");
+    expect(markdownProse).toContain('shadow: "black"');
+    expect(markdownProse).toContain("fully opaque");
+  });
+
+  it("holds the design-system's invalid-colour row to the check", () => {
+    const row = tableRow("invalid colour strings are ignored per property");
+    expect(row).toContain("themeColorFailures");
+    expect(row).toContain("six- or eight-digit hex form");
   });
 });
 

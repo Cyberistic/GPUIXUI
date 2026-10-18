@@ -207,6 +207,23 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
+The guarantee has two more checks. `themeMetricFailures(theme)` holds the numbers
+(§ *Checking the numbers* below), and `themeColorFailures(theme)` holds every
+role to the six- or eight-digit hex form the colour helpers parse:
+
+```ts
+import { themeColorFailures } from "@gpuixui/tokens";
+
+themeColorFailures(brandTheme); // [] when every role is a hex colour
+```
+
+`shadow` is why the format check exists. Plan 085 applies each elevation level's
+alpha to that role through `alpha()`, and an unparseable tint is returned
+unchanged, so a copied theme with `shadow: "black"` paints a **fully opaque**
+shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone — while the
+contrast and metric checks both return `[]`. `#000` and `rgb(0 0 0)` behave the
+same way; `isHexColor(value)` is the predicate for a single stored role.
+
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
 the parts, and the selection wash is measured as it paints on every surface a
 glyph is selected on: the neutral surfaces with `foreground`, `popover` and

@@ -29,6 +29,7 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   isDensityName,
+  isHexColor,
   isStatusTone,
   lightTheme,
   motionTransition,
@@ -44,6 +45,8 @@ import {
   systemUiFont,
   textRoles,
   textStyle,
+  themeColorFailures,
+  type ColorFailure,
   type FocusRing,
   type PlatformName,
   type StatusTone,
@@ -72,6 +75,7 @@ missing here is not public.
 | `AvatarSize` | Avatar diameters for `xs` to `lg`. |
 | `BorderWidth` | Divider and focus-ring thickness. |
 | `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
+| `ColorFailure` | A colour role whose value is not a hex colour the token helpers parse. |
 | `ContrastFailure` | One documented pair a theme misses, with its floor and ratio. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
@@ -1453,9 +1457,46 @@ value and the `bound` it missed. A `MetricRule` is one of `positive`,
 `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`,
 `at-most` or `within`.
 
+#### Colour format
+
+The colour helpers parse one form: `isHexColor(value)` is true for `#RRGGBB`
+and `#RRGGBBAA` and false for every other CSS colour. The runtime is broader —
+GPUix delegates colour parsing to `csscolorparser`, so a name, `rgb(…)`, `hsl(…)`
+or `#RGB` is paintable — but `alpha`, `compositeOver` and `contrastRatio` can
+only read hex, and the theme is authored data in the package's own convention.
+`themeColorFailures(theme)` walks all 66 `colorRoles` and returns the role and
+the value of every entry outside that form:
+
+```ts
+import { extendTheme, getTheme, themeColorFailures } from "@gpuixui/tokens";
+
+const tinted = extendTheme(getTheme("light"), { colors: { shadow: "black" } });
+
+themeColorFailures(tinted); // [{ role: "shadow", value: "black" }]
+```
+
+This is the third check in the editable-theme guarantee. A measured role in a
+non-hex form also fails the contrast check, because `contrastRatio` returns
+`NaN`, which never passes a floor; the tint roles have no pair. `shadow` is
+applied to every elevation level through `alpha()` (plan `085`), and an
+unparseable tint is returned unchanged, so `shadow: "black"` painted a **fully
+opaque** shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone —
+while both other checks returned `[]`. `#000` and `rgb(0 0 0)` behave the same
+way. Every shipped identity theme, platform variant and recipe is hex, so the
+check moves no value; it guards the next edit. `isHexColor` is the predicate for
+one value, for a boundary that receives a role from storage, a URL or a payload:
+
+```ts
+import { isHexColor } from "@gpuixui/tokens";
+
+isHexColor("#191D25"); // true
+isHexColor("rebeccapurple"); // false
+```
+
 No runtime schema: themes authored in TypeScript are trusted at compile time.
 A theme loaded from a file or URL is unknown input and must be decoded by the
-application that owns that boundary.
+application that owns that boundary; `isHexColor` and `themeColorFailures` close
+the format half of that guard, not the shape half.
 
 The role and shadow sets behind the shipped themes are exported as
 `lightColors`, `darkColors`, `highContrastLightColors`,
@@ -2028,7 +2069,12 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`348` closed.
+plans `076`–`348` closed. Both are still held to the **form** the helpers parse:
+`themeColorFailures` reports any of the 66 roles outside the six- or eight-digit
+hex form, and `isHexColor` is the single-value predicate. A measured role in
+another CSS form already fails the contrast check as `NaN`; `shadow` has no pair,
+and plan `085` applies it through `alpha()`, so an unparseable tint used to paint
+every elevation level fully opaque while both checks returned `[]` (plan `371`).
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

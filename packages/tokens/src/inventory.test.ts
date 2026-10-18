@@ -160,4 +160,11 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(metrics).toContain("only focus indicator");
     expect(metrics).toContain("**Theme contrast check**");
   });
+
+  it("states the colour-format check beside the other two", () => {
+    const colour = row("Theme colour check");
+    expect(colour).toContain("`themeColorFailures(theme)`");
+    expect(colour).toContain(`${colorRoles.length} \`colorRoles\``);
+    expect(colour).toContain("`isHexColor(value)`");
+  });
 });

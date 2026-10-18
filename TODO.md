@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 138/188
+`[x]` `[███████░░░]` 139/189
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -992,6 +992,14 @@ renderer, so the contract's "every numeric member is finite" sentence was false;
 the type is now a CSS number in `1…1000`, every role's weight takes a
 `weighable` rule (finite, at-least 1, at-most 1000), and the four shipped
 weights are unchanged (plan 370)
+`[x]` Hold every colour role to the hex form the token maths parses — `shadow`
+is a tint read by `alpha()` rather than a contrast pair, and `alpha` returns an
+unparseable value unchanged, so a copied theme with `shadow: "black"` painted a
+**fully opaque** shadow at every level (0.08, 0.12 and 0.16 gone) while
+`themeContrastFailures` and `themeMetricFailures` both returned `[]`, against the
+design-system's claim that tests restrict roles to hex; `isHexColor` publishes
+the predicate, `themeColorFailures` names every role outside the form, all 24
+shipped sets pass, and no colour moves (plan 371)
 
 ## Phase C — Tier 1–2 components
 

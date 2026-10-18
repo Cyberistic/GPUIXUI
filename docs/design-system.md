@@ -501,6 +501,18 @@ change a value. Every numeric metric must be a **finite** number: the renderer
 casts each to a 32-bit float, and an infinity is invalid layout it paints as
 nothing, silently.
 
+The **format** check is `themeColorFailures(theme)`: every one of the 66 roles
+must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and
+`contrastRatio` parse only that form. The runtime is broader — GPUix accepts
+CSS names and functional colours — so a copied theme can be paintable and still
+invisible to the token maths. A measured role in another form fails the contrast
+check as `NaN`; the two tint roles have no pair. `shadow` is the case that
+matters: plan `085` applies each elevation level's alpha to it through `alpha()`,
+and an unparseable tint is returned unchanged, so `shadow: "black"` painted a
+**fully opaque** shadow at every level — 0.08, 0.12 and 0.16 gone — while both
+other checks returned `[]`. All 24 shipped sets are hex, so the check moves no
+value; `isHexColor` is the predicate for a single stored role.
+
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —
 the identity metrics, the shipped role count, the theme surfaces, the type
 summary, and the spacing, density, radius, icon and avatar scales — to the same
@@ -538,7 +550,7 @@ design system cannot compensate for a missing role.
 | no `scrollbarColor`/`scrollbarWidth` in 0.10.0 | a scroll thumb cannot be tinted, so `scrollbar` is reserved |
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are geometry plus an alpha over the `shadow` tint, not CSS strings |
-| invalid colour strings are ignored per property | a typo paints the previous/black value; tests restrict roles to hex |
+| invalid colour strings are ignored per property | a role outside the six- or eight-digit hex form the helpers parse is reported by `themeColorFailures`; the runtime would paint it while the token maths cannot |
 
 ## 11. Extension
 
@@ -583,7 +595,10 @@ created once at startup and shared.
 Verify an edited theme with `themeContrastFailures(theme)` — it checks at the
 level the theme declares, so a high-contrast theme needs no second argument. An
 empty array is the library's guarantee, and a non-empty one names every pair that
-needs fixing.
+needs fixing. Run `themeMetricFailures(theme)` beside it for the numbers and
+`themeColorFailures(theme)` for the six- or eight-digit hex form the colour
+helpers parse; the three checks are the format, contrast and metric parts of
+the same editable-theme guarantee.
 
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add

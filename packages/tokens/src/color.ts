@@ -585,6 +585,22 @@ export const highContrastDarkColors = {
 const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
 
 /**
+ * True when `value` is a `#RRGGBB` or `#RRGGBBAA` colour — the only form
+ * {@link alpha}, `compositeOver` and `contrastRatio` parse. GPUix accepts every
+ * CSS colour form, so a named or functional colour is paintable but invisible
+ * to the token maths; use this at a boundary that receives a role from storage,
+ * a URL or a payload.
+ *
+ * @example
+ * ```ts
+ * isHexColor("#191D25"); // true
+ * isHexColor("#7567F23D"); // true
+ * isHexColor("rebeccapurple"); // false
+ * ```
+ */
+export const isHexColor = (value: string): boolean => hexColor.test(value);
+
+/**
  * Return `color` with an alpha channel, as an 8-digit hex colour.
  *
  * `amount` is clamped to `0…1` and rounded to the nearest byte. A 6-digit
