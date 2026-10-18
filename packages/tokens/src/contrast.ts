@@ -1204,7 +1204,9 @@ export function themeColorFailures(theme: Theme): ReadonlyArray<ColorFailure> {
   });
 }
 
-const opaqueHex = /^#([0-9A-Fa-f]{6})$/;
+// An opaque role may carry its redundant alpha byte; it paints the same colour
+// either way, so the maths reads both spellings (plan 558).
+const opaqueHex = /^#([0-9A-Fa-f]{6})(?:[Ff]{2})?$/;
 const translucentHex = /^#([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})$/;
 
 const hexOf = (color: string): string | undefined => opaqueHex.exec(color)?.[1];
@@ -1221,9 +1223,10 @@ const luminance = (hex: string): number =>
   0.0722 * linear(channel(hex, 4));
 
 /**
- * The WCAG relative luminance of an opaque `#RRGGBB` colour: `0` for black and
- * `1` for white. A value the token maths cannot parse yields `NaN`, so a
- * malformed role is reported rather than ordered as if it were a colour.
+ * The WCAG relative luminance of an opaque `#RRGGBB` colour (the
+ * paint-identical `#RRGGBBFF` spelling included): `0` for black and `1` for
+ * white. A value the token maths cannot parse yields `NaN`, so a malformed role
+ * is reported rather than ordered as if it were a colour.
  *
  * @example
  * ```ts
@@ -1237,11 +1240,12 @@ export function relativeLuminance(color: string): number {
 }
 
 /**
- * The WCAG 2.x contrast ratio between two **opaque** `#RRGGBB` colours.
+ * The WCAG 2.x contrast ratio between two **opaque** colours, `#RRGGBB` or its
+ * paint-identical `#RRGGBBFF` spelling.
  *
- * A value that is not an opaque six-digit hex — a translucent role, a CSS
- * function, a typo — yields `NaN`, which can never pass a floor, so a malformed
- * theme is reported rather than silently accepted.
+ * A value that is not an opaque hex colour — a partial alpha, a CSS function, a
+ * typo — yields `NaN`, which can never pass a floor, so a malformed theme is
+ * reported rather than silently accepted.
  *
  * @example
  * ```ts
@@ -1260,7 +1264,8 @@ export function contrastRatio(foreground: string, background: string): number {
 }
 
 /**
- * Composite a translucent `#RRGGBBAA` colour over an opaque `#RRGGBB` one.
+ * Composite a translucent `#RRGGBBAA` colour over an opaque `#RRGGBB` (or
+ * `#RRGGBBFF`) one.
  *
  * The result is the opaque colour the runtime paints, so a wash such as the
  * `selection` role can be measured as text actually sees it. An input the

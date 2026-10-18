@@ -369,7 +369,11 @@ single stored role.
 The same bytes have a second form: the alpha channel.
 `themeOpacityFailures(theme)` holds the three veils — `selection`, `overlay` and
 `selectionOnFill`, the `translucentRoles` index — to a byte strictly between `00`
-and `FF`, and every other role to an opaque value (`roleForm` is the rule). The
+and `FF`, and every other role to an opaque value (`roleForm` is the rule). An
+opaque role spelled `#RRGGBBFF` is accepted by both format checks *and* read by
+the maths: `contrastRatio`, `relativeLuminance` and `compositeOver` drop a fully
+opaque alpha byte, so a measured role in that spelling is measured instead of
+reporting `NaN` failures for a paint-identical theme (plan 558). The
 tint is why: `elevationShadow` writes the level's alpha into the tint's fourth
 byte, so `shadow: "#191D2580"` painted at 12% while every other check returned
 `[]`, and a solid `overlay` hides the window the scrim exists to veil:

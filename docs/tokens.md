@@ -1919,7 +1919,8 @@ distinguishable from secondary text; the tightest washed pair is now
 **3.177:1** (Aero light `destructiveSoft`) and **4.722:1** at AAA.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
-ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
+ratio for opaque colours — `#RRGGBB`, or the paint-identical `#RRGGBBFF`
+spelling — with `NaN` when a value does not parse, so a typo
 can never pass — `compositeOver(colour, background)` composites a translucent
 role onto an opaque one, `contrastPairs` / `contrastFloors` are the data the
 check and the test suite both read, and `contrastPairClasses` is the floor
@@ -2073,7 +2074,9 @@ themeColorFailures(tinted); // [{ role: "shadow", value: "black" }]
 This is the format half of the editable-theme guarantee; the opacity half
 follows below. A measured role in a
 non-hex form also fails the contrast check, because `contrastRatio` returns
-`NaN`, which never passes a floor; the tint roles have no pair. `shadow` is
+`NaN`, which never passes a floor; a fully opaque eight-digit spelling
+(`#RRGGBBFF`) is the same paint, so the maths reads it and measures the colour.
+The tint roles have no pair. `shadow` is
 applied to every elevation level through `alpha()` (plan `085`), and an
 unparseable tint is returned unchanged, so `shadow: "black"` painted a **fully
 opaque** shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone —
@@ -2110,7 +2113,14 @@ colour; whether the role is painted with that channel is a separate question.
   applies its own alpha through `alpha()`, which writes the fourth byte, so a
   tint authored at 50% paints at the level's 8/12/16% and the authored value is
   gone. An opaque role written `#RRGGBBFF` is accepted, because it paints the
-  same colour either way.
+  same colour either way. The maths reads that spelling as the colour it paints:
+  `contrastRatio`, `relativeLuminance` and `compositeOver` drop a fully opaque
+  alpha byte, so a measured role written `#191D25FF` is measured rather than
+  reported as a `NaN` failure by the contrast and hierarchy halves while both
+  format checks return `[]`. (Before plan `558` it reported **23** contrast
+  failures for the light `foreground` and **62** for the dark `card`, all
+  ratio `NaN`, for the same paint.) A partial alpha is still unmeasurable, and
+  stays this check's failure.
 
 `translucentRoles` is the index of the three veils, `roleForm` the total rule —
 `roleForm("overlay")` is `"translucent"` and `roleForm("shadow")` is `"opaque"` —

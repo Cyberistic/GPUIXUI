@@ -252,6 +252,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [555](./555-border-rationale-and-duplicate-claim.md) | The border rationale names five of the measured surfaces, and prints one rule twice | F | 080, 084, 300, 318, 327, 352, 550 | done |
 | [556](./556-dialog-calendar-and-mark-dimensions.md) | The dialog, calendar and mark metrics the dimension audits missed | B/F | 353, 389, 530, 550, 554 | done |
 | [557](./557-native-field-caret-mark.md) | The native field's caret is ink, not a fill | F | 082, 332, 337, 511, 527, 546 | done |
+| [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2775,6 +2776,21 @@ the accent's readable ink, clears the floor on all nine surfaces in every
 shipped set (5.587:1 at the tightest), and now carries the caret through a
 published `caretPairs` list. No colour moves: the role already existed, and the
 only new pairs are the contract stating a composition the components paint.
+
+Plan `558` closes a contradiction between the two halves of the editable-theme
+guarantee rather than a palette gap. Plan `540` shipped `themeOpacityFailures`
+with the promise that an opaque role written `#RRGGBBFF` is accepted "because it
+paints the same colour either way", and `themeColorFailures` agreed; the colour
+maths did not. `contrastRatio`, `relativeLuminance` and `compositeOver` parsed
+only six digits, so `foreground: "#191D25FF"` returned `[]` from both format
+checks while the total check reported **35** failures — 23 contrast pairs and the
+hierarchy cases that read the same `NaN` — and dark `card` reported **67**. The
+opaque parser now reads a fully opaque `FF` byte, a partial alpha is still
+unmeasurable and stays the opacity check's diagnostic, and the new suite proves
+both directions: with the parser reverted three cases fail, with a permissive
+parser the partial-alpha guard and the contrast suite's `NaN` case fail. No
+colour, pair, floor, metric, theme, platform style or recipe value moves; 139
+files / 5,713 tests pass.
 
 ## How to use a plan
 

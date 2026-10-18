@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 222/289
+`[x]` `[████████░░]` 223/290
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1823,6 +1823,14 @@ macOS dark's fill measures **2.748:1** on `selected` and **2.836:1** on `active`
 under the 3:1 mark floor, while every check returned `[]`; the caret is
 `primaryText` and `caretPairs` holds it on the field's `input` fill beside the
 eight text surfaces (plan 557)
+
+`[x]` Make the maths read the opaque `FF` spelling the format checks accept —
+`themeColorFailures` and `themeOpacityFailures` returned `[]` for
+`foreground: "#191D25FF"`, while `contrastRatio`, `relativeLuminance` and
+`compositeOver` read only six digits and the total check reported **35**
+failures (23 of them contrast, ratio `NaN`; dark `card` gave **67** with 62
+contrast); the opaque parser now accepts a fully opaque alpha byte, a partial
+alpha still fails, and the two halves of the contract agree (plan 558)
 
 ## Phase C — Tier 1–2 components
 
