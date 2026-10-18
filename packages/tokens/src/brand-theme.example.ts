@@ -13,8 +13,9 @@ import { createTheme, darkTheme } from "./index.js";
  *
  * The groove moves with it too (plan 347). A progress segment paints `primary`
  * on `track`, so a brand that lightens its primary in dark mode needs a groove
- * dark enough to keep the mark at 3:1; the identity groove leaves this fill at
- * 2.67:1. `#2A2A3A` is the brand's own neutral step.
+ * dark enough to keep the mark at 3:1 and to clear the washes and status tints
+ * the rail is painted on; the identity groove leaves this fill at 2.67:1.
+ * `#20202E` is the brand's own neutral step.
  */
 export const brandTheme = createTheme({
   mode: "dark",
@@ -26,7 +27,7 @@ export const brandTheme = createTheme({
     primaryActive: "#A28CFF",
     primaryText: "#C9BDFF",
     ring: "#9B8CFF",
-    track: "#2A2A3A",
+    track: "#20202E",
   },
   radius: { md: 8 },
   density: "compact",

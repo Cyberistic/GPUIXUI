@@ -11,7 +11,10 @@ import { windowsPlatformStyle } from "../windows.js";
  * light/dark border pair. XP shipped no dark mode: the dark half carries the
  * Windows dark palette and is documented as an interpretation.
  * The selected row is a step past the accent wash a selectable row hovers with,
- * so the Luna click is perceivable (plan 381). The values are held to
+ * so the Luna click is perceivable (plan 381). The groove is the era's darker
+ * beige and the progress mark is XP's own Luna green, because the inherited
+ * identity green cannot keep a segment at the mark floor on a rail that clears
+ * the pressed wash (plan 503). The values are held to
  * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const xpPlatformRecipe = {
@@ -56,7 +59,11 @@ export const xpPlatformRecipe = {
       selectedForeground: "#003C74",
       placeholder: "#6B6555",
       skeleton: "#CFC8AE",
-      track: "#E6E2D1",
+      // XP's own Luna green: the identity `success` is too light to keep a
+      // progress segment at the mark floor on the groove the row washes require
+      // (plan 503). White stays well above the on-colour floor on it.
+      success: "#0E6B40",
+      track: "#D2CCB4",
       shadow: "#000000",
     },
     dark: windowsPlatformStyle.colors.dark,

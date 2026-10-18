@@ -63,7 +63,7 @@ export const linuxPlatformStyle = {
       selected: "#D7E6F9",
       selectedForeground: "#0F3D77",
       placeholder: "#6A6865",
-      track: "#DAD8D6",
+      track: "#D8D8D8",
       shadow: "#000000",
     },
     dark: {

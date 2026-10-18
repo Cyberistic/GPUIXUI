@@ -6,6 +6,14 @@
  * its track, because the fill is zero-width) painted nothing on a dark card, and
  * a slider's unfilled span had no shape.
  *
+ * Plan 503 closes the surfaces 347 left out. A row is hovered and pressed before
+ * it is used, and the four soft status fills are first-class surfaces an Alert's
+ * progress or slider sits on, so a groove that disappears on `hover`, `active`
+ * or a tint erases the value indicator exactly while the reader interacts with
+ * it. The audit found identity light `track` on `destructiveSoft` at **1.009:1**,
+ * macOS light on `active` at **1.020:1**, XP light on `warningSoft` at
+ * **1.007:1**, and every AAA dark set on `active` at **1.047:1**.
+ *
  * `track` is the designed groove. These tests prove the old role was invisible
  * on the surfaces a value indicator paints, that every shipped theme carries a
  * track that clears the surface floor on those surfaces and the persistent row
@@ -44,8 +52,14 @@ const trackSurfaces = [
   "card",
   "popover",
   "muted",
+  "hover",
+  "active",
   "accent",
   "selected",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
 ] as const;
 
 const progressMarks = [
@@ -56,7 +70,7 @@ const progressMarks = [
 ] as const;
 
 describe("the value indicator's track", () => {
-  it("publishes six surface pairs and four mark pairs", () => {
+  it("publishes twelve surface pairs and four mark pairs", () => {
     expect(
       trackSurfacePairs.map(([foreground, background, pairClass]) => [
         foreground,
@@ -161,6 +175,24 @@ describe("the value indicator's track", () => {
     expect(failures.every(({ pairClass }) => pairClass === "surface")).toBe(
       true,
     );
+  });
+
+  it("reports a track that disappears under the pointer or on a status panel", () => {
+    const base = getTheme("light");
+    (["hover", "active", "infoSoft"] as const).forEach((surface) => {
+      const regressed = extendTheme(base, {
+        colors: { track: base.colors[surface] },
+      });
+
+      const failures = themeContrastFailures(regressed).filter(
+        ({ foreground, background }) =>
+          foreground === "track" && background === surface,
+      );
+      expect(
+        failures.map(({ pairClass }) => pairClass),
+        surface,
+      ).toEqual(["surface"]);
+    });
   });
 
   it("merges a track override without moving the rest of the palette", () => {

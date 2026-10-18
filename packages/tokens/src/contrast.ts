@@ -110,19 +110,27 @@ export const skeletonPulsePairs: readonly ContrastPair[] = skeletonSurfaces.map(
 /**
  * The surfaces a value indicator's unfilled groove sits on. A progress bar,
  * meter or slider rail can be placed on the four base surfaces, a selectable
- * row's persistent `accent` fill and a selected row's `selected` fill. The
- * momentary `hover`/`active` washes are deliberately absent: the filled part of
- * the indicator still carries the value while the pointer is down, and the XP
- * light palette has no track that clears both the 1.05:1 wash floor and the
- * 3:1 mark floor at once.
+ * row's persistent `accent` fill, a selected row's `selected` fill, the
+ * `hover`/`active` washes a row or a slider paints under the pointer, and the
+ * four soft status fills an Alert or Badge provides. An indeterminate progress
+ * bar is only its groove — the fill is zero-width — and a slider's unfilled span
+ * is the value the reader is about to change, so every surface the indicator
+ * paints is measured. XP light's own `success` mark is what makes its groove
+ * work here: the inherited identity green forced the rail toward the canvas.
  */
 const trackSurfaces = [
   "background",
   "card",
   "popover",
   "muted",
+  "hover",
+  "active",
   "accent",
   "selected",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
 ] as const;
 
 /** The track measured against every surface it is painted on. */
@@ -832,7 +840,10 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * surface role cannot carry it, because the quiet panel is the same value as the
  * card in every platform dark style. Its surface pairs and the four fills
  * painted on it (`trackSurfacePairs`, `trackMarkPairs`) keep an indeterminate
- * progress bar visible on a dark card and give a slider's unfilled span a shape.
+ * progress bar visible on a dark card, give a slider's unfilled span a shape,
+ * and hold the rail on the `hover`/`active` washes and the four soft status
+ * fills a row or a panel paints, because those are surfaces the indicator sits
+ * on while the reader interacts with it.
  *
  * A **status panel's action** is the one family the canvas washes cannot carry:
  * the four soft status fills sit in one narrow luminance band in each mode, so a

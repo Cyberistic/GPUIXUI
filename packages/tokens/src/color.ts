@@ -288,7 +288,9 @@ export interface ThemeColors {
  * must be perceivable from the state before the click, or the two look alike
  * (plan 381). The raised action a soft status panel carries is the card surface
  * pressed one step at a time (`softAction` → `softActionActive`), because a
- * canvas-tuned wash has the tints' own luminance (plan 394).
+ * canvas-tuned wash has the tints' own luminance (plan 394). The groove is one
+ * step darker than plan 347's value, so a progress rail stays perceivable on the
+ * pressed wash and on a soft status fill (plan 503).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -360,7 +362,7 @@ export const lightColors = {
   disabled: palette.neutral[100],
   disabledForeground: "#6E7787",
   skeleton: palette.neutral[300],
-  track: "#DBDFE5",
+  track: "#D5D9E2",
   scrollbar: palette.neutral[300],
   shadow: "#191D25",
 } satisfies ThemeColors;
@@ -390,7 +392,9 @@ export const lightColors = {
  * click is perceivable and `selectedForeground` keeps its floor on it
  * (plan 381). The raised action a soft status panel carries lightens away from
  * the tinted fill (`softAction` → `softActionActive`), because the canvas washes
- * sit inside the tints' own luminance band (plan 394).
+ * sit inside the tints' own luminance band (plan 394). The groove is neutral 700
+ * — a step lighter than plan 347's value — so it clears the pressed wash and the
+ * four soft status fills while every progress fill stays a mark on it (plan 503).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -462,7 +466,7 @@ export const darkColors = {
   disabled: palette.neutral[850],
   disabledForeground: palette.neutral[400],
   skeleton: "#434C5A",
-  track: "#323945",
+  track: palette.neutral[700],
   scrollbar: palette.neutral[700],
   shadow: "#000000",
 } satisfies ThemeColors;
@@ -561,7 +565,9 @@ export const highContrastLightColors = {
  * wash needs 4.5:1 for an inactive label (plan 306). The accent and selected
  * fills are a lighter iris, so a selected row is perceivable on the AAA dark
  * quiet panel and popover (plan 309); `selected` sits on the accent's hover step
- * so the selection is also a step past the row's hover wash (plan 381).
+ * so the selection is also a step past the row's hover wash (plan 381). The
+ * groove moves one step lighter so it clears the pressed wash and the `warning`
+ * tint, which sit a half-step above the surface ladder (plan 503).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -631,7 +637,7 @@ export const highContrastDarkColors = {
   disabled: "#2E2E2E",
   disabledForeground: "#A9A9A9",
   skeleton: "#565656",
-  track: "#3A3A3A",
+  track: "#414141",
   scrollbar: "#8A8A8A",
   shadow: "#000000",
 } satisfies ThemeColors;

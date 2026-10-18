@@ -308,7 +308,7 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 360 to **${contrastPairs.length}**`,
+      `taking it from 388 to **${contrastPairs.length}**`,
     );
   });
 
@@ -1301,18 +1301,18 @@ describe("docs/tokens.md quoted tightest figures", () => {
     const [markLabel, markRatio] = tightest("success", "track");
 
     expect([surfaceLabel, Number(surfaceRatio.toFixed(2))]).toEqual([
-      "identity light",
+      "identity dark",
       1.06,
     ]);
     expect([markLabel, Number(markRatio.toFixed(2))]).toEqual([
-      "Aero light",
-      3.15,
+      "macOS light",
+      3.04,
     ]);
     expect(markdownProse).toContain(
       `${surfaceLabel} \`track\` on its \`selected\` fill at **1.06:1**`,
     );
     expect(markdownProse).toContain(
-      `${markLabel} \`success\` on the groove at **3.15:1**`,
+      `${markLabel} \`success\` on the groove at **3.04:1**`,
     );
   });
 
@@ -1969,7 +1969,7 @@ describe("docs/design-system.md", () => {
       `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
-      `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`accent\`/\`selected\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,

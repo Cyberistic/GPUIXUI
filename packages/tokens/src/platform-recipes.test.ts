@@ -77,13 +77,7 @@ describe("platform recipe resolution", () => {
         const theme = getPlatformRecipeTheme(recipe, mode);
         const declared = platformRecipes[recipe].colors[mode];
         (
-          [
-            "destructive",
-            "success",
-            "warningSoft",
-            "overlay",
-            "scrollbar",
-          ] as const
+          ["destructive", "warningSoft", "overlay", "scrollbar"] as const
         ).forEach((role) => {
           expect(declared[role], `${recipe} ${mode} declares ${role}`).toBe(
             undefined,
@@ -92,6 +86,24 @@ describe("platform recipe resolution", () => {
             base[role],
           );
         });
+        // XP's light half owns its progress mark, because the inherited green
+        // cannot keep a segment at the mark floor on a rail that clears the
+        // pressed wash (plan 503). Its dark half is the Windows palette, which
+        // inherits the identity green like every other style.
+        const ownsSuccess = recipe === "xp" && mode === "light";
+        expect({
+          declared: declared.success ?? null,
+          resolved: theme.colors.success,
+          inherits: theme.colors.success === base.success,
+        }).toEqual(
+          ownsSuccess
+            ? {
+                declared: declared.success,
+                resolved: declared.success,
+                inherits: false,
+              }
+            : { declared: null, resolved: base.success, inherits: true },
+        );
       });
 
       it(`${recipe} ${mode}: clears the documented contrast contract`, () => {

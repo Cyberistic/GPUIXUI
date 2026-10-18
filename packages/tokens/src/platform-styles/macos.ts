@@ -71,7 +71,7 @@ export const macosPlatformStyle = {
       selected: "#CFE3FA",
       selectedForeground: "#004A9E",
       placeholder: "#6E6E73",
-      track: "#DADADF",
+      track: "#D3D3D8",
       shadow: "#000000",
     },
     dark: {
