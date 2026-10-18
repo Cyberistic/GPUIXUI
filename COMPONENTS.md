@@ -214,8 +214,8 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (263 tests in
-20 files at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (264 tests in
+20 files at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
@@ -229,7 +229,7 @@ binding). Details: plan 041 §9, plan 053 §11, plan 054 §9, plan 055 §7, plan
 §12, plan 057 §8, plan 058 §8, plan 059 §8, plan 060 §6, plan 061 §6, plan 062
 §6, plan 065 §6, plan 066 §6, plan 067 §6, plan 068 §6, plan 069 §6, plan 070 §6,
 plan 072 §6, plan 073 §6, plan 076 §7, plan 077 §7, plan 078 §7, plan 079 §8,
-plan 080 §8, plan 081 §8, plan 082 §6, plan 083 §6, plan 084 §6, plan 085 §6, plan 086 §6 and plan 087 §6. The examples suite mounts every
+plan 080 §8, plan 081 §8, plan 082 §6, plan 083 §6, plan 084 §6, plan 085 §6, plan 086 §6, plan 087 §6 and plan 091 §7. The examples suite mounts every
 example in `packages/primitives/examples/` (plan 047).
 
 **Focus matrix (084):** `runtime/focus-ring.runtime.test.tsx` holds every

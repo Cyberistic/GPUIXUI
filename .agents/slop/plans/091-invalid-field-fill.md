@@ -5,7 +5,7 @@
 | Phase | F (hardening) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `047`, `079`, `083`, `090` |
-| Status | **in progress** |
+| Status | **done** — core fix, offline + element-tree + runtime cases, both directions measured (§7) |
 
 Self-contained: §1 the gap and the measured evidence, §2 the rule, §3 the exact
 files, §4 the commands and expected results, §5 the test plan and the
@@ -240,10 +240,10 @@ over-correcting.
 
 ## 8. Acceptance
 
-- [ ] `controlStyle` no longer turns an invalid field's fill destructive.
-- [ ] The invalid border survives hover and press.
-- [ ] Offline and runtime tests cover `Input`, `TextArea` and `OTPField`;
+- [x] `controlStyle` no longer turns an invalid field's fill destructive.
+- [x] The invalid border survives hover and press.
+- [x] Offline and runtime tests cover `Input`, `TextArea` and `OTPField`;
       the core rule covers a borderless variant.
-- [ ] The new tests fail with the fix removed and pass with it.
-- [ ] `COMPONENTS.md` records the fix; `TODO.md` ticks it; this plan is indexed.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The new tests fail with the fix removed and pass with it.
+- [x] `COMPONENTS.md` records the fix; `TODO.md` ticks it; this plan is indexed.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.
