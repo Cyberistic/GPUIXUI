@@ -181,8 +181,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330`–`345` are landed and `346` is the
-next free number.
+tokens-theme (`300–328`) reservations — `330`–`346` are indexed, `346` is
+planned, and `347` is the next free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -261,6 +261,7 @@ next free number.
 | [343](./343-pointer-text-entry.md) | Pointer entry: caret placement, drag selection and textarea lines | B → C | 100, 110, 120, 140, 188 | **landed** — `pointer-text-entry`: a click places the native editor's caret at the nearest glyph (left/middle/right), a drag selects and typing replaces, a plain click clears it, `shift`-click extends it, and Enter/Up work in a `<textarea>` (autosize 32 → 64). Adds `pressWindow` and modifier arguments to the host's click verbs. 22 checks, suite `71 → 72`, 1951 → 1973 checks, exit `0`; three mutation proofs (§8) |
 | [344](./344-tier2-foundation-navigation.md) | Tier 2 foundation and navigation in the playground | C/D | 100, 110, 120, 140, 158, 160, 330 | **landed** — `tier2-foundation` (42 checks) drives Card, Badge, Avatar, Alert, EmptyState and List; `tier2-navigation` (55) drives Tabs, Accordion, Collapsible, Breadcrumb and Pagination through the consumer path. Suite `72 → 74`, 1973 → 2070 checks, exit `0`; four mutation and two reverse proofs (§8). Live twins `live-tier2-foundation` (15) and `live-tier2-navigation` (17) make the live suite `22 → 24` (373 → 405 checks, exit `0`). **Measured live gap:** the window delivers a key to the focused element only, so List/Tabs ancestor `onKeyDown` never runs and a clicked tab does not set `active`; recorded as a components task (§8.1) |
 | [345](./345-live-key-routing.md) | Live key routing: the focused element, its ancestors and the window | B/F | 100, 140, 176, 189, 190, 344 | **landed** — `live-key-routing` (23 checks) proves a key reaches the focused element, bubbles through every ancestor and then the window handler; `autoFocus` and a live click focus natively without React's `onFocus`; `cmd-k` reaches the window handler with its modifier. Wires `useWindowKey` into the live runner. Live `24 → 25`, 405 → 431 checks, exit `0`. Retracts plan `344`'s List-bubbling claim (it was a harness race) and narrows the real defect to Tabs' `active` (§6) |
+| [346](./346-tier2-choice-and-forms.md) | The Tier 2 choice and form catalogue in the playground | C/D | 100, 110, 120, 140, 155, 156, 159, 188, 330, 344, 345 | planned — `tier2-choice` (Popover, SearchInput, Combobox, DatePicker, TimePicker) and `tier2-forms` (Field, Fieldset, Form), with live twins |
 
 Cross-cutting records:
 
