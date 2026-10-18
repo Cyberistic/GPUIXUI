@@ -141,6 +141,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [342](./342-filled-state-steps.md) | The filled family's step in the public contract | F | 071, 097, 306, 327, 338, 341 | done |
 | [343](./343-field-pressed-edge.md) | The field's pressed edge in the public contract | F | 071, 084, 325, 340–342 | done |
 | [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | done |
+| [345](./345-contrast-platform-elevation.md) | A high-contrast platform variant keeps its elevation | F | 063, 073, 085, 301, 311, 323 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1083,6 +1084,21 @@ fill and leaves the system without an answer, deriving the veil from
 `alpha(familyForeground, 0.15)` repeats the alpha-composite defect plans
 055/097/327 removed, and changing `selection` itself would break the
 accent-follows-identity rule plan 331 states.
+
+345 closes the last axis on which a platform variant silently reverted to the
+identity. Plan 063 decided to apply "only `structure` and `types`" at high
+contrast because an elevation level then carried a colour per level, so replacing
+it could weaken the AAA palette. Plan 085 changed that representation: a level is
+geometry plus an alpha over the single `shadow` tint, and the tint is a colour
+role the AAA theme keeps. Skipping elevation now only removes the platform's
+depth, so `getPlatformTheme(platform, mode, "high")` and both recipes painted the
+identity's shadows and the docs toggle's four variants were identical on that
+axis. The levels move into the structural overrides and apply at every contrast
+level; the AAA `shadow` tint stays, so no colour, pair or floor moves and the
+public checker still returns `[]`. `platform-contrast-elevation.test.ts` states
+the regression and the tint/geometry split, and the docs, README and ledger now
+say that a high-contrast variant keeps its platform's elevation while the AAA
+colour set wins.
 
 ### Reference adoption (block `200–299`)
 
