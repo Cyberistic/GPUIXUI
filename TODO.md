@@ -228,6 +228,9 @@ retired once both branches are one
     - [x] Combobox create-new option: one trailing row over the typed query,
       single/multi selection, no sentinel leak — plan 328; 6 logic + 6 native
       tests, both-direction proof (behaviour 487)
+    - [x] Command menu recent commands: front-inserted, deduped, capped, shown
+      first only on an empty query — plan 329; 7 logic + 5 native tests,
+      both-direction proof (behaviour 492)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)

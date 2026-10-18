@@ -3,6 +3,8 @@
  *
  * The palette is controlled; the button below stands in for the application
  * shortcut, which belongs to the app — the component binds no global keys.
+ * Recents are controlled here so a real app can persist them; a component that
+ * owns them keeps them for its own lifetime.
  */
 
 import { useState } from "react";
@@ -22,6 +24,7 @@ export const CommandMenuExample = () => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [ran, setRan] = useState("none");
+  const [recent, setRecent] = useState<ReadonlyArray<string>>(["save"]);
 
   const perform =
     (label: string): (() => void) =>
@@ -94,10 +97,17 @@ export const CommandMenuExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Try “op”, then ↑ and Enter.
+          Try “op”, then ↑ and Enter. Run a command, reopen the palette, and it
+          is first under Recent.
         </text>
       </div>
-      <CommandMenu open={open} onOpenChange={setOpen} actions={actions}>
+      <CommandMenu
+        open={open}
+        onOpenChange={setOpen}
+        actions={actions}
+        recent={recent}
+        onRecentChange={setRecent}
+      >
         <CommandMenuInput />
         <CommandMenuList />
         <CommandMenuEmpty />

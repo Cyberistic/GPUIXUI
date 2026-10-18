@@ -12,7 +12,11 @@
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import {
   CommandMenu,
@@ -92,6 +96,46 @@ const Palette = ({
 /** Type one character into whatever holds focus. */
 const type = (root: ReturnType<typeof renderComponent>, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
+};
+
+/** A palette with a visible reopen control, so recents can be observed. */
+const ReopenablePalette = ({
+  perform,
+  recent,
+  defaultRecent,
+  onRecentChange,
+}: {
+  readonly perform: (id: string) => void;
+  readonly recent?: ReadonlyArray<string>;
+  readonly defaultRecent?: ReadonlyArray<string>;
+  readonly onRecentChange?: (recent: ReadonlyArray<string>) => void;
+}) => {
+  const [open, setOpen] = useState(true);
+  return (
+    <div style={{ width: 640, height: 640 }}>
+      <div
+        role="button"
+        tabIndex={0}
+        testId="open-palette"
+        onClick={() => setOpen(true)}
+        style={{ width: 140, height: 32 }}
+      >
+        Open palette
+      </div>
+      <CommandMenu
+        open={open}
+        onOpenChange={setOpen}
+        actions={actions(perform)}
+        recent={recent}
+        defaultRecent={defaultRecent}
+        onRecentChange={onRecentChange}
+      >
+        <CommandMenuInput />
+        <CommandMenuList />
+        <CommandMenuEmpty />
+      </CommandMenu>
+    </div>
+  );
 };
 
 /** A palette over a caller-supplied action set. */
@@ -368,6 +412,108 @@ describe("CommandMenu", () => {
 
     expect(input?.customProps?.placeholder).toBe("Find a command");
     expect(input?.customProps?.["aria-label"]).toBe("Find");
+
+    palette.unmount();
+  });
+
+  it("shows a run command first when the palette reopens", async () => {
+    const perform = vi.fn();
+    const onRecentChange = vi.fn();
+    const palette = renderComponent(
+      <ReopenablePalette perform={perform} onRecentChange={onRecentChange} />,
+    );
+
+    palette.renderer.simulateKeystrokes("enter");
+    await Promise.resolve();
+    expect(perform).toHaveBeenCalledWith("open-file");
+    expect(palette.renderer.findByTestId("command-menu")).toBeUndefined();
+    expect(onRecentChange).toHaveBeenCalledWith(["open-file"]);
+
+    clickCentreOf(palette, "open-palette");
+    await Promise.resolve();
+
+    expect(palette.renderer.getAllText()).toContain("Recent");
+    const recent = requireBounds(palette, "command-open-file");
+    const next = requireBounds(palette, "command-open-recent");
+    expect(recent.y).toBeLessThan(next.y);
+
+    palette.unmount();
+  });
+
+  it("keeps recency order and does not duplicate a command", async () => {
+    const perform = vi.fn();
+    const palette = renderComponent(<ReopenablePalette perform={perform} />);
+
+    palette.renderer.simulateKeystrokes("enter");
+    await Promise.resolve();
+    clickCentreOf(palette, "open-palette");
+    await Promise.resolve();
+
+    type(palette, "save");
+    palette.renderer.simulateKeystrokes("enter");
+    await Promise.resolve();
+    clickCentreOf(palette, "open-palette");
+    await Promise.resolve();
+
+    const save = requireBounds(palette, "command-save");
+    const open = requireBounds(palette, "command-open-file");
+    expect(save.y).toBeLessThan(open.y);
+    expect(
+      palette.renderer.getAllText().filter((text) => text === "Save"),
+    ).toHaveLength(1);
+
+    palette.unmount();
+  });
+
+  it("takes its initial list from defaultRecent", () => {
+    const palette = renderComponent(
+      <ReopenablePalette perform={vi.fn()} defaultRecent={["sidebar"]} />,
+    );
+
+    expect(palette.renderer.getAllText()).toContain("Recent");
+    const recent = requireBounds(palette, "command-sidebar");
+    const first = requireBounds(palette, "command-open-file");
+    expect(recent.y).toBeLessThan(first.y);
+
+    palette.unmount();
+  });
+
+  it("ranks normally while a query is typed", () => {
+    const palette = renderComponent(
+      <ReopenablePalette perform={vi.fn()} defaultRecent={["sidebar"]} />,
+    );
+
+    type(palette, "op");
+
+    const texts = palette.renderer.getAllText();
+    expect(texts).not.toContain("Recent");
+    expect(texts.filter((text) => text === "Open file")).toHaveLength(1);
+    expect(texts).toContain("Open recent");
+
+    palette.unmount();
+  });
+
+  it("reports the next list without moving a controlled order", async () => {
+    const onRecentChange = vi.fn();
+    const palette = renderComponent(
+      <ReopenablePalette
+        perform={vi.fn()}
+        recent={["sidebar"]}
+        onRecentChange={onRecentChange}
+      />,
+    );
+
+    clickCentreOf(palette, "command-open-file");
+    await Promise.resolve();
+
+    expect(onRecentChange).toHaveBeenCalledWith(["open-file", "sidebar"]);
+
+    clickCentreOf(palette, "open-palette");
+    await Promise.resolve();
+
+    const sidebar = requireBounds(palette, "command-sidebar");
+    const open = requireBounds(palette, "command-open-file");
+    expect(sidebar.y).toBeLessThan(open.y);
 
     palette.unmount();
   });

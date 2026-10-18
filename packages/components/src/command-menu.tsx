@@ -12,13 +12,16 @@
  * repeats. `filter` replaces it with a boolean predicate.
  *
  * The root owns the query and the matches because ranking needs the whole action
- * set; the parts are the input, the list, one row and the empty state.
+ * set; the parts are the input, the list, one row and the empty state. Running
+ * a command records it for the empty-query "Recent" group (`command-menu/logic`),
+ * which is component state unless the caller supplies `recent`.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Str from "effect/String";
 import {
   createContext,
   Fragment,
@@ -27,7 +30,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  orderWithRecent,
+  recordRecent,
+  type CommandAction,
+} from "./command-menu/logic.js";
 import { Dialog, DialogContent } from "./dialog.js";
+import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import {
@@ -46,18 +55,7 @@ import {
   type MenuState,
 } from "./menu/logic.js";
 
-/** One runnable command. */
-export interface CommandAction {
-  readonly id: string;
-  readonly label: string;
-  /** The heading this action sits under; consecutive actions share it. */
-  readonly group?: string;
-  /** Display only, e.g. `"⌘S"`. The component binds no shortcuts. */
-  readonly shortcut?: string;
-  /** Visible but not runnable. */
-  readonly disabled?: boolean;
-  readonly perform: () => void;
-}
+export type { CommandAction } from "./command-menu/logic.js";
 
 /** The rules a command-menu part follows; throws outside a {@link CommandMenu}. */
 interface CommandMenuContextValue {
@@ -92,6 +90,16 @@ export interface CommandMenuProps {
   readonly actions: ReadonlyArray<CommandAction>;
   /** Replace the default ranked fuzzy match; accepted rows keep declaration order. */
   readonly filter?: (action: CommandAction, query: string) => boolean;
+  /** The controlled recent-command ids, most recent first. */
+  readonly recent?: ReadonlyArray<string>;
+  /** The uncontrolled starting list. `/dev/null` by default. */
+  readonly defaultRecent?: ReadonlyArray<string>;
+  /** Called with the next list after an enabled command runs. */
+  readonly onRecentChange?: (recent: ReadonlyArray<string>) => void;
+  /** How many recent commands are kept. Default `5`, minimum `1`. */
+  readonly recentLimit?: number;
+  /** The heading over the recent group. Default `"Recent"`. */
+  readonly recentLabel?: string;
   readonly children?: PartChildren;
 }
 
@@ -130,6 +138,11 @@ export const CommandMenu = ({
   onOpenChange,
   actions,
   filter,
+  recent: recentProp,
+  defaultRecent,
+  onRecentChange,
+  recentLimit = 5,
+  recentLabel = "Recent",
   children,
 }: CommandMenuProps) => {
   const theme = useTheme();
@@ -138,9 +151,15 @@ export const CommandMenu = ({
     Option.none(),
   );
   const input = useRef<PublicInstance | null>(null);
+  const [recent, setRecent] = useControllableState<ReadonlyArray<string>>({
+    value: recentProp,
+    defaultValue: defaultRecent ?? [],
+    onChange: onRecentChange,
+  });
 
-  const matches =
-    filter === undefined
+  const matches = Str.isEmpty(Str.trim(query))
+    ? orderWithRecent(actions, recent, recentLabel)
+    : filter === undefined
       ? defaultMatches(actions, query)
       : Arr.filter(actions, (action) => filter(action, query));
   const rows = specs(matches);
@@ -166,6 +185,7 @@ export const CommandMenu = ({
   const run = (action: CommandAction): void => {
     if (action.disabled === true) return;
     action.perform();
+    setRecent(recordRecent(recent, action.id, recentLimit));
     close();
   };
 

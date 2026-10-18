@@ -84,6 +84,40 @@ order — no hidden fuzzy pass and no reordering. Disabled actions stay visible 
 cannot be run by click or `Enter`; the initial highlight lands on the first
 enabled match.
 
+## Recent commands
+
+Running an enabled command records it. With an empty query the recent commands
+are shown first under `Recent`, in recency order, and each subsequent action
+stays in declaration order. Typing a query ranks exactly as before — recents are
+not pinned while searching.
+
+```tsx
+<CommandMenu
+  open={open}
+  onOpenChange={setOpen}
+  actions={actions}
+  recent={recent}
+  onRecentChange={setRecent}
+  recentLimit={5}
+  recentLabel="Recently used"
+/>
+```
+
+| Prop | Meaning |
+| ---- | ------- |
+| `recent` | Controlled ids, most recent first. |
+| `defaultRecent` | Uncontrolled starting list. |
+| `onRecentChange` | Called with the next list after a command runs. |
+| `recentLimit` | Entries kept, default `5`, minimum `1`. |
+| `recentLabel` | The group heading, default `"Recent"`. |
+
+Recording is front-inserted, deduplicated, and capped. Running the command
+already at the front reports nothing. Disabled commands are never recorded.
+Without `recent`, the list is component state for the lifetime of the mounted
+palette; there is no renderer storage, so an app that needs recents across a
+remount owns the prop (and persists it itself). An id that no longer exists in
+`actions` is ignored when the list renders.
+
 ## Controlled only
 
 `open` is required. A command palette is opened by an application shortcut
@@ -107,21 +141,27 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 - The `<input>` is the host element until `@gpuixui/primitives` lands; it is the
   documented stand-in, not a styled wrapper.
 - Ranking is **per group**, not global: a group's heading stays where the caller
-  declared it even when another group holds the best match. There is no
-  recent-commands memory and no per-query history.
+  declared it even when another group holds the best match. Recents are session
+  state unless the app owns and persists `recent`; there is no per-query history.
 - No `aria-activedescendant`: the highlight is visible but the input does not
   point assistive technology at the active row.
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (14 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (19 tests):
 focus landing on the input, typing filtering the list while focus stays put,
 ArrowDown + Enter running the second match and closing, a clicked row, the empty
 label, a custom filter, a disabled action refusing to run, Escape closing, a
 non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
-a caller-supplied empty state, and the input's placeholder/name coming from the
-part.
+a caller-supplied empty state, the input's placeholder/name coming from the
+part, and recents: a run command shown first on reopen, recency order without a
+duplicate row, `defaultRecent`, normal ranking while a query is typed, and a
+controlled list that reports without moving.
+
+`src/command-menu/logic.test.ts` covers recording (front insert, dedupe, cap,
+head no-op) and the empty-query ordering (recent group, declaration order,
+unknown ids dropped).
 
 `src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and
 trim, word-start versus mid-word scores, separator boundaries, subsequence and
