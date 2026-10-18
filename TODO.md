@@ -60,15 +60,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 81/86 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`390` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `391`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`391` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `392`
 
-`[~]` Probe a **reorderable list** per plan `391` — the unmeasured half of the
-      Drag and drop row: a pointer drop at boundary 3 from index 0 must land at
-      index 2, the rows paint at their new `index * rowHeight`, the
-      gesture-ending click is suppressed by distance, Escape cancels, keyboard
-      lift/arrow/drop keeps native focus, and a virtualized list's keyed reorder
-      is measured (with a remount fallback recorded). Capability `reorder`; headless
-      `list-reorder` + `live-reorder`.
+`[x]` Probe a **reorderable list** per plan `391` — the unmeasured half of the
+      Drag and drop row: `list-reorder` (36 checks) and `live-reorder` (19) with
+      16 pure model tests. A pointer names an insertion **boundary**; the
+      dragged item's removal shifts later boundaries, so a drop at boundary 3
+      from index 0 lands at **index 2** (the unadjusted rule fails both the unit
+      test and the scenario) and rows paint at `index * rowHeight` within 1 px.
+      A click focuses/activates without reordering; a >2 px travel starts a drag;
+      the gesture-ending click is real and is suppressed by that distance
+      (`activations 1 → 2` without the guard). Escape cancels through the window
+      handler; keyboard lift/arrows/drop uses the same rule and ends focus on the
+      moved handle. `<virtual-list>` reorders **keyed** children in place and
+      keeps `[0, 0, 240]`. Suite `90 → 91` (`3088 → 3124`), live `41 → 42`
+      (`839 → 858`), exit `0`, `reorder=verified`; five mutation proofs
+      (plan `391` §9).
 
 `[x]` Probe a **notification centre** per plan `381`: `notification-centre`
       (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a

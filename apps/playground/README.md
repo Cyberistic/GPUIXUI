@@ -1148,7 +1148,7 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 90-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
+The 91-scenario suite runs on the offscreen `TestRenderer`. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1182,6 +1182,7 @@ live pass is citable evidence rather than a second log format.
 | `live-tier2-flow` | the stepper's control moves the value, the timeline stacks, a tick and an expiry repaint the countdown, the shortcut glyphs are explicit, the carousel steps/clamps/home, a swatch and `abc` normalise the colour, and the nav opens one panel by pointer and keyboard with Escape, focus return and an outside press — 24 checks |
 | `live-key-routing` | the three key paths in one tree: the focused element, **every** ancestor (focusable or not) and the app-level window handler all receive a key (`inner=1 middle=1 outer=1 window=1`); `autoFocus` focuses natively **without running React's `onFocus`**; delivery follows focus; and `cmd-k` reaches the window handler with `modifiers.cmd` — 22 checks. A **click's** `onFocus` count is window-state dependent (measured `0` and `1` on the same host) and is printed, not asserted |
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
+| `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
@@ -1212,6 +1213,13 @@ key reaches the focused element, bubbles through **every** ancestor (focusable
 or not) and finally reaches the app-level window handler, so an ancestor handler
 is a valid component path and `useWindowKey` is the global-shortcut path. The
 live runner wires `useWindowKey` (plan `345`).
+
+A fourth rule came from plan `391`: a close produced by a **real timer** is
+awaited with a bounded `waitForText` (3 s), not a fixed sleep. `live-preview`'s
+200 ms grace close had not run 300 ms after the leave under full-suite load
+(measured `open=true closes=0` twice), while a genuinely absent close still
+fails the assertion after the wait. The probe's own drag and keyboard checks
+assert order and geometry after the same bounded wait, never a screenshot.
 
 Exit codes match the headless suite: `0` passed, `1` a failed check, `2` no
 window (CI, a locked session, a missing binding) — and no report is written on
@@ -1322,20 +1330,41 @@ renders (an inline template containing a render counter defeats the cache), and
 do not assume virtualization makes an arbitrarily large model free — it
 windows paint, not host retention.
 
+## Reorder (plan `391`)
+
+`list-reorder` closes the composition half of the Drag and drop row: plans `162`
+and `172` measured the gesture, this applies the order change.
+
+| Fact | Measured |
+| ---- | -------- |
+| the boundary rule | a pointer names an insertion boundary (`0…count`); removing the dragged item shifts every boundary after it. A drop at boundary 3 from index 0 lands at **index 2**, and the rows between move by exactly one |
+| the geometry | after a 0 → 2 drop, `alpha` paints at `listTop + 2 * 32` and `delta` (index 3) stays at `listTop + 3 * 32`, within 1 px |
+| a click is not a drag | a click on a handle focuses it and activates, and moves nothing; a press has to travel more than 2 px before the drop commits |
+| the ending click | the source still receives a click after the drop; without a distance guard it also counts as an activation (`2` instead of `1`), so the component owns the suppression |
+| cancel | Escape during a held drag clears the indicator and leaves the order; the window handler is the reliable route because a press does not have to focus the handle |
+| keyboard | Enter/Space lifts, arrows move the boundary (clamped), Enter drops through the same rule, Escape cancels; native focus ends on the moved handle |
+| virtualization | a `<virtual-list>` reorders its **keyed** children in place: 60 rows, `v-0` dropped at boundary 5 gives `v-1…v-4, v-0, v-5…`, the row paints at `index * 24`, and the anchor stays `[0, 0, 240]` — no generation-keyed remount was needed |
+
+The pure rules (`insertionAt`, `dropIndex`, `moveItem`) live in
+`src/scenarios/reorder-model.ts` with 16 unit tests; the scenario is 36 checks
+and the live twin 19. Five mutation proofs: dropping the boundary adjustment,
+removing the click guard, ignoring the pointer's y, removing Escape, and a no-op
+arrow each fail the named check.
+
 ## Evidence on this host
 
-The suite is **90/90 green** here (`exit 0`, 3088 checks):
+The suite is **91/91 green** here (`exit 0`, 3124 checks):
 
 ```
-90/90 scenarios passed · capabilities: layout=verified text=verified
+91/91 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified float=verified
 preview=verified command=verified content=verified drag=verified
-selection=verified menu=verified components=verified search=verified
-terminal=verified chart=verified toast=verified grid=verified
+reorder=verified selection=verified menu=verified components=verified
+search=verified terminal=verified chart=verified toast=verified grid=verified
 data-grid=verified columns=verified column-config=verified chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified states=verified truncation=verified grid-layout=verified
@@ -1463,6 +1492,9 @@ src/scenarios/notification-centre.tsx a bell, a non-modal panel and a newest-fir
 src/scenarios/crop-model.ts the pure crop geometry, the mask complement and the readout
 src/scenarios/crop-model.test.ts the pure crop rules
 src/scenarios/crop.tsx the image box, four masks, captured handles and a keyboard crop
+src/scenarios/reorder-model.ts the pure boundary/index/move rules
+src/scenarios/reorder-model.test.ts the pure reorder rules
+src/scenarios/reorder.tsx a plain and a virtualized reorderable list, pointer and keyboard
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1510,8 +1542,9 @@ narrower. Each deviation is deliberate and measured:
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
-  probe** (`query-builder`, plan `378`)
-  pass in real GPUix 0.10.0 on this host (90/90), with a written report and
+  probe** (`query-builder`, plan `378`) and the **reorder probe**
+  (`list-reorder`, plan `391`)
+  pass in real GPUix 0.10.0 on this host (91/91), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1519,13 +1552,15 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 41/41 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 42/42 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
   **message scroller**, the **Tier 2 choice and form families**, the
   **multi-pane editor**, the **data toolbar**, the **query builder**, the
-  **notification centre**, the **crop area**, the **multi-step form** and the
+  **notification centre**, the **crop area**, the **multi-step form**, the
+  **reorder** (a paced drop at boundary 3 lands at index 2, keyboard
+  lift/arrow/drop and cancel) and the
   **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
   veil, filter + window keys, arrows that keep focus, `onSubmit` commit and
   three dismissals) —

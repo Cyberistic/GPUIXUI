@@ -385,6 +385,54 @@ The model tests are a deliberate pair: `dropIndex(0, 3, 8) === 2` (down) and
 
 ## 9. Outcome
 
-To be filled by the executor: the measured facts (index/geometry numbers), the
-virtual-reorder route (keyed or remount), whether focus followed, the five
-two-direction outputs, and the exact suite counts.
+Executed on this host on 2026-10-18. **Headless `91/91` green (3124 checks),
+exit `0`, `reorder=verified`; live `42/42` (858 checks), exit `0`, in two
+consecutive full runs.** `list-reorder` records **36 checks**, `live-reorder`
+**19**, and the pure model **16 tests**. `nub run check`, `nub run lint` and
+`nub run test` pass.
+
+Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+
+- **The boundary rule is the drop rule.** A drag from index 0 to the lower half
+  of row 2 names boundary 3 and lands at **index 2**; `alpha` paints at
+  `listTop + 64` and `delta` (index 3) stays at `listTop + 96`, both within 1 px.
+  With the adjustment removed, the row lands at index 3
+  (`bravo,charlie,delta,alpha,…`) and the unit test reads `expected 3 to be 2`.
+- **A click is not a drag.** A click on a handle takes native focus and counts
+  one activation; it moves nothing. A press commits only after more than 2 px of
+  travel, so a click never opens an indicator.
+- **The gesture-ending click is real and must be suppressed.** After a drop the
+  source still receives `click:alpha`; without the distance guard the same step
+  reads `activations=2` instead of `1`. The guard is per gesture and cleared by
+  that click.
+- **Escape cancels through the window handler.** A held pointer drag whose press
+  did not focus the handle still cancels: the indicator leaves, the order is
+  unchanged and `cancel` is in the log.
+- **Keyboard is parity.** Enter lifts at the item's boundary, two ArrowDowns
+  move it to 2, Enter drops at index 1 through the same rule. **Native focus
+  follows the keyed move without an explicit `renderer.focusElement`:** with the
+  refocus disabled the scenario still passes, so that call and the
+  `MutableHashMap` handle registry were deleted rather than kept as ceremony.
+- **A virtualized list reorders keyed children in place.** 60 rows, `v-0`
+  dropped at boundary 5 gives `v-1…v-4, v-0, v-5…`, the moved row paints at
+  `index * 24` within 1 px, every row survives, and the anchor stays
+  `[0, 0, 240]`. **No generation-keyed remount was needed.**
+- **A real-timer close needs a bounded wait.** `live-preview` failed twice under
+  full-suite load with `open=true closes=0` (the 200 ms grace close had not run
+  after a fixed 300 ms sleep). The close is now awaited (`waitForText`, 3 s)
+  before it is asserted; a close that never happens still fails. Two consecutive
+  green live runs after the change.
+
+Mutation proofs (each restored after the run):
+
+| Mutation | Command | Observed |
+| -------- | ------- | -------- |
+| M1 — remove the boundary adjustment | `nub run --filter playground test`; `… smoke/run.js --only list-reorder` | 2 unit failures (`expected 3 to be 2`); smoke exit `1`, `a downward drop lands one index earlier than the boundary: expected "bravo,charlie,alpha,…", got "bravo,charlie,delta,alpha,…"` |
+| M2 — disable the click guard | `--only list-reorder` | exit `1`, `the gesture-ending click did not activate the row: expected "1", got "2"` |
+| M3 — ignore the pointer's y | `--only list-reorder` | exit `1`, `the pointer names boundary 3: expected "3", got "0"` |
+| M4 — ignore Escape | `--only list-reorder` | exit `1`, `the indicator leaves on cancel: expected true, got false` |
+| M5 — make arrows a no-op | `--only list-reorder`; full `live/run.js` | headless exit `1`, `two steps move the boundary to 2: expected "2", got "0"`; live exit `1` on `live-reorder`, `the live keyboard drop applies the boundary rule: expected "bravo,alpha,charlie,…", got "bravo,charlie,alpha,…"` (the full live run also reproduced the `live-preview` flake, which is why the bounded wait landed) |
+
+No file outside `apps/playground`, `packages/testing`, the docs/inventory and
+this plan set was changed.
+
