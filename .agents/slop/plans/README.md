@@ -128,6 +128,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [329](./329-recipe-filled-states.md) | The filled-state matrix must include the shipped recipes | F | 097, 311, 328 | done |
 | [330](./330-authored-accent-family.md) | The authored platform example's unfinished accent family | F | 063, 310, 327 | done |
 | [331](./331-authored-selection-wash.md) | The authored example's selection wash stays on the identity iris | F | 069, 330 | done |
+| [332](./332-mark-contrast.md) | The fill as a mark: a graphic needs more than 1.05:1 | F | 057, 082, 097, 309, 314 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
