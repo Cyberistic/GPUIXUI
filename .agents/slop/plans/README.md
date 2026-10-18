@@ -2249,7 +2249,7 @@ the one resting composition (the disabled state does not step, so the hover and
 press fills stay out), the two `disabledForeground` values move one designed
 step (`#A1A9B7` → `#B0B8C6` and `#B0B0B0` → `#D0D0D0`, 3.317:1 and 4.645:1),
 and every shipped set passes; the other five checks stay blind to the edit, so
-the contrast pair is the only guard. `contrastPairs` stays **394**.
+the contrast pair is the only guard. `contrastPairs` stays **396**.
 
 ## How to use a plan
 

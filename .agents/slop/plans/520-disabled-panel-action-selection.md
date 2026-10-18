@@ -64,7 +64,7 @@ export const selectionFillInactivePairs: readonly ContrastPair[] = [
 Wire it through `textOverWashFailures(selectionFillInactivePairs,
 "selectionOnFill", theme, floors)` in `themeContrastFailures`, beside
 `selectionFillPairs` and `selectionFillWashPairs`. `contrastPairs` is not
-touched (this is a wash pass, like `selectionPairs`), so its count stays 395.
+touched (this is a wash pass, like `selectionPairs`), so its count stays 396.
 
 ### 2.1 The palette fix
 

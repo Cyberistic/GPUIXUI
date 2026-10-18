@@ -2575,16 +2575,6 @@ the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
 `#B0B0B0` — while staying 1.455:1 below `mutedForeground` at the tightest when
 that plan shipped. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA
 dark), no `contrastPairs` entry moves, and `contrastPairs` stays **394**.
-Plan `520` holds the disabled action inside a tone-tinted panel through the
-inverse selection veil. Plan `514` gave the raised action a resting
-`disabledForeground` label on `softAction` and plan `504` routes content on an
-opaque fill through `selectionOnFill`, but no pair measured the disabled label
-through that veil: identity dark measured **2.799:1** and high-contrast dark
-**3.304:1** there, under the 3:1 / 4.5:1 `inactive` floor, while all six checks
-returned `[]`. `selectionFillInactivePairs` publishes the one resting
-composition, identity dark `disabledForeground` moves `#A1A9B7` → `#B0B8C6`
-(3.317:1) and AAA dark `#B0B0B0` → `#D0D0D0` (4.645:1), and every shipped set
-passes; `contrastPairs` stays **394**.
 Plan `512` holds the panel action's label through the same wash. Plan `394` gave
 a ghost action inside a tone-tinted panel its own role, `softActionForeground`,
 but `selectionSoftPairs` still measured the body `foreground` the description
@@ -2608,6 +2598,16 @@ moves the identity light ring one ramp step to `#4C39B5`, because `#7567F2`
 measured **2.983:1** on the light track, under the boundary floor.
 `ringTrackPairs` publishes the pair and every existing ring surface gains
 contrast, taking it from 395 to **396**.
+Plan `520` holds the disabled action inside a tone-tinted panel through the
+inverse selection veil. Plan `514` gave the raised action a resting
+`disabledForeground` label on `softAction` and plan `504` routes content on an
+opaque fill through `selectionOnFill`, but no pair measured the disabled label
+through that veil: identity dark measured **2.799:1** and high-contrast dark
+**3.304:1** there, under the 3:1 / 4.5:1 `inactive` floor, while all six checks
+returned `[]`. `selectionFillInactivePairs` publishes the one resting
+composition, identity dark `disabledForeground` moves `#A1A9B7` → `#B0B8C6`
+(3.317:1) and AAA dark `#B0B0B0` → `#D0D0D0` (4.645:1), and every shipped set
+passes; `contrastPairs` stays **396**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
