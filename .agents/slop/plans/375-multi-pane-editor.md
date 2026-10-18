@@ -265,9 +265,86 @@ revert.
 
 ## 8. Measured results
 
-_To be filled by the executor after the runs in §5. Record the per-scenario
-check counts, the suite totals, the mutation failures and every surprise that
-changed §4._
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `multi-pane-editor` (headless) | 55 | pass — suite `81 → 82`, `2445 → 2500`, exit `0`, `editor=verified` |
+| `live-editor` | 19 | pass — live `32 → 33`, `567 → 586`, exit `0`, one screenshot |
+
+### 8.1 Facts that changed the plan
+
+- **A tab swap clamps a shorter document's offset and fires no `onScroll`.** The
+  first build asserted that pane A kept `-200` across the swap to the 30-line
+  `helper` document. The runtime reported `-168` (the shorter document's own
+  maximum) while the `onScroll`-driven readout still said `-200`. A component
+  cannot assume the old offset survives a document swap, and cannot learn the
+  new one from the event either. The probe now **resets the pane to the top**
+  on a tab click (`renderer.scrollTo(viewport, 0, 0)`) and mirrors that into the
+  readout; a per-tab offset needs a post-layout pass. §7's stop condition was
+  the right one: the surprise is the finding.
+- **`overflowY: "hidden"` still pans with the wheel.** Mutating `scroll` to
+  `hidden` left the suite green (`-200` unchanged). Removing the `overflowY`
+  declaration entirely is what stops the pan (`0`). The axis declaration creates
+  the scroller; `hidden` hides its affordance, not its input. This is a sharper
+  version of plan `173`'s horizontal-scroll result and belongs in the editor
+  contract.
+- **A click on the code bubbles to the viewport.** The viewport's `onClick` and
+  `tabIndex` receive the activation and native focus even though the pointer
+  lands on the `<code>` child, so the pane surface needs no separate hit target.
+- **The code box pans rather than re-laying out.** After `-200`, the code's
+  `y` moved by exactly `-200` and its height was unchanged.
+- **`<code>` line height is 18 px**, which is why the 30-line document's maximum
+  scroll is `540 − 372 = 168`.
+
+### 8.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| layout | pane A `420`; the divider `6`; pane B starts at `paneA.x + 426`; each viewport is `372` tall under a `28` strip |
+| independent scroll | a `-200` wheel on pane A reports `-200`; pane B stays `0`; the readout agrees |
+| panning | the code box moves by exactly `-200`; its height is unchanged |
+| focus | a click on pane B makes `active=b` and puts native focus on `editor-b-viewport` |
+| tabs | `util` paints `helper0` and not `alpha0`; pane B keeps `beta0`; the swap resets the pane to `0`; the tab holds native focus |
+| resize | the `+80` drag sets `500`; pane A paints `500` and its code `500`; pane B's code is `354`; both offsets are unchanged |
+| keyboard | `End` on the divider clamps at `560`; `aria-valuetext` reports `560px` |
+| a11y | `TextInput:Editor A`, `TextInput:Editor B`, `Splitter` |
+| selection | a drag inside pane A copies `alpha…` and not `beta…`; a crossing drag copies both and excludes the tab chrome |
+
+### 8.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only multi-pane-editor`, and
+reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | the viewport drops `overflowY` | `the wheel scrolls pane A: expected -200 ± 2, got 0` |
+| M2 | pane A reports its offset into pane B's state | `the readout reports the A offset: expected "-200", got "0"` |
+| M3 | `selectTab` does not set the document | `the util tab swaps pane A's document` |
+| M4 | `selectTab` does not activate | `the swap makes its pane active` |
+| M5 | `<code>` is fixed at `420` | `the code follows its pane` |
+| M6 | the tab strip drops `userSelect: "none"` | `the tab chrome stays out of the drag` |
+| M7 | `SplitPane` gets no `onResize` | `the divider drag sets the split to 500` |
+
+Reverse proof (consumer wiring): the viewport's `onClick` removed →
+`a click on pane B makes it active` fails.
+
+### 8.4 Limits recorded
+
+- The surface is **read-only** `<code>`: 0.10.0 has no editable syntax element
+  (plans `296`, `333`). A real editor must pair this layout with an
+  `<input>`/`<textarea>` text model, and the probe does not claim one.
+- The probe keeps **one offset per pane**, not per tab. The measured clamp plus
+  the missing `onScroll` mean a per-tab model needs an explicit post-layout
+  restore; that is a component task, not a runtime feature.
+- Scroll persistence across a full workspace restore is measured by plans `167`
+  and `339`; this probe does not repeat it.
+- The split is fixed-size in the probe; a real app derives the height from its
+  window (`workspace-panes`' `height: "100%"` chain rules).
+- `overflowY: "hidden"` still receives a wheel; a component that needs to
+  disable panning must not declare the axis at all (or guard the input).
+
 
 ## 9. Acceptance
 

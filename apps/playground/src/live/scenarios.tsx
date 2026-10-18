@@ -48,6 +48,7 @@ import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
+import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3492,6 +3493,99 @@ const appChrome: LiveScenario = {
     }),
 };
 
+const multiPaneEditor: LiveScenario = {
+  id: "live-editor",
+  title: "Live editor: two panes, a scrolling code surface and a live split",
+  capability: "editor",
+  view: multiPaneEditorScenario.view,
+  ready: "editor-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // A real drag stays inside one pane.
+      const inside = yield* select(ctx, "editor-a-code", "editor-a-code");
+      yield* ctx.expectContains(
+        "a live drag copies pane A's code",
+        inside,
+        "alpha0",
+      );
+      yield* ctx.expectEqual(
+        "a live drag leaves pane B out",
+        Str.includes("beta0")(inside),
+        false,
+      );
+
+      // A real wheel pans one pane and only one.
+      yield* ctx.host.wheel("editor-a-viewport", 0, -200);
+      yield* settle;
+      const scrolled = yield* offsetOf(ctx, "editor-a-viewport");
+      yield* ctx.expectNear(
+        "the live wheel scrolls pane A",
+        scrolled.y,
+        -200,
+        2,
+      );
+      const other = yield* offsetOf(ctx, "editor-b-viewport");
+      yield* ctx.expectEqual("the live wheel leaves pane B alone", other.y, 0);
+      yield* waitForText(ctx, "editor-state", "aY=-200");
+      yield* ctx.expectContains(
+        "the live readout reports the A offset",
+        yield* textOf(ctx, "editor-state"),
+        "aY=-200",
+      );
+
+      // A real click focuses and activates the other pane.
+      yield* ctx.host.click("editor-b-viewport");
+      yield* settle;
+      yield* waitForText(ctx, "editor-state", "active=b");
+      yield* waitForFocus(ctx, "editor-b-viewport");
+      yield* ctx.expectEqual(
+        "a live click makes pane B active and focused",
+        yield* focusedOf(ctx),
+        "editor-b-viewport",
+      );
+
+      // A real divider drag re-widths the pane and its code.
+      yield* ctx.host.drag("editor-divider", 80, 0, 6);
+      yield* settle;
+      yield* waitForText(ctx, "editor-state", "split=500");
+      const pane = yield* boxOf(ctx, "editor-pane-a");
+      yield* ctx.expectNear("the live drag grew pane A", pane.width, 500, 2);
+      const code = yield* boxOf(ctx, "editor-a-code");
+      yield* ctx.expectNear(
+        "the code follows its pane live",
+        code.width,
+        500,
+        2,
+      );
+      const kept = yield* offsetOf(ctx, "editor-a-viewport");
+      yield* ctx.expectNear("the live resize moves no offset", kept.y, -200, 2);
+
+      // A real tab click swaps the document and starts it at the top.
+      yield* ctx.host.click("editor-a-tab-util");
+      yield* settle;
+      yield* waitForText(ctx, "editor-state", "aTab=util");
+      const painted = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the live tab swap paints the other document",
+        Arr.some(painted, Str.includes("helper0")),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live swap stops painting the first document",
+        Arr.some(painted, Str.includes("alpha0")),
+        false,
+      );
+      const reset = yield* offsetOf(ctx, "editor-a-viewport");
+      yield* ctx.expectEqual(
+        "the live swap starts the new document at the top",
+        reset.y,
+        0,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${multiPaneEditor.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -3526,4 +3620,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   inspector,
   dataGridColumns,
   appChrome,
+  multiPaneEditor,
 ];

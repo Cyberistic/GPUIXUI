@@ -60,6 +60,7 @@ import { gridScenario } from "./grid.js";
 import { dataGridScenario } from "./data-grid.js";
 import { dataGridColumnsScenario } from "./data-grid-columns.js";
 import { appChromeScenario } from "./app-chrome.js";
+import { multiPaneEditorScenario } from "./multi-pane-editor.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -147,6 +148,7 @@ export const PROBE_CAPABILITIES = [
   "grid-layout",
   "typography",
   "inspector",
+  "editor",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -188,6 +190,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   dataGridScenario,
   dataGridColumnsScenario,
   appChromeScenario,
+  multiPaneEditorScenario,
   propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,

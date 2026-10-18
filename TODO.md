@@ -58,9 +58,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 71/75 plans-and-harness
+`[x]` `[██████████]` 72/76 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` written and indexed for the playground workstream; the next plan takes `351` (the components and tokens workstreams hold `300`–`329`)
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350` and `375` written and indexed for the playground workstream; the next plan takes `376` (`351`–`374` are held by the components and tokens workstreams)
+`[x]` Probe the **multi-pane editing layout** per plan `375`:
+      `multi-pane-editor` (55 checks) and `live-editor` (19): two tabbed panes
+      around one live split, each a 28 px `userSelect: none` strip over a 372 px
+      `overflowY: "scroll"` viewport holding a `<code showLineNumbers>`; a
+      `-200` wheel pans only pane A and moves the code's painted box by exactly
+      `-200` at unchanged height; a code click bubbles to the viewport, takes
+      native focus and sets `active=b`; a tab swap paints the other document
+      and resets the pane to the top because **the runtime clamps a shorter
+      document's offset silently and fires no `onScroll`**; a `+80` divider drag
+      sets `500` and re-widths both code surfaces within 1 px without moving an
+      offset; `End` clamps at `560` and the divider is a `Splitter` with
+      `aria-valuetext="560px"`; both surfaces are `TextInput`s named
+      `Editor A`/`Editor B`; selection stays in one pane or crosses both while
+      the tab chrome stays out. Suite `81 → 82` (`2445 → 2500`), live
+      `32 → 33` (`567 → 586`), exit `0`, `editor=verified`; seven mutation + one
+      reverse proof. Measured: **`overflowY: "hidden"` still pans with the
+      wheel** — only omitting the axis declaration stops it.
 `[x]` Probe the **inspector / property panel** per plan `348`: `property-panel`
       + `live-inspector` — a 300 px inspector whose `<virtual-list>` rows own
       native editors: Enter arrives as the field's `onSubmit` (not a bubbled
