@@ -1,12 +1,13 @@
 ---
 title: Grid
-description: Equal tracks in two dimensions — the only grid GPUix draws.
+description: Numeric tracks whose minimum can fit their content — the only grid GPUix draws.
 ---
 
-`Grid` is the runtime's fixed-size grid: a numeric column count and an optional
-numeric row count. It is **not** a CSS grid. There is no auto-flow, no named
-area, no `minmax()` and no track string, so anything raggedy belongs in a
-wrapping `Stack`.
+`Grid` is the runtime's numeric-track grid: a column count, an optional row
+count, and one track-minimum mode per axis. It is **not** a CSS grid. There is no
+auto-flow, no named area, no track string and no arbitrary track width, so
+anything raggedy belongs in a wrapping `Stack`. What it can do is fit a track to
+its content — `columnMin="max-content"` is the table-like grid (plan `376`).
 
 ## Usage
 
@@ -21,12 +22,30 @@ import { Grid, Text } from "@gpuixui/primitives";
 </Grid>;
 ```
 
+A label/value inspector with a narrow label column:
+
+```tsx
+<Grid columns={2} gap="sm" columnMin="max-content">
+  <Text role="caption" tone="muted">Owner</Text>
+  <Text role="body">Ada Lovelace</Text>
+  <Text role="caption" tone="muted">Status</Text>
+  <Text role="body">Active since 1843</Text>
+</Grid>;
+```
+
+`max-content` fits each column to its widest cell, so the grid **hugs its
+content** instead of filling its parent (measured: `268` of an explicit `600`
+width). Put it in a `Stack` row with `grow`, or let a cell stretch, when the grid
+must fill the space.
+
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `columns` | `number` | — (required) | equal column tracks; floored, minimum 1, and a non-finite count is 1 |
 | `rows` | `number` | auto | equal fixed rows; floored, minimum 1, and a non-finite count is 1 |
+| `columnMin` | `"zero" \| "min-content" \| "max-content"` | `"zero"` | each column's minimum: its widest cell (`max-content`), its smallest possible content (`min-content`), or zero (equal tracks) |
+| `rowMin` | `"zero" \| "min-content" \| "max-content"` | `"zero"` | the same rule on the row axis |
 | `gap` | spacing step | none | both axes, from `spacing` |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
 | `style` | `StyleDesc` | — | merged last |
@@ -46,14 +65,18 @@ not a positional relationship.
 
 ## Theming
 
-`gridStyle` reads `theme.spacing[gap]` and clamps the track counts. No column
-width is ever a pixel value at the call site.
+`gridStyle` reads `theme.spacing[gap]`, clamps the track counts and passes the
+track-minimum mode through. No column width is ever a pixel value at the call
+site.
 
 ## Limitations
 
-- Equal tracks only. A two-column inspector with a narrow label column is not
-  expressible; use a `Stack` row with a fixed-width `Box` label, or `Stack` plus
-  `Spacer`.
+- A track's **minimum** is one of three modes; a track cannot be given an
+  arbitrary width (`120px`) or a `minmax()` range. Use `columnMin="max-content"`
+  for a content-sized column, or a `Stack` row with a fixed-width `Box` when the
+  width itself is the design.
+- `max-content` makes the grid hug its content; it does not also fill the
+  parent. Add `grow` or a stretching cell when both are needed.
 - No auto-flow or spanning cells.
 - No named areas or template strings.
 
@@ -61,9 +84,15 @@ width is ever a pixel value at the call site.
 
 - `src/core/layout.test.ts` — column/row clamping and gap resolution; a
   non-finite, fractional or negative count is a drawable track count (plan
-  `371`).
+  `371`); a plain grid sets neither track minimum, and each of the three modes
+  reaches its own axis (plan `376`).
+- `src/components/presentational.test.tsx` — the resolved element carries
+  `gridColumnMin`/`gridRowMin` only when asked (plan `376`).
 - `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
-  row with the theme's gap.
+  row with the theme's gap; with no minimum the two columns are equal, with
+  `columnMin="max-content"` the label column is narrow and the grid hugs its
+  content, and `rowMin="max-content"` fits a one-line row above a wrapped one
+  (plan `376`).
 - `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` column count leaves no
   non-finite number in the painted style (plan `371`).
 

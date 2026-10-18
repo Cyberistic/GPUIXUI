@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 108/108
+`[x]` `[██████████]` 121/121
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -848,6 +848,17 @@ retired once both branches are one
       re-reports while an edit that shortens the code reports nothing; it fails
       under the rejected transition-only rule (runtime 552 → 553; plan `360`).
 
+`[x]` `packages/primitives`: **`Grid` hid the runtime's track sizing** —
+      published 0.10.0 declares `gridColumnMin`/`gridRowMin`
+      (`zero`/`min-content`/`max-content`), and `docs/grid.mdx` said "equal
+      tracks only" and "a narrow label column is not expressible". Measured:
+      `gridColumnMin: "max-content"` painted a `33 / 235` label/value split where
+      the default painted `300 / 300`, and `rowMin` fitted a one-line row at `16`
+      above a wrapped `32`. `Grid` now takes `columnMin`/`rowMin` with the
+      runtime's vocabulary, omitted unless asked; the page shows the inspector
+      shape, states the hug-vs-fill trade and the real limits. 2 core + 1
+      element + 3 runtime cases, both mutations fail by name (offline
+      660 → 665, runtime 613 → 616; plan `376`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
       across the whole Tier 1 set: every pointer-interactive element declares
