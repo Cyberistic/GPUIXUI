@@ -125,11 +125,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       moved it 16 px, so the geometry must not read a baseline stage; the
       gesture lives in a `ref` so a move sees the press before the commit
 
-`[~]` Probe a **multi-step form (wizard)** per plan `386` — the last
-      `todo | ?` inventory row. Measures step focus, per-step validation, draft
-      survival, the unmount-vs-hide step strategy, Enter as a step submit and
-      the derived `aria-selected`; adds the `wizard` capability, `wizard-flow` +
-      `live-wizard`, and a pure `wizard-model.ts`.
+`[x]` Probe a **multi-step form (wizard)** per plan `386` — the last
+      `todo | ?` inventory row. `wizard-flow` (70 checks) and `live-wizard`
+      (11): three steps over one draft, per-step schema messages, a derived
+      step indicator, Back/Next/Submit and an `unmount`/`hide` toggle. A step
+      swap **must request native focus**: without it a click leaves focus on
+      `wizard-next` and Enter inside the field leaves it on `wizard-team` (a
+      positional fallback), while a rejected Next focuses the first invalid
+      field from the same click handler through a nonce-keyed layout effect.
+      Drafts are app state (`unmount`) or retained hidden subtrees (`hide`,
+      which still paint nothing and leave the tab order); Enter submits a step;
+      the review paints `ada <ada@x> my-w / core`; the chips are
+      `ListItem` + `aria-selected`. Suite `87 → 88` (`2920 → 2990`), live
+      `38 → 39` (`715 → 726`), exit `0`, `wizard=verified`; 24 model unit tests
+      (207 → 231); six mutation + one reverse proof (plan `386` §9.3).
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
       and an accessible label, a non-modal `align="end"` panel, grouped

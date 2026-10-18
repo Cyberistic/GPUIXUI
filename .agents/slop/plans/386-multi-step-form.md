@@ -1,6 +1,6 @@
 # 386 — Tier 5 feasibility: a multi-step form (wizard)
 
-**Status:** planned 2026-10-18 · **Phase:** D/E · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D/E · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `158`, `177`, `188`, `190`, `330`,
@@ -336,7 +336,7 @@ should land in the same commit as the new step, not after a paint.
 
    Expected: all exit `0`.
 8. Update `COMPONENTS.md`, `apps/playground/README.md`, `TODO.md`, this plan's
-   §10 and the plan index with the measured counts and every fact that changed
+   §9 and the plan index with the measured counts and every fact that changed
    the design. Commit the plan first, then the probe.
 
 ## 7. Test plan
@@ -362,11 +362,11 @@ Each must be able to fail:
 
 The scenario is the runtime test: typed checks over readout text, bounds, the
 a11y dump, native focus and the painted text. Record six mutation proofs and one
-reverse proof in §10 (temporary edit → `--only wizard-flow` → revert):
+reverse proof in §9.3 (temporary edit → `--only wizard-flow` → revert):
 
 | # | Mutation | Must fail with |
 | - | -------- | -------------- |
-| M1 | `invalidFields` ignores `email` | "the wizard stays on the account step" (`step=2`) |
+| M1 | `invalidFields` ignores `email` | "an empty step reports both fields" (`errors=name`) |
 | M2 | a rejected Next requests no focus | "an invalid step focuses its first field" (`wizard-next`) |
 | M3 | the entry-focus effect is removed | "a valid step focuses its first field" (`none`) |
 | M4 | `edit` clears **all** errors | "editing a field clears only its own error" (`errors=0` vs `errors=email`) |
@@ -411,9 +411,98 @@ Reverse proof (consumer wiring): `back()` advances instead of going back →
 
 ## 9. Measured results
 
-To be filled by the executor after the run: scenario checks, suite counts, live
-counts, the facts that changed the design, the mutation failure messages and the
-limits.
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `wizard-flow` (headless) | 70 | pass — suite `87 → 88`, `2920 → 2990`, exit `0`, `wizard=verified` |
+| `live-wizard` | 11 | pass — live `38 → 39`, `715 → 726`, exit `0`, one screenshot |
+
+Unit tests: `wizard-model.test.ts` adds 24; the playground suite is
+207 → **231** tests in 21 files.
+
+### 9.1 Facts that changed the plan
+
+- **The explicit focus move is load-bearing in both directions.** With the
+  entry-focus request removed, a click on `wizard-next` left focus on
+  `wizard-next` (a sibling of the swapped subtree), and Enter inside the email
+  field left focus on **`wizard-team`** — the runtime's own fallback is
+  positional, not "the next step's first field". A wizard must request the focus
+  and must not assume an unmount loses it.
+- **The rejected-step focus works from the click handler** through a
+  `useLayoutEffect` keyed on a nonce: `wizard-name` on the first rejection,
+  `wizard-email` on the second. A `[step]`-keyed effect could never do this,
+  because the step does not change.
+- **A hidden step is retained, unpainted and out of the tab order.** In `hide`
+  mode `elementType("wizard-slug")` is still `input`, its bounds are `null`, its
+  label is absent from `getPaintedText()`, and a `focusNext` walk never reaches
+  it — the plan-177 recipe transfers from panes to steps unchanged.
+- **A controlled input's a11y `value` is the authored prop.** After an unmount
+  and a remount, the name and email drafts read back exactly, which makes the
+  app-state draft contract assertable through the dump (plan `188`'s rule).
+- **The step chips need an authored `aria-id`.** `role="listitem"` +
+  `aria-selected` reach the dump as `ListItem`/`selected`, but an `aria-label`
+  alone gives no addressable node (the plan-344 lesson).
+- **Enter is a step submit.** It reaches the raw input's `onSubmit`; the handler
+  validates the step and focuses the first invalid field, so the whole wizard is
+  operable without the pointer.
+- **`summary` prints `none` for an empty value.** The unit test that asserted a
+  raw `" <>  / "` was replaced after the model gained the shared `valueOf`
+  formatter; the readout and the review line now agree on how absence reads.
+
+### 9.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| baseline | `step=1 mode=unmount … errors=0 submits=0 last=start created=none summary=none`; the account is the only mounted step |
+| rejected Next | `step=1 errors=name,email`; both messages paint; focus `wizard-name` |
+| per-field clear | typing `ada` leaves `errors=email` and unpaints the name message |
+| valid Next | `step=2`, the account subtree unmounts, focus `wizard-slug`; chip 2 becomes `selected` |
+| Back | `step=1`, a11y values `ada`/`ada@x`, focus `wizard-name` |
+| Enter | an empty slug stays on step 2 with `errors=slug` and focus on the slug; a valid slug moves the error to `team` and focuses `wizard-team` |
+| review | `step=3`, `wizard-review` = `ada <ada@x> my-w / core`, focus `wizard-submit` |
+| submit | `submits=1 last=submit`, `Created ada <ada@x> my-w / core` |
+| tab order (unmount) | `wizard-name → wizard-email → wizard-next → wizard-name`; no other step's id |
+| hide mode | inactive inputs retained (`input`), `bounds === null`, labels unpainted, absent from the tab walk; the step change still focuses `wizard-slug` |
+| a11y | step chips are `ListItem` with `selected` true only on the current step |
+| live | the rejected Next, the swap focus, the two Enter validations, the review text, the submit and one Back hold in a real window |
+
+### 9.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only wizard-flow`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | `invalidFields` ignores `email` | `an empty step reports both fields` — `errors=name` |
+| M2 | the rejection requests no focus | `an invalid step focuses its first field` — got `wizard-next` |
+| M3 | the entry-focus request is removed | `a valid step focuses its first field` — got `wizard-next` |
+| M4 | `edit` clears every error | `editing a field clears only its own error` — `errors=0` |
+| M5 | every hide slot is visible | `a hidden step is not painted` — a bound appeared |
+| M6 | submit never stores `created` | `a submit reports the decoded draft` — `wizard-done` reads `none` |
+
+Reverse proof (consumer wiring): `back()` calls `nextStep` instead of
+`previousStep` → `Back returns to the account` fails with `step=3 … last=back`.
+
+A seventh measurement (not a mutation in the table): with the entry-focus
+request removed **and** the transition driven by Enter inside the email field,
+focus after the swap read `wizard-team`, not `none` — the runtime's fallback is
+positional. It is the strongest evidence that the focus request is required.
+
+### 9.4 Limits recorded
+
+- The draft lives in app state. **Unmounting a step loses native editor state**
+  (caret, selection, undo); the probe asserts the app value, not the editor's.
+  `hide` mode is the alternative, measured at rest and across one step change.
+- Native focus on a *hidden* editor is not measured: every navigation requests
+  focus explicitly, so the probe never leaves the pointer on a hidden control.
+- No async validation, no server submit, no persisted wizard progress and no
+  error summary; a step's fields are synchronous and in-memory.
+- The review is a single text line; a real component would render a definition
+  list (plan `348`'s key-value row is the measured shape).
+- Live has no a11y or style channel (plan `197`), so the chip/selected and
+  hidden-subtree checks are headless-only.
+
 
 ## 10. Acceptance
 
@@ -423,6 +512,6 @@ limits.
   `nub run test` all exit `0`.
 - `COMPONENTS.md`'s **Multi-step forms** row has the measured contract;
   `TODO.md` ticks this task with the counts.
-- Every mutation in §7.2 was run and produced the named failure (§9).
+- Every mutation in §7.2 was run and produced the named failure (§9.3).
 - No component package changed. Any defect found is a measured `TODO.md` task
   with its own plan number, not an edit from this workstream.

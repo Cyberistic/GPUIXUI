@@ -40,7 +40,12 @@ describe("EMPTY_DRAFT and messages", () => {
   });
 
   it("gives every field a distinct user-facing message", () => {
-    const messages = [MESSAGES.name, MESSAGES.email, MESSAGES.slug, MESSAGES.team];
+    const messages = [
+      MESSAGES.name,
+      MESSAGES.email,
+      MESSAGES.slug,
+      MESSAGES.team,
+    ];
     expect(messages.every((message) => message.length > 0)).toBe(true);
     expect(new Set(messages).size).toBe(4);
   });
@@ -85,7 +90,9 @@ describe("invalidFields and firstInvalid", () => {
   });
 
   it("drops a field as soon as its rule holds", () => {
-    expect(invalidFields(1, { ...EMPTY_DRAFT, name: "ada" })).toEqual(["email"]);
+    expect(invalidFields(1, { ...EMPTY_DRAFT, name: "ada" })).toEqual([
+      "email",
+    ]);
   });
 
   it("reports nothing for a complete step", () => {

@@ -94,7 +94,11 @@ const TextField = ({
   const theme = useTheme();
   return (
     <div
-      style={{ display: "flex", flexDirection: "column", gap: theme.spacing.xs }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.xs,
+      }}
     >
       <text
         style={{ ...textStyle(theme, "label"), color: theme.colors.foreground }}
@@ -174,9 +178,7 @@ const WizardProbe = () => {
   }, [focusNonce, renderer]);
 
   const messageOf = (field: Field): Option.Option<string> =>
-    Arr.contains(errors, field)
-      ? Option.some(MESSAGES[field])
-      : Option.none();
+    Arr.contains(errors, field) ? Option.some(MESSAGES[field]) : Option.none();
 
   const edit = (field: Field, value: string): void => {
     setDraft((current) => ({ ...current, [field]: value }));
@@ -241,7 +243,11 @@ const WizardProbe = () => {
   const accountStep = (): ReactNode => (
     <div
       testId="wizard-step-account"
-      style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
     >
       <TextField
         label="Full name"
@@ -267,7 +273,11 @@ const WizardProbe = () => {
   const workspaceStep = (): ReactNode => (
     <div
       testId="wizard-step-workspace"
-      style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
     >
       <TextField
         label="Workspace slug"
@@ -293,7 +303,11 @@ const WizardProbe = () => {
   const reviewStep = (): ReactNode => (
     <div
       testId="wizard-step-review"
-      style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: theme.spacing.md,
+      }}
     >
       <text
         testId="wizard-review"
@@ -809,12 +823,7 @@ export const wizardScenario: PlaygroundScenario = {
           walk,
           (id) =>
             !Arr.contains(
-              [
-                "wizard-slug",
-                "wizard-team",
-                "wizard-submit",
-                "wizard-back",
-              ],
+              ["wizard-slug", "wizard-team", "wizard-submit", "wizard-back"],
               id,
             ),
         ),

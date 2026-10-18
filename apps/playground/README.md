@@ -32,7 +32,8 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 `tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the data
 toolbar probe (`data-toolbar`), the data-grid column probes
 (`data-grid-columns`, `column-config`), the notification-centre probe
-(`notification-centre`), the crop-area probe (`crop-area`), the shell
+(`notification-centre`), the crop-area probe (`crop-area`), the multi-step-form
+probe (`wizard-flow`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -613,7 +614,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `36/36`.
+exact, and focus/Escape and the close button hold.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -753,6 +754,35 @@ Limits: no pixel readback; a parent `overflow: hidden` does not clip an `<img>`
 child, so a rounded crop mask is not measured; rectangular selection only (no
 rotation or aspect lock); the accessibility model is a region plus a group and
 buttons, not a multi-value slider.
+
+## Multi-step forms (plan `386`)
+
+`wizard-flow` is the runtime half of a wizard: three steps over one draft
+(`Account`, `Workspace`, `Review`), per-step schema validation, a derived step
+indicator, Back/Next/Submit and a `steps: unmount` / `steps: hide` toggle.
+70 checks; live twin `live-wizard` (11 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| step swap | in `unmount` mode the previous step's subtree is gone (`bounds === null`) and the indicator's `aria-selected` moves; the draft survives because it is app state |
+| focus | the new step is **not** focused by the runtime: without the request a click leaves focus on `wizard-next`, and Enter inside the field leaves it on `wizard-team` (a positional fallback, not the first field). The probe requests focus in a `useLayoutEffect` keyed on a nonce |
+| rejected step | stays on the step, paints each failing field's own schema message and focuses the first invalid field from the click handler; an edit clears only that field's error |
+| Enter | reaches the raw input's `onSubmit`; it validates the step, focuses the next invalid field, and advances when the step passes |
+| review | paints `ada <ada@x> my-w / core`; Submit reports `Created …` once; Back through both steps restores every a11y `value` |
+| tab order | only the mounted step is reachable: `wizard-name → wizard-email → wizard-next → wizard-name` |
+| hide mode | inactive inputs are **retained** as `input` hosts but have no bounds, paint no label and leave the tab walk; the step change still focuses the slug |
+| a11y | each step chip is a `ListItem` with `selected` true only on the current step; the chips need an authored `aria-id` to be addressable |
+
+**Load-bearing lesson:** a wizard cannot rely on the runtime to place focus after
+a step swap, and it cannot rely on an unmount dropping focus — the fallback is
+wherever the old node was. Every step entry and every rejection requests focus
+explicitly.
+
+**Limits:** the draft is app state, so unmounting a step loses native editor
+state (caret, undo); hide mode keeps the subtree but native focus on a hidden
+editor was not measured. No async validation, server submit or persisted
+progress. The live twin cannot read the a11y dump or styles, so the chip and
+hidden-subtree assertions are headless-only.
 
 ## Application chrome (plan `350`)
 
@@ -1259,10 +1289,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **85/85 green** here (`exit 0`, 2724 checks):
+The suite is **88/88 green** here (`exit 0`, 2990 checks):
 
 ```
-85/85 scenarios passed · capabilities: layout=verified text=verified
+88/88 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1271,11 +1301,11 @@ theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified data-grid=verified columns=verified
-chrome=verified
+column-config=verified chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified grid-layout=verified typography=verified
 inspector=verified editor=verified data-toolbar=verified query=verified
-notification=verified
+notification=verified crop=verified wizard=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1445,7 +1475,7 @@ narrower. Each deviation is deliberate and measured:
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
   probe** (`query-builder`, plan `378`)
-  pass in real GPUix 0.10.0 on this host (85/85), with a written report and
+  pass in real GPUix 0.10.0 on this host (88/88), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1453,12 +1483,13 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 36/36 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 39/39 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
   **message scroller**, the **Tier 2 choice and form families**, the
-  **multi-pane editor**, the **data toolbar** and the **query builder** —
+  **multi-pane editor**, the **data toolbar**, the **query builder**, the
+  **notification centre**, the **crop area** and the **multi-step form** —
   including the modal's
   Tab/Shift-Tab trap and focus return (plan `190`), a real pointer drag-select
   with `userSelect: none` exclusion (plan `191`), a paused-clock mid-tween
