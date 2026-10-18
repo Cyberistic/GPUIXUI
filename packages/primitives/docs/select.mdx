@@ -142,8 +142,10 @@ and is **not selectable**: GPUix's SelectItem order stays one flat run, so the
 arrow keys move from the last option of one group to the first of the next
 without stopping on a title (plan `075`).
 
-- An **empty** group paints nothing — no orphan heading — and contributes
-  nothing to the height estimate.
+- An **empty** group paints nothing — no orphan heading, no group node, no row —
+  and contributes nothing to the height estimate (plan `363`: the branch used to
+  paint the heading anyway, leaving a title over blank space and a list one
+  caption row taller than the estimate that chose its side).
 - Option values stay unique across groups; the wrapper passes the flat list to
   GPUix, which keys items by value.
 - The group is a named `group` node in the accessibility tree. GPUix has no

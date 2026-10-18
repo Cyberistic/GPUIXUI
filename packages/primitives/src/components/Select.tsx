@@ -536,21 +536,28 @@ export const renderSelect = (
         )}
       >
         {Arr.map(options, (entry, index) =>
-          isSelectGroup(entry) ? (
-            <SelectGroup
-              key={`${index}-${entry.label}`}
-              role="group"
-              aria-label={entry.label}
-              style={selectGroupStyle(theme)}
-            >
-              <SelectLabel style={selectHeadingStyle(theme)}>
-                {entry.label}
-              </SelectLabel>
-              {Arr.map(entry.options, row)}
-            </SelectGroup>
-          ) : (
-            row(entry)
-          ),
+          isSelectGroup(entry)
+            ? Arr.match(entry.options, {
+                // The height estimate already counts an empty group as nothing
+                // (`selectRowCounts`), so painting its heading would leave a
+                // section title over blank space and a list taller than the
+                // number that chose its side (plan 363).
+                onEmpty: () => null,
+                onNonEmpty: (rows) => (
+                  <SelectGroup
+                    key={`${index}-${entry.label}`}
+                    role="group"
+                    aria-label={entry.label}
+                    style={selectGroupStyle(theme)}
+                  >
+                    <SelectLabel style={selectHeadingStyle(theme)}>
+                      {entry.label}
+                    </SelectLabel>
+                    {Arr.map(rows, row)}
+                  </SelectGroup>
+                ),
+              })
+            : row(entry),
         )}
       </SelectContent>
     </GpuixSelect>

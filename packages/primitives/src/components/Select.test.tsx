@@ -326,6 +326,31 @@ describe("Select", () => {
     ).toStrictEqual([false, true]);
   });
 
+  it("renders nothing for an empty group, while the other entries keep their rows", () => {
+    // The bug guarded (plan 363): every group entry painted its heading
+    // unconditionally, so a filtered-out group left a title over blank space
+    // while `selectRowCounts` already counted it as nothing.
+    const element = renderSelect(
+      {
+        options: [
+          { label: "Empty", options: [] },
+          { value: "a", label: "Alpha" },
+        ],
+        label: "Fruit",
+      },
+      testTheme,
+      valueState("a"),
+      true,
+      noFocus,
+      handlers,
+    );
+    const entries = elementChildren(childAt(element, 1));
+    expect(entries).toHaveLength(1);
+    expect(expectSome(elementProp(expectSome(Arr.head(entries)), "role"))).toBe(
+      "option",
+    );
+  });
+
   it("renders a named group with its heading and options, and reads its label", () => {
     // The bug guarded (plan 075): a grouped list could not be expressed, so a
     // long list was one undifferentiated run of options.

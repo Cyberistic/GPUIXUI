@@ -807,6 +807,43 @@ it("paints a grouped Select's headings and names each group", async () => {
   ).toBeLessThanOrEqual(1);
 });
 
+it("paints nothing for an empty group", async () => {
+  // The bug guarded (plan 363): the group branch painted its heading
+  // unconditionally, so a filtered-out group left a section title over blank
+  // space and a list one heading row taller than the side estimate — which
+  // already counts an empty group as nothing.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Region"
+        options={[
+          { label: "Empty", options: [] },
+          {
+            label: "Europe",
+            options: [{ value: "eu", label: "Europe West" }],
+          },
+          { value: "us", label: "United States" },
+        ]}
+      />
+    </Surface>,
+  );
+  runtime.clickElement(triggerOf(runtime, "sel"));
+  runtime.flush();
+  expect(runtime.allText()).toEqual(
+    expect.arrayContaining(["Europe", "Europe West", "United States"]),
+  );
+  expect(runtime.allText()).not.toContain("Empty");
+  expect(
+    Option.isNone(a11yNode(runtime.a11y(), { role: "Group", label: "Empty" })),
+  ).toBe(true);
+  const list = selectListBoundsOf(runtime);
+  expect(
+    Math.abs(list.height - selectListHeight(2, testTheme, 1)),
+  ).toBeLessThanOrEqual(1);
+});
+
 it("counts group headings when choosing the list's side", async () => {
   // The bug guarded (plan 075): a heading-blind estimate says this list fits
   // below the trigger (about 128 px in 140 px of room) when it really paints
