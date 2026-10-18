@@ -83,7 +83,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[ ]` **Gold standard (outside this workstream):** add `.github/workflows/native-smoke.yml` running `nub run --filter playground smoke` on `macos-14` (Apple Silicon) to confirm with the **published** binary (this host's verdict uses a locally-built binding, ADR 0003). The repo is public, so the runners are free. Owner: whoever owns CI/platform
 `[ ]` Cross-team: the docs' honest native previews need **committed** images; the smoke run writes 18 frames to the gitignored `apps/playground/.artifacts/screenshots`. Decide (docs-site) whether to commit a curated set under the docs app and how it is refreshed; never substitute a browser reimplementation. Owner: `docs-site`
 `[x]` Wire the playground to `@gpuixui/tokens` and delete the app-local `src/theme.ts` (plan `150`) — the shell, shared helpers and every scenario read `useTheme()`; the smoke runner wraps each view in `ThemeProvider`
-`[ ]` Make `@gpuixui/tokens/react` consumable by a GPUix app without a tsconfig shim: its JSX compiles against `@gpuix/react/jsx-runtime` because the consumer sets that `jsxImportSource`, but `packages/tokens` cannot resolve it, so `apps/playground` maps the type path in `tsconfig.check.json`/`tsconfig.build.json`. Fix in `packages/tokens` (a `/** @jsxImportSource react */` pragma, or `createElement`) and remove the mapping. Owner: `tokens` workstream
+`[ ]` Make `@gpuixui/tokens/react` consumable by a GPUix app without a tsconfig shim: its JSX compiles against `@gpuix/react/jsx-runtime` because the consumer sets that `jsxImportSource`, but `packages/tokens` cannot resolve it, so `apps/playground` maps the type path in `tsconfig.check.json`/`tsconfig.build.json`. Fix in `packages/tokens` (a `/** @jsxImportSource react */` pragma, or `createElement`) and remove the mapping. Owner: `tokens` workstream. **When it lands, primitives' `ThemeProvider` can render the tokens provider and the two-provider recipe in the primitives README (plan `350`) becomes one provider** — primitives cannot compile `packages/tokens/src/react.tsx` until then (`TS2875`, measured 2026-10-18).
 `[ ]` Replace the jj-based `scripts/verify-two-directions.sh` with a git implementation (outside this workstream)
 
 #### Process — one writer per tree
@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 97/97
+`[x]` `[██████████]` 98/98
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -793,6 +793,15 @@ retired once both branches are one
       mutation directions proven, offline 574 tests; plan `349`). The docs site's
       `SUMMARIES` override must drop its twelve keys — its guard fails until it
       does.
+`[x]` `packages/primitives`: **composing with `@gpuixui/components` needs two
+      theme providers, and nothing said so** — primitives' provider throws
+      without a theme by design, while components read the tokens context, whose
+      default is light; the docs site's live scenes painted light-on-dark until
+      it mounted both (its plan 457 §9). The unification is blocked outside this
+      package (tokens' JSX cannot resolve `@gpuix/react`), so the README now
+      states the recipe with the measured blockage recorded in plan `350`; no
+      runtime proof can live here until the tokens fix lands, which `TODO.md`'s
+      tokens row now names as the hand-off.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

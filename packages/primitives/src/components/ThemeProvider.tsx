@@ -5,6 +5,10 @@
  * a palette is how two design systems end up in one application, and the second
  * one is always wrong in dark mode. So a primitive without a provider above it
  * fails with an error that names the provider, at the moment it renders.
+ *
+ * `@gpuixui/components` reads `@gpuixui/tokens/react`'s separate context, so an
+ * app composing both packages mounts both providers with the same theme — see
+ * "Composing with `@gpuixui/components`" in this package's README.
  */
 
 import {

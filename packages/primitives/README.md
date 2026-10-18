@@ -43,6 +43,30 @@ second copy of them.
 No colour, space, radius or font literal may appear outside `src/core/` and its
 test fixture — the theme is the only source of those values.
 
+## Composing with `@gpuixui/components`
+
+`@gpuixui/components` reads its theme from `@gpuixui/tokens/react`'s context,
+which falls back to the light theme. Primitives deliberately has **no** fallback
+and throws without its own provider, so an app using both packages mounts both,
+with the same resolved theme:
+
+```tsx
+import { ThemeProvider } from "@gpuixui/primitives";
+import { ThemeProvider as TokenThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={theme}>
+  <TokenThemeProvider theme={theme}>{/* app */}</TokenThemeProvider>
+</ThemeProvider>;
+```
+
+One `theme` value for both means a theme switch repaints primitives and the
+components package together. The docs site mounts exactly this composition in its
+live native scenes. The two contexts will become one when
+`@gpuixui/tokens/react` is consumable without a JSX shim (the tokens workstream's
+row in `TODO.md`); this package cannot import that module in its own type check
+until then (`TS2875`, because the tokens file's JSX cannot resolve
+`@gpuix/react`), so this page changes with that fix.
+
 ## Two layers
 
 | Layer | What lives there | Why it is separate |
