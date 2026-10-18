@@ -469,9 +469,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–513)
+## Docs site workstream (plans 410–499, plus 500–515)
 
-`[x]` `[██████████]` 115/115
+`[x]` `[██████████]` 116/116
+
+`[x]` **The preview strategy names every shipped scene (plan 515)** — the tier‑L
+      row had ended at `Carousels` since plan 513 added the Message scroller
+      scene, and both that row and the gesture table used editorial plurals
+      (`Sliders`, `Number fields`, `Hotkey inputs`) the registry does not; the
+      document also still claimed every interaction scene starts open. Both
+      lists now use the exact `COMPONENTS.md` titles, `apps/docs/README.md`
+      points at the one list, and two new tests compare the tier row and the
+      gesture table with `LIVE_SCENES`/`SCENE_GESTURE` in both directions; the
+      pre-fix run reported 16 missing and 15 extra names. 66 files / 456 docs
+      tests, `check`, docs type-check and build green.
 
 `[x]` **The dark-mode switch has a page (plan 514)** — Getting started handed the
       reader to Theming for the mode switch, and Theming documents the design but

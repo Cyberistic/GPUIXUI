@@ -116,15 +116,9 @@ renderer (the browser's GPU backend) and exports one document per scene:
   `preview/scene-views.tsx` holds the compositions. A registry record opts in
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
-  occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus,
-  Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable
-  containers, Skeletons, Loading indicators, Drawers, Navigation menus,
-  Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers,
-  Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups,
-  Sliders, Range sliders, Search inputs, Text inputs, Text areas, Accordions,
-  Number fields, OTP fields, Ratings, Tag inputs, Toggles, Lists,
-  Collapsible sections, Pagination, Time pickers, Carousels and Message
-  scrollers. 20 of those document state only a gesture produces — an open
+  occurs in its view. Live scenes ship for every record that declares a
+  `liveScene` (42 today); `docs/preview-strategy.md` owns the tier table and
+  names them all. 20 of those document state only a gesture produces — an open
   overlay, an opened list, a checked control, a value a key reaches or text a
   reader types — so
   `preview/scenes.ts` declares the gesture that produces it

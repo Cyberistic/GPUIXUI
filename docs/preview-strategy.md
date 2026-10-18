@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups, Sliders, Range sliders, Search inputs, Text inputs, Text areas, Accordions, Number fields, OTP fields, Ratings, Tag inputs, Toggles, Lists, Collapsible sections, Pagination, Time pickers, Carousels); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -33,10 +33,10 @@ source, the same tokens and the same GPUI layout, and it is the only tier a
 reader can interact with without leaving the page. It is not evidence that the
 desktop binary, the native window or the published native binding works — that
 is tier N/S/V. A live scene is built from the real package code:
-`@gpuixui/primitives` (Button) and `@gpuixui/components` (Tabs, Dropdown menu,
-Dialog, Popover, Command menu). An interactive scene opens in the state it
-documents — a menu, a dialog, a popover or the command palette starts open — so
-the surface proves the real composition without a pointer.
+`@gpuixui/primitives` and `@gpuixui/components`. Some scenes mount in the state
+they document — a menu, a dialog, a popover or the command palette starts open —
+and 20 more are opened by a real gesture through the renderer's automation API;
+*Gestures are proved, not implied* below is that contract.
 `smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome,
 that every scene's canvas is sized (a `ready` flag on a 1×1 frame does not
 count), that every page's iframe carries the page's own mode, that the Button
@@ -203,23 +203,18 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **42 scenes ship today** — Button, Tabs, Dropdown menu,
-  Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
-  containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
-  input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
-  Hotkey input, Select, Checkbox, Switch, Radio group, Slider, Range slider,
-  Search input, Text input, Text area, Accordion, Number field, OTP field,
-  Rating, Tag input, Toggle, List, Collapsible, Pagination, Time picker,
-  Carousel and Message scroller — chosen because a still cannot prove
-  the point: an open overlay and its focus entry, a grouped palette, real SVG
-  markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a transient
-  message, an opened list, a checked control, a value a key reaches, typed text,
-  an opened section, a bounded number, a completed code, a rating, a token set,
-  a pressed toggle, a selected row, an opened disclosure, a moved page window,
-  an arrow-committed time, or a surface only a pointer or a key opens. The Toast scene pushes one toast with an
-  infinite duration: a default five-second toast would race the smoke check, and
-  an infinite one is the component's documented way to keep a message until it
-  is dismissed (`ToastInput.duration`).
+  blank frame. **42 scenes ship today**, one per record that declares a
+  `liveScene`; the tier table above names them. They are chosen because a still
+  cannot prove the point: an open overlay and its focus entry, a grouped palette,
+  real SVG markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a
+  transient message, an opened list, a checked control, a value a key reaches,
+  typed text, an opened section, a bounded number, a completed code, a rating, a
+  token set, a pressed toggle, a selected row, an opened disclosure, a moved page
+  window, an arrow-committed time, or a surface only a pointer or a key opens.
+  The Toast scene pushes one toast with an infinite duration: a default
+  five-second toast would race the smoke check, and an infinite one is the
+  component's documented way to keep a message until it is dismissed
+  (`ToastInput.duration`).
 
 ## Gestures are proved, not implied
 
@@ -240,13 +235,13 @@ first assertion, and a broken gesture fails the second.
 | Context menus | right-click the row | the pointer point reaches the anchored surface |
 | Date pickers | click the field, then a day | the popover opens and a real day can be chosen |
 | Comboboxes | click the field | the popup opens over the closed control |
-| Hotkey inputs | click the recorder, then a key | a real key event is captured as a chord |
+| Hotkey-recorder input | click the recorder, then a key | a real key event is captured as a chord |
 | Selects | click the field | the list surface, its states and a disabled option paint |
 | Checkboxes | click the box | the check mark and the caller's state line paint |
 | Switches | click the switch | the thumb moves and the caller's state line paints |
 | Radio groups | click an option by its label | the check paints and the caller's selection line appears |
-| Sliders | focus the track, press End | the thumb reaches the maximum through the keyboard path |
-| Range sliders | click the track | the nearer thumb moves to the pointer |
+| Slider | focus the track, press End | the thumb reaches the maximum through the keyboard path |
+| Range slider | click the track | the nearer thumb moves to the pointer |
 | Search inputs | type into the field | every edit reaches the caller |
 | Text inputs | type into the field | the typed value reaches the caller |
 | Text areas | type into the field | the typed draft reaches the caller |
@@ -254,8 +249,8 @@ first assertion, and a broken gesture fails the second.
 | Collapsible sections | click the trigger | the content is mounted only in the open state |
 | Pagination | press next three times | the current page and its window move |
 | Time pickers | click the hour field, press Up | an arrow key commits a new value |
-| Carousels | press the next control | the active slide replaces the first |
-| Message scrollers | wheel up in the viewport | the scroller leaves the tail and paints its "Jump to latest" affordance |
+| Carousel | press the next control | the active slide replaces the first |
+| Message scroller | wheel up in the viewport | the scroller leaves the tail and paints its "Jump to latest" affordance |
 
 Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
 is the same path a reader's keyboard takes. A typed character arrives without a

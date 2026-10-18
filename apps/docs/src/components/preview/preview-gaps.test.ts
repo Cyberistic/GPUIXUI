@@ -5,7 +5,12 @@ import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
-import { LIVE_SCENES, SCENE_GESTURE } from "../../../preview/scenes";
+import {
+  LIVE_SCENES,
+  SCENE_GESTURE,
+  isLiveScene,
+} from "../../../preview/scenes";
+import { components } from "../../component-meta/registry";
 import { NO_LIVE_SCENE } from "./gaps";
 
 /**
@@ -122,5 +127,83 @@ describe("preview counts", () => {
     );
     // The table's own header and separator are not scenes.
     expect(rows - 2).toBe(gestureCount);
+  });
+});
+
+/**
+ * The bug this guards: plan 513 added `message-scroller` and updated the counts,
+ * but the tier-L row still ended at `Carousels`; the row and the gesture table
+ * also used editorial plurals the registry does not use (`Sliders`,
+ * `Number fields`, `Hotkey inputs`). Nothing compared a name, so a missing or
+ * renamed component kept the counts right. The document and the index must name
+ * a component the same way: the registry title, which `registry.test.ts` already
+ * proves equals `COMPONENTS.md`.
+ */
+describe("the strategy names the code's scenes", () => {
+  const scenes = pipe(
+    components,
+    Arr.filterMap((component) => {
+      const scene = component.liveScene;
+      return scene === null || !isLiveScene(scene)
+        ? Result.failVoid
+        : Result.succeed({ scene, title: component.title });
+    }),
+  );
+
+  const gestures = Arr.filter(
+    scenes,
+    ({ scene }) => SCENE_GESTURE[scene] !== undefined,
+  );
+
+  const tierRow = document.match(/^\| \*\*L\*\*.*$/m)?.[0] ?? "";
+
+  const listed = pipe(
+    /declares a `liveScene` \((.*?)\); click-to-load/.exec(tierRow)?.[1] ?? "",
+    (value) => value.split(", "),
+    Arr.map((name) => name.trim()),
+  );
+
+  const rowsUnder = (section: string): ReadonlyArray<string> =>
+    pipe(
+      section.split("\n"),
+      Arr.filterMap((line) => {
+        const cells = /^\| (.*?) \| (.*?) \|$/.exec(line.trim());
+        if (cells === null) return Result.failVoid;
+        const name = (cells[1] ?? "").trim();
+        return name === "Scene" || /^-+$/.test(name)
+          ? Result.failVoid
+          : Result.succeed(name);
+      }),
+    );
+
+  const expectedTitles = Arr.sort(
+    Arr.map(scenes, ({ title }) => title),
+    Order.String,
+  );
+  const expectedGestures = Arr.sort(
+    Arr.map(gestures, ({ title }) => title),
+    Order.String,
+  );
+
+  it("names every live scene in the tier table", () => {
+    expect(tierRow).not.toBe("");
+    const named = Arr.sort(listed, Order.String);
+    expect(new Set(named).size).toBe(named.length);
+    expect({
+      missing: Arr.difference(expectedTitles, named),
+      extra: Arr.difference(named, expectedTitles),
+    }).toEqual({ missing: [], extra: [] });
+  });
+
+  it("names one gesture row per gesture scene", () => {
+    const named = Arr.sort(
+      rowsUnder(sectionAfter("## Gestures are proved, not implied")),
+      Order.String,
+    );
+    expect(new Set(named).size).toBe(named.length);
+    expect({
+      missing: Arr.difference(expectedGestures, named),
+      extra: Arr.difference(named, expectedGestures),
+    }).toEqual({ missing: [], extra: [] });
   });
 });
