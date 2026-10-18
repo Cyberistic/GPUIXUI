@@ -187,7 +187,7 @@ date picker), this workstream takes `376` and `377`, and `378` is the
 query-builder probe; `379`/`380` were claimed by the components and tokens
 workstreams, this workstream took `381` (the notification centre), `382` (the live
 reveal wait) and `384` (column configuration — `383` was claimed by the components
-and tokens workstreams first); the next playground plan takes `385`.
+and tokens workstreams first); the next playground plan takes `386`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -277,6 +277,7 @@ and tokens workstreams first); the next playground plan takes `385`.
 | [381](./381-notification-centre.md) | Tier 5 feasibility: a notification centre — prepend stability and derived unread state | D/E | 100, 110, 120, 140, 152, 156, 158, 166, 183, 187, 190, 197, 198, 300, 330, 344, 350, 377 | **landed** — `notification-centre` (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a derived badge opens a 320 × 360 `align="end"` panel within 1 px; 24 px headers and 60 px rows in one `<virtual-list>`; read flags survive close/reopen, the badge unpaints at zero, Down/Up + Enter + Escape work, an outside press dismisses without stealing focus, and clear-all/arrival swap the empty state. **The central finding:** a prepend is already stable — the list keeps the reader's row (anchor `2 → 3`) — so the planned identity re-anchor was **wrong**; removing it passed, forcing the old index moved the row by 60 px, and the effect plus `reanchorTarget`/`rowIndex` were deleted. Suite `84 → 85` (`2644 → 2724`), live `35 → 36` (`651 → 678`), exit `0`, `notification=verified`; ten mutation + one reverse proof (§9.3) |
 | [382](./382-live-add-reveal-wait.md) | `live-query-builder`: wait for the appended row's reveal | F | 378, 189, 345 | **landed** — a bounded `waitForBounds` (3 s, 50 ms poll) closes the race between `rules=4` and the post-commit reveal; two green full live runs (`36/36`, `678`, exit `0`) and the two-direction proof: removing `scrollIntoView` still fails with the measured `221` against `181 ± 2`. No check added, no tolerance widened |
 | [384](./384-column-configuration.md) | Tier 3 feasibility: column configuration — hide, show and reorder columns in a virtualized, panned data grid | D | 100, 110, 120, 140, 152, 164, 166, 173, 185, 198, 338, 349 | **landed** — `column-config` (122 checks) and `live-column-config` (27): a pure `{order, hidden}` model over the plan-349 widths and an anchored `Group:Columns` panel. Hiding a column unpaints its header and cells and closes the gap; showing restores the slot and width; reordering moves the header offsets and every body cell together within 1 px; a hidden widened column keeps its 240 px; the visible width drives the pan and a shrink clamps at once (`-200 → -50`); the anchor and selection survive every change. Suite `85 → 86` (`2724 → 2846`), live `36 → 37` (`678 → 705`), exit `0`, `column-config=verified`; seven mutation + one reverse proof (§10.3) |
+| [385](./385-crop-area.md) | Tier 5 feasibility: a crop area over `<img>` — the box as coordinate space, four masks, captured handles and a keyboard box | D/E | 100, 110, 120, 140, 161, 162, 172, 188, 335 | **planned** — `crop-area` + `live-crop-area`, a new `crop` capability; §3 fixes the geometry and §9 the STOP conditions |
 
 Cross-cutting records:
 
