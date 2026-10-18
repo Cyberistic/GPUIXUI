@@ -30,7 +30,8 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
 `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
 `tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the data
-toolbar probe (`data-toolbar`), the notification-centre probe
+toolbar probe (`data-toolbar`), the data-grid column probes
+(`data-grid-columns`, `column-config`), the notification-centre probe
 (`notification-centre`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
@@ -692,6 +693,39 @@ widths (the reset control plus app state cover storage, as `workspace-restore`
 did for layouts), and every column is painted — column windowing stays
 `grid-wide-table`.
 
+## Column configuration (plan `384`)
+
+`column-config` adds the settings axis the grid was missing: a pure
+`{ order, hidden }` model over the plan-349 widths, driven from an anchored panel
+that lists every column with a show/hide control and up/down controls. The grid
+keeps its 150 px frozen ID column; the four configurable columns start at
+`name 200`, `status 120`, `size 90`, `notes 150` (560 px of content in a 360 px
+viewport). 122 checks; live twin `live-column-config` (27 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| the panel | opens at the trigger's left edge and below it within 1 px; `autoFocus` puts native focus on it; `Group:Columns`; the trigger is `Button:Configure columns` |
+| dismissal | a press outside closes it with `last=outside` and returns focus to nothing (the outside target is not focusable); Escape closes it with `last=escape` and returns focus to the trigger |
+| hide | hiding `status` reads `hidden=status visible=3 content=440`; its header and every body cell unpaint; `size` moves to `name.x + name.width` within 1 px, header and body agree |
+| show | showing restores the order slot, the 120 px width and every cell; content returns 560 |
+| the pan range | the visible width drives the scroller. From `-200`, hiding the last column (`content 410`) clamps the runtime offset to `-50` **at once**, and pan end lands there |
+| reorder | moving `notes` up yields `name,status,notes,size`; `notes` takes `status`'s old slot (320) and `size` moves to 470; every body cell follows within 1 px |
+| clamps | up on the first column and down on the last are no-ops |
+| widths | a widened `name` (240) survives hide/show: content `600 → 360 → 600`, and the restored header still paints 240 |
+| the reader | after a jump to 45 and a selection, a hide, a reorder and a show keep `anchor=45`, `getListScrollTop[0] = 45`, the frozen row aligned and the accent paint |
+| configuration a11y | the panel is a named `Group`, the trigger a `Button`, and the hidden column's control reports `value=hidden` through `aria-valuetext` |
+
+The panel is probe chrome, not the data-grid package's menu: the probe isolates
+the order/visibility mechanism, and plan `164` already measured the `<anchored>`
+primitive it uses. Limits: every column still paints (windowing stays
+`grid-wide-table`), there is no drag reordering, no persisted settings, and the
+frozen ID column is not configurable by design.
+
+**Live lesson:** the panel mounts on a later React commit, so a live step must
+`waitFor("config-panel")` and `settle` after opening it before clicking a control.
+The first live run failed with `Locator did not match any element` at
+`config-show-size`; the headless host is synchronous and cannot show that race.
+
 ## Application chrome (plan `350`)
 
 `app-chrome` builds the shell the Tier 4 rows never had evidence for: a 36 px
@@ -1320,6 +1354,9 @@ src/scenarios/data-grid.tsx the panned virtual grid: frozen column, sort and fil
 src/scenarios/column-resize-model.ts the pure column widths, offsets, row width and pan bound
 src/scenarios/column-resize-model.test.ts the pure width rules
 src/scenarios/data-grid-columns.tsx header-drag column resize over the virtual body
+src/scenarios/column-config-model.ts the pure order/visibility, offsets and visible width
+src/scenarios/column-config-model.test.ts the pure configuration rules
+src/scenarios/column-config.tsx hide/show/reorder over the virtual body, anchored settings
 src/scenarios/app-chrome.tsx toolbar, pinned status bar and a breadcrumb trail
 src/scenarios/multi-pane-editor.tsx two tabbed panes with scrolling code and a live split
 src/scenarios/data-toolbar.tsx a data toolbar over a virtual table, with derived cards

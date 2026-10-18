@@ -1,6 +1,6 @@
 # 384 — Tier 3 feasibility: column configuration in the virtualized, panned data grid
 
-**Status:** planned · **Phase:** D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `152`, `164`, `166`, `173`, `185`,
@@ -402,7 +402,83 @@ Reverse proof (consumer wiring): the panel's show control's `onClick` removed �
 
 ## 10. Measured results
 
-_To be filled after implementation._
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `column-config` (headless) | 122 | pass — suite `85 → 86`, `2724 → 2846`, exit `0`, `column-config=verified` |
+| `live-column-config` | 27 | pass — live `36 → 37`, `678 → 705`, exit `0`, one screenshot |
+
+Unit tests: `column-config-model.test.ts` adds 20 tests; the playground suite is
+166 → **186** tests in 19 files.
+
+### 10.1 Facts that changed the plan
+
+- **A live panel mounts one React commit after the click.** The first live run
+  failed at `config-show-size` with `AutomationError: Locator did not match any
+  element`, because the step pressed a control in the same tick as the open.
+  The twin now `waitFor("config-panel")` and `settle`s after every open. The
+  headless host is synchronous and cannot show that race.
+- **An outside press on a non-focusable target leaves focus `none`.** The
+  dismissal is measured as "does not return focus" — the planned
+  `focused == config-outside` was wrong: a plain `div` without `tabIndex` takes
+  neither focus nor the panel's. The assertion records the measured `none`.
+- **`aria-valuetext` on a `role="checkbox"` control is exposed as `value`.**
+  The hidden column's show control reports `value=hidden`, which is the only
+  checked-state signal 0.10.0 offers (there is no `aria-checked`).
+- **M3's fixed-order offset fails at the hide gap before it reaches the
+  reorder.** Using the declaration order for the header offsets leaves `size` at
+  320 after hiding `status` (expected 200), so the scenario names that assertion,
+  not the reorder. The fixed-order mutation is still guarded end to end; the
+  reorder geometry has its own checks.
+- **A readout expectation built from the same model cannot catch a model bug.**
+  M7 (`moveBy` ignores its delta) leaves the scenario's expected `describeConfig`
+  equally unchanged, so the readout check passes and the **header geometry**
+  fails. The unit tests are the model's guard; the native check is the paint's.
+
+### 10.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| panel | left edge == trigger's, top == trigger's bottom, within 1 px; `autoFocus` focuses it; `Group` named `Columns`; trigger `Button` |
+| hide | `hidden=status visible=3 content=440`; header and every body cell unpaint; `size.x == name.x + name.width` within 1 px; header row 440 |
+| show | order slot, 120 px width and cells return; content 560 |
+| pan shrink | from `-200`, hiding the last column (`content 410`) makes the runtime report `-50` **with no manual pan**; pan end agrees |
+| reorder | `name,status,notes,size`: `notes` at 320, `size` at 470, body cells within 1 px |
+| clamps | up on the first / down on the last are no-ops |
+| widths | `name 240` survives hide/show (`600 → 360 → 600`) and still paints 240 |
+| reader | `anchor=45`, `getListScrollTop[0] = 45`, frozen row aligned, accent paint — after a hide, a reorder and a show |
+| dismissal | Escape: panel gone, `last=escape`, focus back on the trigger. Outside: panel gone, `last=outside`, focus `none` |
+
+### 10.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only column-config`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | body cells map over the full order instead of `visibleIds` | `the hidden column has no body cell` |
+| M2 | header cells map over the full order | `the hidden column has no header` |
+| M3 | header offsets use the declaration order | `the next column closes the hidden column's gap` |
+| M4 | `visibleIds` ignores `hidden` | `hiding status leaves three visible columns` |
+| M5 | pan end derives from `initialConfig` | `the pan reaches the visible maximum (x=-200)` |
+| M6 | `onMouseDownOutside` removed | `the outside press closed the panel` |
+| M7 | `moveBy` never moves up (`index + max(0, delta)`) | `the moved column takes the slot after status` |
+
+Reverse proof (consumer wiring): the show control's `onClick` removed →
+`hiding status leaves three visible columns` fails (one control drives both hide
+and show, so the first use is the first failure).
+
+### 10.4 Limits recorded
+
+- Every column is painted; column windowing stays `grid-wide-table` (`185`).
+- No drag reordering, no persisted settings, no auto-fit; the frozen `ID` column
+  is not configurable by design.
+- The panel is probe chrome: the data-grid package owns the shipped
+  configuration UI and its menu semantics.
+- The live suite cannot assert colour or the a11y dump; the accent paint and the
+  `Group`/`Button`/`value` checks are headless-only (`197`).
+- A model-derived readout expectation is not a model test (see M7 in §10.1).
 
 ## 11. Acceptance
 

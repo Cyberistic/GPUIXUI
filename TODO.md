@@ -58,9 +58,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 76/81 plans-and-harness
+`[x]` `[██████████]` 77/82 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378` and `381` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `382`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382` and `384` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `385`
 
 `[x]` Probe a **notification centre** per plan `381`: `notification-centre`
       (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a
@@ -89,6 +89,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       got 221`), not again in two consecutive full runs after the fix; removing
       the reveal still fails with the same `221`, so the wait does not mask a
       defect. Live stays `36/36` (`678`) and no check was added.
+`[x]` Probe **column configuration** per plan `384`: `column-config`
+      (122 checks) and `live-column-config` (27): a `{order, hidden}` model over
+      the plan-349 widths, driven from an anchored `Group:Columns` panel. Hiding
+      `status` unpaints its header and every cell and closes the gap
+      (`content 560 → 440`); showing restores the order slot and the width;
+      moving `notes` up yields `name,status,notes,size` (`notes` at `320`,
+      `size` at `470`) with every body cell within 1 px; a widened 240 px column
+      survives hide/show (`600 → 360 → 600`); the visible width drives the pan
+      and a shrink clamps the live offset at once (`-200 → -50`); and a jump to
+      row 45 plus its selection survive hide, reorder and show. Escape returns
+      focus to the trigger; an outside press dismisses without returning it.
+      Suite `85 → 86` (`2724 → 2846`), live `36 → 37` (`678 → 705`), exit `0`,
+      `column-config=verified`; seven mutation + one reverse proof (plan `384`
+      §10.3). Measured: the panel mounts a React commit later live, so a live
+      step must `waitFor("config-panel")` before pressing a control, and an
+      outside press on a non-focusable target leaves focus `none`.
 
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge
