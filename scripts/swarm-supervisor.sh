@@ -187,12 +187,12 @@ COMPONENTS.md row), tick it in TODO.md, and commit on your branch.
 
 **Verification is scoped.** While iterating, run only the scenarios your change
 touches:
-- headless: `nub apps/playground/dist/smoke/run.js --only <id>`
-- live: `nub apps/playground/dist/live/run.js --only <id>` (repeat `--only` for
-  more; `--list` prints the ids).
+- headless: \`nub apps/playground/dist/smoke/run.js --only <id>\`
+- live: \`nub apps/playground/dist/live/run.js --only <id>\` (repeat \`--only\` for
+  more; \`--list\` prints the ids).
 
 A live run opens a real window and the full suite takes ~9 minutes. Never run
-the full live suite (`--all`) or the full headless suite while iterating. Run
+the full live suite (\`--all\`) or the full headless suite while iterating. Run
 the full suite once at the end of the task, and only when the change is
 cross-cutting. Record the exact scenario ids you ran in the commit or plan.
 
