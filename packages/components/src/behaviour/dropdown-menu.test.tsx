@@ -29,6 +29,13 @@
  * group could mark none or several rows; a radio row closed the menu instead of
  * staying open; a controlled group overwrote its caller's value; and a disabled
  * radio row stayed reachable by the arrow keys.
+ *
+ * Submenu-hover regression: a `disabled` submenu row opened its panel on hover
+ * (the disabled contract of plan 393, which the press and key paths already
+ * honoured), and leaving the row **and** its panel never closed the level, so
+ * the panel stayed painted with focus inside it until Escape or an outside
+ * press. Hover now goes through the shared `useHoverTravel` policy; a leave
+ * closes one level after `closeDelay` and returns focus to the row.
  */
 
 import * as Option from "effect/Option";
@@ -41,7 +48,9 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  isShown,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { a11yNodes } from "../internal/a11y.js";
 import {
@@ -221,6 +230,40 @@ const WithSubmenus = ({
         <DropdownMenuItem testId="delete" onSelect={() => onSelect("delete")}>
           Delete
         </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+    <Button testId="elsewhere">Elsewhere</Button>
+  </div>
+);
+
+/** A menu whose extra submenu row is disabled. */
+const WithDisabledSubmenu = ({
+  onSelect,
+}: {
+  readonly onSelect: (action: string) => void;
+}) => (
+  <div
+    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+  >
+    <DropdownMenu>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="File actions">
+        <DropdownMenuItem testId="rename" onSelect={() => onSelect("rename")}>
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger testId="share" disabled>
+            Share
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent testId="submenu" label="Share">
+            <DropdownMenuItem
+              testId="copy-link"
+              onSelect={() => onSelect("copy-link")}
+            >
+              Copy link
+            </DropdownMenuItem>
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
       </DropdownMenuContent>
     </DropdownMenu>
     <Button testId="elsewhere">Elsewhere</Button>
@@ -959,6 +1002,53 @@ describe("DropdownMenu submenus", () => {
 
     expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    menu.unmount();
+  });
+
+  it("never opens a disabled submenu row", () => {
+    const menu = renderComponent(<WithDisabledSubmenu onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+
+    hoverCentreOf(menu, "share");
+    expect(isShown(menu, "submenu")).toBe(false);
+
+    clickCentreOf(menu, "share");
+    expect(isShown(menu, "submenu")).toBe(false);
+
+    menu.unmount();
+  });
+
+  it("closes one level when the pointer leaves the row and its panel", async () => {
+    const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    expect(isShown(menu, "submenu")).toBe(true);
+
+    hoverCentreOf(menu, "elsewhere");
+
+    // The close is delayed so the pointer can travel into the panel.
+    expect(isShown(menu, "submenu")).toBe(true);
+    await until(() => !isShown(menu, "submenu"));
+
+    expect(isShown(menu, "menu")).toBe(true);
+    expect(focusedTestId(menu)).toEqual(Option.some("share"));
+
+    menu.unmount();
+  });
+
+  it("keeps the submenu open while the pointer is inside its panel", async () => {
+    const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+    hoverCentreOf(menu, "share");
+    hoverCentreOf(menu, "submenu");
+    await new Promise((resolve) => setTimeout(resolve, 250));
+
+    expect(isShown(menu, "submenu")).toBe(true);
+
+    hoverCentreOf(menu, "elsewhere");
+    await until(() => !isShown(menu, "submenu"));
+    expect(isShown(menu, "submenu")).toBe(false);
 
     menu.unmount();
   });

@@ -194,7 +194,10 @@ The trigger is an ordinary menu row: arrows and type-ahead reach it, and
 clicking, `Enter`, `Space`, `ArrowRight` or hovering opens the submenu. Opening a
 submenu focuses its first row, so the next `Enter` runs the first action without
 an extra arrow press. Only one submenu per menu is open at a time; moving onto
-another row closes the open one.
+another row closes the open one. Leaving the row **and** its panel also closes
+that level, after `closeDelay` (default 150 ms) so the pointer can cross the gap
+into the surface; focus returns to the row and the parent menu stays open. A
+`disabled` row opens nothing, by hover or by key.
 
 A submenu may itself contain a submenu. The rules are the same at every depth,
 and a row in an enclosing submenu stays clickable while a deeper level is open:
@@ -247,7 +250,7 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `DropdownMenuGroup` | `div` (`role="group"`) | — |
 | `DropdownMenuLabel` | `text` | — |
 | `DropdownMenuSeparator` | `div` (`role="separator"`) | — |
-| `DropdownMenuSub` | provider (no host element) | — |
+| `DropdownMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
 | `DropdownMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
 | `DropdownMenuSubContent` | anchored surface | `label?: string` |
 
@@ -307,7 +310,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (47 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (50 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
@@ -320,7 +323,10 @@ hover and pointer opening, right-edge placement — including a right-edge row
 whose submenu opens to its left — focus entering the first row,
 arrows and type-ahead staying inside, one submenu at a time, one-level
 Escape/ArrowLeft, a pointer click running the row and closing both levels, and an
-outside press closing both levels — a nested submenu's enclosing rows staying
+outside press closing both levels — a `disabled` submenu row that opens nothing
+by hover or press, a pointer that leaves the row and its panel and closes one
+level after the delay (focus back on the row), pointer travel into the panel
+keeping it open, a nested submenu's enclosing rows staying
 clickable, its deepest row running once, and an outside press still closing every
 level — and the radio group: one marked row, the reported value, the menu
 staying open, a controlled value that does not drift, `Enter`/`Space` selection,

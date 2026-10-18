@@ -120,7 +120,9 @@ right edge when that fits, otherwise its left edge, decided once per open. Only
 one submenu is open at a time. `Escape` and `ArrowLeft` close one level and
 return focus to the sub-trigger; choosing a row (by keyboard or pointer) runs it
 once, closes every level, and a pointer-opened menu leaves focus where the click
-put it. A press outside every menu surface closes all levels.
+put it. Leaving the submenu row and its panel also closes that level after
+`closeDelay` (default 150 ms), with focus back on the row; a `disabled` row opens
+nothing, by hover or by key. A press outside every menu surface closes all levels.
 
 `autoFocus` sets the initial `focused` state, so the trigger's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
@@ -146,7 +148,7 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `ContextMenuGroup` | `div` (`role="group"`) | — |
 | `ContextMenuLabel` | `text` | — |
 | `ContextMenuSeparator` | `div` (`role="separator"`) | — |
-| `ContextMenuSub` | provider (no host element) | — |
+| `ContextMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
 | `ContextMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
 | `ContextMenuSubContent` | anchored surface | `label?: string` |
 
@@ -198,7 +200,10 @@ submenu rules — `ArrowRight` opening and focusing the first row, a pointer cli
 running a row and closing both levels, one-level Escape/ArrowLeft, a right-edge
 menu whose submenu opens to the left, and an enclosing-submenu row chosen while a
 nested level is open — and a radio row selected from the pointer that keeps the
-menu open.
+menu open. Hover open, the delayed close on a leave (one level, focus back on the
+row) and a `disabled` row that opens nothing are shared with the Dropdown menu's
+submenus and proven by `src/behaviour/dropdown-menu.test.tsx`; this suite does not
+repeat them.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

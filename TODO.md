@@ -413,6 +413,15 @@ retired once both branches are one
       and the ring case covers the seeded ring and the reopen path (fails when
       the ring line is removed); the unobservable half is recorded for the live
       suite. 39 combobox tests; docs truth updated
+    - [x] Submenu hover — plan 539: measured that a `disabled` submenu row
+      opened on hover (the press and key paths already honoured the disabled
+      contract) and that leaving the row and its panel never closed the level,
+      leaving focus on an unmounted row. The shared `useHoverTravel` now closes
+      one level after 150 ms with focus back on the row, the surface accepts
+      pointer travel, and a disabled row opens nothing; 3 native cases
+      (Dropdown menu 50), four mutation proofs; docs, `COMPONENTS.md` and the
+      inventory synced. The one 1 px left-placement failure in each menu suite
+      is the plan-536 binding measurement, not this change
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook

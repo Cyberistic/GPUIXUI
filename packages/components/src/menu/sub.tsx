@@ -32,6 +32,7 @@ import {
 } from "react";
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
 import { claimEvent } from "../internal/event-claim.js";
+import { useHoverTravel, type HoverTravel } from "../internal/hover.js";
 import { isDown, isLeft, isRight, isUp } from "../internal/key.js";
 import {
   assertParts,
@@ -67,6 +68,10 @@ interface SubContextValue {
   readonly trigger: RefObject<PublicInstance | null>;
   /** Set by the content while mounted: focus the submenu's first or last row. */
   readonly focusEdge: RefObject<((edge: "first" | "last") => void) | null>;
+  /** The pointer policy: hover opens at once, a leave closes after the delay. */
+  readonly hover: HoverTravel;
+  /** Set by the content: its own close, so a hover leave returns focus. */
+  readonly hoverClose: RefObject<(() => void) | null>;
 }
 
 const SubContext = createContext<SubContextValue | undefined>(undefined);
@@ -82,6 +87,8 @@ const useSubContext = (): SubContextValue => {
 
 /** {@link MenuSub} props. */
 export interface MenuSubProps {
+  /** Milliseconds after leaving the row and its panel before closing. Default `150`. */
+  readonly closeDelay?: number;
   readonly children?: PartChildren;
 }
 
@@ -89,14 +96,36 @@ export interface MenuSubProps {
  * A group of actions behind one secondary level. It owns its open state; only
  * one submenu per menu is open at a time.
  */
-export const MenuSub = ({ children }: MenuSubProps) => {
+export const MenuSub = ({ closeDelay = 150, children }: MenuSubProps) => {
   const [open, setOpen] = useState(false);
   const trigger = useRef<PublicInstance | null>(null);
   const focusEdge = useRef<((edge: "first" | "last") => void) | null>(null);
+  // The content registers its own close: `close("dismiss")` closes one level
+  // and returns focus to the row, so a hover leave cannot strand focus.
+  const hoverClose = useRef<(() => void) | null>(null);
+  const hover = useHoverTravel({
+    isOpen: () => open,
+    close: () => {
+      const closeContent = hoverClose.current;
+      if (closeContent === null) setOpen(false);
+      else closeContent();
+    },
+    // Hover opens at once (the documented submenu rule); only the leave waits,
+    // so the pointer can cross the gap into the panel.
+    openDelay: 0,
+    closeDelay,
+  });
   const value = useMemo<SubContextValue>(
-    () => ({ open, setOpen, trigger, focusEdge }),
-    [open],
+    () => ({ open, setOpen, trigger, focusEdge, hover, hoverClose }),
+    [hover, open],
   );
+
+  // A close from Escape, a row or an outside press unmounts the panel without
+  // a `mouseLeave`; forget the pointer so the next open starts clean.
+  useLayoutEffect(() => {
+    if (!open) hover.reset();
+  }, [hover, open]);
+
   assertParts(menuSub, children);
 
   return <SubContext.Provider value={value}>{children}</SubContext.Provider>;
@@ -117,20 +146,23 @@ export const MenuSubTrigger = ({
   children,
   trailing,
   textValue,
+  disabled = false,
   onKeyDown,
   onFocus,
   onMouseEnter,
+  onMouseLeave,
   ref,
   ...rest
 }: MenuSubTriggerProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const { open, setOpen, trigger, focusEdge, hover } = useSubContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
     <MenuItem
       {...rest}
       ref={setTrigger}
+      disabled={disabled}
       closeOnSelect={false}
       aria-expanded={open}
       textValue={textValue}
@@ -143,19 +175,27 @@ export const MenuSubTrigger = ({
         onFocus?.(event);
       }}
       onMouseEnter={(event) => {
-        setOpen(true);
+        // A disabled row never opens, by any path (plan 393); the pointer may
+        // still cross it on the way to another row.
+        if (!disabled) hover.enter("trigger", () => setOpen(true));
         onMouseEnter?.(event);
       }}
+      onMouseLeave={(event) => {
+        hover.leave("trigger");
+        onMouseLeave?.(event);
+      }}
       onKeyDown={(event) => {
-        if (!open) {
-          if (isRight(event)) setOpen(true);
-        } else if (isDown(event) || isUp(event)) {
-          // Focus is still on the trigger (a pointer open): Down/Up enter the
-          // submenu instead of moving the parent highlight past it.
-          claimEvent(event);
-          focusEdge.current?.(isDown(event) ? "first" : "last");
-        } else if (isLeft(event)) {
-          setOpen(false);
+        if (!disabled) {
+          if (!open) {
+            if (isRight(event)) setOpen(true);
+          } else if (isDown(event) || isUp(event)) {
+            // Focus is still on the trigger (a pointer open): Down/Up enter the
+            // submenu instead of moving the parent highlight past it.
+            claimEvent(event);
+            focusEdge.current?.(isDown(event) ? "first" : "last");
+          } else if (isLeft(event)) {
+            setOpen(false);
+          }
         }
         onKeyDown?.(event);
       }}
@@ -197,12 +237,15 @@ export const MenuSubContent = ({
   label,
   children,
   onKeyDown,
+  onMouseEnter,
+  onMouseLeave,
   style,
   testId,
   ...rest
 }: MenuSubContentProps) => {
   const renderer = useGpuix().renderer;
-  const { open, setOpen, trigger, focusEdge } = useSubContext();
+  const { open, setOpen, trigger, focusEdge, hover, hoverClose } =
+    useSubContext();
   const parent = useMenuContext();
   assertParts(menuSubContent, children);
   const parentClose = parent.close;
@@ -229,6 +272,15 @@ export const MenuSubContent = ({
     },
     [parentClose, setOpen],
   );
+
+  // The hover policy lives in `MenuSub`; it closes through this level's own
+  // `close("dismiss")`, so focus returns to the row and the parent stays open.
+  useLayoutEffect(() => {
+    hoverClose.current = () => close("dismiss");
+    return () => {
+      hoverClose.current = null;
+    };
+  }, [close, hoverClose]);
 
   const menu = useMenuState(close);
 
@@ -389,6 +441,16 @@ export const MenuSubContent = ({
             testId={testId}
             label={label}
             {...rest}
+            onMouseEnter={(event) => {
+              // Entering the panel cancels the row's pending close, so the
+              // pointer may cross the gap from the row into its surface.
+              hover.enter("content");
+              onMouseEnter?.(event);
+            }}
+            onMouseLeave={(event) => {
+              hover.leave("content");
+              onMouseLeave?.(event);
+            }}
             onKeyDown={(event) => {
               // Claim every key: the parent menu must not also move its highlight.
               claimEvent(event);
