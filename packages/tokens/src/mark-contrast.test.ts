@@ -73,6 +73,7 @@ describe("the mark contract", () => {
       ...(["primary", "destructive"] as const).map(
         (role) => `${role} on input`,
       ),
+      "primary on hover",
     ].toSorted();
 
     expect(
@@ -129,6 +130,7 @@ describe("the mark contract", () => {
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
       "background",
       "card",
+      "hover",
       "input",
       "muted",
       "popover",
@@ -146,7 +148,7 @@ describe("the mark contract", () => {
         .filter(({ pairClass }) => pairClass === "mark")
         .map(({ background }) => background)
         .toSorted(),
-    ).toEqual(["background", "card", "input", "muted", "popover"]);
+    ).toEqual(["background", "card", "hover", "input", "muted", "popover"]);
   });
 
   it("reports a success segment that vanishes into its track", () => {

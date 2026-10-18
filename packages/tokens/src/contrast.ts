@@ -242,14 +242,24 @@ export const stateFillSurfacePairs: readonly ContrastPair[] =
  * segment (`primitives/src/core/style.ts` `progressFillStyle`) and a slider fill
  * paint over the `muted` track; a slider thumb rings its own `input` fill with
  * the same role; a rating star and a combobox check are glyphs on the surface
- * they sit on; a timeline's current dot is a `primary` dot on the canvas, card,
- * popover or quiet panel. A mark is the information, so a fill that matches its
- * surface is a failed state, not a subtle one.
+ * they sit on — a selected option's check also sits on the `hover` wash the row
+ * paints while highlighted; a timeline's current dot is a `primary` dot on the
+ * canvas, card, popover or quiet panel. A mark is the information, so a fill
+ * that matches its surface is a failed state, not a subtle one.
  */
 const markSurfaces = ["background", "card", "popover", "muted"] as const;
 
 /** The solid roles the library paints as a mark. */
 export const markRoles = ["primary", "success", "destructive"] as const;
+
+/**
+ * A selected combobox option's check glyph on the wash it highlights with.
+ * `rowStyle` paints `hover` behind a highlighted option, so the check has to
+ * stay a mark there, not only on the popover at rest.
+ */
+const comboboxCheckPairs: readonly ContrastPair[] = [
+  ["primary", "hover", "mark"],
+];
 
 /** Every mark on every surface it can sit on, plus the thumb's own fill. */
 export const markPairs: readonly ContrastPair[] = [
@@ -258,6 +268,7 @@ export const markPairs: readonly ContrastPair[] = [
   ),
   ["primary", "input", "mark"],
   ["destructive", "input", "mark"],
+  ...comboboxCheckPairs,
 ];
 
 /**
