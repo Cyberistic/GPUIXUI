@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 150/201
+`[x]` `[███████░░░]` 153/208
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1133,6 +1133,13 @@ family moves (plan 385)
 one label line while `fieldTextStyle` and `otpCellStyle` paint the body role in
 the same box, so a theme with a 30px body line returned `[]` from every check
 while a 26px content box clipped a small field (plan 386)
+`[x]` Enumerate the shipped themes in one place — the package owned each axis
+and resolver but not their composition, so the surfaces that said "every shipped
+set" enumerated 4, 20, 24 and 28 (identity repeated through an unfiltered
+`platformNames`) and the README quoted a sixth number; `shippedThemes` and
+`platformVariants` derive from the axis owners, the three suites that claimed
+the full set enumerate them, and the reference, README and ledger state the
+derived count (plan 387)
 
 ## Phase C — Tier 1–2 components
 

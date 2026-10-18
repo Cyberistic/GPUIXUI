@@ -6,6 +6,7 @@ export * from "./motion.js";
 export * from "./platform-recipes.js";
 export * from "./platforms.js";
 export * from "./scale.js";
+export * from "./shipped-themes.js";
 export * from "./styles.js";
 export * from "./theme-check.js";
 export * from "./theme-choice.js";

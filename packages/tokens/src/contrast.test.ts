@@ -167,15 +167,11 @@ import {
   contrastPairs,
   contrastRatio,
   controlBoundarySoftPairs,
-  darkTheme,
   extendTheme,
   getTheme,
-  highContrastDarkTheme,
-  highContrastLightTheme,
   inactivePairs,
   inactiveSoftPairs,
   invalidRingPairs,
-  lightTheme,
   markPairs,
   overlayWashPairs,
   ringSoftPairs,
@@ -188,6 +184,7 @@ import {
   selectionStepPairs,
   selectionSurfaces,
   selectionWashPairs,
+  shippedThemes,
   softBorderSurfacePairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
@@ -198,8 +195,6 @@ import {
   trackSurfacePairs,
   washStepPairs,
   type ContrastPair,
-  type Theme,
-  type ThemeContrast,
 } from "./index.js";
 import {
   quietBrandFailures,
@@ -355,18 +350,10 @@ describe("contrastFloors", () => {
   });
 });
 
-const shipped: ReadonlyArray<readonly [string, Theme, ThemeContrast]> = [
-  ["light", lightTheme, "default"],
-  ["dark", darkTheme, "default"],
-  ["high-contrast light", highContrastLightTheme, "high"],
-  ["high-contrast dark", highContrastDarkTheme, "high"],
-];
-
 describe("themeContrastFailures", () => {
   it("passes every shipped theme at the level it declares", () => {
-    shipped.forEach(([label, theme, contrast]) => {
-      expect(theme.contrast, label).toBe(contrast);
-      expect(themeContrastFailures(theme), label).toEqual([]);
+    shippedThemes.forEach(({ theme }) => {
+      expect(themeContrastFailures(theme), theme.name).toEqual([]);
     });
   });
 

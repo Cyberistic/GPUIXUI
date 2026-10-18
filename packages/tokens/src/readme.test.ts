@@ -28,6 +28,7 @@ import {
   type PlatformName,
 } from "./platforms.js";
 import { defaultDensity, radius } from "./scale.js";
+import { shippedThemes } from "./shipped-themes.js";
 import { statusTones } from "./styles.js";
 import { themes } from "./theme.js";
 import { textRoles } from "./typography.js";
@@ -175,6 +176,15 @@ describe("packages/tokens/README.md", () => {
       "GPUix 0.10.0's `StyleDesc.fontFamily` is one string",
     );
     expect(readme).toContain("`typefaceRoles` and `typefaceRules`");
+  });
+
+  it("holds the shipped-set count to the enumeration", () => {
+    // The front door said "all 20 shipped sets" while the suites enumerated 4,
+    // 20, 24 and 28 depending on the file (plan 387). `shippedThemes` is the
+    // one list, so the sentence is derived from it.
+    expect(readme).toContain(
+      `and all ${shippedThemes.length} shipped sets pass`,
+    );
   });
 
   it("lists every motion level, including the zero one", () => {

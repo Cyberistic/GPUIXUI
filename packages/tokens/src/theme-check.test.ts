@@ -11,17 +11,20 @@
  *
  * Plan 385 adds the fourth class: a family name the runtime cannot resolve as
  * written, which no older check could see.
+ *
+ * Plan 387 moves the shipped list to `shippedThemes`: this suite was one of the
+ * hand-built enumerations that called itself "every shipped set" while covering
+ * the recipes at the default contrast only (20 of the 24 sets).
  */
 import { describe, expect, it } from "vitest";
 import {
   contrastFloors,
   extendTheme,
-  getPlatformRecipeTheme,
-  getPlatformTheme,
   getTheme,
   lightColors,
-  platformNames,
   platformRecipeNames,
+  platformVariants,
+  shippedThemes,
   themeColorFailures,
   themeContrastFailures,
   themeContrasts,
@@ -29,7 +32,7 @@ import {
   themeMetricFailures,
   themeModes,
   themeTypefaceFailures,
-  type Theme,
+  type ShippedTheme,
 } from "./index.js";
 import {
   brandFailures,
@@ -38,46 +41,28 @@ import {
   brokenTheme,
 } from "./theme-check.example.js";
 
-const realPlatforms = platformNames.filter(
-  (platform) => platform !== "default",
-);
-
-const shipped: ReadonlyArray<{
-  readonly label: string;
-  readonly theme: Theme;
-}> = [
-  ...themeContrasts.flatMap((contrast) =>
-    themeModes.map((mode) => ({
-      label: `identity ${mode} ${contrast}`,
-      theme: getTheme(mode, contrast),
-    })),
-  ),
-  ...realPlatforms.flatMap((platform) =>
-    themeContrasts.flatMap((contrast) =>
-      themeModes.map((mode) => ({
-        label: `${platform} ${mode} ${contrast}`,
-        theme: getPlatformTheme(platform, mode, contrast),
-      })),
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map((mode) => ({
-      label: `${recipe} ${mode}`,
-      theme: getPlatformRecipeTheme(recipe, mode),
-    })),
-  ),
-];
+/** How many shipped sets came from each axis. */
+const sourceCount = (source: ShippedTheme["source"]): number =>
+  shippedThemes.filter((set) => set.source === source).length;
 
 const kinds = (failures: ReadonlyArray<{ readonly kind: string }>) =>
   failures.map((failure) => failure.kind);
 
 describe("one total theme check", () => {
   it("covers every shipped set, not a sample", () => {
-    expect(shipped.length).toBeGreaterThanOrEqual(20);
+    expect(sourceCount("identity")).toBe(
+      themeModes.length * themeContrasts.length,
+    );
+    expect(sourceCount("platform")).toBe(
+      platformVariants.length * themeModes.length * themeContrasts.length,
+    );
+    expect(sourceCount("recipe")).toBe(
+      platformRecipeNames.length * themeModes.length * themeContrasts.length,
+    );
   });
 
-  shipped.forEach(({ label, theme }) => {
-    it(`${label}: passes every check through one call`, () => {
+  shippedThemes.forEach(({ theme }) => {
+    it(`${theme.name}: passes every check through one call`, () => {
       expect(themeFailures(theme)).toEqual([]);
     });
   });

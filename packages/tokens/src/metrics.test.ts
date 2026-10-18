@@ -11,6 +11,10 @@
  * Every case below fails without its rule in `metrics.ts`. The shipped-theme
  * case fails if a value moves out of a ladder, the per-rule cases fail if the
  * rule is removed, and the coverage case fails if a group ships unmeasured.
+ *
+ * Plan 387 moves the shipped matrix to `shippedThemes`: the local list repeated
+ * the identity through an unfiltered `platformNames` and measured only the
+ * default contrast, so no recipe was checked at AAA.
  */
 import { describe, expect, it } from "vitest";
 import { themeContrastFailures } from "./contrast.js";
@@ -28,44 +32,8 @@ import {
   themeMetricFailures,
   type MetricFailure,
 } from "./metrics.js";
-import {
-  getPlatformRecipeTheme,
-  platformRecipeNames,
-} from "./platform-recipes.js";
-import { platformNames } from "./platforms.js";
-import {
-  extendTheme,
-  getPlatformTheme,
-  getTheme,
-  lightTheme,
-  themeContrasts,
-  themeModes,
-  type Theme,
-} from "./theme.js";
-
-/** Every shipped set: identity, platform variant and recipe, in both modes. */
-const shipped: ReadonlyArray<readonly [string, Theme]> = [
-  ...themeModes.flatMap((mode) =>
-    themeContrasts.map(
-      (contrast) => [`${mode}/${contrast}`, getTheme(mode, contrast)] as const,
-    ),
-  ),
-  ...platformNames.flatMap((platform) =>
-    themeModes.map(
-      (mode) =>
-        [`${platform}/${mode}`, getPlatformTheme(platform, mode)] as const,
-    ),
-  ),
-  ...platformRecipeNames.flatMap((recipe) =>
-    themeModes.map(
-      (mode) =>
-        [
-          `recipe:${recipe}/${mode}`,
-          getPlatformRecipeTheme(recipe, mode),
-        ] as const,
-    ),
-  ),
-];
+import { shippedThemes } from "./shipped-themes.js";
+import { extendTheme, lightTheme } from "./theme.js";
 
 /** A complete md level, so a case can vary one field without shipped data. */
 const mdShape: ElevationShape = {
@@ -82,16 +50,14 @@ const failuresOf = (overrides: Parameters<typeof extendTheme>[1]) =>
 
 describe("theme metric contract", () => {
   it("has every shipped set to check", () => {
-    expect(shipped).toHaveLength(
-      themeModes.length * themeContrasts.length +
-        platformNames.length * themeModes.length +
-        platformRecipeNames.length * themeModes.length,
+    expect(new Set(shippedThemes.map(({ source }) => source))).toEqual(
+      new Set(["identity", "platform", "recipe"]),
     );
   });
 
   it("passes every shipped theme, platform variant and recipe", () => {
-    shipped.forEach(([label, theme]) => {
-      expect(themeMetricFailures(theme), label).toEqual([]);
+    shippedThemes.forEach(({ theme }) => {
+      expect(themeMetricFailures(theme), theme.name).toEqual([]);
     });
   });
 

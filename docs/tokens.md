@@ -93,6 +93,7 @@ missing here is not public.
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
 | `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500`, `600` and `700`. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
+| `IdentityShippedTheme` | An identity set in `shippedThemes`, with no platform style. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
 | `MetricGroup` | A group of theme metrics from `metricGroups`. |
 | `MetricRule` | One of `metricRules`: `positive`, `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`, `at-most` or `within`. |
@@ -104,11 +105,15 @@ missing here is not public.
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
+| `PlatformShippedTheme` | A styled platform set in `shippedThemes`, with the variant it came from. |
 | `PlatformStyle` | Editable platform data: types, structure, colours and elevation. |
 | `PlatformStyleStructure` | Radii, density and motion shared by both modes. |
 | `PlatformType` | The label and sans/mono families of one platform. |
+| `PlatformVariant` | A platform that carries its own style: `darwin`, `linux` or `win32`. |
 | `Radius` | The corner-radius scale. |
+| `RecipeShippedTheme` | A recipe set in `shippedThemes`, with the recipe it came from. |
 | `SelectionStyle` | `{ selectionColor }` for inherited text selection. |
+| `ShippedTheme` | One shipped set, discriminated by `source`: identity, platform or recipe. |
 | `Spacing` | The spacing scale shared by padding, margin and gap. |
 | `StatusTone` | `"info"`, `"success"`, `"warning"` or `"destructive"`. |
 | `StatusToneStyle` | The four roles a soft status surface needs. |
@@ -1660,8 +1665,8 @@ import { themeFailures } from "@gpuixui/tokens";
 expect(themeFailures(brandTheme)).toEqual([]);
 ```
 
-Every shipped identity theme, platform variant and recipe returns `[]`. The
-executed example is
+Every shipped identity theme, platform variant and recipe returns `[]`. The set
+itself is [`shippedThemes`](#every-shipped-theme). The executed example is
 [`src/theme-check.example.ts`](../packages/tokens/src/theme-check.example.ts).
 
 The role and shadow sets behind the shipped themes are exported as
@@ -1672,6 +1677,30 @@ component source reads `theme.colors` and `theme.elevation`, never a fixed set. 
 consumer theme may share an untouched set or replace it through `extendTheme`.
 An elevation level is geometry plus an alpha, so a replaced level composes with
 the theme's `colors.shadow` tint like a shipped one.
+
+#### Every shipped theme
+
+`shippedThemes` is the ordered list of every theme the library ships, each with
+the axis it came from. It is derived from the same indexes the resolvers use, so
+it cannot omit a platform, a recipe or a contrast level:
+
+```ts
+import { shippedThemes, themeFailures } from "@gpuixui/tokens";
+
+const failures = shippedThemes.flatMap(({ theme }) => themeFailures(theme));
+failures; // []
+```
+
+Each entry's `theme` is a resolved `Theme`, and `mode`, `contrast` and `name` are
+fields on it, so the provenance — `source`, plus `platform` or `recipe` — cannot
+disagree with the value. The length is **24** today: 4 `identity` sets, 12
+`platform` sets (3 platforms × 2 modes × 2 contrasts) and 8 `recipe` sets (2 ×
+2 × 2). The `default` platform is not a variant: `platformVariants` is
+`platformNames` without it, because it resolves to the identity itself.
+
+A gallery, a visual-regression suite or a QA harness that needs every shipped
+look iterates the same list; nothing is retyped. The executed example is
+[`src/shipped-themes.example.ts`](../packages/tokens/src/shipped-themes.example.ts).
 
 ## React binding
 

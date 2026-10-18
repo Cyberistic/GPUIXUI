@@ -231,6 +231,23 @@ the payload is the same `ColorFailure`, `TypefaceFailure`, `ContrastFailure` or
 `MetricFailure` the individual check returns. A runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
+The library holds every shipped set to that same call. `shippedThemes` is the
+ordered list — identity variants, styled platform variants and recipes, at both
+modes and both contrasts, each with its provenance — derived from the same
+indexes the resolvers read, so a consumer's suite or gallery does not retype the
+matrix:
+
+```ts
+import { shippedThemes, themeFailures } from "@gpuixui/tokens";
+
+const failures = shippedThemes.flatMap(({ theme }) => themeFailures(theme));
+failures; // []
+```
+
+`platformVariants` is the styled subset: the `default` platform is the identity,
+not a fourth look. The executed example is
+[`src/shipped-themes.example.ts`](./src/shipped-themes.example.ts).
+
 The other three checks are available on their own.
 `themeMetricFailures(theme)` holds the numbers (§ *Checking the numbers* below),
 and `themeColorFailures(theme)` holds every role to the six- or eight-digit hex
@@ -255,7 +272,7 @@ stack, because GPUix 0.10.0's `StyleDesc.fontFamily` is one string and an
 unknown name falls back silently. A copied theme with
 `sans: "Inter, system-ui, sans-serif"` used to pass every check and paint the
 system fallback; `typefaceRoles` and `typefaceRules` are the ordered indexes,
-and all 20 shipped sets pass:
+and all 24 shipped sets pass:
 
 ```ts
 import { themeTypefaceFailures } from "@gpuixui/tokens";

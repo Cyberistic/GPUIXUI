@@ -120,6 +120,7 @@ import {
   radius,
   spacing,
 } from "./scale.js";
+import { shippedThemes } from "./shipped-themes.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import { typefaceRules } from "./typeface.js";
 import {
@@ -1257,6 +1258,19 @@ describe("docs/tokens.md public values", () => {
     const mentions = (name: string): boolean =>
       new RegExp(`(^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_$])`).test(markdown);
     expect(Object.keys(Tokens).filter((name) => !mentions(name))).toEqual([]);
+  });
+});
+
+describe("docs/tokens.md shipped-theme enumeration", () => {
+  it("states the list, the styled subset and its derived count", () => {
+    expect(markdown).toContain("`shippedThemes`");
+    expect(markdown).toContain("`platformVariants`");
+    ["identity", "platform", "recipe"].forEach((source) => {
+      expect(markdown).toContain(`\`${source}\``);
+    });
+    expect(markdownProse).toContain(
+      `The length is **${shippedThemes.length}** today`,
+    );
   });
 });
 

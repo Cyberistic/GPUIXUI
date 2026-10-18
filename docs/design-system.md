@@ -644,6 +644,14 @@ stack: `StyleDesc.fontFamily` is a single string and an unknown name falls back
 silently, so `themeTypefaceFailures` reports a stack or an empty name that the
 other three checks cannot see.
 
+The set those checks run over is `shippedThemes` — every identity variant,
+platform variant and recipe at both modes and both contrasts, each with the axis
+it came from. It derives from the same indexes the resolvers read, so
+`shippedThemes.flatMap(({ theme }) => themeFailures(theme))` is the library's own
+guarantee in one loop, and a gallery iterates the same list for every shipped
+look. `platformVariants` is the styled subset: the `default` platform is the
+identity, not a fourth look.
+
 A brand may change any value but should not remove roles: every component
 expects the full role set. A brand that needs a different structure should add
 roles in the tokens package, not fork components.
