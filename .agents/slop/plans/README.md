@@ -181,7 +181,7 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330`–`340` are landed and `341` is the
+tokens-theme (`300–328`) reservations — `330`–`341` are landed and `342` is the
 next free number.
 
 | Plan | Title | Phase | Depends on | Status |
@@ -257,6 +257,7 @@ next free number.
 | [339](./339-live-restore.md) | The workspace restore in a real window | F | 100, 110, 140, 167, 189, 197 | **landed** — `live-restore` repeats the shipped probe in a real window: a paced divider drag (320 → 400 painted), a tab activation, `scrollToItem(120, 16)`, then save → reset → restore with the anchor exact at `[120,16]`, row 120 painted and row 0 absent; native focus is not restored and the restored list still takes a click. Live `20 → 21`, exit `0`; two mutation proofs (§6) |
 | [340](./340-live-table-sort.md) | Table sort and selection in a real window | F | 100, 110, 130, 189, 197 | **landed** — `live-table-sort` mounts the shipped `table-select-sort` view in a real window: a wheel moves the body (`y ≈ -200`), the sort reorders the row the automation tree points at (`table-first` → `Item 199`), a real click selects `r199`, and the selection survives a re-sort. Live `21 → 22`, exit `0`; three mutation proofs (§6) |
 | [341](./341-grid-layout-contract.md) | The grid and wrapping layout contract | B → D | 100, 110, 120, 140, `layout-flex` | **landed** — `layout-grid`: equal tracks and the fractional remainder (`93.5/93/93.5`), explicit rows filling a fixed height, auto rows following content, all three `gridColumnMin` modes (`min-content` fills with unequal tracks, `max-content` leaves the remainder unused), `justifyContent` centring a content-sized track set, nested grids, an oversized child overflowing instead of resizing a track, a grid growing as a flex child, and the wrapping-flex line stretch (default `104` vs `alignContent: "flex-start"` `38`). Adds the `grid-layout` capability; 75 checks, suite `69 → 70`, 1848 → 1923 checks, exit `0`; three mutation proofs (§8) |
+| [342](./342-typography-layout.md) | The typography layout contract | B → C | 100, 110, 120, 140, 171, 335 | **planned** — measures exact `lineHeight` (single and wrapped), the default line box across three sizes, `fontWeight` reaching the text layout, a text block filling its parent, and that **`textAlign` is a no-op** with the two working block-alignment routes (`alignSelf`, `justifyContent`) as the alternative. Adds the `typography` capability |
 
 Cross-cutting records:
 
