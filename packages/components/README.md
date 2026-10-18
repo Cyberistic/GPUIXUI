@@ -3,9 +3,9 @@
 Composable Tier 2 components — composition, overlays, navigation, menus,
 feedback and choice inputs — rendered by GPUix through React.
 
-Plans for this package and every component it holds are in
-`.agents/slop/plans/` (110–139, 157–158, 300–324). Read those before adding a
-component.
+Plans for this package and every component it holds are indexed in
+`.agents/slop/plans/README.md`. Read the plan for a component before changing
+it.
 
 ## Boundary
 
@@ -37,7 +37,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/context-menu.tsx` | ContextMenu: the same rows, type-ahead and submenus at the pointer (`onAuxClick` + `isRightClick`) or at the trigger from `Shift+F10` |
 | `src/command-menu.tsx` | CommandMenu: a dialog-hosted palette over `menu/logic.ts`, with ranked subsequence matching inside each declared group |
 | `src/tabs.tsx` | Tabs: roving tab stop, automatic/manual activation, arrow wrap |
-| `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that unmounts |
+| `src/collapsible.tsx` | Collapsible: a trigger with `aria-expanded`, a body that stays mounted and reveals its measured height |
 | `src/accordion.tsx` | Accordion: single (collapsible) and multiple modes over a tagged union, with arrow/Home/End header movement |
 | `src/breadcrumb.tsx` | Breadcrumb: a declarative trail with `maxItems` collapsing |
 | `src/pagination.tsx` | Pagination: a stable-width page window with disabled edges |
