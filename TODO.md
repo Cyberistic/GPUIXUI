@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 63/64
+`[~]` `[██████████]` 64/65
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -458,6 +458,16 @@ retired once both branches are one
       element after it) in 32 cases; both mutations of a `Checkbox` guard fail the
       matrix as they should (plan `089`); `isWithin` is now a harness helper.
 | `[x]` | `packages/primitives`: **the contract** — the accepted Tier 1–2 API spec (`docs/component-api.md`, ADR `0004`) had no Tier 1 record and no guard. `src/contract.test.ts` now holds the parts table (one record per public component: page and state types) and proves export completeness, no `render*`/`*Parts` seam in the root, a real declaration for every advertised state type, the page's state name and required sections, and the verified ARIA subset only. Five mutations failed it; the one real deviation was `IconButton`'s two public renderer seams, now module-level. 7 tests (plan `090`) |
+`[x]` `packages/primitives`: **an invalid field repainted its whole surface** —
+      `controlStyle`'s `invalid` branch assigned the destructive role to
+      `backgroundColor`, so a failed `Input`/`TextArea`/`Select` trigger/
+      `NumberField`/`OTPField` was filled red under the normal text, and the
+      hover/press rules replaced the error border with the healthy one. The rule
+      is now boundary-only: the surface stays the field role, the border and ring
+      are destructive, and hover/press keep that border (a filled, borderless
+      variant is unaffected). 4 core + 1 element-tree + 1 runtime case across
+      `Input`/`TextArea`, plus the OTP cell's fill; both directions measured
+      (plan 091)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
@@ -706,7 +716,7 @@ retired once both branches are one
       - [x] DatePicker + TimePicker parts — plan 303
     - [x] Typed-by-position children — plan 304: `PartChildren` (elements/conditionals, never text) plus a family-scoped render check on 32 parents; part identity cannot be a compile error in React 19's JSX types, recorded in `docs/component-api.md` §1 (owner: components)
     - [x] Expose `style` as `StateStyle<PartState>` on the interactive parts — plan 305: 11 parts with exported state types; button-shaped triggers stay on the local stand-in until `@gpuixui/primitives` owns it (owner: components)
-    - [ ] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives)
+    - [x] `packages/primitives` adopts the same contract for Tier 1 (a parts table row is the spec; the package is owned by primitives) (owner: primitives) — landed in plan `090`; `src/contract.test.ts` is the record and the guard
   - Tier 2 gap rows (plan 205; each row gets its own plan before implementation)
     - [x] Write and index plans 309–320 for the twelve remaining gap rows
     - [x] Fieldset — plan 306: groups fields, propagates `disabled` to `FieldInput` (7 native tests; both-direction proof)

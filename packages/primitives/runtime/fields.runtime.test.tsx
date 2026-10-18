@@ -137,6 +137,35 @@ it("paints an autoFocus TextArea's ring on mount", async () => {
   expect(ringed(runtime, "area")).toBe(true);
 });
 
+it("paints an invalid field's border, not its surface", async () => {
+  // The bug guarded (plan 091): `invalid` filled the whole field with the
+  // destructive role, so a failed validation painted a red input (and dropped
+  // the error border on hover). The surface must stay the field role.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Input testId="valid" label="Valid" />
+        <Input testId="invalid" label="Invalid" invalid />
+        <TextArea testId="valid-area" label="Valid notes" />
+        <TextArea testId="invalid-area" label="Invalid notes" invalid />
+      </Stack>
+    </Surface>,
+  );
+  const paint = (testId: string) =>
+    Option.getOrElse(runtime.element(testId), () =>
+      expect.fail(`the runtime painted no ${testId} field`),
+    ).style;
+  expect(paint("valid").backgroundColor).toBe(testTheme.colors.input);
+  expect(paint("valid").borderColor).toBe(testTheme.colors.border);
+  expect(paint("invalid").backgroundColor).toBe(testTheme.colors.input);
+  expect(paint("invalid").borderColor).toBe(testTheme.colors.destructive);
+  expect(paint("valid-area").backgroundColor).toBe(testTheme.colors.input);
+  expect(paint("valid-area").borderColor).toBe(testTheme.colors.border);
+  expect(paint("invalid-area").backgroundColor).toBe(testTheme.colors.input);
+  expect(paint("invalid-area").borderColor).toBe(testTheme.colors.destructive);
+});
+
 it("paints no ring on a disabled autoFocus field", async () => {
   const runtime = await openWindow();
   runtime.render(

@@ -145,6 +145,41 @@ describe("controlStyle", () => {
     ).toMatchObject({ color: testTheme.colors.destructive });
   });
 
+  it("keeps a field's surface when invalid and moves only its border", () => {
+    // The bug guarded (plan 091): `invalid` filled the whole field with the
+    // destructive role, so a failed validation painted a red input.
+    const style = controlStyle(
+      spec({ variant: fieldVariant, invalid: true }),
+      testTheme,
+    );
+    expect(style.backgroundColor).toBe(testTheme.colors.input);
+    expect(style.borderColor).toBe(testTheme.colors.destructive);
+  });
+
+  it("keeps the invalid border through hover and press", () => {
+    const style = controlStyle(
+      spec({ variant: fieldVariant, invalid: true }),
+      testTheme,
+    );
+    expect(style.hover?.borderColor).toBe(testTheme.colors.destructive);
+    expect(style.active?.borderColor).toBe(testTheme.colors.destructive);
+  });
+
+  it("does not add a border to a filled variant when invalid", () => {
+    const style = controlStyle(spec({ invalid: true }), testTheme);
+    expect(style.backgroundColor).toBe(testTheme.colors.primary);
+    expect(style.borderWidth).toBe(0);
+    expect(style.hover?.borderColor).toBeUndefined();
+    expect(style.active?.borderColor).toBeUndefined();
+  });
+
+  it("keeps a valid field's surface and its hover border", () => {
+    const style = controlStyle(spec({ variant: fieldVariant }), testTheme);
+    expect(style.backgroundColor).toBe(testTheme.colors.input);
+    expect(style.borderColor).toBe(testTheme.colors.border);
+    expect(style.hover?.borderColor).toBe(testTheme.colors.borderStrong);
+  });
+
   it("gives every variant a distinct resting appearance", () => {
     const appearances = Arr.map(BUTTON_VARIANTS, (variant) => {
       const style = controlStyle(

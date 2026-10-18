@@ -52,7 +52,37 @@ const chromeOf = (element: ReactElement) =>
     )(expectSome(hostProp(element, "style"))),
   );
 
+/** The field's surface and boundary, which `invalid` must not confuse. */
+const paintOf = (element: ReactElement) =>
+  expectSome(
+    Schema.decodeUnknownOption(
+      Schema.Struct({
+        backgroundColor: Schema.OptionFromNullishOr(Schema.String),
+        borderColor: Schema.OptionFromNullishOr(Schema.String),
+      }),
+    )(expectSome(hostProp(element, "style"))),
+  );
+
 describe("Input", () => {
+  it("keeps an invalid field's surface and moves only its border", () => {
+    // The bug guarded (plan 091): the shared control resolver filled an invalid
+    // field with the destructive role instead of recolouring its border.
+    const element = renderInput(
+      { invalid: true },
+      testTheme,
+      draft(""),
+      idle,
+      vi.fn(),
+    );
+    const paint = paintOf(element);
+    expect(Option.getOrUndefined(paint.backgroundColor)).toBe(
+      testTheme.colors.input,
+    );
+    expect(Option.getOrUndefined(paint.borderColor)).toBe(
+      testTheme.colors.destructive,
+    );
+  });
+
   it("renders the value the state machine resolved, not its own draft", () => {
     const element = renderInput(
       {},

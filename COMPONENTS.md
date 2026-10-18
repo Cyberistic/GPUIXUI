@@ -204,6 +204,15 @@ carries an evidenced limitation. The capability evidence lives in
 | Toggle | wip | ours | [toggle](packages/primitives/docs/toggle.mdx) · [toggle](packages/primitives/examples/toggle.example.tsx) | **Runtime (054):** a click flips the announced state and repaints the accent fill; Enter down and Space up each activate once; a disabled toggle leaves the tab order; the ring follows focus. **No `aria-pressed`** in 0.10.0 — the state rides on `aria-valuetext`, so a screen reader hears a button with a value. Activation, the ring and the name are this package's (`@gpuix/react` publishes no button). **Name (058):** text-only children become `aria-label`; an explicit `label` wins; non-text content stays unnamed. **Style by state (079):** `style` accepts a `ToggleState` callback (`checked`, `disabled`, `focused`). |
 | Rating | wip | ours | [rating](packages/primitives/docs/rating.mdx) · [rating](packages/primitives/examples/rating.example.tsx) | **Runtime (054):** a click on "4 of 5" reports 4; arrows move the checked star **and** native focus, clamping at the ends; Delete clears; filled stars paint `colors.primary` and empty ones `colors.mutedForeground`; Tab enters on the rating and the next Tab leaves it; disabled refuses input. **Invalid (070):** `invalid` paints the empty stars `destructive` and leaves a chosen one on the brand role (the decoded element tree and the runtime `<svg>` tint agree). Whole stars only (no clip/transform in 0.10.0); no `aria-checked`, and no `aria-invalid` — state rides on `aria-valuetext` and the error is paint only. **Style by state (080):** `RatingState` (`disabled`, `invalid`). **Per-item (081):** `starStyle` over `RatingStarState` (`index` 1-based, `filled`, `disabled`, `readOnly`, `invalid`, `focused`) styles each star; stars derive `${testId}-star-N`, and the runtime case proves the paint follows a click. |
 
+**Invalid fields (091):** every field — `Input`, `TextArea`, `Select`'s trigger,
+`NumberField` and `OTPField` — paints through the one `controlStyle` resolver,
+which used to **fill** an invalid field with the destructive role instead of
+recolouring its boundary (a red input under dark text) and dropped the error
+border on hover and press. The surface is now always the field role, the border
+and focus ring take `destructive`, and the hover/press rules keep that border;
+a filled, borderless variant is unaffected. Measured in `fields.runtime`
+(valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
+
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (263 tests in
 20 files at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,

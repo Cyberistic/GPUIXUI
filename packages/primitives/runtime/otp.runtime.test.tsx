@@ -185,6 +185,9 @@ it("paints the destructive border on every cell when invalid", async () => {
   );
   Arr.forEach(cells(runtime), (cell) => {
     expect(cell.style["borderColor"]).toBe(testTheme.colors.destructive);
+    // The same rule as every other field (plan 091): the surface stays the
+    // field role; only the boundary reports the error.
+    expect(cell.style["backgroundColor"]).toBe(testTheme.colors.input);
   });
 });
 

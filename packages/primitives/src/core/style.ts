@@ -87,14 +87,23 @@ export const controlStyle = (
   const height = theme.density.controlHeight[size];
   const padding = theme.density.controlPaddingX[size];
   const label = theme.typography.label;
-  const rest =
-    spec.invalid === true
-      ? theme.colors.destructive
-      : paint(variant.background, theme);
+  const fill = paint(variant.background, theme);
   const border =
     spec.invalid === true
       ? theme.colors.destructive
       : paint(variant.border, theme);
+  /**
+   * Interaction feedback keeps the error boundary.
+   *
+   * A field's hover/press rule is a border change, so applying the variant's
+   * rule verbatim would paint the healthy border over a failed validation. Only
+   * a variant that has a border to recolour is affected; a filled button keeps
+   * its fill feedback untouched.
+   */
+  const interactive = (style: StyleDesc): StyleDesc =>
+    spec.invalid === true && variant.border !== undefined
+      ? { ...style, borderColor: theme.colors.destructive }
+      : style;
 
   const style: StyleDesc = {
     display: "flex",
@@ -107,7 +116,7 @@ export const controlStyle = (
     fontSize: label.fontSize,
     lineHeight: label.lineHeight,
     fontWeight: label.fontWeight,
-    backgroundColor: rest,
+    backgroundColor: fill,
     color: paint(variant.foreground, theme),
     borderWidth: variant.border === undefined ? 0 : theme.borderWidth.thin,
     borderColor: border,
@@ -119,11 +128,11 @@ export const controlStyle = (
   if (spec.disabled === true) {
     // A disabled control must not respond to the pointer at all.
     style.opacity = 0.5;
-    style.hover = { backgroundColor: rest };
-    style.active = { backgroundColor: rest };
+    style.hover = { backgroundColor: fill };
+    style.active = { backgroundColor: fill };
   } else {
-    style.hover = variant.hover(theme);
-    style.active = variant.active(theme);
+    style.hover = interactive(variant.hover(theme));
+    style.active = interactive(variant.active(theme));
   }
   if (spec.square === true) {
     style.width = height;
