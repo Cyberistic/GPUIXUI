@@ -37,6 +37,7 @@ import {
   platformNames,
   platformStyles,
   platformTypes,
+  selectionInactivePairs,
   selectionPairs,
   selectionSurfaces,
   selectionStyle,
@@ -256,7 +257,7 @@ A runnable example lives in
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
-| `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
+| `disabledForeground` | `#545D6C` | `#A1A9B7` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
 | `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
@@ -533,7 +534,7 @@ carries, so it cannot claim another.
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
-| `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
+| `disabledForeground` | `#444444` | `#B0B0B0` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
@@ -1544,9 +1545,12 @@ a row uses, and a selectable row's label is dragged over with the copy around
 it. An Alert or Badge is measured the same way:
 `selectionSoftPairs` holds the tone's foreground, the body and the caption
 through the wash and `selectionSoftWashPairs` the highlight's own perceivability
-on the four soft fills. The wash itself is compared with each surface it paints
-on, so a highlight that has become imperceptible is reported as well;
-`selectionWashPairs` is that list.
+on the four soft fills. An unavailable label is measured too:
+`selectionInactivePairs` holds `disabledForeground` through the same wash on the
+thirteen `inactiveSurfaces` it paints on, at the `inactive` floor, because
+`selectionColor` inherits into that text. The wash itself is compared with each
+surface it paints on, so a highlight that has become imperceptible is reported
+as well; `selectionWashPairs` is that list.
 
 Every exported pair list is held to content uniqueness: a repeated
 `[foreground, background, class]` would make the checker report one composition
@@ -1648,6 +1652,25 @@ to a floor against the panel: no neutral can clear both a white card and the
 quiet panel, so a disabled control keeps its shape with its `border` edge, which
 is held to the divider floor on `disabled` and on the previously unmeasured
 `muted` panel.
+
+The label is also read while it is selected. `selectionColor` inherits into a
+disabled control's text like any other, and the accent-tinted wash composites
+over the surface beneath it — on a light surface it darkens the ground toward
+the disabled grey, and on a dark surface it lifts the ground toward it. No pair
+measured the composition, so a selected unavailable label could fall under the
+floor while all six checks returned `[]`: the previous light value `#6E7787`
+measured **2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on the
+other default light sets, and the AAA sets **3.430:1** (light,
+`destructiveSoft`) and **4.357:1** (dark, `active`), against 3:1 and 4.5:1.
+`selectionInactivePairs` holds `disabledForeground` through the wash on the same
+thirteen `inactiveSurfaces` at the same floor. Three values move one designed
+step away from the panel: identity light `#6E7787` → `#545D6C` (neutral 600),
+AAA light `#5A5A5A` → `#444444` and AAA dark `#A9A9A9` → `#B0B0B0`; every
+high-contrast platform variant inherits the AAA palettes, and XP and Aero light
+already passed. The values stay below `mutedForeground` by 1.455:1, 1.69:1 and
+1.643:1 at the tightest, so an unavailable label is still distinguishable from
+secondary text; the tightest washed pair is now **3.177:1** (Aero light
+`destructiveSoft`) and **4.722:1** at AAA.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
@@ -1865,10 +1888,11 @@ caption share. Every shipped set clears the step; the tightest are **1.274:1**
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
 `card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
 light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
-high-contrast light on `muted`), **1.349:1** (`disabledForeground` vs
-`mutedForeground`, XP light on `card`) and **1.440:1** (`placeholder` vs
-`mutedForeground`, Windows dark on `input`). No shipped value moves; the check
-exists for the theme a consumer edits. A theme that sets `disabledForeground` to
+high-contrast light on `muted`), **1.333:1** (`disabledForeground` vs
+`mutedForeground`, Windows light on `background`) and **1.440:1**
+(`placeholder` vs `mutedForeground`, Windows dark on `input`). Every shipped set
+still clears the step; the check exists for the theme a consumer edits. A theme
+that sets `disabledForeground` to
 `foreground` still passes every floor, and is reported only here.
 
 `selectedForeground` is deliberately not a body tier: it is the
@@ -2454,6 +2478,17 @@ over. `elevationSurfaces` now derives from the six page layout surfaces, taking
 the walk from twelve to eighteen painted pairs; every shipped set clears 1.05:1
 (1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour moves and
 `contrastPairs` stays **394**.
+Plan `510` holds the unavailable label through the text-selection wash.
+`selectionColor` inherits into a disabled control's text, but `inactivePairs`
+measured the label only at rest, so the previous light `#6E7787` measured
+**2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on the other
+default light sets, and the AAA sets 3.430:1 and 4.357:1, while every check
+returned `[]`. `selectionInactivePairs` adds a washed pair on each of the
+thirteen `inactiveSurfaces`, and three values move one designed step away from
+the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
+`#B0B0B0` — while staying 1.455 / 1.69 / 1.643:1 below `mutedForeground` at the
+tightest. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA dark), no
+`contrastPairs` entry moves, and `contrastPairs` stays **394**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2645,7 +2680,12 @@ accent-toned text stays the documented omission. The card's own
 `cardForeground` is measured beside the default `foreground` (plan `363`), so a
 theme whose card text is readable at rest cannot lose it under the wash — the
 two roles are already apart in both Windows recipes, and Windows dark is the
-tightest at **9.65:1**, so no colour moves.
+tightest at **9.65:1**, so no colour moves. The unavailable label joins the
+list — `selectionInactivePairs` holds `disabledForeground` over the wash on the
+thirteen `inactiveSurfaces`, because a selected disabled label measured
+**2.586:1** on Windows light's `selected` fill and 3.430 / 4.357:1 in the AAA
+sets while every check returned `[]`; the three values moved and the tightest
+washed pair is **3.177:1** (plan `510`).
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over `background`, `card`, `muted`, `input`, `selected`, `popover`, the
@@ -2670,8 +2710,8 @@ move no colour.
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs`,
-`selectionFillPairs`, `selectionFillWashPairs`, `softPanelTextPairs` and
-`overlayWashPairs` measure the
+`selectionFillPairs`, `selectionFillWashPairs`, `softPanelTextPairs`,
+`selectionInactivePairs` and `overlayWashPairs` measure the
 painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
 `statusFillPairs` the solid status fill on the same chip surfaces and `disabled`

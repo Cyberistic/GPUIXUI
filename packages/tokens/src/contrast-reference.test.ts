@@ -8,7 +8,7 @@
  * `@example` fences and `docs.test.ts` the Markdown pages, so nothing read this
  * prose while it shipped to the API reference.
  *
- * Each case fails on the pre-fix paragraph: it names only one of the ten lists,
+ * Each case fails on the pre-fix paragraph: it names only one of the lists,
  * lists no family index and repeats a count. Plan 504 moved the inverse veil's
  * index from `filledControlFamilies` to `selectionFillRoles`, which also owns the
  * solid status chips and `softAction`; the guard names whichever index the
@@ -38,6 +38,7 @@ const appliedLists = [
   "contrastPairs",
   "selectionPairs",
   "selectionStatusPairs",
+  "selectionInactivePairs",
   "selectionWashPairs",
   "selectionSoftPairs",
   "selectionSoftWashPairs",
@@ -45,6 +46,7 @@ const appliedLists = [
   "selectionFillWashPairs",
   "skeletonPulsePairs",
   "overlayWashPairs",
+  "dialogSurfacePairs",
   "elevationSurfaces",
 ] as const;
 

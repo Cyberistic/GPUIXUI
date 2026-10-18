@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 175/228
+`[x]` `[███████░░░]` 176/228
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1383,6 +1383,16 @@ checker returned `[]`; the list now derives from the six page layout surfaces
 (twelve → eighteen painted pairs), every shipped set already clears 1.05:1
 (1.109:1 at the tightest, macOS dark `sm` on `input`), no colour moves and
 `contrastPairs` stays 394 (plan 509)
+`[x]` Hold an unavailable label through the text-selection wash — `disabledForeground`
+was measured on the thirteen surfaces it paints at rest but never through the
+inherited `selectionColor`, so a selected disabled label measured **2.586:1** on
+Windows light's `selected` fill, 2.604–2.945:1 on the other default light sets
+and 3.430 / 4.357:1 in the AAA sets while all six checks returned `[]`;
+`selectionInactivePairs` adds the washed pair on each of the thirteen
+`inactiveSurfaces`, three values move one designed step away from the panel
+(`#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` → `#B0B0B0`) and every
+shipped set passes at 3.177:1 or better (4.722:1 at AAA), with `contrastPairs`
+staying 394 (plan 510)
 
 ## Phase C — Tier 1–2 components
 

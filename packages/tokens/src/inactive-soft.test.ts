@@ -54,9 +54,11 @@ describe("inactive label on a soft status fill", () => {
       colors: { disabledForeground: lightTheme.colors.warningSoft },
     });
     const softFailures = themeContrastFailures(erased).filter(
-      ({ pairClass, foreground, background }) =>
+      ({ pairClass, foreground, background, wash }) =>
         pairClass === "inactive" &&
         foreground === "disabledForeground" &&
+        // The washed pairs are plan 510's; this case is the fill at rest.
+        wash === undefined &&
         softFills.some((fill) => fill === background),
     );
 

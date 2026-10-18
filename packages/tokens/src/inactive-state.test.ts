@@ -50,10 +50,10 @@ describe("inactive state", () => {
       "popover",
       "inactive",
     ]);
-    expect(lightTheme.colors.disabledForeground).toBe("#6E7787");
+    expect(lightTheme.colors.disabledForeground).toBe("#545D6C");
     expect(darkTheme.colors.disabledForeground).toBe("#A1A9B7");
-    expect(highContrastLightTheme.colors.disabledForeground).toBe("#5A5A5A");
-    expect(highContrastDarkTheme.colors.disabledForeground).toBe("#A9A9A9");
+    expect(highContrastLightTheme.colors.disabledForeground).toBe("#444444");
+    expect(highContrastDarkTheme.colors.disabledForeground).toBe("#B0B0B0");
   });
 
   it("reports the pre-fix inactive label through the public checker", () => {

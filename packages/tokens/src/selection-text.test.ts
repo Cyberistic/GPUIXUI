@@ -139,6 +139,8 @@ describe("the selection wash on painted surfaces", () => {
       ({ wash, background, foreground }) =>
         wash === "selection" &&
         !statusTextRoles.has(foreground) &&
+        // The inactive label has its own washed list (plan 510).
+        foreground !== "disabledForeground" &&
         selectionSurfaces.some((surface) => surface === background),
     );
 

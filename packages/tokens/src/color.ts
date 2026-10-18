@@ -278,10 +278,14 @@ export interface ThemeColors {
  * one ramp step darker than the pressed wash so a loading row never erases it
  * (plan 094). The filled-control hover and pressed steps are designed opaque
  * roles, so no state composites an alpha fill (plan 097). `disabledForeground` is
- * a half-step between neutral 500 and 600 so an inactive label clears the 3:1
+ * neutral 600 so an inactive label clears the 3:1
  * `inactive` floor on the darkest platform pressed wash with margin, while the
  * fill stays near the panel and the control's `border` edge carries its shape
- * (plan 306). The quiet panel is neutral 25 — a step toward the card rather than
+ * (plan 306). The role is a full ramp step rather than a half-step toward
+ * neutral 500 because the label is selected with the copy around it: the
+ * previous value measured **2.586:1** through the `selection` wash on Windows
+ * light's `selected` fill, under the 3:1 floor (plan 510), while the tier below
+ * `mutedForeground` still holds. The quiet panel is neutral 25 — a step toward the card rather than
  * the canvas — so a `hover`, `secondary`, `accent` or `selected` fill painted on
  * a sidebar stays perceivable (plan 309). The status text roles sit a half-step
  * between their ramp steps, so a label keeps the secondary floor when it is
@@ -362,7 +366,7 @@ export const lightColors = {
   selected: palette.iris[100],
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
-  disabledForeground: "#6E7787",
+  disabledForeground: palette.neutral[600],
   skeleton: palette.neutral[300],
   track: "#D5D9E2",
   scrollbar: palette.neutral[300],
@@ -552,7 +556,7 @@ export const highContrastLightColors = {
   selected: "#D8DBFF",
   selectedForeground: "#2E2370",
   disabled: "#E8E8E8",
-  disabledForeground: "#5A5A5A",
+  disabledForeground: "#444444",
   skeleton: "#B0B0B0",
   track: "#C6C8CD",
   scrollbar: "#9A9A9A",
@@ -567,7 +571,8 @@ export const highContrastLightColors = {
  * the selection wash is a darker tint so white text keeps the body floor on the
  * fills a row paints (plan 081). The skeleton is a perceivable step off the
  * pressed wash (plan 094). `disabledForeground` is a mid grey because the pressed
- * wash needs 4.5:1 for an inactive label (plan 306). The accent and selected
+ * wash needs 4.5:1 for an inactive label (plan 306) and the selection wash over
+ * it needs the same floor (plan 510). The accent and selected
  * fills are a lighter iris, so a selected row is perceivable on the AAA dark
  * quiet panel and popover (plan 309); `selected` sits on the accent's hover step
  * so the selection is also a step past the row's hover wash (plan 381). The
@@ -649,7 +654,7 @@ export const highContrastDarkColors = {
   selected: "#33257A",
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
-  disabledForeground: "#A9A9A9",
+  disabledForeground: "#B0B0B0",
   skeleton: "#565656",
   track: "#414141",
   scrollbar: "#8A8A8A",

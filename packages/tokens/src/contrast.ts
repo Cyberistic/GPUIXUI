@@ -1307,6 +1307,27 @@ export const selectionStatusPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The unavailable label a reader selects with the copy around it. `inactive` is
+ * a design floor rather than a WCAG one (1.4.3 exempts inactive components),
+ * but the point of a disabled control is that a reader can find out what is
+ * unavailable, and `selectionColor` inherits into that text like any other. The
+ * wash is composited over the same {@link inactiveSurfaces} the at-rest list
+ * measures, because a label readable on a row can lose its floor once the row
+ * is selected: the pre-510 identity light value measured **2.586:1** on the
+ * Windows light `selected` fill, under the 3:1 floor, and the high-contrast
+ * sets 3.430:1 and 4.357:1 under 4.5:1, while every check returned `[]`. The
+ * list derives from `inactiveSurfaces`, so a new surface joins one place.
+ */
+export const selectionInactivePairs: readonly ContrastPair[] =
+  inactiveSurfaces.map(
+    (background): ContrastPair => [
+      "disabledForeground",
+      background,
+      "inactive",
+    ],
+  );
+
+/**
  * The surfaces a selection wash must stay visible on. Each entry pairs the
  * translucent `selection` role with the surface it paints on; the check
  * composites the two, so a theme whose highlight has become imperceptible fails
@@ -1631,6 +1652,9 @@ const elevationFailures = (
  * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
  *   the wash's own perceivability through the composited `selection` colour.
+ * - `selectionInactivePairs` — the unavailable label through the same wash, on
+ *   `inactiveSurfaces`; the floor is the library's own inactive design floor,
+ *   because a disabled control is still read.
  * - `selectionFillPairs` and `selectionFillWashPairs` — the inverse
  *   `selectionOnFill` veil on every opaque fill that carries its own on-colour:
  *   the filled control families, the solid status chips a chip's label is
@@ -1696,6 +1720,7 @@ export function themeContrastFailures(
     ...pairFailures,
     ...textOverWashFailures(selectionPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionStatusPairs, "selection", theme, floors),
+    ...textOverWashFailures(selectionInactivePairs, "selection", theme, floors),
     ...washVisibilityFailures(selectionWashPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionSoftPairs, "selection", theme, floors),
     ...washVisibilityFailures(

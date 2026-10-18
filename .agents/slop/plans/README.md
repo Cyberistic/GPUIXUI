@@ -205,6 +205,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [507](./507-dialog-face-on-scrim.md) | The dialog's face on the scrim | F | 099, 359, 375, 395, 505, 506 | done |
 | [508](./508-solid-chip-on-scrim.md) | The solid status chip on the scrim | F | 099, 359, 375, 395, 399, 504, 507 | done |
 | [509](./509-elevation-persistent-surfaces.md) | The elevation shadow over the persistent selected row and the field a drop-up opens over | F | 085, 099, 359, 505, 507 | done |
+| [510](./510-inactive-label-selection-wash.md) | The unavailable label through the text-selection wash | F | 306, 087, 091, 362, 366, 392, 506 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2099,6 +2100,28 @@ already clears 1.05:1 (1.109:1 at the tightest, macOS dark `sm` on `input`),
 and no colour moves. The suite that proves the shipped guarantee drops its own
 hand-typed four-surface copy for the public list, and a regression case holds a
 `shadow` equal to `selected` or `input` to the checker.
+
+Plan `510` measures the unavailable label through the text-selection wash. Every
+other text role the library paints is held through the inherited `selectionColor`
+— body, secondary, status, soft-panel and on-fill text — but `disabledForeground`
+was measured only at rest, on the thirteen surfaces plan `306` enumerated. A
+disabled control's label is selected with the copy around it, and the accent wash
+composites over the surface beneath it: the previous light `#6E7787` measured
+**2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on the other
+default light sets, and the AAA sets **3.430:1** (light, `destructiveSoft`) and
+**4.357:1** (dark, `active`), under the 3:1 / 4.5:1 inactive floor, while all six
+checks returned `[]`. `selectionInactivePairs` adds a washed pair on each
+`inactiveSurfaces` entry (thirteen), and three values move one designed step away
+from the panel: identity light `#6E7787` → `#545D6C`, AAA light `#5A5A5A` →
+`#444444` and AAA dark `#A9A9A9` → `#B0B0B0`. Every high-contrast platform
+variant inherits the AAA palettes; XP and Aero light already passed. Each value
+stays 1.455 / 1.69 / 1.643:1 below `mutedForeground` at the tightest, so the
+inactive tier does not collapse into secondary text. Every shipped set passes
+(3.177:1 at the tightest, Aero light `destructiveSoft`; 4.722:1 at AAA),
+`contrastPairs` stays **394**, and the two suites that filtered `inactive`
+failures by class alone now name the role and the wash they mean.
+`selection-inactive.test.ts` states the erased-label regression, the at-rest
+passes that hid it, and the live AAA edge one step lighter.
 
 ## How to use a plan
 
