@@ -251,9 +251,23 @@ expansion, ADRs 0004–0005 and plans 119–157):
 - The test guards that assumed a planned component now use the exported
   `componentSearchIndex`/`componentSearchUrl` and `PreviewUnavailable` with
   fixtures; every real record is delivered.
-- Measured: `nub run --filter docs test` 41 files / 255 tests green,
-  `check-types` green, `nub run --filter @gpuixui/components test` 308 tests
-  green.
+- Measured: `nub run --filter docs test` 42 files / 260 tests green (the count
+  includes plans 462–464, which landed on the same branch), `check-types`
+  green, `nub run --filter @gpuixui/components test` 308 tests green, and the
+  production build green.
+- The built site was verified from a preview of that build:
+  `nub scripts/smoke-build.ts --base-url http://127.0.0.1:4314 --no-build` →
+  `smoke: ok` (85 sitemap pages, 104 links, search, 404, robots), and
+  `smoke:browser --base-url … --no-build` → `smoke: ok` (dark, light and
+  `?platform=win32` preview surfaces hydrated). The `smoke:build` wrapper
+  itself was unreliable while several swarm workstreams ran builds on this host
+  — its build step failed or stalled under the contention — so the two checks
+  were run against one clean preview instead. The merged toolchain's cold
+  preview start was measured at 28–45 s, above the script's 30 s readiness
+  budget; `apps/docs/scripts/preview-server.ts` now allows 90 s.
+- **Two directions proven:** renaming `## Keyboard and focus` to `## Keys` on
+  the Time picker page made `component-pages.test.ts` fail with
+  `time-picker: missing section "Keyboard and focus"`; restoring it passed.
 
 A duplicate plan (`461-tier2-supplement-pages.md`) was written by a second
 docs-site loop turn against the same tree; it was folded into this plan and

@@ -101,7 +101,7 @@ Rules, in words:
 
 | Command | Expected |
 | ------- | -------- |
-| `nub run --filter docs test` | 0 failures; 42 files / 259 tests |
+| `nub run --filter docs test` | 0 failures; 42 files (262 tests once plans 465, 468 and 469 had landed) |
 | `nub run --filter docs check-types` | exit 0 |
 | `nub run --filter docs build` | exit 0 |
 | `nub run check` | exit 0 |

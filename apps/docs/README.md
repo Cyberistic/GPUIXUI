@@ -455,6 +455,30 @@ one the surface defines.
 An approximation is never a fallback. The only way to render one is
 `<IllustrativeApproximation>`, which always renders the mandated banner.
 
+## Authoring with Fumadocs Editor
+
+The pages are plain MDX files; the reader never loads an editor. Fumadocs Editor
+is a **dev-only** authoring surface (`@fumadocs-editor/*`, MIT, experimental —
+pinned exactly):
+
+```sh
+nub run --filter docs studio           # http://localhost:5180
+nub run --filter docs studio --no-open --port 5187
+```
+
+Studio opens `content/docs` and writes edits straight to the file; nothing in
+`src/` imports it and the built Worker cannot expose it.
+`fumadocs-studio.config.ts` registers the Fumadocs UI components and the
+admonition syntax. This site's own MDX components (`<NativePreview>`,
+`<include>`, `<ComponentState>`, …) have no spec yet, so Studio keeps them
+verbatim and their source is edited in place.
+
+The promise that a one-sentence edit stays a one-line diff is checked:
+`src/editor-roundtrip.test.ts` parses and re-serializes **every** page and
+asserts byte equality, and proves that editing one heading changes exactly one
+line. A page that the editor would rewrite fails the suite instead of being
+silently reformatted. Bumping an editor version means re-running it.
+
 ## Honesty rules
 
 Every preview obeys `docs/preview-strategy.md`. This app must never import

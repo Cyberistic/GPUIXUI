@@ -13,7 +13,8 @@
     "smoke:build": "nub scripts/smoke-build.ts",
     "smoke:browser": "nub scripts/smoke-browser.ts",
     "build:preview": "nub scripts/build-preview.ts",
-    "smoke:preview": "nub scripts/smoke-live-preview.ts"
+    "smoke:preview": "nub scripts/smoke-live-preview.ts",
+    "studio": "fumadocs-studio"
   },
   "dependencies": {
     "@gpuixui/tokens": "workspace:*",
@@ -28,6 +29,9 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.64.0",
+    "@fumadocs-editor/core": "0.4.1",
+    "@fumadocs-editor/studio": "0.2.4",
+    "@fumadocs-editor/ui": "0.5.1",
     "@gpuix/native": "0.10.0",
     "@gpuix/react": "catalog:",
     "@gpuixui/components": "workspace:*",
