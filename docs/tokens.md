@@ -537,7 +537,7 @@ carries, so it cannot claim another.
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
-| `shadow` | `#000000` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
+| `shadow` | `#000000` | `#FFFFFF` | elevation tint (opaque; each level applies its own alpha; light on the pure black AAA canvas) |
 
 ## Typography
 
@@ -996,6 +996,23 @@ paints one shadow per element.**
 | `md` | `0 4 12 -2 #191D251F` | `0 8 24 -4 #000000A6` | menus and popovers |
 | `lg` | `0 16 40 -8 #191D2529` | `0 24 56 -12 #000000CC` | dialogs and command palettes |
 | `overlay` | `[]` | `[]` | reserved; overlay layering uses the scrim colour |
+
+The AAA dark set is the exception to a dark tint: its canvas is pure black, so a
+shadow cannot darken it. `colors.shadow` is `#FFFFFF` there and
+`highContrastDarkElevation` carries the set's own alphas — 10%, 14% and 18% —
+the way the AAA scrim already veils with light (plan `099`). A black tint
+measured **1.000:1** at every level on that canvas. `elevationSurfaces` is the
+four surfaces a raised element floats over, and every defined level is measured
+composited at its own alpha over them (`elevationLevels` is the ordered index,
+the reserved `overlay` included): the tightest shipped pair is **1.061:1**
+(identity dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**
+(`sm` on `background`).
+
+At high contrast a platform style contributes a level's geometry while the base
+theme's alpha stays with its tint. An alpha is designed against a tint, so a
+dark-mode platform's 40–80% opacity would paint a near-white halo over the new
+light AAA tint. At default contrast the style's tint, geometry and alpha all
+apply, as before.
 
 The table shows the resolved shadow. The tint itself is one role, so retinting
 every level is one value:
@@ -1559,6 +1576,19 @@ selected row while the checker returned `[]`, because the four base surfaces all
 passed. The tightest shipped pair is **1.075:1** (high-contrast dark, `overlay`
 on `primary`), so no colour moves.
 
+The elevation is measured as the painted shadow it is: `themeContrastFailures`
+walks every defined level of `elevationLevels`, composites
+`elevationShadow(theme, level).color` over each surface in `elevationSurfaces` —
+`background`, `card`, `muted` and `popover`, the surfaces a raised card, menu or
+dialog floats over — and holds the result to the same 1.05:1 `surface` floor.
+The reserved empty `overlay` paints nothing and is skipped; a defined one is
+measured like any other. A failure names `wash: "shadow"`, the level's `opacity`
+and its `level`. The audit found the AAA dark set's black tint measured
+**1.000:1** on its pure black canvas at every level while every other shipped
+set cleared the floor — the same defect the scrim had — so that set now paints
+with light (plan `505`). The tightest shipped pair is **1.061:1** (identity
+dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**.
+
 The inactive state has its own floor. `disabledForeground` is measured on the
 thirteen surfaces an unavailable label paints — the `disabled` fill
 (`inactivePairs`), the four plain surfaces, the `hover`/`active`/`accent`/
@@ -1901,12 +1931,15 @@ itself is [`shippedThemes`](#every-shipped-theme). The executed example is
 
 The role and shadow sets behind the shipped themes are exported as
 `lightColors`, `darkColors`, `highContrastLightColors`,
-`highContrastDarkColors`, `lightElevation` and `darkElevation`. They are the
+`highContrastDarkColors`, `lightElevation`, `darkElevation` and
+`highContrastDarkElevation`. They are the
 objects each theme points at, exported for tooling and table generation;
 component source reads `theme.colors` and `theme.elevation`, never a fixed set. A
 consumer theme may share an untouched set or replace it through `extendTheme`.
 An elevation level is geometry plus an alpha, so a replaced level composes with
-the theme's `colors.shadow` tint like a shipped one.
+the theme's `colors.shadow` tint like a shipped one. `elevationLevels` is the
+ordered level index and `elevationSurfaces` the surfaces the contrast check
+paints each level over.
 
 #### Every shipped theme
 
@@ -2353,6 +2386,11 @@ status fills — the surfaces plan `347` had left out — after identity light
 **1.020:1**, XP light on `warningSoft` **1.007:1** and every AAA dark set on
 `active` **1.047:1**; seven values move one designed step and XP light names its
 own Luna green as the progress mark, taking it from 388 to **394**.
+Plan `505` adds the elevation shadow to the check but not to `contrastPairs`: a
+level's alpha depends on the level, so the walk reads `elevationLevels` and
+composites each one over `elevationSurfaces` instead of publishing a
+`[role, background, class]` row. `contrastPairs` stays **394**, and every
+shipped set passes the walk.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2575,17 +2613,19 @@ painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
 `statusFillPairs` the solid status fill on the same chip surfaces and `disabled`
 is measured as its own fill — and
-`contrast.test.ts` keeps a
-declared exemption list for the two that are not pairs: `scrollbar` (reserved; the
-pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
-never text or a bounded surface). A new role that is neither measured nor
-argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`348` closed. Both are still held to the **form** the helpers parse:
+`themeContrastFailures` measures `shadow` composited at each elevation level's
+alpha over `elevationSurfaces`. `contrast.test.ts` keeps a declared exemption
+list for the one role that is not a pair: `scrollbar`, reserved because the
+pinned runtime paints the platform scrollbar and exposes no tint. A new role that
+is neither measured nor argued fails the suite, so the catalogue cannot grow a
+blind spot like the ones plans `076`–`348` closed. The roles are still held to
+the **form** the helpers parse:
 `themeColorFailures` reports any of the 70 roles outside the six- or eight-digit
 hex form, and `isHexColor` is the single-value predicate. A measured role in
-another CSS form already fails the contrast check as `NaN`; `shadow` has no pair,
-and plan `085` applies it through `alpha()`, so an unparseable tint used to paint
-every elevation level fully opaque while both checks returned `[]` (plan `371`).
+another CSS form already fails the contrast check as `NaN`; plan `085` applies
+`shadow` through `alpha()`, so an unparseable tint painted every elevation level
+fully opaque, and since plan `505` the elevation check reports it as `NaN` too
+(plan `371` owns the format).
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

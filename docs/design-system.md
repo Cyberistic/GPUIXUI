@@ -160,8 +160,9 @@ as that platform; the Default variant returns the identity unchanged. The shared
 status, disabled and scale tokens stay put, so the default identity remains the
 system and the platform looks are variants of it, never four design systems. At
 high contrast the families and shape apply — each platform's radii, density,
-motion and elevation levels — while the AAA colour set, the `shadow` tint
-included, wins over platform resemblance. The docs toggle and a native build call
+motion and elevation geometry — while the AAA colour set, the `shadow` tint
+included, and the opacity that tint was designed with win over platform
+resemblance. The docs toggle and a native build call
 the same function.
 
 Two **recipes** ship beside those variants: Windows XP (Luna) and Windows 7
@@ -275,7 +276,16 @@ the filled families' `xHover`/`xActive` steps are gone by the time the pointer
 reaches the dialog, so a scrim over one is not a composition the system
 supports. On the high-contrast dark theme's pure black canvas a dark veil cannot
 darken anything, so that theme veils with light: the modal is separated by a
-light wash, its own edge and elevation instead of a darker backdrop.
+light wash, its own edge and elevation instead of a darker backdrop. Its
+elevation is light too: `highContrastDarkElevation` applies 10%, 14% and 18% of
+the `#FFFFFF` tint, because a black tint measured **1.000:1** at every level on
+that canvas while the AAA modal claims elevation. `elevationSurfaces` is the
+four surfaces a raised element floats over, and every defined level is measured
+composited over them, so the tightest shipped pair is **1.061:1** (identity
+dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**. At high
+contrast a platform style contributes a level's geometry and the AAA set keeps
+the opacity its tint was designed with; a dark-mode platform's 40–80% over the
+light tint would paint a near-white halo.
 `elevation.overlay` is a different concern — a reserved shadow level, empty so
 the shape stays stable; a consumer who defines one is held to the same finite
 geometry and alpha as `sm`, `md` and `lg`, because `elevationShadow` will
@@ -489,9 +499,14 @@ Colour is checked, not assumed. The token suite enforces:
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes, and its dim pulse frame at `skeletonPulseOpacity` on the same eight surfaces (`skeletonPulsePairs`) | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
+| elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`popover`, the surfaces `elevationSurfaces` names) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
-its own canvas — and is part of the normal test suite. The modal scrim is
+its own canvas — and is part of the normal test suite. The elevation shadow is
+measured composited, like the scrim: each defined level's painted shadow over the
+four surfaces a raised element floats over, because a shadow that paints its own
+surface is not a raised surface. The AAA dark set measured **1.000:1** at every
+level until plan `505` gave it a light tint. The modal scrim is
 measured composited rather than as a value: `overlay` over the fifteen surfaces
 a dialog covers — the four base surfaces, the `input` fill a form paints, the
 persistent `selected` fill, the four resting filled actions, the raised action a
@@ -591,11 +606,13 @@ must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and
 `contrastRatio` parse only that form. The runtime is broader — GPUix accepts
 CSS names and functional colours — so a copied theme can be paintable and still
 invisible to the token maths. A measured role in another form fails the contrast
-check as `NaN`; the two tint roles have no pair. `shadow` is the case that
+check as `NaN`; `scrollbar` has no pair. `shadow` is the case that
 matters: plan `085` applies each elevation level's alpha to it through `alpha()`,
 and an unparseable tint is returned unchanged, so `shadow: "black"` painted a
-**fully opaque** shadow at every level — 0.08, 0.12 and 0.16 gone — while both
-other checks returned `[]`. All 24 shipped sets are hex, so the check moves no
+**fully opaque** shadow at every level — the 0.08, 0.12 and 0.16 gone — while the
+metric check returned `[]`. Plan `505` measures the shadow, so that tint also
+fails the contrast check as `NaN`; the colour check remains the one that names
+the form. All 24 shipped sets are hex, so the check moves no
 value; `isHexColor` is the predicate for a single stored role.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 169/232
+`[x]` `[███████░░░]` 171/227
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1328,16 +1328,21 @@ opaque fills, both lists derive from it (4 + 4 → 8 + 8), the AAA dark
 `softAction` moves one step darker (`#3A414D` → `#343B47`) so its white label
 keeps 7:1 through the veil (7.165:1) while clearing 1.071:1 on every AAA soft
 tint, and `statusSolidStyles` paints the veil (plan 504)
-`[ ]` Hold the elevation tint on the AAA dark canvas — every high-contrast
-dark set ships `shadow: #000000` over `background: #000000`, so
-`elevationShadow` resolves `sm`/`md`/`lg` to **1.000:1** on the canvas (and
-`sm` to 1.031:1 on the card) while `docs/design-system.md` §7 says the AAA
-modal is separated by "a light wash, its own edge and elevation". A dark tint
-cannot darken pure black: either give the AAA dark set a light tint with its
-own alphas — and keep it through the platform elevation plan 345 applies at
-high contrast — or correct the claim and document the edge as the elevation
-cue. No contract pair measures `shadow` today (plan 371 covers only its hex
-form)
+`[x]` Hold the elevation tint on the AAA dark canvas — every high-contrast
+dark set shipped `shadow: #000000` over `background: #000000`, so
+`elevationShadow` resolved `sm`/`md`/`lg` to **1.000:1** on the canvas (and
+`sm` to 1.031:1 on the card) while `docs/design-system.md` §7 said the AAA
+modal was separated by "a light wash, its own edge and elevation", and no
+contract pair measured `shadow` (plan 371 covered only its hex form); the set
+now paints with light (`#FFFFFF`) and carries its own alphas
+(`highContrastDarkElevation`, 10/14/18%), `elevationSurfaces` publishes the
+four surfaces a raised element floats over, and `themeContrastFailures`
+composites every defined level at its own alpha over them, reporting the level
+and the fraction. At high contrast a platform style now contributes the
+level's geometry while the AAA opacity stays with its tint, so a dark
+platform's 0.4–0.8 never paints a near-white halo over the light AAA set. Every
+shipped set passes (1.061:1 identity dark at the tightest); the AAA dark set
+moves from 1.000:1 to 1.207:1 and the branch's three gates are green (plan 505)
 
 ## Phase C — Tier 1–2 components
 

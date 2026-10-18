@@ -93,6 +93,16 @@ const shadow = elevationShadow(theme, "md");
 <div style={{ boxShadow: shadow }} />;
 ```
 
+The AAA dark set is the exception to a dark tint: its canvas is pure black, so
+`shadow` is `#FFFFFF` and `highContrastDarkElevation` applies the set's own
+alphas (10%, 14% and 18%), the way its scrim already veils with light. A black
+tint measured **1.000:1** at every level there. `elevationLevels` is the ordered
+level index and `elevationSurfaces` the four surfaces the contrast check
+composites each defined level over; the tightest shipped pair is **1.061:1**
+(identity dark, `sm` on `background`). At high contrast a platform style
+contributes a level's geometry and the base keeps the opacity its tint was
+designed with.
+
 ## Motion
 
 Timings are milliseconds in the tokens and seconds in the runtime's transition.
@@ -232,9 +242,9 @@ themeContrastFailures(brandTheme); // []
 ```
 
 That is one of six checks, and running it alone is not the guarantee: a zero
-`borderWidth.strong` (no focus ring), a `shadow: "black"` tint, a CSS family
-stack, a `disabledForeground` raised to body strength or a light pointer ladder
-whose hover lightens passes it.
+`borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a CSS
+family stack, a `disabledForeground` raised to body strength or a light pointer
+ladder whose hover lightens passes it.
 `themeFailures(theme, contrast = theme.contrast)` composes all six and tags each
 entry with the `kind` that found it:
 
@@ -298,8 +308,10 @@ themeColorFailures(brandTheme); // [] when every role is a hex colour
 alpha to that role through `alpha()`, and an unparseable tint is returned
 unchanged, so a copied theme with `shadow: "black"` paints a **fully opaque**
 shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone — while the
-contrast and metric checks both return `[]`. `#000` and `rgb(0 0 0)` behave the
-same way; `isHexColor(value)` is the predicate for a single stored role.
+metric check returns `[]`. Since plan 505 the elevation check reports the tint as
+`NaN` too, so the colour check is the one that names the form. `#000` and
+`rgb(0 0 0)` behave the same way; `isHexColor(value)` is the predicate for a
+single stored role.
 
 The two families are also held to the form the runtime reads:
 `themeTypefaceFailures(theme)` reports a name that is empty or a CSS comma
@@ -649,11 +661,12 @@ mode.
 High contrast keeps its own colours: `getPlatformTheme(platform, mode, "high")`
 applies the families and shape — radii, density, motion, type roles, spacing,
 borders, icon/avatar sizes, component dimensions and the platform's elevation
-levels — while the AAA colour set stays, because a platform accent must not drop
-those floors. Elevation carries no colour of its own: a level is geometry plus an
-alpha over the theme's `shadow` tint, so the AAA tint stays while the platform's
-depth applies (plan 345). To ship your own look, copy a style file and apply it,
-or extend the resolved theme:
+geometry — while the AAA colour set, and the opacity its `shadow` tint was
+designed with, stays, because a platform accent must not drop those floors.
+Elevation carries no colour of its own: a level is geometry plus an alpha over
+the theme's `shadow` tint, so the AAA tint stays while the platform's depth
+applies (plans 345 and 505). To ship your own look, copy a style file and apply
+it, or extend the resolved theme:
 
 ```ts
 import {
@@ -776,9 +789,9 @@ persisted theme at its own boundary, where `Schema` belongs.
 
 - GPUix has no `letterSpacing` style field; the type scale does not define it.
 - Platform variants express platform conventions with our own values; they do not
-  ship a vendor's design system. At high contrast the families and shape,
-  elevation included, apply while the AAA colour set stays, because accessibility
-  outranks resemblance.
+  ship a vendor's design system. At high contrast the families and shape, the
+  elevation geometry included, apply while the AAA colour set and its opacity
+  stay, because accessibility outranks resemblance.
 - `.SystemUIFont` is verified against GPUI's documentation of the name, and the
   playground's `theme-type-and-shadow` gallery (plan 150) asserts every type role,
   including the family the runtime reports. A visual per-platform comparison is
