@@ -1,7 +1,7 @@
 /**
  * The live smoke CLI: the shipped playground in a **real** GPUix window.
  *
- * The 56-scenario suite runs on the offscreen `TestRenderer`; this runner is the
+ * The headless suite runs on the offscreen `TestRenderer`; this runner is the
  * gold-standard confirmation that the core mechanisms survive a window, driven
  * through `@gpuix/native/automation` (`getByTestId`, `click`, keys, wheel,
  * screenshot). It reports through the same `Smoke` model and exit codes, so a
