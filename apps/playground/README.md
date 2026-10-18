@@ -1673,9 +1673,10 @@ narrower. Each deviation is deliberate and measured:
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
   probe** (`query-builder`, plan `378`), the **reorder probe**
   (`list-reorder`, plan `391`), the **hierarchical reorder probe**
-  (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`) and the
-  **application menu bar** (`menu-bar`, plan `519`)
-  pass in real GPUix 0.10.0 on this host (94/94), with a written report and
+  (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
+  **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
+  (`media-surface`, plan `520`)
+  pass in real GPUix 0.10.0 on this host (95/95), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
