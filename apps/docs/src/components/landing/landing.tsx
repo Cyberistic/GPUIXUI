@@ -1,3 +1,4 @@
+import { useTheme } from "fumadocs-ui/provider/base";
 import { Hero } from "./deck";
 import {
   aiSurfaces,
@@ -30,7 +31,7 @@ function Nav() {
     <nav className="landing-nav">
       <a className="landing-brand" href="/">
         <span aria-hidden="true" className="landing-mark" />
-        GPUixUI
+        GPUIxUI
       </a>
       <div className="landing-nav-links">
         {navLinks.map((link) => (
@@ -39,10 +40,68 @@ function Nav() {
           </a>
         ))}
       </div>
-      <a className="landing-nav-cta" href="/docs">
-        Read the docs
-      </a>
+      <div className="landing-nav-right">
+        <ThemeToggle />
+        <a className="landing-nav-cta" href="/docs">
+          Read the docs
+        </a>
+      </div>
     </nav>
+  );
+}
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+
+  // The two icons are always in the DOM; CSS shows the relevant one from the
+  // `.dark` class on <html>. Rendering both keeps the server and client markup
+  // identical, so the button hydrates cleanly.
+  return (
+    <button
+      aria-label="Toggle theme"
+      className="landing-theme-toggle"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      title="Toggle theme"
+      type="button"
+    >
+      <SunIcon />
+      <MoonIcon />
+    </button>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-icon-sun"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="landing-icon-moon"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
   );
 }
 
@@ -68,7 +127,7 @@ function Licence() {
           <div>
             <p className="landing-licence-title">The Hunter License</p>
             <p className="landing-licence-sub">
-              GPUixUI · one component set, three native looks
+              GPUIxUI · one component set, three native looks
             </p>
           </div>
         </div>
@@ -258,7 +317,7 @@ function Proof() {
 function Footer() {
   return (
     <footer className="landing-footer">
-      <span>GPUixUI — built on GPUix, credited to the references.</span>
+      <span>GPUIxUI — built on GPUix, credited to the references.</span>
       <span>
         {attribution.join(" · ")} ·{" "}
         <a href={repo} rel="noopener noreferrer" target="_blank">
