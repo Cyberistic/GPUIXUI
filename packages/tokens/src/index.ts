@@ -1,5 +1,6 @@
 export * from "./color.js";
 export * from "./contrast.js";
+export * from "./direction.js";
 export * from "./elevation.js";
 export * from "./metrics.js";
 export * from "./motion.js";

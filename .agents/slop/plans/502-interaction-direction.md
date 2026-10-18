@@ -5,8 +5,12 @@
 357 (the wash ladder), 381 (the selection step), 383 (one total check), 387/388
 (the shipped-theme enumeration), 394 (the panel action), 398 (the check index).
 
-**Status:** planned — implementation follows in the next commit; the measured
-probe and the exact edits are below.
+**Status:** done — `stateLadders` and `themeDirectionFailures` ship, the total
+check composes a sixth kind, the tokens suite is green (102 files / 5197 tests),
+and `nub run check`, `nub run lint`, `nub run test` pass. Both directions were
+run: with the composition reverted, the new `theme-check` case fails; with the
+rule stubbed to `[]`, both inversion cases fail; with the fix, every case
+passes and every shipped set returns `[]`.
 
 ---
 

@@ -231,22 +231,25 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of five checks, and running it alone is not the guarantee: a zero
+That is one of six checks, and running it alone is not the guarantee: a zero
 `borderWidth.strong` (no focus ring), a `shadow: "black"` tint, a CSS family
-stack or a `disabledForeground` raised to body strength passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all five and tags each
+stack, a `disabledForeground` raised to body strength or a light pointer ladder
+whose hover lightens passes it.
+`themeFailures(theme, contrast = theme.contrast)` composes all six and tags each
 entry with the `kind` that found it:
 
 ```ts
 import { themeFailures } from "@gpuixui/tokens";
 
-themeFailures(brandTheme); // [] when every colour, family, pair, tier and metric holds
+themeFailures(brandTheme); // [] when every colour, family, pair, tier, ladder and metric holds
 ```
 
-The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`, then
+The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`,
+`direction`, then
 `metric` — and `themeChecks` is that order as a list, so a report or a settings
 screen iterates the index instead of retyping the kinds. The payload is the same
-`ColorFailure`, `TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or
+`ColorFailure`, `TypefaceFailure`, `ContrastFailure`, `TextTierFailure`,
+`DirectionFailure` or
 `MetricFailure` the individual check returns. `themeTextTierFailures` is the
 fifth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below the
 body role each surface paints — `foreground` on the canvas and the row washes,
@@ -255,7 +258,12 @@ body role each surface paints — `foreground` on the canvas and the row washes,
 below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
 the surfaces both are documented on. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
-selected row, whose title is `foreground`. A runnable example lives in
+selected row, whose title is `foreground`. `themeDirectionFailures` is the
+sixth: `stateLadders` names the four filled families, the panel action, the
+generic wash and the selected step, and each step must move away from the
+canvas — darker in light, lighter in dark — so a light `primaryHover` that is
+lighter than its `primary` is reported even though the 1.05:1 step floor passes.
+An equal pair stays the step lists' defect. A runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
 The library holds every shipped set to that same call. `shippedThemes` is the

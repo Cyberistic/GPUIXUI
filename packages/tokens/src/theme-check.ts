@@ -6,6 +6,7 @@ import {
   type ContrastFailure,
   type TextTierFailure,
 } from "./contrast.js";
+import { themeDirectionFailures, type DirectionFailure } from "./direction.js";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
@@ -23,6 +24,7 @@ export const themeChecks = [
   "typeface",
   "contrast",
   "hierarchy",
+  "direction",
   "metric",
 ] as const;
 
@@ -35,6 +37,7 @@ type FailurePayload = {
   readonly typeface: TypefaceFailure;
   readonly contrast: ContrastFailure;
   readonly hierarchy: TextTierFailure;
+  readonly direction: DirectionFailure;
   readonly metric: MetricFailure;
 };
 
@@ -43,8 +46,9 @@ type FailurePayload = {
  * is a role outside the hex form the token maths parses, `typeface` is a family
  * name the runtime cannot resolve as written, `contrast` is a documented pair
  * below its floor, `hierarchy` is a text tier that is not a perceivable step
- * below the tier above it, and `metric` is a numeric invariant a component
- * relies on.
+ * below the tier above it, `direction` is a pointer ladder that steps toward the
+ * canvas instead of away from it, and `metric` is a numeric invariant a
+ * component relies on.
  */
 export type ThemeFailure = {
   readonly [Kind in ThemeFailureKind]: FailurePayload[Kind] & {
@@ -56,14 +60,15 @@ export type ThemeFailure = {
  * Every defect in an edited theme, from one call.
  *
  * The extension mechanism's guarantee is only whole when the colour-format,
- * typeface, contrast, text-hierarchy and metric checks all run: a theme whose
- * only defect is a `shadow: "black"` tint, a zero focus-ring spread, a CSS
- * family stack or a disabled label raised to body strength returns `[]` from the
- * contrast check alone. This function composes them all in diagnostic order —
- * the order {@link themeChecks} owns — format first, so a malformed role is
- * named before the `NaN` ratios it causes and a malformed family before the
- * type scale painted with it, then contrast, then the text hierarchy, then
- * metrics — and tags each failure with the check that found it.
+ * typeface, contrast, text-hierarchy, direction and metric checks all run: a
+ * theme whose only defect is a `shadow: "black"` tint, a zero focus-ring spread,
+ * a CSS family stack, a disabled label raised to body strength or a light
+ * pointer ladder whose hover and press lighten returns `[]` from the contrast
+ * check alone. This function composes them all in diagnostic order — the order
+ * {@link themeChecks} owns — format first, so a malformed role is named before
+ * the `NaN` ratios it causes and a malformed family before the type scale
+ * painted with it, then contrast, then the text hierarchy, then the interaction
+ * direction, then metrics — and tags each failure with the check that found it.
  *
  * `contrast` defaults to the level the theme declares, exactly like
  * {@link themeContrastFailures}, so a high-contrast theme is checked against
@@ -99,6 +104,9 @@ export function themeFailures(
     ),
     ...themeTextTierFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "hierarchy", ...failure }),
+    ),
+    ...themeDirectionFailures(theme).map(
+      (failure): ThemeFailure => ({ kind: "direction", ...failure }),
     ),
     ...themeMetricFailures(theme).map(
       (failure): ThemeFailure => ({ kind: "metric", ...failure }),

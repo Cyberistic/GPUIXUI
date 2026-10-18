@@ -1515,6 +1515,7 @@ describe("docs/tokens.md typeface contract", () => {
       typeface: "typeface form",
       contrast: "contrast",
       hierarchy: "text hierarchy",
+      direction: "interaction direction",
       metric: "numeric metrics",
     } as const satisfies Record<ThemeFailureKind, string>;
     const countWords = [

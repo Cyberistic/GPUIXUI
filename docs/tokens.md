@@ -85,6 +85,7 @@ missing here is not public.
 | `DensityName` | A preset name from `densityNames`. |
 | `DensityOverrides` | Partial density metrics; they merge size by size. |
 | `Dimensions` | Fixed surface metrics: overlay, field, toast and preview-card sizes. |
+| `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`. |
 | `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
@@ -115,6 +116,7 @@ missing here is not public.
 | `SelectionStyle` | `{ selectionColor }` for inherited text selection. |
 | `ShippedTheme` | One shipped set, discriminated by `source`: identity, platform or recipe. |
 | `Spacing` | The spacing scale shared by padding, margin and gap. |
+| `StateLadder` | One interaction ladder: a resting fill and its pointer states. |
 | `StatusTone` | `"info"`, `"success"`, `"warning"` or `"destructive"`. |
 | `StatusToneStyle` | The four roles a soft status surface needs. |
 | `TextRole` | A key of `textRoles`, excluding the family fields. |
@@ -126,7 +128,7 @@ missing here is not public.
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `typeface`, `contrast`, `hierarchy`, `direction` or `metric`. |
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
@@ -1442,9 +1444,10 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is five checks — colour
-format, typeface form, contrast, text hierarchy and numeric metrics — and
-[`themeFailures`](#one-check) runs all five in one call; the sections below
+the same floors as the shipped ones. The guarantee is six checks — colour
+format, typeface form, contrast, text hierarchy, interaction direction and
+numeric metrics — and
+[`themeFailures`](#one-check) runs all six in one call; the sections below
 explain each one it composes.
 
 ```ts
@@ -1789,15 +1792,60 @@ secondary-strength tint an inherited label keeps inside a selected row, whose
 title is painted with `foreground`. Adding it would demand a step the design does
 not have and report every shipped set.
 
+#### Interaction direction
+
+The step lists publish how far a pointer state moves; they cannot publish which
+way, because a contrast ratio is symmetric. A light `primaryHover` that is
+*lighter* than its `primary`, and a press lighter still, clears the same 1.05:1
+step, the on-colour floor and the surface floor as the designed direction — that
+is exactly the defect plan `097` replaced, and a copied theme can reintroduce it
+while every pair passes.
+
+`stateLadders` is the ordered list of ladders the design system documents: the
+four filled families, derived from `filledControlFamilies` (`x`, `xHover`,
+`xActive`), the action a soft status panel carries (`softAction`,
+`softActionHover`, `softActionActive`), the generic wash a ghost or outline
+control paints (`hover`, `active`) and the selected step past the accent a row
+hovers with (`accent`, `selected`).
+`themeDirectionFailures(theme)` reads the direction the theme's declared mode
+requires — `darker` in light, `lighter` in dark — compares each consecutive pair
+with `relativeLuminance`, and reports a step that moves the other way as a
+`DirectionFailure` carrying the ladder, both roles, the expected direction and
+both luminances. A value the token maths cannot parse is reported too, because
+no direction can be established.
+
+```ts
+import { extendTheme, getTheme, themeDirectionFailures } from "@gpuixui/tokens";
+
+const inverted = extendTheme(getTheme("light"), {
+  colors: {
+    primary: "#1E1060",
+    primaryHover: "#2A1A7A",
+    primaryActive: "#372394",
+  },
+});
+
+themeDirectionFailures(inverted); // two `darker` failures, one per step
+```
+
+An **equal** pair is not reported here: `stateStepPairs`, `softActionStepPairs`,
+`washStepPairs` and `selectionStepPairs` own the collapsed step, so one edit
+produces one diagnostic. Every shipped identity theme, platform variant and
+recipe steps the expected way on every ladder, so a shipped set returns `[]` and
+no colour moves; the check exists for the theme a consumer edits. The
+`filled-states.test.ts` suite still asserts the same direction on the shipped
+constants.
+
 #### One check
 
-Running one of the five checks is not the guarantee. A copied theme whose only
+Running one of the six checks is not the guarantee. A copied theme whose only
 defect is a zero `borderWidth.strong` — the focus ring's spread, and the only
 focus indicator the runtime can draw — a `shadow: "black"` tint, which makes
 every elevation level fully opaque, a `sans: "Inter, system-ui, sans-serif"`
-stack, which silently paints the system face, or a `disabledForeground` raised
-to body strength returns `[]` from `themeContrastFailures` while being unusable.
-`themeFailures(theme, contrast = theme.contrast)` composes all five and tags each
+stack, which silently paints the system face, a `disabledForeground` raised
+to body strength or a light pointer ladder that lightens on hover returns `[]`
+from `themeContrastFailures` while being unusable.
+`themeFailures(theme, contrast = theme.contrast)` composes all six and tags each
 entry with the check that found it:
 
 ```ts
@@ -1816,11 +1864,13 @@ themeFailures(theme);
 The order is diagnostic: the two format checks first — `color`, then `typeface`,
 so a malformed role is named before the `NaN` ratios it causes and a malformed
 family before the type scale painted with it — then `contrast`, then
-`hierarchy`, then `metric`. `themeChecks` is that order as a list and
+`hierarchy`, then `direction`, then `metric`. `themeChecks` is that order as a
+list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
 index. A `ThemeFailure` is the underlying `ColorFailure`,
-`TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or `MetricFailure` — the
+`TypefaceFailure`, `ContrastFailure`, `TextTierFailure`, `DirectionFailure` or
+`MetricFailure` — the
 same payload the individual check returns — plus its `kind`. The `contrast`
 argument defaults to the level the theme declares and reaches the contrast and
 hierarchy halves unchanged, so `themeFailures(theme, "high")` asks a stricter
@@ -2018,6 +2068,13 @@ from its `x` and its `xActive` from its `xHover` (`stateStepPairs`), and the
 generic `hover`/`active` ladder that a ghost or outline control paints is held
 the same way (`washStepPairs`, `active` from `hover`). Every shipped set clears
 both ladders, so the floors guard an edited theme rather than a shipped value.
+The **direction** of a step is measured beside its distance:
+`themeDirectionFailures` walks `stateLadders` — the four filled families, the
+panel action, the wash and the selected step — and reports a step that moves
+toward the canvas, because a symmetric ratio cannot see one. Every shipped set
+steps the expected way (darker in light, lighter in dark), so the check guards
+an edited theme; an equal pair stays the step lists' defect and is not reported
+twice.
 The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.

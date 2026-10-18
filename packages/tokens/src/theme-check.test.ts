@@ -17,6 +17,11 @@
  * colour, which is both a contrast defect and an inverted hierarchy, so the
  * composition now covers five classes without a new example theme.
  *
+ * Plan 502 adds the sixth: a pointer ladder that steps toward the canvas. The
+ * broken theme's primary family is now lighter on hover and lighter still on
+ * press in a light theme — the plan-097 defect — which the contrast check cannot
+ * see because the step floor is direction-agnostic.
+ *
  * Plan 387 moves the shipped list to `shippedThemes`: this suite was one of the
  * hand-built enumerations that called itself "every shipped set" while covering
  * the recipes at the default contrast only (20 of the 24 sets).
@@ -37,6 +42,7 @@ import {
   themeColorFailures,
   themeContrastFailures,
   themeContrasts,
+  themeDirectionFailures,
   themeFailures,
   themeMetricFailures,
   themeModes,
@@ -84,6 +90,7 @@ describe("one total theme check", () => {
         themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
         themeTextTierFailures(brokenTheme).length +
+        themeDirectionFailures(brokenTheme).length +
         themeMetricFailures(brokenTheme).length,
     );
 
@@ -95,12 +102,15 @@ describe("one total theme check", () => {
     const lastTypeface = kinds(brokenFailures).lastIndexOf("typeface");
     const firstHierarchy = kinds(brokenFailures).indexOf("hierarchy");
     const lastContrast = kinds(brokenFailures).lastIndexOf("contrast");
-    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    const firstDirection = kinds(brokenFailures).indexOf("direction");
     const lastHierarchy = kinds(brokenFailures).lastIndexOf("hierarchy");
+    const firstMetric = kinds(brokenFailures).indexOf("metric");
+    const lastDirection = kinds(brokenFailures).lastIndexOf("direction");
     expect(lastColor).toBeLessThan(firstTypeface);
     expect(lastTypeface).toBeLessThan(firstContrast);
     expect(lastContrast).toBeLessThan(firstHierarchy);
-    expect(lastHierarchy).toBeLessThan(firstMetric);
+    expect(lastHierarchy).toBeLessThan(firstDirection);
+    expect(lastDirection).toBeLessThan(firstMetric);
   });
 
   it("emits the index's kinds, in its order", () => {
@@ -135,6 +145,15 @@ describe("one total theme check", () => {
       floor: contrastFloors.default.secondary,
       ratio: 1,
     });
+    expect(brokenFailures).toContainEqual({
+      kind: "direction",
+      ladder: "primary",
+      from: "primary",
+      to: "primaryHover",
+      expected: "darker",
+      fromLuminance: expect.any(Number),
+      toLuminance: expect.any(Number),
+    });
   });
 
   it("catches a typeface-only defect the contrast check alone passes", () => {
@@ -153,6 +172,19 @@ describe("one total theme check", () => {
 
     expect(themeContrastFailures(ringless)).toEqual([]);
     expect(kinds(themeFailures(ringless))).toEqual(["metric"]);
+  });
+
+  it("catches a direction-only defect the contrast check alone passes", () => {
+    const inverted = extendTheme(getTheme("light"), {
+      colors: {
+        primary: "#1E1060",
+        primaryHover: "#2A1A7A",
+        primaryActive: "#372394",
+      },
+    });
+
+    expect(themeContrastFailures(inverted)).toEqual([]);
+    expect(kinds(themeFailures(inverted))).toEqual(["direction", "direction"]);
   });
 
   it("catches a format-only defect the contrast check alone passes", () => {

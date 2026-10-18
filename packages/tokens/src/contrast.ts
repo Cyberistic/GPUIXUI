@@ -1118,6 +1118,22 @@ const luminance = (hex: string): number =>
   0.0722 * linear(channel(hex, 4));
 
 /**
+ * The WCAG relative luminance of an opaque `#RRGGBB` colour: `0` for black and
+ * `1` for white. A value the token maths cannot parse yields `NaN`, so a
+ * malformed role is reported rather than ordered as if it were a colour.
+ *
+ * @example
+ * ```ts
+ * relativeLuminance("#FFFFFF"); // 1
+ * relativeLuminance("#000000"); // 0
+ * ```
+ */
+export function relativeLuminance(color: string): number {
+  const hex = hexOf(color);
+  return hex === undefined ? Number.NaN : luminance(hex);
+}
+
+/**
  * The WCAG 2.x contrast ratio between two **opaque** `#RRGGBB` colours.
  *
  * A value that is not an opaque six-digit hex — a translucent role, a CSS

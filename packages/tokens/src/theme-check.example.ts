@@ -18,17 +18,21 @@ export const brandFailures = themeFailures(brandTheme);
 /**
  * A copied theme with one defect from each class: a tint the helpers cannot
  * parse, a family the runtime cannot resolve as written, a secondary text role
- * that erases itself on the canvas, and a focus ring with no spread.
+ * that erases itself on the canvas, a primary family whose hover and press move
+ * lighter in a light theme, and a focus ring with no spread.
  */
 export const brokenTheme = extendTheme(getTheme("light"), {
   name: "Broken",
   colors: {
     shadow: "black",
     mutedForeground: getTheme("light").colors.background,
+    primary: "#1E1060",
+    primaryHover: "#2A1A7A",
+    primaryActive: "#372394",
   },
   typography: { sans: "Inter, system-ui, sans-serif" },
   borderWidth: { strong: 0 },
 });
 
-/** Every check reports through one call, in colour → typeface → contrast → hierarchy → metric order. */
+/** Every check reports through one call, in colour → typeface → contrast → hierarchy → direction → metric order. */
 export const brokenFailures = themeFailures(brokenTheme);

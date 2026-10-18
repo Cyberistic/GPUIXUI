@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 166/223
+`[x]` `[███████░░░]` 168/231
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1297,6 +1297,16 @@ fourteen; the exact-row array never included the scrim row and the pair-class
 map sends `surface` to the interactive-fill row, so nothing read it. The row and
 the explanation now name all fifteen, and two cases derive their members, count
 word and floor cells from `overlaySurfaces` and `contrastFloors` (plan 501)
+`[x]` Publish the direction of a pointer ladder — the step pairs measured only
+the distance, so a copied light theme whose `primaryHover` and `primaryActive`
+were *lighter* than `primary` (the plan 097 defect) cleared the 1.05:1 step, the
+on-colour floor and every surface pair while `themeFailures` returned `[]`;
+`stateLadders` names the four filled families, the panel action, the wash and
+the selected step, `themeDirectionFailures` reports a step that moves toward the
+canvas, `relativeLuminance` publishes the comparison, and the sixth check kind
+`direction` joins `themeChecks` between `hierarchy` and `metric`; an equal pair
+stays the step lists' defect and every shipped set already steps the expected
+way, so no colour moves (plan 502)
 
 ## Phase C — Tier 1–2 components
 
