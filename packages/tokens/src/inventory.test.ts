@@ -178,4 +178,11 @@ describe("COMPONENTS.md design-system rows", () => {
       expect(typeface, rule).toContain(rule);
     });
   });
+
+  it("states the checks from the index, never a subset", () => {
+    const total = row("Total theme check");
+    expect(total).toContain("`themeChecks`");
+    expect(total).toContain("`ThemeFailureKind`");
+    expect(ledger).not.toMatch(/\ball (?:three|four) checks\b/);
+  });
 });

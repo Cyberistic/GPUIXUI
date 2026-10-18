@@ -22,6 +22,7 @@ subset as if it were the whole:
 | `theme-choice.test.ts:42` `failuresOf` “all three” | contrast, metric, colour | 5 |
 | `platform-composition.test.ts:42` `failuresOf` “all four” | contrast, metric, colour, typeface | 5 |
 | `docs/tokens.md:735` “all four checks (`platform-composition.test.ts`)” | — | 5 |
+| `COMPONENTS.md:30` “to all four checks (plan 374)” | — | 5 |
 
 The consequence is silent: a composed theme whose only defect is a CSS family
 stack (plan 385) or an inverted text tier (plan 392) passes `theme-choice` and
@@ -303,8 +304,14 @@ it("states the number of checks from the index", () => {
 
 - **Total theme check** row: add one clause naming the index — “`themeChecks` is
   the ordered index of those five kinds and `ThemeFailureKind` the union it
-  derives; the composition suites ask the total check rather than a local
-  subset.”
+  derives; every composition suite (`applied-palette`, `theme-choice`,
+  `platform-composition`) asks the total check rather than a local subset.”
+- **Platform style variants** row (~line 30): “to all four checks (plan 374)” →
+  “to every check (plan 374)” — the same stale subset claim as
+  `docs/tokens.md:735`.
+- `packages/tokens/src/inventory.test.ts`: one case holds the Total theme check
+  row to `themeChecks`/`ThemeFailureKind` and fails on “all three/four checks”
+  anywhere in the ledger.
 
 ### 3.12 `TODO.md`
 
