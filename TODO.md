@@ -1158,6 +1158,16 @@ retired once both branches are one
       `54` high, sibling at `192…232`); a column is unchanged and `truncate` gets
       the bounded width its ellipsis needs. 1 element + 3 runtime cases, both
       directions proven (plan `383`).
+`[ ]` `packages/primitives`: **the full live suite is not green on this host** —
+      the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
+      a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
+      **523 passed / 110 failed across 19** focus- and window-dependent files,
+      and a fresh process still reports the fixture's `Surface` at `x 12` with
+      the window's own width, so its padding-relative assertions read `0`. The
+      same `layout.runtime` cases fail with the day's changes stashed, so this is
+      the host, not a component (plan `379` §6). Re-run from a fresh desktop
+      session before merging; relative measurements (the new suites) are the
+      robust shape. Owner: whoever merges this branch.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
