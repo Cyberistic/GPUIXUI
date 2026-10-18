@@ -1016,7 +1016,7 @@ retired once both branches are one
       keeps `paddingRight: 0` for its steppers; the select hugs unless
       `fullWidth`; `fieldTextStyle` and the OTP `controlStyle` copy are deleted.
       New element table + recipe cases + runtime heights, and the density proof
-      moved to `Toggle`; both directions proven (offline 653, runtime 608; plan
+      moved to `Toggle`; both directions proven (offline 654, runtime 608; plan
       `372`).
 `[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
       slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/

@@ -292,7 +292,7 @@ Run and recorded on 2026-10-18:
 - **The trigger's width clear removed.** `field-family.test.tsx › hugs the
   select's trigger and keeps its value at the far edge` failed with
   `expected '100%' to be undefined`.
-- Restored (clean `git status`), then the offline suite (45 files / 653 tests),
+- Restored (clean `git status`), then the offline suite (45 files / 654 tests),
   the runtime suite (32 files / 608 tests) and the three gates all passed.
 
 ## 6. STOP conditions
@@ -335,7 +335,7 @@ Implemented.
 - Docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D42 and the plan index record the
   slice.
 
-Measured: offline **45 files / 653 tests**, runtime **32 files / 608 tests**;
+Measured: offline **45 files / 654 tests**, runtime **32 files / 608 tests**;
 `nub run check`, `nub run lint` and `nub run test` pass.
 
 ## 8. Acceptance

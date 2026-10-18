@@ -92,6 +92,14 @@ describe("Select", () => {
     expect(selectItemStyle(testTheme)(rest).flexShrink).toBe(0);
   });
 
+  it("leaves the option rows on their own metric, not the field recipe", () => {
+    // The trigger is a field (plan 372) but a row is not an input: it keeps the
+    // density metric until `select.tsx`'s item string joins `@gpuixui/tw`.
+    expect(selectItemStyle(testTheme)(rest).height).toBe(
+      testTheme.density.controlHeight.sm,
+    );
+  });
+
   it("gives an invalid trigger the destructive border", () => {
     const trigger = selectTriggerStyle(
       { invalid: true },
