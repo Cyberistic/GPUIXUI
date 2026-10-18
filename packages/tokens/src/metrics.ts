@@ -15,7 +15,13 @@
 import type { MotionEasing } from "./motion.js";
 import { controlSizes } from "./scale.js";
 import type { Theme } from "./theme.js";
-import { textRoles } from "./typography.js";
+import {
+  codeLadder,
+  proseLadder,
+  textRoles,
+  type TextRole,
+  type Typography,
+} from "./typography.js";
 
 /** The ordered index of metric groups the contract governs. */
 export const metricGroups = [
@@ -181,10 +187,25 @@ const ladder = (
   });
 
 /**
+ * A documented size ladder walked from its smallest step upwards, because the
+ * `ladder` rule steps up and the docs list each ladder largest first.
+ */
+const ascendingSizes = (
+  ladder: ReadonlyArray<TextRole>,
+  typography: Typography,
+): ReadonlyArray<readonly [string, number]> =>
+  ladder
+    .toReversed()
+    .map((role) => [`${role}.fontSize`, typography[role].fontSize] as const);
+
+/**
  * Every numeric rule a theme misses.
  *
  * - **typography**: a role needs a size and leading, and a line box shorter
- *   than its type clips the glyphs.
+ *   than its type clips the glyphs. The two documented size ladders — prose
+ *   {@link proseLadder} and code {@link codeLadder} — may not be inverted, and
+ *   `bodyStrong` is the weight variant of `body`: it may not shrink below it and
+ *   must stay heavier, or emphasis is indistinguishable from body text.
  * - **borderWidth**: `strong` is the focus ring's spread, and the ring is the
  *   only focus indicator the runtime can draw, so it may not be zero; `thin`
  *   may be zero in a borderless theme, so it is only non-negative.
@@ -248,6 +269,32 @@ export function themeMetricFailures(
         typography[role].fontSize,
       ),
     ]),
+    ...ladder(
+      "typography",
+      ascendingSizes(proseLadder, typography),
+      "non-decreasing",
+    ),
+    ...ladder(
+      "typography",
+      ascendingSizes(codeLadder, typography),
+      "non-decreasing",
+    ),
+    ...ladder(
+      "typography",
+      [
+        ["body.fontSize", typography.body.fontSize],
+        ["bodyStrong.fontSize", typography.bodyStrong.fontSize],
+      ],
+      "non-decreasing",
+    ),
+    ...ladder(
+      "typography",
+      [
+        ["body.fontWeight", typography.body.fontWeight],
+        ["bodyStrong.fontWeight", typography.bodyStrong.fontWeight],
+      ],
+      "increasing",
+    ),
     ...nonNegative("borderWidth", "thin", borderWidth.thin),
     ...positive("borderWidth", "strong", borderWidth.strong),
     ...ladder(

@@ -17,6 +17,7 @@ import { themeContrastFailures } from "./contrast.js";
 import type { ElevationShape } from "./elevation.js";
 import {
   compactFailures,
+  invertedScaleFailures,
   ringlessFailures,
   squarishFailures,
   stretchedFailures,
@@ -99,6 +100,7 @@ describe("theme metric contract", () => {
     expect(ringlessFailures).toHaveLength(1);
     expect(stretchedFailures).toHaveLength(1);
     expect(squarishFailures).toHaveLength(1);
+    expect(invertedScaleFailures).toHaveLength(1);
   });
 
   it("states the gap: a ringless theme passes the colour check", () => {

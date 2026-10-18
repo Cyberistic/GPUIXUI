@@ -40,3 +40,12 @@ export const undriveable = extendTheme(getTheme("light"), {
   motion: { ease: { enter: [2, 0, 0, 1] } },
 });
 export const undriveableFailures = themeMetricFailures(undriveable);
+
+/**
+ * An inverted type scale: `h1` smaller than `h2`, with a leading that still
+ * fits. The colour check is empty; the numeric one names the heading.
+ */
+export const invertedScale = extendTheme(getTheme("light"), {
+  typography: { h1: { fontSize: 12, lineHeight: 16 } },
+});
+export const invertedScaleFailures = themeMetricFailures(invertedScale);

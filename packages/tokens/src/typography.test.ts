@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  codeLadder,
+  proseLadder,
   textRoles,
   typography,
   type FontWeight,
@@ -7,24 +9,9 @@ import {
 } from "./typography.js";
 
 /**
- * The two size ladders. `bodyStrong` is a weight variant of `body` and shares
- * its size, so it belongs to neither; every other role steps strictly down.
+ * The two size ladders are exported by the module, so the shipped scale, the
+ * numeric contract and this test cannot disagree about their order.
  */
-const proseLadder = [
-  "display",
-  "h1",
-  "h2",
-  "h3",
-  "body",
-  "label",
-  "caption",
-] as const satisfies ReadonlyArray<TextRole>;
-
-const codeLadder = [
-  "code",
-  "codeBlock",
-] as const satisfies ReadonlyArray<TextRole>;
-
 const laddered: ReadonlyArray<TextRole> = [
   ...proseLadder,
   "bodyStrong",
@@ -67,6 +54,13 @@ describe("type scale", () => {
   it("steps each ladder strictly down in size", () => {
     expect(brokenSteps(proseLadder), "prose ladder").toEqual([]);
     expect(brokenSteps(codeLadder), "code ladder").toEqual([]);
+  });
+
+  it("makes bodyStrong a weight variant of body", () => {
+    expect(typography.bodyStrong.fontSize).toBe(typography.body.fontSize);
+    expect(typography.bodyStrong.fontWeight).toBeGreaterThan(
+      typography.body.fontWeight,
+    );
   });
 
   it("keeps sans and mono distinct and non-empty", () => {

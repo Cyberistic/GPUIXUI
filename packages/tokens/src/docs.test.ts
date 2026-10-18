@@ -115,7 +115,12 @@ import {
   themes,
   type Theme,
 } from "./theme.js";
-import { textRoles, typography } from "./typography.js";
+import {
+  codeLadder,
+  proseLadder,
+  textRoles,
+  typography,
+} from "./typography.js";
 
 interface DocumentedRole {
   readonly role: string;
@@ -1322,6 +1327,17 @@ describe("docs/design-system.md", () => {
       "drops the label to **2.06:1** on a Linux light card at 50%";
     expect(designSystem.includes(figures), figures).toBe(true);
     expect(designSystem).toContain("`filledControl(theme, family)`");
+  });
+
+  it("states the type ladders the numeric contract enforces", () => {
+    const sentence =
+      "The numeric contract holds an edited theme to the same two ladders and to the weight-variant rule: `body` → `bodyStrong` may not shrink and must gain weight";
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+
+    const ladder = (roles: ReadonlyArray<string>): string =>
+      `(\`${roles[0] ?? ""}\` → \`${roles.at(-1) ?? ""}\`)`;
+    expect(designSystem).toContain(ladder(proseLadder));
+    expect(designSystem).toContain(ladder(codeLadder));
   });
 
   it("summarises every type role with its real metrics", () => {

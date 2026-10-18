@@ -41,6 +41,35 @@ export const textRoles = [
 /** A typographic role name, excluding the font family fields. */
 export type TextRole = (typeof textRoles)[number];
 
+/**
+ * The prose size ladder, largest first. `bodyStrong` is a weight variant of
+ * `body` rather than a step, so it is on neither ladder. The numeric contract
+ * and the type-scale test both read this order, so the shipped scale and the
+ * edited-theme check cannot list different ladders.
+ *
+ * @example
+ * ```ts
+ * import { proseLadder, typography } from "@gpuixui/tokens";
+ *
+ * const rows = proseLadder.map((role) => [role, typography[role].fontSize]);
+ * ```
+ */
+export const proseLadder = [
+  "display",
+  "h1",
+  "h2",
+  "h3",
+  "body",
+  "label",
+  "caption",
+] as const satisfies ReadonlyArray<TextRole>;
+
+/** The code size ladder, largest first: `code`, then `codeBlock`. */
+export const codeLadder = [
+  "code",
+  "codeBlock",
+] as const satisfies ReadonlyArray<TextRole>;
+
 /** Font families and the named type roles components use. */
 export interface Typography {
   /** UI font family. */
