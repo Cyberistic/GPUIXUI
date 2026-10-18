@@ -11,11 +11,13 @@
  * `side="bottom"` and `fit="snap"`, and snap **clamps without flipping**
  * (measured, plan 156 §8), so a select at the window's bottom edge opened its
  * list over the trigger (plan 066). The trigger's measured box and the list's
- * estimated height choose the side; an explicit `side` always wins.
+ * estimated height choose a vertical side, and an explicit `top`/`bottom` wins.
  *
  * A list beside its trigger (`side="left"`/`"right"`) is capped to the window's
  * height and scrolls, because that axis is bounded by the window rather than by
- * the trigger (measured, plan 098).
+ * the trigger (measured, plan 098). That side is a preference: the trigger's box
+ * and the list's measured width move it to the other side when it cannot fit
+ * (measured, plan 335).
  *
  * The options are data rather than compound children because the trigger needs
  * their labels; the `SelectItem` composition below is the shadcn escape hatch
@@ -25,6 +27,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactElement,
@@ -64,8 +67,10 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { fieldVariant } from "../core/variants.js";
 import {
   availableOn,
+  decideHorizontalSide,
   decideVerticalSide,
   FLOATING_MARGIN,
+  isHorizontalSide,
   type PlacementRequest,
 } from "../core/floating.js";
 import {
@@ -110,7 +115,7 @@ export interface SelectProps {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly fullWidth?: boolean;
-  /** Which side the list opens on. Omit to let the wrapper pick the side with room. */
+  /** Which side the list opens on. A `left`/`right` side is a preference (plan 335). */
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
@@ -298,6 +303,8 @@ export interface SelectHandlers {
   readonly onValueChange: (value: string) => void;
   /** The trigger's host instance, so the wrapper can measure its width. */
   readonly registerTrigger: (instance: PublicInstance | null) => void;
+  /** The open list's host instance, so the wrapper can measure its width. */
+  readonly registerContent: (instance: PublicInstance | null) => void;
   /** An option's host instance, keyed by value, so its row can be scrolled. */
   readonly registerItem: (
     value: string,
@@ -419,6 +426,7 @@ export const renderSelect = (
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent
+        ref={handlers.registerContent}
         role="listbox"
         aria-label={label}
         side={placement.side}
@@ -454,6 +462,8 @@ export const renderSelect = (
 /** The trigger's measured box, as the side decision needs it. */
 interface TriggerBox {
   readonly width: number;
+  readonly left: number;
+  readonly right: number;
   readonly top: number;
   readonly bottom: number;
 }
@@ -468,7 +478,9 @@ export const Select = (props: SelectProps): ReactElement => {
   const [triggerBox, setTriggerBox] = useState<TriggerBox | undefined>(
     undefined,
   );
+  const [listWidth, setListWidth] = useState<number | undefined>(undefined);
   const trigger = useRef<number | null>(null);
+  const content = useRef<number | null>(null);
   const items = useRef<Map<string, number>>(new Map());
   const state = useControlState(
     props.value,
@@ -492,17 +504,36 @@ export const Select = (props: SelectProps): ReactElement => {
     },
     [renderer],
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     const id = trigger.current;
     if (id === null) return;
     const bounds = renderer?.getElementBounds?.(id);
     if (bounds === null || bounds === undefined || bounds.width <= 0) return;
     setTriggerBox({
       width: bounds.width,
+      left: bounds.x,
+      right: bounds.x + bounds.width,
       top: bounds.y,
       bottom: bounds.y + bounds.height,
     });
-  }, [renderer, open, props.size, props.fullWidth, viewport.height]);
+    const contentId = open ? content.current : null;
+    const contentBounds =
+      contentId === null ? undefined : renderer?.getElementBounds?.(contentId);
+    setListWidth(
+      contentBounds === null ||
+        contentBounds === undefined ||
+        contentBounds.width <= 0
+        ? undefined
+        : contentBounds.width,
+    );
+  }, [
+    renderer,
+    open,
+    props.size,
+    props.fullWidth,
+    viewport.height,
+    viewport.width,
+  ]);
   const counts = selectRowCounts(props.options);
   const request = Option.map(
     Option.fromNullishOr(triggerBox),
@@ -514,9 +545,25 @@ export const Select = (props: SelectProps): ReactElement => {
       margin: FLOATING_MARGIN,
     }),
   );
-  const side =
-    props.side ??
-    Option.getOrUndefined(Option.map(request, decideVerticalSide));
+  const side = Option.match(Option.fromNullishOr(props.side), {
+    onNone: () =>
+      Option.getOrUndefined(Option.map(request, decideVerticalSide)),
+    onSome: (requested) =>
+      isHorizontalSide(requested)
+        ? Option.match(Option.fromNullishOr(triggerBox), {
+            onNone: () => requested,
+            onSome: (box) =>
+              decideHorizontalSide({
+                triggerLeft: box.left,
+                triggerRight: box.right,
+                layerWidth: listWidth ?? box.width,
+                viewportWidth: viewport.width,
+                margin: FLOATING_MARGIN,
+                preferred: requested,
+              }),
+          })
+        : requested,
+  });
   const maxHeight = Option.getOrUndefined(
     Option.flatMap(request, (measurement) =>
       Option.flatMap(Option.fromNullishOr(side), (resolvedSide) => {
@@ -538,6 +585,9 @@ export const Select = (props: SelectProps): ReactElement => {
       onValueChange: state.set,
       registerTrigger: (instance) => {
         trigger.current = instance?.id ?? null;
+      },
+      registerContent: (instance) => {
+        content.current = instance?.id ?? null;
       },
       registerItem: (value) => (instance) => {
         if (instance === null) items.current.delete(value);

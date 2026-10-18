@@ -33,7 +33,27 @@ export const isHorizontalSide = (side: LayerSide): side is HorizontalSide =>
  */
 export const FLOATING_MARGIN = 8;
 
-/** What the decision needs: the trigger, the layer and the window, in pixels. */
+/**
+ * Which of two sides keeps the layer off its trigger.
+ *
+ * The preferred side wins when the layer fits there, or when it fits nowhere
+ * and the preferred side is the roomier one; otherwise the other side wins. An
+ * exact fit counts as fitting. Both axes differ only in how their free space is
+ * measured, so both decisions share this one order.
+ */
+const chooseSide = <Side extends string>(
+  preferred: Side,
+  other: Side,
+  extent: number,
+  preferredSpace: number,
+  otherSpace: number,
+): Side =>
+  extent <= preferredSpace ||
+  (extent > otherSpace && preferredSpace >= otherSpace)
+    ? preferred
+    : other;
+
+/** What the vertical decision needs: the trigger, the layer and the window. */
 export interface PlacementRequest {
   /** The trigger's top edge, in window coordinates. */
   readonly triggerTop: number;
@@ -64,12 +84,50 @@ export const decideVerticalSide = ({
 }: PlacementRequest): VerticalSide => {
   const below = viewportHeight - margin - triggerBottom;
   const above = triggerTop - margin;
-  const preferredSpace = preferred === "bottom" ? below : above;
-  const otherSpace = preferred === "bottom" ? above : below;
-  const other = preferred === "bottom" ? "top" : "bottom";
-  if (layerHeight <= preferredSpace) return preferred;
-  if (layerHeight <= otherSpace) return other;
-  return preferredSpace >= otherSpace ? preferred : other;
+  return preferred === "bottom"
+    ? chooseSide(preferred, "top", layerHeight, below, above)
+    : chooseSide(preferred, "bottom", layerHeight, above, below);
+};
+
+/** What the horizontal decision needs: the trigger, the layer and the window. */
+export interface HorizontalPlacementRequest {
+  /** The trigger's left edge, in window coordinates. */
+  readonly triggerLeft: number;
+  /** The trigger's right edge, in window coordinates. */
+  readonly triggerRight: number;
+  /** The layer's expected width. */
+  readonly layerWidth: number;
+  /** The window's width. */
+  readonly viewportWidth: number;
+  /** The gap kept between the layer and the window edge. */
+  readonly margin: number;
+  /** The side to keep when it has room. Defaults to `right`. */
+  readonly preferred?: HorizontalSide;
+}
+
+/**
+ * The side with room for the layer: the preferred side when the layer fits
+ * there, else the other side when it fits there, else the roomier side. An
+ * exact fit counts as fitting.
+ *
+ * The runtime's `fit="snap"` clamps a layer into the window **without flipping
+ * it**, so a side that cannot fit paints the layer over its own trigger
+ * (measured, plan `335`). This turns the requested horizontal side into the one
+ * that actually has room.
+ */
+export const decideHorizontalSide = ({
+  triggerLeft,
+  triggerRight,
+  layerWidth,
+  viewportWidth,
+  margin,
+  preferred = "right",
+}: HorizontalPlacementRequest): HorizontalSide => {
+  const after = viewportWidth - margin - triggerRight;
+  const before = triggerLeft - margin;
+  return preferred === "right"
+    ? chooseSide(preferred, "left", layerWidth, after, before)
+    : chooseSide(preferred, "right", layerWidth, before, after);
 };
 
 /**

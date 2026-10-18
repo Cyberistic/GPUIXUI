@@ -46,6 +46,7 @@ const handlers: SelectHandlers = {
   onOpenChange: () => {},
   onValueChange: () => {},
   registerTrigger: () => {},
+  registerContent: () => {},
   registerItem: () => () => {},
   onHighlight: () => {},
 };

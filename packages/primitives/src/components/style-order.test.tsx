@@ -137,6 +137,7 @@ const selectHandlers = (): SelectHandlers => ({
   onOpenChange: vi.fn(),
   onValueChange: vi.fn(),
   registerTrigger: () => {},
+  registerContent: () => {},
   registerItem: () => () => {},
   onHighlight: vi.fn(),
 });

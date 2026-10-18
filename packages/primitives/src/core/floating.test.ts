@@ -13,7 +13,9 @@
 import { describe, expect, it } from "vitest";
 import {
   availableOn,
+  decideHorizontalSide,
   decideVerticalSide,
+  type HorizontalPlacementRequest,
   type LayerSide,
   type PlacementRequest,
   resolveAlign,
@@ -102,6 +104,79 @@ describe("decideVerticalSide", () => {
       availableOn(room({ triggerTop: 12, triggerBottom: 44 }), "right"),
     ).toBe(780);
     expect(availableOn(room(), "left")).toBe(392);
+  });
+});
+
+describe("decideHorizontalSide", () => {
+  const across = (
+    overrides: Partial<HorizontalPlacementRequest> = {},
+  ): HorizontalPlacementRequest => ({
+    triggerLeft: 400,
+    triggerRight: 432,
+    layerWidth: 68,
+    viewportWidth: 800,
+    margin: 8,
+    ...overrides,
+  });
+
+  it("opens right when the layer fits", () => {
+    // after = 800 - 8 - 432 = 360; before = 400 - 8 = 392.
+    expect(decideHorizontalSide(across())).toBe("right");
+  });
+
+  it("opens left when it does not fit right but fits left", () => {
+    // The bug guarded (plan 335): a requested horizontal side was handed to the
+    // runtime, whose `fit="snap"` clamps instead of flipping, so a side that
+    // could not fit painted the layer over its trigger. after = 60, before = 692.
+    expect(
+      decideHorizontalSide(across({ triggerLeft: 700, triggerRight: 732 })),
+    ).toBe("left");
+  });
+
+  it("keeps the margin out of the available space", () => {
+    // after = 68 with the margin: the margin is what decides.
+    expect(decideHorizontalSide(across({ triggerRight: 724 }))).toBe("right");
+    expect(decideHorizontalSide(across({ triggerRight: 725 }))).toBe("left");
+  });
+
+  it("treats an exact fit as fitting", () => {
+    // before = 76 - 8 = 68 on the preferred side.
+    expect(
+      decideHorizontalSide(across({ triggerLeft: 76, preferred: "left" })),
+    ).toBe("left");
+    expect(
+      decideHorizontalSide(across({ triggerLeft: 75, preferred: "left" })),
+    ).toBe("right");
+  });
+
+  it("picks the side with more room when neither fits", () => {
+    const wide = { layerWidth: 600 } as const;
+    // after = 460, before = 292.
+    expect(
+      decideHorizontalSide(
+        across({ ...wide, triggerLeft: 300, triggerRight: 332 }),
+      ),
+    ).toBe("right");
+    // after = 160, before = 592.
+    expect(
+      decideHorizontalSide(
+        across({ ...wide, triggerLeft: 600, triggerRight: 632 }),
+      ),
+    ).toBe("left");
+  });
+
+  it("keeps a preferred left when it has room", () => {
+    // Both sides fit; the request is what decides.
+    expect(decideHorizontalSide(across({ preferred: "left" }))).toBe("left");
+  });
+
+  it("falls back from a preferred left when only right has room", () => {
+    // before = 4, after = 360.
+    expect(
+      decideHorizontalSide(
+        across({ triggerLeft: 12, triggerRight: 44, preferred: "left" }),
+      ),
+    ).toBe("right");
   });
 });
 

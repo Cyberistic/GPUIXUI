@@ -1259,11 +1259,12 @@ it("caps a long Select list beside its trigger", async () => {
     Option.map(runtime.focusedElement(), (element) => element.id),
     () => expect.fail("the open list holds no focus"),
   );
-  Arr.forEach(Arr.range(1, 29), () => {
-    runtime.renderer.nativeSimulateKeyDown(focusedId, "down");
-    runtime.renderer.dispatchNativeEvents();
-    runtime.flush();
-  });
+  // One press is enough to reach the far end and is deterministic whatever the
+  // initial highlight: from no highlight `up` wraps to the last row, and from
+  // the first row (where a pointer over the list leaves it) `up` also wraps.
+  runtime.renderer.nativeSimulateKeyDown(focusedId, "up");
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
   const last = Option.getOrElse(
     Arr.findFirst(runtime.all(), (element) => element.text === "Option 30"),
     () => expect.fail("the last option vanished"),
@@ -1274,6 +1275,127 @@ it("caps a long Select list beside its trigger", async () => {
   expect(lastBounds.y + lastBounds.height).toBeLessThanOrEqual(
     list.y + list.height,
   );
+});
+
+it("opens a left-side Tooltip on the right when the left edge has no room", async () => {
+  // The bug guarded (plan 335): the wrapper handed a requested horizontal side
+  // to the runtime, whose `fit="snap"` clamps without flipping, so a tip with
+  // 4 px of room on the left painted over its own trigger (measured: tip
+  // x 8..55 for a trigger at x 12..72). A requested horizontal side is a
+  // preference.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="left" testId="tip">
+        <div
+          testId="target"
+          tabIndex={0}
+          style={{ width: 60, height: 24, display: "flex" }}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.x).toBeGreaterThanOrEqual(target.x + target.width);
+});
+
+it("opens a right-side Tooltip on the left at the right edge", async () => {
+  // The other direction: the runtime would clamp a `side="right"` tip to the
+  // window's right margin, over a trigger that ends at it.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Tooltip content="A hint" side="right" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ width: 300, height: 40, display: "flex" }}
+          />
+        </Tooltip>
+      </Box>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.x + tip.width).toBeLessThanOrEqual(target.x);
+});
+
+it("opens a left-side Select list on the right when the left edge has no room", async () => {
+  // The bug guarded (plan 335): a `side="left"` list at the window's left edge
+  // was clamped onto its trigger instead of opening on the side with room.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box tone="background" style={{ display: "flex", flexDirection: "row" }}>
+        <Select
+          testId="sel"
+          label="Few"
+          placeholder="Pick"
+          side="left"
+          options={[
+            { value: "a", label: "Alpha" },
+            { value: "b", label: "Beta" },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const list = selectListBoundsOf(runtime);
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  expect(list.x).toBeGreaterThanOrEqual(triggerBox.x + triggerBox.width - 1);
+});
+
+it("opens a right-side Select list on the left at the right edge", async () => {
+  // The other direction: the list cannot fit to the right of a trigger that
+  // ends at the window's right margin.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Box
+        tone="background"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Select
+          testId="sel"
+          label="Few"
+          placeholder="Pick"
+          side="right"
+          options={[
+            { value: "a", label: "Alpha" },
+            { value: "b", label: "Beta" },
+          ]}
+        />
+      </Box>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const list = selectListBoundsOf(runtime);
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  expect(list.x + list.width).toBeLessThanOrEqual(triggerBox.x + 1);
 });
 
 it("opens a Tooltip on hover and dismisses it on click", async () => {

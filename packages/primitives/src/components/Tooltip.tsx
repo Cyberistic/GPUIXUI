@@ -20,7 +20,9 @@
  *
  * The two corrections meet on the layer's own axis: a `left`/`right` side aligns
  * **vertically**, so the wrapper measures the tip's height too and centres on
- * heights, not widths (plan 098).
+ * heights, not widths (plan 098). That side is also a preference: a tip that
+ * cannot fit beside the trigger opens on the other horizontal side, measured
+ * from its own width (plan 335).
  */
 
 import {
@@ -42,8 +44,10 @@ import {
   TooltipTrigger,
 } from "@gpuix/react/tooltip";
 import {
+  decideHorizontalSide,
   decideVerticalSide,
   FLOATING_MARGIN,
+  isHorizontalSide,
   resolveAlign,
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
@@ -57,7 +61,8 @@ export interface TooltipProps {
   readonly children: ReactNode;
   /**
    * Defaults to `top`, flipped to `bottom` when the tip does not fit above.
-   * An explicit value skips the decision.
+   * A `left`/`right` side is a preference: when the tip cannot fit beside the
+   * trigger it opens on the other side (plan 335).
    */
   readonly side?: FloatingSide;
   /**
@@ -171,6 +176,8 @@ export const renderTooltip = (
 
 /** The trigger's measured box, and the tip's box once it is painted. */
 interface TooltipBox {
+  readonly left: number;
+  readonly right: number;
   readonly top: number;
   readonly bottom: number;
   readonly width: number;
@@ -202,6 +209,8 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     const tipBounds =
       tipId === undefined ? undefined : renderer?.getElementBounds?.(tipId);
     setBox({
+      left: bounds.x,
+      right: bounds.x + bounds.width,
       top: bounds.y,
       bottom: bounds.y + bounds.height,
       width: bounds.width,
@@ -216,17 +225,31 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
           : tipBounds.height,
     });
   }, [renderer, open]);
+  const viewport = readWindowSize(renderer);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",
     onSome: (measured) =>
-      props.side ??
-      decideVerticalSide({
-        triggerTop: measured.top,
-        triggerBottom: measured.bottom,
-        layerHeight: tooltipHeight(theme),
-        viewportHeight: readWindowSize(renderer).height,
-        margin: FLOATING_MARGIN,
-        preferred: "top",
+      Option.match(Option.fromNullishOr(props.side), {
+        onNone: () =>
+          decideVerticalSide({
+            triggerTop: measured.top,
+            triggerBottom: measured.bottom,
+            layerHeight: tooltipHeight(theme),
+            viewportHeight: viewport.height,
+            margin: FLOATING_MARGIN,
+            preferred: "top",
+          }),
+        onSome: (requested) =>
+          isHorizontalSide(requested)
+            ? decideHorizontalSide({
+                triggerLeft: measured.left,
+                triggerRight: measured.right,
+                layerWidth: measured.tipWidth ?? measured.width,
+                viewportWidth: viewport.width,
+                margin: FLOATING_MARGIN,
+                preferred: requested,
+              })
+            : requested,
       }),
   });
   const requested = props.align ?? "start";

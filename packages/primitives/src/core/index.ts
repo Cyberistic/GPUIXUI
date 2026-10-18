@@ -26,6 +26,7 @@ export type { ControlMode, ValueState } from "./state.js";
 
 export {
   availableOn,
+  decideHorizontalSide,
   decideVerticalSide,
   FLOATING_MARGIN,
   isHorizontalSide,
@@ -33,6 +34,7 @@ export {
 } from "./floating.js";
 export type {
   AlignRequest,
+  HorizontalPlacementRequest,
   HorizontalSide,
   LayerAlign,
   LayerSide,

@@ -493,6 +493,7 @@ describe("group roots and overlays", () => {
       onOpenChange: vi.fn(),
       onValueChange: vi.fn(),
       registerTrigger: () => {},
+      registerContent: () => {},
       registerItem: () => () => {},
       onHighlight: vi.fn(),
     };
