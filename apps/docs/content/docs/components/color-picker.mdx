@@ -1,0 +1,108 @@
+---
+title: Color picker
+description: Selects a colour from a swatch grid or a HEX field.
+---
+
+`ColorPicker` chooses a colour from a keyboard-reachable swatch grid or by typing
+a HEX value, with a preview of the current colour. It is **not** a
+saturation/value square, and that is an honest limitation, not an omission.
+
+<ComponentState slug="color-picker" />
+
+<NativePreview slug="color-picker" />
+
+<ComponentPreview slug="color-picker" />
+
+## Usage
+
+```tsx
+import { ColorPicker } from "@gpuixui/components";
+
+const [accent, setAccent] = useState("#3b82f6");
+
+<ColorPicker
+  label="Accent colour"
+  value={accent}
+  onValueChange={setAccent}
+  swatches={["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"]}
+/>;
+```
+
+The public value is always lowercase `#rrggbb`. Typed input accepts `#abc`,
+`abc`, `#AABBCC` and `AABBCC`, and normalises on commit; `#abcd` and
+`#aabbccdd` are refused (no alpha in v1). A commit happens on `Enter` or blur; a
+swatch press commits immediately.
+
+## Variants
+
+None. `swatches` replaces the grid; the default is six theme colours
+(`primary`, `secondary`, `accent`, `muted`, `destructive`, `foreground`).
+
+## Sizes
+
+None. The swatch grid and field use the theme's control height and spacing.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| rest | the committed swatch is selected; the preview shows it |
+| invalid draft | `destructive` border and `aria-description="Invalid hex colour"` |
+| blur with an invalid draft | reverts to the committed value |
+| `disabled` | swatches leave the tab order; the field is read-only and dimmed |
+
+## Composition
+
+The real example is a swatch grid, a HEX field and a live preview:
+
+<include lang="tsx" meta='title="packages/components/examples/color-picker.example.tsx"'>
+  ../../../../../packages/components/examples/color-picker.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/color-picker.tsx" name="ColorPickerProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Tab` | moves through the swatches, then into the HEX field |
+| `Enter` / `Space` on a swatch | commits that colour |
+| `Enter` in the field | commits a valid draft |
+| `Escape` | not claimed: blur reverts an invalid draft |
+
+Swatches are `role="button"` with `aria-selected` on the current one, so a
+keyboard user can reach every colour.
+
+## Theming
+
+Swatches are the colours passed (defaults from the theme); the grid uses
+`border`/`foreground` for selected edges, the field uses `background`,
+`inputForeground`, `border`/`destructive` and the focus ring, and the preview
+uses `border`. `ColorPicker.style` takes `{ disabled, valid }`.
+
+## Accessibility and limitations
+
+- The root is a named `group`; every swatch is a button named by its hex value.
+- The field is a real input named "<label> hex value".
+- Disabled is `tabIndex={-1}` plus read-only and dimming: 0.10.0 has no
+  `aria-disabled`.
+- **No saturation/value square**: 0.10.0 supports two-stop linear gradients only
+  and no radial gradient, so a square would be a decorative placeholder.
+- HEX only: no alpha, HSL/RGB fields, eyedropper or named colours.
+- Validation happens on commit, so an invalid draft is not previewed live.
+
+## Dependencies
+
+<ComponentDependencies slug="color-picker" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/color-picker.tsx"'>
+  ../../../../../packages/components/src/color-picker.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="color-picker" />

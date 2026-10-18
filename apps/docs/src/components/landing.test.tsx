@@ -89,7 +89,9 @@ describe("landing page", () => {
       (component) => component.status !== "planned",
     );
     expect(documented.length).toBeGreaterThan(0);
-    expect(documented.length).toBeLessThan(components.length);
+    // Every Tier 1–2 record is delivered after plan 461; the count must still
+    // be read from the registry, so a hard-coded number fails here.
+    expect(documented.length).toBe(components.length);
     expect(html).toContain(`${documented.length} documented components`);
     expect(html).not.toContain("Implemented</dt>");
   });

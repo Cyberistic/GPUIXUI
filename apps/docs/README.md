@@ -189,9 +189,10 @@ no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
 The first real page is `content/docs/components/button.mdx` (plan 422); the
 remaining Tier 1 pages followed it (plan 423), the 22 Tier 2 pages after that
-(plan 425) and the seven Tier 1 value/choice pages in plan 435 — 49 component
-pages in total. Each shows the whole chain: a `wip` registry record, generated status and
-preview blocks, a real API table, the real component source and a
+(plan 425), the seven Tier 1 value/choice pages in plan 435 and the seventeen
+Tier 2 supplement pages in plan 461 — 66 component pages in total. Each shows
+the whole chain: a registry record that mirrors the inventory, generated status
+and preview blocks, a real API table, the real component source and a
 runtime-mounted example. Copy their shape.
 
 1. Add a record to `src/component-meta/entries.ts`. **Titles must match the
@@ -310,7 +311,7 @@ file** by `src/lib/source-imports.ts` (plan 428):
 
 - the entry file's non-relative module imports are the modules (React and
   `@gpuix/react` are the peer packages every component has, so the block states
-  them once instead of listing them 49 times);
+  them once instead of listing them 66 times);
 - a relative import that resolves to another delivered record's `sourcePath` is
   recorded as that record's slug and rendered as a **Composes** link; a relative
   import into `internal/`, `core/`, `menu/`, `toast/` or `combobox/` is a private
@@ -427,18 +428,23 @@ capture sidecars (`src/components/preview/select-preview.ts`):
   the suite path plus its command, and that no capture is published);
 - otherwise the "not verified" notice (tier X).
 
-The static component pages carry a tier-A preview (plans 449, 451, 452 and 453):
-Button, Tabs, Dropdown menu and Card; Text input, Text area, Checkbox, Radio
-group, Select, Switch and Slider; Range slider, Meter, Number field, OTP field,
-Toggle and Rating; Badge, Alert, Progress and Avatar; List, Empty state, Inline
-validation, Breadcrumb, Pagination, Search input, Accordion and Collapsible;
-Text, Separator, Spacer, Stack, Box, Button group and Label. Every one is a
-static rest state built only from the `--preview-*` values of the active theme,
-so the platform toggle re-renders all of them. The 13 pages without one are
-interactions (dialog, confirm dialog, popover, the context and command menus,
-toast, tooltip, combobox, date picker, scroll area), animations (skeleton,
-spinner) or the icon glyph set; they stay at tier V/X. `theme-surface.test.ts` also proves every
-`--preview-*` name a preview reads is one the surface defines.
+The static component pages carry a tier-A preview (plans 449, 451, 452, 453 and
+461): Button, Tabs, Dropdown menu and Card; Text input, Text area, Checkbox,
+Radio group, Select, Switch and Slider; Range slider, Meter, Number field, OTP
+field, Toggle and Rating; Badge, Alert, Progress and Avatar; List, Empty state,
+Inline validation, Breadcrumb, Pagination, Search input, Accordion and
+Collapsible; Text, Separator, Spacer, Stack, Box, Button group and Label; and
+the supplement's Time picker, Message scroller, Fieldset, Form, Preview card,
+Stepper, Timeline, Color picker, Tag input, Countdown, Carousel, Inline edit and
+Keyboard shortcuts. Every one is a static rest state built only from the
+`--preview-*` values of the active theme, so the platform toggle re-renders all
+of them. The pages without one are interactions (dialog, confirm dialog,
+popover, the context and command menus, toast, tooltip, combobox, date picker,
+drawer, navigation menu, mention input, hotkey recorder, scroll area),
+animations (skeleton, spinner) or the icon glyph set; they stay at tier V/X, and
+`scene-contract.test.ts` requires a measured reason for each interaction gap.
+`theme-surface.test.ts` also proves every `--preview-*` name a preview reads is
+one the surface defines.
 
 An approximation is never a fallback. The only way to render one is
 `<IllustrativeApproximation>`, which always renders the mandated banner.

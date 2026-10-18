@@ -781,29 +781,6 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     },
   ),
   delivered(
-    "message-scroller",
-    "Message scroller",
-    "2",
-    "Keeps a transcript on new content while the reader stays in control.",
-    {
-      gpuix: "partial",
-      sourcePath: "packages/components/src/message-scroller.tsx",
-      api: ["MessageScrollerProps", "MessageScrollerViewportProps"],
-      runtime: nativeSuite(
-        "@gpuixui/components",
-        "src/behaviour/message-scroller.test.tsx",
-      ),
-      status: "done",
-      related: ["list"],
-      limitations: [
-        "Not virtualized: every row renders.",
-        "The jump-to-latest affordance sits beneath the viewport, not in a corner.",
-        "No resize observer: a stream that does not re-render is not followed.",
-        "No aria-live in 0.10.0, so new rows are not announced.",
-      ],
-    },
-  ),
-  delivered(
     "empty-state",
     "Empty states",
     "2",
@@ -863,7 +840,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/field.test.tsx",
       ),
       status: "done",
-      dependencies: ["@gpuix/react/floating", "effect/Option"],
+      dependencies: ["@gpuix/react/floating", "effect/Option", "fieldset"],
       related: ["alert", "toast"],
       limitations: [
         "No aria-describedby, aria-invalid or aria-required in 0.10.0.",
@@ -958,7 +935,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "2",
     "A non-modal floating surface anchored to a trigger.",
     {
-      gpuix: "yes",
+      gpuix: "partial",
       sourcePath: "packages/components/src/popover.tsx",
       api: ["PopoverProps"],
       liveScene: "popover",
@@ -1198,7 +1175,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "2",
     "A text field that filters a list of options.",
     {
-      gpuix: "yes",
+      gpuix: "partial",
       sourcePath: "packages/components/src/combobox.tsx",
       api: ["ComboboxProps"],
       runtime: nativeSuite(
@@ -1246,92 +1223,392 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
     },
   ),
-  planned(
+  delivered(
+    "time-picker",
+    "Time pickers",
+    "2",
+    "A time of day entered as an HH:mm hour and minute field.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/time-picker.tsx",
+      api: ["TimePickerProps", "TimePickerSegmentProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/time-picker.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating", "effect", "effect/Option"],
+      related: ["date-picker", "inline-validation"],
+      limitations: [
+        "No aria-valuenow or spinbutton role in 0.10.0; the segments are text inputs.",
+        "No aria-disabled; disabled is readOnly, out of the tab order and dimmed.",
+        "Fixed 24-hour display with no locale, seconds or timezone.",
+        "minuteStep affects the arrow keys only; it is not a validation rule.",
+      ],
+    },
+  ),
+  delivered(
+    "message-scroller",
+    "Message scroller",
+    "2",
+    "Keeps a transcript on new content while the reader stays in control.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/message-scroller.tsx",
+      api: ["MessageScrollerProps", "MessageScrollerViewportProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/message-scroller.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["list"],
+      limitations: [
+        "Not virtualized: every row renders.",
+        "The jump-to-latest affordance sits beneath the viewport, not in a corner.",
+        "No resize observer: a stream that does not re-render is not followed.",
+        "No aria-live in 0.10.0, so new rows are not announced.",
+      ],
+    },
+  ),
+  delivered(
     "fieldset",
     "Fieldset",
     "2",
-    "Groups related form controls with a legend.",
+    "Groups related form controls under one legend.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/fieldset.tsx",
+      api: ["FieldsetProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/fieldset.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["inline-validation", "form", "card"],
+      limitations: [
+        "No fieldset element or aria-disabled in 0.10.0.",
+        "Disabled propagation is opt-in: FieldInput honours it, other controls keep their own disabled.",
+        "A disabled FieldInput is readOnly, not a disabled input.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "form",
     "Form",
     "2",
-    "Validation orchestration and submit lifecycle.",
+    "Schema validation and a submit lifecycle around a group of fields.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/form.tsx",
+      api: ["FormProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/form.test.tsx",
+      ),
+      status: "done",
+      dependencies: [
+        "@gpuix/react/floating",
+        "effect",
+        "effect/Array",
+        "effect/Result",
+        "effect/Schema",
+      ],
+      related: ["fieldset", "inline-validation", "toast"],
+      limitations: [
+        "Owned-value: the caller passes the value and there is no field registration.",
+        "Validation messages carry no paths, so per-field messages stay the Field API.",
+        "No re-validation on edit; errors persist until the next submit.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "navigation-menu",
     "Navigation Menu",
     "2",
-    "A nav whose items open content panels.",
-    { related: ["dropdown-menu"] },
+    "A navigation bar whose items open anchored content panels.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/navigation-menu.tsx",
+      api: ["NavigationMenuProps", "NavigationMenuLinkProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/navigation-menu.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["dropdown-menu"],
+      limitations: [
+        "No href in 0.10.0: links are buttons with onSelect.",
+        "No hover-open, and no aria-haspopup to announce the panel.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "preview-card",
     "Preview Card",
     "2",
     "A hover-triggered rich card with a positioner.",
-    { related: ["popover"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/preview-card.tsx",
+      api: ["PreviewCardProps", "PreviewCardContentProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/preview-card.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["popover", "tooltip"],
+      limitations: [
+        "No pointer-type signal: a touch press toggles instead of hovering.",
+        "Not auto-focused on hover; no anchor arrow or aria-haspopup in 0.10.0.",
+        "Open and close delays are component timers, not motion tokens.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "drawer",
     "Drawer",
     "2",
-    "An edge-anchored panel with swipe-to-dismiss.",
-    { related: ["dialog"] },
+    "An edge-anchored panel for navigation and secondary tasks.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/drawer.tsx",
+      api: ["DrawerProps", "DrawerContentProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/drawer.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["dialog", "popover"],
+      limitations: [
+        "No swipe-to-dismiss (no drag host feature) and no slide animation (no transform).",
+        "No aria-modal/aria-labelledby and no portal; the veil is anchored.",
+        "Sizes are layout constants, not tokens.",
+      ],
+    },
   ),
-  planned("stepper", "Stepper", "2", "A multi-step progress indicator.", {
+  delivered("stepper", "Stepper", "2", "A multi-step progress indicator.", {
+    gpuix: "partial",
+    sourcePath: "packages/components/src/stepper.tsx",
+    api: ["StepperProps", "StepperStepProps"],
+    runtime: nativeSuite(
+      "@gpuixui/components",
+      "src/behaviour/stepper.test.tsx",
+    ),
+    status: "done",
+    dependencies: ["@gpuix/react/floating", "effect"],
     related: ["progress"],
+    limitations: [
+      "Display-only by design: a step is not clickable.",
+      "No connector line, and aria-selected stands in for the missing aria-current.",
+    ],
   }),
-  planned(
+  delivered(
     "timeline",
     "Timeline",
     "2",
-    "An event timeline with connector styles.",
+    "An ordered list of events with a current marker.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/timeline.tsx",
+      api: ["TimelineProps", "TimelineItemProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/timeline.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["list", "stepper"],
+      limitations: [
+        "Display-only; the status is passed per item, never derived.",
+        "No aria-current; the current event uses aria-selected.",
+        "The last event is detected from direct children.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "color-picker",
     "Color picker",
     "2",
-    "Selects a colour from HSL, RGB, HEX and swatches.",
+    "Selects a colour from a swatch grid or a HEX field.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/color-picker.tsx",
+      api: ["ColorPickerProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/color-picker.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating", "effect/Option"],
+      related: ["badge"],
+      limitations: [
+        "No saturation/value square: 0.10.0 has no radial gradient, so the square is not faked.",
+        "HEX plus swatches only: no alpha, HSL, RGB or eyedropper.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "tag-input",
     "Tag / token input",
     "2",
     "An input that collects removable tokens.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/tag-input.tsx",
+      api: ["TagInputProps", "TagInputChipProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/tag-input.test.tsx",
+      ),
+      status: "done",
+      dependencies: [
+        "@gpuix/react/floating",
+        "effect/Array",
+        "effect/Option",
+        "effect/String",
+      ],
+      related: ["text-input", "inline-validation"],
+      limitations: [
+        "No Backspace-on-empty: 0.10.0 emits no keyDown for Backspace/Delete in the test renderer.",
+        "No aria-disabled (readOnly plus dimming) and no autocomplete.",
+        "Controlled only: the value comes from the caller.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "mention-input",
     "Mention input",
     "2",
-    "An input with an anchored suggestion list.",
-    { related: ["combobox"] },
+    "An input with an anchored ranked suggestion list.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/mention-input.tsx",
+      api: ["MentionInputProps", "MentionInputItemProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/mention-input.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating", "effect/Option"],
+      related: ["combobox", "text-area"],
+      limitations: [
+        "The query comes from the text's last @ token, not the caret (no caret API).",
+        "A space while the list is open is consumed by the runtime.",
+        "Listbox/option roles are dropped from the accessibility dump; rows are selected buttons.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "hotkey-input",
     "Hotkey-recorder input",
     "2",
     "Records a keyboard accelerator.",
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/hotkey-recorder.tsx",
+      api: ["HotkeyRecorderProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/hotkey-recorder.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating", "effect/Option", "keycap"],
+      related: ["keycap"],
+      limitations: [
+        "No preventDefault in 0.10.0, so a captured system chord still fires.",
+        "Clearing is a control because the test renderer emits no Backspace/Delete.",
+        "No conflict detection.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "countdown",
     "Countdown",
     "2",
     "Counts down to a moment using the app's clock.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/countdown.tsx",
+      api: ["CountdownProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/countdown.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["stepper"],
+      limitations: [
+        "The component owns no timer; the app ticks with Effect Clock.",
+        "Fixed locale-free format, and no role=timer for a live announcement.",
+      ],
+    },
   ),
-  planned("carousel", "Carousel", "2", "Steps through a set of views."),
-  planned(
+  delivered("carousel", "Carousel", "2", "Steps through a set of views.", {
+    gpuix: "partial",
+    sourcePath: "packages/components/src/carousel.tsx",
+    api: ["CarouselProps", "CarouselSlideProps"],
+    runtime: nativeSuite(
+      "@gpuixui/components",
+      "src/behaviour/carousel.test.tsx",
+    ),
+    status: "done",
+    dependencies: ["@gpuix/react/floating"],
+    related: ["tabs"],
+    limitations: [
+      "No slide animation (motion has no transform) and no swipe.",
+      "No indicator dots or auto-advance; slides must be the track's direct children.",
+    ],
+  }),
+  delivered(
     "inline-edit",
     "Inline edit",
     "2",
     "Swaps text for an input in place.",
-    { related: ["text-input"] },
+    {
+      gpuix: "partial",
+      sourcePath: "packages/components/src/inline-edit.tsx",
+      api: ["InlineEditProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/inline-edit.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["text-input"],
+      limitations: [
+        "No contenteditable in 0.10.0; the display swaps for a real input.",
+        "No aria-invalid or aria-describedby.",
+        "Blur commits by contract.",
+      ],
+    },
   ),
-  planned(
+  delivered(
     "keycap",
     "Keyboard shortcuts / keycap display",
     "2",
     "A categorised shortcut table with keycaps.",
+    {
+      gpuix: "yes",
+      sourcePath: "packages/components/src/keyboard-shortcuts.tsx",
+      api: ["KeyboardShortcutsProps", "KeycapProps"],
+      runtime: nativeSuite(
+        "@gpuixui/components",
+        "src/behaviour/keyboard-shortcuts.test.tsx",
+      ),
+      status: "done",
+      dependencies: ["@gpuix/react/floating"],
+      related: ["context-menu", "command-menu"],
+      limitations: [
+        "Display-only: a row documents a chord, never binds it.",
+        "No aria-keyshortcuts in 0.10.0.",
+        "Rows are separated by 1px elements because an element has one borderColor.",
+      ],
+    },
   ),
 ];
 

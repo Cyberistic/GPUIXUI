@@ -1,0 +1,106 @@
+---
+title: Inline edit
+description: Swaps text for an input in place.
+---
+
+`InlineEdit` shows a value as text and swaps to an `<input>` in place when the
+user activates it. GPUix has no `contenteditable`, so the swap is explicit, not
+a styled text field pretending to be editable. The caller owns the committed
+value; the component owns only the draft.
+
+<ComponentState slug="inline-edit" />
+
+<NativePreview slug="inline-edit" />
+
+<ComponentPreview slug="inline-edit" />
+
+## Usage
+
+```tsx
+import { InlineEdit } from "@gpuixui/components";
+
+const [name, setName] = useState("Untitled workspace");
+
+<InlineEdit label="Workspace name" value={name} onCommit={setName} />;
+```
+
+## Variants
+
+None. `editing` / `defaultEditing` make the edit state controlled or
+uncontrolled; `placeholder` covers an empty value.
+
+## Sizes
+
+None. The input uses the theme's `md` control height; the display uses the
+`label` type role.
+
+## States
+
+| Action | Result |
+| ------ | ------ |
+| click, `Enter` or `Space` on the display | edit mode; the input is focused |
+| `Enter` in the input | commit, return to display, focus the display |
+| blur | commit, leave focus where the user put it |
+| `Escape` | discard the draft, return to display, focus the display |
+| unchanged draft | nothing is called |
+| empty text | a valid value; it clears the field (not "cancel") |
+
+Commit is one rule, and `Enter` can arrive twice in 0.10.0 (`keyDown` and
+`submit`), so the component finishes an edit once per entry.
+`InlineEdit.style` takes `{ editing, disabled }`.
+
+## Composition
+
+The real example renames a workspace and shows the committed value:
+
+<include lang="tsx" meta='title="packages/components/examples/inline-edit.example.tsx"'>
+  ../../../../../packages/components/examples/inline-edit.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/inline-edit.tsx" name="InlineEditProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Enter` / `Space` on the display | enters edit mode |
+| `Enter` in the input | commits and returns focus |
+| `Escape` | discards and returns focus |
+| `Tab` away | commits (blur) and leaves focus where it went |
+
+## Theming
+
+The display uses the `label` type with `foreground`/`mutedForeground` and an
+`accent` hover; the input uses the control height, `background`,
+`inputForeground`, `border` and the focus ring.
+
+## Accessibility and limitations
+
+- The display is a `role="button"` named by `label`; the input is a real input
+  with the same name.
+- Focus is moved with the renderer's `focusElement`; `autoFocus` alone does not
+  follow a replaced element.
+- 0.10.0 has no `aria-invalid` or `aria-describedby`, so a rejected value needs
+  the consumer's own message (pair it with Field).
+- Disabled is `tabIndex={-1}` with no handlers plus dimming; there is no
+  `aria-disabled`.
+- Single-line only, and blur **commits**: a consumer that wants blur to cancel
+  must not use this part.
+- No validation state of its own; `onCommit` is where a caller rejects a value,
+  after the edit has closed.
+
+## Dependencies
+
+<ComponentDependencies slug="inline-edit" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/inline-edit.tsx"'>
+  ../../../../../packages/components/src/inline-edit.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="inline-edit" />

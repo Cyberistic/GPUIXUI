@@ -1,0 +1,124 @@
+---
+title: Time pickers
+description: A time of day entered as an HH:mm hour and minute field.
+---
+
+`TimePicker` is a field with two labelled segments — hours and minutes — and an
+optional clear control. The value is a time of day, not a timestamp: no date, no
+zone and no clock read. It is the time half of the scheduling pair; the date half
+is [Date pickers](/docs/components/date-picker).
+
+<ComponentState slug="time-picker" />
+
+<NativePreview slug="time-picker" />
+
+<ComponentPreview slug="time-picker" />
+
+## Usage
+
+```tsx
+import {
+  TimePicker,
+  TimePickerClear,
+  TimePickerSegment,
+  TimePickerSeparator,
+} from "@gpuixui/components";
+
+const [standup, setStandup] = useState<string | null>("09:30");
+
+<TimePicker value={standup} onValueChange={setStandup} minuteStep={15}>
+  <TimePickerSegment segment="hours" />
+  <TimePickerSeparator />
+  <TimePickerSegment segment="minutes" />
+  <TimePickerClear />
+</TimePicker>;
+```
+
+The public value is `HH:mm`, 24-hour, or `null` for "no time". Never a
+`DateTime`, never a locale-formatted string. Two digits are canonical: `"9:30"`
+and `"24:00"` are malformed and render as an empty field. `undefined` means
+uncontrolled.
+
+## Variants
+
+None. The field has one shape; `minuteStep` and `clearable` change how it
+behaves, not how it looks.
+
+## Sizes
+
+None. The field uses the theme's `md` control height so it lines up with the
+other inputs.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| rest | `colors.input` surface, `border` edge, `radius.md` |
+| focus | the zero-blur `ring` — 0.10.0 has no `outline` |
+| empty | both segments blank; a controlled `null` |
+| malformed | a malformed controlled value renders an empty field |
+| `disabled` | both inputs are `readOnly`, the clear control is gone, the field dims and leaves the tab order |
+
+## Composition
+
+The real example drives a controlled value with a quarter-hour arrow step:
+
+<include lang="tsx" meta='title="packages/components/examples/time-picker.example.tsx"'>
+  ../../../../../packages/components/examples/time-picker.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/time-picker.tsx" name="TimePickerProps" />
+
+<auto-type-table path="../../../../../packages/components/src/time-picker.tsx" name="TimePickerSegmentProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| digits | edits the focused segment; out-of-range text clamps |
+| `ArrowUp` / `ArrowDown` on hours | ±1 hour, carrying and wrapping across midnight |
+| `ArrowUp` / `ArrowDown` on minutes | ±`minuteStep` minutes, carrying and wrapping |
+| `Tab` / `Shift+Tab` | between the segments, then out of the field |
+| `Enter` / `Space` on the clear control | clears, reports `null`, focuses the hours segment |
+
+Arrow keys and typing share one clock function, so `09:59 + 1` is `10:00` and
+`00:00 - 1` is `23:59`.
+
+## Theming
+
+The field paints `colors.input` with `colors.inputForeground` text, a
+`borderWidth.thin` border in `colors.border` and `radius.md`; the separator and
+clear glyph use `colors.mutedForeground`; the clear control's hover uses
+`colors.accent` / `colors.accentForeground`; the focus ring is the zero-blur
+`colors.ring`. `TimePickerSegment.style` takes a `StateStyle` of
+`{ disabled, focused }`.
+
+## Accessibility and limitations
+
+- The field is a labelled `group`; each input is named "<label> hours" /
+  "<label> minutes" and announces its value natively.
+- A field, not a popup: 0.10.0 has no `aria-valuenow` for a spinbutton, so a
+  custom spinbutton could not announce its value.
+- No `aria-disabled`: a disabled field is `readOnly`, out of the tab order and
+  dimmed, but the state is not announced.
+- Fixed 24-hour display. No AM/PM, locale, seconds or timezone; a 12-hour toggle
+  would need a real message catalogue.
+- `minuteStep` affects the arrow keys only; typed minutes still accept `00..59`.
+- The caret after a programmatic clamp belongs to the host input — 0.10.0 has no
+  `preventDefault` in key handlers.
+
+## Dependencies
+
+<ComponentDependencies slug="time-picker" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/time-picker.tsx"'>
+  ../../../../../packages/components/src/time-picker.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="time-picker" />

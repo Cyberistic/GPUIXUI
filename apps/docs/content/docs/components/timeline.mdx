@@ -1,0 +1,100 @@
+---
+title: Timeline
+description: An ordered list of events with a current marker.
+---
+
+`Timeline` shows a history: one event per row, a dot on a vertical rail, an
+optional timestamp and description. It is display-only — there is no click, no
+selection and no derived index. The consumer marks each event's status.
+
+<ComponentState slug="timeline" />
+
+<NativePreview slug="timeline" />
+
+<ComponentPreview slug="timeline" />
+
+## Usage
+
+```tsx
+import { Timeline, TimelineItem } from "@gpuixui/components";
+
+<Timeline label="Release 2.4.0">
+  <TimelineItem title="Build started" timestamp="09:41" status="complete" />
+  <TimelineItem
+    title="Tests passed"
+    description="412 tests, 0 failures"
+    timestamp="09:44"
+  />
+  <TimelineItem title="Deploying" timestamp="09:52" status="current" />
+  <TimelineItem title="Smoke checks" status="upcoming" />
+</Timeline>;
+```
+
+## Variants
+
+None. `status` is per item: `complete` (default), `current` or `upcoming`.
+
+## Sizes
+
+None. The rail, gaps and type come from the theme's spacing and typography.
+
+## States
+
+| `status` | Dot fill | Title |
+| -------- | -------- | ----- |
+| `complete` | `foreground` | `foreground` |
+| `current` | `primary` | `foreground` |
+| `upcoming` | `muted` | `mutedForeground` |
+
+`TimelineItem.style` takes a `StateStyle` of `{ status, last }`.
+
+## Composition
+
+The real example is a four-event release history with a description and a
+current marker:
+
+<include lang="tsx" meta='title="packages/components/examples/timeline.example.tsx"'>
+  ../../../../../packages/components/examples/timeline.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/timeline.tsx" name="TimelineProps" />
+
+<auto-type-table path="../../../../../packages/components/src/timeline.tsx" name="TimelineItemProps" />
+
+## Keyboard and focus
+
+None. Events are not focusable and provide no activation.
+
+## Theming
+
+Dots use `foreground`, `primary`, `muted`; the connector is a 1px `border`-coloured
+element (the runtime has no pseudo-elements); timestamps and descriptions use
+`mutedForeground`. A custom theme changes the rail with no code change.
+
+## Accessibility and limitations
+
+- The root is a named `list` when `label` is given; every event is a `listitem`
+  named by its `title`, so timestamp and description are not repeated.
+- 0.10.0 has no `aria-current`; the current event carries `aria-selected`.
+- The dot is decorative; the status reaches assistive technology only through
+  that selected flag.
+- Display-only: no click, row activation or disabled policy.
+- `last` comes from **direct children**. Pass events directly; a fragment counts
+  as one child and would mark every event inside it as last.
+- One connector style, and no grouping or collapsing of old events.
+
+## Dependencies
+
+<ComponentDependencies slug="timeline" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/timeline.tsx"'>
+  ../../../../../packages/components/src/timeline.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="timeline" />

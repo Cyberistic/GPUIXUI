@@ -1,0 +1,118 @@
+---
+title: Drawer
+description: An edge-anchored panel for navigation and secondary tasks.
+---
+
+`Drawer` is a dialog that opens from an edge: filters on the right, navigation on
+the left, a details sheet at the bottom. It shares Dialog's rules — a window
+veil, the topmost dismiss layer, focus in and back, and a Tab trap — and differs
+only in where the surface sits.
+
+<ComponentState slug="drawer" />
+
+<NativePreview slug="drawer" />
+
+## Usage
+
+```tsx
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@gpuixui/components";
+
+<Drawer>
+  <DrawerTrigger>Filters</DrawerTrigger>
+  <DrawerContent side="right" size="md" label="Filters">
+    <DrawerHeader>
+      <DrawerTitle>Filters</DrawerTitle>
+      <DrawerDescription>Narrow the result set.</DrawerDescription>
+    </DrawerHeader>
+    <DrawerFooter>
+      <DrawerClose>Cancel</DrawerClose>
+    </DrawerFooter>
+  </DrawerContent>
+</Drawer>;
+```
+
+## Variants
+
+`side` is `"right"` (default), `"left"` or `"bottom"`. `DrawerContent` renders
+nothing while the drawer is closed.
+
+## Sizes
+
+`size` is `"sm" | "md" | "lg"`: 320 / 400 / 560 px wide for left and right, and
+240 / 320 / 420 px tall for the bottom sheet. The surface never exceeds the
+window. These are layout constants, not tokens.
+
+## States
+
+Controlled (`open`/`onOpenChange`) or uncontrolled (`defaultOpen`). `Escape`
+closes and returns focus to the trigger; an outside press closes.
+`dismissible={false}` ignores both, so such a drawer needs a visible close
+control.
+
+## Composition
+
+The real example is a filters drawer with a header, a body and actions:
+
+<include lang="tsx" meta='title="packages/components/examples/drawer.example.tsx"'>
+  ../../../../../packages/components/examples/drawer.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/drawer.tsx" name="DrawerProps" />
+
+<auto-type-table path="../../../../../packages/components/src/drawer.tsx" name="DrawerContentProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Enter` / `Space` on the trigger | opens the drawer |
+| `Tab` / `Shift+Tab` | wraps inside the surface |
+| `Escape` | closes; focus returns to the trigger |
+
+A drawer opened inside a dialog pushes its own dismiss layer, so one Escape
+closes the drawer first.
+
+## Theming
+
+The surface uses `popover` / `popoverForeground`, `border`, `radius` and the
+largest elevation; the veil is `overlay`; spacing comes from the theme's scale.
+A custom theme changes the drawer with no code change.
+
+## Accessibility and limitations
+
+- `DrawerContent` is a `dialog` named by the required `label`. 0.10.0 has no
+  `aria-modal` or `aria-labelledby`; the title is a heading, not the dialog's
+  accessible name.
+- Focus enters the surface and returns to the opener. `initialFocus` can put it
+  on a specific control after the surface takes focus.
+- No swipe-to-dismiss: 0.10.0 has no drag host feature.
+- No slide animation: `motion` has no transform, and animating width or left
+  would reflow the content, so the surface mounts in place.
+- No portal: the veil is an `<anchored>` element at window coordinates, as in
+  Dialog.
+- Sizes are layout constants, not tokens; the close control is a text glyph.
+
+## Dependencies
+
+<ComponentDependencies slug="drawer" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/drawer.tsx"'>
+  ../../../../../packages/components/src/drawer.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="drawer" />

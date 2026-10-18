@@ -1,0 +1,118 @@
+---
+title: Mention input
+description: An input with an anchored ranked suggestion list.
+---
+
+`MentionInput` opens a ranked suggestion list when the text contains an open
+`@` token and inserts the chosen name. The token rules are pure; the field owns
+the text and the highlight, and the consumer declares the candidate items.
+
+<ComponentState slug="mention-input" />
+
+<NativePreview slug="mention-input" />
+
+## Usage
+
+```tsx
+import {
+  MentionInput,
+  MentionInputItem,
+  MentionInputList,
+} from "@gpuixui/components";
+
+<MentionInput
+  label="Comment"
+  value={comment}
+  onValueChange={setComment}
+  onMention={(name) => notify(name)}
+>
+  <MentionInputList>
+    {people.map((person) => (
+      <MentionInputItem key={person} value={person} />
+    ))}
+  </MentionInputList>
+</MentionInput>;
+```
+
+## Variants
+
+None. `maxVisible` caps the ranked list (default 6); `disabled` makes the field
+read-only and inert.
+
+## Sizes
+
+None. The field uses the theme's `md` control height and the list sizes itself
+to its rows.
+
+## States
+
+| Text / action | Result |
+| ------------- | ------ |
+| `"@"` or `"hi @"` | opens with an empty query |
+| `"hi @an"` | query `"an"` |
+| `"email@example"` | no mention (no whitespace before `@`) |
+| `"@a @b"` | the last token |
+| no matches | the list closes |
+
+Ranking is case-insensitive: prefix matches first, then substring matches, each
+in declaration order.
+
+## Composition
+
+The real example narrows a list of people and inserts a name:
+
+<include lang="tsx" meta='title="packages/components/examples/mention-input.example.tsx"'>
+  ../../../../../packages/components/examples/mention-input.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/mention-input.tsx" name="MentionInputProps" />
+
+<auto-type-table path="../../../../../packages/components/src/mention-input.tsx" name="MentionInputItemProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `ArrowDown` / `ArrowUp` | moves the highlight, wrapping |
+| `Enter` | inserts the highlighted name (the input's submit event) |
+| `Escape` | closes the list, text unchanged |
+| pressing a row | inserts that name |
+
+`Tab` is not claimed: the platform moves focus out of the field. Rows are
+focusable, so `Tab` then `Enter` can pick one.
+
+## Theming
+
+The field uses `background`, `border`, `radius.md`, the control height and the
+focus ring; the list uses `popover`, `border` and `radius.md`; the highlighted
+row uses `accent` / `accentForeground`.
+
+## Accessibility and limitations
+
+- The field is a real input named by `label`; typing and focus are native.
+- Rows are buttons with `aria-selected` on the highlighted one; the surface is a
+  named group.
+- 0.10.0 drops `role="listbox"`/`option` from its accessibility dump and has no
+  `aria-activedescendant`, so the list is not announced as a listbox.
+- The query comes from the text's last `@` token, not the caret: 0.10.0 exposes
+  no caret position, so mid-string editing is not supported and an `@` inside a
+  word is ignored.
+- A space typed while the list is open is consumed by the runtime before the
+  field sees it.
+- No async or remote candidates, and the surface label is fixed to "Mentions".
+
+## Dependencies
+
+<ComponentDependencies slug="mention-input" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/mention-input.tsx"'>
+  ../../../../../packages/components/src/mention-input.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="mention-input" />

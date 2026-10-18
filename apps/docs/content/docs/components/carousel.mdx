@@ -1,0 +1,120 @@
+---
+title: Carousel
+description: Steps through a set of views.
+---
+
+`Carousel` steps through a fixed set of slides with previous/next controls and
+the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
+left and opacity only — no transform — and scroll snap is unavailable, so a
+translating track is not honestly expressible.
+
+<ComponentState slug="carousel" />
+
+<NativePreview slug="carousel" />
+
+<ComponentPreview slug="carousel" />
+
+## Usage
+
+```tsx
+import {
+  Carousel,
+  CarouselControl,
+  CarouselSlide,
+  CarouselTrack,
+} from "@gpuixui/components";
+
+<Carousel label="Workspace previews" value={index} onValueChange={setIndex} loop>
+  <CarouselTrack>
+    <CarouselSlide>…</CarouselSlide>
+    <CarouselSlide>…</CarouselSlide>
+  </CarouselTrack>
+  <div style={{ display: "flex", gap: 8 }}>
+    <CarouselControl direction="previous" />
+    <CarouselControl direction="next" />
+  </div>
+</Carousel>;
+```
+
+Declare slides directly inside `CarouselTrack`: the track numbers its direct
+children, so a wrapper or fragment gives every slide the same index.
+
+## Variants
+
+None. `loop` wraps at the edges; `value` / `defaultValue` make the index
+controlled or uncontrolled.
+
+## Sizes
+
+None. The track fills its parent; slides have no surface of their own.
+
+## States
+
+| Action | Result |
+| ------ | ------ |
+| next / previous | moves one slide; a no-op at an edge unless `loop` |
+| `loop` | wraps in both directions |
+| `ArrowRight` / `ArrowLeft` | same as the controls while the carousel is focused |
+| `Home` / `End` | first / last slide |
+| controlled `value` | the caller's index wins; the control still reports |
+
+Every slide stays mounted and only the active one is displayed, so a form on
+slide two is not reset by visiting slide three. `CarouselSlide.style` takes
+`{ active, index }`.
+
+## Composition
+
+The real example steps through three workspace previews with controls:
+
+<include lang="tsx" meta='title="packages/components/examples/carousel.example.tsx"'>
+  ../../../../../packages/components/examples/carousel.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/carousel.tsx" name="CarouselProps" />
+
+<auto-type-table path="../../../../../packages/components/src/carousel.tsx" name="CarouselSlideProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `ArrowRight` / `ArrowLeft` | next / previous slide |
+| `Home` / `End` | first / last slide |
+| `Tab` to a control, then `Enter` / `Space` | steps |
+
+The root is focusable and named by `label`; a control at an edge is disabled
+(out of the tab order and dimmed) unless `loop`.
+
+## Theming
+
+The track uses `card` with a `border` edge and `radius.lg`; controls use the
+local Button roles. Slides have no surface of their own.
+
+## Accessibility and limitations
+
+- The root is a named `group` and takes focus for the arrow keys.
+- Controls are buttons named "Previous slide" / "Next slide".
+- Inactive slides stay in the tree with `display: none`; a screen reader does not
+  announce them, and their component state survives.
+- 0.10.0 has no `aria-roledescription="carousel"` or slide-position
+  announcement.
+- **No slide animation** (no transform in `motion`) and **no swipe/drag** (no
+  drag host feature).
+- No indicator dots, auto-advance or thumbnails; slides must be direct children;
+  many heavy slides cost render time because all stay mounted.
+
+## Dependencies
+
+<ComponentDependencies slug="carousel" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/carousel.tsx"'>
+  ../../../../../packages/components/src/carousel.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="carousel" />

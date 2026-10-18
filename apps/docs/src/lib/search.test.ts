@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { SortedResult } from "fumadocs-core/search";
+import type { ComponentMetaInput } from "@/component-meta/schema";
 import {
+  componentSearchIndex,
   componentSearchUrl,
   DEFAULT_SEARCH_LIMIT,
   MAX_SEARCH_LIMIT,
@@ -32,12 +34,12 @@ describe("search", () => {
     expect(results.map((result) => result.url)).toContain("/docs/installation");
   });
 
-  it("finds a component with no page from any page's search", async () => {
+  it("finds a component page from any page's search", async () => {
     const results = await search("drawer");
     const drawer = results.find((result) =>
       contentOf(result).startsWith("Drawer"),
     );
-    expect(drawer?.url).toBe("/docs/components?q=Drawer");
+    expect(drawer?.url).toBe("/docs/components/drawer");
   });
 
   it("ranks real pages ahead of the registry appendix", async () => {
@@ -45,13 +47,33 @@ describe("search", () => {
     expect(results[0]?.url).toBe("/docs/installation");
   });
 
-  it("appends planned components after the pages, pointing at the filtered index", async () => {
-    const results = await search("drawer", 20);
-    const planned = results.find(
-      (result) => contentOf(result) === "Drawer (planned)",
-    );
-    expect(planned?.url).toBe("/docs/components?q=Drawer");
-    expect(results.at(-1)?.url).toContain("/docs/components?q=");
+  it("points a planned record at the filtered index instead of a page", () => {
+    // No Tier 1–2 record is planned after plan 461, so the rule is proven on a
+    // fixture: a future record must not promise a page it does not have.
+    const planned: ComponentMetaInput = {
+      slug: "demo-grid",
+      title: "Demo grid",
+      tier: "2",
+      group: "composition",
+      status: "planned",
+      gpuix: "unverified",
+      summary: "A planned component.",
+      packageName: "@gpuixui/components",
+      sourcePath: null,
+      api: [],
+      parts: [],
+      pattern: "static",
+      persistence: null,
+      dependencies: [],
+      related: [],
+      playgroundScreen: null,
+      liveScene: null,
+      screenshots: [],
+      runtime: null,
+      limitations: [],
+    };
+    expect(componentSearchUrl(planned)).toBe("/docs/components?q=Demo%20grid");
+    expect(componentSearchIndex(planned).title).toBe("Demo grid (planned)");
   });
 
   it("returns nothing for a query no page or component matches", async () => {

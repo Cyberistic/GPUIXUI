@@ -1,0 +1,110 @@
+---
+title: Preview Card
+description: A hover-triggered rich card with a positioner.
+---
+
+`PreviewCard` previews what a link or row points at: a title, a sentence, an
+avatar, a small action. It is **hoverable** — the pointer may travel from the
+trigger into the card — which is what separates it from a tooltip.
+
+<ComponentState slug="preview-card" />
+
+<NativePreview slug="preview-card" />
+
+<ComponentPreview slug="preview-card" />
+
+## Usage
+
+```tsx
+import {
+  PreviewCard,
+  PreviewCardContent,
+  PreviewCardTrigger,
+} from "@gpuixui/components";
+
+<PreviewCard>
+  <PreviewCardTrigger>design-system.md</PreviewCardTrigger>
+  <PreviewCardContent label="design-system.md">
+    <text>Tokens, semantic roles and the theme extension mechanism.</text>
+  </PreviewCardContent>
+</PreviewCard>;
+```
+
+## Variants
+
+None. `open` / `defaultOpen` / `onOpenChange` make it controlled or uncontrolled;
+`side`, `align`, `sideOffset` and `collisionPadding` position the card.
+
+## Sizes
+
+None. The card's `minWidth` is 240 and `maxWidth` 360 so a preview stays a
+glance; the content sizes itself inside that range.
+
+## States
+
+| Action | Result |
+| ------ | ------ |
+| pointer enters the trigger | opens after `openDelay` (default 300 ms) |
+| keyboard focus reaches the trigger | opens immediately |
+| pointer leaves the trigger but enters the card | stays open |
+| pointer leaves both | closes after `closeDelay` (default 150 ms) |
+| `Escape` | closes and returns focus to the trigger |
+| outside press | closes |
+| press while open / closed | closes / opens (the touch path) |
+
+## Composition
+
+The real example previews a file row with a title and a sentence:
+
+<include lang="tsx" meta='title="packages/components/examples/preview-card.example.tsx"'>
+  ../../../../../packages/components/examples/preview-card.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/preview-card.tsx" name="PreviewCardProps" />
+
+<auto-type-table path="../../../../../packages/components/src/preview-card.tsx" name="PreviewCardContentProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Tab` to the trigger | opens the card immediately |
+| `Escape` | closes and returns focus to the trigger |
+| `Tab` from the trigger while open | reaches the card's links and actions |
+
+The card is not auto-focused on hover: that would steal focus from whatever the
+reader was typing.
+
+## Theming
+
+The surface uses `popover` / `popoverForeground`, `border`, `radius.lg` and the
+medium elevation. A custom theme changes it with no code change.
+
+## Accessibility and limitations
+
+- The trigger is a button, so keyboard focus opens the card without hovering.
+- Escape closes through the shared dismiss stack; a preview inside a dialog
+  closes only itself.
+- The card is a named `group`. 0.10.0 has no `aria-haspopup` for this pattern and
+  no anchor arrow.
+- No pointer-type signal: touch has no hover, so press-to-toggle is the honest
+  touch interaction.
+- Open and close delays are the component's UI timers, not domain time or motion
+  tokens; pass `0` for tests or a dense UI.
+- An outside press closes the card but does not restore focus, matching Popover.
+
+## Dependencies
+
+<ComponentDependencies slug="preview-card" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/preview-card.tsx"'>
+  ../../../../../packages/components/src/preview-card.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="preview-card" />

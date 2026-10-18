@@ -1,0 +1,108 @@
+---
+title: Hotkey-recorder input
+description: Records a keyboard accelerator.
+---
+
+`HotkeyRecorder` binds a shortcut: click it (or press `Enter`/`Space`), press a
+chord, and the component reports it as an accelerator string. Display uses the
+same grammar and platform glyphs as
+[Keyboard shortcuts](/docs/components/keycap), so a bound chord and a cheat
+sheet cannot disagree.
+
+<ComponentState slug="hotkey-input" />
+
+<NativePreview slug="hotkey-input" />
+
+## Usage
+
+```tsx
+import { HotkeyRecorder } from "@gpuixui/components";
+
+const [hotkey, setHotkey] = useState<string | null>("mod+k");
+
+<HotkeyRecorder
+  label="Toggle command palette"
+  value={hotkey}
+  onChange={setHotkey}
+/>;
+```
+
+## Variants
+
+None. `placeholder` changes the idle text; `disabled` removes the recorder and
+its clear control from the tab order.
+
+## Sizes
+
+None. The field uses the theme's `md` control height and `radius.md`.
+
+## States
+
+| Action | Result |
+| ------ | ------ |
+| click, `Enter` or `Space` while idle | starts listening ("Press keys…") |
+| a key with a modifier | captures and reports the chord, stops listening |
+| a modifier-only press | ignored; still listening |
+| `Escape` while listening | cancels and keeps the bound value |
+| focus leaves | cancels; a half-finished chord is never committed |
+| the `✕` control | clears the binding (`null`) |
+| `disabled` | out of the tab order, inert, no clear control |
+
+Captured order is `mod`, the secondary modifier, `shift`, `alt`, then the key.
+`mod` is Command on macOS and Control elsewhere; a Control press on macOS keeps
+`ctrl` rather than being rewritten to `mod`.
+
+## Composition
+
+The real example binds a palette chord, records a new one and clears it:
+
+<include lang="tsx" meta='title="packages/components/examples/hotkey-recorder.example.tsx"'>
+  ../../../../../packages/components/examples/hotkey-recorder.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/hotkey-recorder.tsx" name="HotkeyRecorderProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Enter` / `Space` while idle | starts listening |
+| the chord | captured and reported |
+| modifier-only | ignored |
+| `Escape` | cancels recording |
+| `Tab` away | cancels recording |
+
+## Theming
+
+The field uses `background`, `border`, `radius.md`, the control height and the
+focus ring; keycaps use the shared Keycap roles; the clear control shows an
+`accent` hover. `HotkeyRecorder.style` takes `{ recording, disabled }`.
+
+## Accessibility and limitations
+
+- The recorder is a `role="button"` named by `label`; the clear control is a
+  separately named button, so both are reachable by keyboard.
+- Recording is visual and the field keeps focus while listening.
+- 0.10.0 has no `aria-keyshortcuts` and no `aria-disabled`; disabled is the tab
+  order plus dimming.
+- **No `preventDefault`**: the runtime observes keys but cannot cancel them, so
+  a chord the OS or app already handles still fires while being recorded.
+- Clearing is a control, not Backspace, because the test renderer emits no
+  Backspace/Delete event.
+- No conflict detection; registering the chord with the runtime is the app's job.
+
+## Dependencies
+
+<ComponentDependencies slug="hotkey-input" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/hotkey-recorder.tsx"'>
+  ../../../../../packages/components/src/hotkey-recorder.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="hotkey-input" />

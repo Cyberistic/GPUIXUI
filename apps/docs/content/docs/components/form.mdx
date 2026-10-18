@@ -1,0 +1,142 @@
+---
+title: Form
+description: Schema validation and a submit lifecycle around a group of fields.
+---
+
+`Form` joins the schema-to-message validation in `validation/logic.ts` with the
+`Field` parts around each control. A submit runs the schema; a failure shows
+every message; a success calls `onSubmit` with the **decoded** value. It is
+owned-value: the runtime has no form element and no DOM to read values from, so
+the caller passes the value it already holds.
+
+<ComponentState slug="form" />
+
+<NativePreview slug="form" />
+
+<ComponentPreview slug="form" />
+
+## Usage
+
+```tsx
+import { Field, FieldInput, Form } from "@gpuixui/components";
+import { Button } from "@gpuixui/primitives";
+
+const Signup = Schema.Struct({
+  email: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+});
+
+<Form
+  schema={Signup}
+  value={{ email, name }}
+  pending={saving}
+  onSubmit={save}
+  label="Create account"
+>
+  {(form) => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <Field label="Email" description="We never share it">
+        <FieldInput
+          value={email}
+          onChange={(event) => setEmail(event.value ?? "")}
+        />
+      </Field>
+      <Field label="Name">
+        <FieldInput
+          value={name}
+          onChange={(event) => setName(event.value ?? "")}
+        />
+      </Field>
+      <Button onClick={form.submit} disabled={form.pending}>
+        Create account
+      </Button>
+    </div>
+  )}
+</Form>;
+```
+
+## Variants
+
+None. The contract fixes `Form` as one part; `label` decides whether it is a
+named form landmark.
+
+## Sizes
+
+None. The form's layout uses `spacing.lg`; the summary uses the `caption` type.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| idle | children render with `errors: []`, `pending: false` |
+| invalid submit | every schema message appears in one `role="alert"`; `onSubmit` is not called |
+| valid submit | errors clear; `onSubmit` receives the decoded value |
+| `pending` | `form.submit()` is a no-op; render the caller's busy state |
+
+## Composition
+
+The real example shows the whole lifecycle, including the local button
+stand-in:
+
+<include lang="tsx" meta='title="packages/components/examples/form.example.tsx"'>
+  ../../../../../packages/components/examples/form.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/form.tsx" name="FormProps" />
+
+### The render prop
+
+`Form` is one part, so the only way to reach the submit action and the state
+needed to render it is the render prop:
+
+```ts
+interface FormState {
+  readonly errors: ReadonlyArray<string>;
+  readonly pending: boolean;
+  readonly submit: () => void;
+}
+```
+
+`Form` renders the error summary itself, so the render prop does not have to.
+
+## Keyboard and focus
+
+The submit control is the caller's; `Enter` in a field follows the input's own
+contract, and the caller's button takes `Enter` and `Space`. Focus never moves
+on a failed submit — the `role="alert"` summary is announced without stealing
+focus.
+
+## Theming
+
+The form's layout uses `spacing.lg`; the summary uses `caption` type in
+`colors.destructive`. There are no literal colours or sizes.
+
+## Accessibility and limitations
+
+- With `label`, the root is `role="form"` named by `aria-label`; without it the
+  root is a plain container. 0.10.0 has no `aria-labelledby`, so an unnamed form
+  is not a landmark.
+- The summary is a single `role="alert"`, so a failed submit is announced once;
+  each message is its own text node.
+- Owned-value: the caller passes the value; there is no field registration.
+- `validateAll` returns messages, not paths, so `Form` cannot attach a message to
+  a particular `Field`. Per-field messages stay the `Field` API.
+- No re-validation on edit; errors persist until the next submit.
+- The request belongs to the caller: pass `pending` while it runs and re-render
+  with a new value.
+
+## Dependencies
+
+<ComponentDependencies slug="form" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/form.tsx"'>
+  ../../../../../packages/components/src/form.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="form" />

@@ -1,0 +1,120 @@
+---
+title: Navigation Menu
+description: A navigation bar whose items open anchored content panels.
+---
+
+`NavigationMenu` is a navigation region: triggers in a row, exactly one anchored
+panel open, and links inside it. It is not a dropdown menu — the panel holds
+navigation, and the trigger row takes arrow keys as a group.
+
+<ComponentState slug="navigation-menu" />
+
+<NativePreview slug="navigation-menu" />
+
+## Usage
+
+```tsx
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@gpuixui/components";
+
+<NavigationMenu label="Product">
+  <NavigationMenuList>
+    <NavigationMenuItem value="platform">
+      <NavigationMenuTrigger>Platform</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <NavigationMenuLink onSelect={() => go("overview")}>
+          Overview
+        </NavigationMenuLink>
+      </NavigationMenuContent>
+    </NavigationMenuItem>
+  </NavigationMenuList>
+</NavigationMenu>;
+```
+
+## Variants
+
+None. The open item is a `value` (`string | null`), controlled with
+`onValueChange` or uncontrolled with `defaultValue`. One panel is open at a time.
+
+## Sizes
+
+None. The trigger row, panel padding and gaps come from the theme's spacing and
+control height.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| closed | no panel is mounted; the trigger reports `aria-expanded=false` |
+| open | one anchored panel; its trigger reports `aria-expanded=true` |
+| focus | the trigger row moves focus with the arrow keys |
+| outside press | closes the panel |
+| a second trigger | closes the first panel before opening its own |
+
+## Composition
+
+The real example is a two-item product nav with links:
+
+<include lang="tsx" meta='title="packages/components/examples/navigation-menu.example.tsx"'>
+  ../../../../../packages/components/examples/navigation-menu.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/navigation-menu.tsx" name="NavigationMenuProps" />
+
+<auto-type-table path="../../../../../packages/components/src/navigation-menu.tsx" name="NavigationMenuLinkProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Enter` / `Space` on a trigger | toggles that item's panel |
+| `ArrowDown` on a trigger | opens the panel and moves focus to its surface |
+| `ArrowLeft` / `ArrowRight` | moves focus between triggers; does not open |
+| `Home` / `End` | first / last trigger |
+| `Escape` | closes the panel and returns focus to its trigger |
+| `Tab` | moves into the open panel's links |
+
+The panel joins the shared dismiss stack, so a nav inside a dialog closes first.
+
+## Theming
+
+The panel uses `popover` / `popoverForeground`, `border`, `radius.lg` and the
+medium elevation; links use the ghost-button roles with an `accent` hover. Items
+sit `spacing["2xs"]` apart. A custom theme changes it with no code change.
+
+## Accessibility and limitations
+
+- The nav is a named `navigation` region; the trigger row is a `list`.
+- A trigger reports `aria-expanded`; the single `value` means two panels cannot
+  both claim to be open.
+- Links are buttons with `onSelect`: 0.10.0 has no anchor element or `href`, so
+  routing is the consumer's job.
+- 0.10.0 has no `aria-haspopup`, so a trigger does not announce that it owns a
+  panel.
+- Hover does not open. Press, `Enter`/`Space` or `ArrowDown` open; hover-open is
+  a separate policy and is not claimed.
+- `ArrowDown` focuses the panel surface, not the first link; one `Tab` reaches
+  the links.
+- No nested menus or columns beyond the children placed in a panel.
+
+## Dependencies
+
+<ComponentDependencies slug="navigation-menu" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/navigation-menu.tsx"'>
+  ../../../../../packages/components/src/navigation-menu.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="navigation-menu" />

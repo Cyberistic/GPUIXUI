@@ -1,0 +1,99 @@
+---
+title: Stepper
+description: A multi-step progress indicator.
+---
+
+`Stepper` shows where a workflow is in a sequence: a number marker, the step's
+name and an optional description per step. It is an **indicator**, not a
+control — it holds no state, takes no callback, and derives each status from the
+one `value` you pass.
+
+<ComponentState slug="stepper" />
+
+<NativePreview slug="stepper" />
+
+<ComponentPreview slug="stepper" />
+
+## Usage
+
+```tsx
+import { Stepper, StepperStep } from "@gpuixui/components";
+
+<Stepper value={2} label="Checkout">
+  <StepperStep value={1} label="Account" description="Email and password" />
+  <StepperStep value={2} label="Billing" description="Card and address" />
+  <StepperStep value={3} label="Review" />
+</Stepper>;
+```
+
+## Variants
+
+None. `orientation` is `"horizontal"` (default) or `"vertical"`.
+
+## Sizes
+
+None. The marker is the theme's `md` control height and the gaps come from
+spacing, so the stepper follows density.
+
+## States
+
+The status is derived, never passed:
+
+| A step's `value` | Status | Marker |
+| ---------------- | ------ | ------ |
+| `< value` | `complete` | `secondary` fill |
+| `= value` | `current` | `primary` fill |
+| `> value` | `upcoming` | `muted` fill |
+
+`StepperStep.style` takes a `StateStyle` of `{ status }`.
+
+## Composition
+
+The real example is a three-step checkout:
+
+<include lang="tsx" meta='title="packages/components/examples/stepper.example.tsx"'>
+  ../../../../../packages/components/examples/stepper.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/stepper.tsx" name="StepperProps" />
+
+<auto-type-table path="../../../../../packages/components/src/stepper.tsx" name="StepperStepProps" />
+
+## Keyboard and focus
+
+None. The stepper is display-only: no step is focusable, clickable or
+activatable.
+
+## Theming
+
+Markers and labels use `primary`, `secondary`, `muted` and their foregrounds;
+the marker is `controlHeight(theme, "md")` round. A custom theme changes the
+whole indicator with no code change.
+
+## Accessibility and limitations
+
+- The root is a named `list` when `label` is given; every step is a `listitem`
+  named by its `label`.
+- 0.10.0 has no `aria-current`, so the current step carries `aria-selected` —
+  the same substitution Pagination uses.
+- The number marker is visual; the accessible name is the step label only.
+- Display-only by design: there is no step click, disabled policy or
+  `onValueChange`.
+- No connector line between steps: the runtime has no pseudo-elements and the
+  contract fixes two parts.
+
+## Dependencies
+
+<ComponentDependencies slug="stepper" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/stepper.tsx"'>
+  ../../../../../packages/components/src/stepper.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="stepper" />

@@ -48,6 +48,7 @@ import {
   row,
   type PreviewProps,
 } from "./preview-styles";
+import { supplementPreviews } from "./supplement-previews";
 import { PreviewSurface } from "./theme-surface";
 
 /**
@@ -363,4 +364,5 @@ export const previewsBySlug: ReadonlyMap<
   ["box", BoxPreview],
   ["button-group", ButtonGroupPreview],
   ["label", LabelPreview],
+  ...supplementPreviews,
 ]);

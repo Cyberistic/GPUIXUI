@@ -1,0 +1,93 @@
+---
+title: Countdown
+description: Counts down to a moment using the app's clock.
+---
+
+`Countdown` renders **one remaining duration it is given**. It does not tick, and
+that is deliberate: an Effect `Clock` (or the app's clock) owns time, and a
+renderer timer would keep running after unmount and drift from the app's state.
+
+<ComponentState slug="countdown" />
+
+<NativePreview slug="countdown" />
+
+<ComponentPreview slug="countdown" />
+
+## Usage
+
+```tsx
+import { Countdown } from "@gpuixui/components";
+
+<Countdown remainingMs={90_000} label="Offer ends in" />;
+// 01:30
+```
+
+The application ticks and re-renders. An Effect fiber at the boundary is the
+recommended pattern; the example shows the loop and its interrupt on cleanup.
+
+## Variants
+
+None. `showDays` adds a `Nd ` prefix once a full day remains.
+
+## Sizes
+
+None. The value uses the `caption` type role.
+
+## States
+
+| Remaining | Output |
+| --------- | ------ |
+| `90_000` ms | `01:30` |
+| `3_600_000` ms | `01:00:00` |
+| `90_000_000` ms (25 h) | `25:00:00` — hours are uncapped |
+| `90_000_000` ms with `showDays` | `1d 01:00:00` |
+| `0` or negative | `00:00` in `mutedForeground` |
+
+Seconds are floored, not rounded: `59_999` ms is `00:59`. `Countdown.style`
+takes `{ remainingMs, expired }`.
+
+## Composition
+
+The real example owns an Effect clock and re-renders the remaining duration:
+
+<include lang="tsx" meta='title="packages/components/examples/countdown.example.tsx"'>
+  ../../../../../packages/components/examples/countdown.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/countdown.tsx" name="CountdownProps" />
+
+## Keyboard and focus REMOVED
+
+None. The text is not focusable and has no interaction.
+
+## Theming
+
+`caption` type; `foreground` while time remains and `mutedForeground` once
+expired. The component has no colour of its own, so a custom theme changes it.
+
+## Accessibility and limitations
+
+- The text is the value; `label` becomes the accessible name, so a screen reader
+  hears "Offer ends in" rather than only "01:30".
+- 0.10.0 has no `role="timer"`, so no live announcement is claimed. A countdown
+  that must announce changes needs the application's own strategy.
+- The expired colour is visual; the accessible name does not become "expired".
+- **No timer inside the component** — by design, not as a missing feature.
+- Fixed locale-free format: no relative units, no localised numerals.
+- No progress bar or ring; pair it with Progress.
+
+## Dependencies
+
+<ComponentDependencies slug="countdown" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/countdown.tsx"'>
+  ../../../../../packages/components/src/countdown.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="countdown" />

@@ -1,6 +1,6 @@
 ---
-title: Date / time pickers
-description: Selects a date or time.
+title: Date pickers
+description: Selects a calendar day through a popover.
 ---
 
 <ComponentState slug="date-picker" />
@@ -23,8 +23,9 @@ const [due, setDue] = useState<string | null>("2026-10-30");
 
 ## Variants
 
-One day-picker. There is no time picker and no range picker in v1: the public
-value is an ISO day (`YYYY-MM-DD`) or `null`.
+One day-picker. There is no time of day and no range picker in v1: the public
+value is an ISO day (`YYYY-MM-DD`) or `null`, and the time half is the separate
+[Time pickers](/docs/components/time-picker) field.
 
 ## Sizes
 
@@ -81,7 +82,8 @@ The trigger uses `colors.background`, a thin `colors.borderStrong` border and
 - **Fixed English labels**; the repo has no i18n layer, and a locale prop that
   silently did nothing would be worse than none.
 - **No adjacent-month days** and no range selection.
-- **No time picker**: a time control needs its own decision.
+- **No time of day**: the separate [Time pickers](/docs/components/time-picker)
+  field owns that half of a scheduling UI.
 - The only clock read is `DateTime.nowUnsafe` for "today"; pass `today` to make a
   test or server boundary deterministic.
 - No live scene ships for this component yet; the example and source are real.

@@ -1,0 +1,111 @@
+---
+title: Fieldset
+description: Groups related form controls under one legend.
+---
+
+`Fieldset` groups related fields under one visible heading. `Field` wraps a
+single control; a fieldset says which fields belong together — a billing
+address, a notification preference block, the advanced half of a settings form.
+It is composition only: it holds no value, validates nothing and has no submit
+lifecycle.
+
+<ComponentState slug="fieldset" />
+
+<NativePreview slug="fieldset" />
+
+<ComponentPreview slug="fieldset" />
+
+## Usage
+
+```tsx
+import { Field, FieldInput, Fieldset } from "@gpuixui/components";
+
+<Fieldset legend="Billing address" disabled={saving}>
+  <Field label="Street" description="Street and number">
+    <FieldInput
+      value={street}
+      onChange={(event) => setStreet(event.value ?? "")}
+    />
+  </Field>
+  <Field label="City" description="Where the invoice is sent">
+    <FieldInput
+      value={city}
+      onChange={(event) => setCity(event.value ?? "")}
+    />
+  </Field>
+</Fieldset>;
+```
+
+`legend` is both the visible heading and the group's accessible name, so an
+unnamed group cannot be authored. The root renders its own `FieldsetLegend`; a
+second one is the composition mistake the component rejects at render.
+
+## Variants
+
+None. A fieldset is a group and a legend; use `Card` when the group needs a
+border or elevation.
+
+## Sizes
+
+None. The group uses `spacing.lg` between fields and the `label` type for the
+legend.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| enabled | the legend and fields render normally |
+| `disabled` | the legend dims; a `FieldInput` inside becomes read-only, leaves the tab order, paints the disabled roles and shows `not-allowed` |
+
+Only the legend dims with the group. Dimming the subtree would double-dim a
+control that already paints itself disabled, and would hide an action with its
+own policy.
+
+## Composition
+
+The real example pairs the group with two fields:
+
+<include lang="tsx" meta='title="packages/components/examples/fieldset.example.tsx"'>
+  ../../../../../packages/components/examples/fieldset.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/fieldset.tsx" name="FieldsetProps" />
+
+## Keyboard and focus
+
+`Tab` moves through the controls inside the group in declaration order. A
+disabled `FieldInput` leaves the tab order instead of pretending to be disabled.
+The group itself takes no focus.
+
+## Theming
+
+The group uses `spacing.lg`; the legend uses the `label` type in `foreground`,
+or `disabledForeground` when disabled. The disabled input uses `colors.disabled`
+and `colors.disabledForeground`. There are no literal colours or sizes.
+
+## Accessibility and limitations
+
+- The group renders `role="group"` and `aria-label={legend}`. 0.10.0 has no
+  `aria-labelledby`, so the legend text is the name; it is not referenced by id.
+- No `fieldset` element and no `aria-disabled` in 0.10.0. A disabled group is
+  conveyed by its controls leaving the tab order and the dimmed legend.
+- Disabled propagation is opt-in: `FieldInput` honours it; other controls (a
+  `Combobox`, a `List`) keep their own `disabled` prop.
+- A disabled `FieldInput` is `readOnly`, not a disabled input: assistive
+  technology reads an editable-looking field that refuses input.
+
+## Dependencies
+
+<ComponentDependencies slug="fieldset" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/fieldset.tsx"'>
+  ../../../../../packages/components/src/fieldset.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="fieldset" />

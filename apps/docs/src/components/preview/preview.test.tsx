@@ -8,6 +8,7 @@ import {
 import type { Capture, CaptureProvenance } from "./captures";
 import { captureCaption } from "./captures";
 import { NativePreview } from "./native-preview";
+import { PreviewUnavailable } from "./preview-unavailable";
 import { NativeScreenshot } from "./screenshot";
 import { PlaygroundScreen } from "./playground-screen";
 import { selectNativeEvidence, selectPreview } from "./select-preview";
@@ -69,10 +70,14 @@ describe("preview labels", () => {
   });
 
   it("shows an unverified component as unavailable, never approximated", () => {
+    // Every delivered Tier 1–2 record has a runtime suite after plan 461, so the
+    // unavailable notice is proven on the component that renders it; no page
+    // may turn it into a tier-A approximation.
     const html = renderToStaticMarkup(
-      <NativePreview slug="message-scroller" />,
+      <PreviewUnavailable reason="no runtime suite ships for this component" />,
     );
     expect(html).toContain("Not verified in the GPUix runtime");
+    expect(html).toContain("no runtime suite ships for this component");
     expect(html).not.toContain(APPROXIMATION_NOTICE);
   });
 

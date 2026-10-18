@@ -52,6 +52,23 @@
     "pagination",
     "search-input",
     "combobox",
-    "date-picker"
+    "date-picker",
+    "time-picker",
+    "message-scroller",
+    "fieldset",
+    "form",
+    "navigation-menu",
+    "preview-card",
+    "drawer",
+    "stepper",
+    "timeline",
+    "color-picker",
+    "tag-input",
+    "mention-input",
+    "hotkey-input",
+    "countdown",
+    "carousel",
+    "inline-edit",
+    "keycap"
   ]
 }

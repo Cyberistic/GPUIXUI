@@ -1,0 +1,121 @@
+---
+title: Message scroller
+description: Keeps a transcript on new content while the reader stays in control.
+---
+
+`MessageScroller` is the conversation, log and transcript surface: a bounded
+scroll viewport that follows the newest row while the reader is at the end,
+leaves the reader's position untouched once they scroll up, and offers an
+explicit way back with a count of what arrived. The behaviour is ported from
+shadcn/ui's Message Scroller; the implementation is ours and runs on GPUix host
+elements.
+
+<ComponentState slug="message-scroller" />
+
+<NativePreview slug="message-scroller" />
+
+<ComponentPreview slug="message-scroller" />
+
+## Usage
+
+```tsx
+import {
+  MessageScroller,
+  MessageScrollerItem,
+  MessageScrollerJumpToLatest,
+  MessageScrollerViewport,
+} from "@gpuixui/components";
+
+<MessageScroller label="Conversation">
+  <MessageScrollerViewport style={{ height: 320 }}>
+    {messages.map((message) => (
+      <MessageScrollerItem key={message.id}>
+        <text>{message.body}</text>
+      </MessageScrollerItem>
+    ))}
+  </MessageScrollerViewport>
+  <MessageScrollerJumpToLatest />
+</MessageScroller>;
+```
+
+The viewport needs a bounded height — its own `height` or a flex parent with a
+bounded height. Without one there is nothing to scroll.
+
+## Variants
+
+None. The parts are fixed: root, viewport, item and the jump-to-latest
+affordance. Compose the viewport's children and leave the rest.
+
+## Sizes
+
+The viewport has no size of its own; give it a height or a bounded flex parent.
+The affordance uses the theme's `sm` control height.
+
+## States
+
+| State | What happens |
+| ----- | ------------ |
+| pinned (default) | appends follow the tail, including a taller streamed row |
+| unpinned | the reader's offset stays put; the affordance appears |
+| unread | the affordance carries the number of rows that arrived |
+| short history | no scroll and no affordance |
+| controlled `pinned` | the caller's value wins; accepted changes report through `onPinnedChange` |
+
+A scroll within the threshold (default 24px) still counts as "at the end", so a
+nudge does not switch following off.
+
+## Composition
+
+The real example appends rows and streams a reply token by token:
+
+<include lang="tsx" meta='title="packages/components/examples/message-scroller.example.tsx"'>
+  ../../../../../packages/components/examples/message-scroller.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/message-scroller.tsx" name="MessageScrollerProps" />
+
+<auto-type-table path="../../../../../packages/components/src/message-scroller.tsx" name="MessageScrollerViewportProps" />
+
+## Keyboard and focus
+
+The viewport is a plain scroll container. The affordance is a real focusable
+control: `Enter` and `Space` return to the end, clear the count and report the
+pin change. `End` does **not** re-pin — 0.10.0 gives a component no "scroll to
+end" key binding, so the affordance is the path.
+
+## Theming
+
+The viewport paints the `background` / `foreground` roles; an item has no surface
+of its own; the affordance uses the local Button's `secondary` role, its focus
+ring and the theme's `sm` control height. A custom theme changes all of it with
+no code change.
+
+## Accessibility and limitations
+
+- The root is a named `group`.
+- The affordance's text carries the count, so a screen reader hears "3 new
+  messages" rather than an unlabelled icon.
+- Not virtualized: every row renders. `<virtual-list>` takes an item count rather
+  than compound children, so it cannot host `MessageScrollerItem` without a new
+  public API; the pin decision is already measured from the tail.
+- The affordance sits beneath the viewport, not floating in a corner, because
+  `position: "absolute"` resolves against the mount parent in 0.10.0.
+- No resize observer: a row that grows without re-rendering the scroller is not
+  followed. A stream held in the app's state re-renders it and is followed.
+- No `aria-live` in 0.10.0, so new rows are not announced.
+
+## Dependencies
+
+<ComponentDependencies slug="message-scroller" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/message-scroller.tsx"'>
+  ../../../../../packages/components/src/message-scroller.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="message-scroller" />

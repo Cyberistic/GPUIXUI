@@ -36,6 +36,7 @@ const previewSources = [
   "./composition-previews.tsx",
   "./layout-previews.tsx",
   "./platform-previews.tsx",
+  "./supplement-previews.tsx",
 ];
 
 describe("parsePreviewState", () => {

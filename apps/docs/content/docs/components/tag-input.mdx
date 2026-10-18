@@ -1,0 +1,110 @@
+---
+title: Tag / token input
+description: An input that collects removable tokens.
+---
+
+`TagInput` edits a list of tokens: the caller owns the list, the component owns
+the draft and the add/remove rules. Chips are rendered from the caller's value,
+so nothing the component holds is invisible to the caller.
+
+<ComponentState slug="tag-input" />
+
+<NativePreview slug="tag-input" />
+
+<ComponentPreview slug="tag-input" />
+
+## Usage
+
+```tsx
+import { TagInput, TagInputChip, TagInputField } from "@gpuixui/components";
+
+const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
+
+<TagInput label="Tags" value={tags} onValueChange={setTags} max={5}>
+  {tags.map((tag) => (
+    <TagInputChip key={tag} value={tag} />
+  ))}
+  <TagInputField placeholder="Add a tag…" />
+</TagInput>;
+```
+
+## Variants
+
+None. `allowDuplicates` and `max` change the token rules; `disabled` removes the
+field and chip controls from the tab order.
+
+## Sizes
+
+None. The field uses the theme's `md` control height and `radius.md`; chips use
+`radius.sm`.
+
+## States
+
+| Action | Result |
+| ------ | ------ |
+| `Enter` in a non-empty field | trims and commits the draft, clears it |
+| typing `,` | commits everything before it; the remainder stays the draft |
+| pasting `"a,b"` | adds both tokens |
+| a token already present | ignored, unless `allowDuplicates` |
+| reaching `max` | further additions are refused; existing tokens stay |
+| the chip's `✕` | removes that token |
+| whitespace-only input | never becomes a token |
+
+## Composition
+
+The real example keeps a controlled list with a removable chip per token:
+
+<include lang="tsx" meta='title="packages/components/examples/tag-input.example.tsx"'>
+  ../../../../../packages/components/examples/tag-input.example.tsx
+</include>
+
+## API reference
+
+<auto-type-table path="../../../../../packages/components/src/tag-input.tsx" name="TagInputProps" />
+
+<auto-type-table path="../../../../../packages/components/src/tag-input.tsx" name="TagInputChipProps" />
+
+## Keyboard and focus
+
+| Key | Result |
+| --- | ------ |
+| `Enter` | commits the draft |
+| `,` | commits the text before the comma |
+| `Tab` to a chip's `✕`, then `Enter` / `Space` | removes that token |
+
+Backspace-on-empty is **not** wired: 0.10.0 emits no `keyDown` for
+Backspace/Delete in the test renderer, so the gesture cannot be promised.
+
+## Theming
+
+The group uses `background`, `border`, `radius.md`, the control height and the
+focus ring; chips use `muted` / `mutedForeground` and `radius.sm`; the `✕`
+control shows an `accent` hover. Disabled is opacity plus a read-only field
+(0.10.0 has no `aria-disabled`). `TagInputField.style` and `TagInputChip.style`
+take `{ disabled }`.
+
+## Accessibility and limitations
+
+- The root is a named `group`; every chip's removal control is a button named
+  "Remove <token>".
+- The field is a real input, so typing, selection and focus are native.
+- The group's disabled state is visual: there is no `aria-disabled`.
+- Controlled only: chips must come from a value the caller holds, so there is no
+  `defaultValue` the caller cannot read.
+- No token autocomplete, suggestions or validation; compose with Combobox or a
+  schema when tokens must be constrained.
+- Commas are always separators, so a token cannot contain a comma.
+
+## Dependencies
+
+<ComponentDependencies slug="tag-input" />
+
+## Source
+
+<include lang="tsx" meta='title="packages/components/src/tag-input.tsx"'>
+  ../../../../../packages/components/src/tag-input.tsx
+</include>
+
+## Related
+
+<RelatedComponents slug="tag-input" />

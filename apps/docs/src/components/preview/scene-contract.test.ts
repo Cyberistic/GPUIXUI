@@ -49,6 +49,22 @@ const noLiveScene = new Map([
   ],
   ["date-picker", "the picker owns its open state and exposes no defaultOpen"],
   [
+    "drawer",
+    "the panel exists only while open and is anchored by its trigger; an approximation would show a button, not the drawer",
+  ],
+  [
+    "hotkey-input",
+    "the field's content is a captured chord, which needs a real key event rather than a static layout",
+  ],
+  [
+    "mention-input",
+    "the suggestion list exists only while a query is open and no prop opens it",
+  ],
+  [
+    "navigation-menu",
+    "the panel exists only while open; the rest state is a trigger row that proves nothing about the menu",
+  ],
+  [
     "toast",
     "a scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene",
   ],
