@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 145/197
+`[x]` `[███████░░░]` 146/198
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1054,6 +1054,14 @@ the two helpers, and no token, colour, pair or floor moves (plan 376)
 leave the page quoting a ratio the package no longer produces while every pair
 passed; both are now derived from the 24 shipped sets and no value moves
 (plan 377)
+`[x]` Resolve a persisted theme choice in one place — the package owned the
+mode, contrast, platform, recipe and density axes and a guard for each, but not
+their composition, so every settings screen retyped the precedence; a stored
+density must beat the platform's preset (macOS is `compact`), a recipe must beat
+a stray platform key, and an unknown density must keep the resolved preset
+rather than a hardcoded `comfortable`. `resolveThemeChoice(choice)` composes the
+shipped resolvers behind the existing guards, and every shipped combination is
+held to the three checks (plan 380)
 
 ## Phase C — Tier 1–2 components
 

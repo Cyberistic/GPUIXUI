@@ -174,6 +174,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [375](./375-scrim-over-filled-actions.md) | The modal scrim over the filled actions and status panels a window shows | F | 071, 099, 309, 311, 359 | done |
 | [376](./376-design-system-elevation-truth.md) | The design-system's elevation paragraph | F | 315, 326, 337, 345, 352, 359, 375 | done |
 | [377](./377-design-system-figures.md) | The design-system's current scrim and wash-link figures | F | 062, 075, 087, 336, 375, 376 | done |
+| [380](./380-stored-theme-choice.md) | The persisted theme choice, resolved in one place | F | 051, 063, 067, 068, 096, 301, 304, 305, 311, 323, 373, 374 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1544,6 +1545,29 @@ figure while the plain `primaryText` pairs still pass. `docs.test.ts` now builds
 a labelled 24-set list, reduces the scrim ratios, derives the two wash ratios
 from `getTheme("light", "high")` and asserts the page's own sentences, so the
 page cannot quote a number the package no longer produces. No value moves.
+
+380 closes the last composition the extension mechanism left to every caller.
+The package owned every axis a theme is chosen by — `themeModes`,
+`themeContrasts`, `platformNames`, `platformRecipeNames`, `densityNames` — and a
+narrowing guard for each, but not the act of turning them into a theme: the
+example `themeFromStoredChoice` resolved `mode` and `contrast` only and was not
+public, so a settings screen or the docs platform toggle had to invent the
+precedence itself. Two rules are easy to get wrong. A platform style carries its
+own density preset — macOS is `compact`, Linux and Windows are `comfortable` —
+so a stored density must be applied **after** the style or it silently reverts.
+A recipe is an edition of Windows offered beside the platform axis, so a
+malformed stored object carrying both must resolve the recipe, the more specific
+answer. Fallbacks are the third half: an unknown density keeps the resolved
+platform's preset rather than a hardcoded `comfortable`, which would turn a
+macOS workspace comfortable because a settings row was hand-edited. The new leaf
+module ships `ThemeChoice` (five `unknown` fields — the shape is still the
+caller's `Schema` boundary) and `resolveThemeChoice`, which narrows each axis
+through the package's own guards and composes `getPlatformTheme` /
+`getPlatformRecipeTheme` / `extendTheme`. It stays a leaf so
+`theme-choice → platform-recipes → theme` keeps its direction.
+`theme-choice.test.ts` holds every shipped combination to the three checks and
+proves both precedence rules and the three fallbacks. No token value, pair,
+floor, metric, platform style or recipe moves.
 
 ### Reference adoption (block `200–299`)
 
