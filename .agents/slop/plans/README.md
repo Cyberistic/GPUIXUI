@@ -236,6 +236,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [539](./539-disabled-dim-figure.md) | The disabled dim's documented figure | F | 306, 336, 537, 538 | done |
 | [540](./540-colour-role-opacity-form.md) | The alpha form of a colour role | F | 371, 383, 398, 505, 508, 509 | done |
 | [541](./541-applied-level-palette-name-elevation.md) | The applied theme's level, name, palette and elevation agree | F | 073, 301, 323, 373, 505 | done |
+| [542](./542-shareable-choice-density-rule.md) | The shareable choice's density rule | F | 380, 529, 534 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2524,6 +2525,19 @@ own palette, name and edits, a shape-only style keeps the base's level, and a
 high request always builds the AAA set, which a platform's colours never
 repaint. No shipped name, colour, pair, floor or metric moves.
 
+Plan `542` corrects the rule the URL writer documents. `themeChoiceParams` said
+it "emits only the axes whose omission would change the resolved theme" and then
+exempted density, which is written even when it equals the resolved preset —
+on macOS, `compact` already is that preset, so the stated rule was false for the
+shipped case it was written about. The behaviour is right (a stored density must
+survive a platform edit in a shared link) and the prose is what moves: the
+catalogue, the package README and the JSDoc now state the omission rule and the
+density exception separately. The guard named "on every platform" derived the
+platform from the theme's display name, `theme.name.startsWith("macOS")`, which
+is never true for `Light · macOS`, so it exercised `win32` twelve times and never
+the compact preset that makes the rule matter. The case now derives each axis
+from `shippedThemes`, the writer gains a canonical-stability case, and a prose
+guard fails if the false sentence returns. No colour, metric or pair moves.
 
 ## How to use a plan
 

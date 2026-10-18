@@ -126,14 +126,18 @@ const encodeThemeChoice: Readonly<
 /**
  * The canonical query entries for a choice, in {@link themeChoiceKeys} order.
  *
- * An axis is written only when omitting it would resolve to a different theme:
- * `mode` only for `dark`, `contrast` only for `high`, and `platform` only for
- * `darwin`, `linux` or `win32`, because `default` is the identity an absent key
- * already selects. A valid `recipe` suppresses `platform`, which
- * {@link resolveThemeChoice} could never apply beside it. A valid `density` is
- * always written: its fallback is the *resolved theme's* preset — macOS carries
- * `compact` — so the same stored axis applied to another platform resolves
- * differently and is never redundant.
+ * An axis is omitted when the reader's fallback already selects it: `mode` only
+ * for `dark`, `contrast` only for `high`, and `platform` only for `darwin`,
+ * `linux` or `win32`, because `default` is the identity an absent key already
+ * selects. A valid `recipe` suppresses `platform`, which
+ * {@link resolveThemeChoice} could never apply beside it.
+ *
+ * `density` is the one axis written even when it equals the resolved theme's
+ * preset, so the writer is deliberately not minimal there. Its fallback is the
+ * *resolved theme's* preset, which the platform supplies (macOS ships
+ * `compact`), so omitting it would make the same stored row resolve differently
+ * the moment a reader edits the platform in the link: `platform=darwin` without
+ * a density is `compact`, and the same link with `win32` is `comfortable`.
  *
  * The writer is the other half of {@link themeChoiceFromParams}: a consumer
  * clears `themeChoiceKeys` on its search object and then applies these entries,

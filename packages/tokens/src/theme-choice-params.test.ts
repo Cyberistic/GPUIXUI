@@ -7,17 +7,28 @@
  * a shared link could not carry the theme the toggle resolves.
  *
  * The cases below hold the two properties a hand-written parser never had: an
- * unknown value is absent rather than an error, and the writer emits exactly the
- * axes whose omission would change the resolved theme. The full matrix is
+ * unknown value is absent rather than an error, and the writer omits an axis the
+ * reader's fallback already selects — every axis except density, whose fallback
+ * belongs to the platform. The full matrix is
  * round-tripped through a real `URLSearchParams`, which also proves the
  * structural `ThemeParamSource` the package depends on instead of the global.
+ *
+ * Plan 542 fixes two holes in that paragraph: the writer's rule was stated as
+ * "only the axes whose omission would change the resolved theme" while density
+ * is deliberately written even when it equals the resolved preset (macOS is
+ * already `compact`), and the case named "on every platform" derived the
+ * platform from `theme.name.startsWith("macOS")` — never true for
+ * `Light · macOS` — so it exercised `win32` twelve times and missed the compact
+ * preset that makes the exception matter. The cases now derive each axis from
+ * `shippedThemes`, pin the density exception, and check that a decoded link
+ * re-encodes to the same link.
  */
 
 import { describe, expect, it } from "vitest";
 import { platformRecipeNames } from "./platform-recipes.js";
 import { platformNames } from "./platforms.js";
 import { densityNames } from "./scale.js";
-import { shippedThemes } from "./shipped-themes.js";
+import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import {
   getPlatformTheme,
   themeContrasts,
@@ -42,6 +53,14 @@ const toSearch = (choice: ThemeChoice, search = ""): URLSearchParams => {
 
 const resolve = (choice: ThemeChoice): Theme =>
   resolveThemeChoice(themeChoiceFromParams(toSearch(choice)));
+
+/** The choice that selects one shipped entry's axis, and nothing else. */
+const axisOf = (entry: ShippedTheme): ThemeChoice =>
+  entry.source === "platform"
+    ? { platform: entry.platform }
+    : entry.source === "recipe"
+      ? { recipe: entry.recipe }
+      : {};
 
 describe("themeChoiceFromParams", () => {
   it("reads every axis the package owns", () => {
@@ -87,7 +106,7 @@ describe("themeChoiceFromParams", () => {
 });
 
 describe("themeChoiceParams", () => {
-  it("writes only the axes whose absence would change the theme", () => {
+  it("omits every axis a fallback already selects", () => {
     expect(
       themeChoiceParams({
         mode: "light",
@@ -104,7 +123,7 @@ describe("themeChoiceParams", () => {
     ]);
     expect(themeChoiceParams({ platform: "default" })).toEqual([]);
 
-    // Every written axis is necessary: removing it changes the resolved theme.
+    // Every axis this row writes is necessary: removing it changes the theme.
     const entries = themeChoiceParams({
       mode: "dark",
       contrast: "high",
@@ -112,12 +131,7 @@ describe("themeChoiceParams", () => {
       density: "compact",
     });
     const encoded = new URLSearchParams();
-    themeChoiceParams({
-      mode: "dark",
-      contrast: "high",
-      platform: "win32",
-      density: "compact",
-    }).forEach(([key, value]) => encoded.set(key, value));
+    entries.forEach(([key, value]) => encoded.set(key, value));
     const decoded = themeChoiceFromParams(encoded);
     entries.forEach(([key]) => {
       const { [key]: removed, ...rest } = decoded;
@@ -137,15 +151,33 @@ describe("themeChoiceParams", () => {
     );
   });
 
-  it("writes a density on every platform, because the preset supplies the fallback", () => {
+  it("writes a density for every shipped axis, even where the preset already names it", () => {
     shippedThemes
       .filter(({ theme }) => theme.contrast === "default")
-      .forEach(({ theme }) => {
-        const entries = themeChoiceParams({
-          platform: theme.name.startsWith("macOS") ? "darwin" : "win32",
-          density: "spacious",
-        });
-        expect(entries.map(([key]) => key)).toContain("density");
+      .forEach((entry) => {
+        const axis = axisOf(entry);
+        const withDensity: ThemeChoice = { ...axis, density: "spacious" };
+
+        // Written for every axis, the one whose preset already decides it
+        // included (macOS is `compact`).
+        expect(
+          themeChoiceParams(withDensity).map(([key]) => key),
+          entry.theme.name,
+        ).toContain("density");
+
+        // No shipped style's preset is spacious, so the axis alone resolves to
+        // another density and the round trip proves the written one reaches
+        // the theme.
+        expect(
+          resolveThemeChoice(themeChoiceFromParams(toSearch(axis))).density
+            .name,
+          `${entry.theme.name} (axis only)`,
+        ).not.toBe("spacious");
+        expect(
+          resolveThemeChoice(themeChoiceFromParams(toSearch(withDensity)))
+            .density.name,
+          entry.theme.name,
+        ).toBe("spacious");
       });
 
     // A density written beside macOS survives a later platform edit; omitting it
@@ -157,6 +189,32 @@ describe("themeChoiceParams", () => {
     expect(resolveThemeChoice(themeChoiceFromParams(edited)).density.name).toBe(
       "compact",
     );
+  });
+
+  it("is deliberately not minimal for density", () => {
+    const macos: ThemeChoice = { platform: "darwin", density: "compact" };
+
+    // Removing the density resolves the same theme *today*…
+    expect(resolveThemeChoice({ platform: "darwin" })).toEqual(
+      resolveThemeChoice(macos),
+    );
+
+    // …but it is still written, because the fallback belongs to the platform:
+    // the same link edited to Windows would otherwise change its density.
+    expect(themeChoiceParams(macos)).toContainEqual(["density", "compact"]);
+  });
+
+  it("is canonical: re-encoding a decoded link writes the same link", () => {
+    shippedThemes
+      .filter(({ theme }) => theme.contrast === "default")
+      .forEach((entry) => {
+        const choice: ThemeChoice = { ...axisOf(entry), density: "compact" };
+        const params = toSearch(choice);
+        expect(
+          themeChoiceParams(themeChoiceFromParams(params)),
+          entry.theme.name,
+        ).toEqual(themeChoiceParams(choice));
+      });
   });
 
   it("keeps the documented key order", () => {

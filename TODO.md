@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 206/272
+`[x]` `[████████░░]` 207/273
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1682,6 +1682,16 @@ style kept the AAA palette while painting the style's default-level alpha
 (`#FFFFFFA6`, the near-white halo plan 505 forbids). The level now decides the
 palette, and the palette decides the name, the declaration and the elevation
 opacity; no shipped theme moves (plan 541)
+`[x]` Correct the shareable choice's density rule — `themeChoiceParams` was
+documented as emitting "only the axes whose omission would change the resolved
+theme" while deliberately writing density even when it equals the preset (macOS
+is `compact`), and the guard named "on every platform" derived the platform from
+`theme.name.startsWith("macOS")`, which no shipped name satisfies, so it
+exercised `win32` twelve times and never the compact preset that makes the rule
+matter; the catalogue, README and JSDoc now state the omission rule and the
+density exception separately, the case derives each axis from `shippedThemes`,
+a canonical-stability case was added, and a prose guard fails if the old
+sentence returns (plan 542)
 
 ## Phase C — Tier 1–2 components
 

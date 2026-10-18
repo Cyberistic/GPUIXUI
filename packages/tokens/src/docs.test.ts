@@ -2840,3 +2840,41 @@ describe("the applied level's documents", () => {
     expect(designSystem).toContain("the palette decides the name");
   });
 });
+
+describe("the shareable theme choice's documents", () => {
+  const readmeProse = readmeSource.replace(/\s+/g, " ");
+
+  it("writes a density even where the resolved preset already names it", () => {
+    // The exception the prose states: a macOS row is already `compact`, so
+    // omitting the axis would resolve the same theme today. The writer writes it
+    // anyway, so a platform edit in a shared link cannot change the density.
+    expect(
+      Tokens.themeChoiceParams({ platform: "darwin", density: "compact" }),
+    ).toContainEqual(["density", "compact"]);
+  });
+
+  it("states the density exception instead of a minimality rule", () => {
+    expect(markdownProse).toContain("Density is the one exception");
+    expect(readmeProse).toContain("density even when it equals the resolved");
+    expect(designSystem).toContain("every valid density");
+
+    [markdownProse, designSystem, readmeProse].forEach((document) => {
+      expect(document).not.toContain(
+        "only the axes whose omission would change",
+      );
+      expect(document).not.toContain("emits only the axes whose omission");
+    });
+  });
+
+  it("states it in the writer's JSDoc too", () => {
+    const source = readFileSync(
+      new URL("./theme-choice.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).toContain("deliberately not minimal");
+    expect(source).not.toContain(
+      "An axis is written only when omitting it would resolve",
+    );
+  });
+});

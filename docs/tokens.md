@@ -1623,11 +1623,13 @@ transport too. `themeChoiceFromParams(source)` reads the five keys with the same
 guards — a real `URLSearchParams` satisfies the structural `ThemeParamSource`,
 so the package gains no runtime dependency — and treats an unknown value as
 absent, exactly like a missing key. `themeChoiceParams(choice)` is the canonical
-writer: it emits only the axes whose omission would change the resolved theme —
-`dark`, `high`, a non-`default` platform, and every valid density, because the
-platform supplies the density fallback — and a valid `recipe` suppresses the
-`platform` it overrides. `themeChoiceKeys` is the key order and the clear list,
-so a link cannot keep an axis the new choice replaced.
+writer. It omits an axis whose fallback already selects it — a light mode, a
+default contrast, the `default` platform — and a valid `recipe` suppresses the
+`platform` it overrides. Density is the one exception: it is written even when it
+equals the resolved theme's preset (macOS is `compact`), because the fallback is
+the *platform's* preset, so the same row on another platform would otherwise
+change. `themeChoiceKeys` is the key order and the clear list, so a link cannot
+keep an axis the new choice replaced.
 
 ```ts
 import {
