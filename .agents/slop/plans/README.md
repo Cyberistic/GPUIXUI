@@ -177,6 +177,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [380](./380-stored-theme-choice.md) | The persisted theme choice, resolved in one place | F | 051, 063, 067, 068, 096, 301, 304, 305, 311, 323, 373, 374 | done |
 | [381](./381-selected-row-step.md) | The selected row is a perceivable step from the hover wash | F | 016, 059, 081, 097, 309, 327, 342, 357, 380 | done |
 | [382](./382-accent-fill-selection.md) | The accent family's text selection on its filled action | F | 097, 327, 344, 381 | done |
+| [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1601,6 +1602,19 @@ floor. The corrected tightest figures — 4.827:1 text (macOS dark) and 1.075:1
 veil (identity dark high) — replace the stale 6.10:1 and 1.105:1 the page had
 quoted without a test; the new case derives both from the shipped sets. No new
 role.
+
+383 closes the last partial gate in the extension mechanism. A consumer copying
+a platform style is taught three checks — colour format, contrast and numeric
+metrics — and each is total over its own domain, but the guarantee is only total
+when all three run. The reference introduces contrast first, so a theme whose
+only defect is a zero focus-ring spread or a `shadow: "black"` tint returns
+`[]` from the check most likely to be adopted alone; the `docs-site` interlock
+row is the first real consumer of that mistake. `themeFailures(theme, contrast =
+theme.contrast)` composes the three into one discriminated list in diagnostic
+order (format, contrast, metrics), the `ThemeFailure` union names the `kind`,
+and the `contrast` argument reaches the contrast half unchanged. No role, pair,
+floor, metric or shipped value moves; the new suite holds every shipped set to
+`[]` and proves a partial check cannot pass a broken theme.
 
 ### Reference adoption (block `200–299`)
 
