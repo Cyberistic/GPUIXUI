@@ -144,6 +144,7 @@ const UNSUPPORTED_VARIANT = new Set([
   "supports-backdrop-filter",
   "group",
   "peer",
+  "*",
 ]);
 
 /** The bucket a variant list writes to, or why it is skipped. */
@@ -184,6 +185,7 @@ const ringOf = (utility: string, theme: Theme): Ring | undefined => {
   if (!isRing(utility)) return undefined;
   const width = ringWidth(utility);
   const color = width === undefined ? ringColor(theme, utility) : undefined;
+  if (width === undefined && color === undefined) return undefined;
   return {
     ...(width === undefined ? {} : { width }),
     ...(color === undefined ? {} : { color }),
@@ -314,6 +316,9 @@ export const classesToStyle = (
 
       const resolved = resolveUtility(utility, theme);
       if (resolved === undefined) {
+        // A responsive token is recorded for the later breakpoint pass; its
+        // utility is not an unsupported class just because it is named-only.
+        if (Arr.length(responsive) > 0) return { ...current, result };
         return {
           ...current,
           result: {

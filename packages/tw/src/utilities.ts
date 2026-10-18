@@ -11,6 +11,7 @@ import type { StyleDesc } from "@gpuix/react";
 import {
   alpha,
   elevationShadow,
+  type ElevationLevel,
   type Theme,
   type ThemeColors,
 } from "@gpuixui/tokens";
@@ -80,6 +81,21 @@ const RADIUS: Readonly<Record<string, number>> = {
   full: 9999,
 };
 
+/** The named `max-w-*` steps shadcn uses, in pixels. */
+const MAX_WIDTH: Readonly<Record<string, number>> = {
+  sm: 384,
+  md: 448,
+};
+
+/** Tailwind's shadow names on the three native elevation levels. */
+const ELEVATION: Readonly<Record<string, ElevationLevel>> = {
+  xs: "sm",
+  sm: "sm",
+  md: "md",
+  lg: "lg",
+  xl: "lg",
+};
+
 const TEXT_SIZE: Readonly<Record<string, readonly [number, number]>> = {
   xs: [12, 16],
   sm: [14, 20],
@@ -137,22 +153,29 @@ export const resolveUtility = (
   if (name === "border") return { borderWidth: 1 };
   // shadcn's `--input` is a border role; our tokens' `input` is the field fill.
   if (name === "border-input") return { borderColor: theme.colors.border };
-  if (name === "outline-none") return {};
+  if (name === "outline-none" || name === "outline-hidden") return {};
   if (name === "bg-transparent") return { backgroundColor: "transparent" };
   if (name === "flex" || name === "inline-flex") return { display: "flex" };
   if (name === "grid") return { display: "grid" };
   if (name === "flex-col") return { flexDirection: "column" };
+  if (name === "flex-col-reverse") return { flexDirection: "column-reverse" };
+  if (name === "flex-1") return { flexGrow: 1, flexShrink: 1, flexBasis: 0 };
   if (name === "items-center") return { alignItems: "center" };
   if (name === "items-start") return { alignItems: "flex-start" };
   if (name === "justify-center") return { justifyContent: "center" };
   if (name === "justify-between") return { justifyContent: "space-between" };
   if (name === "shrink-0") return { flexShrink: 0 };
   if (name === "w-full") return { width: "100%" };
+  if (name === "w-auto") return { width: "auto" };
+  if (name === "h-full") return { height: "100%" };
   if (name === "min-w-0") return { minWidth: 0 };
   if (name === "max-w-full") return { maxWidth: "100%" };
+  if (name === "overflow-hidden") return { overflow: "hidden" };
+  if (name === "leading-none") return { lineHeight: 1 };
   if (name === "whitespace-nowrap") return { whiteSpace: "nowrap" };
   if (name === "select-none") return { userSelect: "none" };
   if (name === "pointer-events-none") return { pointerEvents: "none" };
+  if (name === "pointer-events-auto") return { pointerEvents: "auto" };
   if (name === "cursor-pointer") return { cursor: "pointer" };
   if (name === "cursor-not-allowed") return { cursor: "not-allowed" };
   if (name === "absolute") return { position: "absolute" };
@@ -181,7 +204,10 @@ export const resolveUtility = (
     return value === undefined ? undefined : { minWidth: value };
   }
   if (name.startsWith("max-w-")) {
-    const value = spacingValue(name.slice(6));
+    const key = name.slice(6);
+    const named = MAX_WIDTH[key];
+    if (named !== undefined) return { maxWidth: named };
+    const value = spacingValue(key);
     return value === undefined ? undefined : { maxWidth: value };
   }
   if (name.startsWith("size-")) {
@@ -203,6 +229,42 @@ export const resolveUtility = (
     return value === undefined
       ? undefined
       : { paddingTop: value, paddingBottom: value };
+  }
+  if (name.startsWith("mx-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined
+      ? undefined
+      : { marginLeft: value, marginRight: value };
+  }
+  if (name.startsWith("my-")) {
+    const value = spacingValue(name.slice(3));
+    return value === undefined
+      ? undefined
+      : { marginTop: value, marginBottom: value };
+  }
+  if (name.startsWith("inset-x-")) {
+    const value = spacingValue(name.slice(8));
+    return value === undefined ? undefined : { left: value, right: value };
+  }
+  if (name.startsWith("inset-y-")) {
+    const value = spacingValue(name.slice(8));
+    return value === undefined ? undefined : { top: value, bottom: value };
+  }
+  if (name.startsWith("top-")) {
+    const value = spacingValue(name.slice(4));
+    return value === undefined ? undefined : { top: value };
+  }
+  if (name.startsWith("right-")) {
+    const value = spacingValue(name.slice(6));
+    return value === undefined ? undefined : { right: value };
+  }
+  if (name.startsWith("bottom-")) {
+    const value = spacingValue(name.slice(7));
+    return value === undefined ? undefined : { bottom: value };
+  }
+  if (name.startsWith("left-")) {
+    const value = spacingValue(name.slice(5));
+    return value === undefined ? undefined : { left: value };
   }
   if (name.startsWith("gap-x-")) {
     const value = spacingValue(name.slice(6));
@@ -247,12 +309,10 @@ export const resolveUtility = (
     return color === undefined ? undefined : { backgroundColor: color };
   }
   if (name.startsWith("shadow-")) {
-    const level = name.slice(7);
-    if (level === "xs") return elevationShadow(theme, "sm");
-    if (level === "sm") return elevationShadow(theme, "sm");
-    if (level === "md") return elevationShadow(theme, "md");
-    if (level === "lg" || level === "xl") return elevationShadow(theme, "lg");
-    return undefined;
+    const elevation = ELEVATION[name.slice(7)];
+    return elevation === undefined
+      ? undefined
+      : { boxShadow: elevationShadow(theme, elevation) };
   }
   if (name === "rounded") return { borderRadius: RADIUS.sm };
 
@@ -265,7 +325,10 @@ export const isRing = (name: string): boolean => name.startsWith("ring-");
 /** The width of `ring-1` / `ring-[3px]`; undefined for a colour-only ring. */
 export const ringWidth = (name: string): number | undefined => {
   if (!name.startsWith("ring-")) return undefined;
-  return spacingValue(name.slice(5));
+  const value = name.slice(5);
+  if (value.startsWith("[")) return spacingValue(value);
+  const width = Number(value);
+  return value.length > 0 && Number.isFinite(width) ? width : undefined;
 };
 
 /** The colour of `ring-ring/50` / `ring-destructive/20`. */

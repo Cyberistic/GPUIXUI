@@ -7,9 +7,6 @@
  * upstream (or when upstream moved to a different value).
  */
 
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   BUTTON_BASE,
@@ -19,17 +16,11 @@ import {
   INPUT_FOCUS,
   INPUT_INVALID,
 } from "./recipes.js";
+import { present, read } from "./reference.js";
 
-const ui = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "../../../../../references/ui",
-);
-const present = existsSync(join(ui, "apps/v4/registry/new-york-v4/ui"));
+const hasSource = present("apps/v4/registry/new-york-v4/ui");
 
-const read = (...parts: ReadonlyArray<string>): string =>
-  readFileSync(join(ui, ...parts), "utf8");
-
-describe.skipIf(!present)("shadcn source provenance", () => {
+describe.skipIf(!hasSource)("shadcn source provenance", () => {
   it("keeps the Input strings verbatim", () => {
     const source = read("apps/v4/registry/new-york-v4/ui/input.tsx");
     expect(source).toContain(INPUT_BASE);

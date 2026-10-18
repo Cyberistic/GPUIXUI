@@ -50,9 +50,14 @@ so light/dark changes resolve at render time.
 
 ## What is supported
 
-- Geometry: `h-*`, `w-*`, `size-*`, `p-*`, `px-*`, `py-*`, `gap-*`, `rounded-*`.
-- Type: `text-*` (size and colour roles), `font-*`, `line-height` via `text-*`.
-- Surfaces: `bg-*`, `text-*`, `border-*`, semantic token roles, `/alpha`.
+- Geometry: `h-*`, `w-*`, `min-h-*`, `min-w-*`, `max-w-*`, `size-*`, `p-*`,
+  `px-*`, `py-*`, `mx-*`, `my-*`, `inset-*`, `top-*`, `right-*`, `bottom-*`,
+  `left-*`, `gap-*`, `rounded-*`, and the flex/overflow utilities the recipes
+  use.
+- Type: `text-*` (size and colour roles), `font-*`, `line-height` via `text-*`,
+  `leading-*`.
+- Surfaces: `bg-*`, `text-*`, `border-*`, semantic token roles, `/alpha`,
+  `shadow-xs`–`shadow-xl` as native elevation.
 - States: `hover:`, `active:`, `focus-visible:`, `disabled:`, `aria-invalid:`,
   `data-open:`, `data-closed:`, `dark:` (theme-resolved), `md:` (desktop
   default, recorded for a later breakpoint pass).
@@ -61,13 +66,15 @@ so light/dark changes resolve at render time.
 
 ## What is recorded as unsupported
 
-`transition-*` (GPUix has no CSS transitions), `transform`/`zoom-*`
+`transition-*` (GPUix has no CSS transitions), `transform`/`origin-*`/`zoom-*`
 (GPUI has no transform), `z-*` (pending the GPUix `zIndex` patch),
-`backdrop-filter`, `selection:`/`file:`/`placeholder:` pseudo-elements,
-`has-[...]`/`group-*`/`peer-*` selectors, and arbitrary `calc()` sizes.
+`backdrop-filter`, `selection:`/`file:`/`placeholder:`/`after:` pseudo-elements,
+`has-[...]`/`group-*`/`peer-*`/`*:` selectors, arbitrary `calc()`/CSS-variable
+values, and percentage offsets such as `top-1/2`.
 
 Each unsupported class is returned in `unsupported` with its original name; it
-is never silently dropped.
+is never silently dropped. `unsupportedReason` gives the recorded reason, and
+`src/unsupported.ts` is the audit table the coverage test checks against.
 
 ## Upstream
 

@@ -182,6 +182,17 @@ are still present in `references/ui`; Input resolves to 36/12/4/6/14.
   strings are still present; it skips when the reference clone is absent.
 - GPUI has no `transform`/`scale`/`rotate`/`z_index`; `zoom-*` is recorded as
   unsupported. `zIndex` is the GPUix-side next step (§5).
+- **Expanded utility slice (2026-10-18):** every geometry/surface class the Base
+  UI and new-york-v4 input/button/dialog/popover/toast recipes use now resolves:
+  `p-*`, `gap-*`, `w-72`, `rounded-3xl`, `ring-1`, `bg-input/50|30`,
+  `border-input`, `text-sm|xs`, `shadow-lg|xl`, `duration-100`, `data-[side=*]`,
+  `sm:max-w-md`, `outline-hidden`, plus offsets/margins and the flex/overflow
+  utilities those sources use. `shadow-*` now returns `{ boxShadow }` instead of
+  a bare elevation record, and `ring-1` is one pixel (it was the 4px spacing
+  step). `unsupported.ts` records every remaining class with a reason;
+  `coverage.test.ts` extracts the five Base UI sources and their luma blocks and
+  fails on a class that is neither resolved nor listed. 68 package tests pass;
+  `nub run check` and `nub run test` pass.
 - Integration into `packages/primitives` (Input/Button) and
   `packages/components` (Toast/Dialog/Popover) is the next slice.
 
