@@ -9,3 +9,4 @@ export * as Native from "./native.js";
 export * as Report from "./report.js";
 export * as Runtime from "./runtime.js";
 export * as Smoke from "./smoke.js";
+export * as State from "./state.js";

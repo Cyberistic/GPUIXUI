@@ -181,7 +181,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
 playground plans take the free numbers above the components (`300–324`) and
-tokens-theme (`300–328`) reservations — `330` is the first free number.
+tokens-theme (`300–328`) reservations — `330` and `331` are landed and `332` is
+the next free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -246,6 +247,7 @@ tokens-theme (`300–328`) reservations — `330` is the first free number.
 
 | [330](./330-tier2-in-playground.md) | The shipped Tier 2 components in the playground | C/D | 100, 110, 120, 140, 155, 164, 183, 187, 189, 190, 193; `packages/components` | **landed** — `tier2-dialog` (24 checks), `tier2-menu` (18) and `tier2-toast` (21) mount the shipped `Dialog`/`ConfirmDialog`, `DropdownMenu`/`ContextMenu` and `ToastProvider`/`ToastViewport`; suite `61 → 64`, exit `0`, `tier2=verified`; three mutation proofs. Measured consumer-path facts: one root host element (a provider with sibling children paints nothing), the viewport insets **16** px (`spacing.xl`), oldest-above-newest stack, and the package must be compiled by the consumer because its tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute (§8) |
 | [331](./331-live-tier2.md) | The shipped Tier 2 components in a real window | F | 189–193, 330 | **landed** — `live-tier2-dialog` (24 checks), `live-tier2-menu` (15) and `live-tier2-toast` (21) reuse the plan-330 views in the real 1100×720 window; live `16 → 19`, exit `0`; three live mutation proofs. The window confirms the dialog centre/2 px and Tab trap, native focus on the shipped menu surface, and the 16 px toast inset with a real 300 ms timer (§8) |
+| [332](./332-shared-command-replay.md) | `@gpuixui/testing`: replay a component runtime without a renderer | B | 100, 201 | **landed** — `State.runCommands` folds a structural runtime's commands and returns the final state plus the query output; 5 tests (fold, one query on the final state, empty replay, untouched initial, a runtime with a private `run`); mutation proof in §8 |
 
 Cross-cutting records:
 
@@ -263,7 +265,7 @@ Cross-cutting records:
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [200](./200-adopt-compound-part-api.md) | Adopt `base-gpui`'s compound-part API contract as the Tier 1–2 public API spec | A | `020`, `030`, `110–117` | **done** — components workstream |
-| [201](./201-adopt-runtime-state-model.md) | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | **components half done** — `core/runtime.ts` + test + doc §7 + ADR 0005; `packages/testing` helper pending |
+| [201](./201-adopt-runtime-state-model.md) | Adopt `base-gpui`'s runtime / context / parts state model as our state convention | B | `200`, `020` | **done** — `core/runtime.ts` + test + doc §7 + ADR 0005 (components); the `packages/testing` replay helper is plan `332` |
 | `202` | Reconcile `adabraka-ui`'s `ThemeTokens` with `@gpuixui/tokens` | B | `010–014`, `020` | planned |
 | `203` | Adopt `adabraka-ui`'s GPUI limits map as `docs/gpuix-capabilities.md`, re-verified against GPUix 0.10.0 | A | `020`, `110` | planned |
 | `204` | Adopt `adabraka-ui`'s workspace and data tiers for Tier 3–4 | A/D | `203`, `020` | planned |

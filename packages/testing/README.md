@@ -20,7 +20,7 @@ the native half (`apps/playground`) supplies the real renderer.
 ## Surface
 
 ```ts
-import { Report, Runtime, Smoke } from "@gpuixui/testing";
+import { Report, Runtime, Smoke, State } from "@gpuixui/testing";
 ```
 
 | Namespace | Responsibility |
@@ -29,6 +29,12 @@ import { Report, Runtime, Smoke } from "@gpuixui/testing";
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union — plus the async twins `AsyncSmokeHost`, `AsyncSmokeScenario`, `runAsyncScenarios` and `SmokeHostError` |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 | `Native`  | `createHost(renderer)`, the structural `NativeRenderer` port, and the lookups (`find`, `allElements`, `boundsOf`, `hitBoundsOf`, `centerOf`, `subtreeText`, `focusedElement`) |
+| `State`   | `runCommands(runtime, commands)` — fold a component runtime's commands and read its part-shaped queries, with no renderer |
+
+`State.runCommands` is the shared half of the plan-201 state convention: pass
+any runtime with `initial`, `reduce` and `query`, and it returns the final state
+and the query output. `@gpuixui/components`' `createRuntime` fits structurally.
+
 
 ## Adapting a host
 
