@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { appRootStyle, chromeStyle } from "./selection.example.js";
+import {
+  appRootStyle,
+  chromeStyle,
+  filledContentStyle,
+} from "./selection.example.js";
 import { statusToneStyles } from "./status-tone.example.js";
 import { statusTextStyles } from "./status-text.example.js";
 import {
@@ -175,11 +179,33 @@ describe("selectionStyle", () => {
       selectionStyle(lightTheme).selectionColor,
     );
   });
+
+  it("maps the filled-action selector to the inverse veil", () => {
+    [lightTheme, darkTheme, highContrastLightTheme].forEach((theme) => {
+      expect(selectionStyle(theme, "fill").selectionColor).toBe(
+        theme.colors.selectionOnFill,
+      );
+      expect(selectionStyle(theme, "fill").selectionColor).not.toBe(
+        theme.colors.selection,
+      );
+    });
+    expect(selectionStyle(lightTheme)).toEqual({
+      selectionColor: lightTheme.colors.selection,
+    });
+  });
 });
 
 describe("selection example", () => {
   it("sets the wash on the root and opts chrome out", () => {
     expect(appRootStyle(lightTheme)).toEqual(selectionStyle(lightTheme));
     expect(chromeStyle.userSelect).toBe("none");
+  });
+
+  it("paints content on a filled action with the inverse veil", () => {
+    expect(filledContentStyle(lightTheme)).toEqual({
+      ...selectionStyle(lightTheme, "fill"),
+      backgroundColor: lightTheme.colors.primary,
+      color: lightTheme.colors.primaryForeground,
+    });
   });
 });

@@ -903,6 +903,26 @@ export const selectionWashPairs: readonly ContrastPair[] =
   );
 
 /**
+ * Content painted on a filled action — a user message bubble on `primary`, a
+ * neutral filled surface, a destructive one — uses the inverse veil rather than
+ * the accent-tinted `selection`, which is invisible on the accent fill itself.
+ * The veil is held to the perceivability floor on each fill, and each family's
+ * own foreground to the floor it already has on that fill.
+ */
+export const selectionFillWashPairs: readonly ContrastPair[] = [
+  ["selectionOnFill", "primary", "surface"],
+  ["selectionOnFill", "secondary", "surface"],
+  ["selectionOnFill", "destructive", "surface"],
+];
+
+/** The family foreground through the inverse veil, at the on-colour floor. */
+export const selectionFillPairs: readonly ContrastPair[] = [
+  ["primaryForeground", "primary", "secondary"],
+  ["secondaryForeground", "secondary", "secondary"],
+  ["destructiveForeground", "destructive", "secondary"],
+];
+
+/**
  * The soft status surfaces a selected glyph is painted on. An Alert, Badge or
  * Toast is text a reader copies, and the wash composites over its fill, so the
  * tone's own foreground is held to the body floor like the plain surfaces.
@@ -985,6 +1005,7 @@ const washVisibilityFailures = (
  * Every documented pair a theme misses — text, status, secondary text and status
  * text on the state washes, selection, surface and divider — including the
  * selection wash measured over the surfaces a selected glyph paints on, the
+ * inverse `selectionOnFill` veil for content painted on a filled action, the
  * secondary text and the wash's own perceivability on those surfaces, the
  * loading skeleton measured on every surface and row wash it fills, the designed edge around
  * each soft status surface measured on its own fill, the plain divider measured
@@ -1010,7 +1031,10 @@ const washVisibilityFailures = (
  * `input` fill a time picker's separator and clear control paint, and the field
  * edge on its `input`
  * fill, so a selected list title, a menu row or a time field cannot lose its
- * label or its chrome on the surface it paints. It also holds a solid role
+ * label or its chrome on the surface it paints. Content painted on a filled
+ * action uses `selectionOnFill`, a neutral veil measured on `primary`,
+ * `secondary` and `destructive`, because the accent-tinted `selection` wash is
+ * invisible on the accent fill itself. It also holds a solid role
  * painted as a graphic — a progress segment,
  * a slider fill, a thumb's ring, a rating star, a combobox check or a timeline
  * dot (`markPairs`) — to the 3:1 mark floor (4.5:1 at AAA), because the 1.05:1
@@ -1060,6 +1084,18 @@ export function themeContrastFailures(
     ...washVisibilityFailures(
       selectionSoftWashPairs,
       "selection",
+      theme,
+      floors,
+    ),
+    ...textOverWashFailures(
+      selectionFillPairs,
+      "selectionOnFill",
+      theme,
+      floors,
+    ),
+    ...washVisibilityFailures(
+      selectionFillWashPairs,
+      "selectionOnFill",
       theme,
       floors,
     ),

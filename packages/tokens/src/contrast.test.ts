@@ -122,6 +122,14 @@
  * contract measured `ring` only where a focus shadow sits — outside the
  * control. Every shipped set already clears the boundary floor there (identity
  * light is tightest at 4.218:1), so no colour moves.
+ *
+ * Plan 344 closes the last content surface the selection contract never
+ * reached: a user message bubble paints body text on `primary`
+ * (`components/message.tsx`), where the accent-tinted `selection` wash
+ * composites to 1.000:1 in seven shipped sets. `selectionFillPairs` and
+ * `selectionFillWashPairs` hold the neutral `selectionOnFill` veil on
+ * `primary`, `secondary` and `destructive`; every shipped set clears the
+ * floors, so no colour moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -139,6 +147,8 @@ import {
   inactivePairs,
   lightTheme,
   overlayWashPairs,
+  selectionFillPairs,
+  selectionFillWashPairs,
   selectionPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
@@ -408,6 +418,13 @@ describe("themeContrastFailures", () => {
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(4);
     expect(selectionSoftWashPairs.length).toBe(4);
+    expect(selectionFillPairs).toHaveLength(3);
+    expect(selectionFillWashPairs).toHaveLength(3);
+    expect(selectionFillWashPairs.map(([, fill]) => fill)).toEqual([
+      "primary",
+      "secondary",
+      "destructive",
+    ]);
     expect(overlayWashPairs.length).toBe(4);
     expect(new Set(overlayWashPairs).size).toBe(overlayWashPairs.length);
   });
@@ -519,6 +536,33 @@ describe("themeContrastFailures", () => {
     ).toEqual(["background", "card", "popover", "input"]);
   });
 
+  it("reports a selection veil that paints nothing on a filled action", () => {
+    const base = getTheme("light");
+    const invisible = extendTheme(base, {
+      colors: { selectionOnFill: base.colors.primary },
+    });
+    const failures = themeContrastFailures(invisible).filter(
+      ({ wash, pairClass }) =>
+        wash === "selectionOnFill" && pairClass === "surface",
+    );
+
+    expect(
+      failures.map(({ foreground, background, floor, ratio }) => ({
+        foreground,
+        background,
+        floor,
+        ratio,
+      })),
+    ).toEqual([
+      {
+        foreground: "selectionOnFill",
+        background: "primary",
+        floor: contrastFloors.default.surface,
+        ratio: 1,
+      },
+    ]);
+  });
+
   it("checks the focus ring on every surface a focused control sits on", () => {
     expect(quietRingTheme.colors.ring).toBe("#EFF4FF");
     const ringFailures = quietRingFailures
@@ -580,6 +624,8 @@ describe("contract completeness", () => {
       ...selectionWashPairs,
       ...selectionSoftPairs,
       ...selectionSoftWashPairs,
+      ...selectionFillPairs,
+      ...selectionFillWashPairs,
       ...overlayWashPairs,
     ].flatMap(([foreground, background]) => [foreground, background]),
   );

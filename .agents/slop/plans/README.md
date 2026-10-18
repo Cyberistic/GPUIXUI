@@ -140,7 +140,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [341](./341-combobox-check-mark.md) | The combobox check on a highlighted option | F | 071–095, 300, 306–332, 339–340 | done |
 | [342](./342-filled-state-steps.md) | The filled family's step in the public contract | F | 071, 097, 306, 327, 338, 341 | done |
 | [343](./343-field-pressed-edge.md) | The field's pressed edge in the public contract | F | 071, 084, 325, 340–342 | done |
-| [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | ready |
+| [344](./344-selection-on-fill.md) | The selection veil for content on a filled action | F | 069, 071, 081, 087, 091, 099, 343 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1059,6 +1059,30 @@ signal disappears under the pointer. The designed fix — keep the `input` fill
 and the `destructive` border, or use `destructiveSoft` +
 `destructiveSoftForeground` (measured at 7:1) — is recorded as a cross-team
 `TODO.md` row with the evidence.
+
+344 closes the last content surface the selection contract never reached. A
+user message bubble paints body text on `primary` (`components/message.tsx`
+`bubble()`), and the accent-tinted `selection` wash **is** the accent, so it
+composites to **1.000:1** there in six shipped palettes — identity dark, macOS
+light and dark, Linux light, Windows light and Aero light (the `default`
+platform's dark half is the identity dark palette) — while `primaryForeground`
+through the wash sits at 4.70:1 at the tightest. The nine content surfaces and
+four soft status fills plans 081, 087 and 091 added never included a filled
+action. `selectionOnFill` is a neutral 15% veil (`#00000026` light,
+`#FFFFFF26` dark) that steps away from the fill in both modes instead of taking
+its hue from it: measured on `primary`, `secondary` and `destructive` with each
+family's own foreground, the tightest default pair is 6.10:1 of text and 1.105:1
+of veil, and the tightest high-contrast pair 8.45:1 and 1.075:1, so no colour
+moves and the existing on-colour and surface floors hold in all 24 sets.
+`selectionStyle(theme, "fill")` applies it, `selectionFillPairs` and
+`selectionFillWashPairs` (3 + 3) publish it through `themeContrastFailures`, and
+the `components` migration — the bubble keeps its brand fill and takes the
+inverse veil — is recorded cross-team with the measured evidence. The rejected
+alternatives are recorded in the plan: restyling the bubble loses the brand
+fill and leaves the system without an answer, deriving the veil from
+`alpha(familyForeground, 0.15)` repeats the alpha-composite defect plans
+055/097/327 removed, and changing `selection` itself would break the
+accent-follows-identity rule plan 331 states.
 
 ### Reference adoption (block `200–299`)
 

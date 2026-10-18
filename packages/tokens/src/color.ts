@@ -202,6 +202,11 @@ export interface ThemeColors {
   /** Text selection wash for `selectionColor`. Translucent, so text stays legible. */
   readonly selection: string;
   /**
+   * Text selection veil for content painted on a filled action. Neutral, because
+   * an accent-tinted wash cannot be perceived on the accent fill itself.
+   */
+  readonly selectionOnFill: string;
+  /**
    * Modal scrim. Translucent, because the surfaces beneath it must stay
    * recognisable. A pure black canvas cannot be darkened, so the high-contrast
    * dark theme veils with light instead of black.
@@ -306,6 +311,7 @@ export const lightColors = {
   placeholder: "#66707F",
   ring: palette.iris[500],
   selection: "#7567F23D",
+  selectionOnFill: "#00000026",
   overlay: "#00000073",
   hover: palette.neutral[100],
   active: palette.neutral[200],
@@ -393,6 +399,7 @@ export const darkColors = {
   placeholder: "#858F9F",
   ring: palette.iris[300],
   selection: "#A7A9FF33",
+  selectionOnFill: "#FFFFFF26",
   overlay: "#000000A6",
   hover: "#262C36",
   active: palette.neutral[800],
@@ -467,6 +474,7 @@ export const highContrastLightColors = {
   placeholder: "#4A4F58",
   ring: "#4C39B5",
   selection: "#7567F24D",
+  selectionOnFill: "#00000026",
   overlay: "#000000A6",
   hover: "#E8E8E8",
   active: "#D6D6D6",
@@ -546,6 +554,7 @@ export const highContrastDarkColors = {
   placeholder: "#B0B0B0",
   ring: "#C7CBFF",
   selection: "#4C39B54D",
+  selectionOnFill: "#FFFFFF26",
   overlay: "#FFFFFF26",
   hover: "#2E2E2E",
   active: "#3D3D3D",
@@ -659,6 +668,7 @@ export const colorRoles = [
   "placeholder",
   "ring",
   "selection",
+  "selectionOnFill",
   "overlay",
   "hover",
   "active",

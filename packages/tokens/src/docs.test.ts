@@ -217,7 +217,7 @@ describe("docs/tokens.md contract counts", () => {
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`343` closed");
+    expect(prose).toContain("plans `076`–`344` closed");
   });
 });
 
@@ -831,6 +831,22 @@ describe("docs/tokens.md quoted tightest figures", () => {
   });
 });
 
+describe("docs/tokens.md fill selection", () => {
+  it("states the inverse veil for content on a filled action", () => {
+    expect(markdownProse).toContain(
+      "Content painted on a **filled action** uses `selectionOnFill` instead of `selection`.",
+    );
+    expect(markdownProse).toContain(
+      '`selectionStyle(theme, "fill")` applies it to a subtree',
+    );
+    ["selectionFillPairs", "selectionFillWashPairs", "selectionOnFill"].forEach(
+      (name) => {
+        expect(markdown).toContain(name);
+      },
+    );
+  });
+});
+
 describe("docs/tokens.md runtime reach", () => {
   it("names the application point for native text selection", () => {
     expect(markdown).toContain("`selectionColor`");
@@ -1219,6 +1235,8 @@ describe("docs/design-system.md", () => {
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| text selection on a filled action (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, and \`primary\`/\`destructive\` on the \`input\` fill a slider thumb rings) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

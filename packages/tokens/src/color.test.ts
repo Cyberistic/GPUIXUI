@@ -73,6 +73,11 @@ describe("text selection", () => {
       expect(colors.selection).toMatch(/^#[0-9A-F]{8}$/);
     });
 
+    it(`${label}: selectionOnFill is a translucent veil`, () => {
+      expect(colors.selectionOnFill).toMatch(/^#[0-9A-F]{8}$/);
+      expect(colors.selectionOnFill).not.toBe(colors.selection);
+    });
+
     surfaces.forEach((surface) => {
       it(`${label}: body text stays readable on ${surface} under the selection wash`, () => {
         expect(

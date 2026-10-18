@@ -226,14 +226,25 @@ export interface SelectionStyle {
  * wash once on its root; a chrome subtree that must not be selectable sets
  * `userSelect: "none"` itself. The wash is translucent, so selected text keeps
  * the theme's foreground contrast on the canvas and card the contrast contract
- * measures. A native `<input>`/`<textarea>` paints its own fixed wash in GPUix
- * 0.10.0 and does not read this property, so a field does not inherit it.
+ * measures. Content painted on a filled action uses
+ * `selectionStyle(theme, "fill")`: the accent-tinted wash cannot be perceived on
+ * the accent fill itself, while the neutral veil steps away from every filled
+ * family in both modes.
+ *
+ * A native `<input>`/`<textarea>` paints its own fixed wash in GPUix 0.10.0 and
+ * does not read this property, so a field does not inherit it.
  *
  * @example
  * ```tsx
- * <div style={selectionStyle(theme)}>{children}</div>
+ * <div style={selectionStyle(theme)}>{children}</div>;
  * ```
  */
-export function selectionStyle(theme: Theme): SelectionStyle {
-  return { selectionColor: theme.colors.selection };
+export function selectionStyle(
+  theme: Theme,
+  on: "surface" | "fill" = "surface",
+): SelectionStyle {
+  return {
+    selectionColor:
+      on === "fill" ? theme.colors.selectionOnFill : theme.colors.selection,
+  };
 }

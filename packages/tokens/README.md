@@ -176,7 +176,7 @@ const size = isControlSize(storedSize) ? storedSize : "md";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 64 roles, so no component changes.
+essential boundaries. It reuses the same 65 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -379,7 +379,11 @@ inherited `selectionColor`; apply it once on the app root. Chrome that must not
 be selectable sets `userSelect: "none"`. A native `<input>`/`<textarea>` is a
 custom element that paints its own fixed wash (`#7C86FF59`) and placeholder
 (`#8F8F8F`) in GPUix 0.10.0 and reads only `theme.caret`, so the theme's wash
-does not reach a native field. A runnable example lives in
+does not reach a native field. Content painted on a filled action uses
+`selectionStyle(theme, "fill")`: the accent-tinted wash composites to 1.000:1 on
+`primary` in six shipped palettes, so `selectionOnFill` is a neutral 15% veil.
+`selectionFillPairs` and `selectionFillWashPairs` hold each family's foreground
+and the veil itself to their floors. A runnable example lives in
 [`src/selection.example.ts`](./src/selection.example.ts).
 
 ```tsx

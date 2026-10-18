@@ -107,7 +107,7 @@ missing here is not public.
 | `TextStyle` | Font size, line height and weight for one role. |
 | `TextStyleProperties` | A resolved role for `StyleDesc`, family included. |
 | `Theme` | A complete resolved theme. |
-| `ThemeColors` | The 64 semantic colour roles. |
+| `ThemeColors` | The 65 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
@@ -130,7 +130,7 @@ control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
 outline control, and `accent` for an outline toggle that is on — so the divider
 is held to its floor on those fills too, not only on the plain surfaces.
 
-There are 64 roles. The four status families — `info`, `success`, `warning` and
+There are 65 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for alerts, badges and toasts, and a text role (`xText`) for
@@ -208,6 +208,7 @@ on the pressed wash, while its text step `#0055B3` clears both.
 | `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#7567F2` | `#A7A9FF` | focus ring |
 | `selection` | `#7567F23D` | `#A7A9FF33` | text selection wash (24% light, 20% dark; `selectionColor`) |
+| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on a filled action (15% in both modes; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
@@ -337,7 +338,7 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 64 roles and the same type, spacing, radius, density, border
+`Theme` — the same 65 roles and the same type, spacing, radius, density, border
 width and icon scales — with colour values chosen to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
@@ -413,6 +414,7 @@ carries, so it cannot claim another.
 | `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
+| `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on a filled action (15% in both modes; `selectionColor`) |
 | `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
@@ -1016,6 +1018,33 @@ const chrome = { userSelect: "none" } as const;
 A runnable example lives in
 [`src/selection.example.ts`](../packages/tokens/src/selection.example.ts).
 
+Content painted on a **filled action** uses `selectionOnFill` instead of
+`selection`. The accent-tinted wash *is* the accent, so on a `primary` fill it
+composites to **1.000:1** — an invisible highlight on the one surface a user
+message is painted on (identity dark, macOS light and dark, Linux light, Windows
+light and Aero light). The neutral 15% veil steps away from the fill in both
+modes: `selectionFillPairs` holds each family's own foreground through it, at
+6.10:1 at the tightest — above the 4.5:1 the on-colour role already has — and
+`selectionFillWashPairs` holds the veil itself at 1.105:1 at the tightest, above
+the 1.05:1 perceivability floor. `selectionStyle(theme, "fill")` applies it to a
+subtree, and `filledContentStyle` in the example is the copyable version:
+
+```tsx
+import { selectionStyle } from "@gpuixui/tokens";
+
+<div
+  style={{
+    ...selectionStyle(theme, "fill"),
+    backgroundColor: theme.colors.primary,
+  }}
+>
+  {children}
+</div>;
+```
+
+The six pairs join the checker and are reported with `wash: "selectionOnFill"`;
+every shipped set already clears them, so no colour moves.
+
 ### Native text fields
 
 A GPUix `<input>`/`<textarea>` is a custom element: it paints its own content, and
@@ -1543,7 +1572,9 @@ the `hover` row wash, taking it from 305 to **306**. Plan `342` publishes the
 filled families' step floor — each `xHover` one perceivable step from its `x`,
 each `xActive` from its `xHover` — taking it from 306 to **314**. Plan `343`
 holds the field's pressed edge — `ring` on the `input` fill — taking it from 314
-to **315**.
+to **315**. Plan `344` adds the inverse selection veil for content painted on a
+filled action — `selectionOnFill` on `primary`/`secondary`/`destructive` — as six
+wash pairs beside the plain `contrastPairs` list.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1717,8 +1748,9 @@ dialog's separation cannot come from darkening a canvas that is already black.
 reported with `wash: "overlay"` (plan `099`).
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
-`selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs` and
-`overlayWashPairs` measure the painted roles — `inactivePairs` is the thirteen-surface
+`selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs`,
+`selectionFillPairs`, `selectionFillWashPairs` and `overlayWashPairs` measure the
+painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge and `disabled`
 is measured as its own fill — and
 `contrast.test.ts` keeps a
@@ -1726,7 +1758,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`343` closed.
+plans `076`–`344` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

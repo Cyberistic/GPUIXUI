@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 111/146
+`[x]` `[████████░░]` 112/148
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -293,6 +293,22 @@ clears them, so no colour moves (plan 342)
 counterpart to the `borderStrong` hover edge — in the public contrast contract;
 every shipped set already clears the boundary floor (identity light is tightest
 at 4.218:1), so no colour moves and the contract grows 314 → 315 (plan 343)
+`[x]` Ship the inverse selection veil for content painted on a filled action —
+a user message bubble paints body text on `primary`, where the accent-tinted
+`selection` wash composites to **1.000:1** in six shipped palettes (identity
+dark, macOS light and dark, Linux light, Windows light and Aero light);
+`selectionOnFill` is a neutral 15% veil,
+`selectionStyle(theme, "fill")` applies it, and
+`selectionFillPairs`/`selectionFillWashPairs` hold the three families to their
+floors with no colour change (6.10:1 text and 1.105:1 wash at the tightest)
+(plan 344)
+`[ ]` Cross-team: `components` applies `selectionStyle(theme, "fill")` — or
+`theme.colors.selectionOnFill` — to the user `Message` bubble in `message.tsx`
+`bubble()`, which paints body text on `primary`; the accent-tinted `selection`
+wash composites to **1.000:1** there in identity dark, macOS light and dark,
+Linux light, Windows light and Aero light, so selecting a sent message shows no
+highlight. The token and helper ship in plan 344; the bubble keeps its brand
+fill (owner: `components`; plan 344)
 `[ ]` Cross-team: `primitives` must not paint an invalid field as a solid
 `destructive` surface — `controlStyle` in `src/core/style.ts` sets
 `backgroundColor: rest`, and `rest` is `destructive` when `invalid` is true, so
