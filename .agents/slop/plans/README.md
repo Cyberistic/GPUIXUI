@@ -228,6 +228,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [531](./531-metric-member-completeness.md) | The numeric contract's member completeness | F | 358, 360, 364, 368, 369, 370, 372, 530 | done |
 | [532](./532-non-finite-diagnostics.md) | One diagnostic per non-finite metric | F | 358, 360, 364, 393, 531 | done |
 | [533](./533-typeface-exact-family.md) | The typeface form: padded and CSS-generic family names | F | 051, 385, 396, 518, 532 | done |
+| [534](./534-platform-density-metrics.md) | A platform style owns the metrics inside its density preset | F | 011, 089, 353, 380, 389, 529 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2408,6 +2409,18 @@ are increasing ladders, the chat viewport is held to one `density.rowHeight`, th
 active carousel mark to its idle dot, and a runnable example owns the merge. The
 three consumer migrations are recorded cross-team. No colour, pair, floor or
 existing metric moves.
+
+Plan `534` closes the one numeric group a copied platform style could not own.
+`PlatformStyleStructure.density` accepted only a `DensityName`, while every
+sibling group is a partial, so the macOS file the copy-and-own story uses could
+name `compact` or drop density — never tune it. `DensityOverrides` had the same
+hole from the other side: it merged over the **base** theme's preset, so a
+`{ preset, rowHeight }` record silently produced comfortable-sized controls and a
+30px row while naming neither. The override now carries the `preset` its metrics
+start from, `mergeDensity` resolves it first, and the style field widens to
+`DensityName | DensityOverrides`. The authored example names compact and raises
+its row height inside it, every shipped style keeps its name-only density, and no
+colour, pair, floor or metric moves.
 
 ## How to use a plan
 
