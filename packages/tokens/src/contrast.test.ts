@@ -253,7 +253,7 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    expect(plain).toHaveLength(8);
+    expect(plain).toHaveLength(9);
     expect(selected).toHaveLength(9);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -347,7 +347,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(293);
+    expect(contrastPairs.length).toBe(294);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(

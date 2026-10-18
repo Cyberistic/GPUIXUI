@@ -151,6 +151,16 @@ const secondaryTextPairs: readonly ContrastPair[] = stateWashes.map(
 );
 
 /**
+ * The field's own secondary text. A time picker paints the separator between
+ * its segments and its clear control on the `input` fill with
+ * `mutedForeground`, so the secondary floor applies to the surface a field
+ * paints for its own chrome, not only to the plain surfaces and the row washes.
+ */
+const fieldSecondaryPairs: readonly ContrastPair[] = [
+  ["mutedForeground", "input", "secondary"],
+];
+
+/**
  * The fills a bordered control paints behind its own edge: a secondary
  * control's resting, hovered and pressed fills, the hover and pressed washes an
  * outline control uses, and the accent family a pressed outline toggle takes —
@@ -536,8 +546,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * pointer washes — a selected `Select` option's label on
  * its `selected` fill, a status label or dot on the quiet `muted` panel, typed
  * text on the `input` fill and on the `background`, `card`, `popover` and
- * `muted` surfaces a transparent field paints, the placeholder on those same
- * surfaces, and a text field's
+ * `muted` surfaces a transparent field paints, secondary text on the `input`
+ * fill a time picker's separator and clear control paint, the placeholder on
+ * those same surfaces, and a text field's
  * edge is measured on the `input` fill it sits on; an invalid field's
  * `destructive` edge is a boundary pair on that fill and on the `background`
  * canvas a transparent field paints.
@@ -620,6 +631,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...controlBoundarySoftPairs,
   ...primaryTextPairs,
   ...secondaryTextPairs,
+  ...fieldSecondaryPairs,
   ...surfacePairs,
   ...softBorderPairs,
   ...softBorderSurfacePairs,
@@ -918,9 +930,11 @@ const washVisibilityFailures = (
  * press — against the canvas, card, popover and quiet panel it paints on,
  * because the identity light panel was the same value as its `hover`,
  * `secondary`, `accent` and `selected` fills. It measures a row's own default
- * text on the washes it paints and the field edge on its `input` fill, so a
- * selected list title or a menu row cannot lose its label on its own state
- * fill. It also holds a solid role painted as a graphic — a progress segment,
+ * text on the washes it paints, secondary text on the `input` fill a time
+ * picker's separator and clear control paint, and the field edge on its `input`
+ * fill, so a selected list title, a menu row or a time field cannot lose its
+ * label or its chrome on the surface it paints. It also holds a solid role
+ * painted as a graphic — a progress segment,
  * a slider fill, a thumb's ring, a rating star, a combobox check or a timeline
  * dot (`markPairs`) — to the 3:1 mark floor (4.5:1 at AAA), because the 1.05:1
  * an interactive fill's wash needs cannot keep a bar or a glyph visible. The
