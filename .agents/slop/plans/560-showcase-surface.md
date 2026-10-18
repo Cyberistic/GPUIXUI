@@ -191,6 +191,8 @@ a pass. Record it and do not claim the scene painted.
    "/docs/showcase"` and that file exists; the smoke source uses `SCENE_PAGE`.
 5. **The landing page brings readers here** — `/docs/showcase` appears in the
    rendered landing HTML, and the page does not deny the live surface.
+6. **Every scene override resolves to a page** — every `SCENE_PAGE` entry maps
+   to an `.mdx` file, so a renamed route fails by name instead of at the smoke.
 
 Two-direction proofs to run and record in §7:
 
@@ -208,7 +210,7 @@ Run 2026-10-19 on `agent/docs-site`:
 
 | Check | Result |
 | ----- | ------ |
-| `nub run --filter docs test` | 72 files / 498 tests passed (the new 5-test suite included) |
+| `nub run --filter docs test` | 72 files / 499 tests passed (the new 6-test suite included) |
 | `nub run --filter docs check-types` | exit 0 (MDX + app + preview projects) |
 | `nub run --filter docs build` | exit 0; `/docs/showcase` in the build |
 | `nub run --filter docs smoke:build` | exit 0; the production crawl renders the new page, resolves its links and finds it in the sitemap |

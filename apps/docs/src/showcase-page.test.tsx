@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import * as Schema from "effect/Schema";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -70,6 +70,21 @@ describe("showcase page", () => {
   it("is driven by the live-surface smoke on its own URL", () => {
     expect(SCENE_PAGE.showcase).toBe("/docs/showcase");
     expect(smoke).toContain("SCENE_PAGE");
+  });
+
+  it("maps every scene override to a page that exists", () => {
+    const dangling = Object.entries(SCENE_PAGE).flatMap(([scene, path]) =>
+      path === undefined ||
+      !existsSync(
+        new URL(
+          `../content/docs/${path.replace(/^\/docs\//, "")}.mdx`,
+          import.meta.url,
+        ),
+      )
+        ? [`${scene}: ${path}`]
+        : [],
+    );
+    expect(dangling).toEqual([]);
   });
 
   it("is reachable from the landing page and does not deny the live surface", () => {
