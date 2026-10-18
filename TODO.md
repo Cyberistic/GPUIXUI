@@ -58,7 +58,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 86/91 plans-and-harness
+`[~]` `[██████████]` 86/92 plans-and-harness
+
+`[~]` **Re-baseline the native evidence against the published 0.10.0 source** per
+      plan `529`: the binding was built from `references/gpuix` HEAD
+      (`515df19`, main) rather than the release tag (`9fcd6288`) and with the
+      main zed pin, so `verified 0.10.0` is currently unproven — the published
+      binary lacks `focusVisible`/`outlineWidth`/`registerFont`/
+      `setFrameWakeCallback`/`keystrokeId` that the local one has, and
+      `packages/native/src` differs by 3,330 lines (bounds tracking, hit
+      testing, frame pacing, event payload). Rebuild from the tag, run the full
+      headless suite, triage every delta, then re-run live; correct ADR 0003,
+      plan `140`, the `COMPONENTS.md` preamble and add the binary fingerprint
+      guard.
 
 `[x]` Probe the **paint/frame counters** per plan `527` — the last supported
 runtime surface with no contract: `frame-stats` (67 checks) and `live-frames`

@@ -202,7 +202,7 @@ contract was renumbered from its own `524` to `525` to keep one plan per number;
 `526` is the window-layout probe (`useWindowSize` and a real resize), and `527`
 was this workstream's next free number (the paint/frame counters), so this
 workstream took `528` (the playground's scenario filter); the next playground
-plan takes `529`.
+plan takes `529` (the binding provenance audit).
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -308,6 +308,7 @@ plan takes `529`.
 | [526](./526-window-layout.md) | The window as the layout root: `useWindowSize`, a real resize and the overlay that follows it | B→F | 100, 110, 120, 140, 182, 197, 350 | **landed** — `window-layout` (27 checks) and `live-window` (29) over a pure `window-layout-model.ts` (7 tests): the hook reports the runner's window exactly (`1280x800` offscreen, `1100x720` live), `zoomWindow()` reaches React (`→ 1680x923`) within the 100 ms poll and restores exactly, the wide sidebar ends at the window's bottom, and the veil tracks a live resize. Desktop insets are zero and **no window-drag API exists**. Two host verbs (`windowSize`, async `zoomWindow`); suite `98 → 99` (`3428 → 3455`), exit `0`; five mutation proofs (§8) |
 | [527](./527-paint-frame-counters.md) | The paint/frame counters: `frames`, the sample ring and the debug overlay | B→F | 100, 110, 120, 140, 182, 197, 302 | **landed** — `frame-stats` (67 checks) + `live-frames` (29) over five host verbs and a forced offscreen `paint`. Measured: a read is free, `flush()` is exactly `+1` frame/`+1` sample, a click and a native wheel paint (4 / 2 frames headless; 3 live), `reset` keeps the lifetime count and leaves one sample with all timings equal, the ring caps at **1000**, the overlay is **paint-only** (no host node, no painted text, no input capture), and an idle live window repaints 0 times in 300 ms. Suite `99 → 100` (`3455 → 3522`), exit `0`, `frames=verified`; live registry `48 → 49`; six mutation + one reverse proof (§6/§8) |
 | [528](./528-playground-scenario-filter.md) | The playground finds its scenarios: a filter over the registry | F | 120, 151, 182, 188, 189, 345, 526 | **landed** — a pure `filterScenarios` rule (8 unit tests), the sidebar filtered by id/title/capability with the stage and highlight following the derived current and `selected` preserved, `Escape` owned by the sidebar; `shell-filter` (16 checks) + `live-shell-filter` (13), suite `100 → 101` (`3522 → 3538`), live `49 → 50` (`999 → 1012`), exit `0`; six mutation proofs (§5) and the measured ESM-cycle note (§8) |
+| [529](./529-native-binding-provenance.md) | The native evidence is built from a newer source than the published 0.10.0 | B/F | 110, 140, 189 | **in progress** — the binding was built from `references/gpuix` HEAD (`515df19`) instead of the release tag (`9fcd6288`) and with the main zed pin (`2565b8a3` vs `81c99f81`); `packages/native/src` differs by **3,330 lines** and the published binary lacks `focusVisible`/`outlineWidth`/`registerFont`/`setFrameWakeCallback`/`keystrokeId`, which the local one has. Rebuild from the tag, re-baseline headless + live, correct ADR 0003/plan 140, and add a binary fingerprint guard (§1–§3) |
 
 Cross-cutting records:
 
