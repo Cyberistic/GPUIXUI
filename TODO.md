@@ -490,7 +490,13 @@ shows it as untracked (owner: repo tooling; `packages/README.md` already lists
 `tokens`)
 `[ ]` Cross-team: `components` uses `statusTone(...).text` for inline status
 text, icons and indicator dots and retires its local `tone()` foreground, which
-reads the solid `success`/`warning` fills as text (plan 057; owner: `components`)
+reads the solid `success`/`warning` fills as text (plan 057; owner: `components`).
+`message.tsx` `callStatusColor` paints the solid `success`, `info` and
+`destructive` roles as the tool-call status word on a `card`; light `success`
+measures 4.540:1, clearing the 4.5:1 floor by 0.04, so an edited theme or a
+copied platform style can erase a "done" label while `themeContrastFailures`
+returns `[]`. `successText`/`infoText`/`destructiveText` are the roles held on
+`card` (6.63:1, 8.42:1 and 7.21:1 in the identity light set).
 `[ ]` Cross-team: `components` uses `destructiveText` for every error signal it
 paints as text — the `FieldError` and `FieldLabel`'s required asterisk
 (`field.tsx`), the `Form` error list (`form.tsx`), and the destructive Menu item
@@ -720,6 +726,20 @@ that is on and deletes the `alpha(accent, 0.9/0.8)` hover and press in
 `packages/primitives/src/core/variants.ts` (`togglePressedBase`); the two roles
 are designed, platform-specific and measured in both modes now, and the outlined
 toggle's `border` edge is held on both (plan 327; owner: `primitives`)
+`[ ]` Cross-team: `primitives` renders a loading `Button` with an invisible
+indicator — `Button.tsx` draws `<Spinner size={theme.iconSize.sm} />` inside the
+control, and `core/loading.ts` `spinnerDotStyle` paints the lit dot with the
+spinner's default `accent: "primary"` and the trail with `mutedForeground`.
+Inside a filled action neither is readable: on a primary button the lit dot is
+`primary` on `primary` (**1.000:1** in every set) and the trail measures
+**1.100:1** (identity dark) to **2.166:1** (macOS dark); on a destructive button
+the default accent is still `primary`, which measures **1.002:1** (Windows light)
+to **1.290:1** (identity dark) on the fill, and the trail 1.173–2.023:1 — all
+under the 3:1 mark floor. The indicator already carries its motion in per-dot
+`opacity`, so it can paint `filledControl(theme, family).foreground` for both the
+lit dot and the trail, or take an explicit tone the caller passes; a spinner on a
+plain surface keeps `primary` (plan 332's mark pairs). `IconButton` inherits the
+same paint through `Button`. Owner: `primitives`; found while auditing plan 345.
 `[ ]` Cross-team: `components` gives the neutral Badge, the Stepper's upcoming
 marker and the TagInput chip a visible fill — `badge.tsx`, `stepper.tsx` and
 `tag-input.tsx` paint `muted` behind `mutedForeground`, but `muted` is a surface
