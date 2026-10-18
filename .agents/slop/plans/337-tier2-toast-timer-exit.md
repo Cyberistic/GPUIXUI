@@ -251,6 +251,7 @@ Filled after implementation.
 | check count | 1785 → **1789** (+4); `tier2-toast` 21 → **25** |
 | `--only tier2-toast` | green, `tier2=verified` |
 | full runs after | three consecutive green runs |
+| live suite (no regression) | `smoke:live` 20/20, exit `0` (the shipped Tier 2 toast included) |
 | M1 (`SHORT_MS = 5000`) | fails at `the timer removed exactly one card`: `expected a string containing "count=2", got "count=3 actions=1 last=Short"` |
 | M2 (short push dropped) | fails at `the short toast joined the stack before its timer`: `expected a string containing "count=3", got "count=2 actions=1 last=Saved"` |
 | M3 (survivor checked as `toast-5`) | fails at `the long toast survived its sibling's timer`: `expected a value, got none` |
