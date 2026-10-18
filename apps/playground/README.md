@@ -289,6 +289,25 @@ function — static children render every item regardless of the query. And a
 Tooltip trigger closes on click (mousedown → close, click → close), so focus
 that arrives from a click does not leave it open; hover is the supported path.
 
+### The same three in a real window (plan `554`)
+
+`live-select`, `live-combobox` and `live-tooltip` reuse the `PopupsProbe` views
+above in the real 1100×720 window, so the published popups are no longer
+headless-only evidence (17 + 17 + 9 checks). The measured facts:
+
+| Question | Measured |
+| -------- | -------- |
+| open | a real `click` on the trigger mounts the list and paints its items; a click on the input opens the combobox |
+| commit | an item click commits `Beta` and returns **native** focus to the trigger; Enter commits the highlighted `Beta` in the combobox |
+| keyboard | Down on the focused trigger opens, the next Down moves, Enter commits `Gamma`; Escape closes |
+| outside press | a real click at `(1000, 690)` — inside the window, outside the probe — dismisses and returns focus to the trigger. The headless point `(1200, 700)` is outside the live window, so the live twin uses its own point |
+| filter / empty | typing `be` reaches the query and unmounts `Alpha`; a later `zz` query paints `no matches` |
+| tooltip | a real pointer enter opens the published tip and paints `tip text`; the leave runs the component's 80 ms timer and closes it |
+
+A trigger click also closes an open list, so that gesture cannot distinguish the
+outside-dismissal path; the mutation proof removes the outside press instead
+(plan `554` §8).
+
 ## Interactive hover cards (plan `196`)
 
 `preview-card` asks the question a tooltip does not answer: can the pointer
@@ -1807,7 +1826,10 @@ narrower. Each deviation is deliberate and measured:
   The **real-window** suite (`smoke:live`) ran in full at **53/53** on
   2026-10-19 (1133 checks, exit `0`, the merge gate) — the plan `532` terminal
   twin, the plan `534` variable-row twin and the plan `535`/`536` pointer twins
-  are all included — and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  are all included. The registry is now **56**: the plan `554` select, combobox
+  and tooltip twins join them, with a focused `3/3` run and no full-suite total
+  claimed after the addition. The full suite is a **merge/release gate** —
+  layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the

@@ -30,6 +30,11 @@ import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { previewScenario } from "../scenarios/preview.js";
 import { primitivesActionsScenario } from "../scenarios/primitives.js";
+import {
+  comboboxScenario,
+  selectScenario,
+  tooltipScenario,
+} from "../scenarios/popups.js";
 import { scrollScenario } from "../scenarios/scroll.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
@@ -1439,6 +1444,252 @@ const primitives: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${primitives.id}.png`);
+    }),
+};
+
+/**
+ * The published `Select` in a real window (plan `554`).
+ *
+ * The view is plan `159`'s probe unchanged, so the headless and live contracts
+ * are the same component. The outside press is inside the live 1100×720 window
+ * — the headless point `(1200, 700)` is outside it.
+ */
+const liveSelect: LiveScenario = {
+  id: "live-select",
+  title: "Live Select: open, commit and focus return in a window",
+  capability: "select",
+  view: selectScenario.view,
+  ready: "select-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("select-trigger");
+      yield* ctx.host.waitFor("select-content");
+      yield* settle;
+      yield* waitForText(ctx, "select-readout", "open=true");
+      yield* ctx.expectContains(
+        "a real click opens the list",
+        yield* textOf(ctx, "select-readout"),
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the list paints its items",
+        yield* textOf(ctx, "select-content"),
+        "Beta",
+      );
+
+      yield* ctx.host.click("select-item-Beta");
+      yield* waitForText(ctx, "select-readout", "open=false value=Beta");
+      yield* ctx.expectContains(
+        "choosing an item commits and closes",
+        yield* textOf(ctx, "select-readout"),
+        "open=false value=Beta",
+      );
+      yield* ctx.expectEqual(
+        "the list unmounted",
+        (yield* ctx.host.bounds("select-content")) === null,
+        true,
+      );
+      yield* waitForFocus(ctx, "select-trigger");
+      yield* ctx.expectEqual(
+        "focus returned to the trigger",
+        Option.getOrElse(
+          Option.fromNullishOr(yield* ctx.host.focused()),
+          () => "none",
+        ),
+        "select-trigger",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "select-readout", "open=true");
+      yield* ctx.expectContains(
+        "the focused trigger opens on down",
+        yield* textOf(ctx, "select-readout"),
+        "open=true",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "select-readout", "value=Gamma");
+      yield* ctx.expectContains(
+        "arrow then enter commits the next item",
+        yield* textOf(ctx, "select-readout"),
+        "open=false value=Gamma",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "select-readout", "open=false");
+      yield* ctx.expectContains(
+        "escape closes",
+        yield* textOf(ctx, "select-readout"),
+        "open=false",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.clickWindow(1000, 690);
+      yield* settle;
+      yield* waitForText(ctx, "select-readout", "open=false");
+      yield* ctx.expectContains(
+        "an outside press dismisses",
+        yield* textOf(ctx, "select-readout"),
+        "open=false",
+      );
+      yield* waitForFocus(ctx, "select-trigger");
+      yield* ctx.expectEqual(
+        "outside dismissal returns focus to the trigger",
+        Option.getOrElse(
+          Option.fromNullishOr(yield* ctx.host.focused()),
+          () => "none",
+        ),
+        "select-trigger",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveSelect.id}.png`);
+    }),
+};
+
+/** The published `Combobox` in a real window (plan `554`). */
+const liveCombobox: LiveScenario = {
+  id: "live-combobox",
+  title: "Live Combobox: type to filter and Enter to choose in a window",
+  capability: "combobox",
+  view: comboboxScenario.view,
+  ready: "combo-input",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("combo-input");
+      yield* ctx.host.waitFor("combo-content");
+      yield* settle;
+      yield* waitForText(ctx, "combo-readout", "open=true");
+      yield* ctx.expectContains(
+        "focusing the input opens the list",
+        yield* textOf(ctx, "combo-readout"),
+        "open=true",
+      );
+      yield* ctx.expectContains(
+        "the unfiltered list paints every item",
+        yield* textOf(ctx, "combo-content"),
+        "Alpha",
+      );
+
+      yield* ctx.host.key("b");
+      yield* ctx.host.key("e");
+      yield* settle;
+      yield* waitForText(ctx, "combo-readout", "query=be");
+      yield* ctx.expectContains(
+        "typing reaches the query",
+        yield* textOf(ctx, "combo-readout"),
+        "query=be",
+      );
+      yield* ctx.expectEqual(
+        "the non-matching item unmounted",
+        (yield* ctx.host.bounds("combo-item-Alpha")) === null,
+        true,
+      );
+      yield* ctx.expectContains(
+        "the matching item is painted",
+        yield* textOf(ctx, "combo-item-Beta"),
+        "Beta",
+      );
+
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "combo-readout", "open=false value=Beta");
+      yield* ctx.expectContains(
+        "enter commits the highlighted item and closes",
+        yield* textOf(ctx, "combo-readout"),
+        "open=false value=Beta",
+      );
+      yield* ctx.expectEqual(
+        "the list unmounted after the commit",
+        (yield* ctx.host.bounds("combo-content")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("combo-input");
+      yield* ctx.host.waitFor("combo-content");
+      yield* settle;
+      yield* ctx.host.key("z");
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* ctx.host.waitFor("combo-empty");
+      yield* ctx.expectContains(
+        "the empty state mounts",
+        yield* textOf(ctx, "combo-empty"),
+        "no matches",
+      );
+      yield* ctx.expectEqual(
+        "no item matches",
+        (yield* ctx.host.bounds("combo-item-Beta")) === null,
+        true,
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "combo-readout", "open=false");
+      yield* ctx.expectContains(
+        "escape closes",
+        yield* textOf(ctx, "combo-readout"),
+        "open=false",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveCombobox.id}.png`);
+    }),
+};
+
+/**
+ * The published `Tooltip` in a real window (plan `554`).
+ *
+ * The close is the component's 80 ms JS timer, so the check uses the bounded
+ * wait rather than assuming a frame.
+ */
+const liveTooltip: LiveScenario = {
+  id: "live-tooltip",
+  title: "Live Tooltip: a real hover opens and the leave closes",
+  capability: "tooltip",
+  view: tooltipScenario.view,
+  ready: "tooltip-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.hover("tooltip-elsewhere");
+      yield* settle;
+      yield* ctx.expectContains(
+        "no tooltip before the pointer reaches it",
+        yield* textOf(ctx, "tooltip-readout"),
+        "open=false",
+      );
+
+      yield* ctx.host.hover("tooltip-trigger");
+      yield* settle;
+      yield* waitForText(ctx, "tooltip-readout", "open=true");
+      yield* ctx.expectContains(
+        "a real mouse enter opens the tooltip",
+        yield* textOf(ctx, "tooltip-readout"),
+        "open=true",
+      );
+      yield* ctx.host.waitFor("tooltip-content");
+      yield* ctx.expectContains(
+        "the content paints",
+        yield* textOf(ctx, "tooltip-content"),
+        "tip text",
+      );
+      yield* boxOf(ctx, "tooltip-content");
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTooltip.id}.png`);
+
+      yield* ctx.host.hover("tooltip-elsewhere");
+      yield* settle;
+      yield* waitForText(ctx, "tooltip-readout", "open=false");
+      yield* ctx.expectContains(
+        "the delayed close fires after leaving",
+        yield* textOf(ctx, "tooltip-readout"),
+        "open=false",
+      );
     }),
 };
 
@@ -6600,6 +6851,9 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   docking,
   float,
   primitives,
+  liveSelect,
+  liveCombobox,
+  liveTooltip,
   table,
   variableRows,
   tableSort,

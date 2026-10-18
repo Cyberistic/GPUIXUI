@@ -58,7 +58,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 91/96 plans-and-harness
+`[x]` `[██████████]` 92/96 plans-and-harness
+
+`[x]` Prove the **published Select, Combobox and Tooltip in a real window** per
+      plan `554`: the three popups the library reuses instead of implementing
+      (D15) were headless-only. `live-select` (17 checks), `live-combobox` (17)
+      and `live-tooltip` (9) reuse plan `159`'s `PopupsProbe` in the real
+      1100×720 window — a click opens, the item click commits `Beta` and returns
+      **native** focus to the trigger, Down opens/moves and Enter commits
+      `Gamma`, Escape and a click at `(1000, 690)` dismiss; `be` filters `Alpha`
+      out, Enter commits `Beta`, `zz` paints `no matches`; a real pointer enter
+      opens the tip and its 80 ms timer closes it. Focused **3/3**, exit `0`,
+      live registry `53 → 56`, one screenshot each. Four mutation proofs
+      (wrong item, wrong hover target, wrong query, removed outside press) — and
+      a **measured trap**: a trigger click also closes an open list, so it cannot
+      distinguish the outside-dismissal check; recorded in the plan §8. Focused
+      ids run: `live-select`, `live-combobox`, `live-tooltip`.
 
 `[x]` Prove the **live pointer gesture** per plan `536`: `AsyncSmokeHost` gains
       `pressWindow`/`movePointer`/`releasePointer` (and a modifier on
