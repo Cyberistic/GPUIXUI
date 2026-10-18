@@ -202,7 +202,8 @@ const ladder = (
   /**
    * The rule every step is held to. A spacing step or a radius may be zero — a
    * borderless or square theme is a design — while a named icon or avatar size
-   * is a shape that must paint, so those two ladders ask for `positive`.
+   * and a control's horizontal padding are sizes that must paint, so those
+   * ladders ask for `positive`.
    */
   stepRule: "non-negative" | "positive" = "non-negative",
 ): ReadonlyArray<MetricFailure> =>
@@ -297,10 +298,13 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **borderWidth**: `strong` is the focus ring's spread, and the ring is the
  *   only focus indicator the runtime can draw, so it may not be zero; `thin`
  *   may be zero in a borderless theme, so it is only non-negative.
- * - **density**: sizes and padding are ladders, the smallest control fits one
- *   label line and one body line — a field paints body type — plus the default
- *   icon and a field adornment, each plus its two borders, and a row fits one
- *   body line and the default `md` control it holds.
+ * - **density**: sizes and padding are ladders, a control's horizontal padding
+ *   stays positive and is no tighter than the theme's own hairline
+ *   (`spacing["2xs"]`), because it is the inset between the label and the
+ *   border painted inside the same box, the smallest control fits one label line
+ *   and one body line — a field paints body type — plus the default icon and a
+ *   field adornment, each plus its two borders, and a row fits one body line and
+ *   the default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
  *   a minimum below its default, a chip fits in the field's content box — its
  *   minimum width less the field's two borders and horizontal padding — the
@@ -442,6 +446,18 @@ export function themeMetricFailures(
           [`controlPaddingX.${size}`, density.controlPaddingX[size]] as const,
       ),
       "non-decreasing",
+      "positive",
+    ),
+    // A control paints its label `controlPaddingX` inside its own border, and
+    // the spacing scale is shared by padding, so an inset tighter than the
+    // theme's own hairline puts the glyph on the edge.
+    ...controlSizes.flatMap((size) =>
+      atLeast(
+        "density",
+        `controlPaddingX.${size}`,
+        density.controlPaddingX[size],
+        spacing["2xs"],
+      ),
     ),
     ...positive("density", "rowHeight", density.rowHeight),
     // A control is not always a label: a field paints the body role, so the
@@ -518,9 +534,6 @@ export function themeMetricFailures(
     // its height at `density.rowHeight` and documents its leading slot for an
     // avatar, so a mark taller than the row cannot fit the row it leads.
     ...atMost("avatarSize", "xs", avatarSize.xs, density.rowHeight),
-    // The `xs` tier is the inline avatar (`scale.ts`): a dense `ListItem` fixes
-    // its height at `density.rowHeight` and documents its leading slot for an
-    // avatar, so a mark taller than the row cannot fit the row it leads.
     ...finiteMembers("radius", [
       ["none", radius.none],
       ["sm", radius.sm],

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 186/248
+`[x]` `[███████░░░]` 188/250
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1492,6 +1492,13 @@ a 28–32px row. One `at-most` rule bounds `xs` by the theme's own row; the othe
 three tiers stay unbounded because `md` in a dense row is a composition
 decision, not a size error. Every shipped set passes and no value moves
 (plan 522)
+
+`[x]` Hold a control's horizontal padding to a paint — `controlPaddingX` was the
+only density metric with no floor: `extendTheme(light, { density: {
+controlPaddingX: { sm: 0, md: 0, lg: 0 } } })` returned `[]` from all six checks
+while every labelled control painted its glyph on its own border. The ladder now
+asks for `positive` and each size is `atLeast` the theme's own hairline
+(`spacing["2xs"]`); every shipped set ships 6–14px, so no value moves (plan 523)
 
 ## Phase C — Tier 1–2 components
 

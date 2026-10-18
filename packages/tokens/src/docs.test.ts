@@ -2205,6 +2205,11 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the control inset's floor", () => {
+    const sentence = `A control's horizontal padding is a shape: it stays positive and at least the theme's own hairline (\`spacing["2xs"]\`, ${spacing["2xs"]}px), because it is the only space between the label and the border the control paints inside its own box`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
   it("states the floors the contrast checker enforces", () => {
     const elevationSurfaceNames = elevationSurfaces
       .map((surface) => `\`${surface}\``)

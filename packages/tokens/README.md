@@ -570,7 +570,8 @@ one body line,
 fit an icon, a field adornment or a chip into a content box shorter or narrower
 than they are, raise an inline icon above the caption or label line it sits in,
 raise an inline avatar above the dense row it leads,
-invert a size ladder, name an icon or avatar size of zero, scroll
+flush a control's horizontal padding to zero or tighter than the theme's own
+hairline (`spacing["2xs"]`), invert a size ladder, name an icon or avatar size of zero, scroll
 an overlay in less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit
 float, ship a non-finite motion timing or a cubic-bezier easing the runtime

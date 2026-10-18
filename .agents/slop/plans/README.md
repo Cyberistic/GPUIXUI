@@ -217,6 +217,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [520](./520-disabled-panel-action-selection.md) | The disabled panel action through the inverse selection veil | F | 306, 344, 394, 397, 399, 504, 510, 512, 513, 514 | done |
 | [521](./521-inline-icon-line-fit.md) | The inline icon must fit its line box | F | 353, 358, 367, 372, 384, 386 | done |
 | [522](./522-inline-avatar-row-fit.md) | The inline avatar must fit the dense row it leads | F | 054, 358, 360, 372, 386, 521 | done |
+| [523](./523-control-horizontal-padding.md) | A control's horizontal padding is a shape, not a number | F | 089, 358, 368, 372, 384, 517 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2283,6 +2284,18 @@ dense row is a composition decision — bounding it would reject the shipped mac
 compact variant — recorded as a cross-team note instead. Every shipped set passes
 (20 ≤ 28), so no colour, pair, floor or metric moves and `contrastPairs` stays
 **396**.
+
+Plan `523` closes the last density metric without a floor. `controlPaddingX` is
+the inset between a control's label and the border the control paints inside its
+own box — every button, field and pagination item reads it — but
+`themeMetricFailures` only held it finite, ordered and non-negative. A probe
+whose whole ladder fell to zero returned `[]` from all six checks while every
+labelled control painted its glyph on its own border, and a 1px inset did the
+same against the 2px hairline the spacing scale defines for padding. The ladder
+now asks for `positive` and each size is `atLeast` the theme's own
+`spacing["2xs"]`, so a brand that widens its hairline gets the allowance and one
+that flushes its controls is reported; every shipped set ships 6–14px, so no
+colour, pair, floor or metric moves and `contrastPairs` stays **396**.
 
 ## How to use a plan
 

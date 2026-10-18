@@ -204,6 +204,11 @@ and the spacing scale stay fixed, so a density switch cannot reflow text
 unexpectedly. Components read `controlHeight(theme, size)` and
 `controlPaddingX(theme, size)` instead of hardcoding numbers.
 
+A control's horizontal padding is a shape: it stays positive and at least the
+theme's own hairline (`spacing["2xs"]`, 2px), because it is the only space
+between the label and the border the control paints inside its own box — a flush
+inset renders the glyph on the edge, and the numeric contract reports it.
+
 Icon and avatar sizes are **fixed tiers**, not density metrics: icons run
 12/14/16/20/24 and avatars 20/26/32/40, read by name from `theme.iconSize` and
 `theme.avatarSize`. A person chip is a size tier, not a spacing decision, so it

@@ -1800,9 +1800,15 @@ must round the largest radius and half of the taller of the largest control and
 the largest avatar — a 40px avatar painted at a smaller radius is a rounded
 square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX`, the motion timings and the
-elevation feather — must not step backwards, and `iconSize` and `avatarSize`
-must also stay above zero, because a named size that paints a 0×0 icon or avatar
-is not a size; the two inline icon sizes are bounded by the line box they share
+elevation feather — must not step backwards, and `iconSize`, `avatarSize` and a
+control's horizontal padding must also stay above zero, because a named size
+that paints a 0×0 icon or avatar is not a size and a control with no inset
+paints its label on its own border; a control's padding is a padding before it
+is a density number, so each `controlPaddingX` size must also be at least the
+theme's own hairline, `spacing["2xs"]`, the smallest step the spacing scale —
+documented as shared by padding, margin and gap — defines, because a brand that
+widens its hairline must not keep controls tighter than it; the two inline icon
+sizes are bounded by the line box they share
 with text — `iconSize.xs` by `typography.caption.lineHeight` and `iconSize.sm`
 by `typography.label.lineHeight`, the partners `scale.ts` names — because a
 glyph taller than its line raises the row the icon is centred in, while the
