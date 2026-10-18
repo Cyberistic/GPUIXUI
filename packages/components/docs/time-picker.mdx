@@ -158,8 +158,8 @@ still owns the group focus ring.
   are text segments; the arrow-key step is an enhancement, not the only way to
   enter a time.
 - **No `aria-disabled`** in 0.10.0. `disabled` makes both inputs `readOnly`,
-  removes the clear control, dims the field and takes the segments out of the
-  tab order; it does not announce a disabled state.
+  removes the clear control, dims the field, takes the segments out of the tab
+  order and makes the arrow keys inert; it does not announce a disabled state.
 - **Fixed 24-hour display.** No AM/PM and no locale: the repo has no i18n layer,
   and a 12-hour toggle would need a real message catalogue. No seconds and no
   timezone either — the value is a time of day, not an instant.
@@ -175,10 +175,11 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (11 tests): typed hours reaching
+`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (12 tests): typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
-the disabled state, clearing from the keyboard on Space release, the controlled
+the disabled state (read-only, out of the tab order and inert to arrows),
+clearing from the keyboard on Space release, the controlled
 contract, the segments laid out where the caller put them, and no clear control
 when the part is not composed. The theme matrix adds the both-theme surface
 assertion.

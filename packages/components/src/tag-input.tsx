@@ -100,6 +100,7 @@ export const TagInput = ({
   };
 
   const commit = (): void => {
+    if (disabled) return;
     add(splitDraft(draft));
     setDraft("");
   };

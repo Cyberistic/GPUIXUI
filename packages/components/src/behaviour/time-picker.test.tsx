@@ -5,8 +5,9 @@
  * without a value on the minute side; text and value disagreeing after an
  * out-of-range digit; arrow keys that stopped at the hour or at midnight; blur
  * that left a one-digit segment; a clear control on an empty or non-clearable
- * field, or one that fired on Space key down instead of release; and a
- * controlled field that changed itself when the consumer said no.
+ * field, or one that fired on Space key down instead of release; a controlled
+ * field that changed itself when the consumer said no; and a disabled field
+ * whose arrow keys still shifted the time (plan 394).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -229,6 +230,24 @@ describe("TimePicker", () => {
       disabled.renderer.findByTestId("time-hours")?.customProps?.readOnly,
     ).toBe(true);
     disabled.unmount();
+  });
+
+  it("ignores the arrow keys while disabled", () => {
+    // A disabled segment is read-only and out of the tab order, but the arrow
+    // handler still shifted the time (plan 394).
+    const onValueChange = vi.fn();
+    const time = renderComponent(
+      <Time defaultValue="09:30" disabled onValueChange={onValueChange} />,
+    );
+
+    time.renderer.focusElement(
+      time.renderer.findByTestId("time-hours")?.id ?? -1,
+    );
+    time.renderer.simulateKeystrokes("up");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    time.unmount();
   });
 
   it("clears from the keyboard on Space release", () => {

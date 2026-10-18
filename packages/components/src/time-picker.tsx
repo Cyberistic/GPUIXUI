@@ -204,6 +204,7 @@ export const TimePicker = ({
   };
 
   const handleKeyDown = (segment: TimeSegment, event: EventPayload): void => {
+    if (disabled) return;
     Match.value(event.key).pipe(
       Match.when("up", () => shift(segment === "hours" ? 60 : step)),
       Match.when("down", () => shift(segment === "hours" ? -60 : -step)),

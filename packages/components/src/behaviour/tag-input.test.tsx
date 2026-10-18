@@ -5,7 +5,8 @@
  * cap that truncates existing tokens, Backspace that removes when a draft is
  * present, a disabled chip that still removes, a draft that stops the field
  * from keeping focus, a chip control that removes on Space key down instead of
- * on release, and a removal control that only a child index could find.
+ * on release, a removal control that only a child index could find, and a
+ * disabled field whose Enter path still committed (plan 394).
  */
 
 import type { TestElement } from "@gpuix/react/testing";
@@ -192,6 +193,24 @@ describe("TagInput", () => {
       true,
     );
     expect(removeControlOf(tags, "chip-design")).toBeUndefined();
+
+    tags.unmount();
+  });
+
+  it("ignores Enter while the field is disabled", () => {
+    // The chip controls are hidden when disabled, but the field's own Enter path
+    // still committed a draft the consumer could not have typed (plan 394).
+    const onValueChange = vi.fn();
+    const tags = renderComponent(
+      <Harness initial={["design"]} disabled onValueChange={onValueChange} />,
+    );
+
+    tags.renderer.focusElement(
+      tags.renderer.findByTestId("tag-field")?.id ?? -1,
+    );
+    tags.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).not.toHaveBeenCalled();
 
     tags.unmount();
   });

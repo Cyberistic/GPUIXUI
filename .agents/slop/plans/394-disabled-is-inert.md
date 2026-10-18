@@ -5,7 +5,7 @@
 | Phase | F (integration and polish — interaction-state consistency) |
 | Owner | components workstream |
 | Depends on | `110`, `111`, `113`, `116`, `200`, `201`, `305`, `332`, `334`, `388`, `393` |
-| Status | done — six measured leaks fixed; 7 new native cases (Button 13, InlineEdit 16, Collapsible 13, SearchInput 11, List 44, behaviour 609); six mutation proofs (one fix reverted at a time fails exactly its case). §1 row 4 was extended after the first pass, when the Escape/Enter path was still live with the clear control hidden |
+| Status | done — seven measured leaks fixed; 9 new native cases (Button 13, InlineEdit 16, Collapsible 13, SearchInput 11, List 44, TagInput 11, TimePicker 12, behaviour 611); eight mutation proofs (one fix reverted at a time fails exactly its case). Two rows were added after the first pass: the SearchInput Escape/Enter path that survived hiding the control, and the TagInput/TimePicker key paths |
 | Number | First free number in the `300–399` block (last landed: `393`) |
 
 This plan is self-contained. A weaker executor can run every step without
@@ -31,6 +31,8 @@ Five measured holes, all reproduced on `HEAD` `9f1097b` with one probe suite
 | 3 | `collapsible.tsx` `CollapsibleTrigger` | has no `disabled` prop at all: a caller's `disabled` falls through to the host div, stays in the tab order and still toggles | `customProps.tabIndex: 0`, `onOpenChange` called once, `style.hover` defined |
 | 4 | `search-input.tsx` clear control and key path | still renders while the field is disabled, so a press clears a field the user cannot type in; with the control hidden, Escape still ran `clear` and Enter still ran `onSubmit` | `findByTestId("search-clear")` returned an element; a disabled field reported `clear: 1, submit: 1` |
 | 5 | `list.tsx` `ListItem` | a disabled row in a selectable/activatable list still gets `cursor: pointer` and the hover/press fills | `style.cursor: "pointer"`, `style.hover` defined |
+| 6 | `tag-input.tsx` field | a disabled field's Enter still committed the draft through `addDraft` | `onValueChange` called once with the unchanged list |
+| 7 | `time-picker.tsx` segments | a disabled segment still shifted the time on ArrowUp/ArrowDown | `onValueChange` called once |
 
 Parts that already do this correctly — use them as the reference shape, do not
 change them:
@@ -178,6 +180,30 @@ and the collection rules); only the pointer affordance is gated.
 
 ---
 
+### 3.6 `packages/components/src/tag-input.tsx`
+
+`commit` is the public Enter path (the chips' removal controls are already
+hidden while disabled):
+
+```ts
+const commit = (): void => {
+  if (disabled) return;
+  add(splitDraft(draft));
+  setDraft("");
+};
+```
+
+### 3.7 `packages/components/src/time-picker.tsx`
+
+The segment key handler shifts the selected time; mute it at the source:
+
+```ts
+const handleKeyDown = (segment: TimeSegment, event: EventPayload): void => {
+  if (disabled) return;
+  // …
+};
+```
+
 ## 4. Tests (native behaviour)
 
 Add these cases; keep the suite's two-space `it(` convention so
@@ -192,6 +218,8 @@ Add these cases; keep the suite's two-space `it(` convention so
 | `src/behaviour/search-input.test.tsx` | "a disabled field offers no clear control" | renders `value="draft" disabled`; asserts `findByTestId("search-clear")` is `undefined`; then the same tree enabled has one | the press that clears an unusable field |
 | `src/behaviour/search-input.test.tsx` | "ignores Escape and Enter while the field is disabled" | focuses a disabled field with a value, sends `escape` and `enter`, and asserts `onClear`/`onSubmit` never ran | the key path that survived hiding the control |
 | `src/behaviour/list.test.tsx` | "a disabled row shows no pointer affordance" | single-select list with an enabled and a disabled row; asserts the disabled row's `style.cursor` is `"not-allowed"` and `style.hover`/`style.active` are `undefined`, while the enabled row keeps `cursor: "pointer"` and a hover fill | the `focusable`-only gate |
+| `src/behaviour/tag-input.test.tsx` | "ignores Enter while the field is disabled" | focuses a disabled field with tokens and sends Enter; asserts `onValueChange` never ran | the unguarded `commit` |
+| `src/behaviour/time-picker.test.tsx` | "ignores the arrow keys while disabled" | focuses a disabled hours segment and sends ArrowUp; asserts `onValueChange` never ran | the unguarded segment key handler |
 
 Expected new totals:
 
@@ -202,7 +230,9 @@ Expected new totals:
 | `collapsible.test.tsx` | 11 | 13 |
 | `search-input.test.tsx` | 9 | 11 |
 | `list.test.tsx` | 43 | 44 |
-| behaviour, whole package | 602 | 609 |
+| `tag-input.test.tsx` | 10 | 11 |
+| `time-picker.test.tsx` | 11 | 12 |
+| behaviour, whole package | 602 | 611 |
 
 Update every stated count (COMPONENTS.md rows and each docs page's Verification
 line) — `inventory.test.ts` fails otherwise.
@@ -245,10 +275,10 @@ line) — `inventory.test.ts` fails otherwise.
 Run from `packages/components` unless stated:
 
 ```sh
-nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/button.test.tsx src/behaviour/inline-edit.test.tsx src/behaviour/collapsible.test.tsx src/behaviour/search-input.test.tsx src/behaviour/list.test.tsx
+nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/button.test.tsx src/behaviour/inline-edit.test.tsx src/behaviour/collapsible.test.tsx src/behaviour/search-input.test.tsx src/behaviour/list.test.tsx src/behaviour/tag-input.test.tsx src/behaviour/time-picker.test.tsx
 ```
 
-Expected: 5 files, **13 + 16 + 13 + 11 + 44 = 97** tests passing.
+Expected: 7 files, **13 + 16 + 13 + 11 + 44 + 11 + 12 = 120** tests passing.
 
 ```sh
 nub run --filter @gpuixui/components test
@@ -260,7 +290,7 @@ Expected: 39 files, **383** unit tests passing (no unit test changes).
 nub run --filter @gpuixui/components test:behaviour
 ```
 
-Expected: 49 files, **609** behaviour tests passing.
+Expected: 49 files, **611** behaviour tests passing.
 
 ```sh
 nub run --filter @gpuixui/components check-types
@@ -301,7 +331,7 @@ Stop and report, do not improvise, if any of these happen:
 - The `List` row's `tabIndex` changes behaviour for an enabled row; the roving
   model's `focusable` flag is not part of this plan.
 - Any existing test that is not listed above fails.
-- The behaviour suite reports fewer than 609 tests (a case was silently not
+- The behaviour suite reports fewer than 611 tests (a case was silently not
   collected — check the two-space `it(` convention).
 
 ---
@@ -312,7 +342,7 @@ Stop and report, do not improvise, if any of these happen:
   without its fix.
 - The disabled contract (§2) holds for `Button`, `IconButton`, `InlineEdit`,
   `CollapsibleTrigger`, `SearchInput` (pointer and keys) and `ListItem`.
-- All five suites, the whole behaviour suite and the unit suite pass with the
+- All seven suites, the whole behaviour suite and the unit suite pass with the
   counts above.
 - Docs pages, `COMPONENTS.md` and the inventory check agree with the code.
 - `nub run check`, `nub run lint` and `nub run test` pass at the repo root.
