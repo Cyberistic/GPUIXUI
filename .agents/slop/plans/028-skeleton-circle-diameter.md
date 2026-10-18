@@ -1,6 +1,6 @@
 # 028 — `Skeleton circle` must be a circle, whatever dimensions it is given
 
-**Status:** ready to execute · **Phase:** C/F · **Owner:** primitives
+**Status:** done — see §7 for the measured results · **Phase:** C/F · **Owner:** primitives
 **Depends on:** `030`, `371`, `384` (the skeleton's existing rules) · **Touches:** `packages/primitives`, `COMPONENTS.md`, `TODO.md`
 
 ## 0. The bug, measured
