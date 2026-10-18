@@ -1,5 +1,7 @@
 # Plan 434: The landing page — a "Hunter License" identity over a stacked-native hero
 
+> **Model**: execute this plan on `opencode-go/deepseek-v4-pro`, not the swarm default (`deepseek-v4.1-flash`). The landing is design-heavy — one confident idea, typography, motion — and the stronger model is the right tool. Keep the flash model for the mechanical workstreams.
+
 ## Why
 
 The landing page is the first impression of a library whose whole claim is *one component
