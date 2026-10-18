@@ -1,0 +1,65 @@
+# `@gpuixui/tw`
+
+shadcn/ui class recipes for the GPUix native renderer, with shadcn's
+[`cn`](https://github.com/shadcn-ui/cn) for class joining and conflict
+resolution.
+
+The native runtime has no CSS. This package resolves the class strings to the
+flat `StyleDesc` GPUix elements take, so the recipe stays the one shadcn ships:
+
+```tsx
+import { cn } from "@gpuixui/tw";
+import { BUTTON_BASE, BUTTON_SIZES, BUTTON_VARIANTS } from "@gpuixui/tw";
+import { classesToStyle } from "@gpuixui/tw";
+import { useTheme } from "@gpuixui/tokens/react";
+
+const theme = useTheme();
+const style = classesToStyle(
+  cn(
+    BUTTON_BASE,
+    BUTTON_VARIANTS.default,
+    BUTTON_SIZES.default,
+    className,
+  ),
+  theme,
+).style;
+```
+
+Or use the React wrappers:
+
+```tsx
+import { Tw } from "@gpuixui/tw/react";
+
+<Tw.input className="h-9 px-3 py-1 rounded-md border border-input" />
+```
+
+## What is supported
+
+- Geometry: `h-*`, `w-*`, `size-*`, `p-*`, `px-*`, `py-*`, `gap-*`, `rounded-*`.
+- Type: `text-*` (size and colour roles), `font-*`, `line-height` via `text-*`.
+- Surfaces: `bg-*`, `text-*`, `border-*`, semantic token roles, `/alpha`.
+- States: `hover:`, `active:`, `focus-visible:`, `disabled:`, `aria-invalid:`,
+  `data-open:`, `data-closed:`, `dark:` (theme-resolved), `md:` (desktop
+  default, recorded for a later breakpoint pass).
+- Motion: `animate-in`, `fade-in-0`, `slide-in-from-*`, `duration-*`, `ease-*`
+  map to `motion` props.
+
+## What is recorded as unsupported
+
+`transition-*` (GPUix has no CSS transitions), `transform`/`zoom-*`
+(GPUI has no transform), `z-*` (pending the GPUix `zIndex` patch),
+`backdrop-filter`, `selection:`/`file:`/`placeholder:` pseudo-elements,
+`has-[...]`/`group-*`/`peer-*` selectors, and arbitrary `calc()` sizes.
+
+Each unsupported class is returned in `unsupported` with its original name; it
+is never silently dropped.
+
+## Upstream
+
+- shadcn/ui `references/ui` @ `d2fba50` (MIT), `apps/v4/registry/new-york-v4`
+  and the Base UI registry.
+- `cn` `0.5.0` (MIT).
+- Base UI `v1.6.0` (MIT) for behavior work.
+
+`src/upstream.test.ts` asserts the copied Input/Button class strings are still
+present in the reference clone. It skips when `references/ui` is absent.

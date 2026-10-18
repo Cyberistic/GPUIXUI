@@ -1,0 +1,18 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@gpuix/react",
+    "paths": {
+      "@gpuix/react/jsx-runtime": [
+        "./node_modules/@gpuix/react/jsx-runtime.d.ts"
+      ],
+      "@gpuix/react/jsx-dev-runtime": [
+        "./node_modules/@gpuix/react/jsx-dev-runtime.d.ts"
+      ]
+    },
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src"]
+}
