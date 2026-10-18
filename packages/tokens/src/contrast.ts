@@ -584,12 +584,15 @@ export const invalidRingPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * The surfaces a status label, icon or indicator dot paints on: the quiet
- * panel of a sidebar or settings group, and the four washes a row paints. A
- * status dot in a sidebar sits on `muted` the way a soft status chip does
- * (plan 300), so the `secondary` floor applies there too.
+ * The surfaces a status label, icon or indicator dot paints on: the plain
+ * surfaces, the quiet panel of a sidebar or settings group, and the four washes
+ * a row paints. A status label is `xText` on each, because the solid fill is a
+ * surface, not a foreground — light `warning` is 1.78:1 on the canvas.
  */
-const statusTextSurfaces = [
+export const statusTextSurfaces = [
+  "background",
+  "card",
+  "popover",
   "muted",
   "hover",
   "active",
@@ -597,9 +600,12 @@ const statusTextSurfaces = [
   "selected",
 ] as const;
 
-const statusTextTones = ["info", "success", "warning", "destructive"] as const;
-
-const statusTextSurfacePairs: readonly ContrastPair[] = statusTextTones.flatMap(
+/**
+ * Every tone's plain-surface text role on every surface it paints. Derived from
+ * the tone index, so a fifth status family joins its own label pairs with that
+ * one edit.
+ */
+const statusTextSurfacePairs: readonly ContrastPair[] = statusTones.flatMap(
   (tone) =>
     statusTextSurfaces.map(
       (background): ContrastPair => [`${tone}Text`, background, "secondary"],
@@ -956,18 +962,6 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...softSurfaceRoles.map(
     (role): ContrastPair => [`${role}Foreground`, role, "body"],
   ),
-  ["infoText", "background", "secondary"],
-  ["infoText", "card", "secondary"],
-  ["infoText", "popover", "secondary"],
-  ["successText", "background", "secondary"],
-  ["successText", "card", "secondary"],
-  ["successText", "popover", "secondary"],
-  ["warningText", "background", "secondary"],
-  ["warningText", "card", "secondary"],
-  ["warningText", "popover", "secondary"],
-  ["destructiveText", "background", "secondary"],
-  ["destructiveText", "card", "secondary"],
-  ["destructiveText", "popover", "secondary"],
   ...statusTextSurfacePairs,
   ...rowTextPairs,
   ...softBodyPairs,

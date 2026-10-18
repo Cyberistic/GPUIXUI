@@ -126,6 +126,7 @@ import {
   stateFillSurfacePairs,
   stateFillSurfaces,
   statusFillPairs,
+  statusTextSurfaces,
   skeletonPulsePairs,
   textTiers,
   toastTonePairs,
@@ -2686,6 +2687,14 @@ describe("docs/design-system.md", () => {
     expect(markdown).toContain(
       "Every soft-fill list is derived from the tone index (`statusTones`)",
     );
+  });
+
+  it("names the surface index the status text pairs derive from", () => {
+    expect(markdown).toContain("The `xText` pairs derive from");
+    expect(markdown).toContain("`statusTextSurfaces` and the tone index");
+    statusTextSurfaces.forEach((surface) => {
+      expect(markdown, surface).toContain(`\`${surface}\``);
+    });
   });
 
   it("names every surface default body text is measured on", () => {

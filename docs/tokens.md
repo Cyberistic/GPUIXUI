@@ -42,6 +42,7 @@ import {
   selectionSurfaces,
   selectionStyle,
   selectionWashPairs,
+  statusTextSurfaces,
   statusTone,
   statusTones,
   systemUiFont,
@@ -342,6 +343,12 @@ on Windows light until plan `300` moved the four light tints one small step
 deeper. Every soft-fill list is derived from the tone index (`statusTones`): a
 fifth status family joins its tint's surface, text, edge, ring, inactive, track,
 scrim and selection pairs from that one edit.
+
+The label itself is indexed too: `statusTextSurfaces` is the ordered list a
+status label, icon or dot paints on — `background`, `card`, `popover`, the
+`muted` quiet panel and the four state washes. The `xText` pairs derive from
+`statusTextSurfaces` and the tone index, so a fifth family's label joins the
+contract with the same one edit.
 
 Because the solid role is a fill, it is held like one: `statusFillPairs`
 measures each of the four solid fills on the eight surfaces a status chip sits

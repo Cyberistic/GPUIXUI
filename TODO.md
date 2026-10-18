@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 212/276
+`[x]` `[████████░░]` 213/276
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1749,6 +1749,13 @@ fill, the `xText` roles, the chip edge and the selection list all derived from
 `selectionSoftWashPairs` and `contentFillSurfaces`), so a fifth tone's Alert
 tint skipped about ten lists while every check returned `[]`; all six now derive
 from the tone index and a new guard takes its expectation from it (plan 548)
+`[x]` Make the status-text contract own the tones it derives from — plan 548
+made every soft-fill list follow `statusTones` and said the `xText` roles already
+did, but those were still a separate four-name `statusTextTones` plus twelve
+literal pairs, so a fifth family's label on `background`/`card`/`popover`/`muted`
+and the four row washes would have shipped unmeasured; `statusTextSurfaces` is
+the public surface index now, the pairs derive from it and the tone index, and a
+new guard takes its expectation from the index (plan 549)
 
 ## Phase C — Tier 1–2 components
 
