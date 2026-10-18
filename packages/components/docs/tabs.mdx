@@ -70,7 +70,8 @@ and the vertical workspace settings.
 | `ArrowRight` / `ArrowLeft` (horizontal) | next/previous enabled tab, wrapping |
 | `ArrowDown` / `ArrowUp` (vertical) | next/previous enabled tab, wrapping |
 | `Home` / `End` | first/last enabled tab |
-| `Enter` / `Space` | select the focused tab (the only way in `manual`) |
+| `Enter` | select the focused tab on press (the only way in `manual`) |
+| `Space` | select the focused tab on release |
 
 ## Controlled and uncontrolled
 
@@ -119,9 +120,10 @@ after the trigger's own rules.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (14 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (15 tests): click
 switching, the active theme role in both themes, arrow wrap with a disabled tab,
-manual activation waiting for Enter, Home/End, the controlled contract, a panel
+manual activation waiting for Enter, Space selecting on release, Home/End, the
+controlled contract, a panel
 whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
 focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
 ignored, the row/column layout, and manual activation. The vertical guard is

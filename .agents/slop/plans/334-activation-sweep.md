@@ -315,3 +315,32 @@ Run from `packages/components/` unless stated.
 - Composite rows/cells are unchanged (`List`, menus, grid/calendar cells).
 - `docs/component-api.md` §4 matches the code; every docs page and
   `COMPONENTS.md` count matches its suite; the three repo gates pass.
+
+## 9. Outcome
+
+Landed on `agent/components` (2026-10-18).
+
+**Measured correction:** `simulateKeystrokes("space")` does **not** deliver a
+key-up. The existing collapsible case that used it to close the section failed
+after the fix; it now sends `nativeSimulateKeyDown` + `nativeSimulateKeyUp`
+explicitly. Every new Space case uses those two calls too.
+
+**Both-direction proof:** with the seven source files stashed and the nine new
+cases kept, the targeted run reported **8 failed / 64 passed**. The failing
+cases were the seven migration cases plus the hotkey clear-control case (the
+latent nested-event bug). The ninth case — “captures Space without reopening the
+recorder” — passes before the migration because the regression it guards is
+introduced *by* the migration; it was proven in the other direction by removing
+the `consumed` ref (the recorder reopened after capturing Space).
+
+After the fix: **behaviour 517** (was 508; nine new cases), **unit 335**
+(unchanged), both green. `nub run check`, `nub run lint` and `nub run test`
+pass. Counts synced in `COMPONENTS.md` and the six docs Verification sections;
+`docs/component-api.md` §4 now states the button-shaped rule without a
+follow-up caveat.
+
+Scope: `TabsTrigger` owns its activation and `TabsList` keeps the roving keys;
+`TabsContextValue` lost `selectActive`. The hotkey recorder spells out its own
+split (capture consumes the key) and its clear control claims the key through
+`internal/event-claim.ts`, which also fixes the pre-existing “keyboard clear
+starts a recording” bug.

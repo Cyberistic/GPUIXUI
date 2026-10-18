@@ -60,8 +60,9 @@ counted as one entry.
 
 ## Keyboard
 
-Tab reaches each link in order. Enter and Space fire `onSelect`. The current page
-and the ellipsis are not focusable.
+Tab reaches each link in order. `Enter` fires `onSelect` on press; `Space` fires
+it on release, so moving focus before letting go cancels the navigation. The
+current page and the ellipsis are not focusable.
 
 ## Theming
 
@@ -81,10 +82,10 @@ Links and separators use the `caption` type role; links are
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (5 tests):
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (6 tests):
 the trail and its separator count, selecting a link but not the current page,
-Enter activation, collapsing the middle while keeping both ends, and the
-ellipsis staying out of the tab order.
+Enter on press and Space on release, collapsing the middle while keeping both
+ends, and the ellipsis staying out of the tab order.
 
 `src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
 budgets 3–6.

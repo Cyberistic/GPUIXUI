@@ -3,8 +3,8 @@ title: Hotkey recorder
 description: Capture a keyboard chord and display it as platform keycaps.
 ---
 
-`HotkeyRecorder` binds a shortcut: click it (or press `Enter`/`Space`), press a
-chord, and the component reports it as an accelerator string. Display uses the
+`HotkeyRecorder` binds a shortcut: click it (or press `Enter`, or release
+`Space`), press a chord, and the component reports it as an accelerator string. Display uses the
 same grammar and the same platform glyphs as
 [Keyboard shortcuts](/docs/keyboard-shortcuts), so a bound chord and a cheat
 sheet can never disagree.
@@ -69,6 +69,9 @@ no code change — see [Theming](/docs/theming).
 
 - The recorder is a `role="button"` named by `label`; the clear control is a
   separately named button, so both are reachable by keyboard.
+- `Enter` starts a recording on press and `Space` on release. The clear control
+  clears on the same split, and its key never reaches the recorder, so clearing
+  from the keyboard does not start a recording.
 - Recording is visual ("Press keys…") and the field keeps focus while listening.
 - There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled is
   the tab order plus dimming.
@@ -88,9 +91,10 @@ no code change — see [Theming](/docs/theming).
 
 `src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a
-keyless event. `src/behaviour/hotkey-recorder.test.tsx` (8 native tests) covers
-the display, click-to-record, a real captured chord, Escape, the clear control,
-blur, disabled, and both themes.
+keyless event. `src/behaviour/hotkey-recorder.test.tsx` (11 native tests) covers
+the display, click-to-record, a real captured chord, Escape, the clear control
+by pointer and keyboard, Space starting on release, a captured Space not
+reopening the recorder, blur, disabled, and both themes.
 
 ```sh
 nub run --filter @gpuixui/components test

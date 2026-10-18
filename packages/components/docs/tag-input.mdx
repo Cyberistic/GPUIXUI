@@ -73,7 +73,7 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
   "Remove <token>".
 - The field is a real input, so typing, selection and focus are native.
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
-  `Enter`/`Space`.
+  `Enter`, or releasing `Space`.
 - The group's disabled state is visual: there is no `aria-disabled` in 0.10.0.
 
 ## Limitations
@@ -89,9 +89,9 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.
-`src/behaviour/tag-input.test.tsx` (8 native tests) covers rendering, Enter,
-comma commit, duplicates, the removal control, `max`, disabled and a caller that
-refuses a change.
+`src/behaviour/tag-input.test.tsx` (9 native tests) covers rendering, Enter,
+comma commit, duplicates, the removal control by pointer and Space release,
+`max`, disabled and a caller that refuses a change.
 
 ```sh
 nub run --filter @gpuixui/components test

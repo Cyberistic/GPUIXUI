@@ -115,15 +115,16 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
 - **Once per keystroke.** A key-repeat event (`EventPayload.isHeld`) never
   activates, so holding Enter cannot toggle a section or run a command twice.
 - **Enter on key down.** It is the action key for buttons, rows and cells.
-- **Space on key up where the component opts in.** Controls built on
-  `internal/activate.ts` — the `Button`/`IconButton` stand-in and the search and
-  time clear affordances — activate Space on release, so a user can move focus
-  away before letting go. The remaining button-shaped parts (`AccordionTrigger`,
-  `CollapsibleTrigger`, `TabsTrigger`, `Breadcrumb`, `HotkeyRecorder`, the
-  `InlineEdit` display and the `TagInput` chip) still use `isActivation` on key
-  down; migrating them is the follow-up recorded in `TODO.md`. Composite rows and
-  cells (`List`, menu rows, grid and calendar cells) keep Space as a
-  **selection** key on key down, per ARIA's listbox/grid patterns.
+- **Space on key up for a button-shaped control.** Every control built on
+  `internal/activate.ts` — the `Button`/`IconButton` stand-in, the search, time
+  and hotkey clear affordances, `AccordionTrigger`, `CollapsibleTrigger`,
+  `TabsTrigger`, `BreadcrumbLink`, `HotkeyRecorder`, the `InlineEdit` display
+  and the `TagInput` chip control — activates Space on release, so a user can
+  move focus away before letting go. A nested button-shaped control claims the
+  key it handled (`internal/event-claim.ts`) so its enclosing control does not
+  act on the same keystroke. Composite rows and cells (`List`, menu rows, grid
+  and calendar cells) keep Space as a **selection** key on key down, per ARIA's
+  listbox/grid patterns.
 - **No default suppression.** `@gpuix/react@0.10.0`'s `EventPayload` has no
   `preventDefault` and no `defaultPrevented`, so a component cannot cancel the
   runtime's own key handling; the contract says what the component does, not

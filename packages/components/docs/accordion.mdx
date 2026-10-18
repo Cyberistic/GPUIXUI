@@ -69,7 +69,8 @@ The trigger is a button: Tab reaches it, Enter and Space toggle it.
 
 | Key | Effect |
 | --- | ------ |
-| `Enter` / `Space` | toggle the focused section |
+| `Enter` | toggle the focused section on press |
+| `Space` | toggle the focused section on release |
 | `↓` / `↑` | focus the next/previous enabled header, wrapping |
 | `Home` / `End` | focus the first/last enabled header |
 
@@ -106,10 +107,10 @@ has no `transform` — a rotation is not available.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (14 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (15 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation (and a held Enter toggling only once), the controlled contract
+activation, Space on release, a held Enter toggling only once, the controlled contract
 including the `null` close, arrow / `Home` / `End` movement between headers
 (wrapping past a disabled one, without opening it), and a caller header `ref`.
 
