@@ -183,6 +183,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [386](./386-body-line-fit.md) | The smallest field must fit a body line | F | 011, 353, 358, 360, 367, 384 | done |
 | [387](./387-shipped-theme-enumeration.md) | The shipped-theme enumeration the package owns | F | 063, 305, 311, 380, 383 | done |
 | [388](./388-shipped-list-migration.md) | Every "every shipped set" suite enumerates the one shipped set | F | 387 | done |
+| [389](./389-platform-style-numeric-groups.md) | A platform style carries every numeric scale | B | 051, 063, 311, 321, 353, 358 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1709,6 +1710,20 @@ catalogue quotes. A new guard in `shipped-themes.test.ts` reads every suite and
 fails when a case title claims "every shipped set/theme" without importing the
 enumeration, with synthetic sources proving both directions. No assertion,
 colour, pair, floor or metric changes.
+
+389 closes the last gap in the "copy a platform file and own the look" story.
+`PlatformStyle` could carry a platform's families, radii, density, motion, colours
+and elevation, but not its **type scale, spacing, border widths, icon and avatar
+sizes or component dimensions** — the six numeric groups `extendTheme` already
+accepts. A consumer who copied `platform-styles/macos.ts` therefore had to leave
+the file they own and call `extendTheme` for a 15px body, 10px section spacing or
+a 240px overlay. The groups join `PlatformStyleStructure` as optional fields,
+`applyPlatformStyle` passes them through the structural overrides (so they apply
+at both contrast levels), and each merges field by field like every other group.
+Every shipped style omits them, so no theme, platform variant, recipe, colour,
+pair, floor or shipped metric moves; `platform-extension.example.ts` is the
+copyable file and `platform-extension.test.ts` proves each group applies, omitted
+groups inherit and an explicit `undefined` is ignored.
 
 ### Reference adoption (block `200–299`)
 
