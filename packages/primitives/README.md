@@ -215,6 +215,9 @@ Every Tier 1 component has a page and a composed example beside the source:
 - `examples/` — fourteen realistic compositions plus the icon set, registered in
   `examples/index.ts` for `apps/playground`, and a coverage guard that fails by
   name when a public component has no rendered example (plan `374`);
+- `@gpuixui/primitives/examples` — that registry as a public subpath, so the
+  playground mounts the compositions through the package boundary instead of a
+  relative path (plan `388`);
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
 
@@ -226,7 +229,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **46 files, 660 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **47 files, 679 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), a guard that every documented `theme.…` path and

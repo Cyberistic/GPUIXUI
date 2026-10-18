@@ -13,6 +13,10 @@
       "types": "./src/core/index.ts",
       "default": "./src/core/index.ts"
     },
+    "./examples": {
+      "types": "./examples/index.ts",
+      "default": "./examples/index.ts"
+    },
     "./testing": {
       "types": "./src/testing/index.ts",
       "default": "./src/testing/index.ts"

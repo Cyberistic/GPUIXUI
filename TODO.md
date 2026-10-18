@@ -1195,6 +1195,14 @@ retired once both branches are one
       unchanged, and a caller's style can still override. 1 offline case + 3
       relative runtime cases, the bounded row and column failing in the old
       direction (plan `387`).
+`[x]` `packages/primitives`: **the composed examples had no public subpath** —
+      the registry of fifteen screens lived at `examples/index.ts`, but the
+      manifest exported only `.`, `./core` and `./testing`, so the playground
+      (plan `168`) could not mount them through the package boundary and had to
+      build its screen against the root export. `./examples` now resolves to the
+      registry (`types` and `default` both point at source), and a guard decodes
+      the manifest, checks the target exists and requires a component for every
+      registry id; 2 tests, the missing-key direction proven (plan `388`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
