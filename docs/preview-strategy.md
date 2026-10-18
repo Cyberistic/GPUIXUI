@@ -44,7 +44,11 @@ scene paints a different frame in light than in dark (and the same frame twice
 in dark), and that a `?platform=win32` page passes the platform through to the
 renderer. Its output is a canvas, so browser assistive technology cannot read
 it: the page's accessibility notes and source remain the accessible description,
-and the live surface never stands in for them.
+and the live surface never stands in for them. Every sitemap page — preview
+surfaces included — is swept by axe-core in light and dark (`smoke:a11y`, plan
+512); a disabled control in a preview carries `aria-disabled` rather than being
+excluded, so the WCAG 1.4.3 exemption is the page's stated semantics, not a
+silent suppression.
 
 **Tier V is coverage, not a pass.** It names the suite file and the exact
 command; the component's status badge (mirrored from `COMPONENTS.md`) is the

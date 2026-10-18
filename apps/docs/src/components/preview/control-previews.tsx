@@ -42,7 +42,12 @@ function Field({
   return (
     <div style={fieldRow}>
       <span style={labelType}>{label}</span>
-      <div style={fieldChrome({ invalid, disabled })}>{value}</div>
+      <div
+        style={fieldChrome({ invalid, disabled })}
+        aria-disabled={disabled === true ? true : undefined}
+      >
+        {value}
+      </div>
       <span style={invalid === true ? errorType : captionType}>{hint}</span>
     </div>
   );
@@ -126,7 +131,11 @@ export function CheckboxPreview({ theme }: PreviewProps) {
     <PreviewSurface theme={theme}>
       <div style={column}>
         {checkboxRows.map((item) => (
-          <div key={item.label} style={row}>
+          <div
+            key={item.label}
+            style={row}
+            aria-disabled={item.disabled === true ? true : undefined}
+          >
             <Checkbox state={item.state} disabled={item.disabled} />
             <span
               style={{
@@ -314,6 +323,7 @@ function TextArea({
           whiteSpace: "pre-wrap",
           opacity: disabled === true ? 0.5 : 1,
         }}
+        aria-disabled={disabled === true ? true : undefined}
       >
         {value}
       </div>
@@ -413,7 +423,11 @@ export function RadioGroupPreview({ theme }: PreviewProps) {
           Digest cadence
         </span>
         {radioRows.map((item) => (
-          <div key={item.label} style={{ ...row, alignItems: "flex-start" }}>
+          <div
+            key={item.label}
+            style={{ ...row, alignItems: "flex-start" }}
+            aria-disabled={item.disabled === true ? true : undefined}
+          >
             <Radio selected={item.selected} disabled={item.disabled} />
             <div style={fieldRow}>
               <span
@@ -762,7 +776,7 @@ export function RatingPreview({ theme }: PreviewProps) {
             4 of 5
           </span>
         </div>
-        <div style={{ ...row, opacity: 0.5 }}>
+        <div style={row}>
           <Stars value={0} />
           <span style={captionType}>No rating yet</span>
         </div>

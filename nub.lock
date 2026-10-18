@@ -135,6 +135,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: 6.1.2
         version: 6.1.2(vite@8.3.4(@types/node@26.6.5))
+      axe-core:
+        specifier: 4.10.2
+        version: 4.10.2
       effect:
         specifier: 'catalog:'
         version: 4.0.5
@@ -3586,6 +3589,10 @@ packages:
     peerDependenciesMeta:
       source-map:
         optional: true
+
+  axe-core@4.10.2:
+    resolution: {integrity: sha512-RE3mdQ7P3FRSe7eqCWoeQ/Z9QXrtniSjp1wUjt5nRC3WIpz5rSCve6o3fsZ2aCpJtrZjSZgjwXAoTO5k4tEI0w==}
+    engines: {node: '>=4'}
 
   babel-dead-code-elimination@1.0.12:
     resolution: {integrity: sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig==}
@@ -8566,6 +8573,8 @@ snapshots:
   astring@1.9.0(source-map@0.7.6):
     dependencies:
       source-map: 0.7.6
+
+  axe-core@4.10.2: {}
 
   babel-dead-code-elimination@1.0.12:
     dependencies:

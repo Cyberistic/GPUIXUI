@@ -65,7 +65,12 @@ export function CapabilityMatrix({
   }
 
   return (
-    <div className="not-prose my-4 overflow-x-auto">
+    <div
+      className="not-prose my-4 overflow-x-auto"
+      role="region"
+      aria-label="Measured GPUix capabilities"
+      tabIndex={0}
+    >
       <table className="w-full text-left text-sm">
         <thead>
           <tr className="border-b border-fd-border text-fd-muted-foreground">

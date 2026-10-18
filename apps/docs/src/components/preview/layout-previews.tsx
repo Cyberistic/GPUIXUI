@@ -326,7 +326,6 @@ export function LabelPreview({ theme }: PreviewProps) {
           style={{
             ...column,
             gap: "var(--preview-space-2xs)",
-            opacity: 0.5,
           }}
         >
           <span

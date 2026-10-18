@@ -20,6 +20,7 @@
     "smoke:platform": "nub scripts/smoke-platform.ts",
     "smoke:search": "nub scripts/smoke-search.ts",
     "smoke:theme": "nub scripts/smoke-theme.ts",
+    "smoke:a11y": "nub scripts/smoke-a11y.ts",
     "smoke:responsive": "nub scripts/smoke-responsive.ts",
     "studio": "fumadocs-studio"
   },
@@ -51,6 +52,7 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
+    "axe-core": "4.10.2",
     "effect": "catalog:",
     "fumadocs-typescript": "5.5.2",
     "tailwindcss": "4.3.3",

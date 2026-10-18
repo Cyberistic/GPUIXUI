@@ -74,16 +74,17 @@ function Palette({ mode }: { readonly mode: (typeof MODES)[number] }) {
         {PALETTE_ROLES.map((role) => {
           const value = themeColors[mode][role];
           return (
-            <li
-              key={role}
-              role="img"
-              aria-label={`${role} ${value}`}
-              title={`${role} · ${value}`}
-              data-role={role}
-              data-mode={mode}
-              className="size-8 rounded-md border border-fd-border"
-              style={{ backgroundColor: value }}
-            />
+            <li key={role} className="flex">
+              <span
+                role="img"
+                aria-label={`${role} ${value}`}
+                title={`${role} · ${value}`}
+                data-role={role}
+                data-mode={mode}
+                className="size-8 rounded-md border border-fd-border"
+                style={{ backgroundColor: value }}
+              />
+            </li>
           );
         })}
       </ul>

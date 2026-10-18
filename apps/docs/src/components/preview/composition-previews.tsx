@@ -79,6 +79,7 @@ export function ListPreview({ theme }: PreviewProps) {
           {listRows.map((item) => (
             <span
               key={item.label}
+              aria-disabled={item.disabled === true ? true : undefined}
               style={{
                 ...labelType,
                 display: "flex",

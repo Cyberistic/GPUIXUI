@@ -164,7 +164,12 @@ export function ButtonPreview({ theme }: PreviewProps) {
           <Button size="sm">Small</Button>
           <Button size="md">Medium</Button>
           <Button size="lg">Large</Button>
-          <span style={{ ...control("primary"), opacity: 0.5 }}>Disabled</span>
+          <span
+            style={{ ...control("primary"), opacity: 0.5 }}
+            aria-disabled="true"
+          >
+            Disabled
+          </span>
           <span style={{ ...row, ...captionType }}>
             <kbd style={keycap}>Enter</kbd> activates on key down
           </span>

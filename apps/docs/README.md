@@ -41,6 +41,7 @@ nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real
 nub run --filter docs smoke:platform # the toggle: click, URL, storage, arrows
 nub run --filter docs smoke:theme   # the theme switch: class, storage, previews
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
+nub run --filter docs smoke:a11y   # axe over every page in both schemes
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
 nub run --filter docs icons         # regenerate the icon catalogue from packages/icons
@@ -325,6 +326,34 @@ server was missing — never a pass.
 nub run --filter docs build
 nub apps/docs/scripts/smoke-responsive.ts --no-build
 ```
+
+## Accessibility sweep
+
+Every rule above checks one thing. `smoke:a11y` runs **axe-core 4.10.2** with
+the WCAG 2.1 A/AA tags over **every sitemap page in both colour schemes**, so a
+defect joins the gate by the page existing. It found three classes on its first
+run and all are fixed: a landing-page `<ul>` whose `<li>` children overrode
+their role, two horizontally scrolling table wrappers with no keyboard path
+(now a labelled `role="region"` with `tabIndex={0}`, which the shared
+`:where(…, [tabindex]):focus-visible` rule already rings), and four preview
+fragments dimmed with `opacity: 0.5` until captions fell to 2.86:1. The Rating
+and Label previews no longer dim informative text; the disabled Button preview
+keeps the library's 0.5 opacity and carries `aria-disabled="true"`, which is
+the state it depicts and the WCAG 1.4.3 exemption stated in the page.
+
+The axe source is injected from the dev dependency, never fetched from a CDN,
+and the script carries no allowlist: a violation fails by name. Use `--only` for
+a local loop; the committed gate always sweeps the sitemap.
+
+```sh
+nub run --filter docs smoke:a11y
+# or against a running server, one page:
+nub apps/docs/scripts/smoke-a11y.ts --base-url http://127.0.0.1:4173 --no-build --only /docs/capabilities
+```
+
+Exit `1` prints one line per violating element (page, scheme, rule, target and
+axe's reason); exit `2` means Chrome, the server or axe could not run — never a
+pass.
 
 
 
