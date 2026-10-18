@@ -29,6 +29,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
@@ -167,6 +168,21 @@ export const Tabs = ({
   const [active, setActive] = useState<Option.Option<string>>(Option.none());
   const [rows, setRows] = useState<ReadonlyArray<TabRow>>([]);
 
+  /**
+   * The tab the user is on, when it still exists and accepts input. A tab that
+   * is disabled by the app must not keep the ring (plan 511).
+   */
+  const liveActive = useMemo(
+    () =>
+      Option.filter(active, (value) =>
+        Arr.some(rows, (row) => row.value === value && !row.disabled),
+      ),
+    [active, rows],
+  );
+
+  /** The native id of the tab the tabs last focused (plan 511). */
+  const focusedTab = useRef<Option.Option<number>>(Option.none());
+
   const register = useCallback((row: TabRow) => {
     setRows((current) => upsert(current, row));
     return () =>
@@ -175,13 +191,26 @@ export const Tabs = ({
       );
   }, []);
 
-  const noteFocus = useCallback((value: string) => {
-    setActive(Option.some(value));
-  }, []);
+  const noteFocus = useCallback(
+    (value: string) => {
+      setActive(Option.some(value));
+      Option.match(
+        Arr.findFirst(rows, (row) => row.value === value),
+        {
+          onNone: () => undefined,
+          onSome: (row) => {
+            focusedTab.current = Option.some(row.id);
+          },
+        },
+      );
+    },
+    [rows],
+  );
 
   const focusRow = useCallback(
     (row: TabRow, select: boolean): void => {
       setActive(Option.some(row.value));
+      focusedTab.current = Option.some(row.id);
       renderer?.focusElement?.(row.id);
       if (select) setSelected(row.value);
     },
@@ -205,9 +234,9 @@ export const Tabs = ({
         Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
         Option.flatMap((id) => Arr.findFirst(rows, (row) => row.id === id)),
         Option.map((row) => row.value),
-        Option.orElse(() => active),
+        Option.orElse(() => liveActive),
       ),
-    [active, renderer, rows],
+    [liveActive, renderer, rows],
   );
 
   const moveBy = useCallback(
@@ -275,10 +304,39 @@ export const Tabs = ({
     [rows, selected],
   );
 
+  /**
+   * A tab that vanishes or turns disabled takes the user's focus with it. Hand
+   * focus to the tab stop without changing the selected tab, and never steal it
+   * from another control the consumer focused in the same update (plan 511).
+   */
+  useLayoutEffect(() => {
+    const remembered = focusedTab.current;
+    if (Option.isNone(remembered)) return;
+
+    const target = Arr.findFirst(rows, (row) => row.id === remembered.value);
+    if (Option.exists(target, (row) => !row.disabled)) return;
+
+    focusedTab.current = Option.none();
+    const focused = Option.fromNullishOr(renderer?.getFocusedElementId?.());
+    if (Option.exists(focused, (id) => id !== remembered.value)) return;
+
+    Option.match(tabbable, {
+      onNone: () => undefined,
+      onSome: (value) =>
+        Option.match(
+          Arr.findFirst(rows, (row) => row.value === value),
+          {
+            onNone: () => undefined,
+            onSome: (row) => focusRow(row, false),
+          },
+        ),
+    });
+  }, [focusRow, renderer, rows, tabbable]);
+
   const context = useMemo<TabsContextValue>(
     () => ({
       selected,
-      active,
+      active: liveActive,
       tabbable,
       orientation,
       activation,
@@ -292,9 +350,9 @@ export const Tabs = ({
     }),
     [
       activation,
-      active,
       focusRow,
       jumpTo,
+      liveActive,
       moveBy,
       noteFocus,
       orientation,
@@ -609,6 +667,7 @@ export const tabsMeta = {
   limitations: [
     "no aria-orientation, aria-controls or aria-labelledby in 0.10.0; the panel is named by its value",
     "the trigger/panel relationship is positional, not semantic",
+    "a controlled value that names a removed tab still renders its panel: the value is the app's",
   ],
   docs: "docs/tabs.mdx",
   example: "examples/tabs.example.tsx",

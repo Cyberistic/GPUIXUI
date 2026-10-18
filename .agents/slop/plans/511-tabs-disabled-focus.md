@@ -1,7 +1,8 @@
 # 511 — Tabs: a tab that turns disabled must not keep focus or the ring
 
 **Phase:** C/F (Tier 2 hardening) · **Owner:** components · **Depends on:** 113,
-321, 334, 367, 388, 394, 510 · **Status:** planned
+321, 334, 367, 388, 394, 510 · **Status:** done — 22/22 native Tabs cases, four
+mutation proofs, behaviour suite 647, all three gates green
 
 ## 1. The defect (measured 2026-10-18, this host, `0.10.0`)
 
@@ -133,7 +134,7 @@ Import `useRef` if it is not already imported.
 
 ### 3.2 `packages/components/src/behaviour/tabs.test.tsx`
 
-Add four native cases (the suite is at 17, so 21). Header comment: the measured
+Add five native cases (the suite is at 17, so 22). Header comment: the measured
 bug (a disabled focused tab keeps focus and the ring), plus the no-steal and
 no-selection-change rules.
 
@@ -148,11 +149,17 @@ no-selection-change rules.
 3. **"never steals focus a consumer claimed in the same update"** — reuse the
    plan-510 pattern: a `Claim` control rendered **inside a container before the
    tabs** (the runtime keeps one child at the root — measured in plan 510) whose
-   layout effect focuses it in the same render that disables or removes the
-   focused tab. Expect focus on `claim` and the tab stop still on `tab-a`.
+   layout effect focuses it in the same render that disables the focused tab.
+   Expect focus on `claim`, the tab stop still on `tab-a`, no ring on `tab-b`,
+   and — through a `style` function — `TabsTriggerState.highlighted` `false` for
+   the disabled tab (this is what `liveActive` fixes even when focus is
+   elsewhere).
 4. **"does not change the selection when it hands focus over"** — render
    `defaultValue="a"` with `activation="manual"`, focus `tab-b`, disable `tab-b`;
    expect focus on `tab-a` and `aria-selected` still true only on `tab-a`.
+5. **"does not select the tab it lands on when the tab stop has to move"** —
+   focus `tab-b`, then disable `a` and `b`; the stop falls to `c`, and
+   `aria-selected` must stay on `a`. This is what proves `focusRow(row, false)`.
 
 Read `customProps.tabIndex`, `customProps["aria-selected"]` and
 `style.boxShadow`; use `focusedTestId` from `internal/interaction.ts`.
@@ -183,19 +190,24 @@ cd packages/components
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx
 ```
 
-Expected: `Tests 21 passed`.
+Expected: `Tests 22 passed`.
 
-Mutation proofs (run each, record, revert):
+Mutation proofs (run each, record, revert; measured 2026-10-18, 22 run):
 
-| Mutation | Expected failure |
-| -------- | ---------------- |
-| Supply raw `active` to the context again | test 1 (ring stays on the disabled tab) |
-| Delete the relocation effect | tests 1, 2 |
-| Remove the focused-element guard | test 3 |
-| Call `focusRow(row, true)` in the handover | test 4 (selection changes) |
+| Mutation | Observed failures |
+| -------- | ----------------- |
+| Supply raw `active` to the context again | 1 of 5 (`never steals focus` — the disabled tab reports `highlighted: true`) |
+| Delete the relocation effect | 4 of 5 (every case except `never steals focus`) |
+| Remove the focused-element guard | 1 of 5 (`never steals focus`) |
+| Call `focusRow(row, true)` in the handover | 1 of 5 (`does not select the tab it lands on`) |
+
+The ring itself is the trigger's `focused` state, which `onBlur` clears when the
+handover moves native focus — so the ring is fixed by the handover, and
+`liveActive` fixes the public `highlighted` state for a tab that is disabled
+while focus lives elsewhere.
 
 Then from the repo root: `nub run check`, `nub run lint`, `nub run test` — all
-exit `0`; behaviour suite 646 (642 + 4).
+exit `0`; behaviour suite 647 (642 + 5).
 
 ## 5. STOP conditions
 
@@ -208,6 +220,6 @@ exit `0`; behaviour suite 646 (642 + 4).
 
 ## 6. Acceptance
 
-- Four native cases pass and each has a recorded mutation that fails it.
+- Five native cases pass and each has a recorded mutation that fails it.
 - The 17 existing Tabs cases, the full behaviour suite and all gates pass.
 - Docs, inventory records, `COMPONENTS.md`, `TODO.md` and the plan index agree.

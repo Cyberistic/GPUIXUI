@@ -12,9 +12,12 @@
  * Space selected on key down instead of on release.
  */
 
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef } from "react";
+import { useGpuix } from "@gpuix/react";
+import type { StateStyle } from "@gpuix/react/floating";
+import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -23,7 +26,13 @@ import {
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  type TabsTriggerState,
+} from "../tabs.js";
 
 /** Three settings panels with the middle tab disabled. */
 const Settings = ({
@@ -68,6 +77,82 @@ const Settings = ({
 const focusTab = (root: ComponentTestRoot, testId: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId(testId)?.id ?? -1);
 };
+
+/**
+ * Tabs built from data, so a test can rerender a different set (plan 511).
+ * `Claim` is rendered first inside a container because the runtime keeps one
+ * child at the root (measured in plan 510).
+ */
+const dynamicTabs = (
+  values: ReadonlyArray<string>,
+  {
+    disabled = [],
+    activation,
+    tabStyle,
+  }: {
+    readonly disabled?: ReadonlyArray<string>;
+    readonly activation?: "automatic" | "manual";
+    readonly tabStyle?: (value: string) => StateStyle<TabsTriggerState>;
+  } = {},
+) => (
+  <Tabs defaultValue="a" activation={activation} testId="tabs">
+    <TabsList testId="list">
+      {Arr.map(values, (value) => (
+        <TabsTrigger
+          key={value}
+          testId={`tab-${value}`}
+          value={value}
+          disabled={Arr.contains(value)(disabled)}
+          style={tabStyle?.(value)}
+        >
+          {value.toUpperCase()}
+        </TabsTrigger>
+      ))}
+    </TabsList>
+    {Arr.map(values, (value) => (
+      <TabsContent key={value} testId={`panel-${value}`} value={value}>
+        <text>{value}</text>
+      </TabsContent>
+    ))}
+  </Tabs>
+);
+
+/** A control that claims focus in the same update as the tabs change. */
+const Claim = ({ claim }: { readonly claim: boolean }) => {
+  const renderer = useGpuix().renderer;
+  const [instance, setInstance] = useState<Option.Option<PublicInstance>>(
+    Option.none(),
+  );
+  const attach = useCallback(
+    (next: PublicInstance | null) => setInstance(Option.fromNullishOr(next)),
+    [],
+  );
+  useLayoutEffect(() => {
+    if (claim) {
+      Option.match(instance, {
+        onNone: () => undefined,
+        onSome: (element) => renderer?.focusElement?.(element.id),
+      });
+    }
+  }, [claim, instance, renderer]);
+  return (
+    <div testId="claim" tabIndex={0} ref={attach}>
+      <text>claim</text>
+    </div>
+  );
+};
+
+const claimingTabs = (
+  values: ReadonlyArray<string>,
+  claim: boolean,
+  disabled: ReadonlyArray<string> = [],
+  tabStyle?: (value: string) => StateStyle<TabsTriggerState>,
+) => (
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <Claim claim={claim} />
+    {dynamicTabs(values, { disabled, tabStyle })}
+  </div>
+);
 
 /** The same three tabs on the vertical axis, with the middle one disabled. */
 const VerticalSettings = ({
@@ -466,6 +551,119 @@ describe("Tabs", () => {
     expect(
       tabs.renderer.findByTestId("tab-danger")?.style.boxShadow,
     ).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  /**
+   * A tab that changes (plan 511). The bug these guard, measured: a focused tab
+   * that turned disabled kept native focus and the focus ring while the tab stop
+   * moved off it. The handover must not change the selection or steal focus the
+   * consumer claimed in the same update.
+   */
+  it("takes focus and the ring off a tab that becomes disabled", () => {
+    const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
+
+    focusTab(tabs, "tab-b");
+    tabs.rerender(dynamicTabs(["a", "b", "c"], { disabled: ["b"] }));
+
+    expect(tabs.renderer.findByTestId("tab-a")?.customProps?.tabIndex).toBe(0);
+    expect(tabs.renderer.findByTestId("tab-b")?.customProps?.tabIndex).toBe(-1);
+    expect(
+      tabs.renderer.findByTestId("tab-b")?.style.boxShadow,
+    ).toBeUndefined();
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-a"));
+    expect(tabs.renderer.findByTestId("tab-a")?.customProps).toMatchObject({
+      "aria-selected": true,
+    });
+    expect(tabs.renderer.findByTestId("tab-b")?.customProps).toMatchObject({
+      "aria-selected": false,
+    });
+
+    tabs.unmount();
+  });
+
+  it("hands focus to the selected tab when the focused tab is removed", () => {
+    const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
+
+    clickCentreOf(tabs, "tab-c");
+    focusTab(tabs, "tab-b");
+    tabs.rerender(dynamicTabs(["a", "c"]));
+
+    expect(tabs.renderer.findByTestId("tab-c")?.customProps?.tabIndex).toBe(0);
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-c"));
+    expect(tabs.renderer.findByTestId("tab-c")?.customProps).toMatchObject({
+      "aria-selected": true,
+    });
+
+    tabs.unmount();
+  });
+
+  it("never steals focus a consumer claimed in the same update", () => {
+    const highlighted = new Map<string, boolean>();
+    const tabs = renderComponent(
+      claimingTabs(["a", "b", "c"], false, [], (value) => (state) => {
+        highlighted.set(value, state.highlighted);
+        return {};
+      }),
+    );
+
+    focusTab(tabs, "tab-b");
+    tabs.rerender(
+      claimingTabs(["a", "b", "c"], true, ["b"], (value) => (state) => {
+        highlighted.set(value, state.highlighted);
+        return {};
+      }),
+    );
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("claim"));
+    expect(tabs.renderer.findByTestId("tab-a")?.customProps?.tabIndex).toBe(0);
+    expect(
+      tabs.renderer.findByTestId("tab-b")?.style.boxShadow,
+    ).toBeUndefined();
+    // A disabled tab is not the highlight, even though it was last focused.
+    expect(highlighted.get("b")).toBe(false);
+
+    tabs.unmount();
+  });
+
+  it("does not change the selection when it hands focus over", () => {
+    const tabs = renderComponent(
+      dynamicTabs(["a", "b", "c"], { activation: "manual" }),
+    );
+
+    focusTab(tabs, "tab-b");
+    tabs.rerender(
+      dynamicTabs(["a", "b", "c"], {
+        activation: "manual",
+        disabled: ["b"],
+      }),
+    );
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-a"));
+    expect(tabs.renderer.findByTestId("tab-a")?.customProps).toMatchObject({
+      "aria-selected": true,
+    });
+    expect(tabs.renderer.findByTestId("tab-b")?.customProps).toMatchObject({
+      "aria-selected": false,
+    });
+
+    tabs.unmount();
+  });
+
+  it("does not select the tab it lands on when the tab stop has to move", () => {
+    const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
+
+    focusTab(tabs, "tab-b");
+    tabs.rerender(dynamicTabs(["a", "b", "c"], { disabled: ["a", "b"] }));
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-c"));
+    expect(tabs.renderer.findByTestId("tab-a")?.customProps).toMatchObject({
+      "aria-selected": true,
+    });
+    expect(tabs.renderer.findByTestId("tab-c")?.customProps).toMatchObject({
+      "aria-selected": false,
+    });
 
     tabs.unmount();
   });

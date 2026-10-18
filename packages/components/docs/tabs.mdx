@@ -86,6 +86,38 @@ and the vertical workspace settings.
 A controlled tab set reports a click or key but does not switch its panel until
 the consumer re-renders with the new `value` — the classic contract, tested.
 
+## A tab that changes
+
+Tabs are often built from data: a settings surface disables a section while it
+loads, or drops one that the current plan does not include. The tab stop follows
+the live tabs:
+
+- A trigger that disappears or turns `disabled` never keeps the tab stop, focus
+  or the highlight. The stop falls to the selected tab, else the first enabled
+  one, and focus follows it when the tab set itself held the user's focus.
+- Handover **does not change the selection**: the panel the consumer chose (or
+  the controlled `value`) stays. A disabled selected tab keeps its panel until
+  the app changes the value.
+- If the consumer focuses another control in the same update, the tab set leaves
+  that focus alone.
+
+```tsx
+<Tabs defaultValue="general">
+  <TabsList label="Workspace sections">
+    <TabsTrigger value="general">General</TabsTrigger>
+    <TabsTrigger value="billing" disabled={billingIsLoading}>
+      Billing
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="general">…</TabsContent>
+  <TabsContent value="billing">…</TabsContent>
+</Tabs>;
+```
+
+Focus tracking covers the triggers themselves. A controlled `value` that names a
+tab removed from the list still renders its panel, because the value is the
+app's; clear it when the tab goes away.
+
 ## API
 
 Every part takes the GPUix host props and **merges `style` last**.
@@ -140,14 +172,18 @@ after the trigger's own rules.
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (17 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (22 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
 controlled contract, a panel
 whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
 focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
-ignored, the row/column layout, and manual activation. The vertical guard is
+ignored, the row/column layout, and manual activation. Dynamic tabs: a tab that
+becomes disabled or is removed hands the tab stop and focus to a live tab, a
+disabled tab stops reporting itself as highlighted, the handover never changes
+the selection, and a consumer's same-update focus is never stolen. The vertical
+guard is
 proven in both directions: inverting the axis mapping fails the movement and
 axis-isolation tests, inverting the layout fails the layout test, and forcing
 `selectsOnFocus` to `true` fails the manual test.
