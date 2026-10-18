@@ -12,10 +12,12 @@
  * Plan 315 added the `background` canvas; plan 319 adds the other three
  * `Surface` tones, because a sidebar search sits on `muted`, a command palette's
  * field on `popover` and a settings form on `card` — the surfaces plan 317 made
- * first class for the placeholder. A copied platform style that retints one of
- * them while keeping the identity's `inputForeground` could erase typed text
- * while `themeContrastFailures` returned `[]`. Every shipped set passes, so no
- * colour moves.
+ * first class for the placeholder. Plan 527 adds the four row washes: an
+ * `InlineEdit` swaps a row's text for a field in place, and a row paints
+ * `hover`/`active`/`accent`/`selected` behind it. A copied platform style that
+ * retints one of those surfaces while keeping the identity's `inputForeground`
+ * could erase typed text while `themeContrastFailures` returned `[]`. Every
+ * shipped set passes, so no colour moves.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -42,14 +44,23 @@ const surfacesOf = (background: string) =>
   typedTextPairs.filter(([, surface]) => surface === background);
 
 describe("typed text on the canvas field", () => {
-  it("documents the four Surface tones and the input fill, once each", () => {
-    ["background", "card", "popover", "muted"].forEach((surface) => {
+  it("documents the four Surface tones, the input fill and the row washes, once each", () => {
+    [
+      "background",
+      "card",
+      "popover",
+      "muted",
+      "hover",
+      "active",
+      "accent",
+      "selected",
+    ].forEach((surface) => {
       expect(surfacesOf(surface), surface).toEqual([
         ["inputForeground", surface, "body"],
       ]);
     });
     expect(surfacesOf("input")).toEqual([["inputForeground", "input", "body"]]);
-    expect(typedTextPairs).toHaveLength(5);
+    expect(typedTextPairs).toHaveLength(9);
   });
 
   it("keeps every shipped theme above its declared floor", () => {

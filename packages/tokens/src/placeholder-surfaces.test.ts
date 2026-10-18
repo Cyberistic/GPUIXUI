@@ -11,6 +11,13 @@
  * under the 4.5:1 secondary floor, and the `default` platform variant plus the
  * XP and Aero dark recipes inherit it. Every other shipped set clears the
  * floor, so only the identity dark value moves.
+ *
+ * Plan 527 adds the four row washes. The reference used to call "a field on a
+ * row wash" out of scope, but `InlineEdit` swaps a row's text for a field in
+ * place, and a row paints `hover`/`active`/`accent`/`selected` behind its
+ * content. Every one of the twelve default sets missed the secondary floor on at
+ * least one wash — identity dark `#858F9F` measured **3.132:1** on `selected`
+ * — while the checker returned `[]`.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -33,17 +40,20 @@ const placeholderPairs = contrastPairs.filter(
 );
 
 describe("the placeholder on every surface a field sits on", () => {
-  it("documents the input fill and the four Surface tones, once each", () => {
+  it("documents the input fill, the four Surface tones and the four row washes, once each", () => {
     expect(placeholderPairs).toEqual([
       ["placeholder", "input", "secondary"],
       ["placeholder", "background", "secondary"],
       ["placeholder", "card", "secondary"],
       ["placeholder", "popover", "secondary"],
       ["placeholder", "muted", "secondary"],
+      ["placeholder", "hover", "secondary"],
+      ["placeholder", "active", "secondary"],
+      ["placeholder", "accent", "secondary"],
+      ["placeholder", "selected", "secondary"],
     ]);
-    placeholderPairs.forEach(([foreground, background, pairClass]) => {
+    placeholderPairs.forEach(([foreground, , pairClass]) => {
       expect(foreground).toBe("placeholder");
-      expect(background).not.toBe("hover");
       expect(pairClass).toBe("secondary");
     });
   });
@@ -70,7 +80,12 @@ describe("the placeholder on every surface a field sits on", () => {
       colors: { placeholder: "#7C8595" },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ foreground }) => foreground === "placeholder",
+      ({ foreground, background }) =>
+        foreground === "placeholder" &&
+        (background === "background" ||
+          background === "card" ||
+          background === "popover" ||
+          background === "muted"),
     );
 
     expect(failures).toHaveLength(2);

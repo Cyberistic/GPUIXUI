@@ -657,6 +657,11 @@ const placeholderSurfacePairs: readonly ContrastPair[] = (
   ["background", "card", "popover", "muted"] as const
 ).map((background): ContrastPair => ["placeholder", background, "secondary"]);
 
+/** The hint on the same four row washes, at the secondary floor. */
+const placeholderWashPairs: readonly ContrastPair[] = stateWashes.map(
+  (background): ContrastPair => ["placeholder", background, "secondary"],
+);
+
 /**
  * The surfaces typed text is painted on: the four `Surface` tones a transparent
  * field (`SearchInput`, `InlineEdit`, `ColorPicker`, `TagInput`,
@@ -667,6 +672,18 @@ const placeholderSurfacePairs: readonly ContrastPair[] = (
 const inputTextSurfaces = ["background", "card", "popover", "muted"] as const;
 
 const inputTextSurfacePairs: readonly ContrastPair[] = inputTextSurfaces.map(
+  (background): ContrastPair => ["inputForeground", background, "body"],
+);
+
+/**
+ * The row washes a transparent field can sit on. `InlineEdit` swaps a row's text
+ * for a field in place, so typed text and the hint paint on the `hover` and
+ * `active` pointer washes, the `accent` fill a selectable row hovers with and
+ * the `selected` fill it keeps. The field's edge, boundary, ring and secondary
+ * chrome text are already measured there; these are the two roles that carry
+ * the content.
+ */
+const inputTextWashPairs: readonly ContrastPair[] = stateWashes.map(
   (background): ContrastPair => ["inputForeground", background, "body"],
 );
 
@@ -907,6 +924,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["mutedForeground", "popover", "secondary"],
   ["inputForeground", "input", "body"],
   ...inputTextSurfacePairs,
+  ...inputTextWashPairs,
   ...ringPairs,
   ...ringTrackPairs,
   ...ringSoftPairs,
@@ -951,6 +969,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],
   ...placeholderSurfacePairs,
+  ...placeholderWashPairs,
   ...inactivePairs,
   ["borderStrong", "background", "boundary"],
   ["borderStrong", "card", "boundary"],

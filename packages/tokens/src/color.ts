@@ -212,7 +212,7 @@ export interface ThemeColors {
   readonly input: string;
   /** Text typed into an input. */
   readonly inputForeground: string;
-  /** Placeholder text inside an input. */
+  /** Placeholder text inside an input, held to the secondary floor on the `input` fill, the four `Surface` tones a transparent field sits on and the four row washes an in-place field paints. */
   readonly placeholder: string;
   /** Focus ring. */
   readonly ring: string;
@@ -298,7 +298,9 @@ export interface ThemeColors {
  * pressed one step at a time (`softAction` → `softActionActive`), because a
  * canvas-tuned wash has the tints' own luminance (plan 394). The groove is one
  * step darker than plan 347's value, so a progress rail stays perceivable on the
- * pressed wash and on a soft status fill (plan 503).
+ * pressed wash and on a soft status fill (plan 503). The hint is a step darker
+ * than plan 317 left it so it clears the secondary floor on the row washes a
+ * field inside a row paints, not only on the plain surfaces (plan 527).
  */
 export const lightColors = {
   background: palette.neutral[50],
@@ -358,7 +360,9 @@ export const lightColors = {
   borderStrong: palette.neutral[500],
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
-  placeholder: "#66707F",
+  // The hint clears the secondary floor on the row washes a field inside a row
+  // paints, not only on the `input` fill and the plain surfaces (plan 527).
+  placeholder: "#5C6574",
   // The focus ring's one non-shadow surface is the value groove, so the ring
   // is the deep iris step: iris[500] measured 2.983:1 on `track` (plan 516),
   // and iris[600] equals the primary fill a clipped inset ring paints on.
@@ -411,6 +415,8 @@ export const lightColors = {
  * sit inside the tints' own luminance band (plan 394). The groove is neutral 700
  * — a step lighter than plan 347's value — so it clears the pressed wash and the
  * four soft status fills while every progress fill stays a mark on it (plan 503).
+ * The hint is a step lighter than plan 317 left it so it clears the secondary
+ * floor on the row washes a field inside a row paints (plan 527).
  */
 export const darkColors = {
   background: palette.neutral[950],
@@ -470,7 +476,9 @@ export const darkColors = {
   borderStrong: "#868FA0",
   input: palette.neutral[900],
   inputForeground: palette.neutral[100],
-  placeholder: "#858F9F",
+  // Lighter than plan 317 left it so the hint keeps the secondary floor on the
+  // row washes a field inside a row paints (plan 527).
+  placeholder: "#A8B0BD",
   ring: palette.iris[300],
   selection: "#A7A9FF24",
   selectionOnFill: "#FFFFFF26",
@@ -497,7 +505,9 @@ export const darkColors = {
  * around it (plan 366). The selected row is a step past the `accent` wash a
  * selectable row hovers with, so the click is perceivable (plan 381). Its
  * inherited label is iris 950, so it keeps 7:1 through the selection wash on the
- * pressed row a reader drags across (plan 525).
+ * pressed row a reader drags across (plan 525). The hint is a step darker so it
+ * clears the AAA secondary floor on the row washes a field inside a row paints
+ * (plan 527).
  */
 export const highContrastLightColors = {
   background: "#FFFFFF",
@@ -555,7 +565,9 @@ export const highContrastLightColors = {
   borderStrong: "#4A4F58",
   input: "#FFFFFF",
   inputForeground: "#000000",
-  placeholder: "#4A4F58",
+  // Darker than plan 317 left it so the AAA hint clears the 7:1 secondary floor
+  // on the row washes a field inside a row paints (plan 527).
+  placeholder: "#3D4047",
   ring: "#4C39B5",
   selection: "#7567F24D",
   selectionOnFill: "#00000026",
@@ -593,7 +605,9 @@ export const highContrastLightColors = {
  * fill (plan 504) while the raised action still clears 1.05:1 on every soft tint.
  * The elevation tint is light: a dark shadow cannot exist on the pure black
  * canvas, so the set paints `#FFFFFF` with its own alphas
- * (`highContrastDarkElevation`, plan 505), as the scrim already does.
+ * (`highContrastDarkElevation`, plan 505), as the scrim already does. The hint
+ * is a step lighter so it clears the AAA secondary floor on the row washes a
+ * field inside a row paints (plan 527).
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -654,7 +668,9 @@ export const highContrastDarkColors = {
   borderStrong: "#AAAAAA",
   input: "#0D0D0D",
   inputForeground: "#FFFFFF",
-  placeholder: "#B0B0B0",
+  // Lighter than plan 317 left it so the AAA hint clears the 7:1 secondary floor
+  // on the row washes a field inside a row paints (plan 527).
+  placeholder: "#D1D1D1",
   ring: "#C7CBFF",
   selection: "#4C39B54D",
   selectionOnFill: "#FFFFFF26",

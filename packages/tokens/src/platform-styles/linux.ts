@@ -27,7 +27,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * designed step darker than plan 381 left it, so the row's title (`foreground`)
  * keeps the 7:1 body floor through the selection wash while the row stays a
  * 1.216:1 step past its accent wash; the wash itself cannot soften further — at
- * the alpha the title needs it measures 1.052:1 on the fill (plan 506).
+ * the alpha the title needs it measures 1.052:1 on the fill (plan 506). The hint
+ * clears the secondary floor on the row washes a field inside a row paints
+ * (plan 527).
  */
 export const linuxPlatformStyle = {
   types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
@@ -66,7 +68,9 @@ export const linuxPlatformStyle = {
       selection: "#1C71D833",
       selected: "#D7E6F9",
       selectedForeground: "#0F3D77",
-      placeholder: "#6A6865",
+      // The hint clears the secondary floor on the row washes a field inside a
+      // row paints, not only on the plain surfaces (plan 527).
+      placeholder: "#615F5C",
       track: "#D8D8D8",
       shadow: "#000000",
     },
@@ -101,7 +105,7 @@ export const linuxPlatformStyle = {
       selection: "#1C71D833",
       selected: "#27476A",
       selectedForeground: "#D6E7FA",
-      placeholder: "#A8A7A3",
+      placeholder: "#B7B6B2",
       destructiveSoft: palette.red[950],
       shadow: "#000000",
     },

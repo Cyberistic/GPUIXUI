@@ -54,7 +54,9 @@ export const aeroPlatformRecipe = {
       selection: "#1565C03D",
       selected: "#CCE4FA",
       selectedForeground: "#0B3A6B",
-      placeholder: "#5B6B80",
+      // The hint clears the secondary floor on the row washes a field inside a
+      // row paints, not only on the plain surfaces (plan 527).
+      placeholder: "#546378",
       skeleton: "#BDCFE4",
       track: "#CED8E5",
       shadow: "#0B1F33",

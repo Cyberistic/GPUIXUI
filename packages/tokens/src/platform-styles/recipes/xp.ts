@@ -57,7 +57,9 @@ export const xpPlatformRecipe = {
       selection: "#5B8DE647",
       selected: "#BDD4FF",
       selectedForeground: "#003C74",
-      placeholder: "#6B6555",
+      // The hint clears the secondary floor on the row washes a field inside a
+      // row paints, not only on the plain surfaces (plan 527).
+      placeholder: "#5F5949",
       skeleton: "#CFC8AE",
       // XP's own Luna green: the identity `success` is too light to keep a
       // progress segment at the mark floor on the groove the row washes require

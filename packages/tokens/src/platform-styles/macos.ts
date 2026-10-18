@@ -34,7 +34,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * through the inverse veil (plan 382). The dark scrim is deeper than the
  * identity's (82%) so the floating face separates from every content fill a
  * dialog can open over; the shipped `primary` patch measured 1.021:1 under the
- * identity scrim (plan 526).
+ * identity scrim (plan 526). The hint clears the secondary floor on the row
+ * washes a field inside a row paints (plan 527).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -73,7 +74,9 @@ export const macosPlatformStyle = {
       selection: "#0071E333",
       selected: "#CFE3FA",
       selectedForeground: "#004A9E",
-      placeholder: "#6E6E73",
+      // The hint clears the secondary floor on the row washes a field inside a
+      // row paints, not only on the plain surfaces (plan 527).
+      placeholder: "#5F5F63",
       track: "#D3D3D8",
       shadow: "#000000",
     },
@@ -108,7 +111,7 @@ export const macosPlatformStyle = {
       selection: "#0A84FF33",
       selected: "#1A4568",
       selectedForeground: "#CFE8FF",
-      placeholder: "#9A9AA0",
+      placeholder: "#B1B1B6",
       // The modal scrim is 82%: the floating face (#2C2C2E) met the scrim over
       // the dark accent at 1.021:1 (plan 507) and the edge could not stand in —
       // a dialog's border measures 1.006:1 over the scrimmed status chips in the

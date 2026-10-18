@@ -506,15 +506,25 @@ describe("themeContrastFailures", () => {
     const failures = themeContrastFailures(typo).filter(
       ({ foreground }) => foreground === "placeholder",
     );
-    expect(failures).toHaveLength(5);
+    expect(failures).toHaveLength(9);
     expect(new Set(failures.map(({ background }) => background))).toEqual(
-      new Set(["input", "background", "card", "popover", "muted"]),
+      new Set([
+        "input",
+        "background",
+        "card",
+        "popover",
+        "muted",
+        "hover",
+        "active",
+        "accent",
+        "selected",
+      ]),
     );
     failures.forEach(({ ratio }) => expect(Number.isNaN(ratio)).toBe(true));
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(396);
+    expect(contrastPairs.length).toBe(404);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [

@@ -29,7 +29,8 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * pressed (plan 318). The dark soft destructive tint is named rather than left
  * to inheritance, so applying this style over another platform's theme cannot
  * keep that platform's tint (plan 374); both Windows recipes share this dark
- * set, so they inherit the fix.
+ * set, so they inherit the fix. The hint clears the secondary floor on the row
+ * washes a field inside a row paints (plan 527).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -68,7 +69,9 @@ export const windowsPlatformStyle = {
       selection: "#0067C033",
       selected: "#C2E2FF",
       selectedForeground: "#003A6B",
-      placeholder: "#6B6B6B",
+      // The hint clears the secondary floor on the row washes a field inside a
+      // row paints, not only on the plain surfaces (plan 527).
+      placeholder: "#606060",
       track: "#D8D8D8",
       shadow: "#000000",
     },
@@ -103,7 +106,7 @@ export const windowsPlatformStyle = {
       selection: "#0067C055",
       selected: "#094771",
       selectedForeground: "#CFE9FF",
-      placeholder: "#A6A6A6",
+      placeholder: "#B5B5B5",
       destructiveSoft: darkColors.destructiveSoft,
       shadow: "#000000",
     },
