@@ -191,6 +191,28 @@ also closes both.
 <DropdownMenu open={open} onOpenChange={setOpen}>…</DropdownMenu>;  // app remembers
 ```
 
+## API
+
+The trigger, surface and rows merge `style` last. The row parts share one prop set: `onSelect?: ()
+=> void`, `disabled?: boolean`, `tone?: "default" | "destructive"` (default
+`"default"`), `leading?: ReactNode`, `trailing?: ReactNode`, `textValue?:
+string`, `closeOnSelect?: boolean` (default `true`) and `style?:
+StateStyle<{ disabled: boolean; highlighted: boolean }>`.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `DropdownMenu` | provider (no host element) | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `DropdownMenuTrigger` | `div` (`role="button"`, `aria-expanded`) | the button's `variant`, `size` and `disabled` |
+| `DropdownMenuContent` | anchored surface | `label?: string`, `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
+| `DropdownMenuItem` | `div` (`role="menuitem"`) | the shared row props |
+| `DropdownMenuCheckboxItem` | `div` (`role="menuitem"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
+| `DropdownMenuGroup` | `div` (`role="group"`) | — |
+| `DropdownMenuLabel` | `text` | — |
+| `DropdownMenuSeparator` | `div` (`role="separator"`) | — |
+| `DropdownMenuSub` | provider (no host element) | — |
+| `DropdownMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
+| `DropdownMenuSubContent` | anchored surface | `label?: string` |
+
 ## Theming
 
 The surface paints `colors.popover` / `colors.popoverForeground`, `radius.md`,

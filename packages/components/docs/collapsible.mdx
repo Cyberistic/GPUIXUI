@@ -62,6 +62,16 @@ order. A closed body is skipped: hiding it removes the whole subtree from the
 keyboard order. `Enter` toggles on press; `Space` toggles on release, so moving
 focus before letting go cancels the change. A held key does not toggle twice.
 
+## API
+
+`style` merges last where the part takes one. The root owns state only.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Collapsible` | `div` | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `CollapsibleTrigger` | `div` (`role="button"`, `aria-expanded`) | `style?: StateStyle<{ open: boolean; closed: boolean; focused: boolean }>` |
+| `CollapsibleContent` | `div` (inside the reveal) | `animate?: boolean` (default `true`) |
+
 ## Theming
 
 The trigger uses the `label` type role, `colors.foreground`, `colors.hover` on

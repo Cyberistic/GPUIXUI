@@ -56,6 +56,21 @@ value, while `onValueChange` still fires — the classic contract, tested.
 Clicking the clear control (or pressing Escape) empties the field, calls
 `onClear`, and returns focus to the input so typing can continue immediately.
 
+## API
+
+`SearchInput` is one part; it takes the host input props and adds:
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` | — (uncontrolled) |
+| `defaultValue` | `string` | `""` |
+| `onValueChange` | `(value: string) => void` | — |
+| `onSubmit` | `(value: string) => void` | — |
+| `onClear` | `() => void` | — |
+| `placeholder` | `string` | `"Search…"` |
+| `disabled` | `boolean` | `false` |
+| `style` | `StateStyle<{ disabled: boolean; focused: boolean }>` | — |
+
 ## Theming
 
 The container paints `colors.background`, a `borderWidth.thin` border in

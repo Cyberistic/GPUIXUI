@@ -116,6 +116,18 @@ owns that state and decides what "not set" means.
 </TimePicker>;
 ```
 
+## API
+
+`TimePickerSegment` and `TimePickerClear` read only the props in this table; the
+root owns the group. `style` merges last where the part takes one.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `TimePicker` | `div` (`role="group"`) | `value?: string \| null`, `defaultValue?: string \| null`, `onValueChange?: (value: string \| null) => void`, `label?: string` (default `"Time"`), `minuteStep?: number` (default `1`, normalised to 1–59), `clearable?: boolean` (default `false`), `disabled?: boolean`, `testId?: string` (default `"time-picker"`) |
+| `TimePickerSegment` | `input` | `segment: "hours" \| "minutes"` (required), `style?: StateStyle<{ disabled: boolean; focused: boolean }>` |
+| `TimePickerSeparator` | `text` (`role="presentation"`) | `children?: ReactNode` (default `":"`) |
+| `TimePickerClear` | `div` (`role="button"`) | `label?: string` (default `"Clear time"`) |
+
 ## Theming
 
 The field paints `colors.input` with `colors.inputForeground` text, a

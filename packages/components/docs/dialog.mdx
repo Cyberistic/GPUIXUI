@@ -133,6 +133,15 @@ actions off screen.
 | `showClose` | `boolean` | `true` |
 | `initialFocus` | `() => number \| null` | — |
 
+`DialogHeader`, `DialogDescription` and `DialogFooter` take the host props and
+children; they draw no state of their own.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `DialogHeader` | `div` | — |
+| `DialogDescription` | `text` | — |
+| `DialogFooter` | `div` | — |
+
 `DialogTrigger`, `DialogClose` and `DialogTitle` take the GPUix host props where
 they render one host element plus, for the buttons, the `variant`/`size` of the
 button. Every part merges `style` last.

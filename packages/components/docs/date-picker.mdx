@@ -157,6 +157,19 @@ arrow keys move real focus, so the highlight and the focus are the same cell. A
 no-value open therefore lands on today — or on the first selectable day when
 today is out of range — never on the month's first day.
 
+## API
+
+`CalendarLabels` is `{ months: ReadonlyArray<string>; weekdays:
+ReadonlyArray<string>; unavailable: string; previousMonth: string;
+nextMonth: string; clear: string }`. Every part merges `style` last where it takes one.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `DatePicker` | provider (no host element) | `value?: string \| null`, `defaultValue?: string \| null`, `onValueChange?: (value: string \| null) => void`, `weekStartsOn?: 0 \| 1` (default `1`), `min?: string`, `max?: string`, `clearable?: boolean` (default `false`), `disabled?: boolean`, `today?: string`, `labels?: Partial<CalendarLabels>` |
+| `DatePickerTrigger` | `div` (`role="button"`, `aria-expanded`) | the button's `variant`, `size` and `disabled`, plus `placeholder?: string` (default `"Pick a date"`), `label?: string`, `testId?: string` (default `"date-picker-trigger"`) |
+| `DatePickerContent` | anchored surface | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `6`) |
+| `DatePickerCalendar` | `div` (`role="grid"`) | `label?: string` (default `"Calendar"`) |
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in

@@ -68,6 +68,18 @@ presentation.
 `aria-description`, so the accessible name stays `"Workspace URL"` and the
 requirement is still announced. The marker itself carries `aria-label="Required"`.
 
+## API
+
+Every part takes the GPUix host props and **merges `style` last**.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Field` | `div` | `label: string` (required), `description?: string`, `error?: string`, `required?: boolean` (default `false`) |
+| `FieldLabel` | `text` | `required?: boolean` (default `false`); appends a destructive `*` |
+| `FieldDescription` | `text` | — |
+| `FieldError` | `text` (`role="alert"`) | — |
+| `FieldInput` | `input` | the host input's props (`value`, `defaultValue`, `onChange`, …), `invalid?: boolean`, `disabled?: boolean`, `style?: StateStyle<{ disabled: boolean; focused: boolean; invalid: boolean }>` |
+
 ## Theming
 
 Labels use the `label` type role in `colors.foreground`; descriptions the

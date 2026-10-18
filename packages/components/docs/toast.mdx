@@ -101,6 +101,17 @@ The queue belongs to the provider, not to the calling component. Any component
 inside the provider can push; the viewport is the single place that renders.
 There is no per-toast React state to keep in sync.
 
+## API
+
+`ToastDraft` is `{ title: string; description?: string; action?: { label:
+string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration }`.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `ToastProvider` | provider (no host element) | `max?: number` (default `3`), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
+| `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
+| `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id) }` |
+
 ## Theming
 
 Cards paint `colors.popover` with `colors.popoverForeground`, a

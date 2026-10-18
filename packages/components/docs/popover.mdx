@@ -71,6 +71,16 @@ Focus moves into the surface on open, so keys reach its content without a click.
 The surface is a tab stop (`tabIndex={-1}`) but not a trap: Tab leaves and closes
 it. The trigger is an ordinary button: `Enter`/`Space` toggle it.
 
+## API
+
+The trigger and the surface merge `style` last.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Popover` | provider (no host element) | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `PopoverTrigger` | `div` (`role="button"`, `aria-expanded`) | the button's `variant`, `size` and `disabled` |
+| `PopoverContent` | anchored surface | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `6`), `collisionPadding?: number` (default `8`), `alignOffset?: number` (default `0`) |
+
 ## Theming
 
 The surface paints `colors.popover` / `colors.popoverForeground`,

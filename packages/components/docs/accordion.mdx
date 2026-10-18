@@ -86,6 +86,18 @@ Arrow movement changes focus only — it never opens or closes a section. Disabl
 headers are skipped, and a control inside an open section keeps its own arrow
 keys because the handler lives on the trigger, not the accordion root.
 
+## API
+
+Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`,
+pointer and key handlers) and **merges `style` last**.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Accordion` | `div` | one of two shapes. Single: `type: "single"`, `collapsible?: boolean` (default `false`), `value?: string \| null`, `defaultValue?: string`, `onValueChange?: (value: string \| null) => void`. Multiple: `type: "multiple"`, `value?: ReadonlyArray<string>`, `defaultValue?: ReadonlyArray<string>`, `onValueChange?: (value: ReadonlyArray<string>) => void` |
+| `AccordionItem` | `div` | `value: string` (required), `disabled?: boolean` (default `false`) |
+| `AccordionTrigger` | `div` (`role="button"`) | `style?: StateStyle<{ open: boolean; disabled: boolean; focused: boolean }>` |
+| `AccordionContent` | `div` | `animate?: boolean` (default `true`) |
+
 ## Theming
 
 Triggers use the `label` type role at `controlHeight(theme, "lg")`, with

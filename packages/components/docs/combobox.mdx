@@ -196,6 +196,22 @@ The trigger is a `button` node named by `label` (or its text) with a live
 `aria-expanded`, so the open state is announced even though 0.10.0 has no
 `aria-haspopup` (see [Limitations](#limitations)).
 
+## API
+
+`ComboboxOption` is `{ value: string; label: string; description?: string;
+disabled?: boolean }`; `ComboboxSelection` is `string | null |
+ReadonlyArray<string>`. Every part merges `style` last where it takes one.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
+| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`) |
+| `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
+| `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
+| `ComboboxList` | GPUix's listbox | `label?: string` (default `"Options"`), `itemStyle?: StateStyle<ComboboxItemState>` |
+| `ComboboxItem` | GPUix's option row | `value: string` (required), `style?: StateStyle<ComboboxItemState>` |
+| `ComboboxEmpty` | GPUix's empty slot | `children?: ReactNode` |
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in

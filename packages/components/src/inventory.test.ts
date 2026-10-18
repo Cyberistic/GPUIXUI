@@ -13,7 +13,9 @@
  *
  * The `documented API` block guards the plan 337 drift: a parts table naming a
  * part the package does not export, a landed component still listed as planned,
- * and a page that drops its limitations section.
+ * and a page that drops its limitations section. Plan 383 adds the page-level
+ * half: every component page has an `## API` section naming every part in its
+ * §8 row, so the props are documented where the reader looks.
  *
  * The date picker landed in plan 119, so every Tier 2 row now has a record.
  * `node:fs` is used here only because this is a test-time repository check —
@@ -426,5 +428,30 @@ describe("documented API", () => {
     });
 
     expect(missing).toEqual([]);
+  });
+
+  it("documents every part in its page's API section", () => {
+    // The §8 parts table is the author's list of what a component owns, so a
+    // page that omits one leaves the reader to find it in the source (plan 383).
+    const rows = tableRows(section(contract(), "## 8. Parts by component"));
+    const problems = Arr.flatMap(inventory, (meta: ComponentMeta) => {
+      const page = readFileSync(
+        fileURLToPath(new URL(meta.docs, packageRoot)),
+        "utf8",
+      );
+      const api = section(page, "## API");
+      if (api === "") return [`${meta.name}: ${meta.docs} has no API section`];
+      const row = Arr.findFirst(rows, (cells) => cells[0] === meta.name);
+      const parts = Option.match(row, {
+        onNone: () => [],
+        onSome: (cells) => partsOf(cells[1] ?? ""),
+      });
+      return Arr.map(
+        Arr.filter(parts, (part) => !api.includes(`\`${part}\``)),
+        (part) => `${meta.name}: ${meta.docs} does not document ${part}`,
+      );
+    });
+
+    expect(problems).toEqual([]);
   });
 });

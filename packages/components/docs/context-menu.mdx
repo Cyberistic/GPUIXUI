@@ -115,6 +115,28 @@ and return focus to the sub-trigger; choosing a row (by keyboard or pointer)
 runs it once, closes both levels, and a pointer-opened menu leaves focus where
 the click put it. A press elsewhere closes both levels.
 
+## API
+
+The trigger, surface and rows merge `style` last. The row parts share one prop set: `onSelect?: ()
+=> void`, `disabled?: boolean`, `tone?: "default" | "destructive"` (default
+`"default"`), `leading?: ReactNode`, `trailing?: ReactNode`, `textValue?:
+string`, `closeOnSelect?: boolean` (default `true`) and `style?:
+StateStyle<{ disabled: boolean; highlighted: boolean }>`.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `ContextMenu` | provider (no host element) | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
+| `ContextMenuTrigger` | `div` (the right-click target) | `disabled?: boolean` (default `false`) |
+| `ContextMenuContent` | anchored surface | `label?: string` (default `"Context menu"`), `testId?: string` (default `"context-menu"`) |
+| `ContextMenuItem` | `div` (`role="menuitem"`) | the shared row props |
+| `ContextMenuCheckboxItem` | `div` (`role="menuitem"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
+| `ContextMenuGroup` | `div` (`role="group"`) | — |
+| `ContextMenuLabel` | `text` | — |
+| `ContextMenuSeparator` | `div` (`role="separator"`) | — |
+| `ContextMenuSub` | provider (no host element) | — |
+| `ContextMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
+| `ContextMenuSubContent` | anchored surface | `label?: string` |
+
 ## Theming
 
 The surface and rows are the shared menu look: `colors.popover`, `radius.md`,

@@ -528,9 +528,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
       synced
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
-  - [ ] Plan 383 — every component page documents its public API: 15 pages have
-    no `## API` section and four omit exported parts; add the tables and the
-    inventory check (owner: components)
+  - [x] Plan 383 — every component page documents its public API: 15 pages had
+    no `## API` section and four omitted exported parts; the tables are added
+    and `inventory.test.ts` now holds every page to its §8 parts row (owner:
+    components)
 
 ## Phase G — release readiness
 

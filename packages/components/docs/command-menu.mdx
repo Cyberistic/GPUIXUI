@@ -124,6 +124,20 @@ remount owns the prop (and persists it itself). An id that no longer exists in
 (⌘K, Ctrl+P) rather than by a control inside the component, so ownership of the
 state belongs to the app. Render it once at the app root.
 
+## API
+
+`CommandAction` is `{ id: string; label: string; group?: string; shortcut?:
+string; disabled?: boolean; perform: () => void }`. Every part merges `style`
+last where it takes one.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `CommandMenu` | Dialog-hosted palette | `open: boolean` (required), `onOpenChange: (open: boolean) => void` (required), `actions: ReadonlyArray<CommandAction>` (required), `filter?: (action: CommandAction, query: string) => boolean`, `recent?: ReadonlyArray<string>`, `defaultRecent?: ReadonlyArray<string>`, `onRecentChange?: (recent: ReadonlyArray<string>) => void`, `recentLimit?: number` (default `5`), `recentLabel?: string` (default `"Recent"`) |
+| `CommandMenuInput` | `input` | `placeholder?: string` (default `"Type a command…"`), `label?: string` (default `"Search commands"`) |
+| `CommandMenuList` | `div` | host props only; the key hint belongs to the list |
+| `CommandMenuItem` | `div` (`role="option"`) | `action: CommandAction` (required) |
+| `CommandMenuEmpty` | `text` | `children?: ReactNode` (default `"No matching commands"`) |
+
 ## Theming
 
 The surface is the dialog's: `colors.popover`, `radius.xl`, the `lg` elevation.

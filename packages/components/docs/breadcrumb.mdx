@@ -64,6 +64,19 @@ Tab reaches each link in order. `Enter` fires `onSelect` on press; `Space` fires
 it on release, so moving focus before letting go cancels the navigation. The
 current page and the ellipsis are not focusable.
 
+## API
+
+Every part takes the GPUix host props and **merges `style` last**.
+
+| Part | Renders | Props |
+| ---- | ------- | ----- |
+| `Breadcrumb` | `div` (`role="navigation"`) | `maxItems?: number` (clamped to at least 3), `separator?: ReactNode` (default `/`) |
+| `BreadcrumbList` | `div` (`role="list"`) | — |
+| `BreadcrumbItem` | `div` (`role="listitem"`) | — |
+| `BreadcrumbLink` | `div` (`role="link"`), or `text` when `current` | `onSelect?: () => void`, `current?: boolean` |
+| `BreadcrumbPage` | `text` | — |
+| `BreadcrumbSeparator` | `text` (`role="presentation"`) | — |
+
 ## Theming
 
 Links and separators use the `caption` type role; links are
