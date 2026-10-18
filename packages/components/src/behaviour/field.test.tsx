@@ -4,12 +4,13 @@
  * The bugs these guard: an error that left the description visible too; an error
  * announced as ordinary text instead of an alert; a required marker that also
  * polluted the accessible name; an invalid control that kept the neutral border;
- * and an input whose typing never reached `onChange`.
+ * an invalid focused control that painted no focus ring, so focus was invisible
+ * once a field was in error; and an input whose typing never reached `onChange`.
  */
 
 import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { darkTheme, focusRing, lightTheme } from "../internal/theme.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import { focusedTestId } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -130,6 +131,37 @@ describe("Field", () => {
     form.renderer.simulateKeystrokes("a");
 
     expect(onChange).not.toHaveBeenCalled();
+
+    form.unmount();
+  });
+
+  it("keeps the focus ring on an invalid control in both themes", () => {
+    const assertTheme = (theme: TestTheme): void => {
+      const palette = theme === "dark" ? darkTheme : lightTheme;
+      const form = renderComponent(
+        <Field label="Email" error="Enter a valid email">
+          <FieldInput testId="email" autoFocus />
+        </Field>,
+        theme,
+      );
+
+      const input = form.renderer.findByTestId("email");
+      expect(input?.style.borderColor).toBe(palette.colors.destructive);
+      expect(input?.style.boxShadow).toEqual(focusRing(palette).boxShadow);
+
+      form.unmount();
+    };
+
+    assertTheme("dark");
+    assertTheme("light");
+  });
+
+  it("paints no ring on an invalid control that does not hold focus", () => {
+    const form = renderComponent(<Form error="Enter a valid email" />, "light");
+    const input = form.renderer.findByTestId("email");
+
+    expect(input?.style.borderColor).toBe(lightTheme.colors.destructive);
+    expect(input?.style.boxShadow).toBeUndefined();
 
     form.unmount();
   });

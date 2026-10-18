@@ -194,7 +194,9 @@ export interface FieldInputState {
 
 /**
  * A single-line input wired to its field: it takes the label as its accessible
- * name, the message as its description, and the destructive border when invalid.
+ * name, the message as its description, the destructive border when invalid, and
+ * the token focus ring whenever it holds focus — validity and focus are
+ * independent signals, so an invalid field cannot lose its focus cue.
  */
 export const FieldInput = ({
   invalid,
@@ -258,7 +260,7 @@ export const FieldInput = ({
               : theme.colors.border,
           borderRadius: theme.radius.md,
           ...(isDisabled ? { cursor: "not-allowed" } : {}),
-          ...(focused && !isInvalid && !isDisabled ? focusRing(theme) : {}),
+          ...(focused && !isDisabled ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),
       )}

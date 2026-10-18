@@ -90,8 +90,9 @@ Labels use the `label` type role in `colors.foreground`; descriptions the
 `caption` role in `colors.mutedForeground`; errors the `caption` role in
 `colors.destructive`. The input paints `colors.input` / `colors.inputForeground`,
 a `borderWidth.thin` border in `colors.border`, `radius.md`, and swaps the border
-to `colors.destructive` when invalid. A neutral focused input takes the focus
-ring; an invalid one keeps the destructive border instead.
+to `colors.destructive` when invalid. A focused input paints the token focus ring
+whether or not it is valid: the border says "invalid" and the ring says "focused",
+so an error never hides where the keyboard is.
 
 ## Style by state
 
@@ -109,6 +110,10 @@ ring; an invalid one keeps the destructive border instead.
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
 `aria-disabled` semantics (plan 516).
 
+The focus cue is the token focus ring, painted whenever the control holds focus —
+including while the field is invalid. `0.10.0` has no `focusVisible`, so a mouse
+press shows the ring too; that is the runtime's limit, not a heuristic of ours.
+
 - The input's accessible name is the field's label; the message is passed as
   `aria-description`.
 - **No `aria-describedby`, `aria-invalid` or `aria-required`** in
@@ -124,11 +129,13 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (7 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (9 tests): label,
 description and control rendering; the error replacing the description with
 `role="alert"`; the required marker and clean accessible name; the destructive
-border in both themes; typed text reaching `onChange`; and the disabled input
-leaving the tab order and accepting no typing.
+border in both themes; an invalid focused input keeping both the destructive
+border and the token ring in both themes, and an unfocused invalid input painting
+no ring; typed text reaching `onChange`; and the disabled input leaving the tab
+order and accepting no typing.
 
 `src/validation/logic.test.ts` covers the message walk, `errors: "all"`,
 deduplication and the valid case.
