@@ -9,8 +9,11 @@
  * prose while it shipped to the API reference.
  *
  * Each case fails on the pre-fix paragraph: it names only one of the ten lists,
- * lists no family index and repeats a count. `node:fs` is deliberate, as in the
- * other tree-local documentation guards.
+ * lists no family index and repeats a count. Plan 504 moved the inverse veil's
+ * index from `filledControlFamilies` to `selectionFillRoles`, which also owns the
+ * solid status chips and `softAction`; the guard names whichever index the
+ * paragraph uses. `node:fs` is deliberate, as in the other tree-local
+ * documentation guards.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -58,8 +61,8 @@ describe("the themeContrastFailures reference", () => {
     });
   });
 
-  it("names the family index instead of the families", () => {
-    expect(prose).toContain("`filledControlFamilies`");
+  it("names the fill index instead of the families", () => {
+    expect(prose).toContain("`selectionFillRoles`");
     expect(prose).not.toContain("`primary`, `secondary` and `destructive`");
   });
 

@@ -104,6 +104,7 @@ import {
   markPairs,
   overlaySurfaces,
   selectionSurfaces,
+  selectionFillRoles,
   softBorderSurfacePairs,
   softActionLabelPairs,
   softActionPairs,
@@ -153,7 +154,7 @@ import {
   spacing,
 } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
-import { filledControlFamilies, statusTones } from "./styles.js";
+import { statusTones } from "./styles.js";
 import { typefaceRules } from "./typeface.js";
 import {
   extendTheme,
@@ -1090,12 +1091,12 @@ describe("docs/tokens.md quoted tightest figures", () => {
     const tightestFill = (
       ratio: (
         theme: Theme,
-        fill: (typeof filledControlFamilies)[number],
+        fill: (typeof selectionFillRoles)[number],
       ) => number,
     ): readonly [string, number] =>
       fillSets
         .flatMap(([label, theme]) =>
-          filledControlFamilies.map(
+          selectionFillRoles.map(
             (fill) => [`${label} ${fill}`, ratio(theme, fill)] as const,
           ),
         )
@@ -1119,15 +1120,15 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ),
     );
     expect([veilLabel, Number(veilRatio.toFixed(3))]).toEqual([
-      "identity dark high primary",
-      1.075,
+      "identity dark high info",
+      1.06,
     ]);
 
     expect(markdownProse).toContain(
       "**4.827:1** at the tightest (macOS dark, `accentForeground` on `accent`)",
     );
     expect(markdownProse).toContain(
-      "**1.075:1** at the tightest (identity dark high, `selectionOnFill` on `primary`)",
+      "**1.060:1** at the tightest (identity dark high, `selectionOnFill` on `info`)",
     );
   });
 
@@ -1343,17 +1344,70 @@ describe("docs/tokens.md quoted tightest figures", () => {
 });
 
 describe("docs/tokens.md fill selection", () => {
-  it("states the inverse veil for content on a filled action", () => {
+  it("states the inverse veil for content on an opaque filled surface", () => {
     expect(markdownProse).toContain(
-      "Content painted on a **filled action** uses `selectionOnFill` instead of `selection`.",
+      "Content painted on an **opaque filled surface**",
     );
     expect(markdownProse).toContain(
       '`selectionStyle(theme, "fill")` applies it to a subtree',
     );
-    ["selectionFillPairs", "selectionFillWashPairs", "selectionOnFill"].forEach(
-      (name) => {
-        expect(markdown).toContain(name);
-      },
+    [
+      "selectionFillPairs",
+      "selectionFillWashPairs",
+      "selectionFillRoles",
+      "selectionOnFill",
+    ].forEach((name) => {
+      expect(markdown).toContain(name);
+    });
+  });
+
+  it("quotes the accent wash a solid status chip cannot use", () => {
+    // The figures are derived from the same roles the checker measures, so a
+    // palette edit cannot leave the page quoting a ratio it no longer produces.
+    const accentOver = (theme: Theme, role: "info" | "success") =>
+      contrastRatio(
+        compositeOver(theme.colors.selection, theme.colors[role]),
+        theme.colors[role],
+      ).toFixed(3);
+
+    const light = getTheme("light");
+    const macos = getPlatformTheme("darwin", "light");
+    const linux = getPlatformTheme("linux", "light");
+    const windows = getPlatformTheme("win32", "light");
+    const aero = getPlatformRecipeTheme("aero", "light");
+
+    expect(markdownProse).toContain(
+      `identity light \`success\` measures **${accentOver(light, "success")}:1**`,
+    );
+    expect(markdownProse).toContain(
+      `macOS light ${accentOver(macos, "success")}:1, Linux light ${accentOver(linux, "success")}:1`,
+    );
+    expect(markdownProse).toContain(
+      `Windows light \`info\` ${accentOver(windows, "info")}:1 and Windows 7 light ${accentOver(aero, "info")}:1`,
+    );
+
+    const highDark = getTheme("dark", "high");
+    const veil = compositeOver(
+      highDark.colors.selectionOnFill,
+      highDark.colors.softAction,
+    );
+    const label = contrastRatio(highDark.colors.softActionForeground, veil);
+    const onTint = Math.min(
+      ...(
+        ["infoSoft", "successSoft", "warningSoft", "destructiveSoft"] as const
+      ).map((tint) =>
+        contrastRatio(highDark.colors.softAction, highDark.colors[tint]),
+      ),
+    );
+
+    expect(markdownProse).toContain(
+      `(\`#3A414D\` → \`${highDark.colors.softAction}\`)`,
+    );
+    expect(markdownProse).toContain(
+      `keeps its white label at ${label.toFixed(3)}:1 through the veil`,
+    );
+    expect(markdownProse).toContain(
+      `raised action at ${onTint.toFixed(3)}:1 on every AAA soft tint`,
     );
   });
 });
@@ -1965,8 +2019,8 @@ describe("docs/design-system.md", () => {
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| text selection on a filled action (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| text selection on an opaque filled surface (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\`/\`infoForeground\`/\`successForeground\`/\`warningForeground\`/\`softActionForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| text selection veil on an opaque filled surface (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`/\`info\`/\`success\`/\`warning\`/\`softAction\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

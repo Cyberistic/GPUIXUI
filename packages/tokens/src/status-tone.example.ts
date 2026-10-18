@@ -1,4 +1,10 @@
-import { statusTone, textStyle, type StatusTone, type Theme } from "./index.js";
+import {
+  selectionStyle,
+  statusTone,
+  textStyle,
+  type StatusTone,
+  type Theme,
+} from "./index.js";
 
 /**
  * The style objects a tone-tinted Alert or Badge spreads for a soft status tone.
@@ -22,12 +28,15 @@ export const statusToneStyles = (theme: Theme, tone: StatusTone) => {
 /**
  * The style objects a solid status chip spreads. The solid role is a fill and
  * carries its own on-colour, so the pair comes from `statusTone(...).solid`
- * rather than from two role lookups at the call site.
+ * rather than from two role lookups at the call site. The chip's label is
+ * selectable, and the accent-tinted wash is invisible on a solid fill, so the
+ * container takes the inverse veil.
  */
 export const statusSolidStyles = (theme: Theme, tone: StatusTone) => {
   const { solid } = statusTone(theme, tone);
   return {
     container: {
+      ...selectionStyle(theme, "fill"),
       backgroundColor: solid.background,
       borderRadius: theme.radius.full,
       paddingLeft: theme.spacing.md,

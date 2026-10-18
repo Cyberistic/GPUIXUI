@@ -135,6 +135,9 @@ describe("the solid status family", () => {
         expect(style.container.backgroundColor, `${theme.name} ${tone}`).toBe(
           theme.colors[tone],
         );
+        expect(style.container.selectionColor, `${theme.name} ${tone}`).toBe(
+          theme.colors.selectionOnFill,
+        );
         expect(style.text.color, `${theme.name} ${tone}`).toBe(
           theme.colors[`${tone}Foreground`],
         );

@@ -1305,22 +1305,43 @@ export const selectionWashPairs: readonly ContrastPair[] =
   );
 
 /**
- * Content painted on a filled action — a user message bubble on `primary`, a
- * neutral filled surface, a destructive one, or a brand-toned toggle — uses the
- * inverse veil rather than the accent-tinted `selection`, which is invisible on
- * the accent fill itself. Both lists derive from `filledControlFamilies`, so a
- * fifth family cannot ship with no selection pair: the veil is held to the
- * perceivability floor on each fill, and each family's own foreground to the
- * floor it already has on that fill.
+ * Content painted on an opaque filled surface uses the inverse veil rather than
+ * the accent-tinted `selection`, which is invisible on those fills: a user
+ * message bubble on `primary`, a neutral filled surface, a destructive one, a
+ * brand-toned toggle, a solid status chip or the status panel's `softAction`.
+ *
+ * The opaque fills are the four filled control families, the solid status chips
+ * a chip's label is painted on (`info`, `success`, `warning`; `destructive` is
+ * already an action family), and `softAction`, the raised action a tone-tinted
+ * status panel carries. Every one is a filled surface a reader can drag a
+ * selection over, and the accent wash is under the perceivability floor on
+ * fourteen shipped compositions — identity light `success` 1.046:1, Windows
+ * light `info` 1.011:1 and every high-contrast dark `softAction` 1.047:1 — so
+ * the inverse veil is the wash. Both lists derive from this index, so a fifth
+ * family, a fifth status tone or a new panel action cannot ship with no
+ * selection pair: the veil is held to the perceivability floor on each fill, and
+ * each fill's own foreground to the floor it already has on that fill.
+ * `statusTones` owns the tone list, so a fifth tone joins here with no second
+ * edit.
  */
+export const selectionFillRoles = [
+  ...filledControlFamilies,
+  ...statusTones.filter((tone) => tone !== "destructive"),
+  "softAction",
+] as const;
+
+/** One veil pair per opaque fill. */
 export const selectionFillWashPairs: readonly ContrastPair[] =
-  filledControlFamilies.map(
+  selectionFillRoles.map(
     (fill): ContrastPair => ["selectionOnFill", fill, "surface"],
   );
 
-/** The family foreground through the inverse veil, at the on-colour floor. */
+/**
+ * The on-colour foreground every opaque fill carries, through the inverse veil,
+ * at the floor that foreground already has on its fill.
+ */
 export const selectionFillPairs: readonly ContrastPair[] =
-  filledControlFamilies.map(
+  selectionFillRoles.map(
     (fill): ContrastPair => [`${fill}Foreground`, fill, "secondary"],
   );
 
@@ -1493,8 +1514,11 @@ const fadedVisibilityFailures = (
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
  *   the wash's own perceivability through the composited `selection` colour.
  * - `selectionFillPairs` and `selectionFillWashPairs` — the inverse
- *   `selectionOnFill` veil on every filled family; the list derives from
- *   `filledControlFamilies`, so `accent` is included.
+ *   `selectionOnFill` veil on every opaque fill that carries its own on-colour:
+ *   the filled control families, the solid status chips a chip's label is
+ *   painted on (`destructive` is already a family) and the status panel's
+ *   `softAction`. The list is `selectionFillRoles`, so a fifth tone joins one
+ *   place.
  * - `skeletonPulsePairs` — the loading pulse's dim frame, the `skeleton` role
  *   composited at `skeletonPulseOpacity` over every surface a placeholder sits
  *   on; a failure names the role and the fraction.

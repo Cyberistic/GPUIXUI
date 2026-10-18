@@ -567,13 +567,17 @@ describe("themeContrastFailures", () => {
     expect(selectionWashPairs.length).toBe(9);
     expect(selectionSoftPairs.length).toBe(12);
     expect(selectionSoftWashPairs.length).toBe(4);
-    expect(selectionFillPairs).toHaveLength(4);
-    expect(selectionFillWashPairs).toHaveLength(4);
+    expect(selectionFillPairs).toHaveLength(8);
+    expect(selectionFillWashPairs).toHaveLength(8);
     expect(selectionFillWashPairs.map(([, fill]) => fill)).toEqual([
       "primary",
       "secondary",
       "destructive",
       "accent",
+      "info",
+      "success",
+      "warning",
+      "softAction",
     ]);
     expect(overlayWashPairs.length).toBe(15);
   });
@@ -703,9 +707,13 @@ describe("themeContrastFailures", () => {
     const invisible = extendTheme(base, {
       colors: { selectionOnFill: base.colors.primary },
     });
+    // The veil is the primary fill, so it also fails to separate from the `info`
+    // chip (1.011:1); this case states the composition it was written for.
     const failures = themeContrastFailures(invisible).filter(
-      ({ wash, pairClass }) =>
-        wash === "selectionOnFill" && pairClass === "surface",
+      ({ wash, background, pairClass }) =>
+        wash === "selectionOnFill" &&
+        background === "primary" &&
+        pairClass === "surface",
     );
 
     expect(

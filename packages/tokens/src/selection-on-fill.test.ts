@@ -19,6 +19,17 @@
  * on-colour role has — while `themeContrastFailures` returned `[]`. Both lists
  * now derive from the family index, and the two foregrounds move one designed
  * step.
+ *
+ * Plan 504 guards the fill family the index never reached: a solid status chip
+ * (its `Solid fill` pair is published, plan 399) and the status panel's
+ * `softAction` (plan 394) both carry their own on-colour, and both are missing
+ * from `filledControlFamilies`. The accent-tinted wash is under the perceivability
+ * floor on fourteen of their shipped compositions — identity light `success`
+ * 1.046:1, Windows light `info` 1.011:1 and every high-contrast dark
+ * `softAction` 1.047:1 — so selecting a chip's label or a Retry action showed no
+ * highlight while the checker returned `[]`. `selectionFillRoles` is the index
+ * (the four families, the three solid status chips, `softAction`) and both lists
+ * derive from it.
  */
 
 import { describe, expect, it } from "vitest";
@@ -31,39 +42,47 @@ import {
   filledControlFamilies,
   getTheme,
   selectionFillPairs,
+  selectionFillRoles,
   selectionFillWashPairs,
   selectionStyle,
+  statusTones,
   themeContrastFailures,
   type Theme,
 } from "./index.js";
 import { filledContentStyle } from "./selection.example.js";
+import { statusSolidStyles } from "./status-tone.example.js";
 
 const variants: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
   ({ theme }) => [theme.name, theme] as const,
 );
 
 describe("the selection veil on a filled action", () => {
-  it("publishes one wash and one text pair per filled family", () => {
-    expect(
-      selectionFillWashPairs.map(([role, fill, pairClass]) => [
-        role,
+  it("publishes one wash and one text pair per opaque fill", () => {
+    expect(selectionFillWashPairs).toEqual(
+      selectionFillRoles.map((fill) => ["selectionOnFill", fill, "surface"]),
+    );
+    expect(selectionFillPairs).toEqual(
+      selectionFillRoles.map((fill) => [
+        `${fill}Foreground`,
         fill,
-        pairClass,
+        "secondary",
       ]),
-    ).toEqual(
-      filledControlFamilies.map((fill) => ["selectionOnFill", fill, "surface"]),
     );
-    expect(selectionFillPairs.map(([role, fill]) => [role, fill])).toEqual(
-      filledControlFamilies.map((fill) => [`${fill}Foreground`, fill]),
-    );
-    expect(
-      selectionFillPairs.every(([, , pairClass]) => pairClass === "secondary"),
-    ).toBe(true);
+    expect(selectionFillRoles).toHaveLength(8);
+    expect(new Set(selectionFillRoles).size).toBe(8);
   });
 
-  it("keeps every shipped set's veil and family text at their floors", () => {
+  it("covers every opaque fill a reader can select a label on", () => {
+    expect(selectionFillRoles).toEqual([
+      ...filledControlFamilies,
+      ...statusTones.filter((tone) => tone !== "destructive"),
+      "softAction",
+    ]);
+  });
+
+  it("keeps every shipped set's veil and fill text at their floors", () => {
     const failures = variants.flatMap(([label, theme]) =>
-      filledControlFamilies.flatMap((fill) => {
+      selectionFillRoles.flatMap((fill) => {
         const painted = compositeOver(
           theme.colors.selectionOnFill,
           theme.colors[fill],
@@ -109,14 +128,54 @@ describe("the selection veil on a filled action", () => {
     );
   });
 
+  it("records the accent wash under a solid status chip", () => {
+    // The same defect one fill family over: a solid status chip carries its own
+    // on-colour, and the accent-tinted wash vanishes on eleven of the shipped
+    // compositions. `softAction` was among them until plan 504 moved the AAA dark
+    // fill one step darker; the veil is still its designed wash, because a
+    // filled action takes the neutral veil like every other opaque fill. The list
+    // is exact, so a palette edit that changes which sets are affected fails here
+    // and the veil's rationale is revisited.
+    const invisible = variants
+      .flatMap(([label, theme]) =>
+        [...statusTones, "softAction" as const].flatMap((role) =>
+          contrastRatio(
+            compositeOver(theme.colors.selection, theme.colors[role]),
+            theme.colors[role],
+          ) < contrastFloors[theme.contrast].surface
+            ? [`${label} ${role}`]
+            : [],
+        ),
+      )
+      .toSorted();
+
+    expect(invisible).toEqual(
+      [
+        "Light destructive",
+        "Light success",
+        "Dark destructive",
+        "Dark info",
+        "Dark success",
+        "Light · macOS success",
+        "Light · Linux info",
+        "Light · Linux success",
+        "Light · Windows info",
+        "Light · Windows XP destructive",
+        "Light · Windows 7 info",
+      ].toSorted(),
+    );
+  });
+
   it("reports an edited theme whose veil matches its fill", () => {
     const base = getTheme("light");
     const regressed = extendTheme(base, {
       colors: { selectionOnFill: base.colors.primary },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ wash, pairClass }) =>
-        wash === "selectionOnFill" && pairClass === "surface",
+      ({ wash, background, pairClass }) =>
+        wash === "selectionOnFill" &&
+        background === "primary" &&
+        pairClass === "surface",
     );
 
     expect(
@@ -216,12 +275,73 @@ describe("the selection veil on a filled action", () => {
     });
   });
 
+  it("reports an edited theme whose veil matches a solid status fill", () => {
+    const base = getTheme("light");
+    const regressed = extendTheme(base, {
+      colors: { selectionOnFill: base.colors.success },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash, background, pairClass }) =>
+        wash === "selectionOnFill" &&
+        background === "success" &&
+        pairClass === "surface",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.ratio).toBe(1);
+    expect(failures[0]?.floor).toBe(contrastFloors.default.surface);
+  });
+
+  it("reports an edited theme whose veil matches the panel action", () => {
+    const base = getTheme("dark", "high");
+    const regressed = extendTheme(base, {
+      colors: { selectionOnFill: base.colors.softAction },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash, background, pairClass }) =>
+        wash === "selectionOnFill" &&
+        background === "softAction" &&
+        pairClass === "surface",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.ratio).toBe(1);
+    expect(failures[0]?.floor).toBe(contrastFloors.high.surface);
+  });
+
+  it("reports a solid status foreground that vanishes through the veil", () => {
+    const base = getTheme("light");
+    const regressed = extendTheme(base, {
+      colors: { successForeground: base.colors.success },
+    });
+    const failures = themeContrastFailures(regressed).filter(
+      ({ wash, foreground, background }) =>
+        wash === "selectionOnFill" &&
+        foreground === "successForeground" &&
+        background === "success",
+    );
+
+    expect(failures).toHaveLength(1);
+    expect(failures[0]?.pairClass).toBe("secondary");
+  });
+
   it("paints the example bubble with the brand fill and the inverse veil", () => {
     variants.forEach(([label, theme]) => {
       expect(filledContentStyle(theme), label).toEqual({
         ...selectionStyle(theme, "fill"),
         backgroundColor: theme.colors.primary,
         color: theme.colors.primaryForeground,
+      });
+    });
+  });
+
+  it("paints the solid status chip with the inverse veil", () => {
+    variants.forEach(([label, theme]) => {
+      statusTones.forEach((tone) => {
+        expect(
+          statusSolidStyles(theme, tone).container,
+          `${label} ${tone}`,
+        ).toMatchObject(selectionStyle(theme, "fill"));
       });
     });
   });

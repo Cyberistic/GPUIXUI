@@ -567,7 +567,10 @@ export const highContrastLightColors = {
  * quiet panel and popover (plan 309); `selected` sits on the accent's hover step
  * so the selection is also a step past the row's hover wash (plan 381). The
  * groove moves one step lighter so it clears the pressed wash and the `warning`
- * tint, which sit a half-step above the surface ladder (plan 503).
+ * tint, which sit a half-step above the surface ladder (plan 503). The panel
+ * action moves one step darker than the identity dark fill, because the white
+ * label has to keep the AAA 7:1 floor through the inverse selection veil on that
+ * fill (plan 504) while the raised action still clears 1.05:1 on every soft tint.
  */
 export const highContrastDarkColors = {
   background: "#000000",
@@ -613,7 +616,10 @@ export const highContrastDarkColors = {
   destructiveSoft: palette.red[900],
   destructiveSoftForeground: palette.red[100],
   destructiveSoftBorder: palette.red[400],
-  softAction: "#3A414D",
+  // One step darker than the identity dark fill: the AAA white label keeps its
+  // 7:1 floor through the inverse selection veil (7.165:1) and the raised action
+  // still clears 1.05:1 on every AAA soft tint (1.071:1 at the tightest).
+  softAction: "#343B47",
   softActionForeground: palette.neutral[0],
   softActionHover: "#454D5B",
   softActionActive: "#4C5462",
