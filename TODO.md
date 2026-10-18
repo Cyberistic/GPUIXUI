@@ -1723,6 +1723,17 @@ second application deep-equal in every field except `name`, so only the label
 drifted; one helper appends a label only when the name does not already end
 with it, `applyPlatformStyle` and the deprecated `platformTheme` bridge share
 it, and a different style still appends its own label once (plan 545)
+`[x]` Make the uniqueness guarantee own its inventory — `docs/tokens.md` says
+"every exported pair list is held to content uniqueness", but
+`contrast.test.ts` checked a hand-typed 28-entry array while the package exports
+35 lists: `ringTrackPairs`, `selectionInactivePairs`, `skeletonPulsePairs`,
+`softActionPairs`, `softActionStepPairs`, `softActionLabelPairs` and
+`inactivePanelActionPairs` were checked only through `contrastPairs` (six of
+them) or not at all (`selectionInactivePairs`, whose duplicate reports one
+composition twice while every suite stays green — a probe passes 33/33); the
+inventory is now a record keyed by the package's own export names, so a new list
+fails `check-types` until it is covered, and the catalogue sentence names that
+owner (plan 546)
 
 ## Phase C — Tier 1–2 components
 

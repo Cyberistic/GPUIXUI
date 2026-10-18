@@ -376,6 +376,13 @@ describe("docs/tokens.md contract counts", () => {
       "A disabled panel action keeps the resting `softAction` fill and paints `disabledForeground`",
     );
   });
+
+  it("states that the uniqueness inventory is derived", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain(
+      "The suite derives its inventory from the package's exports, so a list added later cannot ship without the check.",
+    );
+  });
 });
 
 /** The `## Types` row for `name`, or a failure naming it. */

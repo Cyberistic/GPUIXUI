@@ -1761,7 +1761,9 @@ colour moves.
 
 Every exported pair list is held to content uniqueness: a repeated
 `[foreground, background, class]` would make the checker report one composition
-twice, so `contrast.test.ts` fails on it. Lists that measure the same roles
+twice, so `contrast.test.ts` fails on it. The suite derives its inventory from
+the package's exports, so a list added later cannot ship without the check.
+Lists that measure the same roles
 through a different wash — `selectionPairs` beside `contrastPairs`, for example
 — are separate checks, not duplicates, so uniqueness is asserted inside each
 list and never across them.

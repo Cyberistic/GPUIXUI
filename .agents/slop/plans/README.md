@@ -240,6 +240,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [543](./543-contrast-floor-class-index.md) | The contrast contract's floor classes have no owner | F | 071, 303, 313, 326, 351, 372, 519 | done |
 | [544](./544-quoted-figure-extent.md) | The catalogue's quoted tightest figures are measured on ten of twenty-four sets | F | 380, 387, 388, 536–538 | done |
 | [545](./545-applied-style-name-idempotence.md) | Applying a platform style twice appends its label twice | F | 371, 373, 374, 541 | done |
+| [546](./546-pair-list-uniqueness-owner.md) | "Every exported pair list" checked 28 of 35 | F | 071, 339, 340, 349, 393, 394, 510, 514, 516 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2593,6 +2594,23 @@ the rule and `docs.test.ts` holds all three; the executed
 `acmeWindowsReapplied` example runs in `applied-level.test.ts`, and the new
 `applied-style-name.test.ts` fails on the pre-fix append. No colour, pair,
 floor, metric, platform style, recipe or shipped theme name moves.
+
+Plan `546` closes the gap between the catalogue's uniqueness guarantee and the
+suite that enforces it. `docs/tokens.md` says “every exported pair list is held
+to content uniqueness”, but `contrast.test.ts` checked a hand-typed array of
+**28** entries while the package exports **35** `*Pairs` values. Six of the
+seven omitted lists were still caught through `contrastPairs` (they are folded
+into it), so the catalogue's “inside each list” was false there but not the
+guarantee; the seventh, `selectionInactivePairs`, is applied by
+`textOverWashFailures` and in no master list, so a duplicate in it made the
+checker report one missed composition twice while the pre-fix suite passed
+**33/33** — the plan-349 defect, one list over. The inventory is now a
+`Record` whose key type derives from `keyof typeof Tokens` filtered to `*Pairs`,
+so a 36th list fails `check-types` until it is listed (proved by a scratch
+export) and every list — nested or direct — is asserted by name. The catalogue
+sentence now states that owner and `docs.test.ts` holds it. No colour role,
+pair, floor, metric, theme, platform style or recipe value changes; 131 files /
+5641 tests pass.
 
 ## How to use a plan
 

@@ -172,6 +172,7 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import * as Tokens from "./index.js";
 import {
   colorRoles,
   compositeOver,
@@ -185,14 +186,17 @@ import {
   extendTheme,
   getTheme,
   inactivePairs,
+  inactivePanelActionPairs,
   inactiveSoftPairs,
   invalidRingPairs,
   markPairs,
   overlayWashPairs,
   ringSoftPairs,
+  ringTrackPairs,
   selectionFillPairs,
   selectionFillInactivePairs,
   selectionFillWashPairs,
+  selectionInactivePairs,
   selectionLinkPairs,
   selectionPairs,
   selectionSoftPairs,
@@ -202,6 +206,7 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   shippedThemes,
+  skeletonPulsePairs,
   softActionLabelPairs,
   softActionPairs,
   softActionStepPairs,
@@ -236,7 +241,8 @@ import {
  *
  * Lists that measure the same roles through a different wash are separate
  * checks, not duplicates, so uniqueness is asserted inside each published list,
- * never across lists.
+ * never across lists. Plan 546 derives the inventory from the package's exports,
+ * after seven lists shipped outside the hand-typed array.
  */
 const duplicatePairKeys = (
   pairs: ReadonlyArray<ContrastPair>,
@@ -252,38 +258,57 @@ const duplicatePairKeys = (
   });
 };
 
-const publishedPairLists: ReadonlyArray<
-  readonly [string, ReadonlyArray<ContrastPair>]
-> = [
-  ["contrastPairs", contrastPairs],
-  ["stateFillSurfacePairs", stateFillSurfacePairs],
-  ["stateStepPairs", stateStepPairs],
-  ["washStepPairs", washStepPairs],
-  ["selectionStepPairs", selectionStepPairs],
-  ["markPairs", markPairs],
-  ["inactivePairs", inactivePairs],
-  ["inactiveSoftPairs", inactiveSoftPairs],
-  ["controlBoundarySoftPairs", controlBoundarySoftPairs],
-  ["ringSoftPairs", ringSoftPairs],
-  ["invalidRingPairs", invalidRingPairs],
-  ["softPanelTextPairs", softPanelTextPairs],
-  ["toastTonePairs", toastTonePairs],
-  ["softBorderSurfacePairs", softBorderSurfacePairs],
-  ["statusFillPairs", statusFillPairs],
-  ["trackSurfacePairs", trackSurfacePairs],
-  ["trackMarkPairs", trackMarkPairs],
-  ["selectionPairs", selectionPairs],
-  ["selectionStatusPairs", selectionStatusPairs],
-  ["selectionLinkPairs", selectionLinkPairs],
-  ["selectionWashPairs", selectionWashPairs],
-  ["selectionSoftPairs", selectionSoftPairs],
-  ["selectionSoftWashPairs", selectionSoftWashPairs],
-  ["selectionFillPairs", selectionFillPairs],
-  ["selectionFillInactivePairs", selectionFillInactivePairs],
-  ["selectionFillWashPairs", selectionFillWashPairs],
-  ["overlayWashPairs", overlayWashPairs],
-  ["dialogSurfacePairs", dialogSurfacePairs],
-];
+/**
+ * Every exported pair list, keyed by its export name. The key type derives from
+ * the package's exports, so a new `*Pairs` value fails `check-types` until it is
+ * listed here; the record form, rather than an array literal, is what makes the
+ * inventory compile-enforced.
+ */
+type PairListName = {
+  [Name in keyof typeof Tokens]: Name extends `${string}Pairs` ? Name : never;
+}[keyof typeof Tokens];
+
+const publishedPairLists: Readonly<
+  Record<PairListName, ReadonlyArray<ContrastPair>>
+> = {
+  contrastPairs,
+  controlBoundarySoftPairs,
+  dialogSurfacePairs,
+  inactivePairs,
+  inactivePanelActionPairs,
+  inactiveSoftPairs,
+  invalidRingPairs,
+  markPairs,
+  overlayWashPairs,
+  ringSoftPairs,
+  ringTrackPairs,
+  selectionFillInactivePairs,
+  selectionFillPairs,
+  selectionFillWashPairs,
+  selectionInactivePairs,
+  selectionLinkPairs,
+  selectionPairs,
+  selectionSoftPairs,
+  selectionSoftWashPairs,
+  selectionStatusPairs,
+  selectionStepPairs,
+  selectionWashPairs,
+  skeletonPulsePairs,
+  softActionLabelPairs,
+  softActionPairs,
+  softActionStepPairs,
+  softBorderSurfacePairs,
+  softPanelTextPairs,
+  stateFillSurfacePairs,
+  stateStepPairs,
+  statusFillPairs,
+  toastTonePairs,
+  trackMarkPairs,
+  trackSurfacePairs,
+  washStepPairs,
+};
+
+const publishedPairListEntries = Object.entries(publishedPairLists);
 
 describe("published pair lists", () => {
   it("detects a repeated composition, so the guard can fail", () => {
@@ -295,8 +320,15 @@ describe("published pair lists", () => {
     ).toEqual(["border|card|divider"]);
   });
 
+  it("derives the inventory from the package's exports", () => {
+    expect(publishedPairListEntries.map(([name]) => name)).toContain(
+      "contrastPairs",
+    );
+    expect(publishedPairListEntries.length).toBeGreaterThan(1);
+  });
+
   it("never repeats a composition inside a list", () => {
-    publishedPairLists.forEach(([name, pairs]) => {
+    publishedPairListEntries.forEach(([name, pairs]) => {
       expect(duplicatePairKeys(pairs), name).toEqual([]);
     });
   });
