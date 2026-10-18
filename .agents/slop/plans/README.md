@@ -203,6 +203,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [505](./505-elevation-tint-aaa-dark.md) | The elevation tint on the AAA dark canvas | F | 085, 099, 345, 371, 390, 393 | done |
 | [506](./506-selected-row-title-selection.md) | The selected row's title through the text-selection wash | F | 081, 087, 312, 363, 381, 387, 391 | done |
 | [507](./507-dialog-face-on-scrim.md) | The dialog's face on the scrim | F | 099, 359, 375, 395, 505, 506 | done |
+| [508](./508-solid-chip-on-scrim.md) | The solid status chip on the scrim | F | 099, 359, 375, 395, 399, 504, 507 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2074,6 +2075,16 @@ face to `#343436` fails five existing pairs, and raising the scrim to 70% clears
 `primary` (1.0775:1) but collapses `destructive` (1.0185:1). The documents now say
 what the measurements support: a modal is separated by its scrim, its face on the
 layout and its edge, not by its shadow.
+
+Plan `508` closes the last resting content family the scrim list omitted: a
+Badge's solid status chip. Plan 399 made the solid fill a first-class fill and
+plan 504 made it a selection surface, but `overlaySurfaces` still named only the
+four action families, the raised panel action and the four soft panels, so a
+scrim that composited to `info`, `success` or `warning` left the chip undimmed
+while the checker returned `[]` (`destructive` is already an action fill). The
+three join the list (15 → 18 scrim pairs); every shipped set already clears
+1.05:1 — high-contrast dark `info` is tightest at **1.0599:1** — so no colour
+moves and that figure becomes the scrim contract's published tightest.
 
 ## How to use a plan
 
