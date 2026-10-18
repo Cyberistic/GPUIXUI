@@ -1,6 +1,6 @@
 # Plan 508 — The solid status chip on the scrim
 
-**Status:** ready to execute · **Workstream:** `tokens-theme` · **Phase:** F
+**Status:** done · **Workstream:** `tokens-theme` · **Phase:** F
 **Depends on:** 099 (the scrim became a measured wash), 359/375/395 (the scrim on
 the layout, the filled actions and the status panels), 399 (the solid status fill
 became a first-class fill), 504 (the same fill became a selection surface), 507

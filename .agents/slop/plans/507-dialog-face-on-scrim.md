@@ -1,6 +1,6 @@
 # Plan 507 — The dialog's face on the scrim
 
-**Status:** ready to execute · **Workstream:** `tokens-theme` · **Phase:** F
+**Status:** done · **Workstream:** `tokens-theme` · **Phase:** F
 **Depends on:** 099 (the scrim became a measured wash), 359 (the scrim on
 `selected`/`input`), 375/395 (the scrim on filled actions and status panels),
 505 (the elevation shadow over the page surfaces).
