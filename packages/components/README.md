@@ -72,6 +72,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `@gpuixui/icons` | every component-owned fixed mark (close, clear, chevron, check, toast tone) — plan 324 |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
+| `src/perf/list.test.tsx` | the large-collection ceiling: 1,000 rows, a focus move and a re-render; `docs/performance.md` records the baseline and the known limitation |
 | `examples/index.ts` | the example registry (`id → example`) a native host iterates; the id is the module's basename, with a page at `docs/<id>.mdx` (plan 330) |
 
 ## Commands
@@ -81,8 +82,14 @@ nub install
 nub run --filter @gpuixui/components check-types
 nub run --filter @gpuixui/components test            # logic suites + the guard
 nub run --filter @gpuixui/components test:behaviour  # needs a supported host
+nub run --filter @gpuixui/components test:perf       # large-collection ceiling, needs a supported host
 nub run check            # the repo gate, from the worktree root
 ```
+
+The public surface is explicit: one `exports` entry per `src/*.tsx` component
+module plus `./validation/logic`. There is no wildcard, so internals, domain
+modules and test files are not importable; `src/exports.test.ts` and
+`src/manifest.test.ts` hold that, and the manifest to the source's imports.
 
 Two suites, deliberately split. `test` runs everywhere: pure logic and the guard
 in `src/runtime.test.tsx`. `test:behaviour` renders a real GPUix tree, so it needs

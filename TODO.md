@@ -441,7 +441,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
     the Avatar page's opening claim contradicted its own limitations, and five
     "until primitives lands" notes were stale (the package landed; the real
     blocker is two theme providers); unit 340, both-direction proof
-`[ ]` Performance and packaging
+`[x]` Performance and packaging
+  - `[x]` Plan 338 — explicit package surface (no wildcard, no internals/tests),
+    a manifest dependency check, and a measured large-list performance baseline
+    with a documented limitation (owner: components)
+    - `[x]` `package.json` enumerates the 42 component modules + `validation/logic`;
+      `internal/*`, `menu/item` and `runtime.test` no longer resolve
+    - `[x]` `src/exports.test.ts` (6 checks) and `src/manifest.test.ts` (3 checks),
+      both-direction proven
+    - `[x]` `test:perf` + `src/perf/list.test.tsx` + `docs/performance.md`; the
+      1,000-row cost and the row-repaint limitation are recorded
+    - `[ ]` Row-level subscription for `List` (`useSyncExternalStore` + a stable
+      actions context) so one focus move repaints two rows, not all 1,000 —
+      follow-up to plan 338; needs its own plan and a measured before/after
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

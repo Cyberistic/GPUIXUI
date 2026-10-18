@@ -4,9 +4,15 @@
  * Guards the plan 336 bug: `docs/field.mdx` documents
  * `@gpuixui/components/validation/logic`, but the `./*` export maps it to
  * `src/validation/logic.tsx` while the module is `.ts`, so a consumer following
- * the docs gets `ERR_MODULE_NOT_FOUND`. The second check guards the same class
- * of drift at the package root: a public module that never reaches
- * `src/index.ts`.
+ * the docs gets `ERR_MODULE_NOT_FOUND`.
+ *
+ * Plan 338 added the rest: the `./*` wildcard made `internal/button`,
+ * `menu/item` and even `runtime.test` importable, and mapped `.ts` modules to a
+ * non-existent `.tsx`, so the package had no enumerable public surface. The
+ * checks below hold the explicit map to the source: every target exists, every
+ * public module has one entry, and nothing private is addressable. The last
+ * check guards the same class of drift at the package root: a public module that
+ * never reaches `src/index.ts`.
  *
  * `node:fs` is test-time only, like `inventory.test.ts`; no runtime source
  * imports it.
@@ -17,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 const packageRoot = new URL("../", import.meta.url);
@@ -27,6 +34,16 @@ const read = (relative: string): string =>
 
 const sorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.sort(values, Order.String);
+
+const Manifest = Schema.Struct({
+  exports: Schema.Record(Schema.String, Schema.String),
+});
+
+/** The package's export map, decoded rather than read through `any`. */
+const exportsMap = (): Readonly<Record<string, string>> =>
+  Schema.decodeUnknownSync(Schema.fromJsonString(Manifest))(
+    read("package.json"),
+  ).exports;
 
 /** Every `@gpuixui/components/...` specifier the docs or examples show. */
 const documentedSpecifiers = (): ReadonlyArray<string> => {
@@ -57,6 +74,27 @@ const documentedSpecifiers = (): ReadonlyArray<string> => {
   );
 };
 
+/** The public modules: the `src/*.tsx` files that are not tests. */
+const publicModules = (): ReadonlyArray<string> =>
+  sorted(
+    Arr.map(
+      Arr.filter(
+        readdirSync(fileURLToPath(srcRoot)),
+        (file) =>
+          file.endsWith(".tsx") &&
+          !file.endsWith(".test.tsx") &&
+          file !== "index.tsx",
+      ),
+      (file) => file.slice(0, -".tsx".length),
+    ),
+  );
+
+/** A target the package is allowed to publish: the root, a root module, or the one logic module. */
+const isPublicTarget = (target: string): boolean =>
+  target === "./src/index.ts" ||
+  target === "./src/validation/logic.ts" ||
+  (/^\.\/src\/[^/]+\.tsx$/.test(target) && !target.includes(".test."));
+
 describe("package exports", () => {
   it("resolves every documented subpath to a file that exists", () => {
     const problems = Arr.filterMap(documentedSpecifiers(), (specifier) => {
@@ -69,21 +107,66 @@ describe("package exports", () => {
     expect(sorted(problems)).toEqual([]);
   });
 
+  it("points every export at a file that exists", () => {
+    const problems = Arr.filterMap(
+      Object.entries(exportsMap()),
+      ([key, target]) => {
+        const resolved = fileURLToPath(new URL(target, packageRoot));
+        return existsSync(resolved)
+          ? Result.failVoid
+          : Result.succeed(`${key} -> ${target}`);
+      },
+    );
+
+    expect(sorted(problems)).toEqual([]);
+  });
+
+  it("gives every public module exactly one export entry", () => {
+    const exports = exportsMap();
+    const missing = Arr.filter(
+      publicModules(),
+      (stem) => exports[`./${stem}`] !== `./src/${stem}.tsx`,
+    );
+
+    expect(sorted(missing)).toEqual([]);
+  });
+
+  it("publishes no internal module, test module or undocumented deep path", () => {
+    const privateTargets = Arr.filter(
+      Arr.map(Object.entries(exportsMap()), ([key, target]) => ({
+        key,
+        target,
+      })),
+      ({ target }) => !isPublicTarget(target),
+    );
+
+    expect(privateTargets).toEqual([]);
+  });
+
+  it("refuses to resolve an internal, test or missing deep path", () => {
+    const privateSpecifiers = [
+      "@gpuixui/components/internal/button",
+      "@gpuixui/components/menu/item",
+      "@gpuixui/components/runtime.test",
+      "@gpuixui/components/toast/store",
+    ];
+    const resolvable = Arr.filter(privateSpecifiers, (specifier) => {
+      try {
+        import.meta.resolve(specifier);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+    expect(resolvable).toEqual([]);
+  });
+
   it("re-exports every public module from the package root", () => {
     const index = read("src/index.ts");
-    const modules = Arr.filter(
-      readdirSync(fileURLToPath(srcRoot)),
-      (file) =>
-        file.endsWith(".tsx") &&
-        !file.endsWith(".test.tsx") &&
-        file !== "index.tsx",
-    );
-    const missing = Arr.map(
-      Arr.filter(
-        modules,
-        (file) => !index.includes(`export * from "./${file.slice(0, -4)}.js"`),
-      ),
-      (file) => file.slice(0, -4),
+    const missing = Arr.filter(
+      publicModules(),
+      (stem) => !index.includes(`export * from "./${stem}.js"`),
     );
 
     expect(sorted(missing)).toEqual([]);
