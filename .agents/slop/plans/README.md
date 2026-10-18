@@ -155,6 +155,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [356](./356-jsdoc-example-guard.md) | The source JSDoc examples are unguarded | F | 324, 350, 355 | done |
 | [357](./357-wash-state-steps.md) | The generic wash ladder's press | F | 071, 097, 306, 309, 334, 342, 354, 356 | done |
 | [358](./358-metric-contract.md) | The numeric half of an editable theme | F | 010–019, 050–072, 071, 086, 089, 096, 342, 353, 355–357 | done |
+| [359](./359-modal-scrim-surfaces.md) | The scrim over the surfaces a window actually shows | F | 099, 309, 326, 337, 347, 358 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1239,6 +1240,19 @@ radius ladders (Linux and Windows ship `lg === xl`) and strict motion ladders
 `themeMetricFailures` and `metricGroups` publish the ten groups; every shipped
 identity theme, platform variant and recipe already passes, so no token value
 moves, and a coverage case keeps a future group from shipping unmeasured.
+
+359 corrects the reasoning plan 099 used to leave the row washes out of the
+scrim contract. It excluded the *transient* pointer washes because reaching a
+dialog removes the pointer from the row, which is right — but it also excluded
+`selected`, which is a persistent row state a table, list or tree keeps while a
+modal opens over it, and `input`, which is the fill of every field in the layout
+behind a settings or rename dialog. The audit measured the gap: macOS light's
+own `selected` fill used as `overlay` composites to **1.000:1** on a selected
+row, and `themeContrastFailures` returned `[]` because every measured surface
+passed. The two surfaces join `overlaySurfaces` (four → six scrim pairs); a
+24-set probe finds the tightest pair at 1.164:1 (macOS dark, `overlay` on
+`input`), so no colour moves and the regression case now reports the invisible
+row.
 
 ### Reference adoption (block `200–299`)
 
