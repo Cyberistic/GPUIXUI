@@ -1054,6 +1054,23 @@ the two helpers, and no token, colour, pair or floor moves (plan 376)
 leave the page quoting a ratio the package no longer produces while every pair
 passed; both are now derived from the 24 shipped sets and no value moves
 (plan 377)
+`[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
+role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
+canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures
+**1.310:1** (Windows light) to 1.865:1 (macOS dark) in every default set, under
+the 3:1 mark floor, so an inactive slide has no visible indicator (the AAA sets
+clear it at 6.525:1, where the mark floor is 4.5:1). `borderStrong`, the
+functional boundary, clears it at 3.953:1 (identity light) on the same canvas and
+is already a mark-floor role there (plan 332; owner: `components`).
+`[ ]` Cross-team: `components` keeps the DatePicker's "today" ring visible on a
+selected day — `date-picker.tsx:630-641` paints `borderColor: primary` on a cell
+whose fill is also `primary` when selected, so the ring composites to
+**1.000:1** and only the today signal disappears (the fill and
+`primaryForeground` still show selection). Paint the ring with
+`primaryForeground` — the on-colour role already measured on `primary` — or
+`ring` when the cell is selected, keeping `primary` on the `popover` at rest;
+`primary` on `popover`/`hover` is already a mark pair (plan 341; owner:
+`components`).
 `[x]` Resolve a persisted theme choice in one place — the package owned the
 mode, contrast, platform, recipe and density axes and a guard for each, but not
 their composition, so every settings screen retyped the precedence; a stored
