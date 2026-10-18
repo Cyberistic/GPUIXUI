@@ -1615,7 +1615,7 @@ level the theme declares, so a high-contrast theme is checked against 7:1 withou
 a second argument; naming a level asks a stricter question of a theme that does
 not claim it. It returns one entry per missed pair, naming the two roles, the
 pair class, the floor and the measured ratio. The selection wash is measured as
-it paints, with both text roles each surface carries: the body role over
+it paints, with the text roles each surface carries: the body role over
 `compositeOver(selection, background)`, `card`, `muted`, `hover`, `active` and
 `accent`; `popoverForeground` over `popover`; `inputForeground` over `input`; and
 `selectedForeground` beside the row's title `foreground` over `selected`, at the
