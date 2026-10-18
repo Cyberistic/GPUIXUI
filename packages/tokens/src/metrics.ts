@@ -235,7 +235,9 @@ const ascendingSizes = (
  * - **spacing**: a ladder.
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
- *   fraction. `overlay` is reserved and empty, so it is exempt.
+ *   fraction. `overlay` ships reserved and empty, and an empty level is exempt;
+ *   a level a consumer defines — `overlay` included — is held to the same
+ *   rules, because `elevationShadow` will paint it.
  * - **motion**: `none` is zero, the timings are a finite non-decreasing ladder,
  *   and a cubic-bezier easing holds four finite control points with both x
  *   values inside `0…1` — the runtime rejects the whole transition otherwise. A
@@ -518,30 +520,33 @@ export function themeMetricFailures(
       dimensions.chipMinWidth,
       dimensions.fieldMinWidth,
     ),
-    ...(["sm", "md", "lg"] as const).flatMap((level) => {
+    ...(["sm", "md", "lg", "overlay"] as const).flatMap((level) => {
       const shapes = elevation[level];
-      return shapes.length === 0
-        ? [failure("elevation", level, "at-least", shapes.length, 1)]
-        : shapes.flatMap((shape, index) => [
-            ...finite("elevation", `${level}[${index}].offsetX`, shape.offsetX),
-            ...finite("elevation", `${level}[${index}].offsetY`, shape.offsetY),
-            ...finite(
-              "elevation",
-              `${level}[${index}].blurRadius`,
-              shape.blurRadius,
-            ),
-            ...nonNegative(
-              "elevation",
-              `${level}[${index}].blurRadius`,
-              shape.blurRadius,
-            ),
-            ...finite(
-              "elevation",
-              `${level}[${index}].spreadRadius`,
-              shape.spreadRadius,
-            ),
-            ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
-          ]);
+      if (shapes.length === 0) {
+        return level === "overlay"
+          ? []
+          : [failure("elevation", level, "at-least", shapes.length, 1)];
+      }
+      return shapes.flatMap((shape, index) => [
+        ...finite("elevation", `${level}[${index}].offsetX`, shape.offsetX),
+        ...finite("elevation", `${level}[${index}].offsetY`, shape.offsetY),
+        ...finite(
+          "elevation",
+          `${level}[${index}].blurRadius`,
+          shape.blurRadius,
+        ),
+        ...nonNegative(
+          "elevation",
+          `${level}[${index}].blurRadius`,
+          shape.blurRadius,
+        ),
+        ...finite(
+          "elevation",
+          `${level}[${index}].spreadRadius`,
+          shape.spreadRadius,
+        ),
+        ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
+      ]);
     }),
     ...zero("motion", "none", motion.none),
     ...(["step", "fast", "normal", "slow", "pulse"] as const).flatMap((level) =>
