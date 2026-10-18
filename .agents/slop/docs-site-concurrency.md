@@ -150,6 +150,20 @@ No session was deleted from this session — the server enforces a
 `loopback-secret` header the workstream does not own. The tree was committed
 only after `git log` showed the other turns' work landed.
 
+## 2026-10-18 05:30 — a preview or dev server makes `vite build` hang
+
+Three `nub run --filter docs build` runs were killed (exit `143`) and one hung
+for 15 minutes. The cause was not the build: a `vite dev`/`vite preview` server
+for the same app was alive (PID 46955, started 03:24; plus a preview this
+session started at 04:54 on port 8951). The Cloudflare plugin's build and its
+preview both drive workerd state, and the build blocks until the server exits.
+Killing the servers let the next build finish in ~90 s.
+
+Consequence for the smoke checks: `smoke:build` must not run while a dev or
+preview server of the same app is up. A single-writer tree implies this; the
+five-writer tree did not. No script change was made — the fix is the process
+rule, and `TODO.md`'s single-writer row already owns it.
+
 ## 2026-10-18 04:00–05:00 — the turns now outlive every kill and race whole builds
 
 Measured while finishing plans 461–464:
