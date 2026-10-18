@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed — `qr-code` 53 checks, `qr=verified`, exit `0`; four mutation proofs (§8.3) |
 | Phase | D→E (feasibility probe) |
 | Owner | playground workstream (`apps/playground`, `packages/testing`) |
 | Depends on | `100`, `110`, `120`, `140`, `161` (content surfaces), `180` (svg/img colour), `302` (retained-node cost) |
