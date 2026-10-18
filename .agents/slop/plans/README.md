@@ -196,6 +196,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [398](./398-theme-check-index.md) | The check count and the composition suites' subset | F | 071, 358–364, 371, 383, 385, 392, 396 | done |
 | [399](./399-solid-status-fill.md) | The solid status fill and its one call | F | 014, 057, 071, 083, 090, 300, 308, 309, 314, 332, 347, 371, 383, 387, 388, 394, 398 | done |
 | [500](./500-text-hierarchy-surface-body-roles.md) | The text hierarchy on each surface's own body role | F | 059, 071, 315, 319, 371, 383, 387, 388, 391, 392, 398 | done |
+| [501](./501-floor-table-scrim-row.md) | The accessibility floor table's modal scrim row | F | 099, 359, 375, 395, 351, 352, 354, 398, 500 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1917,6 +1918,17 @@ documented on), and every shipped set clears the step at **1.274:1** (high
 contrast light), so no colour, pair, floor or metric moves. `selectedForeground`
 is deliberately not a body tier: it is the secondary-strength tint an inherited
 label keeps inside a selected row, whose title is `foreground`.
+
+Plan `501` closes the floor table's last stale row. Plan `395` added the raised
+action a status panel carries (`softAction`) to `overlaySurfaces` and updated
+§7, the catalogue and the README, but the §9 accessibility floor table still
+listed fourteen surfaces and the explanation said "fifteen" while naming
+fourteen. No test parsed the row: the exact-row array omitted the modal scrim
+entirely, and the pair-class map sends `surface` to the interactive-fill row.
+The row and the explanation now name all fifteen, and two cases derive their
+members, the count word and the row's floor cells from `overlaySurfaces` and
+`contrastFloors`, so the next scrim surface cannot leave either behind. No
+token value, pair, floor or metric moves.
 
 ## How to use a plan
 

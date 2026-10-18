@@ -1289,6 +1289,14 @@ three roles were never the brighter tier. The three tiers are now in `textTiers`
 `selectedForeground` is documented as deliberately not a body tier (it is a
 secondary-strength tint; a selected row's title is `foreground`), and the total
 check reports it (plan 500)
+`[x]` Hold the accessibility floor table's modal scrim row to the contract —
+plan 395 added the raised action a status panel carries (`softAction`) to
+`overlaySurfaces` and updated §7, the catalogue and the README, but the §9 row
+still named fourteen surfaces and the explanation said "fifteen" while listing
+fourteen; the exact-row array never included the scrim row and the pair-class
+map sends `surface` to the interactive-fill row, so nothing read it. The row and
+the explanation now name all fifteen, and two cases derive their members, count
+word and floor cells from `overlaySurfaces` and `contrastFloors` (plan 501)
 
 ## Phase C — Tier 1–2 components
 
