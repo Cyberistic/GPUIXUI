@@ -21,6 +21,7 @@ import {
   getTheme,
   inactivePanelActionPairs,
   inactiveSoftPairs,
+  selectionFillInactivePairs,
   shippedThemes,
   textTiers,
   themeContrastFailures,
@@ -79,14 +80,27 @@ describe("the disabled action inside a status panel", () => {
         foreground === "disabledForeground" && background === "softAction",
     );
 
-    expect(failures).toHaveLength(1);
-    expect(failures[0]).toMatchObject({
-      foreground: "disabledForeground",
-      background: "softAction",
-      pairClass: "inactive",
-      floor: contrastFloors.default.inactive,
-      ratio: 1,
-    });
+    // The resting pair and the inverse-veil pair are different compositions of
+    // the same two roles, so both are reported.
+    expect(failures).toHaveLength(2);
+    expect(failures).toContainEqual(
+      expect.objectContaining({
+        foreground: "disabledForeground",
+        background: "softAction",
+        pairClass: "inactive",
+        floor: contrastFloors.default.inactive,
+        ratio: 1,
+      }),
+    );
+    expect(failures).toContainEqual(
+      expect.objectContaining({
+        foreground: "disabledForeground",
+        background: "softAction",
+        wash: "selectionOnFill",
+        pairClass: "inactive",
+        floor: contrastFloors.default.inactive,
+      }),
+    );
   });
 
   it("keeps the disabled label a step below the enabled one", () => {
@@ -139,21 +153,11 @@ describe("the disabled action inside a status panel", () => {
       "softAction",
     ]);
 
-    // Pins why the state fills stay out: at high contrast neither would pass the
-    // floor the resting pair clears, so publishing them would demand a palette
-    // change for a state a disabled control never reaches.
-    const high = getTheme("dark", "high");
-    const floor = contrastFloors.high.inactive;
-    (["softActionHover", "softActionActive"] as const).forEach((fill) => {
-      const ratio = contrastRatio(
-        high.colors.disabledForeground,
-        high.colors[fill],
-      );
-      expect(ratio, fill).toBeLessThan(floor);
-    });
-    expect(
-      contrastRatio(high.colors.disabledForeground, high.colors.softAction),
-    ).toBeGreaterThanOrEqual(floor);
+    // A disabled control never receives the pointer state, so neither the
+    // resting list nor the inverse-veil list may grow the hover or press fill.
+    expect(selectionFillInactivePairs).toEqual([
+      ["disabledForeground", "softAction", "inactive"],
+    ]);
   });
 
   it("keeps the ghost state covered by the panel surface pairs", () => {

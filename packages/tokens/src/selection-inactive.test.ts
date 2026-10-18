@@ -7,7 +7,8 @@
  * 3.430 / 4.357:1 in the two AAA sets — under the 3:1 / 4.5:1 `inactive` floor —
  * while all six `themeFailures` checks returned `[]`, because no pair painted the
  * composition. The list is `selectionInactivePairs`; the three values that moved
- * are `#545D6C`, `#444444` and `#B0B0B0`.
+ * are `#545D6C`, `#444444` and `#D0D0D0` (the last one again in plan 520, for the
+ * disabled panel action's inverse veil).
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -99,13 +100,23 @@ describe("the unavailable label under the selection wash", () => {
     const darkFailures = themeContrastFailures(dark).filter(
       ({ foreground }) => foreground === "disabledForeground",
     );
-    expect(darkFailures).toHaveLength(1);
-    expect(darkFailures[0]).toMatchObject({
-      background: "active",
-      wash: "selection",
-      pairClass: "inactive",
-      floor: 4.5,
-    });
+    expect(darkFailures).toHaveLength(2);
+    expect(darkFailures).toContainEqual(
+      expect.objectContaining({
+        background: "active",
+        wash: "selection",
+        pairClass: "inactive",
+        floor: 4.5,
+      }),
+    );
+    expect(darkFailures).toContainEqual(
+      expect.objectContaining({
+        background: "softAction",
+        wash: "selectionOnFill",
+        pairClass: "inactive",
+        floor: 4.5,
+      }),
+    );
     expect(washedRatio(dark, "active")).toBeCloseTo(4.357, 2);
   });
 

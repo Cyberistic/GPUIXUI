@@ -346,7 +346,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on `background`, `card`, `popover`, the `muted` panel and the four row washes it fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the primitive paints the role at `skeletonPulseOpacity` (0.6) for half of every cycle, so `skeletonPulsePairs` holds that dim frame to the same floor on the same surfaces and reports it with the fraction as `opacity`; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`: the fill is held to the perceivability floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step past the `accent` wash a selectable row hovers with (`selectionStepPairs`); the label is held on `selected`, the `hover`/`active` pointer washes and the `accent` wash; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on `background`, `card`, `popover`, the `muted` panel, the `hover`/`active` washes a link paints, the `accent`/`selected` fills a selectable row paints under it and the four soft status fills a link in a status panel sits on; `primary` is a fill and is never the colour of text |
-| disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text, on the `disabled` fill, `background`, `card`, `popover`, the `muted` panel, the `hover`/`active`/`accent`/`selected` washes, the four soft status fills, and through the composited `selection` wash on the same surfaces; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible. A filled action inside a tone-tinted status panel is the one surface where the canvas `disabled` fill is not a shape — it measures 1.0066:1 on XP light's `warningSoft` — so it keeps the resting `softAction` fill and paints `disabledForeground` (`inactivePanelActionPairs`), a step below the enabled `softActionForeground`; a disabled control does not step, and a ghost disabled action keeps no fill |
+| disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text, on the `disabled` fill, `background`, `card`, `popover`, the `muted` panel, the `hover`/`active`/`accent`/`selected` washes, the four soft status fills, and through the composited `selection` wash on the same surfaces; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible. A filled action inside a tone-tinted status panel is the one surface where the canvas `disabled` fill is not a shape — it measures 1.0066:1 on XP light's `warningSoft` — so it keeps the resting `softAction` fill and paints `disabledForeground` (`inactivePanelActionPairs`), a step below the enabled `softActionForeground`; because that fill is opaque, the label is also held through the inverse `selectionOnFill` veil (`selectionFillInactivePairs`); a disabled control does not step, and a ghost disabled action keeps no fill |
 | invalid | a `destructive` edge on the `input` fill a field paints and on the `background` canvas a transparent field paints, held to the essential-boundary floor (3:1, 4.5:1 at AAA); the message itself uses `destructiveText`, not the fill |
 | focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused, on `background`, `card`, `popover`, the `muted` panel, `accent`, the `hover`/`active`/`selected` washes, the four soft status fills and the `track` groove a slider's thumb is centred on (`ringTrackPairs`); an invalid control recolours it with `destructive` on the same surfaces except the canvas, which the invalid field edge already covers, while an invalid slider keeps the accent ring |
 | text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`, `foreground`, `softActionForeground` and `mutedForeground`), a card's own `cardForeground` beside its default `foreground` and a selected row's title (`foreground`) beside its inherited label, a status label (`xText`) on the same nine surfaces, and an unavailable label (`disabledForeground` on the thirteen surfaces `inactiveSurfaces` names), and the wash itself stays perceivable; content painted on an opaque filled surface — a filled action such as `softAction`, or a solid status chip — uses `selectionOnFill`, a neutral 15% veil, because the accent-tinted wash cannot be seen on those fills (1.000:1 on `primary` in six shipped palettes, and under 1.05:1 on a solid `success` or `info` chip); the veil is measured on each fill's resting value, and a filled control's `xHover`/`xActive` fills are outside its reach (60 of 360 labels miss the on-colour floor, worst 3.353:1, and no neutral alpha clears both floors at AAA light), so its chrome sets `userSelect: "none"`; that same property opts any other chrome out |
@@ -616,9 +616,19 @@ all six checks returned `[]`, and the AAA sets measured **3.430:1** (light,
 `selectionInactivePairs` holds `disabledForeground` through the wash on the same
 thirteen surfaces at the same floor, and three values move one designed step
 away from the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
-`#B0B0B0` — staying 1.455:1, 1.69:1 and 1.643:1 below secondary text at the
-tightest. The tightest washed pair is now **3.177:1** (Aero light
-`destructiveSoft`) and **4.722:1** at AAA (plan `510`).
+`#B0B0B0` — staying 1.301:1 (identity dark) and 1.168:1 (AAA dark) below
+secondary text at the tightest. The tightest washed pair is now **3.177:1**
+(Aero light `destructiveSoft`) and **4.722:1** at AAA (plan `510`).
+
+A disabled raised action keeps its `softAction` fill, so its label is content on
+an opaque surface and uses the inverse `selectionOnFill` veil rather than the
+accent wash. No pair measured that composition: identity dark measured
+**2.799:1** and high-contrast dark **3.304:1** through the veil, under the 3:1 /
+4.5:1 `inactive` floor, while all six checks returned `[]`.
+`selectionFillInactivePairs` publishes the one resting composition, and
+`disabledForeground` moves one designed step in the two sets that failed —
+identity dark `#A1A9B7` → `#B0B8C6` (3.317:1) and AAA dark `#B0B0B0` →
+`#D0D0D0` (4.645:1) — so every shipped set passes (plan `520`).
 
 The inactive label is not merely above its floor; it stays **below** the
 secondary text it sits beside. The same is true of a field's hint. Those three
@@ -632,8 +642,8 @@ comparison follows the pair lists. A theme that raises `disabledForeground` to
 body strength passes every floor and still makes an unavailable control look
 enabled; so does one that sets `popoverForeground` to `mutedForeground`, which
 renders every menu label at secondary strength. This is the check that reports
-both, and every shipped set clears it — 1.274:1, 1.349:1 and 1.440:1 at the
-tightest, with the three surface body roles also at 1.274:1.
+both, and every shipped set clears it — 1.274:1, 1.168:1, 1.440:1 and 1.542:1
+at the tightest, with the three surface body roles also at 1.274:1.
 `selectedForeground` is deliberately not a body tier: it is the
 secondary-strength tint an inherited label keeps inside a selected row, whose
 title is `foreground`.

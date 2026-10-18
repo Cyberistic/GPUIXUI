@@ -190,6 +190,7 @@ import {
   overlayWashPairs,
   ringSoftPairs,
   selectionFillPairs,
+  selectionFillInactivePairs,
   selectionFillWashPairs,
   selectionPairs,
   selectionSoftPairs,
@@ -274,6 +275,7 @@ const publishedPairLists: ReadonlyArray<
   ["selectionSoftPairs", selectionSoftPairs],
   ["selectionSoftWashPairs", selectionSoftWashPairs],
   ["selectionFillPairs", selectionFillPairs],
+  ["selectionFillInactivePairs", selectionFillInactivePairs],
   ["selectionFillWashPairs", selectionFillWashPairs],
   ["overlayWashPairs", overlayWashPairs],
   ["dialogSurfacePairs", dialogSurfacePairs],
@@ -586,6 +588,7 @@ describe("themeContrastFailures", () => {
     expect(selectionSoftPairs.length).toBe(16);
     expect(selectionSoftWashPairs.length).toBe(4);
     expect(selectionFillPairs).toHaveLength(8);
+    expect(selectionFillInactivePairs).toHaveLength(1);
     expect(selectionFillWashPairs).toHaveLength(8);
     expect(selectionFillWashPairs.map(([, fill]) => fill)).toEqual([
       "primary",

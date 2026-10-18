@@ -394,9 +394,11 @@ export const lightColors = {
  * a half-step further because its pulse paints the role at 60% for half of every
  * cycle (plan 393).
  * The filled-control hover and pressed steps lighten away from the canvas
- * (plan 097). `disabledForeground` is neutral 400 — one step dimmer than the
- * neutral-300 `mutedForeground` — because the lightest dark platform wash needs
- * it to clear the 3:1 `inactive` floor (plan 306). The hover wash is a designed
+ * (plan 097). `disabledForeground` is a half-step between neutral 400 and 300 —
+ * one designed step dimmer than the neutral-300 `mutedForeground` — because the
+ * lightest dark platform wash needs it to clear the 3:1 `inactive` floor
+ * (plan 306), and the inverse selection veil over the raised panel action needs
+ * it too (plan 520). The hover wash is a designed
  * step between the neutral-850 quiet panel and the neutral-800 press, so a menu
  * item or a sidebar row reacts to the pointer on the surface it paints on
  * (plan 309). The selected row is one designed step lighter than the `accent`
@@ -476,7 +478,7 @@ export const darkColors = {
   selected: "#402F94",
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
-  disabledForeground: palette.neutral[400],
+  disabledForeground: "#B0B8C6",
   skeleton: "#434C5A",
   track: palette.neutral[700],
   scrollbar: palette.neutral[700],
@@ -573,9 +575,10 @@ export const highContrastLightColors = {
  * `active` wash (plan 080) and the designed neutral press step (plan 318) — and
  * the selection wash is a darker tint so white text keeps the body floor on the
  * fills a row paints (plan 081). The skeleton is a perceivable step off the
- * pressed wash (plan 094). `disabledForeground` is a mid grey because the pressed
- * wash needs 4.5:1 for an inactive label (plan 306) and the selection wash over
- * it needs the same floor (plan 510). The accent and selected
+ * pressed wash (plan 094). `disabledForeground` is a light grey because the pressed
+ * wash needs 4.5:1 for an inactive label (plan 306), the selection wash over
+ * it needs the same floor (plan 510), and the inverse veil over the raised panel
+ * action needs it through that veil too (plan 520). The accent and selected
  * fills are a lighter iris, so a selected row is perceivable on the AAA dark
  * quiet panel and popover (plan 309); `selected` sits on the accent's hover step
  * so the selection is also a step past the row's hover wash (plan 381). The
@@ -657,7 +660,7 @@ export const highContrastDarkColors = {
   selected: "#33257A",
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
-  disabledForeground: "#B0B0B0",
+  disabledForeground: "#D0D0D0",
   skeleton: "#565656",
   track: "#414141",
   scrollbar: "#8A8A8A",

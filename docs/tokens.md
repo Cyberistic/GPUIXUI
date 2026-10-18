@@ -258,7 +258,7 @@ A runnable example lives in
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
-| `disabledForeground` | `#545D6C` | `#A1A9B7` | disabled text, held to the `inactive` floor |
+| `disabledForeground` | `#545D6C` | `#B0B8C6` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
 | `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
@@ -548,7 +548,7 @@ carries, so it cannot claim another.
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
-| `disabledForeground` | `#444444` | `#B0B0B0` | disabled text, held to the `inactive` floor |
+| `disabledForeground` | `#444444` | `#D0D0D0` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
 | `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
@@ -1321,7 +1321,9 @@ both modes: `selectionFillPairs` holds one text pair per fill at **4.827:1** at
 the tightest (macOS dark, `accentForeground` on `accent`), above the 4.5:1 the
 on-colour role already has, and `selectionFillWashPairs` holds the veil itself at
 **1.060:1** at the tightest (identity dark high, `selectionOnFill` on `info`),
-above the 1.05:1 perceivability floor.
+above the 1.05:1 perceivability floor. The disabled state of a raised action
+keeps that resting `softAction` fill and paints `disabledForeground`, so
+`selectionFillInactivePairs` holds that one composition through the same veil.
 
 The veil is measured on each fill's **resting** value. A filled control steps to
 `xHover`/`xActive` under the pointer, and its label is chrome: at the shipped 15%
@@ -1732,14 +1734,17 @@ measured **2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on t
 other default light sets, and the AAA sets **3.430:1** (light,
 `destructiveSoft`) and **4.357:1** (dark, `active`), against 3:1 and 4.5:1.
 `selectionInactivePairs` holds `disabledForeground` through the wash on the same
-thirteen `inactiveSurfaces` at the same floor. Three values move one designed
-step away from the panel: identity light `#6E7787` → `#545D6C` (neutral 600),
-AAA light `#5A5A5A` → `#444444` and AAA dark `#A9A9A9` → `#B0B0B0`; every
-high-contrast platform variant inherits the AAA palettes, and XP and Aero light
-already passed. The values stay below `mutedForeground` by 1.455:1, 1.69:1 and
-1.643:1 at the tightest, so an unavailable label is still distinguishable from
-secondary text; the tightest washed pair is now **3.177:1** (Aero light
-`destructiveSoft`) and **4.722:1** at AAA.
+thirteen `inactiveSurfaces` at the same floor. Three values moved one designed
+step away from the panel in plan `510`: identity light `#6E7787` → `#545D6C`
+(neutral 600), AAA light `#5A5A5A` → `#444444` and AAA dark `#A9A9A9` →
+`#B0B0B0`; every high-contrast platform variant inherits the AAA palettes, and
+XP and Aero light already passed. Plan `520` moves AAA dark once more
+(`#B0B0B0` → `#D0D0D0`) and identity dark from `#A1A9B7` → `#B0B8C6`, for the
+disabled raised action's inverse veil. The values stay below `mutedForeground` by
+1.301:1 (identity dark) and 1.168:1 (AAA dark) at the tightest, and 1.542:1
+below `softActionForeground` (identity dark), so an unavailable label is still
+distinguishable from secondary text; the tightest washed pair is now
+**3.177:1** (Aero light `destructiveSoft`) and **4.722:1** at AAA.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
@@ -1961,10 +1966,10 @@ four soft fills). Every shipped set clears the step; the tightest are **1.274:1*
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
 `card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
 light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
-high-contrast light on `muted`), **1.333:1** (`disabledForeground` vs
-`mutedForeground`, Windows light on `background`), **1.440:1**
-(`placeholder` vs `mutedForeground`, Windows dark on `input`) and **2.156:1**
-(`disabledForeground` vs `softActionForeground`, high-contrast light on
+high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
+`mutedForeground`, high-contrast dark on `active`), **1.440:1**
+(`placeholder` vs `mutedForeground`, Windows dark on `input`) and **1.542:1**
+(`disabledForeground` vs `softActionForeground`, identity dark on
 `successSoft`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
@@ -2567,9 +2572,19 @@ default light sets, and the AAA sets 3.430:1 and 4.357:1, while every check
 returned `[]`. `selectionInactivePairs` adds a washed pair on each of the
 thirteen `inactiveSurfaces`, and three values move one designed step away from
 the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
-`#B0B0B0` — while staying 1.455 / 1.69 / 1.643:1 below `mutedForeground` at the
-tightest. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA dark), no
-`contrastPairs` entry moves, and `contrastPairs` stays **394**.
+`#B0B0B0` — while staying 1.455:1 below `mutedForeground` at the tightest when
+that plan shipped. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA
+dark), no `contrastPairs` entry moves, and `contrastPairs` stays **394**.
+Plan `520` holds the disabled action inside a tone-tinted panel through the
+inverse selection veil. Plan `514` gave the raised action a resting
+`disabledForeground` label on `softAction` and plan `504` routes content on an
+opaque fill through `selectionOnFill`, but no pair measured the disabled label
+through that veil: identity dark measured **2.799:1** and high-contrast dark
+**3.304:1** there, under the 3:1 / 4.5:1 `inactive` floor, while all six checks
+returned `[]`. `selectionFillInactivePairs` publishes the one resting
+composition, identity dark `disabledForeground` moves `#A1A9B7` → `#B0B8C6`
+(3.317:1) and AAA dark `#B0B0B0` → `#D0D0D0` (4.645:1), and every shipped set
+passes; `contrastPairs` stays **394**.
 Plan `512` holds the panel action's label through the same wash. Plan `394` gave
 a ghost action inside a tone-tinted panel its own role, `softActionForeground`,
 but `selectionSoftPairs` still measured the body `foreground` the description
@@ -2822,8 +2837,9 @@ move no colour.
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs`,
-`selectionFillPairs`, `selectionFillWashPairs`, `softPanelTextPairs`,
-`selectionInactivePairs` and `overlayWashPairs` measure the
+`selectionFillPairs`, `selectionFillWashPairs`,
+`selectionFillInactivePairs`, `softPanelTextPairs`, `selectionInactivePairs` and
+`overlayWashPairs` measure the
 painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
 `statusFillPairs` the solid status fill on the same chip surfaces and `disabled`

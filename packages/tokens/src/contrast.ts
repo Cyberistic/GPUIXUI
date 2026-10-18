@@ -1410,7 +1410,10 @@ export const selectionWashPairs: readonly ContrastPair[] =
  * neutral alpha clears both that floor and the 1.05:1 veil floor on the
  * high-contrast light set. A state-fill pair would promise a floor the AAA
  * palette cannot meet, so a control opts its label out with `userSelect: "none"`
- * and the resting pairs cover the content that keeps its fill.
+ * and the resting pairs cover the content that keeps its fill. A disabled panel
+ * action keeps this resting `softAction` fill and paints `disabledForeground`,
+ * so {@link selectionFillInactivePairs} measures that label through the same
+ * veil.
  */
 export const selectionFillRoles = [
   ...filledControlFamilies,
@@ -1432,6 +1435,27 @@ export const selectionFillPairs: readonly ContrastPair[] =
   selectionFillRoles.map(
     (fill): ContrastPair => [`${fill}Foreground`, fill, "secondary"],
   );
+
+/**
+ * The disabled action inside a tone-tinted status panel, through the inverse
+ * selection veil. Plan `514` gave the raised action a disabled state that keeps
+ * the resting `softAction` fill — the canvas `disabled` fill is not a panel
+ * shape (1.0066:1 on XP light's `warningSoft`) — and paints
+ * `disabledForeground`. Plan `504` routes content on an opaque fill through
+ * `selectionOnFill`, and {@link selectionFillPairs} measures that fill's
+ * **enabled** foreground; the disabled label had no pair. The composition is
+ * not hypothetical: identity dark measured **2.799:1** and high-contrast dark
+ * **3.304:1** through the veil, under the 3:1 / 4.5:1 `inactive` floor, while
+ * every check returned `[]`.
+ *
+ * The accent-tinted `selection` wash is not the right wash here: `softAction` is
+ * an opaque fill, and plan `513`'s `selectionFillPairs` rationale reserves the
+ * inverse veil for exactly that. The disabled state does not step, so the
+ * `softActionHover`/`softActionActive` fills are deliberately outside this list.
+ */
+export const selectionFillInactivePairs: readonly ContrastPair[] = [
+  ["disabledForeground", "softAction", "inactive"],
+];
 
 /**
  * The text roles a soft status panel carries, through the selection wash: the
@@ -1720,6 +1744,11 @@ const elevationFailures = (
  *   painted on (`destructive` is already a family) and the status panel's
  *   `softAction`. The list is `selectionFillRoles`, so a fifth tone joins one
  *   place.
+ * - `selectionFillInactivePairs` — the disabled action inside a tone-tinted
+ *   status panel, whose resting `softAction` fill carries `disabledForeground`
+ *   through the same inverse veil. Identity dark measured **2.799:1** and
+ *   high-contrast dark **3.304:1** there, under the inactive floor, while every
+ *   other check returned `[]`.
  * - `skeletonPulsePairs` — the loading pulse's dim frame, the `skeleton` role
  *   composited at `skeletonPulseOpacity` over every surface a placeholder sits
  *   on; a failure names the role and the fraction.
@@ -1790,6 +1819,12 @@ export function themeContrastFailures(
     ),
     ...textOverWashFailures(
       selectionFillPairs,
+      "selectionOnFill",
+      theme,
+      floors,
+    ),
+    ...textOverWashFailures(
+      selectionFillInactivePairs,
       "selectionOnFill",
       theme,
       floors,

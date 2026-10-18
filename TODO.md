@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 184/246
+`[x]` `[███████░░░]` 185/247
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1467,6 +1467,14 @@ Alert or Badge with the resting `softAction` fill and `disabledForeground`, not
 the canvas `disabled` fill (1.0066:1 on XP light's `warningSoft`) and not a
 pointer step; a ghost disabled action keeps no fill. The resting pair and the
 enabled/disabled step ship in plan 514 (owner: `components`)
+`[x]` Hold the disabled panel action through the inverse selection veil —
+`inactivePanelActionPairs` measures its resting label and `selectionFillPairs`
+the enabled one, but no pair measured `disabledForeground` through the
+`selectionOnFill` veil over `softAction`; identity dark measured **2.799:1** and
+AAA dark **3.304:1** there, under the inactive floor, while every check returned
+`[]`. `selectionFillInactivePairs` publishes the composition, the two dark
+`disabledForeground` values move one designed step (`#B0B8C6`, `#D0D0D0`), and
+every shipped set passes (plan 520)
 
 ## Phase C — Tier 1–2 components
 

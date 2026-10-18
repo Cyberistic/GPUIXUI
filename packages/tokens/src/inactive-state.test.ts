@@ -51,9 +51,9 @@ describe("inactive state", () => {
       "inactive",
     ]);
     expect(lightTheme.colors.disabledForeground).toBe("#545D6C");
-    expect(darkTheme.colors.disabledForeground).toBe("#A1A9B7");
+    expect(darkTheme.colors.disabledForeground).toBe("#B0B8C6");
     expect(highContrastLightTheme.colors.disabledForeground).toBe("#444444");
-    expect(highContrastDarkTheme.colors.disabledForeground).toBe("#B0B0B0");
+    expect(highContrastDarkTheme.colors.disabledForeground).toBe("#D0D0D0");
   });
 
   it("reports the pre-fix inactive label through the public checker", () => {

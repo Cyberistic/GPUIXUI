@@ -43,6 +43,7 @@ const appliedLists = [
   "selectionSoftPairs",
   "selectionSoftWashPairs",
   "selectionFillPairs",
+  "selectionFillInactivePairs",
   "selectionFillWashPairs",
   "skeletonPulsePairs",
   "overlayWashPairs",

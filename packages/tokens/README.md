@@ -532,8 +532,13 @@ a disabled control paints its `border` edge, measured on `disabled` and on the
 same thirteen surfaces, because `selectionColor` inherits into it: the previous
 light `#6E7787` measured **2.586:1** on Windows light's `selected` fill and the
 AAA sets 3.43:1 / 4.36:1 while every check returned `[]`, so `#545D6C`,
-`#444444` and `#B0B0B0` ship and the tightest washed pair is **3.177:1** (Aero
-light `destructiveSoft`; 4.722:1 at AAA) (plan 510).
+`#444444` and `#D0D0D0` ship and the tightest washed pair is **3.177:1** (Aero
+light `destructiveSoft`; 4.722:1 at AAA) (plan 510). A disabled raised action
+inside a tone-tinted panel keeps its `softAction` fill, so its label is held
+through the inverse `selectionOnFill` veil too (`selectionFillInactivePairs`):
+identity dark measured **2.799:1** and AAA dark **3.304:1** there, so
+`disabledForeground` moves to `#B0B8C6` and `#D0D0D0` respectively (3.317:1 and
+4.645:1) (plan 520).
 A runnable example
 lives in [`src/contrast.example.ts`](./src/contrast.example.ts).
 
@@ -637,7 +642,8 @@ is a neutral 15% veil.
 `selectionFillPairs` and `selectionFillWashPairs` hold every opaque fill's
 (`primary`, `secondary`, `destructive`, `accent`, `info`, `success`, `warning`,
 `softAction`, indexed by `selectionFillRoles`) foreground and the veil itself to
-their floors. The veil is measured on each fill's resting value: a filled
+their floors; `selectionFillInactivePairs` holds the disabled panel action's
+`disabledForeground` through the same veil on its resting `softAction` fill. The veil is measured on each fill's resting value: a filled
 control steps to `xHover`/`xActive` under the pointer, where the 15% veil leaves
 **60 of 360** filled-family label pairs under the on-colour floor (worst
 **3.353:1**, macOS dark `accentActive`) and no neutral alpha clears both floors
