@@ -199,6 +199,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [501](./501-floor-table-scrim-row.md) | The accessibility floor table's modal scrim row | F | 099, 359, 375, 395, 351, 352, 354, 398, 500 | done |
 | [502](./502-interaction-direction.md) | The interaction ladder's direction in the total check | F | 097, 327, 342, 357, 381, 383, 387, 388, 394, 398 | done |
 | [503](./503-track-row-washes.md) | The value indicator's groove on the row washes and status panels | F | 347, 094, 322, 300, 309, 366, 381, 388 | done |
+| [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1980,6 +1981,35 @@ passes `themeFailures` and the four mark pairs, so no other role moves and no
 floor changes; `track-contrast.test.ts` states the erased-groove regressions and
 both docs pages, the README and the ledger derive the new surface list and the
 tightest figures from the contract.
+
+Plan `504` closes the fill family the selection-veil contract never reached.
+Plan `344` shipped `selectionOnFill` for content on a filled action and plan
+`382` derived both fill lists from `filledControlFamilies` — the four
+**interactive** families. Two documented opaque fills are outside that index: a
+solid status chip, whose `Solid fill` column and `statusSolidStyles` example
+paint a label a reader can drag over (plan `399` made the fill a surface), and
+`softAction`, which is literally the action a tone-tinted panel carries (plans
+`394`/`397`) and was missing from the list its own documentation describes. The
+accent-tinted wash has no pair on any of them, and on fourteen shipped
+compositions it is not perceivable: identity light `success` **1.0456:1**,
+identity dark `success` 1.0240 and `info` 1.0274, macOS light `success`
+1.0259, Linux light `success` 1.0266 and `info` 1.0474, Windows light and
+Windows 7 light `info` 1.0109 / 1.0108, and every high-contrast dark set on
+`softAction` 1.0468 — under the 1.05:1 floor, so selecting a status chip's
+label or a Retry action shows no highlight. `selectionFillRoles` is the one
+index — the four families, the three solid status chips that are not already an
+action fill, and `softAction` — and both lists derive from it, so a fifth tone
+or a new panel action joins one place. The AAA dark `softAction` is the one
+value that moves (`#3A414D` → `#343B47`): a 15% white veil over the old fill left
+its white label at **6.623:1**, under the AAA 7:1 floor, and a weaker veil stops
+being perceivable on `primary` (1.048:1 at 10%), so the fill takes one darker
+step instead — the label now measures **7.165:1** through the veil and the raised
+action 1.071:1 on every AAA soft tint, and the accent wash over it becomes
+perceivable. Every other value holds: the tightest veil is **1.060:1**
+(high-contrast dark, `info`) and the tightest text **4.827:1** (macOS dark,
+`accent`), and the solid-chip example now applies the fill selector. The
+eleven-composition regression list, the public-checker cases and the docs guards
+live in `selection-on-fill.test.ts`, `docs.test.ts` and `status-solid.test.ts`.
 
 ## How to use a plan
 
