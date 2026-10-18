@@ -2,11 +2,10 @@
  * The month grid behind DatePicker: pure `DateTime` arithmetic, no `Date`, no
  * `Intl`, no locale lookup.
  *
- * A grid is always six rows of seven cells so the popover does not change height
- * between a short February and a long month. Only days that belong to the month
- * are `Some`; the leading and trailing blanks are `None` and render as empty
- * boxes, because a grid that also shows the adjacent month is a different
- * component with different selection rules.
+ * A grid is always six rows of seven real days so the popover does not change
+ * height between a short February and a long month. Leading and trailing cells
+ * belong to the adjacent months and carry `inMonth: false`; the calendar paints
+ * them muted and lets them be chosen, so no cell is dead.
  *
  * The strings the grid paints — month names, weekday headings, the unavailable
  * suffix and the three control names — are a typed label set with English
@@ -154,25 +153,33 @@ export const parseIsoDay = (value: string): Option.Option<DateTime.Utc> =>
     Option.map((parsed) => DateTime.startOf("day")(parsed)),
   );
 
+/** One grid cell: a real day, and whether it belongs to the viewed month. */
+export interface CalendarCell {
+  readonly day: DateTime.Utc;
+  readonly inMonth: boolean;
+}
+
 /**
- * Six weeks of seven cells for `month`. `Some` is a day in the month; `None` is a
- * blank cell before the first or after the last day.
+ * Six weeks of seven real days for `month`. The leading and trailing days
+ * belong to the adjacent months and carry `inMonth: false`.
  */
 export const monthGrid = (
   month: DateTime.Utc,
   weekStartsOn: WeekStart,
-): ReadonlyArray<ReadonlyArray<Option.Option<DateTime.Utc>>> => {
+): ReadonlyArray<ReadonlyArray<CalendarCell>> => {
   const start = startOfMonth(month);
   const monthParts = DateTime.toPartsUtc(start);
   const offset = (monthParts.weekDay - weekStartsOn + 7) % 7;
   const firstCell = DateTime.add({ days: -offset })(start);
 
-  const cell = (index: number): Option.Option<DateTime.Utc> => {
+  const cell = (index: number): CalendarCell => {
     const day = DateTime.add({ days: index })(firstCell);
     const parts = DateTime.toPartsUtc(day);
-    return parts.year === monthParts.year && parts.month === monthParts.month
-      ? Option.some(day)
-      : Option.none();
+    return {
+      day,
+      inMonth:
+        parts.year === monthParts.year && parts.month === monthParts.month,
+    };
   };
 
   return Arr.map(Arr.range(0, 5), (week) =>

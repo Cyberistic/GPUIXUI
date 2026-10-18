@@ -294,6 +294,10 @@ retired once both branches are one
       create row ungrouped; 6 logic + 5 native tests (Combobox 33, unit 389,
       behaviour 616), four mutation proofs; docs, example and `COMPONENTS.md`
       synced
+    - [x] Date picker adjacent-month days — plan 396: `monthGrid` returns 42 real
+      days, adjacent days are muted, selectable and bounds-aware, so the grid has
+      no dead cells; 2 pure + 3 native tests, both-direction proof (unit 390,
+      behaviour 619); docs, inventory and `COMPONENTS.md` synced
     - [x] Disabled means inert — plan 394: measured five leaks (a disabled
       Button/IconButton kept its hover/press fill, InlineEdit painted a ring and
       a hover with `disabled` + `autoFocus`, `CollapsibleTrigger` had no

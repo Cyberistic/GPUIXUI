@@ -17,8 +17,8 @@
  * are not the component's value.
  *
  * Known scope, recorded in the docs: display labels default to English and are
- * the caller's (`labels`), never a locale lookup; no adjacent-month days in the
- * grid, and no time: a time of day is the separate TimePicker.
+ * the caller's (`labels`), never a locale lookup; no time of day is in this
+ * control — that is the separate TimePicker.
  */
 
 import type { EventPayload, PublicInstance } from "@gpuix/react";
@@ -594,68 +594,61 @@ export const DatePickerCalendar = ({
             role="row"
             style={{ display: "flex", flexDirection: "row" }}
           >
-            {Arr.map(week, (cell, dayIndex) =>
-              Option.match(cell, {
-                onNone: () => (
-                  <div key={dayIndex} style={{ width: CELL, height: CELL }} />
-                ),
-                onSome: (day) => {
-                  const iso = formatIsoDay(day);
-                  const available = isAvailable(day, bounds);
-                  const isSelected = Option.contains(selectedIso, iso);
-                  const isToday = isSameDay(day, todayDay);
-                  return (
-                    <div
-                      key={iso}
-                      role="gridcell"
-                      aria-label={
-                        available
-                          ? formatDayLabel(day, labels)
-                          : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
-                      }
-                      aria-selected={isSelected}
-                      tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
-                      ref={attachCell(iso)}
-                      testId={`date-day-${iso}`}
-                      onClick={available ? () => choose(day) : undefined}
-                      onFocus={() => setActive(Option.some(day))}
-                      style={{
-                        ...textStyle(theme, "caption"),
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: CELL,
-                        height: CELL,
-                        borderRadius: theme.radius.sm,
-                        backgroundColor: isSelected
-                          ? theme.colors.primary
-                          : undefined,
-                        color: isSelected
-                          ? theme.colors.primaryForeground
-                          : available
-                            ? theme.colors.foreground
-                            : theme.colors.mutedForeground,
-                        borderWidth: isToday
-                          ? theme.borderWidth.thin
-                          : undefined,
-                        borderColor: isToday ? theme.colors.primary : undefined,
-                        cursor: available ? "pointer" : "not-allowed",
-                        hover:
-                          isSelected || !available
-                            ? undefined
-                            : { backgroundColor: theme.colors.hover },
-                        ...(iso ===
-                        formatIsoDay(Option.getOrElse(active, () => tabbable))
-                          ? focusRing(theme)
-                          : {}),
-                      }}
-                    >
-                      {DateTime.toPartsUtc(day).day}
-                    </div>
-                  );
-                },
-              }),
-            )}
+            {Arr.map(week, ({ day, inMonth }) => {
+              const iso = formatIsoDay(day);
+              const available = isAvailable(day, bounds);
+              const isSelected = Option.contains(selectedIso, iso);
+              const isToday = isSameDay(day, todayDay);
+              return (
+                <div
+                  key={iso}
+                  role="gridcell"
+                  aria-label={
+                    available
+                      ? formatDayLabel(day, labels)
+                      : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
+                  }
+                  aria-selected={isSelected}
+                  tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
+                  ref={attachCell(iso)}
+                  testId={`date-day-${iso}`}
+                  onClick={available ? () => choose(day) : undefined}
+                  onFocus={() => setActive(Option.some(day))}
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: theme.radius.sm,
+                    backgroundColor: isSelected
+                      ? theme.colors.primary
+                      : undefined,
+                    // The adjacent days are real choices, painted muted rather
+                    // than disabled: the grid has no dead cells.
+                    color: isSelected
+                      ? theme.colors.primaryForeground
+                      : available && inMonth
+                        ? theme.colors.foreground
+                        : theme.colors.mutedForeground,
+                    borderWidth: isToday ? theme.borderWidth.thin : undefined,
+                    borderColor: isToday ? theme.colors.primary : undefined,
+                    cursor: available ? "pointer" : "not-allowed",
+                    hover:
+                      isSelected || !available
+                        ? undefined
+                        : { backgroundColor: theme.colors.hover },
+                    ...(iso ===
+                    formatIsoDay(Option.getOrElse(active, () => tabbable))
+                      ? focusRing(theme)
+                      : {}),
+                  }}
+                >
+                  {DateTime.toPartsUtc(day).day}
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
@@ -702,7 +695,6 @@ export const datePickerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "display labels default to English: pass `labels` from your own catalogue; there is no locale lookup, and the shape (Month YYYY / D Month YYYY) is fixed",
-    "the grid shows only the current month; adjacent-month days are blank",
     "time is a separate TimePicker: this control owns one day only",
     "0.10.0 has no aria-current, so today is marked by a border only",
     "0.10.0 has no aria-disabled: an unavailable day leaves the tab order and its accessible name ends in ', unavailable'",

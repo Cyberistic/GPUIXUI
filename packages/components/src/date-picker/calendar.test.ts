@@ -33,6 +33,7 @@ import {
   startOfMonth,
   unbounded,
   weekdayLabels,
+  type CalendarCell,
 } from "./calendar.js";
 
 /** A parsed day, or a broken fixture. */
@@ -41,47 +42,60 @@ const day = (iso: string): DateTime.Utc =>
     throw new Error(`fixture: ${iso} is not a day`);
   });
 
-const days = (
-  grid: ReadonlyArray<ReadonlyArray<Option.Option<DateTime.Utc>>>,
-): ReadonlyArray<DateTime.Utc> => Arr.getSomes(Arr.flatten(grid));
+const cells = (
+  grid: ReadonlyArray<ReadonlyArray<CalendarCell>>,
+): ReadonlyArray<CalendarCell> => Arr.flatten(grid);
 
-const leadingBlanks = (
-  grid: ReadonlyArray<ReadonlyArray<Option.Option<DateTime.Utc>>>,
+const days = (
+  grid: ReadonlyArray<ReadonlyArray<CalendarCell>>,
+): ReadonlyArray<DateTime.Utc> => Arr.map(cells(grid), (cell) => cell.day);
+
+const monthDays = (
+  grid: ReadonlyArray<ReadonlyArray<CalendarCell>>,
+): ReadonlyArray<DateTime.Utc> =>
+  Arr.map(
+    Arr.filter(cells(grid), (cell) => cell.inMonth),
+    (cell) => cell.day,
+  );
+
+const leadingOutside = (
+  grid: ReadonlyArray<ReadonlyArray<CalendarCell>>,
 ): number => {
   const firstWeek = Arr.head(grid);
   if (Option.isNone(firstWeek)) return 0;
-  return Arr.findFirstIndex(firstWeek.value, (cell) =>
-    Option.isSome(cell),
-  ).pipe(Option.getOrElse(() => 7));
+  return Arr.findFirstIndex(firstWeek.value, (cell) => cell.inMonth).pipe(
+    Option.getOrElse(() => 7),
+  );
 };
 
 describe("monthGrid", () => {
-  it("renders a leap February with 29 days and a common one with 28", () => {
-    expect(days(monthGrid(day("2024-02-10"), 1))).toHaveLength(29);
-    expect(days(monthGrid(day("2025-02-10"), 1))).toHaveLength(28);
+  it("marks a leap February with 29 days and a common one with 28", () => {
+    expect(monthDays(monthGrid(day("2024-02-10"), 1))).toHaveLength(29);
+    expect(monthDays(monthGrid(day("2025-02-10"), 1))).toHaveLength(28);
   });
 
   it("follows the week start when the month begins mid-week", () => {
     // 1 October 2026 is a Thursday.
-    expect(leadingBlanks(monthGrid(day("2026-10-15"), 1))).toBe(3);
-    expect(leadingBlanks(monthGrid(day("2026-10-15"), 0))).toBe(4);
+    expect(leadingOutside(monthGrid(day("2026-10-15"), 1))).toBe(3);
+    expect(leadingOutside(monthGrid(day("2026-10-15"), 0))).toBe(4);
   });
 
   it("starts at the first cell when the month begins on the week start", () => {
     // 1 June 2026 is a Monday.
-    expect(leadingBlanks(monthGrid(day("2026-06-15"), 1))).toBe(0);
+    expect(leadingOutside(monthGrid(day("2026-06-15"), 1))).toBe(0);
   });
 
-  it("always has six rows of seven cells", () => {
+  it("always has six rows of seven real days", () => {
     const grid = monthGrid(day("2026-02-01"), 1);
     expect(grid).toHaveLength(6);
     expect(Arr.every(grid, (week) => week.length === 7)).toBe(true);
-    expect(days(grid)).toHaveLength(28);
+    expect(days(grid)).toHaveLength(42);
+    expect(monthDays(grid)).toHaveLength(28);
   });
 
-  it("contains every day of the month exactly once and nothing else", () => {
+  it("contains every day of the month exactly once and marks the rest adjacent", () => {
     const grid = monthGrid(day("2026-08-01"), 0);
-    const rendered = Arr.map(days(grid), formatIsoDay);
+    const rendered = Arr.map(monthDays(grid), formatIsoDay);
 
     expect(rendered).toHaveLength(31);
     expect(Arr.dedupe(rendered)).toHaveLength(31);
@@ -90,6 +104,26 @@ describe("monthGrid", () => {
     );
     expect(rendered[0]).toBe("2026-08-01");
     expect(Arr.last(rendered)).toEqual(Option.some("2026-08-31"));
+  });
+
+  it("draws real neighbouring days on either side of the month", () => {
+    // August 2026 begins on a Saturday, so a Sunday-first week opens on 26 July
+    // and the sixth week runs into September.
+    const grid = monthGrid(day("2026-08-15"), 0);
+    const all = days(grid);
+
+    expect(Option.map(Arr.head(all), formatIsoDay)).toEqual(
+      Option.some("2026-07-26"),
+    );
+    expect(Option.map(Arr.last(all), formatIsoDay)).toEqual(
+      Option.some("2026-09-05"),
+    );
+    const differences = Arr.map(
+      Arr.zip(all, Arr.drop(all, 1)),
+      ([previous, next]) =>
+        DateTime.toEpochMillis(next) - DateTime.toEpochMillis(previous),
+    );
+    expect(Arr.every(differences, (value) => value === 86_400_000)).toBe(true);
   });
 });
 

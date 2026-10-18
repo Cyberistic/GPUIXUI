@@ -52,9 +52,9 @@ depend on how it is displayed. `undefined` means uncontrolled.
 The root owns the value and the bounds because selection and clamping need them;
 the calendar owns only the view month and the focused day, which reset when the
 surface opens. The grid is always six rows, so the popover does not change height
-between a 28-day February and a 31-day month. Days from the adjacent months are
-blank cells, not second-month buttons: a grid with two months is a different
-component with different selection rules.
+between a 28-day February and a 31-day month. The leading and trailing cells are
+the **real days of the adjacent months**, painted in muted text; choosing one
+selects that day and closes, so the grid has no dead cells.
 
 Browsing months changes the **view**, not the value. Only Enter, Space or a click
 selects.
@@ -78,7 +78,8 @@ is ignored, exactly like a malformed `value`.
 </DatePicker>;
 ```
 
-- Days outside the bounds are muted, leave the tab order and do not activate.
+- Days outside the bounds (including an adjacent-month day) are muted, leave the
+  tab order and do not activate.
 - Arrow, Home/End and PageUp/PageDown movement **clamps** to the bounds instead
   of stepping onto an unavailable day.
 - The previous/next month controls disable at the bound's month, so a visible
@@ -153,9 +154,10 @@ control names and the `Clear` text. The defaults are English.
 | `Tab` | leaves the popover — it is not a trap |
 
 One cell is the tab stop (the selected day, else today clamped to `min`/`max`); the
-arrow keys move real focus, so the highlight and the focus are the same cell. A
-no-value open therefore lands on today — or on the first selectable day when
-today is out of range — never on the month's first day.
+arrow keys move real focus, so the highlight and the focus are the same cell. An
+adjacent-month day is a real cell but never adds a second tab stop. A no-value
+open therefore lands on today — or on the first selectable day when today is out
+of range — never on the month's first day.
 
 ## API
 
@@ -194,7 +196,7 @@ focus ring is `colors.ring`.
   month names, weekday headings, unavailable suffix and the three control names.
   There is no locale lookup and no `Intl` call, and the display *shape* is fixed
   (see Labels).
-- **No adjacent-month days** and no range selection in v1.
+- **No range selection** in v1.
 - **No time of day.** A day and a time are separate values; compose **Time
   picker** beside this control when a form needs both. Folding them together
   would force a timestamp on every consumer that only needs one half.
@@ -205,23 +207,25 @@ focus ring is `colors.ring`.
 
 ## Verification
 
-`src/date-picker/calendar.test.ts` (22 tests) covers leap February, a mid-week
+`src/date-picker/calendar.test.ts` (24 tests) covers leap February, a mid-week
 month start under both week starts, a month start on the week start, the 42-cell
-shape, uniqueness and month membership, year-crossing month arithmetic, the last
-day of a month without `Date`, day identity, labels, ISO parsing (including
-`2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits,
-`min` after `max`, the English defaults, a partial label merge, caller month/day
-names and a rotated caller weekday list.
+shape of real days, adjacent-day neighbours and continuity, uniqueness and month
+membership, year-crossing month arithmetic, the last day of a month without
+`Date`, day identity, labels, ISO parsing (including `2026-02-30`), inclusive
+bounds, malformed bounds, clamping, month browse limits, `min` after `max`, the
+English defaults, a partial label merge, caller month/day names and a rotated
+caller weekday list.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (20 tests): open + day focus,
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (23 tests): open + day focus,
 a no-value open on today, a no-value open clamped to `min`, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
-next-month control, both themes, a disabled trigger, an unavailable day, arrow
-clamping, the month-control bound, the clear action and its visibility rules, the
-trigger's own placeholder/name, an empty surface when the calendar part is not
-composed, the caller's labels in the trigger/header/controls, and a partial label
-object keeping the remaining defaults.
+next-month control, choosing an adjacent-month day, the muted adjacent paint,
+an out-of-bounds adjacent day, both themes, a disabled trigger, an unavailable
+day, arrow clamping, the month-control bound, the clear action and its visibility
+rules, the trigger's own placeholder/name, an empty surface when the calendar part
+is not composed, the caller's labels in the trigger/header/controls, and a
+partial label object keeping the remaining defaults.
 
 ```sh
 nub run --filter @gpuixui/components test

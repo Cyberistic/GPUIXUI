@@ -212,6 +212,73 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
+  it("selects a day from an adjacent month in the grid", () => {
+    // Guards the blank-cell grid: before outside days existed, 31 October was
+    // not rendered in November and this choice was impossible.
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" onValueChange={onValueChange} />,
+    );
+    open(picker);
+    clickCentreOf(picker, "date-next");
+
+    expect(picker.renderer.findByTestId("date-day-2026-10-31")).toBeDefined();
+    clickCentreOf(picker, "date-day-2026-10-31");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("2026-10-31");
+    expect(picker.renderer.getAllText()).toContain("31 October 2026");
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("paints adjacent days muted and in-month days in the foreground", () => {
+    // Guards the grid's two kinds of day: adjacent days are real choices and
+    // must not look like disabled or missing cells.
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" />,
+      "dark",
+    );
+    open(picker);
+
+    expect(
+      picker.renderer.findByTestId("date-day-2026-09-28")?.style.color,
+    ).toBe(darkTheme.colors.mutedForeground);
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-18")?.style.color,
+    ).toBe(darkTheme.colors.foreground);
+
+    picker.unmount();
+  });
+
+  it("refuses an out-of-bounds adjacent day and announces it", () => {
+    // Guards the bounds crossing into the adjacent month: the extra days must
+    // obey min/max exactly like the month's own days.
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker
+        defaultValue="2026-11-15"
+        min="2026-11-01"
+        onValueChange={onValueChange}
+      />,
+    );
+    open(picker);
+
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-31")?.customProps?.[
+        "aria-label"
+      ],
+    ).toBe("31 October 2026, unavailable");
+
+    clickCentreOf(picker, "date-day-2026-10-31");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
   it("paints the selected day with the primary role in both themes", () => {
     const assertTheme = (theme: TestTheme, primary: string): void => {
       const picker = renderComponent(
