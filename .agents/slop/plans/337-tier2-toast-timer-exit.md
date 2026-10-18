@@ -5,7 +5,7 @@
 | Phase | F (native harness determinism) |
 | Depends on | `100`, `110`, `120`, `140`, `183`, `330`, `336` |
 | Owner | playground (`apps/playground`, `packages/testing`) |
-| Status | **planned** — measure the shipped `ToastViewport`'s timer path, then assert the deterministic half |
+| Status | **landed** — measured: the shipped viewport renders the queue directly with no motion wrapper, so the timer removal is a plain state update; `tier2-toast` now proves it at a frozen motion clock; suite `68/68`, 1789 checks (+4), four mutation proofs (§8) |
 
 ## 0. Why this plan exists
 
@@ -189,7 +189,7 @@ copy). Never commit a mutation.
 | - | -------- | ---------------- |
 | M1 | `SHORT_MS = 5000` | `awaitReadout` gives up after two seconds; `the timer removed exactly one card` fails with `count=3` |
 | M2 | Drop `ctx.host.click("toast-push-short")` | `the short toast joined the stack before its timer` fails with `count=2` |
-| M3 | Change the survivor check to `toast-3` | `the long toast survived its sibling's timer` fails with a missing card |
+| M3 | Change the survivor check to `toast-5` (the card the timer removed) | `the long toast survived its sibling's timer` fails with `expected a value, got none` |
 | M4 | Change the survivor inset expectation to `INSET + 40` | `the survivor reflows …` fails with the measured value |
 
 M1–M4 are all scenario-side and need no component edit. The “retained exit”
@@ -243,14 +243,20 @@ Filled after implementation.
 
 | Item | Measured |
 | --- | --- |
-| source reading | `viewport.tsx:227` maps the queue directly; no `motion`/`AnimatePresence` import |
-| suite after | pending |
-| check count | pending |
-| `--only tier2-toast` | pending |
-| full runs after | pending |
-| M1–M4 | pending |
-| gates | pending |
-| residual / component defect | pending |
+| source reading | `packages/components/src/toast/viewport.tsx:227` maps `toasts` straight to `ToastCard`; the file imports no `motion` and no `AnimatePresence`. The store removes an expired toast from the queue (`store.ts` `schedule` → `dismiss`) |
+| runtime | after the store update, `toast-5` has no painted bounds while the motion clock is frozen; there is no leaving card and no exit tween |
+| timer | the real JS timer fired with the motion clock frozen; no `fastForwardMotion` was needed (only `advance(0)` inside `awaitReadout`) |
+| survivor | `toast-4` stayed painted and reflowed to the 16 px bottom inset |
+| suite after | `68/68`, exit `0` |
+| check count | 1785 → **1789** (+4); `tier2-toast` 21 → **25** |
+| `--only tier2-toast` | green, `tier2=verified` |
+| full runs after | three consecutive green runs |
+| M1 (`SHORT_MS = 5000`) | fails at `the timer removed exactly one card`: `expected a string containing "count=2", got "count=3 actions=1 last=Short"` |
+| M2 (short push dropped) | fails at `the short toast joined the stack before its timer`: `expected a string containing "count=3", got "count=2 actions=1 last=Saved"` |
+| M3 (survivor checked as `toast-5`) | fails at `the long toast survived its sibling's timer`: `expected a value, got none` |
+| M4 (survivor inset `+40`) | fails at `the survivor reflows to the bottom inset without motion time`: `expected 56 ± 1, got 16` |
+| gates | `nub run check`, `nub run lint`, `nub run test` green (957 tests across the workspace) |
+| residual / component defect | none for the shipped viewport. Plan `336`'s cross-team risk applies only to the local motion probe and to a consumer that wraps toast cards in `motion.div`; the shipped `ToastViewport` has no exit animation to skip |
 
 ## 9. Record updates
 
