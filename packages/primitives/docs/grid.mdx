@@ -25,8 +25,8 @@ import { Grid, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1 |
-| `rows` | `number` | auto | equal fixed rows; floored, minimum 1 |
+| `columns` | `number` | — (required) | equal column tracks; floored, minimum 1, and a non-finite count is 1 |
+| `rows` | `number` | auto | equal fixed rows; floored, minimum 1, and a non-finite count is 1 |
 | `gap` | spacing step | none | both axes, from `spacing` |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's axis |
 | `style` | `StyleDesc` | — | merged last |
@@ -59,9 +59,13 @@ width is ever a pixel value at the call site.
 
 ## Verification
 
-- `src/core/layout.test.ts` — column/row clamping and gap resolution.
+- `src/core/layout.test.ts` — column/row clamping and gap resolution; a
+  non-finite, fractional or negative count is a drawable track count (plan
+  `371`).
 - `runtime/layout.runtime.test.tsx` — a two-column grid paints two cells on one
   row with the theme's gap.
+- `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` column count leaves no
+  non-finite number in the painted style (plan `371`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

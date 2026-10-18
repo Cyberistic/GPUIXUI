@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 107/107
+`[x]` `[██████████]` 108/108
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -994,6 +994,18 @@ retired once both branches are one
       vertical group already stretches), so they share the width and their
       labels truncate; the group case fails in the old direction and without the
       flag (plan `369`).
+`[x]` `packages/primitives` + `packages/icons`: **a nonsense number reached the
+      paint** — measured (2026-10-18): `NumberField min={NaN}` painted the string
+      `"NaN"` and swallowed every step (the painted value was NaN, so the no-op
+      guard suppressed the report), `min=100 max=0` painted `0` for 150, and
+      `step={Infinity}` painted `"Infinity"`; `Icon size={NaN}` lost its width and
+      height (a 0-high mark stretched across the window), `Spinner size={NaN}` a
+      0-high row, `Skeleton height={NaN}` 0 high, and `Grid columns={NaN}` asked
+      the runtime for NaN tracks. One `usableLength` rule, a total `iconPixels`, a
+      floored track count and a normalised field range (non-finite bound absent,
+      inverted pair swapped like every slider); 8 offline cases across four
+      resolvers + 4 runtime cases, every guard reverted once to prove the failure
+      direction (plan `371`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

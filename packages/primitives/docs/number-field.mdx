@@ -37,6 +37,13 @@ while `ArrowUp` reported a *smaller* `100`, and the first `ArrowDown` only
 reached the bound. A step or a commit that lands on the value already painted
 reports nothing, so a bound never looks like a change.
 
+The bounds are **made total before they reach the paint** (plan `371`): a bound
+that is not a finite number is treated as absent on that side, and an inverted
+pair is swapped, the rule every slider and meter follows. Before that rule,
+`min={NaN}` painted the string `"NaN"` and swallowed every step, `min={100}
+max={0}` collapsed to `0` for a value of `150`, and `step={Infinity}` painted
+`"Infinity"`. A `step` that is not a finite positive number is one.
+
 ## Variants, sizes and states
 
 | Prop | Type | Default | Consequence |
@@ -45,8 +52,8 @@ reports nothing, so a bound never looks like a change.
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
 | `onSubmit` | `(event) => void` | — | Enter: the draft is committed and reformatted first |
-| `min` / `max` | `number` | none | bound the value; absent means unbounded |
-| `step` | `number` | `1` | arrow step |
+| `min` / `max` | `number` | none | bound the value; absent or non-finite means unbounded, an inverted pair is swapped |
+| `step` | `number` | `1` | arrow step; a non-finite or non-positive step is `1` |
 | `precision` | `number` | `0` | decimals shown on commit |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | field height and padding |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
@@ -173,7 +180,12 @@ after the wrapper's chrome:
   paints and announces `100`, `ArrowUp` reports nothing and `ArrowDown` reports
   `99`; an enabled field commits its draft on blur while a field disabled after
   the same edit reports nothing. Measured 2026-10-17 (plans 054 §9, 064 §6 and
-  077 §7) and 2026-10-18 (plans `338`, `339`, `362`).
+  077 §7) and 2026-10-18 (plans `338`, `339`, `362`). **Plan `371`:** a
+  non-finite bound is ignored and an inverted pair is swapped — four fields
+  (`min={NaN}`, `max={NaN}`, `min=100 max=0`, `step={Infinity}`) paint only
+  finite values, the swapped range steps `100 → 99 → 100`, and an infinite step
+  reports `6`; proven in `runtime/nonsense-numbers.runtime.test.tsx` and the
+  core range cases.
 
 ```sh
 nub run --filter @gpuixui/primitives test

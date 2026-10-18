@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `041`, `047`, `054`, `077`, `362`, `366` |
-| Status | in progress |
+| Status | done |
 
 Self-contained: §0 the measured values, §1 the decision, §2 the rule, §3 the
 files, §4 commands, §5 the test plan and the two-direction proof, §6 STOP
@@ -214,14 +214,38 @@ One scene per rule, mounted in the real `TestRenderer`:
 
 ## 7. Outcome
 
-Filled after implementation.
+Implemented.
+
+- `core/value.ts` exports `usableLength`; `core/number.ts` exports
+  `normalizeNumberRange` and routes `clampNumeric`/`stepNumber` through it;
+  `numberRange` (the component) returns the normalised range, so the paint,
+  announcement, stepper states and keys agree.
+- `icons/sizes.ts` makes `iconPixels` total (a non-finite or negative pixel count
+  is `ICON_SIZES.md`; `0` is kept). `core/loading.ts` reads a skeleton dimension
+  through its own `dimension` rule (a string percentage passes through) and a
+  spinner dot side through `usableLength`; `gridStyle` floors a finite count and
+  reads anything else as one track.
+- Tests: `value.test.ts` (+2), `number.test.ts` (+5), `layout.test.ts` (+1),
+  `loading.test.ts` (+2), `NumberField.test.tsx` (+1), `sizes.test.ts` (+1),
+  and a new 4-case `runtime/nonsense-numbers.runtime.test.tsx`. Offline 628,
+  runtime **606 in 32 files**.
+- Both-direction proof, each guard reverted once and restored:
+  - identity `normalizeNumberRange` → the field paints `['NaN','NaN','0','5']`
+    and the swapped field reports nothing;
+  - step guard removed → `ArrowUp` reports `Infinity`;
+  - raw `iconPixels` → the icon paints **1256** wide instead of `md`;
+  - raw dot/dimension → the spinner is **0** high and the skeleton `NaN`;
+  - `tracks` reverted → `gridTemplateColumns` is `NaN`.
+- Docs: `number-field.mdx` (Bounds), `grid.mdx`, `spinner.mdx`,
+  `skeleton.mdx`, `icons/docs/icon.mdx`; the five `COMPONENTS.md` rows and the
+  runtime count; `TODO.md`; the plan index.
 
 ## 8. Acceptance
 
-- [ ] `Icon`, `Spinner`, `Skeleton`, `Grid` and `NumberField` never paint
+- [x] `Icon`, `Spinner`, `Skeleton`, `Grid` and `NumberField` never paint
       `NaN`, `Infinity` or a negative length for any public numeric prop.
-- [ ] The field's non-finite bounds are ignored and an inverted pair is swapped.
-- [ ] The new tests fail with the guards removed (both directions recorded).
-- [ ] Every touched component's docs page states the fallback rule.
-- [ ] `COMPONENTS.md`, `TODO.md` and the plan index are current.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] The field's non-finite bounds are ignored and an inverted pair is swapped.
+- [x] The new tests fail with the guards removed (both directions recorded).
+- [x] Every touched component's docs page states the fallback rule.
+- [x] `COMPONENTS.md`, `TODO.md` and the plan index are current.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

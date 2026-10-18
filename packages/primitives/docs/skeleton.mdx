@@ -33,8 +33,8 @@ An avatar placeholder:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `width` | `number \| string` | `"100%"`, or the height when `circle` | the block's width |
-| `height` | `number \| string` | body line height | the block's height |
+| `width` | `number \| string` | `"100%"`, or the height when `circle` | the block's width; a non-finite or negative pixel value uses the default |
+| `height` | `number \| string` | body line height | the block's height; a non-finite or negative pixel value uses the default |
 | `radius` | `sm \| md \| lg \| xl \| none` | `"sm"` | corner radius |
 | `circle` | `boolean` | `false` | full radius and a square default; an avatar or icon placeholder |
 | `style` | `StyleDesc` | — | merged last |
@@ -70,10 +70,13 @@ skeleton.
 ## Verification
 
 - `src/core/loading.test.ts` — the two pulse states and the block geometry; a
-  circle is as wide as it is tall, an explicit width wins, and a plain block
-  stays `100%` (plan `330`).
+  circle is as wide as it is tall, an explicit width wins, a plain block stays
+  `100%`, and a pixel dimension the runtime cannot paint falls back to its
+  default (plans `330`, `371`).
 - `runtime/loading.runtime.test.tsx` — opacity samples take both `1` and `0.6`
   in the real renderer, and a bare circle paints a square box.
+- `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` height paints the body
+  line height instead of a zero-high block (plan `371`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

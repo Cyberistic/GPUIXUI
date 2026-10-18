@@ -154,6 +154,7 @@ it("never paints NaNs for a bound or a step it cannot read", async () => {
 it("steps an inverted field inside the swapped range", async () => {
   const runtime = await openWindow();
   const values: number[] = [];
+  const infinite: number[] = [];
   runtime.render(
     <Surface>
       <NumberField
@@ -164,6 +165,13 @@ it("steps an inverted field inside the swapped range", async () => {
         defaultValue={150}
         onValueChange={(value) => values.push(value)}
       />
+      <NumberField
+        testId="inf-step"
+        label="Infinite step"
+        step={Number.POSITIVE_INFINITY}
+        defaultValue={5}
+        onValueChange={(value) => infinite.push(value)}
+      />
     </Surface>,
   );
   const input = inputOf(runtime, "inverted");
@@ -171,4 +179,8 @@ it("steps an inverted field inside the swapped range", async () => {
   expect(values).toStrictEqual([99]);
   runtime.renderer.nativeSimulateKeyDown(input.id, "up");
   expect(values).toStrictEqual([99, 100]);
+  // An infinite step is one, not `Infinity`: the field reports a number the
+  // caller can save rather than the largest one the machine holds (plan 371).
+  runtime.renderer.nativeSimulateKeyDown(inputOf(runtime, "inf-step").id, "up");
+  expect(infinite).toStrictEqual([6]);
 });

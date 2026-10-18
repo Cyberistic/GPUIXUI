@@ -45,7 +45,7 @@ change the accessibility role or the name — those come from `label`.
 | ---- | ---- | ------- | ----------- |
 | `name` | `IconName` | — (required) | which icon; TypeScript rejects an unknown name |
 | `color` | `string` | — (required) | the tint; pass a theme role |
-| `size` | `IconSize \| number` | `"md"` | a named step or raw pixels |
+| `size` | `IconSize \| number` | `"md"` | a named step or raw pixels; a non-finite or negative number falls back to `"md"` |
 | `label` | `string` | none | accessible name; presence promotes the icon to an image |
 | `testId` | `string` | — | stable locator |
 | `style` | `StyleDesc` | none | extra paint or layout, merged last |
@@ -64,7 +64,8 @@ exposes the markup by name; `ICON_SIZES` / `iconPixels` resolve the scale.
 | `xl` | 24 |
 
 Named sizes line an icon up with text of the same step. A raw number is for the
-rare case that no step fits.
+rare case that no step fits; a number the runtime cannot paint (`NaN`,
+`Infinity` or a negative) falls back to `md` instead of stretching the mark.
 
 ## Accessibility
 
@@ -101,8 +102,8 @@ paint values a monochrome tint can use. No individual icon carries a colour.
 
 - `src/registry.test.ts` — every icon is 24×24 geometry, self-contained and free
   of scripts, external references and embedded colours.
-- `src/sizes.test.ts` — every named step resolves, and a raw number passes
-  through.
+- `src/sizes.test.ts` — every named step resolves, a raw number passes through,
+  and a number the runtime cannot paint falls back to `md` (plan `371`).
 - `src/Icon.test.ts` — the decoration/image rule, required colour, the
   pointer-events rule and the caller-style merge.
 - `src/docs.test.ts` — the API table lists exactly the props `Icon` accepts, and

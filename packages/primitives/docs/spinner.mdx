@@ -23,14 +23,16 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `size` | `number` | `theme.iconSize.md` | the dot side in pixels |
+| `size` | `number` | `theme.iconSize.md` | the dot side in pixels; a non-finite or negative side uses the default |
 | `accent` | `primary \| destructive \| muted` | `"primary"` | the lit dot's colour role |
 | `label` | `string` | `"Loading"` | accessible name announced as a status |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
 `size` accepts a number because a spinner inside a `Button` often needs to match
-the button's own icon size rather than a named icon step.
+the button's own icon size rather than a named icon step. A number the runtime
+cannot paint (`NaN`, `Infinity` or a negative) falls back to the theme's `md`
+dot instead of collapsing the row.
 
 ## Keyboard
 
@@ -58,10 +60,13 @@ resolves size and colour from the accent role. The gap is `spacing["2xs"]`.
 
 ## Verification
 
-- `src/core/loading.test.ts` — the lit index and fade across steps.
+- `src/core/loading.test.ts` — the lit index and fade across steps; a dot side
+  the runtime cannot paint falls back to the theme's `md` (plan `371`).
 - `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
   time, the accent role reaches the paint, and AccessKit reports `Status` with
   the label.
+- `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` side paints the
+  documented default instead of a zero-high row (plan `371`).
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.
 
 ```sh
