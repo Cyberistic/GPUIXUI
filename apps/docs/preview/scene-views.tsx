@@ -8,7 +8,8 @@
  *
  * Tier 2 components are imported by subpath on purpose: the package root also
  * re-exports Toast, whose provider builds an Effect runtime that a 20 MB browser
- * bundle has no use for (plan 456 §2).
+ * bundle has no use for (plan 456 §2). Toast itself has its own subpath and one
+ * scene (plan 484); its infinite-duration push never races a dismissal.
  */
 import {
   Dialog,
@@ -75,6 +76,11 @@ import {
   TabsList,
   TabsTrigger,
 } from "@gpuixui/components/tabs";
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+} from "@gpuixui/components/toast";
 import { Icon } from "@gpuixui/icons";
 import {
   Box,
@@ -87,7 +93,8 @@ import {
   Text,
   useTheme,
 } from "@gpuixui/primitives";
-import { useState, type ReactElement } from "react";
+import { Duration } from "effect";
+import { useEffect, useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
 
 const ButtonScene = (): ReactElement => (
@@ -529,6 +536,40 @@ const PreviewCardScene = (): ReactElement => (
   </Stack>
 );
 
+/**
+ * A toast is transient, so the scene pushes one with an infinite duration: the
+ * store only schedules a timer for a positive finite duration, which removes the
+ * race a default 5-second toast would have with the smoke check (plan 484). The
+ * provider and viewport are the shipping components; the interaction (pause,
+ * dismiss, action) stays native evidence.
+ */
+const ToastSurface = (): ReactElement => {
+  const toast = useToast();
+  useEffect(() => {
+    toast.push({
+      title: "Changes published",
+      description: "The site rebuilds in about a minute.",
+      tone: "success",
+      duration: Duration.infinity,
+    });
+  }, [toast.push]);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Notifications</Text>
+      <Text role="body" tone="muted">
+        A persistent toast, so the surface never races its own dismissal.
+      </Text>
+      <ToastViewport />
+    </Stack>
+  );
+};
+
+const ToastScene = (): ReactElement => (
+  <ToastProvider>
+    <ToastSurface />
+  </ToastProvider>
+);
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -546,6 +587,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "navigation-menu": NavigationMenuScene,
     "mention-input": MentionInputScene,
     "preview-card": PreviewCardScene,
+    toast: ToastScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

@@ -78,6 +78,11 @@ viewport last:
   ../../../../../packages/components/examples/toast.example.tsx
 </include>
 
+The live surface above mounts the same provider and viewport and pushes one
+toast with `duration: Duration.infinity`, so the card stays on screen while you
+read it. Dismissal, pause and the action handler are covered by the component's
+native behaviour suite, not by the browser renderer.
+
 ## State and ownership
 
 `ToastProvider` owns the Effect runtime, the store and the auto-dismiss timers;
@@ -116,7 +121,6 @@ the tone's colour from the shared status palette.
   deadline.
 - No portal: render the viewport last at the app root (GPUix has no `zIndex`).
 - One action per toast; an action label without a handler renders no control.
-- No live scene ships for this component yet; the example and source are real.
 
 ## Dependencies
 

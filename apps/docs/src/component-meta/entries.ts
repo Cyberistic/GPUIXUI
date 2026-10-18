@@ -917,6 +917,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       sourcePath: "packages/components/src/toast/provider.tsx",
       api: ["ToastProviderProps", "ToastViewportProps"],
       pattern: "stateful",
+      liveScene: "toast",
       parts: [
         {
           name: "ToastProvider",

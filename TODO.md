@@ -469,9 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–483)
+## Docs site workstream (plans 410–484)
 
-`[x]` `[██████████]` 81/82
+`[x]` `[██████████]` 82/83
+
+`[x]` **Toast gets a live scene (plan 484)** — the gap reason said a scene
+      would race the toast's own dismissal, but `ToastInput.duration` accepts
+      `Duration.infinity` and the store only schedules a timer for a positive
+      finite duration; the page now renders the real provider, viewport and card
+      on GPUix's wasm renderer, and the gap set falls from six to five
 
 `[x]` **The site chrome stops denying the live surface (plan 483)** — the landing page's quick start still said "This site never renders GPUix" while the site ships live wasm scenes; one `deniesLiveSurface` predicate now guards MDX prose and the rendered landing chrome, and the shipped sentence failed the new guard before the copy changed
 
@@ -526,7 +532,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[x]` Live scenes for Popover and Command menu (plan 457) — six scenes total; the smoke derives its page URLs from `LIVE_SCENES` and a contract test pins `slug === scene`
 `[ ]` Live scenes for Context menu and Date picker — blocked on the component API: `ContextMenu` needs a `point` prop (its surface is fixed at the internal `{ x: 0, y: 0 }`) and `DatePicker` needs `defaultOpen`; owner: `components`; a scene is never faked
 `[x]` Live scenes for the five pages a real surface can show without a new component API (plan 458) — Icons, Scrollable containers, Skeletons, Loading indicators and Confirmation dialogs; eleven scenes, and `scene-contract.test.ts` fails on a delivered page with neither a live scene nor an illustration unless its reason is listed
-`[x]` Every `liveScene` gap is measured: Tooltip, Combobox and Select hide their open state behind a wrapper with no `open`/`defaultOpen`; Toast races its own dismissal and pulls the Effect runtime into the shared scene bundle (`TODO.md` cross-team row, `docs/preview-strategy.md`)
+`[x]` Every `liveScene` gap is measured: Tooltip, Combobox and Select hide their open state behind a wrapper with no `open`/`defaultOpen`, Context menu paints at an internal point and Date picker owns its open state; Toast's race was disproved by `Duration.infinity` and its page moved to a live scene (plan 484, `docs/preview-strategy.md`)
 `[x]` Architecture page truth (plan 459) — it names all seven packages with real edges, includes the live surface in the preview list, and no longer promises `docs/architecture.md`; `prose-truth.test.ts` reads `packages/*/package.json` and fails on an absent `docs/*.md`
 `[x]` The site stops denying the live surface (plan 460) — the introduction, getting-started, examples, landing page and 19 component pages; a live-scene page may never carry the old denial, and the landing page lists the live tier as its first preview
 

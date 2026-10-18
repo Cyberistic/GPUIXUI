@@ -1,7 +1,7 @@
 /**
  * The component pages with neither a live GPUix scene nor a tier-A
- * illustration, and the measured reason each one has none (plans 457, 458,
- * 461). `scene-contract.test.ts` proves this set equals the real gaps on
+ * illustration, and the measured reason each one has none (plans 457, 458, 461,
+ * 484). `scene-contract.test.ts` proves this set equals the real gaps on
  * delivered pages; `preview-gaps.test.ts` proves `docs/preview-strategy.md`
  * names the same set, so the document cannot drift from the code.
  *
@@ -21,10 +21,6 @@ export const NO_LIVE_SCENE: ReadonlyMap<string, string> = new Map([
   [
     "hotkey-input",
     "the field's content is a captured chord, which needs a real key event rather than a static layout",
-  ],
-  [
-    "toast",
-    "a scene must race the toast's own dismissal, and its provider pulls the Effect runtime into every scene",
   ],
   [
     "tooltip",
