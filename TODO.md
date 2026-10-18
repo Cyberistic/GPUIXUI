@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–492)
 
-`[x]` `[██████████]` 93/93
+`[x]` `[██████████]` 94/94
 
 `[x]` **The three choice controls got live scenes (plan 492)** — Select, Checkbox
       and Switch moved from a tier-A rest state to tier L: the smoke clicks the
@@ -479,11 +479,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       and the thumb move are absent before and present after; 24 scenes, three
       two-direction proofs
 
-`[~]` **Live scenes for the remaining interactive form controls** — radio group,
-      slider, range slider, search input and the text fields still show a tier-A
-      rest state; plan 492's machinery applies, but each scene needs a target the
-      automation can click or drag and a state line the component or caller
-      paints only after the gesture. Plan 493 (in progress)
+`[x]` **Live scenes for the remaining interactive form controls (plan 493)** — radio
+      group (an option clicked by its label), slider (`End` on the focused track),
+      range slider (a click on the track), search input, text input and text area
+      (typed through GPUI's keyboard/IME path) now render on the real wasm
+      renderer; `SceneStep` gained `click-text` (scoped to the control) and
+      `fill`. 30 scenes, 14 gesture-driven, `smoke:preview` exit 0; four
+      two-direction proofs in plan 493 §6
 
 `[x]` **The native smoke suite gets a real page (plan 491)** — `/docs/native-testing`
       documents the platform-free harness, the playground adapter, the `0`/`1`/`2`

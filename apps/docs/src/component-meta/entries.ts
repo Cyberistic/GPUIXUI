@@ -343,6 +343,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "A single-line editable text field.",
     {
       gpuix: "yes",
+      liveScene: "text-input",
       sourcePath: "packages/primitives/src/components/Input.tsx",
       api: ["InputProps"],
       runtime: nativeSuite(
@@ -366,6 +367,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "A multi-line editable text field.",
     {
       gpuix: "yes",
+      liveScene: "text-area",
       sourcePath: "packages/primitives/src/components/TextArea.tsx",
       api: ["TextAreaProps"],
       runtime: nativeSuite(
@@ -411,6 +413,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "Selects one option from a set.",
     {
       gpuix: "partial",
+      liveScene: "radio-group",
       sourcePath: "packages/primitives/src/components/RadioGroup.tsx",
       api: ["RadioGroupProps"],
       runtime: nativeSuite(
@@ -556,6 +559,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "Selects one value by click, drag or keyboard.",
     {
       gpuix: "ours",
+      liveScene: "slider",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
       api: ["SliderProps"],
       runtime: nativeSuite(
@@ -578,6 +582,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "Selects the two ends of an interval on one track.",
     {
       gpuix: "ours",
+      liveScene: "range-slider",
       sourcePath: "packages/primitives/src/components/Slider.tsx",
       api: ["RangeSliderProps"],
       runtime: nativeSuite(
@@ -1519,6 +1524,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "A text field with search affordances.",
     {
       gpuix: "yes",
+      liveScene: "search-input",
       sourcePath: "packages/components/src/search-input.tsx",
       api: ["SearchInputProps"],
       runtime: nativeSuite(

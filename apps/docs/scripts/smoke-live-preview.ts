@@ -331,18 +331,27 @@ const paintedText = async (
  * pointer or keyboard takes.
  */
 const runStep = async (session: Session, step: SceneStep): Promise<void> => {
-  const target = `globalThis.gpuix.getByTestId(${JSON.stringify(step.testId)})`;
+  // An option that carries no test id is targeted by its label, scoped to the
+  // control's own test id so the reader's instruction cannot match first.
+  const target =
+    step.kind === "click-text"
+      ? `globalThis.gpuix.getByTestId(${JSON.stringify(step.within)}).getByText(${JSON.stringify(step.text)})`
+      : `globalThis.gpuix.getByTestId(${JSON.stringify(step.testId)})`;
   const action =
-    step.kind === "hover"
-      ? `await ${target}.hover()`
-      : step.kind === "click"
-        ? `await ${target}.click(${step.button === undefined ? "" : `{ button: ${step.button} }`})`
-        : `await ${target}.press(${JSON.stringify(step.keys)})`;
+    step.kind === "click-text"
+      ? `await ${target}.click()`
+      : step.kind === "hover"
+        ? `await ${target}.hover()`
+        : step.kind === "fill"
+          ? `await ${target}.fill(${JSON.stringify(step.text)})`
+          : step.kind === "press"
+            ? `await ${target}.press(${JSON.stringify(step.keys)})`
+            : `await ${target}.click(${step.button === undefined ? "" : `{ button: ${step.button} }`})`;
   try {
     await session.evaluate(`(async () => { ${action}; })()`);
   } catch (error) {
     throw new Error(
-      `${step.kind} on "${step.testId}" failed: ${
+      `${step.kind} on "${step.kind === "click-text" ? step.text : step.testId}" failed: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
@@ -664,8 +673,8 @@ const main = async (): Promise<number> => {
 };
 
 // A hung CDP command must not keep the command alive forever; the gate reports
-// "could not verify" rather than hanging a release check. Twenty-one scenes
-// (five of them gesture-driven) and twenty-one page loads fit in this budget;
+// "could not verify" rather than hanging a release check. Thirty scenes
+// (fourteen of them gesture-driven) and thirty page loads fit in this budget;
 // the per-iframe wait is up to 60s.
 setTimeout(() => {
   console.error("smoke: not verified — the check did not finish in 600s");

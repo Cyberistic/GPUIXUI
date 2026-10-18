@@ -86,13 +86,18 @@ import {
   Box,
   Button,
   Checkbox,
+  Input,
+  RadioGroup,
+  RangeSlider,
   ScrollArea,
   Select,
   Skeleton,
+  Slider,
   Spinner,
   Stack,
   Switch,
   Text,
+  TextArea,
   Tooltip,
   useTheme,
 } from "@gpuixui/primitives";
@@ -117,6 +122,7 @@ import {
   DatePickerTrigger,
 } from "@gpuixui/components/date-picker";
 import { HotkeyRecorder } from "@gpuixui/components/hotkey-recorder";
+import { SearchInput } from "@gpuixui/components/search-input";
 import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
@@ -595,9 +601,9 @@ const ToastScene = (): ReactElement => (
 );
 
 /**
- * The five gesture scenes (plan 486). Each one paints its documented state only
- * after a real GPUI gesture; `SCENE_GESTURE` in `scenes.ts` drives it and the
- * smoke asserts the text is absent first. The trigger that `Tooltip` wraps is a
+ * The gesture scenes are the ones `SCENE_GESTURE` lists. Each one paints its
+ * documented state only after a real GPUI gesture; the smoke drives it and
+ * asserts the text is absent first. The trigger that `Tooltip` wraps is a
  * host `div`, not this package's `Button`, because `ButtonProps` is closed and
  * does not forward the hover/focus handlers the tooltip clones in — the
  * documented contract on the Tooltip page.
@@ -765,6 +771,125 @@ const SwitchScene = (): ReactElement => {
   );
 };
 
+const RadioGroupScene = (): ReactElement => {
+  const [plan, setPlan] = useState("");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Billing plan</Text>
+      <Text role="caption" tone="muted">
+        The real RadioGroup, nothing selected. Pick an option to see the check
+        and the caller's line.
+      </Text>
+      <RadioGroup
+        label="Plan"
+        value={plan}
+        onChange={setPlan}
+        testId="scene-radio"
+        options={[
+          { value: "free", label: "Free" },
+          { value: "team", label: "Team" },
+          { value: "enterprise", label: "Enterprise" },
+        ]}
+      />
+      {plan === "team" ? <Text role="body">Team plan selected</Text> : null}
+    </Stack>
+  );
+};
+
+const SliderScene = (): ReactElement => {
+  const [volume, setVolume] = useState(40);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Playback</Text>
+      <Text role="caption" tone="muted">
+        The real Slider at 40. Press End on it to reach the maximum.
+      </Text>
+      <Slider
+        label="Volume"
+        value={volume}
+        onChange={setVolume}
+        testId="scene-slider"
+        formatValue={(value) => `${value}%`}
+      />
+      {volume === 100 ? <Text role="body">Volume at maximum</Text> : null}
+    </Stack>
+  );
+};
+
+const RangeSliderScene = (): ReactElement => {
+  const [band, setBand] = useState<readonly [number, number]>([0, 100]);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Price filter</Text>
+      <Text role="caption" tone="muted">
+        The real RangeSlider at its full span. Click the track to move the
+        nearer thumb.
+      </Text>
+      <RangeSlider
+        label="Price"
+        value={band}
+        onChange={setBand}
+        testId="scene-range"
+      />
+      {band[0] > 0 ? <Text role="body">Range narrowed</Text> : null}
+    </Stack>
+  );
+};
+
+const SearchInputScene = (): ReactElement => {
+  const [query, setQuery] = useState("");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Component search</Text>
+      <Text role="caption" tone="muted">
+        The real SearchInput, empty. Type into it to see the clear control and
+        the caller's line.
+      </Text>
+      <SearchInput
+        testId="scene-search"
+        placeholder="Search components"
+        value={query}
+        onValueChange={setQuery}
+      />
+      {query === "grid" ? <Text role="body">Searching for grid</Text> : null}
+    </Stack>
+  );
+};
+
+const TextInputScene = (): ReactElement => {
+  const [name, setName] = useState("");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Account</Text>
+      <Text role="caption" tone="muted">
+        The real Input, empty. Type a name into it.
+      </Text>
+      <Input label="Name" testId="scene-name" value={name} onChange={setName} />
+      {name === "ada" ? <Text role="body">Typed ada</Text> : null}
+    </Stack>
+  );
+};
+
+const TextAreaScene = (): ReactElement => {
+  const [note, setNote] = useState("");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Release note</Text>
+      <Text role="caption" tone="muted">
+        The real TextArea, empty. Type a note into it.
+      </Text>
+      <TextArea
+        label="Note"
+        testId="scene-note"
+        minRows={3}
+        value={note}
+        onChange={setNote}
+      />
+      {note === "ship it" ? <Text role="body">Draft saved</Text> : null}
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -791,6 +916,12 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     select: SelectScene,
     checkbox: CheckboxScene,
     switch: SwitchScene,
+    "radio-group": RadioGroupScene,
+    slider: SliderScene,
+    "range-slider": RangeSliderScene,
+    "search-input": SearchInputScene,
+    "text-input": TextInputScene,
+    "text-area": TextAreaScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

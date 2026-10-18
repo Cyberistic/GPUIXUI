@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups, Sliders, Range sliders, Search inputs, Text inputs, Text areas); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -189,29 +189,31 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **Twenty-four scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **Thirty scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
   input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
-  Hotkey input, Select, Checkbox and Switch — chosen because a still cannot prove
+  Hotkey input, Select, Checkbox, Switch, Radio group, Slider, Range slider,
+  Search input, Text input and Text area — chosen because a still cannot prove
   the point: an open overlay and its focus entry, a grouped palette, real SVG
   markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a transient
-  message, an opened list, a checked control, or a surface only a pointer or a key
-  opens. The Toast scene pushes one toast with an
+  message, an opened list, a checked control, a value a key reaches, typed text,
+  or a surface only a pointer or a key opens. The Toast scene pushes one toast with an
   infinite duration: a default five-second toast would race the smoke check, and
   an infinite one is the component's documented way to keep a message until it
   is dismissed (`ToastInput.duration`).
 
 ## Gestures are proved, not implied
 
-Eight scenes document state only a gesture produces: a component that owns its
-open state and exposes no `defaultOpen`, a list that opens on a click, and two
-controls whose checked paint is not text. They are not opened by a prop: the
-smoke drives the same gesture a reader performs through the automation surface
-the renderer installs (`globalThis.gpuix` in the preview document), and
-`smoke:preview` asserts the scene's text is **absent before** the gesture and
-**present after** it. A prop that quietly opened or checked the surface would
-fail that first assertion, and a broken gesture fails the second.
+Fourteen scenes document state only a gesture produces: a component that owns its
+open state and exposes no `defaultOpen`, a list that opens on a click, controls
+whose checked paint is not text, a value a key moves and a field a reader types
+into. They are not opened by a prop: the smoke drives the same gesture a reader
+performs through the automation surface the renderer installs
+(`globalThis.gpuix` in the preview document), and `smoke:preview` asserts the
+scene's text is **absent before** the gesture and **present after** it. A prop
+that quietly opened, checked or filled the surface would fail that first
+assertion, and a broken gesture fails the second.
 
 | Scene | Gesture the smoke drives | What it proves |
 | ----- | ------------------------ | -------------- |
@@ -223,6 +225,17 @@ fail that first assertion, and a broken gesture fails the second.
 | Selects | click the field | the list surface, its states and a disabled option paint |
 | Checkboxes | click the box | the check mark and the caller's state line paint |
 | Switches | click the switch | the thumb moves and the caller's state line paints |
+| Radio groups | click an option by its label | the check paints and the caller's selection line appears |
+| Sliders | focus the track, press End | the thumb reaches the maximum through the keyboard path |
+| Range sliders | click the track | the nearer thumb moves to the pointer |
+| Search inputs | type into the field | every edit reaches the caller |
+| Text inputs | type into the field | the typed value reaches the caller |
+| Text areas | type into the field | the typed draft reaches the caller |
+
+Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
+is the same path a reader's keyboard takes. A typed character arrives without a
+shift modifier, so a filled scene deliberately uses lower-case text; the radio
+group's target is a painted label, not typed text, so it keeps its case.
 
 The reader sees the same instruction above the surface, and can perform it in the
 browser. One measured limit stays on the Tooltip page: the trigger must be a

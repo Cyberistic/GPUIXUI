@@ -31,6 +31,12 @@ export const LIVE_SCENES = [
   "select",
   "checkbox",
   "switch",
+  "radio-group",
+  "slider",
+  "range-slider",
+  "search-input",
+  "text-input",
+  "text-area",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -69,6 +75,12 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   select: "Europe — West",
   checkbox: "Release notes enabled",
   switch: "System theme applied",
+  "radio-group": "Team plan selected",
+  slider: "Volume at maximum",
+  "range-slider": "Range narrowed",
+  "search-input": "Searching for grid",
+  "text-input": "Typed ada",
+  "text-area": "Draft saved",
 };
 
 /**
@@ -83,7 +95,16 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
 export type SceneStep =
   | { readonly kind: "hover"; readonly testId: string }
   | { readonly kind: "click"; readonly testId: string; readonly button?: 0 | 2 }
-  | { readonly kind: "press"; readonly testId: string; readonly keys: string };
+  /** An option that owns no test id is still a real target by its label. */
+  | {
+      readonly kind: "click-text";
+      readonly text: string;
+      /** The painted test id scoping the search to the control, not the prose. */
+      readonly within: string;
+    }
+  | { readonly kind: "press"; readonly testId: string; readonly keys: string }
+  /** Types through the renderer's keyboard path; the field's own edit path. */
+  | { readonly kind: "fill"; readonly testId: string; readonly text: string };
 
 export const SCENE_GESTURE: Readonly<
   Partial<Record<LiveScene, readonly SceneStep[]>>
@@ -102,6 +123,12 @@ export const SCENE_GESTURE: Readonly<
   select: [{ kind: "click", testId: "scene-select" }],
   checkbox: [{ kind: "click", testId: "scene-checkbox" }],
   switch: [{ kind: "click", testId: "scene-switch" }],
+  "radio-group": [{ kind: "click-text", text: "Team", within: "scene-radio" }],
+  slider: [{ kind: "press", testId: "scene-slider", keys: "end" }],
+  "range-slider": [{ kind: "click", testId: "scene-range" }],
+  "search-input": [{ kind: "fill", testId: "scene-search", text: "grid" }],
+  "text-input": [{ kind: "fill", testId: "scene-name", text: "ada" }],
+  "text-area": [{ kind: "fill", testId: "scene-note", text: "ship it" }],
 };
 
 /**
@@ -117,6 +144,12 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   select: "Click the region field to open its list.",
   checkbox: "Click the box to subscribe.",
   switch: "Click the switch to turn the system theme on.",
+  "radio-group": "Click the Team option to select it.",
+  slider: "Focus the volume slider and press End.",
+  "range-slider": "Click the track to move its nearer thumb.",
+  "search-input": "Type a search term into the field.",
+  "text-input": "Type a name into the field.",
+  "text-area": "Type a note into the field.",
 };
 
 /**

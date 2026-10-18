@@ -50,6 +50,12 @@ const interactionScenes = new Map([
   ["select", "select"],
   ["checkbox", "checkbox"],
   ["switch", "switch"],
+  ["radio-group", "radio-group"],
+  ["slider", "slider"],
+  ["range-slider", "range-slider"],
+  ["search-input", "search-input"],
+  ["text-input", "text-input"],
+  ["text-area", "text-area"],
 ]);
 
 const pagesDirectory = new URL(
@@ -141,6 +147,12 @@ describe("gesture scenes", () => {
     (scene) => SCENE_GESTURE[scene] !== undefined,
   );
 
+  /** The steps that name an element; a text target names a label instead. */
+  const testIdSteps = (scene: (typeof LIVE_SCENES)[number]) =>
+    (SCENE_GESTURE[scene] ?? []).flatMap((step) =>
+      step.kind === "click-text" ? [] : [step],
+    );
+
   /**
    * Targets the component itself renders, so the id cannot occur in the scene
    * source. `DatePickerCalendar` owns one `date-day-<iso>` cell per day; the
@@ -153,11 +165,35 @@ describe("gesture scenes", () => {
 
   it("targets a test id the scene really renders", () => {
     const missing = gestureScenes.flatMap((scene) =>
-      (SCENE_GESTURE[scene] ?? []).flatMap((step) =>
+      testIdSteps(scene).flatMap((step) =>
         viewSource.includes(`testId="${step.testId}"`) ||
         (componentOwnedTargets.get(scene) ?? []).includes(step.testId)
           ? []
           : [`${scene}: ${step.testId}`],
+      ),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  /**
+   * The radio group's options are data and carry no per-option test id, so its
+   * scene targets the option's own painted label, scoped to the control that
+   * renders it. The same drift rule applies: a renamed label or scope must fail
+   * here rather than in the smoke — and scoping is what keeps the reader's own
+   * instruction (which names the option) from matching first.
+   */
+  it("targets text the scene really renders, inside the control it names", () => {
+    // A quoted literal or a JSX child — not a substring of a longer string. A
+    // target of "Team plan" would otherwise pass on the literal "Team plan
+    // selected" the gesture is supposed to reveal.
+    const painted = (text: string): boolean =>
+      viewSource.includes(`"${text}"`) || viewSource.includes(`>${text}<`);
+    const missing = gestureScenes.flatMap((scene) =>
+      (SCENE_GESTURE[scene] ?? []).flatMap((step) =>
+        step.kind !== "click-text" ||
+        (painted(step.text) && viewSource.includes(`testId="${step.within}"`))
+          ? []
+          : [`${scene}: ${step.within} / ${step.text}`],
       ),
     );
     expect(missing).toEqual([]);
@@ -168,9 +204,7 @@ describe("gesture scenes", () => {
       (componentOwnedTargets.get(scene) ?? [])
         .filter(
           (testId) =>
-            !(SCENE_GESTURE[scene] ?? []).some(
-              (step) => step.testId === testId,
-            ),
+            !testIdSteps(scene).some((step) => step.testId === testId),
         )
         .map((testId) => `${scene}: ${testId}`),
     );

@@ -3,7 +3,7 @@
 **Phase:** F (docs showcase completeness) · **Owner:** docs-site
 **Depends on:** 455 (live wasm surface), 456 (interaction scenes), 475 (sized
 canvas), 486 (gesture proof), 492 (choice-control scenes), 451 (tier-A previews)
-**Status:** planned
+**Status:** implemented
 
 ## 1. Why this plan exists
 
@@ -79,14 +79,16 @@ Extend `SceneStep` with the two kinds the smoke is missing. The existing three
 stays as they are; the new arms are additive:
 
 ```ts
-  | { readonly kind: "click-text"; readonly text: string }
+  | { readonly kind: "click-text"; readonly text: string; readonly within: string }
   | { readonly kind: "fill"; readonly testId: string; readonly text: string };
 ```
 
 Add their gestures and instructions:
 
 ```ts
-"radio-group": [{ kind: "click-text", text: "Team" }],
+"radio-group": [
+  { kind: "click-text", text: "Team", within: "scene-radio" },
+],
 slider: [{ kind: "press", testId: "scene-slider", keys: "end" }],
 "range-slider": [{ kind: "click", testId: "scene-range" }],
 "search-input": [{ kind: "fill", testId: "scene-search", text: "grid" }],
@@ -294,17 +296,28 @@ Add `liveScene` to six `delivered(...)` records, changing nothing else:
 - Add one rule beside it:
 
   ```ts
-  it("targets text the scene really renders", () => {
+  it("targets text the scene really renders, inside the control it names", () => {
+    // A quoted literal or a JSX child — not a substring of a longer string.
+    const painted = (text: string): boolean =>
+      viewSource.includes(`"${text}"`) || viewSource.includes(`>${text}<`);
     const missing = LIVE_SCENES.flatMap((scene) =>
       (SCENE_GESTURE[scene] ?? []).flatMap((step) =>
-        step.kind !== "click-text" || viewSource.includes(step.text)
+        step.kind !== "click-text" ||
+        (painted(step.text) && viewSource.includes(`testId="${step.within}"`))
           ? []
-          : [`${scene}: ${step.text}`],
+          : [`${scene}: ${step.within} / ${step.text}`],
       ),
     );
     expect(missing).toEqual([]);
   });
   ```
+
+  The substring form was measured weak: a target of `Team plan` passed on the
+  literal `Team plan selected` the gesture is meant to reveal, so the rule
+  accepts only a whole quoted literal or JSX child. The `within` scope is also
+  load-bearing: measured 2026-10-18, the reader's instruction ("Click the Team
+  option…") is itself a painted text node, so an unscoped `getByText("Team")`
+  matched the instruction and the label.
 
 - The "never names the text the gesture is supposed to reveal" rule keeps
   working: no instruction contains its expectation.
@@ -389,7 +402,67 @@ nub run test                               # every workspace suite
 
 ## 6. Measured results
 
-_(filled in during implementation — every command above run on this host)_
+Run on this host (Intel macOS, wasm renderer in headless Chrome), 2026-10-18.
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter docs test` | 52 files / **343 tests** pass (one new guard) |
+| `nub run --filter docs check-types` | pass |
+| `nub run --filter docs smoke:preview` | **exit 0** — 30 scenes, **14 gesture-driven**; the six new scenes each `opened by 1 step(s)` on a 640×520 canvas; 30 page iframes loaded (606×358) with `mode=dark`; light/dark Button capture differs; the platform toggle reaches the iframe |
+| `nub run check` | pass (test quality, oxlint, oxfmt, types) |
+| `nub run lint` | pass |
+| `nub run test` | exit 0 (docs 343; every workspace suite) |
+| `nub run --filter docs smoke:build` | exit 0 (production crawl) |
+| `nub run --filter docs smoke:browser` | exit 0 (hydrated previews) |
+
+Per-scene output from the green run:
+
+```
+scene radio-group opened by 1 step(s) — 640x520 canvas, 7 text nodes
+scene slider opened by 1 step(s) — 640x520 canvas, 4 text nodes
+scene range-slider opened by 1 step(s) — 640x520 canvas, 4 text nodes
+scene search-input opened by 1 step(s) — 640x520 canvas, 6 text nodes
+scene text-input opened by 1 step(s) — 640x520 canvas, 4 text nodes
+scene text-area opened by 1 step(s) — 640x520 canvas, 4 text nodes
+```
+
+Two-direction proofs, each measured:
+
+1. **A gesture that is removed.** Dropping `slider`'s step and instruction (and
+   rebuilding the preview) → `smoke:preview` failed
+   `FAIL live scene slider: expected "Volume at maximum" in the GPUI tree (["Playback","The real Slider at 40. Press End on it to reach the maximum."])`,
+   exit `1`. Restored → exit `0`.
+2. **A scene that starts in the revealed state.** Starting `TextInputScene` at
+   `"ada"` → `FAIL live scene text-input: "Typed ada" was painted before the
+   gesture; the scene opens itself`, exit `1`. Restored → exit `0`.
+3. **A typed target that drifts.** Renaming the fill target to
+   `scene-search-missing` → `scene-contract.test.ts` failed
+   `targets a test id the scene really renders` with
+   `["search-input: scene-search-missing"]`. Restored → pass.
+4. **A `click-text` target that is only a substring.** Pointing the radio step at
+   `"Team plan"` (a substring of the expectation `Team plan selected`) first
+   *passed* the substring form of the guard. The rule now accepts only a whole
+   quoted literal or JSX child; the same change then failed
+   `["radio-group: scene-radio / Team plan"]`. Restored → pass.
+
+Three measured facts shaped the implementation:
+
+- **`getByText` is substring-based and the reader's instruction is painted
+  text.** `getByText("Team")` matched both the label and the instruction
+  "Click the Team option to select it." (`Locator matched 2 elements`), so a
+  `click-text` step carries a `within` test id and the locator is scoped to the
+  control. Measured tree: `[{"id":1,"type":"text","text":"Click the Team option
+  to select it."},…,{"id":16,"type":"text","text":"Team"}]`.
+- **Typing works through GPUI's own keyboard/IME path.** `Locator.fill` focuses
+  the field, sends select-all then one keystroke per character; all three text
+  scenes reached their exact values (`grid`, `ada`, `ship it`). A character
+  arrives without a shift modifier, hence lower-case fill text.
+- **Keyboard reaches the slider.** `press` `end` on `scene-slider` focused the
+  track and the component's own `decideValueKey` moved the value to `max`, so
+  the keyboard path is proven rather than assumed. The range slider is driven by
+  a click on the track: the nearest end to the pointer is the lower bound, which
+  is the documented `nearestEnd` rule; the scene's predicate is
+  `band[0] > 0`, so it does not depend on the exact clicked value.
 
 ## 7. STOP conditions
 
