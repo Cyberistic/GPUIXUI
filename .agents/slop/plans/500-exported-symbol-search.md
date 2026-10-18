@@ -133,7 +133,7 @@ green unchanged: symbols only add candidates, they never remove one.
 | --- | --- |
 | `nub run --filter docs test` | 0; +2 files, all green |
 | `nub run --filter docs check-types` | 0 |
-| `nub run --filter docs smoke:build` | 0; 90 pages, 110 links, search checked (the new first-result rule included) |
+| `nub run --filter docs smoke:build` | 0; 90 pages, 109 links, search checked (the new first-result rule included) |
 | `nub run check` | 0 |
 | `nub run lint` | 0 |
 | `nub run test` | 0 |
@@ -166,4 +166,37 @@ green unchanged: symbols only add candidates, they never remove one.
 
 ## 8. Results
 
-_To be filled after implementation._
+Implemented 2026-10-18.
+
+- **The rule landed in one place.** `src/component-meta/symbols.ts` derives the
+  names from a record's documented `api` types (`SpinnerProps` → `Spinner`,
+  deduped, suffix-less types ignored). `src/lib/search.ts` ranks a candidate by
+  the best `matchRank` over its title **and** its symbols, so the scale plan 431
+  defined now applies to the name a consumer imports.
+- **The measured defect is gone.** The same probe over the rebuilt production
+  output returns the owning page first for all nine stems: `Spinner` →
+  `spinner`, `ScrollArea` → `scroll-area`, `TextArea` → `text-area`,
+  `ButtonGroup` → `button-group`, `NumberField` → `number-field`, `OTPField` →
+  `otp-field`, `Field` → `inline-validation`, `ConfirmDialog` →
+  `confirm-dialog`, `Grid` → `stack`. Before the change six of them (and three
+  more) sat outside the top three.
+- **The suites pin it.** New `src/component-meta/symbols.test.ts` (4 tests)
+  proves the stem rule, the suffix-less rejection, dedupe and the nine real
+  records; `search.test.ts` gains the `Spinner` first-result rule, a
+  nine-symbol table and a `mergeResults` unit case; `component-index.test.tsx`
+  proves the local filter already matches the symbol through the props type
+  (no filter change was needed). The docs suite is now **56 files / 369 tests**
+  (was 55 / 361).
+- **The production index is guarded.** `smoke:build`'s search table gained an
+  optional `first` rule and a `Spinner` check. Two-direction proof, measured:
+  with `componentRank` temporarily reverted to the title-only expression, the
+  three new search tests failed by name (`Spinner` landed on
+  `/docs/patterns/settings-form`) and the crawl **exited `1`** with
+  `FAIL /api/search?query=Spinner: the first result is not under
+  /docs/components/spinner for an exported symbol that is not the record's
+  title`; with the fix restored the crawl exits `0` over 90 pages / 109 links
+  and the nine-symbol probe reports `misses=0`.
+- **Gates.** `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+  No component page, registry record, component source or inventory row changed;
+  `apps/docs/README.md` **Search** names the symbol rule.
+
