@@ -223,6 +223,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [526](./526-dialog-face-on-content.md) | The dialog's face over the content a window shows | F | 099, 359, 371, 375, 383, 395, 507, 508, 509, 525 | done |
 | [527](./527-field-text-row-washes.md) | The field's typed text and hint on the row washes | F | 071, 081, 087, 306, 315, 317, 319, 392, 500, 506 | done |
 | [528](./528-link-through-text-selection.md) | The link through a text selection | F | 071, 081, 082, 087, 314, 346, 351, 362, 366, 377, 391, 500, 506, 510, 525, 527 | done |
+| [529](./529-shareable-theme-choice.md) | A shareable theme choice: the URL boundary | F | 067, 068, 096, 305, 311, 380, 383, 387 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2375,6 +2376,22 @@ dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light `#005BA1` → `#004F8A`,
 `#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`), every shipped set passes
 (4.729:1 at the tightest, Windows dark; 7.484:1 at AAA) and `contrastPairs`
 stays **404**.
+
+Plan `529` owns the boundary plan `380` documented but left unbuilt: a
+`ThemeChoice` "arrives from ... a shareable URL", yet nothing in the package read
+or wrote one. Every consumer retyped the five query keys and the guard each used;
+the one shipped toggle (`apps/docs/src/platform/platform.ts`) parses only
+`platform` and retypes the union, so plan `380`'s recipe, contrast and density
+axes have no URL form at all. `themeChoiceFromParams(source)` decodes all five
+through the existing guards (a real `URLSearchParams` satisfies the structural
+`ThemeParamSource`, so the package gains no runtime dependency), and
+`themeChoiceParams(choice)` writes only the axes whose absence would change the
+resolved theme — `dark`, `high`, a non-`default` platform, a valid recipe that
+suppresses the platform it overrides, and any valid density, because the platform
+supplies its fallback preset. `themeChoiceKeys` is the key order and the clear
+list, so a link cannot keep an axis the new choice replaced. The full matrix
+round-trips through a real URL, no colour, pair, floor, metric, platform style,
+recipe or theme moves, and `contrastPairs` stays **404**.
 
 ## How to use a plan
 
