@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 105/138
+`[x]` `[████████░░]` 106/139
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -261,6 +261,13 @@ selection (`#7C86FF59`), takes typed text from `style.color` and reads only
 `theme.caret`; the fixed grey measures 3.23:1 on the light `input`, the docs and
 README now separate the paths, `selectionStyle`'s JSDoc states the limit, and
 two `docs.test.ts` cases hold the evidence (plan 337)
+`[x]` Ship `filledControl(theme, family)` beside `filledControlFamilies`,
+`FilledControlFamily` and `FilledControlStyle`, and pin the measured cost of the
+alpha hover the consumers still paint — the primary label falls to **2.06:1** on
+a Linux light card at 50% and **3.40:1** at 80% (destructive 2.24:1 / 3.75:1),
+under the 4.5:1 on-colour floor; the 50% case is past repair in the palette
+(even black at 50% on white reaches only 4.00:1), so the evidence is guarded
+prose plus the designed one-call replacement, not a pair (plan 338)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
@@ -611,6 +618,15 @@ workstreams)
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
 owner: those workstreams)
+`[ ]` Cross-team: `components/internal/button.tsx` and
+`primitives/src/core/variants.ts` replace the alpha hover/press — `alpha(fill,
+0.5)` in `components` (whose comment still claims tokens ship no `primaryHover`)
+and `alpha(fill, 0.9/0.8)` in `primitives` — with `filledControl(theme, family)`
+or the four roles directly. The label was designed for the opaque fill: the
+primary label measures **2.06:1** at 50% (Linux light, card) and **3.40:1** at
+80%, destructive **2.24:1** / **3.75:1** (identity light), under the 4.5:1
+on-colour floor every designed step clears (plan 338; owner: `components`,
+`primitives`)
 `[ ]` Cross-team: `primitives` reads `accentHover`/`accentActive` for a toggle
 that is on and deletes the `alpha(accent, 0.9/0.8)` hover and press in
 `packages/primitives/src/core/variants.ts` (`togglePressedBase`); the two roles

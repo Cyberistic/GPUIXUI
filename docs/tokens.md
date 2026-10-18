@@ -82,6 +82,8 @@ missing here is not public.
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`. |
 | `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
+| `FilledControlFamily` | A filled control family from `filledControlFamilies`. |
+| `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
 | `FontWeight` | `400`, `500`, `600` or `700`. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
@@ -1293,6 +1295,8 @@ Rules:
 5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
    `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
    the ring is never a border and never changes layout. See [Focus](#focus).
+6. A filled control reads its resting, hover and pressed fills from
+   `filledControl(theme, family)`; never composite `alpha(fill, …)` for a state.
 
 ```tsx
 const theme = useTheme();
@@ -1350,7 +1354,8 @@ const rows = textRoles.map((role) => ({ role, ...typography[role] }));
 
 `statusTones` and `platformNames` index the remaining catalogues: the four status
 families in documentation order, and the four platform variants in toggle order
-(macOS · Linux · Windows · Default). A docs table or a platform toggle iterates
+(macOS · Linux · Windows · Default). `filledControlFamilies` indexes the four
+filled control families. A docs table or a platform toggle iterates
 them instead of retyping names, and parses its `platform` parameter with
 `isPlatformName`, so a stale or hand-edited URL falls back to the default rather
 than an invalid theme.
@@ -1544,6 +1549,37 @@ becomes `hover` or `active`, so both pairs are measured as well. They clear the
 secondary floor in every shipped set — **10.42:1** on `hover` (macOS dark) and
 **9.44:1** on `active` (Linux dark) at the tightest — and the designed family
 remains the preferred state (plan `334`).
+
+The two shipped consumers have not migrated their **brand** families, and the
+cost is the label rather than the fill. `components/internal/button.tsx` still
+hovers a primary and a destructive action at `alpha(fill, 0.5)` (its comment
+says tokens ship no `primaryHover`, which has not been true since plan `055`),
+and `primitives/src/core/variants.ts` hovers and presses at
+`alpha(fill, 0.9)` / `alpha(fill, 0.8)`. A translucent fill takes its colour
+from the surface behind the control while the label was designed for the opaque
+fill, so the label falls under the 4.5:1 on-colour floor every designed step
+clears: the primary label measures **2.06:1** (Linux light, card) at 50%,
+**4.02:1** (macOS light, card) at 90% and **3.40:1** (Linux light, card) at
+80%, and the destructive label **2.24:1** (identity light, card) at 50%,
+**4.43:1** (identity light, card) at 90% and **3.75:1** (identity light, card)
+at 80%. The 50% case is past repair in the palette: even a black fill tinted at
+50% over a white card carries white text at only **4.00:1**. The fix is the
+designed step, and the package makes it one call:
+
+```ts
+import { filledControl } from "@gpuixui/tokens";
+
+const states = filledControl(theme, "primary");
+// states.background / .hover / .active are the designed fills;
+// states.foreground is the one label colour readable on all three.
+```
+
+`filledControlFamilies` is the ordered index — `primary`, `secondary`,
+`destructive`, `accent` — and `FilledControlFamily` derives from it, so a
+consumer that paints a filled state reads the family it already names instead of
+compositing an alpha fill. `filled-control.test.ts` proves both directions on
+every shipped set: the designed trio clears the on-colour floor on all three
+steps, and the alpha composition fails it.
 
 The accent family completes the matrix (plan `327`). A toggle that is on paints
 `accent` with `accentForeground`; before `accentHover` and `accentActive`

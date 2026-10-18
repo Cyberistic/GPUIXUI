@@ -134,6 +134,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [335](./335-selected-row-edge.md) | The control edge on the selected row fill | F | 080, 097, 309, 312, 316, 318, 327, 334 | done |
 | [336](./336-quoted-figure-guards.md) | The catalogue's last unpinned tightest figures | F | 071, 075, 326, 335 | done |
 | [337](./337-native-field-reach.md) | The native field's own hint and selection | F | 069, 317, 319, 331, 335 | done |
+| [338](./338-filled-control-family.md) | The filled control's designed family, in one call | F | 055, 097, 327, 334 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -968,6 +969,25 @@ paths, `selectionStyle`'s JSDoc states the field limit, two `docs.test.ts` cases
 hold the claims, and the consumer fix — a `<text>` hint over the input, or the
 documented grey — is recorded for `primitives`. No colour, pair or floor
 changes.
+
+338 closes the gap between the designed filled-control matrix and what the two
+shipped consumers paint. Plan 097 shipped `x` → `xHover` → `xActive` for all
+four families and the contract measures the label on all three, but
+`components/internal/button.tsx` still hovers at `alpha(primary, 0.5)` (with the
+now-false comment *"Tokens ship no `primaryHover`"*) and `primitives` hovers and
+presses at `alpha(fill, 0.9)` / `alpha(fill, 0.8)`. A translucent fill takes its
+colour from the surface behind the control while the label was designed for the
+opaque fill, and nothing measured the result: the label falls to **2.06:1**
+(primary at 50% on a Linux light card) and **3.40:1** (primary at 80% on the
+same), with destructive at 2.24:1 / 3.75:1 (identity light), all under the
+4.5:1 on-colour floor every designed step clears. The 50% case is past repair in
+the palette — even a black fill tinted at 50% over a white card carries white
+text at only 4.00:1 — so the fix is the designed step, and the package makes it
+one call: `filledControl(theme, family)` returns the resting, hover and pressed
+fills with the one foreground, beside `filledControlFamilies`,
+`FilledControlFamily` and `FilledControlStyle`. A pair for the alpha composite
+would bless a composition no palette can pass, so the evidence is a TODO row
+plus guarded prose instead. No colour, pair or floor changes.
 
 ### Reference adoption (block `200–299`)
 

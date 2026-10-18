@@ -117,6 +117,69 @@ export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
   };
 }
 
+/**
+ * The filled control families, in documentation order. Each carries a resting
+ * fill, a designed hover and press, and the one foreground that sits on all
+ * three. `FilledControlFamily` derives from this list, so a fifth family joins
+ * one place.
+ */
+export const filledControlFamilies = [
+  "primary",
+  "secondary",
+  "destructive",
+  "accent",
+] as const;
+
+/** A filled control family. */
+export type FilledControlFamily = (typeof filledControlFamilies)[number];
+
+/** The four roles a filled control paints. */
+export interface FilledControlStyle {
+  /** The resting fill (`primary`, `secondary`, `destructive` or `accent`). */
+  readonly background: string;
+  /** The family foreground, readable on all three fills (`xForeground`). */
+  readonly foreground: string;
+  /** The designed fill under the pointer (`xHover`). */
+  readonly hover: string;
+  /** The designed fill while pressed (`xActive`). */
+  readonly active: string;
+}
+
+/**
+ * Resolve a filled control family to its resting, hover and pressed fills and
+ * the single foreground readable on all three.
+ *
+ * A filled control is never an alpha composite: `alpha(fill, 0.5)` takes its
+ * colour from the surface behind the control, and the label was designed for
+ * the opaque fill — the shipped half-alpha primary hover measures 2.06:1 on a
+ * light card. These three roles are opaque, editable in a copied theme, and
+ * held to the on-colour floor by the contrast contract.
+ *
+ * @example
+ * ```tsx
+ * const states = filledControl(theme, "primary");
+ * <div
+ *   style={{
+ *     backgroundColor: states.background,
+ *     color: states.foreground,
+ *     hover: { backgroundColor: states.hover },
+ *     active: { backgroundColor: states.active },
+ *   }}
+ * />
+ * ```
+ */
+export function filledControl(
+  theme: Theme,
+  family: FilledControlFamily,
+): FilledControlStyle {
+  return {
+    background: theme.colors[family],
+    foreground: theme.colors[`${family}Foreground`],
+    hover: theme.colors[`${family}Hover`],
+    active: theme.colors[`${family}Active`],
+  };
+}
+
 /** A focus ring, as the runtime's single-shadow shape. */
 export interface FocusRing {
   /** The shadow a component paints while it holds focus. */

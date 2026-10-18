@@ -744,6 +744,91 @@ describe("docs/tokens.md quoted tightest figures", () => {
     expect(markdownProse).toContain(`\`${scrim}\`, ${ratio}:1`);
     expect(markdownProse).toContain(`${percent}% white wash`);
   });
+
+  it("quotes the worst alpha-hover label ratios plan 338 records", () => {
+    const surfaces = ["background", "card", "popover", "muted"] as const;
+    const worstAlpha = (
+      foreground: keyof ThemeColors,
+      fill: keyof ThemeColors,
+      opacity: number,
+    ): readonly [string, string, number] =>
+      quotedSets
+        .flatMap(([label, theme]) =>
+          surfaces.map(
+            (surface) =>
+              [
+                label,
+                surface,
+                contrastRatio(
+                  theme.colors[foreground],
+                  compositeOver(
+                    alpha(theme.colors[fill], opacity),
+                    theme.colors[surface],
+                  ),
+                ),
+              ] as const,
+          ),
+        )
+        .reduce((worst, current) => (current[2] < worst[2] ? current : worst));
+
+    const quoted = [
+      ["primaryForeground", "primary", 0.5, "Linux light", "card", 2.06],
+      [
+        "destructiveForeground",
+        "destructive",
+        0.5,
+        "identity light",
+        "card",
+        2.24,
+      ],
+      ["primaryForeground", "primary", 0.9, "macOS light", "card", 4.02],
+      ["primaryForeground", "primary", 0.8, "Linux light", "card", 3.4],
+      [
+        "destructiveForeground",
+        "destructive",
+        0.9,
+        "identity light",
+        "card",
+        4.43,
+      ],
+      [
+        "destructiveForeground",
+        "destructive",
+        0.8,
+        "identity light",
+        "card",
+        3.75,
+      ],
+    ] as const;
+
+    quoted.forEach(([foreground, fill, opacity, label, surface, value]) => {
+      const [actualLabel, actualSurface, ratio] = worstAlpha(
+        foreground,
+        fill,
+        opacity,
+      );
+
+      expect(
+        [actualLabel, actualSurface, Number(ratio.toFixed(2))],
+        `${foreground} at ${opacity}`,
+      ).toEqual([label, surface, value]);
+      expect(markdownProse).toContain(
+        `${value.toFixed(2)}:1** (${label}, ${surface})`,
+      );
+    });
+  });
+
+  it("quotes the ceiling a translucent fill cannot pass", () => {
+    const ceiling = contrastRatio(
+      "#FFFFFF",
+      compositeOver(alpha("#000000", 0.5), "#FFFFFF"),
+    ).toFixed(2);
+
+    expect(ceiling).toBe("4.00");
+    expect(markdownProse).toContain(
+      `carries white text at only **${ceiling}:1**`,
+    );
+  });
 });
 
 describe("docs/tokens.md runtime reach", () => {
@@ -1046,6 +1131,13 @@ describe("docs/design-system.md", () => {
     const destructive = `| destructive | \`${themes.light.colors.destructive}\`, white text | \`${themes.dark.colors.destructive}\`, near-black red text |`;
     expect(designSystem.includes(primary), primary).toBe(true);
     expect(designSystem.includes(destructive), destructive).toBe(true);
+  });
+
+  it("states the alpha state's measured cost and the helper that replaces it", () => {
+    const figures =
+      "drops the label to **2.06:1** on a Linux light card at 50%";
+    expect(designSystem.includes(figures), figures).toBe(true);
+    expect(designSystem).toContain("`filledControl(theme, family)`");
   });
 
   it("summarises every type role with its real metrics", () => {

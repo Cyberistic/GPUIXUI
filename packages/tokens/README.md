@@ -148,6 +148,14 @@ A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
 `themeContrastFailures` by the package's tests.
 
+A filled control reads its states from `filledControl(theme, family)` — the
+resting, hover and pressed fills and the one foreground readable on all three —
+rather than compositing `alpha(fill, …)`. A translucent state takes its colour
+from the surface behind the control and drops the label below the on-colour
+floor; the designed roles are opaque and measured. `filledControlFamilies` is
+the index (`primary`, `secondary`, `destructive`, `accent`) and
+`FilledControlFamily` derives from it.
+
 ## Persisted choices
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,

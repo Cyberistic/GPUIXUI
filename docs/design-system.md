@@ -313,6 +313,15 @@ wash, so both pairs are held to the secondary floor (plan `334`). A migrated
 consumer paints `secondaryHover`/`secondaryActive` and the extra pairs are
 simply no longer exercised.
 
+The brand families have not migrated either, and their cost is the label rather
+than the fill: `components` hovers a primary action at 50% and `primitives` at
+90% and 80%, which drops the label to **2.06:1** on a Linux light card at 50%
+and **3.40:1** at 80%, under the 4.5:1 every designed step clears. No palette
+can make a half-alpha fill carry its own label — even a black fill over a white
+card reaches only 4.00:1 — so `filledControl(theme, family)` returns the designed
+trio and its one foreground, and the consumer migration is recorded in
+`TODO.md`.
+
 An inactive control is not an opacity composite. It paints the `disabled` fill
 with `disabledForeground` on it and its `border` edge around it: the label keeps a
 readable dim (3:1, 4.5:1 at AAA) and the edge keeps the shape, because the fill
