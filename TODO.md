@@ -795,10 +795,12 @@ retired once both branches are one
       `runtime/activation.runtime.test.tsx` now drives eight button-shaped
       controls through nine sequences (Enter up/down/pair/held, Space
       up/down/pair/held, primary click) with the target genuinely focused, in a
-      fresh window per case: 72 cases. The contract was already consistent;
-      three mutations fail by case name — a `Checkbox` up→down handler (4), a
-      deleted `ToggleGroup` key-up path (2), and a removed held-key guard (8).
-      Offline 574, runtime 529; plan `354`.
+      fresh window per case: 72 cases, asserting the reported value as well as
+      the count. The contract was already consistent; four mutations fail by
+      case name — a `Checkbox` up→down handler (4), a deleted `ToggleGroup`
+      key-up path (2), a removed held-key guard (8), and `RadioGroup`'s
+      activation target reverted to the value-derived tab stop (4, failing on
+      the reported value). Offline 574, runtime 529; plan `354`.
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open

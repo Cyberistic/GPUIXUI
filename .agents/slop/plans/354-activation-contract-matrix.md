@@ -69,7 +69,7 @@ sequence names, not the first option).
 
 | File | Change |
 | ---- | ------ |
-| `packages/primitives/runtime/activation.runtime.test.tsx` | **new.** One table: 8 controls × 9 sequences (`enter down`, `enter up`, `space down`, `space up`, `enter held`, `space held`, `enter pair`, `space pair`, `pointer click`) = **72 cases**. Each case mounts one control in a fresh window, focuses the target, delivers the sequence, and asserts the reported callback count. |
+| `packages/primitives/runtime/activation.runtime.test.tsx` | **new.** One table: 8 controls × 9 sequences (`enter down`, `enter up`, `space down`, `space up`, `enter held`, `space held`, `enter pair`, `space pair`, `pointer click`) = **72 cases**. Each case mounts one control in a fresh window, focuses the target, delivers the sequence, and asserts the reported **value** and count — a group that activates the stale tab stop fails on the value. |
 | `.agents/slop/plans/README.md` | index row for `354`. |
 | `TODO.md` | one ticked primitives row; refresh the runtime count. |
 | `COMPONENTS.md` | one line in the runtime-count paragraph (the matrix is cross-cutting, not a component row). |
@@ -140,7 +140,8 @@ and re-run to green before committing.
 
 - Additions: `runtime/activation.runtime.test.tsx` — 72 cases (8 controls × 9
   sequences). Every case focuses its target through the renderer first, in its
-  own fresh window.
+  own fresh window, and asserts the reported **value** as well as the count, so
+  a group that activates the stale tab stop fails even when it reports once.
 - **Counts:** offline `574 passed` in 43 files (unchanged); runtime **`529
   passed` in 26 files**; `check-types` exit `0`.
 - **Two-direction proof (each mutation restored and the file re-run green):**
@@ -152,5 +153,9 @@ and re-run to green before committing.
      (2 failed, 70 passed).
   3. `core/keyboard.ts`'s `if (held) return false` deleted — exactly the eight
      `… / enter held` cases failed, one per control (8 failed, 64 passed).
+  4. `RadioGroup`'s activation target replaced with the value-derived tab stop
+     (plan `353`'s defect) — exactly `RadioGroup / enter down`, `space up`,
+     `enter pair`, `space pair` failed on the *value* (`"a"` for the focused
+     Beta), not the count (4 failed, 68 passed).
 - No component behaviour changed; the contract was already correct. The table is
   the guard plan `353` was missing.

@@ -10,7 +10,9 @@
  * `core/keyboard.ts` owns the rule: **Enter on key down, Space on key up**, a
  * held key never activates, and the pointer activates once. This table drives
  * all of it against the eight controls that share the rule, in a fresh window
- * per case, with the target genuinely focused first.
+ * per case, with the target genuinely focused first. It asserts the reported
+ * **value** as well as the count, so a group that activates the stale tab stop
+ * fails even though it reported exactly once.
  */
 
 import type { ReactElement } from "react";
@@ -33,19 +35,25 @@ const options = [
   { value: "b", label: "Beta" },
 ] as const;
 
+/** What a case reports; buttons report no value, so they use a sentinel. */
+type Report = (value?: string) => void;
+
 interface ActivationCase {
   readonly name: string;
   /** The element the sequence targets — a group's second item, not the root. */
   readonly focusId: string;
-  readonly node: (report: () => void) => ReactElement;
+  /** The value a single activation must report. */
+  readonly reported: string;
+  readonly node: (report: Report) => ReactElement;
 }
 
 const CASES: ReadonlyArray<ActivationCase> = [
   {
     name: "Button",
     focusId: "x",
+    reported: "activated",
     node: (report) => (
-      <Button testId="x" onActivate={report}>
+      <Button testId="x" onActivate={() => report()}>
         Save
       </Button>
     ),
@@ -53,15 +61,22 @@ const CASES: ReadonlyArray<ActivationCase> = [
   {
     name: "IconButton",
     focusId: "x",
+    reported: "activated",
     node: (report) => (
-      <IconButton testId="x" label="Add" icon="plus" onActivate={report} />
+      <IconButton
+        testId="x"
+        label="Add"
+        icon="plus"
+        onActivate={() => report()}
+      />
     ),
   },
   {
     name: "Toggle",
     focusId: "x",
+    reported: "true",
     node: (report) => (
-      <Toggle testId="x" onPressedChange={report}>
+      <Toggle testId="x" onPressedChange={(pressed) => report(String(pressed))}>
         Bold
       </Toggle>
     ),
@@ -69,38 +84,61 @@ const CASES: ReadonlyArray<ActivationCase> = [
   {
     name: "Checkbox",
     focusId: "x",
+    reported: "true",
     node: (report) => (
-      <Checkbox testId="x" label="Accept" onValueChange={report} />
+      <Checkbox
+        testId="x"
+        label="Accept"
+        onValueChange={(checked) => report(String(checked))}
+      />
     ),
   },
   {
     name: "Switch",
     focusId: "x",
-    node: (report) => <Switch testId="x" label="On" onValueChange={report} />,
+    reported: "true",
+    node: (report) => (
+      <Switch
+        testId="x"
+        label="On"
+        onValueChange={(checked) => report(String(checked))}
+      />
+    ),
   },
   {
     name: "CheckboxGroup",
     focusId: "x-b",
+    reported: "b",
     node: (report) => (
-      <CheckboxGroup testId="x" options={options} onValueChange={report} />
+      <CheckboxGroup
+        testId="x"
+        options={options}
+        onValueChange={(values) => report(String(values))}
+      />
     ),
   },
   {
     name: "RadioGroup",
     focusId: "x-b",
+    reported: "b",
     node: (report) => (
-      <RadioGroup testId="x" options={options} onValueChange={report} />
+      <RadioGroup
+        testId="x"
+        options={options}
+        onValueChange={(value) => report(value)}
+      />
     ),
   },
   {
     name: "ToggleGroup",
     focusId: "x-b",
+    reported: "b",
     node: (report) => (
       <ToggleGroup
         testId="x"
         type="single"
         options={options}
-        onValueChange={report}
+        onValueChange={(values) => report(String(values))}
       />
     ),
   },
@@ -109,6 +147,7 @@ const CASES: ReadonlyArray<ActivationCase> = [
 interface Sequence {
   readonly name: string;
   readonly run: (runtime: Runtime, focusId: string) => void;
+  /** How many times the control must report. */
   readonly expected: number;
 }
 
@@ -188,11 +227,11 @@ it.each(
   "%s activates per the contract on %s",
   async (_name, _sequence, testCase, sequence) => {
     const runtime = await openWindow();
-    let reports = 0;
+    const reports: string[] = [];
     runtime.render(
       <Surface>
-        {testCase.node(() => {
-          reports += 1;
+        {testCase.node((value) => {
+          reports.push(value ?? "activated");
         })}
       </Surface>,
     );
@@ -200,7 +239,8 @@ it.each(
     focus(runtime, testCase.focusId);
     sequence.run(runtime, testCase.focusId);
     runtime.flush();
-    // One callback per activation; a repeat and a directional key report nothing.
-    expect(reports).toBe(sequence.expected);
+    // A repeat and the wrong key phase report nothing; an activation reports
+    // once, and a group must report the item the sequence targeted.
+    expect(reports).toEqual(sequence.expected === 0 ? [] : [testCase.reported]);
   },
 );

@@ -310,7 +310,8 @@ number field whose Enter commits `1.5` to `1.50` before calling the caller's
 option holding focus rather than the value's stale tab stop (plan 353), and an
 activation matrix over eight button-shaped controls × nine sequences — Enter
 up/down/pair/held, Space up/down/pair/held, primary click — that fails by case
-name when one control loses a key phase or a held key starts activating
+name when one control loses a key phase, a held key starts activating, or a
+group activates the value's stale tab stop instead of the focused item
 (plan 354).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
