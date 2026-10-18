@@ -482,7 +482,7 @@ list while claiming "every shipped set").
 
 `TODO.md`: tick the elevation row in the tokens section (one paragraph: the
 defect, the values, the platform rule and the contract), and update the section
-bar to the current counts (171/228 after the tick).
+bar to the current counts (171/227 after the tick).
 
 `.agents/slop/plans/README.md`: add the index row
 `| [505](./505-elevation-tint-aaa-dark.md) | The elevation tint on the AAA dark canvas | F | 085, 099, 345, 371, 390, 393 | done |`
