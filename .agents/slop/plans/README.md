@@ -242,6 +242,8 @@ tables and the inventory reconciliation.
 | [`480-state-ownership.md`](./480-state-ownership.md) | State ownership on the interactive compound pages: 19 records become `stateful` and each page names what it owns and what the consumer owns | F | 411, 427, 462, 479 | implemented — 21 stateful records total; two source-corrected claims and two two-direction proofs in §8 |
 | [`481-part-name-search.md`](./481-part-name-search.md) | A part name (`DialogTitle`, `DropdownMenuSubTrigger`) finds its component in ⌘K and the index filter, and the built smoke queries one | F | 419, 431, 442, 454, 479 | implemented — three tests and a production query, both directions proven in §7 |
 | [`482-component-api-page.md`](./482-component-api-page.md) | The public component API contract reaches the site: parts, controlled state, state-aware styles, keyboard and accessibility, with the real hook/keyboard sources and a generated parts index | F | 410, 411, 427, 461, 479, 480; `docs/component-api.md` | implemented — `/docs/component-api`, `<PartIndex />` generated from 29 compound records, two guards proven both ways, 85 → 86 pages |
+| [`483-live-surface-chrome-truth.md`](./483-live-surface-chrome-truth.md) | The landing page stops denying the live surface it ships; one predicate guards MDX prose and rendered chrome | F | 410, 439, 455–460 | implemented — the shipped denial failed the new guard first, then passed; 46 files / 293 docs tests, all gates and the built-site smoke green |
+
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

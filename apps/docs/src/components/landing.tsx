@@ -31,7 +31,7 @@ export const PALETTE_ROLES = [
   "border",
 ] as const;
 
-/** The five honest preview tiers, worded after `docs/preview-strategy.md`. */
+/** The six honest preview tiers, worded after `docs/preview-strategy.md`. */
 export const PREVIEW_TIERS: ReadonlyArray<{
   readonly label: string;
   readonly detail: string;
@@ -227,8 +227,10 @@ export function Landing() {
           example's <code>dev</code> script currently needs Bun, the GPUix
           native binding and a desktop session;{" "}
           <code>nub run --filter @gpuixui/basic-app check-types</code> verifies
-          the composition without launching a window. This site never renders
-          GPUix, so it links to the playground instead of imitating it.
+          the composition without launching a window. Pages with a live scene
+          run GPUix's WebAssembly renderer in the browser; the playground is
+          where the desktop window runs, and every other preview is labelled as
+          native evidence.
         </p>
         <pre className="overflow-x-auto rounded-lg border border-fd-border bg-fd-card p-4 text-sm">
           <code>{QUICK_START.map((command) => `${command}\n`).join("")}</code>

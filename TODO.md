@@ -469,9 +469,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–482)
+## Docs site workstream (plans 410–483)
 
-`[x]` `[██████████]` 80/81
+`[x]` `[██████████]` 81/82
+
+`[x]` **The site chrome stops denying the live surface (plan 483)** — the landing page's quick start still said "This site never renders GPUix" while the site ships live wasm scenes; one `deniesLiveSurface` predicate now guards MDX prose and the rendered landing chrome, and the shipped sentence failed the new guard before the copy changed
 
 `[x]` **The public component API contract reaches the site (plan 482)** — `/docs/component-api` names the parts, controlled/uncontrolled, state-aware style, keyboard and accessibility rules; the parts index is generated from 29 compound records, the real `parts.ts`/`controllable.ts`/`keyboard.ts` sources are included, and the page records the runtime limitation the maintainer contract overstates
 `[x]` **A part name finds its component (plan 481)** — `DialogTitle` and every

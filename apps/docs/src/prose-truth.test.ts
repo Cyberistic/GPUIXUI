@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { previewsBySlug } from "./components/preview/approximations";
+import { deniesLiveSurface } from "./lib/live-surface-truth";
 import { LIVE_SCENES } from "../preview/scenes";
 
 /**
@@ -235,11 +236,7 @@ describe("prose truth", () => {
       liveSceneCount === 0
         ? []
         : pages
-            .filter(
-              ({ body }) =>
-                /\bdoes not render (?:it|GPUix)\b/i.test(body) ||
-                /\bcannot be shown running in a browser\b/i.test(body),
-            )
+            .filter(({ body }) => deniesLiveSurface(body))
             .map(({ path }) => path);
     expect(denials).toEqual([]);
   });

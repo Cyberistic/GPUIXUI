@@ -5,6 +5,7 @@ import * as Arr from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { components, groups } from "@/component-meta/registry";
 import { themeColors } from "@/lib/docs-theme";
+import { deniesLiveSurface } from "@/lib/live-surface-truth";
 import { Landing, PALETTE_ROLES, PREVIEW_TIERS, QUICK_START } from "./landing";
 
 /**
@@ -133,7 +134,7 @@ describe("landing page", () => {
       expect(html).toContain(tier.label);
       expect(html).toContain(tier.detail);
     });
-    expect(html).not.toContain("cannot render GPUix");
+    expect(deniesLiveSurface(html)).toBe(false);
     expect(textOf('href="/docs/architecture"')).toContain("Architecture");
   });
 });
