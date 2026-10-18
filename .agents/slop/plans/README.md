@@ -160,6 +160,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [361](./361-pill-rounds-largest-avatar.md) | The pill radius must round the largest avatar | F | 054, 353, 358, 360 | done |
 | [362](./362-selection-status-panel-text.md) | Text selection in a status panel | F | 091, 320, 346, 351 | done |
 | [363](./363-selection-card-foreground.md) | The card's own foreground through a text selection | F | 071, 081, 087, 362 | done |
+| [364](./364-motion-contract.md) | The motion group the numeric contract left half-governed | F | 019, 358, 360 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1314,6 +1315,23 @@ recipes ship them apart (`xp` light `#191D25` / `#1A1A1A`, `aero` light
 floor through the wash — Windows dark is the tightest at **9.07:1** — so no
 colour moves, and the regression case sets `cardForeground` to the composited
 wash to prove the pair is reported.
+
+364 closes the half of the numeric contract the `motion` group never read. The
+group governed the six timing ladders (`none` zero, `step` → `pulse`
+non-decreasing) and never looked at `motion.ease`, and a timing's ladder does not
+require finiteness. Three edits on the shipped light theme therefore returned
+`[]`: `pulse: Infinity`, `ease.enter: [NaN, 0, 0, 1]` and
+`ease.standard: [2, 0, 0, 1]`. The pinned `@gpuix/native@0.10.0` type accepts the
+tuple as four plain numbers, while the runtime's `validate_seconds` rejects a
+non-finite duration and `validate_ease` rejects a non-finite control point or an
+x value outside `0…1`, and `MotionState::invalid` then drops the transition — so
+the animation silently does not run. The timings gain the `finite` rule and each
+easing tuple is held to the runtime's control points: the two x values finite and
+inside `0…1`, the two y values finite with no range bound, because an overshoot
+curve is a design choice. A named easing is constrained by `MotionEasing` itself.
+No shipped set carries a tuple or a non-finite timing, so no token value moves;
+`motion-contract.test.ts` states the three silent edits and the overshoot the
+rule must not reject.
 
 ### Reference adoption (block `200–299`)
 
