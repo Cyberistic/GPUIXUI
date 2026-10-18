@@ -231,11 +231,14 @@ describe("disabled descriptions", () => {
         onValueChange={() => undefined}
         disabled
       >
-        <TagInputField testId="tag-field" />
+        <TagInputField testId="tag-field" aria-label="Tag field" />
       </TagInput>,
     );
 
     expect(descriptionOf(view.renderer, "Tags")).toEqual(
+      Option.some("Disabled"),
+    );
+    expect(descriptionOf(view.renderer, "Tag field")).toEqual(
       Option.some("Disabled"),
     );
     expect(descriptionOf(view.renderer, "one")).toEqual(Option.none());
