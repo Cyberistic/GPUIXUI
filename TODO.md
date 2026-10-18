@@ -430,6 +430,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
     than only those that happened to adopt the sentence — plan 335; 14 pages
     normalised (three had no verification section), unit 335, behaviour 517;
     both-direction proof
+  - [x] Packaging truth: every documented subpath import resolves, and every
+    public module reaches `src/index.ts` — plan 336; the documented
+    `@gpuixui/components/validation/logic` import pointed at a missing `.tsx`,
+    so `exports` now names the `.ts` module; 2 new checks, unit 337
+    both-direction proof
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 

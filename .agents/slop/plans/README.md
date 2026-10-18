@@ -109,6 +109,7 @@ workstream declares in its own section below.
 | [333](./333-docs-test-counts.md) | Docs truth: a stated native-test count must match the suite | F | 117, 139, 330–332 | done — one drifted page (`Field`) fixed and the count check added to `inventory.test.ts`; both-direction proof (335 unit tests) |
 | [334](./334-activation-sweep.md) | The remaining button-shaped parts activate Space on release | F | 110, 117, 200, 201, 332, 333 | done — 9 native tests (behaviour 517), both-direction proof (8 fail without the fix); the recorder's clear control claims its key, fixing a latent keyboard bug |
 | [335](./335-docs-verification-truth.md) | Docs truth: every docs page states its real native-test count | F | 117, 139, 330–333 | done — 14 pages normalised (3 had no verification section), check tightened from "pages that state a count" to all 41; unit 335, behaviour 517; both-direction proof |
+| [336](./336-documented-subpath-exports.md) | Packaging truth: every documented subpath import resolves | F | 110, 115, 117, 330, 335 | done — `docs/field.mdx`'s `@gpuixui/components/validation/logic` mapped to a missing `.tsx`; explicit export + a resolution/index check (unit 337); both-direction proof |
 
 Interlocks this workstream depends on and does not own:
 
