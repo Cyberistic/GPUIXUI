@@ -1,0 +1,131 @@
+/**
+ * Guards the generic pointer ladder's step floor.
+ *
+ * The bug this suite exists for: a ghost or outline control paints no fill at
+ * rest, the `hover` wash under the pointer and the `active` wash while pressed,
+ * and the shipped secondary control still paints that pair while it migrates to
+ * the designed family. Every wash was measured only against a *surface*
+ * (`stateFillSurfacePairs`), so a theme whose `active` equalled `hover`
+ * returned `[]` from `themeContrastFailures` while the press painted no visible
+ * change — the defect plan 342 fixed for the filled families, one ladder over.
+ * `washStepPairs` publishes the step.
+ */
+import { describe, expect, it } from "vitest";
+import {
+  contrastFloors,
+  contrastRatio,
+  themeContrastFailures,
+  washStepPairs,
+} from "./contrast.js";
+import { quietPressFailures, quietPressTheme } from "./contrast.example.js";
+import {
+  getPlatformRecipeTheme,
+  platformRecipeNames,
+} from "./platform-recipes.js";
+import { platformNames } from "./platforms.js";
+import {
+  extendTheme,
+  getPlatformTheme,
+  getTheme,
+  themeContrasts,
+  themeModes,
+  type Theme,
+  type ThemeContrast,
+} from "./theme.js";
+
+const realPlatforms = platformNames.filter(
+  (platform) => platform !== "default",
+);
+
+const shippedThemes: ReadonlyArray<Theme> = [
+  ...themeContrasts.flatMap((contrast) =>
+    themeModes.map((mode) => getTheme(mode, contrast)),
+  ),
+  ...realPlatforms.flatMap((platform) =>
+    themeContrasts.flatMap((contrast) =>
+      themeModes.map((mode) => getPlatformTheme(platform, mode, contrast)),
+    ),
+  ),
+  ...platformRecipeNames.flatMap((recipe) =>
+    themeContrasts.flatMap((contrast) =>
+      themeModes.map((mode) => getPlatformRecipeTheme(recipe, mode, contrast)),
+    ),
+  ),
+];
+
+const pressFailures = (theme: Theme) =>
+  themeContrastFailures(theme).filter(
+    ({ foreground, background, pairClass }) =>
+      pairClass === "step" && foreground === "active" && background === "hover",
+  );
+
+const collapsePress = (contrast: ThemeContrast): Theme => {
+  const theme = getTheme("light", contrast);
+  return extendTheme(theme, { colors: { active: theme.colors.hover } });
+};
+
+describe("generic wash steps", () => {
+  it("holds every shipped theme's press to a perceivable step", () => {
+    expect(shippedThemes).toHaveLength(24);
+    shippedThemes.forEach((theme) => {
+      expect(
+        contrastRatio(theme.colors.hover, theme.colors.active),
+        theme.name,
+      ).toBeGreaterThanOrEqual(contrastFloors[theme.contrast].step);
+      expect(pressFailures(theme), theme.name).toEqual([]);
+    });
+  });
+
+  it("measures the tightest shipped ladder rather than assuming it", () => {
+    const dark = getTheme("dark");
+    expect(
+      contrastRatio(dark.colors.hover, dark.colors.active).toFixed(3),
+    ).toBe("1.059");
+  });
+
+  it("exports one pair, on the generic washes", () => {
+    expect(washStepPairs).toEqual([["active", "hover", "step"]]);
+  });
+
+  it("reports a press that is the hover it follows", () => {
+    const collapsed = extendTheme(getTheme("dark"), {
+      colors: { active: getTheme("dark").colors.hover },
+    });
+
+    expect(pressFailures(collapsed)).toEqual([
+      {
+        foreground: "active",
+        background: "hover",
+        pairClass: "step",
+        floor: contrastFloors.default.step,
+        ratio: 1,
+      },
+    ]);
+  });
+
+  it("keeps the step floor level-independent at AAA", () => {
+    expect(pressFailures(collapsePress("high"))).toEqual([
+      {
+        foreground: "active",
+        background: "hover",
+        pairClass: "step",
+        floor: contrastFloors.high.step,
+        ratio: 1,
+      },
+    ]);
+    expect(contrastFloors.high.step).toBe(contrastFloors.default.step);
+  });
+
+  it("runs the documented example", () => {
+    expect(quietPressTheme.colors.active).toBe(quietPressTheme.colors.hover);
+    expect(quietPressFailures).toEqual([
+      {
+        foreground: "active",
+        background: "hover",
+        pairClass: "step",
+        floor: contrastFloors.default.step,
+        ratio: 1,
+      },
+    ]);
+  });
+});

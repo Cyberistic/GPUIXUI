@@ -144,6 +144,13 @@
  * contract measured each soft foreground only on its own fill. `toastTonePairs`
  * holds the four roles there until the `components` migration to `xText`; every
  * shipped set clears the secondary floor with a wide margin, so no colour moves.
+ *
+ * Plan 357 publishes the generic pointer ladder: a ghost or outline control
+ * paints no fill at rest, so its press is the change from `hover` to `active` —
+ * and that pair was measured only as two washes against surfaces. `washStepPairs`
+ * holds `active` one perceivable `step` from `hover` at both contrast levels.
+ * Every shipped set already clears 1.05:1 (identity dark is tightest at
+ * 1.059:1), so no colour moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -181,6 +188,7 @@ import {
   toastTonePairs,
   trackMarkPairs,
   trackSurfacePairs,
+  washStepPairs,
   type ContrastPair,
   type Theme,
   type ThemeContrast,
@@ -225,6 +233,7 @@ const publishedPairLists: ReadonlyArray<
   ["contrastPairs", contrastPairs],
   ["stateFillSurfacePairs", stateFillSurfacePairs],
   ["stateStepPairs", stateStepPairs],
+  ["washStepPairs", washStepPairs],
   ["markPairs", markPairs],
   ["inactivePairs", inactivePairs],
   ["inactiveSoftPairs", inactiveSoftPairs],
@@ -473,8 +482,9 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(337);
+    expect(contrastPairs.length).toBe(338);
     expect(stateStepPairs).toHaveLength(8);
+    expect(washStepPairs).toHaveLength(1);
     expect(softPanelTextPairs).toHaveLength(8);
     expect(toastTonePairs).toHaveLength(4);
     expect(softBorderSurfacePairs.length).toBe(32);

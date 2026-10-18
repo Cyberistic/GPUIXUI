@@ -65,3 +65,16 @@ export const quietMarkTheme = extendTheme(getTheme("light"), {
 
 /** Every mark pair the quiet theme misses — the card, panel, popover and field. */
 export const quietMarkFailures = themeContrastFailures(quietMarkTheme);
+
+/**
+ * A theme whose press is its own hover: the `active` wash is the `hover` wash,
+ * so a ghost or outline control still clears every surface pair but stops
+ * reacting to a press. Plan 357's `washStepPairs` is what reports it.
+ */
+export const quietPressTheme = extendTheme(getTheme("light"), {
+  name: "Quiet press",
+  colors: { active: getTheme("light").colors.hover },
+});
+
+/** The generic press pair the quiet theme misses. */
+export const quietPressFailures = themeContrastFailures(quietPressTheme);

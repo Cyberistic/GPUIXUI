@@ -298,6 +298,18 @@ export const stateStepPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The generic pointer ladder. A ghost or outline control paints no fill at
+ * rest, the `hover` wash under the pointer and the `active` wash while pressed;
+ * the shipped secondary control still paints the same two washes (plan 334)
+ * while it migrates to the designed family. A press that is not a step past the
+ * hover it follows is not a press, exactly the rule {@link stateStepPairs}
+ * publishes for the filled families.
+ */
+export const washStepPairs: readonly ContrastPair[] = [
+  ["active", "hover", "step"],
+];
+
+/**
  * The solid roles painted as marks, and the surfaces they sit on. A progress
  * segment (`primitives/src/core/style.ts` `progressFillStyle`) and a slider fill
  * paint over the `muted` track; a slider thumb rings its own `input` fill with
@@ -702,7 +714,10 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * `muted` panel it paints on, because a fill that matches its panel is not a
  * state. Each filled family's `xHover` and `xActive` are also held one
  * perceivable step from the fill before them (`stateStepPairs`, the `step`
- * class), so a collapsed hover or press is reported like an invisible fill.
+ * class), so a collapsed hover or press is reported like an invisible fill. The
+ * generic washes are a ladder too: `active` is held one perceivable step from
+ * `hover` (`washStepPairs`, the same class), because a ghost or outline control
+ * paints no fill at rest and its press is the only change the pointer sees.
  *
  * A solid role painted as a **mark** — a progress segment, a slider fill, a
  * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
@@ -798,6 +813,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
   ...stateStepPairs,
+  ...washStepPairs,
   ...markPairs,
 ];
 
@@ -1107,7 +1123,9 @@ const washVisibilityFailures = (
  * because the identity light panel was the same value as its `hover`,
  * `secondary`, `accent` and `selected` fills. It also holds each filled
  * family's hover and press to one perceivable step from the fill before it
- * (`pairClass: "step"`), so an edited theme cannot flatten a state. It measures
+ * (`pairClass: "step"`), so an edited theme cannot flatten a state; the generic
+ * `hover`/`active` ladder is reported the same way (`active` from `hover`). It
+ * measures
  * a row's own default text on the washes it paints, secondary text on the
  * `input` fill a time picker's separator and clear control paint, and the field
  * edge on its `input`
