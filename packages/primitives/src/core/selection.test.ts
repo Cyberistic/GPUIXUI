@@ -192,6 +192,19 @@ describe("selectionRowStyle", () => {
     expect(style.cursor).toBe("not-allowed");
   });
 
+  it("leaves the fade to the box, so the two cannot multiply", () => {
+    // Plan 367: the page said the row fades, but the fade belongs to the box —
+    // the same painter a standalone Checkbox uses. A row opacity on top of the
+    // box's would paint the mark at 0.25.
+    expect(
+      selectionRowStyle({ disabled: true, align: "center" }, testTheme).opacity,
+    ).toBeUndefined();
+    expect(
+      selectionBoxStyle(spec({ state: "unchecked", disabled: true }), testTheme)
+        .opacity,
+    ).toBe(0.5);
+  });
+
   it("takes the alignment its content needs", () => {
     expect(
       selectionRowStyle({ align: "flex-start" }, testTheme).alignItems,

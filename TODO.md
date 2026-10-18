@@ -909,6 +909,13 @@ retired once both branches are one
       mounts as one star named `"1 of 1"`. 1 core + 1 element + 1 runtime case,
       the element and runtime cases throwing without the fix (offline
       609 → 611, runtime 590 → 591; plan `366`).
+`[x]` `packages/primitives`: **the checkbox group's page named the wrong element
+      as the one that fades** — measured: a disabled row declares no `opacity`
+      (it drops its wash and sets `not-allowed`), while the **box** fades to
+      `0.5`; the page said "a disabled row adds half opacity". Fading the row
+      too would multiply the box's fade to `0.25`, so the page is what changed,
+      and the existing row-style case now pins the split. No behaviour change
+      (offline 611 → 612, plan `367`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`

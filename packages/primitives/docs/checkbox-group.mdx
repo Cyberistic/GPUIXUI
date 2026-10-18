@@ -127,8 +127,10 @@ responds exactly like the box does (plan 355). The box keeps its own border
 feedback, so hovering the circle shows both signals. An invalid **empty** box
 keeps the destructive border on hover and press, so the row's wash is the only
 thing the gesture adds — the error cue is never repainted healthy (plan 356).
-A disabled row adds half
-opacity and no wash. Focus paints `colors.ring` on the box, not on the row, so
+A disabled row paints **no** wash, and its box fades to half opacity with no
+pointer feedback; the row's label takes the muted tone. The fade belongs to the
+box because the same painter serves a standalone `Checkbox`, and fading the row
+as well would multiply the two. Focus paints `colors.ring` on the box, not on the row, so
 the ring sits on the control the way it does in `Checkbox`. A disabled row
 paints **no** ring, even when it kept native focus: the rule lives in
 `controlFocusStyle` and the selection painters, so an inert control never
