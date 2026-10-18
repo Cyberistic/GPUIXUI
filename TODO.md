@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 128/128
+`[x]` `[██████████]` 129/129
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1158,6 +1158,15 @@ retired once both branches are one
       `54` high, sibling at `192…232`); a column is unchanged and `truncate` gets
       the bounded width its ellipsis needs. 1 element + 3 runtime cases, both
       directions proven (plan `383`).
+`[x]` `packages/primitives`: **a `Skeleton` in a row painted outside it** —
+      measured, a default line (`width: "100%"`) beside a 40 px circle in a
+      220 px row painted `x 58…278`, 46 px past the row, and the standard avatar
+      + auto column composition painted its lines `0` wide. A default or
+      percentage width now shrinks to the space the row leaves while a numeric
+      width — and a circle, whose width is its height — keeps its size, and a
+      `minHeight` floor keeps explicit heights in an over-full column. The
+      feedback example mounts the avatar + two-line row; 1 core + 3 runtime
+      cases, both directions proven (plan `384`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

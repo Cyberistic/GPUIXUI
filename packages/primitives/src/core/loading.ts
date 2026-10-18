@@ -50,6 +50,13 @@ const dimension = (
  * so a bare `<Skeleton circle />` is a square rather than a full-width pill.
  * A pixel dimension that cannot be painted is the dimension's default; a
  * percentage is the caller's own layout and passes through.
+ *
+ * **A placeholder's width is a share, its height is a size.** A default or
+ * percentage width takes 100% of the row it is placed in, so beside a sibling
+ * it painted 46 px outside the row (measured, plan `384`); it may now shrink to
+ * the space left, while a numeric width — and a circle, whose width is its
+ * height — keeps its size. `minHeight` is the other half: a skeleton gives up
+ * width in a row, never its own height in an over-full column.
  */
 export const skeletonStyle = (
   spec: SkeletonSpec,
@@ -60,7 +67,8 @@ export const skeletonStyle = (
   return {
     width,
     height,
-    flexShrink: 0,
+    minHeight: height,
+    flexShrink: typeof width === "number" ? 0 : 1,
     borderRadius:
       spec.circle === true
         ? theme.radius.full

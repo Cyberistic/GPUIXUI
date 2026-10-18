@@ -59,6 +59,14 @@ export const FeedbackExample = (): ReactElement => {
           <Skeleton height={12} width="92%" />
         </Stack>
 
+        <Stack direction="row" align="center" gap="sm">
+          <Skeleton circle height={40} testId="feedback-example-avatar" />
+          <Stack direction="column" gap="2xs" grow>
+            <Skeleton height={12} width="60%" />
+            <Skeleton height={12} testId="feedback-example-line" />
+          </Stack>
+        </Stack>
+
         <Stack direction="row" align="center" gap="xs">
           <Icon
             name="clock"

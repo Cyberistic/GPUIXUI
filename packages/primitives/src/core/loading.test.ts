@@ -84,6 +84,21 @@ describe("skeletonStyle", () => {
       skeletonStyle({ width: "50%", height: "30%" }, testTheme),
     ).toMatchObject({ width: "50%", height: "30%" });
   });
+
+  it("gives up width in a row but never its own height", () => {
+    // The bug guarded (plan 384): `width: "100%"` plus `flexShrink: 0` painted
+    // a default line 46 px outside a 220 px row, and an over-full column
+    // squashed explicit heights once the item could shrink.
+    const line = skeletonStyle({ height: 12 }, testTheme);
+    expect(line.flexShrink).toBe(1);
+    expect(line.minHeight).toBe(12);
+    expect(skeletonStyle({ width: "60%" }, testTheme).flexShrink).toBe(1);
+    // An explicit size is the caller's, and a circle's width is its height.
+    expect(skeletonStyle({ width: 40 }, testTheme).flexShrink).toBe(0);
+    const circle = skeletonStyle({ circle: true }, testTheme);
+    expect(circle.flexShrink).toBe(0);
+    expect(circle.minHeight).toBe(circle.height);
+  });
 });
 
 describe("spinnerDots", () => {
