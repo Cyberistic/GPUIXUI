@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 142/194
+`[x]` `[███████░░░]` 143/195
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1034,6 +1034,14 @@ name the identity tint they already paint, no shipped pixel moves, and
 `platform-composition.test.ts` holds every shipped base × style pair to all
 three checks in both modes, both contrasts and both requested levels
 (plan 374)
+`[x]` Hold the modal scrim over the filled actions and status panels a window
+shows — it covered the layout only (`background`, `card`, `muted`, `input`,
+`selected`, `popover`), so a theme whose scrim composited to `primary` or to a
+soft status fill left a control or Alert undimmed while the checker returned
+`[]`; the four resting filled actions and the four soft status panels join
+`overlaySurfaces` (6 → 14 scrim pairs), every shipped set already clears the
+1.05:1 floor (1.075:1 at the tightest, AAA dark on `primary`), so no colour
+moves (plan 375)
 
 ## Phase C — Tier 1–2 components
 
