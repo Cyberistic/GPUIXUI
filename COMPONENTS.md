@@ -194,8 +194,8 @@ carries an evidenced limitation. The capability evidence lives in
 | Resizable columns | todo | ? | Pointer events + grid tracks. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
-| Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. |
-| Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. |
+| Virtualized lists | todo | yes | `<virtual-list>` published (visible-range and scroll-anchor APIs). API-shape work, not implementation. Retains **3 host nodes per row**: paint is windowed, retention is not (measured, playground plan `302` §2). |
+| Virtualized tables | todo | ? | `<virtual-list>` rows can host a grid; there is no table element. Retains **3 host nodes per row** (same measurement as virtualized lists). |
 | Tree views | todo | ? | `<virtual-list>` + indentation; hierarchical virtualization is ours. |
 | Expandable rows | todo | ? | `motion` height. |
 | Key-value displays | todo | ? | `div` + `<text>`. |
@@ -235,7 +235,7 @@ carries an evidenced limitation. The capability evidence lives in
 | Component | Status | GPUix support | Notes / limitations |
 | --------- | ------ | ------------- | ------------------- |
 | Code editor integration | todo | ? | `<code>` renders highlighted code; there is **no editable code surface** (verified). |
-| Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. |
+| Syntax highlighting | todo | yes | `<code>` renders syntax-highlighted blocks with bundled languages. API-shape work, not implementation. Reparses only when the document key changes, so a theme switch costs nothing (playground plan `302` §2). |
 | Diff viewer | todo | yes | `<diff>` renders a unified diff. API-shape work, not implementation. |
 | Rich-text editing | todo | ? | `<markdown>` renders markdown; editing is not provided (verified). |
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. |
