@@ -210,8 +210,11 @@ the same tree was **618/618** green at 21:25 before those runs. The host appears
 to accumulate native window resources across suite invocations (the swarm runs
 many suites in this session), which is why a full run now degrades partway. The
 new case passes in isolation, and no failure is in `floating.ts`, `Select`'s new
-cap, or the new case. Re-run the full suite from a fresh desktop session before
-merging.
+cap, or the new case. The **baseline commit `f05c7302`** (before plans 378 and
+379) was checked out and run afterwards and reproduces the same failure shape —
+19 files, 109 tests, the same focus-dependent files — so the degradation is the
+host, not these changes. Re-run the full suite from a fresh desktop session
+before merging.
 
 Mutation directions:
 
