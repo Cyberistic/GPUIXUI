@@ -79,6 +79,45 @@ describe("Avatar", () => {
     avatar.unmount();
   });
 
+  it("describes its presence without changing its name", () => {
+    const avatar = renderComponent(
+      <Avatar testId="avatar" name="Ada Lovelace" status="away" />,
+    );
+
+    expect(avatar.renderer.findByTestId("avatar")?.customProps).toMatchObject({
+      "aria-label": "Ada Lovelace",
+      "aria-description": "away",
+    });
+    expect(
+      nodesWithRole(avatar.renderer, "image").map((node) => node.name),
+    ).toEqual(["Ada Lovelace"]);
+
+    avatar.unmount();
+  });
+
+  it("omits the description without a status and keeps the caller's own", () => {
+    const plain = renderComponent(
+      <Avatar testId="avatar" name="Ada Lovelace" />,
+    );
+    expect(
+      plain.renderer.findByTestId("avatar")?.customProps?.["aria-description"],
+    ).toBeUndefined();
+    plain.unmount();
+
+    const authored = renderComponent(
+      <Avatar
+        testId="avatar"
+        name="Ada Lovelace"
+        status="busy"
+        aria-description="In a meeting"
+      />,
+    );
+    expect(authored.renderer.findByTestId("avatar")?.customProps).toMatchObject(
+      { "aria-description": "In a meeting" },
+    );
+    authored.unmount();
+  });
+
   it("paints the presence dot from the theme's status roles", () => {
     Arr.forEach(statusFills, ([status, expected]) => {
       const avatar = renderComponent(

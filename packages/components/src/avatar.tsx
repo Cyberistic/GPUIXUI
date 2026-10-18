@@ -67,12 +67,18 @@ export const Avatar = ({
 }: AvatarProps) => {
   const theme = useTheme();
   const diameter = DIAMETER[size];
+  // The dot is visual; `aria-description` is the one description 0.10.0
+  // supports, and the person's name must stay the name (plan 392).
+  const description = rest["aria-description"] ?? status;
 
   return (
     <div
       role="img"
       aria-label={name}
       {...rest}
+      {...(description === undefined
+        ? {}
+        : { "aria-description": description })}
       style={mergeStyles(
         {
           // The root is not clipped so the presence dot can sit on the rim; the
