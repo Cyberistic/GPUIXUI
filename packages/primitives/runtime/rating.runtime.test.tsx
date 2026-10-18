@@ -80,6 +80,28 @@ it("is a named group of stars that reports the rating", async () => {
   ]);
 });
 
+it("mounts a non-finite count as one named star", async () => {
+  // The bug guarded (plan 366): `max={Infinity}` reached `Arr.range` and the
+  // component threw `RangeError: Invalid array length`; `NaN` named its only
+  // star "1 of NaN".
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" max={Number.POSITIVE_INFINITY} />
+    </Surface>,
+  );
+  expect(
+    Option.isSome(
+      a11yNode(runtime.a11y(), { role: "RadioButton", label: "1 of 1" }),
+    ),
+  ).toBe(true);
+  expect(
+    Option.isNone(
+      a11yNode(runtime.a11y(), { role: "RadioButton", label: "2 of 1" }),
+    ),
+  ).toBe(true);
+});
+
 it("selects the star that a real click lands on", async () => {
   const runtime = await openWindow();
   const seen: number[] = [];

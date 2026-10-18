@@ -87,6 +87,20 @@ describe("Rating", () => {
     ]);
   });
 
+  it("renders one named star for a non-finite count", () => {
+    // The bug guarded (plan 366): `Infinity` reached `Arr.range` and threw
+    // `RangeError: Invalid array length`; `NaN` reached the star's name.
+    const infinite = render(
+      { label: "Quality", max: Number.POSITIVE_INFINITY },
+      0,
+    );
+    expect(starsOf(infinite)).toHaveLength(1);
+    expect(labelOf(expectSome(Arr.head(starsOf(infinite))))).toBe("1 of 1");
+    const nan = render({ label: "Quality", max: Number.NaN }, 0);
+    expect(starsOf(nan)).toHaveLength(1);
+    expect(labelOf(expectSome(Arr.head(starsOf(nan))))).toBe("1 of 1");
+  });
+
   it("marks the stars up to the value as checked", () => {
     const element = render({}, 3);
     const values = starsOf(element).map((star) =>

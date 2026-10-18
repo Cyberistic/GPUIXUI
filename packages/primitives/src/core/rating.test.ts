@@ -12,8 +12,28 @@ import {
   clampRating,
   decideRating,
   previewRating,
+  ratingLimit,
   ratingTabStop,
 } from "./rating.js";
+
+describe("ratingLimit", () => {
+  it("turns every unusable count into one star", () => {
+    // The bug guarded (plan 366): the component's own copy of this arithmetic
+    // let `Infinity` through to `Arr.range` (a throw) and `NaN` into the star
+    // names ("1 of NaN").
+    expect(
+      [
+        Number.NaN,
+        Number.POSITIVE_INFINITY,
+        Number.NEGATIVE_INFINITY,
+        0,
+        -3,
+        2.9,
+        5,
+      ].map((max) => ratingLimit(max)),
+    ).toStrictEqual([1, 1, 1, 1, 1, 2, 5]);
+  });
+});
 
 describe("clampRating", () => {
   it("keeps a rating inside 0..max and drops fractions", () => {

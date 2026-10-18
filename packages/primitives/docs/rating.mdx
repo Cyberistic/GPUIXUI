@@ -36,7 +36,7 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `value` | `number` | — | controlled rating, `0..max` |
 | `defaultValue` | `number` | `0` | uncontrolled start |
 | `onValueChange` | `(value: number) => void` | — | the new rating; `0` means cleared |
-| `max` | `number` | `5` | how many stars to paint |
+| `max` | `number` | `5` | how many stars to paint; a non-finite count (`NaN`, `Infinity`) reads as one star (plan `366`) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
 | `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |

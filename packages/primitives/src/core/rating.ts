@@ -10,13 +10,13 @@
 import * as Option from "effect/Option";
 
 /** A usable star count: a whole number, at least one. */
-const limitOf = (max: number): number =>
+export const ratingLimit = (max: number): number =>
   Math.max(1, Math.trunc(Number.isFinite(max) ? max : 1));
 
 /** Clamp a rating to `0..max`; a value that is not a number reads as unrated. */
 export const clampRating = (value: number, max: number): number => {
   if (!Number.isFinite(value)) return 0;
-  return Math.min(limitOf(max), Math.max(0, Math.trunc(value)));
+  return Math.min(ratingLimit(max), Math.max(0, Math.trunc(value)));
 };
 
 const ARROW_STEPS: Readonly<Record<string, number>> = {
@@ -38,7 +38,7 @@ export const decideRating = (
   max: number,
   key: string,
 ): Option.Option<number> => {
-  const limit = limitOf(max);
+  const limit = ratingLimit(max);
   if (key === "home") return Option.some(1);
   if (key === "end") return Option.some(limit);
   if (key === "delete" || key === "backspace") return Option.some(0);

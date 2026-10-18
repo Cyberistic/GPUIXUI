@@ -22,6 +22,7 @@ import {
   clampRating,
   decideRating,
   previewRating,
+  ratingLimit,
   ratingTabStop,
 } from "../core/rating.js";
 import { decideActivation, moveFrom } from "../core/keyboard.js";
@@ -106,9 +107,9 @@ export interface RatingHandlers {
   ) => (instance: PublicInstance | null) => void;
 }
 
-/** A usable star count: at least one, whole. */
+/** A usable star count: at least one, whole. A non-finite count reads as one. */
 export const ratingMax = (max: number | undefined): number =>
-  Math.max(1, Math.trunc(max ?? 5));
+  ratingLimit(max ?? 5);
 
 /** The element tree `Rating` renders from its value and any hovered star. */
 export const renderRating = (
