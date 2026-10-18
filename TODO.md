@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 210/276
+`[x]` `[████████░░]` 211/276
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1734,6 +1734,14 @@ composition twice while every suite stays green — a probe passes 33/33); the
 inventory is now a record keyed by the package's own export names, so a new list
 fails `check-types` until it is covered, and the catalogue sentence names that
 owner (plan 546)
+`[x]` Make the interactive-fill contract own the families it derives from —
+`docs/tokens.md` said "a fifth surface or a new filled family joins one place",
+but `stateFillRoles` retyped the four families by hand, so a fifth family added
+to `filledControlFamilies` gained its step pairs, direction ladder, selection
+pairs and `filledControl` helper while its three fills were never measured
+against a panel; `stateFillRoles` now derives from the index, the test derives
+its expectation from the index too, and the catalogue names that owner
+(plan 547)
 
 ## Phase C — Tier 1–2 components
 

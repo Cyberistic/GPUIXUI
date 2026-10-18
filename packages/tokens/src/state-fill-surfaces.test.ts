@@ -6,6 +6,10 @@
  * was 1.021:1 on its own canvas and Linux light `accent` 1.001:1 on the quiet
  * panel — so a hovered row, a selected row or a neutral filled control in a
  * sidebar could have no visible shape at all.
+ *
+ * Plan 547 derives the fill list from `filledControlFamilies`: the hand list it
+ * replaced omitted any family added to the index, so the fill-on-surface pairs
+ * 309 introduced could skip a new family with every case green.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -13,6 +17,7 @@ import {
   contrastFloors,
   contrastRatio,
   extendTheme,
+  filledControlFamilies,
   getPlatformTheme,
   highContrastThemes,
   stateFillRoles,
@@ -43,22 +48,17 @@ describe("interactive fills on the surfaces they paint on", () => {
     expect(stateFillSurfacePairs).toHaveLength(60);
   });
 
-  it("holds the filled-action families, not only the neutral washes", () => {
-    const filledRoles: ReadonlyArray<(typeof stateFillRoles)[number]> = [
-      "primary",
-      "primaryHover",
-      "primaryActive",
-      "secondary",
-      "secondaryHover",
-      "secondaryActive",
-      "destructive",
-      "destructiveHover",
-      "destructiveActive",
-      "accent",
-      "accentHover",
-      "accentActive",
-    ];
-    filledRoles.forEach((role) => expect(stateFillRoles).toContain(role));
+  it("derives every filled family's three fills from the family index", () => {
+    expect(stateFillRoles).toEqual([
+      ...filledControlFamilies.flatMap((family) => [
+        family,
+        `${family}Hover`,
+        `${family}Active`,
+      ]),
+      "hover",
+      "active",
+      "selected",
+    ]);
   });
 
   it("clears the surface floor on every shipped theme", () => {

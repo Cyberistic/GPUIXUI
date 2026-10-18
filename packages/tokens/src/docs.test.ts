@@ -2660,6 +2660,10 @@ describe("docs/design-system.md", () => {
     });
     expect(markdown).toContain("stateFillSurfacePairs");
     expect(markdown).toContain("stateFillRoles");
+    expect(markdown).toContain(
+      "`stateFillRoles` derives every filled family's rest, hover and press from\n" +
+        "`filledControlFamilies`",
+    );
     expect(markdown).toContain("stateFillSurfaces");
   });
 

@@ -2968,8 +2968,10 @@ the `accent` family at rest, hover and press, `selected`, and the `primary`,
 `secondary` and `destructive` families at rest, hover and press — to the 1.05:1
 surface floor on the four
 surfaces they paint on: `background`, `card`, `popover` and the quiet `muted`
-panel. `stateFillRoles` is the fill list and `stateFillSurfaces` the surface
-list, so a fifth surface or a new filled family joins one place. The audit found
+panel. `stateFillRoles` derives every filled family's rest, hover and press from
+`filledControlFamilies` and adds the two generic washes and `selected`;
+`stateFillSurfaces` is its surface list, so a fifth family joins the family
+index alone and a fifth surface joins the surface list alone. The audit found
 21 shipped pairs under the floor: the identity light `muted`, `hover` and
 `secondary` were the same value (`#EEF1F5`), so a sidebar row had no hover
 feedback, a secondary button had no shape and a selected row was invisible; the

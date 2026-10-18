@@ -15,7 +15,11 @@ import {
   type ElevationLevel,
 } from "./elevation.js";
 import { skeletonPulseOpacity } from "./motion.js";
-import { filledControlFamilies, statusTones } from "./styles.js";
+import {
+  filledControlFamilies,
+  statusTones,
+  type FilledControlFamily,
+} from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
@@ -272,25 +276,27 @@ const selectedRowEdgePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * A filled family's three designed fills, typed as the roles they name.
+ */
+const familyFills = <Family extends FilledControlFamily>(
+  family: Family,
+): readonly [Family, `${Family}Hover`, `${Family}Active`] => [
+  family,
+  `${family}Hover`,
+  `${family}Active`,
+];
+
+/**
  * The interactive fills a control or a row paints as its own shape: the two
- * generic washes, the accent family at rest, hover and press, the selected
- * fill, and the filled-action families at rest, hover and press. A filled
- * control is a surface, so its fill has to stay perceivable on the surface
- * behind it.
+ * generic washes, the selected fill, and every filled-action family at rest,
+ * hover and press. A filled control is a surface, so its fill has to stay
+ * perceivable on the surface behind it.
+ *
+ * The four designed families' rest, hover and press are derived from
+ * `filledControlFamilies`, so a fifth family joins the family index alone.
  */
 export const stateFillRoles = [
-  "primary",
-  "primaryHover",
-  "primaryActive",
-  "secondary",
-  "secondaryHover",
-  "secondaryActive",
-  "destructive",
-  "destructiveHover",
-  "destructiveActive",
-  "accent",
-  "accentHover",
-  "accentActive",
+  ...filledControlFamilies.flatMap(familyFills),
   "hover",
   "active",
   "selected",
