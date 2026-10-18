@@ -1584,6 +1584,11 @@ nine `Dimensions` members by hand and the next field would ship ungoverned while
 both checks returned `[]`; the pass now walks each group's value, `metricMembers`
 publishes the ordered domain, and an unlisted-member regression fails on the
 hand-list code (plan 531)
+`[x]` Keep one diagnostic per non-finite metric — `density.rowHeight: Infinity`
+reported the finite failure and then blamed the overlay height and the message
+viewport, and a non-finite spacing step or drawer width blamed its neighbour;
+a ladder or bound now skips a comparison whose side the finite rule rejects, so
+the cause is the one entry (`-Infinity` still reports its sign too) (plan 532)
 `[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
 `drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
 (`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and

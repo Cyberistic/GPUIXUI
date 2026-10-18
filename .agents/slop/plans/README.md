@@ -226,6 +226,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [529](./529-shareable-theme-choice.md) | A shareable theme choice: the URL boundary | F | 067, 068, 096, 305, 311, 380, 383, 387 | done |
 | [530](./530-drawer-chat-carousel-dimensions.md) | The fixed surface metrics plan 353 left in consumers | B | 353, 358, 368, 384, 389, 396 | done |
 | [531](./531-metric-member-completeness.md) | The numeric contract's member completeness | F | 358, 360, 364, 368, 369, 370, 372, 530 | done |
+| [532](./532-non-finite-diagnostics.md) | One diagnostic per non-finite metric | F | 358, 360, 364, 393, 531 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

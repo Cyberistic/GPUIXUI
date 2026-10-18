@@ -1949,7 +1949,9 @@ A failure is a `MetricFailure`: the `MetricGroup`, the dotted `member`
 (`controlHeight.sm`), the `MetricRule` it broke and both numbers — the `actual`
 value and the `bound` it missed. A `MetricRule` is one of `positive`,
 `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`,
-`at-most` or `within`.
+`at-most` or `within`. A value the `finite` rule rejects is not compared by a
+ladder or a bound, so one bad number keeps one diagnostic — a `-Infinity` is
+still both non-finite and negative, which are independent defects.
 
 #### Colour format
 

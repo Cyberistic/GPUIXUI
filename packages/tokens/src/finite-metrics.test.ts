@@ -10,12 +10,15 @@
  * own metrics, and `renderer.rs` casts a style's lengths unchecked).
  *
  * Each case below fails without the finite pass in `metrics.ts`.
+ *
+ * Plan 532 makes the diagnostic single: a value the finite rule rejects is not
+ * compared by a ladder or a bound, so the bad number keeps one failure instead
+ * of blaming a correct neighbour (`rowHeight: Infinity` used to report three).
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import { themeContrastFailures } from "./contrast.js";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
-import { dimensions } from "./scale.js";
 import { extendTheme, lightTheme, type Theme } from "./theme.js";
 
 /** Every shipped set: identity, platform variant and recipe, in both modes. */
@@ -79,26 +82,21 @@ describe("the finite metric rule", () => {
     ]);
   });
 
-  it("reports a non-finite row height", () => {
-    // The row also stops fitting the overlay's scroll height and the message
-    // viewport, which the existing bounds report: raising a row must clip
-    // neither a menu option nor a message.
+  it("reports a non-finite row height once", () => {
+    // A row that is not a number is the defect. The overlay scroll height and
+    // the message viewport compare against it, but a non-finite bound is not a
+    // comparison: one bad value keeps one diagnostic, not three.
     expect(failuresOf({ density: { rowHeight: Infinity } })).toEqual([
       infinite("density", "rowHeight"),
-      {
-        group: "dimensions",
-        member: "overlayMaxHeight",
-        rule: "at-least",
-        actual: dimensions.overlayMaxHeight,
-        bound: Infinity,
-      },
-      {
-        group: "dimensions",
-        member: "chatViewportMinHeight",
-        rule: "at-least",
-        actual: dimensions.chatViewportMinHeight,
-        bound: Infinity,
-      },
+    ]);
+  });
+
+  it("does not blame the neighbour of a non-finite ladder step", () => {
+    expect(failuresOf({ spacing: { sm: Infinity } })).toEqual([
+      infinite("spacing", "sm"),
+    ]);
+    expect(failuresOf({ dimensions: { drawerWidthSm: Infinity } })).toEqual([
+      infinite("dimensions", "drawerWidthSm"),
     ]);
   });
 

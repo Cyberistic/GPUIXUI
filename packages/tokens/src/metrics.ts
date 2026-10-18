@@ -179,13 +179,20 @@ const finite = (
 ): ReadonlyArray<MetricFailure> =>
   Number.isFinite(actual) ? [] : [failure(group, member, "finite", actual, 0)];
 
+/**
+ * The two bounds. A value the finite rule already rejects is not compared: one
+ * bad number would otherwise blame the finite value on the other side of the
+ * comparison, so the cause keeps one diagnostic.
+ */
 const atLeast = (
   group: MetricGroup,
   member: string,
   actual: number,
   bound: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual >= bound ? [] : [failure(group, member, "at-least", actual, bound)];
+  Number.isFinite(actual) && Number.isFinite(bound) && actual < bound
+    ? [failure(group, member, "at-least", actual, bound)]
+    : [];
 
 const atMost = (
   group: MetricGroup,
@@ -193,7 +200,9 @@ const atMost = (
   actual: number,
   bound: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual <= bound ? [] : [failure(group, member, "at-most", actual, bound)];
+  Number.isFinite(actual) && Number.isFinite(bound) && actual > bound
+    ? [failure(group, member, "at-most", actual, bound)]
+    : [];
 
 /**
  * An elevation alpha is a fraction. Finiteness is the walk's job, so this rule
@@ -250,7 +259,8 @@ const weighable = (
  * the second on, step past the one before it — or reach it, for a
  * `non-decreasing` ladder, because several shipped styles share a step (Linux
  * and Windows ship `radius.lg === radius.xl`; Windows ships
- * `motion.fast === motion.step`).
+ * `motion.fast === motion.step`). A step the finite rule rejects is not compared,
+ * so one bad value keeps one diagnostic instead of blaming its neighbour.
  */
 const ladder = (
   group: MetricGroup,
@@ -270,7 +280,11 @@ const ladder = (
       stepRule === "positive"
         ? positive(group, member, value)
         : nonNegative(group, member, value);
-    if (previous === undefined) {
+    if (
+      previous === undefined ||
+      !Number.isFinite(value) ||
+      !Number.isFinite(previous[1])
+    ) {
       return sign;
     }
     const ok =
