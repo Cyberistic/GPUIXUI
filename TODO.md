@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 224/291
+`[x]` `[████████░░]` 225/291
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1840,6 +1840,13 @@ already forwarded it; `MotionOverrides` is the one shape behind both, the
 authored example names a timing and a curve, and `platform-motion.test.ts`
 proves the phase merge, the inherited phases, the runtime's curve rules on a
 copied style and the shipped styles' unchanged easings (plan 559)
+`[x]` Put the caret inside the mark list — plan 557 published `caretPairs`
+(`primaryText` on the `input` fill) straight to `contrastPairs` while `markPairs`
+is documented as every mark, so a consumer building a mark report from the public
+list — and the design system's graphic-marks floor row, which `docs.test.ts`
+derives from it — omitted the only mark a native field paints while
+`themeContrastFailures` enforced it; `caretPairs` is now part of `markPairs`, the
+row names it, `contrastPairs` stays 405 and no colour moves (plan 563)
 
 ## Phase C — Tier 1–2 components
 

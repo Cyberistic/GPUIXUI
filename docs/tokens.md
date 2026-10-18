@@ -3086,11 +3086,11 @@ progress segment and a slider fill sit on the `track` groove, a slider thumb rin
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
 the panel it paints on — a selected combobox option's check also sits on the
 `hover` wash the row highlights with, so it is measured there too — `markRoles`
-is the role list and `markPairs` the pairs. The native field's caret is a mark
-too, but it is the accent's ink rather than a fill: `primaryText` on the
-field's own `input` fill is `caretPairs`, while the four `Surface` tones and the
-four row washes an in-place editor paints are already `secondary` text pairs
-(plan `557`).
+is the solid role list and `markPairs` the whole class. The native field's caret
+is a mark too, but it is the accent's ink rather than a fill: `primaryText` on
+the field's own `input` fill is `caretPairs`, published inside `markPairs`, while
+the four `Surface` tones and the four row washes an in-place editor paints are
+already `secondary` text pairs (plan `557`).
 A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px bar
 is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
 light canvas, so a status dot uses `xText`, which the status-text pairs already

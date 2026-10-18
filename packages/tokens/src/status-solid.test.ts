@@ -145,13 +145,17 @@ describe("the solid status family", () => {
     );
   });
 
-  it("keeps the solid fill out of the mark class", () => {
+  it("keeps the info and warning fills out of the mark class", () => {
     const markForegrounds = new Set(
       markPairs.map(([foreground]) => foreground),
     );
+    // `success` and `destructive` are also action and progress fills; the
+    // native caret's ink (`primaryText`) is a mark that is not a fill (plan 563).
     expect(markForegrounds).toEqual(
-      new Set(["primary", "success", "destructive"]),
+      new Set(["primary", "success", "destructive", "primaryText"]),
     );
+    expect(markForegrounds).not.toContain("info");
+    expect(markForegrounds).not.toContain("warning");
     markPairs.forEach(([, , pairClass]) => expect(pairClass).toBe("mark"));
   });
 });

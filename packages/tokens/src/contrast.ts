@@ -404,6 +404,24 @@ const markSurfaces = ["background", "card", "popover", "muted"] as const;
 export const markRoles = ["primary", "success", "destructive"] as const;
 
 /**
+ * The native field's caret on the one surface the text contract does not
+ * already hold: its own `input` fill. The caret is the accent's readable ink
+ * (`primaryText`), not the `primary` fill — the fill is tuned for a label on top
+ * of it, and on macOS dark it measures **2.748:1** on `selected` and
+ * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
+ * inline edit vanished while every check returned `[]`. The other eight
+ * surfaces a field sits on — the four `Surface` tones and the four row washes an
+ * in-place editor paints — are already held by `primaryTextPairs` at the higher
+ * `secondary` floor. This pair is a `mark` because a caret is a 1px indicator,
+ * not text; `primaryText` clears it on all nine surfaces in every shipped set
+ * (5.587:1 at the tightest, Windows dark on `active`). It is published inside
+ * {@link markPairs}, so the mark class is whole.
+ */
+export const caretPairs: readonly ContrastPair[] = [
+  ["primaryText", "input", "mark"],
+];
+
+/**
  * A selected combobox option's check glyph on the wash it highlights with.
  * `rowStyle` paints `hover` behind a highlighted option, so the check has to
  * stay a mark there, not only on the popover at rest.
@@ -412,7 +430,12 @@ const comboboxCheckPairs: readonly ContrastPair[] = [
   ["primary", "hover", "mark"],
 ];
 
-/** Every mark on every surface it can sit on, plus the thumb's own fill. */
+/**
+ * Every mark on every surface it can sit on: the three solid roles on the four
+ * plain surfaces, the slider thumb's ring on its own `input` fill, the combobox
+ * check on the wash it highlights with, and the native field's caret ink
+ * (`primaryText`, {@link caretPairs}) on the fill it edits.
+ */
 export const markPairs: readonly ContrastPair[] = [
   ...markRoles.flatMap((role) =>
     markSurfaces.map((background): ContrastPair => [role, background, "mark"]),
@@ -420,6 +443,7 @@ export const markPairs: readonly ContrastPair[] = [
   ["primary", "input", "mark"],
   ["destructive", "input", "mark"],
   ...comboboxCheckPairs,
+  ...caretPairs,
 ];
 
 /**
@@ -519,23 +543,6 @@ const primaryTextSurfaces = [
 const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
   (background): ContrastPair => ["primaryText", background, "secondary"],
 );
-
-/**
- * The native field's caret on the one surface the text contract does not
- * already hold: its own `input` fill. The caret is the accent's readable ink
- * (`primaryText`), not the `primary` fill — the fill is tuned for a label on top
- * of it, and on macOS dark it measures **2.748:1** on `selected` and
- * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
- * inline edit vanished while every check returned `[]`. The other eight
- * surfaces a field sits on — the four `Surface` tones and the four row washes an
- * in-place editor paints — are already held by `primaryTextPairs` at the higher
- * `secondary` floor. This pair is a `mark` because a caret is a 1px indicator,
- * not text; `primaryText` clears it on all nine surfaces in every shipped set
- * (5.587:1 at the tightest, Windows dark on `active`).
- */
-export const caretPairs: readonly ContrastPair[] = [
-  ["primaryText", "input", "mark"],
-];
 
 /**
  * The surfaces a focused control can sit on: the plain surfaces, the quiet
@@ -1028,7 +1035,6 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...washStepPairs,
   ...selectionStepPairs,
   ...markPairs,
-  ...caretPairs,
 ];
 
 /** WCAG floors by contrast level and pair class. */
@@ -1816,7 +1822,8 @@ const elevationFailures = (
  *   (the value groove a focused slider's thumb sits on included, through
  *   `ringTrackPairs`) and dividers; the inactive label; the marks and the value
  *   track; the native field's caret — `primaryText`, the accent's ink rather
- *   than its fill — on the field's own `input` fill (`caretPairs`), with the
+ *   than its fill — on the field's own `input` fill (`caretPairs`, one of the
+ *   marks in `markPairs`), with the
  *   `Surface` tones and row washes an in-place editor paints already held by
  *   `primaryTextPairs`; every
  *   interactive fill against the panel it paints on; the solid status fill on
