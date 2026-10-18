@@ -19,7 +19,7 @@ import {
   captureFile,
   captureJson,
   captureProvenance,
-  clearProvenance,
+  clearCapture,
   commitOf,
   writeProvenance,
 } from "./capture.js";
@@ -160,7 +160,7 @@ describe("the capture directory", () => {
   );
 
   it.effect(
-    "clears a previous sidecar before a new run can replace its frames",
+    "clears the previous frames and sidecar but leaves other files",
     () =>
       Effect.scoped(
         Effect.gen(function* () {
@@ -171,14 +171,28 @@ describe("the capture directory", () => {
             directory,
             provenanceOf(report([scenario("passed")])),
           );
+          yield* fileSystem.writeFileString(
+            path.join(directory, "old-frame.png"),
+            "frame",
+          );
+          yield* fileSystem.writeFileString(
+            path.join(directory, "notes.txt"),
+            "keep",
+          );
 
-          yield* clearProvenance(directory);
+          yield* clearCapture(directory);
 
           expect(
             yield* fileSystem.exists(path.join(directory, "provenance.json")),
           ).toBe(false);
-          // Clearing again is a no-op, not a failure.
-          yield* clearProvenance(directory);
+          expect(
+            yield* fileSystem.exists(path.join(directory, "old-frame.png")),
+          ).toBe(false);
+          expect(
+            yield* fileSystem.exists(path.join(directory, "notes.txt")),
+          ).toBe(true);
+          // A directory that does not exist is a no-op, not a failure.
+          yield* clearCapture(path.join(directory, "missing"));
         }).pipe(
           Effect.provide(NodeFileSystem.layer),
           Effect.provide(NodePath.layer),

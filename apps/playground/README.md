@@ -132,9 +132,10 @@ nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-theming \
 - `commit` is `git rev-parse --short HEAD` in the checkout. Pass
   `--commit <sha>` when the tree has no git metadata; without either, capture
   exits `2` rather than inventing a revision.
-- The sidecar is published only for a green run. A red run leaves the frames it
-  painted but no caption; any earlier sidecar in the directory is removed
-  before the frames change, so a stale caption can never describe them.
+- The sidecar is published only for a green run. The directory's earlier PNGs
+  and sidecar are removed before capture, so a capture directory always
+  describes exactly one run; a red run leaves the frames it painted but no
+  caption.
 - `--capture` implies `--screenshots`; `--screenshots` alone still writes to
   `.artifacts/screenshots/` with no sidecar.
 

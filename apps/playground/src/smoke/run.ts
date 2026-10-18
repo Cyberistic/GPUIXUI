@@ -49,7 +49,7 @@ import {
   captureCommand,
   captureFile,
   captureProvenance,
-  clearProvenance,
+  clearCapture,
   readCommit,
   writeProvenance,
 } from "./capture.js";
@@ -452,7 +452,7 @@ export const program = (
       path.join(flags.artifacts, "screenshots"),
     );
     if (Option.isSome(flags.capture)) {
-      yield* clearProvenance(flags.capture.value);
+      yield* clearCapture(flags.capture.value);
     }
     if (flags.screenshots) {
       yield* fileSystem.makeDirectory(screenshotDir, { recursive: true });

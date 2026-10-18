@@ -42,7 +42,7 @@ Measured facts this plan builds on:
 
 | File | Change |
 | ---- | ------ |
-| `apps/playground/src/smoke/capture.ts` | **new.** `CaptureProvenance` (`Schema.Class`), `captureJson`, `captureCommand`, `captureFile`, `captureProvenance` (report → `Option<CaptureProvenance>`), `writeProvenance`. |
+| `apps/playground/src/smoke/capture.ts` | **new.** `CaptureProvenance` (`Schema.Class`), `captureJson`, `captureCommand`, `captureFile`, `captureProvenance` (report → `Option<CaptureProvenance>`), `writeProvenance`, `clearCapture`. |
 | `apps/playground/src/smoke/capture.test.ts` | **new.** The pure rules and one filesystem round-trip. |
 | `apps/playground/src/smoke/run.ts` | `--capture <dir>` flag (implies screenshots, wins over `--artifacts` for frames), `--commit <sha>` override, a commit read from git at the boundary, sidecar written **only for a green run**, and the usage text. |
 | `apps/playground/src/smoke/run.test.ts` | Extend the existing argument tests with `--capture`/`--commit` cases. |
@@ -70,8 +70,11 @@ and the plan index is edited. The docs site is not touched.
 - The sidecar is written **after** the report and only when
   `Report.passed(report)` is true. A red or empty run writes no sidecar and
   prints `capture: no provenance written (the run did not pass)`.
-- Any sidecar already in `<dir>` is removed **before** the frames are captured,
-  so a failed run can never leave an old caption describing new frames.
+- Any PNGs and the sidecar already in `<dir>` are removed **before** the frames
+  are captured, so a capture directory always describes exactly one run: a
+  failed run can never leave an old caption over new frames, and a green run
+  cannot leave a stale frame beside its fresh caption. Non-PNG files are left
+  alone.
 - `--commit` is read before the binding loads. Without it and without a git
   checkout, capture exits `2` with an actionable message; it never guesses.
 
@@ -147,11 +150,15 @@ New tests must be able to fail; state the mutation that makes each fail.
    equals the report's start (not `Clock.currentTimeMillis`). Mutation: write
    with `Date.now()` → fail. The temp dir is created by the test and removed
    after it.
-5. **The CLI parses `--capture` and `--commit`.** `parseArgs` returns the
+5. **A capture directory owns one run.** With a sidecar, `old-frame.png` and
+   `notes.txt` present, `clearCapture` removes the sidecar and the PNG, keeps
+   the text file, and treats a missing directory as a no-op. Mutation: clear
+   only the sidecar → the PNG assertion fails.
+6. **The CLI parses `--capture` and `--commit`.** `parseArgs` returns the
    directory and the override; a missing value is an unknown token (usage
    error). Mutation: treat a missing value as the next flag → `--capture --only`
    would silently capture to `--only`.
-6. **The frames go to the capture dir.** `captureFile(path, "out", "id")` is
+7. **The frames go to the capture dir.** `captureFile(path, "out", "id")` is
    `out/id.png`. Mutation: keep `artifacts/screenshots` → fail.
 
 ## 6. STOP conditions
@@ -188,6 +195,7 @@ New tests must be able to fail; state the mutation that makes each fail.
 | ------- | ------ |
 | `nub run --filter playground build` | exit `0` |
 | `nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-capture --only theme-color-roles,theme-type-and-shadow` | **2/2**, exit `0`; `theme-color-roles.png` (289,680 B), `theme-type-and-shadow.png` (193,390 B), `provenance.json` (237 B) |
+| a second run into a directory holding `old-frame.png`, a stale sidecar and `notes.txt` | exit `0`; `old-frame.png` and the stale sidecar removed, `theme-color-roles.png` + a fresh sidecar written, `notes.txt` kept |
 | the sidecar | `{"platform":"darwin-x64","gpuixVersion":"0.10.0","commit":"965fc695","command":"nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-capture --only theme-color-roles,theme-type-and-shadow","capturedAt":"2026-10-18T23:11:36.975Z"}` |
 | `nub apps/playground/dist/smoke/run.js` | **101/101**, exit `0` |
 | `nub run --filter playground test` | 33 files, **417 tests** (+9) |
@@ -202,6 +210,10 @@ Two mutation proofs, each observed and reverted:
   `takes its timestamp from the report, not from a later clock read` fails with
   `expected '1970-01-01T00:00:00.000Z' to be '2025-11-24T16:00:00.000Z'`, exit
   `1`.
+- **M3** — `clearCapture`'s PNG filter replaced by an empty list (so only the
+  sidecar is cleared) → `clears the previous frames and sidecar but leaves
+  other files` fails with `expected true to be false` for `old-frame.png`,
+  exit `1`.
 
 No `apps/playground/package.json` script was added: a `capture` script cannot
 carry the required directory argument without a fragile `--` convention, so the

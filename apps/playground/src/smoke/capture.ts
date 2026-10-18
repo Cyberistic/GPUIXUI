@@ -121,13 +121,14 @@ export const writeProvenance = (
   });
 
 /**
- * Removes a sidecar at the start of a capture run.
+ * Removes the previous run's frames and sidecar before a new capture.
  *
- * A failed run captures frames but writes no sidecar. Leaving the previous
- * run's sidecar would caption those new frames with an old commit, so the
- * caption is cleared before the frames can change.
+ * A capture directory belongs to one run: a sidecar names the frames it
+ * describes, so a frame from an earlier selection must not survive beside a
+ * fresh caption. Only PNGs and the sidecar are removed; anything else in the
+ * directory is the caller's.
  */
-export const clearProvenance = (
+export const clearCapture = (
   directory: string,
 ): Effect.Effect<
   void,
@@ -137,8 +138,21 @@ export const clearProvenance = (
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const sidecar = path.join(directory, "provenance.json");
-    if (yield* fileSystem.exists(sidecar)) {
-      yield* fileSystem.remove(sidecar);
-    }
+    if (!(yield* fileSystem.exists(directory))) return;
+    const entries = yield* fileSystem.readDirectory(directory);
+    const stale = Arr.append(
+      Arr.filter(entries, (entry) => Str.endsWith(".png")(entry)),
+      "provenance.json",
+    );
+    yield* Effect.forEach(
+      stale,
+      (entry) =>
+        Effect.gen(function* () {
+          const file = path.join(directory, entry);
+          if (yield* fileSystem.exists(file)) {
+            yield* fileSystem.remove(file);
+          }
+        }),
+      { concurrency: 1 },
+    );
   });

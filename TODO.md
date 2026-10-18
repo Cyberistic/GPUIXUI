@@ -66,15 +66,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `gpuixVersion`, `commit`, `command`, `capturedAt`) — and only when every
       selected scenario passed. `--commit <sha>` overrides
       `git rev-parse --short HEAD`; without either, capture exits `2` rather
-      than inventing a revision. Any earlier sidecar is cleared before the
-      frames change, so a red run can never leave an old caption describing new
+      than inventing a revision. Any earlier PNGs and sidecar in the directory
+      are cleared before capture, so a capture directory always describes
+      exactly one run and a red run can never leave an old caption over new
       frames. The timestamp is the report's start, never a later clock read;
       the command is normalised from the directory and the selected ids, never
       raw argv. `2/2` focused capture (`theme-color-roles`,
       `theme-type-and-shadow`), exit `0`, one PNG per frame and a decodable
-      sidecar; 9 new tests (**417** playground tests), two mutation proofs (the
-      `Report.passed` guard removed → the red/empty cases become `Some`; the
-      timestamp replaced with a fixed value → the timestamp test fails).
+      sidecar; 9 new tests (**417** playground tests), three mutation proofs
+      (the `Report.passed` guard removed → the red/empty cases become `Some`;
+      the timestamp replaced with a fixed value → the timestamp test fails; the
+      PNG clear removed → a stale frame survives), each observed and reverted.
       Full headless stays **101/101**; `check`/`lint`/`test` green. The docs
       contract is plan `412` §5; the sidecar decodes against plan `433`'s schema.
 
