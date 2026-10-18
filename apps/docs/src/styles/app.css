@@ -2,6 +2,8 @@
 @import "fumadocs-ui/css/preset.css";
 @import "fumadocs-ui/css/shadcn.css";
 @import "./demos.css";
+@import "./blocks.css";
+@import "./theme-editor.css";
 
 /*
  * The docs palette is the landing's: near-black surfaces, bone text and the

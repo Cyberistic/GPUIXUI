@@ -198,6 +198,16 @@ B1, so it is planned, not done.
 > and are merged into `main` as each workstream completes; this index is the
 > union.
 
+### Docs site (block `400–499`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [436](./436-blocks-and-theme-editor.md) | **Blocks and the Theme Editor** — the two remaining shadcn surfaces (`/docs/blocks`, `/docs/themes`) | E | `524`, `063`, `200` | done — `/docs/blocks` index + login/settings recipes and the `/docs/themes` token editor, on `agent/blocks-theme-editor` |
+
+> The earlier phase-E docs plans (`433` platform recipes, `434` landing, `435a–c`
+> Pele / Editor / RTL) are listed in the reference-adoption table above; they
+> share this block but were numbered before the docs-site section existed.
+
 ### Cross-cutting styling conformance
 
 | Plan | Title | Phase | Depends on | Status |

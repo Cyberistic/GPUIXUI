@@ -1,0 +1,327 @@
+/*
+ * Theme editor: the chrome (docs variables) and the preview (the bridged token
+ * variables set inline by the editor). The preview reads the shadcn variable
+ * names, so an edit re-renders it immediately.
+ */
+
+.gx-theme-editor {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.gx-te-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.gx-te-modes {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.gx-te-mode {
+  height: 28px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.gx-te-mode[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-te-bar-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.gx-te-copy,
+.gx-te-reset,
+.gx-copy-button {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.gx-te-copy:hover,
+.gx-te-reset:hover,
+.gx-copy-button:hover {
+  border-color: var(--ring);
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.gx-te-copy {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-te-copy:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-te-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+}
+
+.gx-te-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 18px;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+}
+
+.gx-te-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.gx-te-legend {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.gx-te-color {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-te-color-swatch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.gx-te-role {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--foreground);
+}
+
+.gx-te-color-swatch input[type="color"] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+}
+
+.gx-te-color-value {
+  width: 92px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--foreground);
+}
+
+.gx-te-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gx-te-range input[type="range"] {
+  flex: 1;
+  accent-color: var(--primary);
+}
+
+.gx-te-range-value {
+  width: 40px;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.gx-te-font {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gx-te-font input[type="text"] {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  font-size: 12.5px;
+  color: var(--foreground);
+}
+
+/* ---- preview (bridged variables, set inline by the editor) ---- */
+
+.gx-te-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 28px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+.gx-te-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(340px, 100%);
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gx-te-card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.gx-te-card-desc {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-te-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gx-te-field-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.gx-te-input {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+}
+
+.gx-te-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.gx-te-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gx-te-btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.gx-te-btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.gx-te-btn-destructive {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.gx-te-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gx-te-badge {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.gx-te-badge-muted {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.gx-te-muted {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+@media (max-width: 760px) {
+  .gx-te-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gx-te-controls {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+}

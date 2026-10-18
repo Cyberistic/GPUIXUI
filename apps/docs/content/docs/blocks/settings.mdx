@@ -1,0 +1,26 @@
+---
+title: Settings
+description: A settings page — profile header, tabbed sections and the controls each one needs.
+---
+
+A settings recipe that composes the most parts: an `Avatar` and `Badge` in the
+header, `Tabs` for the sections, `Field`/`FieldInput` for text, `Switch` and
+`Select` for choices, and a `Button` footer.
+
+<BlockPreview name="settings-01" />
+
+## Composition
+
+The block composes:
+
+- `Avatar` from `@gpuixui/components/avatar`, `Badge` from
+  `@gpuixui/components/badge`, `Card` and its parts from
+  `@gpuixui/components/card`, `Field` and `FieldInput` from
+  `@gpuixui/components/field`, `Tabs` and its parts from
+  `@gpuixui/components/tabs`
+- `Button`, `Select`, `Stack`, `Switch` and `Text` from `@gpuixui/primitives`
+
+Each `Field` renders its own label and message, so a section reads top to bottom
+with no layout to hand-place. `Switch` reports state through `aria-valuetext`
+because the runtime has no `aria-checked`; the recipe keeps the visible label
+beside it.
