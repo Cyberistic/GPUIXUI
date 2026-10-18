@@ -156,6 +156,10 @@ Cross-cutting records:
 | `206` | Port **shadcn/ui's Message Scroller** behaviour — pinned follow, no yank, jump-to-latest, streaming rows | C | `200`, `201`, `203` | planned |
 | `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | planned |
 | `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | planned |
+| `434` | **Landing page** — a "Hunter License" identity over a stacked macOS / Windows / Linux hero, in the register of cap.so / klack | E | `063`, `433`, `423` | planned (number collides with docs `434-platform-styled-previews`) |
+| `435a` | **Pele** (Obsidian's design system) — recon, licence, and an inventory diff | A | `203`, `200` | planned |
+| `435b` | **Fumadocs Editor** — adopt it for authoring the docs, keeping MDX the source of truth | E | `435a`, `423` | planned (number collides with docs `435-tier1-value-and-choice-pages`) |
+| `435c` | **RTL** — logical placement, a direction token, mirrored directional icons, and an RTL docs toggle | C/D | `063`, `200` | planned (number collides with docs `435-tier1-value-and-choice-pages`) |
 
 ### Docs site (block `400–499`)
 
@@ -218,6 +222,7 @@ tables and the inventory reconciliation.
 | [`460-stop-denying-live-surface.md`](./460-stop-denying-live-surface.md) | The introduction, getting-started, examples, landing page and 19 component pages stop saying the site cannot render the live surface it ships; three guards read the registry and the pages | F | 455–459, 426 | implemented — three guards, proven in both directions (§8); 255 docs tests, all three browser smokes green |
 | [`461-tier2-expansion-pages.md`](./461-tier2-expansion-pages.md) | The 17 Tier 2 components merged from `master` get records, pages, generated props, examples and honest previews; the date/time row split reaches the registry | C/F | 410, 411, 412, 415, 425, 428, 429, 432, 441; components 119–157 | implemented — 66 component pages, 13 tier-A previews, 4 measured tier-V gaps; 255 docs tests, types and build green |
 | [`462-first-compound-records.md`](./462-first-compound-records.md) | The compound contract meets real components: Tabs and Toasts adopt `pattern: "stateful"`, declare their parts and document state ownership; the Toast page shows the viewport source | F | 411, 414, 427, 425, 461 | implemented — two stateful records, three fixtures-only guards now run on real data, two-direction proofs in §9; 255 docs tests, types, build and all gates green |
+| [`463-tier2-page-truth.md`](./463-tier2-page-truth.md) | The 22 original Tier 2 pages stop denying features the components now ship: list multi-select, submenus, type-ahead, accordion header keys, toast actions, measured floating placement; one guard reads the inventory | F | 410, 411, 424, 425, 429, 443, 461; components 111–119, 323 | implemented — six pages corrected, one new inventory guard with two two-direction proofs; see §7 |
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
 > live on their own branches and are merged into the integration branch as each
