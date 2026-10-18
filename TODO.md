@@ -58,7 +58,34 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 96/96 plans-and-harness
+`[x]` `[██████████]` 97/97 plans-and-harness
+
+`[x]` Give the playground's native captures **provenance** per plan `564`:
+      `--capture <dir>` writes one frame per selected scenario plus a
+      `provenance.json` in the docs' published shape (`platform`,
+      `gpuixVersion`, `commit`, `command`, `capturedAt`) — and only when every
+      selected scenario passed. `--commit <sha>` overrides
+      `git rev-parse --short HEAD`; without either, capture exits `2` rather
+      than inventing a revision. Any earlier sidecar is cleared before the
+      frames change, so a red run can never leave an old caption describing new
+      frames. The timestamp is the report's start, never a later clock read;
+      the command is normalised from the directory and the selected ids, never
+      raw argv. `2/2` focused capture (`theme-color-roles`,
+      `theme-type-and-shadow`), exit `0`, one PNG per frame and a decodable
+      sidecar; 9 new tests (**417** playground tests), two mutation proofs (the
+      `Report.passed` guard removed → the red/empty cases become `Some`; the
+      timestamp replaced with a fixed value → the timestamp test fails).
+      Full headless stays **101/101**; `check`/`lint`/`test` green. The docs
+      contract is plan `412` §5; the sidecar decodes against plan `433`'s schema.
+
+`[ ]` **Cross-team:** the docs' component pages still need **per-component
+      screens** — the capture mechanism is now publishable, but the registry
+      scenarios are capability probes, not one clean screen per delivered
+      component (owner: `docs-site` with `components`; evidence: plan `564`,
+      `agent/docs-site` TODO "Playground: add a per-component screen"). The
+      docs' published run is
+      `nub apps/playground/dist/smoke/run.js --capture apps/docs/public/screenshots/<subject> --only <ids>`
+      after `nub run --filter playground build`.
 
 `[x]` Prove the **virtualized tree in a real window** per plan `559`: the last
       Tier 3 interaction probe with headless-only evidence. `live-tree` (44

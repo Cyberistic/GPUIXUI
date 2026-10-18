@@ -20,15 +20,20 @@ import {
   Option,
   Path,
 } from "effect";
+import { ChildProcessSpawner } from "effect/process";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import {
+  NodeChildProcessSpawner,
+  NodeFileSystem,
+  NodePath,
+} from "@effect/platform-node";
 import { Native, Report, Runtime, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment, type ReactNode } from "react";
-import { hostLabel, provenanceIssue } from "../binding.js";
+import { bindingPin, hostLabel, provenanceIssue } from "../binding.js";
 import {
   formatMissing,
   idsOf,
@@ -40,6 +45,14 @@ import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
 import { palettes } from "../palettes.js";
 import { scenarios } from "../scenarios/index.js";
+import {
+  captureCommand,
+  captureFile,
+  captureProvenance,
+  clearProvenance,
+  readCommit,
+  writeProvenance,
+} from "./capture.js";
 
 /** The process exit code: 0 passed, 1 failed, 2 unverified. */
 export const EXIT = { passed: 0, failed: 1, unverified: 2 } as const;
@@ -55,6 +68,8 @@ export const usage: string = Arr.join(
     "  --only <id[,id]>  run only these scenarios (repeatable; default: all)",
     "  --list            print the scenario ids and exit",
     "  --screenshots     capture one screenshot per scenario",
+    "  --capture <dir>   capture frames plus provenance.json (implies --screenshots)",
+    "  --commit <sha>    the commit to record (default: git rev-parse --short HEAD)",
     "  --artifacts <dir> where the report and screenshots land",
     "  --json            print the JSON report as well",
     "exit 2: no native evidence (unsupported host, or nothing ran)",
@@ -66,6 +81,8 @@ export const usage: string = Arr.join(
 export interface CliFlags {
   readonly json: boolean;
   readonly screenshots: boolean;
+  readonly capture: Option.Option<string>;
+  readonly commit: Option.Option<string>;
   readonly only: ReadonlyArray<string>;
   readonly list: boolean;
   readonly artifacts: string;
@@ -103,6 +120,38 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
           ),
           Match.when("--screenshots", () =>
             step(tail, { ...flags, screenshots: true }, unknown),
+          ),
+          Match.when("--capture", () =>
+            Option.match(Arr.head(tail), {
+              onNone: () => ({
+                flags,
+                unknown: Arr.append(unknown, "--capture needs a directory"),
+              }),
+              onSome: (dir) =>
+                step(
+                  Arr.drop(tail, 1),
+                  {
+                    ...flags,
+                    screenshots: true,
+                    capture: Option.some(dir),
+                  },
+                  unknown,
+                ),
+            }),
+          ),
+          Match.when("--commit", () =>
+            Option.match(Arr.head(tail), {
+              onNone: () => ({
+                flags,
+                unknown: Arr.append(unknown, "--commit needs a sha"),
+              }),
+              onSome: (sha) =>
+                step(
+                  Arr.drop(tail, 1),
+                  { ...flags, commit: Option.some(sha) },
+                  unknown,
+                ),
+            }),
           ),
           Match.when("--only", () =>
             Option.match(Arr.head(tail), {
@@ -149,6 +198,8 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     {
       json: false,
       screenshots: false,
+      capture: Option.none(),
+      commit: Option.none(),
       only: [],
       list: false,
       artifacts: DEFAULT_ARTIFACTS,
@@ -307,7 +358,8 @@ const viewOf = (
 /** Mounts each scenario's own view in the test root before its steps run. */
 const mount =
   (
-    flags: CliFlags,
+    screenshots: boolean,
+    screenshotDir: string,
     root: {
       readonly render: (node: ReactNode) => void;
       readonly renderer: { captureScreenshot: (path: string) => void };
@@ -338,11 +390,11 @@ const mount =
           ),
       }),
     );
-    return flags.screenshots
+    return screenshots
       ? Effect.tap(render, () =>
           Effect.sync(() =>
             root.renderer.captureScreenshot(
-              path.join(flags.artifacts, "screenshots", `${scenario.id}.png`),
+              captureFile(path, screenshotDir, scenario.id),
             ),
           ),
         )
@@ -355,7 +407,7 @@ export const program = (
 ): Effect.Effect<
   ExitCode,
   PlatformError.PlatformError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
@@ -370,6 +422,22 @@ export const program = (
       return EXIT.failed;
     }
 
+    // A capture caption may only name a commit the run actually had. Read it
+    // before the binding loads so an unrecordable run costs no suite time.
+    const commit = Option.isSome(flags.capture)
+      ? yield* Option.match(flags.commit, {
+          onSome: (sha) => Effect.succeed(Option.some(sha)),
+          onNone: () =>
+            Effect.flatMap(ChildProcessSpawner.ChildProcessSpawner, readCommit),
+        })
+      : Option.none<string>();
+    if (Option.isSome(flags.capture) && Option.isNone(commit)) {
+      yield* Console.error(
+        "capture: cannot read the git commit; pass --commit <sha> (no image is publishable without it)",
+      );
+      return EXIT.unverified;
+    }
+
     const testing = yield* Effect.tryPromise({
       try: () => import("@gpuix/react/testing"),
       catch: (cause) =>
@@ -380,13 +448,14 @@ export const program = (
     }).pipe(Effect.orDie);
 
     yield* fileSystem.makeDirectory(flags.artifacts, { recursive: true });
+    const screenshotDir = Option.getOrElse(flags.capture, () =>
+      path.join(flags.artifacts, "screenshots"),
+    );
+    if (Option.isSome(flags.capture)) {
+      yield* clearProvenance(flags.capture.value);
+    }
     if (flags.screenshots) {
-      yield* fileSystem.makeDirectory(
-        path.join(flags.artifacts, "screenshots"),
-        {
-          recursive: true,
-        },
-      );
+      yield* fileSystem.makeDirectory(screenshotDir, { recursive: true });
     }
 
     // The app-level window key handler: GPUix delivers window keys only through
@@ -418,7 +487,7 @@ export const program = (
       host,
       selected,
       { host: hostLabelOf(), startedAt },
-      mount(flags, root, path, registerWindowKey),
+      mount(flags.screenshots, screenshotDir, root, path, registerWindowKey),
     );
 
     yield* fileSystem.writeFileString(
@@ -427,6 +496,26 @@ export const program = (
     );
     yield* Console.log(Report.formatReport(report));
     if (flags.json) yield* Console.log(Report.reportJson(report));
+    if (Option.isSome(flags.capture) && Option.isSome(commit)) {
+      const captureDir = flags.capture.value;
+      const captured = Arr.match(flags.only, {
+        onEmpty: () => [],
+        onNonEmpty: () => Arr.map(selected, (scenario) => scenario.id),
+      });
+      const provenance = captureProvenance(report, {
+        platform: `${process.platform}-${process.arch}`,
+        gpuixVersion: bindingPin.version,
+        commit: commit.value,
+        command: captureCommand(captureDir, captured),
+      });
+      yield* Option.match(provenance, {
+        onNone: () =>
+          Console.error(
+            "capture: no provenance written (the run did not pass)",
+          ),
+        onSome: (present) => writeProvenance(captureDir, present),
+      });
+    }
     // Release the native window before the effect completes: the test root's
     // window keeps Node's event loop alive, and a `--only` run (no later
     // scenario replacing the tree) would otherwise never exit.
@@ -444,6 +533,7 @@ export const main = (): Effect.Effect<ExitCode> =>
     }),
     runSuite: (flags) =>
       program(flags).pipe(
+        Effect.provide(NodeChildProcessSpawner.layer),
         Effect.provide(NodeFileSystem.layer),
         Effect.provide(NodePath.layer),
         Effect.orDie,

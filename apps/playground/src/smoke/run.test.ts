@@ -93,6 +93,19 @@ describe("parseArgs", () => {
     expect(parsed.unknown).toContain("--onlyy");
   });
 
+  it("reads --capture as a directory that implies screenshots", () => {
+    const parsed = parseArgs(["--capture", "out"]);
+    expect(parsed.flags.capture).toEqual(Option.some("out"));
+    expect(parsed.flags.screenshots).toBe(true);
+    expect(parsed.unknown).toEqual([]);
+  });
+
+  it("reads --commit and keeps it separate from the capture directory", () => {
+    const parsed = parseArgs(["--capture", "out", "--commit", "deadbee"]);
+    expect(parsed.flags.capture).toEqual(Option.some("out"));
+    expect(parsed.flags.commit).toEqual(Option.some("deadbee"));
+  });
+
   it("reports a value-taking flag that has no value", () => {
     expect(parseArgs(["--artifacts"]).unknown).toContain(
       "--artifacts needs a directory",
@@ -103,6 +116,10 @@ describe("parseArgs", () => {
     expect(parseArgs(["--only", " , "]).unknown).toContain(
       "--only needs a scenario id",
     );
+    expect(parseArgs(["--capture"]).unknown).toContain(
+      "--capture needs a directory",
+    );
+    expect(parseArgs(["--commit"]).unknown).toContain("--commit needs a sha");
   });
 });
 

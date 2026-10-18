@@ -98,10 +98,47 @@ Artifacts (gitignored, under `.artifacts/`):
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
 Flags: `--json`, `--only <id[,id]>` (repeatable), `--list`, `--screenshots`,
-`--artifacts <dir>`.
+`--capture <dir>`, `--commit <sha>`, `--artifacts <dir>`.
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
+
+## Capturing native frames for the docs (plan `564`)
+
+The docs may publish a capture only when a sidecar names the run that produced
+it (docs plan `412` §5); a frame without one is not evidence. `--capture <dir>`
+writes one PNG per selected scenario and, **only when every selected scenario
+passed**, one `provenance.json` beside them:
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-theming \
+  --only theme-color-roles,theme-type-and-shadow
+```
+
+```json
+{
+  "platform": "darwin-x64",
+  "gpuixVersion": "0.10.0",
+  "commit": "965fc69",
+  "command": "nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-theming --only theme-color-roles,theme-type-and-shadow",
+  "capturedAt": "2026-10-19T02:04:56.000Z"
+}
+```
+
+- `capturedAt` is the **report's** start time, not the time the file was copied.
+- `command` is normalised from the directory and the selected ids, never raw
+  argv, so a temporary path cannot leak into a published caption.
+- `commit` is `git rev-parse --short HEAD` in the checkout. Pass
+  `--commit <sha>` when the tree has no git metadata; without either, capture
+  exits `2` rather than inventing a revision.
+- The sidecar is published only for a green run. A red run leaves the frames it
+  painted but no caption; any earlier sidecar in the directory is removed
+  before the frames change, so a stale caption can never describe them.
+- `--capture` implies `--screenshots`; `--screenshots` alone still writes to
+  `.artifacts/screenshots/` with no sidecar.
+
+The full contract, including the two-direction proofs, is plan `564`.
 
 ## The binding on this host
 
