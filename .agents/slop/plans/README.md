@@ -185,8 +185,9 @@ reservations — `330`–`350` are indexed and landed, `351`–`374` were claime
 the components and tokens workstreams, `375` by the components workstream (the
 date picker), this workstream takes `376` and `377`, and `378` is the
 query-builder probe; `379`/`380` were claimed by the components and tokens
-workstreams, this workstream took `381` (the notification centre) and `382` (the live
-reveal wait); the next playground plan takes `383`.
+workstreams, this workstream took `381` (the notification centre), `382` (the live
+reveal wait) and `384` (column configuration — `383` was claimed by the components
+and tokens workstreams first); the next playground plan takes `385`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -275,6 +276,7 @@ reveal wait); the next playground plan takes `383`.
 | [378](./378-query-builder.md) | Tier 5 feasibility: a filter-rule builder over a virtualized table | D/E | 100, 110, 120, 140, 152, 158, 159, 166, 188, 338, 349, 350, 377 | **landed** — `query-builder` (83 checks) and `live-query-builder` (41): a 132 px `Group:Filters` strip of 40 px rule rows, each three native `Select`s, over a 120-row `<virtual-list>`; paused 40, `item 1` 31 (12 under `all`, 59 under `any`), score `> 80` 19 / `>= 80` 20, `owner is Ada` 30 / `is not` 90; a field change resets operator and value; an incomplete rule is ignored by both combinators; `add` reveals and focuses the appended row; a picker opened from the scrolled strip paints **past the clip** and commits; Escape closes and returns focus; zero matches paint the empty state; a rule edit resets the anchor and clears the selection. Suite `83 → 84` (`2561 → 2644`), live `34 → 35` (`610 → 651`), exit `0`, `query=verified`; 19 pure tests, ten mutation + one reverse proof. Measured: three `add` clicks in one frame coalesce live, so the live step settles between them before the reveal lands |
 | [381](./381-notification-centre.md) | Tier 5 feasibility: a notification centre — prepend stability and derived unread state | D/E | 100, 110, 120, 140, 152, 156, 158, 166, 183, 187, 190, 197, 198, 300, 330, 344, 350, 377 | **landed** — `notification-centre` (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a derived badge opens a 320 × 360 `align="end"` panel within 1 px; 24 px headers and 60 px rows in one `<virtual-list>`; read flags survive close/reopen, the badge unpaints at zero, Down/Up + Enter + Escape work, an outside press dismisses without stealing focus, and clear-all/arrival swap the empty state. **The central finding:** a prepend is already stable — the list keeps the reader's row (anchor `2 → 3`) — so the planned identity re-anchor was **wrong**; removing it passed, forcing the old index moved the row by 60 px, and the effect plus `reanchorTarget`/`rowIndex` were deleted. Suite `84 → 85` (`2644 → 2724`), live `35 → 36` (`651 → 678`), exit `0`, `notification=verified`; ten mutation + one reverse proof (§9.3) |
 | [382](./382-live-add-reveal-wait.md) | `live-query-builder`: wait for the appended row's reveal | F | 378, 189, 345 | **landed** — a bounded `waitForBounds` (3 s, 50 ms poll) closes the race between `rules=4` and the post-commit reveal; two green full live runs (`36/36`, `678`, exit `0`) and the two-direction proof: removing `scrollIntoView` still fails with the measured `221` against `181 ± 2`. No check added, no tolerance widened |
+| [384](./384-column-configuration.md) | Tier 3 feasibility: column configuration — hide, show and reorder columns in a virtualized, panned data grid | D | 100, 110, 120, 140, 152, 164, 166, 173, 185, 198, 338, 349 | **planned** — `column-config` + `live-column-config`; a pure order/visibility model over the plan-349 widths, an anchored configuration panel, and the measured contract for hide/show, reorder, pan shrink, widths, anchor and dismissal |
 
 Cross-cutting records:
 
