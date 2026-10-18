@@ -256,6 +256,11 @@ export class A11yNode extends Schema.Class<A11yNode>("A11yNode")({
   placeholder: Schema.OptionFromOptional(Schema.String),
   selected: Schema.OptionFromOptional(Schema.Boolean),
   expanded: Schema.OptionFromOptional(Schema.Boolean),
+  /** AccessKit's `Toggled` variant, formatted by the runtime's dump. */
+  toggled: Schema.OptionFromOptional(Schema.String),
+  numeric_value: Schema.OptionFromOptional(Schema.Number),
+  min_numeric_value: Schema.OptionFromOptional(Schema.Number),
+  max_numeric_value: Schema.OptionFromOptional(Schema.Number),
   level: Schema.OptionFromOptional(Schema.Number),
   on_action: Schema.OptionFromOptional(Schema.Array(Schema.String)),
 }) {}

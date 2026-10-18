@@ -10,6 +10,8 @@
  */
 import { describe, expect, it } from "@effect/vitest";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import { A11yNode, A11yTree } from "./smoke.js";
 import {
   type NativeElement,
   type NativeRenderer,
@@ -473,6 +475,52 @@ describe("runtime reports", () => {
     expect(host.a11y()?.frame.node_count).toBe(1);
     renderer.a11yDump = { nodes: {} };
     expect(host.a11y()).toBeNull();
+  });
+
+  it("decodes checked and numeric accessibility fields", () => {
+    const node = Schema.decodeUnknownSync(A11yNode)({
+      role: "CheckBox",
+      toggled: "Mixed",
+      numeric_value: 42,
+      min_numeric_value: 0,
+      max_numeric_value: 100,
+    });
+
+    expect(node.toggled).toEqual(Option.some("Mixed"));
+    expect(node.numeric_value).toEqual(Option.some(42));
+    expect(node.min_numeric_value).toEqual(Option.some(0));
+    expect(node.max_numeric_value).toEqual(Option.some(100));
+  });
+
+  it("decodes the checked and numeric accessibility values", () => {
+    const renderer = rendererOf();
+    renderer.a11yDump = {
+      frame: { node_count: 1, tab_stop_count: 0 },
+      nodes: {
+        a: {
+          aria: {
+            role: "CheckBox",
+            toggled: "Mixed",
+            numeric_value: 42,
+            min_numeric_value: 0,
+            max_numeric_value: 100,
+          },
+        },
+      },
+    };
+
+    expect(
+      Option.isSome(Schema.decodeUnknownOption(A11yTree)(renderer.a11yDump)),
+    ).toBe(true);
+    const tree = createHost(renderer).a11y();
+    expect(tree).not.toBeNull();
+    const aria = tree?.nodes["a"]?.aria;
+    const node = aria === undefined ? undefined : Option.getOrUndefined(aria);
+    expect(node?.role).toEqual(Option.some("CheckBox"));
+    expect(node?.toggled).toEqual(Option.some("Mixed"));
+    expect(node?.numeric_value).toEqual(Option.some(42));
+    expect(node?.min_numeric_value).toEqual(Option.some(0));
+    expect(node?.max_numeric_value).toEqual(Option.some(100));
   });
 
   it("maps scroll tuples into the documented shapes", () => {
