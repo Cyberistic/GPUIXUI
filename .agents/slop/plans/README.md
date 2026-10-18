@@ -204,6 +204,7 @@ B1, so it is planned, not done.
 | ---- | ----- | ----- | ---------- | ------ |
 | [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
 | [525](./525-gpui-transform.md) | GPUI transform/scale: audit the 0xErwin1 branch, merge surface, licence, and the fork-or-fallback decision | infra (renderer) | `020`, `524`, `140` | research complete — **needs port**; fallback recommended until a forked runtime ships |
+| [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
 
 ## How to use a plan
 
