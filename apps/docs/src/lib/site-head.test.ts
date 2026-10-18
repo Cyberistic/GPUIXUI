@@ -3,8 +3,10 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { themeColors } from "./docs-theme";
+import { isPng, pngSize } from "./png.testing";
 import {
   BRAND_ASSETS,
+  MANIFEST_PATH,
   siteHead,
   SOCIAL_CARD,
   THEME_COLOR_META,
@@ -43,28 +45,6 @@ const flatMeta = (head: ReturnType<typeof siteHead>): ReadonlyArray<FlatMeta> =>
       content: "content" in entry ? entry.content : undefined,
     },
   ]);
-
-interface PngSize {
-  readonly width: number;
-  readonly height: number;
-}
-
-/** A PNG's IHDR: signature (8), chunk length (4), type (4), width (4), height (4). */
-const pngSize = (path: string): PngSize => {
-  const bytes = readFileSync(path);
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  return { width: view.getUint32(16), height: view.getUint32(20) };
-};
-
-const isPng = (path: string): boolean => {
-  const bytes = readFileSync(path);
-  return (
-    bytes[0] === 0x89 &&
-    bytes[1] === 0x50 &&
-    bytes[2] === 0x4e &&
-    bytes[3] === 0x47
-  );
-};
 
 describe("site head", () => {
   it("names brand assets that exist in public/", () => {
@@ -124,15 +104,28 @@ describe("site head", () => {
       BRAND_ASSETS.socialCard,
     );
 
-    const icon = head.links.find((link) => link.rel === "icon");
-    expect(icon?.href).toBe(BRAND_ASSETS.mark);
-    expect(icon?.type).toBe("image/svg+xml");
+    const icons = head.links.filter((link) => link.rel === "icon");
+    expect(icons.map((icon) => [icon.type, icon.href, icon.sizes])).toEqual([
+      ["image/svg+xml", BRAND_ASSETS.mark, "any"],
+      ["image/png", BRAND_ASSETS.favicon, "32x32"],
+    ]);
     expect(head.links.filter((link) => link.rel === "stylesheet")).toHaveLength(
       1,
     );
     expect(
       head.links.find((link) => link.rel === "apple-touch-icon")?.href,
     ).toBe(BRAND_ASSETS.touchIcon);
+    expect(head.links.find((link) => link.rel === "manifest")?.href).toBe(
+      MANIFEST_PATH,
+    );
+  });
+
+  it("ships a raster tab icon for browsers that ignore an SVG favicon", () => {
+    expect(isPng(assetFile(BRAND_ASSETS.favicon))).toBe(true);
+    expect(pngSize(assetFile(BRAND_ASSETS.favicon))).toEqual({
+      width: 32,
+      height: 32,
+    });
   });
 
   it("paints the browser chrome with the theme each scheme shows", () => {

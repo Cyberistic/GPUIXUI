@@ -18,9 +18,15 @@ export const SITE_DESCRIPTION = "A native UI component library for GPUix.";
 /** The committed brand assets, named once for the head and its guards. */
 export const BRAND_ASSETS = {
   mark: "/brand/mark.svg",
+  favicon: "/brand/favicon-32.png",
   touchIcon: "/brand/apple-touch-icon.png",
+  icon192: "/brand/icon-192.png",
+  icon512: "/brand/icon-512.png",
   socialCard: "/brand/og.png",
 } as const;
+
+/** The install metadata document; a route so its colours come from the theme. */
+export const MANIFEST_PATH = "/site.webmanifest";
 
 /** The social card's real pixel size and the text a screen reader announces. */
 export const SOCIAL_CARD = {
@@ -56,6 +62,8 @@ export const siteHead = (stylesheet: string) => ({
     { title: SITE_NAME },
     { name: "description", content: SITE_DESCRIPTION },
     { name: "color-scheme", content: "light dark" },
+    { name: "application-name", content: SITE_NAME },
+    { name: "apple-mobile-web-app-title", content: SITE_NAME },
     { property: "og:site_name", content: SITE_NAME },
     { property: "og:image", content: absoluteUrl(BRAND_ASSETS.socialCard) },
     { property: "og:image:width", content: `${SOCIAL_CARD.width}` },
@@ -67,7 +75,19 @@ export const siteHead = (stylesheet: string) => ({
   ],
   links: [
     { rel: "stylesheet", href: stylesheet },
-    { rel: "icon", type: "image/svg+xml", href: BRAND_ASSETS.mark },
+    {
+      rel: "icon",
+      type: "image/svg+xml",
+      href: BRAND_ASSETS.mark,
+      sizes: "any",
+    },
+    {
+      rel: "icon",
+      type: "image/png",
+      href: BRAND_ASSETS.favicon,
+      sizes: "32x32",
+    },
     { rel: "apple-touch-icon", href: BRAND_ASSETS.touchIcon },
+    { rel: "manifest", href: MANIFEST_PATH },
   ],
 });

@@ -11,8 +11,10 @@
  *
  * Since plan 510 every page must also carry the document head the site claims:
  * a description, `og:title`/`og:url`/an absolute `og:image`, a Twitter card, an
- * icon, an apple-touch icon and a light/dark `theme-color`; the brand assets
- * those tags name must resolve to an image. A head without them used to pass,
+ * SVG icon and a PNG fallback, an apple-touch icon, a link to the install
+ * manifest and a light/dark `theme-color`; the brand assets those tags name must
+ * resolve to an image, and the manifest must be the module's own document with
+ * icons that answer as PNGs (plan 516). A head without them used to pass,
  * because a missing tag is not a broken link.
  *
  *   nub scripts/smoke-build.ts [--base-url <url>] [--port <n>] [--no-build]
@@ -27,6 +29,7 @@ import {
   startDocsPreview,
   type PreviewServer,
 } from "./preview-server.ts";
+import { MANIFEST_ICONS, renderManifest } from "../src/lib/site-manifest.ts";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const CONCURRENCY = 6;
@@ -341,8 +344,11 @@ const auditPage = (
 
   if (linkHref(page.body, "icon", "image/svg+xml") === null)
     fail("no svg rel=icon");
+  if (linkHref(page.body, "icon", "image/png") === null)
+    fail("no png rel=icon");
   if (linkHref(page.body, "apple-touch-icon") === null)
     fail("no rel=apple-touch-icon");
+  if (linkHref(page.body, "manifest") === null) fail("no rel=manifest");
 
   const themeColors = metaEntries(page.body, "name", "theme-color");
   if (themeColors.length !== 2) {
@@ -494,6 +500,55 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   ).then((groups) => groups.flat());
   problems.push(...brandProblems);
   console.log(`smoke: brand ${brandTargets.length} assets checked`);
+
+  // The install metadata (plan 516). The route serves the module's document
+  // byte for byte, so a stale or hand-written manifest fails here even though
+  // the unit suite already decoded the module's output.
+  const manifest = await request(`${baseUrl}/site.webmanifest`);
+  if (manifest === null) {
+    problems.push({ where: "/site.webmanifest", what: "request failed" });
+  } else if (manifest.status !== 200) {
+    problems.push({
+      where: "/site.webmanifest",
+      what: `expected 200, got ${manifest.status}`,
+    });
+  } else {
+    if (
+      manifest.contentType?.startsWith("application/manifest+json") !== true
+    ) {
+      problems.push({
+        where: "/site.webmanifest",
+        what: `content-type ${manifest.contentType ?? "missing"} is not application/manifest+json`,
+      });
+    }
+    if (manifest.body !== renderManifest()) {
+      problems.push({
+        where: "/site.webmanifest",
+        what: "the served document is not renderManifest()",
+      });
+    }
+  }
+
+  const manifestIcons = await mapLimit(
+    MANIFEST_ICONS,
+    CONCURRENCY,
+    async (icon) => {
+      const path = new URL(icon.src, baseUrl).pathname;
+      const response = await request(baseUrl + path);
+      if (response === null)
+        return [{ where: path, what: "manifest icon: request failed" }];
+      return response.status === 200 && response.contentType === "image/png"
+        ? []
+        : [
+            {
+              where: path,
+              what: `manifest icon: expected 200 image/png, got ${response.status} ${response.contentType ?? "missing"}`,
+            },
+          ];
+    },
+  ).then((groups) => groups.flat());
+  problems.push(...manifestIcons);
+  console.log(`smoke: install metadata checked`);
 
   const ids = new Map(
     pages.map(({ path, page }) => [path, elementIds(page.body)] as const),

@@ -18,8 +18,20 @@ The assets live in `public/brand/` (see its `README.md` for the mark, the
 proves each path exists, the card's real pixel size and that the browser-chrome
 colours are the library palettes; `smoke:build` proves the built pages carry the
 tags and serve each asset. A page without a description, `og:title`, `og:url`, an
-absolute `og:image`, a Twitter card, an icon or a light/dark `theme-color` fails
-the crawl by name (plan 510).
+absolute `og:image`, a Twitter card, an SVG icon and a PNG fallback, an
+apple-touch icon, a manifest link or a light/dark `theme-color` fails the crawl
+by name (plans 510 and 516).
+
+The install metadata is `/site.webmanifest`, a route
+(`src/routes/site[.]webmanifest.ts`) built from `src/lib/site-manifest.ts`, so
+the name, description, start URL and both colours come from the head and the
+token palette instead of a hand-written JSON file. It is deliberately
+`display: "browser"` with no maskable icon: there is no service worker, so the
+site makes no standalone or offline claim, and the full-bleed mark would be
+cropped by an Android mask. `src/lib/site-manifest.test.ts` decodes the document
+with a `Schema.Class` and reads each icon's real pixels; `smoke:build` proves the
+route answers as `application/manifest+json`, serves the module's exact
+document, and that both icons resolve as PNGs.
 
 ## Stack
 
