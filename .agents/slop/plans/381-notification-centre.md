@@ -143,7 +143,7 @@ Constants: `FRAME_WIDTH = 760`, `FRAME_HEIGHT = 460`, `BAR_HEIGHT = 52`,
 `HEADER_ROW = 24`, `NOTIFICATION_ROW = 60`.
 
 State: `open`, `items`, `active: Option<number>` (notification id), `anchor`,
-`top`, `inserts`, `arrivals`.
+`top`, `inserts`.
 
 Refs: `bell` (`PublicInstance`), `list` (`PublicInstance`), `rowsRef` (current
 flat rows), `nextId` (a number ref, so an arrival needs no extra state).
@@ -175,7 +175,7 @@ Layout:
    (36 × 36, `position: "relative"`) holding:
    - `nc-bell` (36 × 36, `tabIndex=0`, `role="button"`,
      `aria-label={`Notifications, ${unread} unread`}`, ref, `onClick=toggle`,
-     `onKeyDown` Enter/Space) containing a bell glyph (`✱` or a text mark) and,
+     `onKeyDown` Enter) containing a bell glyph (`bell`) and,
      when `unread > 0`, a `nc-badge` with a small `text` of the count;
    - when `open`, `<anchored side="bottom" align="end" gap={8}>` with
      `nc-panel`.
@@ -379,7 +379,7 @@ the anchor index is what the app shows), but the paint is the runtime's.
 | ---- | ----- |
 | bell | 36 × 36; badge `3`; `Button:Notifications, 3 unread`; no panel while closed |
 | panel | 320 × 360 anchored `side=bottom align=end gap=8` to the bell wrapper; right edge and top within 1 px; `autoFocus` puts focus on it in both hosts |
-| list | 280 px viewport; 24 px `Today`/`Earlier` headers; 60 px rows; `Region:Notifications`; each row is a `Button` named `<title>, <read|unread>` |
+| list | 280 px viewport; 24 px `Today`/`Earlier` headers; 60 px rows; `Region:Notifications`; each row is a `Button` named `<title>, <read or unread>` |
 | unread | derived from the read flags; a row click is idempotent; opening marks nothing read; close/reopen keeps every flag |
 | badge | disappears at zero (no painted bounds); the bell label follows (`Notifications, 0 unread`) |
 | keyboard | Down/Up move the active row, Enter marks it read, Escape closes and returns focus to `nc-bell` |

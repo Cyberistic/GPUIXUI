@@ -801,7 +801,7 @@ arrivals. 80 checks; live twin `live-notification-centre` (27 checks).
 | ---- | -------- |
 | bell | 36 × 36; the badge reads `3`; `Button:Notifications, 3 unread`; the panel does not paint while closed |
 | panel | 320 × 360 anchored `bottom`/`end`/`gap 8` to the bell wrapper; right edge and top within 1 px; `autoFocus` gives it native focus in both hosts |
-| rows | a 280 px viewport with 24 px `Today`/`Earlier` headers and 60 px notification rows in one `<virtual-list>`; `Region:Notifications`, each row a `Button` named `<title>, read|unread` |
+| rows | a 280 px viewport with 24 px `Today`/`Earlier` headers and 60 px notification rows in one `<virtual-list>`; `Region:Notifications`, each row a `Button` named `<title>, read or unread` |
 | unread | derived from the read flags; a row click is idempotent; opening marks nothing read; close/reopen keeps every flag |
 | badge | disappears at zero; the bell label follows (`Notifications, 0 unread`) |
 | keyboard | Down/Up move the active row, Enter marks it read, Escape closes and returns focus to `nc-bell` |
