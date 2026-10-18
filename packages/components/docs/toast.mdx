@@ -34,7 +34,7 @@ toast.push({
 | ---- | -------------- |
 | `ToastProvider` | the `ManagedRuntime`, the store, the React subscription — the package's **only** `runtime.run*` boundary |
 | `useToast()` | `{ toasts, push, dismiss, dismissAll, pause, resume, actionFor }`; throws outside the provider |
-| `ToastViewport` | the bottom-right stack; `role="group"` named Notifications, with each card its own status |
+| `ToastViewport` | the stack in `position`'s corner (bottom-right by default); `role="group"` named Notifications, with each card its own status |
 
 Render the viewport **last** in the app root: GPUix has no `zIndex`, so overlays
 stack in paint order. The viewport is `pointerEvents: "none"` and each card turns
@@ -52,6 +52,7 @@ pointer events back on, so a toast never blocks the page underneath.
 | hovering a card | pauses its clock; leaving resumes with the **remaining** time |
 | focusing a card's controls | pauses its clock; moving focus away resumes with the **remaining** time |
 | an action | one labelled control; pressing it runs the handler once and dismisses the toast |
+| placement | `position` picks `top-left`, `top-right`, `bottom-left` or `bottom-right` (default); the oldest toast is topmost and the stack hugs the named horizontal side in every corner |
 
 A dismissed toast's timer is cancelled with it, so a stale timer can never remove
 the next toast. That regression is guarded in `toast/store.test.ts` with
@@ -109,7 +110,7 @@ string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `ToastProvider` | provider (no host element) | `max?: number` (default `3`), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
-| `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
+| `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `position?: "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` (default `"bottom-right"`), `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
 | `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id) }` |
 
 ## Motion
@@ -125,7 +126,8 @@ reduced-motion preference, so the recipe is not switchable.
 Cards paint `colors.popover` with `colors.popoverForeground`, a
 `borderWidth.thin` border in `colors.border`, `radius.md`, the `md` elevation and
 `spacing.lg` padding. The bar and icon take the tone's colour (the same status
-palette Alert and Badge use). Width is 380px.
+palette Alert and Badge use). Width is 380px; the viewport keeps `spacing.xl`
+from its two pinned edges.
 
 ## Accessibility and limitations
 
@@ -155,14 +157,15 @@ palette Alert and Badge use). Width is 380px.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, and action decoding
   (present, absent, empty label).
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (16 tests): push
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (18 tests): push
 and the card's status name, stacking order, dismissing one card, `dismissAll`,
 the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
 hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
 pointer leaving, the action running once and dismissing, no control for an
 unhandled label, no control without an action, the action holding focus, the
-500 ms enter recipe, and the card remaining through its exit before it leaves.
+500 ms enter recipe, the card remaining through its exit before it leaves, and
+the viewport pinning the default and each named corner's two edges.
 
 ```sh
 nub run --filter @gpuixui/components test

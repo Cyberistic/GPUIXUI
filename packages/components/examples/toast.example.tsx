@@ -2,7 +2,8 @@
  * Toast example: three outcomes from one Save button.
  *
  * The provider owns one store and one runtime; the viewport is the last child so
- * it paints above the card. A caller only sees `useToast()`.
+ * it paints above the card, in the top-right corner so it misses the card. A
+ * caller only sees `useToast()`.
  */
 
 import { Duration } from "effect";
@@ -99,7 +100,7 @@ export const ToastExample = () => (
   <div style={{ width: 900, height: 520 }}>
     <ToastProvider>
       <SavePanel />
-      <ToastViewport />
+      <ToastViewport position="top-right" />
     </ToastProvider>
   </div>
 );

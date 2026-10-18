@@ -8,11 +8,14 @@
  * theme surface. It also guards a toast that auto-dismissed while keyboard focus
  * was on its own dismiss control, dropping the user's focus with it. An action
  * could render with no handler (a dead button), run twice, leave its toast
- * behind, or let the toast expire while its action held keyboard focus.
+ * behind, or let the toast expire while its action held keyboard focus. The
+ * viewport could also ignore the corner it is given and always paint
+ * bottom-right.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import { Duration } from "effect";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
@@ -28,7 +31,12 @@ import {
   type ComponentTestRoot,
   type TestTheme,
 } from "../internal/test-root.js";
-import { ToastProvider, ToastViewport, useToast } from "../toast.js";
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+  type ToastPosition,
+} from "../toast.js";
 
 /** A page with two push buttons, a dismiss-all and an unrelated control. */
 const Controls = ({
@@ -101,10 +109,12 @@ const Harness = ({
   onElsewhere,
   onAction,
   duration,
+  position,
 }: {
   readonly onElsewhere?: () => void;
   readonly onAction?: () => void;
   readonly duration?: Duration.Input;
+  readonly position?: ToastPosition;
 }) => (
   // One root element: the native test renderer reports a single tree root, and a
   // provider's children are siblings of each other.
@@ -114,7 +124,7 @@ const Harness = ({
         onElsewhere={onElsewhere ?? (() => undefined)}
         onAction={onAction}
       />
-      <ToastViewport />
+      <ToastViewport position={position} />
     </ToastProvider>
   </div>
 );
@@ -444,5 +454,60 @@ describe("Toast", () => {
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
     page.unmount();
+  });
+
+  it("paints the default bottom-right corner", () => {
+    const page = renderComponent(<Harness />);
+
+    const style = page.renderer.findByTestId("toast-viewport")?.style;
+    expect(style?.bottom).toBe(darkTheme.spacing.xl);
+    expect(style?.right).toBe(darkTheme.spacing.xl);
+    expect(style?.top).toBeUndefined();
+    expect(style?.left).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("pins the corner the caller names on both axes", () => {
+    const offsets = Arr.map(
+      ["top-left", "top-right", "bottom-left"] as const,
+      (position) => {
+        const page = renderComponent(<Harness position={position} />);
+        const style = page.renderer.findByTestId("toast-viewport")?.style;
+        const result = [
+          style?.top,
+          style?.bottom,
+          style?.left,
+          style?.right,
+          style?.alignItems,
+        ];
+        page.unmount();
+        return result;
+      },
+    );
+
+    expect(offsets).toEqual([
+      [
+        darkTheme.spacing.xl,
+        undefined,
+        darkTheme.spacing.xl,
+        undefined,
+        "flex-start",
+      ],
+      [
+        darkTheme.spacing.xl,
+        undefined,
+        undefined,
+        darkTheme.spacing.xl,
+        "flex-end",
+      ],
+      [
+        undefined,
+        darkTheme.spacing.xl,
+        darkTheme.spacing.xl,
+        undefined,
+        "flex-start",
+      ],
+    ]);
   });
 });

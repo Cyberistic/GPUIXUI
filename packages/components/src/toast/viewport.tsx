@@ -1,5 +1,5 @@
 /**
- * The toast viewport: a paint-order stack in the bottom-right corner.
+ * The toast viewport: a paint-order stack in one corner of the app root.
  *
  * GPUix has no `zIndex`; stacking is paint order, so the viewport must be the
  * **last child of the app root**. The container is `pointerEvents: "none"` so the
@@ -22,6 +22,7 @@ import {
   textStyle,
   tone,
   useTheme,
+  type Theme,
   type Tone,
 } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
@@ -193,17 +194,57 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   );
 };
 
+/** Where the stack sits in the app root. */
+export type ToastPosition =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
+
+/** The two edges a corner pins, as token offsets from the app root. */
+const corner = (
+  theme: Theme,
+  position: ToastPosition,
+): {
+  readonly top?: number;
+  readonly bottom?: number;
+  readonly left?: number;
+  readonly right?: number;
+} =>
+  Match.value(position).pipe(
+    Match.when("top-left", () => ({
+      top: theme.spacing.xl,
+      left: theme.spacing.xl,
+    })),
+    Match.when("top-right", () => ({
+      top: theme.spacing.xl,
+      right: theme.spacing.xl,
+    })),
+    Match.when("bottom-left", () => ({
+      bottom: theme.spacing.xl,
+      left: theme.spacing.xl,
+    })),
+    Match.when("bottom-right", () => ({
+      bottom: theme.spacing.xl,
+      right: theme.spacing.xl,
+    })),
+    Match.exhaustive,
+  );
+
 /** {@link ToastViewport} props: where the stack sits in the app root. */
 export interface ToastViewportProps extends Props {
+  /** The corner the stack grows from. Default `"bottom-right"`. */
+  readonly position?: ToastPosition;
   /** An optional element before the toasts, e.g. a "dismiss all" action. */
   readonly children?: ReactNode;
 }
 
 /**
- * The bottom-right stack. Render it **last** in the app root: the runtime paints
- * in order, so anything after it would cover the toasts.
+ * The stack in `position`'s corner. Render it **last** in the app root: the
+ * runtime paints in order, so anything after it would cover the toasts.
  */
 export const ToastViewport = ({
+  position = "bottom-right",
   children,
   style,
   ...rest
@@ -221,11 +262,13 @@ export const ToastViewport = ({
       style={mergeStyles(
         {
           position: "absolute",
-          right: theme.spacing.xl,
-          bottom: theme.spacing.xl,
+          ...corner(theme, position),
           display: "flex",
           flexDirection: "column",
-          alignItems: "flex-end",
+          alignItems:
+            position === "top-left" || position === "bottom-left"
+              ? "flex-start"
+              : "flex-end",
           gap: theme.spacing.md,
           maxWidth: 380,
           pointerEvents: "none",
