@@ -161,6 +161,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [362](./362-selection-status-panel-text.md) | Text selection in a status panel | F | 091, 320, 346, 351 | done |
 | [363](./363-selection-card-foreground.md) | The card's own foreground through a text selection | F | 071, 081, 087, 362 | done |
 | [364](./364-motion-contract.md) | The motion group the numeric contract left half-governed | F | 019, 358, 360 | done |
+| [365](./365-overlay-scroll-height.md) | The overlay list must fit a row | F | 353, 360 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1332,6 +1333,17 @@ curve is a design choice. A named easing is constrained by `MotionEasing` itself
 No shipped set carries a tuple or a non-finite timing, so no token value moves;
 `motion-contract.test.ts` states the three silent edits and the overshoot the
 rule must not reject.
+
+365 closes the last `dimensions` member with a documented relationship but no
+rule. `overlayMaxHeight` is described as "the height at which a long overlay list
+starts to scroll", yet it was only checked for being positive, so a theme that
+set it to **20** while `density.rowHeight` is **32** returned `[]` — and every
+menu, select and combobox list using the token would scroll in a viewport
+shorter than one of its rows, clipping every option. Plan 360 had already held
+`rowHeight` to the default `md` control it holds; the overlay's own bound is one
+row, because a list item is a row. Every shipped set ships 320 against a row of
+28–36, so no token value moves; `overlay-height.test.ts` states the 20/32 edit,
+the one-row floor and the compact density that lowers the bound.
 
 ### Reference adoption (block `200–299`)
 
