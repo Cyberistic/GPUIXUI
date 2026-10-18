@@ -128,13 +128,13 @@ A custom theme changes all of it with no code change.
   `preventDefault` in 0.10.0.
 - New rows and the alert are not announced, because there is no `aria-live`.
 
-## Testing
+## Verification
 
 `src/chat/logic.test.ts` covers every transition and identity row.
-`src/behaviour/chat.test.tsx` drives the real renderer: it types and sends,
-proves Shift+Enter does not submit, stops a stream, refuses a second submit,
-retries after an error, stops on Escape, attaches, follows an appended row and
-renders the empty slot.
+`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (9 tests): it
+types and sends, proves Shift+Enter does not submit, stops a stream, refuses a
+second submit, retries after an error, stops on Escape, attaches, follows an
+appended row and renders the empty slot.
 
 ## Credit
 

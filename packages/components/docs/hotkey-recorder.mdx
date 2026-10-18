@@ -89,12 +89,14 @@ no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
-modifier, modifier-only presses, Enter/Space normalisation, case, order and a
-keyless event. `src/behaviour/hotkey-recorder.test.tsx` (11 native tests) covers
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (11 tests):
 the display, click-to-record, a real captured chord, Escape, the clear control
 by pointer and keyboard, Space starting on release, a captured Space not
 reopening the recorder, blur, disabled, and both themes.
+
+`src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
+modifier, modifier-only presses, Enter/Space normalisation, case, order and a
+keyless event.
 
 ```sh
 nub run --filter @gpuixui/components test

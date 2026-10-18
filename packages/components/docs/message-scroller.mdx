@@ -98,12 +98,13 @@ change — see [Theming](/docs/theming).
   re-renders the scroller and is followed.
 - **No `aria-live`** and no "new messages" announcement.
 
-## Testing
+## Verification
 
-`src/behaviour/message-scroller.test.tsx` drives the real renderer: it wheels the
-viewport, appends rows, grows the tail and clicks the affordance, then reads the
-real `getScrollOffset`/bounds. `src/message-scroller/logic.test.ts` covers the
-pin/unread fold without a window.
+`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (10 tests):
+it wheels the viewport, appends rows, grows the tail and clicks the affordance,
+then reads the real `getScrollOffset`/bounds.
+`src/message-scroller/logic.test.ts` covers the pin/unread fold without a
+window.
 
 ## Credit
 

@@ -425,6 +425,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `Breadcrumb`, `HotkeyRecorder`, the `InlineEdit` display, the `TagInput`
     chip); plan 334 — 9 native tests; the hotkey clear control now claims its
     key, so a keyboard clear no longer starts a recording
+  - [x] Docs verification truth: every component docs page states its real
+    native-test count in one canonical line, checked for all 41 pages rather
+    than only those that happened to adopt the sentence — plan 335; 14 pages
+    normalised (three had no verification section), unit 335, behaviour 517;
+    both-direction proof
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 

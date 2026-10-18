@@ -121,13 +121,13 @@ all of it with no code change.
 - Tool-call rows are display-only; a consumer wires retry/cancel outside.
 - No `aria-live`; streamed text is not announced.
 
-## Testing
+## Verification
 
-`src/behaviour/message.test.tsx` drives the real renderer: it compares the two
-alignments, appends a token and reads `getPaintedText`, opens the reasoning
-disclosure, clicks a citation, flips a failed tool call, and checks that empty
-slots render nothing. `src/inventory.test.ts` checks this page, the example and
-the `COMPONENTS.md` row.
+`src/behaviour/message.test.tsx` runs in the real GPUix renderer (10 tests): it
+compares the two alignments, appends a token and reads `getPaintedText`, opens
+the reasoning disclosure, clicks a citation, flips a failed tool call, and
+checks that empty slots render nothing. `src/inventory.test.ts` checks this
+page, the example and the `COMPONENTS.md` row.
 
 ## Credit
 

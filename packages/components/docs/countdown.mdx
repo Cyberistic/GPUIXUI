@@ -86,10 +86,12 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
+`src/behaviour/countdown.test.tsx` runs in the real GPUix renderer (5 tests):
+the rendered text, a re-render with a new value, the expired role, the
+accessible name and both themes.
+
 `src/countdown/logic.test.ts` (9 pure tests) covers splitting, flooring,
-clamping, the hour cap and the day prefix. `src/behaviour/countdown.test.tsx`
-(5 native tests) covers the rendered text, a re-render with a new value, the
-expired role, the accessible name and both themes.
+clamping, the hour cap and the day prefix.
 
 ```sh
 nub run --filter @gpuixui/components test

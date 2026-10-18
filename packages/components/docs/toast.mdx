@@ -133,12 +133,12 @@ palette Alert and Badge use). Width is 380px.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, and action decoding
   (present, absent, empty label).
-- `src/behaviour/toast.test.tsx` — 14 tests in the real GPUix renderer: push,
-  stacking order, dismissing one card, `dismissAll`, the page staying clickable
-  through the viewport, both themes, the queue still working after a dismiss,
-  hover pausing a card's auto-dismiss, focus pausing it, focus holding through
-  the pointer leaving, the action running once and dismissing, no control for an
-  unhandled label, no control without an action, and the action holding focus.
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (14 tests): push,
+stacking order, dismissing one card, `dismissAll`, the page staying clickable
+through the viewport, both themes, the queue still working after a dismiss,
+hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
+pointer leaving, the action running once and dismissing, no control for an
+unhandled label, no control without an action, and the action holding focus.
 
 ```sh
 nub run --filter @gpuixui/components test

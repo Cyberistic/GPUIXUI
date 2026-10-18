@@ -91,11 +91,13 @@ Swatches are the colours you pass (defaults from the theme); the grid uses
 
 ## Verification
 
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (8 tests):
+the parts, the theme swatches, a swatch press and selection, a typed shorthand,
+an invalid draft, blur commit/revert, disabled, and a style callback in both
+themes.
+
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.
-`src/behaviour/color-picker.test.tsx` (8 native tests) covers the parts, the
-theme swatches, a swatch press and selection, a typed shorthand, an invalid
-draft, blur commit/revert, disabled, and a style callback in both themes.
 
 ```sh
 nub run --filter @gpuixui/components test

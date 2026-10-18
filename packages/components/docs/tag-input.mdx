@@ -87,11 +87,12 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 
 ## Verification
 
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (9 tests):
+rendering, Enter, comma commit, duplicates, the removal control by pointer and
+Space release, `max`, disabled and a caller that refuses a change.
+
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.
-`src/behaviour/tag-input.test.tsx` (9 native tests) covers rendering, Enter,
-comma commit, duplicates, the removal control by pointer and Space release,
-`max`, disabled and a caller that refuses a change.
 
 ```sh
 nub run --filter @gpuixui/components test

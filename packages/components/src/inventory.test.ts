@@ -22,7 +22,6 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 import { examples } from "../examples/index.js";
 import { inventory, type ComponentMeta } from "./inventory.js";
@@ -246,9 +245,11 @@ describe("inventory", () => {
   });
 
   it("states the real native test count in every docs verification line", () => {
-    // The suffix is captured separately and the closing backtick is consumed by
-    // `\S*`: a backtick inside a regex literal would open a template quote for
-    // `scripts/check-tests.ts`'s scanner, which then loses this test's asserts.
+    // Every page must carry exactly one canonical line, so a page cannot opt
+    // out of the check by wording its verification differently (plan 335).
+    // The closing backtick is consumed by `\S*`: a backtick inside a regex
+    // literal would open a template quote for `scripts/check-tests.ts`'s
+    // scanner, which then loses this test's asserts.
     const stated =
       /src\/behaviour\/([\w-]+)\.test\.tsx\S* runs in the real GPUix renderer \((\d+) tests?\)/g;
     const problems = Arr.flatMap(inventory, (meta: ComponentMeta) => {
@@ -256,18 +257,26 @@ describe("inventory", () => {
         fileURLToPath(new URL(meta.docs, packageRoot)),
         "utf8",
       );
-      return Arr.filterMap(Arr.fromIterable(page.matchAll(stated)), (match) => {
-        const stem = match[1];
-        const claimed = match[2];
-        if (stem === undefined || claimed === undefined) return Result.failVoid;
-        const file = `${stem}.test.tsx`;
-        const actual = countBehaviourTests(`src/behaviour/${file}`);
-        return String(actual) === claimed
-          ? Result.failVoid
-          : Result.succeed(
-              `${meta.name}: ${file} says ${claimed}, suite has ${actual}`,
-            );
-      });
+      const matches = Arr.fromIterable(page.matchAll(stated));
+      if (Arr.length(matches) !== 1) {
+        return [
+          `${meta.name}: expected one verification line, found ${Arr.length(matches)}`,
+        ];
+      }
+      const match = matches[0];
+      const stem = match?.[1];
+      const claimed = match?.[2];
+      if (stem === undefined || claimed === undefined) return [];
+      const file = `${stem}.test.tsx`;
+      if (`src/behaviour/${file}` !== meta.testFile) {
+        return [
+          `${meta.name}: verification names ${file}, record says ${meta.testFile}`,
+        ];
+      }
+      const actual = countBehaviourTests(meta.testFile);
+      return String(actual) === claimed
+        ? []
+        : [`${meta.name}: ${file} says ${claimed}, suite has ${actual}`];
     });
 
     expect(problems).toEqual([]);
