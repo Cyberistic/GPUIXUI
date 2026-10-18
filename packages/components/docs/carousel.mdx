@@ -8,9 +8,11 @@ the arrow keys. It is **discrete**, not sliding: GPUix `motion` animates width,
 left and opacity only — no transform — and scroll snap is unavailable, so a
 translating track is not honestly expressible.
 
-Every slide stays mounted and only the active one is displayed, which preserves
-each slide's component state (a form on slide two is not reset by visiting slide
-three).
+Every slide stays mounted and only the active one is painted and hit-testable:
+an inactive slide is `visibility: hidden` with a collapsed box, so it keeps its
+component state (a form on slide two is not reset by visiting slide three) while
+taking no layout space and staying outside the tab order. GPUix 0.10.0 ignores
+`display: none`, which is why the mechanism is visibility (plan 365).
 
 ## Usage
 
@@ -63,7 +65,7 @@ merges `style` last.
 | ---- | ------- | ----- |
 | `Carousel` | `role="group"` with `aria-label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, children |
 | `CarouselTrack` | the slide row | children |
-| `CarouselSlide` | one slide, `display` toggled | `style?: StateStyle<CarouselSlideState>`, children |
+| `CarouselSlide` | one slide, inactive ones hidden with `visibility` and a collapsed box | `style?: StateStyle<CarouselSlideState>`, children |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
 
 `CarouselSlideState` is `{ active, index }`.
@@ -79,8 +81,9 @@ the frame with no code change — see [Theming](/docs/theming).
 - The root is a named `group` and takes focus for the arrow keys.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
   edge is disabled (out of the tab order, dimmed) unless `loop`.
-- Inactive slides stay in the tree with `display: none`; a screen reader does not
-  announce them, and their component state survives.
+- Inactive slides stay in the tree (their state survives) but are
+  `visibility: hidden` with no layout box: they paint nothing, take no click and
+  leave the native tab order.
 - There is no `aria-roledescription="carousel"` or slide-position announcement
   in `0.10.0`.
 
@@ -90,15 +93,17 @@ the frame with no code change — see [Theming](/docs/theming).
 - **No swipe/drag** (no drag host feature).
 - No indicator dots, auto-advance or thumbnails in v1.
 - Slides must be direct children of the track.
-- Inactive slides stay mounted: many heavy slides cost render time.
+- Inactive slides stay mounted and are still reconciled: many heavy slides cost
+  render time even though only one paints.
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (9 tests):
-every slide mounted and one displayed, control stepping, edge clamping, loop
-wrapping, arrows and Home/End, a controlled carousel, region naming and disabled
-edges, a style callback receiving `{ active, index }` in both themes, and a
-caller's control `onClick` composing with the step.
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (12 tests):
+exactly one slide painted, an inactive slide with no layout box, the active slide
+taking a click the inactive one used to take, a hidden slide keeping its state
+across a step, control stepping, edge clamping, loop wrapping, arrows and
+Home/End, a controlled carousel, region naming and disabled edges, and a style
+callback receiving `{ active, index }` in both themes.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

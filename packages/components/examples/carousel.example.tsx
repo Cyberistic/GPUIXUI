@@ -1,8 +1,9 @@
 /**
  * Carousel example: a three-panel gallery with previous/next controls.
  *
- * The slides stay mounted; only the active one is displayed. Arrow keys work
- * while the carousel has focus, and Home/End jump to the ends.
+ * The slides stay mounted; only the active one is painted, so the others keep
+ * their state without taking layout space. Arrow keys work while the carousel
+ * has focus, and Home/End jump to the ends.
  */
 
 import { useState } from "react";

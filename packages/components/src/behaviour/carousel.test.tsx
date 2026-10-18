@@ -1,12 +1,15 @@
 /**
  * Carousel behaviour, in the real GPUix renderer.
  *
- * The bugs these guard: every slide painted at once, a step that runs past the
- * last slide, loop ignored, arrow keys that do not move, a controlled carousel
- * that moves on its own, and a style callback that cannot see the active slide.
+ * The bugs these guard: every slide painted at once (the runtime ignores
+ * `display: "none"` — plan 365), an inactive slide taking the active slide's
+ * click, a step that runs past the last slide, loop ignored, arrow keys that do
+ * not move, a controlled carousel that moves on its own, and a style callback
+ * that cannot see the active slide.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import {
@@ -15,7 +18,12 @@ import {
   CarouselSlide,
   CarouselTrack,
 } from "../carousel.js";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  boundsOf,
+  clickCentreOf,
+  focusedTestId,
+  requireBounds,
+} from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -43,7 +51,7 @@ const Gallery = ({
       onValueChange={onValueChange}
       loop={loop}
     >
-      <CarouselTrack>
+      <CarouselTrack testId="track">
         <CarouselSlide testId="slide-0">
           <text>One</text>
         </CarouselSlide>
@@ -93,19 +101,117 @@ const StatefulGallery = ({
   );
 };
 
-/** Which slides are painted, from their `display` style. */
-const displays = (root: ComponentTestRoot): ReadonlyArray<unknown> =>
-  [0, 1, 2].map(
-    (index) => root.renderer.findByTestId(`slide-${index}`)?.style.display,
+/** The slide labels the renderer actually painted. */
+const paintedSlides = (root: ComponentTestRoot): ReadonlyArray<string> => {
+  const painted = root.renderer.getPaintedText();
+  return Arr.filter(["One", "Two", "Three"], (label) =>
+    Arr.some(painted, (line) => line.includes(label)),
   );
+};
+
+/** A gallery whose slides each carry a clickable row. */
+const ClickableGallery = ({
+  onRow,
+}: {
+  readonly onRow: (index: number) => void;
+}) => (
+  <div style={{ width: 480 }}>
+    <Carousel testId="carousel" label="Screenshots" value={1}>
+      <CarouselTrack testId="track">
+        <CarouselSlide testId="slide-0">
+          <div testId="row-0" onClick={() => onRow(0)}>
+            <text>One</text>
+          </div>
+        </CarouselSlide>
+        <CarouselSlide testId="slide-1">
+          <div testId="row-1" onClick={() => onRow(1)}>
+            <text>Two</text>
+          </div>
+        </CarouselSlide>
+        <CarouselSlide testId="slide-2">
+          <div testId="row-2" onClick={() => onRow(2)}>
+            <text>Three</text>
+          </div>
+        </CarouselSlide>
+      </CarouselTrack>
+    </Carousel>
+  </div>
+);
+
+/** A slide-local counter, to prove an inactive slide is not remounted. */
+const Counter = () => {
+  const [count, setCount] = useState(0);
+  return (
+    <div testId="counter" onClick={() => setCount((current) => current + 1)}>
+      <text>{`count ${count}`}</text>
+    </div>
+  );
+};
 
 describe("Carousel", () => {
-  it("mounts every slide and displays only the active one", () => {
+  it("paints only the active slide", () => {
     const gallery = renderComponent(<Gallery value={1} />);
 
     expect(gallery.renderer.getAllText()).toEqual(["One", "Two", "Three"]);
     expect(gallery.renderer.findByType("svg")).toHaveLength(2);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
+
+    gallery.unmount();
+  });
+
+  it("gives an inactive slide no layout box", () => {
+    const gallery = renderComponent(<Gallery value={1} />);
+    const track = requireBounds(gallery, "track");
+    const active = requireBounds(gallery, "slide-1");
+
+    expect(Option.isNone(boundsOf(gallery, "slide-0"))).toBe(true);
+    expect(Option.isNone(boundsOf(gallery, "slide-2"))).toBe(true);
+    expect(active.width).toBeGreaterThanOrEqual(track.width - 2);
+    expect(active.width).toBeLessThanOrEqual(track.width);
+
+    gallery.unmount();
+  });
+
+  it("gives the active slide the click an inactive slide used to take", () => {
+    const onRow = vi.fn();
+    const gallery = renderComponent(<ClickableGallery onRow={onRow} />);
+    const track = requireBounds(gallery, "track");
+
+    gallery.renderer.nativeSimulateClick(
+      track.x + 20,
+      track.y + track.height / 2,
+      0,
+    );
+
+    expect(onRow).toHaveBeenCalledWith(1);
+
+    gallery.unmount();
+  });
+
+  it("keeps an inactive slide mounted with its state", () => {
+    const gallery = renderComponent(
+      <Carousel testId="carousel" label="Screenshots" defaultValue={0}>
+        <CarouselTrack>
+          <CarouselSlide testId="slide-0">
+            <Counter />
+          </CarouselSlide>
+          <CarouselSlide testId="slide-1">
+            <text>Two</text>
+          </CarouselSlide>
+        </CarouselTrack>
+        <CarouselControl direction="next" testId="next" />
+        <CarouselControl direction="previous" testId="prev" />
+      </Carousel>,
+    );
+
+    clickCentreOf(gallery, "counter");
+    expect(gallery.renderer.getAllText()).toContain("count 1");
+
+    clickCentreOf(gallery, "next");
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
+
+    clickCentreOf(gallery, "prev");
+    expect(gallery.renderer.getAllText()).toContain("count 1");
 
     gallery.unmount();
   });
@@ -118,7 +224,7 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(1);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(2);
@@ -198,7 +304,7 @@ describe("Carousel", () => {
     clickCentreOf(gallery, "next");
 
     expect(onValueChange).toHaveBeenCalledWith(2);
-    expect(displays(gallery)).toEqual(["none", "flex", "none"]);
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
 
     gallery.unmount();
   });
@@ -250,7 +356,8 @@ describe("Carousel", () => {
 
     const light = renderComponent(<Gallery value={0} />, "light");
     expect(light.renderer.findByTestId("carousel")).toBeDefined();
-    expect(light.renderer.findByTestId("slide-0")?.style.display).toBe("flex");
+    expect(paintedSlides(light)).toEqual(["One"]);
+    expect(Option.isNone(boundsOf(light, "slide-1"))).toBe(true);
     light.unmount();
   });
 

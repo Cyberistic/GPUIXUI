@@ -4,8 +4,9 @@
  * `motion` in 0.10.0 animates width, left and opacity only — there is no
  * transform/translate — and scroll snap is unavailable, so a sliding track is
  * not honestly expressible. Every slide stays mounted and only the active one is
- * displayed. That keeps each slide's component state (a form on slide two is not
- * reset by visiting slide three) and needs no positioning trick.
+ * painted: an inactive slide is `visibility: hidden` with a collapsed box,
+ * because 0.10.0 ignores `display: none` (plan 365). That keeps each slide's
+ * component state (a form on slide two is not reset by visiting slide three).
  *
  * The root owns the active index; the track reports its slide count, so the
  * controls and the arrow keys share one clamp and one loop rule.
@@ -215,7 +216,32 @@ export interface CarouselSlideState {
   readonly index: number;
 }
 
-/** One slide. It stays mounted while inactive and is hidden with `display`. */
+/**
+ * An inactive slide: no paint, no hit test, no layout space. `display: "none"`
+ * is ignored by GPUix 0.10.0, so visibility is the measured mechanism (plan 365;
+ * the playground measured the same property in plan 177).
+ */
+const hiddenSlide = {
+  visibility: "hidden",
+  pointerEvents: "none",
+  width: 0,
+  height: 0,
+  overflow: "hidden",
+  flexGrow: 0,
+  flexShrink: 0,
+} as const;
+
+/** The active slide: it fills the track. */
+const shownSlide = {
+  visibility: "visible",
+  pointerEvents: "auto",
+  flexGrow: 1,
+} as const;
+
+/**
+ * One slide. It stays mounted while inactive so its state survives, and it is
+ * hidden with visibility rather than `display`.
+ */
 export const CarouselSlide = ({
   style,
   children,
@@ -230,9 +256,9 @@ export const CarouselSlide = ({
       {...rest}
       style={mergeStyles(
         {
-          display: active ? "flex" : "none",
+          display: "flex",
           flexDirection: "column",
-          flexGrow: 1,
+          ...(active ? shownSlide : hiddenSlide),
         },
         resolveStyle(style, { active, index }),
       )}
@@ -316,7 +342,7 @@ export const carouselMeta = {
     "discrete stepping only: motion has no transform and scroll snap is unavailable",
     "no swipe gesture (no drag host feature) and no slide animation",
     "no indicator dots or auto-advance in v1",
-    "inactive slides stay mounted and are hidden with display: none",
+    "inactive slides stay mounted and are hidden with visibility: hidden and a collapsed box",
   ],
   docs: "docs/carousel.mdx",
   example: "examples/carousel.example.tsx",

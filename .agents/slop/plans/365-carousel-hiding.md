@@ -4,7 +4,8 @@
 Tier 2 component).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 117, 315, 326, 338.
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — 12 native Carousel tests; 6 fail on the pre-fix
+code and all 12 pass after it (behaviour 525, unit 356).
 
 ## 1. Why this plan exists
 
@@ -133,8 +134,8 @@ Test 4 guards the mechanism chosen over unmounting. Do not assert
 `style.display` anywhere after this change.
 
 The documented count in the suite's header comment and every docs page becomes
-**13 native behaviour tests** (9 existing + 4 new; test 5 strengthens an existing
-one rather than adding a case).
+**12 native behaviour tests** (9 existing, one reworked from the authored-style
+check into a painted check, plus 3 new: bounds, hit test, state retention).
 
 ### 3.3 `packages/components/docs/carousel.mdx`
 
@@ -224,4 +225,20 @@ Stop and report with the measurement instead of improvising if:
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- `src/behaviour/carousel.test.tsx`: **12/12 green**.
+- Both directions: with `src/carousel.tsx` reverted to `display`, the same suite
+  reports **6 failed / 6 passed** (`paintedSlides` returns all three labels,
+  `slide-0` has bounds, the click runs row 0, the light-theme paint check fails);
+  with the fix, **12/12**.
+- Full behaviour suite: **525 passed** (was 522; +3 cases) across 47 files.
+- Unit suite: **356 passed**; `check-types` exit `0`.
+- Docs, example, inventory record and `COMPONENTS.md` now name the visibility
+  mechanism and the real count. GPUix support stays `partial` because the
+  carousel still cannot animate or swipe.
+
+Consumer-facing consequence for the playground's plan `347`: the "inactive slide
+is still hit-testable" limitation no longer exists, so that scenario should
+assert the fixed behaviour (`display: none` remains a runtime no-op; the
+component no longer relies on it).

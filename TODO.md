@@ -379,6 +379,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
 | `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
+| Plan 347's Carousel scenario expected an inactive slide to stay hit-testable; plan 365 fixes the component, so that step should assert the fixed behaviour | playground | resolved in `packages/components`; the playground assertion needs updating |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | **package landed** (19 Tier 1 components + `Button`/`Input`/`Spinner`). The components' `internal/button.tsx`, the `FieldInput` host input and the `…` busy glyph stay until primitives' `ThemeProvider` and `@gpuixui/tokens/react` are one provider — two contexts would make every consumer wrap both. Owner of the unification: cross-package decision, not components |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
@@ -459,8 +460,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
       `loading` close the last documented Combobox gap without adding a
       transport — plan 340; 2 logic + 4 native tests (unit 356, behaviour 522),
       both-direction proof
-    - `[ ]` Carousel hides inactive slides with the runtime's visibility
-      mechanism (`display: none` is a no-op in 0.10.0) — plan 365
+    - `[x]` Carousel hides inactive slides with the runtime's visibility
+      mechanism (`display: none` is a no-op in 0.10.0) — plan 365; 3 new native
+      cases (Carousel 12, behaviour 525), 6 of 12 fail on the old code
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 
