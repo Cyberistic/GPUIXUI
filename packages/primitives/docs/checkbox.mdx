@@ -130,6 +130,10 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
   role is `CheckBox`; focus paints the ring and moves it with focus.
+- `runtime/examples.runtime.test.tsx` — the **checkbox example** (plan `374`)
+  mounts the standalone box in its real role: a tri-state header over a column
+  of row boxes. The header announces `mixed`, a row click repaints the caller's
+  count, and selecting all announces `checked`.
 
 ```sh
 nub run --filter @gpuixui/primitives test

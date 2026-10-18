@@ -267,7 +267,10 @@ dismisses it. A click dismisses it.
   hovered, and `disableHoverableContent` closes it as the pointer leaves the
   trigger.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
-  hover and on keyboard focus, and its trigger announces the description.
+  hover and on keyboard focus, and its trigger announces the description. The
+  **tooltip example** (plan `374`) is the component's own composition: a tip
+  over an `IconButton` opens on hover, and the wrapped Publish button still
+  runs its caller's action and repaints the status line.
 - `runtime/overlay-trigger.runtime.test.tsx` — the documented composition, a
   `Button` trigger: hover and focus open the tip, click closes it, and the
   trigger's `aria-description` carries the text; `IconButton` and `Toggle` open

@@ -34,7 +34,7 @@ never as a promise.
 | [textarea](textarea.mdx) | `TextArea` | [form](../examples/form.example.tsx) |
 | [number-field](number-field.mdx) | `NumberField` | [number-field](../examples/number-field.example.tsx) |
 | [otp-field](otp-field.mdx) | `OTPField` | [otp](../examples/otp.example.tsx) |
-| [checkbox](checkbox.mdx) | `Checkbox` | [selection](../examples/selection.example.tsx) |
+| [checkbox](checkbox.mdx) | `Checkbox` | [checkbox](../examples/checkbox.example.tsx) |
 | [checkbox-group](checkbox-group.mdx) | `CheckboxGroup` | [selection](../examples/selection.example.tsx) |
 | [radio-group](radio-group.mdx) | `RadioGroup` | [selection](../examples/selection.example.tsx) |
 | [switch](switch.mdx) | `Switch` | [selection](../examples/selection.example.tsx) |
@@ -46,7 +46,7 @@ never as a promise.
 | [progress](progress.mdx) | `Progress` | [form](../examples/form.example.tsx) |
 | [skeleton](skeleton.mdx) | `Skeleton` | [feedback](../examples/feedback.example.tsx) |
 | [spinner](spinner.mdx) | `Spinner` | [feedback](../examples/feedback.example.tsx) |
-| [tooltip](tooltip.mdx) | `Tooltip` | [feedback](../examples/feedback.example.tsx) |
+| [tooltip](tooltip.mdx) | `Tooltip` | [tooltip](../examples/tooltip.example.tsx) |
 | [info-tip](info-tip.mdx) | `InfoTip` | [feedback](../examples/feedback.example.tsx) |
 
 The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx).
@@ -64,6 +64,11 @@ The icon package has its own page: [`@gpuixui/icons`](../../icons/docs/icon.mdx)
 9. **Limitations** — measured gaps and the honest alternative.
 10. **Verification** — the suites and the command that ran them.
 11. **Related**.
+
+The table above is guarded from the example side: `src/example-coverage.test.ts`
+reads the public component surface and fails by name when no
+`examples/*.example.tsx` module renders a component. A page's example link can
+therefore never be the only record of a composition (plan `374`).
 
 ## Verification commands
 

@@ -212,8 +212,9 @@ Every Tier 1 component has a page and a composed example beside the source:
 
 - `docs/` — one page per component (`docs/README.md` indexes them) with usage,
   API, keyboard, accessibility, theming, limitations and verification;
-- `examples/` — twelve realistic compositions plus the icon set, registered in
-  `examples/index.ts` for `apps/playground`;
+- `examples/` — fourteen realistic compositions plus the icon set, registered in
+  `examples/index.ts` for `apps/playground`, and a coverage guard that fails by
+  name when a public component has no rendered example (plan `374`);
 - `runtime/examples.runtime.test.tsx` — mounts every example in the real
   renderer, so an example cannot rot into source that has never run.
 
@@ -225,11 +226,12 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **44 files, 626 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **46 files, 660 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
-(plan `098`), and a guard that every documented `theme.…` path and
-`@gpuixui/tokens` import resolves on the shipped package (plan `333`).
+(plan `098`), a guard that every documented `theme.…` path and
+`@gpuixui/tokens` import resolves on the shipped package (plan `333`), and one
+that every public component is rendered by at least one example (plan `374`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render
@@ -244,7 +246,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **31 files, 610 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **32 files, 612 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override

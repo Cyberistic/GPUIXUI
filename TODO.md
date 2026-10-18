@@ -1027,6 +1027,16 @@ retired once both branches are one
       the `ToggleGroup`/`CheckboxGroup` rule — so the pointer and keyboard
       paths share one no-op guard; 5 core + 1 element-tree + 2 runtime cases,
       both directions proven (offline 659, runtime 610; plan `373`).
+`[x]` `packages/primitives`: **the two components with no example** — a
+      boundary-aware scan found `Tooltip` (no `<Tooltip` at all) and the
+      standalone `Checkbox` (hidden behind a prefix match on `<CheckboxGroup`),
+      while the docs index linked both at screens using only their variants. A
+      release-actions screen wraps `Button`/`IconButton`/`Toggle` in `Tooltip`s,
+      and a release-asset table drives a tri-state header `Checkbox` over three
+      row boxes; both mount natively in both palettes. A new
+      `src/example-coverage.test.ts` fails by name when a public component has no
+      rendered example, including a declaration-form export (plan `374`;
+      offline 659 → 660, runtime 610 → 612).
 `[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
       slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/
       `RadioGroup` still read the invented `comfortable` metrics and the icon

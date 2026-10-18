@@ -9,6 +9,7 @@
 
 import type { ComponentType } from "react";
 import { ButtonGroupExample } from "./button-group.example.js";
+import { CheckboxExample } from "./checkbox.example.js";
 import { FeedbackExample } from "./feedback.example.js";
 import { FormExample } from "./form.example.js";
 import { IconsExample } from "./icons.example.js";
@@ -19,12 +20,14 @@ import { RatingExample } from "./rating.example.js";
 import { SelectionExample } from "./selection.example.js";
 import { ToggleExample } from "./toggle.example.js";
 import { ToggleGroupExample } from "./toggle-group.example.js";
+import { TooltipExample } from "./tooltip.example.js";
 import { TypographyExample } from "./typography.example.js";
 import { ValueExample } from "./value.example.js";
 
 /** Every example, by the id a docs page and the playground both use. */
 export const examples: Readonly<Record<string, ComponentType>> = {
   buttonGroup: ButtonGroupExample,
+  checkbox: CheckboxExample,
   feedback: FeedbackExample,
   form: FormExample,
   icons: IconsExample,
@@ -35,6 +38,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   selection: SelectionExample,
   toggle: ToggleExample,
   toggleGroup: ToggleGroupExample,
+  tooltip: TooltipExample,
   typography: TypographyExample,
   value: ValueExample,
 };

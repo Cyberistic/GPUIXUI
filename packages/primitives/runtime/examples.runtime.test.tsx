@@ -32,6 +32,7 @@ const SCREENS = [
     root: "button-group-example",
     headline: "Document actions",
   },
+  { id: "checkbox", root: "checkbox-example", headline: "Release assets" },
   { id: "typography", root: "typography-example", headline: "Version 0.10.0" },
   { id: "form", root: "form-example", headline: "Project settings" },
   { id: "selection", root: "selection-example", headline: "Notifications" },
@@ -51,6 +52,7 @@ const SCREENS = [
     root: "toggle-group-example",
     headline: "Document toolbar",
   },
+  { id: "tooltip", root: "tooltip-example", headline: "Release 0.10.0" },
 ] as const;
 
 const renderExample = (
@@ -291,6 +293,43 @@ it("switches the toggle-group example's mode and formatting set", async () => {
       line.startsWith("Align centre · Formatting bold, italic"),
     ),
   ).toBe(true);
+});
+
+it("selects release assets through the checkbox example", async () => {
+  // The standalone `Checkbox` in its real role (plan 374): a tri-state header
+  // over a column of boxes. The header announces `mixed` while some are
+  // selected, and a row box repaints the caller's count.
+  const runtime = await openWindow();
+  renderExample(runtime, "checkbox");
+  const header = (): string =>
+    Option.getOrElse(
+      a11yValueOf(runtime.a11y(), { label: "Select all assets" }),
+      () => expect.fail("the select-all box announced no state"),
+    );
+  expect(header()).toBe("mixed");
+  expect(runtime.allText()).toContain("1 of 3 selected");
+  runtime.click("checkbox-example-asset-1");
+  expect(runtime.allText()).toContain("2 of 3 selected");
+  runtime.click("checkbox-example-all");
+  expect(header()).toBe("checked");
+  expect(runtime.allText()).toContain("3 of 3 selected");
+});
+
+it("opens the tooltip example's tips and publishes the release", async () => {
+  // The composition the Tooltip page documents (plan 374): a tip over an
+  // IconButton opens on hover, and the wrapped publish button still runs its
+  // caller's action and repaints the status line.
+  const runtime = await openWindow();
+  renderExample(runtime, "tooltip");
+  expect(runtime.allText()).toContain(
+    "Draft — publish when the notes are ready.",
+  );
+  expect(runtime.allText()).not.toContain("Delete this draft permanently.");
+  runtime.hover("tooltip-example-delete");
+  expect(runtime.allText()).toContain("Delete this draft permanently.");
+  runtime.click("tooltip-example-publish");
+  expect(runtime.allText()).toContain("Published to the stable channel.");
+  expect(runtime.allText()).toContain("Published");
 });
 
 it("paints every example from the dark palette", async () => {
