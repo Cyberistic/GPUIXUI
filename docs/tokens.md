@@ -1807,6 +1807,7 @@ four filled families, derived from `filledControlFamilies` (`x`, `xHover`,
 `softActionHover`, `softActionActive`), the generic wash a ghost or outline
 control paints (`hover`, `active`) and the selected step past the accent a row
 hovers with (`accent`, `selected`).
+
 `themeDirectionFailures(theme)` reads the direction the theme's declared mode
 requires — `darker` in light, `lighter` in dark — compares each consecutive pair
 with `relativeLuminance`, and reports a step that moves the other way as a
