@@ -201,13 +201,16 @@ Implemented and run on this host, 2026-10-18:
 | `nub run check` | green |
 | `nub run lint` | green |
 
-Environment note: the **full** live suite was attempted while other worktrees
-were running their own GPUix suites; 110 focus- and window-dependent cases across
-19 files failed (activation, focus rings, hit-tested clicks) while the new case
-passed in isolation. The same tree was 618/618 green at 21:25 before those runs.
-The suite is a shared-GPU resource, so verify it when no other worktree is
-running one (the swarm's known constraint). No failure was in `floating.ts`,
-`Select`'s new cap, or the new case.
+Environment note: the **full** live suite could not be re-run green in this
+session. With no other worktree running a suite, the first 14 files pass and the
+remaining 19 fail together on focus- and window-dependent cases (activation,
+rings, hit-tested clicks); the activation file alone then passes **81/81**, and
+the same tree was **618/618** green at 21:25 before those runs. The host appears
+to accumulate native window resources across suite invocations (the swarm runs
+many suites in this session), which is why a full run now degrades partway. The
+new case passes in isolation, and no failure is in `floating.ts`, `Select`'s new
+cap, or the new case. Re-run the full suite from a fresh desktop session before
+merging.
 
 Mutation directions:
 
