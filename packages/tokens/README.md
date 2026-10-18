@@ -373,8 +373,9 @@ That case is why the check exists: `focusRing` spreads by `borderWidth.strong`,
 and that shadow is the only focus indicator GPUix 0.10.0 can draw, so a zero
 ring removed focus while `themeContrastFailures` still returned `[]`. The same
 edit path can clip a type role by shortening its leading, shrink the smallest
-control below one label line, invert a size ladder, or hand `elevationShadow` an
-alpha the colour helper cannot parse. The ladders are non-decreasing rather than
+control below one label line, invert a size ladder, leave the largest avatar a
+rounded square, or hand `elevationShadow` an alpha the colour helper cannot
+parse. The ladders are non-decreasing rather than
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
 `motion.fast === motion.step`; `elevation.overlay` is exempt because it is
 reserved and empty. Every shipped theme, platform variant and recipe passes.

@@ -21,3 +21,12 @@ export const stretched = extendTheme(getTheme("light"), {
   density: { controlHeight: { md: 40, lg: 44 }, rowHeight: 32 },
 });
 export const stretchedFailures = themeMetricFailures(stretched);
+
+/**
+ * A `full` radius that clears the largest control but not the largest avatar:
+ * the colour check is empty, and the numeric one names the rounded square.
+ */
+export const squarish = extendTheme(getTheme("light"), {
+  radius: { full: 18 },
+});
+export const squarishFailures = themeMetricFailures(squarish);

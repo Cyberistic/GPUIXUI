@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 128/178
+`[x]` `[███████░░░]` 129/179
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -917,6 +917,11 @@ unpaintable shadow) and for `controlHeight.md = 40` over the shipped
 tree row; a `finite` rule now governs both offsets, the blur and the spread
 (negative offsets stay valid) and `rowHeight` is held to `controlHeight.md`
 beside the body-line rule, with no shipped value moving (plan 360)
+`[x]` Hold the pill radius to the largest avatar — `radius.full` was bounded by
+the largest control (18), but `components/avatar.tsx` paints the 40px
+`avatarSize.lg` disc with `full`, so a `full` of 18 or 19 satisfied the checker
+and still left the avatar a rounded square while both contracts returned `[]`;
+a third bound, `avatarSize.lg / 2`, sits beside the control bound (plan 361)
 
 ## Phase C — Tier 1–2 components
 

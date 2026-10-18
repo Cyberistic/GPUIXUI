@@ -1375,7 +1375,9 @@ runtime can draw, so a zero ring removes focus entirely — while
 type role's leading must not be shorter than its size; the smallest control must
 fit one `label` line plus its two borders; a row must fit one `body` line and the
 default `md` control it holds; `radius.none` must be square; `radius.full` must
-round the largest radius and half the largest control; every named ladder —
+round the largest radius and half of the taller of the largest control and the
+largest avatar — a 40px avatar painted at a smaller radius is a rounded square,
+not a circle; every named ladder —
 `spacing`, `radius`, `iconSize`, `avatarSize`, `controlHeight`, `controlPaddingX`
 and the motion timings — must not step backwards; an icon and a field adornment
 must fit the smallest control; a chip must fit in a field; and an elevation level

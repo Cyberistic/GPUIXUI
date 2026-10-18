@@ -218,6 +218,9 @@ dialog or a toast without touching component source.
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.
 Pills and avatars use `full` (clamped by the renderer to half the short side).
+The numeric contract holds `full` to at least half of the larger of the largest
+control and the largest avatar, so a theme that shrinks it cannot turn a 40px
+avatar into a rounded square.
 
 Two border roles:
 
@@ -472,8 +475,9 @@ The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink the smallest control below one label line plus its borders, clip a row
-below the default `md` control it holds, round a "square" corner, invert a named
-size ladder, ship a zero-width surface metric, hand the renderer a non-finite
+below the default `md` control it holds, round a "square" corner, leave the
+largest avatar a rounded square, invert a named size ladder, ship a zero-width
+surface metric, hand the renderer a non-finite
 shadow offset or hand `elevationShadow` an alpha the colour helper cannot
 parse — each of which returned `[]` from the colour check. Every shipped theme,
 platform variant and recipe passes, so the checker exists for the theme a

@@ -18,6 +18,7 @@ import type { ElevationShape } from "./elevation.js";
 import {
   compactFailures,
   ringlessFailures,
+  squarishFailures,
   stretchedFailures,
 } from "./metrics.example.js";
 import {
@@ -97,6 +98,7 @@ describe("theme metric contract", () => {
     expect(compactFailures).toEqual([]);
     expect(ringlessFailures).toHaveLength(1);
     expect(stretchedFailures).toHaveLength(1);
+    expect(squarishFailures).toHaveLength(1);
   });
 
   it("states the gap: a ringless theme passes the colour check", () => {
@@ -175,7 +177,31 @@ describe("theme metric contract", () => {
         actual: 8,
         bound: 18,
       },
+      {
+        group: "radius",
+        member: "full",
+        rule: "at-least",
+        actual: 8,
+        bound: 20,
+      },
     ]);
+  });
+
+  it("reports a pill radius that leaves the largest avatar a rounded square", () => {
+    // 18 satisfies the control bound (controlHeight.lg / 2) but not the avatar
+    // bound (avatarSize.lg / 2 = 20), so the 40px avatar is not a circle.
+    expect(failuresOf({ radius: { full: 18 } })).toEqual([
+      {
+        group: "radius",
+        member: "full",
+        rule: "at-least",
+        actual: 18,
+        bound: 20,
+      },
+    ]);
+
+    // Exactly half the largest avatar is round, and is the intended edit.
+    expect(failuresOf({ radius: { full: 20 } })).toEqual([]);
   });
 
   it("reports an elevation alpha the colour helper cannot parse", () => {

@@ -173,7 +173,8 @@ const ladder = (
  * - **iconSize**, **avatarSize**: named ladders, and the default icon fits the
  *   smallest control.
  * - **radius**: `none` is square, the four steps are a ladder, and `full` rounds
- *   both the largest radius and half the largest control.
+ *   the largest radius, half the largest control and half the largest avatar —
+ *   a 40px avatar at a smaller radius is a rounded square.
  * - **spacing**: a ladder.
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
@@ -280,6 +281,7 @@ export function themeMetricFailures(
     ),
     ...atLeast("radius", "full", radius.full, radius.xl),
     ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
+    ...atLeast("radius", "full", radius.full, avatarSize.lg / 2),
     ...ladder(
       "spacing",
       (
