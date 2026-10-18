@@ -150,6 +150,7 @@ export const brandTheme = createTheme({
     primaryActive: "#A28CFF",
     primaryText: "#C9BDFF",
     ring: "#9B8CFF",
+    overlay: "#000000D9",
   },
   radius: { md: 8 },
   density: "compact",
@@ -161,7 +162,10 @@ A theme that moves a filled family moves the whole family: the brand's
 beside `primary`, and `accentForeground`, `accentHover` and `accentActive` belong
 beside `accent`, and `selection` is the accent's translucent wash. An inherited
 state keeps the base hue running the interaction, and an inherited foreground can
-miss the on-colour floor.
+miss the on-colour floor. A dark brand whose accent is darker than the base's
+also deepens the modal scrim (`overlay`): the face is measured on the scrim over
+every surface a window shows, and the base's 65% scrim left this brand's floating
+face at 1.038:1 over its own primary action, so the example ships 85%.
 
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
@@ -339,12 +343,14 @@ themeTypefaceFailures(brandTheme); // [] when both families are one name
 the parts. The modal scrim and the dialog on it are measured as a pair:
 `overlayWashPairs` holds the painted scrim to 1.05:1 over the eighteen surfaces a
 window shows, and `dialogSurfacePairs` holds the dialog's own face — `popover`
-composited over the `overlay` scrim on the six page layout surfaces
-(`background`, `card`, `muted`, `input`, `selected`, `popover`) — to the same
-floor, because a theme whose scrim meets its own floating surface leaves a dialog
-with only its 1px edge (tightest shipped 1.210:1). The shadow cannot take that
-role in the default dark sets: on the identity dark scrim the `lg` tint paints
-1.035:1 and pure black reaches only 1.042:1. The selection wash is measured as
+composited over the `overlay` scrim on every surface `overlaySurfaces` names, the
+six layout surfaces and the twelve resting content fills — to the same floor,
+because a theme whose scrim meets its own floating surface leaves a dialog with
+no face (tightest shipped 1.079:1). The edge is not a fallback: a dialog's
+`border` measures 1.006:1 over a scrimmed status chip, under the divider floor,
+so the face is the carrier and macOS dark's scrim is 82%. The shadow cannot take
+that role in the default dark sets: on the identity dark scrim the `lg` tint
+paints 1.035:1 and pure black reaches only 1.042:1. The selection wash is measured as
 it paints on every surface a glyph is selected on: the neutral surfaces with
 `foreground`, `popover` and `input` with their own text roles, and `selected`
 with `selectedForeground` at the secondary floor. Secondary text is measured through the same wash on all

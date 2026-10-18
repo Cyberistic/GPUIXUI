@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 190/252
+`[x]` `[███████░░░]` 191/253
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1516,6 +1516,16 @@ while every check returned `[]`. The role moves one iris step to `#1C1547`
 (8.533:1 at the tightest of its four fills), the six pairs join the list
 (20 → 26), and every shipped set passes (4.898:1 macOS light at the tightest)
 (plan 525)
+`[x]` Hold the dialog's face over the content a window shows — plan 507 measured
+`popover` over the scrim on the six layout surfaces only, so macOS dark's face
+met its own `primary` action at **1.021:1** and the `border` it was said to rely
+on measures **1.006:1** on a scrimmed `success` chip, under the divider floor,
+while every check returned `[]`; `dialogSurfacePairs` derives from
+`overlaySurfaces` (6 → 18 pairs), the macOS dark scrim deepens to 82%
+(`#000000D0`) so every shipped face clears 1.05:1 (1.079:1 at the tightest), the
+executed brand example owns its 85% scrim after the inherited one left its face
+at 1.038:1, and the documents stop naming the 1.495:1 edge as the carrier
+(plan 526)
 
 ## Phase C — Tier 1–2 components
 
