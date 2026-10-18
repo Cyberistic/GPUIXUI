@@ -201,6 +201,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [503](./503-track-row-washes.md) | The value indicator's groove on the row washes and status panels | F | 347, 094, 322, 300, 309, 366, 381, 388 | done |
 | [504](./504-solid-status-chip-selection.md) | The solid status chip and the panel action on the inverse selection veil | F | 344, 382, 394, 399 | done |
 | [505](./505-elevation-tint-aaa-dark.md) | The elevation tint on the AAA dark canvas | F | 085, 099, 345, 371, 390, 393 | done |
+| [506](./506-selected-row-title-selection.md) | The selected row's title through the text-selection wash | F | 081, 087, 312, 363, 381, 387, 391 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2030,6 +2031,27 @@ raised element floats over, and `themeContrastFailures` composites every defined
 level at its own alpha over them, reporting the level and the fraction. Every
 shipped set passes; the tightest is 1.061:1 (identity dark, `sm` on
 `background`) and AAA dark moves from 1.000:1 to 1.207:1.
+
+Plan `506` closes the last text role a selected row paints. Plan `312`
+established that a selected row's title is `foreground` — `ListItemTitle`
+overrides the row's inherited colour — while the label beside it keeps the
+secondary-strength `selectedForeground`; plan `363` had already added a card's
+second body role for the same reason. The selection contract measured only
+`selectedForeground` and `mutedForeground` on the `selected` fill, so dragging
+across a selected title had no pair behind it: identity dark measured
+**6.480:1**, Linux dark 6.648:1 and the Windows palette 6.908:1 — five dark
+sets under the 7:1 body floor while all six checks returned `[]`. `selectionPairs`
+now carries `foreground` on `selected` beside the inherited label (19 → 20), and
+three dark values move: the identity wash from 20% to 14%, the Windows (and XP
+and Aero) wash from 40% to 33%, and Linux dark's selected fill one designed step
+darker (`#2B4F76` → `#27476A`), because its wash cannot soften far enough without
+falling under the 1.05:1 highlight floor. The Windows wash carries two floors —
+the title on `selected` and the highlight plan 091 tuned for the soft
+`destructiveSoft` fill — and 33% is the narrow window that clears both. The
+titles now measure 7.144 / 7.389 / 7.164:1, every wash stays perceivable
+(1.264 / 1.125 / 1.136:1, and 1.071:1 on the Windows soft fill), and Linux dark
+keeps a 1.216:1 step past its accent wash. No light or high-contrast value moves,
+and the plain `contrastPairs` count stays 394.
 
 ## How to use a plan
 
