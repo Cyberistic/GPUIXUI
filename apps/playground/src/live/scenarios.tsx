@@ -50,6 +50,7 @@ import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
+import { queryBuilderScenario } from "../scenarios/query-builder.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3733,6 +3734,256 @@ const multiPaneEditor: LiveScenario = {
     }),
 };
 
+const queryBuilder: LiveScenario = {
+  id: "live-query-builder",
+  title: "Live query builder: rules, combinators, append focus and the empty state",
+  capability: "query",
+  view: queryBuilderScenario.view,
+  ready: "qb-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectContains(
+        "the live builder starts closed with every row",
+        yield* textOf(ctx, "qb-state"),
+        "open=false rules=1 complete=0 matched=120",
+      );
+
+      // A real click opens the strip.
+      yield* ctx.host.click("qb-toggle");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "open=true");
+      const strip = yield* boxOf(ctx, "qb-builder");
+      yield* ctx.expectNear("the live strip is 132 px tall", strip.height, 132, 1);
+
+      // A real Select choice narrows the table.
+      yield* ctx.host.click("qb-rule-0-value");
+      yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-value-content", "paused");
+      yield* ctx.host.click("qb-rule-0-value-item-paused");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "complete=1 matched=40");
+      yield* ctx.expectEqual(
+        "the live value choice narrows to the paused rows",
+        yield* textOf(ctx, "qb-summary"),
+        "status is paused",
+      );
+      const match = yield* boxOf(ctx, "qb-row-1");
+      yield* ctx.expectNear(
+        "the live first match is at the top",
+        match.y,
+        (yield* boxOf(ctx, "qb-viewport")).y,
+        1,
+      );
+      const hidden = yield* ctx.host.bounds("qb-row-0");
+      yield* ctx.expectEqual(
+        "a live non-matching row is unpainted",
+        hidden === null,
+        true,
+      );
+
+      // A real add reveals and focuses the appended rule.
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "rules=2");
+      yield* waitForFocus(ctx, "qb-rule-1-value");
+      yield* ctx.expectEqual(
+        "the live appended rule takes focus",
+        yield* focusedOf(ctx),
+        "qb-rule-1-value",
+      );
+      const appended = yield* boxOf(ctx, "qb-rule-1");
+      yield* ctx.expectEqual(
+        "the live appended rule paints inside the strip",
+        appended.y >= strip.y && appended.y + appended.height <= strip.y + 132 + 1,
+        true,
+      );
+
+      // Typing into a real rule narrows under `all` and widens under `any`.
+      yield* ctx.host.click("qb-rule-1-value");
+      yield* ctx.host.key("i t e m space 1");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "complete=2 matched=12");
+      yield* ctx.expectEqual(
+        "the live summary joins both rules",
+        yield* textOf(ctx, "qb-summary"),
+        "status is paused and name contains item 1",
+      );
+      yield* ctx.host.click("qb-match-any");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "match=any");
+      yield* ctx.expectContains(
+        "any widens the live result",
+        yield* textOf(ctx, "qb-state"),
+        "matched=59",
+      );
+      yield* ctx.expectSome(
+        "a live row matching only one rule paints under any",
+        Option.fromNullishOr(yield* ctx.host.bounds("qb-row-11")),
+      );
+
+      // A real numeric field with a real bound.
+      yield* ctx.host.click("qb-clear");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=120");
+      yield* ctx.host.click("qb-rule-0-field");
+      yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-field-content", "Score");
+      yield* ctx.host.click("qb-rule-0-field-item-score");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "complete=0");
+      yield* ctx.expectEqual(
+        "the live field change resets the operator",
+        yield* textOf(ctx, "qb-rule-0-op"),
+        ">",
+      );
+      yield* ctx.host.click("qb-rule-0-value");
+      yield* ctx.host.key("8 0");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=19");
+      yield* ctx.expectContains(
+        "the live numeric rule narrows to the bound",
+        yield* textOf(ctx, "qb-state"),
+        "matched=19",
+      );
+
+      // An enum pair, and an incomplete rule ignored under any.
+      yield* ctx.host.click("qb-clear");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-field");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-field-item-owner");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-value");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-value-item-Ada");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=30");
+      yield* ctx.host.click("qb-rule-0-op");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-op-item-isNot");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=90");
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* ctx.host.click("qb-match-any");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "match=any");
+      yield* ctx.expectContains(
+        "the live incomplete rule is ignored under any",
+        yield* textOf(ctx, "qb-state"),
+        "complete=1 matched=90",
+      );
+
+      // Removing both rules shows the empty builder, then a real empty state.
+      yield* ctx.host.click("qb-rule-0-remove");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "rules=1");
+      yield* ctx.host.click("qb-rule-0-remove");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "rules=0");
+      yield* ctx.expectContains(
+        "a live empty builder says so",
+        yield* textOf(ctx, "qb-rules-empty"),
+        "no rules",
+      );
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* waitForFocus(ctx, "qb-rule-0-value");
+      yield* ctx.host.key("z z z");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=0");
+      yield* ctx.expectContains(
+        "the live empty state paints",
+        yield* textOf(ctx, "qb-empty"),
+        "No matching rows",
+      );
+
+      // A real wheel then a rule edit resets the anchor and the selection.
+      yield* ctx.host.click("qb-clear");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "matched=120");
+      yield* ctx.host.wheel("qb-viewport", 0, -840);
+      yield* settle;
+      yield* waitForAnchor(ctx, "qb-list", "30,0");
+      yield* ctx.host.click("qb-row-31");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "selected=31");
+      yield* ctx.host.click("qb-rule-0-value");
+      yield* settle;
+      yield* ctx.host.click("qb-rule-0-value-item-paused");
+      yield* settle;
+      yield* waitForAnchor(ctx, "qb-list", "0,0");
+      yield* waitForText(ctx, "qb-state", "selected=none");
+      yield* ctx.expectNear(
+        "the live reset puts the first match at the top",
+        (yield* boxOf(ctx, "qb-row-1")).y,
+        (yield* boxOf(ctx, "qb-viewport")).y,
+        1,
+      );
+
+      // Three appends scroll the strip; the appended row is revealed.
+      yield* ctx.host.click("qb-clear");
+      yield* settle;
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* ctx.host.click("qb-add");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "rules=4");
+      const revealed = yield* boxOf(ctx, "qb-rule-3");
+      const scrolledStrip = yield* boxOf(ctx, "qb-rules");
+      yield* ctx.expectNear(
+        "the live appended row sits at the strip's bottom",
+        revealed.y + revealed.height,
+        scrolledStrip.y + scrolledStrip.height,
+        2,
+      );
+      const clipped = yield* boxOf(ctx, "qb-rule-0");
+      yield* ctx.expectEqual(
+        "the live first rule scrolled above the strip",
+        clipped.y < scrolledStrip.y,
+        true,
+      );
+
+      // A picker opened from the scrolled strip still paints and commits.
+      yield* ctx.host.click("qb-rule-3-field");
+      yield* settle;
+      yield* waitForText(ctx, "qb-rule-3-field-content", "Score");
+      yield* ctx.host.click("qb-rule-3-field-item-score");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "rules=4");
+      yield* ctx.expectEqual(
+        "the live scrolled row commits its field",
+        yield* textOf(ctx, "qb-rule-3-op"),
+        ">",
+      );
+
+      // Escape closes and returns focus; the rules survive the reopen.
+      yield* ctx.host.click("qb-rule-3-value");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "open=false");
+      yield* waitForFocus(ctx, "qb-toggle");
+      yield* ctx.expectEqual(
+        "the live escape returns focus to the toggle",
+        yield* focusedOf(ctx),
+        "qb-toggle",
+      );
+      yield* ctx.host.click("qb-toggle");
+      yield* settle;
+      yield* waitForText(ctx, "qb-state", "open=true");
+      yield* ctx.expectContains(
+        "the live rules survive a close and reopen",
+        yield* textOf(ctx, "qb-state"),
+        "rules=4",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${queryBuilder.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -3769,4 +4020,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   appChrome,
   multiPaneEditor,
   dataToolbar,
+  queryBuilder,
 ];

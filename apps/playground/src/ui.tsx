@@ -8,8 +8,8 @@
  * Every colour comes from the theme `ThemeProvider` supplies, so the shell's
  * palette switch re-paints these helpers without a restart.
  */
-import type { ReactNode } from "react";
-import type { StyleDesc } from "@gpuix/react";
+import type { ReactNode, Ref } from "react";
+import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import { textStyle } from "@gpuixui/tokens";
 import { useTheme } from "@gpuixui/tokens/react";
 
@@ -96,17 +96,21 @@ export const Pressable = ({
   testId,
   onClick,
   style,
+  ref,
   children,
 }: {
   readonly testId: string;
   readonly onClick?: () => void;
   readonly style?: StyleDesc;
+  /** The host instance, so a scenario can return native focus to this control. */
+  readonly ref?: Ref<PublicInstance>;
   readonly children: ReactNode;
 }) => {
   const theme = useTheme();
   return (
     <div
       testId={testId}
+      ref={ref}
       tabIndex={0}
       role="button"
       onClick={onClick}

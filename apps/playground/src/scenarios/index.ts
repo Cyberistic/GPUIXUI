@@ -62,6 +62,7 @@ import { dataGridColumnsScenario } from "./data-grid-columns.js";
 import { appChromeScenario } from "./app-chrome.js";
 import { multiPaneEditorScenario } from "./multi-pane-editor.js";
 import { dataToolbarScenario } from "./data-toolbar.js";
+import { queryBuilderScenario } from "./query-builder.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -151,6 +152,7 @@ export const PROBE_CAPABILITIES = [
   "inspector",
   "editor",
   "data-toolbar",
+  "query",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -194,6 +196,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   appChromeScenario,
   multiPaneEditorScenario,
   dataToolbarScenario,
+  queryBuilderScenario,
   propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,
