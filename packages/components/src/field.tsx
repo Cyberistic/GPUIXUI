@@ -176,7 +176,8 @@ export interface FieldInputProps extends Omit<InputProps, "style"> {
   /** Overrides the field's own error as the validity signal. */
   readonly invalid?: boolean;
   /**
-   * Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`.
+   * Leaves the tab order and ignores edits; 0.10.0 has no `aria-disabled`, so
+   * the input announces `Disabled` through `aria-description`.
    * Inferred from a disabled `Fieldset` as well as set directly.
    */
   readonly disabled?: boolean;

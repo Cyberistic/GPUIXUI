@@ -13,7 +13,8 @@
  * Arrow keys add minutes through one clock function, so hours and minutes cannot
  * disagree at the hour or midnight boundary. Emptying a segment clears the
  * whole value; blur pads both segments. Disabled is `readOnly` on both inputs
- * because 0.10.0 has no `aria-disabled`.
+ * because 0.10.0 has no `aria-disabled`; the segments announce `Disabled`
+ * through `aria-description` (plan 516).
  *
  * The root is a field, not a trigger with a popup (the reason it is a field is
  * above): `TimePickerSegment` places the two inputs, `TimePickerSeparator` the
@@ -452,7 +453,7 @@ export const timePickerMeta = {
     "fixed 24-hour display: no AM/PM and no locale, because the repo has no i18n layer",
     "two labelled text segments instead of a spinbutton: 0.10.0 has no aria-valuenow",
     "minuteStep affects the arrow keys only; typed minutes accept 00..59",
-    "disabled is readOnly plus dimming: 0.10.0 has no aria-disabled",
+    "disabled is readOnly plus dimming: 0.10.0 has no aria-disabled, so the segments announce Disabled through aria-description",
     "no seconds and no timezone: the value is a time of day, not an instant",
   ],
   docs: "docs/time-picker.mdx",

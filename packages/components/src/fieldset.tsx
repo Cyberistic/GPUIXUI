@@ -133,7 +133,7 @@ export const fieldsetMeta = {
   status: "done",
   gpuixSupport: "partial",
   limitations: [
-    "no fieldset element and no aria-disabled in 0.10.0: the group is role=group named by its legend, and disabled reaches only FieldInput",
+    "no fieldset element and no aria-disabled in 0.10.0: the group is role=group named by its legend, disabled reaches only FieldInput, and the group/FieldInput announce Disabled through aria-description",
     "only the legend dims with disabled; controls that do not read the context keep their own disabled prop",
   ],
   docs: "docs/fieldset.mdx",

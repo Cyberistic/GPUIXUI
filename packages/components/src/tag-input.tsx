@@ -327,7 +327,7 @@ export const tagInputMeta = {
   gpuixSupport: "partial",
   limitations: [
     "controlled only: the caller owns the tokens and renders chips from that list",
-    "no aria-disabled in 0.10.0: disabled is a readOnly field plus dimming",
+    "no aria-disabled in 0.10.0: disabled is a readOnly field plus dimming, and the group/field announce Disabled through aria-description",
     "a typed comma commits through onChange because the runtime has no preventDefault",
     "Backspace on an empty field is not observable in 0.10.0 (no keyDown is emitted), so removal is the chip control",
   ],

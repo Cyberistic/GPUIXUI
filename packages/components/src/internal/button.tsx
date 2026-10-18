@@ -10,9 +10,9 @@
  * Both exports are replaced by `@gpuixui/primitives`' own the moment that package
  * lands; plan 110 §7 has the amendment and `TODO.md` → Interlocks the record.
  *
- * Known gap: `@gpuix/native@0.10.0` accepts no `aria-disabled`, so a disabled
- * button conveys its state by leaving the tab order, dropping its handlers and
- * dimming — assistive technology sees a button that does nothing.
+ * Known gap: `@gpuix/native@0.10.0` accepts no `aria-disabled`. A disabled
+ * button leaves the tab order, drops its handlers, dims, and announces
+ * `Disabled` through `aria-description` (plan 516).
  */
 
 import type { Props, StyleDesc } from "@gpuix/react";
