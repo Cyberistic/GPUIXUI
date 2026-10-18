@@ -206,7 +206,7 @@ export const replaceScenario: PlaygroundScenario = {
       ctx.host.key("z");
       const caret = readout(ctx, "replace-state");
       yield* ctx.expectContains(
-        "the caret kept its absolute index across the programmatic value",
+        "the caret lands at the end after the programmatic value",
         caret,
         "value=The|warning|handler|logs|an|warning.z",
       );

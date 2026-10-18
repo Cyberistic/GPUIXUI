@@ -82,3 +82,66 @@ planned twice (plans `324` and `330`), and two `edit` calls failed on stale
 seconds earlier. No file was lost, because the losing writer stopped at the
 first observable collision instead of retrying harder.
 
+---
+
+## Second recurrence, 2026-10-18 04:00–05:40 UTC+3 (three live sessions)
+
+A server restart during a turn produced **three** live `swarm:playground`
+sessions at once:
+
+```sh
+sqlite3 ~/.local/share/opencode/opencode.db \
+  "select id, datetime(time_created/1000,'unixepoch','localtime')
+     from session_v2
+    where directory like '%/workspaces/playground' and time_idle is null;"
+```
+
+```text
+ses_eb39d3882ffe2KO9gl2oqvrL45  03:21:44
+ses_eb3793506ffekZsgfWv1g67OXj  04:01:10   this session
+ses_eb373a33affeFkrlp0ozkaQHm1  04:07:11
+```
+
+All three held the tree between 04:20 and 04:30 (`time_updated` within the same
+minute). The observable collisions, in order:
+
+1. Two sessions committed the **same live-wait fix** under different messages
+   (`11c911f` bounded the Tier 2/scroller waits; `1b257fe` committed the focus
+   waits this session wrote while the other turn was editing `plan 331`).
+2. Two sessions wrote the **same task** — the replace feasibility probe. One
+   produced plan `333-search-replace.md`, `replace-state.ts`, `search-replace.tsx`
+   and claimed the `replace` capability; this session produced plan `333-search-
+   and-replace.md`, `replace-core.ts` and `replace-contract`. The other session
+   renamed its plan to `334` on seeing the collision; both scenarios were then
+   registered in one `index.ts` (two writers, one file, sequential edits that
+   happened to merge).
+3. `git commit -- <path>` was the only safe way to land a unit: `git add -A`
+   would have committed the other writer's half-written scenario.
+
+### Resolution taken
+
+The two probes are **complementary, not duplicates**, by the other plan's own
+framing ("the editor/caret half is plan 333"): plan `334` measures washes after
+a document mutation, the find cursor and `<code>`; plan `333` measures the
+editor's caret across a programmatic rewrite. Both were kept, and the commit
+that landed this session's probe also carried the registered `334` scenario
+files, because leaving the `index.ts` import without its module would have
+broken the branch for every other workstream. The full gates were then run on
+the **combined** tree: `nub run check` green, `nub run test` 957 tests green,
+headless `66/66`, live `20/20` — the first trustworthy whole-tree answer of the
+night.
+
+### What it cost
+
+- One task was planned and implemented twice (two plans, two scenario files, two
+  pure rule modules) before either writer noticed.
+- A `git push` was rejected once because two turns pushed in the same second.
+- Two `git commit` calls returned "nothing to commit": a peer had already
+  committed this session's working-tree changes. The content landed; the
+  authorship record did not.
+
+The permanent fix is unchanged and still `scripts/`-owned: pin one `--session`
+per workstream, count server-side live sessions in `agent_alive`, and refuse to
+start a turn whose worktree has another pid's uncommitted changes.
+
+

@@ -130,7 +130,7 @@ Stop and report (do not fudge an assertion) if:
 
 Landed. Headless **66/66**, exit `0`, `replace=verified`, two consecutive full
 runs; live **20/20**, exit `0`, `replace=verified`; `nub run --filter playground
-test` 92 tests. The `replace` capability is now part of the registry.
+test` 101 tests (the two replace suites plus the existing 84). The `replace` capability is now part of the registry.
 
 ### What the runtime answered
 
@@ -144,11 +144,14 @@ test` 92 tests. The `replace` capability is now part of the registry.
   `replaceFirst`, the new sentence is painted **twice** (editor + preview) and
   the old one zero times; the preview's washes drop `2 → 1`. A controlled
   rewrite needs no remount.
-- **The caret keeps its absolute index.** Click → End → replace a 5-character
-  word with a 7-character one → type `z`: the `z` landed at the old index,
-  between the new word and the sentence's period (`…an|warning.z`), not at the
-  start or the end. A replace UI must expect the next keystroke at the old
-  offset; the test pins the exact string in both the headless and live runs.
+- **The caret moves to the end.** Click → End → replace a 5-character word with
+  a 7-character one → type `z`: the value became `…an warning.z` — the `z`
+  landed **after** the sentence's period, i.e. at the end, not at the old
+  index. A replace UI cannot put the caret back (no `setSelection`) and must
+  treat the caret as lost; the test pins the exact string in both the headless
+  and live runs. *(The original commit message said "the caret keeps its
+  absolute index"; the measured string is `warning.z`, so that wording is
+  superseded.)*
 - **No programmatic selection exists.** `NativeRenderer` exposes no
   `setSelection`, so a component cannot select the replaced range or the active
   match; the keyboard path (`ctrl-r` on the editor) is the only way to replace

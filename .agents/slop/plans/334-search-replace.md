@@ -205,4 +205,68 @@ returns the requested index unclamped must fail the clamp test.
 
 ## 9. Landed — measured results
 
-*(filled after implementation)*
+Run on 2026-10-18 on this host, the locally built `darwin-x64` 0.10.0 binding
+(ADR 0003). The suite also contains the companion editor/caret probe
+(`replace-contract`, plan `333`), so the totals below are for the pair.
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter playground check-types` | exit `0` |
+| `nub run --filter playground test` | 13 files / **101 tests** (`replace-state.test.ts` has 9) |
+| `nub run --filter playground build` | exit `0` |
+| `nub apps/playground/dist/smoke/run.js --only search-replace` | exit `0`, **50 checks** |
+| `nub apps/playground/dist/smoke/run.js --only replace-contract` | exit `0`, 15 checks |
+| `nub apps/playground/dist/smoke/run.js` | `66/66`, exit `0` (two consecutive full runs) |
+| `nub apps/playground/dist/live/run.js` | `20/20`, exit `0` |
+
+Measured in the scenario:
+
+- **An editor's text is painted but never washed.** Both the textarea's value
+  (`error in the editor`) and the input's (`error in an input`) reach
+  `paintedText()`, while a `<text>` sibling under the *same* `highlight`
+  declaration washes once. The negative is specific to the editor, not a dead
+  query; the find bar's own query field washes nothing either.
+- **The document re-washes after a mutation, and `onHighlight` recounts.** Five
+  matches before, four after one replacement; the active cursor stayed at index
+  `2`, which is now the match that followed the replaced one (`the last error`).
+- **Replace-all clears the paints and the count.** `total=0`, zero document
+  washes, and `next`/`previous` stay at `0` without throwing.
+- **A count-preserving replacement fires no count event.** `error` → `ERROR`
+  keeps `total=5`; the `sr-events` readout is unchanged, while the first line's
+  washed runs become `ERROR,error`. A UI that rebuilds from `onHighlight` alone
+  would show stale positions.
+- **Length changes shift downstream matches exactly.** `error` → `errors`
+  keeps five matches and moves the line's second match from `start 6` to `7`;
+  `error` → `err` drops to four and moves the survivor to `start 4`.
+- **`<code>` re-highlights by prop.** Replacing the `code` source removes both
+  washes; no manual highlight call is needed.
+- **The fold order is load-bearing.** Replace-all with `err` rewrites every
+  match exactly once: `err err here|an err follows|no match|the last err|another
+  err closes`.
+
+### Two-direction proofs
+
+1. Removing `{...search.props}` from `sr-doc` fails `--only search-replace` at
+   `the find bar counts every document match: expected "total=5", got
+   "total=0 active=0"`, exit `1`.
+2. Folding `replaceRanges` left-to-right fails **two unit tests**
+   (`applies every range right to left`, `handles a length-changing replacement
+   without corrupting later ranges`) and the native check with the corrupted
+   document:
+   `got "err ererrere|an erroerrlows|no match|the last error|errer error
+   clerr"`, exit `1`. Reverted, the suite is green again.
+
+### Notes for the component owner
+
+- Build the replace bar around a **rendered document** (one `<text>` per line)
+  or a **context list**; do not promise washes inside `<textarea>`/`<input>`.
+- Apply ranges **right to left**; recompute the ranges from the new document
+  after every replacement — never cache offsets.
+- Refresh the find bar from the component's own state, not from `onHighlight`:
+  the event only reports a *count change*.
+- The find cursor's rule is `nextCursor(totalAfter, replacedIndex)` — clamp to
+  the new last match, `None` when nothing remains.
+- The caret is lost after a programmatic rewrite (plan `333`), and there is no
+  `setSelection`; treat commit-and-reopen, not in-place editing, as the honest
+  interaction.
+
