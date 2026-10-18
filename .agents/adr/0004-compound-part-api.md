@@ -7,7 +7,7 @@
 
 ## Context
 
-GPUixUI has twenty-odd Tier 2 components and a growing set of Tier 1
+GPUIxUI has twenty-odd Tier 2 components and a growing set of Tier 1
 primitives. Without one API convention every component invents its own shape:
 some take a `title` prop, some export `Header`/`Title` parts, some take a config
 object. `base-gpui` is a Rust port of Base UI and therefore already speaks the

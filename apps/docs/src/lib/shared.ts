@@ -1,4 +1,4 @@
-export const appName = "GPUixUI";
+export const appName = "GPUIxUI";
 export const docsRoute = "/docs";
 export const gitConfig = {
   user: "Cyberistic",

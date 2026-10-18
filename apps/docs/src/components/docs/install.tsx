@@ -11,7 +11,7 @@ import {
  * workspace consumer, and the manual manifest entry for a consumer that pins
  * the dependency by hand.
  *
- * GPUixUI's packages are private workspace packages, so there is no registry
+ * GPUIxUI's packages are private workspace packages, so there is no registry
  * command yet. The note says so instead of inventing one.
  */
 export function Install({

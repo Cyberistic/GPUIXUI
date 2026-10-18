@@ -1,7 +1,7 @@
 /*
  * Browser previews for the native components.
  *
- * GPUixUI renders through GPUix, not the DOM. These rules reproduce the
+ * GPUIxUI renders through GPUix, not the DOM. These rules reproduce the
  * library's measured geometry and palette so a reader can see the shape of a
  * component; the shipping component is the native one, shown in the Code tab.
  * Scoped under `.gx-demo` so nothing leaks into the docs chrome.

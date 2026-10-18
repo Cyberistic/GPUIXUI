@@ -14,7 +14,7 @@ source with `gpui_macos/runtime_shaders`: the `TestRenderer` mounts, dispatches
 real GPUI events, and the capabilities are `verified 0.10.0`.
 
 That leaves exactly one owner for the remaining gap: **nobody has run the
-GPUixUI Tier 1 components in the real runtime** — plan 140's scenarios drive the
+GPUIxUI Tier 1 components in the real runtime** — plan 140's scenarios drive the
 playground's own views, not this library. This plan closes that with a runtime
 suite that lives in this workstream's packages and can be re-run by anyone.
 

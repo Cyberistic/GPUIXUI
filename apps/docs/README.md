@@ -1,4 +1,4 @@
-# apps/docs — the GPUixUI documentation site
+# apps/docs — the GPUIxUI documentation site
 
 The docs site is a real Fumadocs app on TanStack Start, deployed as a Cloudflare
 Worker by `packages/deploy/alchemy.run.docs.ts` at
@@ -28,7 +28,7 @@ src/components/mdx.tsx  The MDX component registry
 src/lib/docs-view.tsx   Shared docs layout and page template
 src/lib/page-markdown.ts Server function for the "Copy page" action
 src/lib/source.ts       Fumadocs collection and page-tree loader
-src/styles/app.css      Tailwind, Fumadocs presets and the GPUixUI palette
+src/styles/app.css      Tailwind, Fumadocs presets and the GPUIxUI palette
 src/styles/demos.css    Scoped browser previews of the native components
 ```
 

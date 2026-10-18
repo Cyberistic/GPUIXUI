@@ -38,7 +38,7 @@ export const TypographyExample = (): ReactElement => {
         <Text role="h2">Version 0.10.0</Text>
 
         <Text role="bodyStrong">
-          GPUixUI now draws every Tier 1 primitive in the real GPUix runtime.
+          GPUIxUI now draws every Tier 1 primitive in the real GPUix runtime.
         </Text>
 
         <Text role="body">

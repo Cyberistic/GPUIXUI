@@ -10,7 +10,7 @@ import {
 /**
  * Browser previews for the docs pages.
  *
- * GPUixUI renders through GPUix, never the DOM. A docs page therefore cannot
+ * GPUIxUI renders through GPUix, never the DOM. A docs page therefore cannot
  * mount the shipped component; each demo below reproduces the component's
  * measured geometry, states and keyboard rules with HTML, and every page says
  * so. The Code tab always shows the real native usage.
