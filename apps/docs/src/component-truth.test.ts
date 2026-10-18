@@ -2,7 +2,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { components } from "./component-meta/registry";
+import { bySlug, components } from "./component-meta/registry";
 import { exportedNames } from "./lib/source-exports";
 
 /**
@@ -90,6 +90,10 @@ describe("inventory features the pages must not deny", () => {
    * pairs the evidence the page must now document with the denial that must not
    * survive. `COMPONENTS.md` and the component's own `docs/*.mdx` are the source
    * of truth; the pages are the copy that drifted.
+   *
+   * The same denials guard the record: `<ComponentState>` renders
+   * `record.limitations` above the page body (plan 465), so a record that still
+   * denies the feature contradicts the prose directly beneath it.
    */
   const shippedFeatures: ReadonlyArray<{
     readonly slug: string;
@@ -114,7 +118,7 @@ describe("inventory features the pages must not deny", () => {
     {
       slug: "dropdown-menu",
       evidence: /DropdownMenuSubContent/,
-      denial: /no submenus/i,
+      denial: /no [^.;\n]{0,40}submenus/i,
     },
     {
       slug: "dropdown-menu",
@@ -129,7 +133,7 @@ describe("inventory features the pages must not deny", () => {
     {
       slug: "context-menu",
       evidence: /ContextMenuSubContent/,
-      denial: /no submenus/i,
+      denial: /no [^.;\n]{0,40}submenus/i,
     },
     {
       slug: "context-menu",
@@ -139,7 +143,7 @@ describe("inventory features the pages must not deny", () => {
     {
       slug: "command-menu",
       evidence: /subsequence/i,
-      denial: /case-insensitive substring/i,
+      denial: /case-insensitive substring|no fuzzy matching/i,
     },
     {
       slug: "toast",
@@ -169,6 +173,17 @@ describe("inventory features the pages must not deny", () => {
     const denied = shippedFeatures
       .filter(({ slug, denial }) => denial.test(readPage(`${slug}.mdx`)))
       .map(({ slug, denial }) => `${slug}: still denies ${String(denial)}`);
+    expect(denied).toEqual([]);
+  });
+
+  it("does not deny it from the record's limitations", () => {
+    const denied = shippedFeatures.flatMap(({ slug, denial }) => {
+      const record = bySlug.get(slug);
+      if (record === undefined) return [`${slug}: no record`];
+      return record.limitations
+        .filter((limitation) => denial.test(limitation))
+        .map((limitation) => `${slug}: still denies "${limitation}"`);
+    });
     expect(denied).toEqual([]);
   });
 });

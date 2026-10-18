@@ -774,7 +774,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       ],
       related: ["card", "badge"],
       limitations: [
-        "Single selection only: no multi-select, type-ahead or reorder.",
+        "No reorder, group headers or nested rows, and no aria-multiselectable.",
         "No virtualisation: every row mounts.",
         "The focus ring shows for a click too; 0.10.0 has no focusVisible.",
       ],
@@ -887,7 +887,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       related: ["alert", "dialog"],
       limitations: [
         "No aria-live or aria-atomic; the viewport is a status region.",
-        "No progress indicator and no pause-on-hover.",
+        "No progress indicator and no dismiss-countdown display.",
         "No portal: render the viewport last at the app root.",
       ],
     },
@@ -983,7 +983,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       related: ["context-menu", "command-menu"],
       limitations: [
         "No aria-haspopup, aria-controls or aria-checked in 0.10.0.",
-        "No submenus and no type-ahead in v1.",
+        "Submenus are one level deep and only open to the right.",
         "A hover does not preview the highlight.",
       ],
     },
@@ -1006,8 +1006,8 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       related: ["dropdown-menu", "command-menu"],
       limitations: [
         "No onContextMenu: opens from onAuxClick + isRightClick.",
-        "No keyboard path to open; it is a pointer gesture.",
-        "No portal, submenus or type-ahead.",
+        "No menu key: Shift+F10 opens at the trigger, not at the pointer.",
+        "No portal; submenus are one level deep and open right.",
       ],
     },
   ),
@@ -1036,7 +1036,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       limitations: [
         "No aria-activedescendant or aria-controls in 0.10.0.",
         "The input is the host element until primitives lands.",
-        "No fuzzy matching or recent-command memory in v1.",
+        "Per-group rather than global ranking; no recent-command memory.",
       ],
     },
   ),
@@ -1090,7 +1090,6 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       related: ["collapsible", "tabs"],
       limitations: [
         "No aria-controls in 0.10.0; the relationship is positional.",
-        "No arrow-key movement between headers.",
         "No height animation; the indicator is a text glyph.",
       ],
     },
