@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 131/181
+`[x]` `[███████░░░]` 132/182
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -938,6 +938,13 @@ default role, so card text readable at rest could lose its floor under the wash
 while `themeContrastFailures` returned `[]`; the two roles are apart in both
 Windows recipes, `selectionPairs` grows 18 → 19, every shipped set passes
 (Windows dark 9.07:1 at the tightest) and no colour moves (plan 363)
+`[x]` Complete the numeric contract's motion group — the timings' ladders checked
+the sign but not finiteness, and `motion.ease` was never read, so `pulse:
+Infinity`, `ease.enter: [NaN, 0, 0, 1]` and `ease.standard: [2, 0, 0, 1]` all
+returned `[]` while the runtime's `validate_seconds`/`validate_ease` reject the
+whole transition; every timing now takes `finite` and each bezier tuple is held
+to four finite control points with both x values inside `0…1` (y may overshoot),
+with no shipped value moving (plan 364)
 
 ## Phase C — Tier 1–2 components
 

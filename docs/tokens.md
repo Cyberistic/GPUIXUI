@@ -915,7 +915,13 @@ Timings are **milliseconds** in the tokens; the runtime's transition takes
 Easings are named per phase: `standard` (`easeInOut`), `enter` (`easeOut`),
 `exit` (`easeIn`) and `linear`. The runtime also takes a cubic-bezier tuple, so
 `extendTheme(base, { motion: { ease: { enter: [0.4, 0, 0.2, 1] } } })` works
-without a cast.
+without a cast. The tuple is four finite control points whose two x values must
+lie inside `0…1`: the runtime's `validate_ease` rejects the whole transition
+otherwise, and a curve outside that range has no progress function. A y value may
+overshoot — a spring-like curve is a design choice — and a named easing is
+constrained by `MotionEasing` itself. `themeMetricFailures` holds both rules, and
+the timings must be finite as well as ordered, because the runtime rejects a
+non-finite duration.
 
 ```tsx
 import { motionTransition } from "@gpuixui/tokens";
@@ -1392,8 +1398,11 @@ round the largest radius and half of the taller of the largest control and the
 largest avatar — a 40px avatar painted at a smaller radius is a rounded square,
 not a circle; every named ladder —
 `spacing`, `radius`, `iconSize`, `avatarSize`, `controlHeight`, `controlPaddingX`
-and the motion timings — must not step backwards; an icon and a field adornment
-must fit the smallest control; a chip must fit in a field; and an elevation level
+and the motion timings — must not step backwards, and a timing must also be
+finite; an icon and a field adornment must fit the smallest control; a chip must
+fit in a field; a cubic-bezier easing must be four finite control points with
+both x values inside `0…1`, because the runtime drops a transition it cannot
+interpolate; and an elevation level
 must hold a shadow whose alpha is a fraction, because `alpha()` falls back to the
 opaque tint on a value it cannot parse, and whose two offsets, blur and spread
 are finite — a negative offset or spread is a direction, a `NaN` is a shadow the

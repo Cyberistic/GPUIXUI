@@ -268,7 +268,10 @@ tokens hold milliseconds because that is what a timer takes;
 `motionTransition(theme, level, phase)` converts to the seconds the runtime's
 `motion` prop takes. GPUix animates only `width`, `height`, `opacity`,
 `top`/`right`/`bottom`/`left` and `borderRadius` — there is no transform, no
-rotation and no colour interpolation — so the design never promises them.
+rotation and no colour interpolation — so the design never promises them. A
+cubic-bezier easing is four finite control points with both x values inside
+`0…1`; the runtime rejects a transition it cannot interpolate, so
+`themeMetricFailures` holds the tuple the way it holds every timing.
 
 Overlays are ordered by tree order, because the runtime has no stacking context:
 the mounting rule and its no-portal limitation are documented once, under

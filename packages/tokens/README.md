@@ -108,7 +108,9 @@ const transition = motionTransition(theme, "normal", "enter"); // 0.2s, easeOut
 
 `none`, `step`, `fast`, `normal`, `slow` and `pulse` are the levels;
 `standard`, `enter`, `exit` and `linear` are the easings. Override any level to
-`0` to remove motion.
+`0` to remove motion. A cubic-bezier easing is four finite control points whose
+x values lie inside `0…1`; the runtime drops a transition that breaks that rule,
+so `themeMetricFailures` reports it.
 A runnable example lives in
 [`src/motion.example.ts`](./src/motion.example.ts).
 
@@ -379,9 +381,10 @@ That case is why the check exists: `focusRing` spreads by `borderWidth.strong`,
 and that shadow is the only focus indicator GPUix 0.10.0 can draw, so a zero
 ring removed focus while `themeContrastFailures` still returned `[]`. The same
 edit path can clip a type role by shortening its leading, shrink the smallest
-control below one label line, invert a size ladder, leave the largest avatar a
-rounded square, or hand `elevationShadow` an alpha the colour helper cannot
-parse. The ladders are non-decreasing rather than
+control below one label line, invert a size ladder, ship a non-finite motion
+timing or a cubic-bezier easing the runtime cannot interpolate, leave the largest
+avatar a rounded square, or hand `elevationShadow` an alpha the colour helper
+cannot parse. The ladders are non-decreasing rather than
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
 `motion.fast === motion.step`; `elevation.overlay` is exempt because it is
 reserved and empty. Every shipped theme, platform variant and recipe passes.

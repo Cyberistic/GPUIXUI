@@ -30,3 +30,13 @@ export const squarish = extendTheme(getTheme("light"), {
   radius: { full: 18 },
 });
 export const squarishFailures = themeMetricFailures(squarish);
+
+/**
+ * A cubic-bezier easing the runtime cannot interpolate: its first x control
+ * point is outside `0…1`, so the colour check is empty and the numeric one
+ * names the transition.
+ */
+export const undriveable = extendTheme(getTheme("light"), {
+  motion: { ease: { enter: [2, 0, 0, 1] } },
+});
+export const undriveableFailures = themeMetricFailures(undriveable);

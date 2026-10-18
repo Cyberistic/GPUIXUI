@@ -12,6 +12,7 @@
  * variant and recipe.
  */
 
+import type { MotionEasing } from "./motion.js";
 import { controlSizes } from "./scale.js";
 import type { Theme } from "./theme.js";
 import { textRoles } from "./typography.js";
@@ -132,6 +133,29 @@ const fraction = (
     : [failure(group, member, "within", actual, 1)];
 
 /**
+ * A cubic-bezier easing the renderer can interpolate. The pinned `MotionEase`
+ * accepts four plain numbers, but the runtime's `validate_ease` rejects a
+ * transition whose control point is not finite or whose x value falls outside
+ * `0…1`, and a curve outside that range has no progress function. A y value may
+ * overshoot — a spring-like curve is a design choice, not breakage — so only the
+ * two x values take the `within` rule. A named easing is constrained by
+ * `MotionEasing` itself.
+ */
+const easing = (
+  group: MetricGroup,
+  phase: string,
+  value: MotionEasing,
+): ReadonlyArray<MetricFailure> =>
+  typeof value === "string"
+    ? []
+    : [
+        ...fraction(group, `ease.${phase}[0]`, value[0]),
+        ...finite(group, `ease.${phase}[1]`, value[1]),
+        ...fraction(group, `ease.${phase}[2]`, value[2]),
+        ...finite(group, `ease.${phase}[3]`, value[3]),
+      ];
+
+/**
  * A ladder of named steps. Every step must be a non-negative number and, from
  * the second on, step past the one before it — or reach it, for a
  * `non-decreasing` ladder, because several shipped styles share a step (Linux
@@ -179,7 +203,11 @@ const ladder = (
  * - **elevation**: `sm`/`md`/`lg` each hold a shadow whose two offsets, blur and
  *   spread are finite, whose blur is non-negative, and whose alpha is a
  *   fraction. `overlay` is reserved and empty, so it is exempt.
- * - **motion**: `none` is zero and the timings are a ladder.
+ * - **motion**: `none` is zero, the timings are a finite non-decreasing ladder,
+ *   and a cubic-bezier easing holds four finite control points with both x
+ *   values inside `0…1` — the runtime rejects the whole transition otherwise. A
+ *   y value may overshoot; an easing named by `MotionEasing` is constrained by
+ *   the type.
  *
  * The level is not a parameter: these rules are the same at every contrast
  * setting, because they describe shapes, not colour.
@@ -375,12 +403,18 @@ export function themeMetricFailures(
           ]);
     }),
     ...zero("motion", "none", motion.none),
+    ...(["step", "fast", "normal", "slow", "pulse"] as const).flatMap((level) =>
+      finite("motion", level, motion[level]),
+    ),
     ...ladder(
       "motion",
       (["step", "fast", "normal", "slow", "pulse"] as const).map(
         (level) => [level, motion[level]] as const,
       ),
       "non-decreasing",
+    ),
+    ...(["standard", "enter", "exit", "linear"] as const).flatMap((phase) =>
+      easing("motion", phase, motion.ease[phase]),
     ),
   ];
 }
