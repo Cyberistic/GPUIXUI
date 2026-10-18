@@ -71,6 +71,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517` and `518` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `519`
 
+`[~]` Probe the **in-window application menu bar** per plan `519` — the last
+      Tier 4 row with no measured interaction model: hover/arrow switching while
+      open, roving items that skip disabled rows, focus returning to the open
+      title, and accelerators running once (and never for a disabled row), plus
+      the `menubar`/`menu`/`menuitem` accessibility mapping. Scenarios
+      `menu-bar` and `live-menu-bar`; the OS menu-bar API stays absent in 0.10.0.
+
 `[x]` Probe a **QR code** per plan `518` — the last `todo` inventory row with no
       runtime evidence: `qr-code` (53 checks) renders the same version-1 fixture
       (21 × 21, 226 dark, Python `qrcode` 7.4.2 EC M) three ways. The module grid
