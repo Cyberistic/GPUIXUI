@@ -4,13 +4,15 @@
  * The bugs these guard: a comma that leaves a stray draft, a duplicate token, a
  * cap that truncates existing tokens, Backspace that removes when a draft is
  * present, a disabled chip that still removes, a draft that stops the field
- * from keeping focus, and a chip control that removes on Space key down instead
- * of on release.
+ * from keeping focus, a chip control that removes on Space key down instead of
+ * on release, and a removal control that only a child index could find.
  */
 
+import type { TestElement } from "@gpuix/react/testing";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import { nodesWithRole } from "../internal/a11y.js";
 import { focusedTestId } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -56,12 +58,12 @@ const type = (root: ComponentTestRoot, text: string): void => {
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
 };
 
-/** The chip's removal control: the chip's second child. */
-const removeControlOf = (root: ComponentTestRoot, chipTestId: string) => {
-  const chip = root.renderer.findByTestId(chipTestId);
-  const id = chip?.children[1];
-  return id === undefined ? undefined : root.renderer.getElement(id);
-};
+/** The chip's removal control, named by the chip's derived id. */
+const removeControlOf = (
+  root: ComponentTestRoot,
+  chipTestId: string,
+): TestElement | undefined =>
+  root.renderer.findByTestId(`${chipTestId}-remove`);
 
 /** Click an element by its measured bounds. */
 const clickElement = (
@@ -120,6 +122,17 @@ describe("TagInput", () => {
     tags.renderer.simulateKeystrokes("enter");
 
     expect(tags.renderer.getAllText()).toEqual(["design"]);
+
+    tags.unmount();
+  });
+
+  it("names its removal control after the chip", () => {
+    const tags = renderComponent(<Harness initial={["design"]} />);
+
+    expect(tags.renderer.findByTestId("chip-design-remove")).toBeDefined();
+    expect(
+      nodesWithRole(tags.renderer, "button").map((node) => node.name),
+    ).toContain("Remove design");
 
     tags.unmount();
   });

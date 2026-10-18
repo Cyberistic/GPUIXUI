@@ -255,6 +255,9 @@ retired once both branches are one
       deliver React's `onBlur` in a live window; the press restores the display
       only when it focused nothing — plan 379; 3 native tests (InlineEdit 14,
       behaviour 554), both-direction proof
+    - [x] Tag chip removal control is nameable: `<chip testId>-remove`, so a
+      native harness can press one token's control without coordinates — plan
+      381; 1 native test (Tag / token input 10), both-direction proof
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -402,6 +405,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | Plan 347's Carousel scenario expected an inactive slide to stay hit-testable; plan 365 fixes the component, so that step should assert the fixed behaviour | playground | resolved in `packages/components`; the playground assertion needs updating |
 | Plan 347 §8.2 found InlineEdit's blur commit is headless-only (live `onBlur` is never delivered for a native focus change) | playground → components | **resolved** in `packages/components` — `Tab` and an outside press finish the edit, and the press restores the display only when it focused nothing (plan 379); the playground live scenario can now assert click-away |
+| Plan 347 §8.2 found TagInput's chip removal control has no `testId`, so the live harness could only assert the chip's presence | playground → components | **resolved** — the control is named `<chip testId>-remove` (plan 381) |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | **package landed** (19 Tier 1 components + `Button`/`Input`/`Spinner`). The components' `internal/button.tsx`, the `FieldInput` host input and the `…` busy glyph stay until primitives' `ThemeProvider` and `@gpuixui/tokens/react` are one provider — two contexts would make every consumer wrap both. Owner of the unification: cross-package decision, not components |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |

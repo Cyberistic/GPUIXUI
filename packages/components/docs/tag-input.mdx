@@ -72,6 +72,9 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 
 - The root is a named `group`; every chip's removal control is a `button` named
   "Remove <token>".
+- A chip with `testId="chip-design"` renders its removal control as
+  `testId="chip-design-remove"`, so a consumer or a harness can address one
+  token's control without coordinates.
 - The field is a real input, so typing, selection and focus are native.
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
   `Enter`, or releasing `Space`.
@@ -88,9 +91,9 @@ control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
 
 ## Verification
 
-`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (9 tests):
-rendering, Enter, comma commit, duplicates, the removal control by pointer and
-Space release, `max`, disabled and a caller that refuses a change.
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (10 tests):
+rendering, Enter, comma commit, duplicates, the named removal control, removal
+by pointer and Space release, `max`, disabled and a caller that refuses a change.
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.

@@ -231,10 +231,17 @@ export interface TagInputChipState {
   readonly disabled: boolean;
 }
 
-/** One token with a removal control. */
+/**
+ * One token with a removal control.
+ *
+ * The control is named `<testId>-remove` when the chip has a `testId`, so a
+ * consumer or a native harness can address one token's control.
+ */
 export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
   const theme = useTheme();
   const { disabled, remove } = useTagInput();
+  const removeTestId =
+    rest.testId === undefined ? undefined : `${rest.testId}-remove`;
 
   return (
     <div
@@ -268,6 +275,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
         <div
           role="button"
           aria-label={`Remove ${value}`}
+          testId={removeTestId}
           tabIndex={0}
           onClick={() => remove(value)}
           {...activationHandlers(() => remove(value))}
