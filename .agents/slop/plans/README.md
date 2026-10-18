@@ -230,6 +230,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [533](./533-typeface-exact-family.md) | The typeface form: padded and CSS-generic family names | F | 051, 385, 396, 518, 532 | done |
 | [534](./534-platform-density-metrics.md) | A platform style owns the metrics inside its density preset | F | 011, 089, 353, 380, 389, 529 | done |
 | [535](./535-platform-table-and-figures.md) | The platform table and files tell the truth about the values they ship | F | 389, 506, 526, 528, 534 | done |
+| [536](./536-present-tense-figures.md) | The catalogue's present-tense figures | F | 336, 348, 377, 503, 514, 520 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2436,6 +2437,21 @@ macOS focus-ring rationale quoting 2.50:1 for a wash that measures 2.836:1;
 `platform-claims.test.ts` derives every current ratio the three platform files
 quote, so the next palette edit takes them with it. No shipped row, colour,
 pair, floor or metric moves.
+
+Plan `536` applies the same rule to the three figures the catalogue still states
+in the present tense without a derivation behind them. The Toast's tone margin
+is **11.98:1**, not the 11.97:1 plan 348 quoted — and the same figure is copied
+into `COMPONENTS.md` and `TODO.md`. The disabled panel action measures
+**5.148:1** identity dark and **7.310:1** AAA dark after plan 520 moved
+`disabledForeground`, not the 4.343/5.199 plan 514 measured. The track's
+"tightest" pair is Linux light `track` on the `active` wash at **1.050:1**, not
+identity dark on `selected` (1.058:1); `docs.test.ts` measured only the
+`selected` surface, so it agreed with a superlative over a list it never read —
+the plan-350 failure mode. `figures.ts` derives a figure from `shippedThemes`
+with the measurement the checker uses and returns the *provenance* of the set
+that produces the minimum, so a sentence that names the wrong set fails even
+when its number is right. The three sentences are corrected; no colour, pair,
+floor or metric moves.
 
 ## How to use a plan
 
