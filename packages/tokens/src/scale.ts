@@ -209,7 +209,7 @@ export const isControlSize = (value: unknown): value is ControlSize =>
 
 /** Density-dependent control metrics. Spacing and type are unaffected. */
 export interface Density {
-  /** Preset name, or the base preset name for a partially overridden density. */
+  /** Preset the metrics belong to: the named `preset`, or the base theme's. */
   readonly name: DensityName;
   /** Control and input height per size. */
   readonly controlHeight: Readonly<Record<ControlSize, number>>;
