@@ -900,6 +900,15 @@ retired once both branches are one
       and a new capture suite holds it. 2 offline + 1 runtime case, all three
       failing in the old direction (offline 607 → 609, runtime 589 → 590,
       29 → 30 files; plan `365`).
+`[x]` `packages/primitives`: **a non-finite `Rating max` crashed the component**
+      — measured: `max={Infinity}` reached `Arr.range` and threw
+      `RangeError: Invalid array length`, and `max={NaN}` rendered one star
+      named `"1 of NaN"`, while `core/rating.ts` already normalised the same
+      input for values and keys. One exported `ratingLimit` now serves the star
+      count, the clamp, the key contract and the tab stop; a non-finite count
+      mounts as one star named `"1 of 1"`. 1 core + 1 element + 1 runtime case,
+      the element and runtime cases throwing without the fix (offline
+      609 → 611, runtime 590 → 591; plan `366`).
 `[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
       were unguarded** — `Icon` was the one renderer without a `style` prop, so
       an icon beside text could not be nudged onto a baseline without a `Box`

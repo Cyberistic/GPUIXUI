@@ -324,7 +324,8 @@ select whose empty option group paints no heading while the estimate, the paint
 and the accessibility tree agree on the rows it has (plan 363), and a labelled
 separator whose caller's margin moves the control instead of each rule half
 (plan 364), and a `Text` whose `align="end"` paints byte-identically to a
-manual right alignment instead of to `start` (plan 365).
+manual right alignment instead of to `start` (plan 365), and a rating whose
+non-finite `max` mounts as one named star instead of throwing (plan 366).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
