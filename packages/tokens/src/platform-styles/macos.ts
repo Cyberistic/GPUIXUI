@@ -1,3 +1,4 @@
+import { darkColors } from "../color.js";
 import { systemUiFont, type PlatformStyle } from "../platform-types.js";
 
 /**
@@ -23,7 +24,10 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * the card, so a sidebar wash, a selected row and a toggle-on fill stay
  * perceivable on the surface they paint on (plan 309). The pressed neutral step
  * is Apple's `systemGray3`, one designed step below the separator, so an
- * outlined control keeps its edge while pressed (plan 318).
+ * outlined control keeps its edge while pressed (plan 318). The dark soft
+ * destructive tint is named rather than left to inheritance, so applying this
+ * style over another platform's theme cannot keep that platform's tint (plan
+ * 374).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -98,6 +102,7 @@ export const macosPlatformStyle = {
       selected: "#123A5C",
       selectedForeground: "#CFE8FF",
       placeholder: "#9A9AA0",
+      destructiveSoft: darkColors.destructiveSoft,
       shadow: "#000000",
     },
   },

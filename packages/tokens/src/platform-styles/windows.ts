@@ -1,3 +1,4 @@
+import { darkColors } from "../color.js";
 import { systemUiFont, type PlatformStyle } from "../platform-types.js";
 
 /**
@@ -21,7 +22,10 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * sidebar wash, a neutral filled control and a toggle-on fill stay perceivable
  * on the surface they paint on (plan 309), and the pressed neutral step sits one
  * designed step below the divider so an outlined control keeps its edge while
- * pressed (plan 318).
+ * pressed (plan 318). The dark soft destructive tint is named rather than left
+ * to inheritance, so applying this style over another platform's theme cannot
+ * keep that platform's tint (plan 374); both Windows recipes share this dark
+ * set, so they inherit the fix.
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -96,6 +100,7 @@ export const windowsPlatformStyle = {
       selected: "#094771",
       selectedForeground: "#CFE9FF",
       placeholder: "#A6A6A6",
+      destructiveSoft: darkColors.destructiveSoft,
       shadow: "#000000",
     },
   },

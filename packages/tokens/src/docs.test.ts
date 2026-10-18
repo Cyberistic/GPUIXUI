@@ -63,7 +63,13 @@
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { alpha, colorRoles, palette, type ThemeColors } from "./color.js";
+import {
+  alpha,
+  colorRoles,
+  darkColors,
+  palette,
+  type ThemeColors,
+} from "./color.js";
 import {
   compositeOver,
   contrastFloors,
@@ -1311,7 +1317,7 @@ describe("docs/tokens.md contrast surfaces", () => {
     ]);
   });
 
-  it("names the skeleton a real platform style carries", () => {
+  it("names the skeleton and the owned tint a real platform style carries", () => {
     const real = platformNames.filter((platform) => platform !== "default");
     real.forEach((platform) => {
       expect(
@@ -1319,9 +1325,27 @@ describe("docs/tokens.md contrast surfaces", () => {
         platform,
       ).toBeDefined();
     });
+    // Plan 374: every real dark style names its soft destructive tint, because
+    // a style applied over another platform's theme must not keep that
+    // platform's value. Linux owns a darker tint; the others name the identity.
+    expect(platformStyles.darwin.colors.dark.destructiveSoft).toBe(
+      darkColors.destructiveSoft,
+    );
+    expect(platformStyles.win32.colors.dark.destructiveSoft).toBe(
+      darkColors.destructiveSoft,
+    );
+    expect(platformStyles.linux.colors.dark.destructiveSoft).toBe(
+      palette.red[950],
+    );
+    platformRecipeNames.forEach((recipe) => {
+      expect(platformRecipes[recipe].colors.dark.destructiveSoft, recipe).toBe(
+        darkColors.destructiveSoft,
+      );
+    });
     expect(markdown).toContain("surfaces (including the loading skeleton)");
-    expect(markdown).toContain("(status, disabled, scrollbar)");
+    expect(markdown).toContain("(the other status roles, disabled, scrollbar)");
     expect(markdown).not.toContain("(status, disabled, skeleton, scrollbar)");
+    expect(markdown).toContain("plan `374`");
   });
 });
 

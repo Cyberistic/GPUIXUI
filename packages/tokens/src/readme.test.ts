@@ -209,4 +209,19 @@ describe("packages/tokens/README.md platform table", () => {
     expect(positions).not.toContain(-1);
     expect(positions).toEqual(positions.toSorted((a, b) => a - b));
   });
+
+  it("states that a style names the dark tint it owns", () => {
+    platformNames
+      .filter((platform) => platform !== "default")
+      .forEach((platform) => {
+        // Also holds the sentence's claim: every real dark style names it.
+        expect(
+          platformStyles[platform].colors.dark.destructiveSoft,
+          platform,
+        ).toBeDefined();
+      });
+    expect(readme).toContain("platform-composition.test.ts");
+    expect(readme).toContain("`destructiveSoft`");
+    expect(readme).toContain("(plan 374)");
+  });
 });
