@@ -24,12 +24,26 @@ machine may not have. Monospace is a named family per platform:
 ## Custom fonts on the pinned runtime
 
 The repository pins `@gpuix/react` and `@gpuix/native` to **0.10.0**. That
-published release exposes no `registerFont` API, so an application cannot
-register its own typeface with it: the library can only use the system UI font and
-the platform monospace families above.
+release exposes no `registerFont` API, so an application cannot ship a font file
+and register it with the runtime. The registration API is tracked by plan
+[`052-register-font.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/slop/plans/052-register-font.md);
+the blocker is the pinned runtime, not the build host — the repository's native
+smoke suite runs on this host ([Native testing](/docs/native-testing)).
 
-`registerFont` exists on GPUix's `main` branch but is not in the published
-release. Shipping a bundled UI or brand face is tracked as plan
-[`052-register-font.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/.agents/slop/plans/052-register-font.md)
-and its native proof is blocked by the binding-install blocker (B1). Until both
-land, treat custom faces as unsupported rather than documented-but-missing.
+A face that is already installed on the machine is a different question.
+`typography.sans` and `typography.mono` are family names, and `extendTheme`
+replaces them, so a brand can point the library at an installed family today:
+
+```tsx
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const brand = extendTheme(lightTheme, {
+  typography: { sans: "Helvetica Neue", mono: "SF Mono" },
+});
+```
+
+What is missing is **distribution**: the file cannot travel with the
+application. GPUI resolves a family by name at paint time, so a name the machine
+does not have falls back silently; `.SystemUIFont` remains the safe default.
+Until `registerFont` ships in the pinned runtime, treat a *bundled* custom face
+as unsupported rather than documented-but-missing.

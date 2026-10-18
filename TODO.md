@@ -471,7 +471,17 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–560)
 
-`[x]` `[██████████]` 121/121
+`[x]` `[██████████]` 122/122
+
+`[x]` **Typography stops citing the resolved B1 and a capability it denied
+      (plan 520)** — the page said the `registerFont` proof was blocked by the
+      binding-install blocker (resolved by plan 140 / ADR 0003) and that only
+      system UI and platform mono families were possible. It now names the real
+      blocker (the pinned 0.10.0 exposes no `registerFont`), documents the
+      installed-family `extendTheme` recipe, and `typography-truth.test.ts`
+      reads the installed `@gpuix/native` declarations so the page cannot
+      outlive the API. Six tests; the pre-fix page and both re-broken claims
+      were measured in plan 520 §7.
 
 `[x]` **The site has a real showcase (plan 560)** — `/docs/showcase` runs one
       composed project panel on GPUix's wasm renderer: an identity header, a
@@ -903,7 +913,16 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 ## Cross-team tasks raised by the docs-site workstream
 
-`[~]` `[██░░░░░░░░]` 6/30
+`[~]` `[██░░░░░░░░]` 6/31
+
+`[ ]` **Tokens-theme: plan 052's premise needs re-checking.** Its §1 table says
+      the published 0.10.0 exposes `renderer.registerFont`; the installed
+      package's declarations expose no `registerFont` at all (`dist/host.d.ts`
+      has only `fontFamily?: string`). Either the API is not in the pinned
+      release (then 052 is blocked by the runtime version, not B1) or the plan
+      cites the reference clone. Verify and correct the plan before
+      implementing it. The docs page now states the pinned-release absence
+      (plan 520). Owner: tokens-theme.
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
