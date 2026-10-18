@@ -87,7 +87,9 @@ row highlighted, which is the desktop menu convention; the first arrow key then
 picks the first enabled row.
 
 Disabled rows are skipped by every arrow key, by `Home`/`End` and by type-ahead,
-and a click on one does nothing.
+and a click on one does nothing. A **disabled trigger** opens nothing: the
+button's press is muted and the trigger's own arrow keys are inert, while a
+caller's `onKeyDown` still runs.
 
 ## Type-ahead
 
@@ -302,8 +304,9 @@ focus is on.
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (46 tests):
-the `menu` role, keyboard opening on the first/last enabled row, a
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (47 tests):
+the `menu` role, keyboard opening on the first/last enabled row, a disabled
+trigger that ignores `ArrowDown`/`ArrowUp`, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press

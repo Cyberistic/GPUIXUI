@@ -503,6 +503,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
     `aria-description`, the caller's description wins and the accessible name
     stays the person's; 2 native cases (Avatar 9, behaviour 598), both-direction
     proof; docs and inventory synced
+  - [x] A disabled trigger never opens anything — plan 393: measured that the
+    Preview card opened on hover and on focus, and the Dropdown and Navigation
+    menus opened on arrow keys (and moved focus), all with `disabled`; 3 guards,
+    4 native cases (Preview card 12, Dropdown menu 47, Navigation menu 21,
+    behaviour 602), both-direction proof; docs, inventory and `COMPONENTS.md`
+    synced
   - [x] Docs verification truth: every component docs page states its real
     native-test count in one canonical line, checked for all 41 pages rather
     than only those that happened to adopt the sentence — plan 335; 14 pages

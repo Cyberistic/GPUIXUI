@@ -66,7 +66,9 @@ switches panels after `openDelay`, and entering the first trigger cancels its
 pending close.
 
 `openOnHover={false}` makes press and keys the only way in — useful for a nav in
-a dense toolbar. A disabled trigger never opens, by hover or by press.
+a dense toolbar. A disabled trigger never opens, by hover, by press or by a key,
+and its arrow keys do not move focus between triggers; a caller's `onKeyDown`
+still runs.
 
 ## Placement
 
@@ -128,7 +130,7 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 ## Verification
 
-`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (21 tests):
 declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a link running once and
@@ -136,8 +138,10 @@ closing, a controlled nav staying closed, both themes, eight hover cases —
 delayed open without focus, switching triggers, pointer travel into the panel,
 leaving a panel for another trigger, `openOnHover={false}`, a disabled trigger,
 a key-opened panel surviving the previous close timer, and one reported hover
-intent on a controlled nav — a bottom panel flipping above a trigger at the
-window's bottom edge, and the caller's `ref` receiving the panel instance.
+intent on a controlled nav — a disabled trigger whose arrow keys neither open
+its panel nor move focus while the caller's `onKeyDown` still runs, a bottom
+panel flipping above a trigger at the window's bottom edge, and the caller's
+`ref` receiving the panel instance.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback
