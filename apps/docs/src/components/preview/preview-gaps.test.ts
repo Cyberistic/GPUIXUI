@@ -22,7 +22,7 @@ const documentPath = fileURLToPath(
 );
 const document = readFileSync(documentPath, "utf8");
 
-const heading = "### The pages without a live scene";
+const heading = "### Pages with neither a live scene nor an illustration";
 
 const section = ((): string => {
   const start = document.indexOf(heading);

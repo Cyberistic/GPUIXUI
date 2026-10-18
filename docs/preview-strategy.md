@@ -224,10 +224,11 @@ browser. One measured limit stays on the Tooltip page: the trigger must be a
 focusable **host element** that forwards hover and focus, so the scene wraps a
 `div`, not this library's `Button`.
 
-No page is without a live scene. The table this section used to carry is the
-same set `apps/docs/src/components/preview/gaps.ts` declares — empty since plan
-486 — and `preview-gaps.test.ts` fails when the document and the code disagree.
+No page lacks both a live scene and an illustration. The table this section used
+to carry is the same set `apps/docs/src/components/preview/gaps.ts` declares —
+empty since plan 486 — and `preview-gaps.test.ts` fails when the document and the
+code disagree.
 
-### The pages without a live scene
+### Pages with neither a live scene nor an illustration
 
 None.
