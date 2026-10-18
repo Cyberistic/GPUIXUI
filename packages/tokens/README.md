@@ -251,9 +251,10 @@ row hovers and on the `hover`/`active` pointer washes are checked
 too (plan 316), and a field's `border` edge is checked on its own `input` fill
 (plan 312).
 Secondary text is
-checked on `hover`, `active`, `accent` and `selected` too, so a row description
-stays readable while the row moves — macOS dark shipped at 4.41:1 and 3.55:1
-until plan 079. Status text is checked on the same four washes and on the
+checked on the `input` fill a field paints for its own chrome — a time picker's
+separator and clear control — and on `hover`, `active`, `accent` and `selected`
+too, so a row description stays readable while the row moves — macOS dark
+shipped at 4.41:1 and 3.55:1 until plan 079. Status text is checked on the same four washes and on the
 `muted` quiet panel a sidebar paints (plan 314), so a status dot in a list,
 table, menu row or settings sidebar is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,

@@ -135,7 +135,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [336](./336-quoted-figure-guards.md) | The catalogue's last unpinned tightest figures | F | 071, 075, 326, 335 | done |
 | [337](./337-native-field-reach.md) | The native field's own hint and selection | F | 069, 317, 319, 331, 335 | done |
 | [338](./338-filled-control-family.md) | The filled control's designed family, in one call | F | 055, 097, 327, 334 | done |
-| [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | in progress |
+| [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

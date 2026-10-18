@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 106/139
+`[x]` `[████████░░]` 107/140
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -268,6 +268,11 @@ a Linux light card at 50% and **3.40:1** at 80% (destructive 2.24:1 / 3.75:1),
 under the 4.5:1 on-colour floor; the 50% case is past repair in the palette
 (even black at 50% on white reaches only 4.00:1), so the evidence is guarded
 prose plus the designed one-call replacement, not a pair (plan 338)
+`[x]` Hold the field's own secondary text — a time picker paints its separator
+and clear control with `mutedForeground` on the `input` fill, which the contract
+measured only on the plain surfaces and the four row washes; every shipped set
+passes (8.376:1 at the tightest), so no colour moves and the contract grows
+293 → 294 (plan 339)
 `[ ]` Cross-team: `components` moves the Avatar presence dot off the solid status
 fills — `avatar.tsx` `statusFill` paints `success`/`warning`/`destructive` on a
 `card`-coloured ring, and light `warning` measures **1.78:1** on its card, so the
@@ -279,6 +284,13 @@ the status-text contract already measures on `card` (plan 332; owner:
 identity light theme and 1.014:1 on Aero light, so a pending event has no dot;
 use `borderStrong`, the 3:1 functional boundary, or `mutedForeground` for the
 secondary floor (plan 332; owner: `components`)
+`[ ]` Cross-team: `components` moves the menu checkbox item's check glyph off
+`accent` — `menu/item.tsx:286` paints `theme.colors.accent` on the menu's
+`popover` (1.11–1.39:1) and on the `hover`/`active` row fill (1.00–1.08:1),
+under the 3:1 mark floor, so a checked item has no visible check; `accent` is a
+wash, not a glyph. Use `popoverForeground` — the row's own text role, already
+measured on `popover`/`hover`/`active`/`selected` — as `ComboboxItem` already
+does with `primary` (plan 339; owner: `components`)
 `[ ]` Cross-team: `components` uses `primaryText` for the Accordion trigger's
 hover label — `accordion.tsx:474` sets `color: primary` on hover, and the fill
 role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the

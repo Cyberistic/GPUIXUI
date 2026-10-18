@@ -1158,7 +1158,8 @@ themeContrastFailures(brandTheme, "high"); // the same theme against the AAA flo
 against `contrastFloors`. The list holds text pairs, secondary text and status
 text on the state washes (`hover`, `active`, `accent` and `selected`), the
 default label of a list or menu row on the washes it paints, the field edge on
-its `input` fill, the invalid field edge — `destructive` on the `input` fill and
+its `input` fill, secondary text on the same fill a time picker's separator and
+clear control paint, the invalid field edge — `destructive` on the `input` fill and
 on the `background` canvas a transparent field paints — the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash, the three state washes a focused control can sit on and the four
@@ -1373,9 +1374,9 @@ variants — and fails if a semantic text/surface pair drops below its floor (7:
 for primary body pairs, typed input text, soft status text and all high-contrast
 text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered or pressed filled action, ghost text on the `hover` and `active` washes,
-muted text on `background`, `card` and `popover`, secondary text on the `hover`,
-`active`, `accent` and `selected` washes a row paints behind a description, and
-status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
+muted text on `background`, `card`, `popover` and the `input` fill a field
+paints for its own chrome, secondary text on the `hover`, `active`, `accent`
+and `selected` washes a row paints behind a description, and status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
 3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
 the high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
@@ -1523,7 +1524,9 @@ brand, success and destructive fills as bars and glyphs on `background`, `card`,
 it from 276 to **290**. Plan `334` adds the secondary control's label on the
 generic `hover`/`active` washes the shipped Button paints, taking it from 290 to
 **292**. Plan `335` adds the control edge on the `selected` fill an outline
-action sits on in a selected row, taking it from 292 to **293**.
+action sits on in a selected row, taking it from 292 to **293**. Plan `339` adds
+secondary text on the `input` fill a field paints for its own chrome, taking it
+from 293 to **294**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1687,7 +1690,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`335` closed.
+plans `076`–`339` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
