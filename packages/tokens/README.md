@@ -134,9 +134,10 @@ A runnable example lives in
 `createTheme({ mode, contrast })` starts from the built-in variant: `contrast`
 selects the palette (`"high"` builds on the AAA set) and defaults to
 `"default"`. `extendTheme` derives from any theme, including a high-contrast
-one. Neither mutates its base. Typography merges field by field, density
-metrics size by size, component dimensions field by field, elevation levels
-replace whole arrays, and the mode is not overridable. An explicitly `undefined`
+one. Neither mutates its base. Typography merges field by field, density metrics
+merge size by size over the preset an override names or the base's, component
+dimensions field by field, elevation levels replace whole arrays, and the mode is
+not overridable. An explicitly `undefined`
 value is treated as omitted, so a partial config spread cannot erase a token.
 Component dimensions include the drawer ladders, the shortest message viewport
 and the carousel marks; they merge field by field with the rest of the group. A
@@ -790,9 +791,12 @@ const tweaked = extendTheme(getPlatformTheme("win32", "dark"), {
 ```
 
 A style's `structure` group names type roles but never families: `types` owns
-`sans` and `mono`, so a copied file cannot name two UI faces. The
-`platform-extension.example.ts` example names every numeric group and is applied
-in both modes, so the shape is compiled and held to `themeFailures`, not sketched.
+`sans` and `mono`, so a copied file cannot name two UI faces. Density is a
+preset plus the metrics tuned inside it (`density: { preset: "compact",
+rowHeight: 30 }`), so a copied file keeps the preset it names and still owns the
+values inside it. The `platform-extension.example.ts` example names every numeric
+group and is applied in both modes, so the shape is compiled and held to
+`themeFailures`, not sketched.
 
 Runnable examples live in
 [`src/platforms.example.ts`](./src/platforms.example.ts) and

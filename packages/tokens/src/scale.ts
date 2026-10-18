@@ -221,11 +221,14 @@ export interface Density {
 
 /**
  * Partial density metrics. A size-keyed record merges size by size, so an
- * omitted size keeps the base preset's value; `rowHeight` is a single metric.
- * The preset's name is never overridable — a metric override is still the base
- * preset with edits.
+ * omitted size keeps the value it starts from; `rowHeight` is a single metric.
+ * `preset` names the preset the metrics start from, so an override can tune a
+ * preset it did not ship in; omitted, they start from the base theme's preset
+ * and the resolved theme keeps its name.
  */
 export interface DensityOverrides {
+  /** The preset the metrics merge over; omitted, the base theme's preset. */
+  readonly preset?: DensityName;
   readonly controlHeight?: Partial<Readonly<Record<ControlSize, number>>>;
   readonly controlPaddingX?: Partial<Readonly<Record<ControlSize, number>>>;
   readonly rowHeight?: number;

@@ -131,7 +131,8 @@ export interface ThemeOverrides {
   /**
    * Use a density preset, or override individual metrics. A size-keyed record
    * merges size by size, so changing the medium control height keeps the small
-   * and large ones. A partial override keeps the base preset's name.
+   * and large ones. `preset` names the preset the metrics start from; omitted,
+   * they start from the base theme's density and keep its name.
    */
   readonly density?: DensityName | DensityOverrides;
   /** Override individual component dimensions. */
@@ -240,14 +241,16 @@ const mergeDensity = (
   if (isDensityName(override)) {
     return densityPresets[override];
   }
+  const from =
+    override.preset === undefined ? base : densityPresets[override.preset];
   return {
-    name: base.name,
-    controlHeight: mergeDefined(base.controlHeight, override.controlHeight),
+    name: from.name,
+    controlHeight: mergeDefined(from.controlHeight, override.controlHeight),
     controlPaddingX: mergeDefined(
-      base.controlPaddingX,
+      from.controlPaddingX,
       override.controlPaddingX,
     ),
-    rowHeight: override.rowHeight ?? base.rowHeight,
+    rowHeight: override.rowHeight ?? from.rowHeight,
   };
 };
 

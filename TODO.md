@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 195/257
+`[x]` `[███████░░░]` 196/258
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1596,6 +1596,13 @@ an independent defect) (plan 532)
 `trimmed` and `css-generic` rules report them, `cssGenericFamilies` indexes the
 CSS Fonts 4 keywords, and a whitespace-only value stays the `non-empty`
 diagnostic alone (plan 533)
+`[x]` Let a platform style own the metrics inside its density preset —
+`PlatformStyleStructure.density` was preset-only, so the macOS file a consumer
+copies could name `compact` or drop density but never raise a control height,
+and a `{ preset, rowHeight }` override silently merged over the **base** preset
+and produced comfortable-sized controls; the override now names the preset it
+starts from and the style field accepts `DensityName | DensityOverrides`
+(plan 534)
 `[ ]` Cross-team: `components` reads `theme.dimensions.drawerWidthSm/Md/Lg` and
 `drawerHeightSm/Md/Lg` for `Drawer`'s local `WIDTH`/`HEIGHT` maps
 (`packages/components/src/drawer.tsx:57-67`) instead of 320/400/560 and

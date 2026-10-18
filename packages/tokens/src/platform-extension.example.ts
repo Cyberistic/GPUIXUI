@@ -1,9 +1,10 @@
 /**
  * A copied platform style that owns **every** part of its look, not only its
- * colours: the six numeric groups travel in `structure`, beside the families in
- * `types`. The values are deliberately modest so the style passes the metric
- * contract on all three density presets — a copied file is still held to
- * `themeFailures`.
+ * colours: the seven numeric groups travel in `structure`, beside the families
+ * in `types`. Density is a preset plus the metrics tuned inside it, so the file
+ * keeps compact's height and padding ladders while raising the row it paints.
+ * The values are deliberately modest so the style passes the metric contract —
+ * a copied file is still held to `themeFailures`.
  *
  * Copy this shape into `platform-styles/` and apply it with
  * `applyPlatformStyle(getTheme(mode), style)`.
@@ -19,6 +20,7 @@ export const contosoDensityPlatformStyle = {
     typography: {
       code: { fontSize: 12, lineHeight: 18 },
     },
+    density: { preset: "compact", rowHeight: 30 },
     spacing: { md: 10 },
     borderWidth: { strong: 3 },
     iconSize: { md: 18 },

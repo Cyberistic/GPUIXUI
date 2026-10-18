@@ -163,6 +163,7 @@ import {
 } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { brandTheme } from "./brand-theme.example.js";
+import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import { cssGenericFamilies, typefaceRules } from "./typeface.js";
 import {
@@ -1978,9 +1979,23 @@ describe("docs/tokens.md theme contract", () => {
 
   it("states the density merge rule and shows a size-by-size override", () => {
     expect(markdown.replace(/\s+/g, " ")).toContain(
-      "`density` accepts a preset name or partial metrics; metrics merge by size, so changing the medium control height keeps the small and large ones, and a partial override keeps the base preset name;",
+      "`density` accepts a preset name, or partial metrics with the `preset` they start from; metrics merge by size, so changing the medium control height keeps the small and large ones, and a partial override without a `preset` keeps the base preset's name;",
     );
     expect(markdown).toContain("density: { controlHeight: { md: 34 } }");
+  });
+
+  it("states the preset a density override starts from", () => {
+    const density = contosoDensityPlatformStyle.structure.density;
+
+    if (typeof density !== "object") {
+      expect.unreachable("the copied example must name a density preset");
+    }
+
+    expect(density.preset).toBe("compact");
+    expect(density.rowHeight).toBe(30);
+    expect(markdown).toContain(
+      `density: { preset: "${density.preset}", rowHeight: ${density.rowHeight} }`,
+    );
   });
 
   it("states how the builder selects its contrast variant", () => {

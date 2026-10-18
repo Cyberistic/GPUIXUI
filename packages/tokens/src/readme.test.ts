@@ -32,6 +32,7 @@ import { shippedThemes } from "./shipped-themes.js";
 import { statusTones } from "./styles.js";
 import { themes } from "./theme.js";
 import { themeChecks } from "./theme-check.js";
+import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
 
@@ -117,7 +118,20 @@ describe("packages/tokens/README.md", () => {
 
   it("states how the theme groups merge", () => {
     expect(readme).toContain(
-      "Typography merges field by field, density metrics size by size, component dimensions field by field, elevation levels replace whole arrays, and the mode is not overridable.",
+      "Typography merges field by field, density metrics merge size by size over the preset an override names or the base's, component dimensions field by field, elevation levels replace whole arrays, and the mode is not overridable.",
+    );
+  });
+
+  it("states the preset a platform density override starts from", () => {
+    const density = contosoDensityPlatformStyle.structure.density;
+
+    if (typeof density !== "object") {
+      expect.unreachable("the copied example must name a density preset");
+    }
+
+    expect(density.preset).toBe("compact");
+    expect(readme).toContain(
+      `density: { preset: "${density.preset}", rowHeight: ${density.rowHeight} }`,
     );
   });
 

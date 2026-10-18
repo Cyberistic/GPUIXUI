@@ -84,7 +84,7 @@ missing here is not public.
 | `ControlSize` | `"sm"`, `"md"` or `"lg"`, derived from `controlSizes`. |
 | `Density` | Resolved control heights, padding and row height for a preset. |
 | `DensityName` | A preset name from `densityNames`. |
-| `DensityOverrides` | Partial density metrics; they merge size by size. |
+| `DensityOverrides` | Partial density metrics and the preset they start from; they merge size by size. |
 | `Dimensions` | Fixed surface metrics: overlay, field, toast, preview-card, drawer, chat and carousel sizes. |
 | `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
@@ -714,7 +714,7 @@ interface PlatformStyle {
   types: PlatformType; // label, sans, mono
   structure: {
     radius?: Partial<Radius>;
-    density?: DensityName;
+    density?: DensityName | DensityOverrides;
     motion?: Partial<Omit<Motion, "ease">>;
     typography?: Partial<Record<TextRole, Partial<TextStyle>>>;
     spacing?: Partial<Spacing>;
@@ -735,6 +735,12 @@ dimensions travel with radii, density and motion. Families live in `types`
 merges field by field exactly like `extendTheme`. These groups are structural:
 they apply at both contrast levels, because they are geometry, not colour.
 
+Density is a preset plus the metrics tuned inside it: a `DensityName` replaces
+the base theme's metrics, and `{ preset, …metrics }` tunes the named preset
+instead of the base's — `density: { preset: "compact", rowHeight: 30 }` keeps
+compact's control heights and padding and raises only the row it paints. A style
+that names no density inherits the base theme's, metric overrides included.
+
 A complete file authored from scratch lives in
 [`src/platform-styles.example.ts`](../packages/tokens/src/platform-styles.example.ts)
 (`contosoPlatformStyle`). It names the whole primary family — fill, foreground,
@@ -752,10 +758,12 @@ wash selects text in another hue (plan `331`).
 A second complete file,
 [`src/platform-extension.example.ts`](../packages/tokens/src/platform-extension.example.ts)
 (`contosoDensityPlatformStyle`), names every numeric group — type roles,
-spacing, borders, icon and avatar sizes and component dimensions — so the
-copy-and-own path is shown for geometry as well as colour. It is applied in both
-modes and held to `themeFailures`, because a copied style is still an edited
-theme.
+density, spacing, borders, icon and avatar sizes and component dimensions — so
+the copy-and-own path is shown for geometry as well as colour. Its density is
+`{ preset: "compact", rowHeight: 30 }`, the preset-plus-metrics form above, so
+the file keeps a named preset and still owns one metric inside it. It is applied
+in both modes and held to `themeFailures`, because a copied style is still an
+edited theme.
 
 `applyPlatformStyle(getTheme(mode), contosoPlatformStyle)` is the same call the
 shipped variants use, so a copied file cannot take a path the library does not
@@ -940,9 +948,24 @@ const taller = extendTheme(lightTheme, {
 and keeps the small and large heights, the padding and the row height, and the
 theme still names `comfortable`.
 
+A metric override can name the preset it starts from, which is how a copied
+platform style keeps a preset it did not ship in:
+
+```ts
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const roomyCompact = extendTheme(lightTheme, {
+  density: { preset: "compact", rowHeight: 30 },
+});
+```
+
+`roomyCompact` names `compact` and keeps compact's 24 / 28 / 32 heights and
+6 / 8 / 10 padding while raising the row to 30. Without `preset`, the metrics
+merge over the base theme's density and keep its name.
+
 `defaultDensity` is the `comfortable` preset, and every built-in theme uses it.
-A theme's `density` always names the preset it is based on, including after a
-partial metric override.
+A theme's `density` always names the preset it is based on — the preset an
+override names, or the base theme's when it names none.
 
 `densityNames` lists the three presets in documentation order, and
 `DensityName` derives from it, so a preset cannot exist without a table row or a
@@ -1623,9 +1646,10 @@ Merge rules:
   alpha applied to the `shadow` tint;
 - motion merges timing by timing and easing by easing, so overriding `normal`
   keeps `fast` and `enter`;
-- `density` accepts a preset name or partial metrics; metrics merge by size, so
-  changing the medium control height keeps the small and large ones, and a
-  partial override keeps the base preset name;
+- `density` accepts a preset name, or partial metrics with the `preset` they
+  start from; metrics merge by size, so changing the medium control height keeps
+  the small and large ones, and a partial override without a `preset` keeps the
+  base preset's name;
 - `mode` is not overridable — `extendTheme` keeps the base mode;
 - `contrast` defaults to the base's declaration; an `extendTheme` override is a
   claim the extension mechanism does not check, and `createTheme` has no claim

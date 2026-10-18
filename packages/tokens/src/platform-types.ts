@@ -11,6 +11,7 @@ import type {
   AvatarSize,
   BorderWidth,
   DensityName,
+  DensityOverrides,
   Dimensions,
   IconSize,
   Radius,
@@ -53,8 +54,11 @@ export interface PlatformType {
 export interface PlatformStyleStructure {
   /** Corner radii. Omitted radii inherit the identity. */
   readonly radius?: Partial<Radius>;
-  /** Control density preset. */
-  readonly density?: DensityName;
+  /**
+   * Control density: a preset, or a preset with the metrics tuned inside it.
+   * Omitted, the base theme's density is kept.
+   */
+  readonly density?: DensityName | DensityOverrides;
   /** Transition timings; easings are shared. */
   readonly motion?: Partial<Omit<Motion, "ease">>;
   /**

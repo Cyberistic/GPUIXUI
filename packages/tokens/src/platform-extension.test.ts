@@ -23,6 +23,7 @@ import {
   getPlatformRecipeTheme,
   platformRecipeNames,
 } from "./platform-recipes.js";
+import { densityPresets } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { textRoles } from "./typography.js";
 import type { PlatformStyle } from "./platform-types.js";
@@ -35,6 +36,7 @@ const extended: PlatformStyle = {
     typography: {
       code: { fontSize: 12, lineHeight: 18, fontWeight: 600 },
     },
+    density: { preset: "compact", rowHeight: 30 },
     spacing: { md: 10 },
     borderWidth: { strong: 3 },
     iconSize: { md: 18 },
@@ -47,6 +49,8 @@ const extended: PlatformStyle = {
 
 const resolved = (theme: Theme) => ({
   code: theme.typography.code,
+  densityName: theme.density.name,
+  rowHeight: theme.density.rowHeight,
   spacingMd: theme.spacing.md,
   borderStrong: theme.borderWidth.strong,
   iconMd: theme.iconSize.md,
@@ -61,6 +65,8 @@ describe("a platform style's numeric groups", () => {
 
     expect(resolved(themed)).toEqual({
       code: { fontSize: 12, lineHeight: 18, fontWeight: 600 },
+      densityName: "compact",
+      rowHeight: 30,
       spacingMd: 10,
       borderStrong: 3,
       iconMd: 18,
@@ -78,6 +84,7 @@ describe("a platform style's numeric groups", () => {
     });
 
     expect(themed.spacing.md).toBe(10);
+    expect(themed.density).toEqual(base.density);
     expect(themed.iconSize).toEqual(base.iconSize);
     expect(themed.avatarSize).toEqual(base.avatarSize);
     expect(themed.dimensions).toEqual(base.dimensions);
@@ -105,6 +112,8 @@ describe("a platform style's numeric groups", () => {
     const themed = applyPlatformStyle(base, extended, "high");
 
     expect(resolved(themed)).toMatchObject({
+      densityName: "compact",
+      rowHeight: 30,
       spacingMd: 10,
       iconMd: 18,
       avatarSm: 28,
@@ -131,14 +140,21 @@ describe("a platform style's numeric groups", () => {
       expect(themeFailures(theme), mode).toEqual([]);
       expect(theme.typography.code.fontSize).toBe(12);
       expect(theme.dimensions.overlayWidth).toBe(240);
+      expect(theme.density.name).toBe("compact");
+      expect(theme.density.rowHeight).toBe(30);
     });
   });
 
-  it("holds the copied example on every density preset", () => {
-    (["compact", "comfortable", "spacious"] as const).forEach((density) => {
-      const base = extendTheme(getTheme("light"), { density });
+  it("resolves the copied example's density over every base preset", () => {
+    (["compact", "comfortable", "spacious"] as const).forEach((preset) => {
+      const base = extendTheme(getTheme("light"), { density: preset });
       const themed = applyPlatformStyle(base, contosoDensityPlatformStyle);
-      expect(themeFailures(themed), density).toEqual([]);
+      expect(themeFailures(themed), preset).toEqual([]);
+      expect(themed.density.name, preset).toBe("compact");
+      expect(themed.density.rowHeight, preset).toBe(30);
+      expect(themed.density.controlHeight, preset).toEqual(
+        densityPresets.compact.controlHeight,
+      );
     });
   });
 
@@ -166,6 +182,8 @@ describe("a platform style's numeric groups", () => {
       expect(themed.iconSize.md).toBe(18);
       expect(themed.typography.code.fontSize).toBe(12);
       expect(themed.dimensions.overlayWidth).toBe(240);
+      expect(themed.density.name).toBe("compact");
+      expect(themed.density.rowHeight).toBe(30);
       // The style names no colour, so the recipe's palette stays.
       expect(themed.colors).toEqual(base.colors);
       expect(themeFailures(themed), recipe).toEqual([]);
