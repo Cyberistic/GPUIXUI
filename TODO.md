@@ -469,13 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–464)
+## Docs site workstream (plans 410–466)
 
-`[~]` `[██████████]` 63/64
+`[~]` `[██████████]` 64/65
 
 `[x]` **Tier 2 page truth (plan 463)** — eight pages stop denying features the components ship: accordion header keys, list multi-select and type-ahead, dropdown/context submenus and 500 ms type-ahead, command-menu subsequence ranking, toast pause and one action, the real reason the dialog/search glyph is text; `preview-server.ts` waits 90 s so a 45 s cold start is not reported unverified
 `[x]` **`docs/preview-strategy.md` gap truth (plan 464)** — the document names all nine pages with neither a live scene nor an illustration, `gaps.ts` owns the set, and `preview-gaps.test.ts` fails when the document and the code disagree
+`[x]` **The record's limitations stop denying shipped features (plan 465)** — the `shippedFeatures` table now also reads each record's limitations, so the status block above a page cannot contradict the prose below it; seven stale strings corrected (list, toast, dropdown, two context, command, accordion)
 `[x]` **The compound contract meets real components (plan 462)** — Tabs and Toasts are `pattern: "stateful"` with real parts, both pages carry `## State and ownership`, and the Toast page includes the viewport source it tells the reader to render; the three guards that were fixtures-only now run on shipped records, with two-direction proofs
+`[x]` **The search suite survives a cold, loaded host (plan 468)** — its first query builds the index for every page; 30 s failed 2 tests when 41 other files ran in parallel and 120 s passes 42 files / 260 tests, with no assertion changed
 `[x]` **Document the 17 Tier 2 components merged from `master` (plan 461)** —
 time picker, message scroller, fieldset, form, navigation menu, preview card,
 drawer, stepper, timeline, colour picker, tag input, mention input, hotkey

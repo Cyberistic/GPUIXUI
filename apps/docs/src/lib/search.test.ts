@@ -28,9 +28,10 @@ import {
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
 
-// The first query builds the Fumadocs index for every page; on a cold checkout
-// that exceeds vitest's 5s default.
-describe("search", { timeout: 30_000 }, () => {
+// The first query builds the Fumadocs index for every page. Measured cold: 24 s
+// alone, over 30 s while the rest of the suite runs in parallel, so the file
+// gets a budget that survives a loaded host.
+describe("search", { timeout: 120_000 }, () => {
   it("returns the matching page for a title query", async () => {
     const results = await search("Installation", 5);
     expect(results.map((result) => result.url)).toContain("/docs/installation");
