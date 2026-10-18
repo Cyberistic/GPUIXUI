@@ -2,7 +2,7 @@ import * as Alchemy from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 
-const DOCS_DOMAIN = "docs.gpuixui.dev";
+const DOCS_DOMAIN = "gpuixui.sudokw.com";
 
 // The docs site (Fumadocs) deployed as a Cloudflare Worker. Nothing deploys
 // yet: this declares the resources so the shape of the deployment is fixed
