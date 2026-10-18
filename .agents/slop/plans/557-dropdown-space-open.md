@@ -194,3 +194,18 @@ Stop and report rather than loosening the test if:
 - `nub run check`, `nub run lint` and the unit suite pass; the behaviour suite has
   exactly the same 55 pre-existing binding failures.
 - Docs, example, `COMPONENTS.md`, `TODO.md` and this index record the fix.
+
+## 9. Observed (2026-10-19)
+
+- New case on the fixed source: `1 passed` (menu painted, `rename` focused).
+- Mutation 1 (old `isActivation` key-down branch): `1 failed` —
+  `expected undefined to be defined` at the `menu` role assertion.
+- Mutation 3 (no `pendingFocus` from the keyboard click): `1 failed` — focus
+  stayed on the surface instead of `rename`.
+- Full dropdown suite: `49 passed | 2 failed (51)`. The two failures are the
+  plan-540 binding position cases (`centres a requested menu on its trigger` off
+  by 4 px; `opens to the left when the right side cannot hold it` off by 1 px),
+  both present before this change.
+- Full behaviour suite: `683 passed | 55 failed (738)` — exactly the plan-540
+  binding set, no new failure.
+- `nub run check` exits 0; the unit suite is 417/417.

@@ -32,7 +32,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isEventClaimed } from "./internal/event-claim.js";
-import { isActivation, isDown, isUp } from "./internal/key.js";
+import { isDown, isEnter, isSpaceRelease, isUp } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -205,22 +205,22 @@ export const DropdownMenuTrigger = ({
       ref={setTrigger}
       aria-expanded={open}
       onKeyDown={(event) => {
-        // The local Button runs its activation click before this handler, so a
-        // keyboard toggle has already opened the menu; record the edge anyway.
-        // A disabled trigger must not open through a key the button never saw.
+        // Arrow keys open without a click. Space is not handled here: the local
+        // Button activates Space on key up, and opening on key down would let
+        // that key-up click close the menu again.
         if (rest.disabled !== true && !open) {
           if (isDown(event)) openAt("first");
           else if (isUp(event)) openAt("last");
-          else if (isActivation(event)) openAt("first");
         }
         onKeyDown?.(event);
       }}
       onClick={(event) => {
         onClick?.(event);
-        // A pointer open keeps focus on the surface; only a keyboard open names
-        // a row. Clearing here cannot undo the key handler: activation clicks
-        // run before onKeyDown within the same render.
-        pendingFocus.current = null;
+        // A button-shaped control synthesises this click on Enter (key down) or
+        // Space (key up). A pointer open keeps focus on the surface; only a
+        // keyboard open names a row.
+        const fromKeyboard = isEnter(event) || isSpaceRelease(event);
+        pendingFocus.current = fromKeyboard && !open ? "first" : null;
         // The press that dismissed the menu owns this click: toggling here would
         // re-open what the same gesture just closed.
         if (dismissedByOutsidePress.current) {

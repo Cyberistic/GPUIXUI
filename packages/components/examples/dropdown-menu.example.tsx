@@ -5,7 +5,7 @@
  * "Show hidden" checkbox and the "Sort by" radio group are app state, because
  * the row behind the menu shows the effect. A menu action is an ordinary
  * callback: the component does not own what "Delete" means. Keyboard opens
- * (`Enter`, `ArrowDown`, `ArrowUp`) land on the first/last action.
+ * (`Enter`, `Space`, `ArrowDown`, `ArrowUp`) land on the first/last action.
  */
 
 import { useState } from "react";

@@ -465,6 +465,22 @@ describe("DropdownMenu", () => {
     menu.unmount();
   });
 
+  it("opens on the first row from a real Space down/up pair", () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+    focusTrigger(menu);
+
+    // `simulateKeystrokes` batches down and up, so the old key-down open looked
+    // fine; separate events expose the render where the key-up click closed it.
+    const trigger = menu.renderer.findByTestId("trigger")?.id ?? -1;
+    menu.renderer.nativeSimulateKeyDown(trigger, "space");
+    menu.renderer.nativeSimulateKeyUp(trigger, "space");
+
+    expect(menu.renderer.findByTestId("menu")?.customProps?.role).toBe("menu");
+    expect(focusedTestId(menu)).toEqual(Option.some("rename"));
+
+    menu.unmount();
+  });
+
   it("opens on the first row from Enter, and a second Enter runs it", () => {
     const onSelect = vi.fn();
     const menu = renderComponent(<FileActions onSelect={onSelect} />);

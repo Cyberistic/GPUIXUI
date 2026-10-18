@@ -312,8 +312,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (50 tests):
-the `menu` role, keyboard opening on the first/last enabled row, a disabled
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (51 tests):
+the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
+key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
