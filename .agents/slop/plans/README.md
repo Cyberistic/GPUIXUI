@@ -191,6 +191,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [394](./394-soft-status-panel-action.md) | The action inside a soft status panel | F | 014, 090, 092, 093, 097, 300, 309, 338, 356, 371, 383, 387, 393 | done |
 | [395](./395-scrim-over-panel-action.md) | The scrim over the panel action | F | 099, 359, 375, 394 | done |
 | [396](./396-type-index-claims.md) | The type index's counts, its weight claim and the colour-format count | F | 324, 370, 394, 395 | done |
+| [397](./397-status-panel-action-scope.md) | The panel action's scope: a tinted panel, not a floating card | F | 348, 362, 392, 394, 395, 396 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1845,6 +1846,23 @@ sentences are corrected, and a new case derives every count and ordered range in
 the type table from
 `colorRoles`, `textRoles`, `motion`, `typography`, `avatarSize` and `iconSize`,
 so a future value edit has to take the document with it.
+
+Plan `397` corrects the scope of the family plan `394` shipped. Every document
+offered `softAction` to "an Alert, Badge or Toast", but a Toast is a `popover`
+card (`toast/viewport.tsx:100`), not a tone-tinted panel: `softAction` against
+`popover` measures **1.0000:1** in eleven of the twelve light shipped sets and
+1.0190:1 in the twelfth (XP light), all under the 1.05:1 surface floor — so a
+consumer following the reference would give a Toast an invisible rest fill while
+`themeContrastFailures` returned `[]` (the family is correctly measured on the
+four soft fills only). The prose now names a tone-tinted Alert or Badge, the
+Toast action keeps the canvas neutral family (`filledControl(theme,
+"secondary")`) that `stateFillSurfacePairs` measures on `popover`, and the pair
+rationales no longer credit a Toast with a tint it never paints. A
+`soft-action.test.ts` case states the floating-card failure (all twelve light
+sets, identity at exactly 1) and proves the canvas family clears the same
+floors; a `docs.test.ts` guard fails if the stale phrase returns to the
+reference, the design system, the README or the package's public JSDoc. No
+colour, pair or count moves.
 
 ## How to use a plan
 
