@@ -429,7 +429,14 @@ describe("docs/design-system.md elevation paragraph", () => {
     expect(elevation).toContain("`highContrastDarkElevation`");
     expect(elevation).toContain("`elevationSurfaces`");
     expect(elevation).toContain("**1.000:1**");
-    expect(elevation).toContain("**1.207:1**");
+    expect(elevation).toContain(
+      `**${weakestElevation(elevationRatios)[3].toFixed(3)}:1**`,
+    );
+    expect(elevation).toContain(
+      `**${weakestElevation(
+        elevationRatios.filter((entry) => entry[0] === "High contrast dark"),
+      )[3].toFixed(3)}:1**`,
+    );
     expect(elevation).toContain("geometry");
   });
 });
@@ -531,6 +538,44 @@ const documentedShadow = (shadow: BoxShadow | undefined): string =>
     ? "`[]`"
     : `\`${shadow.offsetX} ${shadow.offsetY} ${shadow.blurRadius} ${shadow.spreadRadius} ${shadow.color}\``;
 
+/** One painted elevation level: set name, level, surface and ratio. */
+type ElevationRatio = readonly [string, string, string, number];
+
+/** Every elevation level painted on every surface of every shipped set. */
+const elevationRatios: ReadonlyArray<ElevationRatio> = shippedThemes.flatMap(
+  ({ theme }) =>
+    elevationLevels
+      .filter((level) => level !== "overlay")
+      .flatMap((level): ReadonlyArray<ElevationRatio> => {
+        const shadow = elevationShadow(theme, level);
+        if (shadow === undefined) {
+          return [];
+        }
+        return elevationSurfaces.map(
+          (surface): ElevationRatio => [
+            theme.name,
+            level,
+            surface,
+            contrastRatio(
+              compositeOver(shadow.color, theme.colors[surface]),
+              theme.colors[surface],
+            ),
+          ],
+        );
+      }),
+);
+
+/** The weakest of a set of measured pairs, or an invariant failure. */
+const weakestElevation = (
+  ratios: ReadonlyArray<ElevationRatio>,
+): ElevationRatio => {
+  const [first, ...rest] = ratios;
+  if (first === undefined) {
+    throw new Error("the elevation contract must measure something");
+  }
+  return rest.reduce((min, entry) => (entry[3] < min[3] ? entry : min), first);
+};
+
 describe("docs/tokens.md numeric tables", () => {
   it("lists every type role with its size, leading and weight", () => {
     textRoles.forEach((role) => {
@@ -593,42 +638,7 @@ describe("docs/tokens.md numeric tables", () => {
   });
 
   it("quotes the tightest elevation pair and the AAA dark figure", () => {
-    const ratios = shippedThemes.flatMap(({ theme }) =>
-      elevationLevels
-        .filter((level) => level !== "overlay")
-        .flatMap((level) => {
-          const shadow = elevationShadow(theme, level);
-          if (shadow === undefined) {
-            return [];
-          }
-          return elevationSurfaces.map(
-            (surface) =>
-              [
-                theme.name,
-                level,
-                surface,
-                contrastRatio(
-                  compositeOver(shadow.color, theme.colors[surface]),
-                  theme.colors[surface],
-                ),
-              ] as const,
-          );
-        }),
-    );
-    const tightest = (
-      sets: ReadonlyArray<(typeof ratios)[number]>,
-    ): (typeof ratios)[number] => {
-      const [first, ...rest] = sets;
-      if (first === undefined) {
-        throw new Error("the elevation contract must measure something");
-      }
-      return rest.reduce(
-        (min, entry) => (entry[3] < min[3] ? entry : min),
-        first,
-      );
-    };
-
-    const shipped = tightest(ratios);
+    const shipped = weakestElevation(elevationRatios);
     expect([shipped[0], shipped[1], shipped[2], shipped[3].toFixed(3)]).toEqual(
       ["Dark", "sm", "background", "1.061"],
     );
@@ -636,8 +646,8 @@ describe("docs/tokens.md numeric tables", () => {
       `**${shipped[3].toFixed(3)}:1** (identity dark, \`${shipped[1]}\` on \`${shipped[2]}\`)`,
     );
 
-    const aaaDark = tightest(
-      ratios.filter((entry) => entry[0] === "High contrast dark"),
+    const aaaDark = weakestElevation(
+      elevationRatios.filter((entry) => entry[0] === "High contrast dark"),
     );
     expect(aaaDark[3].toFixed(3)).toBe("1.207");
     expect(markdownProse).toContain(`**${aaaDark[3].toFixed(3)}:1**`);
