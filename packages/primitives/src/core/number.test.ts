@@ -3,8 +3,8 @@
  *
  * The guarded defects are the ones a hand-rolled number field ships: a comma
  * decimal silently read as a thousands separator, `"0x10"` read as 16, a field
- * with no maximum jumping to an invented one on End, and a step of 0 freezing
- * the arrows.
+ * with no maximum jumping to an invented one on End, a step of 0 freezing the
+ * arrows, and a draft that outlives the value it belongs to (plan `325`).
  */
 
 import { describe, expect, it } from "vitest";
@@ -12,9 +12,11 @@ import * as Option from "effect/Option";
 import {
   clampNumeric,
   decideNumberKey,
+  draftApplies,
   formatNumber,
   parseNumericText,
   stepNumber,
+  type NumberDraft,
   type NumberRange,
 } from "./number.js";
 
@@ -129,5 +131,32 @@ describe("decideNumberKey", () => {
   it("leaves an unrelated key alone", () => {
     expect(decideNumberKey(50, RANGE, "a")).toStrictEqual(Option.none());
     expect(decideNumberKey(50, RANGE, "enter")).toStrictEqual(Option.none());
+  });
+});
+
+describe("draftApplies", () => {
+  const draft = (
+    text: string,
+    base: number,
+    reported: Option.Option<number>,
+  ): NumberDraft => ({ text, base, reported });
+
+  it("keeps the draft while the parent has not moved", () => {
+    expect(draftApplies(draft("1.", 1, Option.some(1)), 1)).toBe(true);
+  });
+
+  it("keeps the draft the parent accepted", () => {
+    // The user typed 123 and the parent made it the value: the text must stay.
+    expect(draftApplies(draft("123", 12, Option.some(123)), 123)).toBe(true);
+  });
+
+  it("drops the draft when the parent chose another value", () => {
+    // The bug guarded (plan 325): a reset to 5 must replace the stale "123".
+    expect(draftApplies(draft("123", 12, Option.some(123)), 5)).toBe(false);
+  });
+
+  it("drops a draft with no reported value on an external change", () => {
+    expect(draftApplies(draft("-", 4, Option.none()), 4)).toBe(true);
+    expect(draftApplies(draft("-", 4, Option.none()), 9)).toBe(false);
   });
 });

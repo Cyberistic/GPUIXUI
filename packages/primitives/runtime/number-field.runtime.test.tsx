@@ -231,3 +231,29 @@ it("refuses edits, keys and steps while disabled", async () => {
   runtime.clickAt(box.x + box.width - 8, box.y + box.height * 0.25);
   expect(field.values).toStrictEqual([]);
 });
+
+it("follows a value the parent changes while a draft exists", async () => {
+  // The bug guarded (plan 325): the field painted its draft unconditionally, so
+  // a reset or a reloaded record never reached the paint and the next keystroke
+  // continued from the old number — measured 1236 instead of 56.
+  const field = recorder();
+  const runtime = await openWindow();
+  const render = (value: number): void =>
+    runtime.render(
+      <Surface>
+        <NumberField
+          testId="nf"
+          label="Quantity"
+          autoFocus
+          value={value}
+          onValueChange={field.onValueChange}
+        />
+      </Surface>,
+    );
+  render(12);
+  runtime.type("3");
+  expect(lastValue(field.values)).toBe(123);
+  render(5);
+  runtime.type("6");
+  expect(lastValue(field.values)).toBe(56);
+});

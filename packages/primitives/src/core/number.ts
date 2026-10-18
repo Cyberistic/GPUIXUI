@@ -64,6 +64,29 @@ export const stepNumber = (
 ): number =>
   exact(clampNumeric(value + steps * (range.step > 0 ? range.step : 1), range));
 
+/** A number field's in-progress text, and the two values it can belong to. */
+export interface NumberDraft {
+  /** What the user typed. */
+  readonly text: string;
+  /** The value the field held when the draft was written. */
+  readonly base: number;
+  /** The value the draft asked the parent for; absent while it does not parse. */
+  readonly reported: Option.Option<number>;
+}
+
+/**
+ * Whether a draft should still be painted.
+ *
+ * A draft belongs to the field while the current value is the one it started
+ * from (the parent has not moved) or the one it reported (the parent accepted
+ * the edit). Any other value is an external change — a reset, a reloaded
+ * record — and it wins over the draft. This is what keeps `"1."` typeable
+ * without letting a stale draft outlive the value it belongs to.
+ */
+export const draftApplies = (draft: NumberDraft, value: number): boolean =>
+  Object.is(draft.base, value) ||
+  Option.exists(draft.reported, (reported) => Object.is(reported, value));
+
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,
   right: 1,

@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 73/73
+`[x]` `[██████████]` 74/74
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -551,6 +551,13 @@ retired once both branches are one
       present on **every render**; all 14 `useControlState` parts share the
       fix. 3 transition tests + 2 runtime tests, both directions proven
       (plan `324`)
+`[x]` `packages/primitives`: **a controlled `NumberField` ignored an external
+      value change** — the draft text was painted unconditionally, so after the
+      parent set `value={5}` the field kept `"123"` and the next keystroke
+      reported `1236` instead of `56`. The draft now carries the value it
+      started from and the value it reported, and only paints while the current
+      value is one of them; 4 unit + 1 runtime test, both directions proven
+      (plan `325`)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

@@ -44,11 +44,12 @@ export type {
 export {
   clampNumeric,
   decideNumberKey,
+  draftApplies,
   formatNumber,
   parseNumericText,
   stepNumber,
 } from "./number.js";
-export type { NumberRange } from "./number.js";
+export type { NumberDraft, NumberRange } from "./number.js";
 
 export { clampRating, decideRating, ratingTabStop } from "./rating.js";
 

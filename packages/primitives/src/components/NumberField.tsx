@@ -20,9 +20,11 @@ import { Icon } from "@gpuixui/icons";
 import {
   clampNumeric,
   decideNumberKey,
+  draftApplies,
   formatNumber,
   parseNumericText,
   stepNumber,
+  type NumberDraft,
   type NumberRange,
 } from "../core/number.js";
 import {
@@ -202,7 +204,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const focus = useFocus(props.autoFocus === true && props.disabled !== true);
   const range = numberRange(props);
   const inputId = useRef<number | null>(null);
-  const [draft, setDraft] = useState<Option.Option<string>>(Option.none());
+  const [draft, setDraft] = useState<Option.Option<NumberDraft>>(Option.none());
   const [touched, setTouched] = useState(
     props.value !== undefined || props.defaultValue !== undefined,
   );
@@ -214,11 +216,17 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const display = (value: number): string =>
     props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);
   // An untouched field with no value is empty, like a native number field; it is
-  // not a field that starts with a zero the user has to delete.
-  const text =
-    !touched && Option.isNone(draft)
-      ? ""
-      : Option.getOrElse(draft, () => display(state.value.current));
+  // not a field that starts with a zero the user has to delete. A draft paints
+  // only while the value is still the one it belongs to, so an external change
+  // (a reset, a reloaded record) is not hidden behind stale text.
+  const current = state.value.current;
+  const text = Option.match(
+    Option.filter(draft, (candidate) => draftApplies(candidate, current)),
+    {
+      onNone: () => (touched ? display(current) : ""),
+      onSome: (candidate) => candidate.text,
+    },
+  );
   const focusInput = (): void =>
     Option.match(Option.fromNullishOr(inputId.current), {
       onNone: () => {},
@@ -230,10 +238,13 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     },
     onTextChange: (next) => {
       setTouched(true);
-      setDraft(Option.some(next));
-      Option.match(parseNumericText(next), {
+      const parsed = Option.map(parseNumericText(next), (value) =>
+        clampNumeric(value, range),
+      );
+      setDraft(Option.some({ text: next, base: current, reported: parsed }));
+      Option.match(parsed, {
         onNone: () => {},
-        onSome: (parsed) => state.set(clampNumeric(parsed, range)),
+        onSome: state.set,
       });
     },
     onCommit: () =>

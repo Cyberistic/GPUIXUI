@@ -48,6 +48,10 @@ way a native number field does — it does not start with a zero to delete.
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
 the caret never jumps. Every edit that parses reports the clamped number
 through `onValueChange`; on blur or `Enter` the draft is reformatted to `precision`.
+A draft belongs to the value it started from and the value it reported, so a
+**controlled field follows an external change**: when a reset or a reloaded
+record sets `value` to something the draft did not ask for, the field paints
+that value instead of the stale text (plan `325`).
 
 A **decimal step is exact**: `stepNumber` trims its result to 12 decimal places,
 so `0.2` stepped by `0.1` is `0.3` rather than `0.30000000000000004`. `precision`
