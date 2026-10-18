@@ -296,10 +296,13 @@ The section list is a contract, not a suggestion: `src/component-pages.test.ts`
 fails when a page for a component that is no longer `planned` is missing a
 section, its `<ComponentState slug>` block or its `<NativePreview slug>` block,
 and when this template stops listing one. It also fails when the page's
-frontmatter `title`/`description` drift from the registry record. A component
-with no variants or sizes still gets the section — say "none" rather than
-deleting it, so a reader can tell the difference between "not documented" and
-"does not apply".
+frontmatter `title`/`description` drift from the registry record, and when a
+delivered page keeps a heading but loses the `tsx` example under **Usage**, the
+`<auto-type-table>` under **API reference** or the `<include>` under **Source** —
+a heading with nothing under it renders an empty section that still builds. A
+component with no variants or sizes still gets the section — say "none" rather
+than deleting it, so a reader can tell the difference between "not documented"
+and "does not apply".
 
 `<RelatedComponents>` links a related record only when it is no longer
 `planned`; a planned record renders as a plain "(planned)" label, because a link

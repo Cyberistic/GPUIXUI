@@ -16,6 +16,12 @@ import { components } from "./component-meta/registry";
  * builds, still sits in the sidebar and still passes `registry.test.ts`, so the
  * omission is invisible until a reader notices there is no API table.
  *
+ * The heading check alone was not enough: a page could keep `## Usage`,
+ * `## API reference` and `## Source` and lose the `tsx` example, the
+ * `<auto-type-table>` and the `<include>` under them, and still pass — the
+ * section rendered empty while the template guard stayed green. The last test
+ * reads the blocks a page must keep, not only the headings it must have.
+ *
  * The template itself lives in `apps/docs/README.md`; the first test makes the
  * README and this list agree, the second makes every finished component's page
  * follow it. A compound or workspace record owes extra sections (plan 427),
@@ -40,6 +46,15 @@ const headings = (document: string): ReadonlyArray<string> =>
     .split("\n")
     .filter((line) => line.startsWith("## "))
     .map((line) => line.slice("## ".length).trim());
+
+/** The body under one `## ` heading, up to the next heading. */
+const sectionBody = (document: string, name: string): string => {
+  const start = document.indexOf(`## ${name}`);
+  if (start < 0) return "";
+  const rest = document.slice(start + name.length + 3);
+  const next = rest.search(/^## /m);
+  return next < 0 ? rest : rest.slice(0, next);
+};
 
 /** The simple `key: value` frontmatter every component page uses. */
 const frontmatter = (document: string): Readonly<Record<string, string>> =>
@@ -105,6 +120,30 @@ describe("component page template", () => {
             (block) => `${component.slug}: missing ${block} …`,
           ),
         ];
+      });
+    expect(problems).toEqual([]);
+  });
+
+  it("keeps each finished page's example, API table and source", () => {
+    const problems = components
+      .filter((component) => component.status !== "planned")
+      .flatMap((component) => {
+        const body = readFileSync(
+          join(pageDirectory, `${component.slug}.mdx`),
+          "utf8",
+        );
+        const usage = sectionBody(body, "Usage");
+        return [
+          /^```(tsx|ts)\b/m.test(usage) && usage.includes("@gpuixui/")
+            ? []
+            : [`${component.slug}: Usage has no @gpuixui example`],
+          sectionBody(body, "API reference").includes("<auto-type-table")
+            ? []
+            : [`${component.slug}: API reference has no <auto-type-table>`],
+          sectionBody(body, "Source").includes("<include")
+            ? []
+            : [`${component.slug}: Source has no <include>`],
+        ].flat();
       });
     expect(problems).toEqual([]);
   });
