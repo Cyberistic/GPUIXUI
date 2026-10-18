@@ -147,6 +147,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [348](./348-toast-tone-on-floating-card.md) | The toast's tone on its floating card | F | 071, 074, 332, 334, 339, 346, 347 | done |
 | [349](./349-pair-uniqueness-and-role-count-guards.md) | Two guards that were not guarding: pair uniqueness and the palette's role count | F | 071, 303, 306, 313, 333, 347 | done |
 | [350](./350-runnable-examples.md) | The brand-text example no test runs | F | 082, 349 | done |
+| [351](./351-floor-table-pair-classes.md) | The accessibility floor table omits the pair classes it claims to publish | F | 071, 303, 336, 341, 347, 348 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -36,6 +36,13 @@
  * the `placeholder` role is a consumer-rendered hint. The pinned editor paints
  * its own fixed placeholder and wash and reads only `theme.caret`; these cases
  * hold both documents and the `selectionStyle` JSDoc to that evidence.
+ *
+ * Plan 351 guards the last hand-written description of the contract's size: the
+ * design-system's accessibility floor table. Its exact-row assertions held the
+ * wording but not the content, so the `track` pairs (plan 347), the combobox
+ * check on a highlighted row (plan 341) and the Toast's tone on its card (plan
+ * 348) shipped with no row. The mark, track and Toast rows are now built from
+ * the contract lists, and every `ContrastPairClass` needs a row.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -47,11 +54,16 @@ import {
   contrastRatio,
   inactivePairs,
   inactiveSurfaces,
+  markPairs,
   selectionSurfaces,
   softBorderSurfacePairs,
   stateFillRoles,
   stateFillSurfacePairs,
   stateFillSurfaces,
+  toastTonePairs,
+  trackMarkPairs,
+  trackSurfacePairs,
+  type ContrastPairClass,
 } from "./contrast.js";
 import {
   elevationShadow,
@@ -120,10 +132,21 @@ const markdown = readFileSync(
  * Collapsing runs of whitespace lets each assertion be the sentence a reader
  * sees rather than a column-limited fragment.
  */
-const designSystem = readFileSync(
+const designSystemSource = readFileSync(
   new URL("../../../docs/design-system.md", import.meta.url),
   "utf8",
-).replace(/\s+/g, " ");
+);
+
+const designSystem = designSystemSource.replace(/\s+/g, " ");
+
+/** The table row that starts with `label`, or a failure naming it. */
+const tableRow = (label: string): string => {
+  const line = designSystemSource
+    .split("\n")
+    .find((candidate) => candidate.startsWith(`| ${label}`));
+  expect(line, label).toBeDefined();
+  return line ?? "";
+};
 
 const documented = documentedRows(markdown);
 
@@ -1271,6 +1294,7 @@ describe("docs/design-system.md", () => {
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| filled-control state steps (\`xHover\` from \`x\`, \`xActive\` from \`xHover\`, for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection on a soft status fill (\`xSoftForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
@@ -1280,7 +1304,9 @@ describe("docs/design-system.md", () => {
       `| text selection on a filled action (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
-      `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, and \`primary\`/\`destructive\` on the \`input\` fill a slider thumb rings) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
+      `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
+      `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`accent\`/\`selected\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
@@ -1289,6 +1315,55 @@ describe("docs/design-system.md", () => {
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
+    });
+  });
+
+  it("names every mark role and surface the contract measures", () => {
+    const row = tableRow("graphic marks (");
+    markPairs.forEach(([role, surface]) => {
+      expect(row, `${role} on ${surface}`).toContain(`\`${role}\``);
+      expect(row, `${role} on ${surface}`).toContain(`\`${surface}\``);
+    });
+  });
+
+  it("names the value indicator's groove and every mark painted on it", () => {
+    const groove = tableRow("value indicator groove (");
+    trackSurfacePairs.forEach(([, surface]) => {
+      expect(groove, surface).toContain(`\`${surface}\``);
+    });
+
+    const marks = tableRow("value indicator marks (");
+    trackMarkPairs.forEach(([role]) => {
+      expect(marks, role).toContain(`\`${role}\``);
+    });
+    expect(marks).toContain("`track`");
+  });
+
+  it("names every Toast tone role the contract measures on its card", () => {
+    const row = tableRow("a Toast's tone glyph and bar (");
+    toastTonePairs.forEach(([role]) => {
+      expect(row, role).toContain(`\`${role}\``);
+    });
+    expect(row).toContain("`popover`");
+  });
+
+  it("has a floor row for every pair class the checker enforces", () => {
+    const rowFor: Readonly<Record<ContrastPairClass, string>> = {
+      body: "| body text on",
+      secondary: "| secondary text (",
+      inactive: "| inactive label (",
+      boundary: "| focus ring on",
+      mark: "| graphic marks (",
+      surface: "| interactive fills and washes (",
+      step: "| filled-control state steps (",
+      divider: "| decorative dividers (",
+    };
+
+    expect(new Set(Object.keys(rowFor))).toEqual(
+      new Set(Object.keys(contrastFloors.default)),
+    );
+    Object.entries(rowFor).forEach(([pairClass, prefix]) => {
+      expect(designSystemSource.includes(prefix), pairClass).toBe(true);
     });
   });
 

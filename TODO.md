@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 118/163
+`[x]` `[███████░░░]` 119/164
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -90,6 +90,11 @@ in plan 082 with no test importing it and no document linking it, so the snippet
 could drift while every gate stayed green; it now runs in `primary-text.test.ts`
 and is linked from the reference and README, and a new guard fails if a future
 `*.example.ts` is imported by no suite (plan 350)
+`[x]` Hold the design-system's accessibility floor table to the contract — it
+had no row for the `track` groove or the four marks painted on it (plan 347) and
+its mark row omitted the combobox check on a highlighted row's `hover` wash
+(plan 341); every `ContrastPairClass` now needs a row, and the mark, track and
+Toast role/surface lists are derived from the contract (plan 351)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

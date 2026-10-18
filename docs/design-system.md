@@ -385,6 +385,7 @@ Colour is checked, not assumed. The token suite enforces:
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | filled-control state steps (`xHover` from `x`, `xActive` from `xHover`, for `primary`/`secondary`/`destructive`/`accent`) | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
+| a Toast's tone glyph and bar (`infoSoftForeground`/`successSoftForeground`/`warningSoftForeground`/`destructiveSoftForeground` on `popover`, the shipped composition until `components` paints `xText`) | 4.5:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes, the `accent`/`selected` row fills and the four soft status fills a link in a status panel sits on | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
@@ -395,7 +396,9 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection on a filled action (`primaryForeground`/`secondaryForeground`/`destructiveForeground` over the composited `selectionOnFill` veil) | 4.5:1 | 7:1 |
 | text selection veil on a filled action (`selectionOnFill` over `primary`/`secondary`/`destructive`) | 1.05:1 | 1.05:1 |
 | focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) and the field's pressed edge (`ring` on `input`) | 3:1 | 4.5:1 |
-| graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, and `primary`/`destructive` on the `input` fill a slider thumb rings) | 3:1 | 4.5:1 |
+| graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, `primary` and `destructive` on the `input` fill a slider thumb rings, and `primary` on the `hover` wash a highlighted combobox option paints its check on) | 3:1 | 4.5:1 |
+| value indicator groove (`track`) on `background`/`card`/`popover`/`muted` and the `accent`/`selected` fills | 1.05:1 | 1.05:1 |
+| value indicator marks (`primary`/`success`/`destructive`/`mutedForeground` on `track`) | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
