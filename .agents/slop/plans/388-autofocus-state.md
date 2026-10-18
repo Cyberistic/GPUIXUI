@@ -16,7 +16,7 @@ it ran.
 ## 1. Why — the bug, measured
 
 `autoFocus` is a published host prop (`@gpuix/react`'s `Props` / `InputProps`,
-the same `autoFocus` plan `140` measured). Eleven parts paint a focus ring from
+the same `autoFocus` plan `140` measured). Twelve parts paint a focus ring from
 their own `focused` state and expose that state to `StateStyle`. Each of them
 sets `focused` **only** in React's `onFocus`.
 
@@ -169,7 +169,7 @@ native focus and the public state:
 | Suite | Composition | Assertions |
 | ----- | ----------- | ---------- |
 | `button.test.tsx` | `<Button testId="b" autoFocus />` and `<IconButton label="x" testId="i" autoFocus />` | `focusedTestId` is the element; `style.boxShadow` is defined. A second render with `disabled autoFocus` keeps `boxShadow` undefined |
-| `search-input.test.tsx` | style callback records `state.focused` | `focusedTestId` is `search-input`; the last style call has `focused: true`; the wrapper's resolved `boxShadow` is defined |
+| `search-input.test.tsx` | style callback records `state.focused` | `focusedTestId` is `search-input`; the last style call has `focused: true` |
 | `field.test.tsx` | `Field` + `FieldInput autoFocus` with a style callback | `focusedTestId` is the input; last style call `focused: true`; `boxShadow` defined |
 | `accordion.test.tsx` | one item, trigger `autoFocus` | `focusedTestId` is the trigger; last style call `focused: true`; `boxShadow` defined |
 | `collapsible.test.tsx` | trigger `autoFocus` | same |
