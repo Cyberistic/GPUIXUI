@@ -491,7 +491,7 @@ Stop and report instead of improvising if:
 | A doc figure drifts | `docs.test.ts` derives the tightest and the edge ratio |
 | The pair count drifts | `inventory.test.ts` derives `dialogSurfacePairs.length`; `contrast.test.ts` keeps the published lists unique |
 | The scrim change breaks another palette | `platform-composition.test.ts` asks `themeFailures` for every base × style |
-| A copied brand keeps the base scrim over a darker accent | `theme.test.ts` `holds the documented examples to the contrast contract` (the example's 85% scrim is required for it to pass) |
+| A copied brand keeps the base scrim over a darker accent | `theme.test.ts` `holds the documented examples to the contrast contract` (the example's 85% scrim is required for it to pass) and `docs.test.ts` `pins the brand scrim's documented figures` (1.038:1 inherited, `#000000D9` shipped) |
 | The reference loses a list | `contrast-reference.test.ts` (unchanged membership) |
 
 To prove the new cases fail without the fix: revert `contrast.ts`'s list to

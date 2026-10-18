@@ -162,6 +162,7 @@ import {
   spacing,
 } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
+import { brandTheme } from "./brand-theme.example.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import { typefaceRules } from "./typeface.js";
 import {
@@ -1057,6 +1058,26 @@ describe("docs/tokens.md quoted figures", () => {
     expect(shipped).toBeCloseTo(8.533, 3);
     expect(markdownProse).toContain(`**${regressed.toFixed(3)}:1**`);
     expect(markdownProse).toContain(`**${shipped.toFixed(3)}:1**`);
+  });
+
+  it("pins the brand scrim's documented figures", () => {
+    const inherited = extendTheme(brandTheme, {
+      colors: { overlay: themes.dark.colors.overlay },
+    });
+    const face = (theme: Theme): number =>
+      contrastRatio(
+        theme.colors.popover,
+        compositeOver(theme.colors.overlay, theme.colors.primary),
+      );
+
+    expect(face(inherited)).toBeCloseTo(1.038, 3);
+    expect(brandTheme.colors.overlay).toBe("#000000D9");
+    expect(face(brandTheme)).toBeGreaterThanOrEqual(
+      contrastFloors.default.surface,
+    );
+    expect(markdownProse).toContain(
+      "the inherited 65% scrim left the floating face at 1.038:1 over this brand's own primary action, so the example ships 85% (`#000000D9`)",
+    );
   });
 
   it("quotes the two selection regressions and the fixes", () => {
