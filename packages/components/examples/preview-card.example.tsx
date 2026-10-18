@@ -2,7 +2,9 @@
  * Preview card example: a document link that previews its content.
  *
  * The card is hoverable, so it holds a real action rather than only text. The
- * delays are the defaults here (300 ms open, 150 ms close).
+ * delays are the defaults here (300 ms open, 150 ms close). The second card is
+ * centre-aligned, which the component measures against the trigger rather than
+ * trusting the runtime's containing-block centre.
  */
 
 import { Button } from "../src/internal/button.js";
@@ -32,7 +34,7 @@ export const PreviewCardExample = () => (
 
     <PreviewCard>
       <PreviewCardTrigger>contributing.md</PreviewCardTrigger>
-      <PreviewCardContent label="contributing.md">
+      <PreviewCardContent label="contributing.md" align="center">
         <text>How to add a component and keep the gates green.</text>
       </PreviewCardContent>
     </PreviewCard>

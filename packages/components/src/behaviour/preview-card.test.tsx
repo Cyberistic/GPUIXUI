@@ -4,8 +4,9 @@
  * The bugs these guard: a hover delay that opens instantly or never; a card that
  * closes while the pointer travels into it; a card that never closes when the
  * pointer leaves; focus that does not open it; Escape or an outside press that
- * closes the wrong layer; an unnamed surface; and a controlled card that opens
- * on its own.
+ * closes the wrong layer; an unnamed surface; a controlled card that opens on
+ * its own; a centre-aligned card 180 px off its trigger; and a card at the
+ * window's bottom edge covering the trigger instead of flipping above it.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -192,6 +193,63 @@ describe("PreviewCard", () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(true);
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.unmount();
+  });
+
+  it("centres a centre-aligned card on its trigger", () => {
+    const card = renderComponent(
+      <div style={{ paddingTop: 40, paddingLeft: 400, width: 900 }}>
+        <PreviewCard defaultOpen>
+          <PreviewCardTrigger testId="trigger" style={{ width: 120 }}>
+            design-system.md
+          </PreviewCardTrigger>
+          <PreviewCardContent
+            label="Design system"
+            testId="preview"
+            align="center"
+          >
+            <text>Tokens and roles.</text>
+          </PreviewCardContent>
+        </PreviewCard>
+      </div>,
+    );
+    const trigger = requireBounds(card, "trigger");
+    const preview = requireBounds(card, "preview");
+
+    // 0.10.0 centres on the containing block: without the measured correction
+    // the card's centre lands 180 px right of the trigger's.
+    expect(
+      Math.abs(preview.x + preview.width / 2 - (trigger.x + trigger.width / 2)),
+    ).toBeLessThanOrEqual(1);
+
+    card.unmount();
+  });
+
+  it("flips a bottom card above a trigger at the window's bottom edge", () => {
+    const card = renderComponent(
+      <div style={{ paddingTop: 740, paddingLeft: 40 }}>
+        <PreviewCard defaultOpen>
+          <PreviewCardTrigger testId="trigger" style={{ width: 120 }}>
+            design-system.md
+          </PreviewCardTrigger>
+          <PreviewCardContent label="Design system" testId="preview">
+            <text>Tokens, roles and themes.</text>
+            <text>A second line makes the card taller.</text>
+          </PreviewCardContent>
+        </PreviewCard>
+      </div>,
+    );
+    const trigger = requireBounds(card, "trigger");
+    const preview = requireBounds(card, "preview");
+
+    // The runtime snaps a bottom surface up into the window, which puts it over
+    // the trigger; the placement rule flips it above instead.
+    expect(
+      preview.y + preview.height <= trigger.y ||
+        preview.y >= trigger.y + trigger.height,
+    ).toBe(true);
+    expect(preview.y).toBeGreaterThanOrEqual(0);
 
     card.unmount();
   });

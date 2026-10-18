@@ -1,8 +1,9 @@
 /**
  * PreviewCard: a rich card shown on hover or focus.
  *
- * Positioning is GPUix's `FloatingLayer` (as in Popover) and dismissal shares
- * the package's dismiss stack, so Escape closes only the topmost overlay.
+ * Positioning is GPUix's `FloatingLayer` through the shared measured placement
+ * rule (as in Popover), and dismissal shares the package's dismiss stack, so
+ * Escape closes only the topmost overlay.
  *
  * The card is **hoverable**: it may contain a link or a small action, which is
  * what separates it from a tooltip. The pointer may travel from the trigger into
@@ -39,6 +40,7 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
 
 /** The rules a card part follows; throws outside a {@link PreviewCard}. */
 interface PreviewCardContextValue {
@@ -166,16 +168,28 @@ export const PreviewCardContent = ({
   side = "bottom",
   align = "start",
   sideOffset = 6,
+  alignOffset = 0,
   collisionPadding = 8,
   children,
   onKeyDown,
   onMouseDownOutside,
   style,
+  ref,
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
   const { open, setOpen, trigger, hover } = usePreviewCard();
   const renderer = useGpuix().renderer;
+  const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const placement = usePlacement({
+    open,
+    side,
+    align,
+    margin: collisionPadding,
+    trigger,
+    surface,
+  });
 
   const close = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
@@ -199,13 +213,15 @@ export const PreviewCardContent = ({
 
   return (
     <FloatingLayer
-      side={side}
-      align={align}
+      side={placement.side}
+      align={placement.align}
       sideOffset={sideOffset}
+      alignOffset={placement.alignOffset + alignOffset}
       collisionPadding={collisionPadding}
       role="group"
       aria-label={label}
       tabIndex={-1}
+      ref={setSurface}
       {...rest}
       onMouseEnter={(event) => {
         hover.enter("content");
@@ -269,6 +285,7 @@ export const previewCardMeta = {
     "open/close delays are component timers; 0.10.0 has no pointer-type signal, so touch has no hover and uses press",
     "the card is not auto-focused on hover open (that would steal focus from typing); Tab reaches its links",
     "no anchor arrow and no `aria-haspopup` in 0.10.0",
+    'placement is measured once per open: `align="center"` is corrected from the panel\'s bounds and a snapped card near the window edge flips once instead of covering its trigger (0.10.0 snaps, it does not flip)',
   ],
   docs: "docs/preview-card.mdx",
   example: "examples/preview-card.example.tsx",

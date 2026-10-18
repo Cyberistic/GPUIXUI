@@ -7,10 +7,14 @@
  * returning focus, an outside press that does nothing, a controlled nav that
  * opens on its own, a hover that opens instantly or never, a hover that steals
  * focus, a panel that closes while the pointer travels into it, a disabled
- * trigger that opens on hover, and `openOnHover={false}` that still opens.
+ * trigger that opens on hover, `openOnHover={false}` that still opens, a bottom
+ * panel that covers its trigger at the window's edge, and a caller `ref` that is
+ * discarded in favour of the internal panel ref.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
+import { createRef, type Ref } from "react";
 import * as Option from "effect/Option";
 import {
   NavigationMenu,
@@ -25,6 +29,7 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  requireBounds,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 
@@ -60,6 +65,8 @@ const Workspace = ({
   openDelay,
   closeDelay,
   platformDisabled,
+  top = 40,
+  contentRef,
 }: {
   readonly value?: string | null;
   readonly onValueChange?: (value: string | null) => void;
@@ -68,6 +75,10 @@ const Workspace = ({
   readonly openDelay?: number;
   readonly closeDelay?: number;
   readonly platformDisabled?: boolean;
+  /** Top padding, so a test can put the nav at the window's bottom edge. */
+  readonly top?: number;
+  /** A caller ref on the first panel. */
+  readonly contentRef?: Ref<PublicInstance>;
 }) => (
   <div
     style={{
@@ -75,7 +86,10 @@ const Workspace = ({
       flexDirection: "row",
       alignItems: "flex-start",
       gap: 300,
-      padding: 40,
+      paddingTop: top,
+      paddingRight: 40,
+      paddingBottom: 40,
+      paddingLeft: 40,
     }}
   >
     <NavigationMenu
@@ -94,7 +108,7 @@ const Workspace = ({
           >
             Platform
           </NavigationMenuTrigger>
-          <NavigationMenuContent testId="panel-platform">
+          <NavigationMenuContent testId="panel-platform" ref={contentRef}>
             <NavigationMenuLink
               testId="link-overview"
               onSelect={() => onSelect?.("overview")}
@@ -402,6 +416,43 @@ describe("NavigationMenu", () => {
     expect(onValueChange).toHaveBeenCalledTimes(1);
     expect(onValueChange).toHaveBeenCalledWith("platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("flips a bottom panel above a trigger at the window's bottom edge", () => {
+    const nav = renderComponent(<Workspace top={740} />);
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-platform")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+
+    const trigger = requireBounds(nav, "trigger-platform");
+    const panel = requireBounds(nav, "panel-platform");
+
+    // The runtime snaps a bottom panel up into the window, over its trigger;
+    // the measured placement flips it above instead.
+    expect(
+      panel.y + panel.height <= trigger.y ||
+        panel.y >= trigger.y + trigger.height,
+    ).toBe(true);
+    expect(panel.y).toBeGreaterThanOrEqual(0);
+
+    nav.unmount();
+  });
+
+  it("composes the caller's ref with the panel ref", () => {
+    const ref = createRef<PublicInstance>();
+    const nav = renderComponent(<Workspace contentRef={ref} />);
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-platform")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(ref.current).not.toBeNull();
+    expect(ref.current?.id).toBe(
+      nav.renderer.findByTestId("panel-platform")?.id,
+    );
 
     nav.unmount();
   });

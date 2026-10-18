@@ -68,6 +68,18 @@ pending close.
 `openOnHover={false}` makes press and keys the only way in — useful for a nav in
 a dense toolbar. A disabled trigger never opens, by hover or by press.
 
+## Placement
+
+The panel opens below its trigger with a 4 px gap. GPUix `0.10.0` snaps a surface
+inside the window rather than flipping it, so a bottom panel near the window's
+bottom edge would be moved up **over** its trigger. The component measures the
+panel and its registered trigger once when the panel opens and flips the panel
+above the trigger instead. The caller's `ref` on `NavigationMenuContent` is
+composed with the internal panel ref, so both receive the instance.
+
+The decision is one-shot per open; it is not a live collision tracker while the
+window is resized.
+
 ## API
 
 Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
@@ -79,7 +91,7 @@ merges `style` last.
 | `NavigationMenuList` | `role="list"` row | children |
 | `NavigationMenuItem` | `role="listitem"`; owns its value | `value` (required), children |
 | `NavigationMenuTrigger` | button with `aria-expanded` | button props |
-| `NavigationMenuContent` | anchored `role="group"` panel, rendered while open | children |
+| `NavigationMenuContent` | anchored `role="group"` panel, rendered while open | children, host props including `ref` |
 | `NavigationMenuLink` | a full-width button row | `onSelect?`, button props |
 
 ## Theming
@@ -116,14 +128,16 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 ## Verification
 
-`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (19 tests):
 declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a link running once and
-closing, a controlled nav staying closed, both themes, and seven hover cases —
+closing, a controlled nav staying closed, both themes, seven hover cases —
 delayed open without focus, switching triggers, pointer travel into the panel,
 `openOnHover={false}`, a disabled trigger, a key-opened panel surviving the
-previous close timer, and one reported hover intent on a controlled nav.
+previous close timer, and one reported hover intent on a controlled nav — a
+bottom panel flipping above a trigger at the window's bottom edge, and the
+caller's `ref` receiving the panel instance.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback

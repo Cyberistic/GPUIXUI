@@ -53,6 +53,7 @@ import {
 } from "./internal/parts.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, useTheme } from "./internal/theme.js";
+import { usePlacement } from "./internal/use-placement.js";
 
 /** The rules a nav part follows; throws outside a {@link NavigationMenu}. */
 interface NavigationMenuContextValue {
@@ -64,6 +65,8 @@ interface NavigationMenuContextValue {
   ) => void;
   readonly moveFocus: (value: string, delta: 1 | -1 | "first" | "last") => void;
   readonly focusTrigger: (value: string) => void;
+  /** The registered trigger instance for a value, once React has attached it. */
+  readonly triggerFor: (value: string) => PublicInstance | undefined;
   readonly panelFocus: string | null;
   readonly requestPanelFocus: (value: string) => void;
   readonly clearPanelFocus: () => void;
@@ -198,6 +201,11 @@ export const NavigationMenu = ({
     [renderer],
   );
 
+  const triggerFor = useCallback(
+    (value: string) => triggers.current.get(value),
+    [],
+  );
+
   const moveFocus = useCallback(
     (value: string, delta: 1 | -1 | "first" | "last") => {
       if (order.length === 0) return;
@@ -242,6 +250,7 @@ export const NavigationMenu = ({
       registerTrigger,
       moveFocus,
       focusTrigger,
+      triggerFor,
       panelFocus,
       requestPanelFocus: setPanelFocus,
       clearPanelFocus: () => setPanelFocus(null),
@@ -261,6 +270,7 @@ export const NavigationMenu = ({
       panelFocus,
       registerTrigger,
       setOpen,
+      triggerFor,
     ],
   );
 
@@ -429,15 +439,35 @@ export const NavigationMenuContent = ({
   children,
   style,
   onMouseDownOutside,
+  ref,
   ...rest
 }: NavigationMenuContentProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const { value, open } = useNavItem();
-  const { panelFocus, clearPanelFocus, openOnHover, hover } =
+  const { panelFocus, clearPanelFocus, openOnHover, hover, triggerFor } =
     useNavigationMenu();
   const [panel, setPanel] = useState<PublicInstance | undefined>(undefined);
   const panelId = panel?.id;
+  const surface = useRef<PublicInstance | null>(null);
+  const trigger = useRef<PublicInstance | null>(null);
+  trigger.current = triggerFor(value) ?? null;
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
+  const setLayer = useCallback(
+    (instance: PublicInstance | null) => {
+      setSurface(instance);
+      setPanel(instance ?? undefined);
+    },
+    [setSurface],
+  );
+  const placement = usePlacement({
+    open,
+    side: "bottom",
+    align: "start",
+    margin: 8,
+    trigger,
+    surface,
+  });
   assertParts(navigationMenuContent, children);
 
   useLayoutEffect(() => {
@@ -450,15 +480,16 @@ export const NavigationMenuContent = ({
 
   return (
     <FloatingLayer
-      side="bottom"
-      align="start"
+      side={placement.side}
+      align={placement.align}
       sideOffset={4}
+      alignOffset={placement.alignOffset}
       collisionPadding={8}
       role="group"
       aria-label={value}
       tabIndex={-1}
       {...rest}
-      ref={(instance) => setPanel(instance ?? undefined)}
+      ref={setLayer}
       onMouseEnter={(event) => {
         rest.onMouseEnter?.(event);
         if (openOnHover) hover.enter("content", undefined, value);
@@ -591,6 +622,7 @@ export const navigationMenuMeta = {
     "hover never takes focus; the panel is not auto-focused on hover, so a keyboard user enters through ArrowDown",
     "ArrowDown moves focus to the panel surface, not straight to the first link",
     "no aria-haspopup in 0.10.0",
+    "the panel is placed once per open: a bottom panel near the window edge flips above its trigger instead of being snapped over it",
   ],
   docs: "docs/navigation-menu.mdx",
   example: "examples/navigation-menu.example.tsx",

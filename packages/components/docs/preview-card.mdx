@@ -50,9 +50,27 @@ timers at the UI boundary — not domain time.
 | ---- | ------- | ----- |
 | `PreviewCard` | a positioning root; owns open state and the timers | `open?`, `defaultOpen?`, `onOpenChange?`, `openDelay?`, `closeDelay?`, children |
 | `PreviewCardTrigger` | button, `aria-expanded` | button props |
-| `PreviewCardContent` | anchored `FloatingLayer`, `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `collisionPadding?`, children |
+| `PreviewCardContent` | anchored `FloatingLayer`, `role="group"` named by `label` | `label` (required), `side?`, `align?`, `sideOffset?`, `alignOffset?`, `collisionPadding?`, children |
 
 `PreviewCardContent` renders nothing while closed.
+
+## Placement
+
+`side` (default `bottom`) and `align` (default `start`) are the caller's. The
+card is measured once when it opens and placed with the same rule as Popover,
+Dropdown menu and Combobox:
+
+- `align="center"` is corrected from the measured card, because `0.10.0` centres
+  on the trigger's containing block rather than the trigger.
+- `0.10.0` snaps a surface inside the window instead of flipping it. When a
+  snapped card would cover its trigger, the component flips it to the opposite
+  side (above a bottom card) once per open.
+- `alignOffset` adds to the measured centre correction.
+- If centring would leave the window, the snap margin wins and the card sits at
+  the window edge rather than overflowing.
+
+The flip is one-shot per open; it is not a live collision tracker that re-places
+the card while the window is resized.
 
 ## Theming
 
@@ -79,21 +97,23 @@ glance. A custom theme changes it with no code change — see
 - **No pointer-type signal**: touch has no hover, so the press-to-toggle path is
   the honest touch interaction.
 - Not auto-focused on hover; a purely hover-driven user never focuses the card.
-- No anchor arrow, no `aria-haspopup`, no follow-cursor positioning.
+- No anchor arrow, no `aria-haspopup`, no follow-cursor positioning; the
+  near-edge flip is decided once per open, not continuously while resizing.
 - The card closes on an outside press but does not restore focus (the press gave
   focus to whatever was pressed) — the same rule as Popover.
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (8 tests):
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (10 tests):
 closed by default, delayed hover open and immediate focus open, staying open
 while the pointer is inside, closing after leaving both, Escape with focus
-return, outside-press dismissal, surface naming and `aria-expanded`, and a
-controlled card that stays closed. Timers are real but sized to 20 ms by the
-props. One measured fact shaped both the tests and the component: the runtime
-delivers the new element's `mouseEnter` **before** the previous element's
-`mouseLeave`, so the close policy tracks whether either surface still holds the
-pointer.
+return, outside-press dismissal, surface naming and `aria-expanded`, a
+controlled card that stays closed, a centre-aligned card landing on its
+trigger's centre, and a bottom card flipping above a trigger at the window's
+bottom edge. Timers are real but sized to 20 ms by the props. One measured fact
+shaped both the tests and the component: the runtime delivers the new element's
+`mouseEnter` **before** the previous element's `mouseLeave`, so the close policy
+tracks whether either surface still holds the pointer.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
