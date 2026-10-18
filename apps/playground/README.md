@@ -27,7 +27,8 @@ markdown probe
 collapsible-height probe (`collapsible-height`), the nested-layer probe
 (`nested-layer-dismiss`), the shipped Tier 2 catalogue
 (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
-`tier2-navigation`, `tier2-choice`, `tier2-forms`), the shell
+`tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
+`tier2-flow`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -825,6 +826,10 @@ live pass is citable evidence rather than a second log format.
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 17 checks. **A live click focuses a tab natively without running React's `onFocus`**, so an arrow after a click starts from the first tab (the Tabs fix is a cross-team task) |
+| `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
+| `live-tier2-forms` | the schema's message paints on an explicit validate, a disabled input refuses a live edit, an invalid submit reports nothing, a valid one paints the decoded value, and a pending form locks submit — 14 checks |
+| `live-tier2-editing` | the InlineEdit swap focuses a real editor and a coordinate click + `cmd-a` types, Enter commits and Escape discards; a typed comma adds a tag; a chord records and clears; `@` + arrow + Enter inserts a mention; the Drawer opens flush right at 400 × window height, traps Tab, returns focus on Escape and closes on a **window-coordinate veil click** — 24 checks. React's `onBlur` does not run live, so the blur-commit path stays headless |
+| `live-tier2-flow` | the stepper's control moves the value, the timeline stacks, a tick and an expiry repaint the countdown, the shortcut glyphs are explicit, the carousel steps/clamps/home, a swatch and `abc` normalise the colour, and the nav opens one panel by pointer and keyboard with Escape, focus return and an outside press — 24 checks |
 | `live-key-routing` | the three key paths in one tree: the focused element, **every** ancestor (focusable or not) and the app-level window handler all receive a key (`inner=1 middle=1 outer=1 window=1`); `autoFocus` and a click focus natively **without running React's `onFocus`** (`innerFocus=0 outerFocus=0`); delivery follows focus; and `cmd-k` reaches the window handler with `modifiers.cmd` — 23 checks |
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
@@ -845,6 +850,9 @@ A third rule came out of the Tier 2 catalogue and is a **component constraint**,
 not a harness quirk: `autoFocus` and a real pointer click focus an element
 natively **without running React's `onFocus`**. `live-key-routing` measured it on
 two plain divs (`innerFocus=0 outerFocus=0` after both a click and `autoFocus`).
+Plan `347` measured the **blur** twin: a live click that moves native focus away
+does not run React's `onBlur` either, so a component whose commit path is
+`onBlur` (InlineEdit) keeps editing after the user clicks away.
 A component that tracks "the item the user is on" only in `onFocus` therefore
 loses a click. `List` is correct because its click calls its own focus routine;
 `Tabs` is not, and an arrow after a click restarts from the first tab — that is
@@ -921,6 +929,10 @@ evidence.
 | `tier2-toast` | `ToastProvider`/`ToastViewport`: push, 16 px inset, stack order, action once, a real 300 ms timer | 25 |
 | `tier2-foundation` | Card's three variants, Badge token paint, Avatar initials/size/`Image`, Alert role + dismiss, EmptyState action, List selection | 42 |
 | `tier2-navigation` | Tabs swap + arrows, Accordion single mode, Collapsible, Breadcrumb landmarks, Pagination window | 55 |
+| `tier2-choice` | Popover, SearchInput, Combobox, DatePicker, TimePicker: open, rank, select, clamp, clear | 59 |
+| `tier2-forms` | Field validation, Fieldset disable, Form messages/pending | 34 |
+| `tier2-editing` | InlineEdit swap/commit, TagInput add/remove/cap, HotkeyRecorder, MentionInput, Drawer edge/focus/trap | 48 |
+| `tier2-flow` | Stepper, Timeline, Countdown, KeyboardShortcuts glyphs, Carousel stepping, ColorPicker, NavigationMenu | 59 |
 
 Three consumer-path rules hold across all five:
 
@@ -1113,7 +1125,8 @@ narrower. Each deviation is deliberate and measured:
   collapsible-height probe, the nested-layer probe and the variable-row-height
   probe, the grid/wrap layout probe, the typography probe and the **Tier 2
   catalogue** (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
-  `tier2-navigation`, `tier2-choice`, `tier2-forms`; plans `330`, `344`, `346`)
+  `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
+  `tier2-flow`; plans `330`, `344`, `346`, `347`)
   pass in real GPUix 0.10.0 on this host (76/76), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside

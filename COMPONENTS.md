@@ -68,17 +68,17 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | data-grid | `data-grid-virtual` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
-| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms` | verified |
+| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles` | verified |
 | truncation | `text-truncation` | verified |
 
-The suite is **74/74 green here** (exit `0`, `.artifacts/smoke-report.json`,
-2070 checks).
+The suite is **78/78 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2270 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **25/25 green
-here**: `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **29/29 green
+here** (506 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2` and `replace` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -732,7 +732,19 @@ schema message replacing the description, `Required` in the description),
 `Fieldset` (named `Group`, disabled token paint, refused edits and tab-order
 exit) and `Form` (messages on an invalid submit, decoded value on a valid one,
 pending lock).
-The suite is `76/76` (2163 checks) and `tier2=verified`. Consumer-path facts
+Plan `347` adds the last two families: `tier2-editing` drives `InlineEdit`
+(display→editor swap, commit, Escape discard and blur commit), `TagInput`
+(Enter, comma, duplicate, `max` and a chip removal), `HotkeyRecorder` (a
+recorded chord and its clear control), `MentionInput` (open, narrow, highlight,
+insert with the trailing space, no-match close) and `Drawer` (right-edge
+placement, focus entry, Tab, Escape return and a veil press); `tier2-flow`
+drives `Stepper` (derived status), `Timeline` (order, copy, current event),
+`Countdown` (format, a consumer tick, expiry in the muted role),
+`KeyboardShortcuts` (explicit darwin and linux glyphs), `Carousel` (controls,
+keyboard, clamp and the measured hiding mechanism), `ColorPicker` (swatch,
+normalised shorthand hex, invalid draft) and `NavigationMenu` (one panel,
+pointer and keyboard open, arrows, Escape, link select, outside press).
+The suite is `78/78` (2270 checks) and `tier2=verified`. Consumer-path facts
 recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
 **one root host
 element** (a provider with sibling children at the root paints nothing), the
@@ -753,7 +765,17 @@ Accordion single mode and its Enter close, Collapsible's Enter close, Breadcrumb
 clicks and Pagination's page/Next/Prev. Live `22 → 24`, checks `373 → 405`,
 exit `0`, two screenshots. Plan `346`'s `live-tier2-choice` and
 `live-tier2-forms` add the same path for the choice and form families; live
-`25 → 27`, checks `431 → 458`, exit `0`, two screenshots. They also measured the
+`25 → 27`, checks `431 → 458`, exit `0`, two screenshots. Plan `347`'s
+`live-tier2-editing` and `live-tier2-flow` close the catalogue: the swap and
+its focus, a live inline commit and Escape cancel, typed tag/mention/hotkey
+paths, the Drawer's edge/focus/trap/veil, and the flow family's stepping, clock,
+glyphs, carousel, colour and navigation; live `27 → 29`, checks `458 → 506`,
+exit `0`, two screenshots. **Measured live facts (plan `347` §8.2):** a swapped
+native editor only takes text from a **coordinate click** — the automation
+locator resolves the pre-swap node for a `testId` that changes element type; and
+React's `onBlur` does **not** run for a native focus change in a window, so
+`InlineEdit`'s blur-commit is headless-only while Enter and Escape work live.
+They also measured the
 live focus rule (plan `345`):
 a key reaches the focused element, bubbles through every ancestor and then the
 window handler; `autoFocus` and a click focus natively **without running React's
@@ -794,16 +816,16 @@ remaining live-only defect (see the Tabs row).
 | Form | done | partial | `Form` over an owned value: decodes with the caller's schema, shows every `validateAll` message in one `role="alert"` summary, calls `onSubmit` with the decoded value and refuses to submit while `pending`; a render prop hands over `errors`/`pending`/`submit` because the contract fixes Form as one part; 7 native behaviour tests. No field registration, no message-to-field mapping and no re-validation on edit |
 | Navigation Menu | done | partial | `NavigationMenu`, `NavigationMenuList`, `NavigationMenuItem`, `NavigationMenuTrigger`, `NavigationMenuContent`, `NavigationMenuLink`: one anchored panel at a time, press/Enter/Space/ArrowDown open (ArrowDown focuses the panel), Left/Right/Home/End move between triggers, Escape closes through the shared dismiss stack and returns focus, outside press closes, links run once and close, controlled `value`; 10 native behaviour tests, both themes. No `href` in 0.10.0 (links are buttons with `onSelect`), no hover-open, no `aria-haspopup` |
 | Preview Card | done | partial | `PreviewCard`, `PreviewCardTrigger`, `PreviewCardContent` over the anchored layer and the shared dismiss stack: delayed hover open (default 300 ms), immediate keyboard-focus open, pointer travel into the card keeps it open, close after leaving both (default 150 ms), Escape restores focus, outside press closes, press toggles (touch path), `open`/`openDelay`/`closeDelay` controlled; 8 native behaviour tests. Timers are component UI timers; no pointer-type signal (no touch hover), not auto-focused on hover, no anchor arrow or `aria-haspopup` in 0.10.0. **Probe (`preview-card`, plan `196`):** the card enter arrives **before** the trigger leave, the leave has no coordinates, and enter/leave are per element, so a close scheduled on the leave must re-check pointer presence at fire time and every hoverable child needs a handler. **Live (`live-preview`, plan `199`):** the contract holds in a real window; the enter and leave arrive in one React batch, so an append-only log is the reliable order. |
-| Drawer | done | partial | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent` (left/right/bottom, sm/md/lg), `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` over the shared modal rules in `internal/modal.ts` (extracted from Dialog: open state, dismiss stack, focus in/return, Tab trap); 10 native behaviour tests, both themes. No swipe-to-dismiss (no drag host feature), no slide animation (no transform), no `aria-modal`/`aria-labelledby`, no portal (anchored veil), sizes are layout constants |
+| Drawer | done | partial | `Drawer`, `DrawerTrigger`, `DrawerClose`, `DrawerContent` (left/right/bottom, sm/md/lg), `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerFooter` over the shared modal rules in `internal/modal.ts` (extracted from Dialog: open state, dismiss stack, focus in/return, Tab trap); 10 native behaviour tests, both themes. No swipe-to-dismiss (no drag host feature), no slide animation (no transform), no `aria-modal`/`aria-labelledby`, no portal (anchored veil), sizes are layout constants. **Consumer path (`tier2-editing`, plan `347`):** a press opens it flush to the right edge at exactly 400×window height, the surface takes native focus, Tab moves to the first control inside, Escape returns focus to the trigger and a veil press closes it — proven live too |
 | Stepper | done | partial | `Stepper` + `StepperStep` over `role="list"`: statuses (`complete`/`current`/`upcoming`) derived from the one `value`, horizontal or vertical, `StateStyle<StepperStepState>`; 8 native behaviour tests. Display-only by design (no step click), no connector line, and `aria-selected` stands in for the missing `aria-current` |
 | Timeline | done | partial | `Timeline` + `TimelineItem` over `role="list"`: an explicit `complete`/`current`/`upcoming` status (passed, not derived), timestamp/description, a connector after every event but the last, `StateStyle<TimelineItemState>`; 6 native behaviour tests, both themes. Display-only, no `aria-current` (the current event uses `aria-selected`), `last` comes from direct children, one connector style |
 | Color picker | done | partial | one `ColorPicker`: a keyboard-reachable swatch grid (defaults are six theme colours), a HEX field that normalises `#abc`/`AABBCC` on commit, a live preview and `StateStyle<ColorPickerState>`; 8 native behaviour tests + 8 hex tests, both themes. **No saturation/value square** — 0.10.0 has two-stop linear gradients only and no radial gradient, so the square is not faked; no alpha/HSL/RGB fields or eyedropper |
-| Tag / token input | done | partial | `TagInput` + `TagInputField` + `TagInputChip`: Enter and a typed comma commit through a pure add/remove rule set, duplicates refused unless `allowDuplicates`, `max` caps additions, a chip control removes, controlled-only value, `StateStyle` on both field and chip; 8 native behaviour tests + 10 rule tests, both themes. No Backspace-on-empty (0.10.0 emits no keyDown for Backspace/Delete in the test renderer), no `aria-disabled` (readOnly + dimming), no autocomplete |
+| Tag / token input | done | partial | `TagInput` + `TagInputField` + `TagInputChip`: Enter and a typed comma commit through a pure add/remove rule set, duplicates refused unless `allowDuplicates`, `max` caps additions, a chip control removes, controlled-only value, `StateStyle` on both field and chip; 8 native behaviour tests + 10 rule tests, both themes. No Backspace-on-empty (0.10.0 emits no keyDown for Backspace/Delete in the test renderer), no `aria-disabled` (readOnly + dimming), no autocomplete. **Consumer path (`tier2-editing`, plan `347`):** Enter, a typed comma, the duplicate rule and `max` all hold; **the chip's removal control carries no `testId`**, so a probe must click derived coordinates (`x + width − 16`, `y + height/2`) |
 | Mention input | done | partial | `MentionInput` + `MentionInputList` + `MentionInputItem`: the text's last `@` token opens a ranked anchored list (prefix matches first, case-insensitive, capped), arrows wrap, Enter (the input's submit event) or a press inserts `@name `, Escape and a no-match query close, both callbacks fire once, `disabled`; 9 native behaviour tests + 12 rule tests, both themes. The query comes from the text, not the caret (no caret API in 0.10.0), a space while the list is open is consumed by the runtime, and `listbox`/`option` roles are dropped from the a11y dump (rows are selected buttons) |
 | Hotkey-recorder input | done | partial | one `HotkeyRecorder`: click/`Enter`/`Space` listens, a real chord reports the shared accelerator string, Escape cancels, blur cancels, a named clear control unbinds, `disabled` leaves the tab order, `StateStyle<HotkeyRecorderState>`; 8 native behaviour tests + 8 capture tests, both themes. No `preventDefault` in 0.10.0 (a captured system chord still fires), clearing is a control because the test renderer emits no Backspace/Delete, no conflict detection |
 | Countdown | done | yes | one `Countdown` over `<text>`: `MM:SS` under an hour, uncapped `HH:MM:SS` after, opt-in `Nd ` prefix, floored seconds, negatives clamp to `00:00`, expired renders `mutedForeground`; 5 native behaviour tests + 9 formatting tests, both themes. The component owns **no timer** — the app ticks with Effect `Clock` and passes `remainingMs`; fixed locale-free format, no `role=timer` for live announcement in 0.10.0 |
-| Carousel | done | partial | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`: discrete stepping with clamped edges, `loop` wrapping, arrow/Home/End keys, controlled/uncontrolled index, slides kept mounted and hidden with `display`, `StateStyle<CarouselSlideState>`; 8 native behaviour tests, both themes. **No slide animation** (motion has no transform) and no swipe; no indicator dots or auto-advance; slides must be the track's direct children |
-| Inline edit | done | partial | one `InlineEdit` that swaps a `role="button"` display for a real `<input>`: Enter or blur commits (once), Escape discards, an unchanged draft calls nothing, empty text is a valid value, controlled/uncontrolled edit state, `StateStyle<InlineEditState>`; 8 native behaviour tests, both themes. No `contenteditable` in 0.10.0 (the swap is explicit); no `aria-invalid`/`aria-describedby`; blur commits by contract |
+| Carousel | done | partial | `Carousel`, `CarouselTrack`, `CarouselSlide`, `CarouselControl`: discrete stepping with clamped edges, `loop` wrapping, arrow/Home/End keys, controlled/uncontrolled index, slides kept mounted and hidden with `display`, `StateStyle<CarouselSlideState>`; 8 native behaviour tests, both themes. **No slide animation** (motion has no transform) and no swipe; no indicator dots or auto-advance; slides must be the track's direct children. **Measured on the consumer path (`tier2-flow`, plan `347`):** hiding an inactive slide with `display: "none"` is a **no-op** on 0.10.0 (every slide keeps painted bounds and stays hit-testable, headless and live) — the same runtime gap `workspace-panes` measured. Recorded for `components`; the fix is the tabbed panes' absolute-slot + `visibility` recipe |
+| Inline edit | done | partial | one `InlineEdit` that swaps a `role="button"` display for a real `<input>`: Enter or blur commits (once), Escape discards, an unchanged draft calls nothing, empty text is a valid value, controlled/uncontrolled edit state, `StateStyle<InlineEditState>`; 8 native behaviour tests, both themes. No `contenteditable` in 0.10.0 (the swap is explicit); no `aria-invalid`/`aria-describedby`; blur commits by contract. **Live (`live-tier2-editing`, plan `347`):** the swap takes native focus, Enter commits and Escape discards; but React's `onBlur` does **not** run for a native focus change in a window, so the blur-commit path is headless-only, and the swapped editor only takes text from a **coordinate click** (the automation locator resolves the pre-swap node for the shared `testId`) |
 | Keyboard shortcuts / keycap display | done | yes | `KeyboardShortcuts`, `KeyboardShortcutsGroup`, `KeyboardShortcut` and `Keycap` over the shared accelerator model (`mod` adapts to the platform; order preserved; unknown tokens display verbatim); 6 native behaviour tests + 10 accelerator tests, both themes. Display-only by design (a row documents a chord, never binds it); no `aria-keyshortcuts` in 0.10.0; rows are separated by 1px elements because an element has one `borderColor` |
 
 ## Tier 3 — data presentation

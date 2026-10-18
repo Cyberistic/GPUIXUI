@@ -1,6 +1,6 @@
 # 347 — The remaining shipped Tier 2 catalogue in the playground
 
-**Status:** planned 2026-10-18 · **Phase:** C/D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** C/D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `155`, `156`, `159`, `188`, `330`,
@@ -137,9 +137,9 @@ Right column (`width: 460`):
      `DrawerDescription`, a `DrawerFooter` with `DrawerClose testId="drawer-cancel"`
      and a package `Button testId="drawer-send"` that counts a send, and the
      default close control (`drawer-close`).
-6. `choice-outside`-style inert `div testId="editing-outside"` — the live twin has
-   no window-coordinate click, so an in-frame inert target is the reachable
-   outside press.
+6. (No inert outside target: the Drawer's veil covers the whole frame, so an
+   in-frame element would sit *under* the surface. The live twin presses the
+   veil with the async host's `clickWindow` verb, added by §8.1.)
 
 Readout `tier2-editing-readout`:
 
@@ -310,8 +310,104 @@ Every failing label and exit code goes in §8.
 
 ## 8. Measured results
 
-_(Filled in by the executor: check counts, suite totals, mutation proofs, and
-every consumer fact the first runs produce.)_
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003):
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `tier2-editing` | 48 | pass |
+| `tier2-flow` | 59 | pass |
+
+Suite `76 → 78` scenarios, `2163 → 2270` checks, exit `0`.
+
+Live twins (real 1100×720 window):
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `live-tier2-editing` | 24 | pass |
+| `live-tier2-flow` | 24 | pass |
+
+Live suite `27 → 29`, checks `458 → 506`, exit `0`, two screenshots.
+
+### 8.1 Two harness additions
+
+1. **`AsyncSmokeHost.clickWindow(x, y)`** — the live host could only click a
+   `testId`, and the Drawer's veil has none, so the live suite had no way to
+   press outside a modal. The automation client's own `mouse.click` documents
+   window points for "empty space … gestures that end outside every hitbox";
+   the async host now exposes the same verb the sync host already had. One line
+   in `nullAsyncHost`, one in `live/host.ts`.
+2. **`elementTypeOf`** in `scenarios/probes.ts` — `host.elementType` is nullable
+   at the adapter boundary; the helper collapses it to a string so a check names
+   the absence (`"none"`) instead of failing to compile.
+
+### 8.2 Findings the first runs produced
+
+1. **A swapped-in native editor needs a coordinate click, not a locator click.**
+   `InlineEdit` replaces its display with a real `<input>`; in a live window
+   `host.click("ws-name")` (which resolves a locator to its centre) leaves the
+   editor focused but receiving no text, while `clickWindow(<a point inside the
+   editor>)` types normally. The component is fine; the automation locator is
+   resolving the pre-swap node for the shared `testId`. Recorded as a harness
+   fact: a view whose element changes type under one `testId` must be clicked by
+   point in the live suite.
+2. **React's `onBlur` does not run for a native focus change in a window.**
+   Clicking a sibling after entering edit mode left the editor open (the input
+   stayed painted), while the headless renderer commits on blur. This is the
+   blur twin of plan `345`'s `onFocus` finding. `InlineEdit`'s blur-commit is
+   therefore headless-only; a live user commits with Enter or cancels with
+   Escape, both of which the live twin proves. Recorded for `components`.
+3. **`Carousel`'s `display: "none"` does not hide a slide on 0.10.0.** All three
+   slides keep painted bounds and remain hit-testable in both the offscreen
+   renderer and the live window — the same no-op `workspace-panes` measured
+   (plan `177`). The scenario asserts the measured behaviour with a label that
+   says so; recorded as a components task (the fix is the absolute-slot +
+   `visibility` recipe the tabbed panes already use).
+4. **`TagInput`'s chip removal control has no `testId`.** The scenario removes a
+   chip by clicking window coordinates derived from the chip's painted bounds
+   (8 px padding + a 16 px control). The live twin asserts the chip's presence
+   instead: the async host has no coordinate click for an element it cannot
+   name.
+5. **A `max` prop mutation must target the prop, not the doc comment** — the
+   first proof run silently passed because the mutation landed in a comment.
+   The proof below is the corrected one, and it also verifies the compiled
+   `dist` carries `max: 99` before the run.
+
+### 8.3 Mutation proofs
+
+Each mutation was applied temporarily, built, run with `--only`, and reverted.
+
+| # | Mutation | Failing check |
+| - | -------- | ------------- |
+| M1 | `DrawerContent side="right"` → `side="left"` | `the drawer opens from the right edge: expected 1280, got 400` |
+| M2 | the view's `max={3}` → `max={99}` | `max refuses the fourth token: expected a string containing "tags=design,docs,ui ", got "… tags=design,docs,ui,perf …"` |
+| M3 | `applyMention` drops its trailing space | `Enter inserts the highlighted name: expected a string containing 'comment="@anna " mentions=anna', got "… comment="@anna" …"` |
+| M4 | the view's `Carousel value={slide}` → `value={0}` | `Next reaches the last slide: expected a string containing "slide=2", got "… slide=1 …"` |
+| M5 | `countdown-tick` wired to `+61_000` | `a consumer tick repaints a new value: expected a string containing "remaining=29000", got "… remaining=151000 …"` |
+| R1 | `InlineEdit onCommit` → `() => undefined` | `Enter commits the draft once: expected a string containing "name=docs commits=1", got "name=Docs commits=0 …"` |
+| R2 | `ColorPicker onValueChange` → `() => undefined` | `a swatch reports the normalised theme colour: expected a string containing "color=#2e2370", got "… color=#000000 …"` |
+
+M4 fails on the second Next rather than the first: `Carousel` is fully
+controlled, so the readout tracks the consumer's state, which the first step
+does update — the second step exposes that the component's own active index
+never moved. The label is recorded as measured.
+
+### 8.4 Consumer facts worth keeping
+
+- `Stepper` and `Timeline` announce the current item through `aria-selected`
+  (no `aria-current` in 0.10.0); measured through the accessibility dump, not
+  paint.
+- `KeyboardShortcut platform=` makes the glyphs deterministic, so a scenario
+  asserts `⌘⇧P` and `CtrlShiftP` without depending on the host OS.
+- `Countdown` is display-only and takes the app's clock; a tick is a consumer
+  state change, and expiry is the muted token.
+- `NavigationMenu`'s ArrowDown opens *and* focuses the panel surface (not a
+  link), Escape returns focus to the trigger, and an outside press closes it —
+  all proven live as well as headless.
+- `TagInput`'s Enter and comma paths both work live; the max refusal is proven
+  headless only (the live twin has no coordinate-free chip gesture to clear the
+  cap first).
+
 
 ## 9. Acceptance
 
