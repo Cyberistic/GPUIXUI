@@ -51,6 +51,14 @@ Consequences:
   animatable).
 - `scale`/`rotate`/`backdropFilter` need a GPUI fork; record them as
   unsupported and use fade + position for shadcn's `zoom-in-95`/slide.
+- A working transform implementation exists outside main:
+  [zed discussion #53306](https://github.com/zed-industries/zed/discussions/53306),
+  branch `0xErwin1/zed` `feature/53306-07-text-raster-subpixel-regressions`.
+  It adds `ElementTransform`, transform-aware hit testing, clipping/culling and
+  text rasterization. It is not merged upstream. Adopting it means merging that
+  branch (or cherry-picking it) into GPUix's `remorses/zed` `gpuix` fork and
+  then exposing the transform on GPUix's `StyleDesc`; it is a GPUI integration
+  task, not a binding field.
 
 ## 3. Package
 
@@ -161,11 +169,11 @@ are still present in `references/ui`; Input resolves to 36/12/4/6/14.
 ## 10. Results (2026-10-18)
 
 - `packages/tw` created; `cn@0.5.0` installed and re-exported.
-- 21 tests pass: `cn` conflict/join, Input 36/12/4/6/14, Button
+- 22 tests pass: `cn` conflict/join, Input 36/12/4/6/14, Button
   36/16/8 and the sm/lg/icon sizes, focus/invalid/disabled buckets,
   dialog/popover motion, toast 500 ms cubic bezier, the upstream provenance
   guard, and the `className` JSX runtime (classed hosts wrapped, components and
-  unclassed hosts untouched).
+  unclassed hosts untouched, including a real `jsxImportSource` TSX test).
 - The JSX runtime (`jsx-runtime`/`jsx-dev-runtime`) lets a package set
   `jsxImportSource: "@gpuixui/tw"` and keep shadcn host elements verbatim; the
   `TwHost` wrapper reads the theme and resolves the classes at render time.
