@@ -148,6 +148,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [349](./349-pair-uniqueness-and-role-count-guards.md) | Two guards that were not guarding: pair uniqueness and the palette's role count | F | 071, 303, 306, 313, 333, 347 | done |
 | [350](./350-runnable-examples.md) | The brand-text example no test runs | F | 082, 349 | done |
 | [351](./351-floor-table-pair-classes.md) | The accessibility floor table omits the pair classes it claims to publish | F | 071, 303, 336, 341, 347, 348 | done |
+| [352](./352-boundary-row-surfaces.md) | The boundary row omits the surfaces the contract measures | F | 084, 092, 325, 340, 343, 351 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 119/164
+`[x]` `[███████░░░]` 120/165
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -95,6 +95,11 @@ had no row for the `track` groove or the four marks painted on it (plan 347) and
 its mark row omitted the combobox check on a highlighted row's `hover` wash
 (plan 341); every `ContrastPairClass` now needs a row, and the mark, track and
 Toast role/surface lists are derived from the contract (plan 351)
+`[x]` Hold the design-system's boundary row to the contract — it named the
+dialog, panel, row washes and soft fills but not the canvas, a card or the
+`input` fill, where `borderStrong` is also measured; the row now names its three
+roles and a derived case holds each `borderStrong` surface to its own clause
+(plan 352)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

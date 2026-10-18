@@ -42,7 +42,10 @@
  * wording but not the content, so the `track` pairs (plan 347), the combobox
  * check on a highlighted row (plan 341) and the Toast's tone on its card (plan
  * 348) shipped with no row. The mark, track and Toast rows are now built from
- * the contract lists, and every `ContrastPairClass` needs a row.
+ * the contract lists, and every `ContrastPairClass` needs a row. Plan 352 makes
+ * the boundary row content-derived too: the `borderStrong` clause must name
+ * every surface that role is paired with, including the canvas, a card and the
+ * `input` fill the first cut omitted.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -1303,7 +1306,7 @@ describe("docs/design-system.md", () => {
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| text selection on a filled action (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\` over the composited \`selectionOnFill\` veil) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on a filled action (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`accent\`/\`selected\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
@@ -1347,12 +1350,58 @@ describe("docs/design-system.md", () => {
     expect(row).toContain("`popover`");
   });
 
+  it("names every control boundary role and surface the contract measures", () => {
+    const row = tableRow("focus ring (`ring`) on");
+
+    const expand = (text: string): string =>
+      text
+        .replace(
+          "the four state washes",
+          "`hover` `active` `accent` `selected`",
+        )
+        .replace(
+          "the four soft status fills",
+          "`infoSoft` `successSoft` `warningSoft` `destructiveSoft`",
+        );
+
+    const clause = (from: string, to: string): string => {
+      const start = row.indexOf(from);
+      expect(start, from).toBeGreaterThanOrEqual(0);
+      return expand(row.slice(start, row.indexOf(to)));
+    };
+
+    const surfacesOf = (role: "ring" | "borderStrong"): ReadonlyArray<string> =>
+      contrastPairs
+        .filter(
+          ([foreground, , pairClass]) =>
+            foreground === role && pairClass === "boundary",
+        )
+        .map(([, surface]) => surface);
+
+    ["ring", "destructive", "borderStrong"].forEach((role) => {
+      expect(row, role).toContain(`\`${role}\``);
+    });
+
+    const ringClause = clause("(`ring`) on", ", the `destructive` ring");
+    surfacesOf("ring")
+      .filter((surface) => surface !== "input")
+      .forEach((surface) => {
+        expect(ringClause, surface).toContain(`\`${surface}\``);
+      });
+    expect(row).toContain("the field's pressed edge (`ring` on `input`)");
+
+    const boundaryClause = clause("(`borderStrong`) on", ", plus");
+    surfacesOf("borderStrong").forEach((surface) => {
+      expect(boundaryClause, surface).toContain(`\`${surface}\``);
+    });
+  });
+
   it("has a floor row for every pair class the checker enforces", () => {
     const rowFor: Readonly<Record<ContrastPairClass, string>> = {
       body: "| body text on",
       secondary: "| secondary text (",
       inactive: "| inactive label (",
-      boundary: "| focus ring on",
+      boundary: "| focus ring (",
       mark: "| graphic marks (",
       surface: "| interactive fills and washes (",
       step: "| filled-control state steps (",
