@@ -249,6 +249,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [552](./552-scale-ladder-totality.md) | Every size ladder walks the theme's own scale | F | 358, 360, 519, 531, 547–550 | done |
 | [553](./553-documented-brand-and-builder-examples.md) | The documented brand is a theme the contract rejects | F | 098, 347, 355, 356, 526 | done |
 | [554](./554-surface-metric-sign.md) | Every surface metric is a size, and every border is a width | F | 358, 360, 530, 531, 552 | done |
+| [555](./555-border-rationale-and-duplicate-claim.md) | The border rationale names five of the measured surfaces, and prints one rule twice | F | 080, 084, 300, 318, 327, 352, 550 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2733,6 +2734,20 @@ borderless design. The new `dimension-sign-totality.test.ts` has three cases
 that fail before the change and three that guard it after; every shipped set
 still returns `[]`, and no colour, pair, floor, metric, theme, platform style or
 recipe value moves.
+
+Plan `555` makes the design system's border rationale say what the contract
+measures. §7's `border` bullet named six of the eight fills a bordered control
+paints — it left out `accentHover` and `accentActive`, the two steps an outline
+toggle presses through that plan `327` added — and the `borderStrong` bullet
+named eight of the thirteen surfaces the functional boundary is measured on,
+omitting a `card`, a `popover` and the `input` fill a field paints. The same
+paragraph, edited by plan `550`, printed the strong-over-thin rule twice. The
+cause is the one plans 547–549 removed from code: the list had no owner.
+`controlFillRoles` is exported as that owner, the two bullets name every member,
+and `docs.test.ts` derives both surface lists from `contrastPairs` — so a ninth
+control fill or a fourteenth boundary surface fails the page until it is named.
+The three cases fail on the pre-fix page and pass after it; no colour, pair,
+floor, metric, theme, platform style or recipe value moves.
 
 ## How to use a plan
 
