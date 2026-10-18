@@ -420,11 +420,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
   - [x] Docs truth: the native-test count a docs page states matches its
     behaviour suite — plan 333; the one drifted page (`Field`) fixed and the
     check added; both-direction proof (unit 335)
-  - [ ] Move the remaining pure-activation button-shaped parts to Space on
+  - [~] Move the remaining pure-activation button-shaped parts to Space on
     release (`AccordionTrigger`, `CollapsibleTrigger`, `TabsTrigger`,
     `Breadcrumb`, `HotkeyRecorder`, the `InlineEdit` display, the `TagInput`
     chip); plan 332 landed the shared helper and the four controls that use it
-    today, and `docs/component-api.md` §4 records the gap
+    today, and `docs/component-api.md` §4 records the gap — plan 334
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 
