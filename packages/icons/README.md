@@ -11,7 +11,9 @@ the design system exists.
 
 ```tsx
 import { Icon } from "@gpuixui/icons";
-import { theme } from "@gpuixui/tokens";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
 
 // Decoration: takes itself out of the accessibility tree.
 <Icon name="search" color={theme.colors.mutedForeground} />

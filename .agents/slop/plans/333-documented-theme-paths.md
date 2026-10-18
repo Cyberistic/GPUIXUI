@@ -1,4 +1,4 @@
-# 333 — A documented theme path must resolve
+# 333 — A documented token claim must resolve
 
 | Field | Value |
 | ----- | ----- |
@@ -17,37 +17,42 @@ strings, so the two usage snippets below are not compilable — a reader copying
 them gets `Property 'color' does not exist`:
 
 ```
+packages/icons/README.md:14   import { theme } from "@gpuixui/tokens"
 packages/icons/README.md:17   <Icon name="search" color={theme.color.mutedForeground} />
 packages/icons/README.md:20   <Icon name="warning" color={theme.color.destructive.background} … />
 packages/icons/src/Icon.tsx:13  role such as `theme.color.mutedForeground`
 ```
 
-`packages/icons/docs/icon.mdx` is already correct (`theme.colors.mutedForeground`,
-`theme.colors.destructive`), which is the giveaway: the page was written against
-the shipped API and the README/docstring were not.
+`@gpuixui/tokens` exports `lightTheme`, `darkTheme`, `getTheme` and
+`platformTheme`, not a bare `theme`; the README's import line is the wrong half
+of the same snippet. `packages/icons/docs/icon.mdx` is already correct (it reads
+the theme with `useTheme()` from `@gpuixui/primitives`), which is the giveaway:
+the page was written against the shipped API and the README/docstring were not.
 
 Nothing guarded this. `src/exports.test.ts` guards that a page exists and is
 indexed; `src/callback-names.test.ts` guards one renamed prop; no check read a
-documented `theme.…` path against the real theme. The token API was reorganised
-once already (`theme.color.role.background` → `theme.colors.role`), so this is a
-class, not a typo.
+documented `theme.…` path or a documented token import against the real package.
+The token API was reorganised once already (`theme.color.role.background` →
+`theme.colors.role`), so this is a class, not a typo.
 
 ## 2. The rule
 
-> **A `theme.…` path in a package's documentation or examples must resolve on the
-> shipped `Theme`.** A reference to a *file* (`theme.ts`, `theme.fixture.js`,
-> `theme.runtime.test.tsx`) is not a path and is exempt: it is recognisable by a
-> source-file extension in its last segment. Everything else — `theme.colors.x`,
-> `theme.typography.body.fontSize`, `theme.density.controlHeight.sm` — is read
-> against `lightTheme` and must resolve segment by segment.
+> **A documented token claim must resolve on the shipped package.** A `theme.…`
+> path in a package's documentation or examples must resolve on the shipped
+> `Theme`; a named import from `@gpuixui/tokens` must name a real export. A
+> reference to a *file* (`theme.ts`, `theme.fixture.js`) is not a path and is
+> exempt: it is recognisable by a source-file extension in its last segment.
+> Everything else — `theme.colors.x`, `theme.typography.body.fontSize`,
+> `theme.density.controlHeight.sm`, `import { darkTheme }` — is read against the
+> real package and must resolve.
 
 ## 3. Files to change
 
 | File | Change |
 | ---- | ------ |
-| `packages/icons/README.md` | the usage block uses `theme.colors.mutedForeground` and `theme.colors.destructive` |
+| `packages/icons/README.md` | the usage block reads the theme with `useTheme()` and uses `theme.colors.mutedForeground` / `theme.colors.destructive` |
 | `packages/icons/src/Icon.tsx` | the `color` docstring names `theme.colors.mutedForeground` |
-| `packages/primitives/src/docs-theme-paths.test.ts` | **new**: the guard over both packages' docs, READMEs, examples and source |
+| `packages/primitives/src/docs-theme-paths.test.ts` | **new**: the guard over both packages' docs, READMEs, examples and source — theme paths and `@gpuixui/tokens` imports |
 | `packages/primitives/README.md` | the measured offline count moves |
 | `TODO.md` | add and tick the task under the primitives workstream |
 | `.agents/slop/plans/README.md` | index this plan |
@@ -58,6 +63,12 @@ class, not a typo.
 ### 4.1 The docs
 
 ```mdx
+import { Icon } from "@gpuixui/icons";
+import { useTheme } from "@gpuixui/primitives";
+
+const theme = useTheme();
+
+// Decoration: takes itself out of the accessibility tree.
 <Icon name="search" color={theme.colors.mutedForeground} />
 <Icon name="warning" color={theme.colors.destructive} label="Overdue" />
 ```
@@ -139,38 +150,52 @@ document, not a line number.
 ```ts
 describe("documented theme paths", () => {
   it("resolve on the shipped theme", async () => {
-    const claims = await runPromise(scan());
+    const { claims } = await Effect.runPromise(scan);
     const broken = Arr.filter(
       claims,
       (claim) =>
         !isFileReference(claim.segments) &&
         Option.isNone(resolveThemePath(claim.segments)),
     );
-    expect(
-      Arr.map(broken, (claim) => `${claim.file}: theme.${claim.segments.join(".")}`),
-    ).toStrictEqual([]);
+    expect(Arr.map(broken, label)).toStrictEqual([]);
   });
 
-  it("finds a path in a document, so the scan is live", async () => {
-    // Not a tautology: the scan must read at least the icon page, which
-    // documents `theme.colors.mutedForeground`.
-    const claims = await runPromise(scan());
+  it("reads the icon page, so the scan is live", async () => {
+    // Not a tautology: the scan must read at least the icon page and at least
+    // one token import, or an empty scan would pass both suites.
+    const scanned = await Effect.runPromise(scan);
     expect(
-      Arr.some(claims, (claim) =>
-        Arr.contains(claim.segments, "mutedForeground"),
+      Arr.some(
+        scanned.claims,
+        (claim) => claim.file === "packages/icons/docs/icon.mdx",
       ),
     ).toBe(true);
+    expect(Arr.length(scanned.imports)).toBeGreaterThan(0);
+  });
+});
+
+describe("documented token imports", () => {
+  it("name exports the package actually has", async () => {
+    const { imports } = await Effect.runPromise(scan);
+    const missing = Arr.filter(imports, (claim) => !R.has(Tokens, claim.name));
+    expect(
+      Arr.map(missing, (claim) => `${claim.file}: import { ${claim.name} }`),
+    ).toStrictEqual([]);
   });
 });
 ```
+
+The import scanner extracts the names inside `import { … } from
+"@gpuixui/tokens"` (`type` qualifiers stripped) and checks each against the
+package's runtime exports, so `import { theme }` fails by name.
 
 ## 5. Commands, in order
 
 | # | Command | Expected |
 | - | ------- | -------- |
-| 1 | write the guard **before** fixing the docs | fails with `packages/icons/README.md: theme.color.mutedForeground`, `…: theme.color.destructive.background` and `packages/icons/src/Icon.tsx: theme.color.mutedForeground` |
+| 1 | write the guard **before** fixing the docs | fails with `packages/icons/README.md: theme.color.mutedForeground`, `…: theme.color.destructive.background`, `packages/icons/src/Icon.tsx: theme.color.mutedForeground` and `packages/icons/README.md: import { theme }` |
 | 2 | apply §4.1 | — |
-| 3 | `nub run --filter @gpuixui/primitives test -- docs-theme-paths` | both cases green |
+| 3 | `nub run --filter @gpuixui/primitives test -- docs-theme-paths` | all three cases green |
 | 4 | `nub run --filter @gpuixui/primitives test` | 41 files green |
 | 5 | `nub run check` | tests, lint, fmt and types green |
 | 6 | `nub run test` | every workspace green |
@@ -185,9 +210,9 @@ describe("documented theme paths", () => {
 
 ## 7. Acceptance
 
-- [x] Every `theme.…` claim in both packages' docs, READMEs, examples and source
-      resolves on `lightTheme`.
-- [x] The guard fails by file and path for the three claims in §1, and passes
+- [x] Every `theme.…` claim and every `@gpuixui/tokens` named import in both
+      packages' docs, READMEs, examples and source resolves on the real package.
+- [x] The guard fails by file and name for the four claims in §1, and passes
       once they are corrected.
 - [x] `nub run check` and `nub run test` are green; `TODO.md` and the plan index
       agree.
@@ -197,27 +222,28 @@ describe("documented theme paths", () => {
 ### 8.1 Both failing directions
 
 With the guard written first and the docs untouched, the suite reported exactly
-the three false claims and nothing else:
+the four false claims and nothing else:
 
 ```
+packages/icons/README.md: import { theme }
 packages/icons/README.md: theme.color.mutedForeground
 packages/icons/README.md: theme.color.destructive.background
 packages/icons/src/Icon.tsx: theme.color.mutedForeground
 ```
 
-After correcting the two documents, both cases passed. The liveness case earned
-its place during that work: a first version of the resolver wrapped `R.get` in
-`Option.fromNullishOr` (an `Option` is not nullish), so every path resolved to
-`Some(None)`, the guard reported zero broken claims, and only the "reads the icon
-page" case failed. The nested option is gone; the two cases are what keep the
-scan honest.
+After correcting the two documents, all three cases passed. The liveness case
+earned its place during that work: a first version of the resolver wrapped
+`R.get` in `Option.fromNullishOr` (an `Option` is not nullish), so every path
+resolved to `Some(None)`, the guard reported zero broken claims, and only the
+"reads the icon page" case failed. The nested option is gone; the liveness case
+and the import half are what keep the scan honest.
 
 ### 8.2 After the fix
 
 ```
 nub run --filter @gpuixui/primitives test
   Test Files  41 passed (41)
-       Tests  535 passed (535)   (533 + 2)
+       Tests  536 passed (536)   (533 + 3)
 
 nub run check
   tests: every test asserts something, and nothing asserts itself
@@ -227,5 +253,5 @@ nub run check
 
 nub run test
   tokens 196, testing 19, icons 19, playground 11, components 308,
-  primitives 535 — all green
+  primitives 536 — all green
 ```

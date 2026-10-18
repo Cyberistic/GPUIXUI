@@ -16,6 +16,7 @@ import { Effect, FileSystem, Path } from "effect";
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import type { PlatformError } from "effect/PlatformError";
 import { describe, expect, it } from "vitest";
+import * as Tokens from "@gpuixui/tokens";
 import { lightTheme } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -94,15 +95,23 @@ const scan = Effect.gen(function* () {
     files,
     (file) => SCANNABLE.test(file) && !TEST_FILE.test(file),
   );
-  const claims = yield* Effect.forEach(
+  const found = yield* Effect.forEach(
     scannable,
     (file) =>
-      Effect.map(fs.readFileString(file), (text) =>
-        claimsIn(path.relative(workspace, file), text),
-      ),
+      Effect.map(fs.readFileString(file), (text) => {
+        const relative = path.relative(workspace, file);
+        return {
+          claims: claimsIn(relative, text),
+          imports: importClaimsIn(relative, text),
+        };
+      }),
     { concurrency: 8 },
   );
-  return { files: scannable, claims: Arr.flatten(claims) };
+  return {
+    files: scannable,
+    claims: Arr.flatten(Arr.map(found, (entry) => entry.claims)),
+    imports: Arr.flatten(Arr.map(found, (entry) => entry.imports)),
+  };
 }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
 
 /** A file reference (`theme.ts`, `theme.fixture.js`) is not a theme path. */
@@ -136,6 +145,32 @@ const resolveThemePath = (
 const label = (claim: Claim): string =>
   `${claim.file}: theme.${Arr.join(claim.segments, ".")}`;
 
+/** A named import from `@gpuixui/tokens` in a document. */
+interface ImportClaim {
+  readonly file: string;
+  readonly name: string;
+}
+
+const TOKEN_IMPORT = /import\s*\{([^}]*)\}\s*from\s*"@gpuixui\/tokens"/g;
+
+/** `type Theme` → `Theme`; the whitespace around a name is never part of it. */
+const importName = (raw: string): string =>
+  Str.trim(raw).replace(/^type\s+/, "");
+
+const importClaimsIn = (
+  file: string,
+  text: string,
+): ReadonlyArray<ImportClaim> =>
+  Arr.flatMap(Arr.fromIterable(text.matchAll(TOKEN_IMPORT)), (match) =>
+    Arr.map(
+      Arr.filter(
+        Arr.map(Str.split(match[1] ?? "", ","), importName),
+        Str.isNonEmpty,
+      ),
+      (name) => ({ file, name }),
+    ),
+  );
+
 describe("documented theme paths", () => {
   it("resolve on the shipped theme", async () => {
     const { claims } = await Effect.runPromise(scan);
@@ -149,12 +184,26 @@ describe("documented theme paths", () => {
   });
 
   it("reads the icon page, so the scan is live", async () => {
-    const { claims } = await Effect.runPromise(scan);
+    const scanned = await Effect.runPromise(scan);
     expect(
       Arr.some(
-        claims,
+        scanned.claims,
         (claim) => claim.file === "packages/icons/docs/icon.mdx",
       ),
     ).toBe(true);
+    expect(Arr.length(scanned.imports)).toBeGreaterThan(0);
+  });
+});
+
+describe("documented token imports", () => {
+  it("name exports the package actually has", async () => {
+    const { imports } = await Effect.runPromise(scan);
+    const missing = Arr.filter(
+      imports,
+      (claim) => !P.hasProperty(Tokens, claim.name),
+    );
+    expect(
+      Arr.map(missing, (claim) => `${claim.file}: import { ${claim.name} }`),
+    ).toStrictEqual([]);
   });
 });

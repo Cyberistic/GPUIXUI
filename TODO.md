@@ -615,15 +615,16 @@ retired once both branches are one
       (`controlFocusStyle` plus the four non-control painters). 13 activation +
       15 ring runtime cases, 4 core/element cases, both directions proven
       (plan `332`)
-`[x]` `packages/icons` + `packages/primitives`: **a documented theme path did
-      not resolve** — the icons README and the `Icon` docstring documented
-      `theme.color.mutedForeground` and `theme.color.destructive.background`;
-      the token object is `theme.colors` (plural) and its roles are strings, so
-      the copyable snippet did not compile. Both corrected, and
-      `src/docs-theme-paths.test.ts` reads every `theme.…` claim in both
-      packages' docs, READMEs, examples and source against `lightTheme` (file
-      references are exempt by extension); the guard reported exactly the three
-      false claims before the fix (plan `333`)
+`[x]` `packages/icons` + `packages/primitives`: **a documented token claim did
+      not resolve** — the icons README documented `import { theme }` from
+      `@gpuixui/tokens` (no such export) and `theme.color.mutedForeground` /
+      `theme.color.destructive.background`; the token object is `theme.colors`
+      (plural) and its roles are strings, so the copyable snippet did not
+      compile, and the `Icon` docstring repeated the singular path. Both
+      corrected, and `src/docs-theme-paths.test.ts` reads every `theme.…` claim
+      and `@gpuixui/tokens` import in both packages' docs, READMEs, examples and
+      source (file references are exempt by extension); the guard reported
+      exactly the four false claims before the fix (plan `333`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
