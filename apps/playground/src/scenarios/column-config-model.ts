@@ -41,9 +41,7 @@ export const isVisible = (config: ColumnConfig, id: string): boolean =>
   Arr.contains(config.order, id) && !Arr.contains(config.hidden, id);
 
 /** The ids that paint, in order. */
-export const visibleIds = (
-  config: ColumnConfig,
-): ReadonlyArray<string> =>
+export const visibleIds = (config: ColumnConfig): ReadonlyArray<string> =>
   Arr.filter(config.order, (id) => !Arr.contains(config.hidden, id));
 
 /**
@@ -54,21 +52,16 @@ export const visibleIds = (
  * a click that changes nothing cannot re-render the grid.
  */
 export const toggle = (config: ColumnConfig, id: string): ColumnConfig =>
-  Option.match(
-    Arr.findFirstIndex(config.order, (entry) => entry === id),
-    {
-      onNone: () => config,
-      onSome: () =>
-        Arr.contains(config.hidden, id)
-          ? {
-              ...config,
-              hidden: Arr.filter(config.hidden, (entry) => entry !== id),
-            }
-          : Arr.length(visibleIds(config)) > 1
-            ? { ...config, hidden: Arr.append(config.hidden, id) }
-            : config,
-    },
-  );
+  !Arr.contains(config.order, id)
+    ? config
+    : Arr.contains(config.hidden, id)
+      ? {
+          ...config,
+          hidden: Arr.filter(config.hidden, (entry) => entry !== id),
+        }
+      : Arr.length(visibleIds(config)) > 1
+        ? { ...config, hidden: Arr.append(config.hidden, id) }
+        : config;
 
 /**
  * Moves `id` by `delta` positions in the full order (`-1` up, `+1` down).
@@ -128,15 +121,8 @@ export const offsetIn = (
     : 0;
 
 /** The row width: the sum of the visible columns' widths. */
-export const contentWidthOf = (
-  config: ColumnConfig,
-  widths: Widths,
-): number =>
-  Arr.reduce(
-    visibleIds(config),
-    0,
-    (total, id) => total + widthOf(widths, id),
-  );
+export const contentWidthOf = (config: ColumnConfig, widths: Widths): number =>
+  Arr.reduce(visibleIds(config), 0, (total, id) => total + widthOf(widths, id));
 
 /** The smallest legal horizontal offset for `viewport`, never positive. */
 export const maxPanOf = (

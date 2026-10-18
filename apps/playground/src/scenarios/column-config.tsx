@@ -29,7 +29,12 @@ import { palettes } from "../palettes.js";
 import { ariaOf, fieldOf, focusedId, read, readoutNumber } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 import type { GridRow } from "./data-grid-model.js";
-import { anchoredWindow, cellText, indices, rowTop } from "./data-grid-model.js";
+import {
+  anchoredWindow,
+  cellText,
+  indices,
+  rowTop,
+} from "./data-grid-model.js";
 import { DATA_ROWS } from "./data-grid.js";
 import type { Widths } from "./column-resize-model.js";
 import {
@@ -193,16 +198,11 @@ const ColumnConfigProbe = () => {
     Option.match(Option.fromNullishOr(trigger.current?.id), {
       onNone: () => {},
       onSome: (id) =>
-        Option.match(
-          Option.fromNullishOr(renderer?.getElementBounds?.(id)),
-          {
-            onNone: () => {},
-            onSome: (bounds) =>
-              setOpen(
-                Option.some({ x: bounds.x, y: bounds.y + bounds.height }),
-              ),
-          },
-        ),
+        Option.match(Option.fromNullishOr(renderer?.getElementBounds?.(id)), {
+          onNone: () => {},
+          onSome: (bounds) =>
+            setOpen(Option.some({ x: bounds.x, y: bounds.y + bounds.height })),
+        }),
     });
   };
 
@@ -259,9 +259,7 @@ const ColumnConfigProbe = () => {
         <Pressable
           testId="config-widen"
           onClick={() =>
-            setWidths((current) =>
-              setWidth(current, "name", WIDE_NAME),
-            )
+            setWidths((current) => setWidth(current, "name", WIDE_NAME))
           }
         >
           <text style={{ color: theme.colors.foreground }}>widen name</text>

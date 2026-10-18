@@ -152,9 +152,7 @@ describe("contentWidthOf", () => {
   it("follows a widened column even while hidden", () => {
     const wide = setWidth(initialWidths, "status", 160);
     expect(contentWidthOf(hiddenStatus, wide)).toBe(440);
-    expect(
-      contentWidthOf(toggle(hiddenStatus, "status"), wide),
-    ).toBe(600);
+    expect(contentWidthOf(toggle(hiddenStatus, "status"), wide)).toBe(600);
   });
 });
 
@@ -166,9 +164,9 @@ describe("maxPanOf", () => {
 
   it("follows the visible set rather than the full one", () => {
     expect(maxPanOf(hiddenStatus, initialWidths, 360)).toBe(-80);
-    expect(
-      maxPanOf(toggle(initialConfig, "notes"), initialWidths, 360),
-    ).toBe(-50);
+    expect(maxPanOf(toggle(initialConfig, "notes"), initialWidths, 360)).toBe(
+      -50,
+    );
   });
 });
 
