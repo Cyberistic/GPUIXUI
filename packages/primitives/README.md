@@ -194,8 +194,9 @@ the suites in `runtime/` mount the components in the GPUix 0.10.0
 `TestRenderer` and assert only on what the frame produced — painted text,
 bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
-example from `examples/index.ts`, so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **20 files, 264 tests, all passing** —
+example registered in `examples/index.ts` — and a parity test fails if the list
+and the registry drift (plan 092) — so the documentation's compositions are
+runtime-proven too. Measured 2026-10-18: **20 files, 265 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -226,9 +227,10 @@ by a mouse (plan 085), and an `IconButton` that is one named button with a
 tinted icon and a spinner instead of the icon while busy (plan 086), and a
 `Label` beside a standalone checkbox that was measured *not* to toggle it, which
 is what the docs now say (plan 087), a tab-order matrix that proves a
-disabled control is not a stop while an enabled one is (plan 089), and a failed
+disabled control is not a stop while an enabled one is (plan 089), a failed
 validation that recolours a field's border and keeps its surface on hover and
-press (plan 091).
+press (plan 091), and an examples suite that really mounts every registered
+example because a parity test fails when the list drifts (plan 092).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.
