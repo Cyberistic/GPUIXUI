@@ -170,6 +170,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [371](./371-colour-role-format.md) | Every colour role is a hex colour the helpers parse | F | 011, 014, 071, 085, 099, 306 | done |
 | [372](./372-positive-named-sizes.md) | A named size is a positive size, and the rule index is the type | F | 054, 058, 358, 360–371 | done |
 | [373](./373-applied-default-palette.md) | The default palette a caller asked for | F | 011, 063, 073, 301, 323, 345 | done |
+| [374](./374-platform-style-over-platform.md) | A platform style applied over another platform's theme | F | 063, 071, 073, 091, 301, 311, 328, 373 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1474,6 +1475,26 @@ variant's. A base already at the requested level keeps its own colours and edits
 so a style still overrides only what it names, and a style with no defined colour
 keeps the base's level (plan 323). No shipped theme, platform variant or recipe
 changes, so no token value, colour, pair or floor moves.
+
+374 closes the last failing shipped call the 301/323/373 series left, one
+composition over: `applyPlatformStyle` takes **any** base, including a theme that
+already carries another platform's style, and a style only overrides the roles it
+names. Linux dark is the one shipped style that names `destructiveSoft`
+(`#3A0B0D`, plan 091, because the light-accent selection wash had to stay visible
+on the soft destructive fill), while macOS dark, Windows dark, XP and Aero
+inherit the identity tint (`#66191B`). Applying any of them over a Linux dark
+theme therefore kept Linux's tint on a different canvas: **1.0005:1** on macOS
+dark's background and 1.0448:1 on Windows', under the 1.05:1 floor, so an Alert,
+Badge or Toast had an invisible surface while the checker reported it only to a
+consumer who ran it — the documented call itself returned a theme the package's
+contract rejects. The two dark sets now name the identity tint they already
+paint (`darkColors.destructiveSoft`), which moves no pixel on any documented
+path and gives the applied style its own canvas's value. `platform-composition`
+applies every shipped style and recipe to every shipped base — identity,
+`createTheme`, macOS, Linux, Windows, XP and Aero — in both modes, both contrasts
+and both requested levels, and holds each result to all three public checks, so
+a future style that changes a role another style does not name fails the
+cross-product instead of shipping a hybrid.
 
 ### Reference adoption (block `200–299`)
 
