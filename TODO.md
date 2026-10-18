@@ -1037,6 +1037,15 @@ retired once both branches are one
       `src/example-coverage.test.ts` fails by name when a public component has no
       rendered example, including a declaration-form export (plan `374`;
       offline 659 → 660, runtime 610 → 612).
+`[x]` `packages/primitives`: **`IconButton`'s page and matrices described the
+      pre-recipe button** — it claimed a `controlHeight` square and
+      `focusRing(theme)`, while plan `370` made the box the recipe's
+      `size-8/9/10` (32/36/40) and the ring `buttonRecipeRing`; nothing asserted
+      the icon button's size under a density override and it was absent from the
+      focus-ring matrix's "every focusable control". The page now names the
+      recipe and the density exception, the density case asserts 36 square under
+      compact and spacious, and the matrix gains the icon button (plan `375`;
+      runtime 612 → 613).
 `[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
       slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/
       `RadioGroup` still read the invented `comfortable` metrics and the icon

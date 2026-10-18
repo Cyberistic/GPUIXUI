@@ -31,6 +31,7 @@ import * as R from "effect/Record";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { IconButton } from "../src/components/IconButton.js";
 import { Input } from "../src/components/Input.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { Progress } from "../src/components/Progress.js";
@@ -59,6 +60,7 @@ const densityScene = (density: Density) => (
         <Button variant="primary" testId="button">
           Save
         </Button>
+        <IconButton icon="plus" label="Add" testId="icon-button" />
         <Input testId="input" placeholder="Name" />
         <NumberField label="Count" defaultValue={3} testId="number" />
         <Toggle testId="toggle">Bold</Toggle>
@@ -96,6 +98,12 @@ const heightOf = (runtime: Runtime, testId: string): number =>
   Option.getOrElse(runtime.bounds(testId), () =>
     expect.fail(`the runtime painted no ${testId}`),
   ).height;
+
+/** A pixel width the runtime painted for `testId`, failing when absent. */
+const widthOf = (runtime: Runtime, testId: string): number =>
+  Option.getOrElse(runtime.bounds(testId), () =>
+    expect.fail(`the runtime painted no ${testId}`),
+  ).width;
 
 it("paints the high-contrast light palette, not the default one", async () => {
   const runtime = await rendered(controls(highContrastLightTheme));
@@ -143,6 +151,10 @@ it("a density override moves control heights and leaves colour alone", async () 
     expect(heightOf(runtime, "input")).toBe(
       36 - 2 * lightTheme.borderWidth.thin,
     );
+    // The icon button is the square member of the same slice: `size-9` (36)
+    // at `md`, not compact's `controlHeight.md` (32) or spacious's (40).
+    expect(heightOf(runtime, "icon-button")).toBe(36);
+    expect(widthOf(runtime, "icon-button")).toBe(36);
     // A selection box is icon-sized by design; density must not stretch it.
     expect(heightOf(runtime, "checkbox")).toBe(lightTheme.iconSize.md);
   };

@@ -44,9 +44,14 @@ disappear on a filled button.
 
 | `size` | Button box | Icon |
 | ------ | ---------- | ---- |
-| `sm` | `controlHeight.sm` square | `iconSize.sm` (14 px) |
-| `md` (default) | `controlHeight.md` square | `iconSize.md` (16 px) |
-| `lg` | `controlHeight.lg` square | `iconSize.lg` (20 px) |
+| `sm` | 32 (`size-8`) | `iconSize.sm` (14 px) |
+| `md` (default) | 36 (`size-9`) | `iconSize.md` (16 px) |
+| `lg` | 40 (`size-10`) | `iconSize.lg` (20 px) |
+
+The box is shadcn's new-york-v4 icon table (`BUTTON_SIZES` through
+`buttonRecipeStyle`), the same slice `Button` uses. It is **not** the density
+scale: a `ThemeProvider density` override leaves the box at 32/36/40, exactly as
+it leaves a text button at `h-8`/`h-9`/`h-10` (plan `370`; measured 375).
 
 ## API
 
@@ -94,10 +99,13 @@ set, `disabled` wins.
 
 ## Theming
 
-No new token: the geometry and the fill come from `Button`/`controlStyle`, the
-tint from `buttonVariants`, the icon size from `theme.iconSize`, and the focus
-ring from `focusRing(theme)`. A theme change repaints the button and the icon
-together because both read the same `Theme`.
+No new token: the box and the focus ring come from the button recipe
+(`buttonRecipeStyle`, `buttonRecipeRing`), the fill from `buttonVariants`, the
+tint from the same variant's **foreground** role, and the icon size from
+`theme.iconSize`. A theme change repaints the button and the icon together
+because both read the same `Theme`. The ring is the recipe's 3 px, 50 % ring —
+the same one a text button paints, and the same one the attached-`ButtonGroup`
+inset overlay uses (plans `344`, `370`).
 
 ## Limitations
 
@@ -115,6 +123,11 @@ together because both read the same `Theme`.
 - `runtime/controls.runtime.test.tsx` — one named `Button` and no `Image` node;
   click/Enter/Space activation; the painted `svg` tint and square bounds; the
   loading spinner with no icon; a disabled button skipped by `Tab`.
+- `runtime/focus-ring.runtime.test.tsx` — the icon button is in the matrix: it
+  paints exactly one `buttonRecipeRing`, inside its own box (plan `375`).
+- `runtime/theme-axes.runtime.test.tsx` — under the compact and spacious
+  presets the box stays 36 square at `md`, so the recipe, not density, owns it
+  (plan `375`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

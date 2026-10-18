@@ -21,6 +21,7 @@ import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
 import { buttonRecipeRing, fieldRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
+import { IconButton } from "../src/components/IconButton.js";
 import { ButtonGroup } from "../src/components/ButtonGroup.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
@@ -74,6 +75,11 @@ const CASES: ReadonlyArray<FocusCase> = [
   {
     name: "Button",
     node: () => <Button testId="c">Save</Button>,
+    ring: BUTTON_RING,
+  },
+  {
+    name: "IconButton",
+    node: () => <IconButton testId="c" icon="x" label="Close" />,
     ring: BUTTON_RING,
   },
   { name: "Toggle", node: () => <Toggle testId="c">Bold</Toggle> },
