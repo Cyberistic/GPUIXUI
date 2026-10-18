@@ -5,7 +5,7 @@
 | Phase | F (consistency / measured truth) |
 | Owner | primitives workstream |
 | Depends on | `020`, `041`, `047`, `060`, `066`, `067`, `095`, `098`, `156` |
-| Status | planned |
+| Status | done |
 
 Self-contained: §0 the measured defect, §1 the decision, §2 the rule, §3 the
 files, §4 commands and expected results, §5 the test plan and the two-direction
@@ -165,9 +165,9 @@ Run from the worktree root unless stated.
 | Command | Expected |
 | ------- | -------- |
 | `nub run --filter @gpuixui/primitives test -- src/core/floating.test.ts` | the new horizontal cases fail before the fix and pass after |
-| `nub run --filter @gpuixui/primitives test` | all offline tests pass (baseline: 40 files / 529 tests) |
+| `nub run --filter @gpuixui/primitives test` | all offline tests pass (baseline: 41 files / 536 tests) |
 | `nub run --filter @gpuixui/primitives test:runtime -- runtime/fields.runtime.test.tsx` | the four new cases pass; the existing tooltip/select cases stay green |
-| `nub run --filter @gpuixui/primitives test:runtime` | all runtime tests pass (baseline: 23 files / 319 tests) |
+| `nub run --filter @gpuixui/primitives test:runtime` | all runtime tests pass (baseline: 22 files / 349 tests) |
 | `nub run --filter @gpuixui/primitives check-types` | exit 0 |
 | `nub run check` | exit 0 (`check:tests`, lint, format, types) |
 | `nub run lint` | exit 0 |
@@ -274,17 +274,56 @@ Stop and report (do not improvise) if:
 
 ## 7. Outcome
 
-_To be filled after the run: measured before/after table, failing assertions,
-counts, gates._
+A requested horizontal side is now a preference, on both wrappers, and both
+directions are measured.
+
+**The rule.** `core/floating.ts` has one module-local `chooseSide` (fits →
+other side → roomier) shared by `decideVerticalSide` (unchanged behaviour) and
+the new `decideHorizontalSide`. `Tooltip` measures its trigger's left/right and
+its tip's width; `Select` measures its trigger's edges and the open list's width
+(the trigger width is the list's minimum), both in layout effects, so the flip
+is in the first painted frame. An explicit `top`/`bottom` still skips the
+vertical decision.
+
+**Measured before (unwired code, same probes as §0):**
+
+| Case | Failing assertion |
+| ---- | ----------------- |
+| `Tooltip side="left"`, trigger `x 12..72` | `tip.x` `8`, expected `≥ 72` |
+| `Tooltip side="right"`, trigger ending at `x 1268` | `tip.x + tip.width` `1272`, expected `≤ 968` |
+| `Select side="left"`, trigger at `x 12` | `list.x` `8`, expected `≥ 59` |
+| `Select side="right"`, trigger ending at `x 1268` | `list.x + list.width` `1272`, expected `≤ 1221` |
+
+**After:** all four open beside the trigger (left-edge requests open right;
+right-edge requests open left). The measured residual is a layer wider than both
+sides, which the runtime still clamps — stated on both pages.
+
+One existing case needed a correction, not a behaviour change: `caps a long
+Select list beside its trigger` pressed Down 29 times because, with the old
+clamp, the list covered the pointer and the first row was already highlighted by
+mouse-enter. It now presses `up` once, which reaches the last row from either
+initial state, so the cap proof no longer depends on the layer covering its
+trigger.
+
+**Two-direction proof.**
+
+- Unwiring `Tooltip`'s horizontal decision failed the two tooltip cases with the
+  numbers above.
+- Unwiring `Select`'s failed the two select cases with the numbers above.
+- Removing `chooseSide`'s roomier branch failed
+  `picks the side with more room when neither fits` (`"left"` for the expected
+  `"right"`).
+- Restored: offline **41 files / 543 tests**, runtime **22 files / 353 tests**.
+  `nub run check`, `nub run lint` and `nub run test` pass.
 
 ## 8. Acceptance
 
-- [ ] A horizontal `side` that cannot fit beside the trigger opens on the other
+- [x] A horizontal `side` that cannot fit beside the trigger opens on the other
       horizontal side, or the roomier one when neither fits.
-- [ ] The trigger never ends up underneath the layer in the four measured cases.
-- [ ] An explicit `top`/`bottom` and every automatic vertical decision are
+- [x] The trigger never ends up underneath the layer in the four measured cases.
+- [x] An explicit `top`/`bottom` and every automatic vertical decision are
       unchanged.
-- [ ] A layer wider than both sides is still clamped, and both pages say so.
-- [ ] Every new test fails in both directions before the fix.
-- [ ] Docs, `README.md`, `COMPONENTS.md`, `TODO.md` and the plan index record it.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] A layer wider than both sides is still clamped, and both pages say so.
+- [x] Every new test fails in both directions before the fix.
+- [x] Docs, `README.md`, `COMPONENTS.md`, `TODO.md` and the plan index record it.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

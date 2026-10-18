@@ -64,7 +64,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
-| `side` | `FloatingSide` | auto — below, flipped above when it does not fit | which side the list opens on |
+| `side` | `FloatingSide` | auto — below, flipped above when it does not fit; a `left`/`right` side flips when it cannot fit | which side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
@@ -173,7 +173,7 @@ exists: the surface's padding and borders, one `controlHeight.sm` row per
 option, one caption row per non-empty group, and the row gap — the same numbers
 `selectContentStyle`, `selectItemStyle` and `selectHeadingStyle` paint. When
 neither side has room, the side with more room wins (the runtime still clamps).
-An explicit `side` skips the decision.
+An explicit `top`/`bottom` skips that decision.
 
 A list **taller than the space it chose** is capped to exactly that space and
 scrolls. Without the cap a 30-option list painted a 908 px layer from `y 8`, with
@@ -187,7 +187,13 @@ the free space runs from there to the window's bottom margin. Only the vertical
 sides computed a cap before plan `098`, so a left/right list painted 908 px from
 `y 12` in an 800 px window with the last option unreachable; the same cap now
 applies to all four sides (measured: 780 px, scrollable, last option inside).
-An explicit `side` is never flipped — near an edge the runtime clamps it.
+
+A **`left`/`right` side is a preference.** The wrapper measures the open list's
+width (the trigger's width is its minimum) and the trigger's edges; when the
+list cannot fit on the requested side it opens on the other one, or on the
+roomier side when it fits on neither. The runtime alone would clamp it —
+measured on a trigger at `x 524..572`, a `side="right"` list painted
+`x 535..592`, over the trigger (plan `335`).
 
 ## Style by state
 
@@ -240,6 +246,9 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
   room, the list is capped to the roomier one and scrolls.
+- **The side uses a measured list width.** A move to the other horizontal side
+  is decided from the width the list painted on open; a list wider than both
+  sides is still clamped by the runtime and may cover its trigger.
 - The list's dismissal and positioning are GPUix's; this package cannot change
   the open animation or the outside-click rules.
 - No search or type-ahead. A long list wants a combobox, which is Tier 2.
@@ -270,7 +279,9 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
   below but fits above, the collision margin, an exact fit, the more-room
   fallback, a preferred side, and the space on each side — including the height
-  a left/right layer may use (plan `098`).
+  a left/right layer may use (plan `098`); and the horizontal rule: fits right,
+  flips left, the collision margin, an exact fit, the more-room fallback and a
+  preferred side (plan `335`).
 - `runtime/fields.runtime.test.tsx` — measured 2026-10-17: a closed Select is a
   named `ComboBox` with `expanded: false` and the placeholder as its value;
   opening flips `expanded` to `true` and paints a named `ListBox` of named
@@ -289,7 +300,10 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   the trigger (098):** a 30-option `side="left"` list is capped to the window's
   bottom margin (measured 780 px from `y 12`, scrollable), the arrows still reach
   "Option 30" inside it, and the failing direction painted 908 px with the last
-  row at `y 888.5`. **Keyboard
+  row at `y 888.5`. **Side fit (335):** a `side="left"` list at the window's left
+  edge opens to the right of its trigger (the failing direction painted the list
+  at `x 8`, over the trigger), and a `side="right"` list at the right edge opens
+  to the left (the failing direction clamped it to `x 1272`). **Keyboard
   (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
   leave the highlighted "Option 39" inside the list (without the wrapper's
   `scrollIntoView` the offset stays `0`); opening on "Option 49" scrolls to

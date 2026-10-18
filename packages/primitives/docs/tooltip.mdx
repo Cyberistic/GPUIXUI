@@ -59,10 +59,14 @@ and flips **below** when the tip does not fit above — the runtime's layer is
 (plan `156` §8), so at the top edge the tip used to open at `y 8..34` over a
 trigger at `y 12..30` (plan `067` §1). The wrapper measures its root and
 estimates the tip's height from `tooltipStyle` (padding, one caption line,
-border); an explicit `side` skips that decision. Automatic side choice is
-vertical only, and an explicit `side` is never flipped: near a window edge the
-runtime clamps it, which may cover the trigger — pick the other side if that
-matters.
+border). Automatic side choice is vertical only.
+
+A **`left`/`right` side is a preference.** The wrapper measures the tip's width
+and the trigger's edges: when the tip cannot fit on the requested side it opens
+on the other one, or on the roomier side when it fits on neither. The runtime
+alone would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip
+painted `x 8..55`, over the trigger (plan `335`). An explicit `top`/`bottom`
+still skips the vertical decision and is exact where the window allows it.
 
 ## API
 
@@ -70,7 +74,7 @@ matters.
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
-| `side` | `FloatingSide` | auto — above, flipped below when it does not fit | preferred placement |
+| `side` | `FloatingSide` | auto — above, flipped below when it does not fit; a `left`/`right` side flips when it cannot fit | preferred placement |
 | `align` | `FloatingAlign` | `"start"` | alignment against the trigger; `center` is measured exact — see Placement |
 | `delay` | `number` | provider default | hover delay in milliseconds |
 | `testId` | `string` | — | locator on the **tip** |
@@ -112,8 +116,10 @@ dismisses it. A click dismisses it.
   changes while open (it cannot, with `whiteSpace: nowrap`) would not re-centre.
 - **The flip sees one line.** The side is chosen from an estimated height
   (padding + one caption line + border), which is exact for the tip this wrapper
-  paints and for `whiteSpace: nowrap`; a multi-line tip is a popover. A `side`
-  you pass yourself is never flipped.
+  paints and for `whiteSpace: nowrap`; a multi-line tip is a popover.
+- **A tip wider than the room on both sides is clamped.** The horizontal side is
+  chosen from the tip's measured width, but a tip wider than both sides can
+  still be clamped by the runtime and painted over its trigger.
 - No `aria-describedby` association: the content is the trigger's
   `aria-description` instead, which is a description but not a reference.
 - A non-string tip has no description on the trigger and no name of its own.
@@ -128,8 +134,9 @@ dismisses it. A click dismisses it.
   `tooltipStyle`, and the description/name mapping for string and non-string
   content (plan `071`).
 - `src/core/floating.test.ts` — the shared side rule, including a preferred
-  `top` and its fallback below, and the alignment rule on both axes (widths
-  above/below, heights beside — plan `098`).
+  `top` and its fallback below, the horizontal fit rule (fits, flips, exact fit,
+  roomier) and the alignment rule on both axes (widths above/below, heights
+  beside — plans `098`, `335`).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)
@@ -143,6 +150,10 @@ dismisses it. A click dismisses it.
   `align="center"` centre the tip on the trigger's vertical centre within 1 px
   (the failing direction was 90 px low), and the left case has real room instead
   of the runtime's clamp.
+  **Horizontal fit (335):** a `side="left"` tip at the window's left edge opens
+  on the right of its trigger (the failing direction painted the tip `x 8..55`
+  over the trigger), and a `side="right"` tip at the right edge opens on the
+  left. Without the side decision the runtime clamps both onto the trigger.
   **Description (071):** the trigger's accessibility node carries the content as
   its description while the tip is closed, and the open tip is a named `Tooltip`
   node — the failing direction had neither.

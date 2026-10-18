@@ -633,18 +633,27 @@ retired once both branches are one
       native call and the paint; 1 runtime test, both directions proven
       (plan `334`)
 
-`[ ]` `packages/primitives`: **a horizontal `side` still covers its trigger at
-      the window edge.** Measured on 0.10.0 (2026-10-18, 600 px window): a
+`[x]` `packages/primitives`: **a horizontal `side` covered its trigger at the
+      window edge.** Measured on 0.10.0 (2026-10-18, 600 px window): a
       `Tooltip side="left"` on a trigger at `x 12..73` painted its 47 px tip at
       `x 8..55` — clamped onto the trigger; a `Select side="right"` on a trigger
       at `x 524..572` painted its 57 px list at `x 535..592` — 37 px over the
-      trigger. The vertical axis has a fit decision (plans `066`/`067`); the
-      horizontal axis has only a height cap (plan `098`), and the docs record
-      "an explicit `side` is never flipped". Needs a plan before implementation:
-      decide whether a requested side is a preference when it physically cannot
-      fit (and update `Select`/`Tooltip` docs and the two direction tests), or
-      keep the clamp and state it as an evidenced limitation on both pages.
-      Do not change the vertical rule in the same plan.
+      trigger. **Fixed by plan `335`:** a requested horizontal side is a
+      preference. `decideHorizontalSide` shares one fit rule with the vertical
+      decision (`chooseSide`), the wrapper measures the trigger's edges and the
+      layer's width (the open list; the open tip), and opens on the other side,
+      or the roomier one. Measured in the runtime, both edges and both
+      directions: each now opens beside the trigger. Docs, README, inventory and
+      the regression tests record it.
+
+`[ ]` `packages/primitives`: **an explicit vertical `side` still covers its
+      trigger at the window edge.** Plan `335` deliberately left the vertical
+      rule untouched (this row required it). A `Tooltip side="top"` at the top
+      edge and a `Select side="bottom"` at the bottom edge are still clamped by
+      the runtime onto the trigger, exactly as the horizontal sides were. A
+      later plan must decide whether an explicit vertical side is also a
+      preference and unify both axes on `chooseSide` (with its own measured
+      cases).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
