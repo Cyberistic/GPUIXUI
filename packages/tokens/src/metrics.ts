@@ -303,9 +303,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   body line and the default `md` control it holds.
  * - **dimensions**: every surface metric is positive, each documented range has
  *   a minimum below its default, a chip fits in the field's content box — its
- *   minimum width less the field's two borders and horizontal padding — and the
+ *   minimum width less the field's two borders and horizontal padding — the
  *   overlay scroll height fits one row, because a list viewport shorter than a
- *   row clips every option.
+ *   row clips every option, and a keycap's content box holds one caption line
+ *   plus its two borders, because `Keycap` paints caption text inside it.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark — and the default icon fits the smallest
  *   control.
@@ -567,6 +568,7 @@ export function themeMetricFailures(
       ["toastWidth", dimensions.toastWidth],
       ["previewCardMinWidth", dimensions.previewCardMinWidth],
       ["previewCardMaxWidth", dimensions.previewCardMaxWidth],
+      ["keycapSize", dimensions.keycapSize],
     ]),
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
@@ -596,6 +598,16 @@ export function themeMetricFailures(
       "dimensions",
       "previewCardMaxWidth",
       dimensions.previewCardMaxWidth,
+    ),
+    ...positive("dimensions", "keycapSize", dimensions.keycapSize),
+    // A keycap paints the caption role inside a fixed surface: its two borders
+    // are inside `keycapSize`, so a caption leading that grows past the content
+    // box clips the shortcut label.
+    ...atLeast(
+      "dimensions",
+      "keycapSize",
+      dimensions.keycapSize,
+      typography.caption.lineHeight + 2 * borderWidth.thin,
     ),
     ...ladder(
       "dimensions",

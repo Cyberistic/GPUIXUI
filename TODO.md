@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 181/242
+`[x]` `[███████░░░]` 182/244
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1432,6 +1432,16 @@ boundary floor, while every other set passed. The identity light ring moves one
 ramp step to `#4C39B5` (5.802:1 on the groove, and every existing ring pair
 gains contrast), `ringTrackPairs` publishes the pair and `contrastPairs` grows
 395 → 396 (plan 516)
+`[x]` Hold the keycap's fixed surface to its caption line — `Keycap` paints the
+caption role inside the literals `minWidth: 20, height: 20`, so a copied theme
+that raised the caption leading clipped every shortcut label while
+`themeMetricFailures` returned `[]`; `dimensions.keycapSize` is the fixed
+surface (20px, inherited by every shipped theme, platform variant and recipe)
+and the metric contract holds it to one `caption` line plus its two borders
+(plan 517)
+`[ ]` Cross-team: `components` reads `theme.dimensions.keycapSize` for the
+keycap's `minWidth` and `height` instead of the 20px literals in
+`keyboard-shortcuts.tsx` (owner: `components`; plan 517)
 `[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
 `<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
 of the runtime's built-in dark value (owner: `primitives`; plan 511)

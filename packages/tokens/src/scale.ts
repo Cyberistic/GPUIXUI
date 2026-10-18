@@ -129,6 +129,8 @@ export interface Dimensions {
   readonly previewCardMinWidth: number;
   /** 360px — the widest preview card. */
   readonly previewCardMaxWidth: number;
+  /** 20px — the fixed keycap a shortcut label sits in. */
+  readonly keycapSize: number;
 }
 
 /** Default component dimensions. */
@@ -142,6 +144,7 @@ export const dimensions: Dimensions = {
   toastWidth: 380,
   previewCardMinWidth: 240,
   previewCardMaxWidth: 360,
+  keycapSize: 20,
 };
 
 /**

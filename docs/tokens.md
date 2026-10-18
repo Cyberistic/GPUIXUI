@@ -980,6 +980,11 @@ every density.
 | `dimensions.toastWidth` | 380 | fixed toast card width |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
+| `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
+
+A keycap is a fixed surface, not a spacing decision: its content box holds one
+`caption` line plus its two borders, and the metric contract reports a theme
+whose caption leading outgrows it.
 
 A metric override merges field by field, like the spacing and radius scales:
 
@@ -992,9 +997,9 @@ const wider = extendTheme(lightTheme, {
 ```
 
 `dimensions` is inherited by every platform variant and recipe: overlay widths,
-field chrome and card widths are shared surface metrics, not platform
-conventions. A consumer who wants a narrower platform menu edits the group on
-the resolved theme.
+field chrome, card widths and the keycap size are shared surface metrics, not
+platform conventions. A consumer who wants a narrower platform menu edits the
+group on the resolved theme.
 
 ## Elevation
 

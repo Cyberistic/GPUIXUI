@@ -2167,7 +2167,7 @@ describe("docs/design-system.md", () => {
   });
 
   it("states the fixed component dimensions", () => {
-    const sentence = `overlay surfaces take a ${dimensions.overlayMinWidth}px minimum and a ${dimensions.overlayWidth}px default width, and a long list scrolls at ${dimensions.overlayMaxHeight}px; a toast is ${dimensions.toastWidth}px wide, a preview card runs ${dimensions.previewCardMinWidth}–${dimensions.previewCardMaxWidth}px, and an icon or clear control inside a field is ${dimensions.fieldAdornmentSize}px.`;
+    const sentence = `overlay surfaces take a ${dimensions.overlayMinWidth}px minimum and a ${dimensions.overlayWidth}px default width, and a long list scrolls at ${dimensions.overlayMaxHeight}px; a toast is ${dimensions.toastWidth}px wide, a preview card runs ${dimensions.previewCardMinWidth}–${dimensions.previewCardMaxWidth}px, and an icon or clear control inside a field is ${dimensions.fieldAdornmentSize}px. They live in \`theme.dimensions\` so a brand can widen a dialog or a toast without touching component source. A keycap is ${dimensions.keycapSize}px and holds one \`caption\` line plus its two borders;`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 

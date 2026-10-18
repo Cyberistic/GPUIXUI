@@ -222,7 +222,9 @@ Component dimensions are **fixed**, not density metrics: overlay surfaces take a
 180px minimum and a 220px default width, and a long list scrolls at 320px; a
 toast is 380px wide, a preview card runs 240–360px, and an icon or clear control
 inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
-dialog or a toast without touching component source.
+dialog or a toast without touching component source. A keycap is 20px and holds
+one `caption` line plus its two borders; the metric contract reports a theme
+whose caption leading outgrows it.
 
 ## 7. Radii, borders and elevation
 
