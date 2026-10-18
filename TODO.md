@@ -58,9 +58,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 81/86 plans-and-harness
+`[x]` `[██████████]` 82/87 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`391` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `392`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `393`
 
 `[x]` Probe a **reorderable list** per plan `391` — the unmeasured half of the
       Drag and drop row: `list-reorder` (36 checks) and `live-reorder` (19) with
@@ -77,13 +77,23 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (`839 → 858`), exit `0`, `reorder=verified`; five mutation proofs
       (plan `391` §9).
 
-`[ ]` Probe **hierarchical drag reorder** (a file tree) — the remaining
-      composition the flat reorder leaves open for the Tier 5 `Virtualized
-      hierarchical data` row: dropping a node **into** a folder versus between
-      rows, refusing a drop into the node's own descendant, the derived
-      flattened index after a move, expand-on-hover, and the virtual list's
-      anchor. Plan `165` measured the flattened tree and plan `391` the flat
-      reorder; this one needs its own plan (`392`) before implementation.
+`[x]` Probe **hierarchical drag reorder** (a file tree) per plan `392`:
+      `tree-reorder` (74 checks) and `live-tree-reorder` (23) over a pure
+      pre-order `allRows`/`visibleRows`/`subtreeEnd`/`moveSubtree`/`targetAt`/
+      `indicatorAt` model (21 tests). A drop names a row plus `before`/`after`/
+      `into`, where `into` is the **middle 50 %** of a directory row with one
+      16 px indent step of x — so a file never takes a child and a between-drop
+      never guesses depth from x. The source is the **whole subtree** and every
+      moved depth shifts (`dir-1/sub/a` 2 → 3 with its root at 1); a drop into
+      its own descendant is `refused=descendant`, on itself `refused=self`, and
+      the post-move pre-order re-parse refuses a corrupt result as
+      `illegal-depth`. A collapsed target opens on drop; a 500 ms hover opens it
+      without dropping and Escape cancels. The flattened `at`/`depth`/`parent`
+      is reported, and a `<virtual-list>` keeps `[20,0,240]` across a move.
+      Keyboard arrows choose the gap (skipping the source) and Right/Left choose
+      sibling-versus-child. Suite `91 → 92` (`3124 → 3198`), live `42 → 43`
+      (`858 → 881`), exit `0`, `tree-reorder=verified`; seven mutation proofs
+      (plan `392` §9).
 
 
 `[x]` Probe a **notification centre** per plan `381`: `notification-centre`

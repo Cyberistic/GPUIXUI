@@ -1351,26 +1351,50 @@ and the live twin 19. Five mutation proofs: dropping the boundary adjustment,
 removing the click guard, ignoring the pointer's y, removing Escape, and a no-op
 arrow each fail the named check.
 
+## Hierarchical reorder (plan `392`)
+
+`tree-reorder` composes the flat reorder with the virtualized tree:
+`virtualized-tree` flattens and indents, `list-reorder` applies an order
+change, and this applies one **to a subtree inside a file tree**.
+
+| Fact | Measured |
+| ---- | -------- |
+| the target | a drop names a row and `before` / `after` / `into`; `into` is the **middle 50 %** of a directory row and one indent step (16 px) past its label, so a file never accepts a child and a between-drop never guesses a depth from x |
+| the slice | the source is the **whole subtree**: a directory moves with its children, and every moved node's depth shifts by the same delta — `dir-1/sub/a` lands at depth 3 with its root at depth 1 |
+| the flattened index | `tree-last` reports `at`, `depth` and `parent` from the new visible list; the moved root's `at` is its index in the pre-order window, which is what the virtual list and the focus contract index into |
+| cycles | a drop into the source's own descendant is refused (`refused=descendant`) and a drop on itself is `refused=self`; the order and the indicator are unchanged. The pre-order invariant is re-checked after every move, so a corrupt result is refused as `illegal-depth` rather than rendered |
+| opening | a drop into a collapsed directory opens it in the same commit, so the moved node paints one row below its parent; a 500 ms **hover** opens it without dropping (and Escape cancels) |
+| the anchor | a `<virtual-list>` keeps its anchor across a tree move: at anchor `[20,0,240]`, moving `dir-19` into `dir-17` gives `at=26 depth=1`, the row paints at `dir-17.y + 24`, and the anchor is still `[20,0,240]` |
+| keyboard | Enter lifts, Up/Down choose the gap (skipping the source row), Right turns the gap into an `into` target, Left back to `after`, Enter drops, Escape cancels; native focus follows the keyed move |
+
+The pure rules (`allRows`, `visibleRows`, `subtreeEnd`, `moveSubtree`,
+`targetAt`, `indicatorAt`) live in `src/scenarios/tree-reorder-model.ts` with
+21 unit tests; the scenario is 74 checks and the live twin 23. Seven mutation
+proofs: a one-node slice, removing the cycle refusal, letting a file accept
+`into`, ignoring the y zone, a 5 s hover delay, keeping the old depths, and
+resetting the list to row 0 on a drop each fail the named check.
+
 ## Evidence on this host
 
-The suite is **91/91 green** here (`exit 0`, 3124 checks):
+The suite is **92/92 green** here (`exit 0`, 3198 checks):
 
 ```
-91/91 scenarios passed · capabilities: layout=verified text=verified
+92/92 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
 virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified float=verified
 preview=verified command=verified content=verified drag=verified
-reorder=verified selection=verified menu=verified components=verified
-search=verified terminal=verified chart=verified toast=verified grid=verified
-data-grid=verified columns=verified column-config=verified chrome=verified
-layers=verified scroller=verified scale=verified tier2=verified
-replace=verified states=verified truncation=verified grid-layout=verified
-typography=verified inspector=verified editor=verified
-data-toolbar=verified query=verified notification=verified crop=verified
-wizard=verified cell-editing=verified upload=verified
+reorder=verified tree-reorder=verified selection=verified menu=verified
+components=verified search=verified terminal=verified chart=verified
+toast=verified grid=verified data-grid=verified columns=verified
+column-config=verified chrome=verified layers=verified scroller=verified
+scale=verified tier2=verified replace=verified states=verified
+truncation=verified grid-layout=verified typography=verified
+inspector=verified editor=verified data-toolbar=verified query=verified
+notification=verified crop=verified wizard=verified cell-editing=verified
+upload=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1495,6 +1519,9 @@ src/scenarios/crop.tsx the image box, four masks, captured handles and a keyboar
 src/scenarios/reorder-model.ts the pure boundary/index/move rules
 src/scenarios/reorder-model.test.ts the pure reorder rules
 src/scenarios/reorder.tsx a plain and a virtualized reorderable list, pointer and keyboard
+src/scenarios/tree-reorder-model.ts the pure pre-order tree: targets, subtree moves, refusals
+src/scenarios/tree-reorder-model.test.ts the pure tree reorder rules
+src/scenarios/tree-reorder.tsx a plain and a virtualized file tree, pointer and keyboard
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1542,9 +1569,10 @@ narrower. Each deviation is deliberate and measured:
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
-  probe** (`query-builder`, plan `378`) and the **reorder probe**
-  (`list-reorder`, plan `391`)
-  pass in real GPUix 0.10.0 on this host (91/91), with a written report and
+  probe** (`query-builder`, plan `378`), the **reorder probe**
+  (`list-reorder`, plan `391`) and the **hierarchical reorder probe**
+  (`tree-reorder`, plan `392`)
+  pass in real GPUix 0.10.0 on this host (92/92), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1552,7 +1580,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 42/42 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 43/43 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1560,7 +1588,8 @@ narrower. Each deviation is deliberate and measured:
   **multi-pane editor**, the **data toolbar**, the **query builder**, the
   **notification centre**, the **crop area**, the **multi-step form**, the
   **reorder** (a paced drop at boundary 3 lands at index 2, keyboard
-  lift/arrow/drop and cancel) and the
+  lift/arrow/drop and cancel), the **hierarchical reorder** (a paced drag into
+  a collapsed folder, a refused cycle and keyboard nesting) and the
   **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
   veil, filter + window keys, arrows that keep focus, `onSubmit` commit and
   three dismissals) —
