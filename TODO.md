@@ -1018,6 +1018,15 @@ retired once both branches are one
       New element table + recipe cases + runtime heights, and the density proof
       moved to `Toggle`; both directions proven (offline 654, runtime 608; plan
       `372`).
+`[x]` `packages/primitives`: **a range slider reported a gesture that changed
+      nothing** — measured (2026-10-18): a second press on the same spot
+      reported `[20, 91]` again, a press plus a 1 px move reported four times
+      for one change, and `End` at the maximum reported again, because each
+      gesture built a fresh tuple while `useControlState` compares with
+      `Object.is`. `spanAfterMove` now returns the current pair by identity —
+      the `ToggleGroup`/`CheckboxGroup` rule — so the pointer and keyboard
+      paths share one no-op guard; 5 core + 1 element-tree + 2 runtime cases,
+      both directions proven (offline 659, runtime 610; plan `373`).
 `[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
       slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/
       `RadioGroup` still read the invented `comfortable` metrics and the icon

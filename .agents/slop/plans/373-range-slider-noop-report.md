@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Workstream | primitives |
 | Depends on | 030, 041, 053, 063, 324, 331, 361, 362 |
-| Status | ready to implement |
+| Status | done |
 
 ## 0. The defect, measured
 
@@ -263,3 +263,17 @@ Stop and report instead of improvising if:
   measurement.
 - `nub run check`, `nub run lint`, `nub run test` and the runtime suite pass.
 - The plan is indexed, the TODO row is ticked, and both directions are proven.
+
+## 7. Outcome (measured, 2026-10-18)
+
+Landed as planned. The two runtime cases and the element-tree case are green;
+with the identity return in `spanAfterMove` replaced by an always-fresh tuple,
+exactly three cases fail by name — `does not report a key that cannot move its
+end` (element tree) and both runtime cases. Restored: green.
+
+| Suite | Before | After |
+| ----- | ------ | ----- |
+| offline (`nub exec vitest run`) | 45 files / 654 tests | 45 files / **659** tests |
+| runtime (`--config vitest.runtime.config.ts`) | 32 files / 608 tests | 32 files / **610** tests |
+
+`nub run check`, `nub run lint` and `nub run test` are green at the root.

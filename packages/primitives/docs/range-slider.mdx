@@ -33,7 +33,9 @@ a press beyond both thumbs picks the end it passed. The runtime captures the
 press, so a dragged thumb keeps tracking after the pointer leaves the track. The
 ends can touch but never cross. The stops include `max` even when `step` does not
 divide the span, so the default `[min, max]` band paints end to end: `min 0`,
-`max 10`, `step 3` has the stops `0, 3, 6, 9, 10`.
+`max 10`, `step 3` has the stops `0, 3, 6, 9, 10`. A gesture that leaves both
+ends where they were — a second press on the same spot, an `End` already at the
+maximum — reports nothing, the same no-op rule `Slider` follows.
 
 ## Variants, sizes and states
 
@@ -41,7 +43,7 @@ divide the span, so the default `[min, max]` band paints end to end: `min 0`,
 | ---- | ---- | ------- | ----------- |
 | `value` | `readonly [number, number]` | — | controlled span |
 | `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
-| `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair |
+| `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair, only when it changed |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous, and **`max` is always a stop** |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
