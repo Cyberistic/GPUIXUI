@@ -484,14 +484,15 @@ Colour is checked, not assumed. The token suite enforces:
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes, and its dim pulse frame at `skeletonPulseOpacity` on the same eight surfaces (`skeletonPulsePairs`) | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
-| modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive` and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
+| modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The modal scrim is
 measured composited rather than as a value: `overlay` over the fifteen surfaces
 a dialog covers — the four base surfaces, the `input` fill a form paints, the
-persistent `selected` fill, the four resting filled actions and the four soft
-status panels a window shows — which caught the AAA dark backdrop painting
+persistent `selected` fill, the four resting filled actions, the raised action a
+status panel carries (`softAction`) and the four soft status panels a window
+shows — which caught the AAA dark backdrop painting
 **1.000:1** on its own canvas until plan `099` gave it a light veil, and the
 macOS light `selected` fill used as a scrim painting **1.000:1** on a selected row
 until plan `359` measured it. Plan `375` closed the same gap for the page's

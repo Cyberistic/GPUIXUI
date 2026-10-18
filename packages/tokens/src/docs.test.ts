@@ -75,6 +75,15 @@
  * reference, the design system, the README or any non-test module, and each
  * document must state the distinction, so the guidance cannot silently promise a
  * composition the measured family cannot serve.
+ *
+ * Plan 501 guards the floor table's modal scrim row. Plan 395 added the raised
+ * action a status panel carries (`softAction`) to `overlaySurfaces` and updated
+ * §7, the catalogue and the README, but the §9 row still named fourteen
+ * surfaces and the explanation said "fifteen" while listing fourteen. The exact
+ * row array never included the scrim row, and the pair-class map sends
+ * `surface` to the interactive-fill row, so nothing read it. The row and the
+ * explanation are now held to `overlaySurfaces`, and the row's floor cells to
+ * `contrastFloors`, so the next surface cannot leave either behind.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -2102,6 +2111,34 @@ describe("docs/design-system.md", () => {
     Object.entries(rowFor).forEach(([pairClass, prefix]) => {
       expect(designSystemSource.includes(prefix), pairClass).toBe(true);
     });
+  });
+
+  it("names every surface in the modal scrim's floor row", () => {
+    const row = tableRow("modal scrim (");
+    expect(row).toContain("`overlay`");
+    overlaySurfaces.forEach((surface) => {
+      expect(row, surface).toContain(`\`${surface}\``);
+    });
+    expect(row).toContain(
+      `| ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+    );
+  });
+
+  it("names every surface in the modal scrim explanation", () => {
+    const explanation = designSystem.slice(
+      designSystem.indexOf("measured composited rather than as a value"),
+      designSystem.indexOf("A soft status surface is measured"),
+    );
+    expect(explanation.length).toBeGreaterThan(0);
+    expect(explanation).toContain(
+      `the ${countWord(overlaySurfaces.length)} surfaces`,
+    );
+    expect(explanation).toContain(
+      "the raised action a status panel carries (`softAction`)",
+    );
+    expect(explanation).toContain(
+      `The tightest of the ${countWord(overlaySurfaces.length)} pairs`,
+    );
   });
 
   it("states the mark floor beside the fill floor", () => {
