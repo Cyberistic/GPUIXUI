@@ -1805,9 +1805,9 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **53/53** on
-  2026-10-19 (1125 checks, exit `0`, the merge gate) — the plan `532` terminal
-  twin, the plan `534` variable-row twin and the plan `535` pointer twin are all
-  included — and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  2026-10-19 (1133 checks, exit `0`, the merge gate) — the plan `532` terminal
+  twin, the plan `534` variable-row twin and the plan `535`/`536` pointer twins
+  are all included — and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
