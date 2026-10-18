@@ -187,6 +187,17 @@ const ladder = (
   });
 
 /**
+ * Every member of a group must be a number the renderer can paint. A ladder's
+ * last step and a standalone metric have no later rule to catch an infinity, so
+ * the check is its own pass.
+ */
+const finiteMembers = (
+  group: MetricGroup,
+  members: ReadonlyArray<readonly [string, number]>,
+): ReadonlyArray<MetricFailure> =>
+  members.flatMap(([member, value]) => finite(group, member, value));
+
+/**
  * A documented size ladder walked from its smallest step upwards, because the
  * `ladder` rule steps up and the docs list each ladder largest first.
  */
@@ -232,7 +243,11 @@ const ascendingSizes = (
  *   the type.
  *
  * The level is not a parameter: these rules are the same at every contrast
- * setting, because they describe shapes, not colour.
+ * setting, because they describe shapes, not colour. Every numeric member of
+ * every group must also be **finite**: the renderer casts each one to a 32-bit
+ * float, and an infinity becomes invalid layout it paints as nothing, silently.
+ * `elevation` and `motion` carry that rule in their own groups (plans 360 and
+ * 364); this function applies it to the other eight.
  *
  * @example
  * ```ts
@@ -260,6 +275,13 @@ export function themeMetricFailures(
     motion,
   } = theme;
   return [
+    ...finiteMembers(
+      "typography",
+      textRoles.flatMap((role) => [
+        [`${role}.fontSize`, typography[role].fontSize] as const,
+        [`${role}.lineHeight`, typography[role].lineHeight] as const,
+      ]),
+    ),
     ...textRoles.flatMap((role) => [
       ...positive("typography", `${role}.fontSize`, typography[role].fontSize),
       ...atLeast(
@@ -295,8 +317,23 @@ export function themeMetricFailures(
       ],
       "increasing",
     ),
+    ...finiteMembers("borderWidth", [
+      ["thin", borderWidth.thin],
+      ["strong", borderWidth.strong],
+    ]),
     ...nonNegative("borderWidth", "thin", borderWidth.thin),
     ...positive("borderWidth", "strong", borderWidth.strong),
+    ...finiteMembers("density", [
+      ...controlSizes.map(
+        (size) =>
+          [`controlHeight.${size}`, density.controlHeight[size]] as const,
+      ),
+      ...controlSizes.map(
+        (size) =>
+          [`controlPaddingX.${size}`, density.controlPaddingX[size]] as const,
+      ),
+      ["rowHeight", density.rowHeight],
+    ]),
     ...ladder(
       "density",
       controlSizes.map(
@@ -332,6 +369,12 @@ export function themeMetricFailures(
       density.rowHeight,
       density.controlHeight.md,
     ),
+    ...finiteMembers(
+      "iconSize",
+      (["xs", "sm", "md", "lg", "xl"] as const).map(
+        (size) => [size, iconSize[size]] as const,
+      ),
+    ),
     ...ladder(
       "iconSize",
       (["xs", "sm", "md", "lg", "xl"] as const).map(
@@ -340,6 +383,12 @@ export function themeMetricFailures(
       "non-decreasing",
     ),
     ...atMost("iconSize", "md", iconSize.md, density.controlHeight.sm),
+    ...finiteMembers(
+      "avatarSize",
+      (["xs", "sm", "md", "lg"] as const).map(
+        (size) => [size, avatarSize[size]] as const,
+      ),
+    ),
     ...ladder(
       "avatarSize",
       (["xs", "sm", "md", "lg"] as const).map(
@@ -347,6 +396,14 @@ export function themeMetricFailures(
       ),
       "non-decreasing",
     ),
+    ...finiteMembers("radius", [
+      ["none", radius.none],
+      ["sm", radius.sm],
+      ["md", radius.md],
+      ["lg", radius.lg],
+      ["xl", radius.xl],
+      ["full", radius.full],
+    ]),
     ...zero("radius", "none", radius.none),
     ...ladder(
       "radius",
@@ -358,6 +415,23 @@ export function themeMetricFailures(
     ...atLeast("radius", "full", radius.full, radius.xl),
     ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
     ...atLeast("radius", "full", radius.full, avatarSize.lg / 2),
+    ...finiteMembers(
+      "spacing",
+      (
+        [
+          "2xs",
+          "xs",
+          "sm",
+          "md",
+          "lg",
+          "xl",
+          "2xl",
+          "3xl",
+          "4xl",
+          "5xl",
+        ] as const
+      ).map((step) => [step, spacing[step]] as const),
+    ),
     ...ladder(
       "spacing",
       (
@@ -376,6 +450,17 @@ export function themeMetricFailures(
       ).map((step) => [step, spacing[step]] as const),
       "non-decreasing",
     ),
+    ...finiteMembers("dimensions", [
+      ["overlayMinWidth", dimensions.overlayMinWidth],
+      ["overlayWidth", dimensions.overlayWidth],
+      ["overlayMaxHeight", dimensions.overlayMaxHeight],
+      ["fieldMinWidth", dimensions.fieldMinWidth],
+      ["fieldAdornmentSize", dimensions.fieldAdornmentSize],
+      ["chipMinWidth", dimensions.chipMinWidth],
+      ["toastWidth", dimensions.toastWidth],
+      ["previewCardMinWidth", dimensions.previewCardMinWidth],
+      ["previewCardMaxWidth", dimensions.previewCardMaxWidth],
+    ]),
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),
     ...positive("dimensions", "overlayMaxHeight", dimensions.overlayMaxHeight),

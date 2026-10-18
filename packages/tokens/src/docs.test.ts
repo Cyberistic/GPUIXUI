@@ -1340,6 +1340,11 @@ describe("docs/design-system.md", () => {
     expect(designSystem).toContain(ladder(codeLadder));
   });
 
+  it("states that every numeric metric must be finite", () => {
+    const prose = designSystem.replace(/\s+/g, " ");
+    expect(prose).toContain("Every numeric metric must be a **finite** number");
+  });
+
   it("summarises every type role with its real metrics", () => {
     const { body, label, caption, code, codeBlock } = typography;
 
