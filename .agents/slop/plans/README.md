@@ -241,6 +241,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [544](./544-quoted-figure-extent.md) | The catalogue's quoted tightest figures are measured on ten of twenty-four sets | F | 380, 387, 388, 536–538 | done |
 | [545](./545-applied-style-name-idempotence.md) | Applying a platform style twice appends its label twice | F | 371, 373, 374, 541 | done |
 | [546](./546-pair-list-uniqueness-owner.md) | "Every exported pair list" checked 28 of 35 | F | 071, 339, 340, 349, 393, 394, 510, 514, 516 | done |
+| [547](./547-interactive-fill-family-index.md) | The interactive-fill index retypes the families it says it derives | F | 097, 309, 327, 342, 502, 546 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2611,6 +2612,20 @@ export) and every list — nested or direct — is asserted by name. The catalog
 sentence now states that owner and `docs.test.ts` holds it. No colour role,
 pair, floor, metric, theme, platform style or recipe value changes; 131 files /
 5641 tests pass.
+
+Plan `547` closes the same class one list over. `docs/tokens.md` promised
+“`stateFillRoles` is the fill list and `stateFillSurfaces` the surface list, so
+a fifth surface or a new filled family joins one place”, but `stateFillRoles`
+retyped the four families from `filledControlFamilies` by hand. `filledControl`,
+`stateStepPairs`, `stateLadders` and `selectionFillRoles` all derive from the
+index, so a fifth family added where the docs say to add it gained its steps,
+direction, selection pairs and helper — and no fill-on-surface pair. A probe on
+the pre-fix tree added the near-complete `warning` family to the index (only
+`warningHover`/`warningActive` were missing), made `warningHover` equal the
+canvas, and the checker returned no pair; with the derivation it reports one.
+The list now derives from the family index, the suite's expectation derives
+from it too, and the catalogue names the owner. No colour, pair, floor, metric,
+theme, platform style or recipe value moves; 131 files / 5641 tests pass.
 
 ## How to use a plan
 
