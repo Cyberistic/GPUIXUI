@@ -65,8 +65,8 @@ controlled list.
 The group uses `background`, `border`, `radius.md`, `controlHeight` and
 `focusRing`; chips use `muted` / `mutedForeground` and `radius.sm`; the clear
 control shows an `accent` hover. Disabled is `opacity` plus a `readOnly` field
-(0.10.0 has no `aria-disabled`). A custom theme changes all of it — see
-[Theming](/docs/theming).
+that leaves the tab order, ignores `autoFocus` and paints no ring (0.10.0 has no
+`aria-disabled`). A custom theme changes all of it — see [Theming](/docs/theming).
 
 ## Accessibility
 
@@ -98,11 +98,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (15 tests):
 rendering, Enter, comma commit, duplicates, the named removal control, removal
 by pointer and Space release, the chip control's focus ring, the group ring a
 field's `autoFocus` seeds, `max`, a disabled field (read-only, no removal
-controls, no Enter path) and a caller that refuses a change.
+controls, no Enter path, out of the tab order, ignoring `autoFocus` and painting
+no ring) and a caller that refuses a change.
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
 duplicates, the cap and first-match removal.

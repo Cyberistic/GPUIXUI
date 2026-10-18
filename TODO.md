@@ -363,6 +363,13 @@ retired once both branches are one
       is inert and unmounts after its exit. 4 native cases measure the painted
       slide, not only the motion prop (Drawer 14, behaviour 698); two mutation
       proofs
+    - [x] Disabled mention and tag fields are inert — plan 527: measured that
+      `autoFocus` focused a disabled `MentionInput`/`TagInputField`, both stayed
+      tabbable (`tabIndex` absent) and a programmatic focus painted the group
+      ring. Each now ignores `autoFocus`, sets `tabIndex=-1` and guards the ring
+      with `!disabled`; 4 native cases (Mention input 17, Tag / token input 15,
+      behaviour 702), six mutation proofs; docs, `COMPONENTS.md` and the
+      inventory synced
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook
@@ -581,6 +588,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
 | `LICENSES/`: credit shadcn/ui AI Elements `chat` + `message` (MIT) for plan 207's behaviour port; both docs pages already credit it in prose | licensing | pending |
+| `@gpuixui/tw`: `classesToStyle` returns `shadow-sm/md/lg/xl` as a flat `BoxShadow`, so its `color` overwrites the element's text colour (`classesToStyle("text-popover-foreground shadow-xl", light).style.color` is `#191D2529`, the shadow, not `#191D25`). Found while evaluating the plan-524 Dialog/Popover recipes; the component integration is blocked until `shadow-*` wraps the value in `boxShadow` (plan 524 is owned by the tw workstream) | tw (plan 524) | pending — measured 2026-10-18 in this worktree |
 
 ## Phase D — data and workspace components
 

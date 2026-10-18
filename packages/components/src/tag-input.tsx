@@ -159,7 +159,7 @@ export const TagInput = ({
             borderWidth: theme.borderWidth.thin,
             borderColor: theme.colors.border,
             opacity: disabled ? 0.5 : 1,
-            ...(focused ? focusRing(theme) : {}),
+            ...(focused && !disabled ? focusRing(theme) : {}),
           },
           style,
         )}
@@ -207,8 +207,9 @@ export const TagInputField = ({
   return (
     <input
       {...rest}
+      {...(disabled ? { tabIndex: -1 } : {})}
       {...stateDescription(disabled, rest["aria-description"])}
-      autoFocus={autoFocus}
+      autoFocus={autoFocus && !disabled}
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}

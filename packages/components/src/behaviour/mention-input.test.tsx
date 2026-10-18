@@ -351,4 +351,40 @@ describe("MentionInput", () => {
 
     mention.unmount();
   });
+
+  /**
+   * A disabled field is inert (plan 527, continuing plan 394). The bug this
+   * guards, measured: `autoFocus` focused a disabled field and it stayed in the
+   * tab order, announced `Disabled` while behaving as an ordinary control.
+   */
+  it("ignores autoFocus and leaves the tab order when disabled", () => {
+    const mention = renderComponent(
+      <Harness disabled host={{ autoFocus: true }} />,
+    );
+
+    expect(focusedTestId(mention)).toEqual(Option.none());
+    expect(
+      mention.renderer.findByTestId("mention")?.customProps?.tabIndex,
+    ).toBe(-1);
+    expect(
+      mention.renderer.findByTestId("mention-group")?.style.boxShadow,
+    ).toBeUndefined();
+
+    mention.unmount();
+  });
+
+  it("paints no ring when a disabled field is focused", () => {
+    const mention = renderComponent(<Harness disabled />);
+
+    mention.renderer.focusElement(
+      mention.renderer.findByTestId("mention")?.id ?? -1,
+    );
+    mention.renderer.flush();
+
+    expect(
+      mention.renderer.findByTestId("mention-group")?.style.boxShadow,
+    ).toBeUndefined();
+
+    mention.unmount();
+  });
 });

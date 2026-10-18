@@ -264,6 +264,7 @@ B1, so it is planned, not done.
 | [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
 | [525](./525-motion-slice.md) | The first motion slice: Toast, Dialog and Popover consume `@gpuixui/tw` motion | C/F | 110, 112, 115, 117, 323, 366, 398, 524 | done — `AnimatePresence` + keyed `motion.div`: Toast `toastMotion(theme)` 500 ms cubic-bezier, Dialog `dialogMotion(theme)` 100 ms fade, Popover `motionFromClasses` 100 ms fade + side slide; `zoom-*` recorded unsupported. 6 new native cases (Toast 16, Dialog 16, Popover 19; behaviour 694), entry props + exit presence pinned, exit ghost inert; live 2/2 with a scratch wait for the stale toast assertion |
 | [526](./526-drawer-motion.md) | Drawer motion: fade the veil, slide the edge surface | C/F | 309, 524, 525 | done — `AnimatePresence` + two motions (veil 100 ms fade, surface 300 ms fade + side slide); the painted slide is measured, the exit ghost is inert. 4 native cases (Drawer 14, behaviour 698), two mutation proofs |
+| [527](./527-disabled-field-focus.md) | A disabled mention or tag field stays in the tab order and lights the ring | C/F | 110, 200, 201, 314, 319, 388, 394, 516, 522 | done — measured: `autoFocus` focused a disabled `MentionInput`/`TagInputField`, both stayed tabbable and a programmatic focus painted the group ring. 4 native cases (Mention input 17, Tag / token input 15, behaviour 702), six mutation proofs; docs, `COMPONENTS.md` and inventory synced |
 
 ## How to use a plan
 

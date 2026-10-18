@@ -196,15 +196,16 @@ export const MentionInput = ({
             borderWidth: theme.borderWidth.thin,
             borderColor: theme.colors.border,
             opacity: disabled ? 0.5 : 1,
-            ...(focused ? focusRing(theme) : {}),
+            ...(focused && !disabled ? focusRing(theme) : {}),
           }}
         >
           <input
             {...rest}
+            {...(disabled ? { tabIndex: -1 } : {})}
             aria-label={label}
             {...stateDescription(disabled, rest["aria-description"])}
             testId={testId}
-            autoFocus={autoFocus}
+            autoFocus={autoFocus && !disabled}
             value={text}
             readOnly={disabled}
             onChange={(event) => {

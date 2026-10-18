@@ -265,4 +265,54 @@ describe("TagInput", () => {
 
     tags.unmount();
   });
+
+  /**
+   * A disabled field is inert (plan 527, continuing plan 394). The bug this
+   * guards, measured: `autoFocus` focused a disabled field and it stayed in the
+   * tab order, announced `Disabled` while behaving as an ordinary control.
+   */
+  it("ignores a disabled field's autoFocus and leaves the tab order", () => {
+    const tags = renderComponent(
+      <TagInput
+        testId="tags"
+        label="Tags"
+        value={[]}
+        onValueChange={() => undefined}
+        disabled
+      >
+        <TagInputField testId="tag-field" autoFocus />
+      </TagInput>,
+    );
+
+    expect(focusedTestId(tags)).toEqual(Option.none());
+    expect(tags.renderer.findByTestId("tag-field")?.customProps?.tabIndex).toBe(
+      -1,
+    );
+    expect(tags.renderer.findByTestId("tags")?.style.boxShadow).toBeUndefined();
+
+    tags.unmount();
+  });
+
+  it("paints no ring when a disabled field is focused", () => {
+    const tags = renderComponent(
+      <TagInput
+        testId="tags"
+        label="Tags"
+        value={[]}
+        onValueChange={() => undefined}
+        disabled
+      >
+        <TagInputField testId="tag-field" />
+      </TagInput>,
+    );
+
+    tags.renderer.focusElement(
+      tags.renderer.findByTestId("tag-field")?.id ?? -1,
+    );
+    tags.renderer.flush();
+
+    expect(tags.renderer.findByTestId("tags")?.style.boxShadow).toBeUndefined();
+
+    tags.unmount();
+  });
 });

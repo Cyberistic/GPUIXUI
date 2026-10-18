@@ -88,7 +88,9 @@ see [Theming](/docs/theming).
 ## Accessibility
 
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
-`aria-disabled` semantics (plan 516).
+`aria-disabled` semantics (plan 516). A disabled field is also read-only, leaves
+the tab order (`tabIndex -1`), ignores `autoFocus` and paints no focus ring, so it
+never looks editable or focused (plan 527).
 
 - The field is a real input named by `label`, so typing, selection and focus are
   native.
@@ -116,11 +118,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (17 tests):
 opening, narrowing, arrow movement, Enter insertion, row presses, Escape from the
 field and from a focused row, one surface per Escape inside a dialog,
 no-match closing, the two callbacks firing once, a focused row's ring, the group
-ring a field's `autoFocus` seeds, a disabled field, and the caller's
+ring a field's `autoFocus` seeds, a disabled field that ignores `autoFocus`, stays
+out of the tab order and paints no ring, and the caller's
 `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the component's
 own action.
 
