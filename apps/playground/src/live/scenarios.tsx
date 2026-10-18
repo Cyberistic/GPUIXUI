@@ -51,6 +51,7 @@ import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
 import { queryBuilderScenario } from "../scenarios/query-builder.js";
+import { notificationCentreScenario } from "../scenarios/notification-centre.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3991,6 +3992,162 @@ const queryBuilder: LiveScenario = {
     }),
 };
 
+const notificationCentre: LiveScenario = {
+  id: "live-notification-centre",
+  title: "Live notification centre: unread state, keyboard and prepend stability",
+  capability: "notification",
+  view: notificationCentreScenario.view,
+  ready: "nc-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // A closed centre: a badge, a label, no panel.
+      yield* ctx.expectEqual(
+        "the live badge counts unread",
+        yield* textOf(ctx, "nc-badge"),
+        "3",
+      );
+      const closed = yield* ctx.host.bounds("nc-panel");
+      yield* ctx.expectEqual("the live panel starts closed", closed === null, true);
+
+      // A real click opens a panel anchored to the bell and focused.
+      yield* ctx.host.click("nc-bell");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "open=true");
+      const panel = yield* boxOf(ctx, "nc-panel");
+      const bell = yield* boxOf(ctx, "nc-bell");
+      yield* ctx.expectNear(
+        "the live panel meets the bell's right edge",
+        panel.x + panel.width,
+        bell.x + bell.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live panel starts under the bell",
+        panel.y,
+        bell.y + bell.height + 8,
+        1,
+      );
+      yield* waitForFocus(ctx, "nc-panel");
+      yield* ctx.expectEqual(
+        "the live panel owns focus",
+        yield* focusedOf(ctx),
+        "nc-panel",
+      );
+      const listView = yield* boxOf(ctx, "nc-listview");
+      const first = yield* boxOf(ctx, "nc-row-6");
+      yield* ctx.expectNear(
+        "the live first row sits under the header",
+        first.y,
+        listView.y + 24,
+        1,
+      );
+
+      // A click marks read once; Escape closes and returns focus.
+      yield* ctx.host.click("nc-row-6");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "unread=2");
+      yield* ctx.expectEqual(
+        "the live badge follows the read",
+        yield* textOf(ctx, "nc-badge"),
+        "2",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "open=false");
+      yield* waitForFocus(ctx, "nc-bell");
+      yield* ctx.expectEqual(
+        "the live Escape returns focus to the bell",
+        yield* focusedOf(ctx),
+        "nc-bell",
+      );
+
+      // Reopening keeps the read flags; mark-all unpaints the badge.
+      yield* ctx.host.click("nc-bell");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "unread=2");
+      yield* ctx.host.click("nc-mark-all");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "unread=0");
+      const noBadge = yield* ctx.host.bounds("nc-badge");
+      yield* ctx.expectEqual("zero unread paints no live badge", noBadge === null, true);
+
+      // An arrival while closed increments the badge; opening shows it first.
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.host.click("nc-arrive");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "unread=1 items=7");
+      yield* ctx.host.click("nc-bell");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "open=true");
+      const arrived = yield* boxOf(ctx, "nc-row-7");
+      yield* ctx.expectNear(
+        "the live arrival is first",
+        arrived.y,
+        listView.y + 24,
+        1,
+      );
+
+      // An arrival at the top stays at the top.
+      yield* ctx.host.click("nc-simulate");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "unread=2 items=8");
+      const newest = yield* boxOf(ctx, "nc-row-8");
+      yield* ctx.expectNear(
+        "the live newest arrival is first",
+        newest.y,
+        listView.y + 24,
+        1,
+      );
+
+      // The prepend: a scrolled reader keeps their row.
+      yield* ctx.host.scrollToItem("nc-list", 2, 0);
+      yield* settle;
+      yield* waitForAnchor(ctx, "nc-list", "2,0");
+      const kept = yield* boxOf(ctx, "nc-row-7");
+      yield* ctx.expectNear(
+        "the live reader's row starts at the top",
+        kept.y,
+        listView.y,
+        1,
+      );
+      yield* ctx.host.click("nc-simulate");
+      yield* settle;
+      yield* waitForAnchor(ctx, "nc-list", "3,0");
+      const stillKept = yield* boxOf(ctx, "nc-row-7");
+      yield* ctx.expectNear(
+        "the live reader's row did not move",
+        stillKept.y,
+        kept.y,
+        1,
+      );
+      const above = yield* ctx.host.bounds("nc-row-9");
+      yield* ctx.expectEqual(
+        "the row above the live reader is unpainted",
+        above === null,
+        true,
+      );
+
+      // Clear paints the empty state; an outside press dismisses.
+      yield* ctx.host.click("nc-clear");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "items=0");
+      yield* boxOf(ctx, "nc-empty");
+      yield* ctx.host.click("nc-content");
+      yield* settle;
+      yield* waitForText(ctx, "nc-state", "open=false");
+      yield* ctx.expectContains(
+        "the live outside press keeps the state",
+        yield* textOf(ctx, "nc-state"),
+        "unread=0 items=0",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${notificationCentre.id}.png`,
+      );
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -4028,4 +4185,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   multiPaneEditor,
   dataToolbar,
   queryBuilder,
+  notificationCentre,
 ];

@@ -68,6 +68,7 @@ export const CAPABILITIES = [
   "editor",
   "data-toolbar",
   "query",
+  "notification",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

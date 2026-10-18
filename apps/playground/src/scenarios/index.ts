@@ -63,6 +63,7 @@ import { appChromeScenario } from "./app-chrome.js";
 import { multiPaneEditorScenario } from "./multi-pane-editor.js";
 import { dataToolbarScenario } from "./data-toolbar.js";
 import { queryBuilderScenario } from "./query-builder.js";
+import { notificationCentreScenario } from "./notification-centre.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
@@ -153,6 +154,7 @@ export const PROBE_CAPABILITIES = [
   "editor",
   "data-toolbar",
   "query",
+  "notification",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -197,6 +199,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   multiPaneEditorScenario,
   dataToolbarScenario,
   queryBuilderScenario,
+  notificationCentreScenario,
   propertyPanelScenario,
   shortcutScenario,
   themeColorRolesScenario,
