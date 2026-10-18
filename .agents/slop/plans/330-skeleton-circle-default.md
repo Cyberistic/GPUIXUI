@@ -136,7 +136,7 @@ it("paints a bare circle Skeleton as a square", async () => {
 | 1 | `nub run --filter @gpuixui/primitives test -- loading` **before** the change | the new core case fails: `expected "100%" to be 18` |
 | 2 | `nub exec vitest run --config vitest.runtime.config.ts runtime/loading.runtime.test.tsx -t "bare circle"` **before** the change | `expected 1256 to be 18` (the surface's content width) |
 | 3 | apply §4.1–§4.3 | — |
-| 4 | `nub run test` | 40 files, 524 tests green |
+| 4 | `nub run test` | 40 files, 523 tests green |
 | 5 | `nub run test:runtime` | 21 files, 316 tests green |
 | 6 | `nub run check` | every gate green |
 
@@ -160,17 +160,27 @@ it("paints a bare circle Skeleton as a square", async () => {
 
 | Mutation | Result |
 | -------- | ------ |
-| the old `width: spec.width ?? "100%"` | the core case fails (`expected '100%' to be 18`) and the runtime case fails (`expected 1256 to be 18`) |
-| `width: spec.width ?? height` for every skeleton (circle ignored) | the `skeletonStyle > takes width, height and radius…` / plain-block case fails: a plain skeleton painted 18 px instead of spanning its parent |
+| the old `width: spec.width ?? "100%"` | the core case fails: `expected '100%' to be 18`; the runtime case fails: `expected 1256 to be 18` (the surface's content width) |
+| `width: spec.width ?? height` for every skeleton (circle ignored) | the same test fails on its last assertion: `expected 18 to be '100%'` — a plain skeleton stopped spanning its parent |
 
 ### 8.2 After the fix
 
 ```
 nub run --filter @gpuixui/primitives test
   Test Files  40 passed (40)
-       Tests  524 passed (524)
+       Tests  523 passed (523)
 
 nub run --filter @gpuixui/primitives test:runtime
   Test Files  21 passed (21)
        Tests  316 passed (316)
+
+nub run check
+  tests: every test asserts something, and nothing asserts itself
+  oxlint: no findings
+  oxfmt: All matched files use the correct format.
+  check-types: every workspace Done
+
+nub run test
+  tokens 196, testing 19, icons 19, playground 11, components 308,
+  primitives 523 — all green
 ```
