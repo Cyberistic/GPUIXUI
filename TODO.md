@@ -1120,6 +1120,15 @@ inside the box overflowed it; the three rules now subtract the control's or
 field's two borders and, for the chip, the field's horizontal
 `controlPaddingX.md` padding, every shipped set still fits (16 in 24/28/32; 80
 in 200) so no value moves, and four new cases fail without the bounds (plan 384)
+`[~]` Hold a copied theme's family names to the form the runtime reads — the
+docs state that GPUix 0.10.0's `StyleDesc.fontFamily` is one string, so a family
+is never a CSS comma stack, but that was held only for the shipped
+`platformTypes` table: `sans: "Inter, system-ui, sans-serif"`, `""` and `"   "`
+all returned `[]` from the colour, contrast and metric checks, so every label
+painted the system fallback while the guarantee said the theme was good;
+`themeTypefaceFailures` is the fourth check, `themeFailures` composes it in
+colour → typeface → contrast → metric order, and every shipped set passes, so no
+family moves (plan 385)
 
 ## Phase C — Tier 1–2 components
 

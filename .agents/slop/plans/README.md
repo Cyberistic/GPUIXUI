@@ -179,6 +179,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [382](./382-accent-fill-selection.md) | The accent family's text selection on its filled action | F | 097, 327, 344, 381 | done |
 | [383](./383-total-theme-check.md) | One total check for an edited theme | F | 071, 073, 358, 371, 380 | done |
 | [384](./384-content-box-fit.md) | A size that must fit must fit the content box | F | 353, 358, 360, 365, 372 | done |
+| [385](./385-typeface-contract.md) | The typeface half of an editable theme | F | 011, 051, 070, 324, 358, 371, 383 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1634,6 +1635,24 @@ so the check reports the metric a reader must raise. Every shipped set fits
 comfortably (16 in 24/28/32; 80 in 200), so no token value moves; the four new
 cases fail without the bounds and `metrics.test.ts`'s icon case moves from the
 removed `at-most` rule to the density member.
+
+385 closes the last documented form the three checks never read. `docs/tokens.md`
+states that GPUix 0.10.0's `StyleDesc.fontFamily` is a **single** string, not a
+CSS stack, "so an entry never contains a comma; a family the machine does not
+have falls back silently" — but that was held only for the shipped
+`platformTypes` table. A probe over an edited theme returned `[]` from
+`themeColorFailures`, `themeContrastFailures`, `themeMetricFailures` and
+`themeFailures` for `sans: "Inter, system-ui, sans-serif"` (the CSS habit every
+consumer brings), for `""` and for `"   "`. A comma stack is one family name to
+GPUI, no machine has it, and every label paints the system fallback while the
+guarantee says the theme is good. `themeTypefaceFailures(theme)` is the fourth
+check: it reports a family that misses `non-empty` or `single-family`, for both
+`sans` and `mono`, with `typefaceRoles` and `typefaceRules` as the ordered
+indexes. `themeFailures` composes it in colour → typeface → contrast → metric
+order, because a malformed family belongs beside the malformed role and before
+the measurements painted with it. A name with spaces inside (`Helvetica Neue`)
+and the `.SystemUIFont` sentinel pass; every shipped identity theme, platform
+variant and recipe passes, so no family moves.
 
 ### Reference adoption (block `200–299`)
 
