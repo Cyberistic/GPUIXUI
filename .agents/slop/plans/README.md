@@ -114,6 +114,7 @@ workstream declares in its own section below.
 | [338](./338-package-surface-and-performance.md) | Package surface truth and a performance baseline: explicit exports, manifest check, measured large-list cost | F | 110, 117, 330, 336, 337 | done — wildcard exports removed (42 modules + `validation/logic`), 6 export + 3 manifest checks, `test:perf` records the 1,000-row cost (unit 348, behaviour 517); both-direction proof |
 | [339](./339-list-row-subscriptions.md) | List row subscriptions: a focus move repaints the rows that changed | F | 111, 120, 125, 130, 134, 338 | done — per-row mask store + stable context; style-count test fails with all 6 fixture rows on the old code and passes with 2; List 39, behaviour 518; wall clock measured, noise documented |
 | [340](./340-combobox-async-options.md) | Combobox async options: expose the query, let the caller filter, show loading | C/F | 110, 116, 138, 302, 323, 328, 338 | done — `onQueryChange` / `shouldFilter` / `loading`; 2 logic + 4 native tests (unit 356, behaviour 522), both-direction proof |
+| [365](./365-carousel-hiding.md) | Carousel hides inactive slides in the real runtime (`display: none` is a no-op in 0.10.0) | F | 110, 117, 315, 326, 338 | planned — measured defect: all slides paint and an inactive slide takes the click |
 
 Interlocks this workstream depends on and does not own:
 
