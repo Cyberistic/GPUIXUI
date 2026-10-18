@@ -643,6 +643,18 @@ shape. The TagInput chip is the clearest case: it paints on the field's own
 the surface floor on all four panels (1.064–1.133:1), or the chip can keep
 `muted` and paint the designed `border` edge (owner: `components`; found while
 auditing plans 328 and 338)
+`[ ]` Cross-team: `components` gives the selected `Tabs` trigger a perceivable
+fill in the high-contrast light theme — `tabs.tsx` paints
+`backgroundColor: theme.colors.card` on the list's `theme.colors.background`,
+and both roles are `#FFFFFF` at AAA light, so the selected tab measures
+**1.000:1** and the only other signal is the label (`foreground` vs
+`mutedForeground`, 1.27:1), under the 3:1 non-text floor. The designed
+`accent`/`selected` fills (1.27:1 on that canvas) join
+`stateFillSurfacePairs`, or the trigger can paint a `borderStrong` edge; the
+AAA dark set already clears the floor at 1.08:1. A `card`-on-`background` pair
+is deliberately not added to the contract: a raised card is carried by its
+border in the AAA palettes, and the tabs trigger is the composition that paints
+no border (owner: `components`; found while auditing plan 338)
 `[ ]` Cross-team: `primitives` and `components` read the old elevation shape —
 `theme.elevation.md[0].color` in `core/style.test.ts` and their theme fixtures —
 and must use `elevationShadow(theme, level).color`; a custom level is now
