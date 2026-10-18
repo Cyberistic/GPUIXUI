@@ -12,7 +12,8 @@
  * tab order to one stop per field. PageUp/PageDown page. The caret keys are the
  * native editor's: GPUix consumes Left/Right/Home/End on key down before a
  * component handler sees them (measured, plan 338), so the field neither steps
- * on them nor offers a bound jump.
+ * on them nor offers a bound jump. Enter arrives as the host's `submit`
+ * (measured, plan 339): the draft commits there, then the caller's `onSubmit`.
  */
 
 import { useRef, useState, type ReactElement } from "react";
@@ -59,6 +60,11 @@ export interface NumberFieldProps {
   readonly defaultValue?: number;
   /** Called with the clamped value after a valid edit or a step. */
   readonly onValueChange?: (value: number) => void;
+  /**
+   * Enter: the draft is committed and reformatted before this is called. The
+   * host reports Enter as a `submit` on a single-line field (plan 339).
+   */
+  readonly onSubmit?: (event: EventPayload) => void;
   /** No lower bound when omitted. */
   readonly min?: number;
   /** No upper bound when omitted. */
@@ -176,15 +182,15 @@ export const renderNumberField = (
         }}
         onKeyDown={(event: EventPayload) => {
           if (disabled) return;
-          const key = event.key ?? "";
-          if (key === "enter") {
-            handlers.onCommit();
-            return;
-          }
-          Option.match(decideNumberKey(state.current, range, key), {
+          Option.match(decideNumberKey(state.current, range, event.key ?? ""), {
             onNone: () => {},
             onSome: handlers.onValue,
           });
+        }}
+        onSubmit={(event: EventPayload) => {
+          if (disabled) return;
+          handlers.onCommit();
+          props.onSubmit?.(event);
         }}
         onFocus={focus.onFocus}
         onBlur={() => {

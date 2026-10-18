@@ -273,7 +273,9 @@ that paints a square rather than a full-width pill (plan 330), and a
 native focus across the disable, and then act no more, with fifteen controls
 painting no ring once disabled (plan 332), and a number field whose
 `ArrowLeft`/`ArrowRight`/`Home`/`End` were measured to move the native caret and
-report no value, while Up/Down/PageUp/PageDown still step (plan 338).
+report no value, while Up/Down/PageUp/PageDown still step (plan 338), and a
+number field whose Enter commits `1.5` to `1.50` before calling the caller's
+`onSubmit` (plan 339).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

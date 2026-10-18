@@ -32,5 +32,11 @@ export const changeEvent = (value: string): EventPayload => ({
   value,
 });
 
+/** A single-line field's Enter, which the runtime reports as a submit. */
+export const submitEvent = (): EventPayload => ({
+  elementId: 0,
+  eventType: "submit",
+});
+
 /** The underline of a full report: exercise a handler the way the runtime would. */
 export const clickEvent: EventPayload = { elementId: 0, eventType: "click" };

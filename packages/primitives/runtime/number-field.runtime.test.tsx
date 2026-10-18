@@ -191,6 +191,65 @@ it.each(Arr.map(CARET_KEYS, (testCase) => [testCase.key, testCase] as const))(
   },
 );
 
+it("commits and reformats the draft on Enter", async () => {
+  // The bug guarded (plan 339): the field handled Enter in `onKeyDown`, but an
+  // `<input>` consumes that key down and reports a `submit` instead — measured,
+  // `1.5` with `precision={2}` stayed `1.5` after Enter. The draft now commits
+  // through the host's submit.
+  const runtime = await mount(
+    <NumberField testId="nf" label="Amount" autoFocus precision={2} />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.type("1 . 5");
+  expect(runtime.paintedText()).toContain("1.5");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "enter");
+  runtime.flush();
+  expect(runtime.paintedText()).toContain("1.50");
+});
+
+it("calls the caller's onSubmit once on Enter", async () => {
+  const submits: string[] = [];
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      autoFocus
+      precision={2}
+      onSubmit={() => submits.push("submit")}
+    />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.type("1 . 5");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual(["submit"]);
+  expect(runtime.paintedText()).toContain("1.50");
+});
+
+it("ignores Enter while disabled", async () => {
+  const submits: string[] = [];
+  const field = recorder();
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Amount"
+      disabled
+      defaultValue={1.5}
+      precision={2}
+      onValueChange={field.onValueChange}
+      onSubmit={() => submits.push("submit")}
+    />,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual([]);
+  expect(field.values).toStrictEqual([]);
+});
+
 it("steps a decimal field to an exact decimal", async () => {
   const field = recorder();
   const runtime = await mount(

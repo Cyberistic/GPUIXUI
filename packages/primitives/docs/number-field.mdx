@@ -34,6 +34,7 @@ its record without remounting the field.
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | none | start value; the field shows empty without one |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
+| `onSubmit` | `(event) => void` | — | Enter: the draft is committed and reformatted first |
 | `min` / `max` | `number` | none | bound the value; absent means unbounded |
 | `step` | `number` | `1` | arrow step |
 | `precision` | `number` | `0` | decimals shown on commit |
@@ -66,7 +67,12 @@ remains a display rule — it never rounds the value a caller receives.
 | `ArrowUp` | + one step |
 | `ArrowDown` | − one step |
 | `PageUp` / `PageDown` | ± ten steps |
-| `Enter` | commit and reformat |
+| `Enter` | commit, reformat, then call `onSubmit` |
+
+`Enter` reaches the field as the host's **`submit`**, not as a key event — the
+editor consumes the key down (measured, plan `339`). The draft is committed and
+reformatted before the caller's `onSubmit` runs, so `1.5` becomes `1.50` with
+`precision={2}` and an app can save or advance on the same gesture.
 
 `ArrowLeft`, `ArrowRight`, `Home` and `End` move the **native caret**. GPUix
 0.10.0 consumes those key downs inside the editor before a component handler
@@ -135,16 +141,17 @@ after the wrapper's chrome:
   stepping, the caret keys left unhandled, and an exact decimal step (plans
   `077`, `338`).
 - `src/components/NumberField.test.tsx` — the draft value, the delivered key
-  contract, the raw edit report, steppers as presentation, one tab stop,
-  disabled/invalid.
+  contract, submit-then-caller ordering, the raw edit report, steppers as
+  presentation, one tab stop, disabled/invalid.
 - `runtime/number-field.runtime.test.tsx` — real typing through the native input
   reports `12`; `1.5` with `precision={2}`; `999` against `max=100` reports
   `100`; arrow/PageDown step; a decimal step reports `0.3` (not binary noise);
   `ArrowLeft`/`ArrowRight`/`Home`/`End` move the caret and report no value (plan
-  `338`); a hit-tested stepper press steps and refocuses; the chrome ring paints
-  from mount with `autoFocus`; a disabled field refuses text, keys and clicks.
-  Measured 2026-10-17 (plans 054 §9, 064 §6 and 077 §7) and 2026-10-18 (plan
-  `338`).
+  `338`); `Enter` commits the draft to `1.50` and calls `onSubmit` once, and a
+  disabled field does neither (plan `339`); a hit-tested stepper press steps and
+  refocuses; the chrome ring paints from mount with `autoFocus`; a disabled field
+  refuses text, keys and clicks. Measured 2026-10-17 (plans 054 §9, 064 §6 and
+  077 §7) and 2026-10-18 (plans `338`, `339`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

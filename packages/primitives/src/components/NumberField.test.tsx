@@ -20,7 +20,7 @@ import {
   type NumberFieldProps,
 } from "./NumberField.js";
 import type { FocusState } from "./internal.js";
-import { changeEvent, keyEvent } from "./testing/event.js";
+import { changeEvent, keyEvent, submitEvent } from "./testing/event.js";
 import {
   elementChildren,
   expectSome,
@@ -99,8 +99,33 @@ describe("NumberField", () => {
     expect(onValue).toHaveBeenCalledWith(60);
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("pagedown"));
     expect(onValue).toHaveBeenCalledWith(40);
-    expectSome(hostHandler(input, "onKeyDown"))(keyEvent("enter"));
+    expect(onValue).toHaveBeenCalledTimes(4);
+  });
+
+  it("commits on the host's submit, then calls the caller", () => {
+    // Measured (plan 339): an `<input>` consumes Enter's key down and reports a
+    // `submit` instead — the keydown branch never ran, so Enter never committed.
+    const order: string[] = [];
+    const onSubmit = vi.fn(() => order.push("caller"));
+    const onCommit = vi.fn(() => order.push("commit"));
+    const { input } = partsOf(
+      render({ onSubmit }, 50, "50", idle, { onCommit }),
+    );
+    expectSome(hostHandler(input, "onSubmit"))(submitEvent());
     expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(order).toStrictEqual(["commit", "caller"]);
+  });
+
+  it("ignores submit while disabled", () => {
+    const onCommit = vi.fn();
+    const onSubmit = vi.fn();
+    const { input } = partsOf(
+      render({ disabled: true, onSubmit }, 50, "50", idle, { onCommit }),
+    );
+    expectSome(hostHandler(input, "onSubmit"))(submitEvent());
+    expect(onCommit).toHaveBeenCalledTimes(0);
+    expect(onSubmit).toHaveBeenCalledTimes(0);
   });
 
   it("leaves the caret keys unhandled", () => {

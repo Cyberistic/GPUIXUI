@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 86/86
+`[x]` `[██████████]` 87/87
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -688,6 +688,14 @@ retired once both branches are one
       exist. The contract is now exactly the delivered keys
       (`Up`/`Down`/`PageUp`/`PageDown`/`Enter`), the dead rule and its assertions
       are gone, and the docs state the missing bound shortcut (plan `338`).
+
+`[x]` `packages/primitives`: **`NumberField`'s Enter never committed** — measured
+      (2026-10-18): an `<input>` consumes Enter's key down, so the
+      `key === "enter"` branch never ran; `1.5` with `precision={2}` stayed
+      `1.5` after Enter and only a blur reformatted it. The field now commits
+      through the host's `onSubmit` (commit → caller) and exposes `onSubmit`;
+      a disabled field does neither. Measured: Enter paints `1.50`, the caller's
+      handler runs once (plan `339`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
