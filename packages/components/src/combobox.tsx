@@ -158,6 +158,13 @@ export interface ComboboxProps {
    */
   readonly onQueryChange?: (query: string) => void;
   /**
+   * Milliseconds to wait after the last edit before reporting it, so a remote
+   * source is asked once for `"cal"` instead of once per keystroke. Default `0`
+   * reports every edit. Opening reports `""` immediately and a close drops a
+   * pending report, so a request is never made for text the user abandoned.
+   */
+  readonly debounce?: number;
+  /**
    * Default `true`. `false` shows `options` exactly as given (membership and
    * order), for a caller that filters remotely.
    */
@@ -234,6 +241,7 @@ export const Combobox = ({
   multiple = false,
   disabled = false,
   onQueryChange,
+  debounce: debounceProp = 0,
   shouldFilter = true,
   loading = false,
   onCreate,
@@ -249,6 +257,38 @@ export const Combobox = ({
   const wasOpen = useRef(false);
   const dismissedByOutsidePress = useRef(false);
   const close = useRef<() => void>(() => undefined);
+
+  // `onQueryChange` is reported through a debounce when the caller asks for one
+  // (plan 541). The callback is read from a ref so a pending timer never calls a
+  // stale closure, and a close or unmount drops the pending report.
+  const debounce = Number.isFinite(debounceProp)
+    ? Math.max(0, Math.trunc(debounceProp))
+    : 0;
+  const queryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onQueryChangeRef = useRef(onQueryChange);
+  useLayoutEffect(() => {
+    onQueryChangeRef.current = onQueryChange;
+  });
+  const cancelPendingQuery = useCallback(() => {
+    if (queryTimer.current === null) return;
+    clearTimeout(queryTimer.current);
+    queryTimer.current = null;
+  }, []);
+  const reportQuery = useCallback(
+    (next: string, immediate: boolean) => {
+      cancelPendingQuery();
+      if (immediate || debounce === 0) {
+        onQueryChangeRef.current?.(next);
+        return;
+      }
+      queryTimer.current = setTimeout(() => {
+        queryTimer.current = null;
+        onQueryChangeRef.current?.(next);
+      }, debounce);
+    },
+    [cancelPendingQuery, debounce],
+  );
+  useLayoutEffect(() => cancelPendingQuery, [cancelPendingQuery]);
 
   // The list is the scroll viewport. `scrollIntoView` would scroll to its group
   // wrapper, so the row and the list are measured and the list is scrolled to a
@@ -323,6 +363,7 @@ export const Combobox = ({
   // render: a re-push would put this popup above a surface opened after it.
   useLayoutEffect(() => {
     close.current = () => {
+      cancelPendingQuery();
       setOpen(false);
       setQuery("");
     };
@@ -365,7 +406,7 @@ export const Combobox = ({
             optionOf(options, value),
             (option) => option.disabled === true,
           ),
-        noteQueryChange: (next) => onQueryChange?.(next),
+        noteQueryChange: (next) => reportQuery(next, false),
         trigger,
         registerTrigger: (instance) => {
           trigger.current = instance;
@@ -432,7 +473,7 @@ export const Combobox = ({
             }
             restoreFocus.current = false;
             setQuery("");
-            onQueryChange?.("");
+            reportQuery("", true);
             setOpen(true);
             return;
           }
@@ -952,7 +993,7 @@ export const comboboxMeta = {
     "selection yields option values, never labels",
     "a heading follows a contiguous run of equal `group` values: interleaving a group produces two headings",
     "no aria-activedescendant in 0.10.0: the highlighted row is visual while the input keeps focus",
-    "no built-in debounce: onQueryChange fires per edit, so the caller debounces and cancels its own request",
+    "no built-in request cancellation: debounce collapses a burst of edits, but a reply already in flight still lands, so the caller drops stale responses",
     "no separate loading row: while loading with nothing shown, the empty slot says Loading… (stale rows stay visible)",
     'the popup placement is corrected by the component: the runtime snaps but does not flip, and align="center" is measured from the trigger',
   ],

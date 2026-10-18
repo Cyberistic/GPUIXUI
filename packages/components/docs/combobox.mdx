@@ -174,6 +174,7 @@ props hand the search over, and one reports that rows are on their way.
 | Prop | Meaning |
 | ---- | ------- |
 | `onQueryChange?: (query: string) => void` | `""` when the popup opens, then once per edit the user types. The label a selection writes back into the field is **never** reported. |
+| `debounce?: number` | Milliseconds to wait after the last edit before reporting it. Default `0` reports every edit. Opening still reports `""` at once, and closing drops a report that has not fired. |
 | `shouldFilter?: boolean` | Default `true`. `false` shows `options` exactly as given — membership and order — so the caller's result is not re-filtered or re-ranked. |
 | `loading?: boolean` | Default `false`. While no row is shown, the default `ComboboxEmpty` text reads `Loading…` instead of `No matches`. |
 
@@ -200,11 +201,12 @@ const [pending, setPending] = useState(false);
 </Combobox>;
 ```
 
-The component never fetches, debounces or cancels a request. `onQueryChange`
-fires once per edit, so a caller with a network round trip debounces it and
-drops stale responses itself. `loading` only changes the empty slot: a caller
-that keeps the previous rows visible while the next request is in flight gets
-no built-in indicator, and should render its own.
+The component never fetches and never cancels a request. `debounce` collapses a
+burst of keystrokes into one report, so a server sees `"cal"` rather than `"c"`
+and `"ca"`; the caller still drops stale responses itself, because a reply that
+is already in flight cannot be recalled. `loading` only changes the empty slot:
+a caller that keeps the previous rows visible while the next request is in
+flight gets no built-in indicator, and should render its own.
 
 The `examples/combobox.example.tsx` directory picker is this shape: the example
 filters a local array in `onQueryChange`, which is where a request would go.
@@ -242,7 +244,7 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
+| `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `debounce?: number` (default `0`), `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
 | `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
@@ -279,8 +281,9 @@ same shape for a row composed by hand.
 - Group headings follow contiguous runs of equal `group` values; a caller that
   interleaves a group gets two headings. Create-new is a synchronous caller
   callback (`onCreate`), not a persistence layer.
-- No built-in debounce or request cancellation: `onQueryChange` fires per edit
-  and the caller owns the transport ([Remote options](#remote-options)).
+- No request cancellation: `debounce` collapses a burst of edits into one
+  report, but a request that is already in flight still lands, so the caller
+  drops stale responses ([Remote options](#remote-options)).
 - No separate loading row: `loading` changes the empty slot only. Rows kept
   visible from the previous query stay on screen until the caller replaces them.
 - The popup is an anchored layer, not a portal. The runtime snaps it inside the
@@ -296,7 +299,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (39 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (41 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), a centred popup and a near-bottom popup that opens above its
 trigger, the trigger exposed as a button with its expanded state, filtering,
@@ -311,7 +314,9 @@ press — a caller-supplied empty state, the trigger's placeholder/name coming
 from the part, the create row: its position after the matches, its absence
 for an exact option, Enter and pointer selection with focus return, multiple
 selection without the sentinel, and a caller-supplied label — plus the reported
-query (including that a selection's label write is not reported), caller-owned
+query (including that a selection's label write is not reported and that a
+`debounce` collapses a burst into its last query while a close drops a pending
+one), caller-owned
 filtering, a caller replacing the options for a query, the loading empty
 state in both directions, and the grouping contract: one heading per contiguous
 run in declaration order (with a named `role="group"`), in-run ranking that

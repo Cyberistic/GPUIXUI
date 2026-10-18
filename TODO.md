@@ -181,6 +181,7 @@ retired once both branches are one
     - [x] `src/behaviour/theme-matrix.test.tsx`: the both-theme matrix for the 11 components without one
     - [x] Six records corrected from `gpuixSupport: "yes"` to `partial` where the runtime lacks the ARIA surface or a keyboard path
   - Tier 2 hardening after the inventory closed (plans 120+)
+    - [x] Combobox `debounce`: one query per burst, never one the user abandoned — plan 541; the optional window collapses a burst of edits into its last query while opening stays immediate and a close drops a pending report; 2 native tests (Combobox 41, behaviour 658), both-direction proof; example, docs and `COMPONENTS.md` synced
     - [x] Form and multi-step form re-check after an edit (`revalidate`) — plan 397; 5 pure + 7 native tests, both-direction proof (unit 395, behaviour 626); docs, examples, `COMPONENTS.md` and inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121

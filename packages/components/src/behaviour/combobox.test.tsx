@@ -76,6 +76,7 @@ const Picker = ({
   onCreate,
   createLabel,
   onQueryChange,
+  debounce,
   shouldFilter,
   loading,
   optionList,
@@ -91,6 +92,7 @@ const Picker = ({
   readonly onCreate?: (query: string) => void;
   readonly createLabel?: (query: string) => string;
   readonly onQueryChange?: (query: string) => void;
+  readonly debounce?: number;
   readonly shouldFilter?: boolean;
   readonly loading?: boolean;
   readonly optionList?: ReadonlyArray<ComboboxOption>;
@@ -100,6 +102,7 @@ const Picker = ({
       onCreate={onCreate}
       createLabel={createLabel}
       onQueryChange={onQueryChange}
+      debounce={debounce}
       shouldFilter={shouldFilter}
       loading={loading}
       options={
@@ -248,6 +251,11 @@ const settle = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
+};
+
+/** Wait past a debounce window on the real clock (the suite has no fake timers). */
+const wait = async (ms: number): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 /** Open the dialog's combobox, then settle. */
@@ -779,6 +787,54 @@ describe("Combobox", () => {
     await settle();
 
     expect(onQueryChange.mock.calls).toEqual([[""], ["c"], ["ca"]]);
+
+    picker.unmount();
+  });
+
+  it("reports one query for a burst of edits when the caller debounces", async () => {
+    const onQueryChange = vi.fn();
+    const picker = renderComponent(
+      <Picker onQueryChange={onQueryChange} debounce={120} />,
+    );
+    await open(picker);
+
+    // Opening is not an edit: the empty query is reported at once, so a remote
+    // source can start loading before the user has typed.
+    expect(onQueryChange.mock.calls).toEqual([[""]]);
+
+    type(picker, "ca");
+    await settle();
+    // Inside the window nothing is reported yet, or the debounce did nothing.
+    expect(onQueryChange.mock.calls).toEqual([[""]]);
+
+    await wait(200);
+    expect(onQueryChange.mock.calls).toEqual([[""], ["ca"]]);
+
+    picker.unmount();
+  });
+
+  it("drops a pending query when an option is chosen inside the window", async () => {
+    const onQueryChange = vi.fn();
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker
+        onQueryChange={onQueryChange}
+        onValueChange={onValueChange}
+        debounce={120}
+      />,
+    );
+    await open(picker);
+
+    type(picker, "ca");
+    await settle();
+    picker.renderer.simulateKeystrokes("enter");
+    await settle();
+    await wait(200);
+
+    // The selection's label write is not a query, and the abandoned edit must
+    // not reach the caller after the popup has closed.
+    expect(onQueryChange.mock.calls).toEqual([[""]]);
+    expect(onValueChange).toHaveBeenCalledWith("calendar");
 
     picker.unmount();
   });

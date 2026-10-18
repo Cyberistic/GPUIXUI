@@ -69,7 +69,10 @@ const directory: ReadonlyArray<ComboboxOption> = [
   { value: "alan", label: "Alan Turing", description: "Research" },
 ];
 
-/** Stand-in for a server search: the component never fetches or debounces. */
+/**
+ * Stand-in for a server search: the component never fetches, and the picker's
+ * `debounce` is what keeps this from being called once per keystroke.
+ */
 const searchDirectory = (query: string): ReadonlyArray<ComboboxOption> => {
   const needle = query.trim().toLowerCase();
   return needle === ""
@@ -231,6 +234,7 @@ export const ComboboxExample = () => {
           <Combobox
             options={remoteRows}
             shouldFilter={false}
+            debounce={150}
             onQueryChange={(query) => setRemoteRows(searchDirectory(query))}
             onValueChange={(value) =>
               setRemote(typeof value === "string" ? value : null)
