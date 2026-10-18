@@ -26,7 +26,7 @@ const theme = useTheme();
 
 | Export | What it is |
 | ------ | ---------- |
-| `Icon` | the component: `name`, `color`, `size?`, `label?`, `testId?` |
+| `Icon` | the component: `name`, `color`, `size?`, `label?`, `testId?`, `style?` |
 | `ICON_NAMES` / `IconName` | every name, sorted; the source of truth for which icons exist |
 | `icons` | markup by name, for a library that renders the `<svg>` itself |
 | `ICON_SIZES` / `iconPixels` | the `xs`…`xl` scale and its resolver |
@@ -40,8 +40,12 @@ Two rules the component enforces, because both are silent bugs otherwise:
   accessibility node; only a `label` promotes it to `role="img"`. An icon that
   announces itself inside a button makes the button read twice.
 
-The rendered `<svg>` also sets `pointerEvents: "none"`, so an icon inside a
-control cannot swallow the press meant for the control.
+The rendered `<svg>` also sets `pointerEvents: "none"` by default, so an icon
+inside a control cannot swallow the press meant for the control.
+
+`Icon` takes the same `style` prop as every primitive, merged **last**: use it to
+nudge an icon onto a baseline (`style={{ marginTop: 2 }}`) or to override the
+paint deliberately. `style` never changes the role or the name.
 
 ## Sizes
 
@@ -79,8 +83,9 @@ See `LICENSES/` for the attribution record.
 
 ## Verification status
 
-The registry, sizing and `Icon`'s accessibility/props contract are covered by
-executable tests (`nub run --filter @gpuixui/icons test`).
+The registry, sizing, `Icon`'s accessibility/props contract and the icon page's
+API and size tables are covered by executable tests
+(`nub run --filter @gpuixui/icons test`).
 
 **Verified in the real GPUix runtime** by
 `packages/primitives/runtime/icons.runtime.test.tsx`, which runs with
@@ -89,6 +94,8 @@ package that consumes icons — see plan 041 §2.2). Measured 2026-10-17:
 
 - the raw `<svg source>` markup is painted: at `lg` the box is 20×20, at `xl`
   24×24;
+- a caller `style` reaches the paint: `marginLeft: 12` moves the mark exactly 12
+  pixels;
 - a decorative icon is absent from the accessibility tree, and a labelled one is
   an `Image` node carrying its name;
 - `style.color` tints the painted mark: two captures of the same red icon are

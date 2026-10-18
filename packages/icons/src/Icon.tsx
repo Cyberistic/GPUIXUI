@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import type { SvgProps } from "@gpuix/react";
+import type { StyleDesc, SvgProps } from "@gpuix/react";
 import { icons } from "./registry.js";
 import type { IconName } from "./names.js";
 import { iconPixels, type IconSize } from "./sizes.js";
@@ -23,6 +23,12 @@ export interface IconProps {
   label?: string;
   /** Stable locator for automation. */
   testId?: string;
+  /**
+   * Extra paint or layout, merged last — the same caller-style contract as
+   * every primitive. Use it to nudge an icon onto a text baseline; overriding
+   * only `width` stretches the mark, because `size` supplies both axes.
+   */
+  style?: StyleDesc;
 }
 
 /**
@@ -30,7 +36,10 @@ export interface IconProps {
  *
  * GPUix renders `SvgProps.source` — raw markup — natively, so an icon is data
  * here, not a component tree: no `<path>` children, no icon font, no CSS. Size
- * comes from `style.width`/`height`; tint from `style.color`.
+ * comes from `style.width`/`height`; tint from `style.color`. A caller's
+ * `style` is merged **last**, so an icon can be nudged onto a baseline without
+ * a wrapper — and it cannot change the role or the name, which come from the
+ * props.
  */
 export const Icon = ({
   name,
@@ -38,6 +47,7 @@ export const Icon = ({
   size = "md",
   label,
   testId,
+  style: override,
 }: IconProps): ReactElement<SvgProps> => {
   const pixels = iconPixels(size);
   const style: NonNullable<SvgProps["style"]> = {
@@ -47,6 +57,7 @@ export const Icon = ({
     color,
     // An icon inside a control must not steal the press from it.
     pointerEvents: "none",
+    ...override,
   };
   return (
     <svg

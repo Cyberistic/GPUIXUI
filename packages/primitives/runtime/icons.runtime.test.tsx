@@ -62,6 +62,25 @@ it("scales an icon from the size scale", async () => {
   expect(widthAt("xl")).toBeGreaterThan(widthAt("sm"));
 });
 
+it("paints a caller's style last", async () => {
+  const runtime = await openWindow();
+  mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);
+  const before = boundsOfIcon(runtime);
+
+  mount(
+    runtime,
+    <Icon
+      name="check"
+      color="#123456"
+      testId={ICON}
+      style={{ marginLeft: 12 }}
+    />,
+  );
+  const after = boundsOfIcon(runtime);
+  expect(after.x - before.x).toBe(12);
+  expect(after.y).toBe(before.y);
+});
+
 it("takes a decorative icon out of the accessibility tree and keeps a named one", async () => {
   const runtime = await openWindow();
   mount(runtime, <Icon name="check" color="#123456" testId={ICON} />);

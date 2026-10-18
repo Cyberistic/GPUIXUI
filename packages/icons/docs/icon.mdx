@@ -1,6 +1,6 @@
 ---
 title: Icons
-description: Forty-seven monochrome icons, their size scale and the two accessibility rules.
+description: The monochrome icon set, its size scale and the two accessibility rules.
 ---
 
 `@gpuixui/icons` is the icon set: each icon is a self-contained 24×24 monochrome
@@ -25,6 +25,20 @@ const theme = useTheme();
 
 A runnable composition is `packages/primitives/examples/icons.example.tsx`.
 
+## Positioning
+
+An icon takes the same `style` prop as every primitive, and it is merged **last**:
+the default size, tint and `pointerEvents: "none"` apply first, then the caller's
+values. That is how an icon is nudged onto a text baseline without a wrapper:
+
+```tsx
+<Icon name="check" color={theme.colors.primary} style={{ marginTop: 2 }} />
+```
+
+Overriding only `width` (or only `height`) stretches the mark, because `size`
+supplies both axes. Set both when the scale is not what you want. `style` cannot
+change the accessibility role or the name — those come from `label`.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -34,6 +48,7 @@ A runnable composition is `packages/primitives/examples/icons.example.tsx`.
 | `size` | `IconSize \| number` | `"md"` | a named step or raw pixels |
 | `label` | `string` | none | accessible name; presence promotes the icon to an image |
 | `testId` | `string` | — | stable locator |
+| `style` | `StyleDesc` | none | extra paint or layout, merged last |
 
 `ICON_NAMES` / `IconName` is the source of truth for which icons exist; `icons`
 exposes the markup by name; `ICON_SIZES` / `iconPixels` resolve the scale.
@@ -61,8 +76,10 @@ Two rules the component enforces, because both fail silently otherwise:
   node; only a `label` promotes it to `role="img"` with a name. An icon that
   announces itself inside a button makes the button read twice.
 
-The rendered `<svg>` also sets `pointerEvents: "none"`, so an icon inside a
-control cannot swallow the press meant for the control.
+The rendered `<svg>` also sets `pointerEvents: "none"` by default, so an icon
+inside a control cannot swallow the press meant for the control. A caller
+`style` is merged last, so overriding `pointerEvents` is possible but is then a
+deliberate choice.
 
 ## Theming
 
@@ -86,12 +103,15 @@ paint values a monochrome tint can use. No individual icon carries a colour.
   of scripts, external references and embedded colours.
 - `src/sizes.test.ts` — every named step resolves, and a raw number passes
   through.
-- `src/Icon.test.ts` — the decoration/image rule, required colour and the
-  pointer-events rule.
+- `src/Icon.test.ts` — the decoration/image rule, required colour, the
+  pointer-events rule and the caller-style merge.
+- `src/docs.test.ts` — the API table lists exactly the props `Icon` accepts, and
+  the size table matches `ICON_SIZES`.
 - `packages/primitives/runtime/icons.runtime.test.tsx` — the raw `<svg source>`
   paints at 20×20 (`lg`) and 24×24 (`xl`); a decorative icon is absent from the
-  accessibility tree while a labelled one is an `Image`; a red versus blue
-  capture differs byte-wise, so the tint reaches the paint.
+  accessibility tree while a labelled one is an `Image`; a caller `marginLeft`
+  moves the painted mark by exactly that many pixels; a red versus blue capture
+  differs byte-wise, so the tint reaches the paint.
 
 ```sh
 nub run --filter @gpuixui/icons test

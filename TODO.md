@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 101/101
+`[x]` `[██████████]` 102/102
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -825,6 +825,16 @@ retired once both branches are one
       element-tree and runtime guards, both directions proven (plan `356`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
+`[x]` `packages/icons`: **the icon had no caller-style seam, and its page's facts
+      were unguarded** — `Icon` was the one renderer without a `style` prop, so
+      an icon beside text could not be nudged onto a baseline without a `Box`
+      wrapper; its page also claimed "Forty-seven" icons while the registry had
+      48 and duplicated the size table with no guard. `style` is now merged last
+      (a caller `marginLeft: 12` moves the painted mark exactly 12 px in the
+      runtime) without touching the role or name, the page no longer states a
+      count, and `src/docs.test.ts` compares its API table to `IconProps` and its
+      size table to `ICON_SIZES` — 23 offline tests, four failing directions
+      measured (plan `357`).
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
       contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and
       `disableHoverableContent`, but `TooltipProps` exposed only `delay`, so a

@@ -66,4 +66,28 @@ describe("Icon", () => {
     });
     expect(props.testId).toBe("field-search-icon");
   });
+
+  it("merges a caller's style last without losing the defaults", () => {
+    const { props } = render({
+      name: "check",
+      color: "#123456",
+      style: { marginTop: 2 },
+    });
+    expect(props.style?.marginTop).toBe(2);
+    expect(props.style?.color).toBe("#123456");
+    expect(props.style?.width).toBe(ICON_SIZES.md);
+    expect(props.style?.pointerEvents).toBe("none");
+  });
+
+  it("lets a caller's paint over the default size and tint", () => {
+    const { props } = render({
+      name: "check",
+      color: "#123456",
+      style: { width: 32, color: "#abcdef" },
+    });
+    expect(props.style?.width).toBe(32);
+    expect(props.style?.color).toBe("#abcdef");
+    // The caller chose a stretched mark; the axis they did not name is default.
+    expect(props.style?.height).toBe(ICON_SIZES.md);
+  });
 });

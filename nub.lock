@@ -200,6 +200,9 @@ importers:
         specifier: 'catalog:'
         version: 4.0.5
     devDependencies:
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)(redis@6.3.0)
       '@gpuix/react':
         specifier: 'catalog:'
         version: 0.10.0(react@19.3.1)
