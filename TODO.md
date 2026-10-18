@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 121/168
+`[x]` `[███████░░░]` 122/169
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -100,6 +100,11 @@ dialog, panel, row washes and soft fills but not the canvas, a card or the
 `input` fill, where `borderStrong` is also measured; the row now names its three
 roles and a derived case holds each `borderStrong` surface to its own clause
 (plan 352)
+`[x]` Hold the design-system's interaction-state table to the contract — it was
+the last hand-written list on the page: the link row omitted the four soft
+status fills plan 346 added, the loading row named four of eight surfaces, and
+the focus row named none; every state row now names its roles, and ten derived
+cases hold each to the pair list that enforces it (plan 354)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

@@ -150,6 +150,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [351](./351-floor-table-pair-classes.md) | The accessibility floor table omits the pair classes it claims to publish | F | 071, 303, 336, 341, 347, 348 | done |
 | [352](./352-boundary-row-surfaces.md) | The boundary row omits the surfaces the contract measures | F | 084, 092, 325, 340, 343, 351 | done |
 | [353](./353-component-dimensions.md) | Component dimensions: the surface metrics components still hardcode | B | 010, 011, 056–062, 089, 096, 321 | done |
+| [354](./354-interaction-state-table.md) | The interaction-state table names the surfaces the contract measures | F | 346, 351, 352 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1162,6 +1163,16 @@ adds the nine metrics as a flat group that merges field by field, inherits
 through every platform variant and recipe, and is documented and guarded beside
 the other numeric scales. Consumers migrate cross-team; this workstream adds no
 colour role and no contrast pair.
+
+354 closes the last hand-written list on the design-system page: the
+**interaction-state table** (§8). Plans 351 and 352 made the accessibility table
+derive its rows from the contract, but §8 stayed prose and had drifted — the
+link row omitted the four soft status fills plan 346 added, the loading row said
+"every surface" while naming four of eight, the focus row named none, and the
+disabled, selected, hover, pressed and status rows used aliases ("canvas",
+"quiet panel") or omitted surfaces the checker measures. Every state row now
+names its roles, and nine derived cases hold each row to the pair list that
+enforces it. No colour, pair or floor moves; every shipped set already passed.
 
 ### Reference adoption (block `200–299`)
 

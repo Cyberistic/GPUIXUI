@@ -47,6 +47,12 @@
  * the boundary row content-derived too: the `borderStrong` clause must name
  * every surface that role is paired with, including the canvas, a card and the
  * `input` fill the first cut omitted.
+ *
+ * Plan 354 guards the page's last hand-written list, the interaction-state
+ * table: the link row had dropped the four soft status fills plan 346 added, the
+ * loading row named four of eight surfaces and the focus row named none. Every
+ * state row now names its roles, and each case derives its surfaces from the
+ * pair list that enforces them.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -1494,5 +1500,118 @@ describe("docs/design-system.md", () => {
   it("states the radius scale", () => {
     const sentence = `Radii: ${radius.none}, ${radius.sm}, ${radius.md}, ${radius.lg}, ${radius.xl}, full.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+});
+
+describe("docs/design-system.md interaction states", () => {
+  /**
+   * Plan 354 guards the state table, the last hand-written list on the page.
+   * It had drifted: the link row omitted the four soft status fills plan 346
+   * added, the loading row said "every surface" while naming four of eight,
+   * and the focus row named none. Each case derives its surfaces from the
+   * pair list the checker runs, so a new pair cannot ship with a state row
+   * that forgets it.
+   */
+  const expand = (text: string): string =>
+    text
+      .replace(
+        "the four soft status fills",
+        "`infoSoft` `successSoft` `warningSoft` `destructiveSoft`",
+      )
+      .replace("the four row washes", "`hover` `active` `accent` `selected`");
+
+  const missing = (
+    label: string,
+    surfaces: ReadonlyArray<string>,
+  ): ReadonlyArray<string> => {
+    const text = expand(tableRow(label));
+    return surfaces.filter((surface) => !text.includes(`\`${surface}\``));
+  };
+
+  const backgroundsOf = (foreground: string): ReadonlyArray<string> => [
+    ...new Set(
+      contrastPairs
+        .filter(([role]) => role === foreground)
+        .map(([, background]) => background),
+    ),
+  ];
+
+  it("has a row for every interaction state", () => {
+    [
+      "hover",
+      "pressed",
+      "loading",
+      "selected",
+      "link",
+      "disabled",
+      "invalid",
+      "focus",
+      "text selection",
+      "status",
+    ].forEach((state) =>
+      expect(tableRow(state).length, state).toBeGreaterThan(0),
+    );
+  });
+
+  it("names every surface an interactive wash is measured on", () => {
+    (
+      [
+        ["hover", "hover"],
+        ["pressed", "active"],
+      ] as const
+    ).forEach(([label, role]) => {
+      const surfaces = stateFillSurfacePairs
+        .filter(([fill]) => fill === role)
+        .map(([, surface]) => surface);
+      expect(missing(label, surfaces), label).toEqual([]);
+    });
+  });
+
+  it("names every surface a loading placeholder is measured on", () => {
+    expect(missing("loading", backgroundsOf("skeleton"))).toEqual([]);
+  });
+
+  it("names the selected fill and its label's washes", () => {
+    const fillSurfaces = stateFillSurfacePairs
+      .filter(([fill]) => fill === "selected")
+      .map(([, surface]) => surface);
+    expect(missing("selected", fillSurfaces)).toEqual([]);
+    expect(missing("selected", backgroundsOf("selectedForeground"))).toEqual(
+      [],
+    );
+  });
+
+  it("names every surface a link is measured on", () => {
+    expect(missing("link", backgroundsOf("primaryText"))).toEqual([]);
+  });
+
+  it("names every surface an inactive label is measured on", () => {
+    expect(missing("disabled", backgroundsOf("disabledForeground"))).toEqual(
+      [],
+    );
+  });
+
+  it("names the invalid field edge and the two ring roles", () => {
+    expect(missing("invalid", ["input", "background"])).toEqual([]);
+    const focus = tableRow("focus");
+    expect(focus).toContain("`ring`");
+    expect(focus).toContain("`destructive`");
+  });
+
+  it("names every surface the focus ring is measured on", () => {
+    const surfaces = backgroundsOf("ring").filter(
+      (surface) => surface !== "input",
+    );
+    expect(missing("focus", surfaces)).toEqual([]);
+  });
+
+  it("names every surface status text is measured on", () => {
+    expect(missing("status", backgroundsOf("infoText"))).toEqual([]);
+  });
+
+  it("names the selection roles", () => {
+    const text = tableRow("text selection");
+    expect(text).toContain("`selection`");
+    expect(text).toContain("`selectionOnFill`");
   });
 });
