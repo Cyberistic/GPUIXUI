@@ -788,6 +788,18 @@ retired once both branches are one
       the tab stop — and runs on both key phases. 3 runtime tests, both
       directions proven (offline 574, runtime 457; plan `353`).
 
+`[x]` `packages/primitives`: **the activation contract had no cross-control
+      guard** — plan `353`'s bug class (a one-phase key path, or activation
+      aimed at a value-derived index instead of the focused item) was invisible
+      because every test drove one key on one control.
+      `runtime/activation.runtime.test.tsx` now drives eight button-shaped
+      controls through nine sequences (Enter up/down/pair/held, Space
+      up/down/pair/held, primary click) with the target genuinely focused, in a
+      fresh window per case: 72 cases. The contract was already consistent;
+      three mutations fail by case name — a `Checkbox` up→down handler (4), a
+      deleted `ToggleGroup` key-up path (2), and a removed held-key guard (8).
+      Offline 574, runtime 529; plan `354`.
+
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
       contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and

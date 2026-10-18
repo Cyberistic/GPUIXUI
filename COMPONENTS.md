@@ -214,8 +214,8 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (**457 tests
-in 25 files** at plan `353`; 454 at plan `352`; 403 at plan `346`; 398 at plan `345`; 386 at plan `344`; 383 at plan 343; 382 at plan 342; 381 at plan 341; 375 at plan 340; 371 at plan 339; 368 at plan 338; 364 at plan 337; 358 at plan 336; 353 at plan 335; 349 at plan 334; 319 at plan 331; 316 at plan 330; 315 at plan 329; 313 at plan 328; 311 at plan 327; 307 at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-18 (**529 tests
+in 26 files** at plan `354`; 457 at plan `353`; 454 at plan `352`; 403 at plan `346`; 398 at plan `345`; 386 at plan `344`; 383 at plan 343; 382 at plan 342; 381 at plan 341; 375 at plan 340; 371 at plan 339; 368 at plan 338; 364 at plan 337; 358 at plan 336; 353 at plan 335; 349 at plan 334; 319 at plan 331; 316 at plan 330; 315 at plan 329; 313 at plan 328; 311 at plan 327; 307 at plan 098; 304 at plan 097; 303 at plan 096; 301 at plan 095; 300 at plan 094; 295 at plan 093; 265 at plan 092; 264 at plan 091; 263 at plan 089; 231 at plans 088 and 087; 230 at plan 086; 225 at plan 085; 221 at plan 084; 204 at plan 083; 199 at plan 082; 194 in 17 at plan 081; 190 at plan 080; 188 at plan 079; 184 at plan 078; 182 at plan 077; 181 at plan 076; 179 at plan 075,
 175 at plan 073; 172 at plan 072, 167 at plan 071 and 165 at plan 070, including plan 069's
 three Select scroll tests and plan 070's rating validation; 161 after plan 068's long-list cap;
 160 after plan 067's tooltip placement;
