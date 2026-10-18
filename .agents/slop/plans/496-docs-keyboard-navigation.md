@@ -81,7 +81,7 @@ export function SkipLink({ href }: SkipLinkProps) {
     <a
       href={href}
       data-skip-link=""
-      className="sr-only rounded-md border border-fd-border bg-fd-background px-3 py-2 text-sm font-medium text-fd-foreground focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:border-fd-border focus:bg-fd-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-fd-foreground"
     >
       Skip to content
     </a>
@@ -122,7 +122,18 @@ Append one rule after the platform block:
   outline: 2px solid var(--color-fd-ring);
   outline-offset: 2px;
 }
+
+/*
+ * A skip target is a region, not a control: ringing the whole article after
+ * Enter would paint a 2 px frame around every pixel of the page (plan 496).
+ */
+:where([data-skip-target]):focus-visible {
+  outline: none;
+}
 ```
+
+The targets carry `data-skip-target=""` alongside `tabIndex={-1}`; the second
+rule keeps the ring off the article while the first keeps it on controls.
 
 ### 4.4 `apps/docs/src/styles/theme.test.ts`
 
@@ -192,8 +203,10 @@ Per target:
    fails when the CSS rule is removed: the browser default outline is not the
    token.
 5. `press("Enter")`: wait for `location.hash` to equal the target; then
-   `document.activeElement.id` must equal the target id. This fails when the
-   target loses `tabIndex={-1}` (the hash changes but focus stays on the link).
+   `document.activeElement.id` must equal the target id, and the target's
+   computed `outlineStyle` must be `none` (a ring here would frame the whole
+   region). The first assertion fails when the target loses `tabIndex={-1}`; the
+   second fails when the `[data-skip-target]` suppression is removed.
 
 Every failure names the page and the step, e.g.
 `FAIL /docs/components/button: Tab did not focus the skip link`. Print
@@ -250,6 +263,8 @@ reverted.
    Restore.
 5. `skip-link.test.tsx` shipped with the `focus:not-sr-only` token removed from
    the component → the unit test fails. Restore.
+6. Delete the `[data-skip-target]` rule → `theme.test.ts` fails, and the smoke
+   reports a ring around the whole focused region. Restore.
 
 ## 6. Commands and expected results
 
@@ -274,7 +289,7 @@ Run on this host, 2026-10-18.
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter docs test` | **54 files / 353 tests** pass (two new files: the skip-link render suite and the ring-token rule) |
+| `nub run --filter docs test` | **54 files / 354 tests** pass (two new files: the skip-link render suite and the ring-token rules) |
 | `nub run --filter docs check-types` | pass |
 | `nub run --filter docs smoke:keyboard` | exit `0`; `/docs/components/button`, `/` and `/docs/does-not-exist` all `keyboard checked`; **90 s** including the production build |
 | `nub apps/docs/scripts/smoke-keyboard.ts --no-build` | exit `0`; three pages, **~5 s** |
@@ -282,7 +297,7 @@ Run on this host, 2026-10-18.
 | `nub apps/docs/scripts/smoke:browser.ts --no-build` | exit `0`; 101 hydrated-preview checks |
 | `nub run check` | pass (test-quality gate, lint, format, every workspace type-check) |
 | `nub run lint` | exit `0` |
-| `nub run test` | exit `0` — tokens 197, testing 19, icons 19, playground 11, components 308, primitives 282, docs 353 |
+| `nub run test` | exit `0` — tokens 197, testing 19, icons 19, playground 11, components 308, primitives 282, docs 354 |
 
 Two measured facts shaped the implementation:
 
@@ -296,6 +311,10 @@ Two measured facts shaped the implementation:
    `rgb(0, 95, 204)` at 1 px in light. The rule paints `rgb(167, 169, 255)`
    (dark ring) and `rgb(117, 103, 242)` (light ring), matching
    `--color-fd-ring`.
+3. The ring must not follow the skip **target**: measured after Enter, the
+   focused `#nd-page` article is **640×7327 px**, so the token rule painted a
+   2 px frame around the entire page. The `[data-skip-target]` suppression
+   brings it to `outline-style: none`; the smoke now asserts it.
 
 Two-direction proofs:
 
@@ -319,6 +338,10 @@ Two-direction proofs:
    `focus stayed on "body", expected the "nd-page" target`. Restored → exit `0`.
 5. **Component regression**: removed `focus:not-sr-only` from `skip-link.tsx`
    → `skip-link.test.tsx` exited `1` on the class assertion. Restored → green.
+6. **Whole-page ring**: removed the `[data-skip-target]` rule → `theme.test.ts`
+   failed on the missing `outline: none`, and `smoke:keyboard` exited `1` with
+   `the skip target paints a solid outline around the whole region` on all
+   three pages. Restored → both green.
 
 ## 8. STOP conditions
 
@@ -338,6 +361,8 @@ Two-direction proofs:
 - [ ] the skip link is the first tab stop on a docs page, the landing page and a
       404, and Enter moves focus to its target
 - [ ] the link is hidden until focused and uses the ring token when focused
+- [ ] the focused skip target takes focus without painting a ring around the
+      whole region
 - [ ] every site link/button the rule covers draws the ring in both themes
 - [ ] `smoke:keyboard` exits `0`, names each page, and exits `1` on each forced
       defect in §5

@@ -95,4 +95,12 @@ describe("docs theme", () => {
     expect(rule?.[1]).toContain("button");
     expect(rule?.[2]).toContain("outline: 2px solid var(--color-fd-ring)");
   });
+
+  it("does not ring a skip target, which is a region", () => {
+    // Enter moves focus into a whole article; a ring there frames the page.
+    const rule = css.match(
+      /:where\(\[data-skip-target\]\):focus-visible\s*\{([^}]*)\}/,
+    );
+    expect(rule?.[1]).toContain("outline: none");
+  });
 });

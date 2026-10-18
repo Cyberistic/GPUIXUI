@@ -48,7 +48,7 @@ function Content({ path }: { path: string }) {
   const MDX = page.body;
 
   return (
-    <DocsPage toc={toc} tabIndex={-1}>
+    <DocsPage toc={toc} tabIndex={-1} data-skip-target="">
       <DocsTitle>{page.title}</DocsTitle>
       <DocsDescription>{page.description}</DocsDescription>
       <DocsBody>

@@ -81,3 +81,11 @@ html[data-platform] {
   outline: 2px solid var(--color-fd-ring);
   outline-offset: 2px;
 }
+
+/*
+ * A skip target is a region, not a control: ringing the whole article after
+ * Enter would paint a 2 px frame around every pixel of the page (plan 496).
+ */
+:where([data-skip-target]):focus-visible {
+  outline: none;
+}

@@ -477,7 +477,8 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       leads with a `sr-only` skip link; its target carries `tabIndex={-1}` so
       Enter moves focus (`#nd-page` on docs, `#main-content` on home/404), and
       one `:where(...):focus-visible` rule paints the library's ring token on
-      the site's own links, buttons, selects and tab stops. `smoke:keyboard`
+      the site's own links, buttons, selects and tab stops while a
+      `[data-skip-target]` rule keeps that ring off the whole focused region. `smoke:keyboard`
       drives a real Tab/Enter on a docs page (dark), the landing page (light) and
       an unknown slug (the 404 body in dark) and exits `1` on a missing link, a
       hidden link, a non-token outline or a target that does not take focus; five

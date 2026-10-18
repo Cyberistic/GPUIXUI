@@ -121,6 +121,7 @@ export function Landing() {
     <div
       id="main-content"
       tabIndex={-1}
+      data-skip-target=""
       className="mx-auto flex w-full max-w-4xl flex-col gap-14 px-4 py-20"
     >
       <header className="flex flex-col gap-5">

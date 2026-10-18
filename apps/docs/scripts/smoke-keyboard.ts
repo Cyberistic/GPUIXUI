@@ -218,6 +218,16 @@ const checkTarget = async (
       `focus stayed on "${arrivedAt || "body"}", expected the "${target.id}" target`,
     );
   }
+  const targetOutline = String(
+    await session.evaluate(
+      "getComputedStyle(document.activeElement).outlineStyle",
+    ),
+  );
+  if (targetOutline !== "none") {
+    problems.push(
+      `the skip target paints a ${targetOutline} outline around the whole region`,
+    );
+  }
 
   return problems;
 };

@@ -172,7 +172,8 @@ The site's own links, buttons, selects, summaries and tab stops draw a 2 px
 `--color-fd-ring` outline on `:focus-visible` (`src/styles/app.css`), so keyboard
 focus belongs to the docs identity in both themes; `theme.test.ts` pins the rule
 to the token. Fumadocs' own styles keep precedence because the rule uses
-`:where`.
+`:where`. The skip target carries `data-skip-target`, which suppresses the ring:
+focus moved to a 640×7327 px article, and ringing it would frame the page.
 
 `smoke:keyboard` proves the contract in a real browser — the first Tab reaches
 the skip link, it is visible only then, the outline is the resolved ring token,

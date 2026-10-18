@@ -13,6 +13,7 @@ export function NotFoundBody() {
     <div
       id="main-content"
       tabIndex={-1}
+      data-skip-target=""
       className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-24 text-center"
     >
       <h1 className="text-2xl font-medium">Page not found</h1>
