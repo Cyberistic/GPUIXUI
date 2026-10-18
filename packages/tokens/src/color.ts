@@ -357,7 +357,10 @@ export const lightColors = {
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
   placeholder: "#66707F",
-  ring: palette.iris[500],
+  // The focus ring's one non-shadow surface is the value groove, so the ring
+  // is the deep iris step: iris[500] measured 2.983:1 on `track` (plan 516),
+  // and iris[600] equals the primary fill a clipped inset ring paints on.
+  ring: palette.iris[700],
   selection: "#7567F23D",
   selectionOnFill: "#00000026",
   overlay: "#00000073",

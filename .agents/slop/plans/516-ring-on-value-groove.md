@@ -1,6 +1,6 @@
 # Plan 516 — The focus ring on the value groove
 
-**Phase:** F · **Owner:** `tokens-theme` · **Status:** planned (2026-10-18)
+**Phase:** F · **Owner:** `tokens-theme` · **Status:** done (2026-10-18)
 **Depends on:** 086 (the ring's surface list), 093 (the ring on the soft
 fills), 332 (a fill used as a mark), 342/354 (the step lists and the
 interaction-state table), 347/503 (`track` and its surface contract), 384 (the
@@ -71,7 +71,7 @@ wash from the eight `ringSurfaces`, and neither names the groove.
    reason.
 3. Move **only** the identity light `ring` one ramp step:
    `palette.iris[500]` `#7567F2` → `palette.iris[700]` `#4C39B5`.
-   - On `track` it measures **7.24:1** (was 2.983:1).
+   - On `track` it measures **5.802:1** (was 2.983:1).
    - It clears every existing ring surface with more room (the tightest
      `selected`/`active` move from 3.334:1 to ≈6.9:1).
    - `iris[700]` is chosen over `iris[600]` (`primary`) deliberately: the
@@ -82,7 +82,8 @@ wash from the eight `ringSurfaces`, and neither names the groove.
      from the fill. The high-contrast light set already ships `#4C39B5`, so the
      ring keeps one deep-iris tonality at both contrast levels.
    - The field's pressed edge (`ring` on `input`) improves from identity light
-     **4.218:1** to **≈8.2:1**; update the two places that quote the old
+     **4.218:1** to **8.204:1**; the tightest pressed edge becomes macOS
+     light at **4.697:1**, so update the two places that quote the old
      tightest figure (the `contrast.test.ts` header and the docs if they quote
      it).
 4. No other role, floor, type or metric moves. `contrastPairs` grows
@@ -169,7 +170,7 @@ Cases:
    `shippedThemes` entry, `contrastRatio(theme.colors.ring, theme.colors.track)
    >= contrastFloors[theme.contrast].boundary`; collect labelled failures and
    expect `[]`. Assert the tightest is identity light and **≥ 4.0:1** (the new
-   value measures 7.24; the lower bound leaves room for a future ramp edit while
+   value measures 5.802; the lower bound leaves room for a future ramp edit while
    still failing the 2.983 regression).
 3. **`"reports an edited theme whose ring meets the groove"`** —
    `extendTheme(getTheme("light"), { colors: { ring: getTheme("light").colors.track } })`;
@@ -293,7 +294,7 @@ and the `track` groove). Keep the alert-action rationale.
    the ring was measured only on the plain surfaces, the washes and the soft
    fills; identity light `#7567F2` measured **2.983:1** on the light groove,
    under the 3:1 boundary floor, while every other set passed. The identity
-   light ring moves one ramp step to `#4C39B5` (7.24:1 on the groove, and every
+   light ring moves one ramp step to `#4C39B5` (5.802:1 on the groove, and every
    existing ring pair gains contrast), `ringTrackPairs` publishes the pair and
    `contrastPairs` grows 395 → 396 (plan 516)
    ```

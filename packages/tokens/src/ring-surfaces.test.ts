@@ -3,9 +3,11 @@
  * eight surfaces a focused control can sit on — `074` added the three state
  * washes but not the `muted` panel a sidebar control sits on or the `accent`
  * wash a selectable row paints. Both shipped pairs passed, so no colour moves;
- * this suite keeps them measured, and keeps the eight-surface list from being
- * edited by accident. The soft status fills a toast's action button sits on are a
- * separate composition, guarded by `ring-soft.test.ts` (plan 093).
+ * this suite keeps them measured, and keeps the nine-surface list from being
+ * edited by accident. Plan 516 adds the value groove a focused slider's thumb is
+ * centred on: identity light `#7567F2` measured 2.983:1 there, so the light ring
+ * moved one ramp step. The soft status fills a toast's action button sits on are
+ * a separate composition, guarded by `ring-soft.test.ts` (plan 093).
  */
 
 import { describe, expect, it } from "vitest";
@@ -30,6 +32,7 @@ const ringSurfaces = [
   "hover",
   "active",
   "selected",
+  "track",
 ] as const;
 
 const shipped: ReadonlyArray<readonly [string, Theme, ThemeContrast]> =
@@ -48,7 +51,7 @@ describe("the focus ring", () => {
     expect(misses).toEqual([]);
   });
 
-  it("publishes the eight ring surfaces in documented order", () => {
+  it("publishes the nine ring surfaces in documented order", () => {
     const backgrounds = contrastPairs
       .filter(
         ([foreground, background]) =>

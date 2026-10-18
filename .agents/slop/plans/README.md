@@ -210,7 +210,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [512](./512-panel-action-selection.md) | The panel action's label through the text-selection wash | F | 091, 362, 394, 506, 510, 387 | done |
 | [513](./513-selection-veil-pointer-states.md) | The inverse veil's pointer-state gap and its stale rationale | F | 344, 382, 504, 506, 510, 387 | done |
 | [514](./514-disabled-panel-action.md) | The disabled action inside a status panel | F | 306, 307, 392, 394, 397, 500, 502, 512, 513 | done |
-| [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | planned |
+| [516](./516-ring-on-value-groove.md) | The focus ring on the value groove | F | 086, 093, 332, 342, 347, 354, 384, 503 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

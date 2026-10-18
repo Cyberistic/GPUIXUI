@@ -378,11 +378,13 @@ description and caption are measured through the same wash — `foreground` at t
 body floor and `mutedForeground` at the secondary floor on each soft fill,
 because an Alert's body and caption are selected with it (plan 362);
 accent-toned links stay the documented omission. The focus ring is
-checked on the canvas, card, popover and the `hover`, `active` and `selected`
-washes, so a ring that vanishes on a selected row is caught, and on the four soft
-status fills, because an Alert's action button is focused while it sits on its own
-tint; every shipped variant already clears that floor, so the pairs are a
-guarantee rather than a fix (plan 093). An invalid control recolours the ring
+checked on the canvas, card, popover, the `muted` panel and the `accent` wash,
+the `hover`, `active` and `selected` washes, the four soft status fills —
+because an Alert's action button is focused while it sits on its own tint — and
+the `track` groove a focused slider's thumb is centred on (`ringTrackPairs`), so
+a ring that vanishes on a selected row or a value indicator is caught; every
+shipped variant already clears those floors, so the pairs are a guarantee rather
+than a fix (plans 093 and 516). An invalid control recolours the ring
 with `destructive`, and the runtime can draw only one, so the error ring is the
 focus indicator: the same surfaces are measured for it too (`invalidRingPairs`,
 plan 340). The modal scrim is measured the same way:

@@ -94,7 +94,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states the state washes and floating surface the ring is checked on", () => {
     expect(readme).toContain(
-      "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught, and on the four soft status fills, because an Alert's action button is focused while it sits on its own tint",
+      "The focus ring is checked on the canvas, card, popover, the `muted` panel and the `accent` wash, the `hover`, `active` and `selected` washes, the four soft status fills — because an Alert's action button is focused while it sits on its own tint — and the `track` groove a focused slider's thumb is centred on (`ringTrackPairs`), so a ring that vanishes on a selected row or a value indicator is caught",
     );
   });
 

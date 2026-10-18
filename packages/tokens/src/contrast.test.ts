@@ -123,8 +123,9 @@
  * Plan 343 closes the field's pressed edge: `fieldVariant.active` in
  * `primitives` repaints a field border with `ring` on the `input` fill, but the
  * contract measured `ring` only where a focus shadow sits — outside the
- * control. Every shipped set already clears the boundary floor there (identity
- * light is tightest at 4.218:1), so no colour moves.
+ * control. Every shipped set already clears the boundary floor there (macOS
+ * light is tightest at 4.697:1 after plan 516 moved the light ring one step),
+ * so no colour moves.
  *
  * Plan 344 closes the last content surface the selection contract never
  * reached: a user message bubble paints body text on `primary`
@@ -505,7 +506,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(395);
+    expect(contrastPairs.length).toBe(396);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [
@@ -765,6 +766,7 @@ describe("themeContrastFailures", () => {
             "hover",
             "active",
             "selected",
+            "track",
           ].includes(background),
       )
       .map(({ background, pairClass, floor }) => ({
@@ -782,6 +784,7 @@ describe("themeContrastFailures", () => {
         "hover",
         "active",
         "selected",
+        "track",
       ].map((background) => ({ background, pairClass: "boundary", floor: 3 })),
     );
   });

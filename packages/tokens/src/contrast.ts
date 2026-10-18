@@ -512,7 +512,9 @@ const primaryTextPairs: readonly ContrastPair[] = primaryTextSurfaces.map(
  * The surfaces a focused control can sit on: the plain surfaces, the quiet
  * panel a sidebar control sits on, the accent wash a selectable row paints, and
  * the three state washes a focused row paints. The ring is painted outside the
- * control, on the surface behind it, so each must keep it visible.
+ * control, on the surface behind it, so each must keep it visible. The value
+ * groove a focused slider's thumb is centred on is the one extra surface,
+ * published separately as {@link ringTrackPairs}.
  */
 const ringSurfaces = [
   "background",
@@ -528,6 +530,20 @@ const ringSurfaces = [
 const ringPairs: readonly ContrastPair[] = ringSurfaces.map(
   (background): ContrastPair => ["ring", background, "boundary"],
 );
+
+/**
+ * The focus ring on the value groove. A slider's focus shadow is painted around
+ * a thumb centred on the rail, so its left and right arcs land on `track` while
+ * its top and bottom land on the surface behind the slider. The groove is the
+ * one ring surface that is not a plain panel or a wash; identity light measured
+ * **2.983:1** on it with the pre-516 ring, under the boundary floor, while every
+ * other shipped set passed. An invalid slider does not recolour its ring — it
+ * recolours the fill and the thumb border — so this pair is deliberately
+ * outside `ringSurfaces`/`invalidRingPairs`.
+ */
+export const ringTrackPairs: readonly ContrastPair[] = [
+  ["ring", "track", "boundary"],
+];
 
 /**
  * The soft status fills a focused control can sit on. A tone-tinted Alert carries
@@ -794,6 +810,8 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * foreground on its floating `popover` card (`toastTonePairs`) — the focus ring
  * on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
+ * the ring on the value groove a focused slider's thumb is centred on
+ * (`ringTrackPairs`),
  * the `destructive` ring an invalid control paints on those same surfaces,
  * status text on a floating surface, the functional control
  * boundary on a floating surface, a quiet panel, the state washes and the soft
@@ -890,6 +908,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["inputForeground", "input", "body"],
   ...inputTextSurfacePairs,
   ...ringPairs,
+  ...ringTrackPairs,
   ...ringSoftPairs,
   ...invalidRingPairs,
   ["secondaryForeground", "secondary", "secondary"],
@@ -1680,7 +1699,9 @@ const elevationFailures = (
  *
  * - `contrastPairs` — body and secondary text on the plain surfaces, the field,
  *   the row washes and the soft status fills; the control boundary, focus ring
- *   and dividers; the inactive label; the marks and the value track; every
+ *   (the value groove a focused slider's thumb sits on included, through
+ *   `ringTrackPairs`) and dividers; the inactive label; the marks and the value
+ *   track; every
  *   interactive fill against the panel it paints on; the solid status fill on
  *   the surfaces a status chip occupies (`statusFillPairs`); and the state steps
  *   of the filled families, the generic washes, the selected row and the status

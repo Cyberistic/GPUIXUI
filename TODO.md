@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 180/241
+`[x]` `[███████░░░]` 181/242
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1424,6 +1424,14 @@ XP light's `warningSoft`), so it keeps the resting `softAction` fill and paints
 `disabledForeground` (identity dark 4.343:1, AAA dark 5.199:1), while `textTiers`
 holds that label a step below `softActionForeground` (2.156:1 at the tightest);
 `contrastPairs` grows 394 → 395 and no colour moves (plan 514)
+`[x]` Hold the focus ring on the value groove — a focused slider's shadow is
+painted around a thumb centred on the rail, so its arcs land on `track`, but the
+ring was measured only on the plain surfaces, the washes and the soft fills;
+identity light `#7567F2` measured **2.983:1** on the light groove, under the 3:1
+boundary floor, while every other set passed. The identity light ring moves one
+ramp step to `#4C39B5` (5.802:1 on the groove, and every existing ring pair
+gains contrast), `ringTrackPairs` publishes the pair and `contrastPairs` grows
+395 → 396 (plan 516)
 `[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
 `<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
 of the runtime's built-in dark value (owner: `primitives`; plan 511)

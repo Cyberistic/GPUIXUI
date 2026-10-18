@@ -249,7 +249,7 @@ A runnable example lives in
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
 | `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
-| `ring` | `#7567F2` | `#A7A9FF` | focus ring |
+| `ring` | `#4C39B5` | `#A7A9FF` | focus ring; the value groove a focused slider's thumb sits on |
 | `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim; the face a dialog paints on it is measured through the wash |
@@ -1197,6 +1197,14 @@ only one), so the error colour becomes the focus indicator. `invalidRingPairs`
 holds it to the boundary floor on the surfaces a control sits on, which are not
 the field's own fill; `destructive` on `background` is shared with the invalid
 field edge.
+
+A slider is the one control whose ring is painted over its own value
+indicator: the thumb is centred on the rail, so the shadow's left and right arcs
+land on the `track` groove while its top and bottom land on the surface behind
+the slider. `ringTrackPairs` holds `ring` on `track` to the boundary floor for
+that reason. An invalid slider keeps the accent ring — it recolours the fill and
+the thumb border, not `focusRing` — so the groove is deliberately not an
+`invalidRingPairs` surface.
 
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
@@ -2566,6 +2574,12 @@ enabled/disabled step its tier, so a copied theme cannot erase the label or make
 a disabled action look enabled; the canvas `disabled` fill is **1.0066:1** on XP
 light's `warningSoft`, so it is not a panel shape. Every shipped set already
 clears both, so no colour moves: taking it from 394 to **395**.
+Plan `516` holds the focus ring on the value groove — `ring` on `track` for a
+slider's thumb, whose shadow is painted around a thumb centred on the rail — and
+moves the identity light ring one ramp step to `#4C39B5`, because `#7567F2`
+measured **2.983:1** on the light track, under the boundary floor.
+`ringTrackPairs` publishes the pair and every existing ring surface gains
+contrast, taking it from 395 to **396**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2713,21 +2727,25 @@ carried its own complete colour, so the documented tint changed nothing and the
 same value was duplicated three times per set; the split keeps every shipped hex
 byte-for-byte.
 
-The focus ring is measured on the eight surfaces a focused control can sit on —
+The focus ring is measured on the nine surfaces a focused control can sit on —
 the canvas, card and popover, the `muted` panel a sidebar control sits on, the
-`accent` wash a selectable row paints, and the `hover`, `active` and `selected`
-washes — because focus and selection co-occur in rows. It is also measured on the
+`accent` wash a selectable row paints, the `hover`, `active` and `selected`
+washes, and the `track` groove a focused slider's thumb is centred on — because
+focus and selection co-occur in rows and a slider's ring paints over its own
+value indicator. It is also measured on the
 four soft status fills, because an Alert's action button is focused while it sits
 on its own tint; every shipped variant already clears the floor there, so no
 colour moves, and the pairs exist so an edited theme cannot remove the ring. A
 field's own `input` fill
 and a control's `secondary` fill are what the focus shadow surrounds, not what
-it sits on, so they are not `ringSurfaces`. The ring role has one other job: a
+it sits on, so they are not `ringSurfaces`; the groove is the one extra ring
+surface, published separately as `ringTrackPairs` because an invalid slider
+keeps the accent ring. The ring role has one other job: a
 pressed field repaints its border with `ring` on its own `input` fill, the way
 hover repaints it with `borderStrong`, so that control edge is a `boundary` pair
 (`fieldPressedEdgePairs`, plan `343`). `ringSurfaces` in
-`src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public
-check to it. Secondary text is measured on `hover`, `active`, `accent` and
+`src/contrast.ts` is the shadow list, and `ring-surfaces.test.ts` and
+`ring-track.test.ts` hold the public check to it. Secondary text is measured on `hover`, `active`, `accent` and
 `selected`, because a list row, a combobox option and a menu item paint those
 washes behind a description; status text (`xText`) is measured on `background`,
 `card`, `popover`, the `muted` panel and those four washes, so a status label or
