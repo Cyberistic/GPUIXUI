@@ -471,7 +471,17 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–513)
 
-`[x]` `[██████████]` 114/114
+`[x]` `[██████████]` 115/115
+
+`[x]` **The dark-mode switch has a page (plan 514)** — Getting started handed the
+      reader to Theming for the mode switch, and Theming documents the design but
+      never showed the recipe. `/docs/dark-mode` now covers `getTheme`'s four
+      built-ins, why the app owns the mode (GPUix has no appearance query), the
+      two-provider nesting, persistence, the contrast axis and platform
+      composition; `dark-mode-page.test.ts` derives the unions from
+      `packages/tokens/src/theme.ts` and fails on an unknown mode, a dropped
+      provider or a new appearance export. Five two-direction proofs in plan 514
+      §6; 66 files / 454 tests, 91-page built crawl.
 
 `[x]` **The last stateful page gets a live scene (plan 513)** — Message scroller
       was the one `stateful` record without one, behind a written reason that

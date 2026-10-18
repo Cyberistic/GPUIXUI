@@ -1,0 +1,141 @@
+---
+title: Dark mode
+description: Switch light, dark and high-contrast themes from application state; the library ships no OS-mode listener.
+---
+
+Dark mode is a **resolved theme**, not a CSS class. The application decides the
+mode, gets a `Theme` from `@gpuixui/tokens`, and hands it to `ThemeProvider`.
+Every component below reads semantic roles, so one provider value changes the
+whole window.
+
+## A resolved theme, not a class
+
+Two constructs carry the choice: `ThemeMode` (`"light" | "dark"`) and
+`ThemeContrast` (`"default" | "high"`), independent axes. `getTheme` returns one
+of the four built-in themes:
+
+| Call | Theme |
+| ---- | ----- |
+| `getTheme("light")` | light |
+| `getTheme("dark")` | dark |
+| `getTheme("light", "high")` | high-contrast light |
+| `getTheme("dark", "high")` | high-contrast dark |
+
+Each is a real `Theme` object — the same roles, scales and density every
+component already reads. There is nothing to enable per component.
+
+## The application owns the mode
+
+GPUix exposes no appearance query, so the library cannot ask the operating
+system whether it is dark. Pretending to would mean guessing, and a guess is the
+one thing a design system must not do in dark mode. The honest contract is
+explicit: the host application decides the mode, remembers it, and passes the
+resolved theme.
+
+That also makes tests and screenshots deterministic — a test provides a theme
+instead of hoping the machine is in the right mode. The full token contract is
+in [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md);
+[Theming](/docs/theming) covers the roles and the extension mechanism.
+
+## Switching at runtime
+
+Keep the mode in application state and resolve the theme once per render. An app
+that uses both component packages nests the two providers — tokens outside
+primitives — with the same resolved theme:
+
+```tsx title="root.tsx"
+import { useState } from "react";
+import {
+  getTheme,
+  type ThemeContrast,
+  type ThemeMode,
+} from "@gpuixui/tokens";
+import { ThemeProvider as TokensThemeProvider } from "@gpuixui/tokens/react";
+import { ThemeProvider } from "@gpuixui/primitives";
+
+export function Root() {
+  const [mode, setMode] = useState<ThemeMode>("dark");
+  const [contrast, setContrast] = useState<ThemeContrast>("default");
+  const theme = getTheme(mode, contrast);
+
+  return (
+    <TokensThemeProvider theme={theme}>
+      <ThemeProvider theme={theme}>
+        <Workspace
+          onToggleMode={() => setMode(mode === "dark" ? "light" : "dark")}
+          onToggleContrast={() =>
+            setContrast(contrast === "high" ? "default" : "high")
+          }
+        />
+      </ThemeProvider>
+    </TokensThemeProvider>
+  );
+}
+```
+
+`Workspace` is your window content — the switch is ordinary state and the
+providers do the rest. A components-only app needs just the tokens provider; a
+primitives-only app needs just the primitives provider. [Getting started](/docs/getting-started)
+shows both shapes.
+
+## Persisting the choice
+
+The library only needs the resolved value; store the mode wherever the
+application already stores preferences. This snippet uses the app's own
+`settings` store — it is not a library import:
+
+```tsx
+const [mode, setMode] = useState<ThemeMode>(
+  () => settings.get("themeMode") ?? "dark",
+);
+
+const choose = (next: ThemeMode) => {
+  setMode(next);
+  settings.set("themeMode", next);
+};
+```
+
+Because the value is plain data, it can also arrive from a config file, a
+command-line flag or a workspace document — the provider does not care how the
+mode was chosen.
+
+## High contrast is a second axis
+
+Contrast is not a third mode. It keeps the layout and raises text and boundary
+contrast for accessibility:
+
+```tsx
+const theme = getTheme(mode, accessible ? "high" : "default");
+```
+
+Both axes together are the four themes in the table above. [Theming](/docs/theming#high-contrast)
+documents the contrast floors; the high-contrast pairs ship in the same package
+as `highContrastLightTheme` and `highContrastDarkTheme`.
+
+## Platform and mode are independent
+
+Pick the mode first, then apply the platform's type families:
+
+```tsx
+import {
+  getTheme,
+  platformTheme,
+  type PlatformName,
+  type ThemeMode,
+} from "@gpuixui/tokens";
+
+const themed = (mode: ThemeMode, platform: PlatformName) =>
+  platformTheme(getTheme(mode), platform);
+```
+
+`platformTheme` changes the monospace family and the theme label; it keeps the
+base palette, mode and density. Per-platform palettes are not shipped yet — the
+docs platform toggle reflects the values the package actually has.
+
+## What a switch costs
+
+A theme is data. Changing it re-renders the provider's subtree, and components
+read new role values on that render; there is no CSS cascade and no class to
+toggle in the native runtime. Resolve the theme with `getTheme` (and
+`platformTheme`) during render rather than storing resolved objects in state, so
+there is one place that decides what the current theme is.
