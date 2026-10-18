@@ -874,6 +874,19 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[ ]` Repo tooling: `.gitignore`'s `references/` does not match the worktree's `references` symlink, so it shows as untracked and can be committed by accident; ignore the symlink too
 `[x]` Root `nub.lock` is committed — `master` tracks it, so a clean install resolves the same versions
 `[ ]` Repo: AGENTS/PLAN name an integration branch `main`, but only `master` exists and the shared checkout is on it — confirm the name before workstreams merge. `agent/docs-site` has merged `master` (playground + testing) and is green at `552bc43`; it still waits on a coordinator because `master` is another tree's branch and this workstream must not push to it
+`[ ]` **Coordinator: `origin/master` carries a second, independent docs site.**
+      Measured 2026-10-18: `agent/docs-site` ships 285 files under `apps/docs`
+      (plans 410–514, 68 component pages, ten browser gates);
+      `origin/master`'s docs commits (`46287a10`…`5348a085`, 21:18–22:23)
+      build a 50-file minimal site and include none of the `4xx`/`5xx` docs
+      plans. Both write `apps/docs`, so merging either over the other silently
+      drops pages. Decide which site is the deliverable, then port the other's
+      unique content (the Hunter-License landing and shadcn Preview/Code tabs
+      exist only on `master`; the component registry, API tables, search index
+      and browser gates exist only on `agent/docs-site`) before the next
+      workstream takes `apps/docs`. Owner: coordinator + the landing workstream.
+      Deliberately **not** resolved here: this workstream must not push to
+      `master`.
 `[ ]` **Supervisor: two writers in one worktree.** A docs-site loop session (`run-docs-site.sh` → `opencode run`) and the interactive docs-site session wrote `workspaces/docs-site` at the same time on 2026-10-17 08:38–08:52: the loop committed the other session's in-flight edit together with its own work, and reverted a line of it mid-run. Evidence in `.agents/slop/docs-site-concurrency.md`. Per AGENTS §6 this session stopped the loop (both pids) to become the single writer. Fix: treat a live writer as owning the tree — either track interactive sessions, or refuse to start a workstream whose tree has uncommitted changes from a different pid. Owner: whoever owns `scripts/swarm-supervisor.sh`
 `[x]` Tokens-theme: expose a dependency-free token data export the docs site can read for token tables — `@gpuixui/tokens` (root entry) is consumed by the docs site; plan 416 renders the colour and type tables from it
 `[ ]` **Tokens-theme: ship the real per-platform style variants `MISSION.md` now requires.** `platformTheme` changes only the type families and the theme name (plan 051), so the docs platform toggle can only change the mono face. The docs side is ready (plan 434): every labelled preview reads the whole active `Theme`, so per-platform colours, spacing, radius, density and border values reach all four previews with no docs edit. Needs: three editable variant themes in `packages/tokens` pre-styled for macOS/Linux/Windows, their contrast guard, and `docs/tokens.md` updated; the docs then verifies "toggles macOS → Windows and every preview changes" visually. Do not add platform colours in `apps/docs`.
