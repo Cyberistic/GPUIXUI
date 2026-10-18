@@ -74,7 +74,7 @@ export type StatusTone = (typeof statusTones)[number];
 export const isStatusTone = (value: unknown): value is StatusTone =>
   statusTones.some((tone) => tone === value);
 
-/** The soft status roles an Alert, Badge or Toast spreads. */
+/** The soft status roles a tone-tinted Alert or Badge spreads. */
 export interface StatusToneStyle {
   /** The tone's soft surface (`xSoft`). */
   readonly background: string;
@@ -186,9 +186,12 @@ export function filledControl(
  * A canvas-tuned wash (`hover`, `active`) and the neutral fill (`secondary`)
  * cannot be perceived on a soft status fill: the four tints sit in a narrow
  * luminance band in each mode, and 80 of the 288 shipped fill-on-tint pairs are
- * under the 1.05:1 floor. An action inside an Alert, Badge or Toast paints this
- * raised family instead. A ghost action skips `background` and uses `hover` and
- * `active` on the panel; a filled action uses all three and its foreground.
+ * under the 1.05:1 floor. An action inside a tone-tinted Alert or Badge paints
+ * this raised family instead. A ghost action skips `background` and uses `hover`
+ * and `active` on the panel; a filled action uses all three and its foreground.
+ * A Toast is a `popover` card, so its action paints the canvas neutral family
+ * (`filledControl(theme, "secondary")`) — `softAction` equals the card in every
+ * light shipped set.
  *
  * @example
  * ```ts

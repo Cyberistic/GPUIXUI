@@ -9,12 +9,19 @@
  * `softAction` family is the designed answer, and these cases hold it to the
  * contract, prove the rejected composition is still measured, and prove the
  * public checker reports an edited theme that erases it.
+ *
+ * Plan 397 guards the family's scope: a Toast is a `popover` card, not a
+ * tone-tinted panel, and `softAction` equals that card in every light shipped
+ * set (1.0000:1) — so the floating-card case measures the failure the documents
+ * must not recommend, and the canvas case proves the neutral family the Toast
+ * action actually paints clears the same floors.
  */
 import { describe, expect, it } from "vitest";
 import {
   contrastFloors,
   contrastRatio,
   extendTheme,
+  filledControl,
   getTheme,
   highContrastThemes,
   softAction,
@@ -144,5 +151,59 @@ describe("the action inside a soft status panel", () => {
     );
 
     expect(failures.length).toBeGreaterThan(0);
+  });
+
+  it("states the floating card the family cannot carry", () => {
+    const lightSets = shippedThemes.filter(
+      ({ theme }) => theme.mode === "light",
+    );
+    expect(lightSets).toHaveLength(12);
+
+    const measured = lightSets.map(({ theme }) => ({
+      theme,
+      ratio: contrastRatio(theme.colors.softAction, theme.colors.popover),
+    }));
+    measured.forEach(({ theme, ratio }) => {
+      expect(ratio, theme.name).toBeLessThan(
+        contrastFloors[theme.contrast].surface,
+      );
+    });
+
+    expect(measured.find(({ theme }) => theme.name === "Light")?.ratio).toBe(1);
+
+    shippedThemes
+      .filter(({ theme }) => theme.mode === "dark")
+      .forEach(({ theme }) => {
+        expect(
+          contrastRatio(theme.colors.softAction, theme.colors.popover),
+          theme.name,
+        ).toBeGreaterThanOrEqual(contrastFloors[theme.contrast].surface);
+      });
+  });
+
+  it("measures the canvas family a Toast action actually paints", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const action = filledControl(theme, "secondary");
+      const floors = contrastFloors[theme.contrast];
+
+      expect(
+        contrastRatio(action.background, theme.colors.popover),
+        theme.name,
+      ).toBeGreaterThanOrEqual(floors.surface);
+      expect(
+        contrastRatio(action.hover, action.background),
+        `${theme.name} hover`,
+      ).toBeGreaterThanOrEqual(floors.step);
+      expect(
+        contrastRatio(action.active, action.hover),
+        `${theme.name} active`,
+      ).toBeGreaterThanOrEqual(floors.step);
+      [action.background, action.hover, action.active].forEach((fill) => {
+        expect(
+          contrastRatio(action.foreground, fill),
+          `${theme.name} label on ${fill}`,
+        ).toBeGreaterThanOrEqual(floors.secondary);
+      });
+    });
   });
 });

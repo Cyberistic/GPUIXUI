@@ -1,7 +1,7 @@
 /**
  * Guards the defect plan 095 fixes: the decorative `border` was measured on the
  * canvas, the card, the popover and the fills a bordered control paints, but not
- * the four soft status fills an Alert, Badge or Toast can paint — and a status
+ * the four soft status fills a tone-tinted Alert or Badge can paint — and a status
  * panel separates a footer or an action row with a line. Four dark pairs were
  * under the 1.05:1 divider floor: Windows dark 1.015:1 on `successSoft`, the
  * identity 1.023:1, identity dark `destructiveSoft` 1.040:1 and Linux dark

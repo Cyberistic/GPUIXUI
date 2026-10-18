@@ -172,6 +172,12 @@ state. `softActionPairs`, `softActionStepPairs` and `softActionLabelPairs` hold
 the raised family to the surface, step, secondary and body floors in every
 shipped set (plan 394).
 
+A Toast is a `popover` card, not a tinted panel: `toast/viewport.tsx` paints the
+card `popover` and tones only the glyph and the 3px bar. `softAction` equals that
+card in every light shipped set (**1.0000:1**), so a Toast action paints the
+canvas neutral family — `filledControl(theme, "secondary")` — which the contract
+measures on `popover`.
+
 ## Persisted choices
 
 A stored preference or a URL parameter arrives as `unknown`. `isPlatformName`,
@@ -315,7 +321,7 @@ invisible to satisfy a text floor. A card's own `cardForeground` is measured
 beside the default `foreground`, because both Windows recipes ship the two apart
 (plan 363). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
-`active`, until plan 081 darkened the three wash bases. An Alert, Badge or Toast
+`active`, until plan 081 darkened the three wash bases. An Alert or Badge
 is measured the same way: the tone's `xSoftForeground` is held to the body floor
 through the wash and the wash itself to 1.05:1 on the four soft fills. The audit
 found identity light `successSoftForeground` at 5.83:1 through the wash and
@@ -325,11 +331,11 @@ one step lighter with a 20% identity wash, Windows dark's wash moved to 40%, and
 Linux dark's soft destructive fill moved to `#3A0B0D` (plan 091). The panel's
 description and caption are measured through the same wash — `foreground` at the
 body floor and `mutedForeground` at the secondary floor on each soft fill,
-because an Alert's body and a Toast's caption are selected with it (plan 362);
+because an Alert's body and caption are selected with it (plan 362);
 accent-toned links stay the documented omission. The focus ring is
 checked on the canvas, card, popover and the `hover`, `active` and `selected`
 washes, so a ring that vanishes on a selected row is caught, and on the four soft
-status fills, because a toast's action button is focused while it sits on its own
+status fills, because an Alert's action button is focused while it sits on its own
 tint; every shipped variant already clears that floor, so the pairs are a
 guarantee rather than a fix (plan 093). An invalid control recolours the ring
 with `destructive`, and the runtime can draw only one, so the error ring is the
@@ -388,7 +394,7 @@ Windows 4.36:1) and high-contrast light was 5.83:1 on `active` and 6.70:1 on
 `accent`/`selected` until plan 083 moved the two warning steps. The functional
 control boundary is checked on the `muted` panel, the same four washes and the
 four soft status fills, so a checkbox or field inside a row, or an action inside
-an Alert or Toast, keeps its `borderStrong` edge: the identity light
+a tone-tinted Alert, keeps its `borderStrong` edge: the identity light
 set measured 2.62:1 on the pressed wash, macOS light 2.52:1, and high-contrast
 dark 4.15:1 until plan 084 moved five boundary values, and identity dark's edge
 measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
@@ -411,8 +417,8 @@ contrast) on the plain surfaces, on the `secondary`, `secondaryHover`,
 `secondaryActive`, `hover`, `active`, `accent`, `accentHover` and
 `accentActive` fills a bordered control paints, on the `selected` fill an
 outline action sits on in a selected row and on the four soft status fills a
-status panel divides, so an Alert, Badge or Toast, a loading placeholder, every
-divider and every outlined control's edge stay perceivable. The inherited dark
+status panel divides, so a tone-tinted Alert or Badge, a loading placeholder,
+every divider and every outlined control's edge stay perceivable. The inherited dark
 `successSoft` measured 1.015:1 on Windows, 1.023:1 on the identity and 1.047:1
 on Linux until plan 095 darkened it and the soft `destructive` fill one step
 while keeping the surface floor.
@@ -459,7 +465,7 @@ control; the two uses of the ring role are separate pairs.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
 `disabled` fill, the four plain surfaces, the four row washes and the four soft
-status fills a Toast's or Alert's action sits on (`inactiveSoftPairs`), because a
+status fills a tone-tinted Alert's action sits on (`inactiveSoftPairs`), because a
 disabled `Select` item paints the label straight onto the menu's `popover` and
 measured 1.99:1 on Linux dark until plan 306. The `disabled` fill is allowed to
 sit near the panel — no neutral clears both a white card and the quiet panel — so
@@ -516,7 +522,7 @@ lives in [`src/metrics.example.ts`](./src/metrics.example.ts).
 
 The four status families — `info`, `success`, `warning` and `destructive` — each
 have a solid role with a readable foreground, a soft pair with a designed edge
-for alerts, badges and toasts, and an `xText` role for labels, icons and
+for a tone-tinted Alert or Badge, and an `xText` role for labels, icons and
 indicator dots on a plain surface or the
 `hover`/`active`/`accent`/`selected` wash a row paints. `statusTone` resolves the
 soft surface, its readable foreground, its designed edge and the text role;

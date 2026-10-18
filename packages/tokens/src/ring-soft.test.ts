@@ -1,7 +1,7 @@
 /**
  * Guards the gap plan 093 closes: the focus ring was measured on the eight
- * surfaces a focused control sits on, but not the four soft status fills — and a
- * Toast's action button ("Retry", "Undo") is focused while it sits directly on
+ * surfaces a focused control sits on, but not the four soft status fills — and an
+ * Alert's action button ("Retry", "Undo") is focused while it sits directly on
  * `warningSoft` or `destructiveSoft`. No shipped set failed the floor when the
  * pairs were added (identity light `warningSoft` at 3.37:1 was the tightest
  * then; plan 300 moved the four tints, so `destructiveSoft` at 3.18:1 is the

@@ -1,8 +1,8 @@
 /**
  * Guards the defect plan 092 fixes: `borderStrong` is the edge of a field and of
  * an unchecked checkbox, and the contract measured it on the plain surfaces, the
- * `muted` panel and the four row washes — but not the four soft status fills an
- * Alert, Badge or Toast paints, where an action button, a field or a "don't show
+ * `muted` panel and the four row washes — but not the four soft status fills a
+ * tone-tinted Alert paints, where an action button, a field or a "don't show
  * again" checkbox sits. Identity dark measured 2.77:1 on `successSoft`, 2.94:1
  * on `destructiveSoft` and 2.97:1 on `infoSoft`, under the 3:1 boundary floor,
  * while every other shipped set already cleared it.

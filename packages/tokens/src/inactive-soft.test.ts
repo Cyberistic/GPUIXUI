@@ -1,6 +1,6 @@
 /**
  * Guards the gap plan 307 closed: the inactive floor covered the nine surfaces of
- * plan 306 but not the four soft status fills a Toast's or Alert's action sits
+ * plan 306 but not the four soft status fills a tone-tinted Alert's action sits
  * on. Plans 090–093 already treated those fills as surfaces a composition paints
  * on — the surface itself, its edge, the selection wash, the essential boundary
  * and the focus ring — but a disabled "Retry" had no pair behind it, so a brand

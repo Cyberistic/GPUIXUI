@@ -62,13 +62,13 @@
  * on, but only the canvas, card and two washes were measured.
  *
  * Plan 092 closes the same gap for the control boundary: `borderStrong` is
- * painted inside an Alert, Badge or Toast as well, but the contract named the
+ * painted inside a tone-tinted Alert as well, but the contract named the
  * plain surfaces, the quiet panel and the four row washes only. Identity dark
  * measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on
  * `infoSoft`, so the four soft fills join the boundary class and the identity
  * dark edge moves one half-step lighter.
  *
- * Plan 093 closes the last composition on those fills: a Toast's action button
+ * Plan 093 closes the last composition on those fills: an Alert's action button
  * is focused while it sits on the soft tint, but the ring was measured on the
  * eight surfaces a control normally sits on. Every shipped set already clears
  * the floor — identity light `warningSoft` at 3.37:1 is the tightest — so no

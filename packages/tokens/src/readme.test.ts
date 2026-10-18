@@ -74,7 +74,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states the state washes and floating surface the ring is checked on", () => {
     expect(readme).toContain(
-      "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught, and on the four soft status fills, because a toast's action button is focused while it sits on its own tint",
+      "The focus ring is checked on the canvas, card, popover and the `hover`, `active` and `selected` washes, so a ring that vanishes on a selected row is caught, and on the four soft status fills, because an Alert's action button is focused while it sits on its own tint",
     );
   });
 
@@ -138,7 +138,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states that a control inside a soft status fill keeps its edge", () => {
     expect(readme).toContain(
-      "the `muted` panel, the same four washes and the four soft status fills, so a checkbox or field inside a row, or an action inside an Alert or Toast, keeps its `borderStrong` edge",
+      "the `muted` panel, the same four washes and the four soft status fills, so a checkbox or field inside a row, or an action inside a tone-tinted Alert, keeps its `borderStrong` edge",
     );
     expect(readme).toContain(
       "identity dark's edge measured 2.77:1 on `successSoft`, 2.94:1 on `destructiveSoft` and 2.97:1 on `infoSoft` until plan 092 moved it to `#868FA0`",

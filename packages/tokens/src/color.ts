@@ -185,8 +185,9 @@ export interface ThemeColors {
   /**
    * Raised neutral action on a tone-tinted status panel. A canvas-tuned wash
    * cannot be perceived on a soft status fill — the four tints sit in one narrow
-   * luminance band in each mode — so an action inside an Alert, Badge or Toast
-   * paints this family instead.
+   * luminance band in each mode — so an action inside an Alert or Badge paints
+   * this family instead. A Toast is a `popover` card, where the canvas neutral
+   * family is the measured action.
    */
   readonly softAction: string;
   /** Text and icons on the `softAction` family, and on the panel a ghost action rests on. */
@@ -373,7 +374,7 @@ export const lightColors = {
  * The soft status foregrounds are the family's lightest step and the selection
  * wash is 20%, so an alert's text keeps the body floor through it while the
  * highlight stays visible (plan 091). The boundary is a half-step lighter than
- * plan 084 left it, so a checkbox or field inside an Alert or Toast keeps its
+ * plan 084 left it, so a checkbox or field inside a tone-tinted Alert keeps its
  * edge on all four soft status fills (plan 092). The skeleton is one ramp step
  * lighter than the pressed wash so a loading row never erases it (plan 094), and
  * a half-step further because its pulse paints the role at 60% for half of every

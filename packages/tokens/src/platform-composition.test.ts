@@ -6,7 +6,7 @@
  * and Aero inherited the identity tint (`#66191B`). Applying any of them over a
  * Linux dark theme kept Linux's tint, which measures **1.0005:1** on macOS
  * dark's background and 1.0448:1 on Windows', under the 1.05:1 surface floor —
- * an invisible Alert, Badge or Toast produced by the documented call.
+ * an invisible Alert or Badge produced by the documented call.
  *
  * This file fails without the fix: cases 1 and 2 report the four Linux-dark
  * compositions, and case 1 names the role that kept the wrong platform's value.

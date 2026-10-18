@@ -68,8 +68,15 @@
  * `FontWeight` row claimed a shipped `700` no `typography` role uses. The
  * counts, the weight set and the two size ranges are derived here from the
  * runtime owners, so a value edit has to take the table with it.
+ *
+ * Plan 397 guards the panel action's scope: the documents offered `softAction`
+ * to "an Alert, Badge or Toast", but a Toast is a `popover` card and the family
+ * equals that card in every light set. The stale phrase may not appear in the
+ * reference, the design system, the README or any non-test module, and each
+ * document must state the distinction, so the guidance cannot silently promise a
+ * composition the measured family cannot serve.
  */
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   alpha,
@@ -186,6 +193,12 @@ const designSystemSource = readFileSync(
 );
 
 const designSystem = designSystemSource.replace(/\s+/g, " ");
+
+/** The package's front-door document, read the same way as the two above. */
+const readmeSource = readFileSync(
+  new URL("../README.md", import.meta.url),
+  "utf8",
+);
 
 /** The table row that starts with `label`, or a failure naming it. */
 const tableRow = (label: string): string => {
@@ -1564,7 +1577,7 @@ describe("docs/tokens.md theme contract", () => {
 describe("docs/tokens.md contrast surfaces", () => {
   it("names the washes and the floating surface the contract covers", () => {
     const sentence =
-      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because a Toast's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the focus shadow surrounds, not what it sits on, so they are not `ringSurfaces`. The ring role has one other job: a pressed field repaints its border with `ring` on its own `input` fill, the way hover repaints it with `borderStrong`, so that control edge is a `boundary` pair (`fieldPressedEdgePairs`, plan `343`). `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on `background`, `card`, `popover`, the `muted` panel and those four washes, so a status label or indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because an Alert or Toast carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
+      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because an Alert's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the focus shadow surrounds, not what it sits on, so they are not `ringSurfaces`. The ring role has one other job: a pressed field repaints its border with `ring` on its own `input` fill, the way hover repaints it with `borderStrong`, so that control edge is a `boundary` pair (`fieldPressedEdgePairs`, plan `343`). `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on `background`, `card`, `popover`, the `muted` panel and those four washes, so a status label or indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because a tone-tinted Alert carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -1674,7 +1687,7 @@ describe("docs/tokens.md contrast surfaces", () => {
     const list = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     const sentence =
       "A soft surface is a surface in its own right: it is held to " +
-      `${contrastFloors.default.surface}:1 against ${list}, so an Alert, Badge or Toast stays ` +
+      `${contrastFloors.default.surface}:1 against ${list}, so an Alert or Badge stays ` +
       "perceivable on every shipped canvas, platform variants included.";
 
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
@@ -1949,6 +1962,31 @@ describe("docs/design-system.md", () => {
       expect(row, `${role} on ${surface}`).toContain(`\`${role}\``);
       expect(row, `${role} on ${surface}`).toContain(`\`${surface}\``);
     });
+  });
+
+  it("offers the panel action only to a tone-tinted panel", () => {
+    const prose: ReadonlyArray<readonly [string, string]> = [
+      ["docs/tokens.md", markdownProse],
+      ["docs/design-system.md", designSystem],
+      ["packages/tokens/README.md", readmeSource.replace(/\s+/g, " ")],
+    ];
+
+    prose.forEach(([file, text]) => {
+      expect(text, file).toContain(
+        "A Toast is a `popover` card, not a tinted panel",
+      );
+      expect(text, file).not.toContain("Alert, Badge or Toast");
+    });
+
+    const sourceDirectory = new URL("./", import.meta.url);
+    readdirSync(sourceDirectory)
+      .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+      .forEach((name) => {
+        expect(
+          readFileSync(new URL(name, sourceDirectory), "utf8"),
+          name,
+        ).not.toContain("Alert, Badge or Toast");
+      });
   });
 
   it("names every control boundary role and surface the contract measures", () => {

@@ -22,7 +22,7 @@
  * transient pointer washes and the filled families' hover/press steps stay out.
  *
  * Plan 395 adds the resting fill plan 394 shipped: `softAction` is the raised
- * action an Alert or Toast paints, so a dialog opens over it too. Every shipped
+ * action a tone-tinted Alert paints, so a dialog opens over it too. Every shipped
  * set already clears the floor (AAA dark is tightest at 1.5519:1).
  */
 import { describe, expect, it } from "vitest";

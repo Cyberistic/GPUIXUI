@@ -1,7 +1,7 @@
 import { statusTone, textStyle, type StatusTone, type Theme } from "./index.js";
 
 /**
- * The style objects an Alert, Badge or Toast spreads for a soft status tone.
+ * The style objects a tone-tinted Alert or Badge spreads for a soft status tone.
  * A real component adds its own layout; this shows only the tone's colour and
  * text, which is the part that must not be invented per component.
  */

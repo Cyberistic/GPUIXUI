@@ -245,8 +245,8 @@ Two border roles:
   edge around the surface, not a divider inside it.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
   against the canvas, the `muted` panel, the `hover`/`active`/`accent`/
-  `selected` washes a row paints and the four soft status fills an Alert or Toast
-  paints, so a checkbox or field is perceivable without relying on fill alone.
+  `selected` washes a row paints and the four soft status fills a tone-tinted
+  Alert paints, so a checkbox or field is perceivable without relying on fill alone.
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. The
@@ -396,6 +396,12 @@ hover and press on the panel with the same foreground. `softAction(theme)`
 returns the family in one call, and the three lists
 (`softActionPairs`, `softActionStepPairs`, `softActionLabelPairs`) hold it to the
 surface, step, secondary and body floors in every shipped set (plan `394`).
+
+A Toast is a `popover` card, not a tinted panel: `toast/viewport.tsx` paints the
+card `popover` and tones only the glyph and the 3px bar. `softAction` equals that
+card in every light shipped set (**1.0000:1**), so a Toast action paints the
+canvas neutral family — `filledControl(theme, "secondary")` — which is measured
+on `popover`.
 
 The brand families have not migrated either, and their cost is the label rather
 than the fill: `components` hovers a primary action at 50% and `primitives` at

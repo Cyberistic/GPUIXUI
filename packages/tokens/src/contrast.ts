@@ -186,7 +186,7 @@ export const softBorderSurfacePairs: readonly ContrastPair[] =
   );
 
 /**
- * The soft status fills a plain divider is painted on. An Alert or Toast can
+ * The soft status fills a plain divider is painted on. A tone-tinted Alert can
  * separate a footer or an action row with a line, and the divider must stay
  * visible there like it does on the canvas.
  */
@@ -387,7 +387,7 @@ const inactiveBaseSurfaces = [
 ] as const;
 
 /**
- * The soft status fills a disabled action sits on. An Alert or Toast carries
+ * The soft status fills a disabled action sits on. A tone-tinted Alert carries
  * actions — Retry, Undo, Dismiss — and one can be unavailable while the panel is
  * open, so the label needs the inactive floor there like it does on a plain
  * surface.
@@ -434,7 +434,7 @@ const controlBoundaryPairs: readonly ContrastPair[] =
   );
 
 /**
- * The soft status fills a bounded control can sit on. An Alert or Toast carries
+ * The soft status fills a bounded control can sit on. A tone-tinted Alert carries
  * an action — a field, a "don't show again" checkbox — and inline validation
  * renders inside a soft `destructive` block, so the edge a reader uses to see an
  * unchecked control is painted on these fills too. The boundary floor applies.
@@ -487,7 +487,7 @@ const ringPairs: readonly ContrastPair[] = ringSurfaces.map(
 );
 
 /**
- * The soft status fills a focused control can sit on. An Alert or Toast carries
+ * The soft status fills a focused control can sit on. A tone-tinted Alert carries
  * actions — a Retry or Dismiss button — and the ring is the only indicator of
  * which control holds focus, so each fill is held to the boundary floor like the
  * surfaces a control normally sits on.
@@ -674,14 +674,16 @@ export const toastTonePairs: readonly ContrastPair[] = statusTones.flatMap(
 
 /**
  * The designed action family for a tone-tinted status panel. `softAction` is the
- * raised fill an action inside an Alert, Badge or Toast paints, and a ghost
+ * raised fill an action inside a tone-tinted Alert or Badge paints, and a ghost
  * action paints its hover and press on the panel itself. Neither the canvas
  * washes (`hover`, `active`) nor the neutral fill (`secondary`) is perceivable on
  * a soft status fill — the four tints sit in a narrow luminance band and 80 of
  * the 288 shipped fill-on-tint pairs measured under 1.05:1 — so each fill is held
  * to the surface floor on the four fills, the family is a perceivable ladder, and
  * the one foreground is held on all three fills and on the panel a ghost
- * action's label rests on.
+ * action's label rests on. A Toast is a `popover` card, not a tinted panel: its
+ * action paints the canvas neutral family, which `stateFillSurfacePairs` measures
+ * on that card.
  */
 export const softActionPairs: readonly ContrastPair[] = (
   ["softAction", "softActionHover", "softActionActive"] as const
@@ -1291,7 +1293,7 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * persistent `selected` fill a table or list keeps — the floating surface a
  * menu opens on, the resting fills of the actions on the page (`primary`,
  * `secondary`, `accent`, `destructive` and the soft status panel's `softAction`)
- * and the four soft status panels an Alert, Badge or Toast paints. A scrim that
+ * and the four soft status panels an Alert or Badge paints. A scrim that
  * composites to its own surface is an invisible modal backdrop, so each is held
  * to the `surface` floor.
  *
@@ -1300,7 +1302,7 @@ export const selectionSoftWashPairs: readonly ContrastPair[] = [
  * the dialog, so a scrim over them is not a composition the system supports.
  * `accent` is included because it is also the resting fill of a toggled-on
  * control, not only the wash a selectable row hovers; `softAction` is the raised
- * action an Alert or Toast paints (plan 394), so it is a resting fill a window
+ * action a tone-tinted Alert paints (plan 394), so it is a resting fill a window
  * shows too, while its hover and press are transient. `disabled`, `skeleton`
  * and `track` are not the content a dialog opens over: a scrim that is
  * invisible on a disabled control, a loading placeholder or a progress groove

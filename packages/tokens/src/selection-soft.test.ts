@@ -1,6 +1,6 @@
 /**
  * Guards the defect plan 091 fixed: the selection contract named nine surfaces
- * but not the four soft status surfaces an Alert, Badge or Toast paints, so
+ * but not the four soft status surfaces a tone-tinted Alert or Badge paints, so
  * selecting their text was not measured. Identity light `successSoftForeground`
  * through the wash measured 5.83:1, under the 7:1 body floor, and Windows
  * dark's 20% wash over `destructiveSoft` measured 1.005:1 — an invisible
