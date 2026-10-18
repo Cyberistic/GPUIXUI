@@ -26,7 +26,8 @@ import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { useCallback, useState, type ReactNode } from "react";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { ErrorSummary } from "./internal/error-summary.js";
+import { useTheme } from "./internal/theme.js";
 import {
   fieldMessageAt,
   validateFields,
@@ -118,31 +119,7 @@ export const Form = <T,>({
         style,
       )}
     >
-      {Arr.match(errors, {
-        onEmpty: () => null,
-        onNonEmpty: (messages) => (
-          <div
-            role="alert"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: theme.spacing["2xs"],
-            }}
-          >
-            {Arr.map(messages, (message) => (
-              <text
-                key={message}
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.destructive,
-                }}
-              >
-                {message}
-              </text>
-            ))}
-          </div>
-        ),
-      })}
+      <ErrorSummary messages={errors} />
       {children({ errors, fieldErrors, errorFor, pending, submit })}
     </div>
   );

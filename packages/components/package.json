@@ -37,6 +37,7 @@
     "./mention-input": "./src/mention-input.tsx",
     "./message": "./src/message.tsx",
     "./message-scroller": "./src/message-scroller.tsx",
+    "./multi-step-form": "./src/multi-step-form.tsx",
     "./navigation-menu": "./src/navigation-menu.tsx",
     "./pagination": "./src/pagination.tsx",
     "./popover": "./src/popover.tsx",

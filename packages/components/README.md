@@ -45,6 +45,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/fieldset.tsx` | Fieldset: a named group over `role="group"`, with `disabled` reaching `FieldInput` |
 | `src/form.tsx` | Form: owned-value schema validation, one alert summary, messages located by field path (`fieldErrors`/`errorFor`), decoded `onSubmit` |
 | `src/stepper.tsx` | Stepper: a read-only step list whose statuses derive from one value |
+| `src/multi-step-form.tsx` | MultiStepForm: step-scoped validation over the caller's draft, the full schema once on the last step, and the shared error summary |
 | `src/navigation-menu.tsx` | NavigationMenu: one open anchored panel, roving triggers, hover travel over the shared `internal/hover.ts` policy |
 | `src/mention-input.tsx`, `src/mention/logic.ts` | MentionInput: ranked `@` suggestions over the anchored layer |
 | `src/message-scroller.tsx`, `src/message-scroller/logic.ts` | MessageScroller: pinned follow, no yank, unread count and jump-to-latest over a bounded scroll viewport |

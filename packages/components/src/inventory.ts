@@ -36,6 +36,7 @@ import { listMeta } from "./list.js";
 import { mentionInputMeta } from "./mention-input.js";
 import { messageMeta } from "./message.js";
 import { messageScrollerMeta } from "./message-scroller.js";
+import { multiStepFormMeta } from "./multi-step-form.js";
 import { navigationMenuMeta } from "./navigation-menu.js";
 import { paginationMeta } from "./pagination.js";
 import { popoverMeta } from "./popover.js";
@@ -97,6 +98,7 @@ export const inventory: ReadonlyArray<ComponentMeta> = [
   mentionInputMeta,
   messageMeta,
   messageScrollerMeta,
+  multiStepFormMeta,
   navigationMenuMeta,
   paginationMeta,
   popoverMeta,

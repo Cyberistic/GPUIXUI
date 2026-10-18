@@ -43,6 +43,7 @@ import { ListExample } from "./list.example.js";
 import { MentionInputExample } from "./mention-input.example.js";
 import { MessageExample } from "./message.example.js";
 import { MessageScrollerExample } from "./message-scroller.example.js";
+import { MultiStepFormExample } from "./multi-step-form.example.js";
 import { NavigationMenuExample } from "./navigation-menu.example.js";
 import { PaginationExample } from "./pagination.example.js";
 import { PopoverExample } from "./popover.example.js";
@@ -87,6 +88,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   "mention-input": MentionInputExample,
   message: MessageExample,
   "message-scroller": MessageScrollerExample,
+  "multi-step-form": MultiStepFormExample,
   "navigation-menu": NavigationMenuExample,
   pagination: PaginationExample,
   popover: PopoverExample,
