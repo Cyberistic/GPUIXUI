@@ -172,6 +172,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [373](./373-applied-default-palette.md) | The default palette a caller asked for | F | 011, 063, 073, 301, 323, 345 | done |
 | [374](./374-platform-style-over-platform.md) | A platform style applied over another platform's theme | F | 063, 071, 073, 091, 301, 311, 328, 373 | done |
 | [375](./375-scrim-over-filled-actions.md) | The modal scrim over the filled actions and status panels a window shows | F | 071, 099, 309, 311, 359 | done |
+| [376](./376-design-system-elevation-truth.md) | The design-system's elevation paragraph | F | 315, 326, 337, 345, 352, 359, 375 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1510,6 +1511,24 @@ and the four soft status panels join `overlaySurfaces` (6 → 14 scrim pairs).
 The transient pointer washes and the filled families' hover/press steps stay
 out, as do `disabled`, `skeleton` and `track`; none is the content a dialog
 opens over.
+
+376 closes the truth gap plan 375 left in the same document. `overlaySurfaces`
+grew from six to fourteen, and `docs/tokens.md`, the §9 accessibility table row
+and the §9 explanation state fourteen, but the §7 elevation paragraph still said
+"the six surfaces it covers — `background`, `card`, the `muted` panel, the
+`input` fill …, the persistent `selected` fill … and `popover`", so the page
+contradicted itself in two places. Nothing read §7: the floor-table guard is
+built from `overlaySurfaces`, the paragraph was not. The same paragraph called a
+level "exactly one shadow" while `Elevation` is `ElevationShape[]`, a shipped
+level carries at most one entry and `elevationShadows` resolves the list for a
+web renderer — the opposite of what `elevation.ts` and `docs/tokens.md` state —
+and it called the transient pointer washes "the one exclusion" though the filled
+families' `xHover`/`xActive` steps are excluded too. §7 now groups the fourteen
+surfaces the way the reference does, names both pointer-state exclusions and
+describes the level as the list the helpers read. `docs.test.ts` slices the
+paragraph and holds every member of `overlaySurfaces`, the derived count word
+and the two helper names to it, so the next surface added to the scrim contract
+cannot ship with a stale rationale. No token value, colour, pair or floor moves.
 
 ### Reference adoption (block `200–299`)
 

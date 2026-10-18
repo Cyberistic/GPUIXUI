@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 143/195
+`[x]` `[███████░░░]` 144/196
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1042,6 +1042,12 @@ soft status fill left a control or Alert undimmed while the checker returned
 `overlaySurfaces` (6 → 14 scrim pairs), every shipped set already clears the
 1.05:1 floor (1.075:1 at the tightest, AAA dark on `primary`), so no colour
 moves (plan 375)
+`[x]` Hold the design-system's elevation paragraph to the contract — §7 still
+said the scrim covers six surfaces after plan 375 grew it to fourteen, and called
+a level "exactly one shadow" while `Elevation` is a list and `elevationShadows`
+resolves it; §7 now names all fourteen surfaces and the pointer-state exclusion,
+`docs.test.ts` holds each member to `overlaySurfaces` and the level description to
+the two helpers, and no token, colour, pair or floor moves (plan 376)
 
 ## Phase C — Tier 1–2 components
 
