@@ -114,9 +114,10 @@ describe("selected secondary text", () => {
 
 describe("the selection wash stays visible", () => {
   it("documents one perceivability pair per surface", () => {
-    expect(selectionWashPairs).toEqual(
-      selectionSurfaces.map((surface) => ["selection", surface, "surface"]),
-    );
+    expect(selectionWashPairs).toEqual([
+      ...selectionSurfaces.map((surface) => ["selection", surface, "surface"]),
+      ["selection", "disabled", "surface"],
+    ]);
   });
 
   it("clears the surface floor on every shipped set", () => {
@@ -146,6 +147,7 @@ describe("the selection wash stays visible", () => {
 
     expect(failures.map(({ background }) => background)).toEqual([
       ...selectionSurfaces,
+      "disabled",
       ...selectionSoftWashPairs.map(([, background]) => background),
     ]);
     expect(

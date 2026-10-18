@@ -1376,12 +1376,19 @@ export const selectionInactivePairs: readonly ContrastPair[] =
  * The surfaces a selection wash must stay visible on. Each entry pairs the
  * translucent `selection` role with the surface it paints on; the check
  * composites the two, so a theme whose highlight has become imperceptible fails
- * the `surface` floor even when every glyph is readable.
+ * the `surface` floor even when every glyph is readable. The `disabled` fill
+ * joins the list because the unavailable label plan `510` measures through the
+ * same wash is painted on it: a highlight that matches that fill erases the
+ * selection while every text pair still passes.
  */
-export const selectionWashPairs: readonly ContrastPair[] =
-  selectionSurfaces.map(
+export const selectionWashPairs: readonly ContrastPair[] = [
+  ...selectionSurfaces.map(
     (surface): ContrastPair => ["selection", surface, "surface"],
-  );
+  ),
+  // The unavailable label is selected with the copy around it (plan 510), so
+  // the wash must stay visible on the fill it keeps.
+  ["selection", "disabled", "surface"],
+];
 
 /**
  * Content painted on an opaque filled surface uses the inverse veil rather than

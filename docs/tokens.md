@@ -1626,7 +1626,11 @@ highlight's own perceivability on the four soft fills. An unavailable label is m
 thirteen `inactiveSurfaces` it paints on, at the `inactive` floor, because
 `selectionColor` inherits into that text. The wash itself is compared with each
 surface it paints on, so a highlight that has become imperceptible is reported
-as well; `selectionWashPairs` is that list.
+as well; `selectionWashPairs` is that list. It also holds the `disabled` fill,
+because plan `510` measures the unavailable label through this wash on the fill
+it keeps — a highlight that matches that fill would erase the selection while
+every text pair still passed. Every shipped set already clears the floor, so no
+colour moves.
 
 Every exported pair list is held to content uniqueness: a repeated
 `[foreground, background, class]` would make the checker report one composition
@@ -2806,7 +2810,8 @@ visible.
 Text selection is measured in both directions: `selectionPairs` holds the body
 role each surface uses and `mutedForeground` on all nine `selectionSurfaces` to
 their floors, and `selectionWashPairs` holds the wash itself to the 1.05:1
-perceivability floor on each, because a highlight can be readable and still be
+perceivability floor on each plain surface and on the `disabled` fill an
+unavailable label keeps, because a highlight can be readable and still be
 invisible. Windows dark and both high-contrast sets already cleared the secondary
 floor through the wash; the other seven moved their secondary grey one step away
 from the canvas (plan `087`). The four soft status surfaces are measured the same

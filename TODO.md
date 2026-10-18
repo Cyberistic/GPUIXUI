@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 188/250
+`[x]` `[███████░░░]` 189/251
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1499,6 +1499,13 @@ controlPaddingX: { sm: 0, md: 0, lg: 0 } } })` returned `[]` from all six checks
 while every labelled control painted its glyph on its own border. The ladder now
 asks for `positive` and each size is `atLeast` the theme's own hairline
 (`spacing["2xs"]`); every shipped set ships 6–14px, so no value moves (plan 523)
+`[x]` Hold the selection wash on the unavailable control's fill — plan `510`
+measures `disabledForeground` through the paint on the `disabled` fill, but
+`selectionWashPairs` measured the wash only on the nine `selectionSurfaces` and
+the four soft fills, so a theme whose `selection` equalled its `disabled`
+returned `[]` for the composition while the highlight was gone; the pair joins
+the list (9 → 10 wash pairs) and every shipped set already clears the 1.05:1
+floor (1.125:1 at the tightest, high-contrast dark), so no colour moves (plan 524)
 
 ## Phase C — Tier 1–2 components
 

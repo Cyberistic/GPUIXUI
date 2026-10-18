@@ -584,7 +584,7 @@ describe("themeContrastFailures", () => {
     // row's title, and the same nine at secondary strength.
     expect(selectionPairs.length).toBe(20);
     expect(selectionStatusPairs).toHaveLength(36);
-    expect(selectionWashPairs.length).toBe(9);
+    expect(selectionWashPairs.length).toBe(10);
     expect(selectionSoftPairs.length).toBe(16);
     expect(selectionSoftWashPairs.length).toBe(4);
     expect(selectionFillPairs).toHaveLength(8);

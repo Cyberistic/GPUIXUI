@@ -357,9 +357,11 @@ the same wash on the same nine surfaces (`selectionStatusPairs`), because
 `successText` measured 3.671:1 on `active` until plan 366 moved the six light
 status roles one half-step, and the AAA tightest is 7.370:1 (identity light high
 `warningText` on `active`). `selectionWashPairs` also holds the
-wash itself to 1.05:1 against each surface, so a highlight cannot be made
-invisible to satisfy a text floor. A card's own `cardForeground` is measured
-beside the default `foreground`, because both Windows recipes ship the two apart
+wash itself to 1.05:1 against each surface — including the `disabled` fill an
+unavailable label keeps, because plan 510 measures that label through the same
+wash — so a highlight cannot be made invisible to satisfy a text floor. A card's
+own `cardForeground` is measured beside the default `foreground`, because both
+Windows recipes ship the two apart
 (plan 363), and a selected row's title (`foreground`) is measured beside its
 inherited `selectedForeground`, because the title is the brighter of the two
 roles (plan 506). High-contrast dark shipped at 6.48:1 on `hover`

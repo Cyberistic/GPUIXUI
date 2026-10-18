@@ -218,6 +218,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [521](./521-inline-icon-line-fit.md) | The inline icon must fit its line box | F | 353, 358, 367, 372, 384, 386 | done |
 | [522](./522-inline-avatar-row-fit.md) | The inline avatar must fit the dense row it leads | F | 054, 358, 360, 372, 386, 521 | done |
 | [523](./523-control-horizontal-padding.md) | A control's horizontal padding is a shape, not a number | F | 089, 358, 368, 372, 384, 517 | done |
+| [524](./524-disabled-selection-wash.md) | The selection wash on the unavailable control's fill | F | 071, 081, 087, 306, 307, 510 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2296,6 +2297,17 @@ now asks for `positive` and each size is `atLeast` the theme's own
 `spacing["2xs"]`, so a brand that widens its hairline gets the allowance and one
 that flushes its controls is reported; every shipped set ships 6–14px, so no
 colour, pair, floor or metric moves and `contrastPairs` stays **396**.
+
+Plan `524` closes the one surface where a washed label is measured but the wash
+itself is not. Plan `510` holds `disabledForeground` through the composited
+`selection` wash on `inactiveSurfaces`, which begins with the `disabled` fill,
+but `selectionWashPairs` named only the nine `selectionSurfaces` and the four
+soft status fills. A theme whose `selection` equalled its `disabled` fill
+therefore returned `[]` for the composition — the label is exactly as readable
+as it was at rest, so the text pair passed — while the highlight was gone. The
+pair joins the wash list (9 → 10 wash pairs; `contrastPairs` stays 396); every
+shipped set already clears the 1.05:1 floor (1.125:1 at the tightest,
+high-contrast dark), so no colour moves.
 
 ## How to use a plan
 

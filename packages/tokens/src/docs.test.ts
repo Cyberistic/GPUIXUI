@@ -960,6 +960,12 @@ describe("docs/tokens.md quoted figures", () => {
     expect(markdownProse).toContain(sentence);
   });
 
+  it("names the disabled fill in the selection-wash paragraph", () => {
+    expect(markdownProse).toContain(
+      "It also holds the `disabled` fill, because plan `510` measures the unavailable label through this wash on the fill it keeps",
+    );
+  });
+
   it("states the soft edge floor in the catalogue", () => {
     const sentence =
       "measured on the fill it borders and on the eight surfaces a chip sits on " +
@@ -2231,7 +2237,7 @@ describe("docs/design-system.md", () => {
       `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a status label (\`xText\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`, the \`disabled\` fill and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| text selection on an opaque filled surface (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\`/\`infoForeground\`/\`successForeground\`/\`warningForeground\`/\`softActionForeground\` over the composited \`selectionOnFill\` veil, on each fill's resting value) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on an opaque filled surface (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`/\`info\`/\`success\`/\`warning\`/\`softAction\`, on each fill's resting value) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes, the four soft status fills and the \`track\` groove a focused slider's thumb sits on, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
@@ -2657,5 +2663,11 @@ describe("docs/design-system.md interaction states", () => {
     const text = tableRow("text selection");
     expect(text).toContain("`selection`");
     expect(text).toContain("`selectionOnFill`");
+  });
+
+  it("names the disabled fill the wash must stay visible on", () => {
+    expect(tableRow("text selection")).toContain(
+      "including on the `disabled` fill an unavailable label keeps",
+    );
   });
 });
