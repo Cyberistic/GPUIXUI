@@ -44,6 +44,12 @@ pair is swapped, the rule every slider and meter follows. Before that rule,
 max={0}` collapsed to `0` for a value of `150`, and `step={Infinity}` painted
 `"Infinity"`. A `step` that is not a finite positive number is one.
 
+The two spin buttons read that **same normalised range** (plan `378`), so with
+`min={100} max={0}` the field is simply `0…100`: at `0` the up button is live and
+the down button is blocked, and at `100` the reverse. Before that rule both
+buttons compared the raw props, which every painted value satisfies, so an
+inverted pair blocked the pointer while the arrow keys kept stepping.
+
 ## Variants, sizes and states
 
 | Prop | Type | Default | Consequence |
@@ -188,7 +194,10 @@ after the wrapper's chrome:
   (`min={NaN}`, `max={NaN}`, `min=100 max=0`, `step={Infinity}`) paint only
   finite values, the swapped range steps `100 → 99 → 100`, and an infinite step
   reports `6`; proven in `runtime/nonsense-numbers.runtime.test.tsx` and the
-  core range cases.
+  core range cases. **Plan `378`:** the spin buttons resolve their blocked state
+  from that same range, so the swapped pair leaves the up button live at `0` and
+  blocks the down one (the reverse at `100`); the element tree and a hit-tested
+  runtime click prove both ends.
 
 ```sh
 nub run --filter @gpuixui/primitives test

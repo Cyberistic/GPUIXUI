@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 122/122
+`[x]` `[██████████]` 123/123
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -869,6 +869,15 @@ retired once both branches are one
       both decorations differ from plain, and they differ from each other. 2
       core + 1 element + 1 runtime file (2 cases), both mutations fail by name
       (offline 665 → 667, runtime 616 → 618, 33 files; plan `377`).
+`[x]` `packages/primitives`: **a number field's pointer steppers ignored the
+      swapped range** — measured (2026-10-18): `min={100} max={0}` normalises to
+      `0…100` and the arrow keys step it (`100 → 99 → 100`, plan 371), but both
+      spin buttons compared the raw props (`current <= 100`, `current >= 0`),
+      which every painted value satisfies, so both painted blocked and a
+      hit-tested press reported nothing. The blocked state now reads the
+      normalised range, so the up button is live at the range's minimum and the
+      down button at its maximum; one element-tree case and one runtime click
+      case fail in the old direction (plan `378`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
       across the whole Tier 1 set: every pointer-interactive element declares
