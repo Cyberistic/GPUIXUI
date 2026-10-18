@@ -30,14 +30,19 @@ implementation worth keeping.
 ## 2. The rule
 
 > A control activates **once per keystroke**. Enter fires on key down; Space
-> fires on key **up** for a control that draws as a button (`role="button"`).
-> A key-repeat event (`isHeld`) never activates.
+> fires on key **up** for a control that activates through
+> `internal/activate.ts`. A key-repeat event (`isHeld`) never activates.
 >
 > Composite row/cell parts keep Space as a **selection** key on key down
 > (`List`, menus, grid cells, date cells, tabs): ARIA's listbox/grid patterns
 > treat Space as selection there, and moving it to key up would change what the
 > key means. Enter still activates them on key down. The repeat guard applies to
 > every one of them.
+>
+> The helper lands with the controls that use it today (the Button stand-in and
+> the two clear affordances). The other button-shaped parts — accordion,
+> collapsible, breadcrumb, hotkey recorder, inline-edit display, tag chip — keep
+> Space on key down; moving them is the follow-up recorded in `TODO.md`.
 
 `defaultPrevented` remains unavailable in `@gpuix/react@0.10.0`; the contract
 must stop claiming it is respected (it is not part of `EventPayload`).
@@ -208,4 +213,10 @@ records the row a keyboard open lands on *after* the click has opened the menu,
 and a caller-first order makes the click's `setOpen(!open)` reset that row. The
 caller's handler still runs once per keystroke; `docs/component-api.md` §1's
 composition rule is about not dropping or replacing a handler, which holds.
+
+Scope landed: the release split covers the four call sites built on the helper
+(Button, IconButton, the search clear and the time clear). The other
+button-shaped parts keep Space on key down — converting them is a separate sweep
+recorded in `TODO.md`, and `docs/component-api.md` §4 names the split instead of
+overclaiming it.
 
