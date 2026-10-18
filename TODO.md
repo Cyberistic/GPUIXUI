@@ -470,8 +470,9 @@ Work that this workstream needs but does not own. Another agent owns each row.
     - `[x]` Tabs starts an arrow move from the natively focused tab (a live click
       and `autoFocus` never run React's `onFocus`) — plan 367; 1 native case
       (Tabs 16, behaviour 527), fails on the old origin
-    - `[ ]` DatePicker opens on today (clamped to the bounds) instead of the
-      month head when it has no value — plan 368
+    - `[x]` DatePicker opens on today (clamped to the bounds) instead of the
+      month head when it has no value — plan 368; 2 native cases (DatePicker 18,
+      behaviour 529), both fail on the old fallback
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

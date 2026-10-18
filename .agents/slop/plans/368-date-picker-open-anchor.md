@@ -3,7 +3,8 @@
 **Phase.** F — integration and polish (a measured consumer defect).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 112, 119, 127, 303, 323, 346 (playground evidence).
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — 2 native cases (DatePicker 18, behaviour 529); both
+fail on the old month-head fallback.
 
 ## 1. Why this plan exists
 
@@ -165,4 +166,15 @@ Expected: behaviour 529, unit unchanged, `check` exit `0`.
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- `src/behaviour/date-picker.test.tsx`: **18/18 green**. With `date-picker.tsx`
+  restored to the pre-fix focus fallback, both new cases fail with
+  `date-day-2026-10-01` focused (`2 failed | 16 passed`); with the anchor they
+  focus `date-day-2026-10-17` and `ArrowRight` moves to the 18th.
+- One `anchor` now feeds the initial view month, the open effect and the focus
+  fallback, so the commit that runs the focus effect no longer starts from a
+  stale `active`; the anchor is clamped to `min`/`max`, which removes the
+  first-arrow jump the playground measured.
+- Docs and inventory say 18 native tests; the keyboard section states the
+  today/anchor rule.

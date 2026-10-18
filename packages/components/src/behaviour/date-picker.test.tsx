@@ -89,6 +89,29 @@ describe("DatePicker", () => {
     picker.unmount();
   });
 
+  it("opens with no value on today, not the month head", () => {
+    const picker = renderComponent(<Picker />);
+
+    open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.unmount();
+  });
+
+  it("opens on the first selectable day when today is before min", () => {
+    const picker = renderComponent(<Picker min="2026-10-17" />);
+
+    open(picker);
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.renderer.simulateKeystrokes("right");
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-18"));
+
+    picker.unmount();
+  });
+
   it("selects an ISO day, closes and updates the trigger", () => {
     const onValueChange = vi.fn();
     const picker = renderComponent(<Picker onValueChange={onValueChange} />);

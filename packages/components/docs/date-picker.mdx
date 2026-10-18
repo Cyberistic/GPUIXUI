@@ -118,9 +118,10 @@ owns `null` as the "no date" state.
 | `Escape` | closes and returns focus to the trigger |
 | `Tab` | leaves the popover — it is not a trap |
 
-One cell is the tab stop (the selected day, else the first selectable day of the
-viewed month); the arrow keys move real focus, so the highlight and the focus are
-the same cell.
+One cell is the tab stop (the selected day, else today clamped to `min`/`max`); the
+arrow keys move real focus, so the highlight and the focus are the same cell. A
+no-value open therefore lands on today — or on the first selectable day when
+today is out of range — never on the month's first day.
 
 ## Theming
 
@@ -163,7 +164,8 @@ day of a month without `Date`, day identity, labels, ISO parsing (including
 `2026-02-30`), inclusive bounds, malformed bounds, clamping, month browse limits
 and `min` after `max`.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (16 tests): open + day focus, selection
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (18 tests): open + day focus,
+a no-value open on today, a no-value open clamped to `min`, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
 next-month control, both themes, a disabled trigger, an unavailable day, arrow

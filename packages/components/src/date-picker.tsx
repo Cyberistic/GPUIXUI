@@ -382,11 +382,21 @@ export const DatePickerCalendar = ({
     clear,
   } = useDatePicker();
 
-  const [viewMonth, setViewMonth] = useState<DateTime.Utc>(() =>
-    startOfMonth(Option.getOrElse(selectedDay, () => todayDay)),
+  /**
+   * Where an open with no active day lands: the selection, else today, clamped to
+   * the bounds. The focus effect uses it too, because the open effect's state has
+   * not rendered in the commit that effect runs in (plan 368).
+   */
+  const anchor = clampToBounds(
+    Option.getOrElse(selectedDay, () => todayDay),
+    bounds,
   );
-  const [active, setActive] =
-    useState<Option.Option<DateTime.Utc>>(selectedDay);
+  const [viewMonth, setViewMonth] = useState<DateTime.Utc>(() =>
+    startOfMonth(anchor),
+  );
+  const [active, setActive] = useState<Option.Option<DateTime.Utc>>(() =>
+    Option.some(anchor),
+  );
   const cellIds = useRef<Record<string, number>>({});
   const pendingFocus = useRef(false);
   const wasOpen = useRef(false);
@@ -404,7 +414,6 @@ export const DatePickerCalendar = ({
       return;
     }
     wasOpen.current = true;
-    const anchor = Option.getOrElse(selectedDay, () => todayDay);
     setViewMonth(startOfMonth(anchor));
     setActive(Option.some(anchor));
     pendingFocus.current = true;
@@ -418,7 +427,7 @@ export const DatePickerCalendar = ({
 
   useLayoutEffect(() => {
     if (!pendingFocus.current) return;
-    const day = Option.getOrElse(active, () => startOfMonth(viewMonth));
+    const day = Option.getOrElse(active, () => anchor);
     const id = cellIds.current[formatIsoDay(day)];
     if (id === undefined) return;
     pendingFocus.current = false;
