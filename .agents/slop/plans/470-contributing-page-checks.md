@@ -1,6 +1,6 @@
 # 470 — The Contributing page names every docs-site check, and a guard refuses silent additions
 
-**Phase:** F (release workflow truth) · **Owner:** docs-site · **Status:** planned
+**Phase:** F (release workflow truth) · **Owner:** docs-site · **Status:** implemented
 **Depends on:** 410 (the site), 439 (`smoke:build`), 446 (`smoke:browser`), 455 (`smoke:preview`), 467 (Studio authoring)
 
 ## 1. Why
@@ -29,7 +29,7 @@ testable.
 | File | Change |
 | ---- | ------ |
 | `apps/docs/content/docs/contributing.mdx` | Rewrite the **Docs site** section: a table of every docs check with what it proves and its exit codes; one line on Studio authoring pointing at `apps/docs/README.md`. |
-| `apps/docs/src/contributing-page.test.ts` | **New guard** (§4). |
+| `apps/docs/src/docs-checks.test.ts` | **New guard** (§4): the page contract and every docs command in the content tree. |
 | `.agents/slop/plans/README.md` | Add this plan to the docs table. |
 | `TODO.md` | Tick the new row in the docs-site section and keep the count current. |
 
@@ -73,7 +73,7 @@ nub run --filter docs studio
 `apps/docs/README.md` carries the editor's contract and the round-trip guard.
 ```
 
-## 4. The guard — `contributing-page.test.ts`
+## 4. The guard — `docs-checks.test.ts`
 
 Header comment states the bug being guarded: *the page named one docs check
 while the app shipped four; nothing compared the prose to the scripts.*
@@ -86,6 +86,11 @@ while the app shipped four; nothing compared the prose to the scripts.*
 5. Assert the page names `studio` and `nub run --filter docs test`.
 6. Assert every documented smoke command carries the exit-`2` sentence at least
    once (the phrase `could not verify`), so the table cannot lose its meaning.
+7. Walk `content/docs/**/*.mdx`, collect every
+   `nub run --filter docs <script>` and assert the script is a key of the app's
+   `scripts`. This is the general rule the page-local checks specialise: a
+   renamed script leaves a dead command in any page, and only this test reads
+   every one.
 
 `readFileSync` at import time is the repo's test boundary (as in
 `content-references.test.ts`). The test derives from files; no hard-coded script
@@ -118,6 +123,8 @@ list.
 2. Add a `smoke:newcheck` script to `apps/docs/package.json` → the guard fails
    naming it; remove → green.
 3. Delete the `could not verify` sentence → the guard fails; restore → green.
+4. Rename a documented command to `smoke:missing` → the command guard fails with
+   `contributing.mdx: no script "smoke:missing"`; restore → green.
 
 Record the exact failure messages in §9.
 
@@ -137,7 +144,7 @@ Record the exact failure messages in §9.
   `check-types`, `build`, `smoke:build`, `smoke:browser`, `smoke:preview`) with
   what each proves and its exit codes, the rule that `2` is never a pass, and
   the `studio` authoring command.
-- `contributing-page.test.ts` derives the smoke list from
+- `docs-checks.test.ts` derives the smoke list from
   `apps/docs/package.json` (`smoke:` keys) instead of hard-coding it; four
   tests cover the non-empty list, the documented names, the unit suite and the
   authoring command, and the `could not verify` sentence.
@@ -148,4 +155,7 @@ Record the exact failure messages in §9.
     equal []`;
   - replacing the `could not verify` sentence → `expected '---\ntitle:
     Contributing…' to contain 'could not verify'`.
-- `nub run --filter docs test`: 44 files / 269 tests green.
+- `docs-checks.test.ts` also walks `content/docs` and checks every
+  `nub run --filter docs <script>` against `package.json`; every current page
+  passes (7 commands, all real).
+- `nub run --filter docs test`: 44 files / 271 tests green.

@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -15,16 +16,51 @@ import { describe, expect, it } from "vitest";
  */
 
 const appRoot = fileURLToPath(new URL("..", import.meta.url));
+const contentRoot = join(appRoot, "content", "docs");
 
 const scripts: Readonly<Record<string, string>> = JSON.parse(
-  readFileSync(`${appRoot}/package.json`, "utf8"),
+  readFileSync(join(appRoot, "package.json"), "utf8"),
 ).scripts;
 
 const smokeScripts = Object.keys(scripts).filter((name) =>
   name.startsWith("smoke:"),
 );
 
-const page = readFileSync(`${appRoot}/content/docs/contributing.mdx`, "utf8");
+const page = readFileSync(join(contentRoot, "contributing.mdx"), "utf8");
+
+const walk = (directory: string): ReadonlyArray<string> =>
+  readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory()
+      ? walk(path)
+      : entry.name.endsWith(".mdx")
+        ? [path]
+        : [];
+  });
+
+/** A `nub run --filter docs <script>` command, with the file that writes it. */
+const documentedCommands = walk(contentRoot).flatMap((path) =>
+  [
+    ...readFileSync(path, "utf8").matchAll(
+      /nub run --filter docs ([a-z][\w:-]*)/g,
+    ),
+  ]
+    .map((match) => match[1] ?? "")
+    .map((script) => ({ page: path.slice(contentRoot.length + 1), script })),
+);
+
+describe("docs commands in the content", () => {
+  it("writes at least one command, so an empty walk cannot pass", () => {
+    expect(documentedCommands.length).toBeGreaterThan(0);
+  });
+
+  it("names only scripts apps/docs/package.json defines", () => {
+    const unknown = documentedCommands
+      .filter(({ script }) => !(script in scripts))
+      .map(({ page: source, script }) => `${source}: no script "${script}"`);
+    expect(unknown).toEqual([]);
+  });
+});
 
 describe("Contributing page checks", () => {
   it("has smoke scripts to document, so a rename cannot pass vacuously", () => {
