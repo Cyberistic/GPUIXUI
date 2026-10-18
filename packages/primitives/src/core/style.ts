@@ -197,6 +197,38 @@ export const clippedFocusRingStyle = (theme: PrimitiveTheme): StyleDesc => {
 };
 
 /**
+ * A fixed-height control's label: one line, clipped with an ellipsis.
+ *
+ * A text run is a flex item, and the runtime does not shrink one: a 70-character
+ * label painted 80 px outside a 220 px button, 141 px outside a checkbox row,
+ * and pushed a select's chevron out of its own field (measured, plan `368`).
+ * Wrapping the label in a div that can shrink — and clipping it here — keeps
+ * every control's text inside the control and leaves the trailing affordance
+ * where it belongs.
+ */
+export const controlLabelStyle: StyleDesc = {
+  flexShrink: 1,
+  minWidth: 0,
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+};
+
+/**
+ * A flex item that may shrink: a text run in a row, or a group item whose width
+ * is imposed.
+ *
+ * A `Label` and a group row may grow taller, so their text takes the row's width
+ * and wraps; truncating a form label or an option description would hide the
+ * words the user needs. The same two facts let a `ToggleGroup` item share a
+ * constrained group's width instead of overflowing it (plan `368`).
+ */
+export const shrinkLayoutStyle: StyleDesc = {
+  flexShrink: 1,
+  minWidth: 0,
+};
+
+/**
  * What a text field adds over the shared control chrome.
  *
  * A field is not a button: its content starts at the left, it takes the body

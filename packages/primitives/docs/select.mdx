@@ -315,6 +315,10 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **The side uses a measured list width.** A move to the other horizontal side
   is decided from the width the list painted on open; a list wider than both
   sides is still clamped by the runtime and may cover its trigger.
+- **A long label is clipped, not painted outside.** The selected value takes one
+  line with an ellipsis, so the chevron stays inside the trigger; the list is
+  capped to the window's usable width, and an option that does not fit shows its
+  start with an ellipsis (plan `368`).
 - The list's dismissal and positioning are GPUix's; this package owns the open
   **state** (above) but cannot change the open animation or the outside-click
   rules.

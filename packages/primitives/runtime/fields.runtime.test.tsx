@@ -15,6 +15,7 @@
 
 import { expect, it } from "vitest";
 import { useState, type ReactElement } from "react";
+import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
@@ -924,51 +925,50 @@ const selectTriggerOf = (runtime: Runtime, testId: string) =>
   );
 
 /** The list element's id: the parent of a painted option's row. */
-const selectListId = (runtime: Runtime, option: string): number =>
-  Option.getOrElse(
-    Option.flatMap(
-      Arr.findFirst(runtime.all(), (element) => element.text === option),
-      (item) =>
-        Option.flatMap(Option.fromNullishOr(item.parentId), (row) =>
-          Option.flatMap(
-            Option.fromNullishOr(runtime.renderer.getElement(row)),
-            (element) => Option.fromNullishOr(element.parentId),
-          ),
-        ),
-    ),
-    () => expect.fail(`the list painted no ${option} option`),
-  );
+/**
+ * The listbox itself.
+ *
+ * Found by its role, not by walking up from an option: a row wrapper (or a
+ * group) may sit between the option's text and the list, so the tree distance
+ * is not a contract (plan `368`).
+ */
+/** Every ancestor of an element, nearest first, bounded so a cycle cannot hang. */
+const ancestors = (
+  runtime: Runtime,
+  id: number,
+  depth = 8,
+): ReadonlyArray<TestElement> => {
+  const walk = (
+    current: number,
+    remaining: number,
+  ): ReadonlyArray<TestElement> => {
+    if (remaining === 0) return [];
+    const node = Option.getOrUndefined(
+      Option.fromNullishOr(runtime.renderer.getElement(current)),
+    );
+    if (node === undefined) return [];
+    if (node.parentId === null) return [node];
+    return [node, ...walk(node.parentId, remaining - 1)];
+  };
+  return walk(id, depth);
+};
 
-/** The painted box of the open list: the grandparent of a painted option. */
-const selectListBounds = (runtime: Runtime, option: string): Bounds =>
+const selectListId = (runtime: Runtime): number =>
   Option.getOrElse(
-    Option.flatMap(
-      Arr.findFirst(runtime.all(), (element) => element.text === option),
-      (item) =>
-        Option.flatMap(Option.fromNullishOr(item.parentId), (row) =>
-          Option.flatMap(
-            Option.fromNullishOr(runtime.renderer.getElement(row)),
-            (element) =>
-              Option.flatMap(Option.fromNullishOr(element.parentId), (list) =>
-                runtime.boundsOfId(list),
-              ),
-          ),
-        ),
-    ),
-    () => expect.fail(`the list painted no ${option} option`),
-  );
-
-/** The listbox itself, whatever rows a group puts between it and an option. */
-const selectListBoundsOf = (runtime: Runtime): Bounds =>
-  Option.getOrElse(
-    Option.flatMap(
+    Option.map(
       Arr.findFirst(
         runtime.all(),
         (element) => element.customProps?.["role"] === "listbox",
       ),
-      (list) => runtime.boundsOfId(list.id),
+      (list) => list.id,
     ),
     () => expect.fail("the Select painted no listbox"),
+  );
+
+/** The painted box of the open list. */
+const selectListBoundsOf = (runtime: Runtime): Bounds =>
+  Option.getOrElse(runtime.boundsOfId(selectListId(runtime)), () =>
+    expect.fail("the listbox painted no box"),
   );
 
 it("opens the Select's list at least as wide as its trigger", async () => {
@@ -1003,7 +1003,7 @@ it("opens the Select's list at least as wide as its trigger", async () => {
   const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
     expect.fail("the Select trigger painted no box"),
   );
-  const list = selectListBounds(runtime, "Apple");
+  const list = selectListBoundsOf(runtime);
   expect(triggerBox.width).toBeLessThan(900);
   expect(list.width).toBeGreaterThanOrEqual(triggerBox.width - 1);
 });
@@ -1041,7 +1041,7 @@ it("makes a full-width Select's list match the trigger", async () => {
   const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
     expect.fail("the Select trigger painted no box"),
   );
-  const list = selectListBounds(runtime, "Apple");
+  const list = selectListBoundsOf(runtime);
   expect(Math.abs(list.width - trigger.width)).toBeLessThanOrEqual(1);
 });
 
@@ -1072,7 +1072,7 @@ it("opens a Select's list above a trigger at the window's bottom edge", async ()
   const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
     expect.fail("the Select trigger painted no box"),
   );
-  const list = selectListBounds(runtime, "Apple");
+  const list = selectListBoundsOf(runtime);
   expect(list.y + list.height).toBeLessThanOrEqual(trigger.y);
   // The height the side decision estimated is the height the list paints.
   expect(
@@ -1104,7 +1104,7 @@ it("opens a Select's list below a trigger with room", async () => {
   const trigger = Option.getOrElse(runtime.boundsOfId(triggerElement.id), () =>
     expect.fail("the Select trigger painted no box"),
   );
-  const list = selectListBounds(runtime, "Apple");
+  const list = selectListBoundsOf(runtime);
   expect(list.y).toBeGreaterThanOrEqual(trigger.y + trigger.height);
 });
 
@@ -1125,7 +1125,7 @@ it("caps a long Select list to the window and scrolls it", async () => {
   const triggerElement = selectTriggerOf(runtime, "sel");
   runtime.clickElement(triggerElement);
   runtime.flush();
-  const list = selectListBounds(runtime, "Option 0");
+  const list = selectListBoundsOf(runtime);
   expect(list.y + list.height).toBeLessThanOrEqual(800 - 8);
   expect(list.height).toBeLessThan(selectListHeight(30, testTheme));
   const lastOption = (): Bounds =>
@@ -1140,7 +1140,7 @@ it("caps a long Select list to the window and scrolls it", async () => {
   expect(lastOption().y + lastOption().height).toBeGreaterThan(
     list.y + list.height,
   );
-  const listId = selectListId(runtime, "Option 0");
+  const listId = selectListId(runtime);
   const before = runtime.renderer.getScrollOffset(listId);
   expect(before).not.toBeNull();
   runtime.renderer.nativeSimulateScrollWheel(list.x + 20, list.y + 50, 0, -400);
@@ -1172,8 +1172,8 @@ it("scrolls a capped Select list to follow the keyboard highlight", async () => 
   const trigger = selectTriggerOf(runtime, "sel");
   runtime.clickElement(trigger);
   runtime.flush();
-  const listId = selectListId(runtime, "Option 0");
-  const list = selectListBounds(runtime, "Option 0");
+  const listId = selectListId(runtime);
+  const list = selectListBoundsOf(runtime);
   const before = runtime.renderer.getScrollOffset(listId);
   expect(before).not.toBeNull();
   const focusedId = Option.getOrElse(
@@ -1190,21 +1190,21 @@ it("scrolls a capped Select list to follow the keyboard highlight", async () => 
   expect(
     Option.getOrElse(Option.fromNullishOr(after?.[1]), () => 0),
   ).toBeLessThan(Option.getOrElse(Option.fromNullishOr(before?.[1]), () => 0));
-  // ...to the highlighted row, which is now inside the list.
+  // ...to the highlighted row, which is now inside the list. The row is an
+  // ancestor of the painted text, not necessarily its parent: the label is one
+  // shrinkable item inside the row (plan `368`).
   const highlighted = Option.getOrElse(
-    Arr.findFirst(runtime.all(), (element) => {
-      if (element.text === null) return false;
-      const row = Option.fromNullishOr(element.parentId);
-      return Option.exists(row, (parent) =>
-        Option.exists(
-          Option.fromNullishOr(runtime.renderer.getElement(parent)),
-          (node) => node.style["backgroundColor"] === testTheme.colors.hover,
-        ),
-      );
-    }),
-    () => expect.fail("no highlighted option row"),
+    Arr.findFirst(runtime.all(), (element) => element.text === "Option 39"),
+    () => expect.fail("no Option 39 row"),
   );
-  expect(highlighted.text).toBe("Option 39");
+  const row = Option.getOrElse(
+    Arr.findFirst(
+      ancestors(runtime, highlighted.id),
+      (node) => node.style["backgroundColor"] === testTheme.colors.hover,
+    ),
+    () => expect.fail("the highlighted row paints no hover background"),
+  );
+  expect(row.id).toBeDefined();
   const bounds = Option.getOrElse(runtime.boundsOfId(highlighted.id), () =>
     expect.fail("the highlighted option painted no box"),
   );
@@ -1232,8 +1232,8 @@ it("opens a capped Select list scrolled to its selected option", async () => {
   const trigger = selectTriggerOf(runtime, "sel");
   runtime.clickElement(trigger);
   runtime.flush();
-  const listId = selectListId(runtime, "Option 0");
-  const list = selectListBounds(runtime, "Option 0");
+  const listId = selectListId(runtime);
+  const list = selectListBoundsOf(runtime);
   expect(runtime.renderer.getScrollOffset(listId)).not.toBeNull();
   // The selected row is the only one wearing the selected role; the trigger's
   // painted value is a text node, not a row.
@@ -1280,8 +1280,8 @@ it("leaves a Select list that fits the window alone", async () => {
   const trigger = selectTriggerOf(runtime, "sel");
   runtime.clickElement(trigger);
   runtime.flush();
-  const listId = selectListId(runtime, "Alpha");
-  const list = selectListBounds(runtime, "Alpha");
+  const listId = selectListId(runtime);
+  const list = selectListBoundsOf(runtime);
   const focusedId = Option.getOrElse(
     Option.map(runtime.focusedElement(), (element) => element.id),
     () => expect.fail("the open list holds no focus"),
@@ -1433,8 +1433,8 @@ it("caps a long Select list beside its trigger", async () => {
   const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
     expect.fail("the Select trigger painted no box"),
   );
-  const listId = selectListId(runtime, "Option 1");
-  const list = selectListBounds(runtime, "Option 1");
+  const listId = selectListId(runtime);
+  const list = selectListBoundsOf(runtime);
   // The layer starts at the trigger's top edge (the runtime's `align="start"`)
   // and must stop at the window's bottom margin.
   expect(list.y).toBeLessThanOrEqual(triggerBox.y + 1);

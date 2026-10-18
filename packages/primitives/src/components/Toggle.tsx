@@ -12,14 +12,19 @@
  *
  * The paint is the shared control resolver with `core/variants.ts`'
  * `toggleVariants`, and the activation/keyboard contract is `Button`'s —
- * Enter on key down, Space on key up, a held key ignored.
+ * Enter on key down, Space on key up, a held key ignored. The label is one
+ * shrinkable item for the same measured reason as `Button` (plan `368`).
  */
 
 import type { ReactElement, ReactNode } from "react";
 import type { EventPayload } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { decideActivation } from "../core/keyboard.js";
-import { controlFocusStyle, controlStyle } from "../core/style.js";
+import {
+  controlFocusStyle,
+  controlLabelStyle,
+  controlStyle,
+} from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
@@ -134,7 +139,9 @@ export const renderToggle = (
       )}
     >
       {props.leading}
-      {props.children}
+      {props.children === undefined || props.children === null ? null : (
+        <div style={controlLabelStyle}>{props.children}</div>
+      )}
       {props.trailing}
     </div>
   );

@@ -38,6 +38,7 @@ import {
   type SelectionState,
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
+import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   resolvePartStyle,
@@ -263,11 +264,15 @@ export const renderRadioGroup = (
                 <div style={radioDotStyle(spec, theme)} />
               ) : null}
             </div>
-            <Text role="label" tone={disabled ? "muted" : "default"}>
+            <Text
+              role="label"
+              tone={disabled ? "muted" : "default"}
+              style={shrinkLayoutStyle}
+            >
               {option.label}
             </Text>
             {option.description === undefined ? null : (
-              <Text role="caption" tone="muted">
+              <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
                 {option.description}
               </Text>
             )}

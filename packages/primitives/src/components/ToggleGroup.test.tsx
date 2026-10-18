@@ -26,6 +26,7 @@ import {
   expectSome,
   hostHandler,
   hostProp,
+  hostStyleRecord,
   hostStyleString,
 } from "./testing/element.js";
 
@@ -74,6 +75,31 @@ const propOf = (element: ReactElement, index: number, name: string) =>
   expectSome(hostProp(itemAt(element, index), name));
 
 describe("ToggleGroup", () => {
+  it("shrinks an item and contains its label", () => {
+    // Plan 368: a segmented control given a width must not paint an item's
+    // label outside itself; the item shares the group's width and the label is
+    // one clipped flex item.
+    const element = renderToggleGroup(
+      single,
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      handlers(),
+    );
+    const item = itemAt(element, 0);
+    expect(expectSome(hostStyleRecord(item))).toMatchObject({
+      flexShrink: 1,
+      minWidth: 0,
+    });
+    const label = expectSome(Option.fromNullishOr(elementChildren(item)[0]));
+    expect(expectSome(hostStyleRecord(label))).toMatchObject({
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
+  });
+
   it("is a named group of named buttons", () => {
     const group = renderToggleGroup(
       single,

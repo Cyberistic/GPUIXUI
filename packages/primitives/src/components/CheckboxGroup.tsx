@@ -40,6 +40,7 @@ import {
   type SelectionState,
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
+import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionValueText } from "./Checkbox.js";
 import {
@@ -219,11 +220,15 @@ const renderRow = (
         )}
       </div>
       <div style={rowTextStyle(theme)}>
-        <Text role="label" tone={disabled ? "muted" : "default"}>
+        <Text
+          role="label"
+          tone={disabled ? "muted" : "default"}
+          style={shrinkLayoutStyle}
+        >
           {label}
         </Text>
         {description === undefined ? null : (
-          <Text role="caption" tone="muted">
+          <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
             {description}
           </Text>
         )}

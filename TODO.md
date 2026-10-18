@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 105/105
+`[x]` `[██████████]` 106/106
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -977,6 +977,15 @@ retired once both branches are one
       Thirteen runtime cases, one per control that declares the prop, prove the
       destructive role appears when invalid and not when valid; all three
       mutation directions fail by case name (runtime 422; plan `351`).
+`[x]` `packages/primitives`: **a control painted its own label outside itself** —
+      measured: a 70-character label painted 80 px outside a 220 px `Button`,
+      141 px outside a `CheckboxGroup`, 139 px outside a `Label`, and pushed a
+      `Select`'s chevron 192 px out of its trigger, while a 200-character option
+      opened a 1482 px list in a 1280 px window. Fixed-height controls now clip
+      one line with an ellipsis, auto-height rows wrap, and the select list is
+      capped to the window; `runtime/overflow.runtime.test.tsx` holds the class
+      in 9 cases and each surface fails by name without its fix (offline 615,
+      runtime 600; plan `368`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

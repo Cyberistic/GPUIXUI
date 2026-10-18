@@ -22,6 +22,10 @@
  * hover and focus and its text becomes the button's `aria-description`. The
  * same contract makes this the trigger for the components workstream's future
  * popover/menu parts.
+ *
+ * The label is one shrinkable item (`controlLabelStyle`): a text run is a flex
+ * item the runtime never shrinks, so a long label painted outside a bounded
+ * button and over its neighbours (measured, plan `368`).
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
@@ -31,6 +35,7 @@ import { decideActivation } from "../core/keyboard.js";
 import {
   clippedFocusRingStyle,
   controlFocusStyle,
+  controlLabelStyle,
   controlStyle,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
@@ -182,7 +187,9 @@ export const renderButton = (
       ) : (
         props.leading
       )}
-      {props.children}
+      {props.children === undefined || props.children === null ? null : (
+        <div style={controlLabelStyle}>{props.children}</div>
+      )}
       {props.trailing}
       {clipped && showRing ? (
         <div style={clippedFocusRingStyle(theme)} />

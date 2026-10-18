@@ -163,6 +163,36 @@ describe("Select", () => {
     );
   });
 
+  it("shrinks its value and caps its list to the window", () => {
+    // Plan 368: the value is a div the runtime can shrink, and the list is at
+    // most the window's usable width — a long label cannot push the chevron
+    // out of the trigger or the list past the screen.
+    const element = renderSelect(
+      { options: [], label: "Fruit", testId: "sel" },
+      testTheme,
+      valueState("Apple"),
+      false,
+      noFocus,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    const value = expectSome(Option.fromNullishOr(elementChildren(trigger)[0]));
+    expect(expectSome(elementProp(value, "style"))).toMatchObject({
+      flexShrink: 1,
+      minWidth: 0,
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
+    const content = childAt(element, 1);
+    expect(expectSome(elementProp(content, "testId"))).toBe("sel-content");
+    expect(selectContentStyle(testTheme, 120, 200, 1264)).toMatchObject({
+      minWidth: 120,
+      maxHeight: 200,
+      maxWidth: 1264,
+    });
+  });
+
   it("points the chevron up while the list is open", () => {
     const element = renderSelect(
       { options: [], label: "Fruit" },

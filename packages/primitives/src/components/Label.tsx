@@ -9,6 +9,7 @@
  */
 
 import type { ReactElement, ReactNode } from "react";
+import { shrinkLayoutStyle } from "../core/style.js";
 import { resolvePartStyle, type StateStyle } from "./internal.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
@@ -63,7 +64,11 @@ export const renderLabel = ({
     testId={testId}
   >
     <Stack direction="row" gap="2xs" align="baseline">
-      <Text role="label" tone={invalid === true ? "destructive" : "default"}>
+      <Text
+        role="label"
+        tone={invalid === true ? "destructive" : "default"}
+        style={shrinkLayoutStyle}
+      >
         {children}
       </Text>
       {required === true ? (

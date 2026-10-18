@@ -63,6 +63,23 @@ describe("Button", () => {
     );
   });
 
+  it("wraps a text label in one shrinkable item", () => {
+    // The bug guarded (plan 368): a text run is a flex item the runtime never
+    // shrinks, so a long label painted outside a bounded button. The label is
+    // one clipped flex item now, and an empty button still paints no child.
+    const element = resting({ children: "A label wider than the button" });
+    expect(elementChildren(element)).toHaveLength(1);
+    const label = expectSome(Option.fromNullishOr(elementChildren(element)[0]));
+    expect(expectSome(hostTag(label))).toBe("div");
+    expect(expectSome(hostStyleRecord(label))).toMatchObject({
+      flexShrink: 1,
+      minWidth: 0,
+      overflow: "hidden",
+      whiteSpace: "nowrap",
+      textOverflow: "ellipsis",
+    });
+  });
+
   it("activates on Enter key down, never on key up", () => {
     const onActivate = vi.fn();
     const onClick = vi.fn();

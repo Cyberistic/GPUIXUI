@@ -39,7 +39,9 @@ import {
 } from "../core/toggle-group.js";
 import {
   controlFocusStyle,
+  controlLabelStyle,
   controlStyle,
+  shrinkLayoutStyle,
   type ControlSpec,
 } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -230,12 +232,15 @@ export const renderToggleGroup = (
             onFocus={itemFocus.onFocus}
             onBlur={itemFocus.onBlur}
             style={resolvePartStyle(
-              itemFocused
-                ? mergeStyle(
-                    controlStyle(spec, theme),
-                    controlFocusStyle(spec, theme),
-                  )
-                : controlStyle(spec, theme),
+              mergeStyle(
+                itemFocused
+                  ? mergeStyle(
+                      controlStyle(spec, theme),
+                      controlFocusStyle(spec, theme),
+                    )
+                  : controlStyle(spec, theme),
+                shrinkLayoutStyle,
+              ),
               props.itemStyle,
               {
                 value: option.value,
@@ -246,7 +251,7 @@ export const renderToggleGroup = (
               },
             )}
           >
-            {option.label}
+            <div style={controlLabelStyle}>{option.label}</div>
           </div>
         );
       })}

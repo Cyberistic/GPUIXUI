@@ -193,6 +193,8 @@ the row that owns the hit area, the tab stop and the accessible name:
 - No per-option `testId` override; ids are derived from the group's `testId`.
 - No `aria-labelledby`, so `label` is written once on the group and each row
   carries its own option label.
+- A long option label or description **wraps** and grows the row; the text is
+  never painted outside the group (plan `368`).
 
 ## Verification
 

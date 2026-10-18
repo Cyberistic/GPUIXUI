@@ -73,6 +73,7 @@ import {
 } from "../core/select.js";
 import {
   controlFocusStyle,
+  controlLabelStyle,
   controlStyle,
   surfaceStyle,
   type ControlSpec,
@@ -233,11 +234,16 @@ export const selectTriggerPartStyle =
  * because the runtime clamps an over-tall layer against the window with no way
  * to reach its far end (measured: a 30-option list painted 908 px from y 8 and
  * left the last option at y 888 in an 800 px window — plan 068).
+ *
+ * `maxWidth` is the window's usable width: the list hugs its widest option, and
+ * a 200-character label painted a 1482 px list in a 1280 px window (measured,
+ * plan `368`). Rows and headings then truncate inside it.
  */
 export const selectContentStyle = (
   theme: PrimitiveTheme,
   minWidth?: number,
   maxHeight?: number,
+  maxWidth?: number,
 ): StyleDesc => ({
   ...surfaceStyle(
     { tone: "popover", radius: "md", border: true, elevation: "overlay" },
@@ -245,7 +251,11 @@ export const selectContentStyle = (
   ),
   padding: theme.spacing.xs,
   gap: theme.spacing["2xs"],
+  // Rows stretch to the list's width so a long label truncates inside it; a
+  // hugging row keeps its text's intrinsic width (measured, plan `368`).
+  alignItems: "stretch",
   ...(minWidth === undefined ? {} : { minWidth }),
+  ...(maxWidth === undefined ? {} : { maxWidth }),
   ...(maxHeight === undefined
     ? {}
     : { maxHeight, overflowY: "scroll" as const }),
@@ -298,6 +308,10 @@ export const selectHeadingStyle = (theme: PrimitiveTheme): StyleDesc => ({
   fontWeight: theme.typography.caption.fontWeight,
   color: theme.colors.mutedForeground,
   flexShrink: 0,
+  minWidth: 0,
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
 });
 
 /**
@@ -353,6 +367,8 @@ export interface SelectPlacement {
   readonly collisionPadding: number;
   /** The free space on that side, when the list is taller than it. */
   readonly maxHeight?: number;
+  /** The window's usable width, so a long option cannot widen the list past it. */
+  readonly maxWidth?: number;
 }
 
 /** What the renderer does with the wrapper's own state. */
@@ -473,7 +489,7 @@ export const renderSelect = (
               onHighlight={handlers.onHighlight}
             />
           ) : null}
-          {choice.label}
+          <div style={controlLabelStyle}>{choice.label}</div>
         </>
       )}
     </SelectItem>
@@ -513,7 +529,7 @@ export const renderSelect = (
         onKeyUp={onKeyUp}
         style={selectTriggerPartStyle(spec, theme, focus.focused, triggerStyle)}
       >
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={placeholder} style={controlLabelStyle} />
         {renderSelectIndicator(
           {
             open,
@@ -527,12 +543,14 @@ export const renderSelect = (
         ref={handlers.registerContent}
         role="listbox"
         aria-label={label}
+        testId={testId === undefined ? undefined : `${testId}-content`}
         side={placement.side}
         collisionPadding={placement.collisionPadding}
         style={selectContentStyle(
           theme,
           placement.minWidth,
           placement.maxHeight,
+          placement.maxWidth,
         )}
       >
         {Arr.map(options, (entry, index) =>
@@ -724,6 +742,12 @@ export const Select = (props: SelectProps): ReactElement => {
       side: Option.getOrUndefined(side),
       collisionPadding: FLOATING_MARGIN,
       maxHeight,
+      maxWidth: Math.max(
+        0,
+        viewport.width -
+          (triggerBox === undefined ? FLOATING_MARGIN : triggerBox.left) -
+          FLOATING_MARGIN,
+      ),
     },
   );
 };

@@ -169,6 +169,7 @@ export type {
 export {
   clippedFocusRingStyle,
   controlFocusStyle,
+  controlLabelStyle,
   controlStyle,
   fieldTextStyle,
   nativeTextTheme,
@@ -185,6 +186,7 @@ export {
   PROGRESS_TONES,
   ruleStyle,
   scrollStyle,
+  shrinkLayoutStyle,
   sliderFillStyle,
   sliderInset,
   sliderRailStyle,

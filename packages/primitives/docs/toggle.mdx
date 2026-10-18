@@ -113,6 +113,8 @@ property; returning `{}` keeps the default look. `ToggleState` is exported.
   request should disable itself and show the result elsewhere.
 - `square` sizes the button; it does not size the icon — pass an icon whose size
   matches the control (`theme.iconSize`).
+- A label longer than a bounded toggle is clipped to **one line with an
+  ellipsis**, so it cannot paint outside the control (plan `368`).
 
 ## Verification
 

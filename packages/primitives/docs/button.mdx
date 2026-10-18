@@ -161,6 +161,9 @@ look. `ButtonState` is exported.
 - No `aria-disabled` and no `aria-pressed`/toggle-button state.
 - An icon-only button (or one whose children are elements) must pass `label`;
   the component cannot infer a name and will not invent one.
+- A label longer than a bounded button is clipped to **one line with an
+  ellipsis**, and a long label can never paint text outside the button or push
+  its icons out (plan `368`). A hugging button still grows to fit its label.
 - No native button element: the runtime exposes a `div` with role and handlers.
 
 ## Verification
