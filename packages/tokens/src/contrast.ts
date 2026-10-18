@@ -9,7 +9,7 @@
  */
 
 import type { ThemeColors } from "./color.js";
-import { statusTones } from "./styles.js";
+import { filledControlFamilies, statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /** The floor class a documented pair belongs to. */
@@ -28,6 +28,13 @@ export type ContrastPairClass =
   | "mark"
   /** One surface must be perceivable against another (`xSoft` on a canvas). */
   | "surface"
+  /**
+   * One designed state of a fill against the state before it. A hover or a
+   * press that is not perceivable is not a state, so every filled family's
+   * `xHover` is held to its `x` and its `xActive` to its `xHover`. The floor is
+   * the same at every contrast level: the change is a state, not text.
+   */
+  | "step"
   /** A decorative border (`border`) must stay visible on its surface. */
   | "divider";
 
@@ -235,6 +242,22 @@ export const stateFillSurfacePairs: readonly ContrastPair[] =
     stateFillSurfaces.map(
       (background): ContrastPair => [fill, background, "surface"],
     ),
+  );
+
+/**
+ * The designed steps within each filled family. A filled control walks
+ * `x` → `xHover` → `xActive`, and each step must be perceivable against the
+ * fill before it, or the pointer state is invisible. `filled-states.test.ts`
+ * holds the shipped themes to the rule; these pairs publish the same rule
+ * through {@link themeContrastFailures}, so an edited theme cannot collapse a
+ * hover or a press while every fill-on-surface pair still passes.
+ */
+export const stateStepPairs: readonly ContrastPair[] =
+  filledControlFamilies.flatMap(
+    (family): ReadonlyArray<ContrastPair> => [
+      [`${family}Hover`, family, "step"],
+      [`${family}Active`, `${family}Hover`, "step"],
+    ],
   );
 
 /**
@@ -594,7 +617,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * filled families at rest, hover and press — is a surface in its own right and
  * is held to the surface floor on the canvas, a card, a popover and the quiet
  * `muted` panel it paints on, because a fill that matches its panel is not a
- * state.
+ * state. Each filled family's `xHover` and `xActive` are also held one
+ * perceivable step from the fill before them (`stateStepPairs`, the `step`
+ * class), so a collapsed hover or press is reported like an invisible fill.
  *
  * A solid role painted as a **mark** — a progress segment, a slider fill, a
  * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
@@ -678,6 +703,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...controlFillPairs,
   ...selectedRowEdgePairs,
   ...stateFillSurfacePairs,
+  ...stateStepPairs,
   ...markPairs,
 ];
 
@@ -692,6 +718,7 @@ export const contrastFloors: Readonly<
     boundary: 3,
     mark: 3,
     surface: 1.05,
+    step: 1.05,
     divider: 1.05,
   },
   high: {
@@ -701,6 +728,7 @@ export const contrastFloors: Readonly<
     boundary: 4.5,
     mark: 4.5,
     surface: 1.05,
+    step: 1.05,
     divider: 3,
   },
 };
@@ -962,9 +990,12 @@ const washVisibilityFailures = (
  * accent and selected fills and the three filled families at rest, hover and
  * press — against the canvas, card, popover and quiet panel it paints on,
  * because the identity light panel was the same value as its `hover`,
- * `secondary`, `accent` and `selected` fills. It measures a row's own default
- * text on the washes it paints, secondary text on the `input` fill a time
- * picker's separator and clear control paint, and the field edge on its `input`
+ * `secondary`, `accent` and `selected` fills. It also holds each filled
+ * family's hover and press to one perceivable step from the fill before it
+ * (`pairClass: "step"`), so an edited theme cannot flatten a state. It measures
+ * a row's own default text on the washes it paints, secondary text on the
+ * `input` fill a time picker's separator and clear control paint, and the field
+ * edge on its `input`
  * fill, so a selected list title, a menu row or a time field cannot lose its
  * label or its chrome on the surface it paints. It also holds a solid role
  * painted as a graphic — a progress segment,

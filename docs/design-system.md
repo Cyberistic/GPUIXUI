@@ -264,8 +264,8 @@ the mounting rule and its no-portal limitation are documented once, under
 
 | State | Role / mechanism |
 | ----- | ---------------- |
-| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` (opaque, contrast-checked) instead of compositing an alpha fill |
-| pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one step past their hover |
+| hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on the canvas, card, popover and quiet panel it paints on; filled actions step to their family's `xHover` (opaque, contrast-checked), one 1.05:1 step from the resting fill |
+| pressed | `active` wash on ghost and subtle surfaces, held to the same floor on the same four surfaces; filled actions step to `xActive`, one 1.05:1 step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on every surface and row wash a placeholder fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
 | selected | `selected` + `selectedForeground`, the fill held to the perceivability floor on the surface it marks; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on the plain surfaces, the `muted` panel, the `hover`/`active` washes a link paints and the `accent`/`selected` fills a selectable row paints under it; `primary` is a fill and is never the colour of text |
@@ -367,6 +367,7 @@ Colour is checked, not assumed. The token suite enforces:
 | secondary text (`mutedForeground` on plain surfaces, on the `input` fill a field paints for its own chrome, and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
+| filled-control state steps (`xHover` from `x`, `xActive` from `xHover`, for `primary`/`secondary`/`destructive`/`accent`) | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
 | brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes and the `accent`/`selected` row fills | 4.5:1 | 7:1 |
@@ -418,6 +419,11 @@ a hover is visible, not that a 4px bar is. Status marks are `xText`, never the
 solid status fill, because the light `warning` fill is **1.78:1** on the canvas;
 the avatar's presence dot and the timeline's pending dot are two shipped marks
 the ledger records for the components workstream to move onto the designed role.
+A third is the menu row's 2px highlight bar: it paints `accent`, which measures
+1.118–1.392:1 on the menu's `popover` and 1.000–1.113:1 on the `hover` fill the
+row also paints, so the bar that exists to show the highlight is invisible. The
+functional boundary it needs is `borderStrong`, already measured on the
+`popover`, `hover` and `active` fills.
 
 It can fail: a palette edit that reduces contrast fails the gate. The same check
 is public: `themeContrastFailures(theme)` returns every pair an edited theme

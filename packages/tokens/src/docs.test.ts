@@ -211,13 +211,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 305 to **${contrastPairs.length}**`,
+      `taking it from 306 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`341` closed");
+    expect(prose).toContain("plans `076`–`342` closed");
   });
 });
 
@@ -899,6 +899,15 @@ describe("docs/tokens.md contrast contract", () => {
     expect(markdown).toContain(line("high"));
   });
 
+  it("states the filled family's step floor", () => {
+    expect(markdownProse).toContain(
+      "Each filled family also has a **step** floor.",
+    );
+    expect(markdownProse).toContain(
+      "`stateStepPairs` holds `xHover` to 1.05:1 from `x`",
+    );
+  });
+
   it("states the mark floor and why a status fill is not a mark", () => {
     expect(markdownProse).toContain(
       "A solid role painted as a **mark** is held to " +
@@ -1193,6 +1202,7 @@ describe("docs/design-system.md", () => {
       `| secondary text (\`mutedForeground\` on plain surfaces, on the \`input\` fill a field paints for its own chrome, and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder text on the \`input\` fill and the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| filled-control state steps (\`xHover\` from \`x\`, \`xActive\` from \`xHover\`, for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,
       `| soft status text (\`xSoftForeground\` on \`xSoft\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,

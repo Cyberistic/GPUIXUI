@@ -109,6 +109,13 @@
  * surfaces an inactive label paints, the three values move, and `border` joins
  * the divider class on the `disabled` fill and the previously unmeasured quiet
  * panel, so a disabled control keeps its shape.
+ *
+ * Plan 342 publishes the last rule that ran only on shipped themes: each filled
+ * family's `xHover` is one perceivable step from its `x`, and its `xActive` from
+ * its `xHover`. A consumer theme whose hover equalled its fill returned `[]`
+ * from the checker, because a fill equal to the fill before it still clears
+ * every fill-on-surface pair. `stateStepPairs` is a `step` class at 1.05:1 on
+ * both levels.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -132,6 +139,7 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   softBorderSurfacePairs,
+  stateStepPairs,
   themeContrastFailures,
   type Theme,
   type ThemeContrast,
@@ -202,6 +210,7 @@ describe("contrastFloors", () => {
         boundary: 3,
         mark: 3,
         surface: 1.05,
+        step: 1.05,
         divider: 1.05,
       },
       high: {
@@ -211,6 +220,7 @@ describe("contrastFloors", () => {
         boundary: 4.5,
         mark: 4.5,
         surface: 1.05,
+        step: 1.05,
         divider: 3,
       },
     });
@@ -347,8 +357,10 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(306);
+    expect(contrastPairs.length).toBe(314);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
+    expect(stateStepPairs).toHaveLength(8);
+    expect(new Set(stateStepPairs).size).toBe(8);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
       softBorderSurfacePairs.map(([foreground, background]) => [

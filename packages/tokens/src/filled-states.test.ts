@@ -130,6 +130,20 @@ describe("filled control states", () => {
           background,
         ).toBe(true);
       });
+      [
+        [`${family}Hover`, family],
+        [`${family}Active`, `${family}Hover`],
+      ].forEach(([foreground, pairBackground]) => {
+        expect(
+          contrastPairs.some(
+            ([pairForeground, pairSurface, pairClass]) =>
+              pairClass === "step" &&
+              pairForeground === foreground &&
+              pairSurface === pairBackground,
+          ),
+          `${family} step ${foreground}`,
+        ).toBe(true);
+      });
     });
   });
 

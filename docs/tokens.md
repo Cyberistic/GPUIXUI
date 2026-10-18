@@ -1240,8 +1240,8 @@ check and the test suite both read:
 ```ts
 import { contrastFloors } from "@gpuixui/tokens";
 
-contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, mark: 3, surface: 1.05, divider: 1.05 }
-contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, mark: 4.5, surface: 1.05, divider: 3 }
+contrastFloors.default; // { body: 7, secondary: 4.5, inactive: 3, boundary: 3, mark: 3, surface: 1.05, step: 1.05, divider: 1.05 }
+contrastFloors.high; // { body: 7, secondary: 7, inactive: 4.5, boundary: 4.5, mark: 4.5, surface: 1.05, step: 1.05, divider: 3 }
 ```
 
 The floors are the ones in [`design-system.md` §9](./design-system.md#9-accessibility).
@@ -1537,7 +1537,9 @@ secondary text on the `input` fill a field paints for its own chrome, taking it
 from 293 to **294**. Plan `340` holds the invalid control's `destructive` focus
 ring on the eleven surfaces the ring adds — `background` is already the field
 edge — taking it from 294 to **305**. Plan `341` adds the combobox check glyph on
-the `hover` row wash, taking it from 305 to **306**.
+the `hover` row wash, taking it from 305 to **306**. Plan `342` publishes the
+filled families' step floor — each `xHover` one perceivable step from its `x`,
+each `xActive` from its `xHover` — taking it from 306 to **314**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1554,7 +1556,11 @@ RGB change that no pointer user can see. Each filled family now steps through
 `x` → `xHover` → `xActive` with opaque, editable values; the on-colour foreground
 is held to the secondary floor on all three steps in every shipped theme, and
 `filled-states.test.ts` proves the direction follows the mode — darker in light,
-lighter in dark. The outlined neutral family keeps its `border` edge on all three
+lighter in dark — and the same step is a public pair: `stateStepPairs` holds each
+`xHover` to 1.05:1 from its `x` and each `xActive` from its `xHover` under the
+`step` class, so an edited theme that collapses a pointer state is reported
+instead of returning `[]` (plan `342`). The outlined neutral family keeps its
+`border` edge on all three
 steps, so a press changes the fill without erasing the edge: the
 divider contract covers `secondary`, `secondaryHover` and `secondaryActive`. A
 consumer that has not migrated still paints the generic washes: the shipped
@@ -1631,6 +1637,16 @@ the AAA dark accent lightens to `#251B5C`, so a selected row is perceivable on
 the AAA panel and popover. Light mode therefore layers canvas → quiet panel →
 card, a deliberate decision rather than an accident.
 
+Each filled family also has a **step** floor. The three fills are designed to
+walk `x` → `xHover` → `xActive`, and a step that is not perceivable is not a
+state: `stateStepPairs` holds `xHover` to 1.05:1 from `x` and `xActive` from
+`xHover`, for `primary`, `secondary`, `destructive` and `accent`, under the
+`step` pair class. The floor is the same at every contrast level, because a
+pointer state is not text. The shipped themes were already held to it by
+`filled-states.test.ts`, which iterates them; the pairs publish the rule, so an
+edited theme whose hover equals its fill is reported with `pairClass: "step"`
+instead of returning `[]`.
+
 A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
 progress segment and a slider fill sit on the `muted` track, a slider thumb rings
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
@@ -1703,7 +1719,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`341` closed.
+plans `076`–`342` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

@@ -314,7 +314,10 @@ identity light `muted` was the same value as its `hover` and `secondary`, the
 identity dark `hover` was its `muted` and `popover`, macOS light `selected`
 measured 1.021:1 on its canvas and Linux light `accent` 1.001:1 on the panel
 until plan 309 moved the light panel one step toward the card and the two light
-accents one step deeper.
+accents one step deeper. Each filled family also walks `x` → `xHover` →
+`xActive`, and a step that is not perceivable is not a state: `stateStepPairs`
+holds every `xHover` to 1.05:1 from its `x` and every `xActive` from its
+`xHover`, under the `step` class, at both contrast levels.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
 `disabled` fill, the four plain surfaces, the four row washes and the four soft

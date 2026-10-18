@@ -7,11 +7,13 @@
  * behind the mark while `themeContrastFailures` returned `[]`, and a 4px bar or
  * a 16px glyph disappeared.
  *
- * The two shipped marks that paint the *wrong* role are held by TODO rows, not
+ * The three shipped marks that paint the *wrong* role are held by TODO rows, not
  * by a pair: the avatar's presence dot paints the solid `warning` (1.78:1 on a
- * light card) and the timeline's upcoming dot paints `muted` (1.036:1 on the
- * identity canvas). A status mark is `xText`, which the status-text pairs
- * already measure; adding a pair for the bad composition would bless it.
+ * light card), the timeline's upcoming dot paints `muted` (1.036:1 on the
+ * identity canvas), and the menu row's highlight bar paints `accent`
+ * (1.118–1.392:1 on `popover`). A status mark is `xText`, which the status-text
+ * pairs already measure, and a 2px bar needs `borderStrong`; adding a pair for
+ * the bad composition would bless it.
  */
 
 import { describe, expect, it } from "vitest";
