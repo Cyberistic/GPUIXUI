@@ -479,11 +479,11 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       and the thumb move are absent before and present after; 24 scenes, three
       two-direction proofs
 
-`[ ]` **Live scenes for the remaining interactive form controls** — radio group,
+`[~]` **Live scenes for the remaining interactive form controls** — radio group,
       slider, range slider, search input and the text fields still show a tier-A
       rest state; plan 492's machinery applies, but each scene needs a target the
       automation can click or drag and a state line the component or caller
-      paints only after the gesture
+      paints only after the gesture. Plan 493 (in progress)
 
 `[x]` **The native smoke suite gets a real page (plan 491)** — `/docs/native-testing`
       documents the platform-free harness, the playground adapter, the `0`/`1`/`2`
