@@ -165,6 +165,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [366](./366-status-selection.md) | The status label through a text selection | F | 083, 087, 354, 362 | done |
 | [367](./367-type-scale-contract.md) | The type scale must stay a scale | F | 058, 059, 358, 360 | done |
 | [368](./368-finite-metrics.md) | Every numeric metric must be paint | F | 358, 360, 364, 367 | done |
+| [369](./369-defined-overlay-elevation.md) | A defined elevation level is a level, `overlay` included | F | 085, 358, 360, 368 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1394,6 +1395,19 @@ document the result — invalid Taffy geometry it paints as nothing, with no
 error. One `finiteMembers` pass now walks every numeric member of the other
 eight groups, built from the same `textRoles`, `controlSizes` and step lists the
 ladders use. Every shipped set is finite, so no value moves.
+
+369 closes the level plan 368's own sentence still excepted. The elevation rule
+loop walked `sm`, `md` and `lg`, and `overlay` was exempt as "reserved and
+empty": true of the shipped data, false of the type and of the runtime path.
+`ElevationLevel` includes `"overlay"`, `extendTheme` replaces a level's array,
+and `elevationShadow(theme, "overlay")` paints the first entry — so a probe
+defining an overlay entry with `offsetX: NaN` and `alpha: 2` returned `[]` from
+both checkers while the renderer would receive a NaN shadow with an opaque tint
+(`alpha()` clamps the fraction). The rule now walks all four levels: the three
+designed levels still require an entry, an empty `overlay` is the reserved case
+and stays exempt, and a defined entry takes the same `finite`, `non-negative`
+and `within` rules as the rest. Every shipped set ships an empty overlay, so no
+value moves and the "every numeric metric" sentence becomes true as written.
 
 ### Reference adoption (block `200–299`)
 
