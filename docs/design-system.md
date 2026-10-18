@@ -836,8 +836,10 @@ default palette when the style contributes colours, the roles it does not name
 coming from the identity at that level. A shape-only style changes no colour, so
 it keeps the base's level, and a base already at the requested level keeps its
 own colours, edits included. A forced default palette is whole, not half of one,
-and the theme's name always names the palette it carries. A declaration is a
-claim; `themeContrastFailures` is what proves it.
+and the theme's name always names the palette it carries and never appends the
+label it already ends with — re-applying that style changes nothing, while a
+different style appends its own label because the unnamed roles survive. A
+declaration is a claim; `themeContrastFailures` is what proves it.
 
 A style is also an override set over the base it is applied to, so it names the
 canvas-tuned roles it owns: the dark styles name `destructiveSoft` beside their

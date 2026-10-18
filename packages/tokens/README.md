@@ -845,7 +845,10 @@ declares and `themeContrastFailures` returns `[]` for every shipped style
 `high` claim. A shape-only style changes no colour, so it keeps the base's level.
 A colour key set to `undefined` is not an override either: the role inherits and
 the level stays with the base (plan 323). The result's name always names the
-palette it carries, because a preview prints it. A runnable example lives in
+palette it carries, because a preview prints it. Re-applying the style a theme
+already ends with is a no-op on every field, the name included (plan 545),
+while a different style appends its own label because the palette keeps the
+roles the first style did not name. A runnable example lives in
 [`src/applied-level.example.ts`](./src/applied-level.example.ts).
 
 A style is an override set over the base it is applied to, so it names the

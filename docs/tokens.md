@@ -710,8 +710,13 @@ unnamed roles survive, and the result keeps the base's name. The name always
 follows the palette — a rebased palette brings the identity's name, because the
 result is that identity at the requested level — and so does the elevation's
 opacity, because a dark platform's 0.4–0.8 over the AAA dark set's light tint
-would paint a near-white halo (plan `505`). A style with no colour overrides
-changes no colour, so it keeps the base's level (plan `301`); that is the one
+would paint a near-white halo (plan `505`). Applying the style a theme's name
+already ends with changes nothing — no field, and not the name — so a settings
+panel or a restored choice can re-apply the platform over the current theme
+without printing `Light · Windows · Windows`. A different style appends its own
+label once, because it names only the roles it owns (plan `545`). A style with
+no colour overrides changes no colour, so it keeps the base's level (plan
+`301`); that is the one
 request that is not honoured, and the theme's name says so. A colour key set to
 `undefined` is not an override either: the role inherits and the declaration
 stays with the base (plan `323`). A runnable example lives in

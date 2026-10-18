@@ -239,6 +239,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [542](./542-shareable-choice-density-rule.md) | The shareable choice's density rule | F | 380, 529, 534 | done |
 | [543](./543-contrast-floor-class-index.md) | The contrast contract's floor classes have no owner | F | 071, 303, 313, 326, 351, 372, 519 | done |
 | [544](./544-quoted-figure-extent.md) | The catalogue's quoted tightest figures are measured on ten of twenty-four sets | F | 380, 387, 388, 536–538 | done |
+| [545](./545-applied-style-name-idempotence.md) | Applying a platform style twice appends its label twice | F | 371, 373, 374, 541 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2572,6 +2573,26 @@ moves; `quotedSets` derives from `shippedThemes` with a label that carries
 paragraph now names both owners — `figures.ts`/`figures.test.ts` for the
 sixteen-entry current-figure table and `docs.test.ts` for the quoted tightest
 figures.
+
+Plan `545` closes the last false claim in the applied theme's display name.
+`platformOverrides` named its result `${palette.name} · ${label}`, and a
+same-level base keeps its own palette (plan 373), so applying the style a theme
+already carried appended the label again: `getPlatformTheme("win32", "light")`
+reads `Light · Windows`, and one re-application read
+`Light · Windows · Windows` — a palette the package does not ship, printed by
+the preview the name exists for. A probe on the merged tree found the second
+application deep-equal to the first in **every field except `name`**, so the
+composition was already idempotent and only the label drifted. One helper,
+`appliedStyleName`, appends a label only when the name does not already end
+with it; `applyPlatformStyle` and the deprecated `platformTheme` bridge both use
+it, so re-applying a stored choice or a settings row is a no-op and a *different*
+style still appends its own label once (provenance, not accumulation: Windows →
+macOS reads `Light · Windows · macOS` because the second style names only the
+roles it owns, plan 374). The catalogue, the README and the design system state
+the rule and `docs.test.ts` holds all three; the executed
+`acmeWindowsReapplied` example runs in `applied-level.test.ts`, and the new
+`applied-style-name.test.ts` fails on the pre-fix append. No colour, pair,
+floor, metric, platform style, recipe or shipped theme name moves.
 
 ## How to use a plan
 

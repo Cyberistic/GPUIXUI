@@ -6,8 +6,10 @@
  * request on a default theme builds the AAA palette and carries the AAA `shadow`
  * tint at the opacity designed for it; a same-level base keeps its own palette,
  * name and edits, and a shape-only style changes no colour, so it keeps the
- * base's level. The result is a normal theme, so the classes and the resolvers a
- * consumer already uses apply unchanged.
+ * base's level. Re-applying the style the result already carries changes
+ * nothing, so a settings panel or a restored choice can apply the platform over
+ * the current theme. The result is a normal theme, so the classes and the
+ * resolvers a consumer already uses apply unchanged.
  */
 import { elevationShadow } from "./elevation.js";
 import { platformStyles } from "./platforms.js";
@@ -37,6 +39,12 @@ export const highContrastWindowsMd = elevationShadow(
 /** A same-level base keeps its own palette, name and edits. */
 export const acmeWindows = applyPlatformStyle(
   extendTheme(getTheme("dark", "high"), { name: "Acme" }),
+  platformStyles.win32,
+);
+
+/** The same style applied again is the same theme, name included. */
+export const acmeWindowsReapplied = applyPlatformStyle(
+  acmeWindows,
   platformStyles.win32,
 );
 

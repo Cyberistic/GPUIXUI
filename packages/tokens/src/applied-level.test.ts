@@ -46,6 +46,7 @@ import {
 import { themeFailures } from "./theme-check.js";
 import {
   acmeWindows,
+  acmeWindowsReapplied,
   highContrastWindows,
   highContrastWindowsLevel,
   highContrastWindowsMd,
@@ -238,6 +239,8 @@ describe("the copyable example", () => {
       elevationShadow(highContrastDarkTheme, "md")?.color,
     );
     expect(acmeWindows.name).toBe("Acme · Windows");
+    expect(acmeWindowsReapplied.name).toBe("Acme · Windows");
+    expect(acmeWindowsReapplied).toEqual(acmeWindows);
     expect(windowsHigh.colors).toEqual(highContrastWindows.colors);
   });
 });

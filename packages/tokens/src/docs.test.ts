@@ -2863,6 +2863,18 @@ describe("the applied level's documents", () => {
     expect(markdownProse).toContain("the elevation's opacity");
     expect(designSystem).toContain("the palette decides the name");
   });
+
+  it("states that a name never repeats the label it ends with", () => {
+    expect(markdownProse).toContain(
+      "Applying the style a theme's name already ends with changes nothing",
+    );
+    expect(designSystem).toContain(
+      "never appends the label it already ends with",
+    );
+    expect(readmeProse).toContain(
+      "Re-applying the style a theme already ends with is a no-op",
+    );
+  });
 });
 
 describe("the shareable theme choice's documents", () => {

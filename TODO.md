@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 208/274
+`[x]` `[████████░░]` 209/275
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1714,6 +1714,15 @@ composition their sentences name, and the Verification paragraph names both
 owners (`figures.ts`/`figures.test.ts` for the sixteen-entry table and
 `docs.test.ts` for the quoted figures). A probe over all 24 sets finds every
 quoted minimum unchanged, so no document value or colour moves (plan 544)
+`[x]` Make re-applying a style a no-op — `applyPlatformStyle` named its result
+`${palette.name} · ${label}`, and a same-level base keeps its own name, so
+applying the style a theme already carried appended the label again:
+`Light · Windows` became `Light · Windows · Windows`, a palette the package
+does not ship, printed by the preview the name exists for. A probe found the
+second application deep-equal in every field except `name`, so only the label
+drifted; one helper appends a label only when the name does not already end
+with it, `applyPlatformStyle` and the deprecated `platformTheme` bridge share
+it, and a different style still appends its own label once (plan 545)
 
 ## Phase C — Tier 1–2 components
 

@@ -425,6 +425,16 @@ export function createTheme(config: ThemeConfig): Theme {
 }
 
 /**
+ * A palette's name with a style's label, once. A name that already ends with the
+ * label belongs to that style already, so re-applying a stored choice keeps the
+ * name a preview prints instead of appending the label again.
+ */
+const appliedStyleName = (paletteName: string, label: string): string =>
+  paletteName.endsWith(` · ${label}`)
+    ? paletteName
+    : `${paletteName} · ${label}`;
+
+/**
  * Change only the two font families of a theme for a platform.
  *
  * @deprecated Plan 063 replaced this with {@link applyPlatformStyle} and
@@ -446,7 +456,7 @@ export function createTheme(config: ThemeConfig): Theme {
 export function platformTheme(base: Theme, platform: PlatformName): Theme {
   const { label, sans, mono } = platformTypes[platform];
   return extendTheme(base, {
-    name: `${base.name} · ${label}`,
+    name: appliedStyleName(base.name, label),
     typography: { sans, mono },
   });
 }
@@ -513,7 +523,7 @@ const platformOverrides = (
     contrast === "high" ? "high" : appliesColors ? "default" : base.contrast;
   const palette = levelIdentity(base, level);
   return {
-    name: `${palette.name} · ${label}`,
+    name: appliedStyleName(palette.name, label),
     typography: { sans, mono, ...style.structure.typography },
     spacing: style.structure.spacing,
     radius: style.structure.radius,
@@ -567,7 +577,10 @@ const platformOverrides = (
  * A style with no colour overrides changes no colour, so a default request keeps
  * the base's level (plan 301); its name says so, because the name follows the
  * palette. The result is a normal {@link Theme}, so it composes through
- * {@link extendTheme} like any other.
+ * {@link extendTheme} like any other. Applying a style the result already ends
+ * with is a no-op on every field, the name included: a stored choice re-applied
+ * on startup keeps `Light · Windows` instead of printing
+ * `Light · Windows · Windows` (plan 545).
  *
  * @example
  * ```ts
