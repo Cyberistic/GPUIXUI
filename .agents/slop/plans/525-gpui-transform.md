@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | **research complete — verdict: needs port.** No implementation done. |
+| Status | **research complete + optional patch ported** — `patches/gpui/0001-transform.patch` compiles and passes the GPUI lib tests; the fork is still not distributable, so the fallback remains the shipping path. |
 | Phase | infra (renderer capability) |
 | Owner | a dedicated `transform` workstream; reviewed by the components owner |
 | Depends on | `020` (GPUix runtime capability), `524` (the `unsupported` channel), `140` (darwin-x64 binding) |
@@ -928,3 +928,52 @@ node apps/playground/dist/smoke/run.js --only transform
   are required for a fork.
 - Recommendation: keep the fallback (fade + top/left slide, no zoom) in the
   component library; treat the fork as a research branch until gate 2.
+
+## 13. Results — optional patch port (2026-10-18)
+
+**Verdict: the port compiles and its tests pass.** The 17 commits were replayed
+as a three-way merge onto the pin `2565b8a3…`; the result is an optional patch
+at `patches/gpui/0001-transform.patch`, not a change to GPUix's fork contract
+and not a dependency of any package. It still does not expose `rotate` or
+`StyleDesc::transform`; the fallback in §7.2 remains the shipping path.
+
+Verification on Rust 1.97.1 / `x86_64-apple-darwin` (macOS 15.8.1, Command Line
+Tools only):
+
+| Command | Result |
+| ------- | ------ |
+| `cargo check -p gpui --locked` | pass |
+| `cargo clippy -p gpui --lib --locked` | pass |
+| `cargo test -p gpui --lib --locked` | 299 passed, 0 failed |
+| `git apply --3way --check` on a clean pin tree | pass; reproduces the merged files |
+
+The lib tests were built with `gpui_platform/runtime_shaders` on the
+`gpui_platform` dev-dependency because this host has no `xcrun metal`; the patch
+itself changes no manifest.
+
+Resolution summary:
+
+- import unions in `style.rs`, `styled.rs`, `text_system/line.rs`, keeping
+  GPUix's `GridTemplateMinSize`;
+- `div.rs`: prepaint and paint bodies wrapped in `with_style_transform`, keeping
+  GPUix's focus registration, hitbox insertion, a11y drain and
+  `paint_bounds_listener`;
+- `view.rs`: the branch's stale `AnyView` element impl is dropped in favour of
+  `ViewElement`; `ViewElementCacheKey` gains `transform` plus a `matches`
+  predicate, and the branch's two cache-key tests become one test of it. The
+  branch's other tests live in `transform_tests` beside GPUix's `mod tests`;
+- `window.rs`: deferred prepaint keeps GPUix's `element.take()` and threads
+  `content_mask`/`transform`; `paint_quad` keeps the transparent-border strip
+  split and routes every insert through `Window::insert_primitive`;
+  `insert_hitbox` keeps `identity` and adds transformed bounds plus inverse-map
+  metadata;
+- `scene.rs`: clean three-way merge plus the §4.4 item 1 fix —
+  `Primitive::transform` also transforms `Shadow.element_bounds`;
+- test fixtures that painted `Hsla::default()` quads now paint `white()`:
+  GPUix's `paint_quad` splits transparent backgrounds into border strips, so a
+  transparent fixture emitted zero (or four) quads instead of one. The
+  assertions did not change.
+
+Limitations are unchanged (§3.5). Gate 2 (§7.1) is untouched: the patch is not
+a published fork, has no five-target prebuilds, and is not consumed by
+`packages/tw` or any component.
