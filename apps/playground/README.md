@@ -32,7 +32,7 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 `tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the data
 toolbar probe (`data-toolbar`), the data-grid column probes
 (`data-grid-columns`, `column-config`), the notification-centre probe
-(`notification-centre`), the shell
+(`notification-centre`), the crop-area probe (`crop-area`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -726,6 +726,34 @@ frozen ID column is not configurable by design.
 The first live run failed with `Locator did not match any element` at
 `config-show-size`; the headless host is synchronous and cannot show that race.
 
+## Crop areas (plan `385`)
+
+`crop-area` is the runtime half of a crop surface: a 320 × 200 stage whose
+`<img>` box is the crop coordinate space, four plain `div` masks, four 12 px
+handles and a focusable crop box. 74 checks; live twin `live-crop-area`
+(10 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| the coordinate space | `objectFit: "contain"` and `"cover"` both report the same `320 × 200` box and paint no fallback; the renderer exposes no fitted-bitmap rect, no load event and no natural size, so the app owns the aspect mapping |
+| the mask | four `div`s are the exactly complement of the crop; a crop at `x = 0`/`y = 0` renders no left/top mask; the stage's 1 px border offsets every absolute child by 1 |
+| pass-through | with `pointerEvents: "none"` the click reaches the plane — **and still runs the mask's own handler** (log `mask:top>plane`); with `"auto"` only the mask runs. A click-through overlay must guard its handler by mode |
+| a handle drag | a 12 px handle keeps every held move and the release; `+40/+20` grows the crop `192 × 120 → 232 × 140`; the masks and handles follow within 1 px; the gesture ends in a click on the handle, not the image |
+| clamping | the SE handle stops at `256 × 160`; a move stops at `(0, 0)`; a shrink stops at `16 × 16`; the NW corner cannot pass the SE minimum |
+| the box | a click focuses it natively; `right` moves it 1 px; `shift-down` grows the height 1 px |
+| a11y | `Image:Image to crop` contains a named `Group:Crop selection` and `Button:Resize crop bottom right` |
+
+**Harness lesson:** the first run read a phantom `197` for the bottom mask
+because the gesture log started empty and grew to one line, moving the stage
+down by 16 px after the baseline was captured. Both readouts now sit **below**
+the stage. The held gesture also lives in a `ref`, not React state, so a move
+can trust the press that started it before the commit lands.
+
+Limits: no pixel readback; a parent `overflow: hidden` does not clip an `<img>`
+child, so a rounded crop mask is not measured; rectangular selection only (no
+rotation or aspect lock); the accessibility model is a region plus a group and
+buttons, not a multi-value slider.
+
 ## Application chrome (plan `350`)
 
 `app-chrome` builds the shell the Tier 4 rows never had evidence for: a 36 px
@@ -1366,6 +1394,9 @@ src/scenarios/query-builder.tsx a rule strip of native Selects over a virtualize
 src/scenarios/notification-model.ts the pure grouping and unread rules
 src/scenarios/notification-model.test.ts the pure notification rules
 src/scenarios/notification-centre.tsx a bell, a non-modal panel and a newest-first virtual list
+src/scenarios/crop-model.ts the pure crop geometry, the mask complement and the readout
+src/scenarios/crop-model.test.ts the pure crop rules
+src/scenarios/crop.tsx the image box, four masks, captured handles and a keyboard crop
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)

@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 77/82 plans-and-harness
+`[x]` `[██████████]` 78/83 plans-and-harness
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382` and `384` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `385`
 
@@ -105,6 +105,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       §10.3). Measured: the panel mounts a React commit later live, so a live
       step must `waitFor("config-panel")` before pressing a control, and an
       outside press on a non-focusable target leaves focus `none`.
+
+`[x]` Probe a **crop area** per plan `385`: `crop-area` (74 checks) and
+      `live-crop-area` (10): a 320 × 200 stage whose `<img>` box is the crop
+      coordinate space — `objectFit: "contain"` and `"cover"` both report the
+      same box and paint no fallback, and there is no fitted rect, load event or
+      natural size. The dimming mask is four plain `div`s covering the exact
+      complement; a 12 px handle keeps every held move and the release, a
+      `+40/+20` drag grows `192 × 120 → 232 × 140`, the SE clamp stops at
+      `256 × 160`, a move stops at `(0, 0)` (no left/top mask) and a shrink at
+      `16 × 16`; the box takes native focus, `right` moves 1 px and `shift-down`
+      grows 1 px. **The transferable finding: `pointerEvents: "none"` still
+      delivers the click to the mask as well as the plane beneath it
+      (`mask:top>plane`), while `"auto"` delivers it to the mask only — a
+      click-through overlay must guard its handler by mode.** Suite
+      `86 → 87` (`2846 → 2920`), live `37 → 38` (`705 → 715`), exit `0`,
+      `crop=verified`; six mutation + one reverse proof (plan `385` §10.3).
+      Measured harness lesson: a readout above the stage grew by a line and
+      moved it 16 px, so the geometry must not read a baseline stage; the
+      gesture lives in a `ref` so a move sees the press before the commit
 
 `[ ]` **packages/components** (no owner yet): implement a notification centre
       from the contract plan `381` measured — a bell with a derived unread badge

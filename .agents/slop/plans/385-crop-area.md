@@ -1,6 +1,6 @@
 # 385 — Tier 5 feasibility: a crop area over `<img>`
 
-**Status:** planned 2026-10-18 · **Phase:** D/E · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D/E · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `161`, `162`, `172`, `188`, `335`.
@@ -65,7 +65,7 @@ Capability: `crop` (new). Scenario: `crop-area`; live twin: `live-crop-area`.
 
 - `crop-toolbar`: `crop-fit` (`fit contain`/`fit cover`), `crop-mask-mode`
   (`masks pass`/`masks block`), `crop-reset` (`reset`).
-- `crop-readout`: `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 mask=0`.
+- `crop-readout`: `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 blocked=0`.
 - `crop-log`: the append-only gesture log (`down:se>move:se>up:se>click:se`).
 - `crop-stage`: a `320 × 200`, `position: "relative"` surface, `role="img"`,
   `aria-label="Image to crop"`; a 2 : 1 SVG data URL in `crop-image` with
@@ -97,15 +97,15 @@ and the steps call the same functions.
 
 | Area | Check |
 | ---- | ----- |
-| baseline | readout is exactly `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 mask=0`; `crop-image` is an `img` with bounds `320 × 200`; `crop-plane` and `crop-box` are `div`s; the box sits at the stage origin + `(64, 40)` at `192 × 120` |
+| baseline | readout is exactly `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 blocked=0`; `crop-image` is an `img` with bounds `320 × 200`; `crop-plane` and `crop-box` are `div`s; the box sits at the stage origin + `(64, 40)` at `192 × 120` |
 | masks | top `320 × 40` at the stage top; left `64 × 120` at `y = 40`; right `64 × 120` at `x = 256`; bottom `320 × 40` at `y = 160` — each within 1 px of the derived rect |
 | handles | each 12 × 12 and centred on its corner within 1 px (SE centre `= box.x + w`, `box.y + h`) |
 | fit | `crop-fit` switches to `cover` and back; the image bounds stay `320 × 200` in both — the layout box, not the fitted bitmap, is the coordinate space; no `img:` fallback paints |
-| pass-through | with `mask=none`, a click in the top mask reaches `crop-plane` (`image=1 mask=0`); after `crop-mask-mode` (`auto`) the same click hits the mask (`image=1 mask=1`); toggling back lets the next click through (`image=2`) |
+| pass-through | with `mask=none`, a click in the top mask reaches `crop-plane` (`image=1 blocked=0`); after `crop-mask-mode` (`auto`) the same click hits the mask (`image=1 blocked=1`); toggling back lets the next click through (`image=2`) |
 | resize SE | a paced press/move/release on `crop-handle-se` by `(+40, +20)` gives `w=232 h=140`, `x/y` unchanged, and every mask and handle follows within 1 px |
 | clamp SE | after `reset`, a drag of `(+400, +400)` clamps to `w=256 h=160` — the box's right/bottom edges equal the stage edges within 1 px |
-| move | after `reset`, a `(-30, -16)` drag on the box centre gives `x=34 y=24`; the top mask is `320 × 24`, the left `34 × 120`; `(+400, +400)` clamps the box to `x=128 y=80` and the right/bottom masks are absent (zero size) |
-| min size | a `(-400, -400)` drag on the SE handle stops at `w=16 h=16`; the NW handle then cannot pass the SE edge |
+| move | after `reset`, a `(-30, -16)` drag on the box centre gives `x=34 y=24`; the top mask is `320 × 24`, the left `34 × 120`; a further `(-100, -100)` clamps to `(0, 0)` and the left/top masks are absent |
+| min size | a `(-200, -200)` drag on the SE handle stops at `w=16 h=16`; the NW handle then cannot pass the SE edge |
 | keyboard | a click on the box focuses it (`focused = crop-box`); `ArrowRight` moves it `+1` and the masks follow; `shift-ArrowDown` grows the height by `1` (or, if §9 records that `shift` does not arrive, the resize half is dropped and named) |
 | a11y | the stage is an AccessKit `Image` named `Image to crop`; the box is a `Group` named `Crop selection`; every handle is a `Button` named `Resize crop …` |
 | gesture log | the drag is `down:se>move:se>up:se` and ends with a click on the handle; no `image` or `mask` entry appears for a drag (the gesture-ending click lands on the source) |
@@ -207,12 +207,12 @@ export const paints: (rect: CropRect) => boolean;
 /** `x=64 y=40 w=192 h=120` */
 export const describeRect: (rect: CropRect) => string;
 
-/** `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 mask=0` */
+/** `x=64 y=40 w=192 h=120 fit=contain mask=none image=0 blocked=0` */
 export const describeCrop: (
   rect: CropRect,
   fit: "contain" | "cover",
   mask: "none" | "auto",
-  counts: { readonly image: number; readonly mask: number },
+  counts: CropCounts,
 ) => string;
 ```
 
@@ -385,15 +385,15 @@ proof in §10 (temporary edit → `--only crop-area` → revert):
 
 | # | Mutation | Must fail with |
 | - | -------- | -------------- |
-| M1 | `moveCrop` drops the `[0, stage - size]` clamp | "the crop stops at the stage's left edge" |
-| M2 | the masks derive from `initialCrop` instead of the live rect | "the masks follow the moved crop" |
-| M3 | every mask hard-codes `pointerEvents: "none"` | "an auto mask blocks the image plane" |
-| M4 | every corner resizes with the SE arithmetic | "the NW handle moves the origin" |
-| M5 | the box's `onKeyDown` handles only `ArrowRight` | "arrow keys move the crop" |
-| M6 | `end` does not clear the gesture | "the gesture ends on the handler" (the next press drifts) |
+| M1 | `moveCrop` drops the `[0, stage - size]` clamp | "a move past the origin stops at zero" |
+| M2 | the masks derive from `initialCrop` instead of the live rect | "the right mask follows the resized edge" |
+| M3 | every mask hard-codes `pointerEvents: "none"` | "a blocking mask keeps the image plane untouched" |
+| M4 | every corner resizes with the SE arithmetic | "the NW corner cannot pass the SE minimum" |
+| M5 | the Down key maps to `(0, 0)` | "shift+arrow grows the crop from the SE corner" |
+| M6 | the mask's `maskMode === "auto"` guard is removed | "a passing mask records no block" |
 
-Reverse proof (consumer wiring): remove the SE handle's `onMouseMove` →
-"the SE handle resizes the crop" fails on the first resize.
+Reverse proof (consumer wiring): the plane's `onClick` is replaced by a no-op →
+"a passing mask lets the image plane take the click" fails.
 
 ### 8.3 Two-direction checks by hand
 
@@ -433,12 +433,97 @@ Reverse proof (consumer wiring): remove the SE handle's `onMouseMove` →
 
 ## 10. Measured results
 
-_To be filled by the executor after the runs._
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
 
 | Scenario | Checks | Result |
 | -------- | ------ | ------ |
-| `crop-area` (headless) | — | — |
-| `live-crop-area` | — | — |
+| `crop-area` (headless) | 74 | pass — suite `86 → 87`, `2846 → 2920`, exit `0`, `crop=verified` |
+| `live-crop-area` | 10 | pass — live `37 → 38`, `705 → 715`, exit `0`, one screenshot |
+
+Unit tests: `crop-model.test.ts` adds 21 tests; the playground suite is
+186 → **207** tests in 20 files.
+
+### 10.1 Facts that changed the plan
+
+- **`pointerEvents: "none"` does not suppress the masked element's own click.**
+  The runtime delivers the click to the mask **and** to the plane beneath it
+  (the log read `mask:top>plane`, paint order), while `"auto"` delivers it to
+  the mask only (the plane's counter stayed at `1`). The mask handler therefore
+  carries a component-level guard (`if (maskMode !== "auto") return`); the
+  overlay step is not a hit-test filter. This is the plan's most transferable
+  finding: every click-through overlay needs the same guard.
+- **`objectFit` is accepted and changes nothing observable in the box.**
+  `contain` and `cover` both report `320 × 200`, no `img:` fallback paints, and
+  neither exposes the fitted bitmap rect. There is no load event and no natural
+  size, so the app owns the natural-aspect mapping.
+- **The 12 px handle keeps the capture.** Every held move landed, the release
+  committed, and the gesture-ending click landed on the handle (`click:se`) —
+  never on the plane or a mask.
+- **The four-mask complement is exact, offset by the stage's 1 px border.** The
+  top mask paints at `y = 1`, the left at `x = 1`, and the crop box at
+  `(65, 41)` for a `(64, 40)` crop. Zero-size masks are not rendered: a crop at
+  `x = 0` / `y = 0` has no left/top mask and `bounds` returns `null`.
+- **The box takes native focus and answers keys.** A click focused
+  `crop-box`; `right` moved `x` by exactly 1; `shift-down` grew the height by
+  1, so `modifiers.shift` arrives on a lower-case key.
+- **A readout above the stage made the geometry lie.** The gesture log starts
+  empty (zero height) and grows to one line (~16 px), moving the stage down;
+  the first run read the stage's baseline once and reported the bottom mask at
+  `197` instead of `181`. The probe now keeps both readouts **below** the
+  stage, and the baseline is stable. This is a harness lesson, not a runtime
+  fact.
+- **The gesture lives in a `ref`, not React state.** A native move can arrive
+  before the commit that renders the press; the ref is what a held drag can
+  trust (the same batching plan `189` measured live).
+
+### 10.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| stage | `320 × 200`; the image box is the same; `contain` and `cover` do not change it |
+| initial crop | `x=64 y=40 w=192 h=120`; box bounds `(65, 41)` with the 1 px stage border |
+| masks | top `320 × 40` at `y = 0`; left `64 × 120` at `x = 0`; right `64 × 120` at `x = 256`; bottom `320 × 40` at `y = 160` (all +1 in window coordinates) |
+| pass-through | `none`: mask handler + plane handler (`mask:top>plane`); `blocked` stays `0` only with the mode guard |
+| blocking | `auto`: mask handler only; the plane's counter is unchanged |
+| SE resize | `+40/+20` → `232 × 140`; masks and handles follow within 1 px |
+| SE clamp | `+400/+400` → `256 × 160` |
+| move | `-30/-16` → `x=34 y=24`; `-100/-100` → `x=0 y=0`, left/top masks absent |
+| minimum | SE `-200/-200` → `16 × 16` at `(64, 40)`; NW `+400/+400` cannot enlarge it |
+| keyboard | click focuses `crop-box`; `right` → `x=65`; `shift-down` → `h=121` |
+| a11y | `Image` "Image to crop"; `Group` "Crop selection"; `Button` "Resize crop bottom right" |
+| gesture | `down:se>move:se>up:se>click:se` |
+| live | the baseline, a paced SE drag (`232 × 140`), pass-through/blocking, an arrow move and reset all hold |
+
+### 10.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only crop-area`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | `moveCrop` drops the clamp | `a move past the origin stops at zero` (`x=-66 y=-76`) |
+| M2 | the masks use `initialCrop` | `the right mask follows the resized edge` (`269` vs `308`) |
+| M3 | every mask is `pointerEvents: "none"` | `a blocking mask keeps the image plane untouched` (`2` vs `1`) |
+| M4 | every corner resizes with the SE arithmetic | `the NW corner cannot pass the SE minimum` (`256 × 160`) |
+| M5 | Down maps to `(0, 0)` | `shift+arrow grows the crop from the SE corner` (`120`) |
+| M6 | the mask-mode guard is removed | `a passing mask records no block` (`1`) |
+
+Reverse proof (consumer wiring): the plane's `onClick` removed →
+`a passing mask lets the image plane take the click` (`0` vs `1`).
+
+### 10.4 Limits recorded
+
+- No pixel readback, so a decoded image and a corrupt bitmap are
+  indistinguishable; the probe asserts the box and the absence of a fallback.
+- No fitted-bitmap rect, no load event and no natural size: the crop coordinate
+  space is the declared box and the app supplies the aspect ratio.
+- `borderRadius` clips the bitmap, but a parent's `overflow: hidden` does not
+  clip an `<img>` child; a rounded crop mask is not measured.
+- Rectangular selection only: no rotation, no aspect-ratio lock, no snap.
+- 0.10.0 has no multi-value slider role; the a11y model is an `Image` region
+  with a named `Group` and `Button` handles.
+- The live suite cannot read style or the a11y dump (`197`), so those checks
+  are headless-only.
 
 ## 11. Acceptance
 

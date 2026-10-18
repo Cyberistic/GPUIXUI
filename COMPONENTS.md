@@ -80,15 +80,16 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | editor | `multi-pane-editor`, `live-editor` | verified |
 | data-toolbar | `data-toolbar`, `live-data-toolbar` | verified |
 | query | `query-builder`, `live-query-builder` | verified |
+| crop | `crop-area`, `live-crop-area` | verified |
 
-The suite is **85/85 green here** (exit `0`, `.artifacts/smoke-report.json`,
-2724 checks).
+The suite is **87/87 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2920 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **36/36 green
-here** (678 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **38/38 green
+here** (715 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `chrome`, `replace`, `editor`, `data-toolbar` and `query` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `chrome`, `replace`, `editor`, `data-toolbar` and `query` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -902,6 +903,6 @@ remaining live-only defect (see the Tabs row).
 | QR code | todo | yes | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
 | File upload | todo | partial (probe) | **The picker and a drop target are supported; progress/validation are ours.** Picker provided (`promptForPaths`); the drop surface, progress and validation are ours. `onFileDrop` exists and `drag-targets` measured it: absolute paths plus the window drop point, but the simulation also emits moves, and a drop on an element without a handler fires a click. |
 | Video / audio player + waveform | todo | no | **No media host element** (verified: not in `ElementType`). Playback needs a platform surface — **unverified**; a waveform can only be drawn via `<svg>` or the planned `<canvas>`. |
-| Crop area | todo | ? | Draggable handles over `<img>`; crop geometry and constraints are ours. No custom-paint requirement unless the mask is drawn — **unverified**. |
+| Crop area | todo | yes (composition; probe) | Draggable handles over `<img>`; crop geometry and constraints are ours. **Measured (`crop-area`, plan `385`):** a 320 × 200 stage whose `<img>` box is the coordinate space — `objectFit: "contain"` and `"cover"` both report `320 × 200` and paint no fallback, and there is no fitted-bitmap rect, load event or natural size, so the app owns the aspect mapping. The dimming mask is **four plain `div`s** covering the exact complement (no custom paint, no `<canvas>`); a 12 px handle keeps every held move and the release, and the gesture ends in a click on the handle. A crop at `x = 0`/`y = 0` renders no left/top mask. The box takes native focus; arrows move it 1 px and `shift`+arrows resize it. **Load-bearing rule:** `pointerEvents: "none"` still delivers the click to the masked element *and* to the plane beneath it (paint order), while `"auto"` delivers it only to the mask — a click-through overlay must guard its handler by mode, because the overlay step is not a hit-test filter. **Live (`live-crop-area`):** the baseline, a paced SE drag (`192 × 120 → 232 × 140`), both mask modes, an arrow move and reset hold in a window. Limits: no pixel readback, no rounded mask (a parent `overflow` does not clip an `<img>`), rectangular selection only (no rotation or aspect lock), and a `Group`/`Button` accessibility model rather than a multi-value slider. |
 | Chat (AI conversation) | todo | partial (probe) | **The rendering primitives are measured; the component is plan `207` in `components`.** Behaviour ported from **shadcn/ui's AI Elements `chat`** (credited in `LICENSES/`): a message list in a Message scroller, a composer with attachments, submit/stop, `idle/submitting/streaming/error` states, empty state. Plan `207`. |
 | Message (AI message row) | todo | partial (probe) | **The rendering primitives are measured; the component is plan `207` in `components`.** Behaviour ported from **shadcn/ui's AI Elements `message`** (credited): `user`/`assistant`/`system` variants; avatar, content (`<markdown>`), actions (copy/retry/feedback), attachments, reasoning, tool calls, sources, streaming indicator. Plan `207`. |
