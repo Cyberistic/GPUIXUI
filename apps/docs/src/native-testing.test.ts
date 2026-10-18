@@ -74,7 +74,9 @@ const scriptsFor = (packageName: string): Readonly<Record<string, string>> =>
 describe("the native-testing page", () => {
   it("names every namespace projection the package exports", () => {
     expect(namespaces).toEqual(["Report", "Runtime", "Smoke"]);
-    const missing = namespaces.filter((name) => !page.includes(name));
+    const missing = namespaces.filter(
+      (name) => !page.includes("`" + name + "`"),
+    );
     expect(missing).toEqual([]);
   });
 

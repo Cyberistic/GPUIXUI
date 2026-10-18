@@ -136,7 +136,8 @@ and asserts:
 
 1. **Namespaces.** Parse `export * as (\w+)` from the testing entry; expect
    exactly `["Report", "Runtime", "Smoke"]`, and assert each name appears on the
-   page. A new namespace projection fails until the page names it.
+   page as a backticked code span. A new namespace projection fails until the
+   page names it, and a mere `SmokeHost` substring is not enough.
 2. **Commands resolve.** Parse every `nub run --filter <package> <script>` from
    the page; for each, find the workspace whose `package.json` `name` matches and
    assert its `scripts` object has `<script>`. A renamed script fails by name.
@@ -262,8 +263,10 @@ Measured on 2026-10-18 in `workspaces/docs-site`:
 Two-direction proofs, each run against only
 `src/native-testing.test.ts` and then restored:
 
-1. Renamed `SmokeHost` (and the other two `Smoke*` identifiers) → the namespace
+1. Renamed the backticked `Smoke` namespace name to `Runner` → the namespace
    test failed with `expected [ 'Smoke' ] to deeply equal []`; restored, 6/6.
+   (The first attempt renamed `SmokeHost` instead and passed, which is why the
+   guard now requires the backticked namespace names rather than a substring.)
 2. Changed `playground smoke` to `playground smoke2` → the command test failed
    with `[ 'playground smoke2' ]`; restored.
 3. Changed the Contributing link to `/docs/native-testing-typo` → the
