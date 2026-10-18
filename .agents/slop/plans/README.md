@@ -1776,8 +1776,9 @@ strength returned `[]` from `themeFailures` while a disabled control looked
 enabled. The rule survived as two shipped-theme assertions on one surface each.
 `themeTextTierFailures` is the fifth check: `textTiers` is the ordered
 `[dimmer, brighter]` list, the comparison runs on the surfaces where both roles
-already have a documented pair (derived from `contrastPairs` — 12 + 12 + 5), and
-each tier must sit one `contrastFloors[level].step` below the one above it.
+already have a documented pair (derived from `contrastPairs` — 12 + 12 + 5 at
+the time; plan 500 adds the three surface body roles), and each tier must sit
+one `contrastFloors[level].step` below the one above it.
 Every shipped set and every base × style composition clears it (1.274 / 1.349 /
 1.440 at the tightest), so no colour, pair, floor or metric moves. The one total
 call now composes five checks in colour → typeface → contrast → hierarchy →
