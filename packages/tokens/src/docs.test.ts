@@ -315,13 +315,20 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 388 to **${contrastPairs.length}**`,
+      `taking it from 394 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain("plans `076`–`348` closed");
+  });
+
+  it("states the disabled panel action's resting pair", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain(
+      "A disabled panel action keeps the resting `softAction` fill and paints `disabledForeground`",
+    );
   });
 });
 

@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 179/237
+`[x]` `[███████░░░]` 180/241
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1418,6 +1418,12 @@ of `selectionFillRoles`, the documents state the gap and recommend
 `userSelect: "none"` on a control's chrome, and the role's JSDoc no longer says
 "fourteen" or that the AAA dark `softAction` measures 1.047:1 (it is 1.574:1
 after plan 504); no colour, pair or floor moves (plan 513)
+`[x]` Hold the disabled action inside a status panel — a raised action kept no
+disabled state, and the canvas `disabled` fill is not a panel shape (1.0066:1 on
+XP light's `warningSoft`), so it keeps the resting `softAction` fill and paints
+`disabledForeground` (identity dark 4.343:1, AAA dark 5.199:1), while `textTiers`
+holds that label a step below `softActionForeground` (2.156:1 at the tightest);
+`contrastPairs` grows 394 → 395 and no colour moves (plan 514)
 `[ ]` Cross-team: `primitives` passes `nativeFieldTheme(theme)` to every native
 `<input>`/`<textarea>` it renders, so a field's caret follows the theme instead
 of the runtime's built-in dark value (owner: `primitives`; plan 511)
@@ -1427,6 +1433,11 @@ its label is not selectable while the fill is `xHover`/`xActive`, where the 15%
 veil measures **60 of 360** label pairs under the on-colour floor (worst
 3.353:1, macOS dark `accentActive`) and no neutral alpha holds both floors at
 AAA light (owner: those workstreams; plan 513)
+`[ ]` Cross-team: `components` paints a disabled action inside a tone-tinted
+Alert or Badge with the resting `softAction` fill and `disabledForeground`, not
+the canvas `disabled` fill (1.0066:1 on XP light's `warningSoft`) and not a
+pointer step; a ghost disabled action keeps no fill. The resting pair and the
+enabled/disabled step ship in plan 514 (owner: `components`)
 
 ## Phase C — Tier 1–2 components
 

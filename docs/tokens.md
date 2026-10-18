@@ -417,6 +417,19 @@ foreground readable on all three. A filled action uses all four; a ghost action
 skips the resting fill and paints `softActionHover` and `softActionActive` on
 the panel with the same foreground.
 
+A disabled panel action keeps the resting `softAction` fill and paints
+`disabledForeground`; it does not step, because a disabled control receives no
+pointer state. The raised fill is the action's shape, not its state: the canvas
+`disabled` fill is not a panel shape, measuring **1.0066:1** on XP light's
+`warningSoft` and **1.0242:1** on the high-contrast dark `destructiveSoft`,
+under the 1.05:1 surface floor. A ghost disabled action keeps no fill — the
+label sits on the panel, which `inactiveSoftPairs` already measures. The
+resting label is `inactivePanelActionPairs`, and it must stay a perceivable
+step below the enabled `softActionForeground` on the five surfaces the two
+labels share (see [Text hierarchy](#text-hierarchy));
+`softActionHover`/`softActionActive` are deliberately outside the pair list
+because a disabled control never reaches them.
+
 A Toast is a `popover` card, not a tinted panel: `toast/viewport.tsx` paints the
 card `popover` and tones only the glyph and the 3px bar. `softAction` equals that
 card in every light shipped set (**1.0000:1**), so a Toast action paints the
@@ -1896,8 +1909,11 @@ both roles clear their floors.
 same surface**, where both roles already have a documented pair. `textTiers` is
 the ordered list: `mutedForeground` below `foreground`, `mutedForeground` below
 `cardForeground`, `mutedForeground` below `popoverForeground`, `mutedForeground`
-below `inputForeground`, `disabledForeground` below `mutedForeground`, and
-`placeholder` below `mutedForeground`. A `TextTierFailure` carries the two ratios
+below `inputForeground`, `disabledForeground` below `mutedForeground`,
+`placeholder` below `mutedForeground`, and — a **state** rather than a
+hierarchy tier — `disabledForeground` below `softActionForeground`, so the
+unavailable label of a filled status-panel action stays visibly dimmer than the
+enabled one. A `TextTierFailure` carries the two ratios
 and the step:
 
 ```ts
@@ -1917,15 +1933,18 @@ for secondary text below body copy, one `card` for `cardForeground`, four for
 surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover` and `input`), 12 for the inactive label below
 secondary text (every surface `inactivePairs` measures except the `disabled`
-fill, which carries no secondary text), and the five surfaces a hint and a
-caption share. Every shipped set clears the step; the tightest are **1.274:1**
+fill, which carries no secondary text), five for a hint and a caption, and five
+for the disabled panel-action label below the enabled one (`softAction` and the
+four soft fills). Every shipped set clears the step; the tightest are **1.274:1**
 (`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
 `card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
 light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
 high-contrast light on `muted`), **1.333:1** (`disabledForeground` vs
-`mutedForeground`, Windows light on `background`) and **1.440:1**
-(`placeholder` vs `mutedForeground`, Windows dark on `input`). Every shipped set
+`mutedForeground`, Windows light on `background`), **1.440:1**
+(`placeholder` vs `mutedForeground`, Windows dark on `input`) and **2.156:1**
+(`disabledForeground` vs `softActionForeground`, high-contrast light on
+`successSoft`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
 `foreground` still passes every floor, and is reported only here.
@@ -2209,7 +2228,13 @@ washes and the four soft status fills a tone-tinted Alert's action sits on
 with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
 stays near the panel by design, so a disabled control's shape is carried by its
 `border` edge — held to the divider floor on `disabled`, and on the `muted` panel
-a settings sidebar divides (plan `306`).
+a settings sidebar divides (plan `306`). The filled action inside a status panel
+keeps its raised fill when it is disabled and paints `disabledForeground`:
+`inactivePanelActionPairs` holds the resting label (4.343:1 identity dark,
+5.199:1 AAA dark), and the label is also a step below `softActionForeground`, so
+a disabled action cannot look enabled. The hover and press fills are outside the
+list because a disabled control does not step, and a ghost disabled action is
+already covered by `inactiveSoftPairs`.
 A step is measured too: each filled family's `xHover` is held one 1.05:1 step
 from its `x` and its `xActive` from its `xHover` (`stateStepPairs`), and the
 generic `hover`/`active` ladder that a ghost or outline control paints is held
@@ -2535,6 +2560,12 @@ shipped set clears them (8.667:1 at the tightest, identity dark on `infoSoft`),
 so no colour moves, no `contrastPairs` entry moves, and `contrastPairs` stays
 **394**. The same audit corrected `softAction`'s JSDoc, which still described a
 ghost action as painting the canvas `hover`/`active` washes plan `394` replaced.
+Plan `514` gives the disabled action inside a tone-tinted panel its resting
+pair — `disabledForeground` on `softAction`, at the inactive floor — and the
+enabled/disabled step its tier, so a copied theme cannot erase the label or make
+a disabled action look enabled; the canvas `disabled` fill is **1.0066:1** on XP
+light's `warningSoft`, so it is not a panel shape. Every shipped set already
+clears both, so no colour moves: taking it from 394 to **395**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract

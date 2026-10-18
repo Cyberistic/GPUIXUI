@@ -757,6 +757,20 @@ export const softActionLabelPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The disabled action inside a tone-tinted status panel. A raised action keeps
+ * its resting `softAction` fill when it becomes unavailable — the canvas
+ * `disabled` fill measures 1.0066:1 on XP light's `warningSoft` and 1.0242:1 on
+ * the high-contrast dark `destructiveSoft`, so it would replace the action's
+ * shape with the panel — and paints `disabledForeground`. It does not step: a
+ * disabled control does not hover or press, so the hover and press fills are
+ * deliberately outside this list. A ghost action's disabled label is already
+ * covered by {@link inactiveSoftPairs}.
+ */
+export const inactivePanelActionPairs: readonly ContrastPair[] = [
+  ["disabledForeground", "softAction", "inactive"],
+];
+
+/**
  * The generic washes the shipped secondary control still paints behind its
  * label. `components/internal/button.tsx` keeps `secondaryForeground` while the
  * fill becomes `hover` or `active`; the designed family is `secondaryHover` /
@@ -859,6 +873,11 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * measured on all four soft fills (`softActionPairs`), the ladder is the `step`
  * class (`softActionStepPairs`), and the label is measured on the three fills and
  * on the panel a ghost action rests on (`softActionLabelPairs`).
+ *
+ * A disabled panel action keeps the resting fill and dims its label: the canvas
+ * `disabled` fill is 1.0066:1 on XP light's `warningSoft`, so
+ * `inactivePanelActionPairs` holds `disabledForeground` on `softAction` at the
+ * inactive floor, and a disabled control does not step.
  */
 export const contrastPairs: readonly ContrastPair[] = [
   ...bodyTextPairs,
@@ -944,6 +963,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...softActionPairs,
   ...softActionStepPairs,
   ...softActionLabelPairs,
+  ...inactivePanelActionPairs,
   ...stateStepPairs,
   ...washStepPairs,
   ...selectionStepPairs,
@@ -984,7 +1004,10 @@ export const contrastFloors: Readonly<
  * then secondary text, then the two roles below it, an unavailable label and a
  * field's hint. A tier that is only *at least* as readable as the one above it
  * is not a tier; the reader uses the difference to tell a caption from body copy
- * and a disabled label from an enabled one. `selectedForeground` is not a body
+ * and a disabled label from an enabled one. The last pair is a **state** rather
+ * than a hierarchy: the unavailable label of a filled status-panel action must
+ * stay a perceivable step below the enabled `softActionForeground` on the fill
+ * they share. `selectedForeground` is not a body
  * role: it is the secondary-strength tint an inherited label keeps inside a
  * selected row, whose title is painted with `foreground`. The step is the same
  * 1.05:1 the filled families and the wash ladder publish, applied to roles a
@@ -997,6 +1020,7 @@ export const textTiers = [
   ["mutedForeground", "inputForeground"],
   ["disabledForeground", "mutedForeground"],
   ["placeholder", "mutedForeground"],
+  ["disabledForeground", "softActionForeground"],
 ] as const satisfies ReadonlyArray<
   readonly [keyof ThemeColors, keyof ThemeColors]
 >;
@@ -1659,7 +1683,8 @@ const elevationFailures = (
  *   the surfaces a status chip occupies (`statusFillPairs`); and the state steps
  *   of the filled families, the generic washes, the selected row and the status
  *   panel's raised action — `softActionPairs`, `softActionStepPairs` and
- *   `softActionLabelPairs`.
+ *   `softActionLabelPairs` — plus the disabled action's resting label
+ *   (`inactivePanelActionPairs`).
  * - `selectionPairs`, `selectionStatusPairs`, `selectionWashPairs`,
  *   `selectionSoftPairs` and `selectionSoftWashPairs` — text, status text and
  *   the wash's own perceivability through the composited `selection` colour.

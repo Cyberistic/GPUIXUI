@@ -183,7 +183,12 @@ pairs measure under 1.05:1 — the worst Windows light `active` on
 `destructiveSoft` at **1.0042:1** — and an Alert's dismiss control had no press
 state. `softActionPairs`, `softActionStepPairs` and `softActionLabelPairs` hold
 the raised family to the surface, step, secondary and body floors in every
-shipped set (plan 394).
+shipped set (plan 394). A disabled filled action keeps the resting `softAction`
+fill and paints `disabledForeground`: the raised fill is the action's shape, and
+the canvas `disabled` fill measures **1.0066:1** on XP light's `warningSoft`.
+`inactivePanelActionPairs` measures the resting label, and a `textTiers` entry
+keeps it a step below `softActionForeground`; a disabled control does not step
+(plan 514).
 
 A Toast is a `popover` card, not a tinted panel: `toast/viewport.tsx` paints the
 card `popover` and tones only the glyph and the 3px bar. `softAction` equals that

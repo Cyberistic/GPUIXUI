@@ -218,6 +218,13 @@ export function filledControl(
  * (`filledControl(theme, "secondary")`) — `softAction` equals the card in every
  * light shipped set.
  *
+ * A disabled filled action keeps this resting `background` and paints
+ * `disabledForeground` instead of the foreground; it does not step, because a
+ * disabled control receives no pointer state. The canvas `disabled` fill is not
+ * a panel shape (1.0066:1 on XP light's `warningSoft`), so the raised fill is
+ * the action's outline in both states. `inactivePanelActionPairs` measures the
+ * label.
+ *
  * @example
  * ```ts
  * import { getTheme, softAction } from "@gpuixui/tokens";

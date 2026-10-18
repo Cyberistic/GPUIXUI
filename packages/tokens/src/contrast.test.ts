@@ -505,7 +505,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(394);
+    expect(contrastPairs.length).toBe(395);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [
