@@ -3553,12 +3553,13 @@ const tier2Editing: LiveScenario = {
 
       // 1. InlineEdit: the display→editor swap, a real edit and a cancel.
       //
-      // Measured 2026-10-18: the automation locator's `click(testId)` resolves
-      // the pre-swap display node, so the swapped editor only takes a live
-      // pointer focus from a coordinate click inside it — which is what a user
-      // does anyway. React's `onBlur` does not run for a native focus change in
-      // a window (the same gap plan `345` measured for `onFocus`), so the
-      // blur-commit path stays headless; the keyboard commits and cancels work.
+      // Measured 2026-10-18/19: the automation locator's `click(testId)`
+      // resolves the pre-swap display node, so the swapped editor only takes a
+      // live pointer focus from a coordinate click inside it — what a user does
+      // anyway. React's `onFocus`/`onBlur` delivery is window-state dependent
+      // (plan `390`); in the current window a click away commits (plan `555`),
+      // while the headless host delivers no `onBlur` (plan `347`). Each claim is
+      // asserted in its own suite.
       yield* ctx.host.click("ws-name");
       yield* settle;
       yield* ctx.expectSome(
@@ -3609,6 +3610,38 @@ const tier2Editing: LiveScenario = {
         "Escape returns the live display",
         yield* textOf(ctx, "ws-name"),
         "live",
+      );
+
+      // 1b. The blur commit: a live click on a focusable sibling commits the
+      // open draft (plan `555`; the headless host delivers no `onBlur`).
+      yield* ctx.host.click("ws-name");
+      yield* settle;
+      const blurEditor = yield* boxOf(ctx, "ws-name");
+      yield* ctx.host.clickWindow(
+        blurEditor.x + 200,
+        blurEditor.y + blurEditor.height / 2,
+      );
+      yield* settle;
+      yield* ctx.host.key("z");
+      yield* settle;
+      yield* ctx.host.click("ws-elsewhere");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-editing-readout", "name=livez commits=2");
+      yield* ctx.expectContains(
+        "a click away commits the open live draft",
+        yield* textOf(ctx, "tier2-editing-readout"),
+        "name=livez commits=2",
+      );
+      yield* ctx.expectContains(
+        "the committed display paints the draft",
+        yield* textOf(ctx, "ws-name"),
+        "livez",
+      );
+      yield* waitForFocus(ctx, "ws-elsewhere");
+      yield* ctx.expectEqual(
+        "the click's focus is not stolen by the commit",
+        yield* focusedOf(ctx),
+        "ws-elsewhere",
       );
 
       // 2. TagInput: a typed comma adds a live token.

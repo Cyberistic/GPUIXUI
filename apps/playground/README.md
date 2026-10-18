@@ -1325,11 +1325,19 @@ result moved with it (`tab=overview` vs `tab=settings`). The live suite therefor
 asserts focus **movement** and key delivery, not the counter. The consequence
 still stands as a rule: a component that tracks "the item the user is on" only
 in `onFocus` should also set it on click (`List` does; `Tabs` should; the Tabs
-and InlineEdit `onBlur` rows are re-verify tasks). Key delivery itself is fine: a
+row is a re-verify task). Key delivery itself is fine: a
 key reaches the focused element, bubbles through **every** ancestor (focusable
 or not) and finally reaches the app-level window handler, so an ancestor handler
 is a valid component path and `useWindowKey` is the global-shortcut path. The
 live runner wires `useWindowKey` (plan `345`).
+
+The `InlineEdit` blur half of that family was re-measured for plan `555`: in the
+current window, clicking the focusable `ws-elsewhere` **does** deliver
+`onBlur` and the shipped component commits the open draft (`name=livez
+commits=2`), paints it, and leaves focus on the clicked element. `live-tier2-editing`
+guards all three facts; the headless host delivers no `onBlur`, so
+`tier2-editing` keeps asserting the editor stays open there. Delivery is still
+window-state dependent, which is why the live check exists.
 
 A fourth rule came from plan `391`: a close produced by a **real timer** is
 awaited with a bounded `waitForText` (3 s), not a fixed sleep. `live-preview`'s

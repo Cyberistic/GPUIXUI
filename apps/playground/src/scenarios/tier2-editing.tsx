@@ -278,9 +278,10 @@ export const tier2EditingScenario: PlaygroundScenario = {
         "div",
       );
 
-      // 0.10.0 does not dispatch React's onBlur for a native focus change, so
-      // clicking away leaves the editor open (TODO 548). The typed draft is
-      // still there, and Escape is the working exit.
+      // The headless host does not dispatch React's `onBlur` for a native
+      // focus change, so clicking away leaves the editor open here. A real
+      // window does deliver it and commits (plan `555`, `live-tier2-editing`);
+      // each harness asserts its own measured behaviour.
       ctx.host.click("ws-name");
       ctx.host.key("cmd-a");
       ctx.host.key("h a n d b o o k");
