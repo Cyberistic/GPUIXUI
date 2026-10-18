@@ -36,7 +36,12 @@ import {
 } from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 import type { GridRow } from "./data-grid-model.js";
-import { anchoredWindow, indices, rowTop } from "./data-grid-model.js";
+import {
+  anchoredWindow,
+  cellText,
+  indices,
+  rowTop,
+} from "./data-grid-model.js";
 import { DATA_ROWS } from "./data-grid.js";
 import type { Widths } from "./column-resize-model.js";
 import {
@@ -67,15 +72,6 @@ interface Press {
   readonly pointer: number;
   readonly start: number;
 }
-
-/** A row's text for one column. */
-const cellText = (row: GridRow, id: string): string =>
-  Match.value(id).pipe(
-    Match.when("name", () => row.name),
-    Match.when("status", () => row.kind),
-    Match.when("size", () => `${row.size} B`),
-    Match.orElse(() => `note ${row.id}`),
-  );
 
 /** One virtual row; memoized so a pan does not rebuild every cell. */
 const RowView = memo(

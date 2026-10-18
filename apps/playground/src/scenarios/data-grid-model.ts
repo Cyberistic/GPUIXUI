@@ -6,7 +6,7 @@
  * view and the scenario's expectations both call these — one implementation,
  * so an expectation cannot drift from what the view renders.
  */
-import { Order } from "effect";
+import { Match, Order } from "effect";
 import * as Arr from "effect/Array";
 import * as Str from "effect/String";
 
@@ -17,6 +17,15 @@ export interface GridRow {
   readonly kind: "file" | "dir";
   readonly size: number;
 }
+
+/** A row's display text for one column of the probe grids. */
+export const cellText = (row: GridRow, id: string): string =>
+  Match.value(id).pipe(
+    Match.when("name", () => row.name),
+    Match.when("status", () => row.kind),
+    Match.when("size", () => `${row.size} B`),
+    Match.orElse(() => `note ${row.id}`),
+  );
 
 /** Sort direction on `name`. */
 export type SortDirection = "asc" | "desc";

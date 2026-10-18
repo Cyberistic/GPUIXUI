@@ -47,6 +47,7 @@ import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
+import { columnConfigScenario } from "../scenarios/column-config.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
@@ -3402,6 +3403,174 @@ const dataGridColumns: LiveScenario = {
     }),
 };
 
+const columnConfig: LiveScenario = {
+  id: "live-column-config",
+  title: "Live data grid: hide, show and reorder columns in a window",
+  capability: "column-config",
+  view: columnConfigScenario.view,
+  ready: "config-frame",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The panel anchors under its trigger and names the full order.
+      const trigger = yield* boxOf(ctx, "config-open");
+      yield* ctx.host.click("config-open");
+      yield* ctx.host.waitFor("config-panel");
+      yield* settle;
+      const panel = yield* boxOf(ctx, "config-panel");
+      yield* ctx.expectNear(
+        "the live panel opens at the trigger's left edge",
+        panel.x,
+        trigger.x,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live panel opens under the trigger",
+        panel.y,
+        trigger.y + trigger.height,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the live panel starts with every column",
+        yield* textOf(ctx, "config-state"),
+        "hidden=none visible=4 content=560",
+      );
+
+      // 2. Hiding a column unpaints it and the gap closes in the body.
+      yield* ctx.host.click("config-show-status");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "config-state",
+        "hidden=status visible=3 content=440",
+      );
+      yield* ctx.expectEqual(
+        "the live hidden column leaves no header",
+        (yield* ctx.host.bounds("config-head-status")) === null,
+        true,
+      );
+      const nameHead = yield* boxOf(ctx, "config-head-name");
+      const sizeHead = yield* boxOf(ctx, "config-head-size");
+      const sizeCell = yield* boxOf(ctx, "config-cell-0-size");
+      yield* ctx.expectNear(
+        "the live next column closes the gap",
+        sizeHead.x,
+        nameHead.x + nameHead.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live body follows the narrowed header",
+        sizeCell.x,
+        sizeHead.x,
+        1,
+      );
+
+      // 3. A real pan end follows the visible width; the press also closes the
+      //    panel, which is the measured outside-dismissal route.
+      yield* ctx.host.click("config-pan-end");
+      yield* settle;
+      yield* waitForText(ctx, "config-state", "x=-80");
+      const offset = yield* offsetOf(ctx, "config-pan");
+      yield* ctx.expectNear(
+        "the live pan follows the visible width",
+        offset.x,
+        -80,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live outside press closed the panel",
+        (yield* ctx.host.bounds("config-panel")) === null,
+        true,
+      );
+
+      // 4. The reader's row survives a hide and the frozen column follows.
+      yield* ctx.host.click("config-jump");
+      yield* settle;
+      yield* waitForText(ctx, "config-state", "anchor=45");
+      yield* ctx.host.click("config-open");
+      yield* ctx.host.waitFor("config-panel");
+      yield* settle;
+      yield* ctx.host.click("config-show-size");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "config-state",
+        "hidden=size visible=3 anchor=45",
+      );
+      const anchor = yield* ctx.expectSome(
+        "the live list reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("config-list")),
+      );
+      yield* ctx.expectEqual(
+        "the live hide keeps the reader's row",
+        anchor[0],
+        45,
+      );
+      const frozen = yield* boxOf(ctx, "config-frozen-row-45");
+      const body = yield* boxOf(ctx, "config-row-45");
+      yield* ctx.expectNear(
+        "the live frozen row aligns after a hide",
+        frozen.y,
+        body.y,
+        1,
+      );
+
+      // 5. A reorder moves a shown column past a hidden neighbour; both stay
+      //    addressable where the model puts them.
+      yield* ctx.host.click("config-show-size");
+      yield* settle;
+      yield* ctx.host.click("config-up-notes");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "config-state",
+        "order=name,notes,status,size hidden=status",
+      );
+      const notesHead = yield* boxOf(ctx, "config-head-notes");
+      const notesCell = yield* boxOf(ctx, "config-cell-45-notes");
+      yield* ctx.expectNear(
+        "the live reordered column takes the second slot",
+        notesHead.x,
+        nameHead.x + nameHead.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live reordered body follows its header",
+        notesCell.x,
+        notesHead.x,
+        1,
+      );
+
+      // 6. Showing the last hidden column restores the full width; Escape
+      //    closes the panel and returns focus to the trigger.
+      yield* ctx.host.click("config-show-status");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "config-state",
+        "order=name,notes,status,size hidden=none visible=4 content=560",
+      );
+      yield* ctx.expectEqual(
+        "the live restore repaints the column",
+        (yield* ctx.host.bounds("config-cell-45-status")) === null,
+        false,
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live Escape closes the panel",
+        (yield* ctx.host.bounds("config-panel")) === null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live Escape returns focus",
+        yield* focusedOf(ctx),
+        "config-open",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${columnConfig.id}.png`);
+    }),
+};
+
 const appChrome: LiveScenario = {
   id: "live-app-chrome",
   title: "Live application chrome: toolbar, pinned status bar and breadcrumb",
@@ -4214,6 +4383,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   replace,
   inspector,
   dataGridColumns,
+  columnConfig,
   appChrome,
   multiPaneEditor,
   dataToolbar,

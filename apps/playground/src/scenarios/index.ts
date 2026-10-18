@@ -59,6 +59,7 @@ import { previewScenario } from "./preview.js";
 import { gridScenario } from "./grid.js";
 import { dataGridScenario } from "./data-grid.js";
 import { dataGridColumnsScenario } from "./data-grid-columns.js";
+import { columnConfigScenario } from "./column-config.js";
 import { appChromeScenario } from "./app-chrome.js";
 import { multiPaneEditorScenario } from "./multi-pane-editor.js";
 import { dataToolbarScenario } from "./data-toolbar.js";
@@ -142,6 +143,7 @@ export const PROBE_CAPABILITIES = [
   "grid",
   "data-grid",
   "columns",
+  "column-config",
   "chrome",
   "scroller",
   "scale",
@@ -195,6 +197,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   gridScenario,
   dataGridScenario,
   dataGridColumnsScenario,
+  columnConfigScenario,
   appChromeScenario,
   multiPaneEditorScenario,
   dataToolbarScenario,
