@@ -54,6 +54,7 @@ export const CAPABILITIES = [
   "grid",
   "data-grid",
   "columns",
+  "chrome",
   "layers",
   "scroller",
   "scale",

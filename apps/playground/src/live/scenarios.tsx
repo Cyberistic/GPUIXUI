@@ -47,6 +47,7 @@ import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
+import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
 
@@ -3379,6 +3380,113 @@ const dataGridColumns: LiveScenario = {
     }),
 };
 
+const appChrome: LiveScenario = {
+  id: "live-app-chrome",
+  title: "Live application chrome: toolbar, pinned status bar and breadcrumb",
+  capability: "chrome",
+  view: appChromeScenario.view,
+  ready: "chrome-shell",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The bar is pinned to the shell's bottom.
+      const shell = yield* boxOf(ctx, "chrome-shell");
+      const status = yield* boxOf(ctx, "chrome-status");
+      yield* ctx.expectNear(
+        "the live status bar is 24 px tall",
+        status.height,
+        24,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live status bar sits at the shell's bottom",
+        status.y + status.height,
+        shell.y + 420,
+        1,
+      );
+
+      // 2. Two scrollers, one bar that does not move.
+      yield* ctx.host.wheel("chrome-sidebar", 0, -100);
+      yield* settle;
+      const sidebar = yield* offsetOf(ctx, "chrome-sidebar");
+      yield* ctx.expectNear("the live sidebar wheel scrolls", sidebar.y, -100, 2);
+      yield* ctx.expectContains(
+        "a live sidebar wheel leaves the list line alone",
+        yield* textOf(ctx, "chrome-status-text"),
+        "line=0",
+      );
+      yield* ctx.host.wheel("chrome-main-viewport", 0, -240);
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "line=10");
+      const sidebarAfter = yield* offsetOf(ctx, "chrome-sidebar");
+      yield* ctx.expectNear(
+        "the live list wheel leaves the sidebar alone",
+        sidebarAfter.y,
+        -100,
+        2,
+      );
+      const statusAfter = yield* boxOf(ctx, "chrome-status");
+      yield* ctx.expectNear(
+        "the live bar stays put while the list scrolls",
+        statusAfter.y,
+        status.y,
+        1,
+      );
+
+      // 3. The clipped trailing action is revealed by one pan, then runs.
+      yield* ctx.host.click("chrome-pan-end");
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "x=-340");
+      const toolbar = yield* offsetOf(ctx, "chrome-toolbar");
+      yield* ctx.expectNear("the live toolbar pans", toolbar.x, -340, 1);
+      yield* ctx.host.click("chrome-sync");
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "sync=1");
+
+      // 4. A real click collapses the middle crumb and restores it.
+      yield* ctx.host.click("chrome-pan-home");
+      yield* settle;
+      yield* ctx.host.click("chrome-collapse");
+      yield* settle;
+      const collapsedText = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "a live collapse hides the middle segment",
+        Arr.some(collapsedText, Str.includes("src")),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "a live collapse keeps the current page",
+        Arr.some(collapsedText, Str.includes("file.ts")),
+        true,
+      );
+      yield* ctx.host.click("chrome-collapse");
+      yield* settle;
+      const expandedText = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "a live expand restores the middle segment",
+        Arr.some(expandedText, Str.includes("src")),
+        true,
+      );
+      yield* ctx.host.click("crumb-1");
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "trail=2");
+
+      // 5. Input decides the active pane and the bar reports it.
+      yield* ctx.host.click("chrome-item-6");
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "sel=6");
+      yield* ctx.host.click("chrome-line-12");
+      yield* settle;
+      yield* waitForText(ctx, "chrome-status-text", "pane=main");
+      yield* ctx.expectContains(
+        "the live line reaches the bar",
+        yield* textOf(ctx, "chrome-status-text"),
+        "line=12",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${appChrome.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -3412,4 +3520,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   replace,
   inspector,
   dataGridColumns,
+  appChrome,
 ];
