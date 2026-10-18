@@ -1081,6 +1081,35 @@ lifecycle belong to the app; there is no per-cell background or glyph atlas, so 
 block caret is a themed `div` and wide glyphs rely on the monospace font's
 advance. ANSI parsing is the component's (or the app's), not the renderer's.
 
+### The live terminal (plan `532`)
+
+`live-terminal` reuses that exact view in a real `1100 × 720` window. It closes
+the last Tier 4 capability whose evidence was headless only:
+
+| Fact | Measured live |
+| ---- | ------------- |
+| focus | a real click focuses the `role="textbox"` surface; removing `tabIndex` did **not** change that, so the click's native focus is not a tab-order effect |
+| typing | real `keystrokes("l")` / `("s")` reach the surface and paint `$ ls` — with the runtime's `keyChar` absent on a plain `div`, the probe's `keyChar ?? key` fallback is the path that runs |
+| control keys | Enter commits (count `200 → 201`), Up recalls, Backspace deletes one and Escape reports `cancelled` |
+| chords | a real `ctrl-c` arrives with `modifiers.ctrl` and aborts the line; status `interrupted` |
+| scrollback | a real wheel moves the list anchor by more than a screen; `scrollToItem(list, 0)` paints `boot 000`, unpaints `boot 199` and reports anchor `0` |
+| prompt and focus | the sibling prompt keeps `$ ` and the surface keeps native focus across the jump; the next key still edits it |
+| grid | rows are `18 px`, equal character counts paint equal widths, the caret is `7 × 12`, and the prompt row sits below the scrollback |
+
+Two composition facts a terminal consumer needs:
+
+- **A `<virtual-list>` has no painted bounds in the automation tree.** The probe
+  adds a `terminal-viewport` wrapper for the painted box and the live wheel
+  target; `listScrollTop`/`scrollToItem` still address the list's own `testId`.
+- **The declared surface height must include its borders.** A `266`-tall surface
+  with a 1 px border reports `264` inside (plan `529`'s box) and its children
+  lose 2 px — the scrollback measured `238` instead of `240` until the border
+  was added to the declared height. Set the height from the content plus
+  `borderWidth * 2`, or let the flex layout size it.
+
+Colour stays headless: `GpuixRenderer` exposes no style report, so the
+`destructive`/`success` runs remain `terminal-grid`'s evidence.
+
 ## Chart surfaces (plan `180`)
 
 `chart-svg` settles the Tier 3 chart question and the colour picker's gradient
@@ -1751,8 +1780,9 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) was last run in full at **50/50**
-  (1014 checks, the plan `529` re-baseline); the registry lists **50** and the
-  full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  (1014 checks, the plan `529` re-baseline); the registry now lists **51** — the
+  plan `532` terminal twin is not part of that full-run total until a merge gate
+  runs it — and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1778,7 +1808,8 @@ narrower. Each deviation is deliberate and measured:
   editor commits, scrolls out of and back into a virtual list, and resets
   (plan `348`), a live column drag that resizes the header, the virtual rows
   and the pan (plan `349`), and a live app shell whose status bar stays pinned
-  while two panes scroll (plan `350`).
+  while two panes scroll (plan `350`), plus the terminal text grid whose click
+  focus, real keystrokes, chords and scrollback survive a window (plan `532`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

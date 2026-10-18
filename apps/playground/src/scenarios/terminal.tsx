@@ -131,14 +131,17 @@ const TerminalProbe = () => {
         style={{
           display: "flex",
           flexDirection: "column",
-          height: VISIBLE_HEIGHT + ROW_HEIGHT + 8,
+          height: VISIBLE_HEIGHT + ROW_HEIGHT + 8 + theme.borderWidth.thin * 2,
           padding: 4,
           backgroundColor: theme.colors.background,
           borderWidth: theme.borderWidth.thin,
           borderColor: theme.colors.border,
         }}
       >
-        <div style={{ display: "flex", height: VISIBLE_HEIGHT, minHeight: 0 }}>
+        <div
+          testId="terminal-viewport"
+          style={{ display: "flex", height: VISIBLE_HEIGHT, minHeight: 0 }}
+        >
           <virtual-list
             testId="terminal-list"
             alignment="bottom"

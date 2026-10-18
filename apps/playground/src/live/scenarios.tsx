@@ -7,7 +7,8 @@
  * exposes no style or a11y method (plan `197`). Focus, selection, painted
  * highlights and virtual-list anchors *are* asserted: the runner owns the
  * renderer, so it reads them there even where the automation protocol has no
- * verb (plans `190`, `191`, `197`).
+ * verb (plans `190`, `191`, `197`). The terminal twin (plan `532`) also proves
+ * that real keystrokes reach a focused text grid.
  *
  * Each scenario provides its own view, which the runner mounts in the real
  * window under a keyed `Fragment` — the live twin of plan `182`'s isolation.
@@ -65,6 +66,7 @@ import { wizardScenario } from "../scenarios/wizard.js";
 import { gridCellEditingScenario } from "../scenarios/grid-editor.js";
 import { listReorderScenario } from "../scenarios/reorder.js";
 import { treeReorderScenario } from "../scenarios/tree-reorder.js";
+import { terminalScenario } from "../scenarios/terminal.js";
 import { fieldOf } from "../scenarios/probes.js";
 import { KeyRoutingView } from "./key-routing.js";
 import { scenarios } from "../scenarios/index.js";
@@ -5722,6 +5724,229 @@ const media: LiveScenario = {
 };
 
 /**
+ * The terminal surface in a real window (plan `532`).
+ *
+ * The headless probe measures colour, a11y and the synthetic key path. This twin
+ * proves the parts only a window can: a real click focuses the text grid, real
+ * keystrokes edit the prompt (with the `keyChar ?? key` fallback the runtime
+ * needs), `ctrl-c` arrives with its modifier, and a live wheel plus a jump keep
+ * the prompt row and native focus. Colour stays headless — `GpuixRenderer` has
+ * no style report (plan `197`).
+ */
+const terminal: LiveScenario = {
+  id: "live-terminal",
+  title: "Live terminal: a focused text grid and the control keys",
+  capability: "terminal",
+  view: terminalScenario.view,
+  ready: "terminal-surface",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const surface = yield* boxOf(ctx, "terminal-surface");
+      yield* ctx.expectNear(
+        "the live terminal surface is 418 wide inside its borders",
+        surface.width,
+        418,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live terminal surface is 266 tall inside its borders",
+        surface.height,
+        266,
+        1,
+      );
+
+      yield* ctx.host.click("terminal-surface");
+      yield* settle;
+      yield* waitForFocus(ctx, "terminal-surface");
+      yield* ctx.expectEqual(
+        "a live click focuses the terminal surface",
+        yield* focusedOf(ctx),
+        "terminal-surface",
+      );
+
+      yield* ctx.host.key("l");
+      yield* ctx.host.key("s");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-input", "$ ls");
+      yield* ctx.expectEqual(
+        "printable keys edit the prompt",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ls",
+      );
+
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-count", "201");
+      yield* ctx.expectEqual(
+        "enter commits and clears the prompt",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ",
+      );
+      yield* ctx.expectEqual(
+        "the committed command joins the scrollback",
+        yield* textOf(ctx, "terminal-count"),
+        "201",
+      );
+      const committed = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the committed command is painted",
+        Arr.some(committed, Str.includes("$ ls")),
+        true,
+      );
+
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-input", "$ ls");
+      yield* ctx.expectEqual(
+        "up recalls the last command",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ls",
+      );
+      yield* ctx.host.key("backspace");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-input", "$ l");
+      yield* ctx.expectEqual(
+        "backspace deletes one character",
+        yield* textOf(ctx, "terminal-input"),
+        "$ l",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-status", "cancelled");
+      yield* ctx.expectEqual(
+        "escape clears the line",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ",
+      );
+      yield* ctx.expectEqual(
+        "escape reports the cancel",
+        yield* textOf(ctx, "terminal-status"),
+        "cancelled",
+      );
+
+      yield* ctx.host.key("a");
+      yield* settle;
+      yield* ctx.host.key("ctrl-c");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-status", "interrupted");
+      yield* ctx.expectEqual(
+        "ctrl-c aborts the line",
+        yield* textOf(ctx, "terminal-status"),
+        "interrupted",
+      );
+      yield* ctx.expectContains(
+        "ctrl-c arrives with the control modifier",
+        yield* textOf(ctx, "terminal-events"),
+        "c+ctrl",
+      );
+      yield* ctx.expectEqual(
+        "the aborted line is cleared",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ",
+      );
+
+      const tail = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the live scrollback starts at the tail",
+        Arr.some(tail, Str.includes("boot 199")),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live head is outside the window",
+        Arr.some(tail, Str.includes("boot 000")),
+        false,
+      );
+
+      const anchorIndexOf = (anchor: Smoke.ListAnchor | null): number =>
+        Option.getOrElse(
+          Option.map(Option.fromNullishOr(anchor), ([index]) => index),
+          () => -1,
+        );
+      const beforeWheel = yield* ctx.host.listScrollTop("terminal-list");
+      yield* ctx.host.wheel("terminal-viewport", 0, 400);
+      yield* settle;
+      const afterWheel = yield* ctx.host.listScrollTop("terminal-list");
+      yield* ctx.expectEqual(
+        "a live wheel moves the scrollback",
+        anchorIndexOf(afterWheel) < anchorIndexOf(beforeWheel),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a live wheel moves it by more than a screen",
+        anchorIndexOf(beforeWheel) - anchorIndexOf(afterWheel) >= 10,
+        true,
+      );
+
+      yield* ctx.host.scrollToItem("terminal-list", 0);
+      yield* settle;
+      yield* waitForAnchor(ctx, "terminal-list", "0,0");
+      const head = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the live head is painted after the jump",
+        Arr.some(head, Str.includes("boot 000")),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live tail leaves the window",
+        Arr.some(head, Str.includes("boot 199")),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the live prompt survives the jump",
+        yield* textOf(ctx, "terminal-input"),
+        "$ ",
+      );
+      yield* ctx.expectEqual(
+        "native focus survives the jump",
+        yield* focusedOf(ctx),
+        "terminal-surface",
+      );
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* waitForText(ctx, "terminal-input", "$ x");
+      yield* ctx.expectEqual(
+        "the surface still takes input after the jump",
+        yield* textOf(ctx, "terminal-input"),
+        "$ x",
+      );
+
+      const row = yield* boxOf(ctx, "terminal-row-0");
+      yield* ctx.expectNear(
+        "a live row is exactly one line tall",
+        row.height,
+        18,
+        0.5,
+      );
+      const first = yield* boxOf(ctx, "terminal-text-0");
+      const second = yield* boxOf(ctx, "terminal-text-1");
+      yield* ctx.expectNear(
+        "equal character counts paint equal widths live",
+        first.width,
+        second.width,
+        0.5,
+      );
+      const caret = yield* boxOf(ctx, "terminal-caret");
+      yield* ctx.expectNear("the live caret is 7 wide", caret.width, 7, 0.5);
+      yield* ctx.expectNear("the live caret is 12 tall", caret.height, 12, 0.5);
+      const prompt = yield* boxOf(ctx, "terminal-input");
+      const list = yield* boxOf(ctx, "terminal-viewport");
+      yield* ctx.expectNear(
+        "the live scrollback viewport is 240 tall",
+        list.height,
+        240,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live prompt row sits below the scrollback",
+        prompt.y >= list.y + list.height - 1,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${terminal.id}.png`);
+    }),
+};
+
+/**
  * The app root's single child in a real window (plan `522`).
  *
  * The rule is enforced by the reconciler, not the test renderer, so the live
@@ -6117,4 +6342,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   reorder,
   treeReorder,
   media,
+  terminal,
 ];

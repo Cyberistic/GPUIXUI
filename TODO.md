@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 87/92 plans-and-harness
+`[~]` `[██████████]` 88/93 plans-and-harness
 
 `[x]` Guard the **headless smoke CLI's arguments** per plan `531`: `--list`
       prints the 101 ids and exits `0` without loading the binding; `--only`
@@ -69,6 +69,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (§6). Full suite **101/101 (3536 checks)**, playground **408** tests,
       `check`/`lint`/`test` green; focused live `live-input` is `1/1` after the
       shared-selection refactor.
+
+`[x]` Prove the **terminal surface in a real window** per plan `532`: `live-terminal`
+      reuses the `terminal-grid` view in the real `1100×720` window — a real click
+      focuses the text-grid surface (removing `tabIndex` did not change it),
+      printable keys edit the prompt through the `keyChar ?? key` fallback,
+      Enter/Up/Backspace/Escape/`ctrl-c` run, a real wheel moves the scrollback by
+      more than a screen, a jump to row 0 keeps the prompt and native focus, and
+      the 18 px rows, equal-width mono runs and 7×12 caret paint. **48 checks**,
+      live registry `50 → 51`, exit `0`; four mutation proofs (plan `532` §6).
+      Measured: a `<virtual-list>` has **no painted bounds** in the live tree
+      (the `terminal-viewport` wrapper is the box and wheel target), and a
+      bordered surface must include its borders in the declared height (the
+      scrollback shrank `240 → 238`). Colour stays headless. Focused runs:
+      `live-terminal`, `terminal-grid`; full headless **101/101 (3536)**, exit `0`;
+      `check`/`lint`/`test` green (playground 408 tests).
 
 `[x]` **Re-baseline the headless native evidence against the published 0.10.0
       source** per plan `529`: the binding had been built from
