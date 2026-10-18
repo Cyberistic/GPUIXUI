@@ -58,7 +58,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 78/83 plans-and-harness
+`[x]` `[██████████]` 79/84 plans-and-harness
 
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382` and `384` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `385`
 
@@ -146,8 +146,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       bubble to the grid container**, so navigation needs an `editing` guard
       (without it a Down moves the selection). A focused editing row **stays
       painted** after the list scrolls past it, so the probe commits on leave
-      (`commits 2 → last=leave`) rather than letting the user type into an
-      invisible field. A row-anchored menu paints unclipped at the action's
+      (`commits 2 → last=leave`) rather than leaving an edit attached to a row
+      the reader cannot see. A row-anchored menu paints unclipped at the action's
       bottom-left (±1 px), takes focus, returns it on Escape and closes on any
       anchor change because its window point cannot follow a scrolled row. A
       sort commits the draft and keeps it with the row id. Suite `88 → 89`

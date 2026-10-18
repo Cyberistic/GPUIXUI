@@ -797,8 +797,8 @@ action menu. 57 checks; live twin `live-grid-cell-editing` (36 checks).
 | committing | Enter arrives as the input's `onSubmit`: `editing=none commits=1 last=commit`, the row and the preview repaint `beta` |
 | key routing | the editor's keystrokes **do** bubble to the grid container's `onKeyDown` (`keys` grows); without an `editing` guard a `down` moves the grid selection, with the guard the selection stays and the caret key keeps focus |
 | grid navigation | with no editor open, a cell press selects and `down`/`up` move the selection in the rendered order |
-| leaving the window | a focused editing row **stays painted** after the list scrolls past it (the plan-158 rule), and the editor keeps focus and keys — so the grid commits on leave: `editing=none commits=2 last=leave`, and the value survives the scroll back |
-| the row menu | an `<anchored position>` child of the virtual row paints at the action's left edge and below it within 1 px, is unclipped by the list, takes native focus and is `Group:Row actions` |
+| leaving the window | an editing row **stays painted** after the list scrolls past it (the plan-158 focused-row rule), so the runtime does not end the edit; the grid commits on leave: `editing=none commits=2 last=leave`, and the value survives the scroll back |
+| the row menu | an `<anchored position>` child of the virtual row paints at the action's left edge and below it within 1 px — including the part below its 32 px row — takes native focus and is `Group:Row actions` |
 | dismissing | Escape closes it (`panel=none last=escape`) and returns focus to the row action; an outside press closes it (`last=outside`) and does not return focus |
 | menu actions | Rename closes the menu and opens that row's editor with focus (`last=rename`); Delete removes exactly that row (`rows=60 → 59`), unpaints it and leaves its neighbour; Escape in the editor cancels |
 | scrolling | the captured point is a **window** point, so a scroll leaves an open menu pointing at the row's old place; the probe closes any menu on an anchor change (`last=scroll`) |
@@ -808,13 +808,15 @@ action menu. 57 checks; live twin `live-grid-cell-editing` (36 checks).
 **Load-bearing lessons.** A grid cannot let its navigation handler see the
 editor's keys unguarded — the keys bubble, and the guard is a state check, not
 an event stop. And an edit must end when its row leaves the viewport: the
-focused row stays painted and keeps accepting keys, so otherwise the user types
-into a field they cannot see. The row menu's window point is the other trap: an
+row stays painted because it holds focus, so the runtime never decides that the
+edit is over. The row menu's window point is the other trap: an
 anchored child does not follow a scrolling virtual row.
 
 **Limits:** no double click, no multi-cell range, no validation, no undo and no
 persisted edit; a right-click context menu and column virtualization stay with
-plans `164` and `185`.
+plans `164` and `185`. The menu opens from a row near the top, so paint beyond
+the list's own viewport clip was not measured (the close-on-scroll rule makes
+it moot for this contract).
 
 ## Application chrome (plan `350`)
 

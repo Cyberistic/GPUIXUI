@@ -482,15 +482,19 @@ Unit tests: `grid-editor-model.test.ts` adds 33; the playground suite is
 - **The still-editing row stays painted after the window moves past it.** With
   the leave rule disabled (M3), the first failing check was *"the edited row left
   the window"* — `ge-row-0` still had bounds because it held focus, matching
-  plan `158`. The editor also kept focus and keys; committing on leave is what
-  makes "left the window" observable at all.
+  plan `158`. The edit also stayed open; committing on leave is what makes "left the
+  window" observable at all. The probe does **not** re-measure focus or key
+  delivery for an off-window editor (plan `158` measured both for a focused
+  div row); its leave rule ends the edit first.
 - **A programmatic `scrollToItem` fires no range event live.** The headless list
   reported the new anchor, so the headless steps can scroll the host directly;
   the live twin has to click the app-owned `jump`, which mirrors the anchor and
   applies the leave/close rules (plan `338`'s rule, re-measured).
-- **The anchored menu is not clipped by the list.** It painted at the action's
-  bottom-left within 1 px from a child of the virtual row and took focus; the
-  planned sibling-of-the-list fallback was not needed.
+- **The anchored menu painted fully from inside the virtual row.** At the
+  action's bottom-left within 1 px, including the part below the row's 32 px box,
+  and it took focus; the planned sibling-of-the-list fallback was not needed for
+  a row inside the viewport. Paint beyond the list's own clip was not measured
+  (the menu is closed on any scroll).
 - **The menu's captured point does not follow a scroll.** The panel is a child
   of the row but its `position` is a window point, so a scroll leaves it at the
   stale place. Closing on any anchor change is the measured contract; M5 proves
@@ -545,6 +549,9 @@ reverted:
   and `185`; this probe uses a left-click row action.
 - The live twin cannot read the a11y dump or styles, so the `Group`/`TextInput`
   and painted-draft checks are headless-only.
+- Native focus and key delivery for an editor whose row has left the window
+  were not re-measured (M3 only asserts the row keeps painted bounds); plan
+  `158` measured focus and the next key for a focused div row.
 - The list's overdraw is not used as the visible window: `visibleIds` counts the
   exact viewport, because "is the editing row visible" is a different question
   from "is it close to the window".
