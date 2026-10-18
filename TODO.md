@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–510)
+## Docs site workstream (plans 410–499, plus 500–511)
 
-`[x]` `[██████████]` 111/111
+`[x]` `[██████████]` 112/112
+
+`[x]` **The theme switch is operated, not assumed (plan 511)** — every browser
+      smoke forced the colour scheme through CDP, so none pressed the control a
+      reader presses. `smoke:theme` starts in forced light, presses
+      `[data-theme-toggle]`, and proves the document class, `color-scheme`, the
+      page background, the stored `localStorage["theme"]` and every preview
+      surface move together; a client navigation and a parameter-free reload
+      keep the mode (storage is the only explanation), and a second press
+      returns to light. Three two-direction proofs in plan 511 §4, including
+      the measured mount-effect race the first version hit.
 
 `[x]` **Every page ships the brand head (plan 510)** — the site had no favicon,
       no `og:image`, no `twitter:card` and no `theme-color`, and
