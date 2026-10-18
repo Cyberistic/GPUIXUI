@@ -12,6 +12,7 @@
     "test": "vitest run",
     "api:values": "nub scripts/api-values.ts",
     "icons": "nub scripts/icons.ts",
+    "roadmap": "nub scripts/roadmap.ts",
     "smoke:build": "nub scripts/smoke-build.ts",
     "smoke:browser": "nub scripts/smoke-browser.ts",
     "build:preview": "nub scripts/build-preview.ts",

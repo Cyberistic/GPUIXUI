@@ -11,6 +11,7 @@ import { valueExports } from "./api-values.generated";
 import { capabilitySearchEntry } from "./capability-search";
 import { exactNameRank, type GeneratedSearchEntry } from "./generated-search";
 import { iconSearchEntry } from "./icon-search";
+import { roadmapSearchEntry } from "./roadmap-search";
 import { source } from "./source";
 import { tokenSearchEntries } from "./token-search";
 
@@ -79,6 +80,7 @@ const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   ...tokenSearchEntries,
   capabilitySearchEntry,
   iconSearchEntry,
+  roadmapSearchEntry,
 ];
 
 const generatedByUrl = new Map(

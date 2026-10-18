@@ -1,0 +1,33 @@
+---
+title: Roadmap
+description: Every component target in the inventory, its status and the measured GPUix support behind it.
+---
+
+This page is the public half of [`COMPONENTS.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/COMPONENTS.md).
+That file owns the target inventory; the table below is generated from its Tier 3, 4 and 5 sections,
+so a row here cannot disagree with the inventory. Nothing on this page is a placeholder: a target
+listed as `todo` has no implementation and no page yet, and says so.
+
+<RoadmapTable />
+
+## What a status means
+
+- **`todo`** — tracked, not built. No package, no page.
+- **`wip`** — code exists and is documented, but at least one bar below is unmet.
+- **`done`** — code, a test appropriate to its behaviour, a working example, a docs page, and a
+  verified interaction in the real GPUix runtime.
+- **`blocked`** / **`unsupported`** — the reason and the evidence are recorded. Where the limit is
+  the runtime rather than the package, [GPUix capabilities](/docs/capabilities) names the measured
+  behaviour and the scenario that proves it.
+
+The **GPUix support** column is the runtime's own answer, not our status: `yes` means GPUix publishes
+the primitive, `?` means it is unverified, and `ours` means the library must implement it. The
+component index uses the same vocabulary.
+
+## Where the delivered work lives
+
+- [Components](/docs/components) — every component with a page, its real props and source.
+- [Data display](/docs/data-display) — the Tier 3 plan and what the runtime already proves.
+- [Workspace](/docs/workspace) — the Tier 4 plan and the measured panel and tab probes.
+- [Patterns](/docs/patterns) — compositions built from the delivered components.
+- [Architecture](/docs/architecture) — the packages and the boundaries between them.

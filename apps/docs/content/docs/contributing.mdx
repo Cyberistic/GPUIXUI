@@ -110,3 +110,14 @@ nub run --filter docs icons
 
 The generated catalogue is committed, and the same suite fails while it is
 stale, so adding an icon cannot ship a page that is one icon short.
+
+[Roadmap](/docs/roadmap) renders every Tier 3–5 target from `COMPONENTS.md`,
+with its inventory status, GPUix support and note:
+
+```sh
+nub run --filter docs roadmap
+```
+
+The command refuses to write an empty cell, a duplicate target or a missing
+tier; the same suite fails while the committed module is stale, so an inventory
+change cannot ship a page that is one target behind.

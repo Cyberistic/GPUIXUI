@@ -57,6 +57,7 @@ nub run --filter docs smoke:a11y   # axe over every page in both schemes
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
 nub run --filter docs icons         # regenerate the icon catalogue from packages/icons
+nub run --filter docs roadmap       # regenerate the roadmap from COMPONENTS.md
 nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-only)
 nub run check                       # repo gate: test quality, lint, format, types
 ```
@@ -500,6 +501,16 @@ lookup table, not a native capture, and the live scene plus
 the search index (`src/lib/icon-search.ts`); only hyphenated names are promoted,
 so `chevrons-up-down` reaches the page first while `copy` and `search` keep the
 pages that own those words.
+
+## Roadmap
+
+`/docs/roadmap` publishes the half of the inventory that has no pages yet: every
+Tier 3–5 target from `COMPONENTS.md`, with its status, GPUix support and note.
+`nub run --filter docs roadmap` writes `src/lib/roadmap.generated.ts`; the page
+renders it through `<RoadmapTable />`, and `src/lib/roadmap.test.ts` fails while
+the committed module is stale. `src/lib/roadmap-search.ts` indexes every target,
+promoting only multiword names (`Resizable split panes`) so a plain word such as
+`Toolbars` keeps its prose result.
 
 ## Public URL
 
