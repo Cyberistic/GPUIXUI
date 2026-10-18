@@ -231,6 +231,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [534](./534-platform-density-metrics.md) | A platform style owns the metrics inside its density preset | F | 011, 089, 353, 380, 389, 529 | done |
 | [535](./535-platform-table-and-figures.md) | The platform table and files tell the truth about the values they ship | F | 389, 506, 526, 528, 534 | done |
 | [536](./536-present-tense-figures.md) | The catalogue's present-tense figures | F | 336, 348, 377, 503, 514, 520 | done |
+| [537](./537-tier-figures.md) | The tier figures the two documents quote | F | 392, 500, 510, 520, 527, 536 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2451,6 +2452,20 @@ the plan-350 failure mode. `figures.ts` derives a figure from `shippedThemes`
 with the measurement the checker uses and returns the *provenance* of the set
 that produces the minimum, so a sentence that names the wrong set fails even
 when its number is right. The three sentences are corrected; no colour, pair,
+floor or metric moves.
+
+Plan `537` extends that table to the **text tiers**, which are ratios of ratios
+rather than pairs. Two present-tense claims were false: the catalogue's panel
+action step named **identity dark** (1.877:1) for a minimum that is
+**high-contrast dark** (1.542:1), and the design system still quoted plan 392's
+**1.440:1** for the hint — plan 527 moved it to **1.157:1**. The old
+`docs.test.ts` case asserted each tier's minimum appeared *somewhere* in the
+paragraph, so any of the four figures satisfied every tier and a wrong
+attribution could not fail; the design-system sentence was never read at all.
+`figures.ts` gains `tierSurfaces`, `deriveTierFigure` and `tierMinimum`, the
+seven catalogue parentheticals are pinned with their set and surface, the design
+system's summary is derived from the tier groups, and a case proves the figure
+table and `themeTextTierFailures` compare the same surfaces. No colour, pair,
 floor or metric moves.
 
 ## How to use a plan
