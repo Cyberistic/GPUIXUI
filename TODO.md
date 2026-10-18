@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 105/105
+`[x]` `[██████████]` 106/106
+
+`[x]` **A scenario id finds the capability page (plan 505)** — the measured
+      matrix is rendered React, so `modal-focus-trap` returned Command menu prose
+      and never `/docs/capabilities`; one generated document derives every
+      capability, verdict and scenario id from `capabilities.ts`, and the
+      promoted-name ranker is now shared with the token index. Only hyphenated
+      ids are promoted, so `theme`, `log`, `input` and `label` keep their pages.
 
 `[x]` **A token role is findable from ⌘K (plan 504)** — the colour, type, scale
       and platform tables are rendered React from `@gpuixui/tokens`, so

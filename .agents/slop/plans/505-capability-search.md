@@ -1,6 +1,6 @@
 # 505 — A scenario id finds the capability page (the measured matrix joins search)
 
-**Status:** planned · **Phase:** F (search / capability truth) · **Owner:** docs-site
+**Status:** implemented (2026-10-18) · **Phase:** F (search / capability truth) · **Owner:** docs-site
 **Depends on:** `410`, `419`, `431`, `448`, `490`, `500`, `504`; the playground
 scenario registry and `COMPONENTS.md`.
 
@@ -183,3 +183,39 @@ Add one production search check:
 ## 7. Why no `COMPONENTS.md` row
 
 No library surface and no status changes.
+
+## 8. Results (2026-10-18)
+
+Implemented on `agent/docs-site`. `apps/docs/src/lib/capability-search.test.ts`
+(8 tests) and the docs suite is **59 files / 402 tests passing**, up from 58 /
+394. The shared ranker is `src/lib/generated-search.ts`; `token-search.ts` now
+declares only its promoted (distinctive) names, and the token suite's promotion
+test calls `exactNameRank` directly.
+
+### What changed beyond the plan
+
+- The token entry map is gone: `search.ts` builds one promoted-entry map from
+  `tokenSearchEntries` plus `capabilitySearchEntry`, so the token and capability
+  documents cannot rank differently. The 504 tests were updated accordingly
+  (same assertions, one lookup).
+- `capabilitySearchEntry` promotes every scenario id and every hyphenated
+  capability name; `theme`, `text`, `log` are indexed but never promoted. The
+  proof below shows the difference: promoting `theme` fails the guard.
+
+### Two-direction proofs
+
+| Break | Failure |
+| ----- | ------- |
+| Dropped the capability document from `registrySearch` | `finds the matrix from a scenario id` — `expected '/docs/contributing' to be '/docs/capabilities'`; `… from a hyphenated capability name` — `'/docs/data-display'`; `… from a theme scenario` — `'/docs/theming'` |
+| Removed the scenario ids from the promoted `names` | `promotes every scenario id and no plain-word capability` — `expected [ 'layout-flex', …(18) ] to deeply equal []`; the scenario-id and theme queries fell back to prose |
+| Added the plain word `theme` to the promoted names | `promotes every scenario id and no plain-word capability` — `expected [ 'theme' ] to deeply equal []` |
+| Production `/api/search` before the fix | `modal-focus-trap` → Command menu; `floating-placement` → Dialog/Spinner; `theme-color-roles` → Colour picker; `virtual-list` → List |
+| Production `/api/search` after the fix | `modal-focus-trap`, `theme-color-roles`, `floating-placement` and `virtual-list` → `/docs/capabilities` first; `input` → `/docs/components/text-input`; `label` → `/docs/components/label`; `theme` → `/docs/tokens-api`; `log` → Text |
+
+### Commands
+
+- `nub run --filter docs test` → `59 passed (59)`, `402 passed (402)`.
+- `nub run check` → exit `0` (test quality, lint, format, all workspace types).
+- `nub run --filter docs smoke:build` → exit `0`; `90 pages`, `109 links`,
+  `1145 anchors`, search and robots checked, including the new
+  `modal-focus-trap` production query.
