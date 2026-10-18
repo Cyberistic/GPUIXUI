@@ -10,6 +10,7 @@ import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
 import { LiveSurface } from "./preview/live-surface";
 import { NativePreview } from "./preview/native-preview";
+import { IconCatalogue } from "./icon-catalogue";
 import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
 import { PlatformPreviews } from "./preview/platform-previews";
@@ -47,6 +48,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ValueIndex,
     PlatformValues,
     ThemeCaptures,
+    IconCatalogue,
     ...components,
   } satisfies MDXComponents;
 }

@@ -97,3 +97,13 @@ The command refuses to write an export with no summary, or a package that is
 neither indexed nor excluded. `nub run --filter docs test` then fails while the
 committed index is stale, so the generated file is never the only copy of the
 truth.
+
+[Icons](/docs/components/icon) lists every name the icon set ships, generated
+from the package's own registry:
+
+```sh
+nub run --filter docs icons
+```
+
+The generated catalogue is committed, and the same suite fails while it is
+stale, so adding an icon cannot ship a page that is one icon short.

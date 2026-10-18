@@ -25,6 +25,7 @@ nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)
 nub run --filter docs api:values    # regenerate the generated Values API index
+nub run --filter docs icons         # regenerate the icon catalogue from packages/icons
 nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-only)
 nub run check                       # repo gate: test quality, lint, format, types
 ```
@@ -275,8 +276,10 @@ such as `input` or `label` is not, so the component page keeps the first result,
 and a pasted theme value finds the role that owns it. The measured capability
 matrix is its own document (plan 505), so `modal-focus-trap` and
 `theme-color-roles` reach `/docs/capabilities`; only hyphenated ids are promoted,
-so `theme` and `log` still find their pages. A blank query returns `[]`, and one
-page is listed once. `src/lib/search.test.ts`, `src/lib/token-search.test.ts` and
+so `theme` and `log` still find their pages. The icon set is indexed the same
+way (plan 507): every name is in the document, and a hyphenated one such as
+`chevrons-up-down` reaches the Icons page first. A blank query returns `[]`, and
+one page is listed once. `src/lib/search.test.ts`, `src/lib/token-search.test.ts` and
 `src/lib/capability-search.test.ts` guard these rules, and `smoke:build` asserts
 the `Spinner` symbol, a token role and a scenario id against the production
 index.
@@ -364,6 +367,26 @@ dark one, both below the 4.5:1 text floor. They are replaced per theme
 (`#b34700`, `#8b949e`) so each correction reaches one scheme. Change the palette
 in that module, not in CSS: `src/code-palette.test.ts` recomputes every ratio,
 and `smoke:browser` measures each painted code colour on the pages it visits.
+
+## Icon catalogue
+
+The Icons page lists **every name the set ships**, filtered locally
+(`src/components/icon-catalogue.tsx`). The names and their geometry are
+generated: `nub run --filter docs icons` writes
+`src/lib/icon-catalogue.generated.ts` from `packages/icons/src/names.ts` and
+`registry.ts`, and `src/lib/icon-catalogue.test.ts` fails while the file is
+stale, so a new icon reaches the page with no docs edit beyond the command. The
+site cannot import `@gpuixui/icons` directly: its root pulls `effect/Record` and
+its `Icon` component into the bundle, which `src/architecture.test.ts` forbids.
+
+Each tile draws the package's own markup in the browser, with the replaceable
+`#000` shown as the current text colour — the same substitution GPUix's
+`<svg source>` performs with `style.color`. The page says so: the gallery is a
+lookup table, not a native capture, and the live scene plus
+`icon.runtime.test.tsx` remain the native evidence. Every icon name is also in
+the search index (`src/lib/icon-search.ts`); only hyphenated names are promoted,
+so `chevrons-up-down` reaches the page first while `copy` and `search` keep the
+pages that own those words.
 
 ## Public URL
 

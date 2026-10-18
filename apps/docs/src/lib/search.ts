@@ -10,6 +10,7 @@ import { componentSymbols } from "@/component-meta/symbols";
 import { valueExports } from "./api-values.generated";
 import { capabilitySearchEntry } from "./capability-search";
 import { exactNameRank, type GeneratedSearchEntry } from "./generated-search";
+import { iconSearchEntry } from "./icon-search";
 import { source } from "./source";
 import { tokenSearchEntries } from "./token-search";
 
@@ -77,6 +78,7 @@ export const valueSearchIndex: Index = {
 const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   ...tokenSearchEntries,
   capabilitySearchEntry,
+  iconSearchEntry,
 ];
 
 const generatedByUrl = new Map(
@@ -159,11 +161,14 @@ export const withoutTypeTableRows = (
  * Merges the indexes into one ranked list (plan 431). A component name match —
  * its title or an exported name its props types imply (plan 500) — or an exact
  * promoted name from a generated document (`destructiveSoft`, `spacing.md`, a
- * scenario id; plans 504 and 505) moves ahead of prose; everything else keeps
- * plan 419's order: page results first, registry hits in the tail. Ties break on
- * the shorter title (`Buttons` before `Button groups`) and then on the index's
- * own order. One entry survives per page URL, so a delivered component is not
- * listed once as a page and again as a registry record.
+ * scenario id, a hyphenated icon name; plans 504, 505 and 507) moves ahead of
+ * prose; everything else keeps plan 419's order: page results first, registry
+ * hits in the tail. A URL can be both a component record and a generated
+ * document (the Icons page owns its name catalogue), so a candidate takes the
+ * best of the two ranks. Ties break on the shorter title (`Buttons` before
+ * `Button groups`) and then on the index's own order. One entry survives per
+ * page URL, so a delivered component is not listed once as a page and again as
+ * a registry record.
  *
  * Native `sort`/`Set` are deliberate: `effect` must not reach the docs bundle
  * (`architecture.test.ts`, plan 410 §2).
@@ -176,16 +181,16 @@ export const mergeResults = (
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
-      const generated =
-        component === undefined ? generatedByUrl.get(result.url) : undefined;
-      const rank =
-        component === undefined
-          ? exactNameRank(generated, query)
-          : componentRank(component, query);
+      const generated = generatedByUrl.get(result.url);
+      const ranks = [
+        component === undefined ? undefined : componentRank(component, query),
+        exactNameRank(generated, query),
+      ].filter((rank): rank is number => rank !== undefined);
       return {
         result,
         index,
-        rank: rank ?? Number.POSITIVE_INFINITY,
+        rank:
+          ranks.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...ranks),
         titleLength:
           component?.title.length ?? generated?.index.title.length ?? 0,
       };

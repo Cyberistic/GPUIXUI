@@ -391,6 +391,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a scenario id from the generated capability index",
     },
+    {
+      query: "chevrons-up-down",
+      expected: "/docs/components/icon",
+      first: true,
+      what: "an icon name from the generated catalogue",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
