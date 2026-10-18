@@ -358,6 +358,11 @@ retired once both branches are one
       at close so the exit ghost is inert. 6 new native cases (Toast 16, Dialog
       16, Popover 19; behaviour 694); live 2/2 once the scratch toast scenario
       waits for the 500 ms exit
+    - [x] Drawer motion — plan 526: the veil fades in 100 ms and the edge
+      surface fades and slides in 300 ms from its own edge; the closing drawer
+      is inert and unmounts after its exit. 4 native cases measure the painted
+      slide, not only the motion prop (Drawer 14, behaviour 698); two mutation
+      proofs
     - [x] A controlled-state request for the current value is a no-op — plan
       517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
       when the already-selected tab was pressed, because the shared hook

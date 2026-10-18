@@ -62,6 +62,19 @@ capped by the window size.
 - A drawer opened inside a dialog pushes its own layer, so one Escape closes
   the drawer first (the shared dismiss stack, plan 112).
 
+## Motion
+
+The veil fades in 100 ms (`dialogMotion(theme)`) and the surface fades and slides
+in 300 ms from its own edge, from the shadcn sheet recipe compiled by
+`@gpuixui/tw`. GPUix's motion animates `top` / `left` as relative offsets, so the
+surface moves without reflowing its content; the slide is measured in the native
+suite rather than only configured.
+
+A closing drawer stays painted for its 300 ms exit, with the veil inert
+(`pointerEvents: none`), so it cannot be clicked while it leaves. Focus has
+already returned at close, exactly as before. `zoom-*` and `transform` stay
+unsupported and are not faked.
+
 ## API
 
 Every part takes the GPUix host props (`style`, `testId`, `role`, `aria-*`) and
@@ -78,7 +91,8 @@ merges `style` last.
 | `DrawerDescription` | muted copy | text props |
 | `DrawerFooter` | right-aligned actions | children |
 
-`DrawerContent` renders nothing while the drawer is closed.
+`DrawerContent` renders nothing while the drawer is closed and through its exit
+motion, then unmounts.
 
 ## Theming
 
@@ -100,8 +114,6 @@ with no code change — see [Theming](/docs/theming).
 ## Limitations
 
 - **No swipe-to-dismiss**: `0.10.0` has no drag host feature.
-- **No slide animation**: `motion` has no transform; animating width or left
-  would reflow the content, so the surface mounts in place.
 - **No portal**: the veil is an `<anchored>` element at window coordinates, as in
   Dialog. A drawer mounted inside a scrolled container is still painted at the
   window origin, not inside that container.
@@ -110,10 +122,12 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (10 tests): open
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (14 tests): open
 lifecycle, dialog naming and `aria-expanded`, full-window veil, focus in/return,
 backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
-uninterruptible drawer, and a controlled drawer that stays closed.
+uninterruptible drawer, a controlled drawer that stays closed, and the motion —
+entry props, the measured slide on both axes, and a closing surface that stays
+painted but inert until it unmounts.
 
 The four modal rules were extracted from Dialog into `internal/modal.ts` with no
 behaviour change; Dialog and Confirmation dialog keep their own suites as the

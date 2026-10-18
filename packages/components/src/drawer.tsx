@@ -9,15 +9,16 @@
  * trap — live in `internal/modal.ts`.
  *
  * Known gaps in 0.10.0: no `aria-modal` or `aria-labelledby` (the surface is
- * named with `aria-label`), no swipe gesture (no drag host feature), and no
- * slide animation (`motion` has no transform; animating width/left would reflow
- * the content).
+ * named with `aria-label`) and no swipe gesture (no drag host feature). The
+ * sideways slide is real: GPUix's motion animates `top`/`left` as relative
+ * offsets, so the surface moves without reflowing its content.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
-import { useGpuix, useWindowSize } from "@gpuix/react";
+import { AnimatePresence, motion, useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import { dialogMotion, motionFromClasses } from "@gpuixui/tw";
 import {
   createContext,
   useCallback,
@@ -31,6 +32,7 @@ import {
   useModalFocus,
   useModalState,
 } from "./internal/modal.js";
+import { motionProps } from "./internal/motion.js";
 import {
   assertParts,
   type PartChildren,
@@ -197,12 +199,30 @@ const surfaceStyle = (
   overflow: "scroll" as const,
 });
 
+/** The side-specific shadcn slide (the zoom is unsupported by GPUI). */
+const SLIDE: Readonly<Record<DrawerSide, string>> = {
+  right: "data-open:slide-in-from-right",
+  left: "data-open:slide-in-from-left",
+  bottom: "data-open:slide-in-from-bottom",
+};
+
 /**
  * The veil and the edge surface, rendered while the drawer is open. Focus enters
  * the surface, Tab stays inside it, Escape and an outside press close it, and
- * closing returns focus to whatever had it before.
+ * closing returns focus to whatever had it before. The exit is animated by
+ * `AnimatePresence`; the surface is inert until it unmounts (plan 526).
  */
-export const DrawerContent = ({
+export const DrawerContent = (props: DrawerContentProps) => {
+  const { open } = useDrawerContext();
+  return (
+    <AnimatePresence initial={false}>
+      {open ? <DrawerSurface key="drawer" {...props} /> : null}
+    </AnimatePresence>
+  );
+};
+
+/** The surface itself; mounted while open and through its exit motion. */
+const DrawerSurface = ({
   side = "right",
   size = "md",
   label,
@@ -231,9 +251,7 @@ export const DrawerContent = ({
   );
 
   const contentId = content?.id;
-  useModalFocus(contentId, initialFocus);
-
-  if (!open) return null;
+  useModalFocus(open ? contentId : undefined, initialFocus);
 
   const box = surfaceSize(side, size, window);
   const close = () => setOpen(false);
@@ -241,57 +259,72 @@ export const DrawerContent = ({
     handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 
+  const surfaceMotion = motionProps(
+    motionFromClasses(
+      `data-open:animate-in data-closed:animate-out data-open:fade-in-0 data-closed:fade-out-0 ${SLIDE[side]} duration-300`,
+      theme,
+    ),
+  );
+
   return (
     <anchored
       position={{ x: 0, y: 0 }}
       occlude
       style={{ position: "absolute" }}
     >
-      <div
-        testId="drawer-backdrop"
-        style={{
-          width: window.width,
-          height: window.height,
-          display: "flex",
-          flexDirection: isVertical(side) ? "column" : "row",
-          alignItems: "stretch",
-          justifyContent: side === "left" ? "flex-start" : "flex-end",
-          backgroundColor: theme.colors.overlay,
-          pointerEvents: "auto",
-        }}
-      >
+      <motion.div {...motionProps(dialogMotion(theme))}>
         <div
-          role="dialog"
-          aria-label={label}
-          tabIndex={-1}
-          {...rest}
-          ref={setContentElement}
-          testId={testId}
-          onMouseDownOutside={(event) => {
-            onMouseDownOutside?.(event);
-            dismissTopLayer(event);
+          testId="drawer-backdrop"
+          style={{
+            width: window.width,
+            height: window.height,
+            display: "flex",
+            flexDirection: isVertical(side) ? "column" : "row",
+            alignItems: "stretch",
+            justifyContent: side === "left" ? "flex-start" : "flex-end",
+            backgroundColor: theme.colors.overlay,
+            pointerEvents: open ? "auto" : "none",
           }}
-          onKeyDown={handleKeyDown}
-          style={mergeStyles(surfaceStyle(theme, box), style)}
         >
-          {children}
-          {showClose ? (
-            <IconButton
-              label="Close drawer"
-              size="sm"
-              testId="drawer-close"
-              onClick={close}
-              style={{
-                position: "absolute",
-                top: theme.spacing.lg,
-                right: theme.spacing.lg,
+          <motion.div {...surfaceMotion}>
+            <div
+              role="dialog"
+              aria-label={label}
+              tabIndex={-1}
+              {...rest}
+              ref={setContentElement}
+              testId={testId}
+              onMouseDownOutside={(event) => {
+                onMouseDownOutside?.(event);
+                dismissTopLayer(event);
               }}
+              onKeyDown={handleKeyDown}
+              style={mergeStyles(surfaceStyle(theme, box), style)}
             >
-              <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
-            </IconButton>
-          ) : null}
+              {children}
+              {showClose ? (
+                <IconButton
+                  label="Close drawer"
+                  size="sm"
+                  testId="drawer-close"
+                  onClick={close}
+                  style={{
+                    position: "absolute",
+                    top: theme.spacing.lg,
+                    right: theme.spacing.lg,
+                  }}
+                >
+                  <Icon
+                    name="x"
+                    color={theme.colors.mutedForeground}
+                    size="sm"
+                  />
+                </IconButton>
+              ) : null}
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     </anchored>
   );
 };
@@ -407,7 +440,7 @@ export const drawerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "no swipe-to-dismiss: 0.10.0 has no drag host feature",
-    "no slide animation: motion has no transform, and width/left would reflow the content",
+    "no zoom/transform: the exit is a fade plus a measured top/left slide",
     "no aria-modal or aria-labelledby in 0.10.0: the surface is named with aria-label",
     "the veil is an anchored element at window coordinates because the release ships no portal",
     "sizes are layout constants: tokens carry no drawer-size role",
