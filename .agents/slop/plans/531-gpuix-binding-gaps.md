@@ -132,7 +132,11 @@ typings ship.
 
 **Patches.** `0003-dimension-insets.patch` (style, renderer, motion, host type)
 and `0004-aria-values.patch` (mapping, helpers, tests, host type) apply after
-`gpuix-zindex.patch` to `references/gpuix` `515df19`. The build script now
+`gpuix-zindex.patch` to `references/gpuix` `515df19`. The host-type hunk in
+`0004` was added after the build; `js/host.ts` is not compiled into the cdylib,
+so the artifact hash is unaffected. The final set was re-applied forward to a
+pristine copy (identical result) and reverse-checked on the scratch tree. The
+build script now
 preflights every patch with `git apply --check` and detects an already-patched
 tree by reverse-applying a throwaway copy of the touched files. The old BSD
 `patch -R --dry-run` check exited `0` after ignoring a failed hunk, so a fresh
@@ -208,3 +212,5 @@ playground 397 — all green. `nub run check`: exit `0` (including
   recorded for `zIndex`.
 - `motion` remains pixels-only; percentage insets and auto margins do not
   animate.
+- GPUix's own `README.md` still says margins take numbers; update the style
+  contract there when these patches are upstreamed.
