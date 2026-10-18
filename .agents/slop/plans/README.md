@@ -232,6 +232,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [535](./535-platform-table-and-figures.md) | The platform table and files tell the truth about the values they ship | F | 389, 506, 526, 528, 534 | done |
 | [536](./536-present-tense-figures.md) | The catalogue's present-tense figures | F | 336, 348, 377, 503, 514, 520 | done |
 | [537](./537-tier-figures.md) | The tier figures the two documents quote | F | 392, 500, 510, 520, 527, 536 | done |
+| [538](./538-tier-surface-counts.md) | The tier paragraph's surface counts | F | 392, 500, 527, 537 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2467,6 +2468,15 @@ seven catalogue parentheticals are pinned with their set and surface, the design
 system's summary is derived from the tier groups, and a case proves the figure
 table and `themeTextTierFailures` compare the same surfaces. No colour, pair,
 floor or metric moves.
+
+Plan `538` closes the count beside those figures. The same paragraph states each
+tier's surface-set size as prose ("12 shared surfaces", "one `card`", "four for
+`popoverForeground`", …) and no test derived it: a surface joining both roles'
+pairs changes the set a tier is compared on, and if its step is larger than the
+minimum every plan-537 figure still passes while the count is stale. The two
+numerals become the paragraph's own word style (`twelve`) and one case derives
+all eight phrases — seven tier counts and the panel action's "five surfaces the
+two labels share" — through `tierSurfaces`.
 
 ## How to use a plan
 
