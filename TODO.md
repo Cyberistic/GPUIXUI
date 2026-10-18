@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 193/255
+`[x]` `[███████░░░]` 194/256
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1553,6 +1553,16 @@ four soft fills), seven values move one designed step inside their own families
 `#004F8A`, XP `#0046BD` → `#003FA8`, Aero `#0F55A3` → `#0C4A8C`), every
 shipped set passes (4.729:1 at the tightest, Windows dark; 7.484:1 at AAA) and
 the plain 404 pairs do not move (plan 528)
+`[x]` Own the shareable theme choice — `ThemeChoice` documented “a shareable
+URL” but nothing read or wrote one, so every consumer retyped the five keys and
+the docs platform toggle parsed only `platform` while plan 380's recipe,
+contrast and density axes had no URL form at all; `themeChoiceFromParams`,
+`themeChoiceParams` and `themeChoiceKeys` decode through the existing guards,
+write only the axes whose absence would change the theme (a recipe suppresses
+the platform it overrides, a stored density is always written because the
+platform supplies the preset), and the exported key order is the clear list that
+stops a stale axis surviving; the full matrix round-trips through a real
+`URLSearchParams` and `contrastPairs` stays 404 (plan 529)
 
 ## Phase C — Tier 1–2 components
 

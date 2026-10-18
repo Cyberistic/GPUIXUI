@@ -219,6 +219,34 @@ default — an unknown density keeps the resolved theme's preset. A runnable
 example lives in
 [`src/theme-choice.example.ts`](./src/theme-choice.example.ts).
 
+A shareable URL is the same row, and the package owns the transport.
+`themeChoiceFromParams(source)` reads the five keys through the same guards — a
+real `URLSearchParams` satisfies the structural `ThemeParamSource`, so no runtime
+dependency is added — and an unknown value is absent. `themeChoiceParams(choice)`
+writes the canonical axes: only `dark`, `high`, a non-`default` platform, a valid
+recipe (which suppresses the platform it overrides) and any valid density, since
+the platform supplies the density fallback. `themeChoiceKeys` is the key order
+and the clear list, so a stale axis cannot survive a new choice.
+
+```ts
+import {
+  resolveThemeChoice,
+  themeChoiceFromParams,
+  themeChoiceKeys,
+  themeChoiceParams,
+} from "@gpuixui/tokens";
+
+const theme = resolveThemeChoice(
+  themeChoiceFromParams(new URLSearchParams("?mode=dark&platform=win32")),
+);
+
+const next = new URLSearchParams("?platform=win32");
+themeChoiceKeys.forEach((key) => next.delete(key));
+themeChoiceParams({ recipe: "aero" }).forEach(([key, value]) =>
+  next.set(key, value),
+);
+```
+
 ```ts
 import { isControlSize, isDensityName, isPlatformName } from "@gpuixui/tokens";
 

@@ -127,6 +127,7 @@ missing here is not public.
 | `TextTierFailure` | A text tier that is not one step below the tier above it, with both ratios and the step. |
 | `Theme` | A complete resolved theme. |
 | `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
+| `ThemeChoiceKey` | A query key from `themeChoiceKeys`. |
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
@@ -134,6 +135,7 @@ missing here is not public.
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
+| `ThemeParamSource` | The lookup a URL search object provides: `get(key)` returning a string, `null` or `undefined`. |
 | `ThemeProviderProps` | Props for `ThemeProvider`. |
 | `TypefaceFailure` | A family name that is not one non-empty family. |
 | `TypefaceRole` | `sans` or `mono`, a key of `typefaceRoles`. |
@@ -1557,6 +1559,39 @@ const theme = resolveThemeChoice({
 The object's shape is still the application's `Schema` boundary; the unions and
 the precedence are the package's. The executed example is
 [`src/theme-choice.example.ts`](../packages/tokens/src/theme-choice.example.ts).
+
+A choice that travels in a URL is the same row, and the package owns that
+transport too. `themeChoiceFromParams(source)` reads the five keys with the same
+guards — a real `URLSearchParams` satisfies the structural `ThemeParamSource`,
+so the package gains no runtime dependency — and treats an unknown value as
+absent, exactly like a missing key. `themeChoiceParams(choice)` is the canonical
+writer: it emits only the axes whose omission would change the resolved theme —
+`dark`, `high`, a non-`default` platform, and every valid density, because the
+platform supplies the density fallback — and a valid `recipe` suppresses the
+`platform` it overrides. `themeChoiceKeys` is the key order and the clear list,
+so a link cannot keep an axis the new choice replaced.
+
+```ts
+import {
+  resolveThemeChoice,
+  themeChoiceFromParams,
+  themeChoiceKeys,
+  themeChoiceParams,
+} from "@gpuixui/tokens";
+
+const theme = resolveThemeChoice(
+  themeChoiceFromParams(new URLSearchParams("?mode=dark&platform=win32")),
+);
+
+const next = new URLSearchParams("?platform=win32");
+themeChoiceKeys.forEach((key) => next.delete(key));
+themeChoiceParams({ recipe: "aero" }).forEach(([key, value]) =>
+  next.set(key, value),
+);
+```
+
+The reader accepts a hand-written `platform=default`, `mode=light` or
+`contrast=default`; only the writer omits a value its fallback already selects.
 
 Merge rules:
 

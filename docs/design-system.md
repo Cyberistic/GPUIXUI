@@ -790,6 +790,17 @@ the ordered indexes a settings row or a docs toggle iterates. A whole theme
 object from a file is a different boundary: decode it with the application's
 `Schema`.
 
+A choice that travels in a URL is the same row. `themeChoiceFromParams(source)`
+reads the five keys through the same guards — a real `URLSearchParams` satisfies
+the structural `ThemeParamSource` — and treats an unknown value as absent, so a
+hand-edited link resolves to a readable theme. `themeChoiceParams(choice)` writes
+the canonical axes only: `mode=dark`, `contrast=high`, a non-`default` platform,
+a valid recipe, and every valid density, because the platform supplies the
+density fallback; a recipe suppresses the platform it overrides.
+`themeChoiceKeys` is both the key order and the list a consumer clears before
+writing a new choice, so a stale axis cannot survive beside its replacement. No
+theme, role or pair changes.
+
 A theme carries its contrast level the way it carries its mode: `extendTheme`
 keeps the base's declaration and `applyPlatformStyle` and
 `themeContrastFailures` default to it, so the short call is the safe one. An
