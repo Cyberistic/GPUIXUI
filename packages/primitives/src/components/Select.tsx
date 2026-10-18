@@ -11,12 +11,13 @@
  * `side="bottom"` and `fit="snap"`, and snap **clamps without flipping**
  * (measured, plan 156 §8), so a select at the window's bottom edge opened its
  * list over the trigger (plan 066). The trigger's measured box and the list's
- * estimated height choose a vertical side, and an explicit `top`/`bottom` wins.
+ * estimated height choose a vertical side; an explicit `top`/`bottom` is the
+ * same rule's preference, so it flips when it cannot fit (plan 336).
  *
  * A list beside its trigger (`side="left"`/`"right"`) is capped to the window's
  * height and scrolls, because that axis is bounded by the window rather than by
- * the trigger (measured, plan 098). That side is a preference: the trigger's box
- * and the list's measured width move it to the other side when it cannot fit
+ * the trigger (measured, plan 098). That side is a preference too: the trigger's
+ * box and the list's measured width move it to the other side when it cannot fit
  * (measured, plan 335).
  *
  * The options are data rather than compound children because the trigger needs
@@ -71,7 +72,9 @@ import {
   decideVerticalSide,
   FLOATING_MARGIN,
   isHorizontalSide,
+  type HorizontalSide,
   type PlacementRequest,
+  type VerticalSide,
 } from "../core/floating.js";
 import {
   mergeStyle,
@@ -115,7 +118,11 @@ export interface SelectProps {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly fullWidth?: boolean;
-  /** Which side the list opens on. A `left`/`right` side is a preference (plan 335). */
+  /**
+   * Which side the list opens on. A requested side is a preference on both
+   * axes: the list flips to the other side when it cannot fit, or to the roomier
+   * one (plans 335, 336).
+   */
   readonly side?: FloatingSide;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
@@ -545,28 +552,36 @@ export const Select = (props: SelectProps): ReactElement => {
       margin: FLOATING_MARGIN,
     }),
   );
+  const vertical = (preferred?: VerticalSide): Option.Option<VerticalSide> =>
+    Option.map(request, (measurement) =>
+      decideVerticalSide(
+        preferred === undefined ? measurement : { ...measurement, preferred },
+      ),
+    );
+  const horizontal = (preferred: HorizontalSide): HorizontalSide =>
+    Option.getOrElse(
+      Option.map(Option.fromNullishOr(triggerBox), (box) =>
+        decideHorizontalSide({
+          triggerLeft: box.left,
+          triggerRight: box.right,
+          layerWidth: listWidth ?? box.width,
+          viewportWidth: viewport.width,
+          margin: FLOATING_MARGIN,
+          preferred,
+        }),
+      ),
+      () => preferred,
+    );
   const side = Option.match(Option.fromNullishOr(props.side), {
-    onNone: () =>
-      Option.getOrUndefined(Option.map(request, decideVerticalSide)),
+    onNone: () => vertical(),
     onSome: (requested) =>
       isHorizontalSide(requested)
-        ? Option.match(Option.fromNullishOr(triggerBox), {
-            onNone: () => requested,
-            onSome: (box) =>
-              decideHorizontalSide({
-                triggerLeft: box.left,
-                triggerRight: box.right,
-                layerWidth: listWidth ?? box.width,
-                viewportWidth: viewport.width,
-                margin: FLOATING_MARGIN,
-                preferred: requested,
-              }),
-          })
-        : requested,
+        ? Option.some(horizontal(requested))
+        : vertical(requested),
   });
   const maxHeight = Option.getOrUndefined(
     Option.flatMap(request, (measurement) =>
-      Option.flatMap(Option.fromNullishOr(side), (resolvedSide) => {
+      Option.flatMap(side, (resolvedSide) => {
         const space = availableOn(measurement, resolvedSide);
         return measurement.layerHeight > space
           ? Option.some(Math.max(space, 0))
@@ -597,7 +612,7 @@ export const Select = (props: SelectProps): ReactElement => {
     },
     {
       minWidth: triggerBox?.width,
-      side,
+      side: Option.getOrUndefined(side),
       collisionPadding: FLOATING_MARGIN,
       maxHeight,
     },

@@ -64,7 +64,7 @@ Group a long list by giving `options` a `{ label, options }` entry:
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | trigger height and padding |
 | `fullWidth` | `boolean` | `false` | the trigger fills the parent; the list matches its measured width |
-| `side` | `FloatingSide` | auto — below, flipped above when it does not fit; a `left`/`right` side flips when it cannot fit | which side the list opens on |
+| `side` | `FloatingSide` | auto — below, flipped above when it does not fit; any requested side flips when it cannot fit | preferred side the list opens on |
 | `label` | `string` | none | accessible name for the select |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
@@ -173,7 +173,8 @@ exists: the surface's padding and borders, one `controlHeight.sm` row per
 option, one caption row per non-empty group, and the row gap — the same numbers
 `selectContentStyle`, `selectItemStyle` and `selectHeadingStyle` paint. When
 neither side has room, the side with more room wins (the runtime still clamps).
-An explicit `top`/`bottom` skips that decision.
+An explicit `top`/`bottom` is the same rule's **preference**, so it flips when
+it cannot fit (plan `336`).
 
 A list **taller than the space it chose** is capped to exactly that space and
 scrolls. Without the cap a 30-option list painted a 908 px layer from `y 8`, with
@@ -194,6 +195,12 @@ list cannot fit on the requested side it opens on the other one, or on the
 roomier side when it fits on neither. The runtime alone would clamp it —
 measured on a trigger at `x 524..572`, a `side="right"` list painted
 `x 535..592`, over the trigger (plan `335`).
+
+A **`top`/`bottom` side is the same preference on the vertical axis** (plan
+`336`). At the bottom edge a `side="bottom"` list used to be squashed to the
+20 px the cap believed it had (`selectListHeight` is 84 px for two options); it
+now opens above at its full height. A `side="top"` list at the top edge used to
+paint `y 2..12`, inside the margin; it now opens below.
 
 ## Style by state
 
@@ -245,7 +252,8 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   picked up the next time it opens; there is no resize observer in 0.10.0.
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
-  room, the list is capped to the roomier one and scrolls.
+  room, the list is capped to the roomier one and scrolls. An explicit
+  `top`/`bottom` follows the same fit rule rather than pinning the side.
 - **The side uses a measured list width.** A move to the other horizontal side
   is decided from the width the list painted on open; a list wider than both
   sides is still clamped by the runtime and may cover its trigger.
@@ -303,7 +311,12 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   row at `y 888.5`. **Side fit (335):** a `side="left"` list at the window's left
   edge opens to the right of its trigger (the failing direction painted the list
   at `x 8`, over the trigger), and a `side="right"` list at the right edge opens
-  to the left (the failing direction clamped it to `x 1272`). **Keyboard
+  to the left (the failing direction clamped it to `x 1272`). **Vertical side fit
+  (336):** a `side="bottom"` list at the bottom edge opens above at its full
+  height (the failing direction painted `y 772..792`, 20 px, because the pin also
+  fed the cap), a `side="top"` list at the top edge opens below (the failing
+  direction painted `y 2..12`), and a `side="bottom"` list with room still opens
+  below. **Keyboard
   (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
   leave the highlighted "Option 39" inside the list (without the wrapper's
   `scrollIntoView` the offset stays `0`); opening on "Option 49" scrolls to

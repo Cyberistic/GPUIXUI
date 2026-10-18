@@ -59,14 +59,15 @@ and flips **below** when the tip does not fit above — the runtime's layer is
 (plan `156` §8), so at the top edge the tip used to open at `y 8..34` over a
 trigger at `y 12..30` (plan `067` §1). The wrapper measures its root and
 estimates the tip's height from `tooltipStyle` (padding, one caption line,
-border). Automatic side choice is vertical only.
+border). With no `side` it only decides the vertical axis; `left`/`right` is
+used when asked for.
 
-A **`left`/`right` side is a preference.** The wrapper measures the tip's width
-and the trigger's edges: when the tip cannot fit on the requested side it opens
-on the other one, or on the roomier side when it fits on neither. The runtime
-alone would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip
-painted `x 8..55`, over the trigger (plan `335`). An explicit `top`/`bottom`
-still skips the vertical decision and is exact where the window allows it.
+A **requested side is a preference on both axes.** The wrapper measures the
+trigger's box: when the tip cannot fit on the requested side it opens on the
+other one, or on the roomier side when it fits on neither. The runtime alone
+would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip painted
+`x 8..55`, over the trigger (plan `335`), and a `side="top"` tip painted
+`y 8..34` over a trigger at `y 12..36` (plan `336`).
 
 ## API
 
@@ -74,7 +75,7 @@ still skips the vertical decision and is exact where the window allows it.
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
-| `side` | `FloatingSide` | auto — above, flipped below when it does not fit; a `left`/`right` side flips when it cannot fit | preferred placement |
+| `side` | `FloatingSide` | auto — above, flipped below when it does not fit; a `left`/`right` side flips when it cannot fit | preferred placement on both axes |
 | `align` | `FloatingAlign` | `"start"` | alignment against the trigger; `center` is measured exact — see Placement |
 | `delay` | `number` | provider default | hover delay in milliseconds |
 | `testId` | `string` | — | locator on the **tip** |
@@ -119,7 +120,8 @@ dismisses it. A click dismisses it.
   paints and for `whiteSpace: nowrap`; a multi-line tip is a popover.
 - **A tip wider than the room on both sides is clamped.** The horizontal side is
   chosen from the tip's measured width, but a tip wider than both sides can
-  still be clamped by the runtime and painted over its trigger.
+  still be clamped by the runtime and painted over its trigger. The same holds
+  vertically for a tip taller than both gaps.
 - No `aria-describedby` association: the content is the trigger's
   `aria-description` instead, which is a description but not a reference.
 - A non-string tip has no description on the trigger and no name of its own.
@@ -154,6 +156,10 @@ dismisses it. A click dismisses it.
   on the right of its trigger (the failing direction painted the tip `x 8..55`
   over the trigger), and a `side="right"` tip at the right edge opens on the
   left. Without the side decision the runtime clamps both onto the trigger.
+  **Vertical fit (336):** a `side="top"` tip at the top edge opens below its
+  trigger (the failing direction painted the tip `y 8..34` over a trigger at
+  `y 12..36`), and a `side="bottom"` tip at the bottom edge opens above
+  (it ran to `y 798` past the margin before).
   **Description (071):** the trigger's accessibility node carries the content as
   its description while the tip is closed, and the open tip is a named `Tooltip`
   node — the failing direction had neither.

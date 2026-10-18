@@ -20,9 +20,10 @@
  *
  * The two corrections meet on the layer's own axis: a `left`/`right` side aligns
  * **vertically**, so the wrapper measures the tip's height too and centres on
- * heights, not widths (plan 098). That side is also a preference: a tip that
- * cannot fit beside the trigger opens on the other horizontal side, measured
- * from its own width (plan 335).
+ * heights, not widths (plan 098). A requested side is a **preference on both
+ * axes**: a tip that cannot fit where it was asked to open goes to the other
+ * side, horizontal from its measured width (plan 335) and vertical from the
+ * position the side decision estimates (plan 336).
  */
 
 import {
@@ -49,6 +50,7 @@ import {
   FLOATING_MARGIN,
   isHorizontalSide,
   resolveAlign,
+  type VerticalSide,
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -60,9 +62,10 @@ export interface TooltipProps {
   /** The element the tooltip describes. It must be focusable. */
   readonly children: ReactNode;
   /**
-   * Defaults to `top`, flipped to `bottom` when the tip does not fit above.
-   * A `left`/`right` side is a preference: when the tip cannot fit beside the
-   * trigger it opens on the other side (plan 335).
+   * Defaults to `top`. A requested side is a **preference**: when the tip
+   * cannot fit there it opens on the other side — below instead of above, or
+   * the other horizontal side — and on the roomier side when it fits on
+   * neither (plans 335, 336).
    */
   readonly side?: FloatingSide;
   /**
@@ -228,29 +231,30 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const viewport = readWindowSize(renderer);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",
-    onSome: (measured) =>
-      Option.match(Option.fromNullishOr(props.side), {
-        onNone: () =>
-          decideVerticalSide({
-            triggerTop: measured.top,
-            triggerBottom: measured.bottom,
-            layerHeight: tooltipHeight(theme),
-            viewportHeight: viewport.height,
-            margin: FLOATING_MARGIN,
-            preferred: "top",
-          }),
-        onSome: (requested) =>
-          isHorizontalSide(requested)
-            ? decideHorizontalSide({
-                triggerLeft: measured.left,
-                triggerRight: measured.right,
-                layerWidth: measured.tipWidth ?? measured.width,
-                viewportWidth: viewport.width,
-                margin: FLOATING_MARGIN,
-                preferred: requested,
-              })
-            : requested,
-      }),
+    onSome: (measured) => {
+      const vertical = (preferred: VerticalSide): VerticalSide =>
+        decideVerticalSide({
+          triggerTop: measured.top,
+          triggerBottom: measured.bottom,
+          layerHeight: tooltipHeight(theme),
+          viewportHeight: viewport.height,
+          margin: FLOATING_MARGIN,
+          preferred,
+        });
+      const requested = props.side;
+      return requested === undefined
+        ? vertical("top")
+        : isHorizontalSide(requested)
+          ? decideHorizontalSide({
+              triggerLeft: measured.left,
+              triggerRight: measured.right,
+              layerWidth: measured.tipWidth ?? measured.width,
+              viewportWidth: viewport.width,
+              margin: FLOATING_MARGIN,
+              preferred: requested,
+            })
+          : vertical(requested);
+    },
   });
   const requested = props.align ?? "start";
   // The runtime's own `center` is never passed through: until the tip is

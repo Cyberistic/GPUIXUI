@@ -1398,6 +1398,149 @@ it("opens a right-side Select list on the left at the right edge", async () => {
   expect(list.x + list.width).toBeLessThanOrEqual(triggerBox.x + 1);
 });
 
+it("opens a top-side Tooltip below at the window's top edge", async () => {
+  // The bug guarded (plan 336): a requested vertical side skipped the fit rule
+  // and went straight to the runtime, whose `fit="snap"` clamps without
+  // flipping. Measured: a `side="top"` tip painted y 8..34 over a trigger at
+  // y 12..36. A requested vertical side is a preference, like the horizontal one.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="top" testId="tip">
+        <div
+          testId="target"
+          tabIndex={0}
+          style={{ width: 60, height: 24, display: "flex" }}
+        />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height);
+});
+
+it("opens a bottom-side Tooltip above at the window's bottom edge", async () => {
+  // The other vertical direction: the tip cannot fit below (20 px of space for
+  // a 26 px tip), so it must open above instead of overrunning the margin —
+  // measured before the fix: tip y 772..798 in an 800 px window.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 760 }}>
+        <Spacer />
+        <Tooltip content="A hint" side="bottom" testId="tip">
+          <div
+            testId="target"
+            tabIndex={0}
+            style={{ width: 60, height: 24, display: "flex" }}
+          />
+        </Tooltip>
+      </Stack>
+    </Surface>,
+  );
+  runtime.hover("target");
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.y + tip.height).toBeLessThanOrEqual(target.y);
+});
+
+it("opens a bottom-side Select list above at the window's bottom edge", async () => {
+  // The bug guarded (plan 336): a pinned bottom side also fed the wrapper's own
+  // `maxHeight` cap, so the list was squashed to the 20 px it believed it had —
+  // measured: list y 772..792 for a trigger at y 740..772. It must open above at
+  // its full height (selectListHeight is 84 px for two options).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 760 }}>
+        <Spacer />
+        <Select
+          testId="sel"
+          label="Few"
+          placeholder="Pick"
+          side="bottom"
+          options={[
+            { value: "a", label: "Alpha" },
+            { value: "b", label: "Beta" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const list = selectListBoundsOf(runtime);
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  expect(list.y + list.height).toBeLessThanOrEqual(triggerBox.y);
+  expect(
+    Math.abs(list.height - selectListHeight(2, testTheme)),
+  ).toBeLessThanOrEqual(1);
+});
+
+it("opens a top-side Select list below at the window's top edge", async () => {
+  // The other vertical direction: measured before the fix, a `side="top"` list
+  // painted y 2..12 — inside the margin and touching its trigger at y 12.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Few"
+        placeholder="Pick"
+        side="top"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const list = selectListBoundsOf(runtime);
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  expect(list.y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height);
+});
+
+it("keeps a bottom-side Select list below a trigger with room", async () => {
+  // The direction that keeps the rule honest: a requested side is not inverted,
+  // it is merely allowed to flip when the room is gone.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Few"
+        placeholder="Pick"
+        side="bottom"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "b", label: "Beta" },
+        ]}
+      />
+    </Surface>,
+  );
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const list = selectListBoundsOf(runtime);
+  const triggerBox = Option.getOrElse(runtime.boundsOfId(trigger.id), () =>
+    expect.fail("the Select trigger painted no box"),
+  );
+  expect(list.y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height);
+  expect(
+    Math.abs(list.height - selectListHeight(2, testTheme)),
+  ).toBeLessThanOrEqual(1);
+});
+
 it("opens a Tooltip on hover and dismisses it on click", async () => {
   const runtime = await openWindow();
   runtime.render(

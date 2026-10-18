@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[█████████░]` 83/84
+`[x]` `[██████████]` 85/85
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -651,14 +651,18 @@ retired once both branches are one
       directions: each now opens beside the trigger. Docs, README, inventory and
       the regression tests record it.
 
-`[ ]` `packages/primitives`: **an explicit vertical `side` still covers its
-      trigger at the window edge.** Plan `335` deliberately left the vertical
-      rule untouched (this row required it). A `Tooltip side="top"` at the top
-      edge and a `Select side="bottom"` at the bottom edge are still clamped by
-      the runtime onto the trigger, exactly as the horizontal sides were. A
-      later plan must decide whether an explicit vertical side is also a
-      preference and unify both axes on `chooseSide` (with its own measured
-      cases).
+`[x]` `packages/primitives`: **an explicit vertical `side` covered its trigger /
+      shrank the list at the window edge.** Measured (2026-10-18): a
+      `Tooltip side="top"` at the top edge painted its tip `y 8..34` over a
+      trigger at `y 12..36`, and its `side="bottom"` case ran to `y 798`, past
+      the margin; a `Select side="bottom"` at the bottom edge painted a **20 px**
+      list instead of its 84 px estimate (the pin also fed `maxHeight`), and a
+      `side="top"` list painted `y 2..12`, touching its trigger. **Fixed by plan
+      `336`:** both wrappers now route an explicit `top`/`bottom` through the
+      existing `decideVerticalSide` (no core change), so a requested side is a
+      preference on both axes: it opens where it was asked when there is room,
+      and on the other side — or the roomier one — otherwise. 5 runtime tests,
+      both directions proven.
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
