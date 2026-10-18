@@ -278,7 +278,8 @@ retired once both branches are one
       window's bottom edge — the runtime's `fit="snap"` clamps without flipping
       (measured: list `y 724..792` over a trigger at `740..772`). The wrapper
       now estimates the list height from its own styles and opens above when it
-      does not fit below; an explicit `side` still wins. Pure side rule,
+      does not fit below (an explicit `side` became a preference in plans 335,
+      336). Pure side rule,
       estimate-vs-styles guard, and two runtime placement tests with both
       directions proven (plan 066)
 `[x]` `packages/primitives`: **`Tooltip`'s tip covered its trigger at the
