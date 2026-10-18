@@ -30,6 +30,7 @@ import {
   type PreviewServer,
 } from "./preview-server.ts";
 import { MANIFEST_ICONS, renderManifest } from "../src/lib/site-manifest.ts";
+import { SITE_NAME } from "../src/lib/site-head.ts";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const CONCURRENCY = 6;
@@ -349,6 +350,14 @@ const auditPage = (
   if (linkHref(page.body, "apple-touch-icon") === null)
     fail("no rel=apple-touch-icon");
   if (linkHref(page.body, "manifest") === null) fail("no rel=manifest");
+  // TanStack keys a meta by `name` and keeps one per key, so a name meta can be
+  // dropped silently; the crawl reads the built page, not the head module.
+  if (metaContent(page.body, "name", "application-name") !== SITE_NAME)
+    fail("application-name is not the site name");
+  if (
+    metaContent(page.body, "name", "apple-mobile-web-app-title") !== SITE_NAME
+  )
+    fail("no apple-mobile-web-app-title");
 
   const themeColors = metaEntries(page.body, "name", "theme-color");
   if (themeColors.length !== 2) {

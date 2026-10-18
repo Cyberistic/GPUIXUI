@@ -224,6 +224,10 @@ copied).
 5. Remove `icon-192.png` from the built site → `smoke:build` fails
    `/brand/icon-192.png: manifest icon: expected 200 image/png, got 404`;
    restore.
+6. Remove the `apple-mobile-web-app-title` meta from the head → `smoke:build`
+   fails `no apple-mobile-web-app-title` on every page (TanStack keeps one meta
+   per name, so the crawl must read the built page, not the head module);
+   restore.
 
 ## 5. Commands and expected results
 
@@ -269,6 +273,7 @@ Every two-direction proof was run in this worktree on 2026-10-18.
 | literal colour | `vitest run src/lib/site-manifest.test.ts` | `Expected: "#F6F8FA" / Received: "#000000"`; 1 failed / 4 passed |
 | stale route | `smoke:build --no-build` after rebuilding with `new Response("{}")` | exit `1`, `FAIL /site.webmanifest: the served document is not renderManifest()` |
 | missing icon | `smoke:build --no-build` after moving `dist/client/brand/icon-192.png` | exit `1`, `FAIL /brand/icon-192.png: manifest icon: expected 200 image/png, got 404 text/html; charset=utf-8` |
+| dropped name meta | `smoke:build --no-build` after removing `apple-mobile-web-app-title` and rebuilding | exit `1`, `FAIL /: no apple-mobile-web-app-title` on every page |
 
 Restored state re-verified: `smoke:build --no-build` exits `0` with
 `smoke: install metadata checked`.

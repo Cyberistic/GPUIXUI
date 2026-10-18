@@ -481,7 +481,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       maskable claim), the head links a 32 px PNG beside the SVG, and a
       `Schema.Class` suite plus the built crawl prove the document, every icon's
       real size and each answer. 67 files / 462 docs tests, 91-page crawl,
-      `check` green; five two-direction proofs measured.
+      `check` green; six two-direction proofs measured.
 
 `[x]` **The preview strategy names every shipped scene (plan 515)** — the tier‑L
       row had ended at `Carousels` since plan 513 added the Message scroller

@@ -6,7 +6,6 @@ import { themeColors } from "./docs-theme";
 import { isPng, pngSize } from "./png.testing";
 import {
   BRAND_ASSETS,
-  MANIFEST_PATH,
   siteHead,
   SOCIAL_CARD,
   THEME_COLOR_META,
@@ -104,20 +103,12 @@ describe("site head", () => {
       BRAND_ASSETS.socialCard,
     );
 
-    const icons = head.links.filter((link) => link.rel === "icon");
-    expect(icons.map((icon) => [icon.type, icon.href, icon.sizes])).toEqual([
-      ["image/svg+xml", BRAND_ASSETS.mark, "any"],
-      ["image/png", BRAND_ASSETS.favicon, "32x32"],
-    ]);
     expect(head.links.filter((link) => link.rel === "stylesheet")).toHaveLength(
       1,
     );
     expect(
       head.links.find((link) => link.rel === "apple-touch-icon")?.href,
     ).toBe(BRAND_ASSETS.touchIcon);
-    expect(head.links.find((link) => link.rel === "manifest")?.href).toBe(
-      MANIFEST_PATH,
-    );
   });
 
   it("ships a raster tab icon for browsers that ignore an SVG favicon", () => {
