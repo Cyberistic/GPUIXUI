@@ -68,18 +68,36 @@ star-under-the-pointer query" limitation was false) with:
 `packages/primitives/**`, `COMPONENTS.md`, `TODO.md` and the plan index in the
 shared tree were left untouched by this session.
 
-## Merge note
+## Outcome: the same task was claimed twice
 
-When one writer owns `workspaces/primitives`, merge the work in with:
+At 05:12 a peer landed `b480eae feat(primitives): Rating previews the star under
+the pointer` on `agent/primitives` — from the **stray plan file** `a1426fe` had
+swept into its tree, renumbered to `094-rating-hover-preview.md`. It is the same
+task this branch implemented, with one extra case (a preview already pending when
+the control becomes inert is ignored) and five runtime tests.
+
+So `agent/primitives-hover` is **superseded**: do **not** merge its code. The
+shared plan `094` on `agent/primitives` is authoritative. This branch remains as
+the evidence for B3 and the workaround, and its code is a second implementation
+of the same plan — the clearest possible demonstration of what two writers on
+one queue costs.
+
+The peer's `094` and this branch's `094` are two versions of one plan (the
+shared one was seeded from this branch's file). A merge would duplicate the plan
+row and the helper; no merge is needed.
+
+## Merge note (historical)
+
+When one writer owns `workspaces/primitives`, only the blocker note from this
+branch is worth keeping:
 
 ```sh
 git -C ~/GPUIXUI/workspaces/primitives merge agent/primitives-hover
 ```
 
-Expected conflict: the plan index and `TODO.md` (the peer added plans 092/093
-and their ledger rows). Resolution: keep **094** for the rating preview, keep
-**092** for the examples parity, and drop the stray unindexed
-`092-rating-hover-preview.md` that `a1426fe` swept in (this branch deletes it).
+The expected conflicts are the plan index, `TODO.md` and the Rating files; the
+resolution is to take the shared tree's version of everything except
+`.agents/slop/blockers/2026-10-18-concurrent-primitives-writers.md`.
 
 ## The fix (unchanged, not this workstream's paths)
 
