@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress |
+| Status | landed |
 | Phase | F (native capability) |
 | Owner | gpuix-zindex workstream |
 | Depends on | `140` (the source build), `529` (binding provenance) |
@@ -71,9 +71,43 @@ Rust unit tests in `retained_tree.rs` (they fail when the rule is removed):
 `cargo test --release --lib` on the scratch tree, then the binding build and the
 playground smoke suite.
 
-## 4. Results
+## 4. Results (2026-10-18, darwin-x64)
 
-_Filled by the execution run._
+**Build** — `sh apps/playground/scripts/build-native-binding.sh`: `EXIT=0` in
+**11 m 55 s**; `libgpuix_native.dylib` 25 606 504 B, `Mach-O 64-bit dynamically
+linked shared library x86_64`. Four warnings, all pre-existing (unused
+`browser_platform_is_macos`, `is_empty`, `hash_into`, and the `aws-lc`
+compact-unwind linker note); none names a patched file. The rebuild logged
+`gpuix-zindex.patch already applied`, and the committed patch was separately
+proven to apply forward to pristine files and to reverse-dry-run afterwards.
+
+**Runtime probe** (`.agents/slop/scratch/zindex-probe.mjs`, outside the registry):
+two overlapping boxes, id 2 `absolute` and declared **first**, id 3 in-flow.
+Without `zIndex`, the click lands on `[3]`; with `zIndex: 2` on id 2 it lands on
+`[2]`. That is paint order and GPUI's hit order in one measurement.
+
+**Smoke** — `nub apps/playground/dist/smoke/run.js --only layout-flex`:
+`1/1 scenarios passed · capabilities: layout=verified`. The installed artifact
+hash was identical before and after the run (`e8064859…`). That check matters:
+`apps/playground/node_modules/@gpuix/native` resolves into the machine-wide nub
+cache, where a concurrent workstream build replaced the binary mid-session.
+
+**Rust** — `cargo test --release --locked --lib -- retained_tree` in the scratch
+tree: `27 passed; 0 failed` (242 filtered out), including
+`z_index_orders_positioned_siblings_above_in_flow`,
+`no_z_index_leaves_the_paint_order_alone` and
+`z_index_hit_order_is_reverse_paint_order`.
+
+**Playground** — `nub run --filter playground test`: **31 files, 397 tests**
+passed.
+
+**Gate** — `nub run check`: exit `0`.
+
+A comment-only wording fix after the first build rebuilt in **2 m 50 s** to the
+**same bytes** (`e8064859…`), so the smoke and probe measurements above apply to
+the final patch. The race below forced one re-run: the isolated copy under
+`.agents/slop/scratch/zindex-probe/` loaded `e8064859…` and reproduced
+`[3]` → `[2]`.
 
 ## 5. Limitations
 
@@ -83,3 +117,12 @@ _Filled by the execution run._
   order, because moving it would change flex layout.
 - No stacking contexts: `zIndex` orders siblings of one parent only. A nested
   positioned child does not escape its parent's paint slot.
+- The **published** 0.10.0 TypeScript declarations (`dist/host.d.ts`) do not
+  know `zIndex`; the patched source does. Code in this repo needs a rebuilt
+  `@gpuix/native` package or a local type augmentation until the patch is
+  published. The runtime accepts the field today because the style object is
+  serialized generically.
+- The `@gpuix/native` install path is a symlink into the machine-wide nub cache,
+  so two worktrees rebuilding the binding overwrite each other's artifact. A
+  verification run must hash the `.node` before and after; this run's smoke
+  result was produced with the hash unchanged.
