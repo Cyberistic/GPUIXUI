@@ -30,6 +30,10 @@
   Function names are checked only when called or rendered, because
   `controlHeight` is both a helper and a `density` field — the first run caught
   that false positive and the rule was narrowed rather than the snippet changed.
+- The export check is per entry: a type imported from `@gpuixui/tokens/react`
+  must be declared there, not merely somewhere in the package. A probe that
+  added `type Theme` to the README's `/react` import failed with
+  `packages/tokens/README.md #1: Theme from @gpuixui/tokens/react`.
 - Final: `nub run test` → **71 files / 4244 tests passed** (the guard has four
   cases, not the three estimated below); `nub run check`, `nub run lint` and
   `nub run test` are green.

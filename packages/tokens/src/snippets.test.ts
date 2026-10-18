@@ -108,10 +108,9 @@ const exportedTypes = (entry: URL): ReadonlySet<string> => {
   return names;
 };
 
-const publicTypes = new Set([
-  ...exportedTypes(new URL("./index.ts", import.meta.url)),
-  ...exportedTypes(new URL("./react.ts", import.meta.url)),
-]);
+const indexTypes = exportedTypes(new URL("./index.ts", import.meta.url));
+const reactTypes = exportedTypes(new URL("./react.ts", import.meta.url));
+const publicTypes = new Set([...indexTypes, ...reactTypes]);
 
 const publicFunctions = new Set(
   Object.entries({ ...tokens, ...react }).flatMap(([name, value]) =>
@@ -183,10 +182,12 @@ describe("documented snippets", () => {
     snippets.forEach(({ label, index, code }) => {
       [...code.matchAll(importPattern)].forEach((match) => {
         const source = match[2];
-        const namespace = source === "@gpuixui/tokens/react" ? react : tokens;
+        const isReact = source === "@gpuixui/tokens/react";
+        const namespace = isReact ? react : tokens;
+        const types = isReact ? reactTypes : indexTypes;
         namedImports(match[1] ?? "").forEach((name) => {
           expect(
-            name in namespace || publicTypes.has(name),
+            name in namespace || types.has(name),
             `${label} #${index}: ${name} from ${source}`,
           ).toBe(true);
         });
