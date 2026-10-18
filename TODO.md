@@ -85,12 +85,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       inside `abcdef` (index 1–5), a right-edge click appends, a left-edge click
       prepends, a `<textarea>` takes `x\ny` and autosizes to 64 px, and Up
       returns to the previous line (`xz\ny`). **14 checks**, 1/1 exit `0`; live
-      registry `52 → 53`. Two levers: the middle click moved to the right edge
-      fails `expected 3 ± 2, got 6`, and rendering the area as an `<input>`
-      fails `expected "x\ny", got "xy"` (both exit `1`). Not claimed: a live
-      press-drag-release selection gesture — the async host has no
-      press/move/release verbs and `live-selection` already proves a real drag.
-      `COMPONENTS.md`'s `Text inputs` row and the README cite it.
+      registry `52 → 53`, and the merge gate then ran the whole registry at
+      **53/53** (`1125` checks), exit `0`. Two levers: the middle click moved
+      to the right edge fails `expected 3 ± 2, got 6`, and rendering the area as
+      an `<input>` fails `expected "x\ny", got "xy"` (both exit `1`). Not
+      claimed: a live press-drag-release selection gesture — the async host has
+      no press/move/release verbs and `live-selection` already proves a real
+      drag. `COMPONENTS.md`'s `Text inputs` row and the README cite it.
 
 `[x]` Guard the **headless smoke CLI's arguments** per plan `531`: `--list`
       prints the 101 ids and exits `0` without loading the binding; `--only`
@@ -624,7 +625,7 @@ focused id is `live-frames`.
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
       re-run on the final branch: headless **101/101** (`3536` checks) and live
-      **52/52** (`1111` checks), both exit `0`; `nub run check` and
+      **53/53** (`1125` checks), both exit `0`; `nub run check` and
       `nub run test` pass (1,384 tests). The workstream's own instruction is
       *never push to master*, so an owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)

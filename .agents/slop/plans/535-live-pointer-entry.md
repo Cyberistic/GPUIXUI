@@ -145,4 +145,4 @@ a real drag selects through the renderer's own drag. Adding the verbs is a
 separate task if a component ever needs a mid-drag observation (the headless
 `pointer-text-entry` covers the release path).
 
-`nub run check` and `nub run test` pass.
+The merge gate then ran the whole live registry at **53/53**, 1,125 checks, exit `0`. `nub run check` and `nub run test` pass.
