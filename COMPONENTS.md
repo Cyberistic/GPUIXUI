@@ -68,13 +68,13 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | data-grid | `data-grid-virtual` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
-| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast` | verified |
+| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles` | verified |
 | truncation | `text-truncation` | verified |
 
-The suite is **72/72 green here** (exit `0`, `.artifacts/smoke-report.json`,
-1973 checks).
+The suite is **74/74 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2070 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **22/22 green
@@ -700,27 +700,39 @@ All five playground scenarios now mount the shipped package; together with the
 primitives' own `test:runtime` suites, every interactive Tier 1 row has both an
 in-package and an end-to-end native verdict.
 
-**End-to-end Tier 2 composition (playground plan `330`).** Three scenarios mount
-the shipped `@gpuixui/components` through its published root: `tier2-dialog`
-drives `Dialog`/`ConfirmDialog` (centred surface, focus entry, Tab/Shift-Tab
-containment, Escape and focus return, Cancel holding initial focus, confirm
-reporting once and leaving the dialog open), `tier2-menu` drives
+**End-to-end Tier 2 composition (playground plans `330` and `344`).** Five
+scenarios mount the shipped `@gpuixui/components` through its published root:
+`tier2-dialog` drives `Dialog`/`ConfirmDialog` (centred surface, focus entry,
+Tab/Shift-Tab containment, Escape and focus return, Cancel holding initial
+focus, confirm reporting once and leaving the dialog open), `tier2-menu` drives
 `DropdownMenu`/`ContextMenu` (click and right-click open, the disabled row
 skipped by native focus, Enter activating once with focus restored, pointer
 placement within 12 px, Escape and outside dismissal) and `tier2-toast` drives
 `ToastProvider`/`ToastViewport` (a push paints a 380 px card inset 16 px, the
 action runs once and dismisses, the stack is oldest-above-newest, Escape is not a
-shortcut, a 300 ms duration dismisses itself). The suite is `64/64` and
-`tier2=verified`. Two consumer-path facts are recorded in plan `330` §8: the
-renderer needs **one root host element** (a provider with sibling children at the
-root paints nothing), and the components package is compiled by the consumer
-because its tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute.
-**In a real window (plan `331`):** `live-tier2-dialog`, `live-tier2-menu` and
+shortcut, a 300 ms duration dismisses itself). Plan `344` adds
+`tier2-foundation` (Card's three variants and its shadow rule, the primary badge
+painting the token role, the avatar's initials/32–40 px/`Image` node, the alert's
+`Alert` role and a working dismiss, the empty state's action, and List selection
+through click, arrow keys, Enter and a disabled row) and `tier2-navigation`
+(Tabs' panel swap, arrow selection with a disabled tab skipped and a labelled
+`TabPanel`, Accordion's single-mode replacement and `collapsible` Enter path,
+Collapsible's `expanded` header, Breadcrumb's `navigation`/`Link` nodes, and
+Pagination's `aria-selected` page, page click, Next/Prev and painted window).
+The suite is `74/74` (2070 checks) and `tier2=verified`. Consumer-path facts
+recorded in plan `330` §8 and plan `344` §8: the renderer needs **one root host
+element** (a provider with sibling children at the root paints nothing), the
+components package is compiled by the consumer because its tsconfig maps the JSX
+runtime to a `.d.ts` that `nub` cannot execute, and an accessibility node keeps
+its `author_id` only when the consumer authors `aria-id` (a role paints without
+one, and a role-less `text` is a `Label` with no authored id). **In a real
+window (plan `331`):** `live-tier2-dialog`, `live-tier2-menu` and
 `live-tier2-toast` repeat the consumer path live — the surface centres within
 2 px, the Tab trap keeps native focus inside, the menu surface takes native
 focus, the context menu lands within 12 px of the right click, the toast card is
 inset 16 px, and a 300 ms duration really dismisses itself. Live `16 → 19`,
-exit `0`, three real-window screenshots.
+exit `0`, three real-window screenshots. The foundation and navigation views are
+`TestRenderer` evidence only; live parity for them is a follow-up.
 
 ## Tier 2 — composition and feedback
 

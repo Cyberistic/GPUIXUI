@@ -25,7 +25,9 @@ shortcut probe (`window-key-shortcut`), the chart probe (`chart-svg`), the
 markdown probe
 (`markdown-surface`), the toast-viewport probe (`toast-lifecycle`), the
 collapsible-height probe (`collapsible-height`), the nested-layer probe
-(`nested-layer-dismiss`), the shell
+(`nested-layer-dismiss`), the shipped Tier 2 catalogue
+(`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
+`tier2-navigation`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -69,7 +71,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (72/72 green); -> 2 on a host with no binding
+# -> 0 here (74/74 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -606,7 +608,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `20/20`.
+exact, and focus/Escape and the close button hold. The live suite is `22/22`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -889,6 +891,37 @@ mask, so a typed secret is held, announced and painted in clear. A password
 field is an app-owned OS prompt, not a component; the shipped library must not
 pretend otherwise.
 
+## The shipped Tier 2 catalogue (plans `330`, `344`)
+
+Five scenarios mount `@gpuixui/components` through its **published root**, the
+same way a consumer does, and drive it with native input. They are the end-to-end
+half of the package's own behaviour tests and the source of the docs' native
+evidence.
+
+| Scenario | What it drives | Checks |
+| -------- | -------------- | ------ |
+| `tier2-dialog` | `Dialog`/`ConfirmDialog`: open, centre, focus entry, Tab trap, Escape and focus return, Cancel-first, confirm reports once | 24 |
+| `tier2-menu` | `DropdownMenu`/`ContextMenu`: click/right-click open, disabled row skipped, Enter once, placement, dismissal | 18 |
+| `tier2-toast` | `ToastProvider`/`ToastViewport`: push, 16 px inset, stack order, action once, a real 300 ms timer | 25 |
+| `tier2-foundation` | Card's three variants, Badge token paint, Avatar initials/size/`Image`, Alert role + dismiss, EmptyState action, List selection | 42 |
+| `tier2-navigation` | Tabs swap + arrows, Accordion single mode, Collapsible, Breadcrumb landmarks, Pagination window | 55 |
+
+Three consumer-path rules hold across all five:
+
+- the renderer reports **one root host element** — a provider whose children are
+  siblings at the root paints nothing, so each view has one frame element;
+- the package is compiled by the consumer (`tsconfig.vendor.json`) because its
+  tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute;
+- an accessibility node carries its `author_id` only when the consumer authors
+  `aria-id`. A role paints without one (`Image`, `Alert`, `Tab`), but a probe
+  cannot address it by id. Plan `344` measured all three; the runtime maps
+  `role="img"` to AccessKit `Image` even though the plan-160 table did not list
+  it.
+
+`tier2-foundation` and `tier2-navigation` are `TestRenderer` evidence. Live
+parity for them is a follow-up; the overlay views already run in a real window
+via `live-tier2-*` (plan `331`).
+
 ## The cost model (plan `302`)
 
 `scale-cost` reads the renderer's own two counters — `getRetainedElementCount`
@@ -911,10 +944,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **72/72 green** here (`exit 0`, 1973 checks):
+The suite is **74/74 green** here (`exit 0`, 2070 checks):
 
 ```
-72/72 scenarios passed · capabilities: layout=verified text=verified
+74/74 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1061,15 +1094,16 @@ narrower. Each deviation is deliberate and measured:
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
   the pinned-grid probe, the virtualized data-grid probe, the
   collapsible-height probe, the nested-layer probe and the variable-row-height
-  probe, the grid/wrap layout probe and the typography probe pass in real
-  GPUix 0.10.0 on this host (72/72), with a written report and screenshots. The **message-scroller** probe
+  probe, the grid/wrap layout probe, the typography probe and the **Tier 2
+  catalogue** (`tier2-foundation`, `tier2-navigation`; plan `344`) pass in real
+  GPUix 0.10.0 on this host (74/74), with a written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 20/20 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 22/22 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card and

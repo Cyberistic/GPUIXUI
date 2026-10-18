@@ -82,7 +82,9 @@ import {
 import { messageScrollerScenario } from "./message-scroller.js";
 import { scaleCostScenario } from "./scale.js";
 import { tier2DialogScenario } from "./tier2-dialog.js";
+import { tier2FoundationScenario } from "./tier2-foundation.js";
 import { tier2MenuScenario } from "./tier2-menu.js";
+import { tier2NavigationScenario } from "./tier2-navigation.js";
 import { tier2ToastScenario } from "./tier2-toast.js";
 import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
 
@@ -207,7 +209,9 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   messageScrollerScenario,
   scaleCostScenario,
   tier2DialogScenario,
+  tier2FoundationScenario,
   tier2MenuScenario,
+  tier2NavigationScenario,
   tier2ToastScenario,
   declaredStylesScenario,
   textTruncationScenario,
