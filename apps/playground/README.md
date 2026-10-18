@@ -1542,26 +1542,24 @@ given.
 
 ## Evidence on this host
 
-The suite is **97/97 green** here (`exit 0`, 3389 checks):
+The suite is **101/101 green** here (`exit 0`, 3536 checks, 2026-10-18):
 
 ```
-97/97 scenarios passed · capabilities: layout=verified root=verified text=verified
-input=verified focus=verified overlay=verified modal=verified
-floating=verified select=verified combobox=verified tooltip=verified
-a11y=verified scroll=verified panel=verified motion=verified
-virtual-list=verified table=verified tree=verified log=verified
-theme=verified workspace=verified docking=verified float=verified
-preview=verified command=verified content=verified drag=verified
-reorder=verified tree-reorder=verified selection=verified menu=verified
-menubar=verified
-components=verified search=verified terminal=verified chart=verified
-toast=verified grid=verified data-grid=verified columns=verified
-column-config=verified chrome=verified layers=verified scroller=verified
-scale=verified tier2=verified replace=verified states=verified
-truncation=verified grid-layout=verified typography=verified
-inspector=verified editor=verified data-toolbar=verified query=verified
-notification=verified crop=verified wizard=verified cell-editing=verified
-upload=verified qr=verified media=verified
+101/101 scenarios passed · capabilities: layout=verified root=verified text=verified
+input=verified focus=verified overlay=verified modal=verified floating=verified
+select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
+panel=verified motion=verified virtual-list=verified table=verified tree=verified
+log=verified theme=verified workspace=verified docking=verified float=verified
+preview=verified command=verified content=verified drag=verified reorder=verified
+tree-reorder=verified selection=verified menu=verified menubar=verified
+components=verified search=verified terminal=verified chart=verified toast=verified
+grid=verified data-grid=verified columns=verified column-config=verified
+chrome=verified layers=verified scroller=verified scale=verified tier2=verified
+replace=verified states=verified truncation=verified grid-layout=verified
+typography=verified inspector=verified editor=verified data-toolbar=verified
+query=verified notification=verified crop=verified wizard=verified
+cell-editing=verified upload=verified qr=verified media=verified window=verified
+frames=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1724,7 +1722,7 @@ narrower. Each deviation is deliberate and measured:
 
 ## What is proven here, honestly
 
-- The eighteen core capabilities (including the modal contract, floating
+- The nineteen core capabilities (including the modal contract, floating
   placement, the three published popups, the accessibility tree, the content
   surfaces, text selection, the detachable-tab float and the interactive hover
   card), the Tier 3/4 probes, the drag/file-drop probe, the app-level shortcut
@@ -1744,7 +1742,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (97/97), with a written report and
+  pass in real GPUix 0.10.0 on this host (101/101, 3536 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1752,9 +1750,9 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) was last run at 46/46 (929 checks);
-  plan `525` added `live-input-payload` (12/12 in a focused run), so the registry
-  is now 47 and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  The **real-window** suite (`smoke:live`) was last run in full at **50/50**
+  (1014 checks, the plan `529` re-baseline); the registry lists **50** and the
+  full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
