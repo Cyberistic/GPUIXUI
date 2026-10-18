@@ -163,6 +163,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [364](./364-motion-contract.md) | The motion group the numeric contract left half-governed | F | 019, 358, 360 | done |
 | [365](./365-overlay-scroll-height.md) | The overlay list must fit a row | F | 353, 360 | done |
 | [366](./366-status-selection.md) | The status label through a text selection | F | 083, 087, 354, 362 | done |
+| [367](./367-type-scale-contract.md) | The type scale must stay a scale | F | 058, 059, 358, 360 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1361,6 +1362,24 @@ the ramp steps they used, and every shipped set clears (4.661:1 XP light
 `infoText` on `active`, 7.370:1 AAA light `warningText` on `active`). No dark
 value, `contrastPairs` count, platform style or recipe changes; `primaryText`
 remains the one documented omission, now scoped to links.
+
+367 closes the last ladder the numeric contract left ungoverned: its typography
+group held a role's size positive and its leading above that size, but the scale
+the design system publishes — two ladders, prose `display` → `caption` and code
+`code` → `codeBlock`, with `bodyStrong` as the weight variant of `body` — lived
+only in `typography.test.ts` as two local arrays asserted on the shipped
+constants. A probe on the shipped light theme returned `[]` from both checkers
+for four edits: `h1` below `h2`, `codeBlock` above `code`, `bodyStrong` at body's
+weight, and `bodyStrong` smaller than body. The compositions are first-class —
+`card.tsx` paints `CardTitle` with `h3`, `alert.tsx` and `toast/viewport.tsx`
+paint `bodyStrong` for the panel title, and `field.tsx` paints helper text with
+`caption` — so an inverted scale renders a card title smaller than the body
+inside it and a flattened one makes an Alert title indistinguishable from its
+description. `proseLadder` and `codeLadder` move into `typography.ts`, both the
+test and the contract read them, and the contract holds each ladder
+`non-decreasing` in size plus `bodyStrong` no smaller than `body` and heavier
+than it. Every shipped theme, platform variant and recipe shares the identity
+type scale, so no value moves.
 
 ### Reference adoption (block `200–299`)
 
