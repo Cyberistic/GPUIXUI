@@ -1264,12 +1264,13 @@ retired once both branches are one
       current artifact; the scoped relative suites remain valid, and the full
       suite waits for plan `529`'s published-tag build.
       **Re-measured 2026-10-18 23:48 (artifact rebuilt 23:35):** 656 tests,
-      **544 passed / 112 failed across 20 of 42 files** — the same
+      **544 passed / 112 failed across 20 failing files** — the same
       focus/activation/trigger/geometry families (`fields` 30, `focus-ring` 19,
       `disabled` 15, `activation` 8, `overlay-trigger` 8), not a new regression.
       One of the 112 was this package's stale `__probe.runtime.test.tsx`
-      (plan `390`): after deleting it the count is 111 and the suite is
-      otherwise unchanged. No assertion was re-baselined.
+      (plan `390`). **After deleting it (re-run 2026-10-19):** 41 files, 655
+      tests, 544 passed / 111 failed, 19 failing files. No assertion was
+      re-baselined.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

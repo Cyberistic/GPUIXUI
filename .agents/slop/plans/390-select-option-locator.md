@@ -208,9 +208,10 @@ itself; the runtime restores it, which is what the test records).
   pre-existing artifact delta recorded in `TODO.md` and plan `529`, not this
   change (the new `testId` adds no style or layout).
 - A full `test:runtime` run on the 23:35 artifact: **656 tests, 544 passed /
-  112 failed across 20 of 42 files**; one of the 112 was the deleted probe. After
-  the deletion the count is 111 and no assertion was re-baselined. Recorded in
-  `TODO.md`.
+  112 failed, 20 failing files**; one of the 112 was the deleted probe. After
+  the deletion, a re-run measured **41 files, 655 tests, 544 passed / 111
+  failed, 19 failing files**. No assertion was re-baselined. Recorded in
+  `TODO.md` and the package README.
 - `nub run check` — exit `0` (check-tests, lint, format, every workspace type
   check); `nub run lint` — exit `0`; `nub run test` — exit `0` (primitives 682,
   components 308, playground 11, icons and the rest green).
