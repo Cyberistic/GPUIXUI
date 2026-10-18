@@ -60,6 +60,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 82/87 plans-and-harness
 
+`[x]` Scope **live smoke verification** per plan `515`: `--only <id[,id]>`
+      (repeatable) runs just those scenarios, `--all` runs the full suite,
+      `--list` prints the ids without a window, and a bare command, unknown id
+      or unknown flag exits `2` before the native import. A focused
+      `--only live-input` run passes `1/1`; the full suite is now an explicit
+      final-gate action. The swarm prompt tells agents to use `--only` while
+      iterating and `--all` only at the end. `nub run check` and `nub run test`
+      pass.
+
 `[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `393`
 
 `[x]` Probe a **reorderable list** per plan `391` — the unmeasured half of the

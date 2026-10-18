@@ -325,6 +325,12 @@ Cross-cutting records:
 > and are merged into `main` as each workstream completes; this index is the
 > union.
 
+### Cross-cutting smoke runner
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [515](./515-focused-live-smoke.md) | Focused live smoke: `--only`/`--all`, no accidental full runs | infra | `110`, `120` | done — focused `live-input` 1/1; `nub run check` + `nub run test` pass |
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.
