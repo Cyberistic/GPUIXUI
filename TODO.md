@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 162/219
+`[x]` `[███████░░░]` 163/220
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1213,14 +1213,18 @@ family (66 → 70 roles), `softAction(theme)` resolves it in one call, and
 `softActionPairs`/`softActionStepPairs`/`softActionLabelPairs` hold it to the
 surface, step, secondary and body floors in all 24 shipped sets (339 → 360
 pairs) with no colour moving (plan 394)
-`[ ]` Cross-team: `components` paints an action inside a soft status panel with
+`[ ]` Cross-team: `components` paints an action inside a tone-tinted Alert with
 `softAction(theme)` — `AlertDescription`'s documented `<Button>Try again</Button>`
-and `AlertDismiss` (and the Toast's action) paint the canvas-tuned `secondary` →
+and `AlertDismiss` paint the canvas-tuned `secondary` →
 `hover` → `active` ladder, which measures 1.0102:1 (Windows dark) to
 **1.0042:1** (Windows light `active` on `destructiveSoft`) against the tint, so
 the action's press and the filled action's rest have no visible shape; the raised
 family and `softActionForeground` are measured on every shipped set in both
-modes (plan 394; owner: `components`)
+modes. The **Toast's** action keeps the canvas neutral family
+(`filledControl(theme, "secondary")`): its card is `popover`, where `softAction`
+equals the card in every light shipped set (**1.0000:1**), so the raised family
+would lose its rest shape (plan 394, scope corrected by plan 397; owner:
+`components`)
 `[x]` Hold the modal scrim over the panel action — plan 394 made `softAction` a
 resting fill a window shows, but `overlaySurfaces` still named only the four
 `primary`/`secondary`/`accent`/`destructive` actions and the four soft panels,
@@ -1244,6 +1248,14 @@ family's foreground (the DatePicker today-ring precedent) or keep the outer
 shadow, then the tokens contract can hold `ring` on the filled families at the
 boundary floor (owner: `primitives`; found while auditing the contrast contract
 for plan 393)
+`[x]` Hold the panel action's scope — the reference, the design system, the
+README and the JSDoc offered `softAction` to "an Alert, Badge or Toast", but a
+Toast is a `popover` card (`toast/viewport.tsx:100`) and `softAction` equals that
+card in all 12 light shipped sets (**1.0000:1** in eleven, 1.0190:1 in XP), so
+following the guidance produced an invisible rest fill while the checker returned
+`[]`; the prose now names a tone-tinted Alert or Badge, the Toast action keeps the
+measured canvas neutral family on `popover`, and a guard fails if the phrase
+returns or a document loses the distinction. No colour or pair moves (plan 397)
 
 ## Phase C — Tier 1–2 components
 
