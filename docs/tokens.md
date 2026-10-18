@@ -955,6 +955,12 @@ too: the published runtime has no `:focus-visible` equivalent. The ring never
 changes an element's size or position, because a shadow is painted outside the
 border box and takes no space in layout.
 
+An invalid control recolours that ring with `destructive` (the runtime can draw
+only one), so the error colour becomes the focus indicator. `invalidRingPairs`
+holds it to the boundary floor on the surfaces a control sits on, which are not
+the field's own fill; `destructive` on `background` is shared with the invalid
+field edge.
+
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
 
@@ -1163,7 +1169,8 @@ clear control paint, the invalid field edge — `destructive` on the `input` fil
 on the `background` canvas a transparent field paints — the other
 status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 `accent` wash, the three state washes a focused control can sit on and the four
-soft status fills (`ringSoftPairs`), the
+soft status fills (`ringSoftPairs`), the `destructive` ring an invalid control
+paints on the same surfaces (`invalidRingPairs`), the
 functional control boundary on the `muted` panel, those washes and the four soft
 status fills (`controlBoundarySoftPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
@@ -1377,8 +1384,9 @@ text on a hovered or pressed filled action, ghost text on the `hover` and `activ
 muted text on `background`, `card`, `popover` and the `input` fill a field
 paints for its own chrome, secondary text on the `hover`, `active`, `accent`
 and `selected` washes a row paints behind a description, and status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
-3:1 for focus and essential boundaries in the default themes; 4.5:1 for them in
-the high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
+3:1 for focus and essential boundaries, including the `destructive` ring an
+invalid control paints, in the default themes; 4.5:1 for them in the
+high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
 measures `disabledForeground` on its own fill, the plain surfaces, the four row
 washes and the four soft status fills a Toast's or Alert's action sits on
@@ -1526,7 +1534,9 @@ generic `hover`/`active` washes the shipped Button paints, taking it from 290 to
 **292**. Plan `335` adds the control edge on the `selected` fill an outline
 action sits on in a selected row, taking it from 292 to **293**. Plan `339` adds
 secondary text on the `input` fill a field paints for its own chrome, taking it
-from 293 to **294**.
+from 293 to **294**. Plan `340` holds the invalid control's `destructive` focus
+ring on the eleven surfaces the ring adds — `background` is already the field
+edge — taking it from 294 to **305**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1690,7 +1700,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`339` closed.
+plans `076`–`340` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

@@ -271,7 +271,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | link | `primaryText` on the plain surfaces, the `muted` panel, the `hover`/`active` washes a link paints and the `accent`/`selected` fills a selectable row paints under it; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | invalid | a `destructive` edge on the `input` fill a field paints and on the `background` canvas a transparent field paints, held to the essential-boundary floor (3:1, 4.5:1 at AAA); the message itself uses `destructiveText`, not the fill |
-| focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused |
+| focus | `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by `borderWidth.strong`, painted from `ring` while the control is focused; an invalid control recolours it with `destructive` |
 | text selection | `selection` wash via `selectionColor`; body and secondary text keep their floors through the composited wash on every surface a glyph is selected on, including the four soft status fills (`xSoftForeground`), and the wash itself stays perceivable; `userSelect: "none"` opts chrome out |
 | status | a family (`info`/`success`/`warning`/`destructive`) via its solid role for a fill, its soft pair and designed edge through `statusTone(theme, tone)`, or its `xText` role for labels, icons and dots on a plain surface, the `muted` panel or the `hover`/`active`/`accent`/`selected` wash a row paints; a tone from untrusted data narrows with `isStatusTone` |
 
@@ -282,7 +282,10 @@ no `focusVisible` state** — a nested style offers only `hover` and `active`, a
 runtime can draw. The component applies it while it holds focus, which means a
 mouse press shows the ring too: there is no `:focus-visible` to distinguish a Tab
 from a click. A design that needs that distinction must keep a press from
-focusing the control (that limitation is real and is not worked around).
+focusing the control (that limitation is real and is not worked around). An
+invalid field's ring takes `destructive`; the runtime can draw only one ring, so
+the error colour *is* the focus indicator and the boundary floor applies where it
+is painted, not on the field's own fill.
 
 A filled control steps through its own family — `x` → `xHover` → `xActive` — so
 the state is an editable, measured fill, not a translucent tint that takes its
@@ -372,7 +375,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
-| focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) | 3:1 | 4.5:1 |
+| focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) | 3:1 | 4.5:1 |
 | graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, and `primary`/`destructive` on the `input` fill a slider thumb rings) | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |
