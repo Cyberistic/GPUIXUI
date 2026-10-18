@@ -1394,7 +1394,8 @@ retired once both branches are one
       still scrolls by keyboard. Measured limit: GPUix hit-tests the painted child and
       does not bubble hover to the ancestor, so a content-filled region is a keyboard
       trigger (documented on both pages). 2 element + 4 scoped runtime cases, both
-      directions proven (plan `399b`; offline 722 → 724).
+      directions proven, plus the `scrollTrigger` composed example (plan `399b`;
+      offline 722 → 724).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

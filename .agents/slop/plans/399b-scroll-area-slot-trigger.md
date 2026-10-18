@@ -185,8 +185,14 @@ Use `openWindow`/`Surface` from `runtime/fixture.tsx`, `a11yNode` from
 - `packages/primitives/docs/tooltip.mdx`: name `ScrollArea` among the parts that
   forward the contract in the existing trigger paragraph/limitation; keep the
   roving composites and `Box` as the exceptions.
+- `packages/primitives/examples/scroll-trigger.example.tsx` (new): an activity
+  log inside a `Tooltip`, registered as `scrollTrigger` (registry + `SCREENS` +
+  `docs/README.md`). Its log stack uses `pointerEvents: "none"` so the pointer
+  reaches the region — the documented hit-testing workaround, shown in a
+  mounted example.
 - `COMPONENTS.md`: add a plan-`399b` sentence to the ScrollArea row (slot
-  trigger; composed keyboard contract) and to the Tooltip row's trigger list.
+  trigger; composed keyboard contract), the example link to its Docs column,
+  and the trigger note to the Tooltip row.
 - `.agents/slop/plans/README.md`: add this plan's row.
 - `TODO.md`: add and immediately tick the task under the Primitives workstream
   (with the test counts), and keep the docs-site/live-suite rows untouched.
@@ -310,7 +316,11 @@ Stop and report — do not improvise — if:
 - **Docs/inventory:** `scroll-area.mdx` gains the API row, a Tooltip-trigger
   section and the measured hover limit; `tooltip.mdx` adds `ScrollArea` to the
   trigger table and states the hit-testing limit; `COMPONENTS.md` has both row
-  notes; `TODO.md` is ticked at 140/140 and this index row is `done`.
+  notes and the example link; `TODO.md` is ticked at 140/140 and this index row
+  is `done`.
+- **Example:** `examples/scroll-trigger.example.tsx`, registered as
+  `scrollTrigger`; the examples runtime registry-parity and mount cases pass
+  (1/1 each, scoped), and the example paints its "Activity log" headline.
 - **Gates, all exit `0`:** `nub run check` (check:tests, lint, fmt, all
   check-types), `nub run lint`, `nub run test` (primitives 724 + every other
   package green).

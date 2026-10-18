@@ -17,6 +17,7 @@ import { LayoutExample } from "./layout.example.js";
 import { NumberFieldExample } from "./number-field.example.js";
 import { OtpExample } from "./otp.example.js";
 import { RatingExample } from "./rating.example.js";
+import { ScrollTriggerExample } from "./scroll-trigger.example.js";
 import { SelectionExample } from "./selection.example.js";
 import { ToggleExample } from "./toggle.example.js";
 import { ToggleGroupExample } from "./toggle-group.example.js";
@@ -35,6 +36,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   numberField: NumberFieldExample,
   otp: OtpExample,
   rating: RatingExample,
+  scrollTrigger: ScrollTriggerExample,
   selection: SelectionExample,
   toggle: ToggleExample,
   toggleGroup: ToggleGroupExample,

@@ -46,6 +46,11 @@ const SCREENS = [
   },
   { id: "otp", root: "otp-example", headline: "Two-factor verification" },
   { id: "rating", root: "rating-example", headline: "Rate this release" },
+  {
+    id: "scrollTrigger",
+    root: "scroll-trigger-example",
+    headline: "Activity log",
+  },
   { id: "toggle", root: "toggle-example", headline: "Canvas toolbar" },
   {
     id: "toggleGroup",

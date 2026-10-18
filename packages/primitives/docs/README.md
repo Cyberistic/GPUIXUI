@@ -22,7 +22,7 @@ never as a promise.
 | [grid](grid.mdx) | `Grid` | [layout](../examples/layout.example.tsx) |
 | [separator](separator.mdx) | `Separator` | [layout](../examples/layout.example.tsx) |
 | [spacer](spacer.mdx) | `Spacer` | [layout](../examples/layout.example.tsx) |
-| [scroll-area](scroll-area.mdx) | `ScrollArea` | [layout](../examples/layout.example.tsx) |
+| [scroll-area](scroll-area.mdx) | `ScrollArea` | [layout](../examples/layout.example.tsx) · [scroll-trigger](../examples/scroll-trigger.example.tsx) |
 | [text](text.mdx) | `Text` | [typography](../examples/typography.example.tsx) |
 | [label](label.mdx) | `Label`, `labelledBy` | [form](../examples/form.example.tsx) |
 | [button](button.mdx) | `Button` | [form](../examples/form.example.tsx) |
