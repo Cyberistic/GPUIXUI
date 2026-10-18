@@ -14,8 +14,10 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import { nodesWithRole, type A11yNode } from "../internal/a11y.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -665,6 +667,27 @@ describe("Combobox", () => {
     expect(texts).toContain("Vacation cover");
     expect(texts).not.toContain("Calendar");
     expect(texts).not.toContain("Ada Lovelace");
+
+    picker.unmount();
+  });
+
+  it("exposes the trigger as a button with its expanded state", async () => {
+    const picker = renderComponent(<Picker />);
+    const named = (): ReadonlyArray<A11yNode> =>
+      Arr.filter(
+        nodesWithRole(picker.renderer, "button"),
+        (node) => node.name === "Assign reviewer",
+      );
+
+    expect(Option.map(Arr.head(named()), (node) => node.expanded)).toEqual(
+      Option.some(Option.some(false)),
+    );
+
+    await open(picker);
+
+    expect(Option.map(Arr.head(named()), (node) => node.expanded)).toEqual(
+      Option.some(Option.some(true)),
+    );
 
     picker.unmount();
   });

@@ -396,6 +396,7 @@ export const ComboboxTrigger = ({
   return (
     <HeadlessTrigger
       {...(label === undefined ? {} : { "aria-label": label })}
+      role="button"
       aria-expanded={open}
       ref={registerTrigger}
       testId={testId}

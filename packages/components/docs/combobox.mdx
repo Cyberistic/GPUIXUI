@@ -38,7 +38,7 @@ import {
 | Part | Responsibility |
 | ---- | -------------- |
 | `Combobox` | the headless root: ranking, selection, open state and focus restore |
-| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `aria-expanded`, a chevron |
+| `ComboboxTrigger` | the field-shaped control: selected labels or `placeholder`, `role="button"`, `aria-expanded`, a chevron |
 | `ComboboxContent` | the anchored popup surface |
 | `ComboboxInput` | the search field; Escape asks the root to restore focus |
 | `ComboboxList` | the ranked listbox, one `ComboboxItem` per visible option |
@@ -192,6 +192,10 @@ The search input keeps focus; the highlighted row is visual. **No
 `aria-activedescendant`** exists in 0.10.0, so assistive technology does not get
 the input→row relationship; `aria-selected` on the rows is the supported signal.
 
+The trigger is a `button` node named by `label` (or its text) with a live
+`aria-expanded`, so the open state is announced even though 0.10.0 has no
+`aria-haspopup` (see [Limitations](#limitations)).
+
 ## Theming
 
 The trigger paints `colors.background`, a `borderWidth.thin` border in
@@ -232,9 +236,10 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (27 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (28 tests):
 open + input focus, a centred popup and a near-bottom popup that opens above its
-trigger, filtering, ArrowDown + Enter selecting the **value**, the empty state,
+trigger, the trigger exposed as a button with its expanded state, filtering,
+ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
 add/remove with order, the disabled row, Escape restoring focus,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
