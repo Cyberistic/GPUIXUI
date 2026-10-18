@@ -38,9 +38,9 @@ describe("initialWidths", () => {
 
 describe("offsetOf", () => {
   it("starts each cell after the widths before it", () => {
-    expect(
-      COLUMNS.map((column) => offsetOf(initialWidths, column.id)),
-    ).toEqual([0, 200, 320, 410]);
+    expect(COLUMNS.map((column) => offsetOf(initialWidths, column.id))).toEqual(
+      [0, 200, 320, 410],
+    );
   });
 
   it("moves every later cell when one column grows", () => {

@@ -1,6 +1,6 @@
 # 349 — Tier 3 feasibility: resizable columns inside the virtualized, panned data grid
 
-**Status:** planned 2026-10-18 · **Phase:** D · **Workstream:** playground
+**Status:** landed 2026-10-18 · **Phase:** D · **Workstream:** playground
 (`apps/playground`, `packages/testing`)
 
 **Depends on:** `100`, `110`, `120`, `140`, `152`, `166`, `173`, `175`, `185`,
@@ -68,7 +68,9 @@ viewport holding a 560 px content area: a 28 px header row and a 280 px
 | `notes` | 150 | 80 | 300 |
 
 Header cells are absolutely positioned at `offsetOf(widths, id)` with
-`widthOf(widths, id)`; each carries a 6 px handle straddling its right edge.
+`widthOf(widths, id)`; each carries a 6 px handle on its right edge, fully
+inside the cell (a straddling handle loses its centre click to the next cell —
+measured, §10.1).
 Body cells are flex children of a `contentWidth` px row with the same widths.
 The frozen column places its rows from the list anchor (`getListScrollTop` read
 inside `onVisibleRange`, the plan-300 rule).
@@ -200,11 +202,12 @@ when selected.
 - header row `testId="columns-headrow"`, `position: "relative"`, height 28,
   `backgroundColor: muted`. For each column an absolutely positioned cell
   `testId={`columns-head-${id}`}` at `left: offsetOf`, `width: widthOf`,
-  carrying the label `<text>` and an absolutely positioned handle
+  carrying the label `<text>` and a handle
   `testId={`columns-handle-${id}`}`, `aria-id` and `aria-label`
   (`Resize <label> column`), `role="separator"`, `tabIndex={0}`,
-  `aria-valuetext={`${width}px`}`, `left: width - 3`, `width: 6`, full height,
-  `cursor: "col-resize"`, `hover: { backgroundColor: primary }`.
+  `aria-valuetext={`${width}px`}`, `left: width - 6` (fully inside the cell),
+  `width: 6`, full height, `cursor: "col-resize"`,
+  `hover: { backgroundColor: primary }`.
 - `<virtual-list testId="columns-list" ref={list} estimatedItemHeight={28}
   onVisibleRange={syncAnchor} style={{ width: contentWidth, height: 280 }}>`
   with 60 rows. A row is `testId={`columns-row-${id}`}`, flex, width
@@ -355,9 +358,87 @@ the column" fails.
 
 ## 10. Measured results
 
-_(Filled by the executor after the runs: the headless/live counts, the raw
-pan-shrink offset, every mutation proof with its exact failure text, and any
-limit worth recording. Keep the §9 vocabulary.)_
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `data-grid-columns` (headless) | 87 | pass — suite `79 → 80`, `2312 → 2399`, exit `0`, `columns=verified` |
+| `live-data-grid-columns` | 18 | pass — live `30 → 31`, `530 → 548`, exit `0`, one screenshot |
+
+Unit tests: `column-resize-model.test.ts` adds 14 tests; the playground suite is
+138 tests in 16 files (was 124).
+
+### 10.1 Facts that changed the plan
+
+- **A handle that straddles the cell boundary does not drag.** The first
+  implementation placed it at `left = width − 3`, so its centre sat exactly on
+  the boundary between its cell and the next. The click went to the **next**
+  header cell (the later sibling owns the boundary pixel), focus stayed
+  elsewhere and the drag did nothing. `left = width − 6` — fully inside its own
+  cell — fixes both the click and the drag. This is the plan's §9 STOP, and the
+  measured rule is in decision D51.
+- **The live `click(testId)` uses the unclipped centre.** `columns-handle-size`
+  sits at `x ≈ 407` inside a 360 px viewport; the live click landed outside the
+  scroller and left focus on `columns-reset` (the previous click's target). The
+  headless host intersects the clip through `hitBoundsOf`, so the two hosts
+  disagreed. The live twin now resizes the visible `name` column and pans before
+  touching the last one.
+- **A shrink clamps the live offset at once.** After narrowing the last column
+  (`content 710 → 490`) the runtime reported `x = -130` — the new maximum —
+  with no manual scroll, so the scenario asserts the pan end rather than a
+  repair.
+- **The header cells really are absolute.** A diagnostic first suspected they
+  resolved against the mount parent (plan `112`), but the measured `y` matched
+  the headrow within 1 px, so the planned fallback to a flex header was not
+  needed.
+- `maxPan` uses `Number.min` from `effect/Number`, not `Math`, matching the
+  package's Effect-first rule.
+
+### 10.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| header/body alignment | every compared column shares its left edge and width within 1 px, at rest, after a +40 drag, at `-350` and at `-130` |
+| the drag | `name 200 → 240`; the next header **and** body cell move `+40`; the header row widens `560 → 600` |
+| clamps | `name` 96 / 320; the last column 300 / 80 (inclusive) |
+| row width = content | `560` at defaults, `600`, `710`, `490` — the readout and the painted header row agree |
+| pan maximum | `-200` at defaults, `-350` after the last column's maximum, `-130` after its minimum |
+| shrink | the runtime offset follows immediately: `-350 → -130` |
+| anchor | `scrollToItem(45)` → readout `45` and `getListScrollTop[0] = 45`; a resize leaves both at `45`; the frozen row 45 stays aligned with body row 45 |
+| selection | stays `45` across a resize |
+| keyboard | `Right` `140 → 156`; `End` → 240; `Home` → 80 (a click focuses the handle) |
+| a11y | `Splitter` with `aria-valuetext = "200px"` |
+
+### 10.3 Mutation proofs
+
+Each mutation was applied, built, run with `--only data-grid-columns`, and
+reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | header cell width hard-coded to `column.width` | `the header paints the new width: expected 240 ± 1, got 200` |
+| M2 | body cell width hard-coded to `column.width` | `the status header and body share a left edge: expected 390 ± 1, got 350` |
+| M3 | the drag ignores the pointer delta (`start.start`) | `the drag grows the name column: expected 240, got 200` |
+| M4 | the clamp widened to `0…max×10` | `the drag clamps at the minimum: expected 96, got 0` |
+| M5 | `jump` scrolls the list to 0 instead of 45 | `the runtime anchor is the jump index: expected 45, got 0` |
+| M6 | pan-end derived from `initialWidths` | `the pan maximum follows the resize (x=-200): expected -350 ± 1, got -200` |
+
+Reverse proof (consumer wiring): `Right` made a no-op →
+`Right grows the column by one step: expected 156, got 140`.
+
+### 10.4 Limits recorded
+
+- No auto-fit/double-click reset, no column reordering and no persisted widths;
+  the reset control plus app state cover storage (as `workspace-restore` did for
+  layouts).
+- Every column is painted in this probe; column windowing stays
+  `grid-wide-table` (`185`).
+- The live suite cannot click a handle outside the viewport: the protocol's
+  `click(testId)` uses the unclipped centre. Pan first, or resize a visible
+  column.
+- The probe does not claim an off-window row keeps native focus across a
+  resize; it proves the committed widths, the anchor and the selection.
 
 ## 11. Acceptance
 

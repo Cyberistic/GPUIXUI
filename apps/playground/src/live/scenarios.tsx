@@ -3289,7 +3289,8 @@ const inspector: LiveScenario = {
 
 const dataGridColumns: LiveScenario = {
   id: "live-data-grid-columns",
-  title: "Live data grid: a header drag resizes the rows, the pan and the anchor",
+  title:
+    "Live data grid: a header drag resizes the rows, the pan and the anchor",
   capability: "columns",
   view: dataGridColumnsScenario.view,
   ready: "columns-frame",
@@ -3304,12 +3305,7 @@ const dataGridColumns: LiveScenario = {
         frozen.x + 150,
         1,
       );
-      yield* ctx.expectNear(
-        "the pan is the viewport width",
-        pan.width,
-        360,
-        1,
-      );
+      yield* ctx.expectNear("the pan is the viewport width", pan.width, 360, 1);
       yield* ctx.expectContains(
         "the grid starts at its default widths",
         yield* textOf(ctx, "columns-state"),
@@ -3364,7 +3360,12 @@ const dataGridColumns: LiveScenario = {
       yield* settle;
       yield* waitForText(ctx, "columns-state", "x=-200");
       const offset = yield* offsetOf(ctx, "columns-pan");
-      yield* ctx.expectNear("a live pan reaches the far edge", offset.x, -200, 1);
+      yield* ctx.expectNear(
+        "a live pan reaches the far edge",
+        offset.x,
+        -200,
+        1,
+      );
       const pannedStatus = yield* boxOf(ctx, "columns-head-status");
       const pannedBody = yield* boxOf(ctx, "columns-cell-0-status");
       yield* ctx.expectNear(

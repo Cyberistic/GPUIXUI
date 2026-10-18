@@ -73,7 +73,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (79/79 green); -> 2 on a host with no binding
+# -> 0 here (80/80 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -610,7 +610,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `29/29`.
+exact, and focus/Escape and the close button hold. The live suite is `31/31`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -657,6 +657,38 @@ mirror its anchor optimistically, because a programmatic `scrollToItem` has no
 range event to read. The probe is the suite's slowest (≈ 10–19 s) because a
 60-row re-render dominates; it is the cheapest shape that still proves the
 composition.
+
+## Resizable data-grid columns (plan `349`)
+
+`data-grid-columns` composes the two shapes a data grid needs: plan `130`'s
+drag-resized column and plan `338`'s panned virtual body. Four columns (560 px of
+content in a 360 px viewport) sit beside a 150 px frozen ID column; each header
+cell carries a 6 px handle that drives per-column width state. 87 checks; live
+twin `live-data-grid-columns` (18 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| header geometry | the pan starts at the frozen column's right edge; the header row is the content width; every visible header cell shares its body cell's left edge and width within 1 px |
+| the drag | a +40 drag on a header handle grows `name` `200 → 240`, moves the next header **and** body cell by exactly `+40`, and widens the header row to 600 |
+| clamps | drags stop inclusively at the declared bounds (`name` 96 and 320); the last column clamps at 300 |
+| the body follows | the virtual rows are flex children of a row whose width is the width sum: a resize repaints every row at the new width, with no stale cell |
+| the pan range | the row width is the sum of the widths, so the horizontal maximum follows a resize (`-200 → -350` after growing the last column). **A shrink clamps the live offset immediately**: `getScrollOffset` reported the new maximum `-130` without a manual scroll |
+| hit-testing | a 6 px handle straddling its cell's right edge loses its **centre** click to the *next* header cell — the later sibling owns the boundary pixel. The handle must sit fully inside its own cell (`left = width − 6`), which also keeps it reachable while panned |
+| anchor | `scrollToItem(list, 45)` anchors exactly; a resize then leaves the readout anchor at 45, `getListScrollTop[0]` at 45 and the frozen row 45 aligned with its body row |
+| selection | a selected row survives a resize |
+| keyboard | a click focuses the handle; `Right` grows by 16, `End` clamps to the maximum, `Home` to the minimum |
+| accessibility | `role="separator"` is an AccessKit `Splitter` carrying `aria-valuetext="200px"` (there is no `aria-valuenow`) |
+
+**Live lesson:** the automation protocol's `click(testId)` uses the element's
+**unclipped** centre, so a handle outside the 360 px viewport (the `size` column
+after a reset) is not reachable live even though the headless host intersects the
+clip. The live twin resizes a visible column instead, and pans before touching
+the last one. Every width mutation is a functional update, the plan-348 lesson.
+
+Limits: no auto-fit or double-click reset, no column reordering, no persisted
+widths (the reset control plus app state cover storage, as `workspace-restore`
+did for layouts), and every column is painted — column windowing stays
+`grid-wide-table`.
 
 ## Inspector panels (plan `348`)
 
@@ -1003,10 +1035,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **79/79 green** here (`exit 0`, 2312 checks):
+The suite is **80/80 green** here (`exit 0`, 2399 checks):
 
 ```
-79/79 scenarios passed · capabilities: layout=verified text=verified
+80/80 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1014,9 +1046,10 @@ virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
-toast=verified grid=verified data-grid=verified layers=verified
-scroller=verified scale=verified tier2=verified replace=verified
-grid-layout=verified typography=verified inspector=verified
+toast=verified grid=verified data-grid=verified columns=verified
+layers=verified scroller=verified scale=verified tier2=verified
+replace=verified grid-layout=verified typography=verified
+inspector=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1059,6 +1092,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | chart | bars from `div`s keep exact geometry/colour and hit-test; `<svg source>` is an **alpha mask tinted by one `color`** (one layer per series); SVG text/children are painted/retained but not addressable; `<img>` SVG data URLs are the full-colour path (linear + radial gradient, distinct fills) |
 | markdown | `<markdown>` paints GFM blocks as addressable text; a crossing drag copies the document; a coordinate click on a link fires `onLinkClick`; children are retained but unpainted; one named `Article` node, with no per-heading nodes |
 | inspector | Enter in a focused `<input>` is the field's `onSubmit` (not a bubbled key); a row editor's draft survives a virtual-list scroll and the committed model repaints it on return; a 96 px label column plus an 8 px gap positions the editor; an inspector edit resizes a rendered surface outside the list |
+| columns | a header-cell handle drives per-column width state; the virtual rows, the frozen column, the row width and the pan maximum follow within 1 px; a shrink clamps the live offset at once; a handle on the cell boundary loses its centre click to the next cell; the anchor and selection survive a resize; `Home`/`End`/arrows clamp |
 
 `legacy-probe/` keeps the 0.5.1 measurements as historical hardware evidence
 (`./legacy-probe/run.sh probe`); they never set a component status.
@@ -1116,6 +1150,10 @@ src/scenarios/grid-window.ts the pure window: clamp, visible range, keyboard rev
 src/scenarios/terminal.tsx  terminal grid: key path, scrollback, mono alignment, colour
 src/scenarios/chart.tsx     chart: bars, one svg layer per series, SVG text, img gradients
 src/scenarios/markdown.tsx  markdown: blocks, selection, links, children, a11y
+src/scenarios/data-grid.tsx the panned virtual grid: frozen column, sort and filter
+src/scenarios/column-resize-model.ts the pure column widths, offsets, row width and pan bound
+src/scenarios/column-resize-model.test.ts the pure width rules
+src/scenarios/data-grid-columns.tsx header-drag column resize over the virtual body
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1158,11 +1196,12 @@ narrower. Each deviation is deliberate and measured:
   the pinned-grid probe, the virtualized data-grid probe, the
   collapsible-height probe, the nested-layer probe and the variable-row-height
   probe, the grid/wrap layout probe, the typography probe, the **inspector
-  probe** (`property-panel`, plan `348`) and the **Tier 2 catalogue**
+  probe** (`property-panel`, plan `348`), the **column-resize probe**
+  (`data-grid-columns`, plan `349`) and the **Tier 2 catalogue**
   (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`)
-  pass in real GPUix 0.10.0 on this host (79/79), with a written report and
+  pass in real GPUix 0.10.0 on this host (80/80), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1170,7 +1209,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 30/30 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 31/31 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1183,7 +1222,8 @@ narrower. Each deviation is deliberate and measured:
   with its grace close (plan `199`), and the scroller's pin/no-yank/jump/stream
   path through the automation protocol (plan `301`), and a live inspector whose
   editor commits, scrolls out of and back into a virtual list, and resets
-  (plan `348`).
+  (plan `348`), and a live column drag that resizes the header, the virtual
+  rows and the pan (plan `349`).
 - The suite can fail: changing `panel-resize`'s expected delta `+80 → +81` makes
   it exit `1`, name the check, and report `panel=failed` (plan `140` §4).
   Pointing `swatch-background` at `card` does the same for the gallery

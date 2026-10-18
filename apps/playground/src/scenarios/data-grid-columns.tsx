@@ -26,7 +26,14 @@ import type { PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Pressable, Readout } from "../ui.js";
-import { ariaOf, fieldOf, focusedId, read, readoutNumber, text } from "./probes.js";
+import {
+  ariaOf,
+  fieldOf,
+  focusedId,
+  read,
+  readoutNumber,
+  text,
+} from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 import type { GridRow } from "./data-grid-model.js";
 import { anchoredWindow, indices, rowTop } from "./data-grid-model.js";
@@ -210,7 +217,10 @@ const DataGridColumnsProbe = () => {
       style={{ display: "flex", flexDirection: "column", gap: 8, width: 660 }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Pressable testId="columns-reset" onClick={() => setWidths(resetWidths())}>
+        <Pressable
+          testId="columns-reset"
+          onClick={() => setWidths(resetWidths())}
+        >
           <text style={{ color: theme.colors.foreground }}>reset widths</text>
         </Pressable>
         <Pressable
@@ -234,7 +244,11 @@ const DataGridColumnsProbe = () => {
       <div testId="columns-grid" style={{ display: "flex", height: 308 }}>
         <div
           testId="columns-frozen"
-          style={{ display: "flex", flexDirection: "column", width: FROZEN_WIDTH }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: FROZEN_WIDTH,
+          }}
         >
           <div
             testId="columns-frozen-head"
@@ -280,7 +294,9 @@ const DataGridColumnsProbe = () => {
                       borderColor: theme.colors.border,
                     }}
                   >
-                    <text style={{ fontSize: 11, color: theme.colors.foreground }}>
+                    <text
+                      style={{ fontSize: 11, color: theme.colors.foreground }}
+                    >
                       {`#${row.id}`}
                     </text>
                   </div>
@@ -327,7 +343,10 @@ const DataGridColumnsProbe = () => {
                   }}
                 >
                   <text
-                    style={{ fontSize: 12, color: theme.colors.mutedForeground }}
+                    style={{
+                      fontSize: 12,
+                      color: theme.colors.mutedForeground,
+                    }}
                   >
                     {column.label}
                   </text>
@@ -363,10 +382,18 @@ const DataGridColumnsProbe = () => {
                     onMouseUp={() => setPress(Option.none())}
                     onKeyDown={(event) =>
                       Match.value(event.key).pipe(
-                        Match.when("left", () => resizeBy(column.id, -KEY_STEP)),
-                        Match.when("right", () => resizeBy(column.id, KEY_STEP)),
-                        Match.when("home", () => resizeToBound(column.id, "min")),
-                        Match.when("end", () => resizeToBound(column.id, "max")),
+                        Match.when("left", () =>
+                          resizeBy(column.id, -KEY_STEP),
+                        ),
+                        Match.when("right", () =>
+                          resizeBy(column.id, KEY_STEP),
+                        ),
+                        Match.when("home", () =>
+                          resizeToBound(column.id, "min"),
+                        ),
+                        Match.when("end", () =>
+                          resizeToBound(column.id, "max"),
+                        ),
                         Match.orElse(() => {}),
                       )
                     }
@@ -417,11 +444,8 @@ const field = (ctx: Smoke.SmokeContext, key: string): number =>
 const selectedId = (ctx: Smoke.SmokeContext): string =>
   Option.getOrElse(fieldOf(state(ctx), "sel"), () => "none");
 
-const boundsOrFail = (
-  ctx: Smoke.SmokeContext,
-  testId: string,
-  label: string,
-) => ctx.expectSome(label, Option.fromNullishOr(ctx.host.bounds(testId)));
+const boundsOrFail = (ctx: Smoke.SmokeContext, testId: string, label: string) =>
+  ctx.expectSome(label, Option.fromNullishOr(ctx.host.bounds(testId)));
 
 const panOffset = (ctx: Smoke.SmokeContext): number =>
   Option.getOrElse(
@@ -674,7 +698,12 @@ export const dataGridColumnsScenario: PlaygroundScenario = {
         -130,
         1,
       );
-      yield* ctx.expectNear("the runtime pan is legal again", panOffset(ctx), -130, 1);
+      yield* ctx.expectNear(
+        "the runtime pan is legal again",
+        panOffset(ctx),
+        -130,
+        1,
+      );
       yield* Effect.forEach(
         ["name", "status", "size"],
         (id) => alignedColumn(ctx, id, 0),

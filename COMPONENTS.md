@@ -65,7 +65,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
 | grid | `grid-wide-table` | verified |
-| data-grid | `data-grid-virtual` | verified |
+| data-grid | `data-grid-virtual`, `data-grid-columns` | verified |
+| columns | `data-grid-columns`, `live-data-grid-columns` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow` | verified |
@@ -74,14 +75,14 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | truncation | `text-truncation` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 
-The suite is **78/78 green here** (exit `0`, `.artifacts/smoke-report.json`,
-2270 checks).
+The suite is **80/80 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2399 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **29/29 green
-here** (506 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **31/31 green
+here** (548 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
-`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2` and `replace` are confirmed there too
+`preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns` and `replace` are confirmed there too
 — the shell fills the window and navigates by click and
 Enter, typing reaches `onChange`/`onSubmit` in a live editor, a modal opens
 centred and Escape closes it, a wheel moves a live container with its
@@ -745,7 +746,7 @@ drives `Stepper` (derived status), `Timeline` (order, copy, current event),
 keyboard, clamp and the measured hiding mechanism), `ColorPicker` (swatch,
 normalised shorthand hex, invalid draft) and `NavigationMenu` (one panel,
 pointer and keyboard open, arrows, Escape, link select, outside press).
-The suite is `79/79` (2312 checks) and `tier2=verified`; live is `30/30` (530
+The suite is `80/80` (2399 checks) and `tier2=verified`; live is `31/31` (548
 checks). Consumer-path facts
 recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
 **one root host
@@ -838,7 +839,7 @@ remaining live-only defect (see the Tabs row).
 | Sortable tables | todo | ? | Grid + keyboard headers. **Live (`live-table-sort`, plan `340`):** a real click on `table-sort` reorders the row the automation tree points at (`table-first` becomes `Item 199`), a click selects `r199`, and the selection survives a re-sort. **Playground (`data-grid-virtual`, plan `338`):** sorting a virtualized grid from anchor 45 must reset the list to row 0 (`scrollToItem`) — without the reset the anchor stays 45 and the frozen column shows unrelated rows; ascending then paints `Item 000`, descending `Item 059`. |
 | Row selection | todo | ? | `aria-selected` is supported (verified). **Live (`live-table-sort`):** a real row click selects by row id and the selection survives a re-sort. **Playground (`data-grid-virtual`):** clicking a cell in a horizontally panned virtual row selects its row, moves native focus to the cell and does not move the pan. |
 | Column configuration | todo | ? | Grid tracks + a menu. **Two measured shapes:** a wide grid can window columns in component code (`grid-wide-table`) or put all columns inside a `<virtual-list>` that is wider than its viewport (`data-grid-virtual`). The second shape pans the header and every row from one plain scroller; a `deltaX` wheel over the **header** pans, while the same wheel over a body cell is swallowed by the list (a grid needs a pan affordance outside its rows). Columns are **component-windowed** on a wide table: `grid-wide-table` keeps only the visible columns in the tree (at `x=-360` columns 3–10; at the end 17–23), because the runtime keeps clipped children in its paint log. Track widths are `style.width` per cell; `gridTemplateColumns` is a count, not a track list. |
-| Resizable columns | todo | ? | Pointer events + grid tracks. |
+| Resizable columns | todo | yes (probe) | Pointer events + per-column width state. **`data-grid-columns` (plan `349`) measures the grid shape:** a 6 px handle on each header cell drags that column's width between inclusive bounds (`96…320`); the virtual rows are flex children of a row whose width is the sum, so a resize repaints every row at the new width with no stale cell, and header/body agree within 1 px; the horizontal scroller's maximum follows the sum (`-200 → -350`) and a **shrink clamps the live offset immediately** (`-350 → -130` with no manual scroll); the anchor (`getListScrollTop[0] = 45`), the frozen column and the selection survive a resize; a click focuses the handle and `Home`/`End`/arrows clamp. **Hit-testing:** a handle that straddles the cell boundary loses its **centre** click to the next header cell (the later sibling owns the boundary pixel), so it must sit fully inside its own cell. `role="separator"` is an AccessKit `Splitter` with `aria-valuetext` (no `aria-valuenow`). **Live (`live-data-grid-columns`):** a paced real drag resizes header and body, a real click + arrow resizes, and a real pan keeps the alignment; the automation `click(testId)` uses the **unclipped** centre, so a clipped handle needs a pan first. Plan `130`'s `table-column-resize` remains the plain-flex-row case. No auto-fit, reorder or persisted widths. |
 | Filtering controls | todo | ? | `div` + `<input>`. |
 | Data toolbars | todo | ? | Toolbars + Button groups. |
 | Virtualized lists | todo | yes | `<virtual-list>` published. `scroll-into-view` measures the scroll contract: `focusElement` reveals a row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; **`getScrollOffset` saturates on a virtual list — persist `getListScrollTop`** (`[itemIndex, offsetInItemPx, viewportHeightPx]`); a scroll does not move focus. **A resized pane (`workspace-panes`)** re-windows the list against the **clipped** intersection (a list fixed at `120` still painted fewer rows when its pane shrank), and the anchor survives the resize and a tab switch. **Variable heights (`variable-rows`, plan `198`):** declared row heights stack exactly (20/40/60), an in-place expansion reflows the rows below by the exact delta with the anchor intact, and `scrollToItem`/`scrollIntoView` stay exact — so an expandable row or a wrapped cell needs no fixed-height assumption. The list needs a resolved height: derive it from the split. **Live (`live-table`, plan `197`):** a real window reports the same anchor through the renderer — `[0, 0, 258]` at rest and `[120, 0, 258]` after `scrollToItem(120)` — so persistence is assertable live. |
