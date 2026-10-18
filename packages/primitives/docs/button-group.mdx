@@ -106,8 +106,8 @@ axis changes layout only, so neither the tokens nor the clip follow it.
 
 - The group is for `Button` / `IconButton` children: the shape rule reaches
   `Button` only (through `GroupShapeContext`), so another control would keep its
-  own radius **and** lose its outer focus ring to the clip. A pressed set belongs
-  in `ToggleGroup`, which owns that paint.
+  own radius instead of sharing the group's shape. A pressed set belongs in
+  `ToggleGroup`, which owns that paint.
 - In `attached` mode the ring is drawn just **inside** the button, not around
   it: the group's clip removes an outer ring. The width and colour still come
   from `focusRing`.
