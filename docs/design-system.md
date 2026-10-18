@@ -250,20 +250,26 @@ Two border roles:
 
 Elevation is a semantic level, not a literal shadow: `sm` for resting cards,
 `md` for menus and popovers, `lg` for dialogs and the command palette. The
-runtime paints one shadow per element — no `inset`, no shadow list — so a level
-is exactly one shadow, read with `elevationShadow(theme, level)`. A level is
-geometry plus an alpha; the tint is the single `shadow` role, so a brand retints
-every level by editing one value. Overlay layering uses the `overlay` scrim
-colour, a translucent wash a Dialog paints across the window. The scrim is held
-to the same 1.05:1 perceivability floor as every other painted value, on the six
-surfaces it covers — `background`, `card`, the `muted` panel, the `input` fill a
-form paints, the persistent `selected` fill a table or list keeps and `popover` —
+runtime paints one shadow per element — no `inset` and no shadow list — so a
+level is a list a web renderer can composite, a shipped level carries at most
+one entry, and the entry the runtime paints is read with
+`elevationShadow(theme, level)` (`elevationShadows` resolves the whole list). A
+level is geometry plus an alpha; the tint is the single `shadow` role, so a
+brand retints every level by editing one value. Overlay layering uses the
+`overlay` scrim colour, a translucent wash a Dialog paints across the window.
+The scrim is held to the same 1.05:1 perceivability floor as every other painted
+value, on the fourteen surfaces it covers — the four base surfaces
+(`background`, `card`, `muted`, `popover`), the `input` fill a form paints, the
+persistent `selected` fill a table or list keeps, the four resting filled
+actions (`primary`, `secondary`, `accent`, `destructive`) and the four soft
+status panels (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`) —
 because a scrim that composites to the surface beneath it is an invisible modal
-backdrop. The transient pointer washes are the one exclusion: reaching the
-dialog takes the pointer off the row. On the high-contrast dark theme's pure
-black canvas a dark veil cannot darken anything, so that theme veils with light:
-the modal is separated by a light wash, its own edge and elevation instead of a
-darker backdrop.
+backdrop. The transient pointer states are the exclusion: `hover`, `active` and
+the filled families' `xHover`/`xActive` steps are gone by the time the pointer
+reaches the dialog, so a scrim over one is not a composition the system
+supports. On the high-contrast dark theme's pure black canvas a dark veil cannot
+darken anything, so that theme veils with light: the modal is separated by a
+light wash, its own edge and elevation instead of a darker backdrop.
 `elevation.overlay` is a different concern — a reserved shadow level, empty so
 the shape stays stable; a consumer who defines one is held to the same finite
 geometry and alpha as `sm`, `md` and `lg`, because `elevationShadow` will

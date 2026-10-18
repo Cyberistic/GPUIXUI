@@ -78,6 +78,7 @@ import {
   inactivePairs,
   inactiveSurfaces,
   markPairs,
+  overlaySurfaces,
   selectionSurfaces,
   softBorderSurfacePairs,
   stateFillRoles,
@@ -221,26 +222,27 @@ describe("docs/tokens.md", () => {
   });
 });
 
-describe("docs/tokens.md contract counts", () => {
-  const countWords = [
-    "zero",
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-  ] as const;
-  const countWord = (count: number): string =>
-    countWords[count] ?? String(count);
+const countWords = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+] as const;
 
+const countWord = (count: number): string => countWords[count] ?? String(count);
+
+describe("docs/tokens.md contract counts", () => {
   it("states the surface counts of the nested pair lists", () => {
     const prose = markdown.replace(/\s+/g, " ");
 
@@ -270,6 +272,48 @@ describe("docs/tokens.md contract counts", () => {
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain("plans `076`–`348` closed");
+  });
+});
+
+/**
+ * Plan 376: the design-system's elevation paragraph is the page's rationale for
+ * the scrim and the elevation shape, and nothing read it. Plan 375 grew
+ * `overlaySurfaces` from six to fourteen and updated the §9 table and
+ * explanation, leaving §7 saying "the six surfaces it covers" — the same page
+ * stating two counts. The paragraph also called a level "exactly one shadow"
+ * while `Elevation` is a list `elevationShadows` resolves, and called the
+ * pointer washes "the one exclusion" though the filled families' hover and
+ * press steps are excluded too. These cases slice the paragraph and hold it to
+ * the contract, so the next scrim surface cannot ship with a stale rationale.
+ */
+describe("docs/design-system.md elevation paragraph", () => {
+  const paragraph = (start: string, end: string): string => {
+    const from = designSystem.indexOf(start);
+    const to = designSystem.indexOf(end, from);
+    expect(from, start).toBeGreaterThanOrEqual(0);
+    expect(to, end).toBeGreaterThan(from);
+    return designSystem.slice(from, to);
+  };
+
+  it("names every surface the modal scrim covers", () => {
+    const scrim = paragraph("The scrim is held", "darker backdrop.");
+    expect(scrim).toContain(
+      `the ${countWord(overlaySurfaces.length)} surfaces it covers`,
+    );
+    expect(scrim).not.toContain("six surfaces");
+    overlaySurfaces.forEach((surface) => {
+      expect(scrim, surface).toContain(`\`${surface}\``);
+    });
+  });
+
+  it("describes a level as the list the helpers read", () => {
+    const elevation = paragraph(
+      "Elevation is a semantic level",
+      "Motion is a scale beside elevation",
+    );
+    expect(elevation).toContain("`elevationShadows`");
+    expect(elevation).toContain("at most one entry");
+    expect(elevation).not.toContain("exactly one shadow");
   });
 });
 
