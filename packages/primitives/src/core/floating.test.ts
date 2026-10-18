@@ -286,6 +286,8 @@ describe("tipWidthCap", () => {
       align: "start",
       anchorLeft: 17,
       anchorRight: 400,
+      triggerLeft: 17,
+      triggerRight: 400,
       viewportWidth: 1280,
       margin: 8,
       ...overrides,
@@ -315,15 +317,50 @@ describe("tipWidthCap", () => {
     expect(cap({ align: "center", anchorLeft: 12, anchorRight: 100 })).toBe(96);
   });
 
-  it("only takes the window cap beside its trigger", () => {
-    // On a left/right side `align` places the other axis, so the trigger's x
-    // does not bound the width (the side decision already fitted it).
-    expect(cap({ side: "left" })).toBe(1264);
-    expect(cap({ side: "right", align: "end" })).toBe(1264);
+  it("caps a tip beside its trigger at the room on that side", () => {
+    // The bug guarded (plan 393): a side cap used the window although the
+    // trigger bounds it, so a 60-word left-side tip painted 1 262 px where its
+    // side offered 984 and covered the trigger.
+    // A left-side tip ends at the trigger's left edge: 992 - 8 = 984.
+    expect(cap({ side: "left", triggerLeft: 992, triggerRight: 1112 })).toBe(
+      984,
+    );
+    // A right-side tip starts at the trigger's right edge: 1280 - 8 - 132.
+    expect(cap({ side: "right", triggerLeft: 12, triggerRight: 132 })).toBe(
+      1140,
+    );
+  });
+
+  it("keeps `align` out of a side cap, because it places the other axis", () => {
+    expect(
+      cap({
+        side: "left",
+        align: "center",
+        triggerLeft: 900,
+        triggerRight: 1200,
+      }),
+    ).toBe(892);
+    expect(
+      cap({
+        side: "left",
+        align: "end",
+        triggerLeft: 900,
+        triggerRight: 1200,
+      }),
+    ).toBe(892);
+  });
+
+  it("still bounds a side cap by the window", () => {
+    // A trigger beyond the window cannot ask for a wider tip than the window.
+    expect(cap({ side: "left", triggerLeft: 4000, triggerRight: 4100 })).toBe(
+      1264,
+    );
+    expect(cap({ side: "right", triggerLeft: 0, triggerRight: 0 })).toBe(1264);
   });
 
   it("never returns a negative or fractional cap", () => {
     expect(cap({ viewportWidth: 10 })).toBe(0);
+    expect(cap({ side: "left", triggerLeft: 4, triggerRight: 100 })).toBe(0);
     expect(cap({ anchorLeft: 2000 })).toBe(0);
     expect(cap({ align: "center", anchorLeft: 1279, anchorRight: 1300 })).toBe(
       0,

@@ -146,7 +146,7 @@ would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip pain
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `content` | `ReactNode` | — (required) | the tip; long text wraps inside a window-wide cap |
+| `content` | `ReactNode` | — (required) | the tip; long text wraps inside a cap set by the resolved side's room |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
 | `open` | `boolean` | uncontrolled | controls the tip; requests arrive through `onOpenChange` |
 | `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
@@ -193,10 +193,14 @@ single-line `nowrap` form.
 window margin but never caps its width: measured, a 200-word tip painted **6 270 px
 wide** in a 1 280 px window, its text 6 258 px. The cap is the room the resolved
 side and alignment actually have — a `start` tip begins at the anchor's left, an
-`end` tip ends at its right, a centred tip needs equal room on both sides, and a
-tip beside its trigger takes the window width. The painted tip's own box is the
-anchor once it exists, so the second frame is exact even though the wrapper's
-root can sit a few pixels off the trigger the layer anchors to.
+`end` tip ends at its right, and a centred tip needs equal room on both sides.
+A tip **beside** its trigger is capped by that side's room: a `left` tip ends at
+the trigger's left edge (`triggerLeft − margin`), a `right` one starts at its
+right edge (`viewportWidth − margin − triggerRight`), so a long tip wraps
+instead of painting across its trigger (plan `393`). `align` places the other
+axis on those sides and does not change the width. The painted tip's own box is
+the anchor once it exists for a vertical side; a horizontal side uses the
+trigger's edges, because a clamped layer's box would sit across the trigger.
 
 ## Limitations
 
@@ -220,10 +224,10 @@ root can sit a few pixels off the trigger the layer anchors to.
   exist yet. Once it is painted, its measured height drives the decision, so a
   wrapped tip flips on the next frame instead of staying on a side with no room
   (plan `391`). A tip taller than both gaps still clamps.
-- **A tip wider than the room on both sides is clamped.** The horizontal side is
-  chosen from the tip's measured width, but a tip wider than both sides can
-  still be clamped by the runtime and painted over its trigger. The same holds
-  vertically for a tip taller than both gaps.
+- **A tip taller than the window is clamped.** Text wraps inside the width cap,
+  but there is no height cap or scrolling; a tip longer than the window is
+  clipped by the runtime at the window edge. A paragraph belongs in a popover,
+  not a tooltip.
 - No `aria-describedby` association: the content is the trigger's
   `aria-description` instead, which is a description but not a reference.
 - A non-string tip has no description on the trigger and no name of its own.
@@ -255,7 +259,11 @@ root can sit a few pixels off the trigger the layer anchors to.
   `top` and its fallback below, the horizontal fit rule (fits, flips, exact fit,
   roomier), the alignment rule on both axes (widths above/below, heights
   beside — plans `098`, `335`), and the tip width cap for every alignment and a
-  horizontal side (plan `391`).
+  horizontal side (plans `391`, `393`).
+- `runtime/tooltip-side-cap.runtime.test.tsx` — a 60-word tip on a `left` and a
+  `right` side is no wider than that side's room (the failing direction painted
+  1 262 px where 984/1 140 were offered), a short tip keeps its natural width,
+  and two triggers 120 px apart get tips 120 px apart (plan `393`).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)

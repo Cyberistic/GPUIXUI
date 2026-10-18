@@ -342,8 +342,10 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const requested = props.align ?? "start";
   // The runtime keeps the layer's left edge inside the margin but never caps
   // its width (measured: a 200-word tip painted 6 270 px, plan `391`). The cap
-  // is the room the resolved side and alignment actually have, so a tip cannot
-  // be wider than the window whichever side it opens on.
+  // is the room the resolved side and alignment actually have. A vertical side
+  // measures from the painted tip's own box (its true anchor); a side beside
+  // the trigger takes the trigger's edges, because the painted box of a clamped
+  // layer would sit across the trigger (plan `393`).
   const cap = Option.match(Option.fromNullishOr(box), {
     onNone: () => Math.floor(viewport.width - 2 * FLOATING_MARGIN),
     onSome: (measured) => {
@@ -359,6 +361,8 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
         align: requested,
         anchorLeft,
         anchorRight,
+        triggerLeft: measured.left,
+        triggerRight: measured.right,
         viewportWidth: viewport.width,
         margin: FLOATING_MARGIN,
       });

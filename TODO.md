@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 132/132
+`[x]` `[███████████]` 133/133
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1265,6 +1265,17 @@ retired once both branches are one
       `formatNumber` treats a non-finite precision as `0`; 3 core + 1 live case
       (six fields plus a step), both directions proven (offline 690 → 693, the
       scoped live file 5/5; plan `392`).
+`[x]` `packages/primitives`: **a long tooltip beside its trigger painted over
+      it** — measured (2026-10-19): a 60-word `side="left"` tip on a trigger at
+      `x 992..1112` painted `x 15..1277` (1 262 px wide) although its side
+      offered `992 − 8 = 984`, and a right-side tip painted 1 262 px where 1 140
+      were free; `tipWidthCap` returned only the window cap beside the trigger,
+      the same class plan `379` fixed for `Select`. A horizontal side now caps at
+      `triggerLeft − margin` / `viewportWidth − margin − triggerRight` from the
+      trigger's edges (`align` places the other axis), so the tip wraps on its
+      own side and a short tip keeps its width; 3 core + 4 scoped runtime cases,
+      four mutations fail by name (offline 693 → 695, scoped live 4/4; plan
+      `393`). The false "wider than both sides is clamped" limitation is gone.
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

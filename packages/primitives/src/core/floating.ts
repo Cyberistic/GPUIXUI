@@ -192,6 +192,10 @@ export interface TipWidthRequest {
   readonly align: LayerAlign;
   readonly anchorLeft: number;
   readonly anchorRight: number;
+  /** The trigger's left edge: a layer beside its trigger is bounded by it. */
+  readonly triggerLeft: number;
+  /** The trigger's right edge: a layer beside its trigger is bounded by it. */
+  readonly triggerRight: number;
   readonly viewportWidth: number;
   readonly margin: number;
 }
@@ -204,10 +208,15 @@ export interface TipWidthRequest {
  * (plan `391`). A `start`-aligned vertical tip begins at the anchor's left
  * edge, an `end`-aligned one ends at its right, and a centred one needs equal
  * room on both sides of the anchor's centre — so the cap is the room the
- * alignment actually has. A tip beside its trigger is not aligned on this axis
- * (its `align` places the other one), so it only takes the window cap.
+ * alignment actually has.
  *
- * `0` means the alignment has no room at all; the caller omits the cap then and
+ * A tip **beside** its trigger is capped by the room on that side: the trigger's
+ * edge is where the layer ends, and `align` places the other axis there. The cap
+ * deliberately takes the trigger's edges rather than the painted tip's box: once
+ * the runtime has clamped an over-wide layer, that box sits across the trigger
+ * and would keep the error (the class plan `379` fixed for `Select`).
+ *
+ * `0` means the side has no room at all; the caller omits the cap then and
  * lets the runtime clamp, because a zero-width tip would paint nothing.
  */
 export const tipWidthCap = ({
@@ -215,11 +224,25 @@ export const tipWidthCap = ({
   align,
   anchorLeft,
   anchorRight,
+  triggerLeft,
+  triggerRight,
   viewportWidth,
   margin,
 }: TipWidthRequest): number => {
   const windowCap = Math.max(0, viewportWidth - 2 * margin);
-  if (isHorizontalSide(side)) return Math.floor(windowCap);
+  if (isHorizontalSide(side))
+    return Math.floor(
+      Math.max(
+        0,
+        Math.min(
+          windowCap,
+          availableWidth(
+            { triggerLeft, triggerRight, viewportWidth, margin },
+            side,
+          ),
+        ),
+      ),
+    );
   if (align === "start")
     return Math.floor(
       Math.max(
