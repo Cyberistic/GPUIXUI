@@ -263,10 +263,11 @@ the tint is the single `shadow` role, so a
 brand retints every level by editing one value. Overlay layering uses the
 `overlay` scrim colour, a translucent wash a Dialog paints across the window.
 The scrim is held to the same 1.05:1 perceivability floor as every other painted
-value, on the fourteen surfaces it covers — the four base surfaces
+value, on the fifteen surfaces it covers — the four base surfaces
 (`background`, `card`, `muted`, `popover`), the `input` fill a form paints, the
 persistent `selected` fill a table or list keeps, the four resting filled
-actions (`primary`, `secondary`, `accent`, `destructive`) and the four soft
+actions (`primary`, `secondary`, `accent`, `destructive`), the raised action a
+status panel carries (`softAction`) and the four soft
 status panels (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`) —
 because a scrim that composites to the surface beneath it is an invisible modal
 backdrop. The transient pointer states are the exclusion: `hover`, `active` and
@@ -480,7 +481,7 @@ Colour is checked, not assumed. The token suite enforces:
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The modal scrim is
-measured composited rather than as a value: `overlay` over the fourteen surfaces
+measured composited rather than as a value: `overlay` over the fifteen surfaces
 a dialog covers — the four base surfaces, the `input` fill a form paints, the
 persistent `selected` fill, the four resting filled actions and the four soft
 status panels a window shows — which caught the AAA dark backdrop painting
@@ -489,7 +490,7 @@ macOS light `selected` fill used as a scrim painting **1.000:1** on a selected r
 until plan `359` measured it. Plan `375` closed the same gap for the page's
 filled actions and status panels: a scrim equal to `primary` or to `infoSoft`
 left the control or the Alert undimmed while the checker returned `[]`. The
-tightest of the fourteen pairs is **1.075:1** (high-contrast dark, `overlay` on
+tightest of the fifteen pairs is **1.075:1** (high-contrast dark, `overlay` on
 `primary`), so no colour moves. A soft status surface is measured on
 the quiet panel as well as the canvas, card and popover: a status badge or small
 Alert in a sidebar is a real composition, and the platform light variants change

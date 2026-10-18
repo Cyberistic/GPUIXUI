@@ -189,6 +189,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [392](./392-text-hierarchy.md) | The text tiers must stay a hierarchy | F | 306, 309, 317, 351, 383, 387, 388, 391 | done |
 | [393](./393-loading-pulse.md) | The loading pulse must stay visible | F | 019, 094, 309, 322, 358, 391, 392 | done |
 | [394](./394-soft-status-panel-action.md) | The action inside a soft status panel | F | 014, 090, 092, 093, 097, 300, 309, 338, 356, 371, 383, 387, 393 | done |
+| [395](./395-scrim-over-panel-action.md) | The scrim over the panel action | F | 099, 359, 375, 394 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1823,6 +1824,14 @@ band in each mode, so the fix is a designed raised family
 `softAction(theme)` resolver rather than a palette move. The contract grows
 339 → 360 pairs and 66 → 70 roles, every shipped set passes, and the `components`
 migration is recorded cross-team.
+
+Plan `395` closes the gap plan `394` opened in an earlier list: `softAction` is a
+resting fill a window shows, but the modal scrim contract still named only the
+four `primary`/`secondary`/`accent`/`destructive` actions and the four soft
+panels, so an `overlay` that composited to the Alert's "Try again" button left it
+undimmed while the checker returned `[]`. The fill joins `overlaySurfaces`
+(14 → 15 scrim pairs); every shipped set already clears 1.05:1 (1.5519:1 at the
+tightest, AAA dark), so no colour moves.
 
 ## How to use a plan
 

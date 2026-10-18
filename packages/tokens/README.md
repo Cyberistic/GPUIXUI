@@ -335,9 +335,10 @@ guarantee rather than a fix (plan 093). An invalid control recolours the ring
 with `destructive`, and the runtime can draw only one, so the error ring is the
 focus indicator: the same surfaces are measured for it too (`invalidRingPairs`,
 plan 340). The modal scrim is measured the same way:
-`overlay` composited over the fourteen surfaces a dialog covers — the four base
+`overlay` composited over the fifteen surfaces a dialog covers — the four base
 surfaces, the `input` fill a form paints, the persistent `selected` fill a
-table or list keeps, the four resting filled actions and the four soft status
+table or list keeps, the four resting filled actions, the raised action a status
+panel carries and the four soft status
 panels a window shows — and held to 1.05:1, which caught the AAA dark theme's
 black veil painting **1.000:1** on its pure black canvas and turned it into a
 light one (plan 099) and a macOS light scrim equal to its own `selected` fill

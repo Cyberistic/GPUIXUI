@@ -1502,8 +1502,9 @@ canvas washes, which measure **1.0042:1** at worst on a tint (plan `394`).
 The modal scrim is measured the same way, because its job is to change the
 surface beneath it: `overlayWashPairs` composites `overlay` over the surfaces a
 dialog covers — `overlaySurfaces` is `background`, `card`, `muted`, `input`,
-`selected`, `popover`, the four resting filled actions (`primary`, `secondary`,
-`accent`, `destructive`) and the four soft status panels (`infoSoft`,
+`selected`, `popover`, the resting filled actions (`primary`, `secondary`,
+`accent`, `destructive`), the raised action a status panel carries (`softAction`)
+and the four soft status panels (`infoSoft`,
 `successSoft`, `warningSoft`, `destructiveSoft`) — and holds the painted value
 to the `surface` floor. A scrim that composites to its own surface is an
 invisible modal backdrop; the audit found high-contrast dark's `#000000CC`
@@ -1516,8 +1517,9 @@ so a scrim over a transient state is not a composition the system supports.
 `selected`, `input`, the resting filled actions and the soft status panels are
 not transient — a table, list or tree keeps a selected row while a modal opens
 over it, every field in the layout behind a form dialog sits on the `input`
-fill, the page's buttons keep their resting fills, and an Alert or Toast stays
-on screen — so plans `359` and `375` measured them too. The gap was real: macOS
+fill, the page's buttons keep their resting fills, a status panel's action keeps
+its raised fill, and an Alert or Toast stays
+on screen — so plans `359`, `375` and `395` measured them too. The gap was real: macOS
 light's own `selected` fill used as `overlay` composited to **1.000:1** on a
 selected row while the checker returned `[]`, because the four base surfaces all
 passed. The tightest shipped pair is **1.075:1** (high-contrast dark, `overlay`
@@ -2413,21 +2415,23 @@ two roles are already apart in both Windows recipes, and Windows dark is the
 tightest at **9.07:1**, so no colour moves.
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
-over `background`, `card`, `muted`, `input`, `selected`, `popover`, the four
-resting filled actions (`primary`, `secondary`, `accent`, `destructive`) and the
+over `background`, `card`, `muted`, `input`, `selected`, `popover`, the
+resting filled actions (`primary`, `secondary`, `accent`, `destructive`), the
+raised action a status panel carries (`softAction`) and the
 four soft status panels (`infoSoft`, `successSoft`, `warningSoft`,
 `destructiveSoft`), and holds the result to 1.05:1, because a scrim that paints
 its own surface is an invisible modal backdrop. The transient pointer washes and
 the filled families' hover and press steps are excluded — the pointer leaves the
 row to reach the dialog — but `selected` persists, `input` is part of the
-layout, the page's actions keep their resting fills and a status panel stays on
-screen, so all of them are measured (plans `359` and `375`). The audit found
+layout, the page's actions and the panel's action keep their resting fills and a
+status panel stays on
+screen, so all of them are measured (plans `359`, `375` and `395`). The audit found
 high-contrast dark's `#000000CC` measured **1.000:1** on the pure black canvas —
 an 80% black veil over black — while every other shipped set cleared the floor.
 The AAA dark theme now veils with light (`#FFFFFF26`): a dialog's separation
 cannot come from darkening a canvas that is already black. `overlay` stops being
 an exempt role; it is measured like the selection wash and reported with
-`wash: "overlay"` (plan `099`). The tightest of the fourteen pairs is
+`wash: "overlay"` (plan `099`). The tightest of the fifteen pairs is
 **1.075:1** (high-contrast dark, `overlay` on `primary`), so the new surfaces
 move no colour.
 

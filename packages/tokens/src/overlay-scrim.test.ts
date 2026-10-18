@@ -20,6 +20,10 @@
  * or Alert undimmed while the checker returns `[]`. The four resting filled
  * actions and the four soft status panels join the measured surfaces; the
  * transient pointer washes and the filled families' hover/press steps stay out.
+ *
+ * Plan 395 adds the resting fill plan 394 shipped: `softAction` is the raised
+ * action an Alert or Toast paints, so a dialog opens over it too. Every shipped
+ * set already clears the floor (AAA dark is tightest at 1.5519:1).
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -49,6 +53,7 @@ const persistentSurfaces = [
   "secondary",
   "accent",
   "destructive",
+  "softAction",
   "infoSoft",
   "successSoft",
   "warningSoft",
@@ -109,6 +114,7 @@ describe("modal scrim", () => {
       ["overlay", "secondary", "surface"],
       ["overlay", "accent", "surface"],
       ["overlay", "destructive", "surface"],
+      ["overlay", "softAction", "surface"],
       ["overlay", "infoSoft", "surface"],
       ["overlay", "successSoft", "surface"],
       ["overlay", "warningSoft", "surface"],

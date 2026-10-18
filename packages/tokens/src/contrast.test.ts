@@ -546,7 +546,7 @@ describe("themeContrastFailures", () => {
       "destructive",
       "accent",
     ]);
-    expect(overlayWashPairs.length).toBe(14);
+    expect(overlayWashPairs.length).toBe(15);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {

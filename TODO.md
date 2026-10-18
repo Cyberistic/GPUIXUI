@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 160/217
+`[x]` `[███████░░░]` 161/218
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1221,6 +1221,13 @@ and `AlertDismiss` (and the Toast's action) paint the canvas-tuned `secondary` �
 the action's press and the filled action's rest have no visible shape; the raised
 family and `softActionForeground` are measured on every shipped set in both
 modes (plan 394; owner: `components`)
+`[x]` Hold the modal scrim over the panel action — plan 394 made `softAction` a
+resting fill a window shows, but `overlaySurfaces` still named only the four
+`primary`/`secondary`/`accent`/`destructive` actions and the four soft panels,
+so a scrim that composited to the Alert's "Try again" button left it undimmed
+while `themeContrastFailures` returned `[]`; the fill joins the scrim contract
+(14 → 15 pairs), every shipped set already clears 1.05:1 (1.5519:1 at the
+tightest, AAA dark) and the plain 360 pairs do not move (plan 395)
 `[ ]` Cross-team: `primitives` paints a clipped ButtonGroup's focus ring as an
 inset border in `ring` on the button's own fill (`core/style.ts`
 `clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` equals
