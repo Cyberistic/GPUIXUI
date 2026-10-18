@@ -1,0 +1,38 @@
+{
+  "name": "@gpuixui/tw",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "shadcn/Base UI Tailwind recipes compiled to GPUix StyleDesc.",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./react": {
+      "types": "./src/react.tsx",
+      "default": "./src/react.tsx"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@gpuix/react": "0.10.0",
+    "@gpuixui/tokens": "workspace:*",
+    "cn": "^0.5.0",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@gpuixui/config": "workspace:*",
+    "@types/react": "^19.2.0",
+    "react": "^19.2.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

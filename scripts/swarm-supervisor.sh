@@ -185,6 +185,17 @@ Then: claim the next unclaimed task in your workstream, implement it to the bar
 in AGENTS.md (code + a test that can fail + an example + a docs page + a
 COMPONENTS.md row), tick it in TODO.md, and commit on your branch.
 
+**Verification is scoped.** While iterating, run only the scenarios your change
+touches:
+- headless: \`nub apps/playground/dist/smoke/run.js --only <id>\`
+- live: \`nub apps/playground/dist/live/run.js --only <id>\` (repeat \`--only\` for
+  more; \`--list\` prints the ids).
+
+A live run opens a real window and the full suite takes ~9 minutes. Never run
+the full live suite (\`--all\`) or the full headless suite while iterating. Run
+the full suite once at the end of the task, and only when the change is
+cross-cutting. Record the exact scenario ids you ran in the commit or plan.
+
 Your workstream: $(workstream_scope "$ws")
 
 Own only the paths in your workstream. Another agent owns everything else; if
@@ -207,12 +218,13 @@ cd "$dir" || exit 1
 export PATH="$PATH"
 OPENCODE="$OPENCODE"
 MODELS="$MODELS"
-PROMPT="\$(cat "$prompt")"
+PROMPT_FILE="$prompt"
 out=\$(mktemp)
 err=\$(mktemp)
 trap 'rm -f "\$out" "\$err"' EXIT
 fails=0
 while :; do
+  PROMPT="\$(cat "\$PROMPT_FILE")"
   model=\$("\$MODELS" current)
   # stdout streams to this workstream's log and is captured for the detector;
   # stderr (the model banner and any provider error) is captured and echoed
