@@ -34,6 +34,7 @@ import { scrollScenario } from "../scenarios/scroll.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
+import { variableRowsScenario } from "../scenarios/variable-rows.js";
 import { tableSelectSortScenario } from "../scenarios/table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
@@ -1385,6 +1386,174 @@ const table: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${table.id}.png`);
+    }),
+};
+
+/**
+ * `variable-rows`: the declared heights the view paints (20/40/60 by parity),
+ * written here as literals — a check derived from the view's own helper would
+ * move with a mutation (plan `350`).
+ */
+const vrHeightOf = (index: number): number => 20 + (index % 3) * 20;
+
+/** The `y` a row starts at relative to the viewport when nothing is expanded. */
+const vrBaseYOf = (index: number): number =>
+  Arr.reduce(Arr.range(0, index), 0, (sum, row) => sum + vrHeightOf(row)) -
+  vrHeightOf(index);
+
+/** The viewport and expansion the view declares. */
+const VR_VIEWPORT = 300;
+const VR_EXPAND_BY = 60;
+
+const variableRows: LiveScenario = {
+  id: "live-variable-rows",
+  title: "Live variable rows: heights, an expansion and an exact jump",
+  capability: "virtual-list",
+  view: variableRowsScenario.view,
+  ready: "vr-row-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const origin = yield* boxOf(ctx, "vr-viewport");
+
+      // 1. Declared heights stack in a real window.
+      yield* Effect.forEach(
+        Arr.range(0, 5),
+        (index) =>
+          Effect.gen(function* () {
+            const box = yield* boxOf(ctx, `vr-row-${index}`);
+            yield* ctx.expectNear(
+              `live row ${index} stacks at its declared height`,
+              box.y - origin.y,
+              vrBaseYOf(index),
+              1,
+            );
+            yield* ctx.expectNear(
+              `live row ${index} declares its own height`,
+              box.height,
+              vrHeightOf(index),
+              1,
+            );
+          }),
+        { concurrency: 1, discard: true },
+      );
+
+      const start = yield* ctx.expectSome(
+        "the live list reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vr-list")),
+      );
+      yield* ctx.expectEqual("the live list starts on row 0", start[0], 0);
+      yield* ctx.expectEqual("the live list starts at offset 0", start[1], 0);
+      yield* ctx.expectEqual(
+        "the live list has its declared viewport",
+        start[2],
+        VR_VIEWPORT,
+      );
+
+      // 2. A real click expands the row and reflows the rows below.
+      yield* ctx.host.click("vr-row-2");
+      yield* settle;
+      const expanded = yield* awaitedTextOf(ctx, "vr-state", "expanded=2");
+      yield* ctx.expectContains(
+        "a real click expands the row",
+        expanded,
+        "expanded=2",
+      );
+      const grown = yield* boxOf(ctx, "vr-row-2");
+      yield* ctx.expectNear(
+        "the live expanded row grows by exactly 60",
+        grown.height,
+        vrHeightOf(2) + VR_EXPAND_BY,
+        1,
+      );
+      yield* Effect.forEach(
+        Arr.range(3, 5),
+        (index) =>
+          Effect.gen(function* () {
+            const box = yield* boxOf(ctx, `vr-row-${index}`);
+            yield* ctx.expectNear(
+              `live row ${index} moves down by the expansion`,
+              box.y - origin.y,
+              vrBaseYOf(index) + VR_EXPAND_BY,
+              1,
+            );
+          }),
+        { concurrency: 1, discard: true },
+      );
+      const expandedAnchor = yield* ctx.expectSome(
+        "the expanded live list still reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vr-list")),
+      );
+      yield* ctx.expectEqual(
+        "the live expansion does not move the anchor",
+        `[${Arr.join(Arr.map(expandedAnchor, String), ",")}]`,
+        `[0,0,${VR_VIEWPORT}]`,
+      );
+      yield* ctx.expectEqual(
+        "the taller live rows shrink the painted window",
+        Arr.contains(yield* ctx.host.paintedText(), "row 6"),
+        false,
+      );
+
+      // 3. Collapsing restores the arithmetic.
+      yield* ctx.host.click("vr-row-2");
+      yield* settle;
+      const collapsed = yield* awaitedTextOf(ctx, "vr-state", "expanded=none");
+      yield* ctx.expectContains(
+        "a second real click collapses the row",
+        collapsed,
+        "expanded=none",
+      );
+      const back = yield* boxOf(ctx, "vr-row-3");
+      yield* ctx.expectNear(
+        "collapsing moves the live rows back",
+        back.y - origin.y,
+        vrBaseYOf(3),
+        1,
+      );
+
+      // 4. A jump is exact with mixed heights.
+      yield* ctx.host.scrollToItem("vr-list", 30);
+      yield* settle;
+      const jumped = yield* ctx.expectSome(
+        "the jumped live list reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vr-list")),
+      );
+      yield* ctx.expectEqual("the live jump anchors the row", jumped[0], 30);
+      yield* ctx.expectEqual("the live jump lands at offset 0", jumped[1], 0);
+      const jumpedRow = yield* boxOf(ctx, "vr-row-30");
+      yield* ctx.expectNear(
+        "the jumped live row sits at the viewport top",
+        jumpedRow.y,
+        origin.y,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live jump unpaints the rows above it",
+        Arr.contains(yield* ctx.host.paintedText(), "row 29"),
+        false,
+      );
+
+      // 5. A real wheel names a row and keeps its offset inside it.
+      yield* ctx.host.scrollToItem("vr-list", 0);
+      yield* settle;
+      yield* ctx.host.wheel("vr-viewport", 0, -120);
+      yield* settle;
+      const wheeled = yield* ctx.expectSome(
+        "the wheeled live list reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("vr-list")),
+      );
+      yield* ctx.expectEqual(
+        "the live wheel moves past row 0",
+        wheeled[0] > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live in-row offset is inside that row",
+        wheeled[1] >= 0 && wheeled[1] < vrHeightOf(wheeled[0]),
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${variableRows.id}.png`);
     }),
 };
 
@@ -6310,6 +6479,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   float,
   primitives,
   table,
+  variableRows,
   tableSort,
   highlights,
   preview,

@@ -58,7 +58,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[██████████]` 88/93 plans-and-harness
+`[~]` `[██████████]` 89/94 plans-and-harness
+
+`[x]` Prove **variable row heights in a real window** per plan `534`: the last
+      interaction family whose evidence was headless-only. `live-variable-rows`
+      reuses the `variable-rows` view in the real `1100×720` window — 20/40/60 px
+      rows stack at their declared offsets, a real click expands row 2 to
+      exactly 120 px and moves rows 3–5 by exactly `+60` with the anchor
+      `[0,0,300]` unmoved, a second click collapses it, `scrollToItem(30)` sits
+      row 30 at the viewport top, and a real `-120` wheel keeps its in-row
+      offset. **49 checks**, 1/1 exit `0`; live registry `51 → 52` (the
+      full-run total stays the merge gate's 51/51). Two mutation proofs:
+      `EXPAND_BY 60 → 40` fails with `expected 120 ± 1, got 100`, and a
+      never-expanding toggle fails with `expected "expanded=2", got
+      "expanded=none"` (both exit `1`). Measured: a `<virtual-list>` has no
+      bounds live but its rows do, so the declared geometry is assertable
+      against the wrapper `div` with no correction term. `COMPONENTS.md`'s
+      `Virtualized lists` and `Expandable rows` rows now cite it. Focused ids
+      run: `live-variable-rows`; `nub run check` and `nub run test` green.
 
 `[x]` Guard the **headless smoke CLI's arguments** per plan `531`: `--list`
       prints the 101 ids and exits `0` without loading the binding; `--only`

@@ -468,6 +468,16 @@ thread needs. 60 rows cycle 20/40/60 px with `estimatedItemHeight={20}`.
 | `scrollIntoView(row 45)` | reveals the row inside the viewport from a jump to the top |
 | A `-120` wheel | anchor index `> 0` with `offsetInItem <` that row's height |
 
+**In a real window (`live-variable-rows`, plan `534`):** the same six facts hold
+through the automation protocol — 20/40/60 px rows stack at their declared
+offsets and heights, a real click expands row 2 to exactly 120 px and moves rows
+3–5 by exactly `+60` with the anchor unmoved, a second click collapses it,
+`scrollToItem(30)` puts row 30 at the viewport top, and a real `-120` wheel lands
+inside the row it names. Two rules for a live probe: read the origin from the
+`vr-viewport` `div` because a `<virtual-list>` has **no painted bounds** in the
+live tree (plan `532`), and read the anchor from `listScrollTop` — never from a
+list's bounds.
+
 The recipe for Expandable rows: declare each row's height (state, not a
 measurement pass), let the list reflow, and persist the anchor as before — no
 `estimatedItemHeight` tuning is needed for correctness, only for the scrollbar's
@@ -1255,6 +1265,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
+| `live-variable-rows` | the variable-height list in a window: rows stack at 20/40/60 px, a real click expands row 2 to 120 px and moves the rows below by exactly `+60` with the anchor unmoved, a second click collapses, `scrollToItem(30)` sits row 30 at the viewport top, and a real wheel keeps its in-row offset — 49 checks (plan `534`) |
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
@@ -1783,7 +1794,10 @@ narrower. Each deviation is deliberate and measured:
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **51/51** on
   2026-10-19 (1062 checks, exit `0`, the merge gate) — the plan `532` terminal
-  twin is included — and the full suite is a **merge/release gate** — layout, **root**, input, scroll,
+  twin is included — and the registry now lists **52** after the plan `534`
+  variable-row twin, which this workstream verified with
+  `--only live-variable-rows` (49 checks) and has not folded into a full-run
+  total. The full suite is a **merge/release gate** — layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
