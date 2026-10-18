@@ -4,16 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.build.json",
+    "vendor": "tsc -p tsconfig.vendor.json",
+    "build": "nub run --filter @gpuixui/testing build && nub run vendor && tsc -p tsconfig.build.json",
     "dev": "nub run build && nub watch dist/main.js",
     "smoke": "nub run build && cd ../.. && nub apps/playground/dist/smoke/run.js",
     "smoke:live": "nub run build && cd ../.. && nub apps/playground/dist/live/run.js",
-    "check-types": "nub run --filter @gpuixui/testing build && tsc -p tsconfig.check.json",
-    "test": "nub run --filter @gpuixui/testing build && vitest run"
+    "check-types": "nub run --filter @gpuixui/testing build && nub run vendor && tsc -p tsconfig.check.json",
+    "test": "nub run --filter @gpuixui/testing build && nub run vendor && vitest run"
   },
   "dependencies": {
     "@gpuix/native": "0.10.0",
     "@gpuix/react": "0.10.0",
+    "@gpuixui/components": "workspace:*",
     "@gpuixui/primitives": "workspace:*",
     "@gpuixui/testing": "workspace:*",
     "@gpuixui/tokens": "workspace:*",

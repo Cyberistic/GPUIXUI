@@ -180,7 +180,8 @@ B1, so it is planned, not done. — **B1 is fixed** (ADR 0003, plan `140`), so
 
 Owns `apps/playground` and `packages/testing`: the native smoke harness, the
 playground shell and the feasibility probes. `100–199` is **full**; the next
-playground plan takes a free block (`300–399`).
+playground plans take the free numbers above the components (`300–324`) and
+tokens-theme (`300–328`) reservations — `330` is the first free number.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -242,6 +243,8 @@ playground plan takes a free block (`300–399`).
 | [300](./300-message-scroller-feasibility.md) | Tier 3 feasibility: a message scroller — pin, no-yank, streaming and jump-to-latest | D | 100, 110, 120, 140, 152, 166, 183, 198, 206 | **landed**: `message-scroller` — `<virtual-list>` has **no `onScroll`**, and the `onVisibleRange` payload is a built-window range with overdraw that lags one gesture (`endIndex >= count` stayed pinned through a 400 px scroll up and yanked on the next append). The exact pin source is `renderer.getListScrollTop(id)` read inside the handler; a single 400 px wheel up unpins, an append while unpinned leaves the anchor untouched and counts unread, jump-to-latest re-pins, a streamed last row keeps the tail at the viewport bottom, a 10 px scroll stays inside the 24 px threshold, and a 3-row history has no affordance. 51 checks, suite `59 → 60`, exit `0`; the stale-payload mutation fails `exit 1`, and removing the growth effect fails `52,0 ≠ 52,20` (§8) |
 | [301](./301-live-scroller.md) | The message scroller in a real window | F | 189, 190, 192, 197, 300 | **landed**: `live-scroller` reuses the headless view and asserts the full pin/no-yank/jump/stream path through the automation protocol (45 checks, live `15 → 16`, exit `0`); a no-op wheel fails `exit 1`. Also maps the protocol's `NotFound` for a retained-but-unpainted element to `bounds = null` (§7) |
 | [302](./302-native-cost-model.md) | The native cost model: retained host nodes and the syntax cache | F | 100, 110, 120, 140, 152, 188, 198 | **landed**: `scale-cost` — a virtual list retains **3 host nodes per row** (2,000 rows = 6,012; 100 = 312; the delta is exactly 5,700) while painting ~15, a jump neither leaks nor recycles, two identical `<code>` blocks cost one miss + one hit, a **theme switch reparses nothing**, idle frames do nothing, and each source edit costs exactly one miss + one hit + one document. `SmokeHost` gains `retainedElements` and a schema-decoded `syntaxCache`; 36 checks, suite `60 → 61`, exit `0`; M1/M2/M3 fail in the documented direction (§6) |
+
+| [330](./330-tier2-in-playground.md) | The shipped Tier 2 components in the playground | C/D | 100, 110, 120, 140, 155, 164, 183, 187, 189, 190, 193; `packages/components` | **landed** — `tier2-dialog` (24 checks), `tier2-menu` (18) and `tier2-toast` (21) mount the shipped `Dialog`/`ConfirmDialog`, `DropdownMenu`/`ContextMenu` and `ToastProvider`/`ToastViewport`; suite `61 → 64`, exit `0`, `tier2=verified`; three mutation proofs. Measured consumer-path facts: one root host element (a provider with sibling children paints nothing), the viewport insets **16** px (`spacing.xl`), oldest-above-newest stack, and the package must be compiled by the consumer because its tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute (§8) |
 
 Cross-cutting records:
 

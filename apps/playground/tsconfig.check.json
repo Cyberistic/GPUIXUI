@@ -1,9 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "paths": {
-      "@gpuix/react/jsx-runtime": ["./node_modules/@gpuix/react/jsx-runtime"]
-    }
-  },
   "include": ["src"]
 }

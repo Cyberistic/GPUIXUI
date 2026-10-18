@@ -75,6 +75,9 @@ import {
 } from "./primitives-advanced.js";
 import { messageScrollerScenario } from "./message-scroller.js";
 import { scaleCostScenario } from "./scale.js";
+import { tier2DialogScenario } from "./tier2-dialog.js";
+import { tier2MenuScenario } from "./tier2-menu.js";
+import { tier2ToastScenario } from "./tier2-toast.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -96,6 +99,7 @@ export const CORE_CAPABILITIES = [
   "content",
   "selection",
   "components",
+  "tier2",
 ] as const;
 
 /** The Tier 3/4 and desktop-input capabilities the feasibility probes cover (plans `130`, `152`–`154`, `157`, `162`, `164`). */
@@ -183,6 +187,9 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   toastScenario,
   messageScrollerScenario,
   scaleCostScenario,
+  tier2DialogScenario,
+  tier2MenuScenario,
+  tier2ToastScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

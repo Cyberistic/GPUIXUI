@@ -4,7 +4,13 @@
     "jsx": "react-jsx",
     "jsxImportSource": "@gpuix/react",
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@gpuix/react/jsx-runtime": ["./node_modules/@gpuix/react/jsx-runtime"],
+      "@gpuix/react/jsx-dev-runtime": [
+        "./node_modules/@gpuix/react/jsx-dev-runtime"
+      ]
+    }
   },
   "include": ["src"]
 }

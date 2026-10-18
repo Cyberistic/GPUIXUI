@@ -65,8 +65,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | grid | `grid-wide-table` | verified |
 | layers | `nested-layer-dismiss` | verified |
 | scroller | `message-scroller` | verified |
+| tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast` | verified |
 
-The suite is **60/60 green here** (exit `0`, `.artifacts/smoke-report.json`).
+The suite is **64/64 green here** (exit `0`, `.artifacts/smoke-report.json`).
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`) and is **16/16 green
@@ -626,6 +627,22 @@ numeric commit, and OTP focus advance with a single-character Backspace.
 All five playground scenarios now mount the shipped package; together with the
 primitives' own `test:runtime` suites, every interactive Tier 1 row has both an
 in-package and an end-to-end native verdict.
+
+**End-to-end Tier 2 composition (playground plan `330`).** Three scenarios mount
+the shipped `@gpuixui/components` through its published root: `tier2-dialog`
+drives `Dialog`/`ConfirmDialog` (centred surface, focus entry, Tab/Shift-Tab
+containment, Escape and focus return, Cancel holding initial focus, confirm
+reporting once and leaving the dialog open), `tier2-menu` drives
+`DropdownMenu`/`ContextMenu` (click and right-click open, the disabled row
+skipped by native focus, Enter activating once with focus restored, pointer
+placement within 12 px, Escape and outside dismissal) and `tier2-toast` drives
+`ToastProvider`/`ToastViewport` (a push paints a 380 px card inset 16 px, the
+action runs once and dismisses, the stack is oldest-above-newest, Escape is not a
+shortcut, a 300 ms duration dismisses itself). The suite is `64/64` and
+`tier2=verified`. Two consumer-path facts are recorded in plan `330` §8: the
+renderer needs **one root host element** (a provider with sibling children at the
+root paints nothing), and the components package is compiled by the consumer
+because its tsconfig maps the JSX runtime to a `.d.ts` that `nub` cannot execute.
 
 ## Tier 2 — composition and feedback
 

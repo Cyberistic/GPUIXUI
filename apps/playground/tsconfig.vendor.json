@@ -1,0 +1,18 @@
+{
+  "extends": "../../packages/components/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": "../..",
+    "outDir": "vendor"
+  },
+  "include": [
+    "../../packages/components/src/**/*.ts",
+    "../../packages/components/src/**/*.tsx"
+  ],
+  "exclude": [
+    "../../packages/components/src/**/*.test.ts",
+    "../../packages/components/src/**/*.test.tsx",
+    "../../packages/components/src/behaviour/**"
+  ]
+}

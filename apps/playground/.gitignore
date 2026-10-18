@@ -1,1 +1,6 @@
 .artifacts/
+
+# Compiled `@gpuixui/components`, built by `tsconfig.vendor.json`. The package
+# is source-first, and its own tsconfig maps the JSX runtime to a `.d.ts`, which
+# `nub` cannot execute; the consumer compiles it instead (plan 330 §3).
+vendor/

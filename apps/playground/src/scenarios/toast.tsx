@@ -38,6 +38,7 @@ import {
   type Toast,
   type ToastState,
 } from "./toast-state.js";
+import { awaitReadout } from "./await-readout.js";
 
 const CARD_WIDTH = 380;
 const CARD_HEIGHT = 56;
@@ -591,7 +592,7 @@ export const toastScenario: PlaygroundScenario = {
 
       ctx.host.click("toast-show");
       ctx.host.click("toast-show-short");
-      yield* Effect.sleep("350 millis");
+      yield* awaitReadout(ctx, "toast-readout", "dismissed=Short");
       yield* ctx.expectContains(
         "the short toast's timer fired",
         readout(ctx),
