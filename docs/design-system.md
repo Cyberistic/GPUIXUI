@@ -301,7 +301,7 @@ the mounting rule and its no-portal limitation are documented once, under
 | hover | `hover` wash on ghost and subtle surfaces, held to the 1.05:1 perceivability floor on `background`, `card`, `popover` and the quiet `muted` panel it paints on; a ghost or outline control paints no fill at rest, so its ladder is `surface` → `hover` → `active`; filled actions step to their family's `xHover` — opaque, contrast-checked, one 1.05:1 step from the resting fill — instead of compositing an alpha fill |
 | pressed | `active` wash on ghost and subtle surfaces, held to the same floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step from the `hover` that precedes it (`washStepPairs`); filled actions step to `xActive`, one 1.05:1 step past their hover |
 | loading | `skeleton` fill with `pulse` (or `step`) motion, held to the 1.05:1 perceivability floor on `background`, `card`, `popover`, the `muted` panel and the four row washes it fills — `hover`, `active`, the `accent` wash a selectable row hovers and `selected`; the identity and high-contrast skeletons were the `active` fill until plan 094; the active indicator uses `primary` |
-| selected | `selected` + `selectedForeground`: the fill is held to the perceivability floor on `background`, `card`, `popover` and `muted`, and the label to its floor on `selected`, the `hover`/`active` pointer washes and the `accent` wash a selectable row hovers; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
+| selected | `selected` + `selectedForeground`: the fill is held to the perceivability floor on `background`, `card`, `popover` and `muted` and one 1.05:1 step past the `accent` wash a selectable row hovers with (`selectionStepPairs`); the label is held on `selected`, the `hover`/`active` pointer washes and the `accent` wash; a toggle that is on steps `accent` → `accentHover` → `accentActive` with `accentForeground` on all three |
 | link | `primaryText` on `background`, `card`, `popover`, the `muted` panel, the `hover`/`active` washes a link paints, the `accent`/`selected` fills a selectable row paints under it and the four soft status fills a link in a status panel sits on; `primary` is a fill and is never the colour of text |
 | disabled | `disabled` fill + `disabledForeground`, which keeps a readable dim (3:1, 4.5:1 at AAA) while staying well below secondary text, on the `disabled` fill, `background`, `card`, `popover`, the `muted` panel, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills; the control paints its `border` edge on that fill so its shape survives on any panel, plus a non-colour cue where possible |
 | invalid | a `destructive` edge on the `input` fill a field paints and on the `background` canvas a transparent field paints, held to the essential-boundary floor (3:1, 4.5:1 at AAA); the message itself uses `destructiveText`, not the fill |
@@ -355,6 +355,17 @@ The generic `hover`/`active` pair is a ladder of two, not two unrelated washes:
 a ghost or outline control paints no fill at rest, so `active` is held one
 1.05:1 step from `hover` (`washStepPairs`), and a consumer theme that collapses
 the press is reported the way a collapsed filled family is (plan `357`).
+
+A selectable row adds one state to that ladder: it paints `accent` under the
+pointer and keeps `selected` once chosen, so `selected` is held one 1.05:1 step
+from `accent` too (`selectionStepPairs`, plan `381`). In the identity — both
+modes and both contrast levels — and macOS light the two roles were the same
+fill, so hovering one row looked like selecting another and the click changed
+nothing; Windows light, macOS dark and XP light were under the step floor. The
+selected fill moved one designed step in those eight sets, and macOS light's
+`selectedForeground` moved with its deeper fill. A selected row keeps its fill
+under the pointer: the shipped `List` still paints the unselected `accent` wash
+over a selected row, which is recorded cross-team.
 
 The designed family is the preferred state, but the contract also guards the
 composition that ships today: the secondary Button still keeps
@@ -420,7 +431,7 @@ Colour is checked, not assumed. The token suite enforces:
 | secondary text (`mutedForeground` on plain surfaces, on the `input` fill a field paints for its own chrome, on the `hover`, `active`, `accent` and `selected` washes and on the four soft status fills a status panel's caption sits on), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
-| state steps (`xHover` from `x` and `xActive` from `xHover` for `primary`/`secondary`/`destructive`/`accent`, and the generic wash's `active` from `hover`) | 1.05:1 | 1.05:1 |
+| state steps (`xHover` from `x` and `xActive` from `xHover` for `primary`/`secondary`/`destructive`/`accent`, the generic wash's `active` from `hover`, and the selected row's `selected` from the `accent` hover wash) | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | a Toast's tone glyph and bar (`infoSoftForeground`/`successSoftForeground`/`warningSoftForeground`/`destructiveSoftForeground` on `popover`, the shipped composition until `components` paints `xText`) | 4.5:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |

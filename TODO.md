@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 146/198
+`[x]` `[███████░░░]` 147/199
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1071,6 +1071,15 @@ whose fill is also `primary` when selected, so the ring composites to
 `ring` when the cell is selected, keeping `primary` on the `popover` at rest;
 `primary` on `popover`/`hover` is already a mark pair (plan 341; owner:
 `components`).
+`[ ]` Cross-team: `components` keeps a selected `List` row's fill under the
+pointer — `list.tsx:772` paints `hover: { backgroundColor: accent }` on every
+focusable row and `:778` sets `backgroundColor: selected` when selected, so the
+hover style replaces the persistent selection; now that plan 381 separates the
+two roles (they were the same value in the identity, macOS light and three more
+sets), a selected row visibly falls back to the unselected hover wash while the
+pointer is over it. Do not paint the unselected hover wash over a selected row:
+keep `selected`, or step inside a selection family if one ships later (owner:
+`components`; plan 381).
 `[x]` Resolve a persisted theme choice in one place — the package owned the
 mode, contrast, platform, recipe and density axes and a guard for each, but not
 their composition, so every settings screen retyped the precedence; a stored
@@ -1079,6 +1088,15 @@ a stray platform key, and an unknown density must keep the resolved preset
 rather than a hardcoded `comfortable`. `resolveThemeChoice(choice)` composes the
 shipped resolvers behind the existing guards, and every shipped combination is
 held to the three checks (plan 380)
+`[x]` Make the selected row a perceivable step from the hover wash — a
+selectable `List` row paints `accent` under the pointer and `selected` once
+chosen, and the two roles were the same fill in the identity (both modes and
+both contrasts) and macOS light and under the 1.05:1 floor on Windows light,
+macOS dark and XP light, so hovering one row looked like selecting another and
+the click changed nothing; `selectionStepPairs` publishes the step, eight shipped
+sets move `selected` one designed step, macOS light's `selectedForeground` moves
+with its deeper fill, every shipped set and both executed examples still pass
+all three checks, and the consumer composition is cross-team (plan 381)
 
 ## Phase C — Tier 1–2 components
 

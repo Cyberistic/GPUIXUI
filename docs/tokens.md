@@ -188,7 +188,7 @@ A runnable example lives in
 | `secondaryActive` | `#CBD1DB` | `#545D6C` | secondary action while pressed |
 | `muted` | `#FBFCFD` | `#222730` | quiet surface |
 | `mutedForeground` | `#3D4552` | `#CBD1DB` | secondary text |
-| `accent` | `#EEF0FF` | `#2E2370` | selection and toggle-on surface |
+| `accent` | `#EEF0FF` | `#2E2370` | highlight wash for a menu row, a hovered selectable row and a toggle that is on |
 | `accentForeground` | `#3B2C8F` | `#C7CBFF` | text on `accent` |
 | `accentHover` | `#E0E3FF` | `#42319F` | toggle-on surface while hovered |
 | `accentActive` | `#C7CBFF` | `#4C39B5` | toggle-on surface while pressed |
@@ -229,7 +229,7 @@ A runnable example lives in
 | `overlay` | `#00000073` | `#000000A6` | modal scrim |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2A303B` | pressed wash |
-| `selected` | `#EEF0FF` | `#2E2370` | selected row or item |
+| `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#6E7787` | `#A1A9B7` | disabled text, held to the `inactive` floor |
@@ -404,7 +404,7 @@ carries, so it cannot claim another.
 | `secondaryActive` | `#B8B8B8` | `#4A4A4A` | secondary action while pressed |
 | `muted` | `#F2F2F2` | `#1A1A1A` | quiet surface |
 | `mutedForeground` | `#1F1F1F` | `#E0E0E0` | secondary text |
-| `accent` | `#E0E3FF` | `#251B5C` | selection and toggle-on surface |
+| `accent` | `#E0E3FF` | `#251B5C` | highlight wash for a menu row, a hovered selectable row and a toggle that is on |
 | `accentForeground` | `#2E2370` | `#E0E3FF` | text on `accent` |
 | `accentHover` | `#D5D8FF` | `#33257A` | toggle-on surface while hovered |
 | `accentActive` | `#BFC2FF` | `#42319F` | toggle-on surface while pressed |
@@ -445,7 +445,7 @@ carries, so it cannot claim another.
 | `overlay` | `#000000A6` | `#FFFFFF26` | modal scrim |
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
-| `selected` | `#E0E3FF` | `#251B5C` | selected row or item |
+| `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#2E2370` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#5A5A5A` | `#A9A9A9` | disabled text, held to the `inactive` floor |
@@ -656,7 +656,7 @@ resolves one through the same `applyPlatformStyle` path as
 
 | Recipe | Canvas (light) | Accent (light) | Selected (light) | Radius `sm` / `md` / `lg` / `xl` | Density | Mono |
 | ------ | -------------- | -------------- | ---------------- | -------------------------------- | ------- | ---- |
-| `xp` (Windows XP) | `#ECE9D8` | `#0054E3` | `#C9DDFF` | 2 / 3 / 6 / 8 | `compact` | `Consolas` |
+| `xp` (Windows XP) | `#ECE9D8` | `#0054E3` | `#BDD4FF` | 2 / 3 / 6 / 8 | `compact` | `Consolas` |
 | `aero` (Windows 7) | `#F0F4F9` | `#1565C0` | `#CCE4FA` | 3 / 5 / 8 / 10 | `comfortable` | `Consolas` |
 
 A recipe names only what it changes: status tones, disabled, overlay, scrollbar
@@ -1102,7 +1102,7 @@ XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
 `selected`, and every high-contrast light tone at 6.12–6.72:1 under the 7:1
 floor while the dark sets already passed; the six light status roles move one
 half-step between the ramp steps they used, so the tightest shipped pair is
-**4.661:1** (XP light `infoText` on `active`) and the AAA tightest **7.370:1**
+**4.584:1** (XP light `infoText` on `selected`) and the AAA tightest **7.370:1**
 (identity light high `warningText` on `active`). An accent-toned
 link is the one deliberate omission: the shipped `primaryText` does not clear
 7:1 at AAA, and macOS light measures 4.32:1 through the wash on
@@ -1827,8 +1827,8 @@ is the one a selectable `ListItem` paints on hover, so it is a composition the
 list API invites, not a spare surface. The tightest shipped values are
 `foreground` on `selected` at **7.47:1** (Linux dark),
 `popoverForeground` on `selected` at **7.95:1** (Linux dark),
-`selectedForeground` on `active` at **5.21:1** (macOS light) and
-`selectedForeground` on `accent` at **5.81:1** (macOS light), so no colour moves.
+`selectedForeground` on `active` at **6.22:1** (macOS light) and
+`selectedForeground` on `accent` at **6.93:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
 floor. The pressed edge is `ring` on the same `input` fill, and the hover edge is
@@ -1888,7 +1888,7 @@ status label in a selectable row paints and the label is dragged over with the
 copy around it; XP light `successText` measured 3.671:1 on `active` and every
 high-contrast light tone 6.12–6.72:1 under 7:1, so the six light status roles
 move one half-step between the ramp steps they used. The tightest pair is
-**4.661:1** (XP light `infoText` on `active`) and **7.370:1** at AAA (identity
+**4.584:1** (XP light `infoText` on `selected`) and **7.370:1** at AAA (identity
 light high `warningText` on `active`); the plain `contrastPairs` count stays
 **338**.
 
@@ -1920,6 +1920,19 @@ becomes `hover` or `active`, so both pairs are measured as well. They clear the
 secondary floor in every shipped set — **10.42:1** on `hover` (macOS dark) and
 **9.44:1** on `active` (Linux dark) at the tightest — and the designed family
 remains the preferred state (plan `334`).
+
+A selectable row is the same story one state further: it paints `accent` under
+the pointer and keeps `selected` once chosen, so `selected` must be a perceivable
+step past the hover wash or the click changes nothing. In the identity (both
+modes, both contrast levels) and macOS light the two roles were the **same
+value**, and Windows light, macOS dark and XP light sat under the 1.05:1 step
+floor — hovering one row looked like selecting another. `selectionStepPairs`
+publishes the `selected`/`accent` pair under the same `step` class the filled
+families and the wash ladder use, eight shipped sets move `selected` one designed
+step (plus the authored Contoso light style), and macOS light's
+`selectedForeground` moves with its deeper fill because no step that cleared the
+pair kept the old blue at 4.5:1. The measurement is in `selection-states.test.ts`, and the pair
+is part of the plain contract — taking it from 338 to **339** (plan `381`).
 
 The two shipped consumers have not migrated their **brand** families, and the
 cost is the label rather than the fill. `components/internal/button.tsx` still
@@ -2039,7 +2052,7 @@ the four base surfaces and the persistent `accent`/`selected` row fills at
 (`trackMarkPairs`). The momentary `hover`/`active` washes are out of scope: the
 filled part still carries the value while the pointer is down, and XP light has
 no track that clears both the 1.05:1 wash floor and the 3:1 mark floor at once.
-The tightest shipped pairs are XP light `track` on its `selected` fill at
+The tightest shipped pairs are identity light `track` on its `selected` fill at
 **1.06:1** and Aero light `success` on the groove at **3.15:1**. `primitives`
 still paints `muted`; the migration is recorded in `TODO.md`.
 
