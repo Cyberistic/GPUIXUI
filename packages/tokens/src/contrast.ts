@@ -494,6 +494,16 @@ const fieldEdgePairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The field's pressed edge. `fieldVariant.active` in `primitives` repaints the
+ * field border with `ring` on the `input` fill, the way `hover` repaints it
+ * with `borderStrong`; the role is a control boundary here, not a shadow
+ * outside the control.
+ */
+const fieldPressedEdgePairs: readonly ContrastPair[] = [
+  ["ring", "input", "boundary"],
+];
+
+/**
  * The invalid field edge. A field in an error state paints `destructive` as its
  * border — `FieldInput` on its `input` fill and the ColorPicker hex field on the
  * `background` canvas — so the error signal is an essential boundary, not a
@@ -605,7 +615,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * those same surfaces, and a text field's
  * edge is measured on the `input` fill it sits on; an invalid field's
  * `destructive` edge is a boundary pair on that fill and on the `background`
- * canvas a transparent field paints.
+ * canvas a transparent field paints. A field's pressed border is `ring` on
+ * that same `input` fill — the hover edge is `borderStrong` — so the ring's
+ * shadow surfaces and its one control edge are both measured.
  *
  * The filled families — `primary`, `secondary`, `destructive` and `accent` —
  * are measured at rest, hover and pressed. The neutral
@@ -699,6 +711,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ["border", "muted", "divider"],
   ["border", "disabled", "divider"],
   ...fieldEdgePairs,
+  ...fieldPressedEdgePairs,
   ...invalidEdgePairs,
   ...controlFillPairs,
   ...selectedRowEdgePairs,

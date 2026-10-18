@@ -287,6 +287,14 @@ invalid field's ring takes `destructive`; the runtime can draw only one ring, so
 the error colour *is* the focus indicator and the boundary floor applies where it
 is painted, not on the field's own fill.
 
+A field is not a filled action: at rest its edge is `border`, under the pointer
+`borderStrong`, and while pressed `ring`, all three painted on its own `input`
+fill. The focus shadow still surrounds the field, so the two uses of the ring
+role are measured separately: the shadow on the surface behind the control, the
+pressed edge on the field's fill. The pressed edge was the last field pair to
+join the contract (plan `343`); every shipped theme already cleared it, so no
+colour moved.
+
 A filled control steps through its own family — `x` → `xHover` → `xActive` — so
 the state is an editable, measured fill, not a translucent tint that takes its
 colour from the surface behind it. `primary`, `secondary`, `destructive` and
@@ -376,7 +384,7 @@ Colour is checked, not assumed. The token suite enforces:
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |
 | text selection of secondary text (`mutedForeground` over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected`) | 4.5:1 | 7:1 |
 | text selection wash (`selection` composited over `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`/`selected` and the four soft status fills) | 1.05:1 | 1.05:1 |
-| focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) | 3:1 | 4.5:1 |
+| focus ring on `background`/`card`/`popover`/`muted`/`accent`, the `hover`/`active`/`selected` washes and the four soft status fills, the `destructive` ring an invalid control paints on the same surfaces, essential boundaries on `popover`, `muted`, the four state washes and the four soft status fills, plus the invalid field edge (`destructive` on `input`/`background`) and the field's pressed edge (`ring` on `input`) | 3:1 | 4.5:1 |
 | graphic marks (`primary`/`success`/`destructive` on `background`/`card`/`popover`/`muted`, and `primary`/`destructive` on the `input` fill a slider thumb rings) | 3:1 | 4.5:1 |
 | soft status surface (`xSoft`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | soft status edge (`xSoftBorder` on `xSoft` and on the eight surfaces a chip sits on) | 1.05:1 | 3:1 |

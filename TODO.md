@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 110/145
+`[x]` `[████████░░]` 111/146
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -289,6 +289,21 @@ a collapsed hover or press was invisible to `themeContrastFailures` because the
 1.05:1 step lived only in `filled-states.test.ts`, which runs on shipped themes;
 `stateStepPairs` adds eight `step` pairs (306 → 314), every shipped set already
 clears them, so no colour moves (plan 342)
+`[x]` Hold the field's pressed edge — `ring` on the `input` fill, the pressed
+counterpart to the `borderStrong` hover edge — in the public contrast contract;
+every shipped set already clears the boundary floor (identity light is tightest
+at 4.218:1), so no colour moves and the contract grows 314 → 315 (plan 343)
+`[ ]` Cross-team: `primitives` must not paint an invalid field as a solid
+`destructive` surface — `controlStyle` in `src/core/style.ts` sets
+`backgroundColor: rest`, and `rest` is `destructive` when `invalid` is true, so
+an invalid `Input`/`TextArea`/`Select` paints `inputForeground` on `destructive`
+at **1.97:1** (both AAA dark) to **3.48:1** (Aero light), under the 4.5:1 floor,
+and its `hover`/`active` variants replace the error border with
+`borderStrong`/`ring`, so the error signal disappears under the pointer. Keep
+the `input` fill and the `destructive` border in every state (the documented
+invalid state), or use `destructiveSoft` + `destructiveSoftForeground`
+(measured at 7:1); `destructiveText` carries the message (plan 343; owner:
+`primitives`)
 `[ ]` Cross-team: `primitives` gives a pressed selection control a perceivable
 state — `selectionBoxStyle` and `switchTrackStyle` paint
 `active: { borderColor: ring }` on a filled box whose fill is `primary` or

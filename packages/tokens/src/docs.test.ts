@@ -211,13 +211,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 306 to **${contrastPairs.length}**`,
+      `taking it from 314 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`342` closed");
+    expect(prose).toContain("plans `076`–`343` closed");
   });
 });
 
@@ -965,7 +965,7 @@ describe("docs/tokens.md theme contract", () => {
 describe("docs/tokens.md contrast surfaces", () => {
   it("names the washes and the floating surface the contract covers", () => {
     const sentence =
-      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because a Toast's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the ring surrounds, not what it sits on, so they are deliberately not ring surfaces. `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on `background`, `card`, `popover`, the `muted` panel and those four washes, so a status label or indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because an Alert or Toast carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
+      "The focus ring is measured on the eight surfaces a focused control can sit on — the canvas, card and popover, the `muted` panel a sidebar control sits on, the `accent` wash a selectable row paints, and the `hover`, `active` and `selected` washes — because focus and selection co-occur in rows. It is also measured on the four soft status fills, because a Toast's action button is focused while it sits on its own tint; every shipped variant already clears the floor there, so no colour moves, and the pairs exist so an edited theme cannot remove the ring. A field's own `input` fill and a control's `secondary` fill are what the focus shadow surrounds, not what it sits on, so they are not `ringSurfaces`. The ring role has one other job: a pressed field repaints its border with `ring` on its own `input` fill, the way hover repaints it with `borderStrong`, so that control edge is a `boundary` pair (`fieldPressedEdgePairs`, plan `343`). `ringSurfaces` in `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public check to it. Secondary text is measured on `hover`, `active`, `accent` and `selected`, because a list row, a combobox option and a menu item paint those washes behind a description; status text (`xText`) is measured on `background`, `card`, `popover`, the `muted` panel and those four washes, so a status label or indicator dot in a sidebar, a hovered, pressed or selected row or a dialog is covered; the `borderStrong` boundary is measured on `popover`, the `muted` panel and those four washes, so a checkbox or field in a quiet panel, a hovered, pressed, selectable or selected row still shows its edge. It is also measured on the four soft status fills, because an Alert or Toast carries actions — a field, a don't-show-again checkbox — whose edge must stay visible.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 
@@ -984,6 +984,15 @@ describe("docs/tokens.md contrast surfaces", () => {
     expect(markdown).toContain("`destructive` on the `input` fill");
     expect(markdown).toContain(
       "the `background` canvas a transparent field paints",
+    );
+  });
+
+  it("states the pressed field edge on the input fill", () => {
+    expect(markdownProse).toContain(
+      "a pressed field repaints its border with `ring` on its own `input` fill",
+    );
+    expect(markdownProse).toContain(
+      "The pressed edge is `ring` on the same `input` fill",
     );
   });
 
@@ -1210,7 +1219,7 @@ describe("docs/design-system.md", () => {
       `| text selection in a selected row (\`selectedForeground\` over the wash on \`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of secondary text (\`mutedForeground\` over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection wash (\`selection\` composited over \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`/\`selected\` and the four soft status fills) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
+      `| focus ring on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the four soft status fills, the \`destructive\` ring an invalid control paints on the same surfaces, essential boundaries on \`popover\`, \`muted\`, the four state washes and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, and \`primary\`/\`destructive\` on the \`input\` fill a slider thumb rings) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,

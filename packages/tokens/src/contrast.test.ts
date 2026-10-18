@@ -116,6 +116,12 @@
  * from the checker, because a fill equal to the fill before it still clears
  * every fill-on-surface pair. `stateStepPairs` is a `step` class at 1.05:1 on
  * both levels.
+ *
+ * Plan 343 closes the field's pressed edge: `fieldVariant.active` in
+ * `primitives` repaints a field border with `ring` on the `input` fill, but the
+ * contract measured `ring` only where a focus shadow sits — outside the
+ * control. Every shipped set already clears the boundary floor there (identity
+ * light is tightest at 4.218:1), so no colour moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -357,7 +363,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(314);
+    expect(contrastPairs.length).toBe(315);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(stateStepPairs).toHaveLength(8);
     expect(new Set(stateStepPairs).size).toBe(8);

@@ -105,6 +105,12 @@ describe("COMPONENTS.md design-system rows", () => {
     );
   });
 
+  it("names the pressed field edge the ring role paints", () => {
+    expect(row("Focus state")).toContain(
+      "pressed field border on the `input` fill",
+    );
+  });
+
   it("does not keep a stale exemption list beside the measured roles", () => {
     const contrast = row("Theme contrast check");
     expect(contrast).not.toContain("`overlay`, `scrollbar`");

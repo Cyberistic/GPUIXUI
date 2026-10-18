@@ -318,6 +318,10 @@ accents one step deeper. Each filled family also walks `x` → `xHover` →
 `xActive`, and a step that is not perceivable is not a state: `stateStepPairs`
 holds every `xHover` to 1.05:1 from its `x` and every `xActive` from its
 `xHover`, under the `step` class, at both contrast levels.
+A field's pointer edges are both measured on its own `input` fill:
+`borderStrong` under the pointer and `ring` while pressed
+(`fieldPressedEdgePairs`). The focus shadow still sits on the surface behind the
+control; the two uses of the ring role are separate pairs.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
 `disabled` fill, the four plain surfaces, the four row washes and the four soft

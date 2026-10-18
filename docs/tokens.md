@@ -1512,7 +1512,9 @@ list API invites, not a spare surface. The tightest shipped values are
 `selectedForeground` on `accent` at **5.81:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
 floor; the weakest shipped set is Linux dark at **1.25:1**, above the 1.05:1
-floor. These seven pairs take `contrastPairs` from 232 to 239; plan `314` adds
+floor. The pressed edge is `ring` on the same `input` fill, and the hover edge is
+`borderStrong` there, both at the boundary floor (plan `343`). These seven pairs
+take `contrastPairs` from 232 to 239; plan `314` adds
 the selected option, the sidebar status label and the row link, plan `315` adds
 typed text on the canvas field, plan `316` adds the `accent` fill a selected
 row inherits its label on, and plan `317` adds the placeholder on the four
@@ -1539,7 +1541,9 @@ ring on the eleven surfaces the ring adds — `background` is already the field
 edge — taking it from 294 to **305**. Plan `341` adds the combobox check glyph on
 the `hover` row wash, taking it from 305 to **306**. Plan `342` publishes the
 filled families' step floor — each `xHover` one perceivable step from its `x`,
-each `xActive` from its `xHover` — taking it from 306 to **314**.
+each `xActive` from its `xHover` — taking it from 306 to **314**. Plan `343`
+holds the field's pressed edge — `ring` on the `input` fill — taking it from 314
+to **315**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1673,8 +1677,11 @@ four soft status fills, because a Toast's action button is focused while it sits
 on its own tint; every shipped variant already clears the floor there, so no
 colour moves, and the pairs exist so an edited theme cannot remove the ring. A
 field's own `input` fill
-and a control's `secondary` fill are what the ring surrounds, not what it sits
-on, so they are deliberately not ring surfaces. `ringSurfaces` in
+and a control's `secondary` fill are what the focus shadow surrounds, not what
+it sits on, so they are not `ringSurfaces`. The ring role has one other job: a
+pressed field repaints its border with `ring` on its own `input` fill, the way
+hover repaints it with `borderStrong`, so that control edge is a `boundary` pair
+(`fieldPressedEdgePairs`, plan `343`). `ringSurfaces` in
 `src/contrast.ts` is the one list, and `ring-surfaces.test.ts` holds the public
 check to it. Secondary text is measured on `hover`, `active`, `accent` and
 `selected`, because a list row, a combobox option and a menu item paint those
@@ -1719,7 +1726,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`342` closed.
+plans `076`–`343` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds
