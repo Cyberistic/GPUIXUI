@@ -221,6 +221,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [524](./524-disabled-selection-wash.md) | The selection wash on the unavailable control's fill | F | 071, 081, 087, 306, 307, 510 | done |
 | [525](./525-row-text-selection.md) | The row's own text through a text selection | F | 071, 081, 087, 312, 316, 363, 506, 510 | done |
 | [526](./526-dialog-face-on-content.md) | The dialog's face over the content a window shows | F | 099, 359, 371, 375, 383, 395, 507, 508, 509, 525 | done |
+| [527](./527-field-text-row-washes.md) | The field's typed text and hint on the row washes | F | 071, 081, 087, 306, 315, 317, 319, 392, 500, 506 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2338,6 +2339,23 @@ face nor an edge. The face is the carrier — `dialogSurfacePairs` now derives f
 passes (1.079:1 at the tightest, Linux dark on `destructive`), the executed brand
 example deepens its own scrim to 85% because its darker accent put the inherited
 one at 1.038:1, and `contrastPairs` stays **396**.
+
+Plan `527` closes the field composition plan `317` excluded. The placeholder
+and typed text were measured on the `input` fill and the four `Surface` tones a
+transparent field sits on, and the reference said “a field on a row wash … is
+deliberately out of scope”. It is not: `InlineEdit` swaps a row's text for a
+field in place, and a row paints `hover`, `active`, `accent` and `selected`
+behind its content, while the field's edge, boundary, ring and secondary chrome
+text were already measured there. The audit found the shipped hint below its
+floor on at least one wash in all twenty-four sets — identity dark **3.132:1**
+on `selected`, macOS light 3.714:1 on `active`, Windows dark 3.939:1, XP light
+3.877:1, and both AAA palettes under 7:1 at 5.665:1 and 5.009:1 — while all six
+checks returned `[]`. `inputForeground` and `placeholder` join the four washes
+(396 → 404 pairs), fourteen shipped hints move one designed step (identity dark
+`#858F9F` → `#A8B0BD`, AAA light `#4A4F58` → `#3D4047`, AAA dark `#B0B0B0` →
+`#D1D1D1`), every shipped set passes (4.651:1 at the tightest, Linux dark on
+`active`; 7.113:1 at AAA), and the hint stays 1.157:1 below `mutedForeground` at
+the tightest.
 
 ## How to use a plan
 
