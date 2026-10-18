@@ -54,6 +54,7 @@ import { dockingScenario } from "./docking.js";
 import { floatScenario } from "./float.js";
 import { previewScenario } from "./preview.js";
 import { gridScenario } from "./grid.js";
+import { dataGridScenario } from "./data-grid.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
 import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
@@ -123,6 +124,7 @@ export const PROBE_CAPABILITIES = [
   "float",
   "preview",
   "grid",
+  "data-grid",
   "scroller",
   "scale",
   "replace",
@@ -163,6 +165,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   floatScenario,
   previewScenario,
   gridScenario,
+  dataGridScenario,
   shortcutScenario,
   themeColorRolesScenario,
   themeTypeAndShadowScenario,

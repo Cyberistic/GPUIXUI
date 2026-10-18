@@ -52,6 +52,7 @@ export const CAPABILITIES = [
   "chart",
   "toast",
   "grid",
+  "data-grid",
   "layers",
   "scroller",
   "scale",

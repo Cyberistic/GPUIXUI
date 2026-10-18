@@ -119,6 +119,12 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
       "grid",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
+      "data-grid-virtual",
+    );
+    expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
+      "data-grid",
+    );
   });
 
   it("flags duplicated ids", () => {

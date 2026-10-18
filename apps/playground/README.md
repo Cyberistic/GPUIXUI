@@ -69,7 +69,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (66/66 green); -> 2 on a host with no binding
+# -> 0 here (69/69 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -606,7 +606,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `16/16`.
+exact, and focus/Escape and the close button hold. The live suite is `20/20`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -626,8 +626,33 @@ decisive fact is negative:
 Limits: column windowing is component code (no horizontal virtual list), the
 probe derives its windows from the renderer's offset rather than accumulating
 wheel deltas, and rows are plain — combining the window with `<virtual-list>`
-row virtualization is the data-grid component's job (`virtualized-table` and
-`scroll-into-view` measure that half).
+row virtualization is measured by `data-grid-virtual` (plan `338`, below).
+
+## Virtualized data grid (plan `338`)
+
+`data-grid-virtual` is the composition plan `185` left to the data grid: a
+`<virtual-list>` **wider than its viewport** inside a plain horizontal scroller,
+a frozen column derived from the list's anchor, and a sort/filter that changes
+the row set. 60 rows × 10 columns (900 px of content in a 500 px viewport),
+59 checks.
+
+| Fact | Measured |
+| ---- | -------- |
+| wide list inside a horizontal scroller | the header row and the list are children of one `overflowX: "scroll"` div; `renderer.scrollTo` on it pans both, and a header cell aligns with its body cell within 1 px at `-90` and at the far edge `-400`; the list keeps painting and scrolling vertically while panned |
+| the wheel route | a `deltaX` wheel over a header cell pans exactly (`-90` for `-90`); the same wheel over a **body cell does nothing** — the list owns the gesture and does not chain it to the ancestor. A grid needs a pan affordance outside its rows, or a forwarder |
+| the frozen column | `renderer.getListScrollTop` read inside `onVisibleRange` places its rows; after a 280 px wheel (anchor 10) and after `scrollToItem(list, 45)`, the frozen row and its body row agree within 1 px. The `onVisibleRange` **payload is not a sync source**: with it the anchor was still `0` after the wheel |
+| a row-set change | sorting or filtering from anchor 45 returns the list to 0 (the component's `scrollToItem`); without the reset the anchor stays `45` and the frozen column shows unrelated rows. The filtered 10-row set then paints inside the 300 px viewport |
+| sort | ascending paints `Item 000`, descending `Item 059`; the list keeps its element and `scrollToItem(45)` is exact |
+| panned hit-testing | a click on column 9 at `-400` selects the row, takes native focus (`dg-cell-<id>-9`) and does not move the pan |
+
+The recipe: keep the header and the list in one horizontal scroller, window rows
+with `<virtual-list>`, place the frozen column from the list anchor, reset the
+anchor on any row-set change, and read the anchor in the handler. Limits: no
+column windowing here (`grid-wide-table` covers it) and an app-owned jump must
+mirror its anchor optimistically, because a programmatic `scrollToItem` has no
+range event to read. The probe is the suite's slowest (≈ 10–19 s) because a
+60-row re-render dominates; it is the cheapest shape that still proves the
+composition.
 
 ## Terminal surfaces (plan `179`)
 
@@ -884,10 +909,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **66/66 green** here (`exit 0`):
+The suite is **69/69 green** here (`exit 0`):
 
 ```
-66/66 scenarios passed · capabilities: layout=verified text=verified
+69/69 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -895,8 +920,8 @@ virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified command=verified
 content=verified drag=verified selection=verified menu=verified
 components=verified search=verified terminal=verified chart=verified
-toast=verified grid=verified layers=verified scroller=verified
-scale=verified tier2=verified replace=verified
+toast=verified grid=verified data-grid=verified layers=verified
+scroller=verified scale=verified tier2=verified replace=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1025,16 +1050,17 @@ narrower. Each deviation is deliberate and measured:
   probe, the search-highlight probe, the drag-autoscroll probe, the
   command-palette probe, the tabbed-pane probe, the terminal-grid probe, the
   chart probe, the markdown probe, the toast-viewport probe, the shell probe,
-  the pinned-grid probe, the collapsible-height probe, the nested-layer probe
-  and the variable-row-height probe pass in real GPUix 0.10.0 on this host
-  (66/66), with a written report and screenshots. The **message-scroller** probe
+  the pinned-grid probe, the virtualized data-grid probe, the
+  collapsible-height probe, the nested-layer probe and the variable-row-height
+  probe pass in real GPUix 0.10.0 on this host
+  (69/69), with a written report and screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
   unpinned, jump-to-latest, the threshold and a short history. The
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 16/16 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 20/20 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card and
