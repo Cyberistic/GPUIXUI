@@ -5,14 +5,12 @@
     "jsxImportSource": "@gpuix/react",
     // `@gpuixui/tokens/react` is consumed from source; its JSX is compiled with
     // this program's `jsxImportSource`, but the isolated linker puts
-    // `@gpuix/react` under this package's node_modules, not tokens'.
+    // `@gpuix/react` under this package's node_modules, not tokens'. Map to the
+    // runtime files, not their declarations: a `.d.ts` target makes Node's type
+    // stripping refuse the import (plan 380).
     "paths": {
-      "@gpuix/react/jsx-runtime": [
-        "./node_modules/@gpuix/react/jsx-runtime.d.ts"
-      ],
-      "@gpuix/react/jsx-dev-runtime": [
-        "./node_modules/@gpuix/react/jsx-dev-runtime.d.ts"
-      ]
+      "@gpuix/react/jsx-runtime": ["./src/internal/jsx-runtime.ts"],
+      "@gpuix/react/jsx-dev-runtime": ["./src/internal/jsx-dev-runtime.ts"]
     },
     "noEmit": true,
     "types": ["node"]

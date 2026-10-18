@@ -16,6 +16,10 @@
  *
  * `node:fs` is test-time only, like `inventory.test.ts`; no runtime source
  * imports it.
+ *
+ * Plan 380 added the last check: the JSX-runtime shim that makes the package
+ * loadable from source (`src/internal/jsx-runtime.ts`) carries a copy of the
+ * installed declaration's intrinsic map, and that copy must not drift.
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -95,6 +99,30 @@ const isPublicTarget = (target: string): boolean =>
   target === "./src/validation/logic.ts" ||
   (/^\.\/src\/[^/]+\.tsx$/.test(target) && !target.includes(".test."));
 
+/** The entries of an `interface IntrinsicElements { ... }` block, normalised. */
+const intrinsicEntries = (text: string): ReadonlyArray<string> =>
+  Arr.map(
+    Arr.filter(
+      Arr.map(
+        (
+          /interface IntrinsicElements \{([\s\S]*?)\n\}/.exec(text)?.[1] ?? ""
+        ).split("\n"),
+        (line) => line.trim().replace(/;$/, ""),
+      ),
+      (line) => line.length > 0,
+    ),
+    (line) => line,
+  );
+
+/** The JSX-runtime shim pairs, with the declaration each one mirrors. */
+const jsxRuntimePairs: ReadonlyArray<readonly [string, string]> = [
+  ["node_modules/@gpuix/react/jsx-runtime.d.ts", "src/internal/jsx-runtime.ts"],
+  [
+    "node_modules/@gpuix/react/jsx-dev-runtime.d.ts",
+    "src/internal/jsx-dev-runtime.ts",
+  ],
+];
+
 describe("package exports", () => {
   it("resolves every documented subpath to a file that exists", () => {
     const problems = Arr.filterMap(documentedSpecifiers(), (specifier) => {
@@ -170,5 +198,20 @@ describe("package exports", () => {
     );
 
     expect(sorted(missing)).toEqual([]);
+  });
+
+  it("keeps the JSX runtime shim level with the installed declaration", () => {
+    const drifted = Arr.filterMap(jsxRuntimePairs, ([declaration, shim]) => {
+      const expected = intrinsicEntries(read(declaration));
+      const actual = intrinsicEntries(read(shim));
+      const same =
+        Arr.length(expected) === Arr.length(actual) &&
+        Arr.every(Arr.zip(expected, actual), ([left, right]) => left === right);
+      return same
+        ? Result.failVoid
+        : Result.succeed(`${shim} differs from ${declaration}`);
+    });
+
+    expect(drifted).toEqual([]);
   });
 });

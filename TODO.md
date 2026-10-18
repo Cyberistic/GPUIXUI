@@ -93,12 +93,15 @@ first-shadow helpers (`primitives/src/core/style.ts`) — delete them now that
 records the components half)
 `[x]` Components carry no structural copy of `@gpuixui/tokens` and import the
 package directly (plan 157)
-`[!]` Tokens' `src/react.tsx` is compiled inside the components program when
+`[x]` Tokens' `src/react.tsx` is compiled inside the components program when
 tokens resolves from source; the isolated linker puts `@gpuix/react` only under
 `packages/components/node_modules`, so components' `tsconfig.json` maps the JSX
-runtime to its own dependency. The durable fix is a tokens-side
-`@gpuix/react` devDependency or an `@jsxImportSource react` pragma (owner:
-tokens-theme — do not edit from this workstream)
+runtime through a loadable `.ts` shim (`src/internal/{jsx-runtime,jsx-dev-runtime}.ts`).
+Mapping straight to the installed `.d.ts` made `nub` fail with
+`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`; plan 380 fixes it and a drift
+check holds the shim's intrinsic map to the installed declaration. A tokens-side
+`@gpuix/react` devDependency or `@jsxImportSource react` pragma would let the
+shim go (owner: tokens-theme, optional)
 `[x]` Promote the workstream to `main`: plans 010–019 and 051, `packages/tokens`
 and the union plan index are on `main` (commit `458fe10`); `main` now compiles
 `@gpuixui/tokens` from source, so `primitives`, `components` and `docs-site` can
@@ -394,7 +397,8 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Soft tone pair per status (`info`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` + readable foregrounds) | tokens-theme | **resolved** — landed on `main`; `internal/theme.ts` consumes `statusTone` (plan 157) |
 | `alpha(color, amount)` helper | tokens-theme | **resolved** — landed on `main`; the local `withAlpha` is deleted (plan 157) |
 | An `info` status role so Alert/Badge/Toast stop borrowing `accent` | tokens-theme | **resolved** — `infoSoft`/`infoSoftForeground` are the tone's roles (plan 157) |
-| `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | pending — worked around in `packages/components/tsconfig.json` `paths`; durable fix is a tokens devDependency or pragma |
+| `@gpuixui/tokens`' React file compiles with this package's `jsxImportSource`; tokens cannot resolve `@gpuix/react` under the isolated linker | tokens-theme | **resolved** — the JSX runtime maps through a loadable `.ts` shim, so the package imports from source (plan 380); a tokens devDependency/pragma would remove the shim |
+| Playground can drop `apps/playground/tsconfig.vendor.json` and import `@gpuixui/components` from source: the `ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING` cause is gone (plan 380) | playground | pending — hand-off recorded |
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | Plan 347's Carousel scenario expected an inactive slide to stay hit-testable; plan 365 fixes the component, so that step should assert the fixed behaviour | playground | resolved in `packages/components`; the playground assertion needs updating |
 | Plan 347 §8.2 found InlineEdit's blur commit is headless-only (live `onBlur` is never delivered for a native focus change) | playground → components | **resolved** in `packages/components` — `Tab` and an outside press finish the edit, and the press restores the display only when it focused nothing (plan 379); the playground live scenario can now assert click-away |
@@ -471,6 +475,11 @@ Work that this workstream needs but does not own. Another agent owns each row.
       both-direction proven
     - `[x]` `test:perf` + `src/perf/list.test.tsx` + `docs/performance.md`; the
       1,000-row cost and the row-repaint limitation are recorded
+    - `[x]` Packaging runtime truth: `@gpuixui/components` imports from source
+      again — the JSX runtime maps to loadable `.ts` shims instead of the
+      installed `.d.ts`, which Node refused to strip; `nub -e` reports 210
+      exports and a drift check holds the shim's intrinsic map to the installed
+      declaration — plan 380; unit 362, both-direction proof
     - `[x]` Plan 339 — row-level subscription for `List`: a per-row mask store and
       a stable actions context, so one focus move repaints exactly the two rows
       that changed; the style-count test fails with all six fixture rows on the
