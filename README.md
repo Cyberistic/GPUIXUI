@@ -44,6 +44,7 @@ Cloned read-only into `references/` (gitignored) and used as references, never
 edited:
 
 - GPUix — https://github.com/remorses/gpuix
+- GPUI transform branch — https://github.com/0xErwin1/zed, `feature/53306-07-text-raster-subpixel-regressions` (audited in plan 525; treeless clone at `references/transform-zed`)
 - GPUI Kit — https://github.com/longbridge/gpui-kit
 - shadcn/ui — https://github.com/shadcn-ui/ui
 - Fumadocs — https://github.com/fuma-nama/fumadocs
