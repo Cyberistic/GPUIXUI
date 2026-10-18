@@ -30,7 +30,7 @@ The icon itself is decorative, so the trigger is a single accessibility node.
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `content` | `string` | — | the tip; also the trigger's `aria-description` |
+| `content` | `string` | — | the tip; wraps inside the measured cap; also the trigger's `aria-description` |
 | `label` | `string` | — | the trigger's accessible name |
 | `icon` | `IconName` | `"info"` | which icon is painted |
 | `side` | `FloatingSide` | `top` | preferred side; flips when it does not fit (plan 067) |
@@ -67,7 +67,12 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   so a mouse press shows the same ring as `Tab`.
 - **No click-to-open.** The published tooltip opens on hover and focus; a
   persistent popover is `Popover`/`Dialog` work in `@gpuixui/components`.
-- The tip does not wrap (`whiteSpace: "nowrap"`), so keep `content` short.
+- A long `content` **wraps** inside the room the resolved side and alignment
+  have (inherited from `Tooltip`, plans `391` and `393`). Measured: a
+  230-character tip paints 1 251 × 40 px — two caption lines — in a 1280 × 800
+  window. A single unbreakable token can still paint past the cap, because
+  `StyleDesc` has no word-break property. Keep `content` to a sentence or two
+  anyway; a long explanation belongs in a popover.
 
 ## Verification
 
@@ -75,7 +80,12 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   icon is `presentation`, and the ring paints only while focused.
 - `runtime/info-tip.runtime.test.tsx` — hover opens the tip; `focusNext` lands on
   the trigger, the `Image` node carries the description and the tip is a named
-  `Tooltip`; the painted `boxShadow` equals `focusRing(theme)`.
+  `Tooltip`; the painted `boxShadow` equals `focusRing(theme)`; a 230-character
+  tip stays inside the window and paints more than one line, while a short one
+  paints exactly one (plan `395`).
+- `src/docs-tooltip-wrap.test.ts` — the resolver's capped form is `normal` and
+  uncapped form `nowrap`, and no primitives page may claim a mounted tip does
+  not wrap (plan `395`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

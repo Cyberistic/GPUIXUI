@@ -1285,6 +1285,17 @@ retired once both branches are one
       rule (3 tests, failing on the old rows and on a swapped axis); the runtime
       case proves both orientations (offline 695 → 698, scoped live 9/9; plan
       `394`).
+`[x]` `packages/primitives`: **the `InfoTip` page denied the wrap its tooltip
+      now performs** — plan `391` replaced the tip's unconditional `nowrap` with
+      a measured `maxWidth` cap but only updated `tooltip.mdx`, so
+      `docs/info-tip.mdx` still told readers "The tip does not wrap
+      (`whiteSpace: "nowrap"`)". Measured (2026-10-19): a 230-character
+      `InfoTip` paints **1 251 × 40 px** — two caption lines — in a 1280 × 800
+      window. The page now states the wrap and the unbreakable-token limit, a
+      runtime case proves a long tip wraps and a short one stays one line, and
+      `src/docs-tooltip-wrap.test.ts` fails by page and line if a primitives
+      page denies the wrap or if `tooltipStyle` stops producing the capped
+      `normal` form. Both failure directions measured (plan `395`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

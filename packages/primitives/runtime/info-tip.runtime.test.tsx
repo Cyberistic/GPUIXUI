@@ -11,10 +11,22 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
 import { InfoTip } from "../src/components/InfoTip.js";
+import { FLOATING_MARGIN } from "../src/core/floating.js";
 import { a11yNode, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const CONTENT = "Booked revenue, net of refunds.";
+
+/**
+ * The page used to say an InfoTip's tip "does not wrap" (plan `395`), because
+ * plan `391` updated `tooltip.mdx` but not this component's page. This is long
+ * enough to need more than one line in the 1280 px window the fixture opens.
+ */
+const LONG_CONTENT =
+  "Revenue is recognised when the service is delivered, net of refunds and " +
+  "credits, and excludes taxes collected on behalf of a jurisdiction. This " +
+  "explanation is deliberately long enough to need more than one line in any " +
+  "reasonable window, because the tip used to be nowrap with no width cap.";
 
 const renderTip = (runtime: Runtime): void =>
   runtime.render(
@@ -74,4 +86,45 @@ it("paints a focus ring on the trigger", async () => {
     ...focusRing(testTheme).boxShadow,
     inset: false,
   });
+});
+
+/** The tip's painted box, after opening it with a hover. */
+const openAndMeasure = async (
+  content: string,
+): Promise<{ readonly width: number; readonly height: number }> => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <InfoTip
+        content={content}
+        label="Revenue definition"
+        testId="trigger"
+        tipTestId="tip"
+      />
+    </Surface>,
+  );
+  runtime.hover("trigger");
+  runtime.flush();
+  const box = Option.getOrElse(runtime.bounds("tip"), () =>
+    expect.fail("the open tip painted no box"),
+  );
+  return { width: box.width, height: box.height };
+};
+
+it("wraps a long tip inside the window instead of painting one wide line", async () => {
+  const long = await openAndMeasure(LONG_CONTENT);
+  // The wrapper caps at the room on the resolved side; for a top-side tip that
+  // is the window less one margin at each edge (plan `391`).
+  expect(long.width).toBeLessThanOrEqual(1280 - 2 * FLOATING_MARGIN);
+  // More than one caption line: the measured form is 1 251 × 40 px (plan `395`).
+  expect(long.height).toBeGreaterThan(testTheme.typography.caption.lineHeight);
+});
+
+it("keeps a short tip on one line", async () => {
+  const short = await openAndMeasure(CONTENT);
+  // Two caption lines would be `2 × lineHeight`; the measured one-line tip is
+  // 24 px against a 20 px line, i.e. the padding and no second line (plan `395`).
+  expect(short.height).toBeLessThan(
+    2 * testTheme.typography.caption.lineHeight,
+  );
 });
