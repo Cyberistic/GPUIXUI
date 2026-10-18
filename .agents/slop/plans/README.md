@@ -255,6 +255,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
 | [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | done |
 | [563](./563-caret-mark-list.md) | The caret mark outside the mark list | F | 332, 341, 351, 399, 557 | done |
+| [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2821,6 +2822,19 @@ incomplete and the guard could not see it. `caretPairs` now sits inside
 `markPairs`, `contrastPairs` keeps one copy, the graphic-marks row names it, and
 `caret-mark-list.test.ts` fails on the pre-fix tree. No colour, pair count or
 floor moves: `contrastPairs` stays 405.
+
+Plan `564` closes the last CSS habit the typeface contract accepts. Plan 533
+closed the padded name and the CSS generic keyword and plan 385 the comma stack,
+but a family wrapped in CSS quotes — `'"Helvetica Neue"'`, the canonical CSS
+spelling for a multi-word family — still returned `[]` from all seven checks.
+The runtime passes `StyleDesc.fontFamily` to its font collection as
+`QueryFamily::Named(name)` without unquoting it, so the theme paints the system
+fallback silently while the guarantee says it is good. A fifth `quoted` rule
+reports a quoted (or half-quoted) name, leaves an internal apostrophe
+(`D'Nealian`) and every shipped family alone, and joins `typefaceRules`; the
+catalogue, README, design system and ledger enumerate the rule from the index,
+and `typeface-quoted.test.ts` fails on the pre-fix tree. No family, colour, pair,
+floor or metric moves.
 
 ## How to use a plan
 
