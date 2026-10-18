@@ -3,7 +3,7 @@
 **Phase:** F (docs information architecture and honest status)
 **Owner:** `docs-site`
 **Depends on:** 410, 411, 417, 429, 443, 469, 470, 487, 504, 505, 507
-**Status:** planned
+**Status:** implemented
 
 ## 1. The gap, measured
 
@@ -51,11 +51,6 @@ A pure derivation module with a vitest-only filesystem boundary, following
 ```ts
 export type RoadmapTier = 3 | 4 | 5;
 
-export type RoadmapSpan =
-  | { readonly kind: "text"; readonly text: string }
-  | { readonly kind: "code"; readonly text: string }
-  | { readonly kind: "strong"; readonly text: string };
-
 export interface RoadmapTarget {
   readonly tier: RoadmapTier;
   /** The heading's label, e.g. `"data presentation"` (verbatim from COMPONENTS.md). */
@@ -63,8 +58,8 @@ export interface RoadmapTarget {
   readonly name: string;
   readonly status: string;
   readonly support: string;
-  /** The inventory's note, split so the page can render `code` and **strong**. */
-  readonly note: ReadonlyArray<RoadmapSpan>;
+  /** The inventory's note, verbatim. */
+  readonly note: string;
 }
 ```
 
@@ -80,23 +75,23 @@ Required exports:
   - Cells in order: name, status, support, note. Preserve file order.
   - `tierTitle` is the heading text after the em dash, trimmed and lowercased
     (`"data presentation"`, `"desktop workspace"`, `"specialised"`).
-- `noteSpans(note: string): ReadonlyArray<RoadmapSpan>`
-  - Split on `` `…` `` and `**…**` only. Emit the text between them as `text`,
-    backticked content as `code`, bold content as `strong`. Drop empty spans.
-  - This file may read `node:fs`; it never runs in the browser. A note such as
-    `No `<table>` element; …` must produce three spans and render without
-    literal backticks on the page.
-- `plainNote(note: ReadonlyArray<RoadmapSpan>): string` — the concatenated span
-  text, used by search.
-- `roadmapProblems(targets: ReadonlyArray<RoadmapTarget>): ReadonlyArray<string>`
-  - empty `name`/`status`/`support`/`note`;
-  - a duplicate name;
-  - a target outside tiers 3–5;
-  - a tier with no rows.
-- `deriveRoadmap({ root }: { readonly root: string }): ReadonlyArray<RoadmapTarget>`
-  — reads `COMPONENTS.md` from `root` and returns `parseInventory`.
-- `renderGeneratedModule(targets: ReadonlyArray<RoadmapTarget>): string` — the
-  committed TypeScript module below, with a header naming the command.
+- `roadmapProblems(targets)`, `deriveRoadmap({ root })` and
+  `renderGeneratedModule(targets)` as below.
+- `renderGeneratedModule` must emit the exact bytes oxfmt accepts, including the
+  quote style (a note containing `"` and no apostrophe is single-quoted), or the
+  freshness test and `nub run fmt` will disagree.
+
+The inline Markdown is **not** parsed here. `apps/docs/src/lib/roadmap-note.ts`
+is a second, browser-safe module:
+
+- `RoadmapSpan` (`text` / `code` / `strong`) and
+  `noteSpans(note: string): ReadonlyArray<RoadmapSpan>`;
+- `plainNote(note: string): string` for search;
+- code inside bold is still code (the inventory has
+  `**… \`chat\`**`), and a bold marker inside a code span is left alone;
+- no `node:` import, because `<RoadmapTable />` calls `noteSpans` in the browser.
+
+This file may read `node:fs`; it never runs in the browser.
 
 ### 2.2 `apps/docs/scripts/roadmap.ts` (new)
 
@@ -131,19 +126,13 @@ export const roadmapTargets: readonly RoadmapTarget[] = [
     name: "Tables",
     status: "todo",
     support: "?",
-    note: [
-      { kind: "text", text: "No " },
-      { kind: "code", text: "<table>" },
-      { kind: "text", text: " element; grid + " },
-      { kind: "code", text: "div" },
-      { kind: "text", text: " rows." },
-    ],
+    note: "No `<table>` element; grid + `div` rows.",
   },
   // … one entry per COMPONENTS.md Tier 3–5 row, in file order
 ];
 ```
 
-The exact spans depend on the file; the committed file is the script's output,
+The exact notes depend on the file; the committed file is the script's output,
 not a hand copy. No `node:` import may appear in this module.
 
 ### 2.4 `apps/docs/src/components/roadmap-table.tsx` (new)
@@ -162,12 +151,13 @@ order 3, 4, 5. For each tier:
 - a scrollable table region (the accessibility pattern `CapabilityMatrix` uses):
   `<div role="region" aria-label={"Tier " + tier + " targets"} tabIndex={0}
   className="not-prose my-4 overflow-x-auto">`.
-- columns: **Component** (the name, `font-medium`), **Status** (`data-status`),
-  **GPUix support**, **Notes** (render `note` spans; `code` becomes `<code>`,
-  `strong` becomes `<strong>`, `text` plain).
+- columns: **Component** (the name, `font-medium`), **Status**
+  (`data-roadmap-status`), **GPUix support**, **Notes** (`noteSpans` from
+  `src/lib/roadmap-note.ts` turns `code` into `<code>`, `strong` into
+  `<strong>`, text plain).
 - each `<tr>` carries `data-roadmap-target={target.name}` and
-  `data-roadmap-tier={target.tier}` so the page test can compare rows with the
-  inventory in both directions.
+  `data-roadmap-status={target.status}` so the page test can compare rows with
+  the inventory in both directions.
 
 An empty tier renders a sentence (`No targets are tracked in this tier.`) rather
 than a bare table; `roadmapProblems` makes that unreachable, but the component
@@ -232,12 +222,12 @@ Register it in `apps/docs/src/lib/search.ts`'s `generatedEntries`.
   - every row's `status`/`support`/note text matches the file;
   - no Tier 1 or Tier 2 component name appears;
   - `roadmapProblems` is empty.
-- `noteSpans` on the real Tables note yields code spans for `<table>` and `div`
-  and no literal backticks in `plainNote`.
+- `noteSpans` on the real `Virtualized tables` note yields code spans for
+  `onVisibleRange` and a strong span for the warning, and `plainNote` contains no
+  literal backticks or `**`.
 - `renderGeneratedModule(deriveRoadmap(...))` equals the committed
-  `roadmapTargets` file byte-for-byte — import the generated module and compare
-  its `JSON.stringify`, or read the file and compare strings. This is the
-  freshness guard.
+  `roadmap.generated.ts` byte-for-byte, read as a string. This is the freshness
+  guard, and it also proves the emitter is oxfmt-stable.
 - The generated module's source contains no `node:` import.
 
 **`apps/docs/src/roadmap-page.test.tsx` (new)**
@@ -259,9 +249,8 @@ Register it in `apps/docs/src/lib/search.ts`'s `generatedEntries`.
 - Promoted names are exactly the targets whose name contains a space (both
   directions), and no single-word target is promoted.
 - `await search("Resizable split panes", 5)` returns `/docs/roadmap` first.
-- `await search("Tables", 5)` still returns a result and does not fail; assert
-  the roadmap appears in the first five (it is promoted only if the name has a
-  space, so this checks indexing rather than promotion).
+- `await search("Toolbars", 5)` still returns a result; the roadmap is in the
+  first five even though the name is not promoted (indexing, not promotion).
 
 ### 2.9 Cross-links and commands
 
@@ -358,28 +347,30 @@ Record each observed message under §7.
 
 ## 7. Implementation record
 
-**Landed.** `apps/docs/src/lib/roadmap.ts` derives the inventory; the command
-`nub run --filter docs roadmap` writes
-`apps/docs/src/lib/roadmap.generated.ts` (54 targets, 15 + 22 + 17);
+**Landed.** `apps/docs/src/lib/roadmap.ts` derives the inventory and
+`apps/docs/src/lib/roadmap-note.ts` renders its inline Markdown in the browser;
+the command `nub run --filter docs roadmap` writes
+`apps/docs/src/lib/roadmap.generated.ts` (54 targets: 15 + 22 + 17);
 `<RoadmapTable />` renders three tier sections with derived counts and links;
 `/docs/roadmap` sits after Components in the sidebar and is linked from the
 component index, Data display and Workspace; `roadmapSearchEntry` makes every
 target findable from ⌘K and promotes only multiword names.
 
-Measured two-direction proofs (each run over the relevant suite, then the file
-restored):
+Measured two-direction proofs (each run over the docs suite, then the file
+restored and the generator re-run):
 
 | Direction | Command | Observed |
 | --------- | ------- | -------- |
-| a row deleted | `nub run roadmap` after deleting `Tables` from `COMPONENTS.md` | `roadmap: 53 targets from COMPONENTS.md`; `roadmap.test.ts` fails naming `Tables` as missing |
-| a fake generated row | hand-added `Fake target` to `roadmap.generated.ts` | freshness test: `generated module is stale` |
-| the block removed | deleted `<RoadmapTable />` from `roadmap.mdx` | page test fails: the page no longer renders the table |
-| the sidebar entry removed | deleted `"roadmap"` from `meta.json` | page test fails: `roadmap` is not in the sidebar |
-| the search entry dropped | removed `roadmapSearchEntry` from `generatedEntries` | `Resizable split panes` no longer returns `/docs/roadmap` first |
-| a plain word promoted | added `"Tables"` to `names` | promotion test fails on `Tables` |
-| a tier link removed | deleted the Data display link | page test fails naming `/docs/data-display` |
-| a note span corrupted | changed `` `div` `` to `div` in the source note | span test fails on the Tables note |
+| a row deleted | `nub run roadmap` after deleting `Tables` from `COMPONENTS.md` | `roadmap: 53 targets from COMPONENTS.md`; `roadmap.test.ts` fails: `expected 'Sortable tables' to be 'Tables'` (the first row moved) |
+| a fake generated row | hand-added `Fake target` to `roadmap.generated.ts` | three failures: stale bytes, `expected { extra: [ 'Fake target' ] }`, `expected [ 'Fake target' ] to deeply equal []` |
+| the block removed | deleted `<RoadmapTable />` from `roadmap.mdx` | page test: `expected '---\ntitle: Roadmap…' to contain '<RoadmapTable />'` |
+| the sidebar entry removed | deleted `"roadmap"` from `meta.json` | `content.test.ts` reports `expected [ 'roadmap' ] to deeply equal []`; the page test's sidebar regex fails |
+| the search entry dropped | removed `roadmapSearchEntry` from `generatedEntries` | `Resizable split panes` returns `/docs/workspace` first, not `/docs/roadmap`; the single-word check fails |
+| a plain word promoted | added `"Tables"` to `names` | promotion test: `expected [ 'Sortable tables', …(51) ] to deeply equal [ 'Sortable tables', …(50) ]` |
+| a tier link removed | changed the Tier 3 `href` to `/docs/data` | page test: `expected [ '/docs/data-display' ] to deeply equal []` |
+| a note span corrupted | removed the backticks around `onVisibleRange` in `COMPONENTS.md`, regenerated | span test: `expected [ 'virtualized-table', …(1) ] to include 'onVisibleRange'` |
 
-Final counts: **70 files / 476 docs tests** (was 67 / 465), 92 built pages,
-`nub run check`, `nub run lint`, `nub run test`, docs type-check and
-`smoke:build` green. `COMPONENTS.md` untouched.
+Final counts: **70 files / 490 docs tests**, **92 built pages**; `nub run check`,
+`nub run lint`, `nub run test`, `smoke:build` (92 pages, 115 links, 1 162
+anchors), `smoke:a11y --only /docs/roadmap` (1 page × 2 schemes, 0 violations)
+and `smoke:responsive` (92 pages, 390 px) all green. `COMPONENTS.md` untouched.
