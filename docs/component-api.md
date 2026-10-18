@@ -279,6 +279,7 @@ parts.
 | --------- | ----- | --------------- | ------ |
 | Message (AI message row) | `Message`, `MessageAvatar`, `MessageContent`, `MessageStreaming`, `MessageReasoning`, `MessageToolCalls`, `MessageSources`, `MessageAttachments`, `MessageActions` | `Message` (shape only) | plan 207 |
 | Chat (AI conversation) | `Chat`, `ChatMessages`, `ChatComposer`, `ChatEmpty` | `Chat` (shape only) | plan 207 |
+| Multi-step forms | `MultiStepForm` (render prop; one part) | — | plan 390 |
 
 `TimePicker` is a **field**, not a trigger with a popup. The §9 plan line that
 said "the same for `TimePicker`" predated the measured reason it is a field: the

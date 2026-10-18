@@ -5,7 +5,7 @@
 | Phase | C (Tier 2 composition; the Tier 5 row is a composition, not a new capability) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `115` (`Field`/validation), `200` (compound-part contract), `201` (state model), `205` §3 (B4), `306` (`Fieldset`), `307` (`Stepper`), `308` (`Form`), `384` (`Form` field paths) |
-| Status | planned |
+| Status | done — 12 native tests (Multi-step form 12, behaviour 595); five mutation proofs (step validation, last-step submit guard, pending on next, controlled index, stale-message guard) |
 | Source | `COMPONENTS.md` → Tier 5 → "Multi-step forms"; plan `205` §3 B4 |
 
 This plan is self-contained. It adds `MultiStepForm` to `packages/components` at

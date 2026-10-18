@@ -443,7 +443,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — the registry is complete and every entry is render-proven in this package (plan 330); mounting still belongs to `apps/playground` |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
-| Root `README.md`'s status line still says 517 behaviour tests / 41 areas; the suite is now 542 and the package has 42 modules | repo README (coordinator) | pending — recorded by plan 373; not edited from `packages/components` |
+| Root `README.md`'s status line still says 517 behaviour tests / 41 areas; the suite is now 595 and the package has 43 modules | repo README (coordinator) | pending — recorded by plan 373, count refreshed by plan 390; not edited from `packages/components` |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
@@ -462,6 +462,12 @@ Work that this workstream needs but does not own. Another agent owns each row.
 `[ ]` `[░░░░░░░░░░]` 0/2
 
 `[ ]` Tier 5 specialised components where justified
+  - [x] Multi-step form — plan 390: `MultiStepForm` composes `Form`'s validation
+    with `Stepper`; each step validates a projection schema over the caller's
+    draft, `back` never validates, the full schema runs once on the last step and
+    delivers the decoded value, messages carry the step that produced them;
+    controlled/uncontrolled `step`, one `role="alert"` summary, 12 native tests,
+    example, docs page and inventory row; five mutation proofs (behaviour 595)
 `[ ]` Document every capability GPUix does not provide, with evidence
 
 ## Phase F — integration and polish

@@ -242,7 +242,7 @@ carries an evidenced limitation. The capability evidence lives in
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | ? | Mouse events exist; there is no drag host feature. `onFileDrop` handles file drops only. |
 | Notification centre | todo | ? | Composition over toasts + panels. |
-| Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
+| Multi-step forms | done | partial | `MultiStepForm` composes `Form`'s validation with `Stepper`: each step validates a projection schema over the caller's draft before advancing, `back` never validates, the full schema runs once on the last step and delivers the decoded value, messages carry the step that produced them, `step` is controlled/uncontrolled, and one `role="alert"` summary feeds `errorFor` paths; 12 native behaviour tests, both themes. Owned-value + render prop, no step click (Stepper is display-only), no validate-on-edit, and a failed final submit names earlier-step fields but cannot paint them inline |
 | Virtualized hierarchical data | todo | ? | Tree views + `<virtual-list>`; hierarchical virtualization is ours. |
 | Advanced filtering / query builders | todo | ? | Composition over inputs + menus. |
 | QR code | todo | ? | Render the matrix as a grid of `div`s or one `<svg>`; both are provided. The encoder is ours (dependency not yet chosen). |
