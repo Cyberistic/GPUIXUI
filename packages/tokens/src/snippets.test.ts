@@ -138,12 +138,12 @@ const scaleNames = new Set(Object.keys(scaleGroups));
  * and every data export except the scale groups, whose names (`radius`,
  * `spacing`, `motion`) are also ordinary object keys and JSX prop names.
  */
-const checkedValues = [
+const checkedValues = new Set([
   ...publicFunctions,
   ...Object.keys({ ...tokens, ...react }).filter(
     (name) => !publicFunctions.has(name) && !scaleNames.has(name),
   ),
-];
+]);
 
 /** A snippet's code without comments or imports: only its usage remains. */
 const usageOf = (code: string): string =>
@@ -168,7 +168,7 @@ const usesWithoutImport = (code: string, name: string): boolean => {
   }
   return (
     (publicTypes.has(name) ||
-      (!publicFunctions.has(name) && checkedValues.includes(name))) &&
+      (!publicFunctions.has(name) && checkedValues.has(name))) &&
     new RegExp(`(?<![\\w$.])${name}(?![\\w$])`).test(body)
   );
 };
