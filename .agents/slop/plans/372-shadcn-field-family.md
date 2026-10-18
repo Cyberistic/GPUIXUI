@@ -278,14 +278,22 @@ name so a control that drifts fails by name:
 
 ### 5.4 Two-direction proof
 
-- Revert `selectTriggerStyle` to `controlStyle` (and `NumberField`/`otpCellStyle`
-  with it) and run 5.1 + 5.2: the cases fail with **32/10/13** instead of
-  36/12/14 (recorded, with the failing case names).
-- Remove the square override: the OTP cell is 36 high × 100 % wide, and 5.2's
-  square case fails by name.
-- Remove `width: undefined` from the trigger: the trigger reports `"100%"`, and
-  the hugging case fails by name.
-- Restore; run the offline suite, the runtime suite, then the three gates.
+Run and recorded on 2026-10-18:
+
+- **Pre-slice chrome.** `fieldRecipeStyle` temporarily returned the density
+  chrome (32/10, label type 13/18) for the field family:
+  `field-family.test.tsx` failed with heights `[32, 32, 32, 32]` instead of
+  `[36, …]`, `paddingLeft` 10 instead of 12, and the OTP square at 32;
+  `OTPField.test.tsx`'s square case and `Select.test.tsx`'s recipe-ring case
+  failed too — **6 failures across the 3 files**.
+- **The square override removed.** `field-family.test.tsx › makes an OTP cell
+  square and centres its digit` failed with `expected '100%' to be 36` (the
+  other 11 cases passed), so the case is about the override, not the fixture.
+- **The trigger's width clear removed.** `field-family.test.tsx › hugs the
+  select's trigger and keeps its value at the far edge` failed with
+  `expected '100%' to be undefined`.
+- Restored (clean `git status`), then the offline suite (45 files / 653 tests),
+  the runtime suite (32 files / 608 tests) and the three gates all passed.
 
 ## 6. STOP conditions
 
