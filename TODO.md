@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–485)
+## Docs site workstream (plans 410–486)
 
-`[x]` `[██████████]` 83/84
+`[x]` `[██████████]` 84/84
+
+`[x]` **The five remaining preview gaps become gesture-driven live scenes
+      (plan 486)** — Tooltip (hover), Context menu (right-click), Date picker
+      (open + choose a day), Combobox (click) and Hotkey input (click + key) are
+      real scenes driven through the renderer's own automation API
+      (`globalThis.gpuix`); `smoke:preview` asserts each scene's text is absent
+      before the gesture and present after it, the gap set is empty, and both
+      directions were measured (removing the combobox step fails the after
+      assertion; an initial date fails the before assertion; a renamed target
+      fails the contract guard)
 
 `[x]` **The patterns index names the real blocker (plan 485)** — it said the
       confirmation flow and command palette appear "once the components they
@@ -536,9 +546,15 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[x]` **Live GPUix surface previews (plan 455)** — the published 0.10.0 wasm renderer runs the real Button scene behind a labelled click-to-load iframe on the Buttons and Theming pages; the native tier stays beneath it, `smoke:preview` proves the scene reaches GPUI's tree in headless Chrome (real time), the page wiring, and that `?platform=win32` reaches the renderer
 `[x]` Live scenes for the rest of the delivered components — one per interaction record first (Tabs, Dropdown menu, Dialog), each with its own `LIVE_SCENES` key, a real composition and a smoke assertion; the tier-A list and the components' platform-styled previews stay as they are — plan 456: four scenes with a JSX-free expectation table, the per-page iframe check, and a readiness probe for the renderer's window handle
 `[x]` Live scenes for Popover and Command menu (plan 457) — six scenes total; the smoke derives its page URLs from `LIVE_SCENES` and a contract test pins `slug === scene`
-`[ ]` Live scenes for Context menu and Date picker — blocked on the component API: `ContextMenu` needs a `point` prop (its surface is fixed at the internal `{ x: 0, y: 0 }`) and `DatePicker` needs `defaultOpen`; owner: `components`; a scene is never faked
+`[x]` Live scenes for Context menu and Date picker (plan 486) — supersedes the
+      API ask: no `ContextMenu.point` or `DatePicker.defaultOpen` is needed,
+      because the smoke drives the real right-click and the real trigger click
+      and a real day selection through `globalThis.gpuix`
 `[x]` Live scenes for the five pages a real surface can show without a new component API (plan 458) — Icons, Scrollable containers, Skeletons, Loading indicators and Confirmation dialogs; eleven scenes, and `scene-contract.test.ts` fails on a delivered page with neither a live scene nor an illustration unless its reason is listed
-`[x]` Every `liveScene` gap is measured: Tooltip, Combobox and Select hide their open state behind a wrapper with no `open`/`defaultOpen`, Context menu paints at an internal point and Date picker owns its open state; Toast's race was disproved by `Duration.infinity` and its page moved to a live scene (plan 484, `docs/preview-strategy.md`)
+`[x]` Every `liveScene` gap was measured and then closed (plan 486): the five
+      pages that hid their open state behind a wrapper, an internal point or a
+      key event are now gesture-driven live scenes; the gap set is empty and
+      `preview-gaps.test.ts` still compares the document with the code
 `[x]` Architecture page truth (plan 459) — it names all seven packages with real edges, includes the live surface in the preview list, and no longer promises `docs/architecture.md`; `prose-truth.test.ts` reads `packages/*/package.json` and fails on an absent `docs/*.md`
 `[x]` The site stops denying the live surface (plan 460) — the introduction, getting-started, examples, landing page and 19 component pages; a live-scene page may never carry the old denial, and the landing page lists the live tier as its first preview
 
@@ -609,8 +625,15 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
-`[ ]` **Components**: expose the two props the remaining live scenes need — `ContextMenu.point` (its surface paints at an internal `{ x: 0, y: 0 }` set only by the trigger's aux click) and `DatePicker.defaultOpen` (it owns its open state). Plans 457 and the preview strategy record why both stay at their native tier until then
-`[ ]` **Components/primitives**: expose the open state the wrappers hide, so a live scene can prove it — `Select` and `Tooltip` (primitives) and `Combobox` (components) have no `open`/`defaultOpen`, while GPUix's primitives do; a headless check cannot prove a hover- or click-opened surface. Plan 458 records the three asks; no scene is faked meanwhile
+`[-]` **Components**: expose `ContextMenu.point` and `DatePicker.defaultOpen` —
+      superseded by plan 486: the docs' live scenes drive the real right-click
+      and trigger click, so no prop is needed. A prop would still be a fine
+      component API; nothing on the docs depends on it
+`[-]` **Components/primitives**: expose `open`/`defaultOpen` on `Select`,
+      `Tooltip` and `Combobox` — superseded by plan 486 for Tooltip and Combobox
+      (their scenes open by the real hover/click). `Select` keeps its tier-A
+      illustration and is not a gap; a live scene for it can be added the same
+      way, without a new prop
 `[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs
 
 `[ ]` **Repo tooling (`scripts/check-tests.ts`)**: a regex literal whose `/` follows a space is read as division, and backticks inside it then open a phantom template literal, so a real `it(...)` block can be truncated to `"("` and reported as assertionless. The docs guard worked around it without the `check-tests-ok` escape (plan 469); the parser should accept a regex after whitespace when the previous non-space token cannot end a value. Owner: whoever owns `scripts/`

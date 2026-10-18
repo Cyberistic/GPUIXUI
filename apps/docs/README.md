@@ -79,9 +79,14 @@ renderer (the browser's GPU backend) and exports one document per scene:
   occurs in its view. Live scenes ship for Buttons, Tabs, Dropdown menus,
   Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable
   containers, Skeletons, Loading indicators, Drawers, Navigation menus,
-  Mention inputs, Preview cards and Toasts. A page with neither a live scene
-  nor an illustration must be one of the reasons `scene-contract.test.ts` lists
-  (plan 458) — a new gap fails the suite instead of shipping silently.
+  Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers,
+  Comboboxes and Hotkey inputs. Five of those own their open state and expose
+  no `defaultOpen`, so `preview/scenes.ts` declares the gesture that opens them
+  (`SCENE_GESTURE`) and the sentence the reader sees
+  (`SCENE_INTERACTION`); the smoke drives the gesture through the `App` the
+  renderer installs on the page. Every delivered page now has a live scene or an
+  illustration; `scene-contract.test.ts` fails on a new gap instead of shipping
+  it silently (plans 458 and 486).
 - `vite.preview.config.ts` builds it to `public/gpuix-preview/` (gitignored,
   ~20 MB). `build` and `dev` run `build:preview` first. The published browser
   entry uses Bun's `with { type: "file" }`, so the config names the two
@@ -96,7 +101,8 @@ renderer (the browser's GPU backend) and exports one document per scene:
 `smoke:preview` drives Chrome over CDP **in real time** — a virtual-time
 screenshot is black — and asserts every scene's text is in GPUI's tree, that
 every scene reaches a sized canvas (a `ready` flag on a 1×1 frame does not
-count), that the Button scene paints a different frame in light than in dark
+count), that a gesture scene's text is absent before the gesture and present
+after it, that the Button scene paints a different frame in light than in dark
 (with two identical dark captures proving the screenshot is deterministic), that
 an unknown scene reports a reason, that each component page loads the iframe on
 a click (after hydration) with the page's mode and platform in the URL, and that

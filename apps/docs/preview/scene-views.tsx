@@ -91,8 +91,30 @@ import {
   Spinner,
   Stack,
   Text,
+  Tooltip,
   useTheme,
 } from "@gpuixui/primitives";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@gpuixui/components/combobox";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@gpuixui/components/context-menu";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "@gpuixui/components/date-picker";
+import { HotkeyRecorder } from "@gpuixui/components/hotkey-recorder";
 import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
 import type { LiveScene } from "./scenes";
@@ -570,6 +592,113 @@ const ToastScene = (): ReactElement => (
   </ToastProvider>
 );
 
+/**
+ * The five gesture scenes (plan 486). Each one paints its documented state only
+ * after a real GPUI gesture; `SCENE_GESTURE` in `scenes.ts` drives it and the
+ * smoke asserts the text is absent first. The trigger that `Tooltip` wraps is a
+ * host `div`, not this package's `Button`, because `ButtonProps` is closed and
+ * does not forward the hover/focus handlers the tooltip clones in — the
+ * documented contract on the Tooltip page.
+ */
+const TooltipScene = (): ReactElement => {
+  const theme = useTheme();
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Revenue</Text>
+      <Tooltip content="Revenue, net of refunds." side="bottom">
+        <div
+          tabIndex={0}
+          testId="scene-tooltip-trigger"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: theme.spacing.sm,
+            alignSelf: "flex-start",
+            paddingLeft: theme.spacing.sm,
+            paddingRight: theme.spacing.sm,
+            paddingTop: theme.spacing.xs,
+            paddingBottom: theme.spacing.xs,
+            borderRadius: theme.radius.md,
+          }}
+        >
+          <Icon name="info" size="sm" color={theme.colors.mutedForeground} />
+          <Text role="label">Net revenue</Text>
+        </div>
+      </Tooltip>
+    </Stack>
+  );
+};
+
+const ContextMenuScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Projects</Text>
+    <ContextMenu>
+      <ContextMenuTrigger testId="scene-context-row">
+        <Text role="label">GPUIXUI</Text>
+        <Text role="caption" tone="muted">
+          12 components · right-click for actions
+        </Text>
+      </ContextMenuTrigger>
+      <ContextMenuContent label="Project actions">
+        <ContextMenuItem>Open</ContextMenuItem>
+        <ContextMenuItem>Copy path</ContextMenuItem>
+        <ContextMenuItem tone="destructive">Delete</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  </Stack>
+);
+
+const DatePickerScene = (): ReactElement => {
+  const [due, setDue] = useState<string | null>(null);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Project settings</Text>
+      <DatePicker value={due} onValueChange={setDue} today="2026-10-17">
+        <DatePickerTrigger label="Due date" testId="scene-date-trigger" />
+        <DatePickerContent>
+          <DatePickerCalendar />
+        </DatePickerContent>
+      </DatePicker>
+      {due === "2026-10-21" ? <Text role="body">Booked 21 October</Text> : null}
+    </Stack>
+  );
+};
+
+const ComboboxScene = (): ReactElement => (
+  <Stack direction="column" gap="lg">
+    <Text role="h3">Task details</Text>
+    <Combobox
+      options={[
+        { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+      ]}
+    >
+      <ComboboxTrigger label="Reviewer" testId="scene-combobox-trigger" />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+        <ComboboxEmpty />
+      </ComboboxContent>
+    </Combobox>
+  </Stack>
+);
+
+const HotkeyInputScene = (): ReactElement => {
+  const [hotkey, setHotkey] = useState<string | null>(null);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Shortcuts</Text>
+      <HotkeyRecorder
+        label="Toggle the command palette"
+        value={hotkey}
+        onChange={setHotkey}
+        testId="scene-hotkey"
+      />
+      {hotkey === "p" ? <Text role="body">Recorded p</Text> : null}
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -588,6 +717,11 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "mention-input": MentionInputScene,
     "preview-card": PreviewCardScene,
     toast: ToastScene,
+    tooltip: TooltipScene,
+    "context-menu": ContextMenuScene,
+    "date-picker": DatePickerScene,
+    combobox: ComboboxScene,
+    "hotkey-input": HotkeyInputScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { SCENE_INTERACTION } from "../../../preview/scenes";
 import {
   LIVE_SURFACE_DOWNLOAD,
   LIVE_SURFACE_NOTICE,
@@ -48,5 +49,31 @@ describe("live preview labels", () => {
   it("does not mount the iframe until the reader asks", () => {
     expect(html).toContain('data-preview-tier="live"');
     expect(html).not.toContain("<iframe");
+  });
+});
+
+describe("gesture instructions", () => {
+  /**
+   * The five gesture scenes (plan 486) need a reader to open the surface; the
+   * instruction is the only place the page says how. A scene that paints its
+   * state only after a gesture without telling the reader is a blank frame with
+   * a spinner, so the text is part of the contract, not decoration.
+   */
+  it("tells the reader the gesture a gesture scene needs", () => {
+    const instruction = SCENE_INTERACTION.combobox;
+    const html = renderToStaticMarkup(
+      <LiveSurface scene="combobox" title="Comboboxes" />,
+    );
+    expect(instruction).toBeDefined();
+    expect(html).toContain("data-scene-interaction");
+    expect(html).toContain(instruction ?? "");
+  });
+
+  it("adds no instruction to a scene that opens itself", () => {
+    const html = renderToStaticMarkup(
+      <LiveSurface scene="button" title="Buttons" />,
+    );
+    expect(SCENE_INTERACTION.button).toBeUndefined();
+    expect(html).not.toContain("data-scene-interaction");
   });
 });

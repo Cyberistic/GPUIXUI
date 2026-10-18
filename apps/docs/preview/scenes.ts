@@ -23,6 +23,11 @@ export const LIVE_SCENES = [
   "mention-input",
   "preview-card",
   "toast",
+  "tooltip",
+  "context-menu",
+  "date-picker",
+  "combobox",
+  "hotkey-input",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -53,6 +58,53 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "mention-input": "@alice",
   "preview-card": "Tokens, semantic roles and the theme extension mechanism.",
   toast: "The site rebuilds in about a minute.",
+  tooltip: "Revenue, net of refunds.",
+  "context-menu": "Copy path",
+  "date-picker": "Booked 21 October",
+  combobox: "Ada Lovelace",
+  "hotkey-input": "Recorded p",
+};
+
+/**
+ * The gesture a scene needs before its documented state exists (plan 486).
+ *
+ * Some components own their open state and expose no `defaultOpen`; the
+ * published renderer's automation API can still drive the real interaction
+ * (`globalThis.gpuix` in the preview document), so the smoke proves the surface
+ * opens the way a reader opens it. A scene with steps must **not** paint its
+ * `SCENE_TEXT` until the steps have run — the smoke asserts both directions.
+ */
+export type SceneStep =
+  | { readonly kind: "hover"; readonly testId: string }
+  | { readonly kind: "click"; readonly testId: string; readonly button?: 0 | 2 }
+  | { readonly kind: "press"; readonly testId: string; readonly keys: string };
+
+export const SCENE_GESTURE: Readonly<
+  Partial<Record<LiveScene, readonly SceneStep[]>>
+> = {
+  tooltip: [{ kind: "hover", testId: "scene-tooltip-trigger" }],
+  "context-menu": [{ kind: "click", testId: "scene-context-row", button: 2 }],
+  "date-picker": [
+    { kind: "click", testId: "scene-date-trigger" },
+    { kind: "click", testId: "date-day-2026-10-21" },
+  ],
+  combobox: [{ kind: "click", testId: "scene-combobox-trigger" }],
+  "hotkey-input": [
+    { kind: "click", testId: "scene-hotkey" },
+    { kind: "press", testId: "scene-hotkey", keys: "p" },
+  ],
+};
+
+/**
+ * What a reader does to see the opened state. Rendered above the surface in the
+ * docs and inside the preview document, so a scene is never a mystery frame.
+ */
+export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
+  tooltip: "Hover the info control to open the tip.",
+  "context-menu": "Right-click the project row to open the menu.",
+  "date-picker": "Click the due-date field, then the 21st, to book it.",
+  combobox: "Click the reviewer field to open the suggestions.",
+  "hotkey-input": "Click the shortcut field, then press P.",
 };
 
 /**

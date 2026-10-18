@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { PlatformName, ThemeMode } from "@gpuixui/tokens";
+import { isLiveScene, SCENE_INTERACTION } from "../../../preview/scenes";
 import { usePreviewState } from "./theme-surface";
 
 /**
@@ -51,6 +52,7 @@ export function LiveSurface({
   const { platform, mode } = usePreviewState();
   const [state, setState] = useState<LoadState>("idle");
   const src = livePreviewSrc({ scene, platform, mode });
+  const interaction = isLiveScene(scene) ? SCENE_INTERACTION[scene] : undefined;
 
   const start = (): void => {
     setState("checking");
@@ -72,6 +74,11 @@ export function LiveSurface({
       >
         {LIVE_SURFACE_NOTICE}
       </p>
+      {interaction === undefined ? null : (
+        <p data-scene-interaction className="text-sm text-fd-muted-foreground">
+          {interaction}
+        </p>
+      )}
       {state === "idle" || state === "checking" ? (
         <div className="flex flex-wrap items-center gap-3">
           <button

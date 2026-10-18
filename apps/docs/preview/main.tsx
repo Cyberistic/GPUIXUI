@@ -11,7 +11,7 @@
  * mistaken for a painted one.
  */
 import { render, useGpuix, useWindowSize } from "@gpuix/react";
-import { Text, ThemeProvider } from "@gpuixui/primitives";
+import { Stack, Text, ThemeProvider } from "@gpuixui/primitives";
 import {
   platformTheme,
   themes,
@@ -24,7 +24,7 @@ import { useEffect, useState } from "react";
 import { initGpuixWeb } from "./gpuix-web";
 import { isWindowReady } from "./renderer-ready";
 import { LIVE_SCENE_VIEWS, LiveSurface } from "./scene-views";
-import { isLiveScene, type LiveScene } from "./scenes";
+import { isLiveScene, SCENE_INTERACTION, type LiveScene } from "./scenes";
 
 const READY_TIMEOUT_MS = 10_000;
 
@@ -72,6 +72,7 @@ const Surface = ({
 }) => {
   const size = useWindowSize();
   const View = LIVE_SCENE_VIEWS[activeScene];
+  const interaction = SCENE_INTERACTION[activeScene];
   // Two providers, because the two packages read two contexts: primitives owns
   // its context, components read `@gpuixui/tokens/react` and otherwise fall back
   // to the light theme (measured: light Tabs and Popovers on a dark page). Both
@@ -80,13 +81,20 @@ const Surface = ({
     <TokensThemeProvider theme={theme}>
       <ThemeProvider theme={theme}>
         <LiveSurface size={{ width: size.width, height: size.height }}>
-          {ready ? (
-            <View />
-          ) : (
-            <Text role="caption" tone="muted">
-              Preparing the scene…
-            </Text>
-          )}
+          <Stack direction="column" gap="sm">
+            {interaction === undefined ? null : (
+              <Text role="caption" tone="muted">
+                {interaction}
+              </Text>
+            )}
+            {ready ? (
+              <View />
+            ) : (
+              <Text role="caption" tone="muted">
+                Preparing the scene…
+              </Text>
+            )}
+          </Stack>
         </LiveSurface>
       </ThemeProvider>
     </TokensThemeProvider>

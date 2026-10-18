@@ -486,6 +486,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   delivered("tooltip", "Tooltips", "1", "Labels a control on hover or focus.", {
     gpuix: "reuse",
     sourcePath: "packages/primitives/src/components/Tooltip.tsx",
+    liveScene: "tooltip",
     api: ["TooltipProps"],
     runtime: nativeSuite(
       "@gpuixui/primitives",
@@ -1155,6 +1156,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/context-menu.tsx",
+      liveScene: "context-menu",
       api: [
         "ContextMenuProps",
         "ContextMenuTriggerProps",
@@ -1538,6 +1540,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/combobox.tsx",
+      liveScene: "combobox",
       api: [
         "ComboboxProps",
         "ComboboxTriggerProps",
@@ -1600,6 +1603,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/date-picker.tsx",
+      liveScene: "date-picker",
       api: [
         "DatePickerProps",
         "DatePickerTriggerProps",
@@ -2128,6 +2132,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/hotkey-recorder.tsx",
+      liveScene: "hotkey-input",
       api: ["HotkeyRecorderProps"],
       runtime: nativeSuite(
         "@gpuixui/components",

@@ -13,7 +13,10 @@
  *
  * Every `LIVE_SCENES` key is driven, and its expected text comes from the same
  * JSX-free table the docs test guards (plan 456), so a scene cannot ship with no
- * composition behind it.
+ * composition behind it. A gesture scene (plan 486) must **not** paint its text
+ * until the smoke has driven the real interaction through `globalThis.gpuix`,
+ * the `App` the browser renderer installs: the before/after pair is the proof
+ * that a prop did not quietly open the surface.
  *
  *   nub scripts/smoke-live-preview.ts [--base-url <url>] [--chrome <path>] [--no-build]
  *
@@ -26,7 +29,12 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
-import { LIVE_SCENES, SCENE_TEXT } from "../preview/scenes.ts";
+import {
+  LIVE_SCENES,
+  SCENE_GESTURE,
+  SCENE_TEXT,
+  type SceneStep,
+} from "../preview/scenes.ts";
 import {
   SetupError,
   startDocsPreview,
@@ -121,7 +129,7 @@ const startSession = async (chrome: string): Promise<Session> => {
       "--enable-unsafe-webgpu",
       "--no-first-run",
       `--user-data-dir=${profile}`,
-      "--window-size=640,360",
+      "--window-size=640,720",
       `--remote-debugging-port=${port}`,
       "about:blank",
     ],
@@ -317,6 +325,50 @@ const paintedText = async (
 };
 
 /**
+ * One gesture step, driven through the `App` the browser renderer installs on
+ * the page (plan 486). The locator resolves the element's painted centre and the
+ * input goes through GPUI's own hit testing, so this is the same path a reader's
+ * pointer or keyboard takes.
+ */
+const runStep = async (session: Session, step: SceneStep): Promise<void> => {
+  const target = `globalThis.gpuix.getByTestId(${JSON.stringify(step.testId)})`;
+  const action =
+    step.kind === "hover"
+      ? `await ${target}.hover()`
+      : step.kind === "click"
+        ? `await ${target}.click(${step.button === undefined ? "" : `{ button: ${step.button} }`})`
+        : `await ${target}.press(${JSON.stringify(step.keys)})`;
+  try {
+    await session.evaluate(`(async () => { ${action}; })()`);
+  } catch (error) {
+    throw new Error(
+      `${step.kind} on "${step.testId}" failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+};
+
+/**
+ * Poll for the scene's text after a gesture. A component updates its tree on the
+ * frame the input causes, but a tooltip's delay and a popover's placement run
+ * over a few frames, so a fixed sleep would be both slow and flaky.
+ */
+const waitForPaintedText = async (
+  session: Session,
+  expected: string,
+  timeoutMs = 5_000,
+): Promise<ReadonlyArray<string> | null> => {
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const text = await paintedText(session);
+    if (text.includes(expected)) return text;
+    if (Date.now() > deadline) return null;
+    await sleep(100);
+  }
+};
+
+/**
  * The Button scene in one mode, as a PNG. The screenshot is the only signal
  * that the mode reached the paint: `getAllText` is identical in both modes by
  * design, and the wasm renderer exposes no style query (plan 474).
@@ -433,14 +485,52 @@ const main = async (): Promise<number> => {
         return 1;
       }
       const text = await paintedText(session);
-      if (!text.includes(SCENE_TEXT[scene])) {
+      const steps = SCENE_GESTURE[scene];
+      if (steps === undefined) {
+        if (!text.includes(SCENE_TEXT[scene])) {
+          console.error(
+            `FAIL live scene ${scene}: expected "${SCENE_TEXT[scene]}" in the GPUI tree (${JSON.stringify(text)})`,
+          );
+          return 1;
+        }
+        console.log(
+          `smoke: scene ${scene} ready — ${surface.canvas[0]}x${surface.canvas[1]} canvas, ${text.length} text nodes`,
+        );
+        continue;
+      }
+      // A gesture scene must not already be open: a prop that quietly opens the
+      // surface would make the steps below prove nothing (plan 486).
+      if (text.includes(SCENE_TEXT[scene])) {
         console.error(
-          `FAIL live scene ${scene}: expected "${SCENE_TEXT[scene]}" in the GPUI tree (${JSON.stringify(text)})`,
+          `FAIL live scene ${scene}: "${SCENE_TEXT[scene]}" was painted before the gesture; the scene opens itself`,
+        );
+        return 1;
+      }
+      try {
+        for (const step of steps) {
+          await runStep(session, step);
+          // A popover measures and paints on the frame after the click that
+          // opened it; the next step's locator needs those painted bounds.
+          await sleep(250);
+        }
+      } catch (error) {
+        console.error(
+          `FAIL live scene ${scene}: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+        return 1;
+      }
+      const opened = await waitForPaintedText(session, SCENE_TEXT[scene]);
+      if (opened === null) {
+        const after = await paintedText(session);
+        console.error(
+          `FAIL live scene ${scene}: expected "${SCENE_TEXT[scene]}" after ${steps.length} gesture step(s) (${JSON.stringify(after)})`,
         );
         return 1;
       }
       console.log(
-        `smoke: scene ${scene} ready — ${surface.canvas[0]}x${surface.canvas[1]} canvas, ${text.length} text nodes`,
+        `smoke: scene ${scene} opened by ${steps.length} step(s) — ${surface.canvas[0]}x${surface.canvas[1]} canvas, ${opened.length} text nodes`,
       );
     }
 
@@ -574,12 +664,13 @@ const main = async (): Promise<number> => {
 };
 
 // A hung CDP command must not keep the command alive forever; the gate reports
-// "could not verify" rather than hanging a release check. Eleven scenes and
-// eleven page loads fit in this budget; the per-iframe wait is up to 60s.
+// "could not verify" rather than hanging a release check. Twenty-one scenes
+// (five of them gesture-driven) and twenty-one page loads fit in this budget;
+// the per-iframe wait is up to 60s.
 setTimeout(() => {
-  console.error("smoke: not verified — the check did not finish in 420s");
+  console.error("smoke: not verified — the check did not finish in 600s");
   process.exit(2);
-}, 420_000).unref();
+}, 600_000).unref();
 
 main().then(
   (code) => {

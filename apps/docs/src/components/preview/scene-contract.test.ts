@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { components } from "@/component-meta/registry";
 import {
   LIVE_SCENES,
+  SCENE_GESTURE,
+  SCENE_INTERACTION,
   SCENE_TEXT,
   SCENE_TEXT_IS_SCENE_PROSE,
 } from "../../../preview/scenes";
@@ -40,6 +42,11 @@ const interactionScenes = new Map([
   ["mention-input", "mention-input"],
   ["preview-card", "preview-card"],
   ["toast", "toast"],
+  ["tooltip", "tooltip"],
+  ["context-menu", "context-menu"],
+  ["date-picker", "date-picker"],
+  ["combobox", "combobox"],
+  ["hotkey-input", "hotkey-input"],
 ]);
 
 const pagesDirectory = new URL(
@@ -118,6 +125,76 @@ describe("live scene table", () => {
       "<CommandMenuEmpty",
     ].filter((part) => !scene.includes(part));
     expect(missing).toEqual([]);
+  });
+});
+
+/**
+ * The gesture scenes (plan 486): a component that owns its open state is driven
+ * by a real GPUI gesture in the smoke instead of a prop. These guards keep the
+ * gesture table, the view it drives and the reader's instruction from drifting.
+ */
+describe("gesture scenes", () => {
+  const gestureScenes = LIVE_SCENES.filter(
+    (scene) => SCENE_GESTURE[scene] !== undefined,
+  );
+
+  /**
+   * Targets the component itself renders, so the id cannot occur in the scene
+   * source. `DatePickerCalendar` owns one `date-day-<iso>` cell per day; the
+   * scene's `today="2026-10-17"` is what puts the 21st in that month. Pinned, so
+   * a stale exemption fails like a stale expectation.
+   */
+  const componentOwnedTargets: ReadonlyMap<string, readonly string[]> = new Map(
+    [["date-picker", ["date-day-2026-10-21"]]],
+  );
+
+  it("targets a test id the scene really renders", () => {
+    const missing = gestureScenes.flatMap((scene) =>
+      (SCENE_GESTURE[scene] ?? []).flatMap((step) =>
+        viewSource.includes(`testId="${step.testId}"`) ||
+        (componentOwnedTargets.get(scene) ?? []).includes(step.testId)
+          ? []
+          : [`${scene}: ${step.testId}`],
+      ),
+    );
+    expect(missing).toEqual([]);
+  });
+
+  it("keeps no unused component-owned exemption", () => {
+    const unused = LIVE_SCENES.flatMap((scene) =>
+      (componentOwnedTargets.get(scene) ?? [])
+        .filter(
+          (testId) =>
+            !(SCENE_GESTURE[scene] ?? []).some(
+              (step) => step.testId === testId,
+            ),
+        )
+        .map((testId) => `${scene}: ${testId}`),
+    );
+    expect(unused).toEqual([]);
+  });
+
+  it("tells the reader what to do for exactly the scenes that need it", () => {
+    const described = LIVE_SCENES.filter(
+      (scene) => SCENE_INTERACTION[scene] !== undefined,
+    );
+    expect(described).toEqual(gestureScenes);
+  });
+
+  /**
+   * The smoke asserts the expected text is **absent before** the gesture. An
+   * instruction that names the text would make a broken scene look explained
+   * while the before-check still passes for the wrong reason, and a copy of the
+   * text in the instruction would let a scene pass with the component missing.
+   */
+  it("never names the text the gesture is supposed to reveal", () => {
+    const leaked = gestureScenes.filter((scene) => {
+      const instruction = SCENE_INTERACTION[scene];
+      return (
+        instruction !== undefined && instruction.includes(SCENE_TEXT[scene])
+      );
+    });
+    expect(leaked).toEqual([]);
   });
 });
 
