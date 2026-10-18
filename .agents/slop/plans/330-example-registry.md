@@ -6,8 +6,8 @@
 
 Every Tier 2 component has an example module, a docs page and an inventory record.
 `examples/index.ts` is the **only** mount point for those examples: it is the map
-`id → example` a native surface (`apps/playground`, `packages/testing`, any host)
-iterates. It is also the contract the docs pages name.
+`id → example` a native host (`apps/playground`, a companion app) iterates. It is
+also the contract the docs pages name.
 
 Measured on 2026-10-18, on `agent/components`:
 
