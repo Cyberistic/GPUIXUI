@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 217/283
+`[x]` `[████████░░]` 218/284
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1781,6 +1781,16 @@ theme's values but the ladder half read the shipped names, so
 the catalogue promised every named ladder must not step backwards; the six
 ladders now walk the theme's own objects, with `radius.none`/`full` keeping
 their own rules (plan 552)
+`[x]` Hold the documented brand to the theme it builds — the docs and README
+brand snippets omitted `track`, so a copied brand shipped `primary` as a
+progress segment on the identity groove at **2.225:1**, under the 3:1 mark
+floor, while the page called the executed example "this exact family"; the
+`extendTheme`/`createTheme` JSDoc examples moved only `primary` and each built a
+theme the checker rejected three times. The three documented palettes now match
+the executed example role for role, `snippets.test.ts` builds every documented
+colour map and holds it to `themeFailures` (with a case that rebuilds the
+pre-fix map and proves the guard can fail), and the brand rationale's groove
+figure is derived after plan 503 moved it (plan 553)
 
 ## Phase C — Tier 1–2 components
 

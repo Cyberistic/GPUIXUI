@@ -247,6 +247,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [550](./550-border-width-ladder.md) | The strong border may not be thinner than the thin one | F | 017, 358, 360, 372, 523, 533 | done |
 | [551](./551-undefined-platform-colour-palette.md) | An `undefined` platform colour inherits the palette it asked for | F | 301, 321, 323, 373, 545 | done |
 | [552](./552-scale-ladder-totality.md) | Every size ladder walks the theme's own scale | F | 358, 360, 519, 531, 547–550 | done |
+| [553](./553-documented-brand-and-builder-examples.md) | The documented brand is a theme the contract rejects | F | 098, 347, 355, 356, 526 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2696,6 +2697,25 @@ stay out of the ladder because each has its own rule, so one defect keeps one
 report. The new `scale-ladder-totality.test.ts` fails on five extra steps
 before the change and passes after it, every shipped set still returns `[]`, and
 no colour, pair, floor, metric, theme, platform style or recipe value moves.
+
+Plan `553` closes the last place where the package's documentation and its own
+contract disagreed about the same theme. Plans `098` and `355`/`356` held the
+executed brand example to `themeContrastFailures` and held every snippet to the
+public API, but nobody built the theme a snippet *writes*. The docs page and the
+README showed the executed brand palette without `track`, so a reader who copied
+it shipped `primary` as a progress segment on the identity groove at **2.225:1**,
+under the 3:1 mark floor, while the page said the example was "this exact
+family"; the `extendTheme` and `createTheme` JSDoc examples moved only
+`primary`, so each built a theme three checks rejected (the inherited
+foreground at 4.243:1, the groove at 2.225:1 and the dialog face over the
+brand's action at 1.038:1). The three documented palettes now carry the executed
+example's groove, the builder JSDoc shows the complete brand (and a shape-only
+`extendTheme`), and `snippets.test.ts` builds every documented colour map and
+holds it to `themeFailures` — with a case that rebuilds the pre-fix map and
+proves the guard can fail. `theme.test.ts` now derives the brand rationale's
+groove figure, which plan `503` had moved from 2.67:1 to 2.23:1 while the
+sentence stayed. No colour, pair, floor, metric, theme, platform style or recipe
+value moves; 136 files / 5675 tests pass.
 
 ## How to use a plan
 
