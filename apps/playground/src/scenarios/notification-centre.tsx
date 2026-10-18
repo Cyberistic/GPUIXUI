@@ -21,7 +21,7 @@
  * - an outside press that dismisses without stealing focus back;
  * - an empty state after clear-all and a later arrival that restores the list.
  */
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
@@ -34,7 +34,6 @@ import { Pressable, Readout } from "../ui.js";
 import {
   initialNotifications,
   newNotification,
-  rowIndex,
   rowsOf,
   unreadCount,
 } from "./notification-model.js";
@@ -115,9 +114,6 @@ const NotificationCentreProbe = () => {
   const rows = rowsOf(items);
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
-  const anchorRef = useRef(0);
-  const topKeyRef = useRef("none");
-  const pendingTop = useRef<Option.Option<string>>(Option.none());
 
   const unread = unreadCount(items);
 
@@ -130,41 +126,13 @@ const NotificationCentreProbe = () => {
           onNone: () => {},
           onSome: (value) => {
             const index = value[0] ?? 0;
-            const key = rowsRef.current[index]?.key ?? "none";
-            anchorRef.current = index;
-            topKeyRef.current = key;
             setAnchor(index);
-            setTop(key);
+            setTop(rowsRef.current[index]?.key ?? "none");
           },
         });
       },
     });
   };
-
-  /** Scroll the list to a row index (the app-owned re-anchor). */
-  const scrollToRow = (index: number): void => {
-    Option.match(Option.fromNullishOr(list.current?.id), {
-      onNone: () => {},
-      onSome: (id) => {
-        renderer?.scrollToItem?.(id, index);
-        syncAnchor();
-      },
-    });
-  };
-
-  /** A reader scrolled below the top keeps the row they were reading. */
-  useEffect(() => {
-    Option.match(pendingTop.current, {
-      onNone: () => {},
-      onSome: (key) => {
-        pendingTop.current = Option.none();
-        Option.match(rowIndex(rowsRef.current, key), {
-          onNone: () => {},
-          onSome: scrollToRow,
-        });
-      },
-    });
-  }, [items.length]);
 
   const markRead = (id: number): void => {
     setItems((current) =>
@@ -180,19 +148,12 @@ const NotificationCentreProbe = () => {
 
   const clearAll = (): void => {
     setItems([]);
-    anchorRef.current = 0;
-    topKeyRef.current = "none";
     setAnchor(0);
     setTop("none");
     setActive(Option.none());
   };
 
   const arrive = (): void => {
-    const keep =
-      open && anchorRef.current > 0
-        ? Option.some(topKeyRef.current)
-        : Option.none();
-    pendingTop.current = keep;
     const id = nextId.current;
     nextId.current += 1;
     setItems((current) => Arr.prepend(current, newNotification(id)));
@@ -202,8 +163,6 @@ const NotificationCentreProbe = () => {
   const openPanel = (): void => {
     setOpen(true);
     setActive(firstId(rows));
-    anchorRef.current = 0;
-    topKeyRef.current = "none";
     setAnchor(0);
     setTop("none");
   };
@@ -828,7 +787,7 @@ export const notificationCentreScenario: PlaygroundScenario = {
         0,
       );
 
-      // 9. The prepend: a scrolled reader keeps their row.
+      // 9. The prepend: the list keeps the reader's row by itself.
       ctx.host.scrollToItem("nc-list", 2, 0);
       ctx.host.advance(0);
       yield* ctx.expectEqual(
@@ -853,7 +812,7 @@ export const notificationCentreScenario: PlaygroundScenario = {
       );
       ctx.host.click("nc-simulate");
       yield* ctx.expectEqual(
-        "the scrolled arrival re-anchors by row identity",
+        "the prepend keeps the reader's row",
         anchorIndex(ctx),
         3,
       );
