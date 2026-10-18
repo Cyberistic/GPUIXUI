@@ -35,6 +35,25 @@ describe("selectionBoxStyle", () => {
     expect(style.borderColor).toBe(testTheme.colors.input);
   });
 
+  it("rings a focused control, but never a disabled one", () => {
+    // Plan 332: focus outlives `disabled`, so a disabled control kept its ring
+    // when the prop changed; the fields had always dropped theirs.
+    expect(
+      selectionBoxStyle(spec({ focused: true }), testTheme).boxShadow,
+    ).toBeDefined();
+    expect(
+      selectionBoxStyle(spec({ focused: true, disabled: true }), testTheme)
+        .boxShadow,
+    ).toBeUndefined();
+    expect(
+      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow,
+    ).toBeDefined();
+    expect(
+      switchTrackStyle(spec({ focused: true, disabled: true }), testTheme)
+        .boxShadow,
+    ).toBeUndefined();
+  });
+
   it("fills a checked box with the accent and makes the mark legible", () => {
     const style = selectionBoxStyle(spec({ state: "checked" }), testTheme);
     expect(style.backgroundColor).toBe(testTheme.colors.primary);

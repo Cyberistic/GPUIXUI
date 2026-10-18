@@ -153,11 +153,18 @@ export const controlStyle = (
  * state, so a component tracks focus itself (`onFocus`/`onBlur`) and merges
  * this over the resting style; a mouse press shows the ring too, which
  * `COMPONENTS.md` records.
+ *
+ * A **disabled** control paints no ring. Focus outlives a `disabled` prop change
+ * — the runtime never blurs a host element whose tab stop disappears — and a
+ * control that cannot act must not advertise the caret (measured, plan `332`).
+ * That is the one rule every ring painter follows; a caller must not re-test
+ * `disabled` before asking.
  */
 export const controlFocusStyle = (
   spec: ControlSpec,
   theme: PrimitiveTheme,
 ): StyleDesc => {
+  if (spec.disabled === true) return {};
   const ring = focusRing(theme);
   return spec.invalid === true
     ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
@@ -567,7 +574,8 @@ export const sliderThumbStyle = (
     marginRight: -half,
     pointerEvents: "none",
   };
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  if (spec.focused === true && spec.disabled !== true)
+    style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -646,7 +654,8 @@ export const ratingStarStyle = (
     cursor: interactive ? "pointer" : "not-allowed",
   };
   if (spec.disabled === true) style.opacity = 0.5;
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  if (spec.focused === true && spec.disabled !== true)
+    style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -714,9 +723,14 @@ export const otpCellStyle = (
     lineHeight: theme.typography.body.lineHeight,
     fontWeight: theme.typography.body.fontWeight,
     cursor: spec.disabled === true ? "not-allowed" : "text",
-    ...(spec.focused === true && spec.disabled !== true
+    ...(spec.focused === true
       ? controlFocusStyle(
-          { variant: fieldVariant, size: spec.size, invalid: spec.invalid },
+          {
+            variant: fieldVariant,
+            size: spec.size,
+            invalid: spec.invalid,
+            disabled: spec.disabled,
+          },
           theme,
         )
       : {}),

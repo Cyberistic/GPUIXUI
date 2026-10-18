@@ -162,7 +162,7 @@ mistake.
 
 | Capability | GPUix 0.10.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too |
+| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332) |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
@@ -200,7 +200,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 523 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 533 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`) and the axis-aware floating alignment rule
 (plan `098`).
@@ -218,7 +218,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **21 files, 316 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **22 files, 348 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -264,7 +264,10 @@ the window and scrollable (plan 098), and a determinate `Progress` that schedule
 no animation timer while an indeterminate one paints its requested tone
 (plan 328), and a switch whose thumb slides through an intermediate position and
 rests at the layout painter's two ends (plan 329), and a bare `<Skeleton circle />`
-that paints a square rather than a full-width pill (plan 330).
+that paints a square rather than a full-width pill (plan 330), and a
+"disabled after focus" matrix over thirteen controls that act while enabled, keep
+native focus across the disable, and then act no more, with fifteen controls
+painting no ring once disabled (plan 332).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

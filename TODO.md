@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 80/80
+`[x]` `[██████████]` 81/81
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -605,6 +605,16 @@ retired once both branches are one
       `6`, and a default `RangeSlider` never reached its own maximum. The stops
       now include `max` and arrow/Page/Home/End movement walks the stops; 6 core
       + 3 runtime cases, both directions proven (plan `331`)
+`[x]` `packages/primitives`: **a control disabled after it took focus kept
+      acting** — measured: native focus survives a `disabled` prop change on all
+      thirteen controls, and `CheckboxGroup`'s row guarded its click but not its
+      keys, so a form disabled during a save still toggled from the keyboard
+      (`onValueChange` 1 → 2). Ten action/selection controls also kept their
+      focus ring while the five fields dropped theirs. The row's key path now
+      refuses a disabled row, and the ring rule has one owner
+      (`controlFocusStyle` plus the four non-control painters). 13 activation +
+      15 ring runtime cases, 4 core/element cases, both directions proven
+      (plan `332`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

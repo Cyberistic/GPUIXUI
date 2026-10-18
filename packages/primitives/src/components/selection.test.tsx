@@ -462,4 +462,57 @@ describe("CheckboxGroup", () => {
     );
     expect(Option.isSome(hostStyle(box(element, 1), "boxShadow"))).toBe(true);
   });
+
+  it("paints no ring on a focused row that cannot act", () => {
+    // Plan 332: `disabled` can arrive while a row still holds native focus.
+    const element = render(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push", disabled: true },
+        ],
+      },
+      [],
+      { ...groupFocus, focusedIndex: Option.some(1) },
+    );
+    expect(hostStyle(box(element, 1), "boxShadow")).toStrictEqual(
+      Option.none(),
+    );
+    // The enabled row at the same focus still rings, so the case above is the
+    // disabled rule and not a lost ring.
+    const enabled = render(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push", disabled: true },
+        ],
+      },
+      [],
+      { ...groupFocus, focusedIndex: Option.some(0) },
+    );
+    expect(Option.isSome(hostStyle(box(enabled, 0), "boxShadow"))).toBe(true);
+  });
+
+  it("ignores Enter and Space on a row that cannot act", () => {
+    // Plan 332: the click path refused a disabled row, the key path did not, so
+    // a group disabled while focused still toggled from the keyboard.
+    const onToggle = vi.fn();
+    const element = render(
+      {
+        options: [
+          { value: "email", label: "Email" },
+          { value: "push", label: "Push", disabled: true },
+        ],
+      },
+      [],
+      groupFocus,
+      { onToggle, onToggleAll: vi.fn() },
+    );
+    expectSome(hostHandler(row(element, 1), "onKeyDown"))(keyEvent("enter"));
+    expectSome(hostHandler(row(element, 1), "onKeyUp"))(keyEvent("space"));
+    expect(onToggle).not.toHaveBeenCalled();
+    // The enabled neighbour still reports, so the case above is not vacuous.
+    expectSome(hostHandler(row(element, 0), "onKeyDown"))(keyEvent("enter"));
+    expect(onToggle).toHaveBeenCalledWith("email");
+  });
 });

@@ -94,6 +94,7 @@ order. A press that changes nothing does not call `onValueChange`.
 | Space | toggles the focused row on key **up** |
 | Enter | toggles the focused row on key **down** |
 | held key | repeat events do nothing |
+| disabled row | Enter and Space do nothing, even when the row was focused before it became disabled (plan 332) |
 | arrows | **not handled** — arrows do not move between checkboxes on the platform |
 
 ## Accessibility
@@ -106,7 +107,10 @@ order. A press that changes nothing does not call `onValueChange`.
   so a separate `Text` beside a control is inert to the pointer and to assistive
   technology. Nesting a focusable box inside a clickable row would be two
   interactive elements in one.
-- `disabled` removes the row's tab stop; there is no `aria-disabled`.
+- `disabled` removes the row's tab stop; there is no `aria-disabled`. Native focus
+  can outlive the prop change — a form that disables while saving leaves the
+  keyboard where it was — so a disabled row is inert to both the pointer and the
+  keys and paints no focus ring (plan 332).
 - `option.description` is painted as visible supporting text, not wired as
   `aria-describedby` (unsupported).
 
@@ -118,7 +122,9 @@ empty border from `input` (or `destructive` when `invalid`), fill from the accen
 role, mark from `selectionMarkColor`. Hover and press are declared in
 `style.hover`/`style.active`; disabled adds half opacity and removes pointer
 feedback. Focus paints `colors.ring` on the box, not on the row, so the ring sits
-on the control the way it does in `Checkbox`.
+on the control the way it does in `Checkbox`. A disabled row paints **no** ring,
+even when it kept native focus: the rule lives in `controlFocusStyle` and the
+selection painters, so an inert control never advertises the caret (plan 332).
 
 ## Style by state
 
@@ -196,6 +202,9 @@ the row that owns the hit area, the tab stop and the accessible name:
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
   disabled row, and the painted error border and ring.
+- `runtime/disabled.runtime.test.tsx` — the cross-control "disabled after focus"
+  matrix: every control acts while enabled, focus survives the disable, nothing
+  acts afterwards, and no disabled control paints a ring (plan 332).
 
 ```sh
 nub run --filter @gpuixui/primitives test

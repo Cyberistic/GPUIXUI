@@ -117,7 +117,9 @@ export const selectionBoxStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  // A disabled control paints no ring: see `controlFocusStyle` (plan 332).
+  if (spec.focused === true && spec.disabled !== true)
+    style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 
@@ -199,7 +201,8 @@ export const switchTrackStyle = (
     };
     style.active = {};
   }
-  if (spec.focused === true) style.boxShadow = focusRing(theme).boxShadow;
+  if (spec.focused === true && spec.disabled !== true)
+    style.boxShadow = focusRing(theme).boxShadow;
   return style;
 };
 

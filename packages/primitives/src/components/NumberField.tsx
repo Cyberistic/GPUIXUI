@@ -120,7 +120,7 @@ export const renderNumberField = (
       mergeStyle(mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)), {
         paddingRight: 0,
       }),
-      focus.focused && !disabled ? controlFocusStyle(spec, theme) : {},
+      focus.focused ? controlFocusStyle(spec, theme) : {},
     ),
     props.style,
     {

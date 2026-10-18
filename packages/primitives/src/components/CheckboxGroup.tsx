@@ -192,6 +192,9 @@ const renderRow = (
   const onKey =
     (phase: "down" | "up") =>
     (event: EventPayload): void => {
+      // A row can be disabled while it holds native focus (plan 332), so the
+      // key path refuses it exactly like the pointer path below.
+      if (disabled) return;
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         onActivate();
     };

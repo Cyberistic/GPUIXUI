@@ -81,8 +81,7 @@ export const fieldChrome = (
     mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)),
     disabled === true ? { cursor: "not-allowed" } : undefined,
   );
-  const ring =
-    focused && disabled !== true ? controlFocusStyle(spec, theme) : {};
+  const ring = focused ? controlFocusStyle(spec, theme) : {};
   return resolvePartStyle(mergeStyle(base, ring), style, {
     disabled: disabled === true,
     focused,

@@ -9,6 +9,7 @@ import {
   progressPercent,
   progressTrackStyle,
   PROGRESS_TONES,
+  ratingStarStyle,
   ruleStyle,
   scrollStyle,
   sliderFillStyle,
@@ -210,6 +211,28 @@ describe("controlStyle", () => {
       blurRadius: 0,
     });
     expect(spreadOf(focused)).toBeGreaterThan(0);
+  });
+
+  it("paints no ring for a control that cannot act", () => {
+    // Plan 332: focus outlives `disabled`, so a disabled control used to keep
+    // its ring while the fields dropped theirs.
+    expect(controlFocusStyle(spec({ disabled: true }), testTheme)).toEqual({});
+    expect(
+      sliderThumbStyle({ size: "md", focused: true, disabled: true }, testTheme)
+        .boxShadow,
+    ).toBeUndefined();
+    expect(
+      ratingStarStyle({ size: "md", focused: true, disabled: true }, testTheme)
+        .boxShadow,
+    ).toBeUndefined();
+    // The enabled direction still rings, so the cases above cannot pass by the
+    // painter having lost its ring entirely.
+    expect(
+      sliderThumbStyle({ size: "md", focused: true }, testTheme).boxShadow,
+    ).toBeDefined();
+    expect(
+      ratingStarStyle({ size: "md", focused: true }, testTheme).boxShadow,
+    ).toBeDefined();
   });
 
   it("warns the eye at rest for a field, and rings it when focused", () => {
