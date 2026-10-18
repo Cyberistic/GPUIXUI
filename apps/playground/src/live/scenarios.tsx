@@ -33,6 +33,7 @@ import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
+import { replaceScenario } from "../scenarios/replace.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
@@ -1978,6 +1979,91 @@ const tier2Toast: LiveScenario = {
     }),
 };
 
+const replace: LiveScenario = {
+  id: "live-replace",
+  title: "Live replace: a controlled rewrite, its caret and the washes",
+  capability: "replace",
+  view: replaceScenario.view,
+  ready: "replace-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "replace-counts", "doc=2");
+      yield* ctx.expectContains(
+        "the live preview counts both matches",
+        yield* textOf(ctx, "replace-counts"),
+        "doc=2",
+      );
+      yield* ctx.expectContains(
+        "the live editor never reports a highlight match",
+        yield* textOf(ctx, "replace-counts"),
+        "editor=0",
+      );
+
+      yield* ctx.host.click("replace-one");
+      yield* waitForText(ctx, "replace-state", "replaces=1");
+      const replaced = yield* textOf(ctx, "replace-state");
+      yield* ctx.expectContains(
+        "the live replace rewrites the controlled value",
+        replaced,
+        "value=The|warning|handler|logs|an|error. replaces=1 last=replace",
+      );
+      yield* waitForText(ctx, "replace-counts", "doc=1");
+      const liveWashes = yield* ctx.host.highlights();
+      yield* ctx.expectEqual(
+        "one wash is left in the live preview",
+        Arr.length(liveWashes),
+        1,
+      );
+      const livePaint = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the editor and the preview both paint the new sentence",
+        Arr.length(
+          Arr.filter(
+            livePaint,
+            (run) => run === "The warning handler logs an error.",
+          ),
+        ),
+        2,
+      );
+
+      yield* ctx.host.click("replace-editor");
+      yield* ctx.host.key("end");
+      yield* ctx.host.key("ctrl-r");
+      yield* waitForText(ctx, "replace-state", "replaces=2");
+      yield* ctx.expectContains(
+        "the keyboard replace reaches the focused editor",
+        yield* textOf(ctx, "replace-state"),
+        "value=The|warning|handler|logs|an|warning.",
+      );
+      yield* ctx.host.key("z");
+      // The value grew by one: the only wait that cannot be satisfied by the
+      // pre-keystroke readout.
+      yield* waitForText(ctx, "replace-state", "len=37");
+      yield* ctx.expectContains(
+        "the live caret after a programmatic value lands at the end",
+        yield* textOf(ctx, "replace-state"),
+        "value=The|warning|handler|logs|an|warning.z",
+      );
+
+      yield* ctx.host.click("replace-undo");
+      yield* waitForText(ctx, "replace-state", "last=undo");
+      yield* waitForText(ctx, "replace-counts", "doc=2");
+
+      yield* ctx.host.click("replace-all");
+      yield* waitForText(ctx, "replace-counts", "doc=0");
+      yield* ctx.expectContains(
+        "the live replace-all changed both occurrences",
+        yield* textOf(ctx, "replace-state"),
+        "replaces=2",
+      );
+
+      yield* ctx.host.click("replace-all");
+      yield* waitForText(ctx, "replace-state", "last=noop");
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${replace.id}.png`);
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -1999,4 +2085,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Dialog,
   tier2Menu,
   tier2Toast,
+  replace,
 ];

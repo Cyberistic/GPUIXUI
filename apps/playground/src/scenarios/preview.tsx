@@ -32,6 +32,7 @@ import * as Str from "effect/String";
 import { FloatingLayer } from "@gpuix/react/floating";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
+import { awaitReadout } from "./await-readout.js";
 import type { PlaygroundScenario } from "../types.js";
 
 /** The grace period after a leave; the steps wait 300 ms on the real clock. */
@@ -322,6 +323,7 @@ export const previewScenario: PlaygroundScenario = {
 
       ctx.host.hover("preview-away");
       yield* wait;
+      yield* awaitReadout(ctx, "preview-state", "open=false");
       yield* ctx.expectContains(
         "leaving the card closes it",
         read("preview-state"),
@@ -350,6 +352,7 @@ export const previewScenario: PlaygroundScenario = {
 
       ctx.host.hover("preview-away");
       yield* wait;
+      yield* awaitReadout(ctx, "preview-state", "open=false");
       yield* ctx.expectContains(
         "leaving the trigger closes it",
         read("preview-state"),

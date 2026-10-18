@@ -40,6 +40,7 @@ import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
+import { awaitReadout } from "./await-readout.js";
 
 const ITEMS: ReadonlyArray<string> = ["Alpha", "Beta", "Gamma"];
 
@@ -390,8 +391,7 @@ export const tooltipScenario: PlaygroundScenario = {
       );
 
       ctx.host.hover("tooltip-elsewhere");
-      yield* Effect.sleep("150 millis");
-      ctx.host.advance(0);
+      yield* awaitReadout(ctx, "tooltip-readout", "open=false");
       yield* ctx.expectContains(
         "the delayed close fires after leaving",
         read(ctx, "tooltip-readout"),

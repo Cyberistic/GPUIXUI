@@ -591,6 +591,10 @@ export const toastScenario: PlaygroundScenario = {
       );
 
       ctx.host.click("toast-show");
+      // Pause the motion clock before the short timer can fire: under load the
+      // 250 ms timer may beat the first fast-forward, and then the exit is
+      // already over by the time the card is asserted.
+      ctx.host.pauseMotion();
       ctx.host.click("toast-show-short");
       // Register the exit watcher before the real timer can remove the card.
       ctx.host.fastForwardMotion(0);

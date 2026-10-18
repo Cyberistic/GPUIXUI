@@ -1,12 +1,12 @@
-# 333 — Search and replace: washing editable text, and the replace cursor
+# 334 — Search and replace: washing editable text, and the replace cursor
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed (measured facts in §9) |
 | Phase | D (Tier 4 feasibility) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `171`, `188`, `197` |
-| Feeds | `COMPONENTS.md` **Search and replace**; the Tier 4 search/replace component and any editor surface that offers find |
+| Feeds | `COMPONENTS.md` **Search and replace**; the Tier 4 search/replace component and any editor surface that offers find. The editor/caret half is plan `333` |
 
 ## 1. Goal
 
