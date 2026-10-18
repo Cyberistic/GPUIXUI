@@ -2361,6 +2361,12 @@ every platform theme is held to the same contrast floors as the identity —
 including the composited `selection` wash. The same suite covers
 `applyPlatformStyle`: a copied style with an edited accent applies, an unnamed
 role inherits the identity, and a high-contrast base keeps its colours.
+`platform-extension.test.ts` proves the same path carries the numeric scales: a
+style naming the type roles, spacing, borders, icon/avatar sizes and component
+dimensions applies every one, an omitted group inherits, an explicit `undefined`
+is ignored, the groups apply at high contrast, and no shipped style names them —
+so the copyable file in `platform-extension.example.ts` owns the whole look
+without moving a shipped value.
 `docs.test.ts` builds the table above
 from `platformStyles`, so a value edit cannot ship a document that lies. There is
 no font-registration test because the pinned runtime has no API to test against;
