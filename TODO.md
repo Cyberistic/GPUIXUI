@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 153/208
+`[x]` `[███████░░░]` 153/209
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1140,6 +1140,11 @@ set" enumerated 4, 20, 24 and 28 (identity repeated through an unfiltered
 `platformVariants` derive from the axis owners, the three suites that claimed
 the full set enumerate them, and the reference, README and ledger state the
 derived count (plan 387)
+`[ ]` Migrate the remaining token suites' hand-built shipped lists to
+`shippedThemes` where the case claims "every shipped set" — plan 387 moved
+`contrast`, `theme-check` and `metrics`; the other suites still build their own
+matrix (some at one contrast level, some with `realPlatforms` retyped), so a
+future recipe or platform can be silently omitted (plan 388, to be written)
 
 ## Phase C — Tier 1–2 components
 
