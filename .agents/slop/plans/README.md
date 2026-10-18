@@ -214,6 +214,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [517](./517-keycap-surface-metric.md) | The keycap surface a theme cannot own or check | F | 011, 353, 358, 360, 367, 384, 386 | done |
 | [518](./518-shipped-weight-claims.md) | The shipped weight set, in one index and two last claims | F | 011, 367, 370, 387, 391, 396 | done |
 | [519](./519-motion-scale-indexes.md) | The motion scale's ordered indexes | F | 019, 064, 096, 305, 364, 372, 387, 518 | done |
+| [520](./520-disabled-panel-action-selection.md) | The disabled panel action through the inverse selection veil | F | 306, 344, 394, 397, 399, 504, 510, 512, 513, 514 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2234,6 +2235,21 @@ from them, the two documentation suites read them, and `motion-index.test.ts`
 fails when a timing or phase is added without the index. `motion-levels.example.ts`
 is the table a docs site or a settings row copies. No timing, easing, colour,
 pair, floor or metric moves.
+
+Plan `520` closes the last disabled-state composition the `504`/`510`/`514`
+sequence left. Plan `514` gave the disabled action inside a tone-tinted status
+panel a resting label (`disabledForeground` on `softAction`) and plan `504`
+routes content on an opaque fill through the inverse `selectionOnFill` veil, but
+`selectionFillPairs` measures only the fill's **enabled** foreground — the
+disabled label had no pair, and a probe over the 24 shipped sets found identity
+dark **2.799:1** and high-contrast dark **3.304:1** through the veil, under the
+3:1 / 4.5:1 `inactive` floor, while all six checks returned `[]`. The two
+contracts each believed the other covered it. `selectionFillInactivePairs` adds
+the one resting composition (the disabled state does not step, so the hover and
+press fills stay out), the two `disabledForeground` values move one designed
+step (`#A1A9B7` → `#B0B8C6` and `#B0B0B0` → `#D0D0D0`, 3.317:1 and 4.645:1),
+and every shipped set passes; the other five checks stay blind to the edit, so
+the contrast pair is the only guard. `contrastPairs` stays **394**.
 
 ## How to use a plan
 
