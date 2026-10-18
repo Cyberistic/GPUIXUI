@@ -647,7 +647,9 @@ fit an icon, a field adornment or a chip into a content box shorter or narrower
 than they are, raise an inline icon above the caption or label line it sits in,
 raise an inline avatar above the dense row it leads,
 flush a control's horizontal padding to zero or tighter than the theme's own
-hairline (`spacing["2xs"]`), invert a size ladder, name an icon or avatar size of zero, shrink
+hairline (`spacing["2xs"]`), invert a size ladder — the size ladders are read
+from the theme's own scale objects, so a step a brand adds is held too — name an
+icon or avatar size of zero, shrink
 `strong` below `thin` so the focus ring is thinner than a divider, scroll
 an overlay in less than one row, ship a non-finite
 spacing step, radius, type size or dimension the renderer casts to a 32-bit

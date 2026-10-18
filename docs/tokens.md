@@ -1951,7 +1951,10 @@ the largest avatar — a 40px avatar painted at a smaller radius is a rounded
 square, not a circle; every named ladder — `spacing`, `radius`, `iconSize`,
 `avatarSize`, `controlHeight`, `controlPaddingX`, the two border widths, the
 motion timings and the
-elevation feather — must not step backwards; `borderWidth.strong` is the focus
+elevation feather — must not step backwards, each size ladder read from the
+theme's own scale object in the order the theme holds its steps, so a step a
+brand adds is compared while `radius.none` and `radius.full` keep their own
+rules; `borderWidth.strong` is the focus
 ring's spread, so it may equal the default border but never be thinner than a
 divider, and `iconSize`, `avatarSize` and a
 control's horizontal padding must also stay above zero, because a named size
@@ -2008,7 +2011,9 @@ documentation table or a settings row iterates it instead of retyping the names.
 — the numeric sibling of `colorRoles` — derived from each group's default object
 and ordered indexes (`dimensions`, `controlSizes`, `elevationLevels`,
 `motionLevels`, `motionPhases`), so a diagnostics table iterates the walked
-domain. An elevation entry names the field once per level (`md.offsetX`) because
+domain. It names the shipped domain: a theme may carry a wider scale, and the
+size ladders walk the theme's own members. An elevation entry names the field
+once per level (`md.offsetX`) because
 every entry in the level is read, while a failure names the one it measured
 (`md[0].offsetX`).
 `metricRules` is the ordered index of the nine rules a `MetricFailure` can

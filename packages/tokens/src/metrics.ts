@@ -84,9 +84,11 @@ const typeFields = ["fontSize", "lineHeight", "fontWeight"] as const;
 const easingPoints = [0, 1, 2, 3] as const;
 
 /**
- * Every numeric member the contract governs, one ordered list per group — the
+ * Every numeric member of the shipped themes, one ordered list per group — the
  * numeric sibling of `colorRoles`, so a diagnostics table or a reference row
- * iterates the domain instead of retyping it.
+ * iterates the domain instead of retyping it. A theme may carry a wider scale
+ * than the shipped one; the ladders walk the theme's own members, so this index
+ * names the shipped domain, not the limit of what is governed.
  *
  * Each list derives from the group's own default object or its ordered index
  * (`dimensions`, `controlSizes`, `elevationLevels`, `motionLevels`,
@@ -348,6 +350,26 @@ const ascendingSizes = (
     .map((role) => [`${role}.fontSize`, typography[role].fontSize] as const);
 
 /**
+ * The steps of a scale in the order the theme holds them. `extendTheme` copies
+ * the base group and assigns the override, so a shipped scale keeps its authored
+ * order and a step a theme adds lands after the last one it knows. Walking the
+ * theme's object — instead of the shipped names — is what makes the ladder rules
+ * total: a brand may carry a wider scale than the identity, and the same walker
+ * the finite pass uses reads it.
+ */
+const scaleSteps = (scale: unknown): ReadonlyArray<readonly [string, number]> =>
+  numericMembers(scale, "");
+
+/** A density size ladder, named the way a failure reports it. */
+const sizeSteps = (
+  group: "controlHeight" | "controlPaddingX",
+  sizes: unknown,
+): ReadonlyArray<readonly [string, number]> =>
+  scaleSteps(sizes).map(
+    ([size, value]) => [`${group}.${size}`, value] as const,
+  );
+
+/**
  * The elevation feather is the level's height. A level's first entry is the
  * shadow the native runtime paints, so `sm` → `md` → `lg` may not get a smaller
  * blur as it rises. Opacity is deliberately not a step: a fainter dialog shadow
@@ -388,6 +410,11 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
 
 /**
  * Every numeric rule a theme misses.
+ *
+ * The six size ladders — density's two, `spacing`, `radius`, `iconSize` and
+ * `avatarSize` — are read from the theme's own scale object, in the order the
+ * theme holds its steps, so a step a brand adds is compared too; `radius.none`
+ * and `radius.full` stay on their own rules below.
  *
  * - **typography**: a role needs a size, leading and weight, and a line box
  *   shorter than its type clips the glyphs; a weight is a CSS number in `1…1000`
@@ -528,18 +555,12 @@ export function themeMetricFailures(
     ...finiteGroup("density", density),
     ...ladder(
       "density",
-      controlSizes.map(
-        (size) =>
-          [`controlHeight.${size}`, density.controlHeight[size]] as const,
-      ),
+      sizeSteps("controlHeight", density.controlHeight),
       "non-decreasing",
     ),
     ...ladder(
       "density",
-      controlSizes.map(
-        (size) =>
-          [`controlPaddingX.${size}`, density.controlPaddingX[size]] as const,
-      ),
+      sizeSteps("controlPaddingX", density.controlPaddingX),
       "non-decreasing",
       "positive",
     ),
@@ -592,14 +613,7 @@ export function themeMetricFailures(
       density.controlHeight.md,
     ),
     ...finiteGroup("iconSize", iconSize),
-    ...ladder(
-      "iconSize",
-      (["xs", "sm", "md", "lg", "xl"] as const).map(
-        (size) => [size, iconSize[size]] as const,
-      ),
-      "non-decreasing",
-      "positive",
-    ),
+    ...ladder("iconSize", scaleSteps(iconSize), "non-decreasing", "positive"),
     // An inline icon is painted inside the line box of the text it sits with
     // (`scale.ts`: `xs` is inline with a caption, `sm` with a label). A glyph
     // taller than the line raises the row it is centred in, so the two inline
@@ -609,9 +623,7 @@ export function themeMetricFailures(
     ...finiteGroup("avatarSize", avatarSize),
     ...ladder(
       "avatarSize",
-      (["xs", "sm", "md", "lg"] as const).map(
-        (size) => [size, avatarSize[size]] as const,
-      ),
+      scaleSteps(avatarSize),
       "non-decreasing",
       "positive",
     ),
@@ -623,33 +635,14 @@ export function themeMetricFailures(
     ...zero("radius", "none", radius.none),
     ...ladder(
       "radius",
-      (["sm", "md", "lg", "xl"] as const).map(
-        (step) => [step, radius[step]] as const,
-      ),
+      scaleSteps(radius).filter(([step]) => step !== "none" && step !== "full"),
       "non-decreasing",
     ),
     ...atLeast("radius", "full", radius.full, radius.xl),
     ...atLeast("radius", "full", radius.full, density.controlHeight.lg / 2),
     ...atLeast("radius", "full", radius.full, avatarSize.lg / 2),
     ...finiteGroup("spacing", spacing),
-    ...ladder(
-      "spacing",
-      (
-        [
-          "2xs",
-          "xs",
-          "sm",
-          "md",
-          "lg",
-          "xl",
-          "2xl",
-          "3xl",
-          "4xl",
-          "5xl",
-        ] as const
-      ).map((step) => [step, spacing[step]] as const),
-      "non-decreasing",
-    ),
+    ...ladder("spacing", scaleSteps(spacing), "non-decreasing"),
     ...finiteGroup("dimensions", dimensions),
     ...positive("dimensions", "overlayMinWidth", dimensions.overlayMinWidth),
     ...positive("dimensions", "overlayWidth", dimensions.overlayWidth),

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 216/282
+`[x]` `[████████░░]` 217/283
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1775,6 +1775,12 @@ AAA base at `"default"` spread the `undefined` key over the default palette and
 then let `extendTheme` fall back to the AAA base, so the result mixed two primary
 families and `themeFailures` reported a direction failure; the palette merge now
 drops the key before the base sees it (plan 551)
+`[x]` Hold every size ladder to the theme's own scale — the finite pass walked a
+theme's values but the ladder half read the shipped names, so
+`extendTheme(light, { spacing: { ...spacing, "6xl": 1 } })` returned `[]` while
+the catalogue promised every named ladder must not step backwards; the six
+ladders now walk the theme's own objects, with `radius.none`/`full` keeping
+their own rules (plan 552)
 
 ## Phase C — Tier 1–2 components
 
