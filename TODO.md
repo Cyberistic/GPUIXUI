@@ -469,9 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499)
+## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 100/100
+`[x]` `[██████████]` 101/101
+
+`[ ]` **A component's exported symbol reaches its page (plan 500)** — step one
+      queued: `Spinner`, `ScrollArea`, `TextArea`, `ButtonGroup`,
+      `NumberField`, `OTPField`, `Field`, `ConfirmDialog` and `Grid` land in the
+      registry appendix today (measured: `Spinner` rank 7), because plan 431
+      ranks titles only. The `*Props` stems are derived from each record's
+      documented `api` types.
 
 `[x]` **Every page's heading outline is ordered (plan 499)** — `/docs/components`,
       `/docs/api-reference` and `/docs/api-values` jumped `h1 → h3` because their

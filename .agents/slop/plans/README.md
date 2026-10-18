@@ -259,7 +259,11 @@ tables and the inventory reconciliation.
 | [`497-remaining-value-live-scenes.md`](./497-remaining-value-live-scenes.md) | The remaining value and disclosure controls get live scenes: Accordions, Number fields, OTP fields, Ratings, Tag inputs and Toggles render on the wasm renderer; a page can no longer deny a scene its record declares | F | 412, 434, 455–458, 475, 486, 492, 493 | implemented — six scenes, 36 total; the widened guard caught the shipped `search-input` denial before it was fixed; `smoke:preview` green for every scene and page (§8) |
 | [`498-code-contrast.md`](./498-code-contrast.md) | The docs code palette clears the 4.5:1 text floor: the two failing GitHub Light/Dark colours are replaced per theme, both Shiki pipelines share the map, and the hydrated smoke reads every painted code leaf | F | 410, 416, 446, 495 | implemented — the measured 3.49:1 and 3.51:1 pairs are 5.50:1 and 5.49:1; a 7-test suite pins the wiring and both directions were measured (§7) |
 | [`499-heading-outline.md`](./499-heading-outline.md) | Every page's heading outline is ordered: the three generated indexes open their groups at `h2`, and the built-site crawl fails when any page skips a level | F | 410, 417, 441, 490, 439 | implemented — the crawl named the three `h1 → h3` pages before the swap, then passed 90 pages; the check now guards every page (§7) |
+| [`500-exported-symbol-search.md`](./500-exported-symbol-search.md) | A component's **exported symbol** reaches its page: `Spinner` (from `SpinnerProps`) outranks prose, so the nine stems that differ from their inventory title stop landing in the appendix | F | 411, 419, 431, 441, 479 | implemented — nine symbol queries now return their page first; `smoke:build` asserts one against the production index (§8) |
 
+> The `400–499` block is full; plan `500` takes the next free number, as plan
+> `051` did for the tokens workstream when `010–019` filled.
+>
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
 > live on their own branches and are merged into the integration branch as each
