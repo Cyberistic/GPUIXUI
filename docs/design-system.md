@@ -132,6 +132,11 @@ on neither ladder. `textRoles` is the index of all ten roles in documentation
 order; the package test holds it, the `Typography` interface and the docs table
 in agreement, so the type scale is enumerated in one place.
 
+The numeric contract holds an edited theme to the same two ladders and to the
+weight-variant rule: `body` → `bodyStrong` may not shrink and must gain weight,
+so a copied theme cannot flatten emphasis or render a lower role larger than the
+one above it.
+
 Why 14px body: it is the smallest size that stays comfortable in long desktop
 sessions while leaving more room for data density than a 16px web default.
 Labels are one step smaller because controls are scanned, not read.

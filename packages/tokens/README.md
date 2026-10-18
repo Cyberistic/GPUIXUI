@@ -385,9 +385,10 @@ themeMetricFailures(ringless); // one borderWidth/strong failure
 That case is why the check exists: `focusRing` spreads by `borderWidth.strong`,
 and that shadow is the only focus indicator GPUix 0.10.0 can draw, so a zero
 ring removed focus while `themeContrastFailures` still returned `[]`. The same
-edit path can clip a type role by shortening its leading, shrink the smallest
-control below one label line, invert a size ladder, scroll an overlay in less
-than one row, ship a non-finite motion
+edit path can clip a type role by shortening its leading, invert one of the two
+type ladders (`proseLadder` / `codeLadder`) or flatten `bodyStrong` onto
+`body`'s weight, shrink the smallest control below one label line, invert a size
+ladder, scroll an overlay in less than one row, ship a non-finite motion
 timing or a cubic-bezier easing the runtime cannot interpolate, leave the largest
 avatar a rounded square, or hand `elevationShadow` an alpha the colour helper
 cannot parse. The ladders are non-decreasing rather than

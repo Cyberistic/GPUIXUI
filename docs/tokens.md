@@ -471,6 +471,11 @@ does not define tracking.
 `textRoles` lists the ten roles in this order, so a table can be generated
 without retyping them.
 
+The scale is two exported ladders: `proseLadder` (`display` → `caption`) and
+`codeLadder` (`code` → `codeBlock`). `bodyStrong` shares `body`'s size and is a
+weight variant, so it is on neither. `themeMetricFailures` holds an edited theme
+to the same order.
+
 `textStyle(theme, role)` resolves a role to GPUix style properties, choosing the
 mono family for `code` and `codeBlock`:
 
@@ -1404,7 +1409,11 @@ The rules are breakage tests, not a house style. `borderWidth.strong` is the
 focus ring's spread, and that zero-blur shadow is the only focus indicator the
 runtime can draw, so a zero ring removes focus entirely — while
 `themeContrastFailures` still returns `[]`, because the ring's colour is fine. A
-type role's leading must not be shorter than its size; the smallest control must
+type role's leading must not be shorter than its size; the two documented type
+ladders (`proseLadder` and `codeLadder`) must not be inverted — a role below
+another may not render larger — and `bodyStrong`, the weight variant of `body`,
+may not shrink below it and must stay heavier, because an emphasis role the
+reader cannot distinguish from body text is not emphasis; the smallest control must
 fit one `label` line plus its two borders; a row must fit one `body` line and the
 default `md` control it holds; `radius.none` must be square; `radius.full` must
 round the largest radius and half of the taller of the largest control and the

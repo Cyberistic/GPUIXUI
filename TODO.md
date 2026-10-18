@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 134/184
+`[x]` `[███████░░░]` 135/185
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -959,6 +959,15 @@ and every high-contrast light tone 6.12–6.72:1 under 7:1 while
 on the nine surfaces (36 pairs), the six light status roles move one designed
 half-step, every shipped set passes (4.661:1 XP light `infoText` on `active`,
 7.370:1 at AAA) and the plain 338 pairs do not move (plan 366)
+`[x]` Hold the type scale to its two documented ladders — `themeMetricFailures`
+checked a role's size was positive and its leading long enough, but the prose
+(`display` → `caption`) and code (`code` → `codeBlock`) ladders and the
+`bodyStrong` weight variant lived only in `typography.test.ts` as two local
+arrays over the shipped constant, so an edited theme rendered `h1` below `h2`,
+`codeBlock` above `code`, or emphasis `bodyStrong` at body's weight while both
+checkers returned `[]`; the ladders are now exported as `proseLadder` /
+`codeLadder`, the contract holds each `non-decreasing` and `bodyStrong` no
+smaller and heavier than `body`, and no shipped value moves (plan 367)
 
 ## Phase C — Tier 1–2 components
 
