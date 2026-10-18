@@ -34,10 +34,11 @@ toolbar probe (`data-toolbar`), the data-grid column probes
 (`data-grid-columns`, `column-config`), the notification-centre probe
 (`notification-centre`), the crop-area probe (`crop-area`), the multi-step-form
 probe (`wizard-flow`), the editable-grid probe (`grid-cell-editing`), the shell
-probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
+probes (`shell-navigation`, `shell-selection`, `shell-filter`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
-selecting an entry, the keyboard contract and the palette switch — and the
+selecting an entry, the keyboard contract and the palette switch, and the third
+proves the filter that makes 100 entries scannable — and the
 app-root probe (`root-single-child`, `root-wrapper`), which measures the one
 rule every scenario's mount sits on: the native root keeps only its **last**
 child.
@@ -171,6 +172,22 @@ native input:
 | keyboard | Enter on key **down** switches; Space on key **up** switches; Space on the down alone does nothing. The nav uses the shipped `Button`'s `decideActivation`, not a second copy |
 | palette | `theme-mode-light` repaints `app-shell` from `#11141A` to the light `#F6F8FA`, keeps the selected scenario and leaves its view mounted |
 | isolation | the full suite mounts every scenario under a `Fragment` keyed by id: without it React kept the previous `<App>`'s Shell state and native scroll offset, and a click landed outside the viewport (found by this probe; `--only` passed, the full run did not) |
+
+### Finding a scenario (plan `528`)
+
+The registry became 100 entries, so the sidebar gained a filter. It is a
+controlled native `<input>` over the same registry — the rule is the pure
+`filterScenarios` (`src/shell-filter.ts`), matched case-insensitively against
+each scenario's **id, title and capability**, and the count is painted beside
+it. `shell-filter` and `live-shell-filter` drive it.
+
+| Fact | Measured |
+| ---- | -------- |
+| filter | typing `crop` paints `1 of 101`, keeps `nav-crop-area` and drops `nav-window-layout` from the tree; `CROP` matches the same entry |
+| stage | while the previous pick is hidden the stage follows the first match and **that row** paints `colors.accent` — the highlight is the derived current, not the stored `selected` |
+| clearing | `Escape` belongs to the sidebar container, so it clears from the focused filter **and** from a focused row (keys bubble, plan `345`); the full list returns and the pick the reader made is kept |
+| empty | `zzz` paints `0 of 101`, `No scenarios match` in the sidebar and `no scenarios` in the stage |
+| selection | filtering never rewrites `selected`: hide the pick, then clear, and the stage returns to the hidden pick (a filtered-out pick yields to the first match only while the filter is active) |
 
 ## The app root (plan `522`)
 

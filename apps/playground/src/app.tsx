@@ -23,6 +23,7 @@ import { decideActivation, type KeyPhase } from "@gpuixui/primitives";
 import { textStyle } from "@gpuixui/tokens";
 import { ThemeProvider, useTheme } from "@gpuixui/tokens/react";
 import { paletteIds, palettes, type PaletteId } from "./palettes.js";
+import { filterScenarios } from "./shell-filter.js";
 import type { PlaygroundScenario } from "./types.js";
 import { Body, Readout } from "./ui.js";
 
@@ -104,10 +105,13 @@ const Shell = ({
       onSome: (scenario) => scenario.id,
     }),
   );
+  const [query, setQuery] = useState("");
+  const visible = filterScenarios(list, query);
   const current = pipe(
-    Arr.findFirst(list, (scenario) => scenario.id === selected),
-    Option.orElse(() => Arr.head(list)),
+    Arr.findFirst(visible, (scenario) => scenario.id === selected),
+    Option.orElse(() => Arr.head(visible)),
   );
+  const activeId = Option.map(current, (scenario) => scenario.id);
 
   return (
     <div
@@ -120,6 +124,9 @@ const Shell = ({
       }}
     >
       <div
+        onKeyDown={(event) => {
+          if (event.key === "escape") setQuery("");
+        }}
         style={{
           width: 260,
           flexShrink: 0,
@@ -132,15 +139,44 @@ const Shell = ({
         }}
       >
         <PaletteSwitch active={palette} onSelect={onPalette} />
-        <text
+        <div
           style={{
-            ...textStyle(theme, "label"),
-            color: theme.colors.foreground,
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
             marginTop: theme.spacing.md,
           }}
         >
-          Scenarios
-        </text>
+          <input
+            testId="shell-filter"
+            value={query}
+            aria-id="shell-filter"
+            aria-label="Filter scenarios"
+            placeholder="Filter scenarios"
+            onChange={(event) => setQuery(event.value ?? "")}
+            style={{
+              height: 26,
+              flexGrow: 1,
+              minWidth: 0,
+              paddingLeft: theme.spacing.sm,
+              fontSize: 12,
+              color: theme.colors.inputForeground,
+              backgroundColor: theme.colors.input,
+              borderWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.sm,
+            }}
+          />
+          <text
+            testId="shell-filter-count"
+            style={{
+              ...textStyle(theme, "caption"),
+              color: theme.colors.mutedForeground,
+            }}
+          >
+            {`${Arr.length(visible)} of ${Arr.length(list)}`}
+          </text>
+        </div>
         <div
           testId="shell-nav-list"
           style={{
@@ -152,7 +188,7 @@ const Shell = ({
             overflowY: "scroll",
           }}
         >
-          {Arr.map(list, (scenario) => {
+          {Arr.map(visible, (scenario) => {
             const select = () => setSelected(scenario.id);
             return (
               <div
@@ -168,10 +204,12 @@ const Shell = ({
                   borderRadius: theme.radius.md,
                   cursor: "pointer",
                   flexShrink: 0,
-                  backgroundColor:
-                    selected === scenario.id
-                      ? theme.colors.accent
-                      : theme.colors.background,
+                  backgroundColor: Option.exists(
+                    activeId,
+                    (id) => id === scenario.id,
+                  )
+                    ? theme.colors.accent
+                    : theme.colors.background,
                   hover: { backgroundColor: theme.colors.muted },
                 }}
               >
@@ -193,6 +231,12 @@ const Shell = ({
                 </text>
               </div>
             );
+          })}
+          {Arr.match(visible, {
+            onEmpty: () => (
+              <Readout testId="shell-filter-empty">No scenarios match</Readout>
+            ),
+            onNonEmpty: () => null,
           })}
         </div>
       </div>

@@ -320,6 +320,87 @@ const shell: LiveScenario = {
     }),
 };
 
+/**
+ * The scenario filter in a real window (plan `528`).
+ *
+ * Headless proves the rule; this proves the path a reader takes: a controlled
+ * native editor receives real keys, the sidebar unmounts the non-matches, and
+ * Escape — bubbling from the filter or a focused row — restores the list
+ * without losing the pick.
+ */
+const liveShellFilter: LiveScenario = {
+  id: "live-shell-filter",
+  title: "Live shell: the scenario filter in a real window",
+  capability: "layout",
+  // The registry is the single source of truth: looking the view up here also
+  // avoids a second import edge into the shell scenario's own module (which
+  // imports the registry), which would put `scenarios` in a temporal dead zone
+  // while the live module evaluates.
+  view: () =>
+    Option.match(
+      Arr.findFirst(scenarios, (scenario) => scenario.id === "shell-filter"),
+      { onNone: () => null, onSome: (scenario) => scenario.view() },
+    ),
+  ready: "app-shell",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("shell-filter");
+      yield* ctx.host.key("c r o p");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live filter counts only its match",
+        yield* textOf(ctx, "shell-filter-count"),
+        `1 of ${Arr.length(scenarios)}`,
+      );
+      const match = yield* ctx.host.bounds("nav-crop-area");
+      yield* ctx.expectEqual(
+        "the matching live entry is painted",
+        match !== null,
+        true,
+      );
+      const hidden = yield* ctx.host.bounds("nav-window-layout");
+      yield* ctx.expectEqual(
+        "a filtered-out live entry leaves the sidebar",
+        hidden === null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live stage follows the first match",
+        yield* textOf(ctx, "stage-title"),
+        titleOf("crop-area"),
+      );
+
+      yield* ctx.host.click("nav-crop-area");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "clicking a filtered live entry mounts it",
+        yield* textOf(ctx, "stage-title"),
+        titleOf("crop-area"),
+      );
+
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Escape clears the live filter from the focused row",
+        yield* textOf(ctx, "shell-filter-count"),
+        `${Arr.length(scenarios)} of ${Arr.length(scenarios)}`,
+      );
+      const restored = yield* ctx.host.bounds("nav-window-layout");
+      yield* ctx.expectEqual(
+        "clearing restores the live list",
+        restored !== null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "clearing keeps the live pick",
+        yield* textOf(ctx, "stage-title"),
+        titleOf("crop-area"),
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveShellFilter.id}.png`);
+    }),
+};
+
 const input: LiveScenario = {
   id: "live-input",
   title: "Live input: typing and submit in a real editor",
@@ -5952,6 +6033,7 @@ const liveFrames: LiveScenario = {
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
+  liveShellFilter,
   rootProbe,
   liveWindow,
   liveFrames,

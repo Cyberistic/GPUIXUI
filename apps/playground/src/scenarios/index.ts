@@ -78,6 +78,7 @@ import { gridCellEditingScenario } from "./grid-editor.js";
 import { fileUploadScenario } from "./file-upload.js";
 import { propertyPanelScenario } from "./property-panel.js";
 import { shellNavigationScenario, shellSelectionScenario } from "./shell.js";
+import { shellFilterScenario } from "./shell-filter.js";
 import { terminalScenario } from "./terminal.js";
 import { virtualizedTableScenario } from "./virtual-table.js";
 import { treeScenario } from "./tree.js";
@@ -256,6 +257,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   textSelectionScenario,
   shellNavigationScenario,
   shellSelectionScenario,
+  shellFilterScenario,
   virtualizedTableScenario,
   treeScenario,
   logViewerScenario,
