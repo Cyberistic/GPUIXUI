@@ -119,6 +119,23 @@ describe("Checkbox", () => {
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
 
+  it("keeps the destructive border on hover and press while invalid", () => {
+    // Plan 356: on an unfilled box the border is the only error cue, and the
+    // healthy interaction rule replaced it for the whole gesture.
+    const element = renderCheckbox(
+      { invalid: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const destructive = Option.some({
+      borderColor: testTheme.colors.destructive,
+    });
+    expect(hostStyle(element, "hover")).toStrictEqual(destructive);
+    expect(hostStyle(element, "active")).toStrictEqual(destructive);
+  });
+
   it("does not toggle while disabled", () => {
     const onValueChange = vi.fn();
     const element = renderCheckbox(
@@ -169,6 +186,23 @@ describe("Switch", () => {
       top: 1,
     });
     expect(Option.isNone(hostStyle(off, "justifyContent"))).toBe(true);
+  });
+
+  it("keeps the destructive track border on hover and press while invalid", () => {
+    // Plan 356: the off track's border is the error cue, and hover/press used to
+    // paint the healthy border over it.
+    const element = renderSwitch(
+      { invalid: true },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const destructive = Option.some({
+      borderColor: testTheme.colors.destructive,
+    });
+    expect(hostStyle(element, "hover")).toStrictEqual(destructive);
+    expect(hostStyle(element, "active")).toStrictEqual(destructive);
   });
 });
 
@@ -331,6 +365,25 @@ describe("RadioGroup", () => {
       testTheme.colors.input,
     );
   });
+
+  it("keeps an unanswered circle's error border through hover and press", () => {
+    // Plan 356: the circles share `selectionBoxStyle` with the checkbox.
+    const element = renderRadioGroup(
+      { options, invalid: true },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const row = expectSome(Arr.get(elementChildren(element), 1));
+    const circle = expectSome(Arr.get(elementChildren(row), 0));
+    const destructive = Option.some({
+      borderColor: testTheme.colors.destructive,
+    });
+    expect(hostStyle(circle, "hover")).toStrictEqual(destructive);
+    expect(hostStyle(circle, "active")).toStrictEqual(destructive);
+  });
 });
 
 describe("CheckboxGroup", () => {
@@ -450,6 +503,16 @@ describe("CheckboxGroup", () => {
     expect(expectSome(hostStyleString(box(element, 2), "borderColor"))).toBe(
       testTheme.colors.destructive,
     );
+  });
+
+  it("keeps an empty row's error border through hover and press", () => {
+    // Plan 356: the row's box shares the checkbox painter.
+    const element = render({ invalid: true, selectAll: "All channels" });
+    const destructive = Option.some({
+      borderColor: testTheme.colors.destructive,
+    });
+    expect(hostStyle(box(element, 2), "hover")).toStrictEqual(destructive);
+    expect(hostStyle(box(element, 2), "active")).toStrictEqual(destructive);
   });
 
   it("paints the ring on the focused row's box", () => {

@@ -95,7 +95,10 @@ The **option row** — the element that owns the name, the tab stop and the clic
 and key handlers — takes its layout and pointer feedback from
 `selectionRowStyle`: a `colors.hover` wash on hover and `colors.active` on press,
 and neither while disabled (plan 355). The circle keeps its own border feedback,
-so the row and the control both answer the pointer.
+so the row and the control both answer the pointer. An invalid **empty** circle
+keeps the destructive border on hover and press; the healthy interaction colours
+never paint over the error cue, while a chosen circle keeps its accent
+(plan 356).
 
 ## Style by state
 

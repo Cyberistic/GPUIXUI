@@ -79,8 +79,11 @@ clearing.
 `selectionBoxStyle` resolves box side from `iconSize`, radius from `radius.sm`,
 border from `input`/`destructive`, fill from the accent role and the mark from
 `selectionMarkColor`. Hover and press are declared in `style.hover`/`style.active`,
-not scripted. Disabled adds half opacity and removes pointer feedback. Focus
-paints the selection ring (`colors.ring`, spread by `borderWidth.strong`).
+not scripted. An invalid **empty** box keeps the destructive border through both
+— the border is the error cue, so the healthy interaction rule never paints over
+it — while a chosen box keeps its accent feedback (plan 356). Disabled adds half
+opacity and removes pointer feedback. Focus paints the selection ring
+(`colors.ring`, spread by `borderWidth.strong`).
 
 ## Style by state
 

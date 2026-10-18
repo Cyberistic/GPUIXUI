@@ -1,6 +1,6 @@
 # 356 — An invalid selection surface loses its error border when hovered
 
-**Phase:** F (interaction states) · **Workstream:** primitives · **Depends on:** 030, 041, 047, 049, 061, 065, 070, 079, 084, 091, 332, 351, 355 · **Status:** planned
+**Phase:** F (interaction states) · **Workstream:** primitives · **Depends on:** 030, 041, 047, 049, 061, 065, 070, 079, 084, 091, 332, 351, 355 · **Status:** done
 
 ## 1. The defect (measured)
 
@@ -180,5 +180,39 @@ real renderer):
 
 ## 6. Result (executed 2026-10-18)
 
-_(fill after the run: exact counts, the files touched, and the four mutation
-outcomes by test name.)_
+- `core/selection.ts` gained one module-local `interactionBorder(spec, theme,
+  fallback)`: `colors.destructive` when the surface is `invalid` and unfilled,
+  else the healthy fallback. `selectionBoxStyle` (checkbox/radio/group box) and
+  `switchTrackStyle` both route their unfilled `hover`/`active` border through it;
+  a filled surface keeps its accent feedback and the disabled branch is
+  unchanged.
+- Additions: **4 core + 4 element-tree + 1 runtime** cases. The runtime case
+  reads the authored nested `hover`/`active` blocks (the matrix's top-level
+  colour scan cannot see them).
+- **Counts:** offline **`591 passed` in 43 files** (583 + 8); runtime **`535
+  passed` in 27 files** (534 + 1); `nub run check` (check-tests, lint, fmt,
+  check-types) exit `0`; repo `nub run test` green (components 308, primitives
+  591).
+- **Two-direction proof (each mutation restored and re-run green):**
+  1. `selectionBoxStyle` reverted to the healthy literals — core `keeps the
+     destructive boundary through hover and press on an empty box` plus element
+     `keeps the destructive border on hover and press while invalid`,
+     `keeps an unanswered circle's error border through hover and press` and
+     `keeps an empty row's error border through hover and press` failed (1 core +
+     3 element); every switch case stayed green.
+  2. `switchTrackStyle` reverted — core `keeps the destructive boundary through
+     hover and press on an empty switch` and element `keeps the destructive track
+     border on hover and press while invalid` failed, plus runtime `keeps the
+     destructive boundary through hover and press on an invalid control`
+     (2 offline + 1 runtime); every box case stayed green.
+  3. `interactionBorder` made to ignore `invalid` — all six invalid cases failed
+     (2 core + 4 element) while the valid and filled cases stayed green.
+  4. `interactionBorder` made to ignore `filled` — core `leaves a filled invalid
+     box on its accent feedback` failed, proving the accent branch is guarded.
+- **Measured before/after:** `<Checkbox invalid />` and `<Switch invalid />`
+  authored `hover.borderColor` `#000014` → `#00000F` and `active.borderColor`
+  `#000018` → `#00000F`; a valid control still authors `#000014`/`#000018`.
+- **Honest limit:** the proof is the authored declaration reaching the element
+  that owns the pointer; the applied post-hover paint is GPUI's own state
+  application, which no test-renderer API exposes (the same basis as plans `355`
+  and `091`).

@@ -68,7 +68,9 @@ inset, and it cannot drift out of the pill. A toggle animates that inset over
 200 ms with the runtime's `motion`; a switch that mounts already checked rests
 at the far end rather than sliding there. Disabled adds half opacity and
 removes feedback. `invalid` gives an off-switch the destructive border, the
-same role a checkbox uses, and focus paints the shared selection ring.
+same role a checkbox uses, and that border survives hover and press — the
+healthy interaction rule never repaints the error cue (plan 356). Focus paints
+the shared selection ring.
 
 
 ## Style by state

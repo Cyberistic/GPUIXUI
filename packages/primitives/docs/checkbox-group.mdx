@@ -124,7 +124,10 @@ role, the name, the tab stop and both handlers — takes its layout and pointer
 feedback from `selectionRowStyle`: a `colors.hover` wash on hover and
 `colors.active` on press, and **neither** while disabled, so the label column
 responds exactly like the box does (plan 355). The box keeps its own border
-feedback, so hovering the circle shows both signals. A disabled row adds half
+feedback, so hovering the circle shows both signals. An invalid **empty** box
+keeps the destructive border on hover and press, so the row's wash is the only
+thing the gesture adds — the error cue is never repainted healthy (plan 356).
+A disabled row adds half
 opacity and no wash. Focus paints `colors.ring` on the box, not on the row, so
 the ring sits on the control the way it does in `Checkbox`. A disabled row
 paints **no** ring, even when it kept native focus: the rule lives in

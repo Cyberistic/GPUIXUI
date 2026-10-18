@@ -130,6 +130,47 @@ describe("selectionBoxStyle", () => {
   });
 });
 
+describe("invalid selection feedback", () => {
+  it("keeps the destructive boundary through hover and press on an empty box", () => {
+    // Plan 356: the error cue is a border, so reusing the healthy hover/press
+    // rule painted the box as valid for the whole gesture.
+    const invalid = selectionBoxStyle(spec({ invalid: true }), testTheme);
+    expect(invalid.hover?.borderColor).toBe(testTheme.colors.destructive);
+    expect(invalid.active?.borderColor).toBe(testTheme.colors.destructive);
+    const valid = selectionBoxStyle(spec(), testTheme);
+    expect(valid.hover?.borderColor).toBe(testTheme.colors.borderStrong);
+    expect(valid.active?.borderColor).toBe(testTheme.colors.ring);
+  });
+
+  it("leaves a filled invalid box on its accent feedback", () => {
+    // A chosen option is not what failed validation (plans 061, 070).
+    const filled = selectionBoxStyle(
+      spec({ invalid: true, state: "checked" }),
+      testTheme,
+    );
+    expect(filled.hover?.borderColor).not.toBe(testTheme.colors.destructive);
+    expect(filled.active?.borderColor).toBe(testTheme.colors.ring);
+  });
+
+  it("keeps the destructive boundary through hover and press on an empty switch", () => {
+    const invalid = switchTrackStyle(spec({ invalid: true }), testTheme);
+    expect(invalid.hover?.borderColor).toBe(testTheme.colors.destructive);
+    expect(invalid.active?.borderColor).toBe(testTheme.colors.destructive);
+    const valid = switchTrackStyle(spec(), testTheme);
+    expect(valid.hover?.borderColor).toBe(testTheme.colors.borderStrong);
+    expect(valid.active?.borderColor).toBe(testTheme.colors.ring);
+  });
+
+  it("still declares no press feedback while disabled", () => {
+    const disabled = spec({ invalid: true, disabled: true });
+    expect(selectionBoxStyle(disabled, testTheme).active).toStrictEqual({});
+    expect(selectionBoxStyle(disabled, testTheme).hover?.borderColor).toBe(
+      testTheme.colors.destructive,
+    );
+    expect(switchTrackStyle(disabled, testTheme).active).toStrictEqual({});
+  });
+});
+
 describe("selectionRowStyle", () => {
   it("gives the row that owns the pointer a hover and press wash", () => {
     // Plan 355: the group row is the control (role, name, tab stop, click and

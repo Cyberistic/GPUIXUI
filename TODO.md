@@ -813,6 +813,17 @@ retired once both branches are one
       layout); 3 core + 6 element-tree + 5 runtime cases, four mutations fail by
       name (offline 583, runtime 534; plan `355`).
 
+`[x]` `packages/primitives`: **an invalid selection surface lost its error
+      border under the pointer** — measured (2026-10-18): `<Checkbox invalid />`
+      and `<Switch invalid />` paint `colors.destructive` at rest but the
+      healthy `borderStrong` on hover and the `ring` role on press, so the only
+      error cue disappeared for the whole gesture; the `RadioGroup` circles and
+      `CheckboxGroup` boxes share the painter. One `interactionBorder` rule now
+      keeps the destructive boundary through both interaction states of an
+      unfilled invalid surface while a chosen one keeps its accent (the
+      `controlStyle` rule from plan 091 applied to selection), with core,
+      element-tree and runtime guards, both directions proven (plan `356`).
+
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
       contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and

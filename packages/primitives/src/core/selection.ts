@@ -74,6 +74,22 @@ export const selectionMarkColor = (
       : theme.colors.mutedForeground;
 
 /**
+ * The border an unfilled selection surface paints while interacting.
+ *
+ * Interaction feedback is a border change, so the healthy hover/press rule
+ * would paint over a failed validation. Only an invalid, unfilled surface keeps
+ * the destructive role; a filled one keeps its accent. This mirrors
+ * `controlStyle`'s rule for fields (plan 091) and is shared by the box and the
+ * switch track (plan 356).
+ */
+const interactionBorder = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+  fallback: string,
+): string =>
+  spec.invalid === true && !filled(spec) ? theme.colors.destructive : fallback;
+
+/**
  * The square a checkbox or radio paints.
  *
  * The side is the theme's icon size for the control size, so a checkbox lines
@@ -106,8 +122,14 @@ export const selectionBoxStyle = (
           backgroundColor: alpha(role.background, 0.9),
           borderColor: alpha(role.background, 0.9),
         }
-      : { borderColor: theme.colors.borderStrong },
-    active: { borderColor: theme.colors.ring },
+      : {
+          borderColor: interactionBorder(
+            spec,
+            theme,
+            theme.colors.borderStrong,
+          ),
+        },
+    active: { borderColor: interactionBorder(spec, theme, theme.colors.ring) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;
@@ -226,8 +248,14 @@ export const switchTrackStyle = (
           backgroundColor: alpha(role.background, 0.9),
           borderColor: alpha(role.background, 0.9),
         }
-      : { borderColor: theme.colors.borderStrong },
-    active: { borderColor: theme.colors.ring },
+      : {
+          borderColor: interactionBorder(
+            spec,
+            theme,
+            theme.colors.borderStrong,
+          ),
+        },
+    active: { borderColor: interactionBorder(spec, theme, theme.colors.ring) },
   };
   if (spec.disabled === true) {
     style.opacity = 0.5;

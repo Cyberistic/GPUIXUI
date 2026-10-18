@@ -13,10 +13,15 @@
  * than one element's property — the state lands on a border, a tint or a text
  * colour depending on the control, and the defect class is "paints nothing".
  * Each control's own suite still asserts *where* it lands.
+ *
+ * Plan `356` added the nested direction: the scan above reads top-level colours
+ * only, so an interaction rule that repainted the healthy border over the error
+ * was invisible; the final case reads the authored `hover`/`active` blocks.
  */
 
 import type { ReactElement } from "react";
 import { expect, it } from "vitest";
+import * as Option from "effect/Option";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Input } from "../src/components/Input.js";
@@ -32,7 +37,7 @@ import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import { openWindow, testTheme } from "./fixture.js";
-import { paintedColours, rgbOf } from "./theme.js";
+import { paintedColours, rgbOf, styleOf } from "./theme.js";
 
 /** Every control that declares an `invalid` prop, and the minimum data it needs. */
 const INVALID_CONTROLS: ReadonlyArray<
@@ -100,3 +105,64 @@ it.each(INVALID_CONTROLS)(
     expect(await coloursOf(render, false)).not.toContain(destructive);
   },
 );
+
+/** The nested interaction rule an element declares, or a named failure. */
+const interactionOf = async (
+  node: ReactElement,
+  testId: string,
+  state: "hover" | "active",
+): Promise<unknown> => {
+  const runtime = await openWindow();
+  runtime.render(<ThemeProvider theme={testTheme}>{node}</ThemeProvider>);
+  return Option.getOrElse(
+    Option.fromNullishOr(styleOf(runtime, testId)[state]),
+    () => expect.fail(`${testId} declared no ${state}`),
+  );
+};
+
+it("keeps the destructive boundary through hover and press on an invalid control", async () => {
+  // Plan 356: the matrix above reads top-level colours only, so the nested
+  // hover/press rules were unguarded — measured, an invalid box painted the
+  // healthy border for the whole gesture.
+  const destructive = { borderColor: testTheme.colors.destructive };
+  expect(
+    await interactionOf(
+      <Checkbox testId="cb" label="Accept" invalid />,
+      "cb",
+      "hover",
+    ),
+  ).toMatchObject(destructive);
+  expect(
+    await interactionOf(
+      <Checkbox testId="cb" label="Accept" invalid />,
+      "cb",
+      "active",
+    ),
+  ).toMatchObject(destructive);
+  expect(
+    await interactionOf(
+      <Switch testId="sw" label="On" invalid />,
+      "sw",
+      "hover",
+    ),
+  ).toMatchObject(destructive);
+  expect(
+    await interactionOf(
+      <Switch testId="sw" label="On" invalid />,
+      "sw",
+      "active",
+    ),
+  ).toMatchObject(destructive);
+  // A valid control still takes the healthy interaction colours, so the cases
+  // above are the invalid rule and not a lost feedback declaration.
+  expect(
+    await interactionOf(<Checkbox testId="ok" label="Accept" />, "ok", "hover"),
+  ).toMatchObject({ borderColor: testTheme.colors.borderStrong });
+  expect(
+    await interactionOf(
+      <Checkbox testId="ok" label="Accept" />,
+      "ok",
+      "active",
+    ),
+  ).toMatchObject({ borderColor: testTheme.colors.ring });
+});
