@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–517)
 
-`[x]` `[██████████]` 119/119
+`[x]` `[██████████]` 120/120
+
+`[x]` **The mode and platform controls stay reachable at every width (plan 519)** —
+      the landing page's Fumadocs switch is inside `max-lg:hidden` (measured 0×0
+      at 390 px) and the platform radio group filled the phone header, so a
+      compact theme switch ships below `lg` and the platform control becomes a
+      native select below `sm`; both browser gates now operate a visible control
+      and add a phone step.
 
 `[x]` **The roadmap publishes the tracked inventory (plan 518)** — 54 Tier 3–5
       targets from `COMPONENTS.md` render on `/docs/roadmap` with their exact
