@@ -255,5 +255,5 @@ the full-suite totals, and the exact scenario ids that were run.
 | M5 | wheel `precise` forced to `false` → "expected \"40/true/moved\", got \"40/false/moved\"", exit `1` |
 | M6 | adapter dropped `isHeld` → the adapter test expects `keyDown:2:a:true`, got `keyDown:2:a:false` |
 | full headless | `98/98` scenarios, **3428 checks**, exit `0` (one run, at the end; `input-payload` is 39 of them) |
-| full live | **not run — merge gate.** The registry lists 47 scenarios; the focused `live-input-payload` run is 12/12 green. No full-suite total is claimed. |
+| full live | **not completed — stopped on instruction; merge/release gate.** The registry lists 47 scenarios; the focused `live-input-payload` run is 12/12 green. No full-suite total is claimed, and the run must not be retried per task. |
 | gates | pending |
