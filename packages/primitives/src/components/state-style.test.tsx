@@ -387,6 +387,7 @@ describe("group roots and overlays", () => {
       testTheme,
       initValueState(Option.some(3), 0),
       groupFocus,
+      { preview: Option.none(), onEnter: vi.fn(), onLeave: vi.fn() },
       handlers,
     );
     expect(lastState(record.seen)).toStrictEqual({
@@ -664,6 +665,7 @@ describe("per-item style", () => {
       testTheme,
       initValueState(Option.some(2), 0),
       groupFocus,
+      { preview: Option.none(), onEnter: vi.fn(), onLeave: vi.fn() },
       handlers,
     );
     expect(record.seen).toStrictEqual([

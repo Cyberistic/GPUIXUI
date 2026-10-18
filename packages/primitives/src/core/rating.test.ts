@@ -8,7 +8,12 @@
 
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
-import { clampRating, decideRating, ratingTabStop } from "./rating.js";
+import {
+  clampRating,
+  decideRating,
+  previewRating,
+  ratingTabStop,
+} from "./rating.js";
 
 describe("clampRating", () => {
   it("keeps a rating inside 0..max and drops fractions", () => {
@@ -63,5 +68,23 @@ describe("ratingTabStop", () => {
     expect(ratingTabStop(0, 5)).toBe(1);
     expect(ratingTabStop(9, 5)).toBe(5);
     expect(ratingTabStop(0, 0)).toBe(1);
+  });
+});
+
+describe("previewRating", () => {
+  it("paints the committed value when nothing is hovered", () => {
+    expect(previewRating(2, Option.none(), 5)).toBe(2);
+    expect(previewRating(-3, Option.none(), 5)).toBe(0);
+  });
+
+  it("paints the hovered star instead", () => {
+    expect(previewRating(2, Option.some(4), 5)).toBe(4);
+    expect(previewRating(0, Option.some(1), 5)).toBe(1);
+  });
+
+  it("clamps a preview to the star count", () => {
+    expect(previewRating(2, Option.some(99), 5)).toBe(5);
+    expect(previewRating(2, Option.some(-3), 5)).toBe(0);
+    expect(previewRating(2, Option.some(4), 2.5)).toBe(2);
   });
 });

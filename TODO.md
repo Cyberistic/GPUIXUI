@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[~]` `[██████████]` 66/67
+`[~]` `[██████████]` 67/68
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -482,6 +482,15 @@ retired once both branches are one
       pairs, a composed scene proves no interactive node is unnamed, and the
       presentational primitives prove they invent no role; measured `TextArea`
       is `MultilineTextInput`. Both directions measured (plan 093)
+`[x]` `packages/primitives`: **`Rating` had no hover preview, and the docs'
+      reason was false** — the limitation said a preview needed a "which star is
+      under the pointer" query the runtime does not provide, but every star is
+      its own element with `onMouseEnter`/`onMouseLeave`, so the star *is* the
+      target. The stars now preview the prospective value from one pure rule
+      while the committed value, `onValueChange` and `aria-valuetext` stay put;
+      `disabled`/`readOnly` never preview, an invalid preview keeps the brand
+      role, and `starStyle.filled` follows the paint. 3 core + 3 element-tree +
+      5 runtime tests, both directions measured (plan 094)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

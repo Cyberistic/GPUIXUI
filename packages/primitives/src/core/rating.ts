@@ -52,3 +52,21 @@ export const decideRating = (
 /** The star that holds the group's single tab stop. */
 export const ratingTabStop = (value: number, max: number): number =>
   clampRating(value, max) === 0 ? 1 : clampRating(value, max);
+
+/**
+ * The value a rating **paints** while a pointer previews it.
+ *
+ * A preview is not a selection: with no star under the pointer the committed
+ * value paints, and a hovered star is clamped into the same range so a preview
+ * can never paint a star that does not exist. The committed value and its
+ * announcement stay the component's, not this function's.
+ */
+export const previewRating = (
+  value: number,
+  preview: Option.Option<number>,
+  max: number,
+): number =>
+  Option.match(preview, {
+    onNone: () => clampRating(value, max),
+    onSome: (hovered) => clampRating(hovered, max),
+  });

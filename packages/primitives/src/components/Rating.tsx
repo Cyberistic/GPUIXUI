@@ -17,7 +17,12 @@ import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
-import { clampRating, decideRating, ratingTabStop } from "../core/rating.js";
+import {
+  clampRating,
+  decideRating,
+  previewRating,
+  ratingTabStop,
+} from "../core/rating.js";
 import { ratingStarColor, ratingStarStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
@@ -71,6 +76,18 @@ export interface RatingProps {
   readonly testId?: string;
 }
 
+/**
+ * The star under the pointer, and how the group learns it moved.
+ *
+ * A preview is paint only: the committed value and its `aria-valuetext` are the
+ * component's state, and a hovered star never changes them.
+ */
+export interface RatingHover {
+  readonly preview: Option.Option<number>;
+  readonly onEnter: (index: number) => void;
+  readonly onLeave: () => void;
+}
+
 /** Which star holds focus, and how the group learns that it moved. */
 export interface RatingFocus {
   readonly focusedIndex: Option.Option<number>;
@@ -96,12 +113,18 @@ export const renderRating = (
   theme: PrimitiveTheme,
   state: ValueState<number>,
   focus: RatingFocus,
+  hover: RatingHover,
   handlers: RatingHandlers,
 ): ReactElement => {
   const max = ratingMax(props.max);
   const value = clampRating(state.current, max);
   const tabStop = ratingTabStop(value, max);
   const interactive = props.disabled !== true && props.readOnly !== true;
+  // A preview is an input affordance: an inert rating never paints one, and a
+  // pending preview is ignored the moment the control becomes inert.
+  const painted = interactive
+    ? previewRating(value, hover.preview, max)
+    : value;
   const star = (index: number): ReactElement => {
     const focused = Option.exists(
       focus.focusedIndex,
@@ -125,6 +148,7 @@ export const renderRating = (
         }}
         onFocus={() => focus.onFocus(index)}
         onBlur={() => focus.onBlur(index)}
+        onMouseEnter={interactive ? () => hover.onEnter(index) : undefined}
         style={resolvePartStyle(
           ratingStarStyle(
             {
@@ -138,7 +162,7 @@ export const renderRating = (
           props.starStyle,
           {
             index,
-            filled: index <= value,
+            filled: index <= painted,
             disabled: props.disabled === true,
             readOnly: props.readOnly === true,
             invalid: props.invalid === true,
@@ -147,9 +171,13 @@ export const renderRating = (
         )}
       >
         <Icon
-          name={index <= value ? "star-filled" : "star"}
+          name={index <= painted ? "star-filled" : "star"}
           size={props.size ?? "md"}
-          color={ratingStarColor(index <= value, theme, props.invalid === true)}
+          color={ratingStarColor(
+            index <= painted,
+            theme,
+            props.invalid === true,
+          )}
         />
       </div>
     );
@@ -159,6 +187,7 @@ export const renderRating = (
       role="radiogroup"
       aria-label={props.label}
       testId={props.testId}
+      onMouseLeave={interactive ? hover.onLeave : undefined}
       onKeyDown={(event) => {
         if (!interactive) return;
         Option.match(decideRating(value, max, event.key ?? ""), {
@@ -193,6 +222,7 @@ export const Rating = (props: RatingProps): ReactElement => {
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
+  const [preview, setPreview] = useState<Option.Option<number>>(Option.none());
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
@@ -209,6 +239,11 @@ export const Rating = (props: RatingProps): ReactElement => {
         setFocusedIndex((current) =>
           Option.filter(current, (focused) => focused !== index),
         ),
+    },
+    {
+      preview,
+      onEnter: (index) => setPreview(Option.some(index)),
+      onLeave: () => setPreview(Option.none()),
     },
     {
       onSelect: state.set,

@@ -1,11 +1,11 @@
-# 092 — `Rating` has no hover preview, and the reason given was false
+# 094 — `Rating` has no hover preview, and the reason given was false
 
 | Field | Value |
 | ----- | ----- |
 | Phase | C/F (Tier 1 selection control) |
 | Owner | primitives workstream |
 | Depends on | `030`, `040`, `041`, `047`, `054`, `070`, `079`, `081` |
-| Status | **in progress** |
+| Status | **done** (2026-10-18; renumbered from the colliding `092`) |
 
 Self-contained: §1 the gap and the measurement, §2 the rule, §3 the exact files,
 §4 the commands and expected results, §5 the test plan and the two-direction
@@ -68,10 +68,10 @@ prospective value; the committed value and its announcement do not change.**
 | `packages/primitives/runtime/rating.runtime.test.tsx` | the real pointer: hover paints, leaving restores, an invalid preview keeps the brand role, disabled/read-only do not preview |
 | `packages/primitives/docs/rating.mdx` | a Hover preview section; delete the false limitation; `filled` row and Verification updated |
 | `packages/primitives/README.md` | the Rating note gains the preview clause |
-| `COMPONENTS.md` | the Rating row gains the plan-092 clause |
+| `COMPONENTS.md` | the Rating row gains the plan-094 clause |
 | `TODO.md` | add and tick the task under the primitives ledger |
 | `.agents/slop/plans/README.md` | index this plan |
-| `.agents/slop/plans/092-rating-hover-preview.md` | §7 results after the run |
+| `.agents/slop/plans/094-rating-hover-preview.md` | §7 results after the run |
 
 Do **not** edit `packages/tokens`, `packages/components`, `packages/icons` or
 `apps/*`. No new dependency.
@@ -86,7 +86,7 @@ Run from the worktree root unless stated.
 | `nub run --filter @gpuixui/primitives test -- src/components/Rating.test.tsx` | the new element-tree cases fail before the handler wiring and pass after |
 | `nub run --filter @gpuixui/primitives test` | all offline tests pass (baseline: 38 files / 433 tests) |
 | `nub run --filter @gpuixui/primitives test:runtime -- runtime/rating.runtime.test.tsx` | the new pointer cases fail before the wiring and pass after |
-| `nub run --filter @gpuixui/primitives test:runtime` | all runtime tests pass (baseline: 20 files / 264 tests) |
+| `nub run --filter @gpuixui/primitives test:runtime` | all runtime tests pass (baseline: 21 files / 295 tests) |
 | `nub run check` | exit 0 (`check:tests`, lint, format, types) |
 | `nub run lint` | exit 0 |
 | `nub run test` | exit 0 |
@@ -166,19 +166,56 @@ Stop and report (do not improvise) if:
 
 ### Measured before (the old direction)
 
-_(filled in after the failing run)_
+The runtime had no hover path at all: hovering `ra-star-4` on
+`<Rating defaultValue={2} />` left star 4 at `colors.mutedForeground`, and the
+group had no `onMouseLeave`. The first new runtime test fails at its first
+assertion (`expected '#0000xx' to be '#0000yy'`, muted vs primary).
+
+### Failing directions
+
+Two mutations, each restored with `cp` from a saved copy:
+
+1. **The paint ignores the preview** (`const painted = value`, the pure helper
+   and the handlers still wired): 2 offline cases fail — "paints the star under
+   the pointer and keeps the announcement committed" and "reports the preview
+   paint to `starStyle`" — and 3 runtime cases fail: the preview, the downward
+   preview and the invalid preview. The disabled/read-only case correctly still
+   passes: it asserts *no* preview.
+2. **The stars take no `onMouseEnter`** (the helper and paint kept): 1 offline
+   case fails ("attaches hover input only to an interactive rating") and the same
+   3 runtime cases fail.
+
+So the paint, the wiring and the inert-control rule each have a test that fails
+without them.
+
+### STOP condition 2, answered
+
+`nativeSimulateMouseMove` does dispatch per-element enter and the group's leave:
+moving the pointer from inside the group to a sibling `Box` restored the
+committed value (the leaving assertion), and moving between two stars previewed
+the new one without the group clearing it permanently (the downward case).
+No per-star leave workaround was needed.
 
 ### After
 
-_(filled in after the green run)_
+- One pure rule, `previewRating(value, preview, max)`, decides the painted star;
+  the committed value, `onValueChange` and `aria-valuetext` are untouched.
+- `disabled`/`readOnly` attach neither `onMouseEnter` nor `onMouseLeave`, and a
+  pending preview is ignored if the control becomes inert.
+- `starStyle.filled` follows the paint; an invalid preview keeps the brand role
+  while the still-missing star stays destructive.
+- The false "no hover preview" limitation is gone from the page.
+- Offline: **38 files / 439 tests passed** (433 before; +3 core, +3 element tree).
+- Runtime: **21 files / 300 tests passed** (295 before; +5).
+- `nub run check`, `nub run lint` and `nub run test` pass.
 
 ## 8. Acceptance
 
-- [ ] A pointer over an interactive rating previews the prospective value.
-- [ ] Leaving the group restores the committed value; the announcement never
+- [x] A pointer over an interactive rating previews the prospective value.
+- [x] Leaving the group restores the committed value; the announcement never
       changes.
-- [ ] `disabled`/`readOnly` never preview; an invalid preview uses the brand role.
-- [ ] `starStyle`'s `filled` follows the paint.
-- [ ] The new tests fail with the wiring removed and pass with it.
-- [ ] Docs, README, `COMPONENTS.md`, `TODO.md` and the plan index are updated.
-- [ ] `nub run check`, `nub run lint` and `nub run test` pass.
+- [x] `disabled`/`readOnly` never preview; an invalid preview uses the brand role.
+- [x] `starStyle`'s `filled` follows the paint.
+- [x] The new tests fail with the wiring removed and pass with it.
+- [x] Docs, README, `COMPONENTS.md`, `TODO.md` and the plan index are updated.
+- [x] `nub run check`, `nub run lint` and `nub run test` pass.

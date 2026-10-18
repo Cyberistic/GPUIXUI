@@ -10,9 +10,11 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
+import { Text } from "../src/components/Text.js";
 import { a11yNode, a11yValueOf, type Runtime } from "./harness.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
@@ -42,6 +44,20 @@ const focusLabel = (runtime: Runtime): string =>
     ),
     () => "nothing",
   );
+
+/** The tint of the icon painted under the star announced as `label`. */
+const paintedColor = (runtime: Runtime, label: string): unknown => {
+  const star = byLabel(runtime, label);
+  return Option.getOrElse(
+    Option.flatMap(Option.fromNullishOr(star.children[0]), (id) =>
+      Option.map(
+        Option.fromNullishOr(runtime.renderer.getElement(id)),
+        (svg) => svg.style["color"],
+      ),
+    ),
+    () => expect.fail(`${label} painted no icon`),
+  );
+};
 
 it("is a named group of stars that reports the rating", async () => {
   const runtime = await openWindow();
@@ -208,17 +224,7 @@ it("refuses input and leaves the tab order when disabled", async () => {
 
 it("paints a failed validation on the empty stars only", async () => {
   const runtime = await openWindow();
-  const colorOf = (label: string): unknown => {
-    const star = byLabel(runtime, label);
-    const iconId = Option.getOrElse(
-      Option.fromNullishOr(star.children[0]),
-      () => expect.fail(`the star ${label} painted no icon`),
-    );
-    return Option.getOrElse(
-      Option.fromNullishOr(runtime.renderer.getElement(iconId)),
-      () => expect.fail(`the icon under ${label} vanished`),
-    ).style["color"];
-  };
+  const colorOf = (label: string): unknown => paintedColor(runtime, label);
   runtime.render(
     <Surface>
       <Rating testId="ra" label="Quality" defaultValue={2} invalid />
@@ -233,4 +239,107 @@ it("paints a failed validation on the empty stars only", async () => {
     </Surface>,
   );
   expect(colorOf("3 of 5")).toBe(testTheme.colors.mutedForeground);
+});
+
+it("previews the star under the pointer and restores the value on leave", async () => {
+  // The bug guarded (plan 094): a pointer could not preview the value a click
+  // would set, so an unrated group showed outline stars under the mouse.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Rating testId="ra" label="Quality" defaultValue={2} />
+        <Box testId="outside" tone="background" padding="sm">
+          <Text>Elsewhere</Text>
+        </Box>
+      </Stack>
+    </Surface>,
+  );
+  runtime.hover("ra-star-4");
+  expect(paintedColor(runtime, "4 of 5")).toBe(testTheme.colors.primary);
+  expect(paintedColor(runtime, "5 of 5")).toBe(
+    testTheme.colors.mutedForeground,
+  );
+  // A preview is paint only: the announcement stays the committed value.
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "unchecked",
+    "unchecked",
+    "unchecked",
+  ]);
+  runtime.hover("outside");
+  expect(paintedColor(runtime, "4 of 5")).toBe(
+    testTheme.colors.mutedForeground,
+  );
+  expect(paintedColor(runtime, "2 of 5")).toBe(testTheme.colors.primary);
+});
+
+it("previews downward when the pointer is left of the value", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={4} />
+    </Surface>,
+  );
+  runtime.hover("ra-star-2");
+  expect(paintedColor(runtime, "2 of 5")).toBe(testTheme.colors.primary);
+  expect(paintedColor(runtime, "3 of 5")).toBe(
+    testTheme.colors.mutedForeground,
+  );
+  // Moving between stars previews the new one; the value is still untouched.
+  runtime.hover("ra-star-1");
+  expect(paintedColor(runtime, "1 of 5")).toBe(testTheme.colors.primary);
+  expect(paintedColor(runtime, "2 of 5")).toBe(
+    testTheme.colors.mutedForeground,
+  );
+  expect(checkedStars(runtime)).toStrictEqual([
+    "checked",
+    "checked",
+    "checked",
+    "checked",
+    "unchecked",
+  ]);
+});
+
+it("keeps an invalid preview on the brand role", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={2} invalid />
+    </Surface>,
+  );
+  runtime.hover("ra-star-4");
+  expect(paintedColor(runtime, "4 of 5")).toBe(testTheme.colors.primary);
+  // The error still marks the star that remains missing.
+  expect(paintedColor(runtime, "5 of 5")).toBe(testTheme.colors.destructive);
+});
+
+it.each(
+  Arr.map(
+    [
+      { name: "disabled", props: { disabled: true } },
+      { name: "read-only", props: { readOnly: true } },
+    ] as const,
+    (testCase) => [testCase.name, testCase.props] as const,
+  ),
+)("does not preview when %s", async (_name, props) => {
+  const runtime = await openWindow();
+  const seen: number[] = [];
+  runtime.render(
+    <Surface>
+      <Rating
+        testId="ra"
+        label="Quality"
+        defaultValue={2}
+        onValueChange={(value) => seen.push(value)}
+        {...props}
+      />
+    </Surface>,
+  );
+  runtime.hover("ra-star-5");
+  expect(paintedColor(runtime, "5 of 5")).toBe(
+    testTheme.colors.mutedForeground,
+  );
+  expect(seen).toStrictEqual([]);
 });

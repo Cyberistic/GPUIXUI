@@ -16,6 +16,7 @@ import { testTheme } from "../core/testing/theme.fixture.js";
 import {
   renderRating,
   type RatingHandlers,
+  type RatingHover,
   type RatingProps,
 } from "./Rating.js";
 import type { RatingFocus } from "./Rating.js";
@@ -44,13 +45,27 @@ const handlers = (over: Partial<RatingHandlers> = {}): RatingHandlers => ({
   ...over,
 });
 
+const hover = (index?: number): RatingHover => ({
+  preview: Option.fromNullishOr(index),
+  onEnter: vi.fn(),
+  onLeave: vi.fn(),
+});
+
 const render = (
   props: RatingProps,
   value: number,
   focused?: number,
   over: Partial<RatingHandlers> = {},
+  preview?: number,
 ): ReactElement =>
-  renderRating(props, testTheme, state(value), focus(focused), handlers(over));
+  renderRating(
+    props,
+    testTheme,
+    state(value),
+    focus(focused),
+    hover(preview),
+    handlers(over),
+  );
 
 const starsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(element);
@@ -189,5 +204,67 @@ describe("Rating", () => {
       ),
     );
     expect(starred).toStrictEqual([false, true, false, false, false]);
+  });
+
+  it("paints the star under the pointer and keeps the announcement committed", () => {
+    // The bug guarded (plan 094): a pointer could not preview what a click
+    // would set, so an unrated group showed five outline stars under the mouse.
+    const element = render({}, 2, undefined, {}, 4);
+    const iconName = (star: ReactElement): unknown =>
+      Option.getOrUndefined(
+        elementProp(elementChildren(star)[0] ?? expect.fail("no icon"), "name"),
+      );
+    expect(starsOf(element).map(iconName)).toStrictEqual([
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star-filled",
+      "star",
+    ]);
+    // A preview is paint, not selection: what AT hears must not move.
+    expect(
+      starsOf(element).map((star) =>
+        expectSome(hostProp(star, "aria-valuetext")),
+      ),
+    ).toStrictEqual([
+      "checked",
+      "checked",
+      "unchecked",
+      "unchecked",
+      "unchecked",
+    ]);
+  });
+
+  it("reports the preview paint to starStyle", () => {
+    const filled: boolean[] = [];
+    render(
+      {
+        starStyle: (star) => {
+          filled.push(star.filled);
+          return {};
+        },
+      },
+      2,
+      undefined,
+      {},
+      4,
+    );
+    expect(filled).toStrictEqual([true, true, true, true, false]);
+  });
+
+  it("attaches hover input only to an interactive rating", () => {
+    const interactive = render({}, 2);
+    const star = starsOf(interactive)[0] ?? expect.fail("no star");
+    expect(Option.isSome(hostHandler(star, "onMouseEnter"))).toBe(true);
+    expect(Option.isSome(hostHandler(interactive, "onMouseLeave"))).toBe(true);
+
+    Arr.forEach([{ disabled: true }, { readOnly: true }] as const, (props) => {
+      const inert = render(props, 2);
+      const inertStar = starsOf(inert)[0] ?? expect.fail("no star");
+      expect(hostHandler(inertStar, "onMouseEnter")).toStrictEqual(
+        Option.none(),
+      );
+      expect(hostHandler(inert, "onMouseLeave")).toStrictEqual(Option.none());
+    });
   });
 });

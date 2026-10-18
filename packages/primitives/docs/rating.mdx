@@ -62,15 +62,32 @@ The group holds **one tab stop** — on the current rating, or on the first star
 when unrated — and an arrow moves the selection and native focus together, so
 the ring is always on the star the value came from.
 
+## Hover preview
+
+While the pointer is over an interactive rating, the stars paint the value a
+click would set. The preview follows the star under the pointer — hovering star
+4 fills stars 1–4 — and leaving the group restores the committed value. It is
+**paint only**: the committed value, `onValueChange` and the star's announced
+state do not change, because a preview is not a selection.
+
+`disabled` and `readOnly` ratings take no hover handlers and never preview: a
+preview is an input affordance, and an inert control has none. An `invalid`
+preview fills with the brand role like any other; the destructive role stays on
+the stars that are still missing.
+
+`starStyle`'s `filled` follows the paint, not the committed value, so a custom
+star style cannot disagree with the icon beside it.
+
 ## Accessibility
 
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
   (AccessKit `RadioGroup` / `RadioButton`).
 - Each star's name is `"N of max"` and its state is announced through
   **`aria-valuetext`** (`"checked"` / `"unchecked"`), because GPUix 0.10.0 has no
-  `aria-checked`.
+  `aria-checked`. A hover preview never changes that announcement — only the
+  committed value does.
 - `readOnly` keeps the group visible to assistive technology but removes it from
-  the tab order; `disabled` also paints it muted.
+  the tab order; `disabled` also paints it muted. Neither previews.
 
 ## Theming
 
@@ -112,7 +129,7 @@ each star:
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `index` | `number` | 1-based, matching the star's announced "N of max" |
-| `filled` | `boolean` | this star is at or below the value |
+| `filled` | `boolean` | this star is painted filled — at or below the value, or inside the hover preview |
 | `disabled` | `boolean` | the rating is disabled |
 | `readOnly` | `boolean` | the rating is read-only |
 | `invalid` | `boolean` | paints the empty stars destructive |
@@ -130,9 +147,6 @@ each star:
 - **Whole stars only.** Half stars would need clipping or a transform, neither of
   which exists in GPUix 0.10.0; a caller that needs a finer score can keep it in
   state and paint the label beside the stars.
-- **No hover preview.** A hover-filled preview needs per-star hover state and a
-  re-render per movement; the runtime gives hover styles but not a cheap
-  "which star is under the pointer" query for a group.
 - **Clearing is explicit** (Delete/Backspace or the app), not "click the selected
   star again" — a rating is not a toggle.
 
@@ -146,16 +160,20 @@ each star:
   081).
 
 - `src/core/rating.test.ts` — clamping (not wrapping), Home/End, Delete/Backspace,
-  the tab-stop choice, a zero or fractional `max`.
+  the tab-stop choice, a zero or fractional `max`, and the preview clamp.
 - `src/components/Rating.test.tsx` — group and star labels, checked states, the
   single tab stop, filled vs outline icons, the invalid tint rule, keys, click,
-  disabled/readOnly, ring.
+  disabled/readOnly, ring, and the hover preview's paint, committed announcement,
+  `starStyle` fill and inert-control handlers.
 - `runtime/rating.runtime.test.tsx` — a real click on "4 of 5" reports `4`; an
   arrow moves the checked star and native focus; Right at five stays at five;
   Delete clears; filled stars paint `colors.primary`; Tab enters on the rating
   and the next Tab leaves the group; disabled refuses input; an `invalid` rating
   paints the empty stars' icons `destructive` and leaves the chosen ones
-  `primary` (plan `070`). Measured 2026-10-17 (plan 054 §9, plan 070 §6).
+  `primary` (plan `070`); a real pointer over star 4 previews 1–4, leaving
+  restores the value, a downward preview follows the pointer, an invalid preview
+  keeps the brand role and disabled/readOnly never preview (plan `094`).
+  Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plan 094 §7).
 
 ```sh
 nub run --filter @gpuixui/primitives test
