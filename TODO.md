@@ -69,14 +69,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       iterating and `--all` only at the end. `nub run check` and `nub run test`
       pass.
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517` and `518` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `519`
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378`, `381`, `382`, `384`–`392`, `517`–`519` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `520`
 
-`[~]` Probe the **in-window application menu bar** per plan `519` — the last
-      Tier 4 row with no measured interaction model: hover/arrow switching while
-      open, roving items that skip disabled rows, focus returning to the open
-      title, and accelerators running once (and never for a disabled row), plus
-      the `menubar`/`menu`/`menuitem` accessibility mapping. Scenarios
-      `menu-bar` and `live-menu-bar`; the OS menu-bar API stays absent in 0.10.0.
+`[x]` Probe the **in-window application menu bar** per plan `519`: `menu-bar`
+      (56 checks) and `live-menu-bar` (29) over a pure 19-test model. Hover and
+      Left/Right switch the open menu and **skip the disabled View**; Down/Up
+      wrap and **skip the disabled Save As** row; Escape and activation return
+      native focus to the **open title**; `cmd-s` runs exactly once, never opens
+      a menu, dismisses one when open and is inert for a disabled row (the window
+      handler is the sole owner); AccessKit maps `menubar`/`menu`/`menuitem` to
+      `MenuBar`/`Menu`/`MenuItem` with `aria-expanded` on the open title. Suite
+      `93 → 94` (`3251 → 3307`), live `43 → 44` (`881 → 910`), exit `0`,
+      `menubar=verified`; five mutation proofs (plan `519` §9). The OS menu bar
+      stays unavailable in 0.10.0 (no menu/tray API) and is documented as such.
+      Closes the last Tier 4 row with no measured interaction model.
 
 `[x]` Probe a **QR code** per plan `518` — the last `todo` inventory row with no
       runtime evidence: `qr-code` (53 checks) renders the same version-1 fixture

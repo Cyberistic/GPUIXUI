@@ -107,6 +107,10 @@ describe("scenarioProblems", () => {
     expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
       "tree-reorder",
     );
+    expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain("menu-bar");
+    expect(Arr.map(scenarios, (scenario) => scenario.capability)).toContain(
+      "menubar",
+    );
     expect(Arr.map(scenarios, (scenario) => scenario.id)).toContain(
       "tab-strip-overflow",
     );

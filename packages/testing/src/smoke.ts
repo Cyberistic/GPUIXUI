@@ -48,6 +48,7 @@ export const CAPABILITIES = [
   "tree-reorder",
   "selection",
   "menu",
+  "menubar",
   "components",
   "search",
   "terminal",

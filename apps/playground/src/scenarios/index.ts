@@ -22,6 +22,7 @@ import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { listReorderScenario } from "./reorder.js";
 import { treeReorderScenario } from "./tree-reorder.js";
 import { contextMenuScenario } from "./context-menu.js";
+import { menuBarScenario } from "./menu-bar.js";
 import { nestedLayerScenario } from "./layers.js";
 import { virtualizedTreeScenario } from "./virtual-tree.js";
 import { scrollIntoViewScenario } from "./scroll-into-view.js";
@@ -142,6 +143,7 @@ export const PROBE_CAPABILITIES = [
   "reorder",
   "tree-reorder",
   "menu",
+  "menubar",
   "search",
   "terminal",
   "chart",
@@ -233,6 +235,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   listReorderScenario,
   treeReorderScenario,
   contextMenuScenario,
+  menuBarScenario,
   nestedLayerScenario,
   virtualizedTreeScenario,
   scrollIntoViewScenario,

@@ -1410,12 +1410,44 @@ screenshot is the visual evidence), the white quiet zone as a check (a transpare
 one still paints), and any encoder. A module grid is the wrong default for a large
 code: version 40 is 177 × 177, so tens of thousands of retained nodes.
 
+## Application menu bar (plan `519`)
+
+`menu-bar` measures the last Tier 4 row that had only a capability note:
+`COMPONENTS.md` records Application menus as **unsupported as an OS menu** (0.10.0
+has no menu/tray API), so an application menu is an in-window bar. The palette
+(`command-palette`) and the dropdown/context surfaces were measured already; the
+bar's own interaction model was not. 56 checks, 19 pure model tests, and
+`live-menu-bar` (29 checks) repeats the path in a real window.
+
+| Fact | Measured |
+| ---- | -------- |
+| the surface | `FloatingLayer side="bottom" align="start" sideOffset={2}` places the menu **2 px under its title** and aligned to the title's start (within 2 px), even though the bar is only 28 px tall |
+| switching | hovering another title switches the open menu, and the switched menu's first enabled row takes native focus; hover is inert while the bar is closed and on a disabled title |
+| the disabled menu | `View` is disabled: Right from Edit opens Help and skips View; Left from File wraps to Help. A disabled title never opens |
+| roving rows | Down/Up wrap, and both skip the disabled `Save As…` row (`New → Open → Save → New`); `Save As…` paints but runs nothing |
+| focus return | Escape and item activation return native focus to the **open title** (`menubar-help` after Escape from Help, not the first title) |
+| activation | Enter **or a click** runs the focused row once, closes the menu and returns focus; a second press on a title toggles its menu shut |
+| accelerators | `cmd-s` runs `save` exactly once with the menu closed, never opens one, and **closes a menu when one is open**; `cmd-shift-s` (a disabled row) is inert. The window handler is the only accelerator owner |
+| outside press | an outside control closes the menu without running any row |
+| accessibility | `role="menubar"` → AccessKit `MenuBar`, `role="menu"` → `Menu`, `role="menuitem"` → `MenuItem`; `aria-expanded` is true only on the open title |
+
+Five mutation proofs: removing the hover handler fails `hover switches the open
+menu` (`got "open=file …"`); letting `stepTitle` enter a disabled menu fails
+`Right skips a disabled menu` (`got "open=view …"`); returning focus to title 0
+fails `Escape returns focus to the open title` (`got "menubar-file"`); binding a
+disabled row's chord fails `a disabled row's chord is inert` (`runs=3
+last=accel:save-as`); handling the chord in the bar as well as the window fails
+`a chord runs its command once` (`runs=3`).
+
+Not available: a real macOS menu bar or tray — `NativeRenderer` exposes only
+window controls and no menu API, so this is honestly an in-window bar.
+
 ## Evidence on this host
 
-The suite is **93/93 green** here (`exit 0`, 3251 checks):
+The suite is **94/94 green** here (`exit 0`, 3307 checks):
 
 ```
-93/93 scenarios passed · capabilities: layout=verified text=verified
+94/94 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1423,6 +1455,7 @@ virtual-list=verified table=verified tree=verified log=verified
 theme=verified workspace=verified docking=verified float=verified
 preview=verified command=verified content=verified drag=verified
 reorder=verified tree-reorder=verified selection=verified menu=verified
+menubar=verified
 components=verified search=verified terminal=verified chart=verified
 toast=verified grid=verified data-grid=verified columns=verified
 column-config=verified chrome=verified layers=verified scroller=verified
@@ -1558,6 +1591,9 @@ src/scenarios/reorder.tsx a plain and a virtualized reorderable list, pointer an
 src/scenarios/tree-reorder-model.ts the pure pre-order tree: targets, subtree moves, refusals
 src/scenarios/tree-reorder-model.test.ts the pure tree reorder rules
 src/scenarios/tree-reorder.tsx a plain and a virtualized file tree, pointer and keyboard
+src/scenarios/menubar-model.ts the pure open menu, roving rows and accelerators
+src/scenarios/menubar-model.test.ts the pure menu-bar rules
+src/scenarios/menu-bar.tsx the in-window bar, switching, keyboard and chords
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1607,8 +1643,9 @@ narrower. Each deviation is deliberate and measured:
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
   probe** (`query-builder`, plan `378`), the **reorder probe**
   (`list-reorder`, plan `391`), the **hierarchical reorder probe**
-  (`tree-reorder`, plan `392`) and the **QR probe** (`qr-code`, plan `518`)
-  pass in real GPUix 0.10.0 on this host (93/93), with a written report and
+  (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`) and the
+  **application menu bar** (`menu-bar`, plan `519`)
+  pass in real GPUix 0.10.0 on this host (94/94), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1616,7 +1653,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 43/43 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 44/44 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
@@ -1625,8 +1662,9 @@ narrower. Each deviation is deliberate and measured:
   **notification centre**, the **crop area**, the **multi-step form**, the
   **reorder** (a paced drop at boundary 3 lands at index 2, keyboard
   lift/arrow/drop and cancel), the **hierarchical reorder** (a paced drag into
-  a collapsed folder, a refused cycle and keyboard nesting) and the
-  **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
+  a collapsed folder, a refused cycle and keyboard nesting), the
+  **application menu bar** (hover/arrow switching, roving rows, focus return and
+  a live accelerator) and the **command palette** (plan `389`: `cmd-k` with nothing focused, a window-sized
   veil, filter + window keys, arrows that keep focus, `onSubmit` commit and
   three dismissals) —
   including the modal's

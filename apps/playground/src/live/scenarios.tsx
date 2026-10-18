@@ -50,6 +50,7 @@ import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
+import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
 import { multiPaneEditorScenario } from "../scenarios/multi-pane-editor.js";
 import { dataToolbarScenario } from "../scenarios/data-toolbar.js";
@@ -3953,6 +3954,181 @@ const cropArea: LiveScenario = {
     }),
 };
 
+const menuBar: LiveScenario = {
+  id: "live-menu-bar",
+  title: "Live application menu bar: switching, roving rows and accelerators",
+  capability: "menubar",
+  view: menuBarScenario.view,
+  ready: "menubar-bar",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const bar = yield* boxOf(ctx, "menubar-bar");
+      const file = yield* boxOf(ctx, "menubar-file");
+      yield* ctx.expectNear("the live bar is 28 px tall", bar.height, 28, 1);
+
+      // 1. A real click opens File below its title and focuses the first row.
+      yield* ctx.host.click("menubar-file");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+      yield* ctx.host.waitFor("menubar-file-surface");
+      const surface = yield* boxOf(ctx, "menubar-file-surface");
+      yield* ctx.expectNear(
+        "the live surface starts under its title",
+        surface.y,
+        file.y + file.height + 2,
+        3,
+      );
+      yield* ctx.expectNear(
+        "the live surface aligns to the title",
+        surface.x,
+        file.x,
+        3,
+      );
+      yield* ctx.expectEqual(
+        "opening focuses the first row live",
+        yield* focusedOf(ctx),
+        "menu-file-new",
+      );
+
+      // 2. Hover switches the open menu without a press.
+      yield* ctx.host.hover("menubar-edit");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=edit");
+      yield* ctx.expectEqual(
+        "hover switches and focuses the new menu live",
+        yield* focusedOf(ctx),
+        "menu-edit-undo",
+      );
+
+      // 3. Right/Left switch and skip the disabled View menu.
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=help");
+      yield* ctx.expectEqual(
+        "Right skips View and focuses Help live",
+        yield* focusedOf(ctx),
+        "menu-help-about",
+      );
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+
+      // 4. Down/Up rove, wrap and skip the disabled row.
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "item=open");
+      yield* ctx.expectEqual(
+        "Down roves live",
+        yield* focusedOf(ctx),
+        "menu-file-open",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "item=new");
+      yield* ctx.expectContains(
+        "Down skips the disabled row live",
+        yield* textOf(ctx, "menubar-readout"),
+        "item=new",
+      );
+
+      // 5. Enter runs once, closes, and returns focus to the title.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "runs=1");
+      yield* ctx.expectContains(
+        "the live row is the one that ran",
+        yield* textOf(ctx, "menubar-readout"),
+        "last=new",
+      );
+      yield* ctx.expectEqual(
+        "activation returns focus to the title live",
+        yield* focusedOf(ctx),
+        "menubar-file",
+      );
+
+      // 6. Escape closes and returns focus.
+      yield* ctx.host.click("menubar-file");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=none");
+      yield* ctx.expectEqual(
+        "Escape returns focus to the title live",
+        yield* focusedOf(ctx),
+        "menubar-file",
+      );
+
+      // 7. Accelerators run once, never open, and are inert when disabled.
+      yield* ctx.host.key("cmd-s");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "runs=2");
+      yield* ctx.expectContains(
+        "the live chord runs its command",
+        yield* textOf(ctx, "menubar-readout"),
+        "last=accel:save",
+      );
+      yield* ctx.host.key("cmd-shift-s");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a disabled row's chord is inert live",
+        yield* textOf(ctx, "menubar-readout"),
+        "runs=2",
+      );
+      yield* ctx.host.click("menubar-file");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+      yield* ctx.host.key("cmd-o");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "runs=3");
+      yield* ctx.expectContains(
+        "a chord with a menu open dismisses it",
+        yield* textOf(ctx, "menubar-readout"),
+        "open=none",
+      );
+
+      // 8. An outside control dismisses without running a row.
+      yield* ctx.host.click("menubar-file");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+      yield* ctx.host.click("menubar-outside");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "outside=1");
+      yield* ctx.expectContains(
+        "the live outside press closes the menu",
+        yield* textOf(ctx, "menubar-readout"),
+        "open=none",
+      );
+      yield* ctx.expectContains(
+        "no live menu row ran",
+        yield* textOf(ctx, "menubar-readout"),
+        "runs=3",
+      );
+
+      // 9. A real click on a row runs once and returns focus to the title.
+      yield* ctx.host.click("menubar-file");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "open=file");
+      yield* ctx.host.click("menu-file-save");
+      yield* settle;
+      yield* waitForText(ctx, "menubar-readout", "runs=4");
+      yield* ctx.expectContains(
+        "the live clicked row is the one that ran",
+        yield* textOf(ctx, "menubar-readout"),
+        "last=save",
+      );
+      yield* ctx.expectEqual(
+        "a live row click returns focus to the title",
+        yield* focusedOf(ctx),
+        "menubar-file",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${menuBar.id}.png`);
+    }),
+};
+
 const appChrome: LiveScenario = {
   id: "live-app-chrome",
   title: "Live application chrome: toolbar, pinned status bar and breadcrumb",
@@ -5286,6 +5462,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   columnConfig,
   cropArea,
   appChrome,
+  menuBar,
   multiPaneEditor,
   dataToolbar,
   queryBuilder,

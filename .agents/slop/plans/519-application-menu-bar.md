@@ -112,7 +112,7 @@ Items:
 | Help | `about` — |
 
 A single `Readout testId="menubar-readout"` reports
-`open=<file|edit|help|none> item=<id|none> runs=<n> last=<command|none> focus=<title|none>`.
+`open=<file|edit|help|none> item=<id|none> runs=<n> last=<command|none> outside=<n> want=<testId|none>`.
 The last command and the run count are the assertion surface for activation and
 accelerators.
 
@@ -236,7 +236,7 @@ Baseline before this plan: headless `93/93` (3251 checks), live `43/43`
 | `stepItem` wrap + skip disabled | unit | stepping onto `save-as`/`redo` |
 | `closeMenu` keeps `active` | unit | a return target reset to 0 (M3) |
 | `acceleratorCommand` enabled / disabled / unknown | unit | a disabled chord running (M4) |
-| `menu-bar` steps 1–12 | native smoke | any rule above regressing in the runtime |
+| `menu-bar` steps 1–13 | native smoke | any rule above regressing in the runtime |
 | `scenarioProblems` registration | unit | the scenario or capability falling out of the registry |
 | `live-menu-bar` | live smoke | hover-switch, focus return or an accelerator not surviving a window |
 | full headless + live suites | native smoke | the new overlay leaking state into later scenarios |
@@ -273,6 +273,45 @@ disabled Save As). A test using only enabled entries lets both mutations pass.
 
 ## 9. Outcome
 
-_To be recorded by the executor: suite counts, the five mutation outputs, and
-every measured fact (surface box, hover-switch, focus return, accelerator
-count, the exposed roles)._
+Executed on this host on 2026-10-18. **Headless `94/94` green (3307 checks),
+exit `0`, `menubar=verified`; live `44/44` (910 checks), exit `0`.**
+`menu-bar` records **56 checks**, `live-menu-bar` **29**, and the pure model
+**19 tests**. `nub run check`, `nub run lint` and `nub run test` pass.
+
+Measured facts (also in plan `140` §4, `COMPONENTS.md` and the app README):
+
+- **The surface is 2 px under its title and aligned to its start** (`side="bottom"`,
+  `align="start"`, `sideOffset={2}`), even inside a 28 px bar, within 2 px. The
+  bar-relative assertion is what separates a mount bug from the placement engine.
+- **Hover switches the open menu.** `hover("menubar-edit")` reads `open=edit` and
+  the first enabled row (`menu-edit-undo`) takes native focus; hover on a closed
+  bar changes nothing, and hovering the disabled `View` leaves `open=edit`.
+- **A disabled menu is skipped by the arrows.** Right from Edit reads `open=help`
+  (not `view`); Right from Help wraps to File; Left from File wraps to Help.
+  Removing the enabled filter fails with `open=view item=zoom`.
+- **A disabled row is painted but inert.** `Save As…` has bounds and runs
+  nothing; Down/Up wrap `New → Open → Save → New` around it; the model's
+  `stepItem` unit test pins the same wrap.
+- **Focus returns to the open title.** Escape from Help focuses `menubar-help`;
+  Enter or a click on a row runs it once and focuses the menu's own title. Returning to title 0 fails with
+  `got "menubar-file"`.
+- **One accelerator owner.** `cmd-s` with the menu closed reads `runs=2
+  last=accel:save`; `cmd-shift-s` (disabled) changes nothing; `cmd-o` with File
+  open runs once, reads `open=none`, and returns focus to `menubar-file`.
+  Handling the chord in the bar as well as the window makes `cmd-s` read
+  `runs=3`, so the window handler is the sole owner.
+- **Roles map exactly:** `menubar` → `MenuBar`, `menu` → `Menu`, `menuitem` →
+  `MenuItem`; `aria-expanded` is `true` only on the open title.
+- **The OS menu bar remains unavailable.** `NativeRenderer` has only window
+  controls and 0.10.0 has no menu/tray symbol, so this is an in-window bar with
+  the measured model above — not a macOS menu bar.
+
+Mutation proofs, each observed in the named check:
+
+| Mutation | Observed |
+| -------- | -------- |
+| M1 remove the title's hover handler | `hover switches the open menu: expected "open=edit", got "open=file item=new …"`
+| M2 let `stepTitle` enter a disabled menu | `Right skips a disabled menu: expected "open=help", got "open=view item=zoom …"`
+| M3 return focus to title 0 | `Escape returns focus to the open title: expected "menubar-help", got "menubar-file"`
+| M4 bind a disabled row's chord | `a disabled row's chord is inert: … got "runs=3 last=accel:save-as"`
+| M5 handle the chord in the bar too | `a chord runs its command once: expected "runs=2 …", got "runs=3 …"` |
