@@ -113,6 +113,7 @@ describe("themeTypefaceFailures", () => {
       ...themeTypefaceFailures(families("")),
       ...themeTypefaceFailures(families(" Inter")),
       ...themeTypefaceFailures(families("Menlo, monospace")),
+      ...themeTypefaceFailures(families('"Inter"')),
       ...themeTypefaceFailures(families("system-ui")),
     ].map((failure) => failure.rule);
     expect(reported.toSorted()).toEqual([...typefaceRules].toSorted());

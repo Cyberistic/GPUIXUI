@@ -20,14 +20,17 @@ export type TypefaceRole = (typeof typefaceRoles)[number];
 
 /**
  * The forms a family name must hold, in documentation order. `trimmed` and
- * `css-generic` close the two forms a reader brings from the web: a stray space
- * is not part of an installed name, and a CSS generic keyword is syntax the
- * native runtime does not resolve — `.SystemUIFont` is its sentinel.
+ * `css-generic` close two forms a reader brings from the web: a stray space is
+ * not part of an installed name, and a CSS generic keyword is syntax the native
+ * runtime does not resolve — `.SystemUIFont` is its sentinel. `quoted` closes
+ * the third: CSS quotes around a multi-word family are not part of the name the
+ * runtime looks up.
  */
 export const typefaceRules = [
   "non-empty",
   "trimmed",
   "single-family",
+  "quoted",
   "css-generic",
 ] as const;
 
@@ -68,6 +71,17 @@ export interface TypefaceFailure {
 }
 
 /**
+ * A family wrapped in CSS quotes, or with one unmatched quote at an edge. The
+ * runtime looks the string up verbatim, so the quote characters are part of the
+ * name it searches for. A padded value is the `trimmed` rule's diagnostic alone,
+ * so one bad value keeps one report, and an apostrophe inside a name
+ * (`D'Nealian`) is a character of that name and is not reported.
+ */
+const isQuoted = (value: string): boolean =>
+  value === value.trim() &&
+  ['"', "'"].some((quote) => value.startsWith(quote) || value.endsWith(quote));
+
+/**
  * Every family name in a theme the runtime cannot resolve as written.
  *
  * A `non-empty` failure is a value that is empty or whitespace-only, which
@@ -77,9 +91,14 @@ export interface TypefaceFailure {
  * `non-empty` rule's diagnostic alone, so one bad value keeps one diagnostic. A
  * `single-family` failure is a value containing a comma: `fontFamily` is one
  * string, so a CSS stack names a family no machine has and the text falls back
- * silently. A `css-generic` failure is one of {@link cssGenericFamilies} as the
- * whole value: CSS syntax, not a family the font database holds. The generic
- * test reads the value as written, so a padded keyword reports `trimmed`.
+ * silently. A `quoted` failure is a name wrapped in CSS quotes — or a
+ * half-copied declaration with one quote at an edge — because the runtime looks
+ * the string up verbatim and the quote characters are part of the family name it
+ * searches for; an apostrophe inside a name (`D'Nealian`) is a character of that
+ * name and is not reported. A `css-generic` failure is one of
+ * {@link cssGenericFamilies} as the whole value: CSS syntax, not a family the
+ * font database holds. The generic test reads the value as written, so a padded
+ * keyword reports `trimmed`.
  * A name with a space inside it (`Helvetica Neue`) is a valid single family and
  * is not reported; neither is the `.SystemUIFont` sentinel every shipped theme
  * uses.
@@ -109,6 +128,7 @@ export function themeTypefaceFailures(
       ...(value.includes(",")
         ? [{ role, rule: "single-family" as const, value }]
         : []),
+      ...(isQuoted(value) ? [{ role, rule: "quoted" as const, value }] : []),
       ...(cssGenericFamilies.some((family) => family === value.toLowerCase())
         ? [{ role, rule: "css-generic" as const, value }]
         : []),

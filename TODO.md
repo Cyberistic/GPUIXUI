@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 225/291
+`[x]` `[████████░░]` 226/292
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1604,6 +1604,12 @@ an independent defect) (plan 532)
 `trimmed` and `css-generic` rules report them, `cssGenericFamilies` indexes the
 CSS Fonts 4 keywords, and a whitespace-only value stays the `non-empty`
 diagnostic alone (plan 533)
+`[x]` Report a CSS-quoted family name — `'"Helvetica Neue"'`, the canonical CSS
+spelling for a multi-word family, returned `[]` from all seven checks while the
+runtime looked up a family literally named `"Helvetica Neue"` and painted the
+system fallback; the fifth `quoted` rule reports a quoted or half-quoted name,
+leaves `D'Nealian` and every shipped family alone, and joins `typefaceRules`,
+the catalogue, README, design system and ledger (plan 564)
 `[x]` Let a platform style own the metrics inside its density preset —
 `PlatformStyleStructure.density` was preset-only, so the macOS file a consumer
 copies could name `compact` or drop density but never raise a control height,

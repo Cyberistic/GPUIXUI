@@ -892,7 +892,8 @@ a consumer that runs only one has not run the guarantee: a zero focus-ring sprea
 an unparseable `shadow` tint or a translucent one the paint discards passes the
 contrast check alone. `themeChecks`
 is the ordered index of those parts. A family name is one exact, non-empty
-family — not a CSS comma stack, not a CSS generic keyword and not a padded name
+family — not a CSS comma stack, not a CSS generic keyword, not a CSS-quoted name
+and not a padded name
 — because `StyleDesc.fontFamily` is a single string and an unknown name falls
 back silently, so `themeTypefaceFailures` reports those forms and an empty name
 that no other check can see.

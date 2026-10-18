@@ -390,8 +390,9 @@ themeOpacityFailures(tinted); // [{ role: "shadow", expected: "opaque" }]
 
 The two families are also held to the form the runtime reads:
 `themeTypefaceFailures(theme)` reports a name that is empty (`non-empty`), a
-padded name (`trimmed`, `" Inter"`), a CSS comma stack (`single-family`) or a CSS
-generic keyword (`css-generic`, `system-ui`), because GPUix 0.10.0's
+padded name (`trimmed`, `" Inter"`), a CSS comma stack (`single-family`), a name
+wrapped in CSS quotes (`quoted`, `"Helvetica Neue"`) or a CSS generic keyword
+(`css-generic`, `system-ui`), because GPUix 0.10.0's
 `StyleDesc.fontFamily` is one string and an unknown name falls back silently. A
 copied theme with `sans: "Inter, system-ui, sans-serif"` used to pass every check
 and paint the system fallback; `typefaceRoles`, `typefaceRules` and

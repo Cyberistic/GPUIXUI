@@ -144,7 +144,7 @@ missing here is not public.
 | `TranslucentRole` | A role from `translucentRoles`, the three roles the runtime composites. |
 | `TypefaceFailure` | A family name that is not one exact, non-empty family the runtime can resolve. |
 | `TypefaceRole` | `sans` or `mono`, a key of `typefaceRoles`. |
-| `TypefaceRule` | `non-empty`, `trimmed`, `single-family` or `css-generic`, a key of `typefaceRules`. |
+| `TypefaceRule` | `non-empty`, `trimmed`, `single-family`, `quoted` or `css-generic`, a key of `typefaceRules`. |
 | `Typography` | The sans/mono families and ten type roles. |
 | `TypographyOverrides` | Partial families and roles; roles merge field by field. |
 
@@ -2164,7 +2164,7 @@ machine does not have **falls back silently** to the system face. That makes the
 family names the one documented form no measurement can see — an edited theme
 paints a different typeface, not a broken contrast ratio.
 
-`themeTypefaceFailures(theme)` holds both fields to four rules, listed in
+`themeTypefaceFailures(theme)` holds both fields to five rules, listed in
 `typefaceRules` and checked in `typefaceRoles` order:
 
 | Rule | What it catches |
@@ -2172,6 +2172,7 @@ paints a different typeface, not a broken contrast ratio.
 | `non-empty` | A family that is empty or whitespace-only names nothing. |
 | `trimmed` | A name with surrounding whitespace — `" Inter"` — is not the installed name; the runtime matches the family string it is given. A whitespace-only value is the `non-empty` rule's diagnostic alone. |
 | `single-family` | A comma list — `"Inter, system-ui, sans-serif"` — is one string to the runtime, so it names a family no machine has. |
+| `quoted` | A CSS-quoted name — `"Helvetica Neue"` — carries the quote characters into the family lookup, so it names no installed family. A half-copied declaration with one quote at an edge is the same silent fallback, while an apostrophe inside a name (`D'Nealian`) is one family and passes. |
 | `css-generic` | A CSS generic keyword — `system-ui`, `sans-serif`, `monospace` and the rest of `cssGenericFamilies` — is CSS syntax, not a family the font database holds; `.SystemUIFont` is the native sentinel for the operating system's UI face. |
 
 ```ts
@@ -2197,7 +2198,8 @@ facts above already state that an unknown family falls back silently.
 `sans-serif`, `cursive`, `fantasy`, `monospace`, `system-ui`, `ui-serif`,
 `ui-sans-serif`, `ui-monospace`, `ui-rounded`, `math`, `emoji` and `fangsong`.
 The test reads the value as written, so a padded keyword reports `trimmed`
-first; once trimmed it reports `css-generic`.
+first; once trimmed it reports `css-generic`. A padded quoted name reports
+`trimmed` alone in the same way, and `quoted` once the padding is gone.
 
 Every shipped identity theme, platform variant and recipe passes, so no family
 moves; `platforms.test.ts` already holds the shipped platform table to the same

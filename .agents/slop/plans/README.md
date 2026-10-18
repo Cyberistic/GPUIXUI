@@ -255,7 +255,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [558](./558-opaque-alpha-suffix.md) | The opaque `FF` spelling the format checks accept and the maths cannot read | F | 371, 540, 557 | done |
 | [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | done |
 | [563](./563-caret-mark-list.md) | The caret mark outside the mark list | F | 332, 341, 351, 399, 557 | done |
-| [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | ready |
+| [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

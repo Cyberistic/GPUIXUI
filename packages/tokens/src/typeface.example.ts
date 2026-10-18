@@ -31,3 +31,11 @@ export const genericTheme = extendTheme(getTheme("light"), {
 
 /** The `css-generic` failure a web habit earns. */
 export const genericFailures = themeTypefaceFailures(genericTheme);
+
+/** CSS quotes are part of the family string the runtime looks up. */
+export const quotedTheme = extendTheme(getTheme("light"), {
+  typography: { sans: '"Helvetica Neue"' },
+});
+
+/** The `quoted` failure a copied CSS declaration earns. */
+export const quotedFailures = themeTypefaceFailures(quotedTheme);

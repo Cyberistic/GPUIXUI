@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | ready to execute |
+| Status | done |
 | Phase | F (theme contract truth) |
 | Owner | `tokens-theme` |
 | Paths | `packages/tokens/src`, `docs/tokens.md`, `docs/design-system.md`, `COMPONENTS.md`, `TODO.md` |
@@ -52,10 +52,12 @@ name, whatever the machine has.
    /**
     * A family wrapped in CSS quotes, or with one unmatched quote at an edge. The
     * runtime looks the string up verbatim, so the quote characters are part of
-    * the name it searches for. An apostrophe inside a name (`D'Nealian`) is a
-    * character of that name and is not reported.
+    * the name it searches for. A padded value is the `trimmed` rule's diagnostic
+    * alone, so one bad value keeps one report, and an apostrophe inside a name
+    * (`D'Nealian`) is a character of that name and is not reported.
     */
    const isQuoted = (value: string): boolean =>
+     value === value.trim() &&
      ['"', "'"].some(
        (quote) => value.startsWith(quote) || value.endsWith(quote),
      );
