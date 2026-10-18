@@ -530,7 +530,9 @@ on a wrapping element instead of faking it.
 
 ## 9. Accessibility
 
-Colour is checked, not assumed. The token suite enforces:
+Colour is checked, not assumed. The token suite enforces every
+`ContrastPairClass` — the `contrastPairClasses` index owns the list and the
+order the ledger's floor table uses — against the floor for the class:
 
 | Pair class | Default | High contrast |
 | ---------- | ------- | ------------- |

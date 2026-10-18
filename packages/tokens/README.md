@@ -395,8 +395,9 @@ import { themeTypefaceFailures } from "@gpuixui/tokens";
 themeTypefaceFailures(brandTheme); // [] when both families are one name
 ```
 
-`contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
-the parts. The modal scrim and the dialog on it are measured as a pair:
+`contrastRatio`, `contrastPairs`, `contrastFloors`, `contrastPairClasses` and
+`compositeOver` expose the parts, the class list in the order the floor table
+states them. The modal scrim and the dialog on it are measured as a pair:
 `overlayWashPairs` holds the painted scrim to 1.05:1 over the eighteen surfaces a
 window shows, and `dialogSurfacePairs` holds the dialog's own face — `popover`
 composited over the `overlay` scrim on every surface `overlaySurfaces` names, the

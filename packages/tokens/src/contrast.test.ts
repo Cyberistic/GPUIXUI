@@ -176,6 +176,7 @@ import {
   colorRoles,
   compositeOver,
   contrastFloors,
+  contrastPairClasses,
   contrastPairs,
   contrastRatio,
   controlBoundarySoftPairs,
@@ -210,6 +211,7 @@ import {
   statusFillPairs,
   stateStepPairs,
   themeContrastFailures,
+  themeContrasts,
   toastTonePairs,
   trackMarkPairs,
   trackSurfacePairs,
@@ -371,6 +373,50 @@ describe("contrastFloors", () => {
         divider: 3,
       },
     });
+  });
+});
+
+describe("contrastPairClasses", () => {
+  const classesOf = (
+    pairs: ReadonlyArray<ContrastPair>,
+  ): ReadonlyArray<string> => [
+    ...new Set(pairs.map(([, , pairClass]) => pairClass)),
+  ];
+
+  const unenforced = (
+    classes: ReadonlyArray<string>,
+    pairs: ReadonlyArray<ContrastPair>,
+  ): ReadonlyArray<string> => {
+    const used = new Set(classesOf(pairs));
+    return classes.filter((pairClass) => !used.has(pairClass));
+  };
+
+  it("lists each class once", () => {
+    expect(new Set(contrastPairClasses).size).toBe(contrastPairClasses.length);
+  });
+
+  it("owns both floor records, in index order", () => {
+    themeContrasts.forEach((level) => {
+      expect(Object.keys(contrastFloors[level]), level).toEqual([
+        ...contrastPairClasses,
+      ]);
+      contrastPairClasses.forEach((pairClass) => {
+        expect(
+          contrastFloors[level][pairClass],
+          `${level}/${pairClass}`,
+        ).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  it("enforces every class through at least one pair", () => {
+    expect(unenforced(contrastPairClasses, contrastPairs)).toEqual([]);
+  });
+
+  it("reports a class no pair enforces, so the guard can fail", () => {
+    expect(
+      unenforced([...contrastPairClasses, "unused"], contrastPairs),
+    ).toEqual(["unused"]);
   });
 });
 

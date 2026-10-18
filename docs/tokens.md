@@ -1882,8 +1882,11 @@ distinguishable from secondary text; the tightest washed pair is now
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque `#RRGGBB` values — `NaN` when a value does not parse, so a typo
 can never pass — `compositeOver(colour, background)` composites a translucent
-role onto an opaque one, and `contrastPairs` / `contrastFloors` are the data the
-check and the test suite both read:
+role onto an opaque one, `contrastPairs` / `contrastFloors` are the data the
+check and the test suite both read, and `contrastPairClasses` is the floor
+classes in documentation order — the order the table below and the ledger's
+floor table use — so a report iterates the contract instead of retyping the
+eight class names:
 
 ```ts
 import { contrastFloors } from "@gpuixui/tokens";

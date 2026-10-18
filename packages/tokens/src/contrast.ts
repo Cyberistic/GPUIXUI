@@ -18,31 +18,41 @@ import { skeletonPulseOpacity } from "./motion.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
+/**
+ * The floor classes, in the order the reference and the ledger state them.
+ *
+ * Every other domain union in the package owns an ordered index (`colorRoles`,
+ * `textRoles`, `metricRules`), so a table renders from the domain instead of
+ * retyping it. `ContrastPairClass` derives from this list, so a ninth class
+ * reaches the type, both floor records and every published floor table from one
+ * edit.
+ *
+ * - `body`: body copy on each surface it paints on.
+ * - `secondary`: captions, descriptions, hints and other supporting text.
+ * - `inactive`: a dimmed but readable label — a design floor, not a WCAG one.
+ * - `boundary`: a functional edge — a field, a checkbox, a focus ring.
+ * - `mark`: a solid role painted as a glyph, a bar or a dot rather than behind
+ *   text. WCAG's non-text requirement is the boundary number; the separate name
+ *   records the intent, so a fill's 1.05:1 wash floor cannot be mistaken for a
+ *   mark's floor.
+ * - `surface`: one surface perceivable against another (`xSoft` on a canvas).
+ * - `step`: one designed state of a fill against the state before it, so a
+ *   hover or a press that cannot be seen is reported.
+ * - `divider`: a decorative border that must stay visible on its surface.
+ */
+export const contrastPairClasses = [
+  "body",
+  "secondary",
+  "inactive",
+  "boundary",
+  "mark",
+  "surface",
+  "step",
+  "divider",
+] as const;
+
 /** The floor class a documented pair belongs to. */
-export type ContrastPairClass =
-  | "body"
-  | "secondary"
-  /** An inactive label: dimmed but readable (a design floor, not a WCAG one). */
-  | "inactive"
-  | "boundary"
-  /**
-   * A solid role painted as a glyph, a bar or a dot rather than behind text.
-   * WCAG's non-text requirement (3:1, 4.5:1 at AAA) is the same number the
-   * boundary class uses; the separate name records the intent, so a fill's
-   * 1.05:1 wash floor cannot be mistaken for a mark's floor.
-   */
-  | "mark"
-  /** One surface must be perceivable against another (`xSoft` on a canvas). */
-  | "surface"
-  /**
-   * One designed state of a fill against the state before it. A hover or a
-   * press that is not perceivable is not a state, so every filled family's
-   * `xHover` is held to its `x` and its `xActive` to its `xHover`. The floor is
-   * the same at every contrast level: the change is a state, not text.
-   */
-  | "step"
-  /** A decorative border (`border`) must stay visible on its surface. */
-  | "divider";
+export type ContrastPairClass = (typeof contrastPairClasses)[number];
 
 /** A role pair and the floor class it belongs to. */
 export type ContrastPair = readonly [

@@ -21,6 +21,7 @@ import { describe, expect, it } from "vitest";
 import { colorRoles } from "./color.js";
 import {
   contrastFloors,
+  contrastPairClasses,
   contrastPairs,
   dialogSurfacePairs,
   overlayWashPairs,
@@ -56,16 +57,8 @@ const row = (firstCell: string): string => {
 
 const floorRow = (contrast: keyof typeof contrastFloors): string => {
   const floors = contrastFloors[contrast];
-  return [
-    floors.body,
-    floors.secondary,
-    floors.inactive,
-    floors.boundary,
-    floors.mark,
-    floors.surface,
-    floors.step,
-    floors.divider,
-  ]
+  return contrastPairClasses
+    .map((pairClass) => floors[pairClass])
     .join(" / ")
     .concat(` ${contrast}`);
 };
@@ -118,6 +111,10 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(row("Theme contrast check")).toContain("`elevationSurfaces`");
     expect(row("Theme contrast check")).toContain("`elevationLevels`");
     expect(row("High-contrast theme")).toContain("`highContrastDarkElevation`");
+  });
+
+  it("names the floor-class index its table is built from", () => {
+    expect(row("Theme contrast check")).toContain("`contrastPairClasses`");
   });
 
   it("names the pressed field edge the ring role paints", () => {

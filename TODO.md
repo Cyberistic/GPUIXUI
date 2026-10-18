@@ -1692,6 +1692,15 @@ matter; the catalogue, README and JSDoc now state the omission rule and the
 density exception separately, the case derives each axis from `shippedThemes`,
 a canonical-stability case was added, and a prose guard fails if the old
 sentence returns (plan 542)
+`[x]` Give the contrast contract's floor classes an ordered owner —
+`ContrastPairClass` was the last exported union without an index, and the
+ledger's floor table was rebuilt from eight named fields, so a ninth class would
+gain a floor at both levels and a design-system row (both compile-enforced) while
+`COMPONENTS.md` kept publishing an eight-value table and `inventory.test.ts`
+stayed green; the reference's floor snippet also took its order from the
+`contrastFloors` object literal. `contrastPairClasses` is the index, the type
+derives from it, the ledger and the reference enumerate it, and a class with a
+floor but no pair is reported; no colour, pair or floor moves (plan 543)
 
 ## Phase C — Tier 1–2 components
 

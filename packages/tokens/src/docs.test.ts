@@ -106,6 +106,7 @@ import {
 import {
   compositeOver,
   contrastFloors,
+  contrastPairClasses,
   contrastPairs,
   contrastRatio,
   dialogSurfacePairs,
@@ -1802,6 +1803,7 @@ describe("docs/tokens.md contrast contract", () => {
       "contrastRatio",
       "contrastPairs",
       "contrastFloors",
+      "contrastPairClasses",
       "compositeOver",
     ].forEach((name) => {
       expect(mentions(name), name).toBe(true);
@@ -1810,8 +1812,8 @@ describe("docs/tokens.md contrast contract", () => {
 
   it("states the floor table the checker reads", () => {
     const line = (level: keyof typeof contrastFloors): string =>
-      `contrastFloors.${level}; // { ${Object.entries(contrastFloors[level])
-        .map(([pairClass, floor]) => `${pairClass}: ${floor}`)
+      `contrastFloors.${level}; // { ${contrastPairClasses
+        .map((pairClass) => `${pairClass}: ${contrastFloors[level][pairClass]}`)
         .join(", ")} }`;
 
     expect(markdown).toContain(line("default"));
