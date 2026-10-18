@@ -463,8 +463,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
     - `[x]` Carousel hides inactive slides with the runtime's visibility
       mechanism (`display: none` is a no-op in 0.10.0) — plan 365; 3 new native
       cases (Carousel 12, behaviour 525), 6 of 12 fail on the old code
-    - `[ ]` One Escape closes one overlay: the dismiss stack uses the shared
-      field claim instead of payload identity — plan 366
+    - `[x]` One Escape closes one overlay: the dismiss stack uses the shared
+      field claim instead of payload identity — plan 366; unit copy case + 1
+      native nested-dismiss case (Dialog 14, behaviour 526), both fail on the old
+      `WeakSet`
 `[ ]` Docs truth pass against the implementation (docs-site pages still owned by
 the docs-site workstream; the `packages/components` half is plan 337)
 

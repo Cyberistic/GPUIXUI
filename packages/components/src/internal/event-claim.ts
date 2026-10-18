@@ -1,27 +1,35 @@
 /**
  * Event claims for nested surfaces.
  *
- * A key event travels from the focused row through every enclosing menu. The
- * runtime delivers one payload copy per handler, so object identity cannot carry
- * a claim across levels; the key fields can. An inner surface claims the key it
- * handled and the enclosing menu ignores the same key for the rest of the tick.
+ * A single runtime event travels from the focused node through every enclosing
+ * surface, and 0.10.0 hands **each handler its own payload copy** (measured: plan
+ * `187` §9). Identity therefore cannot carry a claim across levels; the event's
+ * fields can. An inner surface claims the event it handled and the enclosing
+ * surface ignores the same event for the rest of the tick.
+ *
+ * The claim covers keys and pointer events: the dismiss stack uses it for
+ * Escape and for outside presses, the menus for the keys they act on.
  *
  * The claim is cleared in a microtask, after the synchronous event propagation
- * has finished, so a later key with the same name is a new event.
+ * has finished, so a later event — even one with the same key at the same
+ * coordinates — is a new event.
  */
 
 import type { EventPayload } from "@gpuix/react";
 import * as Option from "effect/Option";
 
-/** The fields that identify one key event across the runtime's payload copies. */
-interface KeyClaim {
+/** The fields that identify one event across the runtime's payload copies. */
+interface EventClaim {
   readonly eventType: string;
   readonly key: string | undefined;
   readonly keyChar: string | undefined;
+  readonly x: number | undefined;
+  readonly y: number | undefined;
+  readonly button: number | undefined;
   readonly modifiers: string;
 }
 
-let claim: Option.Option<KeyClaim> = Option.none();
+let claim: Option.Option<EventClaim> = Option.none();
 
 const modifiersOf = (event: EventPayload): string => {
   const modifiers = event.modifiers;
@@ -33,17 +41,23 @@ const modifiersOf = (event: EventPayload): string => {
   ].join("+");
 };
 
-const claimOf = (event: EventPayload): KeyClaim => ({
+const claimOf = (event: EventPayload): EventClaim => ({
   eventType: event.eventType,
   key: event.key,
   keyChar: event.keyChar,
+  x: event.x,
+  y: event.y,
+  button: event.button,
   modifiers: modifiersOf(event),
 });
 
-const sameClaim = (left: KeyClaim, right: KeyClaim): boolean =>
+const sameClaim = (left: EventClaim, right: EventClaim): boolean =>
   left.eventType === right.eventType &&
   left.key === right.key &&
   left.keyChar === right.keyChar &&
+  left.x === right.x &&
+  left.y === right.y &&
+  left.button === right.button &&
   left.modifiers === right.modifiers;
 
 /** Mark `event` as handled by the surface it happened in. */

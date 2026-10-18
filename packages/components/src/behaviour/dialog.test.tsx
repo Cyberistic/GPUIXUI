@@ -11,7 +11,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef } from "react";
+import { createRef, useState } from "react";
 import { Button } from "../internal/button.js";
 import {
   Dialog,
@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../dialog.js";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
@@ -68,6 +69,25 @@ const Workspace = ({
     </Dialog>
   </div>
 );
+
+/** A dialog whose content holds a popover that the user opens, then Escape. */
+const NestedOverlays = () => {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger testId="open">Open</DialogTrigger>
+      <DialogContent label="Settings" testId="dialog">
+        <DialogTitle>Settings</DialogTitle>
+        <Popover>
+          <PopoverTrigger testId="columns">Columns</PopoverTrigger>
+          <PopoverContent testId="panel">
+            <text>Visible columns</text>
+          </PopoverContent>
+        </Popover>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 describe("Dialog", () => {
   it("stays unmounted until the trigger is clicked", () => {
@@ -138,6 +158,24 @@ describe("Dialog", () => {
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
 
     dialog.unmount();
+  });
+
+  it("closes one overlay per Escape, keeping the enclosing dialog", () => {
+    const nested = renderComponent(<NestedOverlays />);
+
+    clickCentreOf(nested, "columns");
+    expect(nested.renderer.findByTestId("panel")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("panel")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
   });
 
   it("closes on a backdrop press and stays open on a press inside", () => {

@@ -75,7 +75,9 @@ work settles.
 
 Open dialogs share one dismiss stack (`src/internal/dismiss-layer.ts`): Escape and
 outside presses are consumed by the **topmost** overlay only, so a popover inside a
-dialog closes the popover first. One event cannot close two layers.
+dialog closes the popover first. One event cannot close two layers. The runtime
+hands each handler its own payload copy, so consumption is keyed on the event's
+fields (the same claim the menus use), never on object identity.
 
 ## Keyboard
 
@@ -110,6 +112,10 @@ actions off screen.
   window; it does not participate in a scrolling parent's clip.
 - The top-right close control uses the `x` icon from `@gpuixui/icons`.
 - A dialog is not resizable, draggable or multi-window. One dialog per surface.
+- The dismiss stack orders layers by the commit that opens them. A nested overlay
+  (a popover or menu) that mounts **open in the same commit** as its dialog joins
+  the stack below it, so the first Escape closes the dialog first; opening the
+  nested overlay through interaction puts it on top as expected.
 
 ## API
 
@@ -133,14 +139,15 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (13 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (14 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
-entering and returning, Escape and backdrop dismissal, Tab wrapping at both ends,
+entering and returning, Escape and backdrop dismissal, a popover inside the dialog
+closed by the first Escape with the dialog kept open, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, both themes reading
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
 dismissals, a controlled dialog staying closed, the caller's own close control,
 and a caller content `ref`. Plus `src/internal/dismiss-layer.test.ts` for the
-stack's own rules.
+stack's own rules, including one keystroke arriving as two payload copies.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

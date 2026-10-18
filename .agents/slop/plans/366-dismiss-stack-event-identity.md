@@ -4,7 +4,8 @@
 overlay).
 **Workstream.** components (`packages/components`).
 **Depends on.** 110, 112, 114, 117, 131, 187 (playground evidence), 326.
-**Status.** planned 2026-10-18.
+**Status.** done 2026-10-18 — unit copy case + 1 native nested-dismiss case; both
+fail on the `WeakSet` and pass after it (Dialog 14, behaviour 526, unit 357).
 
 ## 1. Why this plan exists
 
@@ -229,4 +230,22 @@ Expected: behaviour 526 (525 + 1), unit 356 + 1, `check` exit `0`.
 
 ## 7. Result
 
-_To be filled after execution._
+Executed on this host, 2026-10-18.
+
+- `src/internal/dismiss-layer.test.ts`: **6/6 green**. With `dismiss-layer.ts`
+  restored to the `WeakSet`, the copy case fails (`expected true to be false`)
+  while the other five pass.
+- `src/behaviour/dialog.test.tsx`: **14/14 green**; the nested test renders a
+  dialog, opens a popover inside it through the trigger, presses Escape once and
+  keeps the dialog, then closes it with the second Escape. On the `WeakSet` code
+  the same test fails with the dialog already gone after the first Escape.
+- Full behaviour suite **526 passed** (525 + 1); unit **357 passed** (356 + 1).
+- Docs and inventory counts updated; `docs/dialog.mdx` now states the field-claim
+  mechanism and the one-commit mount-order nuance (a nested overlay mounted open
+  in the same commit joins the stack below its dialog, so the first Escape closes
+  the dialog; the interactive path is the expected one).
+
+**Measured nuance, not a defect.** The dialect question in the plan's STOP list
+was answered by the probe: the popover and the dialog each received a distinct
+payload copy for one Escape, exactly as plan `187` §9 measured. With the field
+claim the enclosing handler sees the claim and leaves the event alone.
