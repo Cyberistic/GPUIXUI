@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-ui/css/shadcn.css";
+
+/*
+ * The docs palette is the GPUixUI token palette: iris for the brand, the
+ * neutral ramp for surfaces. Fumadocs reads every colour through the shadcn
+ * variables, so this is the only place colour is declared.
+ */
+:root {
+  --background: #f6f8fa;
+  --foreground: #191d25;
+  --card: #ffffff;
+  --card-foreground: #191d25;
+  --popover: #ffffff;
+  --popover-foreground: #191d25;
+  --primary: #5f4bdb;
+  --primary-foreground: #ffffff;
+  --secondary: #eef1f5;
+  --secondary-foreground: #2a303b;
+  --muted: #eef1f5;
+  --muted-foreground: #545d6c;
+  --accent: #eef0ff;
+  --accent-foreground: #3b2c8f;
+  --destructive: #cc3439;
+  --border: #e1e5ec;
+  --input: #e1e5ec;
+  --ring: #7567f2;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #191d25;
+  --sidebar-border: #e1e5ec;
+  --sidebar-accent: #eef0ff;
+  --sidebar-accent-foreground: #3b2c8f;
+  --sidebar-ring: #7567f2;
+  --sidebar-primary: #5f4bdb;
+  --sidebar-primary-foreground: #ffffff;
+
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", monospace;
+}
+
+.dark {
+  --background: #11141a;
+  --foreground: #eef1f5;
+  --card: #191d25;
+  --card-foreground: #eef1f5;
+  --popover: #222730;
+  --popover-foreground: #f6f8fa;
+  --primary: #a7a9ff;
+  --primary-foreground: #11141a;
+  --secondary: #2a303b;
+  --secondary-foreground: #e1e5ec;
+  --muted: #222730;
+  --muted-foreground: #a1a9b7;
+  --accent: #2e2370;
+  --accent-foreground: #c7cbff;
+  --destructive: #ff6b6b;
+  --border: #2a303b;
+  --input: #2a303b;
+  --ring: #7567f2;
+
+  --sidebar: #191d25;
+  --sidebar-foreground: #eef1f5;
+  --sidebar-border: #2a303b;
+  --sidebar-accent: #2e2370;
+  --sidebar-accent-foreground: #c7cbff;
+  --sidebar-ring: #7567f2;
+  --sidebar-primary: #a7a9ff;
+  --sidebar-primary-foreground: #11141a;
+}
+
+body {
+  font-family: var(--font-sans);
+}

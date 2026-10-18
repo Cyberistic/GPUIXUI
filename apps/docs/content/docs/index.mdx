@@ -1,0 +1,60 @@
+---
+title: GPUixUI
+description: Native UI components for interfaces built with GPUix and React.
+---
+
+GPUixUI is a component library for native desktop interfaces built with
+[GPUix](https://github.com/remorses/gpuix) and React. Every component renders
+through GPUix's native primitives — the library has no DOM, CSS or browser
+runtime inside it.
+
+The design system sits underneath the components: semantic colour roles for
+light, dark and high-contrast themes, a density-aware spacing and control scale,
+typography roles, elevation and focus rings.
+
+## Start here
+
+<Cards>
+  <Card title="Getting started" href="/docs/getting-started">
+    Clone the workspace, run the playground and render your first GPUixUI
+    component.
+  </Card>
+  <Card
+    title="Source on GitHub"
+    href="https://github.com/Cyberistic/GPUIXUI"
+  >
+    Packages, examples, design documents and the plans behind them.
+  </Card>
+</Cards>
+
+## What is in the library
+
+| Package | Responsibility |
+| --- | --- |
+| `@gpuixui/tokens` | Colour, typography, spacing, radius, elevation and density tokens, plus the React theme provider |
+| `@gpuixui/primitives` | Tier 1 render primitives |
+| `@gpuixui/components` | Tier 2 composition, feedback, navigation and input components |
+| `@gpuixui/icons` | The icon set and its sizing rules |
+| `@gpuixui/testing` | The platform-free smoke suite: checks, runner, report and preflight |
+
+## How it fits together
+
+A theme is plain data. `ThemeProvider` puts a resolved theme in React context,
+and each component reads the semantic role it needs — `colors.primary`,
+`spacing.md`, `radius.md` — instead of a literal value. A brand theme overrides
+only what it changes; every other role is inherited.
+
+```tsx
+import { Badge } from "@gpuixui/components";
+import { lightTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={lightTheme}>
+  <Badge variant="primary">Ready</Badge>
+</ThemeProvider>;
+```
+
+<Callout title="Native, not a web preview">
+  GPUixUI is rendered by GPUix in a native window. This site documents the
+  library; it does not reimplement the components in HTML and CSS.
+</Callout>

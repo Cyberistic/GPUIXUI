@@ -1,0 +1,75 @@
+---
+title: Getting started
+description: Run the workspace, render a component and find the checks.
+---
+
+GPUixUI is developed as a set of private workspace packages in the
+[GPUIXUI repository](https://github.com/Cyberistic/GPUIXUI). The packages are
+not published to a registry yet, so you consume them from the workspace rather
+than from npm.
+
+## Requirements
+
+- Node.js 24.18.0 — pinned in `.node-version`
+- [`nub`](https://nub.dev), the package manager and task runner pinned in the
+  root `package.json`
+
+## Install the workspace
+
+```sh
+git clone https://github.com/Cyberistic/GPUIXUI.git
+cd GPUIXUI
+nub install
+```
+
+## Render a component
+
+GPUixUI components expect to be rendered by a GPUix window, the same way the
+playground runs them. Supply a theme once, near the root of the window:
+
+```tsx
+import { Badge } from "@gpuixui/components";
+import { darkTheme, lightTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+const theme = isDark ? darkTheme : lightTheme;
+
+<ThemeProvider theme={theme}>
+  <Badge variant="success">Connected</Badge>
+</ThemeProvider>;
+```
+
+Components read semantic roles such as `colors.primary` and `spacing.md` from
+the theme, so switching the provider's theme restyles the subtree without
+changing component code. See `packages/tokens/src/theme.ts` for the full shape
+and `packages/tokens/src/brand-theme.example.ts` for an override.
+
+## Run the playground
+
+The playground is the working native surface for the library:
+
+```sh
+nub run dev:playground
+```
+
+## Run the checks
+
+```sh
+nub run check                                  # lint, format, types
+nub run test                                   # unit tests
+nub run --filter @gpuixui/components test:behaviour
+```
+
+## Work on this site
+
+```sh
+nub run dev:docs
+```
+
+The docs app lives in `apps/docs`; pages are MDX files under
+`apps/docs/content/docs` and navigation is declared in `meta.json` beside them.
+
+<Callout type="info" title="Private packages">
+  Because the packages are private and versioned `0.0.0`, install them with a
+  workspace protocol (`"@gpuixui/components": "workspace:*"`), not from npm.
+</Callout>

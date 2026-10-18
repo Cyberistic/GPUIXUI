@@ -39,14 +39,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[██░░░░░░░░]` 1/6
+`[x]` `[███░░░░░░░]` 2/7
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
 `[ ]` Land the primitives package
 `[ ]` **Native smoke test**: layout, input, focus, overlay and panel primitives in real GPUix
 `[ ]` Land one fully working component running in GPUix
-`[ ]` Land the docs shell and document that component in Fumadocs
+`[~]` Land the docs shell and document that component in Fumadocs — the shell
+is deployed at <https://gpuixui.sudokw.com>; component pages are still pending
+`[x]` Deploy the Fumadocs app (landing + getting started) to
+<https://gpuixui.sudokw.com> on Cloudflare Workers via the alchemy stack
 
 ### Design tokens and theming (`tokens-theme`)
 

@@ -1,34 +1,38 @@
-# apps/docs — the Fumadocs site
+# apps/docs — the GPUixUI documentation site
 
-**Status: Phase B deliverable. Not created yet — the plan comes first.**
+The docs site is a real Fumadocs app on TanStack Start, deployed as a Cloudflare
+Worker by `packages/deploy/alchemy.run.docs.ts` at
+**https://gpuixui.sudokw.com**. It documents the native library; it does not
+reimplement it. The browser site never pretends to be GPUix.
 
-The docs site is a **browser** application. It documents and showcases the
-native library; it does not render it. `MISSION.md` is explicit that a fake
-HTML/CSS reimplementation presented as native is not acceptable, so the preview
-strategy is a Phase A/B decision with four honest options (embed a real native
-surface if the runtime supports it; otherwise a companion native playground with
-run instructions; browser previews only when labelled as illustrative
-approximations; source + real screenshots + a limitation notice for unsupported
-interactions).
+## Layout
 
-## What Phase B must create
+```
+content/docs/       MDX pages and their meta.json navigation
+public/             Static assets (favicon)
+src/routes/         TanStack Start routes: docs splat, search, root redirect
+src/lib/source.ts   Fumadocs collection and page-tree loader
+src/lib/            Shared app name, git config and layout options
+src/styles/app.css  Tailwind, Fumadocs presets and the GPUixUI palette
+source.config.ts    Fumadocs MDX collection definition
+```
 
-- A real Fumadocs site on Fumadocs' supported architecture — not a bespoke docs
-  framework. `packages/deploy/alchemy.run.docs.ts` already declares the
-  Cloudflare resources with `rootDir: "../../apps/docs"`, so the app's location
-  and build command are fixed by that stack.
-- The information architecture from `MISSION.md`: Introduction, Installation,
-  Getting started, Architecture, Theming, Typography, Components, Layouts,
-  Workspace, Data display, Patterns, Examples, API reference, Contributing,
-  License and attribution.
-- Structured component metadata so navigation, status and the component index
-  are generated consistently rather than hand-maintained.
-- Light and dark docs themes, component search, a clear sidebar, readable code
-  blocks and a useful landing page.
+## Commands
 
-## Required first page
+```sh
+nub run dev:docs                               # dev server
+nub run --filter @gpuixui/docs build           # production build
+nub run --filter @gpuixui/docs check-types     # tsc
+```
 
-The Phase B exit condition is *one fully working component running in GPUix and
-documented here* — a real page with a description, variants, sizes and states,
-usage, API/prop docs, composition examples, keyboard notes, theming behaviour,
-accessibility notes and limitations, and its implementation status.
+## Deploy
+
+```sh
+cd packages/deploy
+nub run deploy:docs
+```
+
+The stack deploys `Cloudflare.Website.Vite` as `gpuixui-docs` with
+`rootDir: "../../apps/docs"`. Alchemy injects the Cloudflare Vite plugin, builds
+the app and attaches the custom domain. Cloudflare credentials come from the
+environment; no secret is stored in this repository.
