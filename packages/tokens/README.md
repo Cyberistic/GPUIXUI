@@ -72,8 +72,9 @@ subtree.
 `primary` is a fill: it carries `primaryForeground`, and it is only measured as
 a fill. Brand-toned text — a link, a label, an icon — reads `primaryText`, which
 is held to the text floor on the plain surfaces, the `hover`/`active` washes a
-link paints and the `accent`/`selected` fills a link sits on inside a row
-(plan 314). A brand that changes `primary` should set `primaryText` beside it.
+link paints, the `accent`/`selected` fills a link sits on inside a row
+(plan 314) and the four soft status fills a link in a status panel sits on
+(plan 346). A brand that changes `primary` should set `primaryText` beside it.
 
 ## Shadows
 
@@ -257,7 +258,8 @@ Secondary text is
 checked on the `input` fill a field paints for its own chrome — a time picker's
 separator and clear control — and on `hover`, `active`, `accent` and `selected`
 too, so a row description stays readable while the row moves — macOS dark
-shipped at 4.41:1 and 3.55:1 until plan 079. Status text is checked on the same four washes and on the
+shipped at 4.41:1 and 3.55:1 until plan 079 — and on the four soft status fills
+a status panel's caption sits on, tightest at 6.61:1 (Aero light, plan 346). Status text is checked on the same four washes and on the
 `muted` quiet panel a sidebar paints (plan 314), so a status dot in a list,
 table, menu row or settings sidebar is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,

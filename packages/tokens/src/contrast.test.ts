@@ -130,6 +130,14 @@
  * `selectionFillWashPairs` hold the neutral `selectionOnFill` veil on
  * `primary`, `secondary` and `destructive`; every shipped set clears the
  * floors, so no colour moves.
+ *
+ * Plan 346 closes the two text roles a status panel was never measured for: a
+ * caption (`mutedForeground`) and a link or action (`primaryText`). The four
+ * soft status fills were held for body text, the tone's own text, the inactive
+ * label, the control boundary, the ring and the divider, but an edited theme
+ * could set either role equal to a fill while the checker returned `[]`.
+ * `softPanelTextPairs` adds both on all four fills; every shipped set clears
+ * the secondary floor, so no colour moves (315 → 323 pairs).
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -155,6 +163,7 @@ import {
   selectionSurfaces,
   selectionWashPairs,
   softBorderSurfacePairs,
+  softPanelTextPairs,
   stateStepPairs,
   themeContrastFailures,
   type Theme,
@@ -262,7 +271,7 @@ describe("themeContrastFailures", () => {
     // `#444444` clears 4.5:1 on every surface — including through the selection
     // wash — but misses 7:1 on the pressed wash (6.70:1) and on all nine
     // selected pairs, so only the declared high-contrast floors catch it.
-    expect(quietHighContrastFailures).toHaveLength(10);
+    expect(quietHighContrastFailures).toHaveLength(12);
     expect(
       quietHighContrastFailures.every(
         ({ foreground, floor }) =>
@@ -279,7 +288,7 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    expect(plain).toHaveLength(9);
+    expect(plain).toHaveLength(13);
     expect(selected).toHaveLength(9);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -294,9 +303,13 @@ describe("themeContrastFailures", () => {
         "card",
         "hover",
         "input",
+        "infoSoft",
         "muted",
         "popover",
         "selected",
+        "destructiveSoft",
+        "successSoft",
+        "warningSoft",
       ].toSorted(),
     );
     expect(
@@ -373,10 +386,11 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(315);
+    expect(contrastPairs.length).toBe(323);
     expect(new Set(contrastPairs).size).toBe(contrastPairs.length);
     expect(stateStepPairs).toHaveLength(8);
     expect(new Set(stateStepPairs).size).toBe(8);
+    expect(softPanelTextPairs).toHaveLength(8);
     expect(softBorderSurfacePairs.length).toBe(32);
     expect(
       softBorderSurfacePairs.map(([foreground, background]) => [

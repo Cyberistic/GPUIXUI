@@ -374,13 +374,13 @@ Colour is checked, not assumed. The token suite enforces:
 | body text on `background`/`card`/`muted`/`popover`/`input`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description paints; typed text on `input` and on the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on | 7:1 | 7:1 |
 | a menu row's label (`popoverForeground` on `hover`/`active`, and on `selected` for a selected `Select` option) | 7:1 | 7:1 |
 | selected row label (`selectedForeground` on `selected`, the `accent` wash a hovered selectable row paints and the `hover`/`active` pointer washes) | 4.5:1 | 7:1 |
-| secondary text (`mutedForeground` on plain surfaces, on the `input` fill a field paints for its own chrome, and on the `hover`, `active`, `accent` and `selected` washes), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
+| secondary text (`mutedForeground` on plain surfaces, on the `input` fill a field paints for its own chrome, on the `hover`, `active`, `accent` and `selected` washes and on the four soft status fills a status panel's caption sits on), on-colour text, placeholder text on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field sits on, ghost text on the `hover`/`active` washes | 4.5:1 | 7:1 |
 | filled-control states (`primaryForeground`/`secondaryForeground`/`destructiveForeground`/`accentForeground` on each family's `x`, `xHover` and `xActive`) | 4.5:1 | 7:1 |
 | interactive fills and washes (`hover`, `active`, `accent`, `selected`, and each filled family's `x`/`xHover`/`xActive`) on `background`/`card`/`popover`/`muted` | 1.05:1 | 1.05:1 |
 | filled-control state steps (`xHover` from `x`, `xActive` from `xHover`, for `primary`/`secondary`/`destructive`/`accent`) | 1.05:1 | 1.05:1 |
 | soft status text (`xSoftForeground` on `xSoft`) | 7:1 | 7:1 |
 | status text (`xText`) on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes | 4.5:1 | 7:1 |
-| brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes and the `accent`/`selected` row fills | 4.5:1 | 7:1 |
+| brand-toned text (`primaryText`) on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes, the `accent`/`selected` row fills and the four soft status fills a link in a status panel sits on | 4.5:1 | 7:1 |
 | text selection (body text over the composited `selection` wash on `background`/`card`/`muted`/`hover`/`active`/`accent`/`popover`/`input`) | 7:1 | 7:1 |
 | text selection on a soft status fill (`xSoftForeground` over the wash on `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 7:1 | 7:1 |
 | text selection in a selected row (`selectedForeground` over the wash on `selected`) | 4.5:1 | 7:1 |

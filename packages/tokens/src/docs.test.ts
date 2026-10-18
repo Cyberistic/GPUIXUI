@@ -211,13 +211,13 @@ describe("docs/tokens.md contract counts", () => {
   it("ends the pair-count history at the contract's shipped size", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
-      `taking it from 314 to **${contrastPairs.length}**`,
+      `taking it from 315 to **${contrastPairs.length}**`,
     );
   });
 
   it("names the audit series through the latest plan", () => {
     const prose = markdown.replace(/\s+/g, " ");
-    expect(prose).toContain("plans `076`–`344` closed");
+    expect(prose).toContain("plans `076`–`346` closed");
   });
 });
 
@@ -706,6 +706,8 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ["selectedForeground", "active", "macOS light", 5.21],
       ["selectedForeground", "accent", "macOS light", 5.81],
       ["successText", "muted", "Aero light", 5.92],
+      ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
+      ["primaryText", "destructiveSoft", "Windows light", 5.26],
     ] as const;
 
     quoted.forEach(([foreground, background, label, value]) => {
@@ -1230,7 +1232,8 @@ describe("docs/design-system.md", () => {
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills an Alert's description paints; typed text on \`input\` and on the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| selected row label (\`selectedForeground\` on \`selected\`, the \`accent\` wash a hovered selectable row paints and the \`hover\`/\`active\` pointer washes) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
-      `| secondary text (\`mutedForeground\` on plain surfaces, on the \`input\` fill a field paints for its own chrome, and on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes), on-colour text, placeholder text on the \`input\` fill and the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| secondary text (\`mutedForeground\` on plain surfaces, on the \`input\` fill a field paints for its own chrome, on the \`hover\`, \`active\`, \`accent\` and \`selected\` washes and on the four soft status fills a status panel's caption sits on), on-colour text, placeholder text on the \`input\` fill and the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
+      `| brand-toned text (\`primaryText\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\` washes, the \`accent\`/\`selected\` row fills and the four soft status fills a link in a status panel sits on | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| filled-control states (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\` on each family's \`x\`, \`xHover\` and \`xActive\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| interactive fills and washes (\`hover\`, \`active\`, \`accent\`, \`selected\`, and each filled family's \`x\`/\`xHover\`/\`xActive\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| filled-control state steps (\`xHover\` from \`x\`, \`xActive\` from \`xHover\`, for \`primary\`/\`secondary\`/\`destructive\`/\`accent\`) | ${contrastFloors.default.step}:1 | ${contrastFloors.high.step}:1 |`,

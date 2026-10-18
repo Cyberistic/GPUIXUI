@@ -147,8 +147,9 @@ The same fill-versus-text split applies to the brand action. `primary` is a
 surface: it carries `primaryForeground`, and it is measured only as a fill.
 Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 4.5:1 on `background`, `card`, `popover` and `muted`, on the `hover` and
-`active` washes the Link variant paints behind its own label, and on the
-`accent`/`selected` fills a selectable row paints under it. The split is not
+`active` washes the Link variant paints behind its own label, on the
+`accent`/`selected` fills a selectable row paints under it, and on the four soft
+status fills a link in a status panel sits on. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
 on the pressed wash, while its text step `#0055B3` clears both.
 
@@ -1204,7 +1205,9 @@ status pairs, the focus ring on the plain surfaces, the `muted` panel, the
 soft status fills (`ringSoftPairs`), the `destructive` ring an invalid control
 paints on the same surfaces (`invalidRingPairs`), the
 functional control boundary on the `muted` panel, those washes and the four soft
-status fills (`controlBoundarySoftPairs`), the selection
+status fills (`controlBoundarySoftPairs`), a status panel's caption and link —
+`mutedForeground` and `primaryText` on the four soft status fills
+(`softPanelTextPairs`), the selection
 wash — body and secondary text through it, and the wash's own perceivability —
 the soft status surfaces, the designed edge on its own fill and on the eight
 surfaces a chip sits on (`softBorderSurfacePairs`), the plain divider on those
@@ -1420,8 +1423,9 @@ variants — and fails if a semantic text/surface pair drops below its floor (7:
 for primary body pairs, typed input text, soft status text and all high-contrast
 text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered or pressed filled action, ghost text on the `hover` and `active` washes,
-muted text on `background`, `card`, `popover` and the `input` fill a field
-paints for its own chrome, secondary text on the `hover`, `active`, `accent`
+muted text on `background`, `card`, `popover`, the `input` fill a field
+paints for its own chrome and the four soft status fills a status panel's
+caption sits on, secondary text on the `hover`, `active`, `accent`
 and `selected` washes a row paints behind a description, and status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
 3:1 for focus and essential boundaries, including the `destructive` ring an
 invalid control paints, in the default themes; 4.5:1 for them in the
@@ -1475,17 +1479,24 @@ the light and dark skeleton moved one ramp step away, and each dark platform
 style carries its own.
 Brand-toned text is checked on the eight surfaces a link paints —
 `background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
-`accent`/`selected` fills a selectable row paints — so a platform accent cannot
+`accent`/`selected` fills a selectable row paints — and on the four soft status
+fills a link in a status panel sits on
+(`softPanelTextPairs`), so a platform accent cannot
 ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
 high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
 by plan `314`; the tightest shipped pair is `primaryText` on `selected` at
-**4.53:1** (Linux dark), so no value moves.
+**4.53:1** (Linux dark), and the soft fills are tightest at
+`primaryText` on `destructiveSoft` at **5.26:1** (Windows light), so no value
+moves.
 Every platform variant is checked on its own canvas, not the identity's, so a
 style that moves `background` or `card` is held to the status tints and skeleton
 it inherits. The same loop holds secondary text on each variant's washes: macOS
 dark shipped at 4.41:1 on `hover` and 3.55:1 on `active` until plan `079` moved
-its secondary grey and pressed wash. The control edge is held there too: four
+its secondary grey and pressed wash. A status panel's caption is checked on the
+four soft status fills too (`softPanelTextPairs`), tightest at
+`mutedForeground` on `destructiveSoft` at **6.61:1** (Aero light), so no value
+moves. The control edge is held there too: four
 shipped sets had `border` equal to the fill it sits on (identity light `active`,
 identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
 `accent`, and high-contrast dark's `active` at 2.53:1 under the AAA floor), so
@@ -1584,7 +1595,9 @@ each `xActive` from its `xHover` — taking it from 306 to **314**. Plan `343`
 holds the field's pressed edge — `ring` on the `input` fill — taking it from 314
 to **315**. Plan `344` adds the inverse selection veil for content painted on a
 filled action — `selectionOnFill` on `primary`/`secondary`/`destructive` — as six
-wash pairs beside the plain `contrastPairs` list.
+wash pairs beside the plain `contrastPairs` list. Plan `346` holds a status
+panel's caption and link — `mutedForeground` and `primaryText` on the four soft
+status fills — taking it from 315 to **323**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
@@ -1759,7 +1772,8 @@ reported with `wash: "overlay"` (plan `099`).
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs`,
-`selectionFillPairs`, `selectionFillWashPairs` and `overlayWashPairs` measure the
+`selectionFillPairs`, `selectionFillWashPairs`, `softPanelTextPairs` and
+`overlayWashPairs` measure the
 painted roles — `inactivePairs` is the thirteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge and `disabled`
 is measured as its own fill — and
@@ -1768,7 +1782,7 @@ declared exemption list for the two that are not pairs: `scrollbar` (reserved; t
 pinned runtime paints the platform scrollbar) and `shadow` (an elevation tint,
 never text or a bounded surface). A new role that is neither measured nor
 argued fails the suite, so the catalogue cannot grow a blind spot like the ones
-plans `076`–`344` closed.
+plans `076`–`346` closed.
 
 `packages/tokens/src/docs.test.ts` parses the colour tables above and fails if
 they disagree with the shipped themes or fall out of role order; it also holds

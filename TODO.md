@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 113/149
+`[x]` `[████████░░]` 114/149
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -308,6 +308,12 @@ over the `shadow` tint, so every AAA platform variant painted the identity's
 shadows while the docs toggle promised a platform preview; the levels now ride
 with the structural overrides and the AAA tint stays, so no colour or pair moves
 (plan 345)
+`[x]` Hold a status panel's caption and link — `mutedForeground` and
+`primaryText` had pairs on the plain surfaces, the row washes and the `input`
+fill but not the four soft status fills an Alert's description can carry a
+caption or a link on, so an edited theme could erase either while the checker
+returned `[]`; every shipped set passes (6.61:1 and 5.26:1 at the tightest), so
+no colour moves and the contract grows 315 → 323 (plan 346)
 `[ ]` Cross-team: `components` applies `selectionStyle(theme, "fill")` — or
 `theme.colors.selectionOnFill` — to the user `Message` bubble in `message.tsx`
 `bubble()`, which paints body text on `primary`; the accent-tinted `selection`

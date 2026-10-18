@@ -570,6 +570,21 @@ const softBodyPairs: readonly ContrastPair[] = softSurfaceRoles.map(
 );
 
 /**
+ * The two text roles a status panel carries besides its own tone and body: a
+ * caption or supporting line in the quiet tonality (`mutedForeground`) and a
+ * link or action in the brand tonality (`primaryText`). `AlertDescription` is
+ * documented as a container that may hold an action, and the primitives `Link`
+ * paints `primaryText`, so both sit on the tone-tinted root.
+ */
+export const softPanelTextPairs: readonly ContrastPair[] =
+  softSurfaceRoles.flatMap(
+    (background): ReadonlyArray<ContrastPair> => [
+      ["mutedForeground", background, "secondary"],
+      ["primaryText", background, "secondary"],
+    ],
+  );
+
+/**
  * The generic washes the shipped secondary control still paints behind its
  * label. `components/internal/button.tsx` keeps `secondaryForeground` while the
  * fill becomes `hover` or `active`; the designed family is `secondaryHover` /
@@ -587,7 +602,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * the quiet `muted` panel, brand-toned text on the plain surfaces, the washes a
  * link paints and the row fills it sits on, default body text on the quiet panel,
  * the floating surface and the four soft status fills an Alert's description and
- * ghost dismiss control paint, the focus ring on every surface a focused control
+ * ghost dismiss control paint, a status panel's caption and link — `mutedForeground`
+ * and `primaryText` on the same four fills (`softPanelTextPairs`) — the focus ring
+ * on every surface a focused control
  * can sit on, the ring on the soft status fills a toast's action button sits on,
  * the `destructive` ring an invalid control paints on those same surfaces,
  * status text on a floating surface, the functional control
@@ -687,6 +704,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...statusTextSurfacePairs,
   ...rowTextPairs,
   ...softBodyPairs,
+  ...softPanelTextPairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],
   ["placeholder", "input", "secondary"],

@@ -28,6 +28,10 @@ const surfaces = [
   "card",
   "popover",
   "muted",
+  "infoSoft",
+  "successSoft",
+  "warningSoft",
+  "destructiveSoft",
   "hover",
   "active",
   "accent",
@@ -120,10 +124,14 @@ describe("brand-toned text", () => {
       "accent",
       "active",
       "card",
+      "destructiveSoft",
       "hover",
+      "infoSoft",
       "muted",
       "popover",
       "selected",
+      "successSoft",
+      "warningSoft",
     ]);
     expect(
       failures.every(
