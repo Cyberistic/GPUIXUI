@@ -121,6 +121,7 @@ workstream declares in its own section below.
 | [369](./369-combobox-trigger-role.md) | ComboboxTrigger exposes a button role and its expanded state | F | 110, 116, 138, 302, 323, 328, 340, 346 | done — `role="button"` on the headless trigger; 1 native case (Combobox 28, behaviour 530), fails without the role |
 | [370](./370-toast-status-per-card.md) | Each toast card is the status region, named by its own message | F | 110, 115, 117, 123, 124, 322, 183 | done — the card is `role="status"` named `title: description` and the viewport is a named group; the strengthened native case fails on the old shape (Toast 14, behaviour 530) |
 | [371](./371-docs-example-pointer-truth.md) | Docs truth: the example pointer names what this package verifies, not another app | F | 110, 117, 330, 333, 335, 337, 347 | done — 19 pointers across 17 pages now name `examples/index.ts` + `src/behaviour/examples.test.tsx`; no docs page mentions the playground |
+| [372](./372-collapsible-height-animation.md) | Collapsible/Accordion: keep the body mounted and reveal it from a measurement | F | 110, 111, 113, 117, 186, 326, 327 | in progress — the clip leaves the closed body in the tab order (§2); the shared `internal/reveal.tsx` hides with `visibility`, measures once, then tweens |
 
 Interlocks this workstream depends on and does not own:
 
