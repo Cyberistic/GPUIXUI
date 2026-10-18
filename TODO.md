@@ -471,7 +471,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–492)
 
-`[x]` `[██████████]` 94/94
+`[x]` `[██████████]` 95/95
+
+`[x]` **The preview counts stop being remembered (plan 494)** — the document's
+      scene total and both documents' gesture total are now digits derived from
+      `LIVE_SCENES` and `SCENE_GESTURE` by `preview-gaps.test.ts`, and the
+      gesture table must have one row per gesture scene; four two-direction
+      proofs in plan 494 §6
 
 `[x]` **The three choice controls got live scenes (plan 492)** — Select, Checkbox
       and Switch moved from a tier-A rest state to tier L: the smoke clicks the

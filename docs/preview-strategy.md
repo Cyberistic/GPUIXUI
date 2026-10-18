@@ -189,7 +189,7 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **Thirty scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **30 scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
   input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
@@ -205,7 +205,7 @@ the source for a component that is no longer `planned`.
 
 ## Gestures are proved, not implied
 
-Fourteen scenes document state only a gesture produces: a component that owns its
+14 scenes document state only a gesture produces: a component that owns its
 open state and exposes no `defaultOpen`, a list that opens on a click, controls
 whose checked paint is not text, a value a key moves and a field a reader types
 into. They are not opened by a prop: the smoke drives the same gesture a reader

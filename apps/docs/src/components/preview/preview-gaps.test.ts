@@ -5,6 +5,7 @@ import * as Arr from "effect/Array";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
+import { LIVE_SCENES, SCENE_GESTURE } from "../../../preview/scenes";
 import { NO_LIVE_SCENE } from "./gaps";
 
 /**
@@ -22,15 +23,23 @@ const documentPath = fileURLToPath(
 );
 const document = readFileSync(documentPath, "utf8");
 
+const readme = readFileSync(
+  fileURLToPath(new URL("../../../README.md", import.meta.url)),
+  "utf8",
+);
+
 const heading = "### Pages with neither a live scene nor an illustration";
 
-const section = ((): string => {
-  const start = document.indexOf(heading);
+/** The body of a section, from its heading to the next heading. */
+const sectionAfter = (title: string): string => {
+  const start = document.indexOf(title);
   if (start < 0) return "";
-  const rest = document.slice(start + heading.length);
+  const rest = document.slice(start + title.length);
   const next = rest.search(/^#{2,3} /m);
   return next < 0 ? rest : rest.slice(0, next);
-})();
+};
+
+const section = sectionAfter(heading);
 
 /** `| `slug` | reason |` → a row; header and separator rows yield nothing. */
 const parseRow = (
@@ -71,5 +80,47 @@ describe("preview-strategy gap list", () => {
         : Result.failVoid,
     );
     expect(empty).toEqual([]);
+  });
+});
+
+/**
+ * The bug this guards: plans 450 and 464 each fixed a hand-counted preview
+ * total that had drifted from the registry, and plan 493 changed both totals
+ * again. The document and the README are what a reader trusts, so their numbers
+ * are derived from the scene table here instead of remembered at authoring time.
+ */
+describe("preview counts", () => {
+  const gestureCount = Arr.length(
+    Arr.filter(LIVE_SCENES, (scene) => SCENE_GESTURE[scene] !== undefined),
+  );
+  const gestureSection = sectionAfter("## Gestures are proved, not implied");
+
+  const countIn = (source: string, pattern: RegExp): number =>
+    Number(pattern.exec(source)?.[1] ?? Number.NaN);
+
+  it("states the scene total the code ships", () => {
+    const stated = countIn(document, /(\d+) scenes ship today/);
+    expect(stated).toBe(Arr.length(LIVE_SCENES));
+  });
+
+  it("states the gesture total the code ships, in both documents", () => {
+    const stated = {
+      document: countIn(
+        document,
+        /(\d+) scenes document state only a gesture produces/,
+      ),
+      readme: countIn(readme, /(\d+) of\s+those/),
+    };
+    expect(stated).toEqual({ document: gestureCount, readme: gestureCount });
+  });
+
+  it("lists one gesture row per gesture scene", () => {
+    const rows = pipe(
+      gestureSection.split("\n"),
+      Arr.filter((line) => /^\|.*\|$/.test(line)),
+      Arr.length,
+    );
+    // The table's own header and separator are not scenes.
+    expect(rows - 2).toBe(gestureCount);
   });
 });

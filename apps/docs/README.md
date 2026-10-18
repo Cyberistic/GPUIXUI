@@ -92,7 +92,7 @@ renderer (the browser's GPU backend) and exports one document per scene:
   containers, Skeletons, Loading indicators, Drawers, Navigation menus,
   Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers,
   Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches, Radio groups,
-  Sliders, Range sliders, Search inputs, Text inputs and Text areas. Fourteen of
+  Sliders, Range sliders, Search inputs, Text inputs and Text areas. 14 of
   those document state only a gesture produces — an open overlay, an opened
   list, a checked control, a value a key reaches or text a reader types — so
   `preview/scenes.ts` declares the gesture that produces it
