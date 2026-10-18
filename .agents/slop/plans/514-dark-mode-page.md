@@ -166,6 +166,9 @@ Implemented 2026-10-18 on `agent/docs-site`.
 - `nub run --filter docs check-types`: exit `0`.
 - `nub run --filter docs smoke:build`: **91 pages** (was 90), 112 links, 3 brand
   assets, exit `0`.
+- The release browser gates, re-run because a page entered the sitemap:
+  `smoke:a11y` **91 pages × 2 schemes, 0 violations**; `smoke:responsive` **91
+  pages**; `smoke:keyboard`, `smoke:theme` (5 steps) and `smoke:search` exit `0`.
 
 Two-direction proofs, all measured on the shipped tree and then reverted:
 
