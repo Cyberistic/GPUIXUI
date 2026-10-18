@@ -207,7 +207,8 @@ export const DropdownMenuTrigger = ({
       onKeyDown={(event) => {
         // The local Button runs its activation click before this handler, so a
         // keyboard toggle has already opened the menu; record the edge anyway.
-        if (!open) {
+        // A disabled trigger must not open through a key the button never saw.
+        if (rest.disabled !== true && !open) {
           if (isDown(event)) openAt("first");
           else if (isUp(event)) openAt("last");
           else if (isActivation(event)) openAt("first");

@@ -412,6 +412,7 @@ export const NavigationMenuTrigger = ({
       }}
       onKeyDown={(event: EventPayload) => {
         onKeyDown?.(event);
+        if (rest.disabled === true) return;
         if (isDown(event)) {
           setOpen(value);
           requestPanelFocus(value);

@@ -123,17 +123,19 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       ref={setTrigger}
       aria-expanded={open}
       onMouseEnter={(event) => {
-        hover.enter("trigger", () => setOpen(true));
         rest.onMouseEnter?.(event);
+        if (rest.disabled === true) return;
+        hover.enter("trigger", () => setOpen(true));
       }}
       onMouseLeave={(event) => {
         hover.leave("trigger");
         rest.onMouseLeave?.(event);
       }}
       onFocus={(event) => {
-        hover.cancel();
-        setOpen(true);
         rest.onFocus?.(event);
+        hover.cancel();
+        if (rest.disabled === true) return;
+        setOpen(true);
       }}
       onClick={(event) => {
         onClick?.(event);

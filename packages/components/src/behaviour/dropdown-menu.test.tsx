@@ -11,7 +11,7 @@
  * Keyboard-opening regression: a menu opened from the trigger landed on the
  * surface with nothing highlighted, so Enter ran nothing and ArrowDown/ArrowUp on
  * the closed trigger did nothing. A caller `ref` on the trigger was discarded in
- * favour of the internal one.
+ * favour of the internal one. A **disabled** trigger still opened on those keys.
  *
  * Type-ahead regression: typing a prefix selected nothing, a disabled row could
  * win the match, a repeated letter did not advance, the buffer never expired so a
@@ -488,6 +488,29 @@ describe("DropdownMenu", () => {
     const surface = requireBounds(menu, "menu");
 
     expect(surface.y + surface.height).toBeLessThanOrEqual(trigger.y);
+
+    menu.unmount();
+  });
+
+  it("never opens from a disabled trigger, by arrow keys", () => {
+    const menu = renderComponent(
+      <div style={{ padding: 40 }}>
+        <DropdownMenu>
+          <DropdownMenuTrigger testId="trigger" disabled>
+            Actions
+          </DropdownMenuTrigger>
+          <DropdownMenuContent testId="menu" label="File actions">
+            <DropdownMenuItem testId="rename">Rename</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>,
+    );
+
+    menu.renderer.focusElement(menu.renderer.findByTestId("trigger")?.id ?? -1);
+    menu.renderer.simulateKeystrokes("down");
+    menu.renderer.simulateKeystrokes("up");
+
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
 
     menu.unmount();
   });

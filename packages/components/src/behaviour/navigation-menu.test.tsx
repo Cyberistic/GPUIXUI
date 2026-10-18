@@ -7,7 +7,8 @@
  * returning focus, an outside press that does nothing, a controlled nav that
  * opens on its own, a hover that opens instantly or never, a hover that steals
  * focus, a panel that closes while the pointer travels into it, a disabled
- * trigger that opens on hover, `openOnHover={false}` that still opens, a bottom
+ * trigger that opens (on hover, on press, or on an arrow key) or moves focus
+ * with the arrow keys, `openOnHover={false}` that still opens, a bottom
  * panel that covers its trigger at the window's edge, and a caller `ref` that is
  * discarded in favour of the internal panel ref.
  */
@@ -389,6 +390,48 @@ describe("NavigationMenu", () => {
 
     clickCentreOf(nav, "trigger-platform");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("ignores arrow keys on a disabled trigger and still forwards the caller's", () => {
+    const onKeyDown = vi.fn();
+    const nav = renderComponent(
+      <NavigationMenu label="Product">
+        <NavigationMenuList>
+          <NavigationMenuItem value="platform">
+            <NavigationMenuTrigger
+              testId="trigger-platform"
+              disabled
+              onKeyDown={onKeyDown}
+            >
+              Platform
+            </NavigationMenuTrigger>
+            <NavigationMenuContent testId="panel-platform">
+              <text>Overview</text>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+          <NavigationMenuItem value="pricing">
+            <NavigationMenuTrigger testId="trigger-pricing">
+              Pricing
+            </NavigationMenuTrigger>
+            <NavigationMenuContent testId="panel-pricing">
+              <text>Plans</text>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>,
+    );
+
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("trigger-platform")?.id ?? -1,
+    );
+    nav.renderer.simulateKeystrokes("down");
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+
+    nav.renderer.simulateKeystrokes("right");
+    expect(focusedTestId(nav)).toEqual(Option.some("trigger-platform"));
 
     nav.unmount();
   });

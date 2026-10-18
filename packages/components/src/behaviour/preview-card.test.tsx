@@ -5,8 +5,9 @@
  * closes while the pointer travels into it; a card that never closes when the
  * pointer leaves; focus that does not open it; Escape or an outside press that
  * closes the wrong layer; an unnamed surface; a controlled card that opens on
- * its own; a centre-aligned card 180 px off its trigger; and a card at the
- * window's bottom edge covering the trigger instead of flipping above it.
+ * its own; a centre-aligned card 180 px off its trigger; a card at the window's
+ * bottom edge covering the trigger instead of flipping above it; and a disabled
+ * trigger that opened on hover and on focus.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -56,9 +57,11 @@ const isShown = (
 const Workspace = ({
   open,
   onOpenChange,
+  disabled,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly disabled?: boolean;
 }) => (
   <div
     style={{
@@ -75,7 +78,9 @@ const Workspace = ({
       openDelay={20}
       closeDelay={20}
     >
-      <PreviewCardTrigger testId="trigger">design-system.md</PreviewCardTrigger>
+      <PreviewCardTrigger testId="trigger" disabled={disabled}>
+        design-system.md
+      </PreviewCardTrigger>
       <PreviewCardContent label="Design system" testId="preview">
         <text>Tokens, roles and themes.</text>
         <Button testId="inside">Open file</Button>
@@ -112,6 +117,25 @@ describe("PreviewCard", () => {
     );
     expect(focused.renderer.findByTestId("preview")).toBeDefined();
     focused.unmount();
+  });
+
+  it("never opens from a disabled trigger on hover", async () => {
+    const card = renderComponent(<Workspace disabled />);
+    hoverCentreOf(card, "trigger");
+    await after(150);
+
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.unmount();
+  });
+
+  it("never opens from a disabled trigger on focus", () => {
+    const card = renderComponent(<Workspace disabled />);
+    card.renderer.focusElement(card.renderer.findByTestId("trigger")?.id ?? -1);
+
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.unmount();
   });
 
   it("stays open while the pointer is inside the card", async () => {
