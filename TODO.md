@@ -39,7 +39,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ## Phase B — working foundation
 
-`[x]` `[████░░░░░░]` 4/8
+`[x]` `[█████░░░░░]` 5/9
 
 `[ ]` Land the workspace, boundaries and package scaffolding that has real content
 `[x]` Land tokens and the theming architecture (light + dark, semantic roles)
@@ -53,6 +53,9 @@ sectioned sidebar (Getting Started / Components / Contributing), the reusable
 Preview/Code template, the `nub` install block, the "On this page" TOC, the
 previous/next pager, and the Button, Dialog, Popover and Tabs pages are deployed
 under <https://gpuixui.sudokw.com/docs>
+`[x]` Land the Blocks and Theme Editor docs surfaces (plan 436) — the
+`/docs/blocks` index with Login/Settings recipes and the `/docs/themes` live
+token editor, deployed under <https://gpuixui.sudokw.com/docs>
 `[x]` Land the marketing landing page at `/` (plan 434) — Hunter License
 identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to
