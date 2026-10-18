@@ -136,6 +136,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [337](./337-native-field-reach.md) | The native field's own hint and selection | F | 069, 317, 319, 331, 335 | done |
 | [338](./338-filled-control-family.md) | The filled control's designed family, in one call | F | 055, 097, 327, 334 | done |
 | [339](./339-field-adornment-text.md) | The field's adornment text and the check the accent cannot carry | F | 059, 071–095, 300, 306–319, 335 | done |
+| [340](./340-invalid-control-ring.md) | The invalid control's focus ring | F | 017, 071–095, 300, 325, 339 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1004,6 +1005,17 @@ checked item has no visible check. The role must be the row's own
 `popoverForeground`, which the contract already measures on all four fills;
 because the file belongs to `components`, the fix is recorded cross-team with its
 measured evidence instead of adding a pair the shipped palette fails.
+
+340 closes the invalid half of the focus story. GPUix 0.10.0 has no `outline*`
+and no `focusVisible`, so the ring is a spread shadow — the only focus indicator
+the runtime can draw — and `controlFocusStyle` recolours it with `destructive`
+when a field fails validation. The contract measured `destructive` as a fill and,
+since plan 325, as the field's own edge, but never as the ring painted on the
+surface behind the control, so an edited theme could set the error colour close
+to a card, popover, row wash or soft status fill and erase the focus indicator
+while the checker returned `[]`. The twelve boundary pairs join the contract
+(294 → 306); every shipped set already clears 3:1 / 4.5:1 (3.048:1 at the
+tightest), so no colour moves.
 
 ### Reference adoption (block `200–299`)
 
