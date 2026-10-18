@@ -208,6 +208,12 @@ icons take `xs` so they do not raise the line box, control icons `md`, and
 toolbar or navigation icons `lg` or `xl`. The icon set owns its markup rules; the
 design system owns the size tier and the alignment.
 
+Component dimensions are **fixed**, not density metrics: overlay surfaces take a
+180px minimum and a 220px default width, and a long list scrolls at 320px; a
+toast is 380px wide, a preview card runs 240–360px, and an icon or clear control
+inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
+dialog or a toast without touching component source.
+
 ## 7. Radii, borders and elevation
 
 Radii: 0, 4, 6, 8, 12, full. Small controls use 4 or 6; cards 8; dialogs 12.

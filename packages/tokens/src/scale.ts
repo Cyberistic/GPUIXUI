@@ -106,6 +106,45 @@ export interface AvatarSize {
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 
 /**
+ * Fixed surface metrics shared by components. Unlike `Density`, these do not
+ * change with the control size: an overlay keeps its width and a field its
+ * adornment when the workspace gets denser.
+ */
+export interface Dimensions {
+  /** 180px — the narrowest menu surface. */
+  readonly overlayMinWidth: number;
+  /** 220px — default popover, combobox and calendar width. */
+  readonly overlayWidth: number;
+  /** 320px — the height at which a long overlay list starts to scroll. */
+  readonly overlayMaxHeight: number;
+  /** 200px — the narrowest field that still shows a query and an action. */
+  readonly fieldMinWidth: number;
+  /** 16px — an icon or clear control inside a field. */
+  readonly fieldAdornmentSize: number;
+  /** 80px — the minimum content width of a token-input chip. */
+  readonly chipMinWidth: number;
+  /** 380px — the fixed width of a toast card. */
+  readonly toastWidth: number;
+  /** 240px — the narrowest preview card. */
+  readonly previewCardMinWidth: number;
+  /** 360px — the widest preview card. */
+  readonly previewCardMaxWidth: number;
+}
+
+/** Default component dimensions. */
+export const dimensions: Dimensions = {
+  overlayMinWidth: 180,
+  overlayWidth: 220,
+  overlayMaxHeight: 320,
+  fieldMinWidth: 200,
+  fieldAdornmentSize: 16,
+  chipMinWidth: 80,
+  toastWidth: 380,
+  previewCardMinWidth: 240,
+  previewCardMaxWidth: 360,
+};
+
+/**
  * Named control density presets, in documentation order. `DensityName` derives
  * from this list, so a new preset must also gain a value in `densityPresets`.
  */

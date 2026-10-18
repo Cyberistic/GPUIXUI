@@ -95,7 +95,7 @@ describe("packages/tokens/README.md", () => {
 
   it("states how the theme groups merge", () => {
     expect(readme).toContain(
-      "Typography merges field by field, density metrics size by size, elevation levels replace whole arrays, and the mode is not overridable.",
+      "Typography merges field by field, density metrics size by size, component dimensions field by field, elevation levels replace whole arrays, and the mode is not overridable.",
     );
   });
 

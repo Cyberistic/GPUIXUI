@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 120/165
+`[x]` `[███████░░░]` 121/168
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -829,6 +829,19 @@ palette (66 ship now, `track` included), an elevation level as `{ …, color }`
 (it is `{ …, alpha }` since plan 085) and a `Theme` without `contrast`, `motion`
 or `avatarSize`, so it cannot type-check against the merged package (owner:
 `primitives`; plans 019, 054, 073, 085, 302, 347)
+`[x]` Ship component dimensions — the fixed surface metrics components still
+hardcode: overlay min/default width and scroll height, field minimum and
+adornment, chip minimum, toast width and the preview-card range — as
+`theme.dimensions`, merged field by field, inherited by every platform variant
+and recipe, documented and guarded (plan 353)
+`[ ]` Cross-team: `components` reads `theme.dimensions` for its overlay widths
+and scroll height, toast width, preview-card range, field minimum, chip minimum
+and field adornment instead of the literals in plan 353 §1, settling the
+16px/18px adornment split on `fieldAdornmentSize` (owner: `components`; plan
+353)
+`[ ]` Cross-team: `primitives` reads `theme.dimensions.fieldAdornmentSize` for a
+field's clear or search glyph where it paints one (owner: `primitives`; plan
+353)
 `[ ]` Cross-team: the integration owner promotes the reconciled commit to `main`
 so the shared `TODO.md`, `COMPONENTS.md` and plan index carry the tokens rows,
 and retires the now-redundant `agent/tokens-platform` worktree (its branch is

@@ -1,7 +1,8 @@
 # `@gpuixui/tokens`
 
 The single source of truth for colour, typography, spacing, radii, density,
-elevation, border widths, icon sizes, avatar diameters and motion in GPUIXUI.
+component dimensions, elevation, border widths, icon sizes, avatar diameters and
+motion in GPUIXUI.
 Light and dark themes are designed, not inverted — each with a high-contrast
 variant — and every component reads semantic roles from here.
 
@@ -117,9 +118,9 @@ A runnable example lives in
 selects the palette (`"high"` builds on the AAA set) and defaults to
 `"default"`. `extendTheme` derives from any theme, including a high-contrast
 one. Neither mutates its base. Typography merges field by field, density
-metrics size by size, elevation levels replace whole arrays, and the mode is not
-overridable. An explicitly `undefined` value is treated as omitted, so a partial
-config spread cannot erase a token.
+metrics size by size, component dimensions field by field, elevation levels
+replace whole arrays, and the mode is not overridable. An explicitly `undefined`
+value is treated as omitted, so a partial config spread cannot erase a token.
 
 ```ts
 import { createTheme } from "@gpuixui/tokens";

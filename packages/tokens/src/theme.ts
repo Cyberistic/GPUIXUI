@@ -18,6 +18,7 @@ import {
   borderWidth,
   defaultDensity,
   densityPresets,
+  dimensions,
   iconSize,
   isDensityName,
   radius,
@@ -27,6 +28,7 @@ import {
   type Density,
   type DensityName,
   type DensityOverrides,
+  type Dimensions,
   type IconSize,
   type Radius,
   type Spacing,
@@ -67,6 +69,8 @@ export interface Theme {
   readonly radius: Radius;
   /** Control metrics for the active density. */
   readonly density: Density;
+  /** Fixed surface metrics: overlay widths, field chrome, toast and preview cards. */
+  readonly dimensions: Dimensions;
   /** Elevation levels: geometry plus the alpha applied to the `shadow` tint. */
   readonly elevation: Elevation;
   /** Motion timings and easings. */
@@ -124,6 +128,8 @@ export interface ThemeOverrides {
    * and large ones. A partial override keeps the base preset's name.
    */
   readonly density?: DensityName | DensityOverrides;
+  /** Override individual component dimensions. */
+  readonly dimensions?: Partial<Dimensions>;
   /** Replace individual elevation levels. */
   readonly elevation?: Partial<Elevation>;
   /**
@@ -249,6 +255,7 @@ export const lightTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
+  dimensions,
   elevation: lightElevation,
   motion,
   borderWidth,
@@ -266,6 +273,7 @@ export const darkTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
+  dimensions,
   elevation: darkElevation,
   motion,
   borderWidth,
@@ -307,6 +315,7 @@ export const highContrastLightTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
+  dimensions,
   elevation: lightElevation,
   motion,
   borderWidth,
@@ -324,6 +333,7 @@ export const highContrastDarkTheme: Theme = {
   spacing,
   radius,
   density: defaultDensity,
+  dimensions,
   elevation: darkElevation,
   motion,
   borderWidth,
@@ -374,6 +384,7 @@ export function extendTheme(base: Theme, overrides: ThemeOverrides): Theme {
     spacing: mergeDefined(base.spacing, overrides.spacing),
     radius: mergeDefined(base.radius, overrides.radius),
     density: mergeDensity(base.density, overrides.density),
+    dimensions: mergeDefined(base.dimensions, overrides.dimensions),
     elevation: mergeDefined(base.elevation, overrides.elevation),
     motion: mergeMotion(base.motion, overrides.motion),
     borderWidth: mergeDefined(base.borderWidth, overrides.borderWidth),

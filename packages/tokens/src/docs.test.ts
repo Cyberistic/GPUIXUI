@@ -5,10 +5,11 @@
  * disagrees with the theme. The test parses the documented rows and compares
  * them with the implementation.
  *
- * The numeric tables (typography, spacing, radius, density, elevation, motion,
- * border/icon/avatar sizes) are guarded the other way round: the test builds the
- * documented row from the implementation and requires the markdown to contain
- * it, so a value edit cannot ship a document that lies. The same builder holds
+ * The numeric tables (typography, spacing, radius, density, component
+ * dimensions, elevation, motion, border/icon/avatar sizes) are guarded the
+ * other way round: the test builds the documented row from the implementation
+ * and requires the markdown to contain it, so a value edit cannot ship a
+ * document that lies. The same builder holds
  * the palette ramps — the last hand-written value table — so a ramp edit and a
  * document edit cannot land apart. The design-system assertions include the
  * per-platform mono families and the icon-to-label gap, so the rationale cannot
@@ -94,6 +95,7 @@ import {
   borderWidth,
   defaultDensity,
   densityPresets,
+  dimensions,
   iconSize,
   radius,
   spacing,
@@ -345,6 +347,14 @@ describe("docs/tokens.md numeric tables", () => {
     Object.entries(avatarSize).forEach(([size, pixels]) => {
       expect(markdown, `avatarSize.${size}`).toContain(
         `| \`avatarSize.${size}\` | ${pixels} |`,
+      );
+    });
+  });
+
+  it("lists every component dimension", () => {
+    Object.entries(dimensions).forEach(([token, pixels]) => {
+      expect(markdown, `dimensions.${token}`).toContain(
+        `| \`dimensions.${token}\` | ${pixels} |`,
       );
     });
   });
@@ -1264,6 +1274,11 @@ describe("docs/design-system.md", () => {
 
   it("states the icon and avatar tiers", () => {
     const sentence = `icons run ${Object.values(iconSize).join("/")} and avatars ${Object.values(avatarSize).join("/")},`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
+  it("states the fixed component dimensions", () => {
+    const sentence = `overlay surfaces take a ${dimensions.overlayMinWidth}px minimum and a ${dimensions.overlayWidth}px default width, and a long list scrolls at ${dimensions.overlayMaxHeight}px; a toast is ${dimensions.toastWidth}px wide, a preview card runs ${dimensions.previewCardMinWidth}–${dimensions.previewCardMaxWidth}px, and an icon or clear control inside a field is ${dimensions.fieldAdornmentSize}px.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 

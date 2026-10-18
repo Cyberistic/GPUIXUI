@@ -149,6 +149,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [350](./350-runnable-examples.md) | The brand-text example no test runs | F | 082, 349 | done |
 | [351](./351-floor-table-pair-classes.md) | The accessibility floor table omits the pair classes it claims to publish | F | 071, 303, 336, 341, 347, 348 | done |
 | [352](./352-boundary-row-surfaces.md) | The boundary row omits the surfaces the contract measures | F | 084, 092, 325, 340, 343, 351 | done |
+| [353](./353-component-dimensions.md) | Component dimensions: the surface metrics components still hardcode | B | 010, 011, 056–062, 089, 096, 321 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1149,6 +1150,18 @@ dark `infoSoftForeground`), so no colour moves. The pair is documented as the
 shipped composition, not the recommended one: plan 334 set the precedent for
 the secondary Button's generic washes, and the `components` migration to
 `statusTone(...).text` remains a cross-team row.
+
+353 closes the last MISSION-named design-system item with no token
+representation: **component dimensions**. Spacing, radii, density, elevation,
+borders, icons and avatars all ship, but the fixed surface metrics a component
+needs at any density were literals in consumers — overlay widths of 180/220px, a
+320px scroll height, a 380px toast, a 240–360px preview card, a 200px field
+minimum, an 80px chip minimum and a 16px field adornment (with two components
+using 18px instead). None could be changed through a theme. `theme.dimensions`
+adds the nine metrics as a flat group that merges field by field, inherits
+through every platform variant and recipe, and is documented and guarded beside
+the other numeric scales. Consumers migrate cross-team; this workstream adds no
+colour role and no contrast pair.
 
 ### Reference adoption (block `200–299`)
 

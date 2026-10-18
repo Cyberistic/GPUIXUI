@@ -79,6 +79,7 @@ missing here is not public.
 | `Density` | Resolved control heights, padding and row height for a preset. |
 | `DensityName` | A preset name from `densityNames`. |
 | `DensityOverrides` | Partial density metrics; they merge size by size. |
+| `Dimensions` | Fixed surface metrics: overlay, field, toast and preview-card sizes. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`. |
 | `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
@@ -354,8 +355,9 @@ does the same for a status label and an indicator dot on a plain surface.
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 66 roles and the same type, spacing, radius, density, border
-width and icon scales — with colour values chosen to meet stricter floors: AAA
+`Theme` — the same 66 roles and the same type, spacing, radius, density,
+component dimensions, border width and icon scales — with colour values chosen
+to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
 essential boundaries. Changing values rather than roles is why no component has
 to know the variant exists. It also declares `contrast: "high"`, so the checks
@@ -807,6 +809,40 @@ const resolveSize = (stored: unknown): ControlSize =>
   isControlSize(stored) ? stored : "md";
 ```
 
+## Component dimensions
+
+Density changes what scales with a control — height, horizontal padding and row
+height. Component dimensions are the fixed surface metrics that do not: an
+overlay keeps its width, a toast its card width and a field its adornment at
+every density.
+
+| Token | Pixels | Use |
+| ----- | ------ | --- |
+| `dimensions.overlayMinWidth` | 180 | narrowest menu surface |
+| `dimensions.overlayWidth` | 220 | default popover, combobox and calendar width |
+| `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls |
+| `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action |
+| `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
+| `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
+| `dimensions.toastWidth` | 380 | fixed toast card width |
+| `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
+| `dimensions.previewCardMaxWidth` | 360 | widest preview card |
+
+A metric override merges field by field, like the spacing and radius scales:
+
+```ts
+import { extendTheme, lightTheme } from "@gpuixui/tokens";
+
+const wider = extendTheme(lightTheme, {
+  dimensions: { toastWidth: 420 },
+});
+```
+
+`dimensions` is inherited by every platform variant and recipe: overlay widths,
+field chrome and card widths are shared surface metrics, not platform
+conventions. A consumer who wants a narrower platform menu edits the group on
+the resolved theme.
+
 ## Elevation
 
 A level is geometry, not a colour: `offsetX`, `offsetY`, `blurRadius`,
@@ -1110,6 +1146,7 @@ interface Theme {
   spacing: Spacing;
   radius: Radius;
   density: Density;
+  dimensions: Dimensions;
   elevation: Elevation;
   motion: Motion;
   borderWidth: BorderWidth;
@@ -1179,8 +1216,8 @@ Merge rules:
 - groups are partial: omitted values inherit from the base; an explicit
   `undefined` is treated as omitted, so a partial config spread cannot erase a
   role, a metric or an elevation level;
-- colour, spacing, radius, border width, icon and avatar overrides merge key by
-  key;
+- colour, spacing, radius, component dimensions, border width, icon and avatar
+  overrides merge key by key;
 - typography text roles merge field by field, so `body.fontSize` keeps the base
   leading and weight;
 - elevation levels **replace** the whole level list; a level is geometry plus an
