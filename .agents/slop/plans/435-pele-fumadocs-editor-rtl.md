@@ -33,37 +33,54 @@ short "what Pele taught us" section in the research file. No implementation in t
 
 ---
 
-## 435b — Adopt the Fumadocs Editor for authoring the docs
+## 435b — The Fumadocs Editor as a component in the suite
 
 **Reference:** `https://github.com/fuma-nama/fumadocs-editor`.
 
-**Why.** The component pages are authored as MDX by hand. The Fumadocs Editor turns an MDX
-file into an editable page (prose, tables, code fences, frontmatter, the `fumadocs-ui`
-component set) with a slash menu and an attributes panel — **and keeps untouched blocks
-byte-for-byte**, so a one-line edit stays a one-line diff.
+**Why.** A rich-text/MDX editor is a component our users need — notes, reports, docs inside
+their own apps. The Fumadocs Editor is the reference for the **behaviour and API**: an MDX
+document edited as blocks (prose, tables, code fences, frontmatter, the `fumadocs-ui`
+component set) with a slash menu and an attributes panel, where **untouched blocks serialize
+byte-for-byte** so a one-line edit is a one-line diff.
 
-**Scope:** authoring only. The docs *reader* stays the existing Fumadocs site; this adds an
-editing surface for `apps/docs/content`.
+**It is not how we author our own docs.** Our docs stay hand-authored MDX in
+`apps/docs/content`; the editor is a **component the library ships**, showcased on its own
+docs page like any other component.
 
-**Steps:**
-1. Verify the current package names/versions (`@fumadocs-editor/*` — the ecosystem is
-   pre-v1; confirm the published packages and the editor URL before adding anything).
-2. Mount the editor on one docs page in a **local/dev-only** route. It must not be reachable
-   on the deployed Worker (no auth story there).
-3. Prove the byte-for-byte promise on a real page: open a component page, change one
-   sentence, confirm the diff is one line and the untouched MDX (our custom components,
-   `<include>`, code fences) is unchanged.
-4. Wire the "save" path to the file (the editor ships a Studio CLI / sync path), not to a
-   database copy — **the file stays the source of truth**.
+**The runtime question comes first.** The Fumadocs Editor is a DOM/web component; our
+library targets GPUix. Before designing the API, establish what the runtime can host:
 
-**Tests / evidence:** a round-trip check (open → no edit → save → `git diff` empty); a
-one-sentence edit producing a one-line diff; the deployed site still builds.
+- If GPUix can embed a web surface (webview or wasm browser surface), the editor ships as an
+  **embedded-surface component**, and the plan specifies the boundary — what crosses it, and
+  what state lives on which side.
+- If it cannot, the editor ships as a **web-tier component** — clearly labelled a browser
+  surface, not a native one — and the native alternative is a documented gap, not a fake.
 
-**Acceptance:** a component page can be edited in the editor and lands as a minimal diff;
-the deployed docs never expose the writing surface.
+Do not design a native "editor" that is secretly a DOM element, and do not claim native
+behaviour the runtime does not provide.
 
-**STOP:** if the byte-for-byte promise fails on our MDX (custom components, includes), do
-not adopt it; record the exact failing page and move on.
+**API shape (target).** Compound parts consistent with `200`:
+
+```tsx
+<Editor.Root value defaultValue onValueChange>
+  <Editor.Content />
+  <Editor.SlashMenu />
+  <Editor.Attributes />
+  <Editor.Frontmatter />
+</Editor.Root>
+```
+
+with the byte-for-byte guarantee stated as a contract, not a hope.
+
+**Evidence.** A round-trip test: open a real MDX document, change one sentence, assert the
+diff is one line and the untouched blocks are byte-identical. A docs page with a live demo
+(or a labelled browser surface). Licence recorded in `LICENSES/`.
+
+**Acceptance:** the editor is a documented component with typed parts and a live demo; the
+runtime boundary is stated; the round-trip contract is tested.
+
+**STOP:** if the runtime cannot host a DOM editor and a web-tier component is unacceptable,
+record the gap and stop — do not fake a native editor.
 
 ---
 
@@ -72,7 +89,7 @@ not adopt it; record the exact failing page and move on.
 **Reference:** `https://ui.shadcn.com/docs/rtl`.
 
 **Why.** The library claims to be usable for real products; a product that ships in Arabic,
-Hebrew, Persian or Urdu needs a mirrored layout, not a CSS afterthought. It also forces the
+Persian or Urdu needs a mirrored layout, not a CSS afterthought. It also forces the
 layout primitives to be honest about direction.
 
 **Scope:**
