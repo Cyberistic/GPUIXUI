@@ -37,7 +37,8 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef } from "react";
+import { useGpuix } from "@gpuix/react";
+import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import {
   clickCentreOf,
@@ -147,6 +148,59 @@ const searchableIds = [
 /** Whether a row reports itself selected. */
 const isSelected = (root: ComponentTestRoot, testId: string): unknown =>
   root.renderer.findByTestId(testId)?.customProps?.["aria-selected"];
+
+/** Rows built from data, so a test can rerender a different set. */
+const dataRows = (
+  values: ReadonlyArray<string>,
+  disabled: ReadonlyArray<string> = [],
+) => (
+  <List testId="list" selectionMode="single">
+    {Arr.map(values, (value) => (
+      <ListItem
+        key={value}
+        testId={`row-${value}`}
+        value={value}
+        disabled={Arr.contains(value)(disabled)}
+      >
+        <ListItemTitle>{value}</ListItemTitle>
+      </ListItem>
+    ))}
+  </List>
+);
+
+/** A control rendered before the list that claims focus in the same update. */
+const Claim = ({ claim }: { readonly claim: boolean }) => {
+  const renderer = useGpuix().renderer;
+  const [instance, setInstance] = useState<Option.Option<PublicInstance>>(
+    Option.none(),
+  );
+  const attach = useCallback(
+    (next: PublicInstance | null) => setInstance(Option.fromNullishOr(next)),
+    [],
+  );
+  useLayoutEffect(() => {
+    if (claim) {
+      Option.match(instance, {
+        onNone: () => undefined,
+        onSome: (element) => renderer?.focusElement?.(element.id),
+      });
+    }
+  }, [claim, instance, renderer]);
+  return (
+    <div testId="claim" tabIndex={0} ref={attach}>
+      <text>claim</text>
+    </div>
+  );
+};
+
+const claiming = (values: ReadonlyArray<string>, claim: boolean) => (
+  // The runtime keeps only one child at the root (measured, plan 510), so
+  // the claim control and the list share a container.
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <Claim claim={claim} />
+    {dataRows(values)}
+  </div>
+);
 
 describe("List", () => {
   it("presents rows without selection or a tab stop", () => {
@@ -1052,6 +1106,98 @@ describe("List", () => {
     expect(
       list.renderer.findByTestId("row-a")?.style.boxShadow,
     ).toBeUndefined();
+
+    list.unmount();
+  });
+
+  /**
+   * Dynamic rows (plan 510). The bug these guard, measured: removing the active
+   * row left every remaining row `tabIndex -1` with focus `null`, so the list
+   * lost its only tab stop; disabling it left the tab stop — and the focus ring
+   * — on the row that could no longer be activated. Focus relocation must also
+   * never steal focus a consumer claimed in the same update.
+   */
+  it("keeps a tab stop when the active row is removed", () => {
+    const list = renderComponent(dataRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(dataRows(["a", "c"]));
+
+    expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
+    expect(list.renderer.findByTestId("row-c")?.customProps?.tabIndex).toBe(-1);
+
+    list.unmount();
+  });
+
+  it("hands focus to the tab stop when the focused row is removed", () => {
+    const list = renderComponent(dataRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(dataRows(["a", "c"]));
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-a"));
+    expect(list.renderer.findByTestId("row-a")?.style.boxShadow).toBeDefined();
+    expect(
+      list.renderer.findByTestId("row-c")?.style.boxShadow,
+    ).toBeUndefined();
+
+    list.unmount();
+  });
+
+  it("falls back to the surviving selection when the focused row is removed", () => {
+    const list = renderComponent(dataRows(["a", "b", "c"]));
+
+    clickCentreOf(list, "row-a");
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(dataRows(["a", "c"]));
+
+    expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
+    expect(focusedTestId(list)).toEqual(Option.some("row-a"));
+
+    list.unmount();
+  });
+
+  it("takes the tab stop and focus off a row that becomes disabled", () => {
+    const list = renderComponent(dataRows(["a", "b", "c"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(dataRows(["a", "b", "c"], ["b"]));
+
+    expect(tabStop(list, ["row-a", "row-b", "row-c"])).toEqual(["row-a"]);
+    expect(list.renderer.findByTestId("row-b")?.customProps?.tabIndex).toBe(-1);
+    expect(
+      list.renderer.findByTestId("row-b")?.style.boxShadow,
+    ).toBeUndefined();
+    expect(focusedTestId(list)).toEqual(Option.some("row-a"));
+
+    list.unmount();
+  });
+
+  it("never steals focus a consumer claimed in the same update", () => {
+    const list = renderComponent(claiming(["a", "b", "c"], false));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(claiming(["a", "c"], true));
+
+    expect(focusedTestId(list)).toEqual(Option.some("claim"));
+    expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
+
+    list.unmount();
+  });
+
+  it("does not grab focus when rows return after being emptied", () => {
+    const list = renderComponent(dataRows(["a", "b"]));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-b")?.id ?? -1);
+    list.rerender(dataRows([]));
+
+    expect(focusedTestId(list)).toEqual(Option.none());
+
+    // The vanished row is forgotten: a refill must not resume its focus.
+    list.rerender(dataRows(["a", "c"]));
+
+    expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
+    expect(focusedTestId(list)).toEqual(Option.none());
 
     list.unmount();
   });

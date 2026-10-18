@@ -164,7 +164,8 @@ const rowAt = (
  * Which row owns the tab stop: the active row, else the first selected one in
  * declaration order, else the first row that accepts input. Exactly one row is
  * tabbable, which is what makes a list a single stop rather than one stop per
- * row.
+ * row. `active` must be a live row (`liveActive`): a vanished or disabled row
+ * would otherwise become the list's only stop.
  */
 const tabbableValue = (
   rows: ReadonlyArray<Row>,
@@ -319,6 +320,25 @@ export const List = (props: ListProps) => {
   const [rows, setRows] = useState<ReadonlyArray<Row>>([]);
   const [rowMasks] = useState(createRowMasks);
 
+  /**
+   * The row the user is on, when that row still exists and accepts input. A list
+   * whose rows are data loses them: a filtered-out or newly disabled row must not
+   * keep the ring, the tab stop or the keys (plan 510).
+   */
+  const liveActive = useMemo(
+    () =>
+      Option.filter(active, (value) =>
+        Arr.some(rows, (row) => row.value === value && !row.disabled),
+      ),
+    [active, rows],
+  );
+
+  /**
+   * The native id of the row the list last focused. Read after a rows change to
+   * tell a vanished row from a list that was never focused (plan 510).
+   */
+  const focusedRow = useRef<Option.Option<number>>(Option.none());
+
   const commit = useCallback(
     (next: ReadonlyArray<string>) => {
       if (sameValues(next, selected)) return;
@@ -350,6 +370,7 @@ export const List = (props: ListProps) => {
   const focusRow = useCallback(
     (row: Row) => {
       setActiveIfChanged(row.value);
+      focusedRow.current = Option.some(row.nativeId);
       renderer?.focusElement?.(row.nativeId);
     },
     [renderer, setActiveIfChanged],
@@ -362,8 +383,17 @@ export const List = (props: ListProps) => {
   const noteFocus = useCallback(
     (value: string) => {
       setActiveIfChanged(value);
+      Option.match(
+        Arr.findFirst(rows, (row) => row.value === value),
+        {
+          onNone: () => undefined,
+          onSome: (row) => {
+            focusedRow.current = Option.some(row.nativeId);
+          },
+        },
+      );
     },
-    [setActiveIfChanged],
+    [rows, setActiveIfChanged],
   );
 
   /**
@@ -373,7 +403,7 @@ export const List = (props: ListProps) => {
   const moveBy = useCallback(
     (delta: 1 | -1, extend: boolean) => {
       pipe(
-        rowAt(rows, nextEnabled(items(rows), indexOf(rows, active), delta)),
+        rowAt(rows, nextEnabled(items(rows), indexOf(rows, liveActive), delta)),
         Option.match({
           onNone: () => undefined,
           onSome: (row) => {
@@ -393,7 +423,7 @@ export const List = (props: ListProps) => {
         }),
       );
     },
-    [active, anchor, commit, focusRow, multiple, rows],
+    [anchor, commit, focusRow, liveActive, multiple, rows],
   );
 
   const jumpTo = useCallback(
@@ -494,24 +524,24 @@ export const List = (props: ListProps) => {
 
   const selectActive = useCallback(() => {
     pipe(
-      active,
+      liveActive,
       Option.match({
         onNone: () => undefined,
         onSome: (target) => select(target),
       }),
     );
-  }, [active, select]);
+  }, [liveActive, select]);
 
   /** Run the active row's action; a disabled or missing row does nothing. */
   const activateActive = useCallback(() => {
     pipe(
-      Option.flatMap(active, enabledRow),
+      Option.flatMap(liveActive, enabledRow),
       Option.match({
         onNone: () => undefined,
         onSome: (row) => onActivate?.(row.value),
       }),
     );
-  }, [active, enabledRow, onActivate]);
+  }, [liveActive, enabledRow, onActivate]);
 
   /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
   const selectEveryRow = useCallback(() => {
@@ -527,7 +557,7 @@ export const List = (props: ListProps) => {
     commit(next);
   }, [commit, multiple, rows]);
 
-  const typeahead = useTypeahead(rows, indexOf(rows, active), (row) => {
+  const typeahead = useTypeahead(rows, indexOf(rows, liveActive), (row) => {
     focusRow(row);
     // A typed jump re-anchors, exactly like an arrow move, so a following
     // Shift+click extends from the row the user reached.
@@ -565,9 +595,42 @@ export const List = (props: ListProps) => {
   };
 
   const tabbable = useMemo(
-    () => tabbableValue(rows, active, selected, selectable),
-    [active, rows, selectable, selected],
+    () => tabbableValue(rows, liveActive, selected, selectable),
+    [liveActive, rows, selectable, selected],
   );
+
+  /**
+   * A row that vanishes or turns disabled takes the user's focus with it: the
+   * native element is gone, and a disabled row cannot run its action. Hand focus
+   * to the row that now owns the tab stop, but never steal it from another
+   * control the consumer focused in the same update (plan 510).
+   */
+  useLayoutEffect(() => {
+    const remembered = focusedRow.current;
+    if (Option.isNone(remembered)) return;
+
+    const target = Arr.findFirst(
+      rows,
+      (row) => row.nativeId === remembered.value,
+    );
+    if (Option.exists(target, (row) => !row.disabled)) return;
+
+    focusedRow.current = Option.none();
+    const focused = Option.fromNullishOr(renderer?.getFocusedElementId?.());
+    if (Option.exists(focused, (id) => id !== remembered.value)) return;
+
+    Option.match(tabbable, {
+      onNone: () => undefined,
+      onSome: (value) =>
+        Option.match(
+          Arr.findFirst(rows, (row) => row.value === value),
+          {
+            onNone: () => undefined,
+            onSome: (row) => focusRow(row),
+          },
+        ),
+    });
+  }, [focusRow, renderer, rows, tabbable]);
 
   // The per-row paint state. `rowMasks.replace` notifies a row only when one of
   // its own bits changes, so a focus move re-renders the two rows that moved —
@@ -575,7 +638,7 @@ export const List = (props: ListProps) => {
   const flags = useMemo(() => {
     const selectedSet = HashSet.fromIterable(selected);
     const isActive = (value: string) =>
-      Option.exists(active, (candidate) => candidate === value);
+      Option.exists(liveActive, (candidate) => candidate === value);
     const isTabbable = (value: string) =>
       Option.exists(tabbable, (candidate) => candidate === value);
     return Arr.map(
@@ -588,7 +651,7 @@ export const List = (props: ListProps) => {
             (isTabbable(row.value) ? TABBABLE : 0),
         ] as const,
     );
-  }, [active, rows, selected, tabbable]);
+  }, [liveActive, rows, selected, tabbable]);
 
   useLayoutEffect(() => {
     rowMasks.replace(flags);
@@ -899,6 +962,7 @@ export const listMeta = {
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",
     "activation is a callback on single/none lists: no href or link role; a plain list without onActivate has no tab stop, and a multiple list has no activation",
+    "focus tracking follows the rows the list focused: a focusable control in a row's trailing slot is not tracked when the row disappears",
     "no drag reorder or virtualisation",
   ],
   docs: "docs/list.mdx",

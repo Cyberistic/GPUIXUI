@@ -200,6 +200,24 @@ clears by toggling its last selected row.
 ring to it — the runtime applies native focus after React's effects and never
 dispatches `onFocus`.
 
+## Dynamic rows
+
+A list whose rows are data — search results, a filtered file list, a permission
+set — can change while it is focused. The tab stop and focus never ride a row
+that is gone:
+
+- Removing the row that owns the tab stop hands the stop to the selected row,
+  else the first enabled row. Focus follows it when the list itself held the
+  user's focus.
+- Disabling that row does the same, so the stop never lands on a row that cannot
+  be activated, and the disabled row stops painting the focus ring.
+- If the consumer focuses another control in the same update, the list leaves
+  that focus alone.
+- An emptied list focuses nothing, and rows that arrive later do not grab focus.
+
+The rule follows the row the **list** focused. A focusable control placed in a
+row's `trailing` slot is the consumer's own focus target and is not tracked.
+
 ## API
 
 `List` and `ListItem` take the GPUix host props and merge `style` last.
@@ -287,10 +305,12 @@ is on.
   move on this host (`docs/performance.md`). Long collections belong in
   `virtual-list`, which is a separate component with its own API.
 - The rows are not accessible by index: the API is `value`-based.
+- Focus tracking follows the rows the list focused. A focusable control inside a
+  row's `trailing` slot is not tracked if the row disappears (see Dynamic rows).
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (44 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (50 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -308,7 +328,10 @@ stop and its arrow/`Enter` path (with `Space` deliberately inert), and — in
 multiple mode — plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow`
 ranges, `Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never
 entering a selection. A focus move repaints exactly the two rows that changed,
-counted through the public `style` function.
+counted through the public `style` function. Dynamic rows: a removed or newly
+disabled row never keeps the tab stop, focus follows the stop when the list held
+it, a consumer's own focus in the same update is never stolen, and an emptied
+list that refills does not grab focus.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

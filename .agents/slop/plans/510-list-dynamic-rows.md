@@ -1,7 +1,8 @@
 # 510 — List: the roving tab stop survives its rows changing
 
 **Phase:** C/F (Tier 2 hardening) · **Owner:** components · **Depends on:** 111,
-120, 125, 130, 134, 339, 394, 388 · **Status:** planned
+120, 125, 130, 134, 339, 394, 388 · **Status:** done — 50/50 native List cases,
+four mutation proofs, behaviour suite 642, all three gates green
 
 Every other number in `100–499` is already claimed across the four worktrees
 (`PLAN.md` D7), so this plan takes the first free number after the docs block
@@ -216,9 +217,10 @@ Fixture: a local `rowsOf(values, disabled?)` helper that returns the same
    `useLayoutEffect` focuses `after` when a prop flips, and the same render
    removes the focused `b`. Expect `focusedTestId` is `Some("after")` and no
    list row is focused.
-6. **"an emptied list focuses nothing and throws nothing"** — focus `b`,
-   rerender with no rows; expect `focusedTestId` is `None`, the root still
-   renders, and no assertion throws.
+6. **"does not grab focus when rows return after being emptied"** — focus `b`,
+   rerender with no rows; expect `focusedTestId` is `None`. Rerender `[a, c]`;
+   expect the tab stop on `row-a` and focus still `None` — the vanished row is
+   forgotten, so a refill cannot resume its focus.
 
 Assertions must be able to fail: each one names a value that differs between
 the broken and fixed code (see §4). Do not assert a literal against itself and
@@ -263,17 +265,24 @@ nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/list.test.
 
 Expected: `Test Files 1 passed`, `Tests 50 passed` (44 + 6).
 
-Prove the tests can fail — **each mutation, run, observe, revert**:
+Prove the tests can fail — **each mutation, run, observe, revert**. The counts
+below are the ones measured on 2026-10-18 (44 skipped, 6 run):
 
-| Mutation | Expected failures |
+| Mutation | Observed failures |
 | -------- | ----------------- |
-| Pass raw `active` into `tabbableValue` again | tests 1 and 4 |
-| Delete the relocation `useLayoutEffect` | tests 2, 3, 4 |
-| Remove the "something else claimed focus" guard | test 5 |
-| Relocate without checking the row is present/enabled | test 5 (steals after every rows change) |
-| Make the `None` tab-stop branch focus `rows[0]` unconditionally | test 6 (throws on an empty list) |
+| Pass raw `active` into `tabbableValue` again | 5 of 6 (`keeps a tab stop`, `hands focus`, `falls back to the selection`, `takes the tab stop off a disabled row`, `never steals focus`) |
+| Delete the relocation `useLayoutEffect` | 3 of 6 (`hands focus`, `falls back to the selection`, `takes the tab stop off a disabled row`) |
+| Remove the "something else claimed focus" guard | 1 of 6 (`never steals focus`) |
+| Skip clearing `focusedRow` after relocating | 1 of 6 (`does not grab focus when rows return`) |
 
-Record the observed failure counts in the plan's status line.
+A fifth candidate — dropping the present/enabled guard alone — changed nothing
+observable, because the claim guard still suppresses the only case it would
+break; the two guards are proven together by the rows above.
+
+While writing test 5, a runtime fact surfaced that is not this plan's subject:
+the native tree keeps **one** child at the root, so two sibling roots render
+only the last (measured: a two-`div` fragment renders the second). The fixture
+uses a container div; the fact belongs in the playground's capability notes.
 
 Then the full gates, from the repo root:
 
@@ -283,9 +292,9 @@ nub run lint
 nub run test
 ```
 
-Expected: every script exits `0`; `packages/components` reports 395 + 6 unit/
-logic tests unchanged (the new cases are behaviour-only) and
-`test:behaviour` reports 637 (631 + 6) when run separately.
+Expected: every script exits `0`; `packages/components` reports 395 unit/logic
+tests unchanged (the new cases are behaviour-only) and `test:behaviour` reports
+642 (636 + 6) when run separately.
 
 ## 5. STOP conditions
 
