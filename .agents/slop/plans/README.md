@@ -157,6 +157,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [358](./358-metric-contract.md) | The numeric half of an editable theme | F | 010–019, 050–072, 071, 086, 089, 096, 342, 353, 355–357 | done |
 | [359](./359-modal-scrim-surfaces.md) | The scrim over the surfaces a window actually shows | F | 099, 309, 326, 337, 347, 358 | done |
 | [360](./360-metric-completeness.md) | The numeric contract's last ungoverned members | F | 077, 353, 358, 359 | done |
+| [361](./361-pill-rounds-largest-avatar.md) | The pill radius must round the largest avatar | F | 054, 353, 358, 360 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1272,6 +1273,17 @@ body-line rule. Every shipped theme, platform variant and recipe already
 satisfies both (all three density presets ship `rowHeight === controlHeight.md`),
 so no token, colour, pair or floor moves; the two new cases fail on the pre-fix
 `metrics.ts` and pass after it.
+
+361 closes the same class of gap one rule over. Plan 358 held `radius.full` to
+the largest corner radius and half the largest **control**, but `full` is also
+the **avatar** radius, and the largest avatar is bigger than the largest control:
+`packages/components/src/avatar.tsx` paints an `avatarSize.lg` disc (40px) with
+`radius.full`, so a `full` of 18 or 19 satisfies the control bound (18) and still
+leaves the avatar a rounded square — and the probe returned `[]`. A third bound,
+`avatarSize.lg / 2`, now sits beside the control bound, so each shape keeps its
+own diagnostic and `full` must round both. Every shipped theme,
+platform variant and recipe ships `full` 9999, so no value moves; the new case
+fails on the pre-fix `metrics.ts` and passes after it.
 
 ### Reference adoption (block `200–299`)
 
