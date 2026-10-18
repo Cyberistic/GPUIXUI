@@ -369,7 +369,9 @@ single stored role.
 The same bytes have a second form: the alpha channel.
 `themeOpacityFailures(theme)` holds the three veils — `selection`, `overlay` and
 `selectionOnFill`, the `translucentRoles` index — to a byte strictly between `00`
-and `FF`, and every other role to an opaque value (`roleForm` is the rule). An
+and `FF`, and every other role to an opaque value (`roleForm` is the rule).
+`colorForms` is the ordered index of the two forms, `"opaque"` and
+`"translucent"`, and the executed example groups every role by it. An
 opaque role spelled `#RRGGBBFF` is accepted by both format checks *and* read by
 the maths: `contrastRatio`, `relativeLuminance` and `compositeOver` drop a fully
 opaque alpha byte, so a measured role in that spelling is measured instead of

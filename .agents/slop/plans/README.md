@@ -256,6 +256,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [559](./559-platform-easing.md) | A copied platform style owns its easings | B/F | 019, 321, 364, 389 | done |
 | [563](./563-caret-mark-list.md) | The caret mark outside the mark list | F | 332, 341, 351, 399, 557 | done |
 | [564](./564-quoted-family-name.md) | A quoted family name is CSS syntax, not a family | F | 385, 533, 540, 558 | done |
+| [565](./565-colour-form-index.md) | The alpha form owns its two members | F | 540, 543, 558 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2835,6 +2836,17 @@ reports a quoted (or half-quoted) name, leaves an internal apostrophe
 catalogue, README, design system and ledger enumerate the rule from the index,
 and `typeface-quoted.test.ts` fails on the pre-fix tree. No family, colour, pair,
 floor or metric moves.
+
+Plan `565` closes the last exported union without an ordered owner. Plan 558
+deferred `ColorForm` as "a separate, smaller unit": it is a diagnostics payload
+with no stored boundary, so it takes plan 543's `contrastPairClasses` precedent —
+an index and no narrowing guard. `colorForms` is `["opaque", "translucent"]`,
+`ColorForm` derives from it, and the executed `opacity.example.ts` groups every
+`colorRoles` member by its form through `rolesByForm`. The `Types` row and the
+Role opacity paragraph derive their members from the index, `color-forms.test.ts`
+proves every form has a role and the example partitions the palette exactly once,
+and a temporary third form fails the guard. No colour, pair, floor, metric or
+shipped theme moves.
 
 ## How to use a plan
 

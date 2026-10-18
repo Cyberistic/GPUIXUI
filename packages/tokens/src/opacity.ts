@@ -1,8 +1,17 @@
 import { colorRoles, isHexColor, type ThemeColors } from "./color.js";
 import type { Theme } from "./theme.js";
 
+/**
+ * The alpha forms a colour role's value can take, in documentation order.
+ * `ColorForm` derives from this list, so a form joins the type, `roleForm` and
+ * every table that iterates the forms from one edit. It is an index, not a
+ * stored choice: a form is produced by the opacity check, never decoded from
+ * input, so it has no narrowing guard (plan 565).
+ */
+export const colorForms = ["opaque", "translucent"] as const;
+
 /** The alpha form a colour role's value must take. */
-export type ColorForm = "opaque" | "translucent";
+export type ColorForm = (typeof colorForms)[number];
 
 /**
  * The roles the runtime composites. A wash is painted over content, so it needs
@@ -22,7 +31,8 @@ export type TranslucentRole = (typeof translucentRoles)[number];
 /**
  * The form a colour role's value must take. Total over `colorRoles`: the three
  * veils are translucent and every other role is opaque, so a role added to the
- * palette is governed without a second list.
+ * palette is governed without a second list. The two forms are `colorForms`, in
+ * documentation order; this rule decides which one each role takes.
  *
  * @example
  * ```ts

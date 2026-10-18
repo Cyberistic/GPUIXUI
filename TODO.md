@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 226/292
+`[x]` `[████████░░]` 227/293
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1853,6 +1853,13 @@ list — and the design system's graphic-marks floor row, which `docs.test.ts`
 derives from it — omitted the only mark a native field paints while
 `themeContrastFailures` enforced it; `caretPairs` is now part of `markPairs`, the
 row names it, `contrastPairs` stays 405 and no colour moves (plan 563)
+`[x]` Give the alpha form an ordered owner — `ColorForm` was the package's last
+exported union without an index, so the `Types` row, a diagnostics view and the
+opacity example retyped `"opaque"` / `"translucent"` and a third form would
+join the type with nothing to notice it had no role; `colorForms` is the
+ordered index, `ColorForm` derives from it, and `rolesByForm` in the executed
+example groups every role by its form. No guard ships — a form is a diagnostics
+payload, never an input (plan 565)
 
 ## Phase C — Tier 1–2 components
 

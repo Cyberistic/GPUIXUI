@@ -757,7 +757,8 @@ composite over content, so each needs a byte strictly between `00` and `FF`, and
 every other role is opaque. `shadow` is the opposite case: each level's alpha
 writes the tint's fourth byte, so an eight-digit tint is a value the paint
 discards, and a solid `overlay` hides the window the scrim exists to keep
-recognisable. `roleForm` is the rule and `translucentRoles` the index; all 24
+recognisable. `roleForm` is the rule, `colorForms` the ordered index of the two
+forms and `translucentRoles` the index of the three veils; all 24
 shipped sets carry the form they need, so no colour moves.
 
 `packages/tokens/src/docs.test.ts` holds this page's machine-checkable claims —

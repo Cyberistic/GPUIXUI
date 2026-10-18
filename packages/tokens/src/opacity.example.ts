@@ -6,9 +6,16 @@
  * content, and every other role paints solid. A tint authored at 50% loses its
  * byte to the level's own alpha (`elevationShadow`), and a solid scrim hides the
  * window it exists to veil. Both edits change no contrast pair, so this check is
- * the only one that sees them.
+ * the only one that sees them. `rolesByForm` groups the palette by the
+ * `colorForms` index, the shape a diagnostics view renders.
  */
-import { themeOpacityFailures } from "./opacity.js";
+import { colorRoles, type ThemeColors } from "./color.js";
+import {
+  colorForms,
+  roleForm,
+  themeOpacityFailures,
+  type ColorForm,
+} from "./opacity.js";
 import { extendTheme, getTheme } from "./theme.js";
 
 /** The light theme with its elevation tint authored at 50%. */
@@ -26,3 +33,12 @@ export const solidScrim = extendTheme(getTheme("light"), {
 
 /** A scrim is a veil, so it needs an alpha byte the runtime can composite. */
 export const solidScrimFailures = themeOpacityFailures(solidScrim);
+
+/** Every role grouped by the alpha form it must take, in index order. */
+export const rolesByForm: ReadonlyArray<{
+  readonly form: ColorForm;
+  readonly roles: ReadonlyArray<keyof ThemeColors>;
+}> = colorForms.map((form) => ({
+  form,
+  roles: colorRoles.filter((role) => roleForm(role) === form),
+}));

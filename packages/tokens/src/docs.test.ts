@@ -147,6 +147,7 @@ import {
 } from "./figures.js";
 import * as Tokens from "./index.js";
 import { themeMetricFailures } from "./metrics.js";
+import { colorForms } from "./opacity.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import {
   motion,
@@ -1920,11 +1921,22 @@ describe("docs/tokens.md opacity contract", () => {
     [
       "themeOpacityFailures",
       "OpacityFailure",
+      "colorForms",
       "translucentRoles",
       "roleForm",
     ].forEach((name) => {
       expect(markdown).toContain(name);
     });
+  });
+
+  it("names every alpha form in the ColorForm row", () => {
+    const line = markdown
+      .split("\n")
+      .find((candidate) => candidate.startsWith("| `ColorForm` |"));
+    if (line === undefined) {
+      throw new Error("docs/tokens.md has no ColorForm row");
+    }
+    colorForms.forEach((form) => expect(line).toContain(`"${form}"`));
   });
 
   it("states the three veils and the tint consequence", () => {

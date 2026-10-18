@@ -79,7 +79,7 @@ missing here is not public.
 | `BorderWidth` | Divider and focus-ring thickness. |
 | `BoxShadow` | The runtime's five-field shadow; `elevationShadow` returns one. |
 | `ColorFailure` | A colour role whose value is not a hex colour the token helpers parse. |
-| `ColorForm` | The alpha form a colour role's value must take: `"opaque"` or `"translucent"`. |
+| `ColorForm` | The alpha form a colour role's value must take, derived from `colorForms`: `"opaque"` or `"translucent"`. |
 | `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash, the opacity or the elevation `level` when the pair is composited. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
@@ -2128,7 +2128,9 @@ colour; whether the role is painted with that channel is a separate question.
   ratio `NaN`, for the same paint.) A partial alpha is still unmeasurable, and
   stays this check's failure.
 
-`translucentRoles` is the index of the three veils, `roleForm` the total rule —
+`colorForms` is the ordered index of the two forms — `"opaque"` and
+`"translucent"` — and `ColorForm` derives from it. `translucentRoles` is the
+index of the three veils, `roleForm` the total rule —
 `roleForm("overlay")` is `"translucent"` and `roleForm("shadow")` is `"opaque"` —
 and a failure is an `OpacityFailure` with the `role`, the `value` and the
 `expected` form. A value the hex parser cannot read stays `themeColorFailures`'
@@ -2136,6 +2138,7 @@ diagnostic, so one defect keeps one report.
 
 ```ts
 import {
+  colorForms,
   extendTheme,
   getTheme,
   roleForm,
@@ -2149,11 +2152,13 @@ const tinted = extendTheme(getTheme("light"), {
 themeOpacityFailures(tinted);
 // [{ role: "shadow", value: "#191D2580", expected: "opaque" }]
 roleForm("overlay"); // "translucent"
+colorForms; // ["opaque", "translucent"]
 ```
 
 Every shipped identity theme, platform variant and recipe carries the form its
 roles need, so the check moves no value; it guards the next edit. The executed
-example is [`src/opacity.example.ts`](../packages/tokens/src/opacity.example.ts).
+example is [`src/opacity.example.ts`](../packages/tokens/src/opacity.example.ts),
+which also groups every role by its form through `rolesByForm`.
 
 #### Typeface
 
