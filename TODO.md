@@ -469,9 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–491)
+## Docs site workstream (plans 410–492)
 
-`[x]` `[██████████]` 92/92
+`[x]` `[██████████]` 93/93
+
+`[x]` **The three choice controls got live scenes (plan 492)** — Select, Checkbox
+      and Switch moved from a tier-A rest state to tier L: the smoke clicks the
+      field, the box and the switch and proves the opened list, the checked state
+      and the thumb move are absent before and present after; 24 scenes, three
+      two-direction proofs
 
 `[x]` **The native smoke suite gets a real page (plan 491)** — `/docs/native-testing`
       documents the platform-free harness, the playground adapter, the `0`/`1`/`2`
@@ -676,9 +682,8 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       component API; nothing on the docs depends on it
 `[-]` **Components/primitives**: expose `open`/`defaultOpen` on `Select`,
       `Tooltip` and `Combobox` — superseded by plan 486 for Tooltip and Combobox
-      (their scenes open by the real hover/click). `Select` keeps its tier-A
-      illustration and is not a gap; a live scene for it can be added the same
-      way, without a new prop
+      (their scenes open by the real hover/click) and by plan 492 for Select
+      (the live scene clicks the real trigger; no prop was needed)
 `[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs
 
 `[ ]` **Repo tooling (`scripts/check-tests.ts`)**: a regex literal whose `/` follows a space is read as division, and backticks inside it then open a phantom template literal, so a real `it(...)` block can be truncated to `"("` and reported as assertionless. The docs guard worked around it without the `check-tests-ok` escape (plan 469); the parser should accept a regex after whitespace when the previous non-space token cannot end a value. Owner: whoever owns `scripts/`

@@ -28,6 +28,9 @@ export const LIVE_SCENES = [
   "date-picker",
   "combobox",
   "hotkey-input",
+  "select",
+  "checkbox",
+  "switch",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -63,6 +66,9 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "date-picker": "Booked 21 October",
   combobox: "Ada Lovelace",
   "hotkey-input": "Recorded p",
+  select: "Europe — West",
+  checkbox: "Release notes enabled",
+  switch: "System theme applied",
 };
 
 /**
@@ -93,6 +99,9 @@ export const SCENE_GESTURE: Readonly<
     { kind: "click", testId: "scene-hotkey" },
     { kind: "press", testId: "scene-hotkey", keys: "p" },
   ],
+  select: [{ kind: "click", testId: "scene-select" }],
+  checkbox: [{ kind: "click", testId: "scene-checkbox" }],
+  switch: [{ kind: "click", testId: "scene-switch" }],
 };
 
 /**
@@ -105,6 +114,9 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "date-picker": "Click the due-date field, then the 21st, to book it.",
   combobox: "Click the reviewer field to open the suggestions.",
   "hotkey-input": "Click the shortcut field, then press P.",
+  select: "Click the region field to open its list.",
+  checkbox: "Click the box to subscribe.",
+  switch: "Click the switch to turn the system theme on.",
 };
 
 /**

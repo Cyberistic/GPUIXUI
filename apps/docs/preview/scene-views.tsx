@@ -87,9 +87,11 @@ import {
   Button,
   Checkbox,
   ScrollArea,
+  Select,
   Skeleton,
   Spinner,
   Stack,
+  Switch,
   Text,
   Tooltip,
   useTheme,
@@ -699,6 +701,70 @@ const HotkeyInputScene = (): ReactElement => {
   );
 };
 
+const SelectScene = (): ReactElement => {
+  const [region, setRegion] = useState<string | undefined>(undefined);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Region</Text>
+      <Text role="caption" tone="muted">
+        The real Select, closed. Open it to see the list surface, the selected
+        item states and a disabled option.
+      </Text>
+      <Select
+        label="Region"
+        placeholder="Choose a region"
+        value={region}
+        onChange={setRegion}
+        testId="scene-select"
+        fullWidth
+        options={[
+          { value: "eu-west", label: "Europe — West" },
+          { value: "us-east", label: "United States — East" },
+          { value: "legacy", label: "Legacy region", disabled: true },
+        ]}
+      />
+    </Stack>
+  );
+};
+
+const CheckboxScene = (): ReactElement => {
+  const [subscribed, setSubscribed] = useState(false);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Notifications</Text>
+      <Text role="caption" tone="muted">
+        The real Checkbox, unchecked. Click it to see the checked paint.
+      </Text>
+      <Checkbox
+        checked={subscribed}
+        onChange={setSubscribed}
+        label="Email me about releases"
+        testId="scene-checkbox"
+      />
+      {subscribed ? <Text role="body">Release notes enabled</Text> : null}
+    </Stack>
+  );
+};
+
+const SwitchScene = (): ReactElement => {
+  const [systemTheme, setSystemTheme] = useState(false);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Appearance</Text>
+      <Text role="caption" tone="muted">
+        The real Switch, off. Click it to see the thumb move.
+      </Text>
+      <Switch
+        checked={systemTheme}
+        onChange={setSystemTheme}
+        label="Follow the system theme"
+        testId="scene-switch"
+      />
+      {systemTheme ? <Text role="body">System theme applied</Text> : null}
+    </Stack>
+  );
+};
+
 export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
   {
     button: ButtonScene,
@@ -722,6 +788,9 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "date-picker": DatePickerScene,
     combobox: ComboboxScene,
     "hotkey-input": HotkeyInputScene,
+    select: SelectScene,
+    checkbox: CheckboxScene,
+    switch: SwitchScene,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

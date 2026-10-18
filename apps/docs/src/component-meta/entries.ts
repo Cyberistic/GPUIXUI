@@ -388,6 +388,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
     "Toggles a single independent option.",
     {
       gpuix: "partial",
+      liveScene: "checkbox",
       sourcePath: "packages/primitives/src/components/Checkbox.tsx",
       api: ["CheckboxProps"],
       runtime: nativeSuite(
@@ -427,6 +428,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   ),
   delivered("select", "Selects", "1", "Selects one value from a list.", {
     gpuix: "reuse",
+    liveScene: "select",
     sourcePath: "packages/primitives/src/components/Select.tsx",
     api: ["SelectProps"],
     runtime: nativeSuite(
@@ -447,6 +449,7 @@ const foundational: ReadonlyArray<ComponentMetaInput> = [
   }),
   delivered("switch", "Switches", "1", "Toggles a setting on or off.", {
     gpuix: "partial",
+    liveScene: "switch",
     sourcePath: "packages/primitives/src/components/Switch.tsx",
     api: ["SwitchProps"],
     runtime: nativeSuite(

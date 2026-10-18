@@ -47,6 +47,9 @@ const interactionScenes = new Map([
   ["date-picker", "date-picker"],
   ["combobox", "combobox"],
   ["hotkey-input", "hotkey-input"],
+  ["select", "select"],
+  ["checkbox", "checkbox"],
+  ["switch", "switch"],
 ]);
 
 const pagesDirectory = new URL(

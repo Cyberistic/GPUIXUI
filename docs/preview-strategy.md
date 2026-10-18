@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs); click-to-load, because the renderer is about 20 MB |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawers, Navigation menus, Mention inputs, Preview cards, Toasts, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey inputs, Selects, Checkboxes, Switches); click-to-load, because the renderer is about 20 MB |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -189,27 +189,29 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **Twenty-one scenes ship today** — Button, Tabs, Dropdown menu,
+  blank frame. **Twenty-four scenes ship today** — Button, Tabs, Dropdown menu,
   Dialog, Confirmation dialog, Popover, Command menu, Icons, Scrollable
   containers, Skeleton, Loading indicators, Drawer, Navigation menu, Mention
-  input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox and
-  Hotkey input — chosen because a still cannot prove the point: an open overlay
-  and its focus entry, a grouped palette, real SVG markup tinted by the theme,
-  wheel scrolling, a pulse, an edge panel, a transient message, or a surface
-  only a pointer or a key opens. The Toast scene pushes one toast with an
+  input, Preview card, Toast, Tooltip, Context menu, Date picker, Combobox,
+  Hotkey input, Select, Checkbox and Switch — chosen because a still cannot prove
+  the point: an open overlay and its focus entry, a grouped palette, real SVG
+  markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a transient
+  message, an opened list, a checked control, or a surface only a pointer or a key
+  opens. The Toast scene pushes one toast with an
   infinite duration: a default five-second toast would race the smoke check, and
   an infinite one is the component's documented way to keep a message until it
   is dismissed (`ToastInput.duration`).
 
 ## Gestures are proved, not implied
 
-Five scenes document a component that owns its open state and exposes no
-`defaultOpen`. They are not opened by a prop: the smoke drives the same gesture a
-reader performs through the automation surface the renderer installs
-(`globalThis.gpuix` in the preview document), and `smoke:preview` asserts the
-scene's text is **absent before** the gesture and **present after** it. A prop
-that quietly opened the surface would fail that first assertion, and a broken
-gesture fails the second.
+Eight scenes document state only a gesture produces: a component that owns its
+open state and exposes no `defaultOpen`, a list that opens on a click, and two
+controls whose checked paint is not text. They are not opened by a prop: the
+smoke drives the same gesture a reader performs through the automation surface
+the renderer installs (`globalThis.gpuix` in the preview document), and
+`smoke:preview` asserts the scene's text is **absent before** the gesture and
+**present after** it. A prop that quietly opened or checked the surface would
+fail that first assertion, and a broken gesture fails the second.
 
 | Scene | Gesture the smoke drives | What it proves |
 | ----- | ------------------------ | -------------- |
@@ -218,6 +220,9 @@ gesture fails the second.
 | Date pickers | click the field, then a day | the popover opens and a real day can be chosen |
 | Comboboxes | click the field | the popup opens over the closed control |
 | Hotkey inputs | click the recorder, then a key | a real key event is captured as a chord |
+| Selects | click the field | the list surface, its states and a disabled option paint |
+| Checkboxes | click the box | the check mark and the caller's state line paint |
+| Switches | click the switch | the thumb moves and the caller's state line paints |
 
 The reader sees the same instruction above the surface, and can perform it in the
 browser. One measured limit stays on the Tooltip page: the trigger must be a
