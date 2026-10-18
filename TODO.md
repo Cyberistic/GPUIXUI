@@ -522,7 +522,7 @@ retired once both branches are one
       has already resolved the caller's `style` (`TextArea.tsx`), so
       `style={{ height: 120 }}` paints a one-row field. Fix both to keep the
       caller last, and add the missing cross-component guard (a sentinel style
-      property must survive on every `render*` that takes `style`). No plan yet.
+      property must survive on every `render*` that takes `style`). Plan `097`.
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
