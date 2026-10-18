@@ -27,7 +27,9 @@ export interface ControllableStateOptions<Value> {
 
 /**
  * The current value and its setter. In controlled mode the setter only reports;
- * in uncontrolled mode it also stores.
+ * in uncontrolled mode it also stores. Either way it reports only a real
+ * change: a request for the value already held updates nothing and calls no
+ * callback (plan 517).
  */
 export const useControllableState = <Value>({
   value,
@@ -36,14 +38,15 @@ export const useControllableState = <Value>({
 }: ControllableStateOptions<Value>): ControllableState<Value> => {
   const [internal, setInternal] = useState(defaultValue);
   const controlled = value !== undefined;
+  const current = controlled ? value : internal;
 
   const setValue = useCallback(
     (next: Value) => {
       if (!controlled) setInternal(next);
-      if (value !== next) onChange?.(next);
+      if (!Object.is(current, next)) onChange?.(next);
     },
-    [controlled, value, onChange],
+    [controlled, current, onChange],
   );
 
-  return [controlled ? value : internal, setValue];
+  return [current, setValue];
 };

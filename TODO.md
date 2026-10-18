@@ -351,6 +351,13 @@ retired once both branches are one
       message; 6 pure + 12 native cases (unit 404, behaviour 668), mutation proof
       (removing it from Button, FieldInput and ComboboxTrigger fails 4 cases);
       docs, `COMPONENTS.md` and the inventory synced
+    - [x] A controlled-state request for the current value is a no-op — plan
+      517. Measured: an uncontrolled `Tabs` fired `onValueChange("profile")`
+      when the already-selected tab was pressed, because the shared hook
+      compared the request with the (always undefined) prop instead of the
+      value it held. The hook now compares the resolved value with `Object.is`;
+      3 hook cases + 1 Tabs case (behaviour 672), both-direction proof (2 fail
+      on the old comparison); docs, `COMPONENTS.md` and the inventory synced
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page

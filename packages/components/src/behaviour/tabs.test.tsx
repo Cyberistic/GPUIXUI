@@ -372,6 +372,19 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
+  it("does not report a press on the already selected uncontrolled tab", () => {
+    const onValueChange = vi.fn();
+    const tabs = renderComponent(<Settings onValueChange={onValueChange} />);
+
+    clickCentreOf(tabs, "tab-profile");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    clickCentreOf(tabs, "tab-danger");
+    expect(onValueChange.mock.calls).toEqual([["danger"]]);
+
+    tabs.unmount();
+  });
+
   it("renders no panel for a value that matches nothing", () => {
     const tabs = renderComponent(
       <Tabs defaultValue="profile">

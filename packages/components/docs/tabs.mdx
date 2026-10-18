@@ -85,6 +85,8 @@ and the vertical workspace settings.
 
 A controlled tab set reports a click or key but does not switch its panel until
 the consumer re-renders with the new `value` — the classic contract, tested.
+Pressing the tab that is already selected reports nothing: a request for the
+value the set already holds is a no-op in both modes (plan 517).
 
 ## A tab that changes
 
@@ -175,11 +177,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (22 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (23 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
-controlled contract, a panel
+controlled contract, a press on the already-selected uncontrolled tab reporting
+nothing (plan 517), a panel
 whose value matches nothing, a caller `ref`, a caller `onBlur` composed with the
 focus ring, and four vertical-axis cases — Down/Up movement with wrap, Left/Right
 ignored, the row/column layout, and manual activation. Dynamic tabs: a tab that

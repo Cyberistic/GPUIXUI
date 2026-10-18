@@ -58,9 +58,14 @@ history. No landed component currently deviates.
 - `value` makes the part controlled: the selection changes **only** when the
   caller supplies a new value.
 - `defaultValue` is the uncontrolled initial value. `value` and `defaultValue`
-  are mutually exclusive; a component that receives both logs one warning and
-  ignores `defaultValue`.
-- `onValueChange(value)` fires on request and is the only change callback name.
+  are mutually exclusive; a component that receives both ignores `defaultValue`.
+- `onValueChange(value)` fires on request and is the change callback for a
+  selection. A request for the value the part already holds is a **no-op** in
+  both modes: it changes nothing and calls no callback (plan `517`). A component
+  whose value is not a selection names its pair after the state it owns — for
+  example `onOpenChange`, `onQueryChange`, `onPageChange`, `onStepChange` — and
+  the same no-op rule applies. A local guard must never weaken this rule; the
+  hook is the one place that enforces it.
 - The resolution lives in exactly one hook — `useControllableState` from
   `@gpuix/react/floating` (published in 0.10.0) or this package's
   `internal/controllable.ts` wrapper. Do not write a second implementation.
