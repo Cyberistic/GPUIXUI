@@ -522,13 +522,21 @@ canvas); the designed pair is what a control should paint instead.
 
 The inactive label is not merely above its floor; it stays **below** the
 secondary text it sits beside. The same is true of a field's hint. Those three
-relationships are the text hierarchy, and `themeTextTierFailures` holds an
-edited theme to them: each tier must sit one `contrastFloors[level].step`
-(1.05:1) below the tier above it, measured on the same surface. The surfaces come
-from `contrastPairs`, so the comparison follows the pair lists. A theme that
-raises `disabledForeground` to body strength passes every floor and still makes
-an unavailable control look enabled; this is the check that reports it, and every
-shipped set clears it — 1.274:1, 1.349:1 and 1.440:1 at the tightest.
+relationships are part of the text hierarchy, and so is the body role each
+surface paints: `foreground` on the canvas and the row washes, `cardForeground`
+on a card, `popoverForeground` on a menu, dialog or toast and `inputForeground`
+in a field. `themeTextTierFailures` holds an edited theme to all of them: each
+tier must sit one `contrastFloors[level].step` (1.05:1) below the tier above it,
+measured on the same surface. The surfaces come from `contrastPairs`, so the
+comparison follows the pair lists. A theme that raises `disabledForeground` to
+body strength passes every floor and still makes an unavailable control look
+enabled; so does one that sets `popoverForeground` to `mutedForeground`, which
+renders every menu label at secondary strength. This is the check that reports
+both, and every shipped set clears it — 1.274:1, 1.349:1 and 1.440:1 at the
+tightest, with the three surface body roles also at 1.274:1.
+`selectedForeground` is deliberately not a body tier: it is the
+secondary-strength tint an inherited label keeps inside a selected row, whose
+title is `foreground`.
 
 A role painted through an alpha needs the composited pair, not only the opaque
 one. The loading skeleton's dim frame is `skeleton` at `skeletonPulseOpacity`

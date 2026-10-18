@@ -1738,15 +1738,22 @@ single-family rule. The executed example is
 #### Text hierarchy
 
 The colour check enforces minimums, so it cannot see an inverted hierarchy. The
-design system documents three tiers — body copy (`foreground`), secondary text
-(`mutedForeground`), and the two roles below it, an unavailable label
-(`disabledForeground`) and a field's hint (`placeholder`) — and
+design system documents the body role each surface paints — `foreground` on the
+canvas and the row washes, `cardForeground` on a card, `popoverForeground` on a
+menu, dialog or toast and `inputForeground` in a field — then secondary text
+(`mutedForeground`), then the two roles below it, an unavailable label
+(`disabledForeground`) and a field's hint (`placeholder`). A surface's own body
+role is the tier its secondary text sits below, so a card, menu or field that
+renders its labels at secondary strength is an inverted hierarchy even though
+both roles clear their floors.
 `themeTextTierFailures(theme, contrast = theme.contrast)` holds each tier to one
 `contrastFloors[level].step` (1.05:1) below the tier above it, measured **on the
 same surface**, where both roles already have a documented pair. `textTiers` is
-the ordered list — `mutedForeground` below `foreground`, `disabledForeground`
-below `mutedForeground`, and `placeholder` below `mutedForeground` — and a
-`TextTierFailure` carries the two ratios and the step:
+the ordered list: `mutedForeground` below `foreground`, `mutedForeground` below
+`cardForeground`, `mutedForeground` below `popoverForeground`, `mutedForeground`
+below `inputForeground`, `disabledForeground` below `mutedForeground`, and
+`placeholder` below `mutedForeground`. A `TextTierFailure` carries the two ratios
+and the step:
 
 ```ts
 import { extendTheme, getTheme, themeTextTierFailures } from "@gpuixui/tokens";
@@ -1760,16 +1767,27 @@ themeTextTierFailures(flattened); // a failure per surface the tiers share
 ```
 
 The surfaces are derived from `contrastPairs`, not retyped: 12 shared surfaces
-for secondary text below body copy, 12 for the inactive label below secondary
-text (every surface `inactivePairs` measures except the `disabled` fill, which
-carries no secondary text), and the five surfaces a hint and a caption share.
-Every shipped set clears the step; the tightest are **1.274:1**
+for secondary text below body copy, one `card` for `cardForeground`, four for
+`popoverForeground` (`popover` and the three row washes it shares), the five
+surfaces typed text is documented on for `inputForeground` (`muted`,
+`background`, `card`, `popover` and `input`), 12 for the inactive label below
+secondary text (every surface `inactivePairs` measures except the `disabled`
+fill, which carries no secondary text), and the five surfaces a hint and a
+caption share. Every shipped set clears the step; the tightest are **1.274:1**
 (`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
-**1.349:1** (`disabledForeground` vs `mutedForeground`, XP light on `card`) and
-**1.440:1** (`placeholder` vs `mutedForeground`, Windows dark on `input`). No
-shipped value moves; the check exists for the theme a consumer edits. A theme
-that sets `disabledForeground` to `foreground` still passes every floor, and is
-reported only here.
+**1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
+`card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
+light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
+high-contrast light on `muted`), **1.349:1** (`disabledForeground` vs
+`mutedForeground`, XP light on `card`) and **1.440:1** (`placeholder` vs
+`mutedForeground`, Windows dark on `input`). No shipped value moves; the check
+exists for the theme a consumer edits. A theme that sets `disabledForeground` to
+`foreground` still passes every floor, and is reported only here.
+
+`selectedForeground` is deliberately not a body tier: it is the
+secondary-strength tint an inherited label keeps inside a selected row, whose
+title is painted with `foreground`. Adding it would demand a step the design does
+not have and report every shipped set.
 
 #### One check
 

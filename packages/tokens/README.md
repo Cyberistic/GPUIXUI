@@ -248,11 +248,14 @@ The order is diagnostic — `color`, `typeface`, `contrast`, `hierarchy`, then
 screen iterates the index instead of retyping the kinds. The payload is the same
 `ColorFailure`, `TypefaceFailure`, `ContrastFailure`, `TextTierFailure` or
 `MetricFailure` the individual check returns. `themeTextTierFailures` is the
-fifth check: `textTiers` is
-`[dimmer, brighter]` for `mutedForeground` below `foreground`, and
-`disabledForeground` and `placeholder` below `mutedForeground`; each is held one
-1.05:1 step below the tier above it on the surfaces both are documented on. A
-runnable example lives in
+fifth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below the
+body role each surface paints — `foreground` on the canvas and the row washes,
+`cardForeground` on a card, `popoverForeground` on a menu, dialog or toast and
+`inputForeground` in a field — and for `disabledForeground` and `placeholder`
+below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
+the surfaces both are documented on. `selectedForeground` is deliberately not a
+body tier: it is the secondary-strength tint an inherited label keeps inside a
+selected row, whose title is `foreground`. A runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
 The library holds every shipped set to that same call. `shippedThemes` is the
