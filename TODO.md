@@ -457,7 +457,7 @@ retired once both branches are one
       (enabled: the next Tab lands inside it; disabled: the next Tab lands on the
       element after it) in 32 cases; both mutations of a `Checkbox` guard fail the
       matrix as they should (plan `089`); `isWithin` is now a harness helper.
-| `[x]` | `packages/primitives`: **the contract** — the accepted Tier 1–2 API spec (`docs/component-api.md`, ADR `0004`) had no Tier 1 record and no guard. `src/contract.test.ts` now holds the parts table (one record per public component: page and state types) and proves export completeness, no `render*`/`*Parts` seam in the root, a real declaration for every advertised state type, the page's state name and required sections, and the verified ARIA subset only. Five mutations failed it; the one real deviation was `IconButton`'s two public renderer seams, now module-level. 7 tests (plan `090`) |
+`[x]` `packages/primitives`: **the contract** — the accepted Tier 1–2 API spec (`docs/component-api.md`, ADR `0004`) had no Tier 1 record and no guard. `src/contract.test.ts` now holds the parts table (one record per public component: page and state types) and proves export completeness, no `render*`/`*Parts` seam in the root, a real declaration for every advertised state type, the page's state name and required sections, and the verified ARIA subset only. Five mutations failed it; the one real deviation was `IconButton`'s two public renderer seams, now module-level. 7 tests (plan `090`)
 `[x]` `packages/primitives`: **an invalid field repainted its whole surface** —
       `controlStyle`'s `invalid` branch assigned the destructive role to
       `backgroundColor`, so a failed `Input`/`TextArea`/`Select` trigger/
