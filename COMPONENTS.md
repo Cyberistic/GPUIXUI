@@ -64,6 +64,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | terminal | `terminal-grid` | verified |
 | chart | `chart-svg` | verified |
 | toast | `toast-lifecycle` | verified |
+| notification | `notification-centre`, `live-notification-centre` | verified |
 | grid | `grid-wide-table` | verified |
 | data-grid | `data-grid-virtual`, `data-grid-columns` | verified |
 | columns | `data-grid-columns`, `live-data-grid-columns` | verified |
@@ -79,12 +80,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | data-toolbar | `data-toolbar`, `live-data-toolbar` | verified |
 | query | `query-builder`, `live-query-builder` | verified |
 
-The suite is **84/84 green here** (exit `0`, `.artifacts/smoke-report.json`,
-2644 checks).
+The suite is **85/85 green here** (exit `0`, `.artifacts/smoke-report.json`,
+2724 checks).
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`) and is **35/35 green
-here** (651 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+(`nub run --filter playground smoke:live`, plan `189`) and is **36/36 green
+here** (678 checks): `layout`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore), `table` (sort and selection) `tier2`, `columns`, `chrome`, `replace`, `editor`, `data-toolbar` and `query` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -750,7 +751,7 @@ drives `Stepper` (derived status), `Timeline` (order, copy, current event),
 keyboard, clamp and the measured hiding mechanism), `ColorPicker` (swatch,
 normalised shorthand hex, invalid draft) and `NavigationMenu` (one panel,
 pointer and keyboard open, arrows, Escape, link select, outside press).
-The suite is `84/84` (2644 checks) and `tier2=verified`; live is `35/35` (651
+The suite is `85/85` (2724 checks) and `tier2=verified`; live is `36/36` (678
 checks). Consumer-path facts
 recorded in plan `330` §8, plan `344` §8 and plan `346` §8: the renderer needs
 **one root host
@@ -893,7 +894,7 @@ remaining live-only defect (see the Tabs row).
 | Image preview | todo | yes | `<img>` loads raster and SVG from path/data URL/http(s). API-shape work, not implementation. Evidence: `native-surfaces` — a valid PNG data URL lays out at its box with no fallback, a missing `src` paints `img: no src`, an undecodable one paints `img: load failed`, and `setImagePixels` through the ref uploaded a bitmap without throwing. No pixel readback, so a corrupt bitmap with a valid MIME is indistinguishable from a decoded one. |
 | File / folder selection | todo | yes | `GpuixRenderer.promptForPaths` opens the platform picker. API-shape work, not implementation. |
 | Drag and drop | todo | partial (probe) | **Component-owned pointer capture is supported; there is no drag host feature.** Mouse events exist; there is no drag host feature. `drag-targets`: pointer capture keeps moves and the up on the source, **hover is frozen during the drag**, the drag ends in a click on the source, and a drop on an element without `onFileDrop` still fires a click. `drag-autoscroll`: a held drag at a container edge does **not** auto-scroll; the component owns an edge loop (`renderer.scrollTo` on each held move, which keeps the capture), the derived drop index and the click suppression. |
-| Notification centre | todo | ? | Composition over toasts + panels. |
+| Notification centre | todo | yes (composition; probe) | Composition over a bell, a non-modal anchored panel, a virtual list, roving focus and a derived badge. **Measured (`notification-centre`, plan `381`):** a 36 × 36 bell with `Button:Notifications, N unread` opens a 320 × 360 `align="end"` panel (right edge and top within 1 px, `autoFocus` on the panel); 24 px group headers and 60 px notification rows coexist in one `<virtual-list>`; an unread count derived from read flags drives a badge that **unpaints at zero**, read flags survive close/reopen, and opening marks nothing read; Down/Up move an active row, Enter marks it read, Escape returns native focus to the bell, and an outside press dismisses without stealing focus back; clear-all paints an empty state and a later arrival restores the list. **The key measured rule: the list keeps the reader's row across a prepend by itself** (anchor `2 → 3`), so component code must **not** compensate — forcing the pre-insert index moved the reader's row by exactly 60 px (one notification). No toast bridge, no focus trap (the panel is non-modal), and state is app-owned. |
 | Multi-step forms | todo | ? | Variant merged here: Form (adabraka `form`) — partial coverage; validation orchestration is the Tier 2 Form row. |
 | Virtualized hierarchical data | todo | yes (probe) | Tree views + `<virtual-list>` — `virtualized-tree` measures the model: flatten, indent by depth, a changing row count, roving focus by index, and the focused row staying painted outside the window. Only the painted window reaches the accessibility tree, so a keyboard-focusable row outside it is invisible to assistive technology (`a11y-tree`). |
 | Advanced filtering / query builders | todo | yes (composition; probe) | **Measured (`query-builder`, plan `378`):** a rule strip of three native `Select`s per row composes and works — a picker opened from a scrolled `overflowY: "scroll"` strip paints its content and items **past the clip** and commits, so `Select` is a viable rule control; a field change resets the operator/value, incomplete rules are ignored by both `all` and `any`, numeric bounds are exact, and one pure predicate drives a `<virtual-list>` (counts, empty state, anchor and selection reset). Appending a rule needs a post-commit effect to reveal (`scrollIntoView`) and focus it. **Remaining for a component:** nested rule groups, drag reordering, persisted rule sets and an overlay-panel shell. |

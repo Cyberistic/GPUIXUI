@@ -39,12 +39,54 @@ const notification = (
 
 /** Six notifications: three Today, three Earlier, and three unread. */
 export const initialNotifications: ReadonlyArray<Notification> = [
-  notification(6, "Build finished", "web-1042 passed in 42s", "2m", "today", false),
-  notification(5, "New comment", "Ada replied to your review", "18m", "today", true),
-  notification(4, "Deploy failed", "api-88 stopped at the migrate step", "1h", "today", false),
-  notification(3, "Review requested", "Grace asked for a review", "3h", "earlier", true),
-  notification(2, "Mention", "Linus mentioned you in #runtime", "3h", "earlier", false),
-  notification(1, "System update", "Restart to install 0.10.1", "Yesterday", "earlier", true),
+  notification(
+    6,
+    "Build finished",
+    "web-1042 passed in 42s",
+    "2m",
+    "today",
+    false,
+  ),
+  notification(
+    5,
+    "New comment",
+    "Ada replied to your review",
+    "18m",
+    "today",
+    true,
+  ),
+  notification(
+    4,
+    "Deploy failed",
+    "api-88 stopped at the migrate step",
+    "1h",
+    "today",
+    false,
+  ),
+  notification(
+    3,
+    "Review requested",
+    "Grace asked for a review",
+    "3h",
+    "earlier",
+    true,
+  ),
+  notification(
+    2,
+    "Mention",
+    "Linus mentioned you in #runtime",
+    "3h",
+    "earlier",
+    false,
+  ),
+  notification(
+    1,
+    "System update",
+    "Restart to install 0.10.1",
+    "Yesterday",
+    "earlier",
+    true,
+  ),
 ];
 
 /** A fresh arrival: unread, Today, newest. */
@@ -62,7 +104,9 @@ export const newNotification = (id: number): Notification =>
 export const unreadCount = (items: ReadonlyArray<Notification>): number =>
   Arr.length(Arr.filter(items, (item) => !item.read));
 
-const newestFirst = (items: ReadonlyArray<Notification>): ReadonlyArray<Notification> =>
+const newestFirst = (
+  items: ReadonlyArray<Notification>,
+): ReadonlyArray<Notification> =>
   Arr.sort(
     items,
     Order.mapInput(Order.flip(Order.Number), (item: Notification) => item.id),
@@ -91,7 +135,9 @@ const section = (
   });
 
 /** The flat list: Today (newest first), then Earlier, headers only when non-empty. */
-export const rowsOf = (items: ReadonlyArray<Notification>): ReadonlyArray<Row> =>
+export const rowsOf = (
+  items: ReadonlyArray<Notification>,
+): ReadonlyArray<Row> =>
   Arr.appendAll(
     section("today", "Today", "today", items),
     section("earlier", "Earlier", "earlier", items),

@@ -64,7 +64,7 @@ unread ids `6`, `4`, `2` (three).
 | mark all | `nc-mark-all` clears every dot, the badge is unpainted, and the label reads `Notifications, 0 unread` |
 | arrival (closed) | `nc-arrive` adds one unread row while the panel is closed; the badge reads 4; opening paints the new row at the top of Today |
 | arrival (open, at top) | `nc-simulate` inside the panel prepends a row at the top without dismissing the panel; the new row sits under the Today header |
-| **arrival (open, scrolled)** | `scrollToItem(nc-list, 2, 0)` puts `n:7` at the viewport top; `nc-simulate` prepends one row; the component re-anchors to the same row: anchor `3`, `nc-row-7` still at the viewport top (`±1`), the new row above it unpainted |
+| **arrival (open, scrolled)** | `scrollToItem(nc-list, 2, 0)` puts `n:7` at the viewport top; `nc-simulate` prepends one row; the **list itself** re-anchors to the same row — anchor `3`, `nc-row-7` still at the viewport top (`±1`) and the new row above it unpainted. Component code does nothing on an arrival; forcing the old index moves the row by one notification height |
 | clear | `nc-clear` empties the list, unpaints the badge and paints `nc-empty`; a later arrival restores the list and hides the empty state |
 | outside | a press on the body closes the panel; the state survives |
 | a11y | `Region:Notifications`, `Button:Notifications, N unread` and one `Button` per row |
@@ -129,14 +129,11 @@ Exports:
 - `unreadCount(items)` — `Arr.filter(...).length`.
 - `rowsOf(items)` — `Today` header + today's items (descending id), then
   `Earlier` + the earlier ones; a group with no items contributes no header.
-- `rowIndex(rows, key)` — `Option<number>` via `Arr.findFirst`.
-- `reanchorTarget(rowsBefore, anchorIndex, rowsAfter)` —
-  `Option<number>`: the index in `rowsAfter` of `rowsBefore[anchorIndex]`'s key,
-  or `None` when the anchor is `0` (the reader is at the top and should see the
-  arrival) or the key is gone.
 
-The re-anchor rule is the point of the model: **compensate by row identity,
-never by a constant height**.
+There is deliberately **no re-anchor rule**: §9 measured that the
+`<virtual-list>` keeps the reader's row across a prepend. A pure helper that
+computed a compensating index would be dead code at best and a second source of
+truth at worst.
 
 ## 5. The view (`notification-centre.tsx`)
 
@@ -148,33 +145,28 @@ Constants: `FRAME_WIDTH = 760`, `FRAME_HEIGHT = 460`, `BAR_HEIGHT = 52`,
 State: `open`, `items`, `active: Option<number>` (notification id), `anchor`,
 `top`, `inserts`, `arrivals`.
 
-Refs: `bell` (`PublicInstance`), `panel` (`PublicInstance`), `list`
-(`PublicInstance`), `rowsRef` (current flat rows), `topKeyRef`,
-`pendingTopRef: Option<string>`.
+Refs: `bell` (`PublicInstance`), `list` (`PublicInstance`), `rowsRef` (current
+flat rows), `nextId` (a number ref, so an arrival needs no extra state).
 
 Rules:
 
 - `toggle()` flips `open`; opening sets `active` to the first notification and
   leaves read flags alone.
 - `close(reason)` sets `open = false`, clears `active`, and returns native focus
-  to the bell via `renderer.focusElement(bell.current.id)`.
+  to the bell via `renderer.focusElement(bell.current.id)` for `toggle` and
+  `escape` — **not** for `outside`, because an outside press has already focused
+  what the user pressed.
 - `markRead(id)` maps that item to `read: true` (idempotent).
 - `markAll()` maps every item to `read: true`.
 - `clearAll()` empties `items`, sets `anchor = 0`, `top = "none"`.
-- `arrive()`:
-  1. read the current top row key from `topKeyRef` and the anchor from
-     `anchorRef`; if the anchor is `0`, no re-anchor is pending;
-  2. prepend `newNotification(nextId)` (a functional update) and increment
-     `inserts`;
-  3. store the pending top key in a ref.
-- `useEffect([items.length])`: if a pending top key exists, find its index in
-  `rowsRef.current` and call `renderer.scrollToItem(list, index)`; clear the
-  pending key. This is the component-owned compensation.
+- `arrive()` prepends `newNotification(nextId.current)` and increments `nextId`
+  and `inserts`. **Nothing else** (§9 measured that the list keeps the reader's
+  row by itself; a compensating scroll is the bug, not the fix).
 - `syncAnchor()` (the list's `onVisibleRange` handler) reads
   `renderer.getListScrollTop(list.id)`, sets `anchor`, and sets `top` to the
   key of `rowsRef.current[anchor]`; never read the payload.
 - `onKeyDown` on the panel: `arrowdown`/`arrowup` move `active` through the
-  notification ids in order and clamp; `return` marks the active id read;
+  notification ids in order and clamp; `enter` marks the active id read;
   `escape` closes with focus return.
 
 Layout:
@@ -292,13 +284,10 @@ app-owned), no toast bridge, no virtualized group headers beyond the flat
 | 2 | `rowsOf` puts the Today header first, newest first, then Earlier | a reversed or headerless flatten |
 | 3 | a group with no items contributes no header | an empty header row |
 | 4 | `unreadCount` follows a read mutation | a count that is not derived |
-| 5 | `rowIndex` finds a header and a row, and is `None` for an unknown key | a loose string match |
-| 6 | `reanchorTarget` shifts by one for an anchor below the insertion | a constant-height assumption |
-| 7 | `reanchorTarget` is `None` at anchor `0` | stealing the top from a reader who wants the arrival |
-| 8 | `reanchorTarget` is `None` when the prior row is gone | scrolling to a stale index |
+| 5 | an arrival lands under Today, above the older items | an arrival appended at the bottom |
 
-Run each with a deliberate mutation (swap the anchor rule for `+1`, store the
-count) and record the exact failure.
+Run the count test with a deliberate mutation (store the count on the seed) and
+record the exact failure.
 
 ### 7.2 The scenario
 
@@ -307,16 +296,16 @@ count) and record the exact failure.
 | M1 | the badge renders the item count, not the unread count | "the badge counts unread" |
 | M2 | opening marks every item read | "opening does not mark read" |
 | M3 | `markRead` toggles instead of setting read | "a second click keeps it read" |
-| M4 | the arrival effect is removed (no re-anchor) | "the reader keeps the same row" (`nc-row-7` moves by 60) |
-| M5 | the re-anchor targets the old index, not the row key | the same check, with the wrong row on top |
-| M6 | the panel is a child of the bell | clicking `nc-mark-all` closes the panel |
-| M7 | `onMouseDownOutside` is removed | "an outside press dismisses" |
-| M8 | Escape does not return focus | "Escape returns focus to the bell" |
-| M9 | `clearAll` keeps the badge | "clearing unpaints the badge" |
-| M10 | the readout reports the range payload instead of `getListScrollTop` | "the readout names the reader's row" after a jump |
+| M4 | the component forces the **pre-insert** index after a prepend | "the prepend keeps the reader's row" (anchor 2) and "the reader's row did not move" (+60) |
+| M5 | the component forces anchor `0` after a prepend | the same two checks |
+| M6 | remove `onMouseDownOutside` | "an outside press dismisses" |
+| M7 | Escape does not return focus | "Escape returns focus to the bell" |
+| M8 | `markAll` is a no-op | "mark all clears the count" |
+| M9 | the readout names the first row instead of the reader's row | "the readout names the reader's row" |
+| M10 | `clearAll` leaves the rows | "clear empties the model" |
 
-Reverse proof (consumer wiring): the row `onClick` removed → "a row click marks
-it read" fails.
+Reverse proof (consumer wiring): the row `onClick` stops calling `markRead` →
+"a row click marks it read" fails.
 
 Run each mutation with `--only notification-centre`, record the exact failure,
 revert.
@@ -328,24 +317,23 @@ revert.
 
 ## 8. STOP conditions
 
-- **The runtime already preserves the scrolled content on a prepend** (the
-  anchor moves by itself). Record it; the component keeps the identity
-  re-anchor only if it is needed for grouping, and the mutation proof is
-  rewritten to remove the helper.
-- **The runtime resets the anchor to 0 on a prepend.** Record it; the component
-  must re-anchor from the row key, and the check asserts the target row.
-- **`scrollToItem` in the effect runs before the list knows the new count** and
-  lands on the wrong row. Re-read `getListScrollTop` after `advance(0)` and, if
-  the runtime needs a frame, use `ctx.host.advance(0)` in the step and document
-  it; do not add a timer.
-- **A press inside the panel bubbles to the bell and closes it.** Move the
-  toggle off the wrapper (the plan already puts it on the bell only) and record
-  the measured bubbling.
+- ~~**The runtime already preserves the scrolled content on a prepend.** Record
+  it.~~ **It does.** The list re-anchors from index 2 to 3 by itself and the
+  reader's row stays at the viewport top (`±1`). Recording this removed the
+  component's compensation entirely (§9) — a compensating `scrollToItem` is the
+  defect, not the fix.
+- ~~**The runtime resets the anchor to 0 on a prepend.**~~ Not observed; the
+  anchor moved by exactly the inserted row count.
+- **A press inside the panel bubbles to the bell and closes it.** The headless
+  `click` verb does not run an ancestor's `onClick` for a press on a descendant
+  (measured: moving the bell's toggle to its wrapper made `nc-bell`'s click
+  inert). The panel stays a sibling of the bell as the honest structure; no
+  close-on-inside-click claim is made.
 - **A `FloatingLayer` cannot be placed beside the bell without changing the
-  bar's layout.** Use the raw `<anchored>` (as `layers.tsx` does) inside a
-  zero-size wrapper; record the box.
-- **Focus does not enter the panel with `autoFocus`.** Focus it from an effect
-  via `renderer.focusElement` and record which route worked.
+  bar's layout.** The raw `<anchored>` inside the 36 × 36 wrapper was used; the
+  panel's right edge and top are exact.
+- **Focus does not enter the panel with `autoFocus`.** It does, in the headless
+  host and the live window.
 - **A row inside the virtual list cannot be addressed after a prepend** (the
   key is not painted). Assert the anchor and the readout instead, and record
   the paint.
@@ -357,7 +345,87 @@ revert.
 
 ## 9. Measured results
 
-To be filled by the executor.
+Run on this host, 2026-10-18, against the locally built `darwin-x64` 0.10.0
+binding (ADR 0003).
+
+| Scenario | Checks | Result |
+| -------- | ------ | ------ |
+| `notification-centre` (headless) | 80 | pass — suite `84 → 85`, `2644 → 2724`, exit `0`, `notification=verified` |
+| `live-notification-centre` | 27 | pass — live `35 → 36`, `651 → 678`, exit `0`, one screenshot |
+
+### 9.1 The central fact: a prepend is already stable
+
+**`<virtual-list>` keeps the reader's row across a prepend.** With a mixed-height
+list (24 px group headers, 60 px notifications) scrolled to index `2`, adding a
+row above it moves the anchor to `3` and leaves the reader's row at the viewport
+top. The component does nothing on an arrival.
+
+That was not the planned design: the plan carried an identity re-anchor effect
+(`renderer.scrollToItem` to the row's new index). The mutation that removed it
+**did not fail the suite**, which is how the runtime behaviour was found. A
+further mutation that forced the **pre-insert** index reproduced the bug the
+effect was meant to prevent: anchor `2`, and the reader's row moved from `96.5`
+to `156.5` — exactly one notification height. So the effect was a second, wrong
+source of truth and was deleted, together with the pure `reanchorTarget` /
+`rowIndex` helpers and their four tests.
+
+The honest rule for a consumer: **do not compensate a prepend yourself.**
+Re-reading the anchor is still required (the `onVisibleRange` payload lags and
+the anchor index is what the app shows), but the paint is the runtime's.
+
+### 9.2 The measured contract
+
+| Fact | Value |
+| ---- | ----- |
+| bell | 36 × 36; badge `3`; `Button:Notifications, 3 unread`; no panel while closed |
+| panel | 320 × 360 anchored `side=bottom align=end gap=8` to the bell wrapper; right edge and top within 1 px; `autoFocus` puts focus on it in both hosts |
+| list | 280 px viewport; 24 px `Today`/`Earlier` headers; 60 px rows; `Region:Notifications`; each row is a `Button` named `<title>, <read|unread>` |
+| unread | derived from the read flags; a row click is idempotent; opening marks nothing read; close/reopen keeps every flag |
+| badge | disappears at zero (no painted bounds); the bell label follows (`Notifications, 0 unread`) |
+| keyboard | Down/Up move the active row, Enter marks it read, Escape closes and returns focus to `nc-bell` |
+| arrival | closed → badge increments and the row is first on reopen; open at anchor 0 → first under `Today`; open at anchor 2 → anchor 3 with the reader's row unmoved |
+| outside | a press on the body closes; focus is not stolen back; the state survives |
+| empty | clear-all paints `nc-empty`, removes the list and the badge; a later arrival restores the list |
+
+### 9.3 Mutation proofs
+
+Each was applied, built, run with `--only notification-centre`, and reverted:
+
+| # | Mutation | Measured failure |
+| - | -------- | ---------------- |
+| M1 | badge counts `items` | `the badge counts unread: expected "3", got "6"` |
+| M2 | `openPanel` marks everything read | `opening does not mark read: expected "3", got "0"` |
+| M3 | `markRead` toggles | `a second click keeps it read: expected "1", got "2"` |
+| M4 | force the pre-insert index after a prepend | `the prepend keeps the reader's row: expected 3, got 2`; with that expectation corrected, `the reader's row did not move: expected 96.5 ± 1, got 156.5` |
+| M5 | force anchor `0` after a prepend | the same two checks |
+| M6 | remove `onMouseDownOutside` | `an outside press dismisses: expected "false", got "true"` |
+| M7 | Escape skips the focus return | `Escape returns focus to the bell: expected "nc-bell", got "none"` |
+| M8 | `markAll` is a no-op | `mark all clears the count: expected "0", got "1"` |
+| M9 | the readout names `rows[0]` | `the readout names the reader's row: expected "n:7", got "h:today"` |
+| M10 | `clearAll` keeps the rows | `clear empties the model: expected "0", got "10"` |
+
+Reverse proof (consumer wiring): the row `onClick` stops calling `markRead` →
+`a row click marks it read: expected "1", got "2"`.
+
+One harness finding: moving the bell's toggle to its wrapper made `nc-bell`'s
+click **inert** (`the click opens the panel: expected "true", got "false"`), so
+the headless `click(testId)` verb does not run an ancestor's `onClick` for a
+press on a descendant. The panel stays a sibling of the bell (honest structure);
+the claim is not made that the headless suite can prove the close-on-inside-click
+trap.
+
+### 9.4 Limits recorded
+
+- State is app-owned: a remount resets reads and arrivals (workspace restore is
+  `167`/`339`). The panel is non-modal: no focus trap, and Tab can leave it.
+- No toast bridge: a toast is transient and the centre is durable; composing the
+  two would repeat `tier2-toast` (`330`) without a new question.
+- The panel fits its 760 × 460 frame; edge flipping is `floating-placement`
+  (`156`/`323`), not re-measured.
+- Group headers are flat 24 px rows; nested grouping is the components
+  workstream's design.
+- There is no per-notification action menu or bulk selection; the probe is a
+  feasibility contract, not a shipped component.
 
 ## 10. Acceptance
 
@@ -365,6 +433,5 @@ To be filled by the executor.
   entry, the capability literal, the live twin, the README section, the
   inventory row and the plan-index row.
 - Headless `85/85`, live `36/36`, exit `0`; all three gates exit `0`.
-- Ten mutation proofs (or the amended set from §8) and one reverse proof
-  recorded in §9.
+- The ten mutation proofs and one reverse proof recorded in §9.3.
 - No package changed; any defect is a `TODO.md` task with its own plan number.

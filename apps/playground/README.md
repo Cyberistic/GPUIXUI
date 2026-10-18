@@ -30,7 +30,8 @@ collapsible-height probe (`collapsible-height`), the nested-layer probe
 (`tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`,
 `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
 `tier2-flow`), the multi-pane editor probe (`multi-pane-editor`), the data
-toolbar probe (`data-toolbar`), the shell
+toolbar probe (`data-toolbar`), the notification-centre probe
+(`notification-centre`), the shell
 probes (`shell-navigation`, `shell-selection`), which mount the real `App` — the
 first proves the sidebar scrolls (the registry is longer than the window, so an
 unreachable entry would be a scenario the app cannot open), the second proves
@@ -611,7 +612,7 @@ could not see it. The fix is a functional `setDock((current) => ...)`, so the
 click applies to the post-tear-off state and is a no-op; a component whose tab
 click is destructive must suppress the gesture-ending click outright. In the
 window the panel lands on the release point within 1 px, the title drag is
-exact, and focus/Escape and the close button hold. The live suite is `35/35`.
+exact, and focus/Escape and the close button hold. The live suite is `36/36`.
 
 ## Pinned grid chrome (plan `185`)
 
@@ -786,6 +787,40 @@ rules are AND/OR without nesting or groups, operators are the four numeric
 comparisons plus text/enum equality, and no rule set is persisted. `Select`
 content is anchored to its trigger's row, not portalled (0.10.0 has no
 `createPortal`).
+
+## Notification centres (plan `381`)
+
+`notification-centre` is the composition the Tier 5 row **Notification centre**
+never had: a bell → a non-modal panel → a newest-first virtual list → live
+arrivals. 80 checks; live twin `live-notification-centre` (27 checks).
+
+| Fact | Measured |
+| ---- | -------- |
+| bell | 36 × 36; the badge reads `3`; `Button:Notifications, 3 unread`; the panel does not paint while closed |
+| panel | 320 × 360 anchored `bottom`/`end`/`gap 8` to the bell wrapper; right edge and top within 1 px; `autoFocus` gives it native focus in both hosts |
+| rows | a 280 px viewport with 24 px `Today`/`Earlier` headers and 60 px notification rows in one `<virtual-list>`; `Region:Notifications`, each row a `Button` named `<title>, read|unread` |
+| unread | derived from the read flags; a row click is idempotent; opening marks nothing read; close/reopen keeps every flag |
+| badge | disappears at zero; the bell label follows (`Notifications, 0 unread`) |
+| keyboard | Down/Up move the active row, Enter marks it read, Escape closes and returns focus to `nc-bell` |
+| arrival (closed) | the badge increments and the row is first on reopen |
+| arrival (open, top) | the new row paints under `Today`; the anchor stays 0 |
+| arrival (open, scrolled) | **the list itself keeps the reader's row**: anchor `2 → 3`, the row stays at the viewport top |
+| outside | a press on the body closes the panel, does not steal focus back, and keeps the state |
+| empty | clear-all paints `You're all caught up`, removes the list and the badge; a later arrival restores it |
+
+**The measured rule: do not compensate a prepend.** The plan carried an
+identity re-anchor effect (`scrollToItem` to the row's new index). Removing it
+did **not** fail the suite — the runtime had already moved the anchor from 2 to
+3 and kept the paint. Forcing the pre-insert index reproduced the bug the effect
+was meant to prevent: anchor `2` and the row moved from `96.5` to `156.5`,
+exactly one notification height. The effect, `reanchorTarget` and `rowIndex`
+were deleted. An app still re-reads the anchor (`getListScrollTop` inside
+`onVisibleRange`) because the index is what it displays; the paint is the
+runtime's.
+
+Limits: state is app-owned (a remount resets it; restore is `167`/`339`), the
+panel is non-modal (no focus trap), there is no toast bridge, and edge flipping
+belongs to `floating-placement` (`156`/`323`).
 
 ## Multi-pane editor (plan `376`)
 
@@ -1159,10 +1194,10 @@ windows paint, not host retention.
 
 ## Evidence on this host
 
-The suite is **84/84 green** here (`exit 0`, 2644 checks):
+The suite is **85/85 green** here (`exit 0`, 2724 checks):
 
 ```
-84/84 scenarios passed · capabilities: layout=verified text=verified
+85/85 scenarios passed · capabilities: layout=verified text=verified
 input=verified focus=verified overlay=verified modal=verified
 floating=verified select=verified combobox=verified tooltip=verified
 a11y=verified scroll=verified panel=verified motion=verified
@@ -1175,6 +1210,7 @@ chrome=verified
 layers=verified scroller=verified scale=verified tier2=verified
 replace=verified grid-layout=verified typography=verified
 inspector=verified editor=verified data-toolbar=verified query=verified
+notification=verified
 ```
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
@@ -1198,6 +1234,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | selection | cross-element selection joins with newlines; `<code>`/`<diff>` copy is chrome-free; an anchor inside `userSelect: "none"` selects nothing; a click selects nothing |
 | menu | a right click is `onAuxClick` + `isRightClick` (no `button`, no `onClick`); `<anchored position>` is exact at the pointer, even inside a **scrolled** container (no offset, no clipping); `shift-f10` opens and Escape returns focus |
 | hierarchy | a flattened tree inside `<virtual-list>`: 16 px per depth, 8 ↔ 48 rows on expand/collapse, roving focus moves native focus, the focused row stays painted outside the window |
+| notification centre | a 36 × 36 bell with a derived badge opens a 320 × 360 `align="end"` panel whose right edge and top are exact; mixed 24 px headers and 60 px rows in one virtual list; **a prepend is already stable — the list keeps the reader's row (anchor 2 → 3) and component code must not compensate** (forcing the old index moves the row by 60); Escape returns focus to the bell, an outside press does not; read flags survive close/reopen and the badge disappears at zero |
 | scroll into view | `focusElement` reveals a virtual row by itself; `scrollToItem`/`scrollIntoView` reach exact anchors; `getScrollOffset` **saturates** on a virtual list, `getListScrollTop` is exact |
 | scroll | the wheel **works**; `deltaY` is negative to scroll down (the opposite of the DOM) |
 | horizontal scroll | `overflowX: "scroll"` pans; `deltaX: -240` → `x = -240`; a vertical wheel leaves a horizontal-only strip at the same `x`; a clipped tab **keeps painted bounds**; `scrollIntoView` reveals it and saturates at `-461`, but the near-end reveal stops at `x = -5` (clamp it); `renderer.scrollTo(id, -400, 0)` is exact |
@@ -1286,6 +1323,9 @@ src/scenarios/data-toolbar.tsx a data toolbar over a virtual table, with derived
 src/scenarios/query-model.ts the pure filter rules: operators, completeness, predicate, summary
 src/scenarios/query-model.test.ts the pure rule tests (counts, bounds, combinators)
 src/scenarios/query-builder.tsx a rule strip of native Selects over a virtualized result
+src/scenarios/notification-model.ts the pure grouping and unread rules
+src/scenarios/notification-model.test.ts the pure notification rules
+src/scenarios/notification-centre.tsx a bell, a non-modal panel and a newest-first virtual list
 src/scenarios/index.ts   the registry + scenarioProblems (pure integrity check)
 src/window-key.tsx       the app-level window key bridge (useWindowKey)
 src/smoke/run.ts         the CLI (preflight → mount each scenario → report)
@@ -1334,7 +1374,7 @@ narrower. Each deviation is deliberate and measured:
   `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`,
   `tier2-flow`; plans `330`, `344`, `346`, `347`) and the **query-builder
   probe** (`query-builder`, plan `378`)
-  pass in real GPUix 0.10.0 on this host (84/84), with a written report and
+  pass in real GPUix 0.10.0 on this host (85/85), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1342,7 +1382,7 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) is 35/35 — layout, input, scroll,
+  The **real-window** suite (`smoke:live`) is 36/36 — layout, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the

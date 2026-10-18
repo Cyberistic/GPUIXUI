@@ -3994,7 +3994,8 @@ const queryBuilder: LiveScenario = {
 
 const notificationCentre: LiveScenario = {
   id: "live-notification-centre",
-  title: "Live notification centre: unread state, keyboard and prepend stability",
+  title:
+    "Live notification centre: unread state, keyboard and prepend stability",
   capability: "notification",
   view: notificationCentreScenario.view,
   ready: "nc-state",
@@ -4007,7 +4008,11 @@ const notificationCentre: LiveScenario = {
         "3",
       );
       const closed = yield* ctx.host.bounds("nc-panel");
-      yield* ctx.expectEqual("the live panel starts closed", closed === null, true);
+      yield* ctx.expectEqual(
+        "the live panel starts closed",
+        closed === null,
+        true,
+      );
 
       // A real click opens a panel anchored to the bell and focused.
       yield* ctx.host.click("nc-bell");
@@ -4069,7 +4074,11 @@ const notificationCentre: LiveScenario = {
       yield* settle;
       yield* waitForText(ctx, "nc-state", "unread=0");
       const noBadge = yield* ctx.host.bounds("nc-badge");
-      yield* ctx.expectEqual("zero unread paints no live badge", noBadge === null, true);
+      yield* ctx.expectEqual(
+        "zero unread paints no live badge",
+        noBadge === null,
+        true,
+      );
 
       // An arrival while closed increments the badge; opening shows it first.
       yield* ctx.host.key("escape");

@@ -58,9 +58,37 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 74/78 plans-and-harness
+`[x]` `[██████████]` 75/79 plans-and-harness
 
-`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378` written and indexed for the playground workstream; the next plan takes `379` (`351`–`375` are held by the components and tokens workstreams)
+`[x]` Plans `100`–`199`, `300`–`302`, `330`–`350`, `376`–`378` and `381` written and indexed for the playground workstream; `379`/`380` are held by the components and tokens workstreams, and the next plan takes `382`
+
+`[x]` Probe a **notification centre** per plan `381`: `notification-centre`
+      (80 checks) and `live-notification-centre` (27): a 36 × 36 bell with a
+      derived badge (`Button:Notifications, 3 unread`) opens a 320 × 360
+      `align="end"` panel within 1 px of the bell; 24 px group headers and 60 px
+      notification rows coexist in one `<virtual-list>`; read flags survive
+      close/reopen, a row click is idempotent, opening marks nothing read, and
+      the badge unpaints at zero; Down/Up move an active row, Enter marks it
+      read, Escape returns native focus to the bell, and an outside press
+      dismisses without stealing focus; clear-all paints an empty state and a
+      later arrival restores the list. **The key measured rule: a prepend is
+      already stable — the list keeps the reader's row (anchor `2 → 3`), and
+      component code must not compensate** (forcing the pre-insert index moved
+      the row by exactly 60 px). The first mutation removed the planned
+      identity re-anchor and the suite still passed, which is how the runtime
+      behaviour was found; the effect and the `reanchorTarget`/`rowIndex`
+      helpers were then deleted. Suite `84 → 85` (`2644 → 2724`), live
+      `35 → 36` (`651 → 678`), exit `0`, `notification=verified`; ten mutation
+      proofs and one reverse proof (plan `381` §9.3). Also measured: the
+      headless `click(testId)` verb does not run an ancestor's `onClick` for a
+      press on a descendant
+`[ ]` **packages/components** (no owner yet): implement a notification centre
+      from the contract plan `381` measured — a bell with a derived unread badge
+      and an accessible label, a non-modal `align="end"` panel, grouped
+      newest-first rows in a virtual list, roving keyboard selection, idempotent
+      reads, an outside press and Escape (focus return on Escape only), and an
+      empty state. Key rule: do **not** compensate a prepend; the runtime keeps
+      the reader's row. `notification-centre` is the acceptance evidence.
 `[x]` Probe the **filter-rule builder** per plan `378`: `query-builder` (83 checks)
       and `live-query-builder` (41): a 40 px `Toolbar:Query` over a 132 px
       `Group:Filters` strip of 40 px rule rows, each three native `Select`s and a

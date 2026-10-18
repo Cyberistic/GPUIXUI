@@ -49,17 +49,20 @@ describe("notification model", () => {
     }));
     expect(unreadCount(readAll)).toBe(0);
     expect(
-      unreadCount(Arr.map(initialNotifications, (item) => ({ ...item, read: false }))),
+      unreadCount(
+        Arr.map(initialNotifications, (item) => ({ ...item, read: false })),
+      ),
     ).toBe(6);
   });
 
   it("prepends an arrival inside Today, above the older items", () => {
-    const withArrival = Arr.prepend(
-      initialNotifications,
-      newNotification(7),
-    );
-    expect(keys(withArrival).slice(0, 4)).toEqual(["h:today", "n:7", "n:6", "n:5"]);
+    const withArrival = Arr.prepend(initialNotifications, newNotification(7));
+    expect(keys(withArrival).slice(0, 4)).toEqual([
+      "h:today",
+      "n:7",
+      "n:6",
+      "n:5",
+    ]);
     expect(unreadCount(withArrival)).toBe(4);
   });
-
 });

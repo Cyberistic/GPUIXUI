@@ -76,7 +76,13 @@ const firstId = (rows: ReadonlyArray<Row>): Option.Option<number> =>
   Arr.head(orderedIds(rows));
 
 /** One group header row. */
-const GroupHeader = ({ label, testId }: { readonly label: string; readonly testId: string }) => {
+const GroupHeader = ({
+  label,
+  testId,
+}: {
+  readonly label: string;
+  readonly testId: string;
+}) => {
   const theme = useTheme();
   return (
     <div
@@ -102,9 +108,8 @@ const NotificationCentreProbe = () => {
   const bell = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<ReadonlyArray<Notification>>(
-    initialNotifications,
-  );
+  const [items, setItems] =
+    useState<ReadonlyArray<Notification>>(initialNotifications);
   const [active, setActive] = useState<Option.Option<number>>(Option.none());
   const [anchor, setAnchor] = useState(0);
   const [top, setTop] = useState("none");
@@ -143,7 +148,9 @@ const NotificationCentreProbe = () => {
   };
 
   const markAll = (): void => {
-    setItems((current) => Arr.map(current, (item) => ({ ...item, read: true })));
+    setItems((current) =>
+      Arr.map(current, (item) => ({ ...item, read: true })),
+    );
   };
 
   const clearAll = (): void => {
@@ -254,7 +261,12 @@ const NotificationCentreProbe = () => {
       }}
     >
       <div
-        style={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}
+        style={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+        }}
       >
         <text style={{ fontSize: 12, color: theme.colors.foreground }}>
           {item.title}
@@ -339,7 +351,10 @@ const NotificationCentreProbe = () => {
         </Pressable>
       </div>
 
-      <div testId="nc-listview" style={{ width: PANEL_WIDTH, height: LIST_HEIGHT }}>
+      <div
+        testId="nc-listview"
+        style={{ width: PANEL_WIDTH, height: LIST_HEIGHT }}
+      >
         {Arr.match(rows, {
           onEmpty: () => (
             <div
@@ -352,7 +367,9 @@ const NotificationCentreProbe = () => {
                 justifyContent: "center",
               }}
             >
-              <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
+              <text
+                style={{ fontSize: 11, color: theme.colors.mutedForeground }}
+              >
                 You're all caught up
               </text>
             </div>
@@ -449,8 +466,9 @@ const NotificationCentreProbe = () => {
             aria-label={`Notifications, ${unread} unread`}
             onClick={() => (open ? close("toggle") : openPanel())}
             onKeyDown={(event) => {
-              if (event.key === "enter")
-                open ? close("toggle") : openPanel();
+              if (event.key !== "enter") return;
+              if (open) close("toggle");
+              else openPanel();
             }}
             style={{
               width: BELL_SIZE,
@@ -487,9 +505,18 @@ const NotificationCentreProbe = () => {
 
       <div
         testId="nc-body"
-        style={{ flexGrow: 1, padding: 16, gap: 12, display: "flex", flexDirection: "column" }}
+        style={{
+          flexGrow: 1,
+          padding: 16,
+          gap: 12,
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
-        <div testId="nc-content" style={{ height: 120, backgroundColor: theme.colors.muted }}>
+        <div
+          testId="nc-content"
+          style={{ height: 120, backgroundColor: theme.colors.muted }}
+        >
           <text style={{ fontSize: 11, color: theme.colors.mutedForeground }}>
             mock application content
           </text>
@@ -530,7 +557,8 @@ const anchorIndex = (ctx: Smoke.SmokeContext): number =>
 
 export const notificationCentreScenario: PlaygroundScenario = {
   id: "notification-centre",
-  title: "Notification centre: unread state, keyboard and prepend-stable scrolling",
+  title:
+    "Notification centre: unread state, keyboard and prepend-stable scrolling",
   capability: "notification",
   view: () => <NotificationCentreProbe />,
   steps: (ctx) =>
@@ -541,7 +569,11 @@ export const notificationCentreScenario: PlaygroundScenario = {
         Option.fromNullishOr(ctx.host.bounds("nc-bell")),
       );
       yield* ctx.expectNear("the bell is 36 px wide", bell.width, 36, 1);
-      yield* ctx.expectEqual("the badge counts unread", read(ctx, "nc-badge"), "3");
+      yield* ctx.expectEqual(
+        "the badge counts unread",
+        read(ctx, "nc-badge"),
+        "3",
+      );
       yield* ctx.expectEqual(
         "the panel does not paint while closed",
         Option.isNone(Option.fromNullishOr(ctx.host.bounds("nc-panel"))),
@@ -582,7 +614,10 @@ export const notificationCentreScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "opening focuses the panel",
-        Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none"),
+        Option.getOrElse(
+          Option.fromNullishOr(ctx.host.focused()),
+          () => "none",
+        ),
         "nc-panel",
       );
       yield* ctx.expectEqual(
@@ -594,21 +629,44 @@ export const notificationCentreScenario: PlaygroundScenario = {
         "the list viewport paints",
         Option.fromNullishOr(ctx.host.bounds("nc-listview")),
       );
-      yield* ctx.expectNear("the list viewport is 280 px tall", listView.height, 280, 1);
+      yield* ctx.expectNear(
+        "the list viewport is 280 px tall",
+        listView.height,
+        280,
+        1,
+      );
       const today = yield* ctx.expectSome(
         "the Today header paints",
         Option.fromNullishOr(ctx.host.bounds("nc-head-today")),
       );
-      yield* ctx.expectNear("the header row is 24 px", today.height, HEADER_ROW, 1);
-      yield* ctx.expectNear("the header starts at the viewport top", today.y, listView.y, 1);
-      const first = yield* ctx.expectSome("the newest row paints", rowBox(ctx, 6));
+      yield* ctx.expectNear(
+        "the header row is 24 px",
+        today.height,
+        HEADER_ROW,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the header starts at the viewport top",
+        today.y,
+        listView.y,
+        1,
+      );
+      const first = yield* ctx.expectSome(
+        "the newest row paints",
+        rowBox(ctx, 6),
+      );
       yield* ctx.expectNear(
         "the first notification starts under the header",
         first.y,
         listView.y + HEADER_ROW,
         1,
       );
-      yield* ctx.expectNear("a notification row is 60 px", first.height, NOTIFICATION_ROW, 1);
+      yield* ctx.expectNear(
+        "a notification row is 60 px",
+        first.height,
+        NOTIFICATION_ROW,
+        1,
+      );
       yield* ctx.expectSome(
         "the Earlier header paints",
         Option.fromNullishOr(ctx.host.bounds("nc-head-earlier")),
@@ -627,9 +685,17 @@ export const notificationCentreScenario: PlaygroundScenario = {
       yield* node(ctx, openTree, "Button", "Build finished, unread");
 
       // 3. Arrows move the active row; Enter marks it read.
-      yield* ctx.expectEqual("the first row starts active", stateField(ctx, "active"), "n:6");
+      yield* ctx.expectEqual(
+        "the first row starts active",
+        stateField(ctx, "active"),
+        "n:6",
+      );
       ctx.host.key("down");
-      yield* ctx.expectEqual("Down moves the active row", stateField(ctx, "active"), "n:5");
+      yield* ctx.expectEqual(
+        "Down moves the active row",
+        stateField(ctx, "active"),
+        "n:5",
+      );
       ctx.host.key("down");
       yield* ctx.expectEqual(
         "a second Down reaches the next unread row",
@@ -683,7 +749,10 @@ export const notificationCentreScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "Escape returns focus to the bell",
-        Option.getOrElse(Option.fromNullishOr(ctx.host.focused()), () => "none"),
+        Option.getOrElse(
+          Option.fromNullishOr(ctx.host.focused()),
+          () => "none",
+        ),
         "nc-bell",
       );
       ctx.host.click("nc-bell");
@@ -722,7 +791,9 @@ export const notificationCentreScenario: PlaygroundScenario = {
         "every dot is gone",
         Arr.every(
           Arr.map([6, 5, 4, 3, 2, 1], (id) =>
-            Option.isNone(Option.fromNullishOr(ctx.host.bounds(`nc-dot-${id}`))),
+            Option.isNone(
+              Option.fromNullishOr(ctx.host.bounds(`nc-dot-${id}`)),
+            ),
           ),
           (gone) => gone,
         ),
