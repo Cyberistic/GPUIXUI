@@ -139,6 +139,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [340](./340-invalid-control-ring.md) | The invalid control's focus ring | F | 017, 071–095, 300, 325, 339 | done |
 | [341](./341-combobox-check-mark.md) | The combobox check on a highlighted option | F | 071–095, 300, 306–332, 339–340 | done |
 | [342](./342-filled-state-steps.md) | The filled family's step in the public contract | F | 071, 097, 306, 327, 338, 341 | done |
+| [343](./343-field-pressed-edge.md) | The field's pressed edge in the public contract | F | 071, 084, 325, 340–342 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1038,6 +1039,25 @@ surface pair. `stateStepPairs` (eight pairs) joins the contract under a new
 against a panel and the existing `surface` filters key on fill roles. No colour
 moves: every shipped identity, platform and recipe theme already clears the
 floor (306 → 314 pairs).
+
+343 closes the field's last unmeasured pointer edge. `fieldVariant.active` in
+`primitives` repaints a pressed field's border with `ring` on the field's own
+`input` fill, the way hover repaints it with `borderStrong` — and the hover edge
+was already a `boundary` pair. The contract measured `ring` only on the eight
+surfaces a focus shadow sits on plus the four soft status fills, because the
+focus ring is painted outside the control, so a consumer theme whose `ring`
+equalled `input` returned `[]` while its pressed field had no visible edge.
+`fieldPressedEdgePairs` adds `ring` on `input` as a `boundary` pair (314 → 315);
+every shipped identity, platform and recipe theme already clears the 3:1 / 4.5:1
+floor (identity light is tightest at 4.218:1), so no colour moves. The same
+audit found a real `primitives` defect rather than a missing pair: an invalid
+field is painted with a solid `destructive` **fill** behind `inputForeground`
+(1.97:1 on both AAA dark sets, 3.48:1 on Aero light) and its `hover`/`active`
+variants replace the error border with `borderStrong`/`ring`, so the error
+signal disappears under the pointer. The designed fix — keep the `input` fill
+and the `destructive` border, or use `destructiveSoft` +
+`destructiveSoftForeground` (measured at 7:1) — is recorded as a cross-team
+`TODO.md` row with the evidence.
 
 ### Reference adoption (block `200–299`)
 
