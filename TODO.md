@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 191/253
+`[x]` `[███████░░░]` 192/254
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1526,6 +1526,19 @@ while every check returned `[]`; `dialogSurfacePairs` derives from
 executed brand example owns its 85% scrim after the inherited one left its face
 at 1.038:1, and the documents stop naming the 1.495:1 edge as the carrier
 (plan 526)
+
+`[x]` Hold a field's typed text and hint on the row washes an in-place editor
+paints — plan 317 excluded “a field on a row wash”, but `InlineEdit` swaps a
+row's text for a field in place and the shipped `placeholder` missed its floor on
+at least one wash in all twenty-four sets (identity dark **3.132:1** on
+`selected`, macOS light 3.714:1 on `active`, Windows dark 3.939:1, XP light
+3.877:1, and both AAA palettes under 7:1 at 5.665:1 and 5.009:1) while
+`themeContrastFailures` returned `[]`; `inputForeground` and `placeholder` join
+the four washes (396 → 404 pairs), fourteen shipped hints move one designed step
+(identity dark `#858F9F` → `#A8B0BD`, AAA light `#4A4F58` → `#3D4047`, AAA dark
+`#B0B0B0` → `#D1D1D1`), every shipped set passes (4.651:1 at the tightest, Linux
+dark on `active`; 7.113:1 at AAA) and the hint stays 1.157:1 below
+`mutedForeground` at the tightest (plan 527)
 
 ## Phase C — Tier 1–2 components
 

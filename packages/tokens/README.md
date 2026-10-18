@@ -429,13 +429,18 @@ is checked on the canvas, card, the `muted` panel, `popover`, the
 Alert's description paints, so an avatar's initials on
 the quiet panel, a date picker's month header on its floating surface, a selected
 row's title and an Alert's body are held to the body floor. Typed text (`inputForeground`) is
-checked on the `input` fill and on the four `Surface` tones a transparent field
-can sit on — `background`, `card`, `popover` and `muted` — so a search box or
-inline edit cannot lose its text whichever panel it sits on (plan 319). The
-placeholder (`placeholder`) is checked on the `input` fill and on all four
-`Surface` tones a transparent field can sit on, because a search box in a
-sidebar or a dialog is not tied to one fill; identity dark measured 4.03:1 on
-the quiet panel and the floating surface until plan 317 moved it one step. A menu
+checked on the `input` fill, on the four `Surface` tones a transparent field
+can sit on — `background`, `card`, `popover` and `muted` — and on the four row
+washes a field inside a row paints, so a search box or
+inline edit cannot lose its text whichever panel it sits on (plans 319 and 527). The
+placeholder (`placeholder`) is checked on the same nine surfaces, because a
+search box in a
+sidebar or a dialog is not tied to one fill and an in-place edit sits in the row
+it replaces; identity dark measured 4.03:1 on
+the quiet panel and the floating surface until plan 317 moved it one step, then
+**3.132:1** on the `selected` fill until plan 527 moved it again, and every one
+of the twelve default sets missed the row-wash floor (4.651:1 at the tightest
+after the move, Linux dark on `active`). A menu
 row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
 selected row's inherited `selectedForeground` on the `accent` wash a selectable

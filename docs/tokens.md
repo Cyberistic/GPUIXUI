@@ -248,7 +248,7 @@ A runnable example lives in
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
-| `placeholder` | `#66707F` | `#858F9F` | a hint the consumer renders on the `input` fill and the `background`/`card`/`popover`/`muted` surfaces a transparent field paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
+| `placeholder` | `#5C6574` | `#A8B0BD` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints and the `hover`/`active`/`accent`/`selected` washes a field inside a row paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#4C39B5` | `#A7A9FF` | focus ring; the value groove a focused slider's thumb sits on |
 | `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
@@ -538,7 +538,7 @@ carries, so it cannot claim another.
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
-| `placeholder` | `#4A4F58` | `#B0B0B0` | placeholder text |
+| `placeholder` | `#3D4047` | `#D1D1D1` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
@@ -1996,22 +1996,23 @@ themeTextTierFailures(flattened); // a failure per surface the tiers share
 
 The surfaces are derived from `contrastPairs`, not retyped: 12 shared surfaces
 for secondary text below body copy, one `card` for `cardForeground`, four for
-`popoverForeground` (`popover` and the three row washes it shares), the five
+`popoverForeground` (`popover` and the three row washes it shares), the nine
 surfaces typed text is documented on for `inputForeground` (`muted`,
-`background`, `card`, `popover` and `input`), 12 for the inactive label below
-secondary text (every surface `inactivePairs` measures except the `disabled`
-fill, which carries no secondary text), five for a hint and a caption, and five
-for the disabled panel-action label below the enabled one (`softAction` and the
-four soft fills). Every shipped set clears the step; the tightest are **1.274:1**
+`background`, `card`, `popover`, `input` and the four row washes), 12 for the
+inactive label below secondary text (every surface `inactivePairs` measures
+except the `disabled` fill, which carries no secondary text), nine for a hint and
+a caption, and five for the disabled panel-action label below the enabled one
+(`softAction` and the four soft fills). Every shipped set clears the step; the
+tightest are **1.274:1**
 (`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
 `card`), **1.274:1** (`mutedForeground` vs `popoverForeground`, high-contrast
 light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
 high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
-`mutedForeground`, high-contrast dark on `active`), **1.440:1**
-(`placeholder` vs `mutedForeground`, Windows dark on `input`) and **1.542:1**
-(`disabledForeground` vs `softActionForeground`, identity dark on
-`successSoft`). Every shipped set
+`mutedForeground`, high-contrast dark on `active`), **1.157:1**
+(`placeholder` vs `mutedForeground`, high-contrast dark on every surface the two
+share) and **1.542:1** (`disabledForeground` vs `softActionForeground`, identity
+dark on `successSoft`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
 `foreground` still passes every floor, and is reported only here.
@@ -2416,22 +2417,29 @@ Default body text is measured on `background`, `card`, the `muted` panel,
 `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft
 status fills an Alert's description paints
 (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is
-`inputForeground` on the `input` fill and on the four `Surface` tones a
-transparent field can sit on (`background`, `card`, `popover`, `muted`), the same
-set the placeholder is measured on. The placeholder is held to the same secondary floor
-on the `input` fill and on all four `Surface` tones a transparent field can sit
-on (`background`, `card`, `muted`, `popover`); a field on a row wash and a
-disabled field are deliberately out of scope — the latter reads
-`disabledForeground`, which plan `306` measures — and identity dark `#7C8595`
-measured 4.03:1 on the quiet panel and the floating surface until plan `317`
-moved it to `#858F9F`. The panel and the floating surface are not
+`inputForeground` on the `input` fill, on the four `Surface` tones a transparent
+field can sit on (`background`, `card`, `popover`, `muted`) and on the four row
+washes a field inside a row paints. The placeholder is held to the same
+secondary floor on that same nine-surface list; a disabled field is
+deliberately out of scope — it reads `disabledForeground`, which plan `306`
+measures — while a field inside a row is measured on the four row washes (plan
+`527`). Identity dark `#7C8595` measured 4.03:1 on the quiet panel and the
+floating surface until plan `317` moved it to `#858F9F`; that hint then measured
+**3.132:1** on the `selected` fill a row keeps, and every one of the twelve
+default sets missed the 4.5:1 floor on at least one wash — macOS light 3.714:1
+on `active`, Windows dark 3.939:1, XP light 3.877:1 — while
+`themeContrastFailures` returned `[]`. Plan `527` adds the four washes to both
+lists, moves the fourteen shipped hints (the twelve default sets and the two AAA
+palettes every high-contrast variant reads), and the tightest new pair is
+**4.651:1** (Linux dark on `active`) with the AAA sets at 7.113:1 or better.
+The panel and the floating surface are not
 academic: an avatar's fallback initials sit on `muted`, and a date picker's month
 header sits on its `popover`. The row washes are not either: a selectable list
 row paints `accent` on hover and `selected` when selected, and its title is
 `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides
 the `selectedForeground` the row inherits. Every pair clears the body floor with
-margin in every shipped set, so no value moves; the pairs exist so an edited
-theme cannot break them silently.
+margin in every shipped set, so no other value moves; the pairs exist so an
+edited theme cannot break them silently.
 
 The other row text roles have their own pairs. A menu row paints
 `popoverForeground` on `hover`/`active`, a selected `Select` option paints it on
@@ -2668,6 +2676,24 @@ under 7:1, while all six checks returned `[]`; the role moves one iris step
 (`#2E2370` → `#1C1547`), the six pairs join the list (20 → **26**), every shipped
 set passes (4.898:1 macOS light at the tightest), and `contrastPairs` stays
 **396**.
+Plan `527` measures a field's typed text and hint on the four row washes an
+in-place editor paints. Plans `317` and `319` measured `placeholder` and
+`inputForeground` on the `input` fill and the four `Surface` tones, and the
+reference called "a field on a row wash" deliberately out of scope; but
+`InlineEdit` swaps a row's text for a field in place, and a row paints
+`hover`/`active`/`accent`/`selected` behind its content while the field's edge,
+boundary, ring and secondary chrome text were already measured there. All
+twelve default sets missed the 4.5:1 secondary floor for the hint on at least
+one wash — identity dark `#858F9F` measured **3.132:1** on `selected`, macOS
+light 3.714:1 on `active`, Windows dark 3.939:1, XP light 3.877:1 — and the two
+AAA palettes read by every high-contrast variant measured 5.665:1 (light) and
+5.009:1 (dark) on `active`, under 7:1, while `themeContrastFailures` returned
+`[]`. The four washes join both role lists, taking it from 396 to **404**, the
+fourteen shipped hints move one designed step (identity dark `#858F9F` →
+`#A8B0BD`, AAA
+light `#4A4F58` → `#3D4047`, AAA dark `#B0B0B0` → `#D1D1D1`), every shipped set
+passes (4.651:1 at the tightest, Linux dark on `active`; 7.113:1 at AAA) and the
+hint stays a step below `mutedForeground` (1.157:1 at the tightest).
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
