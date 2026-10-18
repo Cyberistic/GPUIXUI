@@ -107,6 +107,17 @@ const CASES: ReadonlyArray<NameCase> = [
     ),
   },
   {
+    // Plan 396: a computed empty label must not discard the content's name.
+    name: "Button with a blank explicit label",
+    role: "Button",
+    label: "Save",
+    node: () => (
+      <Button testId="c" label="">
+        Save
+      </Button>
+    ),
+  },
+  {
     name: "IconButton",
     role: "Button",
     label: "Close",
@@ -117,6 +128,17 @@ const CASES: ReadonlyArray<NameCase> = [
     role: "Button",
     label: "Bold",
     node: () => <Toggle testId="c">Bold</Toggle>,
+  },
+  {
+    // Plan 396: whitespace is not a name; the content still provides one.
+    name: "Toggle with a blank explicit label",
+    role: "Button",
+    label: "Bold",
+    node: () => (
+      <Toggle testId="c" label="   ">
+        Bold
+      </Toggle>
+    ),
   },
   {
     name: "ToggleGroup",
@@ -399,6 +421,35 @@ const SCENE: ReadonlyArray<ReactElement> = [
     options={[{ value: "left", label: "Left" }]}
   />,
 ];
+
+it("creates no unnamed region for a blank ScrollArea label", async () => {
+  // Plan 396: `label="   "` used to make the area a focusable `Region` whose
+  // name was whitespace — the unnamed tab stop its own docs say it avoids.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <div testId="before" tabIndex={0} />
+        <ScrollArea label="   " testId="area" style={{ height: 60 }}>
+          <Text>Line</Text>
+        </ScrollArea>
+        <div testId="after" tabIndex={0} />
+      </Stack>
+    </Surface>,
+  );
+  expect(
+    Arr.map(
+      Arr.filter(
+        a11yNodes(runtime.a11y()),
+        (node) => node.aria?.role === "Region",
+      ),
+      (node) => node.aria?.label ?? "",
+    ),
+  ).toStrictEqual([]);
+  runtime.focusNext();
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("after");
+});
 
 it("leaves no interactive node in a composed scene unnamed", async () => {
   // A tall window so no control is clipped out of the accessibility tree.

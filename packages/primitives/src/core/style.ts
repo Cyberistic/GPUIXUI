@@ -459,7 +459,8 @@ export const ruleStyle = (spec: RuleSpec, theme: PrimitiveTheme): StyleDesc => {
 };
 
 export interface ScrollSpec {
-  readonly axis: "vertical" | "horizontal" | "both";
+  /** Which overflow axes scroll. Defaults to `"vertical"`. */
+  readonly axis?: "vertical" | "horizontal" | "both";
 }
 
 /**
@@ -470,11 +471,18 @@ export interface ScrollSpec {
  * GPUix's unreleased `main`), so `theme.colors.scrollbar` cannot be applied and
  * there is no fade mask to configure. Both are recorded as limitations in
  * `COMPONENTS.md` rather than faked.
+ *
+ * The axis defaults to `"vertical"`, the value the component already used; the
+ * default lives here so a direct resolver caller and `ScrollArea` agree
+ * (plan `397`).
  */
-export const scrollStyle = (spec: ScrollSpec): StyleDesc => ({
-  overflowY: spec.axis === "horizontal" ? "hidden" : "scroll",
-  overflowX: spec.axis === "vertical" ? "hidden" : "scroll",
-});
+export const scrollStyle = (spec: ScrollSpec): StyleDesc => {
+  const axis = spec.axis ?? "vertical";
+  return {
+    overflowY: axis === "horizontal" ? "hidden" : "scroll",
+    overflowX: axis === "vertical" ? "hidden" : "scroll",
+  };
+};
 
 /**
  * Clamp a progress value to the 0–100 the track can actually paint.

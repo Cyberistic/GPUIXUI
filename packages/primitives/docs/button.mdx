@@ -70,7 +70,7 @@ sm / md / lg.
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
 | `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
-| `label` | `string` | none | accessible name. Overrides the name derived from text children; required when the content is not text (e.g. an icon) |
+| `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | called after `onClick` for a click or an activating key; not called while busy |
 | `onClick` | `(event) => void` | none | the event that activated the button: the pointer click, or the Enter/Space key event. Runs before `onActivate` |
 | `onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseDown`, `onMouseUp`, `onMouseDownOutside`, `onAuxClick`, `onScroll` | host handlers | none | forwarded to the button element — the slot contract a `Tooltip` trigger uses |
@@ -124,11 +124,13 @@ button reports nothing, while hover still opens its tip.
 
 ## Accessibility
 
-- Role: `button`; the name is `label` when given, otherwise the **text-only**
-  children joined and trimmed (`"Save changes"`). GPUix does not derive a
-  button's name from painted text, so the component writes `aria-label` itself
-  (measured: plan `058`). Content that is not all text — an icon, an element, a
-  mixed list — yields no name; pass `label` then.
+- Role: `button`; the name is `label` when it says something (trimmed),
+  otherwise the **text-only** children joined and trimmed (`"Save changes"`).
+  GPUix does not derive a button's name from painted text, so the component
+  writes `aria-label` itself (measured: plan `058`). A computed `label=""` — or
+  whitespace — is **not** a name and does not erase the content's (plan `396`).
+  Content that is not all text — an icon, an element, a mixed list — yields no
+  name; pass `label` then.
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.

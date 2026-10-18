@@ -136,6 +136,37 @@ export const textOf = (children: ReactNode): Option.Option<string> => {
 };
 
 /**
+ * A caller's explicit name, when it says anything.
+ *
+ * A label is often computed (`label={record.name}`) and can arrive empty or as
+ * whitespace. That is not a name: treating it as one either erases the name a
+ * control already derives from its content or creates a focus stop nothing can
+ * announce. The value is trimmed, so padding cannot make a blank name look
+ * present (plan `396`).
+ */
+export const usableLabel = (label: string | undefined): Option.Option<string> =>
+  Option.filter(
+    Option.map(Option.fromNullishOr(label), Str.trim),
+    Str.isNonEmpty,
+  );
+
+/**
+ * A control's name: an explicit label that says something, else its text
+ * children.
+ *
+ * The fallback is the rule `Button`/`Toggle` already document; a blank explicit
+ * label must not beat it (plan `396`).
+ */
+export const controlName = (
+  label: string | undefined,
+  children: ReactNode,
+): Option.Option<string> =>
+  pipe(
+    usableLabel(label),
+    Option.orElse(() => textOf(children)),
+  );
+
+/**
  * The theme a provider hands down.
  *
  * Density moves numbers and never colour, so the override swaps the `density`

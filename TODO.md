@@ -1296,6 +1296,23 @@ retired once both branches are one
       `src/docs-tooltip-wrap.test.ts` fails by page and line if a primitives
       page denies the wrap or if `tooltipStyle` stops producing the capped
       `normal` form. Both failure directions measured (plan `395`).
+`[x]` `packages/primitives`: **a blank explicit label was treated as a name** —
+      measured (2026-10-19): `<Button label="">Save</Button>` exposed
+      `Button:""` (the text child's name was discarded), and
+      `<ScrollArea label="   ">` exposed `Region:"   "` as a focus stop — the
+      unnamed tab stop the component's own rule says it avoids. One
+      `usableLabel`/`controlName` rule now treats whitespace as absent: Button
+      and Toggle fall back to their text children, ScrollArea stays inert, and a
+      real label is trimmed. 4 element + 3 runtime cases (the matrix's two blank
+      rows, the blank region, the tab order); both directions proven (plan
+      `396`).
+`[x]` `packages/primitives`: **`ScrollArea`'s documented default axis was not
+      reachable** — `docs/scroll-area.mdx` says `axis` defaults to `"vertical"`
+      and `renderScrollArea` implements that default, but `ScrollSpec.axis` was
+      required, so `<ScrollArea label="Activity">` failed `check-types` with
+      TS2741. `axis` is now optional and `scrollStyle` owns the default; 1 core
+      case proves the omitted axis paints the vertical pair, and the blank-label
+      runtime case omits it (plan `397`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,

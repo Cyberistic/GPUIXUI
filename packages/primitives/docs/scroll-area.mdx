@@ -25,18 +25,20 @@ import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 **Give it a bounded size.** A scroll container with no height constraint grows
 with its content and never scrolls.
 
-**A label makes it a keyboard scroll stop.** The runtime does not move a
-container from the keyboard on its own, so a labelled area becomes a named
-`region` with `tabIndex={0}` and its own keys. Without a label it is a plain
-container and stays out of the tab order — adding a stop to every existing
-layout silently would be the worse default.
+**A non-blank label makes it a keyboard scroll stop.** The runtime does not move
+a container from the keyboard on its own, so a labelled area becomes a named
+`region` with `tabIndex={0}` and its own keys. Without a label — or with one
+that is only whitespace after trimming — it is a plain container and stays out
+of the tab order: a focus stop nothing can announce is worse than no stop, and
+adding one to every existing layout silently would be the worse default
+(plan `396`).
 
 ## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
-| `label` | `string` | none | names the region **and** makes it a focusable keyboard scroll stop |
+| `label` | `string` | none | a non-blank value names the region (trimmed) **and** makes it a focusable keyboard scroll stop; a blank one is ignored |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
 | `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel or keyboard scroll, only when it changed |
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
@@ -114,8 +116,8 @@ area keeps its arrow keys instead of scrolling the region.
 
 A labelled area is a named `region` and a focus stop, and paints the focus ring.
 That is the keyboard path for a region whose content is not itself focusable.
-An unlabelled area has no role and is not announced as a region: pair it with a
-heading, or label it.
+An unlabelled area — including one whose label is blank — has no role and is not
+announced as a region: pair it with a heading, or label it.
 
 ## Theming
 

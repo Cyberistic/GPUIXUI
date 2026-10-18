@@ -43,10 +43,10 @@ import type { ButtonVariant } from "../core/variants.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   composeHandler,
+  controlName,
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
-  textOf,
   type StateStyle,
   type TriggerHandlers,
 } from "./internal.js";
@@ -175,7 +175,9 @@ export const renderButton = (
     <div
       {...passiveTriggerHandlers(props)}
       role="button"
-      aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
+      aria-label={Option.getOrUndefined(
+        controlName(props.label, props.children),
+      )}
       aria-description={description}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

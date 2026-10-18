@@ -63,6 +63,35 @@ describe("Button", () => {
     );
   });
 
+  it("falls back to its text when an explicit label is blank", () => {
+    // A computed label (`label={record.name}`) can arrive empty; it must not
+    // erase the name the button's own content already provides (plan 396).
+    expect(
+      expectSome(
+        hostProp(
+          resting({ label: "", children: "Save changes" }),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Save changes");
+    expect(
+      expectSome(
+        hostProp(
+          resting({ label: "   ", children: "Save changes" }),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Save changes");
+  });
+
+  it("trims an explicit label that does say something", () => {
+    expect(
+      expectSome(
+        hostProp(resting({ label: "  Close  ", children: "×" }), "aria-label"),
+      ),
+    ).toBe("Close");
+  });
+
   it("wraps a text label in one shrinkable item", () => {
     // The bug guarded (plan 368): a text run is a flex item the runtime never
     // shrinks, so a long label painted outside a bounded button. The label is

@@ -484,6 +484,12 @@ describe("ruleStyle", () => {
 });
 
 describe("scrollStyle", () => {
+  it("defaults an omitted axis to vertical", () => {
+    // Plan 397: the docs and `renderScrollArea` both promise this default, but
+    // `ScrollSpec.axis` was required, so typed callers could not use it.
+    expect(scrollStyle({})).toStrictEqual(scrollStyle({ axis: "vertical" }));
+  });
+
   it("scrolls only the asked-for axis", () => {
     const vertical = scrollStyle({ axis: "vertical" });
     expect(vertical.overflowY).toBe("scroll");

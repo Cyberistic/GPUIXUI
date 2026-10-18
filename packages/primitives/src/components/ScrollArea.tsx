@@ -36,7 +36,12 @@ import * as Option from "effect/Option";
 import { decideScroll, resolveScroll, scrollLine } from "../core/layout.js";
 import { scrollStyle, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { resolvePartStyle, useFocus, type StateStyle } from "./internal.js";
+import {
+  resolvePartStyle,
+  usableLabel,
+  useFocus,
+  type StateStyle,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The public state a `ScrollArea` style callback receives. */
@@ -116,14 +121,15 @@ export const renderScrollArea = (
   theme: PrimitiveTheme,
   handlers: ScrollAreaHandlers = {},
 ): ReactElement => {
-  const named = label !== undefined;
+  const name = Option.getOrUndefined(usableLabel(label));
+  const named = name !== undefined;
   const ring = handlers.focused === true && named ? focusRing(theme) : {};
   return (
     <div
       testId={testId}
       ref={handlers.ref}
       role={named ? "region" : undefined}
-      aria-label={label}
+      aria-label={name}
       tabIndex={named ? 0 : undefined}
       onFocus={handlers.onFocus}
       onBlur={handlers.onBlur}
@@ -197,7 +203,7 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
   }));
 
   const onKeyDown = (event: EventPayload): void => {
-    if (props.label === undefined) return;
+    if (Option.isNone(usableLabel(props.label))) return;
     const id = root.current?.id;
     if (id === undefined) return;
     // A child's keys may reach this handler; only scroll when the region itself

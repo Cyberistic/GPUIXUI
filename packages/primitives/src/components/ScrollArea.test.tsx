@@ -38,6 +38,28 @@ describe("ScrollArea", () => {
     expect(hostProp(area, "tabIndex")).toStrictEqual(Option.none());
   });
 
+  it("treats a blank label as absent, and trims a real one", () => {
+    // Plan 396: `label="   "` used to make a focusable region nothing can
+    // announce; it is not a name. A padded label is named without the padding.
+    const blank = renderScrollArea(
+      { axis: "vertical", label: "   " },
+      testTheme,
+      { onKeyDown: () => {} },
+    );
+    expect(hostProp(blank, "role")).toStrictEqual(Option.none());
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    expect(hostProp(blank, "tabIndex")).toStrictEqual(Option.none());
+
+    const padded = renderScrollArea(
+      { axis: "vertical", label: "  Properties  " },
+      testTheme,
+      { onKeyDown: () => {} },
+    );
+    expect(expectSome(hostProp(padded, "role"))).toBe("region");
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Properties");
+    expect(expectSome(hostProp(padded, "tabIndex"))).toBe(0);
+  });
+
   it("paints the focus ring only on a labelled, focused region", () => {
     const focused = renderScrollArea(
       { axis: "vertical", label: "Properties" },

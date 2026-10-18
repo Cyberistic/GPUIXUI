@@ -30,10 +30,10 @@ import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import {
   composeHandler,
+  controlName,
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
-  textOf,
   useControlState,
   useFocus,
   type FocusState,
@@ -117,7 +117,9 @@ export const renderToggle = (
     <div
       {...passiveTriggerHandlers(props)}
       role="button"
-      aria-label={props.label ?? Option.getOrUndefined(textOf(props.children))}
+      aria-label={Option.getOrUndefined(
+        controlName(props.label, props.children),
+      )}
       aria-description={props["aria-description"]}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}

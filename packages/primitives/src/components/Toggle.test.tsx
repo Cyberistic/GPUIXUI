@@ -85,6 +85,26 @@ describe("Toggle", () => {
     expect(hostProp(iconOnly, "aria-label")).toStrictEqual(Option.none());
   });
 
+  it("falls back to its text when an explicit label is blank", () => {
+    // Plan 396: a computed empty label must not erase the content's name.
+    const blank = renderToggle(
+      { label: "   ", children: "Bold" },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(blank, "aria-label"))).toBe("Bold");
+    const padded = renderToggle(
+      { label: "  Bold  ", children: <div /> },
+      testTheme,
+      state(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Bold");
+  });
+
   it("paints the accent role while pressed and nothing at rest", () => {
     const pressed = renderToggle(
       { pressed: true },

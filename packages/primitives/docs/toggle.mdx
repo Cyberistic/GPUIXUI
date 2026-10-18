@@ -35,7 +35,7 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
-| `label` | `string` | none | accessible name. Overrides the name derived from text children; required when the content is not text |
+| `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
 | `style` | `StateStyle<ToggleState>` | — | merged last; an object or a state callback |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
@@ -75,10 +75,12 @@ boundary. The tip's string becomes the toggle's `aria-description`.
   uses that channel for its state. A screen reader therefore hears a button with
   a value, not a pressed button. That is the limitation of the runtime, and the
   component does not pretend otherwise.
-- The name is `label` when given, otherwise the **text-only** children joined
-  and trimmed. GPUix does not derive a button's name from painted text, so
-  `Toggle` writes `aria-label` itself (measured: plan `058`). Content that is
-  not all text yields no name — give it a `label`; the icon is decorative.
+- The name is `label` when it says something (trimmed), otherwise the
+  **text-only** children joined and trimmed. GPUix does not derive a button's
+  name from painted text, so `Toggle` writes `aria-label` itself (measured:
+  plan `058`). A computed `label=""` — or whitespace — is not a name and does
+  not erase the content's (plan `396`). Content that is not all text yields no
+  name — give it a `label`; the icon is decorative.
 - The label is **chrome, not content**: `userSelect: "none"` on the control, so
   a drag across a toggle cannot select its text (measured before plan `386`:
   the drag selected `"Grid view"`). A caller's `style` still merges last and can
