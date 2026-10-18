@@ -81,7 +81,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - The root is a named `group`.
 - Every swatch is a `role="button"` named by its hex value, with `aria-selected`
-  on the current one; selected swatches also carry the strong border.
+  on the current one; selected swatches also carry the strong border, and a
+  focused swatch paints the token ring (plan 522).
 - The field is a real input named "<label> hex value"; an invalid draft is
   described through `aria-description` (`0.10.0` supports it).
 - Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
@@ -98,10 +99,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (8 tests):
-the parts, the theme swatches, a swatch press and selection, a typed shorthand,
-an invalid draft, blur commit/revert, disabled, and a style callback in both
-themes.
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (9 tests):
+the parts, the theme swatches, a swatch press and selection, the swatch focus
+ring, a typed shorthand, an invalid draft, blur commit/revert, disabled, and a
+style callback in both themes.
 
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.

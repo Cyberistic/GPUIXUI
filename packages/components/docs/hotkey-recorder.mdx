@@ -61,7 +61,8 @@ macOS keeps `ctrl` rather than being silently rewritten to `mod`.
 
 `autoFocus` sets the initial `focused` state, so the recorder's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
-never dispatches `onFocus`.
+never dispatches `onFocus`. The clear control paints the token ring while it is
+focused (plan 522).
 
 ## Theming
 
@@ -98,11 +99,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (14 tests):
 the display, click-to-record, a real captured chord, Escape, a recording Escape
-that leaves its dialog open, the clear control by pointer and keyboard, Space
-starting on release, a captured Space not reopening the recorder, blur,
-disabled, and both themes.
+that leaves its dialog open, the clear control by pointer and keyboard, the
+clear control's focus ring, Space starting on release, a captured Space not
+reopening the recorder, blur, disabled, and both themes.
 
 `src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a

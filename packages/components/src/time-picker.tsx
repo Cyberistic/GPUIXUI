@@ -397,6 +397,7 @@ export const TimePickerClear = ({
 }: TimePickerClearProps) => {
   const theme = useTheme();
   const { clearable, hasValue, disabled, testId, clear } = useTimePicker();
+  const [focused, setFocused] = useState(false);
   if (!clearable || !hasValue || disabled) return null;
 
   return (
@@ -407,6 +408,8 @@ export const TimePickerClear = ({
       tabIndex={0}
       onClick={clear}
       {...activationHandlers(clear)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={{
         ...textStyle(theme, "caption"),
         display: "flex",
@@ -417,6 +420,7 @@ export const TimePickerClear = ({
         borderRadius: theme.radius.sm,
         color: theme.colors.mutedForeground,
         cursor: "pointer",
+        ...(focused ? focusRing(theme) : {}),
         hover: {
           backgroundColor: theme.colors.accent,
           color: theme.colors.accentForeground,

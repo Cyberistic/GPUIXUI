@@ -79,6 +79,7 @@ export const HotkeyRecorder = ({
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
   const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [clearFocused, setClearFocused] = useState(false);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
   // A key captured while recording must not start a new recording on release:
@@ -220,6 +221,8 @@ export const HotkeyRecorder = ({
             claimEvent(event);
             clear();
           })}
+          onFocus={() => setClearFocused(true)}
+          onBlur={() => setClearFocused(false)}
           style={{
             ...textStyle(theme, "caption"),
             display: "flex",
@@ -229,6 +232,7 @@ export const HotkeyRecorder = ({
             height: 16,
             borderRadius: theme.radius.sm,
             color: theme.colors.mutedForeground,
+            ...(clearFocused ? focusRing(theme) : {}),
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,

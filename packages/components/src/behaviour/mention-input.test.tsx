@@ -309,4 +309,41 @@ describe("MentionInput", () => {
     expect(onMention).toHaveBeenCalledWith("ana");
     keyed.unmount();
   });
+
+  /**
+   * Focus visibility (plan 522). The bugs these guard, measured: a row focused
+   * with Tab that is not the highlighted row painted nothing, and an
+   * `autoFocus` field focused natively without running `onFocus`, so the
+   * group's ring never lit.
+   */
+  it("paints the focus ring on a focused row", () => {
+    const mention = renderComponent(<Harness />);
+    type(mention, "@an");
+
+    mention.renderer.focusElement(
+      mention.renderer.findByTestId("row-anna")?.id ?? -1,
+    );
+
+    expect(focusedTestId(mention)).toEqual(Option.some("row-anna"));
+    expect(
+      mention.renderer.findByTestId("row-anna")?.style.boxShadow,
+    ).toBeDefined();
+    // The highlighted row paints the selection fill, not the ring.
+    expect(
+      mention.renderer.findByTestId("row-ana")?.style.boxShadow,
+    ).toBeUndefined();
+
+    mention.unmount();
+  });
+
+  it("seeds the group ring from autoFocus", () => {
+    const mention = renderComponent(<Harness host={{ autoFocus: true }} />);
+
+    expect(focusedTestId(mention)).toEqual(Option.some("mention"));
+    expect(
+      mention.renderer.findByTestId("mention-group")?.style.boxShadow,
+    ).toBeDefined();
+
+    mention.unmount();
+  });
 });

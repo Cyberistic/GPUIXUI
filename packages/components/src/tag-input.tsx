@@ -21,7 +21,13 @@ import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
-import { createContext, useContext, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { isEnter } from "./internal/key.js";
 import {
@@ -183,15 +189,26 @@ export const TagInputField = ({
   onKeyDown,
   onFocus,
   onBlur,
+  autoFocus = false,
   ...rest
 }: TagInputFieldProps) => {
   const theme = useTheme();
   const { draft, disabled, editDraft, addDraft, setFocused } = useTagInput();
+  const seeded = useRef(false);
+
+  // `autoFocus` focuses the native input after React's effects, so `onFocus`
+  // never runs; seed the group's ring from the prop instead (plan 522).
+  useLayoutEffect(() => {
+    if (seeded.current) return;
+    seeded.current = true;
+    if (autoFocus && !disabled) setFocused(true);
+  }, [autoFocus, disabled, setFocused]);
 
   return (
     <input
       {...rest}
       {...stateDescription(disabled, rest["aria-description"])}
+      autoFocus={autoFocus}
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}
@@ -244,6 +261,7 @@ export interface TagInputChipState {
 export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
   const theme = useTheme();
   const { disabled, remove } = useTagInput();
+  const [focused, setFocused] = useState(false);
   const removeTestId =
     rest.testId === undefined ? undefined : `${rest.testId}-remove`;
 
@@ -283,6 +301,8 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
           tabIndex={0}
           onClick={() => remove(value)}
           {...activationHandlers(() => remove(value))}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
           style={{
             ...textStyle(theme, "caption"),
             display: "flex",
@@ -292,6 +312,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
             height: 16,
             borderRadius: theme.radius.sm,
             color: theme.colors.mutedForeground,
+            ...(focused ? focusRing(theme) : {}),
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,

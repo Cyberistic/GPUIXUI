@@ -231,4 +231,38 @@ describe("TagInput", () => {
 
     tags.unmount();
   });
+
+  /**
+   * Focus visibility (plan 522). The bugs these guard, measured: a chip's
+   * removal control took native focus and painted no ring, and a field with
+   * `autoFocus` focused natively without running `onFocus`, so the group ring
+   * its sibling sets never lit.
+   */
+  it("paints the focus ring on a chip's removal control", () => {
+    const tags = renderComponent(<Harness initial={["design"]} />);
+
+    tags.renderer.focusElement(removeControlOf(tags, "chip-design")?.id ?? -1);
+
+    expect(removeControlOf(tags, "chip-design")?.style.boxShadow).toBeDefined();
+
+    tags.unmount();
+  });
+
+  it("seeds the group ring from a field's autoFocus", () => {
+    const tags = renderComponent(
+      <TagInput
+        testId="tags"
+        label="Tags"
+        value={[]}
+        onValueChange={() => undefined}
+      >
+        <TagInputField testId="tag-field" autoFocus />
+      </TagInput>,
+    );
+
+    expect(focusedTestId(tags)).toEqual(Option.some("tag-field"));
+    expect(tags.renderer.findByTestId("tags")?.style.boxShadow).toBeDefined();
+
+    tags.unmount();
+  });
 });

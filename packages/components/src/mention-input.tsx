@@ -122,6 +122,7 @@ export const MentionInput = ({
   onKeyDown,
   onFocus,
   onBlur,
+  autoFocus = false,
   ...rest
 }: MentionInputProps) => {
   const theme = useTheme();
@@ -133,7 +134,7 @@ export const MentionInput = ({
   const [dismissed, setDismissed] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
   const [visible, setVisible] = useState<ReadonlyArray<string>>([]);
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useState(autoFocus && !disabled);
   assertParts(mentionRoot, children);
 
   const open = dismissed ? Option.none() : mentionQuery(text);
@@ -182,6 +183,7 @@ export const MentionInput = ({
         <div
           role="group"
           aria-label={label}
+          testId={testId === undefined ? undefined : `${testId}-group`}
           style={{
             display: "flex",
             flexDirection: "row",
@@ -202,6 +204,7 @@ export const MentionInput = ({
             aria-label={label}
             {...stateDescription(disabled, rest["aria-description"])}
             testId={testId}
+            autoFocus={autoFocus}
             value={text}
             readOnly={disabled}
             onChange={(event) => {
@@ -348,11 +351,15 @@ export const MentionInputItem = ({
   style,
   onMouseDown,
   onKeyDown,
+  onFocus,
+  onBlur,
+  autoFocus = false,
   ...rest
 }: MentionInputItemProps) => {
   const theme = useTheme();
   const { highlighted } = useContext(MentionItemContext);
   const { select, close } = useMention();
+  const [focused, setFocused] = useState(autoFocus);
 
   return (
     <div
@@ -360,6 +367,15 @@ export const MentionInputItem = ({
       aria-selected={highlighted}
       tabIndex={0}
       {...rest}
+      autoFocus={autoFocus}
+      onFocus={(event) => {
+        setFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setFocused(false);
+        onBlur?.(event);
+      }}
       onMouseDown={(event) => {
         onMouseDown?.(event);
         select(value);
@@ -389,6 +405,7 @@ export const MentionInputItem = ({
           color: highlighted
             ? theme.colors.accentForeground
             : theme.colors.popoverForeground,
+          ...(focused ? focusRing(theme) : {}),
         },
         style,
       )}

@@ -21,6 +21,7 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import {
   Children,
   createContext,
@@ -39,7 +40,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { useTheme } from "./internal/theme.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a carousel part follows; throws outside a {@link Carousel}. */
 interface CarouselContextValue {
@@ -93,9 +94,13 @@ export const Carousel = ({
   children,
   style,
   onKeyDown,
+  onFocus,
+  onBlur,
+  autoFocus = false,
   ...rest
 }: CarouselProps) => {
   const theme = useTheme();
+  const [focused, setFocused] = useState(autoFocus);
   const [value, setValue] = useControllableState({
     value: valueProp,
     defaultValue,
@@ -137,7 +142,16 @@ export const Carousel = ({
         {...rest}
         role="group"
         aria-label={label}
+        autoFocus={autoFocus}
         tabIndex={0}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         onKeyDown={(event: EventPayload) => {
           if (isRight(event)) context.step(1);
           else if (isLeft(event)) context.step(-1);
@@ -150,6 +164,7 @@ export const Carousel = ({
             display: "flex",
             flexDirection: "column",
             gap: theme.spacing.md,
+            ...(focused ? focusRing(theme) : {}),
           },
           style,
         )}
@@ -342,6 +357,9 @@ export const CarouselIndicators = ({
   const theme = useTheme();
   const { active, count, goTo } = useCarousel();
   const indexes = count === 0 ? Arr.empty<number>() : Arr.range(0, count - 1);
+  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
+    Option.none(),
+  );
 
   return (
     <div
@@ -374,6 +392,8 @@ export const CarouselIndicators = ({
             testId={`carousel-indicator-${index}`}
             {...activationHandlers(() => goTo(index))}
             onClick={() => goTo(index)}
+            onFocus={() => setFocusedIndex(Option.some(index))}
+            onBlur={() => setFocusedIndex(Option.none())}
             style={mergeStyles(
               {
                 width: isActive ? 18 : 8,
@@ -383,6 +403,9 @@ export const CarouselIndicators = ({
                   ? theme.colors.primary
                   : theme.colors.border,
                 cursor: "pointer",
+                ...(Option.contains(focusedIndex, index)
+                  ? focusRing(theme)
+                  : {}),
               },
               resolveStyle(indicatorStyle, state),
             )}

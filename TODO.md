@@ -366,6 +366,15 @@ retired once both branches are one
       first stop cannot trap; 5 new native cases + 1 strengthened (Popover 17,
       behaviour 677), four mutation proofs; docs, `COMPONENTS.md` and the
       inventory synced
+    - [x] Every focusable part paints the focus ring — plan 522. Measured seven
+      controls that took native focus and painted no ring (the `Carousel` root
+      and its dots, a color swatch, a chip's removal control, the time and
+      hotkey clear controls, a mention row), plus two `autoFocus` fields whose
+      group ring never lit because the runtime focuses after React's effects.
+      Each now owns its `focused` state and paints `focusRing`, and
+      `MentionInput`/`TagInput` seed the group ring from `autoFocus`; 9 native
+      cases (behaviour 686), nine mutation proofs; docs, `COMPONENTS.md` and the
+      inventory synced
     - [x] Pagination never hides a single page behind an ellipsis — plan 513.
       Measured: a 7-page list was windowed although all seven numbers fit, and
       a gap of one page rendered `…` instead of the page (also a zero-page

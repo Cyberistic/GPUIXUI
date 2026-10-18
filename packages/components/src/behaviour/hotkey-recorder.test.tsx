@@ -278,4 +278,24 @@ describe("HotkeyRecorder", () => {
 
     recorder.unmount();
   });
+
+  /**
+   * Focus visibility (plan 522). The bug this guards, measured: the clear
+   * control took native focus and painted no ring, so a keyboard user could not
+   * see that the next Enter would clear the binding.
+   */
+  it("paints the focus ring on the clear control", () => {
+    const recorder = renderComponent(<Harness initial="ctrl+k" />);
+
+    recorder.renderer.focusElement(
+      recorder.renderer.findByTestId("recorder-clear")?.id ?? -1,
+    );
+
+    expect(focusedTestId(recorder)).toEqual(Option.some("recorder-clear"));
+    expect(
+      recorder.renderer.findByTestId("recorder-clear")?.style.boxShadow,
+    ).toBeDefined();
+
+    recorder.unmount();
+  });
 });

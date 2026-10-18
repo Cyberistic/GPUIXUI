@@ -84,6 +84,9 @@ export const ColorPicker = ({
   });
   const [draft, setDraft] = useState(value);
   const [focused, setFocused] = useState(false);
+  const [focusedSwatch, setFocusedSwatch] = useState<Option.Option<number>>(
+    Option.none(),
+  );
   const swatches = swatchesProp ?? defaultSwatches(theme);
   const valid = Option.isSome(normalizeHex(draft));
 
@@ -149,6 +152,8 @@ export const ColorPicker = ({
               onClick={() => {
                 if (!disabled) choose(swatch);
               }}
+              onFocus={() => setFocusedSwatch(Option.some(index))}
+              onBlur={() => setFocusedSwatch(Option.none())}
               onKeyDown={(event: EventPayload) => {
                 if (!disabled && isActivation(event)) choose(swatch);
               }}
@@ -163,6 +168,9 @@ export const ColorPicker = ({
                 borderColor: selected
                   ? theme.colors.foreground
                   : theme.colors.border,
+                ...(Option.contains(focusedSwatch, index)
+                  ? focusRing(theme)
+                  : {}),
               }}
             />
           );

@@ -141,7 +141,8 @@ theme matrix.
 
 `TimePickerSegment.style` takes a `StyleDesc` or a function of
 `TimePickerSegmentState` (`{ disabled, focused }`); the root's field surface
-still owns the group focus ring.
+still owns the group focus ring, and the clear control paints its own ring while
+focused.
 
 ```tsx
 <TimePickerSegment
@@ -179,14 +180,14 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (12 tests): typed hours reaching
+`src/behaviour/time-picker.test.tsx` runs in the real GPUix renderer (13 tests): typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
 the disabled state (read-only, out of the tab order and inert to arrows),
-clearing from the keyboard on Space release, the controlled
-contract, the segments laid out where the caller put them, and no clear control
-when the part is not composed. The theme matrix adds the both-theme surface
-assertion.
+clearing from the keyboard on Space release, the clear control's focus ring, the
+controlled contract, the segments laid out where the caller put them, and no
+clear control when the part is not composed. The theme matrix adds the
+both-theme surface assertion.
 
 ```sh
 nub run --filter @gpuixui/components test

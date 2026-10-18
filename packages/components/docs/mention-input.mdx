@@ -75,6 +75,9 @@ press closes the list and the next closes the dialog.
 
 The list renders nothing while there is no query or no match.
 
+With a `testId`, the input is that id and the group surface that paints the ring
+is `<testId>-group`, so a harness can measure the focused field surface.
+
 ## Theming
 
 The field uses `background`, `border`, `radius.md`, `controlHeight(theme, "md")`
@@ -95,7 +98,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   `@gpuix/native@0.10.0`'s accessibility dump (measured), so the list is not
   announced as a listbox. There is no `aria-activedescendant` either.
 - Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
-  input's `Tab` behaviour is the platform's.
+  input's `Tab` behaviour is the platform's. A focused row paints the token ring
+  even when it is not the highlighted row, and a field with `autoFocus` seeds the
+  group ring (plan 522).
 
 ## Limitations
 
@@ -111,12 +116,13 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (15 tests):
 opening, narrowing, arrow movement, Enter insertion, row presses, Escape from the
 field and from a focused row, one surface per Escape inside a dialog,
-no-match closing, the two callbacks firing once, a disabled field, and the
-caller's `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the
-component's own action.
+no-match closing, the two callbacks firing once, a focused row's ring, the group
+ring a field's `autoFocus` seeds, a disabled field, and the caller's
+`onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the component's
+own action.
 
 `src/mention/logic.test.ts` (12 pure tests) covers query detection, replacement
 and ranking.

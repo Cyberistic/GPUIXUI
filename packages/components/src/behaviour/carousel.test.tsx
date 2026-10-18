@@ -477,4 +477,62 @@ describe("Carousel", () => {
 
     gallery.unmount();
   });
+
+  /**
+   * Focus visibility (plan 522). The bug these guard, measured: the root takes
+   * native focus for its arrow keys and a dot takes it for Enter/Space, and
+   * neither painted the token ring, so a keyboard user could not see where
+   * focus was.
+   */
+  it("paints the focus ring on the group and the focused dot", () => {
+    const gallery = renderComponent(<StatefulIndicators />);
+
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("carousel")?.id ?? -1,
+    );
+
+    expect(
+      gallery.renderer.findByTestId("carousel")?.style.boxShadow,
+    ).toBeDefined();
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-0")?.style.boxShadow,
+    ).toBeUndefined();
+
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("carousel-indicator-1")?.id ?? -1,
+    );
+
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-1")?.style.boxShadow,
+    ).toBeDefined();
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-0")?.style.boxShadow,
+    ).toBeUndefined();
+    expect(
+      gallery.renderer.findByTestId("carousel")?.style.boxShadow,
+    ).toBeUndefined();
+
+    gallery.unmount();
+  });
+
+  it("seeds the group ring from autoFocus", () => {
+    // The runtime applies `autoFocus` after React's effects, so `onFocus` never
+    // runs (plan 388); the root's own state must carry the ring (plan 522).
+    const gallery = renderComponent(
+      <Carousel testId="carousel" label="Screenshots" autoFocus>
+        <CarouselTrack>
+          <CarouselSlide>
+            <text>One</text>
+          </CarouselSlide>
+        </CarouselTrack>
+      </Carousel>,
+    );
+
+    expect(focusedTestId(gallery)).toEqual(Option.some("carousel"));
+    expect(
+      gallery.renderer.findByTestId("carousel")?.style.boxShadow,
+    ).toBeDefined();
+
+    gallery.unmount();
+  });
 });

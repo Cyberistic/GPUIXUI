@@ -88,7 +88,8 @@ the frame with no code change — see [Theming](/docs/theming).
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
 `aria-disabled` semantics (plan 516).
 
-- The root is a named `group` and takes focus for the arrow keys.
+- The root is a named `group` and takes focus for the arrow keys; the root and
+  every dot paint the token focus ring, and a root `autoFocus` seeds its ring.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
   edge is disabled (out of the tab order, dimmed) unless `loop`.
 - Each indicator is a button named "Go to slide N"; the active one carries
@@ -110,13 +111,14 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (17 tests):
 exactly one slide painted, an inactive slide with no layout box, the active slide
 taking a click the inactive one used to take, a hidden slide keeping its state
 across a step, control stepping, edge clamping, loop wrapping, arrows and
 Home/End, a controlled carousel, region naming and disabled edges, one named
 indicator per slide with the active one marked (press and `Enter`/`Space` both
-jump), and a style callback receiving `{ active, index }` in both themes.
+jump), the root and dot focus rings (including the `autoFocus` seed), and a
+style callback receiving `{ active, index }` in both themes.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

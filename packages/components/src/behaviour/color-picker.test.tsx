@@ -190,4 +190,26 @@ describe("ColorPicker", () => {
     ).toBe(lightTheme.colors.border);
     invalid.unmount();
   });
+
+  /**
+   * Focus visibility (plan 522). The bug this guards, measured: a swatch takes
+   * native focus and painted no ring, so a keyboard user could not see which
+   * colour the next Enter would choose.
+   */
+  it("paints the focus ring on a focused swatch", () => {
+    const picker = renderComponent(<Harness />);
+
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("picker-swatch-1")?.id ?? -1,
+    );
+
+    expect(
+      picker.renderer.findByTestId("picker-swatch-1")?.style.boxShadow,
+    ).toBeDefined();
+    expect(
+      picker.renderer.findByTestId("picker-swatch-0")?.style.boxShadow,
+    ).toBeUndefined();
+
+    picker.unmount();
+  });
 });

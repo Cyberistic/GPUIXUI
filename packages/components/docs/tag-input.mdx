@@ -78,7 +78,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - A chip with `testId="chip-design"` renders its removal control as
   `testId="chip-design-remove"`, so a consumer or a harness can address one
   token's control without coordinates.
-- The field is a real input, so typing, selection and focus are native.
+- The field is a real input, so typing, selection and focus are native. A
+  focused chip's removal control paints the token ring, and a field with
+  `autoFocus` seeds the group ring (the runtime applies native focus after
+  React's effects, so `onFocus` never runs — plan 522).
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
   `Enter`, or releasing `Space`.
 - There is no `aria-disabled` in 0.10.0; the field and the group announce
@@ -95,9 +98,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (11 tests):
+`src/behaviour/tag-input.test.tsx` runs in the real GPUix renderer (13 tests):
 rendering, Enter, comma commit, duplicates, the named removal control, removal
-by pointer and Space release, `max`, a disabled field (read-only, no removal
+by pointer and Space release, the chip control's focus ring, the group ring a
+field's `autoFocus` seeds, `max`, a disabled field (read-only, no removal
 controls, no Enter path) and a caller that refuses a change.
 
 `src/tag-input/logic.test.ts` (10 pure tests) covers splitting, trimming,
