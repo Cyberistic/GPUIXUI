@@ -119,7 +119,7 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SelectState>` | — | merged last on the select root; an object or a state callback |
 | `triggerStyle` | `StateStyle<SelectTriggerState>` | — | merged last on the visible trigger; an object or a state callback |
-| `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger`, the indicator `${testId}-chevron` |
+| `testId` | `string` | — | names the select; the visible trigger becomes `${testId}-trigger`, the indicator `${testId}-chevron`, and each option `${testId}-option-${value}` |
 
 ```ts
 interface SelectOption {
@@ -356,6 +356,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
   select's open state, and the per-item states reaching the paint (plans 080,
   081).
+- `runtime/select-pointer.runtime.test.tsx` — pointer selection on the painted
+  label: clicking an enabled option's text reports it, closes the list and
+  returns native focus to the trigger; clicking a disabled option's text
+  reports nothing and leaves the list open. The option rows are located as
+  `${testId}-option-${value}` (plan 390).
 
 - `src/components/Select.test.tsx` — trigger chrome, **the decorative chevron
   (down at rest, up while open, muted when disabled, unnamed)**, **the focus
@@ -365,7 +370,9 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   role/name/expanded/selected props the wrapper passes down, the list-height
   estimate checked against the styles it mirrors, the capped content style, the
   non-shrinking row, and a grouped tree: one named `group`, its caption heading,
-  the flat `items` order, and the selected label across a group (plan `075`).
+  the flat `items` order, and the selected label across a group (plan `075`);
+  and the option locators `${testId}-option-${value}`, grouped options
+  included, with none invented when `testId` is absent (plan `390`).
 - `src/core/select.test.ts` — the entry model: a flat list reads as itself, a
   group flattens in paint order without its heading, an empty group contributes
   nothing, disabled flags survive the flatten, and a disabled select is closed

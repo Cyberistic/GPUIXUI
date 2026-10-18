@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 130/130
+`[x]` `[██████████]` 131/131
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1211,6 +1211,19 @@ retired once both branches are one
       consequence, forbids collecting passwords/API keys/tokens in `Input` and
       points at an OS credential prompt or configuration; no `PasswordInput`
       ships. Docs + inventory only, no behaviour change (plan `389`).
+`[x]` `packages/primitives`: **a debug probe shipped as a runtime test, and a
+      `Select` option had no locator** — `runtime/__probe.runtime.test.tsx` was
+      committed while the degraded artifact was diagnosed: one case **failed**
+      asserting that clicking an enabled option's painted label reports nothing
+      (it reports the option), and two passed by asserting that real
+      interactions report nothing. It is deleted. Every option row is now
+      addressable as `${testId}-option-${value}` (trigger and chevron already
+      were), and `runtime/select-pointer.runtime.test.tsx` proves the label is a
+      hit target — enabled reports the value, closes the list and returns focus
+      to the trigger; disabled reports nothing and keeps the list open. A new
+      `src/runtime-hygiene.test.ts` fails by file name when a runtime suite has
+      no header comment or is `__`-prefixed. Both new guards proven in both
+      directions (plan `390`).
 `[ ]` `packages/primitives`: **the full live suite is not green on this host** —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
@@ -1232,6 +1245,13 @@ retired once both branches are one
       testing and the frame model. Do **not** re-baseline these assertions on the
       current artifact; the scoped relative suites remain valid, and the full
       suite waits for plan `529`'s published-tag build.
+      **Re-measured 2026-10-18 23:48 (artifact rebuilt 23:35):** 656 tests,
+      **544 passed / 112 failed across 20 of 42 files** — the same
+      focus/activation/trigger/geometry families (`fields` 30, `focus-ring` 19,
+      `disabled` 15, `activation` 8, `overlay-trigger` 8), not a new regression.
+      One of the 112 was this package's stale `__probe.runtime.test.tsx`
+      (plan `390`): after deleting it the count is 111 and the suite is
+      otherwise unchanged. No assertion was re-baselined.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

@@ -384,6 +384,19 @@ export const selectListHeight = (
   );
 };
 
+/**
+ * The locator an option row carries: `${testId}-option-${value}`.
+ *
+ * The trigger and its indicator are already named (plans `083`, `343`); the
+ * option rows were not, so a suite had to find the painted label and walk to
+ * its parent. An absent `testId` names nothing — the wrapper never invents one.
+ */
+export const selectOptionTestId = (
+  testId: string | undefined,
+  value: string,
+): string | undefined =>
+  testId === undefined ? undefined : `${testId}-option-${value}`;
+
 /** The placement the wrapper has already resolved for the list. */
 export interface SelectPlacement {
   /** The trigger's measured width, so the list is never narrower. */
@@ -505,6 +518,7 @@ export const renderSelect = (
       aria-label={choice.label}
       aria-selected={choice.value === selected}
       disabled={choice.disabled}
+      testId={selectOptionTestId(testId, choice.value)}
       style={selectItemStyle(theme)}
     >
       {(state) => (

@@ -368,6 +368,7 @@ describe("Select", () => {
           { value: "beta", label: "Beta" },
         ],
         label: "Fruit",
+        testId: "sel",
       },
       testTheme,
       valueState("beta"),
@@ -388,6 +389,24 @@ describe("Select", () => {
     expect(
       entries.map((item) => expectSome(elementProp(item, "aria-selected"))),
     ).toStrictEqual([false, true]);
+    // An option is addressable like the trigger and its indicator (plan 390),
+    // so a suite never has to find the painted label and walk to its parent.
+    expect(
+      entries.map((item) => expectSome(elementProp(item, "testId"))),
+    ).toStrictEqual(["sel-option-alpha", "sel-option-beta"]);
+  });
+
+  it("invents no option locator when the select has no testId", () => {
+    const element = renderSelect(
+      { options: [{ value: "alpha", label: "Alpha" }], label: "Fruit" },
+      testTheme,
+      valueState("alpha"),
+      true,
+      noFocus,
+      handlers,
+    );
+    const option = childAt(childAt(element, 1), 0);
+    expect(Option.isNone(elementProp(option, "testId"))).toBe(true);
   });
 
   it("renders nothing for an empty group, while the other entries keep their rows", () => {
@@ -428,6 +447,7 @@ describe("Select", () => {
           { value: "us", label: "United States" },
         ],
         label: "Region",
+        testId: "region",
       },
       testTheme,
       valueState("eu"),
@@ -463,7 +483,17 @@ describe("Select", () => {
         Option.getOrUndefined(elementProp(child, "role")),
       ),
     ).toStrictEqual([undefined, "option"]);
+    // A grouped option is addressable too; the caption above it is not a
+    // control, so it carries no locator (plan 390).
+    expect(
+      groupChildren.map((child) =>
+        Option.getOrUndefined(elementProp(child, "testId")),
+      ),
+    ).toStrictEqual([undefined, "region-option-eu"]);
     expect(expectSome(elementProp(childAt(list, 1), "role"))).toBe("option");
+    expect(expectSome(elementProp(childAt(list, 1), "testId"))).toBe(
+      "region-option-us",
+    );
   });
 });
 
