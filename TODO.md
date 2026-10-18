@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 136/186
+`[x]` `[███████░░░]` 137/187
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -976,6 +976,14 @@ geometry (plan 360) and motion (plan 364) but the other eight groups accepted
 renderer casts each to `f32::INFINITY` and paints invalid layout silently; one
 `finiteMembers` pass now walks every numeric member of those eight groups and no
 shipped value moves (plan 368)
+`[x]` Govern a defined `elevation.overlay` — the elevation rule walked `sm`,
+`md` and `lg` and exempted `overlay` as "reserved and empty", which is true of
+the shipped data but not of the type or the runtime: `extendTheme` replaces a
+level's array and `elevationShadow` paints it, so a defined overlay entry with
+`offsetX: NaN` and `alpha: 2` returned `[]` from both checkers while the
+renderer received an unpaintable shadow with an opaque tint; the loop now walks
+all four levels, an empty level stays exempt, and every shipped set ships an
+empty overlay so no value moves (plan 369)
 
 ## Phase C — Tier 1–2 components
 

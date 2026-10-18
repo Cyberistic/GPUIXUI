@@ -261,7 +261,9 @@ black canvas a dark veil cannot darken anything, so that theme veils with light:
 the modal is separated by a light wash, its own edge and elevation instead of a
 darker backdrop.
 `elevation.overlay` is a different concern — a reserved shadow level, empty so
-the shape stays stable.
+the shape stays stable; a consumer who defines one is held to the same finite
+geometry and alpha as `sm`, `md` and `lg`, because `elevationShadow` will
+paint it.
 Dark shadows are darker and more opaque because contrast between surfaces is
 lower.
 

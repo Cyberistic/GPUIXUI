@@ -1435,9 +1435,11 @@ step, and every motion timing — must be a **finite** number too, because the
 renderer casts each to a 32-bit float and an infinity becomes invalid layout it
 paints as nothing, with no error. `radius` and the motion timings are
 deliberately non-decreasing rather than strict: Linux and Windows ship
-`radius.lg === radius.xl`, and Windows ships `motion.fast === motion.step`. `elevation.overlay` is exempt
-because it is reserved and empty. Every shipped theme, platform variant and
-recipe passes, so the check moves no value; it guards the next edit.
+`radius.lg === radius.xl`, and Windows ships `motion.fast === motion.step`. An
+empty elevation level is exempt — `elevation.overlay` ships reserved and empty —
+but a level a consumer defines, `overlay` included, is held to the same rules,
+because `elevationShadow` will paint it. Every shipped theme, platform variant
+and recipe passes, so the check moves no value; it guards the next edit.
 
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.

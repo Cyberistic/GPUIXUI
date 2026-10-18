@@ -333,6 +333,13 @@ describe("docs/tokens.md numeric tables", () => {
     expect(markdown).toContain("`elevationShadows`");
   });
 
+  it("governs a defined elevation level, overlay included", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain(
+      "a level a consumer defines, `overlay` included, is held to the same rules",
+    );
+  });
+
   it("lists every motion level in milliseconds", () => {
     Object.entries(motion).forEach(([level, value]) => {
       if (typeof value !== "number") {

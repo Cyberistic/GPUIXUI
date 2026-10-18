@@ -394,8 +394,10 @@ non-finite motion timing or a cubic-bezier easing the runtime cannot
 interpolate, leave the largest avatar a rounded square, or hand
 `elevationShadow` an alpha the colour helper cannot parse. The ladders are non-decreasing rather than
 strict because Linux and Windows ship `radius.lg === radius.xl` and Windows ships
-`motion.fast === motion.step`; `elevation.overlay` is exempt because it is
-reserved and empty. Every shipped theme, platform variant and recipe passes.
+`motion.fast === motion.step`; an empty elevation level is exempt (the shipped
+`elevation.overlay`), while a level a consumer defines is held to the same rules
+because `elevationShadow` paints its first entry. Every shipped theme, platform
+variant and recipe passes.
 `metricGroups` is the ordered index a settings row iterates. A runnable example
 lives in [`src/metrics.example.ts`](./src/metrics.example.ts).
 
