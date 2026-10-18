@@ -29,7 +29,12 @@ Omit `value` to let the rating own its state; `defaultValue` sets the start
 (`0` is unrated). Clicking the selected star keeps it — clearing is a deliberate
 key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 
-## Variants, sizes and states
+## Values
+
+Values are truncated to whole stars and clamped to `0..max`; a value that is not
+a number reads as unrated.
+
+## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
@@ -45,9 +50,6 @@ key (`Delete`/`Backspace`) or the app calling `onValueChange(0)`.
 | `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
 | `starStyle` | `StateStyle<RatingStarState>` | — | merged last on each star; an object or a state callback |
 | `testId` | `string` | — | names the group; stars become `${testId}-star-N` (1-based) |
-
-Values are truncated to whole stars and clamped to `0..max`; a value that is not
-a number reads as unrated.
 
 ## Keyboard
 

@@ -1375,6 +1375,16 @@ retired once both branches are one
       Spinner/OTP/Slider/Range slider/Progress/Meter state the resolved
       behaviour (plan `026`; offline 705 → 720).
 
+`[x]` `packages/primitives`: **the API section of a component page was a
+      convention, not a contract** — 24 pages put the prop table under
+      `## API` while seven (`meter`, `number-field`, `otp-field`, `rating`,
+      `slider`, `range-slider`, `toggle`) put the same table under
+      `## Variants, sizes and states`, and nothing required a page to name every
+      prop. The seven tables move under `## API`, the section joins the required
+      page contract, and the contract suite reads the source and fails by part
+      and prop when a page misses one or names a phantom (plan `027`; offline
+      720 → 722, three mutation directions measured).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: the `SUMMARIES` override table in

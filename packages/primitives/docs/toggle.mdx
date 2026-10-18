@@ -25,6 +25,12 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 
 ## Variants, sizes and states
 
+Pressing paints `colors.accent` with `colors.accentForeground` — the role the
+theme reserves for a selected surface — so pressed, hover and focus are three
+different states.
+
+## API
+
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `pressed` | `boolean` | — | controlled state |
@@ -36,13 +42,10 @@ Omit `pressed` to let the toggle own its state (`defaultPressed` sets the start)
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
+| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<ToggleState>` | — | merged last; an object or a state callback |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |
-
-Pressing paints `colors.accent` with `colors.accentForeground` — the role the
-theme reserves for a selected surface — so pressed, hover and focus are three
-different states.
 
 ## Keyboard
 

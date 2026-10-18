@@ -30,7 +30,15 @@ const [quality, setQuality] = useState(62);
 
 Omit `value` to let the slider own its state (`defaultValue` sets the start).
 
-## Variants, sizes and states
+## Values
+
+Out-of-range values are clamped, and a value between stops snaps to the nearest
+stop measured from `min` (a tie goes to `max`). **`max` is always a stop**, so a
+step that does not divide the span still fills the track: `min 0`, `max 10`,
+`step 3` has the stops `0, 3, 6, 9, 10`. `NaN` reads as `min`, never as a full
+track.
+
+## API
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
@@ -48,12 +56,6 @@ Omit `value` to let the slider own its state (`defaultValue` sets the start).
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<SliderThumbState>` | — | merged last on the thumb; an object or a state callback |
 | `testId` | `string` | — | names the track; the thumb becomes `${testId}-thumb` |
-
-Out-of-range values are clamped, and a value between stops snaps to the nearest
-stop measured from `min` (a tie goes to `max`). **`max` is always a stop**, so a
-step that does not divide the span still fills the track: `min 0`, `max 10`,
-`step 3` has the stops `0, 3, 6, 9, 10`. `NaN` reads as `min`, never as a full
-track.
 
 ## Keyboard
 
