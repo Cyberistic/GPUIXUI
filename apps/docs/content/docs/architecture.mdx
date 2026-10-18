@@ -15,7 +15,9 @@ tokens → icons → primitives → components → data-grid · docking · edito
   depends on nothing else in the repository.
 - `@gpuixui/icons` — the monochrome SVG icon set, sized from the token scale.
 - `@gpuixui/primitives` — foundational parts: layout, text, buttons, inputs and
-  the value controls. It depends on tokens and icons.
+  the value controls. It depends on tokens and icons. Its `core/` entry point
+  holds the pure decisions behind those components; [Extending](/docs/extending)
+  documents the layer and the rule for adding to it.
 - `@gpuixui/components` — composition and feedback components. It reads tokens
   directly and wraps GPUix's headless `select`, `combobox` and `tooltip` where
   those exist.

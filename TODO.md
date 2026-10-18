@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–486)
+## Docs site workstream (plans 410–488)
 
-`[x]` `[██████████]` 85/85
+`[x]` `[██████████]` 89/89
+
+`[x]` **Extension instructions reach the site (plan 488)** — `/docs/extending`
+      documents the primitives `core/` layer: every real module and what it
+      decides, the exported public surface, a walk-through of the real
+      `Toggle` source, where a new decision belongs, the theme example and the
+      four verification layers; `extending.test.ts` reads
+      `packages/primitives/src/core` and the page, so a new module cannot ship
+      undocumented and a renamed include or command fails by name (five
+      two-direction proofs)
 
 `[x]` **The component-page template is published (plan 487)** — `/docs/component-pages`
       generates its section list from `sectionsFor(pattern)`, names the record

@@ -1,0 +1,146 @@
+---
+title: Extending
+description: The primitives core, and how a component is built on it.
+---
+
+GPUIXUI is built to be extended, not just consumed. A component's behaviour is a
+pure decision you can call, test and replace; the component is the thin renderer
+around it. This page documents that layer and the rules for adding to it.
+
+## The two layers
+
+`@gpuixui/primitives` publishes two entry points:
+
+- `@gpuixui/primitives` — the components: layout, text, buttons, inputs, the
+  value controls. They render GPUix host elements.
+- `@gpuixui/primitives/core` — the decisions, with no GPUix import at runtime:
+  keyboard contracts, controlled state, the value/number/OTP/rating
+  arithmetic, layout resolution, the style resolvers and the variant tables.
+
+That split is deliberate. A decision that lives in `core/` is provable on a
+machine with no GPUix window, so keyboard contracts, clamping and state rules
+have real tests everywhere; the runtime is reserved for what only it can prove
+— paint, focus and real events. The [GPUix capabilities](/docs/capabilities)
+page records which claims come from a runtime run.
+
+Nothing in `core/` imports `@gpuix/react` at runtime (only its types, erased at
+build). If you find yourself reaching for a renderer inside a decision, the
+decision belongs in the component instead — see
+[Where a decision goes](#where-a-decision-goes).
+
+## The core modules
+
+| Module | What it decides | Used by |
+| ------ | --------------- | ------- |
+| `keyboard.ts` | activation and navigation from one key event: Enter on key down, Space on key up, a held key never activates, arrows/Home/End/Page where the control has an index | Button, Toggle, Checkbox, Switch, RadioGroup |
+| `state.ts` | controlled versus uncontrolled values, and which value wins while controlled | Input, TextArea, Checkbox, Switch, RadioGroup, Slider, Rating, NumberField, OTPField, Toggle |
+| `number.ts` | number-field text parsing, formatting and the step/clamp arithmetic between optional bounds | NumberField |
+| `rating.ts` | star-count clamping, arrow/clear decisions and the rating's tab stop | Rating |
+| `otp.ts` | distributing an accumulated input across the cells, and the per-key contract | OTPField |
+| `value.ts` | range normalisation and snapping, fraction ⇄ value, and pointer/key movement | Slider, Meter |
+| `layout.ts` | Stack, Grid and Box geometry, resolved from the theme's spacing scale | Stack, Box |
+| `selection.ts` | the unchecked / checked / indeterminate paint shared by selection controls | Checkbox, RadioGroup, Switch |
+| `loading.ts` | discrete pulse steps for indicators the runtime cannot animate | Skeleton, Spinner, Progress |
+| `style.ts` | the one place a semantic spec (`ControlSpec`, `TextSpec`, `SurfaceSpec`, …) becomes a GPUix `StyleDesc` | every painted component |
+| `variants.ts` | the variant tables — what `variant="primary"` means, as theme roles rather than colours | Button, Toggle, Input, NumberField, Select |
+| `theme.ts` | the token theme's names, re-exported with the `ColorRef` resolver type; the declaration itself lives in `@gpuixui/tokens` | every component |
+
+A module is added only when a second control needs the same decision; a single
+component's private rule stays in the component.
+
+## The public surface
+
+This is the whole exported entry point — the signatures and the doc comments are
+the API, not a copy of it:
+
+<include lang="ts" meta='title="packages/primitives/src/core/index.ts"'>
+  ../../../../packages/primitives/src/core/index.ts
+</include>
+
+The same exports are available from the package root as well, so a component can
+import from `@gpuixui/primitives` and a consumer can take only the decision
+layer from `@gpuixui/primitives/core`.
+
+## A worked component
+
+`Toggle` is the smallest delivered component that composes the layer: a button
+that stays on, with the state announced through a value rather than a pressed
+state (GPUix 0.10.0 has no `aria-pressed`).
+
+<include lang="tsx" meta='title="packages/primitives/src/components/Toggle.tsx"'>
+  ../../../../packages/primitives/src/components/Toggle.tsx
+</include>
+
+Read it as five separate concerns:
+
+1. **activation** — `decideActivation(key, phase, isHeld)` is `core/keyboard.ts`.
+   The component only routes `onKeyDown` and `onKeyUp` to it, so Enter/Space and
+   held-key behaviour match every other control.
+2. **state** — `useControlState` wraps `core/state.ts`: a supplied `pressed`
+   makes the toggle controlled and the internal copy irrelevant. `Toggle` never
+   decides which value wins.
+3. **paint** — `toggleVariants` (`core/variants.ts`) names the roles for the
+   pressed and resting fills; `controlStyle` and `controlFocusStyle`
+   (`core/style.ts`) turn the spec into `StyleDesc`s. There is no colour, space
+   or radius literal here.
+4. **accessibility** — `pressedValueText` is the component's own small contract,
+   and it exists because the runtime has no `aria-pressed`; it is documented as a
+   [limitation](/docs/components/toggle) rather than presented as a native state.
+5. **React-local wiring** — `useFocus` and the event handlers are the only
+   pieces that must live in the component: they need a mount and a renderer.
+
+What `Toggle` does **not** own is as important: it does not clamp, snap,
+normalise or compute geometry, so nothing in it needs a renderer to be tested.
+
+## Where a decision goes
+
+| The thing you are writing | Where it belongs |
+| ------------------------- | ---------------- |
+| A rule that is a function of props and an event (`decide*`, `clamp*`, `normalize*`, `step*`) | a `core/` module, with a unit test that reads like the rule |
+| Which value a control renders while controlled | `core/state.ts` — never a component |
+| A colour, border, radius or shadow | `core/style.ts`, from a theme role |
+| A new named variant | `core/variants.ts`, referencing roles |
+| Focus, refs, timers, native interaction | the component, beside `useFocus` |
+| A one-off rule only this component has | the component, until a second consumer appears |
+
+If a rule needs a renderer to be observed, that is the signal it is not a
+decision — move it up into the component and prove it in the runtime suite.
+
+## A theme, not a rewrite
+
+Theming is the other extension axis, and it needs no component change: a theme
+overrides semantic roles, so every variant, focus ring and elevation follows.
+The mechanism is `createTheme`; its real, type-checked example is:
+
+<include lang="ts" meta='title="packages/tokens/src/brand-theme.example.ts"'>
+  ../../../../packages/tokens/src/brand-theme.example.ts
+</include>
+
+[Theming](/docs/theming) documents every role and the platform styles;
+[Tokens API](/docs/tokens-api) generates the `ThemeConfig`/`Theme` shapes and
+lists every helper.
+
+## Verify it
+
+A new decision or component is only done when the layer it belongs to has been
+proved. Run the narrowest check that can fail for your change, then the gates:
+
+| Layer | Command | What it proves |
+| ----- | ------- | -------------- |
+| pure decisions | `nub run --filter @gpuixui/primitives test` | every `core/` rule and the component tests that do not need a window |
+| real renderer | `nub run --filter @gpuixui/primitives test:runtime` | the component mounts, paints, focuses and receives keys in GPUix 0.10.0 |
+| native playground | `nub run --filter playground build` | the smoke suite and its capabilities run as one app |
+| docs | `nub run --filter docs test` | the page contract, links, API tables and previews this site publishes |
+
+The runtime suites need a GPUix binding; on a host without one they fail loudly
+rather than reporting a pass. A component page must name which layer proved it
+— [Component pages](/docs/component-pages) carries the template.
+
+## Related
+
+- [Architecture](/docs/architecture) — how the packages fit together.
+- [Component API](/docs/component-api) — the compound-part contract a component
+  follows.
+- [Component pages](/docs/component-pages) — the record, sections and guards a
+  docs page owes.
+- [Contributing](/docs/contributing) — the gates and the worktree rules.

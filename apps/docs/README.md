@@ -46,6 +46,11 @@ The contributor-facing copy of the component-page template is
 `src/component-meta/contract.ts`, while the `## ` headings below stay the file
 `component-pages.test.ts` reads.
 
+The extension half is `/docs/extending` (plan 488): the `core/` layer, the real
+`Toggle` source and the theme example. `src/extending.test.ts` reads
+`packages/primitives/src/core` and the page, so a new core module cannot ship
+undocumented and a renamed include or command fails by name.
+
 The editor packages are exact-pinned devDependencies: the ecosystem is pre-v1, so
 a minor bump may change the serialization contract the guard proves. Re-run the
 suite before bumping.
