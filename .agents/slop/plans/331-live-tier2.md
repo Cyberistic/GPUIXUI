@@ -171,6 +171,10 @@ native window; the same build then passed twice in isolation. A live verdict
 requires no concurrent run — the same rule the components package applies to
 `createTestRoot`.
 
+Headless gate after the same hardening: **64/64**, exit `0`. The load-sensitive
+`toast-lifecycle` exit assertion now registers the frozen exit with
+`fastForwardMotion(0)` before the real timer can remove its card.
+
 ## 9. Acceptance
 
 - [x] `live-tier2-dialog`, `live-tier2-menu`, `live-tier2-toast` are registered
