@@ -11,12 +11,21 @@ import type { EventPayload } from "@gpuix/react";
 import { pipe } from "effect";
 import * as Option from "effect/Option";
 
-/** Enter or Space: the two keys that activate a focused control. */
+/**
+ * The selection keys of a composite row or cell: Enter or Space, on key down,
+ * never on a held-key repeat. Space keeps its listbox/grid meaning here; a
+ * button-shaped control uses {@link isSpaceRelease} instead.
+ */
 export const isActivation = (event: EventPayload): boolean =>
-  event.key === "enter" || event.key === "space";
+  event.isHeld !== true && (event.key === "enter" || event.key === "space");
 
-/** Enter alone: a row action. Space stays a selection key. */
-export const isEnter = (event: EventPayload): boolean => event.key === "enter";
+/** Enter alone on key down: a row action, never on a held-key repeat. */
+export const isEnter = (event: EventPayload): boolean =>
+  event.key === "enter" && event.isHeld !== true;
+
+/** Space on key up: the activation half of a button-shaped control. */
+export const isSpaceRelease = (event: EventPayload): boolean =>
+  event.key === "space";
 
 /** Arrow Down, or Ctrl+N for a menu that follows the desktop convention. */
 export const isDown = (event: EventPayload): boolean =>

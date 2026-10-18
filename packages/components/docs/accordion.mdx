@@ -106,12 +106,12 @@ has no `transform` — a rotation is not available.
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (14 tests):
 single mode closing the previous section, the non-collapsible no-op, the
 collapsible close, multiple mode keeping sections, the disabled section, Enter
-activation, the controlled contract including the `null` close, arrow /
-`Home` / `End` movement between headers (wrapping past a disabled one, without
-opening it), and a caller header `ref`.
+activation (and a held Enter toggling only once), the controlled contract
+including the `null` close, arrow / `Home` / `End` movement between headers
+(wrapping past a disabled one, without opening it), and a caller header `ref`.
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.

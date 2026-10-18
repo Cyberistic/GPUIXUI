@@ -35,6 +35,7 @@ a visible label, or pass `aria-label` for a filter bar.
 | ---- | ------ |
 | any character | updates the text and calls `onValueChange` |
 | `Enter` | calls `onSubmit(currentText)` |
+| `Space` on the clear control | clears on release; key down alone does nothing |
 | `Escape` | clears when non-empty and calls `onClear`; does nothing on an empty field, so it does not swallow the key from an enclosing dialog |
 
 `Enter` arrives as the input's `submit` event, not a key-down — measured in
@@ -85,10 +86,11 @@ inner `<input>`.
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (7 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (8 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
-text, clearing and returning focus, Enter submitting, Escape clearing once, the
-controlled contract, and a caller `ref` composed with the internal one.
+text, clearing and returning focus, clearing from the keyboard on Space
+release, Enter submitting, Escape clearing once, the controlled contract, and a
+caller `ref` composed with the internal one.
 
 The field merges its own focus ref with the caller's, so `ref` receives the same
 `<input>` instance that clearing focuses.

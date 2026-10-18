@@ -5,7 +5,8 @@
  * without a value on the minute side; text and value disagreeing after an
  * out-of-range digit; arrow keys that stopped at the hour or at midnight; blur
  * that left a one-digit segment; a clear control on an empty or non-clearable
- * field; and a controlled field that changed itself when the consumer said no.
+ * field, or one that fired on Space key down instead of release; and a
+ * controlled field that changed itself when the consumer said no.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -228,6 +229,24 @@ describe("TimePicker", () => {
       disabled.renderer.findByTestId("time-hours")?.customProps?.readOnly,
     ).toBe(true);
     disabled.unmount();
+  });
+
+  it("clears from the keyboard on Space release", () => {
+    const onValueChange = vi.fn();
+    const time = renderComponent(
+      <Time defaultValue="09:30" clearable onValueChange={onValueChange} />,
+    );
+    const clearControl = time.renderer.findByTestId("time-clear");
+    expect(clearControl).toBeDefined();
+    if (clearControl === undefined) return;
+
+    time.renderer.nativeSimulateKeyDown(clearControl.id, "space");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    time.renderer.nativeSimulateKeyUp(clearControl.id, "space");
+    expect(onValueChange.mock.calls.at(-1)).toEqual([null]);
+
+    time.unmount();
   });
 
   it("keeps a controlled field where the consumer put it", () => {

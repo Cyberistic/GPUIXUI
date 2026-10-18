@@ -14,8 +14,9 @@
  *
  * Activation: Enter that selected but ran nothing; Space that ran the action it
  * should only select with; a click that did not run the row it selected; a plain
- * list click that ran nothing; a disabled row that activated anyway; and an
- * arrow move that activated the old row instead of the reached one.
+ * list click that ran nothing; a disabled row that activated anyway; an arrow
+ * move that activated the old row instead of the reached one; and a held Enter
+ * that activated once per repeat.
  *
  * A caller `ref` on a row was also discarded in favour of the internal one, and
  * so was a caller `onClick`.
@@ -738,6 +739,27 @@ describe("List", () => {
     expect(onActivate).toHaveBeenCalledTimes(1);
     expect(onActivate).toHaveBeenCalledWith("a");
     expect(onValueChange).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("activates once while Enter repeats", () => {
+    const onActivate = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" onActivate={onActivate}>
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+    const row = list.renderer.findByTestId("row-a");
+    expect(row).toBeDefined();
+    if (row === undefined) return;
+
+    list.renderer.nativeSimulateKeyDown(row.id, "enter");
+    list.renderer.nativeSimulateKeyDown(row.id, "enter", true);
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
 
     list.unmount();
   });

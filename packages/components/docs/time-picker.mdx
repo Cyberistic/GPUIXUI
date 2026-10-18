@@ -82,7 +82,7 @@ announce its value. A text input announces its value natively.
 | `ArrowUp` / `ArrowDown` on hours | ±1 hour, carrying and wrapping across midnight |
 | `ArrowUp` / `ArrowDown` on minutes | ±`minuteStep` minutes, carrying and wrapping |
 | `Tab` / `Shift+Tab` | moves between the segments, then out of the field |
-| `Enter` / `Space` on the clear control | clears, reports `null`, focuses the hours segment |
+| `Enter` / `Space` on the clear control | clears, reports `null`, focuses the hours segment; Space acts on release |
 
 Arrow keys and typing share one clock function, so hours and minutes cannot
 disagree at `09:59 + 1` (`10:00`) or `00:00 - 1` (`23:59`).
@@ -163,12 +163,13 @@ and a round-trip of all 1440 minutes, hour carry in both directions, midnight
 wrapping, day wrap, strict and clamping segment parsers, padding, step
 normalisation, the last-two-digits rule and segment composition.
 
-`src/behaviour/time-picker.test.tsx` (10 tests) covers typed hours reaching
+`src/behaviour/time-picker.test.tsx` (11 tests) covers typed hours reaching
 `onValueChange`, typed minutes completing the value, out-of-range clamping,
 arrow carry and midnight wrap, `minuteStep`, blur padding, the clear rules and
-the disabled state, the controlled contract, the segments laid out where the
-caller put them, and no clear control when the part is not composed. The theme
-matrix adds the both-theme surface assertion.
+the disabled state, clearing from the keyboard on Space release, the controlled
+contract, the segments laid out where the caller put them, and no clear control
+when the part is not composed. The theme matrix adds the both-theme surface
+assertion.
 
 ```sh
 nub run --filter @gpuixui/components test

@@ -15,11 +15,11 @@
  * dimming — assistive technology sees a button that does nothing.
  */
 
-import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
+import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { useState } from "react";
-import { isActivation } from "./key.js";
+import { activationHandlers } from "./activate.js";
 import {
   alpha,
   controlHeight,
@@ -109,22 +109,22 @@ const controlStyle = (
 
 /**
  * Click and key activation, muted when the control is disabled. A disabled
- * control keeps its own `onKeyDown` so a wrapper can still see keys bubble.
+ * control keeps its own key handlers so a wrapper can still see keys bubble;
+ * Enter fires on key down and Space on key up (`internal/activate.ts`).
  */
 const activation = (
   disabled: boolean,
   onClick: Props["onClick"],
   onKeyDown: Props["onKeyDown"],
-): Pick<Props, "onClick" | "onKeyDown"> =>
-  disabled
-    ? { onClick: undefined, onKeyDown }
-    : {
-        onClick,
-        onKeyDown: (event: EventPayload) => {
-          if (isActivation(event)) onClick?.(event);
-          onKeyDown?.(event);
-        },
-      };
+  onKeyUp: Props["onKeyUp"],
+): Pick<Props, "onClick" | "onKeyDown" | "onKeyUp"> => ({
+  onClick: disabled ? undefined : onClick,
+  ...activationHandlers((event) => onClick?.(event), {
+    disabled,
+    onKeyDown,
+    onKeyUp,
+  }),
+});
 
 /** A control's look when it is disabled: dimmed, and out of the tab order. */
 const disabledStyle = (disabled: boolean): StyleDesc => ({
@@ -142,6 +142,7 @@ export const Button = ({
   disabled = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -155,7 +156,7 @@ export const Button = ({
       role="button"
       tabIndex={disabled ? -1 : 0}
       {...rest}
-      {...activation(disabled, onClick, onKeyDown)}
+      {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);
@@ -186,6 +187,7 @@ export const IconButton = ({
   disabled = false,
   onClick,
   onKeyDown,
+  onKeyUp,
   onFocus,
   onBlur,
   style,
@@ -201,7 +203,7 @@ export const IconButton = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
-      {...activation(disabled, onClick, onKeyDown)}
+      {...activation(disabled, onClick, onKeyDown, onKeyUp)}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);

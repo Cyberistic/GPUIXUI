@@ -109,12 +109,23 @@ Which parts have a state, and which do not, is a measured line:
 ## 4. Keyboard
 
 Keyboard behaviour is the shared contract in
-`packages/primitives/src/core/keyboard.ts` (plan `030`):
+`packages/primitives/src/core/keyboard.ts` (plan `030`), implemented through
+this package's `internal/key.ts` predicates and `internal/activate.ts`:
 
-- Enter activates on key down, Space on key up, and `defaultPrevented` is
-  respected;
-- one roving tab stop per composite, arrows wrap and skip disabled parts;
-- Home/End and Escape follow the component's guide;
+- **Once per keystroke.** A key-repeat event (`EventPayload.isHeld`) never
+  activates, so holding Enter cannot toggle a section or run a command twice.
+- **Enter on key down.** It is the action key for buttons, rows and cells.
+- **Space on key up for a button-shaped control.** Anything drawn as
+  `role="button"` activates Space through `internal/activate.ts`, so a user can
+  move focus away before releasing. Composite rows and cells (`List`, menu rows,
+  grid and calendar cells, tabs) keep Space as a **selection** key on key down,
+  per ARIA's listbox/grid patterns.
+- **No default suppression.** `@gpuix/react@0.10.0`'s `EventPayload` has no
+  `preventDefault` and no `defaultPrevented`, so a component cannot cancel the
+  runtime's own key handling; the contract says what the component does, not
+  what it suppresses.
+- One roving tab stop per composite, arrows wrap and skip disabled parts;
+  Home/End and Escape follow the component's guide;
 - every component's docs page records its own key table, drawn from
   `base-gpui`'s `## Keyboard interaction` section.
 

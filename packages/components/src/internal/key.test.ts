@@ -1,8 +1,12 @@
 /**
  * Key predicates. The bug these guard: `isActivation` accepted only `"enter"`
  * because `"space"` looked like the DOM's `" "`, so Space never activated a
- * focused control. Every predicate is asserted against a neighbouring key, so a
- * typo in any key name fails here instead of in a component.
+ * focused control; and no predicate read `isHeld`, so holding a key ran the
+ * action once per repeat. Every predicate is asserted against a neighbouring
+ * key, so a typo in any key name fails here instead of in a component.
+ *
+ * `isSpaceRelease` is the key-up half of a button's activation: Enter fires on
+ * key down, Space on release, so a user can move focus before letting go.
  */
 
 import { describe, expect, it } from "vitest";
@@ -13,19 +17,27 @@ import {
   isActivation,
   isDismiss,
   isDown,
+  isEnter,
   isFirst,
   isLast,
   isLeft,
   isMenuKey,
   isRight,
+  isSpaceRelease,
   isTab,
   isUp,
 } from "./key.js";
 
-const keyEvent = (key: string, ctrl = false, shift = false): EventPayload => ({
+const keyEvent = (
+  key: string,
+  ctrl = false,
+  shift = false,
+  isHeld = false,
+): EventPayload => ({
   elementId: 1,
   eventType: "keyDown",
   key,
+  isHeld,
   modifiers: { shift, ctrl, alt: false, cmd: false },
 });
 
@@ -34,6 +46,20 @@ describe("key predicates", () => {
     expect(isActivation(keyEvent("enter"))).toBe(true);
     expect(isActivation(keyEvent("space"))).toBe(true);
     expect(isActivation(keyEvent("tab"))).toBe(false);
+  });
+
+  it("does not activate on a held-key repeat", () => {
+    expect(isActivation(keyEvent("enter", false, false, true))).toBe(false);
+    expect(isActivation(keyEvent("space", false, false, true))).toBe(false);
+    expect(isEnter(keyEvent("enter", false, false, true))).toBe(false);
+    expect(isEnter(keyEvent("enter"))).toBe(true);
+    expect(isEnter(keyEvent("space"))).toBe(false);
+  });
+
+  it("releases Space as the button activation key", () => {
+    expect(isSpaceRelease(keyEvent("space"))).toBe(true);
+    expect(isSpaceRelease(keyEvent("enter"))).toBe(false);
+    expect(isSpaceRelease(keyEvent("tab"))).toBe(false);
   });
 
   it("reads the arrow keys in their own direction only", () => {

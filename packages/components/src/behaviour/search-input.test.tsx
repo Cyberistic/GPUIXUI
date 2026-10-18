@@ -4,8 +4,9 @@
  * The bugs these guard: typing that never reached `onValueChange`; a clear
  * control offered on an empty field; clearing that forgot to give focus back to
  * the field; Enter that submitted nothing; Escape that swallowed the key on an
- * empty field; a controlled field that changed its own display when the consumer
- * said no; and a caller `ref` that the internal focus ref silently replaced.
+ * empty field; a clear control that fired on Space key down instead of release;
+ * a controlled field that changed its own display when the consumer said no; and
+ * a caller `ref` that the internal focus ref silently replaced.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -83,6 +84,24 @@ describe("SearchInput", () => {
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(search.renderer.findByTestId("search-clear")).toBeUndefined();
     expect(focusedTestId(search)).toEqual(Option.some("search"));
+
+    search.unmount();
+  });
+
+  it("clears the field from the keyboard on Space release", () => {
+    const onClear = vi.fn();
+    const search = renderComponent(<Search onClear={onClear} />);
+    type(search, "abc");
+    const clearControl = search.renderer.findByTestId("search-clear");
+    expect(clearControl).toBeDefined();
+    if (clearControl === undefined) return;
+
+    search.renderer.nativeSimulateKeyDown(clearControl.id, "space");
+    expect(onClear).not.toHaveBeenCalled();
+
+    search.renderer.nativeSimulateKeyUp(clearControl.id, "space");
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(search.renderer.findByTestId("search-clear")).toBeUndefined();
 
     search.unmount();
   });

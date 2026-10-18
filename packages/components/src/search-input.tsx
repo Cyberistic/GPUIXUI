@@ -18,6 +18,7 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { useCallback, useRef, useState } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { isDismiss } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
@@ -154,9 +155,7 @@ export const SearchInput = ({
           testId="search-clear"
           tabIndex={disabled ? -1 : 0}
           onClick={clear}
-          onKeyDown={(event: EventPayload) => {
-            if (event.key === "enter" || event.key === "space") clear();
-          }}
+          {...activationHandlers(clear)}
           style={{
             ...textStyle(theme, "caption"),
             display: "flex",

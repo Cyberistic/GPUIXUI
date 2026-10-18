@@ -413,6 +413,10 @@ Work that this workstream needs but does not own. Another agent owns each row.
     accepts a host handler composes it with its own action (Pagination,
     CommandMenu, Carousel, Alert, InlineEdit, MentionInput); nine native cases,
     both-direction proof
+  - [x] Activation contract — plan 332: a held key never activates twice
+    (`isHeld` in the shared predicates) and a button-shaped control activates
+    Space on release; the two clear controls share the helper; 7 new native
+    cases (behaviour 508, unit 334), both-direction proof
 `[ ]` Performance and packaging
 `[ ]` Docs truth pass against the implementation
 

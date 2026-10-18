@@ -5,8 +5,10 @@
  * so every later overlay inherits their correctness. The bugs these guard: a
  * click that fires twice (once from the pointer, once from a synthesised key); a
  * disabled control that still runs its handler or still takes a tab stop; a
- * keyboard activation that works for Enter but not Space; and an icon-only
- * control with no accessible name.
+ * keyboard activation that works for Enter but not Space; Space firing on key
+ * down so it cannot be cancelled before release; a held Enter activating once
+ * per repeat; a caller `onKeyUp` being dropped; and an icon-only control with no
+ * accessible name.
  */
 
 import * as Option from "effect/Option";
@@ -33,7 +35,7 @@ describe("Button", () => {
     button.unmount();
   });
 
-  it("activates from the keyboard with Enter and with Space", () => {
+  it("activates Enter on key down and Space on release", () => {
     const onClick = vi.fn();
     const button = renderComponent(
       <Button testId="button" onClick={onClick}>
@@ -49,7 +51,51 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
 
     button.renderer.nativeSimulateKeyDown(element.id, "space");
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    button.renderer.nativeSimulateKeyUp(element.id, "space");
     expect(onClick).toHaveBeenCalledTimes(2);
+
+    button.unmount();
+  });
+
+  it("does not activate again while Enter repeats", () => {
+    const onClick = vi.fn();
+    const button = renderComponent(
+      <Button testId="button" onClick={onClick}>
+        Save
+      </Button>,
+    );
+
+    const element = button.renderer.findByTestId("button");
+    expect(element).toBeDefined();
+    if (element === undefined) return;
+
+    button.renderer.nativeSimulateKeyDown(element.id, "enter");
+    button.renderer.nativeSimulateKeyDown(element.id, "enter", true);
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+
+    button.unmount();
+  });
+
+  it("composes a caller onKeyUp with its own activation", () => {
+    const onClick = vi.fn();
+    const onKeyUp = vi.fn();
+    const button = renderComponent(
+      <Button testId="button" onClick={onClick} onKeyUp={onKeyUp}>
+        Save
+      </Button>,
+    );
+
+    const element = button.renderer.findByTestId("button");
+    expect(element).toBeDefined();
+    if (element === undefined) return;
+
+    button.renderer.nativeSimulateKeyUp(element.id, "space");
+
+    expect(onKeyUp).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
 
     button.unmount();
   });

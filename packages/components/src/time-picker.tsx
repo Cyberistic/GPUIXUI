@@ -34,6 +34,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import {
   assertParts,
@@ -400,9 +401,7 @@ export const TimePickerClear = ({
       testId={`${testId}-clear`}
       tabIndex={0}
       onClick={clear}
-      onKeyDown={(event: EventPayload) => {
-        if (event.key === "enter" || event.key === "space") clear();
-      }}
+      {...activationHandlers(clear)}
       style={{
         ...textStyle(theme, "caption"),
         display: "flex",
