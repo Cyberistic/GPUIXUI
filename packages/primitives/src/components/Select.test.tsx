@@ -477,6 +477,40 @@ describe("Tooltip", () => {
     );
     expect(elementProp(tip, "aria-label")).toStrictEqual(Option.none());
   });
+
+  it("forwards a controlled open state and the hover-close flag to the runtime", () => {
+    // The bug guarded (plan 347): GPUix publishes `open`/`defaultOpen`/
+    // `onOpenChange` and `disableHoverableContent`, but this wrapper exposed
+    // only `delay`, so a tip could not be opened from code.
+    const onOpenChange = vi.fn();
+    const tree = renderTooltip(
+      {
+        content: "A hint",
+        children: null,
+        open: true,
+        disableHoverableContent: true,
+      },
+      testTheme,
+      { onOpenChange },
+    );
+    expect(expectSome(elementProp(tree, "open"))).toBe(true);
+    expect(expectSome(elementProp(tree, "disableHoverableContent"))).toBe(true);
+    expect(Option.getOrUndefined(elementHandler(tree, "onOpenChange"))).toBe(
+      onOpenChange,
+    );
+  });
+
+  it("keeps the runtime controlled while the tip is closed", () => {
+    // A closed wrapper still owns open: `open={false}` must reach the runtime,
+    // not `undefined`, or the runtime would silently become uncontrolled and
+    // the pointer could open a tip the parent said was closed.
+    const tree = renderTooltip(
+      { content: "A hint", children: null, open: false },
+      testTheme,
+    );
+    expect(expectSome(elementProp(tree, "open"))).toBe(false);
+    expect(elementProp(tree, "defaultOpen")).toStrictEqual(Option.none());
+  });
 });
 
 describe("Select as a slot trigger", () => {

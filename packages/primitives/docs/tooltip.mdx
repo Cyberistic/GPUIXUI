@@ -65,6 +65,42 @@ For the common "info icon that explains a term" case, use **InfoTip** instead of
 writing that trigger by hand: it owns the role, the name, the tab stop and the
 focus ring.
 
+## Open state
+
+Hover, focus, click and Escape drive the tip by default. Supplying `open` makes
+it **controlled**: the wrapper reports every request through `onOpenChange` and
+the tip changes only when the parent passes a new value. That is what a one-time
+hint, a product tour, or a "the shortcut moved here" callout needs.
+
+```tsx
+const [hintOpen, setHintOpen] = useState(false);
+
+<>
+  <Button label="Show hint" onClick={() => setHintOpen(true)}>
+    Show hint
+  </Button>
+  <Tooltip
+    content="Press Cmd-K to search"
+    open={hintOpen}
+    onOpenChange={setHintOpen}
+    side="bottom"
+  >
+    <Button label="Search">Search</Button>
+  </Tooltip>
+</>;
+```
+
+`defaultOpen` starts an uncontrolled tip open (a tour whose first step is
+already visible). The tip is still dismissable by the runtime's own paths —
+Escape on the trigger, a click, or the pointer leaving — and each one reports
+`false` to `onOpenChange`.
+
+The same value drives the wrapper's measurements, so a tip opened from code is
+placed from its trigger's real box: it flips below at the window's top edge just
+like a hovered tip. `disableHoverableContent` closes the tip as soon as the
+pointer leaves the trigger, so its own surface cannot be hovered; the default
+(`false`) keeps it open while the pointer travels onto the tip.
+
 ## Placement
 
 The root sets `alignSelf: "flex-start"` (`tooltipRootStyle`), so it hugs the
@@ -111,6 +147,10 @@ would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip pain
 | ---- | ---- | ------- | ----------- |
 | `content` | `ReactNode` | — (required) | the tip; keep it short and unwrapped |
 | `children` | `ReactNode` | — (required) | the trigger, a focusable host element |
+| `open` | `boolean` | uncontrolled | controls the tip; requests arrive through `onOpenChange` |
+| `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
+| `onOpenChange` | `(open: boolean) => void` | — | called when the tooltip asks to open or close |
+| `disableHoverableContent` | `boolean` | provider (`false`) | closes as soon as the pointer leaves the trigger |
 | `side` | `FloatingSide` | auto — above, flipped below when it does not fit; a `left`/`right` side flips when it cannot fit | preferred placement on both axes |
 | `align` | `FloatingAlign` | `"start"` | alignment against the trigger; `center` is measured exact — see Placement |
 | `delay` | `number` | provider default | hover delay in milliseconds |
@@ -173,14 +213,25 @@ dismisses it. A click dismisses it.
 - A non-string tip has no description on the trigger and no name of its own.
 - No wrapping or rich content: a paragraph is a popover, not a tooltip.
 - No arrow/caret and no touch-long-press behaviour.
-- Open/close timing is GPUix's; this wrapper only sets the delay.
+- **The interactions are GPUix's; the open state is this wrapper's.** Hover,
+  focus, click, Escape and the hover delay are the published tooltip's; `open`,
+  `defaultOpen`, `onOpenChange` and `disableHoverableContent` follow the
+  package's one controlled rule (plan `347`). A controlled parent that ignores
+  an `onOpenChange(false)` request keeps the tip open — it owns the value.
+- **A controlled tip is placed from its trigger's box, not from an event.** The
+  root is measured while the tip is closed, so opening from code chooses the
+  side before the first painted frame. Nothing re-measures the trigger while
+  the tip stays open; a trigger that moves under an open tip is not re-placed.
 
 ## Verification
 
 - `src/components/Select.test.tsx` — the wrapper's theme spec, the root hug, the
   default `align` at the render seam, the tip-height estimate checked against
   `tooltipStyle`, and the description/name mapping for string and non-string
-  content (plan `071`).
+  content (plan `071`). **Open state (347):** the resolved `open`, the
+  `disableHoverableContent` flag and the `onOpenChange` handler reach the host
+  root, and a closed tip still passes `open={false}` rather than leaving the
+  runtime uncontrolled.
 - `src/core/floating.test.ts` — the shared side rule, including a preferred
   `top` and its fallback below, the horizontal fit rule (fits, flips, exact fit,
   roomier) and the alignment rule on both axes (widths above/below, heights
@@ -209,6 +260,12 @@ dismisses it. A click dismisses it.
   **Description (071):** the trigger's accessibility node carries the content as
   its description while the tip is closed, and the open tip is a named `Tooltip`
   node — the failing direction had neither.
+  **Open state (347):** a controlled tip follows hover and click, an
+  `open={false}` parent refuses a hover while still receiving the request,
+  `defaultOpen` paints and Escape closes it, and a tip opened from code at the
+  window's top edge is placed below its trigger. The tip stays open while it is
+  hovered, and `disableHoverableContent` closes it as the pointer leaves the
+  trigger.
 - `runtime/examples.runtime.test.tsx` — the feedback example's tooltip opens on
   hover and on keyboard focus, and its trigger announces the description.
 - `runtime/overlay-trigger.runtime.test.tsx` — the documented composition, a

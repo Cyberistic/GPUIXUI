@@ -24,6 +24,13 @@
  * axes**: a tip that cannot fit where it was asked to open goes to the other
  * side, horizontal from its measured width (plan 335) and vertical from the
  * position the side decision estimates (plan 336).
+ *
+ * **Open state is the wrapper's**, through the package's one controlled rule
+ * (plan 347): `open`/`defaultOpen`/`onOpenChange` reach GPUix as a controlled
+ * value, so a tip opened from code (a tour, a one-time hint) is the same tip
+ * the pointer opens and the one the measurements describe. The root is measured
+ * on every open transition including mount with the tip closed, so a controlled
+ * tip is placed from its trigger's real box before it is first painted.
  */
 
 import {
@@ -54,7 +61,7 @@ import {
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle } from "./internal.js";
+import { mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -62,6 +69,21 @@ export interface TooltipProps {
   readonly content: ReactNode;
   /** The element the tooltip describes. It must be focusable. */
   readonly children: ReactNode;
+  /**
+   * Whether the tip is painted. Supplying it makes the tip **controlled**: a
+   * request reaches `onOpenChange` and the tip changes only when this prop
+   * changes (plan 347).
+   */
+  readonly open?: boolean;
+  /** Initial open state when uncontrolled. Defaults to closed. */
+  readonly defaultOpen?: boolean;
+  /** Called when the tooltip asks to open or close. */
+  readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * Close as soon as the pointer leaves the trigger, so the tip's own surface
+   * cannot be hovered. Defaults to the provider's value (`false`).
+   */
+  readonly disableHoverableContent?: boolean;
   /**
    * Defaults to `top`. A requested side is a **preference**: when the tip
    * cannot fit there it opens on the other side — below instead of above, or
@@ -128,7 +150,11 @@ export const tooltipHeight = (theme: PrimitiveTheme): number =>
 export interface TooltipHandlers {
   /** The root div, so the wrapper can measure the trigger's box. */
   readonly ref?: Ref<PublicInstance>;
-  /** When the tip opens, so the side is decided from a fresh measurement. */
+  /**
+   * The runtime's open request. The wrapper routes it through its controlled
+   * rule, so the value that places the tip is the value the caller sees
+   * (plan 347).
+   */
   readonly onOpenChange?: (open: boolean) => void;
   /** The tip itself, so the wrapper can measure its box for `center`. */
   readonly contentRef?: Ref<PublicInstance>;
@@ -155,6 +181,8 @@ export const renderTooltip = (
   {
     content,
     children,
+    open,
+    disableHoverableContent,
     side,
     align = "start",
     delay,
@@ -168,6 +196,8 @@ export const renderTooltip = (
   const placed = handlers.placement ?? { align, offset: 0 };
   return (
     <GpuixTooltip
+      open={open}
+      disableHoverableContent={disableHoverableContent}
       delayDuration={delay}
       style={mergeStyle(tooltipRootStyle, style)}
       ref={handlers.ref}
@@ -211,9 +241,17 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const { renderer } = useGpuix();
   const root = useRef<PublicInstance | null>(null);
   const tip = useRef<PublicInstance | null>(null);
-  const [open, setOpen] = useState(false);
+  const openState = useControlState(
+    props.open,
+    props.defaultOpen ?? false,
+    props.onOpenChange,
+  );
+  const open = openState.value.current;
   const [box, setBox] = useState<TooltipBox | undefined>(undefined);
   useLayoutEffect(() => {
+    // The trigger is measured while the tip is closed too: a controlled tip can
+    // open with no pointer or focus event, and its side must come from the
+    // trigger's real box (plan 347).
     const rootId = root.current?.id;
     if (rootId === undefined) return;
     const bounds = renderer?.getElementBounds?.(rootId);
@@ -293,10 +331,10 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
             layerHeight: measured.tipHeight,
           }),
   });
-  return renderTooltip({ ...props, side }, theme, {
+  return renderTooltip({ ...props, side, open }, theme, {
     ref: root,
     contentRef: tip,
     placement,
-    onOpenChange: setOpen,
+    onOpenChange: openState.set,
   });
 };

@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 94/94
+`[x]` `[██████████]` 95/95
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -765,13 +765,16 @@ retired once both branches are one
       mutations fail by name (plan `346`).
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
-`[ ]` `packages/primitives`: `Tooltip` is the one overlay wrapper that still hides
-      the runtime's controlled open contract — GPUix publishes
-      `open`/`defaultOpen`/`onOpenChange` and `disableHoverableContent`, but
-      `TooltipProps` exposes only `delay`. Plan `346` fixed the same class on
-      `Select`; a controlled tip (a one-time hint, a tour) needs the same
-      `useControlState` wiring plus a measurement pass while closed. Not a
-      defect: no page claims it works.
+`[x]` `packages/primitives`: **`Tooltip` hid the runtime's controlled open
+      contract** — GPUix publishes `open`/`defaultOpen`/`onOpenChange` and
+      `disableHoverableContent`, but `TooltipProps` exposed only `delay`, so a
+      tip could not be driven from code (a one-time hint, a tour) and the
+      wrapper's measurements could disagree with what the runtime painted.
+      `open`/`defaultOpen`/`onOpenChange` now follow `useControlState`, one
+      derived value goes back to the runtime, the root is measured while the tip
+      is closed, and `disableHoverableContent` is exposed. 6 runtime + 2 element
+      tests; dropping `open`, `onOpenChange`, `disableHoverableContent` or the
+      measurement each fail by name (plan `347`).
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

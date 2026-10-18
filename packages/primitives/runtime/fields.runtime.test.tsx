@@ -1917,3 +1917,169 @@ it("keeps the Tooltip's content inside the frame it is anchored to", async () =>
   expect(tip.x).toBeGreaterThanOrEqual(frame.x);
   expect(tip.x + tip.width).toBeLessThanOrEqual(frame.x + frame.width);
 });
+
+/** A tooltip whose open state lives in the parent, as a consumer would wire it. */
+const ControlledTooltip = ({
+  onRequest,
+}: {
+  readonly onRequest: (open: boolean) => void;
+}): ReactElement => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Tooltip
+      content="A hint"
+      side="bottom"
+      testId="tip"
+      open={open}
+      onOpenChange={(next) => {
+        onRequest(next);
+        setOpen(next);
+      }}
+    >
+      <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+        <Text>Trigger</Text>
+      </div>
+    </Tooltip>
+  );
+};
+
+it("follows a controlled open state through hover and click", async () => {
+  // The bug guarded (plan 347): GPUix publishes `open`/`onOpenChange`, but the
+  // wrapper kept open in a private `useState`, so a tip could not be driven
+  // from code and the wrapper's measurements could disagree with the paint.
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <ControlledTooltip onRequest={(next) => requests.push(next)} />
+    </Surface>,
+  );
+  expect(runtime.allText()).not.toContain("A hint");
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("A hint");
+  expect(requests).toStrictEqual([true]);
+  runtime.click("target");
+  expect(runtime.allText()).not.toContain("A hint");
+  // A click also focuses the trigger, whose focus path asks to open before the
+  // click's own close arrives (measured: true, false, true, false). The paint
+  // follows the last request, which is the contract; the intermediate open is
+  // the runtime's dispatch order, not a duplicate transition.
+  expect(Arr.last(requests)).toStrictEqual(Option.some(false));
+  expect(Arr.take(requests, 2)).toStrictEqual([true, false]);
+});
+
+it("lets a controlled open prop decide, not the hover", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  const view = (open: boolean) => (
+    <Surface>
+      <Tooltip
+        content="A hint"
+        side="bottom"
+        testId="tip"
+        open={open}
+        onOpenChange={(next) => requests.push(next)}
+      >
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>
+  );
+  runtime.render(view(false));
+  runtime.hover("target");
+  // The tooltip asked to open; the parent did not supply it, so nothing is
+  // painted — the controlled rule, not the request.
+  expect(runtime.allText()).not.toContain("A hint");
+  expect(requests).toStrictEqual([true]);
+  runtime.render(view(true));
+  expect(runtime.allText()).toContain("A hint");
+});
+
+it("opens on defaultOpen and closes on Escape", async () => {
+  const runtime = await openWindow();
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <Tooltip
+        content="A hint"
+        side="bottom"
+        testId="tip"
+        defaultOpen
+        onOpenChange={(next) => requests.push(next)}
+      >
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("A hint");
+  runtime.focusNext();
+  runtime.keyDown("target", "escape");
+  runtime.flush();
+  expect(runtime.allText()).not.toContain("A hint");
+  expect(requests).toStrictEqual([false]);
+});
+
+it("keeps a Tooltip open while its content is hovered", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" side="bottom" testId="tip">
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("A hint");
+  runtime.hover("tip");
+  // The runtime cancels its scheduled close when the tip is entered.
+  expect(runtime.allText()).toContain("A hint");
+});
+
+it("closes a hover-disabled Tooltip when the pointer leaves the trigger", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip
+        content="A hint"
+        side="bottom"
+        testId="tip"
+        disableHoverableContent
+      >
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  expect(runtime.allText()).toContain("A hint");
+  runtime.hover("tip");
+  // The flag means the tip's own surface is not hoverable, so the move off the
+  // trigger closes it rather than cancelling the close.
+  expect(runtime.allText()).not.toContain("A hint");
+});
+
+it("places a controlled Tooltip from its trigger's measured box", async () => {
+  // A tip opened from code receives no hover or focus event, so the side must
+  // come from the root measurement taken while the tip was closed (plan 347).
+  // Paired with the top-edge case above: the unmeasured default is `top`, which
+  // the runtime clamps over the trigger.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" testId="tip" open>
+        <div testId="target" tabIndex={0} style={{ display: "flex" }}>
+          <Text>Trigger</Text>
+        </div>
+      </Tooltip>
+    </Surface>,
+  );
+  const tip = boundsOf(runtime, "tip");
+  const target = boundsOf(runtime, "target");
+  expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height);
+});
