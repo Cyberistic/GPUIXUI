@@ -14,10 +14,10 @@ import { Icon } from "@gpuixui/icons";
 import { theme } from "@gpuixui/tokens";
 
 // Decoration: takes itself out of the accessibility tree.
-<Icon name="search" color={theme.color.mutedForeground} />
+<Icon name="search" color={theme.colors.mutedForeground} />
 
 // Meaningful on its own: announced as an image.
-<Icon name="warning" color={theme.color.destructive.background} label="Overdue" />
+<Icon name="warning" color={theme.colors.destructive} label="Overdue" />
 ```
 
 ## API

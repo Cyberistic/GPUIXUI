@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 81/81
+`[x]` `[██████████]` 82/82
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -615,6 +615,15 @@ retired once both branches are one
       (`controlFocusStyle` plus the four non-control painters). 13 activation +
       15 ring runtime cases, 4 core/element cases, both directions proven
       (plan `332`)
+`[x]` `packages/icons` + `packages/primitives`: **a documented theme path did
+      not resolve** — the icons README and the `Icon` docstring documented
+      `theme.color.mutedForeground` and `theme.color.destructive.background`;
+      the token object is `theme.colors` (plural) and its roles are strings, so
+      the copyable snippet did not compile. Both corrected, and
+      `src/docs-theme-paths.test.ts` reads every `theme.…` claim in both
+      packages' docs, READMEs, examples and source against `lightTheme` (file
+      references are exempt by extension); the guard reported exactly the three
+      false claims before the fix (plan `333`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

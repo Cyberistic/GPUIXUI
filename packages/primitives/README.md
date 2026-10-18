@@ -200,10 +200,11 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 533 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **41 files, 535 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
-on every part (plan `097`) and the axis-aware floating alignment rule
-(plan `098`).
+on every part (plan `097`), the axis-aware floating alignment rule
+(plan `098`), and a guard that every documented `theme.…` path resolves on the
+shipped theme (plan `333`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render
