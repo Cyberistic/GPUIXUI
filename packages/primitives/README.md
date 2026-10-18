@@ -169,7 +169,7 @@ mistake.
 | `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once; a label beside a control is inert, so `CheckboxGroup` makes the whole row one interactive element instead of pairing a box with a `Text` |
 | `aria-describedby` | absent | `Tooltip` writes a string tip onto the trigger as `aria-description` and exposes the open tip as a named `role="tooltip"` node; the trigger still owns its role and name, and a non-string tip has no description (plan `071`) |
 | scrollbar tint, fade mask | absent | `ScrollArea` sets the overflow axes only; the thumb is platform-themed. A **labelled** area is a named focusable `region` whose arrows/page/Home/End scroll it through the runtime's `scrollTo`; the handler only fires when the region itself holds focus, so fields inside keep their keys (plan `072`). |
-| rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning |
+| rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning. Native `motion` **is** available for one-way position changes — the `Switch` thumb slides 200 ms from `switchThumbOffset`'s two ends — but it has no `repeat`, so the looping indicators keep their steps (plans `020`, `329`) |
 | `./button` | not published | `Button` implements the keyboard contract itself (`core/keyboard.ts`) |
 | an anchor that resists its parent | `<anchored>` positions against its parent, and a block-level flex parent stretches on the cross axis | `Tooltip` hugs its trigger with `alignSelf: "flex-start"` so the layer anchors to the trigger and defaults `align` to the exact `start`; the runtime's `center` is half a panel off, so the wrapper maps it to `start` plus a measured half-difference **on the layer's own axis** — widths above/below, heights beside (plans `060`, `095`, `098`) |
 | percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
@@ -200,7 +200,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 519 tests,
+`src/components/testing/element.ts`. Measured 2026-10-18: **40 files, 522 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`) and the axis-aware floating alignment rule
 (plan `098`).
@@ -218,7 +218,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-18: **21 files, 313 tests, all passing** —
+runtime-proven too. Measured 2026-10-18: **21 files, 315 tests, all passing** —
 including a theme switch on a mounted tree, using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
@@ -262,7 +262,8 @@ caller's `style.height` instead of its rows (plan 097), and a tooltip beside its
 trigger centred on the layer's own axis with a left/right select list capped to
 the window and scrollable (plan 098), and a determinate `Progress` that schedules
 no animation timer while an indeterminate one paints its requested tone
-(plan 328).
+(plan 328), and a switch whose thumb slides through an intermediate position and
+rests at the layout painter's two ends (plan 329).
 `runtime/` is deliberately outside `nub run test`, so the default gate still
 runs on a host with no binding; `test:runtime` is opt-in and fails loudly when
 the binding is absent rather than skipping.

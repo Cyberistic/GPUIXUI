@@ -3,14 +3,16 @@
  *
  * A switch and a checkbox differ in intent, not in state model: both are the
  * three-state paint from `core/selection.ts`, and the switch draws it as a pill
- * and a thumb. The thumb is positioned by the track's `justifyContent`, so it
- * cannot drift out of the pill.
+ * and a thumb. The thumb's resting offsets come from `switchThumbOffset`, and
+ * a toggle animates between them with the runtime's `motion` — the one
+ * animation that is a one-way position change (plan `329`).
  */
 
 import type { ReactElement } from "react";
-import type { EventPayload } from "@gpuix/react";
+import { motion, type EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import {
+  switchThumbOffset,
   switchThumbStyle,
   switchTrackStyle,
   type SelectionAccent,
@@ -56,6 +58,9 @@ export interface SwitchProps {
   readonly testId?: string;
 }
 
+/** How long the thumb takes to cross the track. */
+const SWITCH_THUMB_SLIDE_MS = 200;
+
 export const renderSwitch = (
   props: SwitchProps,
   theme: PrimitiveTheme,
@@ -71,6 +76,9 @@ export const renderSwitch = (
     disabled: props.disabled,
     focused: focus.focused,
   };
+  const thumb = switchThumbStyle(spec, theme);
+  const rest = switchThumbOffset(spec, theme);
+
   const toggle = (): void => {
     if (props.disabled === true) return;
     onValueChange(!state.current);
@@ -105,7 +113,15 @@ export const renderSwitch = (
         partState,
       )}
     >
-      <div style={switchThumbStyle(spec, theme)} />
+      <motion.div
+        initial={{ left: rest.left }}
+        animate={{ left: rest.left }}
+        transition={{
+          duration: SWITCH_THUMB_SLIDE_MS / 1000,
+          ease: "easeOut",
+        }}
+        style={thumb}
+      />
     </div>
   );
 };

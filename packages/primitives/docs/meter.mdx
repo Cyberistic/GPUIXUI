@@ -60,8 +60,8 @@ bar painter means `Progress` and `Meter` cannot drift apart.
 
 - No `aria-valuenow`/`min`/`max` (above).
 - No threshold segments, tick marks or a label inside the track.
-- The fill cannot animate between values; `motion` is not used here, so a
-  changing measurement repaints rather than interpolates.
+- The fill cannot animate between values; the measurement is a percentage, so it
+  repaints rather than interpolates (a `motion` target is a number, plan `329`).
 
 ## Verification
 

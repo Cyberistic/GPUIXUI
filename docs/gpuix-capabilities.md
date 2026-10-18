@@ -119,7 +119,7 @@ verdict, the evidence, and the honest workaround.
 | Per-corner radii and per-side border widths | **supported** | `host.d.ts` · `borderRadius`/`borderTopLeftRadius`… and `borderWidth`/`borderTopWidth`… | — |
 | Dashed or dotted borders (`borderStyle`) | **not supported** | no `borderStyle` in the 0.10.0 `StyleDesc` (main-only; §6) | a solid border in a muted role |
 | Opacity | **supported** | `host.d.ts` · `opacity` | — |
-| Element transform, rotate, scale or translate | **not supported** | no `transform` field; `MotionStyle` targets only size, position, opacity and radius | change layout values instead (width, left, `justifyContent`) |
+| Element transform, rotate, scale or translate | **not supported** | no `transform` field; `MotionStyle` targets only size, position, opacity and radius | change layout values instead (width, left, `justifyContent`); `motion` can animate the change (plan `329`) |
 | z-index or explicit stacking | **not supported** | no `zIndex` field; tree order is paint order; `<anchored>` has `deferred`/`priority` | reorder the tree; give overlays a `priority` |
 | Backdrop blur or vibrancy | **window-only** | `@gpuix/native` · `WindowOptions.windowBackground: "blurred"` is the macOS vibrancy backdrop; no per-element `backdropFilter` | a semi-transparent surface |
 | CSS `filter` | **not supported** | no `filter` field | bake the effect into the asset |
@@ -173,11 +173,15 @@ Consequences, all recorded in component rows:
 ### Animation and motion
 
 `motion` transitions `width`, `height`, `top`, `right`, `bottom`, `left`,
-`opacity` and `borderRadius`; springs, keyframes, variants and shared-layout
-animations are absent, and colour is not interpolated. A target change resumes
-from the current value. Therefore: a spinner cannot rotate (use an indeterminate
-sweep or a step cycle), a switch thumb moves by the track's `justifyContent`
-rather than a transform, and a skeleton pulses opacity only.
+`opacity` and `borderRadius`; springs, keyframes, variants, shared-layout
+animations and **`repeat`** are absent, and colour is not interpolated. A target
+change resumes from the current value. Therefore: a spinner cannot rotate (use
+an indeterminate sweep or a step cycle), a looping animation is not honest (its
+second cycle would rewind or remount), and a one-way position change is the
+native fit — `Switch`'s thumb slides `left` 2 → 12 over 200 ms (plan `329`).
+Measured in the `TestRenderer`: `clockFastForward(ms)` then `flush()` drives it
+(`advanceTime` does not), and the painted `getElementBounds` follows the
+transition.
 
 ### Text and input
 

@@ -11,6 +11,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import type { ReactElement } from "react";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import {
@@ -34,13 +35,14 @@ import { renderSwitch } from "./Switch.js";
 import type { FocusState } from "./internal.js";
 import { keyEvent } from "./testing/event.js";
 import {
+  elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
   hostStyle,
   hostStyleString,
   hostTag,
-  elementChildren,
 } from "./testing/element.js";
 
 const idle: FocusState = { focused: false, onFocus: vi.fn(), onBlur: vi.fn() };
@@ -146,6 +148,27 @@ describe("Switch", () => {
     expect(onValueChange).toHaveBeenCalledTimes(0);
     expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
     expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+
+  it("rests its thumb at the end it reports, and animates only that position", () => {
+    // The bug guarded (plan 329): the thumb was laid out with `justifyContent`,
+    // so it jumped and there was no transition to assert on. A `motion.div` is
+    // not a host tag, so its props are read with `elementProp`, not `hostStyle`.
+    const thumbOf = (element: ReactElement): ReactElement =>
+      expectSome(Arr.head(elementChildren(element)));
+    const off = renderSwitch({}, testTheme, checked(false), idle, vi.fn());
+    const on = renderSwitch({}, testTheme, checked(true), idle, vi.fn());
+    const offThumb = thumbOf(off);
+    const onThumb = thumbOf(on);
+
+    expect(expectSome(elementProp(offThumb, "animate"))).toEqual({ left: 2 });
+    expect(expectSome(elementProp(onThumb, "animate"))).toEqual({ left: 12 });
+    expect(expectSome(elementProp(offThumb, "style"))).toMatchObject({
+      position: "absolute",
+      left: 2,
+      top: 1,
+    });
+    expect(Option.isNone(hostStyle(off, "justifyContent"))).toBe(true);
   });
 });
 

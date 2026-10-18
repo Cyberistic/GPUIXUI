@@ -254,6 +254,17 @@ A `motion.div` is not a host tag, so its props are read with `elementProp`, not
 `runtime/controls.runtime.test.tsx`:
 
 ```tsx
+/** The switch's thumb box, which is the switch's only child. */
+const switchThumb = (runtime: Runtime, testId: string): Bounds =>
+  Option.getOrElse(
+    Option.flatMap(runtime.element(testId), (element) =>
+      Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
+        runtime.boundsOfId(id),
+      ),
+    ),
+    () => expect.fail(`the ${testId} switch painted no thumb`),
+  );
+
 it("slides the switch thumb to its new end instead of jumping", async () => {
   // Plan 329 §1.2: the thumb used justifyContent, so it teleported. Measured
   // travel at md: dx 3 → 13, dy 2.
@@ -263,31 +274,24 @@ it("slides the switch thumb to its new end instead of jumping", async () => {
       <Switch testId="sw" label="Wifi" />
     </Surface>,
   );
-  const track = Option.getOrElse(runtime.bounds("sw"), () => expect.fail("no track"));
-  const thumbX = (): number => {
-    const thumb = Option.getOrElse(
-      Option.flatMap(runtime.element("sw"), (element) =>
-        Option.fromNullishOr(element.children[0]),
-      ),
-      () => expect.fail("the switch painted no thumb"),
-    );
-    return Option.getOrElse(runtime.boundsOfId(thumb), () =>
-      expect.fail("the thumb has no bounds"),
-    ).x;
-  };
-  const rest = thumbX();
-  expect(rest - track.x).toBe(3);
+  const track = boundsOf(runtime, "sw");
+  const rest = switchThumb(runtime, "sw");
+  expect(rest.x - track.x).toBe(3);
+  expect(rest.y - track.y).toBe(2);
+
   runtime.click("sw");
   runtime.advanceMotion(0);
-  const atClick = thumbX();
+  const atClick = switchThumb(runtime, "sw");
   runtime.advanceMotion(100);
-  const midway = thumbX();
+  const midway = switchThumb(runtime, "sw");
   runtime.advanceMotion(200);
-  const end = thumbX();
-  expect(atClick).toBe(rest);                       // no jump on the click
-  expect(midway).toBeGreaterThan(rest);
-  expect(midway).toBeLessThan(end);
-  expect(end - track.x).toBe(13);                   // the old resting place
+  const end = switchThumb(runtime, "sw");
+
+  expect(atClick.x).toBe(rest.x); // no jump on the click
+  expect(midway.x).toBeGreaterThan(rest.x);
+  expect(midway.x).toBeLessThan(end.x);
+  expect(end.x - track.x).toBe(13); // the resting place the layout painter had
+  expect(end.y).toBe(rest.y);
 });
 
 it("rests a controlled switch at the end it mounted with", async () => {
@@ -297,13 +301,11 @@ it("rests a controlled switch at the end it mounted with", async () => {
       <Switch testId="sw" label="Wifi" checked />
     </Surface>,
   );
-  // mount applies `initial`, so there is no slide from unchecked
-  expect(/* thumb dx */ 13).toBe(13);
+  // Mount applies `initial`, so a switch that starts on paints no slide.
+  const track = boundsOf(runtime, "sw");
+  expect(switchThumb(runtime, "sw").x - track.x).toBe(13);
 });
 ```
-
-The second case reads the same two helpers; the executor factors them into local
-functions in the file (the suite already has `childrenOf`/`styleOf`).
 
 ### 4.5 Docs truth
 
@@ -335,8 +337,8 @@ functions in the file (the suite already has `childrenOf`/`styleOf`).
 | 1 | `cd packages/primitives && nub run test -- selection` **before** the change | the new element-tree case fails: the thumb is a host `div` with no `animate` prop and no `position` |
 | 2 | `nub exec vitest run --config vitest.runtime.config.ts runtime/controls.runtime.test.tsx` **before** the change | the slide case fails: `midway` equals `end` (the jump) |
 | 3 | apply §4.1–§4.3 | — |
-| 4 | `nub run test` | 40 files, ≥ 522 tests green |
-| 5 | `nub run test:runtime` | 21 files, ≥ 315 tests green |
+| 4 | `nub run test` | 40 files, 522 tests green |
+| 5 | `nub run test:runtime` | 21 files, 315 tests green |
 | 6 | from the repo root: `nub run check` | `check:tests`, `oxlint`, `oxfmt` and every `check-types` green |
 | 7 | `git diff --stat` | only §3's files |
 
@@ -379,14 +381,57 @@ functions in the file (the suite already has `childrenOf`/`styleOf`).
 All runs on this host, 2026-10-18, real GPUix 0.10.0 `TestRenderer`
 (locally built `darwin-x64`, ADR 0003).
 
-### 8.1 Both failing directions
+### 8.1 Before the fix
+
+Measured with the published `motion` probe (a band, `initial {left: 0}`,
+`animate {left: 200}`, 1 s linear):
+
+```
+t0     x 0.5
+t250   x 50.5
+t500   x 100.5
+t1000  x 200
+```
+
+and the switch's resting boxes: track `x12 y12 28×16`, thumb `x15 y14 12×12`
+unchecked (dx 3, dy 2) and `x25 y14 12×12` checked (dx 13). The thumb was a
+host `div` positioned by `justifyContent`, so a toggle moved it in one frame.
+
+### 8.2 Both failing directions
+
+Each mutation was applied, the named test run, and the file restored.
 
 | Mutation | Result |
 | -------- | ------ |
-| the thumb back to a `justifyContent` host `div` | `selection.test.tsx > rests its thumb at the end it reports…` fails (`animate` absent, `style.position` absent); the runtime slide case fails because `midway` equals `end` |
-| the slide's duration set to 0 | the runtime slide case fails: `midway` equals `end` — the intermediate assertion is what catches a jump |
+| the thumb back to a plain host `div` (no motion) | `src/components/selection.test.tsx > Switch > rests its thumb at the end it reports…` fails: "the element tree did not carry what this test asserts on" (no `animate` prop, 1 failed / 521 passed); `runtime/controls.runtime.test.tsx > slides the switch thumb…` fails at the click: `expected 25 to be 15` — the thumb teleported to the far end |
+| the slide's duration set to `0` | the runtime slide case fails identically: `expected 25 to be 15` — the intermediate sample is already the target, which is exactly a jump |
 
-### 8.2 After the fix
+### 8.3 After the fix
 
-_(filled in by the executor from the actual runs; both suites and `nub run check`
-must be quoted verbatim)_
+```
+nub run --filter @gpuixui/primitives test
+  Test Files  40 passed (40)
+       Tests  522 passed (522)
+
+nub run --filter @gpuixui/primitives test:runtime
+  Test Files  21 passed (21)
+       Tests  315 passed (315)
+
+nub run check
+  tests: every test asserts something, and nothing asserts itself
+  oxlint: no findings
+  oxfmt: All matched files use the correct format.
+  check-types: every workspace Done
+
+nub run test
+  tokens 196, testing 19, icons 19, playground 11, components 308,
+  primitives 522 — all green
+```
+
+The slide test measured the resting places the layout painter produced before
+the change (dx 3 / 13, dy 2) and then, after a click and
+`advanceMotion(100)` of the 200 ms transition, an intermediate x strictly
+between them — with `advanceMotion(0)` unchanged from the resting x, proving the
+click itself does not jump. A controlled `<Switch checked />` mounted at dx 13,
+proving `initial` suppresses the mount slide.
+

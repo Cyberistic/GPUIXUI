@@ -3,11 +3,13 @@
  *
  * The published runtime's `motion` API animates **only** `width`, `height`,
  * `opacity`, `top`, `right`, `bottom`, `left` and `borderRadius` — no rotation,
- * no colour interpolation (plan 020 §1.2) — and `motion` itself is only
- * reachable through the `@gpuix/react` root, which this repository cannot import
- * (plan 020 §3). So every indicator here advances through a **discrete step**
- * driven by a component interval, and the step function — the part that can be
- * wrong — is pure and lives here.
+ * no colour interpolation (plan 020 §1.2) — and `MotionTransition` has **no
+ * `repeat`** (measured, plan 329). A loading indicator loops, so it would need
+ * a remount or a visible rewind for every cycle; and its bar is a percentage,
+ * while a motion target is a number. So every indicator here advances through a
+ * **discrete step** driven by a component interval, and the step function — the
+ * part that can be wrong — is pure and lives here. A one-way position change
+ * (the switch thumb) does use `motion`; see `components/Switch.tsx`.
  */
 
 import * as Arr from "effect/Array";

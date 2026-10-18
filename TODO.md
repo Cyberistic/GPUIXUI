@@ -590,8 +590,8 @@ retired once both branches are one
       50.5 → 100.5 → 200` over 1 s) and the `TestRenderer` drives it with
       `clockFastForward`, not `advanceTime`. The thumb is now an absolute
       `motion.div` sliding `left` 2 → 12 over 200 ms `easeOut`, resting exactly
-      where the layout painter put it (dx 3/13, dy 2 at `md`); 1 core + 1
-      element-tree + 2 runtime tests, both directions proven (plan `329`)
+      where the layout painter put it (dx 3/13, dy 2 at `md`); 2 core +
+      1 element-tree + 2 runtime tests, both directions proven (plan `329`)
 
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`

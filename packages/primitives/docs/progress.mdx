@@ -64,8 +64,9 @@ role — the indeterminate segment resolves the same `progressToneColor` map, so
 ## Limitations
 
 - No `aria-valuenow` (above).
-- The indeterminate segment is a discrete step, not a smooth sweep; the runtime
-  cannot interpolate position beyond the motion API this package does not import.
+- The indeterminate segment is a discrete step, not a smooth sweep: the bar is a
+  percentage, while a `motion` target is a number, and a looping sweep has no
+  `repeat` (plan `329`).
 - No buffer/secondary value, no stacked segments, no label inside the track.
 
 ## Verification

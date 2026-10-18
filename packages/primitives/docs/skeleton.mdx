@@ -56,8 +56,10 @@ skeleton.
 
 ## Limitations
 
-- **No shimmer sweep**: the runtime's `motion` animates opacity, width, height,
-  insets and radius — not a moving gradient — so a shimmer would be a fake.
+- **No looping shimmer.** A swept highlight band is expressible — `motion`
+  animates `left` inside a clipped box — but `MotionTransition` has no `repeat`,
+  so the second cycle would rewind visibly or remount the element. The pulse
+  stays a discrete interval (plan `329`).
 - No automatic count or list-shape generation; compose the blocks you need.
 - No reduced-motion switch: the pulse is a plain interval.
 

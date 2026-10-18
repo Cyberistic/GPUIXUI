@@ -4,6 +4,7 @@ import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  switchThumbOffset,
   switchThumbStyle,
   switchTrackStyle,
   type SelectionSpec,
@@ -132,13 +133,31 @@ describe("switch", () => {
     expect(thumb.backgroundColor).not.toBe(on.backgroundColor);
   });
 
-  it("moves the thumb across the pill without measuring it", () => {
-    expect(switchTrackStyle(spec(), testTheme).justifyContent).toBe(
-      "flex-start",
-    );
+  it("rests the thumb on the inset at each end of the pill", () => {
+    // The bug guarded (plan 329): the thumb was moved by the track's
+    // `justifyContent`, so a toggle teleported and there was no position a
+    // motion target could animate.
+    expect(switchThumbOffset(spec(), testTheme)).toEqual({ left: 2, top: 1 });
+    expect(switchThumbOffset(spec({ state: "checked" }), testTheme)).toEqual({
+      left: 12,
+      top: 1,
+    });
+  });
+
+  it("derives the travel from the size, not a literal", () => {
     expect(
-      switchTrackStyle(spec({ state: "checked" }), testTheme).justifyContent,
-    ).toBe("flex-end");
+      switchThumbOffset(spec({ size: "lg", state: "checked" }), testTheme).left,
+    ).toBe(15);
+    expect(
+      switchThumbOffset(spec({ size: "sm", state: "checked" }), testTheme).left,
+    ).toBe(11);
+  });
+
+  it("stops centring the thumb with layout, so its position can animate", () => {
+    const track = switchTrackStyle(spec(), testTheme);
+    expect(track.position).toBe("relative");
+    expect(track.justifyContent).toBeUndefined();
+    expect(track.padding).toBeUndefined();
   });
 
   it("keeps the thumb a whole pixel inside the track", () => {

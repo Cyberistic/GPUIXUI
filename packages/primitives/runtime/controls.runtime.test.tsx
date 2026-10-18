@@ -625,6 +625,59 @@ it("toggles a Switch on a click and reports the role the runtime maps it to", as
   );
 });
 
+/** The switch's thumb box, which is the switch's only child. */
+const switchThumb = (runtime: Runtime, testId: string): Bounds =>
+  Option.getOrElse(
+    Option.flatMap(runtime.element(testId), (element) =>
+      Option.flatMap(Option.fromNullishOr(element.children[0]), (id) =>
+        runtime.boundsOfId(id),
+      ),
+    ),
+    () => expect.fail(`the ${testId} switch painted no thumb`),
+  );
+
+it("slides the switch thumb to its new end instead of jumping", async () => {
+  // The bug guarded (plan 329): the thumb was laid out with the track's
+  // `justifyContent`, so a toggle teleported from one end to the other in one
+  // frame. Measured travel at `md`: dx 3 → 13, dy 2.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="sw" label="Wifi" />
+    </Surface>,
+  );
+  const track = boundsOf(runtime, "sw");
+  const rest = switchThumb(runtime, "sw");
+  expect(rest.x - track.x).toBe(3);
+  expect(rest.y - track.y).toBe(2);
+
+  runtime.click("sw");
+  runtime.advanceMotion(0);
+  const atClick = switchThumb(runtime, "sw");
+  runtime.advanceMotion(100);
+  const midway = switchThumb(runtime, "sw");
+  runtime.advanceMotion(200);
+  const end = switchThumb(runtime, "sw");
+
+  expect(atClick.x).toBe(rest.x); // no jump on the click
+  expect(midway.x).toBeGreaterThan(rest.x);
+  expect(midway.x).toBeLessThan(end.x);
+  expect(end.x - track.x).toBe(13); // the resting place the layout painter had
+  expect(end.y).toBe(rest.y);
+});
+
+it("rests a controlled switch at the end it mounted with", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="sw" label="Wifi" checked />
+    </Surface>,
+  );
+  // Mount applies `initial`, so a switch that starts on paints no slide.
+  const track = boundsOf(runtime, "sw");
+  expect(switchThumb(runtime, "sw").x - track.x).toBe(13);
+});
+
 it("moves a RadioGroup's selection with the arrow keys", async () => {
   const runtime = await openWindow();
   runtime.render(

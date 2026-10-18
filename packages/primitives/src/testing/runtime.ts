@@ -136,8 +136,15 @@ export interface Runtime {
   readonly scrollOffset: (
     testId: string,
   ) => Option.Option<{ readonly x: number; readonly y: number }>;
-  /** Run due timers and the motion clock, for the loading indicators. */
+  /** Run due timers (the dispatcher's clock) and let the runtime settle. */
   readonly advance: (milliseconds: number) => void;
+  /**
+   * Move the **motion clock** — what `motion` animations run on — and repaint.
+   *
+   * `advance` moves the test dispatcher's timers, which is not the same clock:
+   * a `motion` target does not move under `advance` (measured, plan `329`).
+   */
+  readonly advanceMotion: (milliseconds: number) => void;
   /** Re-run the layout and paint pipeline over what is mounted. */
   readonly flush: () => void;
   /** A real hit-tested click on an element found by `all()`. */
@@ -354,6 +361,10 @@ export const createRuntime = (
           ),
         ),
       advance: (milliseconds) => renderer.advanceTime(milliseconds),
+      advanceMotion: (milliseconds) => {
+        renderer.clockFastForward(milliseconds);
+        renderer.flush();
+      },
       flush: () => renderer.flush(),
       clickElement: (element) =>
         Option.match(boundsOf(renderer, element.id), {

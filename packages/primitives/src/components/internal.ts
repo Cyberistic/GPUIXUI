@@ -2,9 +2,10 @@
  * Small pieces every component needs.
  *
  * `mergeStyle` is how a caller's `style` prop wins over a resolved one without
- * each component re-implementing a spread. `useStep` is the one animation the
- * runtime allows: a discrete step advanced on a timer, because `motion` cannot
- * rotate or interpolate a colour (plan 020 §1.2).
+ * each component re-implementing a spread. `useStep` is the loading family's
+ * animation: a discrete step on a timer, because a looping indicator cannot use
+ * `motion` (it has no `repeat`) and `motion` cannot rotate or interpolate a
+ * colour (plan 020 §1.2, plan 329).
  */
 
 import { Children, useEffect, useState, type ReactNode } from "react";

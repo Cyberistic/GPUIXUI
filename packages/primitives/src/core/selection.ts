@@ -121,12 +121,49 @@ export const selectionBoxStyle = (
   return style;
 };
 
+/** The pill's width as a multiple of its height (measured: 28×16 at `md`). */
+const SWITCH_TRACK_RATIO = 1.75;
+
+/** The thumb's side: the track height less one `2xs` inset on each edge. */
+const switchThumbSide = (spec: SelectionSpec, theme: PrimitiveTheme): number =>
+  theme.iconSize[spec.size] - theme.spacing["2xs"] * 2;
+
+/** The track's painted width. */
+export const switchTrackWidth = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): number => Math.round(theme.iconSize[spec.size] * SWITCH_TRACK_RATIO);
+
+/**
+ * Where the thumb rests, inside the track's border.
+ *
+ * `position: "absolute"` measures `left`/`top` from the padding-box edge, so the
+ * `2xs` inset the layout painter used is the resting `left`, and the checked
+ * position is the content width less the inset and the thumb. Measured at `md`:
+ * dx 3 / 13, dy 2 — the same box `justifyContent` painted (plan `329`).
+ */
+export const switchThumbOffset = (
+  spec: SelectionSpec,
+  theme: PrimitiveTheme,
+): { readonly left: number; readonly top: number } => {
+  const side = switchThumbSide(spec, theme);
+  const border = theme.borderWidth.thin;
+  const edge = theme.spacing["2xs"];
+  return {
+    left: filled(spec)
+      ? switchTrackWidth(spec, theme) - border * 2 - edge - side
+      : edge,
+    top: Math.round((theme.iconSize[spec.size] - border * 2 - side) / 2),
+  };
+};
+
 /**
  * The pill a switch slides in.
  *
  * Height is the box side, width a fixed ratio of it, so a switch is the same
- * "size" as the checkbox on the label beside it. The thumb is positioned by
- * `justifyContent`, not by a pixel offset, so it cannot drift out of the pill.
+ * "size" as the checkbox on the label beside it. The thumb is absolutely
+ * positioned from `switchThumbOffset`, because the runtime can animate a
+ * position but not a layout justification (plan `329`).
  */
 export const switchTrackStyle = (
   spec: SelectionSpec,
@@ -137,18 +174,14 @@ export const switchTrackStyle = (
   const emptyBorder =
     spec.invalid === true ? theme.colors.destructive : theme.colors.input;
   const style: StyleDesc = {
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    width: Math.round(height * 1.75),
+    position: "relative",
+    width: switchTrackWidth(spec, theme),
     height,
     flexShrink: 0,
     borderRadius: theme.radius.full,
-    padding: theme.spacing["2xs"],
     borderWidth: theme.borderWidth.thin,
     borderColor: filled(spec) ? role.background : emptyBorder,
     backgroundColor: filled(spec) ? role.background : theme.colors.muted,
-    justifyContent: filled(spec) ? "flex-end" : "flex-start",
     cursor: spec.disabled === true ? "not-allowed" : "pointer",
     hover: filled(spec)
       ? {
@@ -181,25 +214,22 @@ export const switchTrackStyle = (
  * deepest element under the point and does not bubble an unhandled click to the
  * track, so a filled child covering the switch's centre swallowed every click
  * (measured: plan 041 §9 — the toggle never fired and the switch never took
- * focus).
+ * focus). Its `left` is the motion target the component animates (plan `329`).
  */
 export const switchThumbStyle = (
   spec: SelectionSpec,
   theme: PrimitiveTheme,
-): StyleDesc => {
-  const inset = theme.spacing["2xs"] * 2;
-  const side = theme.iconSize[spec.size] - inset;
-  return {
-    width: side,
-    height: side,
-    flexShrink: 0,
-    borderRadius: theme.radius.full,
-    pointerEvents: "none",
-    backgroundColor: filled(spec)
-      ? accentRole(spec, theme).foreground
-      : theme.colors.foreground,
-  };
-};
+): StyleDesc => ({
+  position: "absolute",
+  ...switchThumbOffset(spec, theme),
+  width: switchThumbSide(spec, theme),
+  height: switchThumbSide(spec, theme),
+  borderRadius: theme.radius.full,
+  pointerEvents: "none",
+  backgroundColor: filled(spec)
+    ? accentRole(spec, theme).foreground
+    : theme.colors.foreground,
+});
 
 /**
  * The centre dot of a checked radio.
