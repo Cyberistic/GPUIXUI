@@ -389,7 +389,8 @@ const resolveTone = (value: unknown): StatusTone =>
   isStatusTone(value) ? value : "info";
 ```
 
-A runnable example spreads the result onto a container and its text; see
+A runnable example spreads the result onto a container and its text, and
+`statusSolidStyles` does the same for a solid chip; see
 [`src/status-tone.example.ts`](../packages/tokens/src/status-tone.example.ts).
 [`src/status-text.example.ts`](../packages/tokens/src/status-text.example.ts)
 does the same for a status label and an indicator dot on a plain surface.

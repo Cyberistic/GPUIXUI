@@ -18,3 +18,24 @@ export const statusToneStyles = (theme: Theme, tone: StatusTone) => {
     text: { ...textStyle(theme, "label"), color: foreground },
   };
 };
+
+/**
+ * The style objects a solid status chip spreads. The solid role is a fill and
+ * carries its own on-colour, so the pair comes from `statusTone(...).solid`
+ * rather than from two role lookups at the call site.
+ */
+export const statusSolidStyles = (theme: Theme, tone: StatusTone) => {
+  const { solid } = statusTone(theme, tone);
+  return {
+    container: {
+      backgroundColor: solid.background,
+      borderRadius: theme.radius.full,
+      paddingLeft: theme.spacing.md,
+      paddingRight: theme.spacing.md,
+      paddingTop: theme.spacing["2xs"],
+      paddingBottom: theme.spacing["2xs"],
+      alignSelf: "flex-start",
+    },
+    text: { ...textStyle(theme, "label"), color: solid.foreground },
+  };
+};

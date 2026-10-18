@@ -27,6 +27,7 @@ import {
 import { extendTheme, getTheme } from "./theme.js";
 import { themeFailures } from "./theme-check.js";
 import { statusTone, statusTones } from "./styles.js";
+import { statusSolidStyles } from "./status-tone.example.js";
 import { shippedThemes } from "./shipped-themes.js";
 
 /** The surfaces a status chip occupies, in pair order. */
@@ -125,6 +126,20 @@ describe("the solid status family", () => {
           failure.background === "card",
       ),
     ).toBe(true);
+  });
+
+  it("runs the solid chip example in every shipped set", () => {
+    shippedThemes.forEach(({ theme }) =>
+      statusTones.forEach((tone) => {
+        const style = statusSolidStyles(theme, tone);
+        expect(style.container.backgroundColor, `${theme.name} ${tone}`).toBe(
+          theme.colors[tone],
+        );
+        expect(style.text.color, `${theme.name} ${tone}`).toBe(
+          theme.colors[`${tone}Foreground`],
+        );
+      }),
+    );
   });
 
   it("keeps the solid fill out of the mark class", () => {

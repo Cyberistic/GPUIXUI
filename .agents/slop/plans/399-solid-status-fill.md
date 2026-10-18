@@ -15,7 +15,9 @@ is 28 pairs, not 32, because `destructive` is also an action fill and its four
 base-surface pairs already exist in `stateFillSurfacePairs`; the contract
 therefore grows 360 → 388, not 392. The docs-test case that asserts the
 interactive fills now checks coverage rather than exact equality, because one
-role serves two families.
+role serves two families. A third addition beyond §3: `status-tone.example.ts`
+gains `statusSolidStyles`, executed by the new suite, so the one-call story is a
+runnable example rather than a snippet.
 
 ---
 
@@ -236,6 +238,8 @@ Cases (expectations derived from the package, not from literals):
    and `markPairs` measures `primary`/`success`/`destructive` (not `info`) at
    the mark floor; assert the sets, so a later edit cannot quietly turn the fill
    pairs into mark pairs or vice versa.
+7. **The example runs** — `statusSolidStyles` from `status-tone.example.ts`
+   paints the solid fill and its on-colour for every tone in every shipped set.
 
 ### 3.4 `packages/tokens/src/contrast.test.ts`
 
