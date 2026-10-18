@@ -5,16 +5,30 @@ description: Render a GPUix window and place the first GPUIXUI component.
 
 A GPUix application is a React tree rendered into a native window. The entry
 file ends with `render()`, which creates the window, mounts React and starts the
-frame loop.
+frame loop. Wrap the tree in a `ThemeProvider` so every component below it reads
+the same resolved theme.
 
 ```tsx title="app.tsx"
 import { render } from "@gpuix/react";
+import {
+  Box,
+  Button,
+  Stack,
+  Text,
+  ThemeProvider,
+} from "@gpuixui/primitives";
+import { lightTheme } from "@gpuixui/tokens";
 
 function App() {
   return (
-    <div style={{ padding: 24 }}>
-      <text>Hello from GPUix</text>
-    </div>
+    <ThemeProvider theme={lightTheme}>
+      <Box tone="background" padding="lg">
+        <Stack direction="column" gap="md">
+          <Text role="h2">Hello from GPUIXUI</Text>
+          <Button variant="primary">Save changes</Button>
+        </Stack>
+      </Box>
+    </ThemeProvider>
   );
 }
 
@@ -24,6 +38,42 @@ render(<App />, { title: "My app" });
 ```sh
 nub app.tsx
 ```
+
+`lightTheme` and `darkTheme` are plain values from `@gpuixui/tokens`. The
+application owns the mode switch, because GPUix exposes no appearance query; see
+[Theming](/docs/theming) for the roles and the extension mechanism.
+
+## Providers
+
+The two component packages read two different React contexts, so a mixed app
+mounts two providers.
+
+- `@gpuixui/primitives` owns its context. There is no default theme: a primitive
+  rendered without `<ThemeProvider>` above it throws `MissingThemeProviderError`
+  naming the provider.
+- `@gpuixui/components` reads the token context from `@gpuixui/tokens/react`.
+  That context **falls back to `lightTheme`** when no provider is above it, so a
+  components-only tree paints light instead of failing.
+
+An app that uses both packages nests the token provider outside the primitives
+provider, with the same resolved theme:
+
+```tsx
+import { darkTheme } from "@gpuixui/tokens";
+import { ThemeProvider as TokensThemeProvider } from "@gpuixui/tokens/react";
+import { ThemeProvider } from "@gpuixui/primitives";
+
+<TokensThemeProvider theme={darkTheme}>
+  <ThemeProvider theme={darkTheme}>
+    {/* primitives and components */}
+  </ThemeProvider>
+</TokensThemeProvider>;
+```
+
+A components-only app still imports the provider from `@gpuixui/tokens/react`; a
+primitives-only app needs only the primitives provider. The
+[Installation](/docs/installation) page declares `@gpuixui/tokens` directly for
+that reason, rather than relying on a transitive install.
 
 ## Try the library in an example
 

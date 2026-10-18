@@ -262,9 +262,11 @@ tables and the inventory reconciliation.
 | [`500-exported-symbol-search.md`](./500-exported-symbol-search.md) | A component's **exported symbol** reaches its page: `Spinner` (from `SpinnerProps`) outranks prose, so the nine stems that differ from their inventory title stop landing in the appendix | F | 411, 419, 431, 441, 479 | implemented — nine symbol queries now return their page first; `smoke:build` asserts one against the production index (§8) |
 | [`501-fragment-anchor-integrity.md`](./501-fragment-anchor-integrity.md) | A fragment link lands on a heading: the production crawl compares every internal `#fragment` with the ids the destination page actually renders, so a renamed heading cannot silently break the 66 generated `#api-reference` links | F | 410, 438, 439, 441, 499 | implemented — 1 143 anchors over 90 pages, exit `0`; both directions (66 broken API links, one renamed heading) fail by name (§7) |
 | [`502-responsive-smoke.md`](./502-responsive-smoke.md) | The site is usable at a phone width: a 390 px browser smoke crawls every sitemap page for sideways scroll and clipped columns, then opens and navigates the mobile sidebar | F | 410, 439, 446, 470, 495 | implemented — it found the Buttons page clipping a 423 px suite path in a 390 px column; inline code now wraps, 90/90 pages clean, nav failure proven at 1200 px (§7) |
+| [`503-getting-started-providers.md`](./503-getting-started-providers.md) | Getting started actually starts with the library: the first app mounts a provider and renders a real component, the install declares `@gpuixui/tokens`, Theming names the second provider a mixed app needs, and a suite derives both contexts from package source | F | 410, 411, 426, 455, 457 §9; shipped tokens/primitives | implemented — five two-direction proofs (one exposed a missed "fall back" wording), 380 docs tests, `check` and `smoke:build` green (§7) |
 
-> The `400–499` block is full; plans `500`, `501` and `502` take the next free
-> numbers, as plan `051` did for the tokens workstream when `010–019` filled.
+> The `400–499` block is full; plans `500`, `501`, `502` and `503` take the next
+> free numbers, as plan `051` did for the tokens workstream when `010–019`
+> filled.
 >
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

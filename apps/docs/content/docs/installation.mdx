@@ -30,13 +30,19 @@ without a window. [Examples](/docs/examples) records what it verifies.
 # the native runtime and its React adapter, pinned together
 nub add --exact @gpuix/react @gpuix/native react
 
-# the library
-nub add @gpuixui/primitives @gpuixui/components
+# the library, plus the package that owns the theme provider
+nub add @gpuixui/tokens @gpuixui/primitives @gpuixui/components
 ```
 
 Pin `@gpuix/react` and `@gpuix/native` to the **same exact version**. GPUix is
 pre-1.0, so a release can break either package and the adapter's version range
 can install a newer native binary.
+
+`@gpuixui/tokens` is declared directly because its React provider is part of the
+public API: primitives mount `ThemeProvider` from `@gpuixui/primitives`, and
+components read the context from `@gpuixui/tokens/react`. A mixed app mounts
+both, tokens outside primitives; [Getting started](/docs/getting-started) shows
+the nesting, and [Theming](/docs/theming) explains the roles it carries.
 
 ## TypeScript
 

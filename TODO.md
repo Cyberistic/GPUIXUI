@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500)
 
-`[x]` `[██████████]` 103/103
+`[x]` `[██████████]` 104/104
+
+`[x]` **Getting started starts with the library (plan 503)** — the first app
+      mounts a primitives provider and renders a real component, the install
+      declares `@gpuixui/tokens` (the only public token provider), and Theming
+      names the second provider a mixed app needs; `provider-docs.test.ts`
+      derives both contexts from package source and fails when the prose
+      inverts them.
 
 `[x]` **The site is usable at a phone width (plan 502)** — `smoke:responsive`
       crawls every sitemap page at 390 px, proving no page scrolls sideways, no
@@ -761,7 +768,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       `Tooltip` and `Combobox` — superseded by plan 486 for Tooltip and Combobox
       (their scenes open by the real hover/click) and by plan 492 for Select
       (the live scene clicks the real trigger; no prop was needed)
-`[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs
+`[ ]` **Components/primitives**: a consumer composing both packages must nest two theme providers — primitives own `ThemeProvider`, components read `@gpuixui/tokens/react` and fall back to the light theme without it. The live scenes painted light-on-dark until `apps/docs` mounted both (plan 457 §9). Unify the context or document the nesting in both package READMEs. **Docs half done (plan 503):** `/docs/getting-started`, `/docs/installation` and `/docs/theming` now show the nesting and declare `@gpuixui/tokens`; the package READMEs and the context decision remain here.
 
 `[ ]` **Repo tooling (`scripts/check-tests.ts`)**: a regex literal whose `/` follows a space is read as division, and backticks inside it then open a phantom template literal, so a real `it(...)` block can be truncated to `"("` and reported as assertionless. The docs guard worked around it without the `check-tests-ok` escape (plan 469); the parser should accept a regex after whitespace when the previous non-space token cannot end a value. Owner: whoever owns `scripts/`
 `[ ]` **Deploy: confirm the production host serves `/gpuix-preview/`** — the live surface adds a 19.1 MB wasm asset to `apps/docs/public/` (under Workers' 25 MiB per-asset limit). Run `smoke:preview --base-url <deploy>` once the deploy path is verified; owner: packages/deploy, with `docs-site` verifying.

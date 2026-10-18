@@ -15,6 +15,34 @@ cascade in the native runtime and no appearance query, so the application choose
 reference is [`docs/tokens.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/tokens.md);
 the reasoning is in [`docs/design-system.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/design-system.md).
 
+## Providers
+
+The theme enters a tree through a React provider, and the two component packages
+read two different contexts:
+
+- `@gpuixui/primitives` owns its context and throws `MissingThemeProviderError`
+  when a primitive renders without `<ThemeProvider>` above it;
+- `@gpuixui/components` reads `@gpuixui/tokens/react`, which falls back to
+  `lightTheme` when no provider is above it.
+
+An app that uses both mounts the token provider outside the primitives provider,
+with the same resolved theme:
+
+```tsx
+import { darkTheme } from "@gpuixui/tokens";
+import { ThemeProvider as TokensThemeProvider } from "@gpuixui/tokens/react";
+import { ThemeProvider } from "@gpuixui/primitives";
+
+<TokensThemeProvider theme={darkTheme}>
+  <ThemeProvider theme={darkTheme}>
+    {/* primitives and components */}
+  </ThemeProvider>
+</TokensThemeProvider>;
+```
+
+[Getting started](/docs/getting-started) has the complete first app, and
+[Tokens API](/docs/tokens-api) documents the provider's signature.
+
 ## Semantic roles
 
 Three tiers, strictly ordered:
