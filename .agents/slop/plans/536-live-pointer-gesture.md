@@ -182,3 +182,12 @@ Mutation proofs (each restored after the run; every one exits `1`):
 press commits a frame before the move. No component code is involved, so a
 component must not intercept a modified click or reimplement selection.
 
+## 9. Merge gate
+
+Run on the final branch after this change:
+
+- headless **101/101** (`3536` checks), exit `0`;
+- live **53/53** (`1133` checks, up from `1125`), exit `0`;
+- `nub run check`, `nub run lint` and `nub run test` pass (1,384 tests).
+
+

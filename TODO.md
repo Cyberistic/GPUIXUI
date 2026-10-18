@@ -71,7 +71,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `pressedButton: 0` gives `got "zabcdef"`, and a click without `shift`
       gives `got "abcdefs"` (all exit `1`). Closes plan `535`'s "not claimed"
       line; measured that the live key verb types **lowercase**. Focused id run:
-      `live-pointer-entry`; `check`/`lint`/`test` green.
+      `live-pointer-entry`; full gate after the change: headless **101/101**
+      (`3536` checks) and live **53/53** (`1133`), both exit `0`;
+      `check`/`lint`/`test` green.
 
 `[x]` Prove **variable row heights in a real window** per plan `534`: the last
       interaction family whose evidence was headless-only. `live-variable-rows`
@@ -637,10 +639,11 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      re-run on the final branch: headless **101/101** (`3536` checks) and live
-      **53/53** (`1125` checks), both exit `0`; `nub run check` and
-      `nub run test` pass (1,384 tests). The workstream's own instruction is
-      *never push to master*, so an owner/supervisor performs the final merge.
+      re-run on the final branch (after plan `536`): headless **101/101**
+      (`3536` checks) and live **53/53** (`1133` checks), both exit `0`;
+      `nub run check` and `nub run test` pass (1,384 tests). The workstream's
+      own instruction is *never push to master*, so an owner/supervisor
+      performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
