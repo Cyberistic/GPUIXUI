@@ -304,6 +304,10 @@ retired once both branches are one
       re-open what it just dismissed — plan 398; 3 native cases (Combobox 36,
       behaviour 629), both-direction proof; docs, `COMPONENTS.md` and inventory
       synced
+    - [x] Mention input claims its Escape, so one Escape closes the list and
+      leaves an enclosing dialog open — plan 399; 2 native cases (Mention input
+      13, behaviour 631), both-direction proof; docs, `COMPONENTS.md` and
+      inventory synced
     - [x] Disabled means inert — plan 394: measured five leaks (a disabled
       Button/IconButton kept its hover/press fill, InlineEdit painted a ring and
       a hover with `disabled` + `autoFocus`, `CollapsibleTrigger` had no

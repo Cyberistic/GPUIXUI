@@ -58,9 +58,12 @@ replaces the `@query` token with `@value` plus one space, and reports both
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping |
 | `Enter` | inserts the highlighted name (arrives as the input's submit event) |
 | Press a row | inserts that name |
-| `Escape` | closes the list, text unchanged |
+| `Escape` | closes the list, text unchanged — from the field or a focused row |
 | Typing a query with no matches | closes the list |
 | `Tab` | not claimed: the platform moves focus out of the field |
+
+`Escape` closes the list and claims the event, so inside a dialog the first
+press closes the list and the next closes the dialog.
 
 ## API
 
@@ -105,8 +108,9 @@ see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (11 tests):
-opening, narrowing, arrow movement, Enter insertion, row presses, Escape,
+`src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (13 tests):
+opening, narrowing, arrow movement, Enter insertion, row presses, Escape from the
+field and from a focused row, one surface per Escape inside a dialog,
 no-match closing, the two callbacks firing once, a disabled field, and the
 caller's `onKeyDown`/`onFocus`/`onBlur` and row handlers composing with the
 component's own action.

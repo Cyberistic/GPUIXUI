@@ -8,6 +8,9 @@
  *
  * The list filters and ranks the `MentionInputItem`s the consumer declares, so
  * the candidate set stays the consumer's data and the ranking stays ours.
+ *
+ * `Escape` closes the list and claims the event, so an enclosing dialog or
+ * popover stays open for the next press (plan 399).
  */
 
 import type { EventPayload, InputProps, Props } from "@gpuix/react";
@@ -28,6 +31,7 @@ import {
   type ReactElement,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { claimEvent } from "./internal/event-claim.js";
 import { isActivation, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -216,6 +220,9 @@ export const MentionInput = ({
               } else if (isUp(event)) {
                 setHighlighted((current) => current - 1);
               } else if (isDismiss(event)) {
+                // The field closes the list here; an enclosing dialog must not
+                // also close on the same Escape (plan 399).
+                claimEvent(event);
                 setDismissed(true);
               }
             }}
@@ -343,7 +350,7 @@ export const MentionInputItem = ({
 }: MentionInputItemProps) => {
   const theme = useTheme();
   const { highlighted } = useContext(MentionItemContext);
-  const { select } = useMention();
+  const { select, close } = useMention();
 
   return (
     <div
@@ -357,6 +364,13 @@ export const MentionInputItem = ({
       }}
       onKeyDown={(event: EventPayload) => {
         onKeyDown?.(event);
+        // A focused row can be the surface the user dismisses from; the claim
+        // keeps an enclosing dialog open for the next Escape (plan 399).
+        if (isDismiss(event)) {
+          claimEvent(event);
+          close();
+          return;
+        }
         if (isActivation(event)) select(value);
       }}
       style={mergeStyles(

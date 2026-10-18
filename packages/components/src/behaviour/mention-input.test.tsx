@@ -10,6 +10,7 @@
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import {
   MentionInput,
   MentionInputItem,
@@ -72,6 +73,19 @@ const Harness = ({
 const type = (root: ComponentTestRoot, text: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId("mention")?.id ?? -1);
   text.split("").forEach((key) => root.renderer.simulateKeystrokes(key));
+};
+
+/** An open dialog whose content holds the mention composer. */
+const InDialog = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent label="Comment" testId="dialog">
+        <DialogTitle>Comment</DialogTitle>
+        <Harness />
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const valueOf = (root: ComponentTestRoot): unknown =>
@@ -167,6 +181,40 @@ describe("MentionInput", () => {
     expect(valueOf(mention)).toBe("@an");
 
     mention.unmount();
+  });
+
+  it("closes one surface per Escape inside a dialog", () => {
+    const nested = renderComponent(<InDialog />);
+    type(nested, "@");
+
+    expect(nested.renderer.findByTestId("row-ana")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("row-ana")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
+
+    nested.unmount();
+  });
+
+  it("closes from a focused row without closing the dialog", () => {
+    const nested = renderComponent(<InDialog />);
+    type(nested, "@");
+
+    const row = nested.renderer.findByTestId("row-ana");
+    nested.renderer.focusElement(row?.id ?? -1);
+    expect(focusedTestId(nested)).toEqual(Option.some("row-ana"));
+
+    nested.renderer.simulateKeystrokes("escape");
+
+    expect(nested.renderer.findByTestId("row-ana")).toBeUndefined();
+    expect(nested.renderer.findByTestId("dialog")).toBeDefined();
+
+    nested.unmount();
   });
 
   it("closes when the query matches nothing", () => {
