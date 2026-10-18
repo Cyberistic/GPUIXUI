@@ -93,7 +93,7 @@ export interface DocumentedFigure {
 }
 
 /** The provenance of one {@link shippedThemes} entry. */
-export const provenanceOf = (entry: ShippedTheme): ShippedThemeProvenance =>
+const provenanceOf = (entry: ShippedTheme): ShippedThemeProvenance =>
   entry.source === "identity"
     ? {
         source: "identity",
@@ -244,7 +244,7 @@ const identityTheme = (
 ): ShippedThemeProvenance => ({ source: "identity", mode, contrast });
 
 /** The Toast's tone on its floating card, the one unsplit status composition. */
-export const toastToneFigure: DocumentedFigure = {
+const toastToneFigure: DocumentedFigure = {
   document: "docs/tokens.md",
   name: "the Toast's tone on its floating card",
   pairs: toastTonePairs,
@@ -257,7 +257,7 @@ export const toastToneFigure: DocumentedFigure = {
 };
 
 /** The disabled action inside a status panel, in the two dark palettes. */
-export const inactivePanelActionFigures: ReadonlyArray<DocumentedFigure> = [
+const inactivePanelActionFigures: ReadonlyArray<DocumentedFigure> = [
   {
     document: "docs/tokens.md",
     name: "the disabled action inside a status panel, identity dark",
@@ -285,7 +285,7 @@ export const inactivePanelActionFigures: ReadonlyArray<DocumentedFigure> = [
  * The value groove: the tightest surface pair across the whole list, and the
  * persistent row fill the sentence names beside it.
  */
-export const trackSurfaceFigure: DocumentedFigure = {
+const trackSurfaceFigure: DocumentedFigure = {
   document: "docs/tokens.md",
   name: "the value indicator's groove on a surface",
   pairs: trackSurfacePairs,
@@ -298,7 +298,7 @@ export const trackSurfaceFigure: DocumentedFigure = {
 };
 
 /** The groove on the selected call it measures beside the minimum. */
-export const trackSelectedFigure: DocumentedFigure = {
+const trackSelectedFigure: DocumentedFigure = {
   document: "docs/tokens.md",
   name: "the value indicator's groove on the selected row",
   pairs: [["track", "selected", "surface"]],
