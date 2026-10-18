@@ -1403,20 +1403,25 @@ const layoutSurfaces = [
 ] as const;
 
 /**
- * The content fills a window shows behind the scrim. The scrim's own
- * perceivability is measured on them (`overlayWashPairs`), but a dialog's face
- * is not: the four soft status fills sit in one narrow luminance band, so a face
- * can and does meet the scrim over a bright action patch — macOS dark measures
- * 1.0213:1 on `primary` — where the dialog's `border` edge carries the
- * silhouette. No single `popover` value can leave that band: lightening the
- * face breaks the soft fills it sits beside, and raising the scrim trades the
- * `primary` patch for the `destructive` one (plan 507).
+ * The content fills a window shows behind the scrim: the four resting filled
+ * actions, the three solid status chips a Badge paints (`destructive` is already
+ * an action family), the raised action a status panel carries and the four soft
+ * status panels. The scrim's own perceivability is measured on them
+ * (`overlayWashPairs`); a dialog's face is not, because the four soft fills sit in
+ * one narrow luminance band and a face can meet the scrim over a bright action
+ * patch (macOS dark measures 1.0213:1 on `primary`, where the dialog's `border`
+ * carries the silhouette). No `popover` value leaves that band — lightening the
+ * face breaks the soft fills beside it and raising the scrim trades the `primary`
+ * patch for `destructive` (plan 507).
  */
 const contentFillSurfaces = [
   "primary",
   "secondary",
   "accent",
   "destructive",
+  "info",
+  "success",
+  "warning",
   "softAction",
   "infoSoft",
   "successSoft",
@@ -1430,7 +1435,8 @@ const contentFillSurfaces = [
  * canvas, a card, the quiet panel, the field fill a form paints, the persistent
  * `selected` fill a table or list keeps and the floating surface a menu opens
  * on — the resting fills of the actions on the page (`primary`, `secondary`,
- * `accent`, `destructive` and the soft status panel's `softAction`) and the four
+ * `accent`, `destructive` and the soft status panel's `softAction`), the three
+ * solid status chips a Badge paints (`info`, `success`, `warning`) and the four
  * soft status panels an Alert or Badge paints. A scrim that composites to its
  * own surface is an invisible modal backdrop, so each is held to the `surface`
  * floor.
@@ -1494,7 +1500,8 @@ export const elevationSurfaces = [
  * deliberately absent: the pointer leaves the row to reach the dialog, so a
  * scrim over a transient state is not a composition the design system supports.
  * `selected` persists while the modal opens, `input` is a layout surface, the
- * filled actions are the resting fills on the page, the panel action
+ * filled actions are the resting fills on the page, a Badge keeps its solid
+ * status chip (`info`, `success` or `warning`), the panel action
  * (`softAction`) is the resting fill inside a status panel and `accent` is also
  * the resting fill of a toggled-on control, so all of them are measured.
  * `disabled`, `skeleton` and `track` are not the content a dialog opens over.

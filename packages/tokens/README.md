@@ -329,7 +329,7 @@ themeTypefaceFailures(brandTheme); // [] when both families are one name
 
 `contrastRatio`, `contrastPairs`, `contrastFloors` and `compositeOver` expose
 the parts. The modal scrim and the dialog on it are measured as a pair:
-`overlayWashPairs` holds the painted scrim to 1.05:1 over the fifteen surfaces a
+`overlayWashPairs` holds the painted scrim to 1.05:1 over the eighteen surfaces a
 window shows, and `dialogSurfacePairs` holds the dialog's own face — `popover`
 composited over the `overlay` scrim on the six page layout surfaces
 (`background`, `card`, `muted`, `input`, `selected`, `popover`) — to the same
@@ -378,18 +378,19 @@ guarantee rather than a fix (plan 093). An invalid control recolours the ring
 with `destructive`, and the runtime can draw only one, so the error ring is the
 focus indicator: the same surfaces are measured for it too (`invalidRingPairs`,
 plan 340). The modal scrim is measured the same way:
-`overlay` composited over the fifteen surfaces a dialog covers — the four base
+`overlay` composited over the eighteen surfaces a dialog covers — the four base
 surfaces, the `input` fill a form paints, the persistent `selected` fill a
-table or list keeps, the four resting filled actions, the raised action a status
-panel carries and the four soft status
-panels a window shows — and held to 1.05:1, which caught the AAA dark theme's
+table or list keeps, the four resting filled actions, the three solid status
+chips a Badge paints, the raised action a status panel carries and the four soft
+status panels a window shows — and held to 1.05:1, which caught the AAA dark theme's
 black veil painting **1.000:1** on its pure black canvas and turned it into a
 light one (plan 099) and a macOS light scrim equal to its own `selected` fill
 painting **1.000:1** on a selected row (plan 359). Plan 375 extends the same
 check to the page's filled actions and status panels: a scrim equal to
 `primary` or `infoSoft` used to leave the control or Alert undimmed while the
-checker returned `[]`; the tightest pair is **1.075:1** (AAA dark on `primary`),
-so no colour moves. The transient pointer washes stay out:
+checker returned `[]`, and plan 508 closes it for a solid status chip a Badge
+keeps on screen; the tightest pair is **1.060:1** (AAA dark on `info`), so no
+colour moves. The transient pointer washes stay out:
 reaching the dialog takes the pointer off the row. A solid role painted as a mark — a
 progress segment, slider fill, thumb ring, rating star or timeline dot — is held
 to 3:1 (4.5:1 at AAA) by `markPairs`, not to the 1.05:1 an interactive fill's

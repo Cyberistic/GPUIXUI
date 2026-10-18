@@ -24,6 +24,15 @@
  * Plan 395 adds the resting fill plan 394 shipped: `softAction` is the raised
  * action a tone-tinted Alert paints, so a dialog opens over it too. Every shipped
  * set already clears the floor (AAA dark is tightest at 1.5519:1).
+ *
+ * Plan 508 adds the last resting content family the list omitted: a Badge's solid
+ * status chip (`info`, `success`, `warning`). Plan 399 made the solid fill a
+ * first-class fill and plan 504 made it a selection surface, but the scrim still
+ * named only the action families and the soft panels, so a scrim that composites
+ * to a status chip left the Badge undimmed while every check returned `[]`.
+ * `destructive` is already measured as an action fill. Every shipped set clears
+ * the floor — high-contrast dark `info` is tightest at **1.0599:1** — so the
+ * scrim list grows from fifteen surfaces to eighteen and no colour moves.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -37,6 +46,7 @@ import {
   lightTheme,
   overlaySurfaces,
   overlayWashPairs,
+  statusTones,
   themeContrastFailures,
   type Theme,
   type ThemeColors,
@@ -59,6 +69,16 @@ const persistentSurfaces = [
   "warningSoft",
   "destructiveSoft",
 ] as const satisfies ReadonlyArray<keyof ThemeColors>;
+
+/** The solid status chips plan 508 adds: every tone but the action fill. */
+const solidChips = statusTones.filter((tone) => tone !== "destructive");
+
+/** The scrim over a solid chip, as the contract measures it. */
+const chipScrimRatio = (theme: Theme, chip: keyof ThemeColors): number =>
+  contrastRatio(
+    compositeOver(theme.colors.overlay, theme.colors[chip]),
+    theme.colors[chip],
+  );
 
 describe("modal scrim", () => {
   it("veils every surface a dialog covers in every shipped colour set", () => {
@@ -114,6 +134,9 @@ describe("modal scrim", () => {
       ["overlay", "secondary", "surface"],
       ["overlay", "accent", "surface"],
       ["overlay", "destructive", "surface"],
+      ["overlay", "info", "surface"],
+      ["overlay", "success", "surface"],
+      ["overlay", "warning", "surface"],
       ["overlay", "softAction", "surface"],
       ["overlay", "infoSoft", "surface"],
       ["overlay", "successSoft", "surface"],
@@ -164,5 +187,70 @@ describe("modal scrim", () => {
         },
       ]);
     });
+  });
+
+  it("derives the solid status chips from the tone index", () => {
+    const chips = new Set<string>(solidChips);
+    expect(overlaySurfaces.filter((surface) => chips.has(surface))).toEqual(
+      solidChips,
+    );
+    expect(
+      overlaySurfaces.filter((surface) => surface === "destructive"),
+    ).toEqual(["destructive"]);
+  });
+
+  it("reports a scrim that disappears on a solid status chip", () => {
+    solidChips.forEach((chip) => {
+      const regressed = extendTheme(lightTheme, {
+        colors: { overlay: lightTheme.colors[chip] },
+      });
+      expect(
+        themeContrastFailures(regressed).filter(
+          ({ background }) => background === chip,
+        ),
+        chip,
+      ).toEqual([
+        {
+          foreground: "overlay",
+          background: chip,
+          wash: "overlay",
+          pairClass: "surface",
+          floor: contrastFloors.default.surface,
+          ratio: 1,
+        },
+      ]);
+    });
+  });
+
+  it("keeps every shipped scrim visible on the chips", () => {
+    const pairs = shippedThemes.flatMap(({ theme }) =>
+      solidChips.map((chip) => ({
+        name: theme.name,
+        chip,
+        ratio: chipScrimRatio(theme, chip),
+      })),
+    );
+    const [first, ...rest] = pairs;
+    if (first === undefined) {
+      throw new Error("the chip contract must measure something");
+    }
+    const tightest = rest.reduce(
+      (min, entry) => (entry.ratio < min.ratio ? entry : min),
+      first,
+    );
+
+    expect([tightest.name, tightest.chip, tightest.ratio.toFixed(4)]).toEqual([
+      "High contrast dark",
+      "info",
+      "1.0599",
+    ]);
+    shippedThemes.forEach(({ theme }) =>
+      solidChips.forEach((chip) =>
+        expect(
+          chipScrimRatio(theme, chip),
+          `${theme.name}: overlay on ${chip}`,
+        ).toBeGreaterThanOrEqual(contrastFloors[theme.contrast].surface),
+      ),
+    );
   });
 });

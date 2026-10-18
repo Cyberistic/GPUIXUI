@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 173/228
+`[x]` `[███████░░░]` 174/228
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1367,6 +1367,14 @@ carries the silhouette at 1.495:1; raising the scrim to 70% clears `primary` at
 `popover` over the composited `overlay` on the six page layout surfaces, every
 shipped set already clears 1.05:1 (1.210:1 at the tightest) and no colour moves
 (plan 507)
+`[x]` Hold the solid status chip on the scrim — a Badge's `info`/`success`/
+`warning` chip is resting content a dialog opens over, and plan 375's scrim list
+named the action families and the soft panels but not the three solid chips plan
+399 made first-class fills and plan 504 made selection surfaces; a scrim that
+composited to one of them left the Badge undimmed while every check returned
+`[]`. The three join `overlaySurfaces` (15 → 18 scrim pairs), every shipped set
+already clears 1.05:1 (1.060:1 at the tightest, high-contrast dark `info`), the
+checker's new tightest is that pair, and no colour moves (plan 508)
 
 ## Phase C — Tier 1–2 components
 

@@ -1569,7 +1569,8 @@ The modal scrim is measured the same way, because its job is to change the
 surface beneath it: `overlayWashPairs` composites `overlay` over the surfaces a
 dialog covers — `overlaySurfaces` is `background`, `card`, `muted`, `input`,
 `selected`, `popover`, the resting filled actions (`primary`, `secondary`,
-`accent`, `destructive`), the raised action a status panel carries (`softAction`)
+`accent`, `destructive`), the three solid status chips a Badge paints (`info`,
+`success`, `warning`), the raised action a status panel carries (`softAction`)
 and the four soft status panels (`infoSoft`,
 `successSoft`, `warningSoft`, `destructiveSoft`) — and holds the painted value
 to the `surface` floor. A scrim that composites to its own surface is an
@@ -1583,13 +1584,14 @@ so a scrim over a transient state is not a composition the system supports.
 `selected`, `input`, the resting filled actions and the soft status panels are
 not transient — a table, list or tree keeps a selected row while a modal opens
 over it, every field in the layout behind a form dialog sits on the `input`
-fill, the page's buttons keep their resting fills, a status panel's action keeps
+fill, the page's buttons keep their resting fills, a Badge keeps its solid status
+chip, a status panel's action keeps
 its raised fill, and a tone-tinted Alert stays
-on screen — so plans `359`, `375` and `395` measured them too. The gap was real: macOS
+on screen — so plans `359`, `375`, `395` and `508` measured them too. The gap was real: macOS
 light's own `selected` fill used as `overlay` composited to **1.000:1** on a
 selected row while the checker returned `[]`, because the four base surfaces all
-passed. The tightest shipped pair is **1.075:1** (high-contrast dark, `overlay`
-on `primary`), so no colour moves.
+passed. The tightest shipped pair is **1.060:1** (high-contrast dark, `overlay`
+on `info`), so no colour moves.
 
 The element the scrim carries is measured too: a dialog, drawer or command
 palette paints `popover` over it, so `dialogSurfacePairs` composites `overlay`
@@ -2434,6 +2436,11 @@ composites `overlay` over the six page layout surfaces and holds `popover` to th
 reported instead of shipping a dialog with only its edge. The walk adds six pairs
 to the checker and none to `contrastPairs`, which stays **394**; every shipped
 set passes (1.210:1 at the tightest, the identity dark `selected` row).
+Plan `508` adds the last resting content family the scrim list omitted: the three
+solid status chips a Badge paints (`info`, `success`, `warning`; `destructive` is
+already an action fill), taking `overlaySurfaces` from fifteen to eighteen. Every
+shipped set clears the floor (1.060:1 at the tightest, high-contrast dark `info`),
+so no colour moves and `contrastPairs` stays **394**.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -2644,8 +2651,8 @@ an 80% black veil over black — while every other shipped set cleared the floor
 The AAA dark theme now veils with light (`#FFFFFF26`): a dialog's separation
 cannot come from darkening a canvas that is already black. `overlay` stops being
 an exempt role; it is measured like the selection wash and reported with
-`wash: "overlay"` (plan `099`). The tightest of the fifteen pairs is
-**1.075:1** (high-contrast dark, `overlay` on `primary`), so the new surfaces
+`wash: "overlay"` (plan `099`). The tightest of the eighteen pairs is
+**1.060:1** (high-contrast dark, `overlay` on `info`), so the new surfaces
 move no colour.
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,

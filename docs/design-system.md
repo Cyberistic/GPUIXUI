@@ -264,11 +264,12 @@ the tint is the single `shadow` role, so a
 brand retints every level by editing one value. Overlay layering uses the
 `overlay` scrim colour, a translucent wash a Dialog paints across the window.
 The scrim is held to the same 1.05:1 perceivability floor as every other painted
-value, on the fifteen surfaces it covers — the four base surfaces
+value, on the eighteen surfaces it covers — the four base surfaces
 (`background`, `card`, `muted`, `popover`), the `input` fill a form paints, the
 persistent `selected` fill a table or list keeps, the four resting filled
-actions (`primary`, `secondary`, `accent`, `destructive`), the raised action a
-status panel carries (`softAction`) and the four soft
+actions (`primary`, `secondary`, `accent`, `destructive`), the three solid status
+chips a Badge paints (`info`, `success`, `warning`), the raised action a status
+panel carries (`softAction`) and the four soft
 status panels (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`) —
 because a scrim that composites to the surface beneath it is an invisible modal
 backdrop. The transient pointer states are the exclusion: `hover`, `active` and
@@ -516,7 +517,7 @@ Colour is checked, not assumed. The token suite enforces:
 | inactive label (`disabledForeground` on the `disabled` fill, `background`/`card`/`popover`/`muted`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills) | 3:1 | 4.5:1 |
 | loading skeleton (`skeleton`) on `background`/`card`/`popover`/`muted` and the `hover`/`active`/`accent`/`selected` washes, and its dim pulse frame at `skeletonPulseOpacity` on the same eight surfaces (`skeletonPulsePairs`) | 1.05:1 | 1.05:1 |
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
-| modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
+| modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the three solid status chips `info`/`success`/`warning`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
 | dialog face (`popover` over the composited `overlay` on the six page layout surfaces — `background`/`card`/`muted`/`input`/`selected`/`popover`, `dialogSurfacePairs`) | 1.05:1 | 1.05:1 |
 | elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`popover`, the surfaces `elevationSurfaces` names) | 1.05:1 | 1.05:1 |
 
@@ -526,18 +527,20 @@ measured composited, like the scrim: each defined level's painted shadow over th
 four surfaces a raised card, menu or popover floats over, because a shadow that paints its own
 surface is not a raised surface. The AAA dark set measured **1.000:1** at every
 level until plan `505` gave it a light tint. The modal scrim is
-measured composited rather than as a value: `overlay` over the fifteen surfaces
+measured composited rather than as a value: `overlay` over the eighteen surfaces
 a dialog covers — the four base surfaces, the `input` fill a form paints, the
-persistent `selected` fill, the four resting filled actions, the raised action a
+persistent `selected` fill, the four resting filled actions, the three solid
+status chips a Badge paints, the raised action a
 status panel carries (`softAction`) and the four soft status panels a window
 shows — which caught the AAA dark backdrop painting
 **1.000:1** on its own canvas until plan `099` gave it a light veil, and the
 macOS light `selected` fill used as a scrim painting **1.000:1** on a selected row
 until plan `359` measured it. Plan `375` closed the same gap for the page's
 filled actions and status panels: a scrim equal to `primary` or to `infoSoft`
-left the control or the Alert undimmed while the checker returned `[]`. The
-tightest of the fifteen pairs is **1.075:1** (high-contrast dark, `overlay` on
-`primary`), so no colour moves. A soft status surface is measured on
+left the control or the Alert undimmed while the checker returned `[]`, and plan
+`508` closed it for a solid status chip, which a Badge keeps on screen. The
+tightest of the eighteen pairs is **1.060:1** (high-contrast dark, `overlay` on
+`info`), so no colour moves. A soft status surface is measured on
 the quiet panel as well as the canvas, card and popover: a status badge or small
 Alert in a sidebar is a real composition, and the platform light variants change
 `muted` while inheriting the identity's pastel tints — macOS, Linux and Windows

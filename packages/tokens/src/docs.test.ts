@@ -284,6 +284,9 @@ const countWords = [
   "thirteen",
   "fourteen",
   "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
 ] as const;
 
 const countWord = (count: number): string => countWords[count] ?? String(count);
@@ -511,7 +514,7 @@ describe("docs/design-system.md current figures", () => {
       tightest.label,
       tightest.surface,
       tightest.ratio.toFixed(3),
-    ]).toEqual(["high-contrast dark", "primary", "1.075"]);
+    ]).toEqual(["high-contrast dark", "info", "1.060"]);
     expect(designSystem).toContain(
       `**${tightest.ratio.toFixed(3)}:1** (${tightest.label}, \`overlay\` on \`${tightest.surface}\`)`,
     );

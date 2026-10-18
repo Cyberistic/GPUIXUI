@@ -585,7 +585,7 @@ describe("themeContrastFailures", () => {
       "warning",
       "softAction",
     ]);
-    expect(overlayWashPairs.length).toBe(15);
+    expect(overlayWashPairs.length).toBe(18);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
