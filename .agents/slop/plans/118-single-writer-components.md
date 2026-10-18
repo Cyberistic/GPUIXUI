@@ -210,3 +210,25 @@ the "rotating turn owns the tree" tie-breaker in §5 only works if the other
 turn actually stands down, and both turns are model-driven, so neither can
 enforce it. The pragmatic rule for the next tick: if the count is `2`, edit only
 `.agents/slop/` and report; do not touch `packages/components`.
+
+### Recurrence, 2026-10-18 18:03–18:12 (plan 515)
+
+The pair recurred during the plan-515 turn. Evidence:
+
+- two different `swarm:components` sessions wrote `packages/components` within
+  the same minute: `ses_eb078862fffeem9JJRCKIrr1eY` (this turn) and
+  `ses_eb07dc155ffe0oBqHX48yI7lbY`;
+- the other turn authored its own `514-escape-claims-in-fields.md`, edited five
+  field components plus `preview-card.tsx`, and committed `e8f3e2f`, then
+  `ca23609` — the second commit swept this turn's renamed plan, README and TODO
+  edits into its tree and then dropped them, so a `git mv` and a README edit
+  briefly had no owner;
+- the §5 count printed `1` throughout, because the other turn was between
+  server-side turns while still committing.
+
+Resolution this time: this turn stopped editing component code, preserved the
+other turn's 514 work, verified it (66 targeted tests, full suite 654), then
+renumbered its own plan to `515` and landed the remaining fix
+(`0638ccf`). The permanent fix is still plan `022` §5 — a pinned session and a
+hard live-session gate. Until then, the pragmatic rule above stands: on a second
+writer, touch only `.agents/slop/` and report.
