@@ -50,7 +50,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[███████░░░]` 165/222
+`[x]` `[███████░░░]` 165/223
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1277,6 +1277,18 @@ surfaces are already the action fill's; 360 → 388), every shipped set passes
 (1.262:1 at the tightest, XP light `warning` on `selected`) and no colour moves.
 The mark story is unchanged: a status dot or label is `xText`, not the solid fill
 (plan 399)
+
+`[ ]` Hold the text hierarchy on each surface's *own* body role — `textTiers`
+compares `mutedForeground` (and `placeholder`, `disabledForeground`) against the
+default `foreground` on every shared surface, but a card, menu and field paint
+their own body role (`cardForeground`, `popoverForeground`, `inputForeground`).
+A theme that sets `popoverForeground` to its `mutedForeground` therefore renders
+every menu label at secondary strength while all five checks return `[]`; the
+three roles are never the brighter tier. Add the three tiers (they pass in every
+shipped set, so no colour moves), state why `selectedForeground` is deliberately
+not a body tier (it is a secondary-strength tint; a selected row's title is
+`foreground`), and guard it. Needs a plan number from a free block (300–399 is
+spent; 400–499 belongs to `docs-site`)
 
 ## Phase C — Tier 1–2 components
 
