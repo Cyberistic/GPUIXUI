@@ -168,7 +168,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[██████████]` 74/74
+`[x]` `[██████████]` 75/75
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -558,6 +558,12 @@ retired once both branches are one
       started from and the value it reported, and only paints while the current
       value is one of them; 4 unit + 1 runtime test, both directions proven
       (plan `325`)
+`[x]` `packages/primitives`: **`NumberField` hid a value supplied after mount**
+      — its "untouched fields are empty" gate was decided at mount, so an empty
+      field that became controlled later painted nothing and typing `7`
+      reported `7` instead of `427`. The gate now also passes when the field is
+      controlled on this render; 1 runtime test, both directions proven
+      (plan `326`)
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site workstream)
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

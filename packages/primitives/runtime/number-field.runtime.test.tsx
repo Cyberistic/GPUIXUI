@@ -257,3 +257,27 @@ it("follows a value the parent changes while a draft exists", async () => {
   runtime.type("6");
   expect(lastValue(field.values)).toBe(56);
 });
+
+it("shows a value supplied after mount", async () => {
+  // The bug guarded (plan 326): `touched` was decided at mount, so an empty
+  // field that became controlled later painted nothing — typing 7 reported 7
+  // instead of 427.
+  const field = recorder();
+  const runtime = await openWindow();
+  const render = (value?: number): void =>
+    runtime.render(
+      <Surface>
+        <NumberField
+          testId="nf"
+          label="Quantity"
+          autoFocus
+          value={value}
+          onValueChange={field.onValueChange}
+        />
+      </Surface>,
+    );
+  render();
+  render(42);
+  runtime.type("7");
+  expect(lastValue(field.values)).toBe(427);
+});

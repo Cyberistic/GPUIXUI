@@ -218,12 +218,14 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   // An untouched field with no value is empty, like a native number field; it is
   // not a field that starts with a zero the user has to delete. A draft paints
   // only while the value is still the one it belongs to, so an external change
-  // (a reset, a reloaded record) is not hidden behind stale text.
+  // (a reset, a reloaded record) is not hidden behind stale text — and a value
+  // supplied after mount shows even though the field mounted untouched.
   const current = state.value.current;
+  const showValue = touched || state.value.mode === "controlled";
   const text = Option.match(
     Option.filter(draft, (candidate) => draftApplies(candidate, current)),
     {
-      onNone: () => (touched ? display(current) : ""),
+      onNone: () => (showValue ? display(current) : ""),
       onSome: (candidate) => candidate.text,
     },
   );

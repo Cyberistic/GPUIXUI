@@ -23,7 +23,9 @@ const [copies, setCopies] = useState(1);
 ```
 
 An untouched field with neither `value` nor `defaultValue` renders empty, the
-way a native number field does — it does not start with a zero to delete.
+way a native number field does — it does not start with a zero to delete. A
+`value` supplied after mount shows immediately (plan `326`), so a form can load
+its record without remounting the field.
 
 ## Variants, sizes and states
 
