@@ -97,6 +97,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 118/118 plans-and-harness
 
+`[~]` **The chart recipe's colour contract in a real window** per plan `697`:
+      the sourced `<svg>` tint, the image's two opaque fills and both gradients
+      were `paintedStyle`/screenshot-only since plans `180`/`593`. One captured
+      live frame is sampled for two solid masks (`primary`/`success`), the two
+      fill literals (`#E5484D`, `#30A46C`), the radial centre (`#FFD166`) and
+      the linear gradient's top/bottom. `live-chart` 40 → 68 checks predicted;
+      `chart-svg` unchanged at 52. Six mutation proofs planned. Plan `697`.
+
 `[x]` **Run the promotion gate on the head that includes plan `690`'s
       image-source pixels** per plan `691`: verification only on the
       `836b4d63` code head (a concurrent session merged `origin/master`'s
