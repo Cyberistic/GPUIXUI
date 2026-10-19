@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 297/371
+`[x]` `[████████░░]` 302/378
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -102,6 +102,11 @@ an executed example paints a failed field's edge and ring (plan 679)
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
 679)
+`[ ]` Cross-team: the root `README.md` still says “Phase A … No implementation
+work starts before those plans exist” while tokens, primitives, components,
+the docs shell and the playground have shipped; its Status section is the first
+thing a reader sees and now contradicts `TODO.md` (owner: repo tooling; found
+while landing plan 679)
 `[x]` Hold the contract's own guards to their claims — every "unique pairs"
 assertion built a `Set` of tuple arrays, which compares identity, so a repeated
 `[foreground, background, class]` could never fail one and the checker could
