@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 243/320
+`[x]` `[████████░░]` 244/320
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2026,6 +2026,16 @@ while `themeFailures` returned `[]`; `nativeInlineCode` owns the pair at the
 body floor, the four inks (and macOS light's three-decimal 7.006:1 pass) take
 one designed step, the tightest is 7.102:1 (`Light · Windows XP`), and the
 reference, design system, README and ledger name it (plan 590)
+`[x]` Hold the native diff chrome to the type the runtime paints — the meta line
+is 10.5px, the gutter, hunk header, notice and file counts 11px and the file
+path 12px, each on GPUI's golden-ratio line box, while the four heights and the
+marker column followed the theme's roles; a compact theme with
+`caption`/`label`/`codeBlock` at 8/8 and spacing at `0` returned `[]` from
+`themeFailures` and resolved **8 / 8 / 8 / 8** and a **0px** marker, which the
+runtime painted 11–12px chrome through. `nativeTextChrome` and
+`nativeTextLineRatio` publish the fixed type, `nativeTextTheme` floors the four
+boxes at **19 / 18 / 18 / 18** and the marker at one code em, and no shipped box
+moves (plan 592)
 
 ## Phase C — Tier 1–2 components
 
