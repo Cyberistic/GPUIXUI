@@ -76,4 +76,12 @@ describe("rankMentions", () => {
       "anna",
     ]);
   });
+
+  it("shows every match when the cap is not a number", () => {
+    expect(rankMentions(["ana", "anna", "joana"], "an", Number.NaN)).toEqual([
+      "ana",
+      "anna",
+      "joana",
+    ]);
+  });
 });

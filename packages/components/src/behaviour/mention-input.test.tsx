@@ -122,6 +122,21 @@ describe("MentionInput", () => {
     mention.unmount();
   });
 
+  it("lists every match when the visible cap is not a number", () => {
+    const mention = renderComponent(
+      <Harness host={{ maxVisible: Number.NaN }} />,
+    );
+
+    type(mention, "@");
+
+    // A malformed cap is no cap: the candidates the query matches all stay.
+    expect(mention.renderer.findByTestId("row-ana")).toBeDefined();
+    expect(mention.renderer.findByTestId("row-anna")).toBeDefined();
+    expect(mention.renderer.findByTestId("row-joan")).toBeDefined();
+
+    mention.unmount();
+  });
+
   it("moves the highlight with the arrow keys", () => {
     const mention = renderComponent(<Harness />);
     type(mention, "@an");

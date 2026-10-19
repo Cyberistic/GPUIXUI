@@ -44,6 +44,14 @@ describe("recordRecent", () => {
     expect(recordRecent([], "open", 0)).toEqual(["open"]);
   });
 
+  it("keeps every entry when the limit is not a number", () => {
+    expect(recordRecent(["save", "export"], "open", Number.NaN)).toEqual([
+      "open",
+      "save",
+      "export",
+    ]);
+  });
+
   it("does not report a change when the command is already first", () => {
     const recent = ["open", "save"];
     expect(recordRecent(recent, "open", 5)).toBe(recent);

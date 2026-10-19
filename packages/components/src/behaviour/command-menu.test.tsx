@@ -109,12 +109,14 @@ const ReopenablePalette = ({
   recent,
   defaultRecent,
   onRecentChange,
+  recentLimit,
   defaultOpen = true,
 }: {
   readonly perform: (id: string) => void;
   readonly recent?: ReadonlyArray<string>;
   readonly defaultRecent?: ReadonlyArray<string>;
   readonly onRecentChange?: (recent: ReadonlyArray<string>) => void;
+  readonly recentLimit?: number;
   readonly defaultOpen?: boolean;
 }) => {
   const [open, setOpen] = useState(defaultOpen);
@@ -136,6 +138,7 @@ const ReopenablePalette = ({
         recent={recent}
         defaultRecent={defaultRecent}
         onRecentChange={onRecentChange}
+        recentLimit={recentLimit}
       >
         <CommandMenuInput />
         <CommandMenuList />
@@ -487,6 +490,31 @@ describe("CommandMenu", () => {
     const recent = requireBounds(palette, "command-sidebar");
     const first = requireBounds(palette, "command-open-file");
     expect(recent.y).toBeLessThan(first.y);
+
+    palette.unmount();
+  });
+
+  it("records a run command when the recent limit is not a number", async () => {
+    const onRecentChange = vi.fn();
+    const palette = renderComponent(
+      <ReopenablePalette
+        perform={vi.fn()}
+        recentLimit={Number.NaN}
+        onRecentChange={onRecentChange}
+      />,
+    );
+
+    palette.renderer.simulateKeystrokes("enter");
+    await Promise.resolve();
+
+    // A malformed cap is no cap, not "keep nothing".
+    expect(onRecentChange).toHaveBeenCalledWith(["open-file"]);
+
+    finishMotion(palette);
+    clickCentreOf(palette, "open-palette");
+    await until(() => isShown(palette, "command-open-file"));
+
+    expect(palette.renderer.getAllText()).toContain("Recent");
 
     palette.unmount();
   });

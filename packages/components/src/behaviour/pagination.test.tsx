@@ -156,6 +156,37 @@ describe("Pagination", () => {
     eight.unmount();
   });
 
+  it("renders every page when the sibling count is not a number", () => {
+    const pager = renderComponent(
+      <Pager
+        page={5}
+        pageCount={10}
+        siblingCount={Number.NaN}
+        onPageChange={vi.fn()}
+      />,
+    );
+
+    // A malformed cap is no cap: the current page and every sibling stay.
+    expect(buttonFor(pager, "5")?.style.backgroundColor).toBeDefined();
+    expect(pager.renderer.findByText("…")).toBeUndefined();
+    expect(pager.renderer.getAllText()).toEqual(
+      expect.arrayContaining([
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+      ]),
+    );
+
+    pager.unmount();
+  });
+
   it("activates a page from Enter on the focused button", () => {
     const onPageChange = vi.fn();
     const pager = renderComponent(

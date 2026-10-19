@@ -9,6 +9,7 @@
 
 import * as Arr from "effect/Array";
 import * as Num from "effect/Number";
+import { wholeCap } from "../internal/count.js";
 
 /** A rendered entry in the page list. */
 export type PageItem =
@@ -29,7 +30,7 @@ export interface PageWindowInput {
   readonly page: number;
   /** How many pages exist, truncated. Zero, fewer or non-finite yields an empty list. */
   readonly pageCount: number;
-  /** Pages shown either side of the current one. Default 1. */
+  /** Pages shown either side of the current one. Default 1; a non-finite value means no crop. */
   readonly siblingCount?: number;
   /** Always show the first and last page. Default true. */
   readonly showEdges?: boolean;
@@ -61,7 +62,7 @@ export const pageWindow = ({
   if (pageCount === 0) return [];
 
   const current = currentPageOf(rawPage, pageCount);
-  const siblings = Math.max(0, Math.trunc(siblingCount));
+  const siblings = wholeCap(siblingCount);
   const left = Math.max(current - siblings, 1);
   const right = Math.min(current + siblings, pageCount);
 

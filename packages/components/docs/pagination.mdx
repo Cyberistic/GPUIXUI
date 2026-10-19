@@ -60,7 +60,9 @@ pages, while a gap of one renders the page itself.
 Both numbers are **whole**: `page` is truncated before it is clamped and
 `pageCount` is truncated, so `page={1.9}` of `pageCount={5.9}` is page `1` of
 `5`, not a window with no current page and a `6` that does not exist. A
-non-finite `pageCount` renders nothing rather than an unbounded list.
+non-finite `pageCount` renders nothing rather than an unbounded list. A
+non-finite `siblingCount` is **no cap**: the whole list renders, so a malformed
+bound never hides the current page.
 
 ## Layout and states
 
@@ -127,11 +129,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (18 tests):
 disabled edges (including a caller `disabled={false}` that cannot re-enable
 them), the page number (not index) reported, the current page no-op,
 Previous/Next stepping, a fractional page and page count normalised to whole
-numbers and stopped at the real last page, the ellipsis not being a tab stop, a
+numbers and stopped at the real last page, a non-finite `siblingCount` rendering
+every page, the ellipsis not being a tab stop, a
 single hidden page being rendered instead of an ellipsis, Enter activation,
 `pageCount: 0`, the current fill in both themes, the composed part order, an
 item outside the list reading the root's page, and a caller `onClick` composing

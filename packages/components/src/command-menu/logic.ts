@@ -9,6 +9,7 @@
 
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { wholeCap } from "../internal/count.js";
 
 /** One runnable command. */
 export interface CommandAction {
@@ -34,7 +35,7 @@ export const recordRecent = (
   limit: number,
 ): ReadonlyArray<string> => {
   if (Option.exists(Arr.head(recent), (head) => head === id)) return recent;
-  const capped = Math.max(1, Math.trunc(limit));
+  const capped = wholeCap(limit, 1);
   return Arr.take(
     Arr.dedupe(
       Arr.prepend(

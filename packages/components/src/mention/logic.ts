@@ -11,6 +11,7 @@
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
+import { wholeCap } from "../internal/count.js";
 
 /** The active query and the index of its `@`. */
 export interface MentionQuery {
@@ -56,5 +57,5 @@ export const rankMentions = (
     matches,
     (value) => !Str.startsWith(needle)(Str.toLowerCase(value)),
   );
-  return Arr.take(Arr.appendAll(prefixes, rest), Math.max(0, maxVisible));
+  return Arr.take(Arr.appendAll(prefixes, rest), wholeCap(maxVisible));
 };

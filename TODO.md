@@ -507,6 +507,16 @@ retired once both branches are one
       + 1 native case (Countdown 6, unit 457), both-direction proof (the pure
       cases read `NaN:NaN`/NaN units and the native tree painted no `00:00` at
       `HEAD`); docs, `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] A malformed count cap hides nothing — plan 651. Measured: `siblingCount={NaN}`
+      painted `1 … 10` with the current page gone, `maxVisible={NaN}` returned no
+      suggestion and `recentLimit={NaN}` recorded no recent, because `Math.max`
+      propagated `NaN` and `Arr.take(list, NaN)` is empty. One shared `wholeCap`
+      treats a non-finite bound as no bound (never "hide everything") and keeps
+      each component's documented floor for finite values; 1 helper + 3 pure +
+      3 native cases (unit 462, behaviour 58 → 61 in the three touched files with
+      the same 3 recorded plan-540 failures), both-direction proof (the 3 native
+      cases fail on the old source); docs, `COMPONENTS.md`, `PLAN.md` D30 and the
+      inventory synced (owner: components)
     - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
       it is its own tab stop (`tabIndex 0`) and takes native focus
       (`getFocusedElementId() = search-clear`), but has no `focused` state or

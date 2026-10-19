@@ -116,6 +116,19 @@ describe("pageWindow", () => {
     ]);
   });
 
+  it("renders every page when the sibling count is not a number", () => {
+    expect(
+      pageWindow({ page: 5, pageCount: 10, siblingCount: Number.NaN }),
+    ).toEqual(pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+    expect(
+      pageWindow({
+        page: 5,
+        pageCount: 10,
+        siblingCount: Number.POSITIVE_INFINITY,
+      }),
+    ).toEqual(pages(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+  });
+
   it("drops the edges when showEdges is false", () => {
     expect(pageWindow({ page: 5, pageCount: 10, showEdges: false })).toEqual(
       pages(4, 5, 6),

@@ -113,7 +113,7 @@ not pinned while searching.
 | `recent` | Controlled ids, most recent first. |
 | `defaultRecent` | Uncontrolled starting list. |
 | `onRecentChange` | Called with the next list after a command runs. |
-| `recentLimit` | Entries kept, default `5`, minimum `1`. |
+| `recentLimit` | Entries kept, default `5`, minimum `1`; a non-finite value keeps every entry. |
 | `recentLabel` | The group heading, default `"Recent"`. |
 
 Recording is front-inserted, deduplicated, and capped. Running the command
@@ -178,7 +178,7 @@ menu rows: `colors.hover` for the highlight with the 2px
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (24 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (25 tests):
 focus landing on the input, the input's focus ring, closing returning focus to
 the control that opened the palette, typing filtering the list while focus stays
 put, ArrowDown + Enter running the second match and closing, a clicked row, the
@@ -189,12 +189,13 @@ a caller-supplied empty state, the input's placeholder/name coming from the part
 a caller-composed row running its `onClick` before the action, a highlighted row
 staying inside the list viewport after 24 arrow presses and returning to the top
 as the highlight moves back up, and recents: a run command shown first on reopen,
-recency order without a duplicate row, `defaultRecent`, normal ranking while a
-query is typed, and a controlled list that reports without moving.
+a non-finite `recentLimit` still recording the run, recency order without a
+duplicate row, `defaultRecent`, normal ranking while a query is typed, and a
+controlled list that reports without moving.
 
 `src/command-menu/logic.test.ts` covers recording (front insert, dedupe, cap,
-head no-op) and the empty-query ordering (recent group, declaration order,
-unknown ids dropped).
+non-finite cap as no cap, head no-op) and the empty-query ordering (recent group,
+declaration order, unknown ids dropped).
 
 `src/menu/fuzzy.test.ts` (12 tests) covers empty and whitespace queries, case and
 trim, word-start versus mid-word scores, separator boundaries, subsequence and
