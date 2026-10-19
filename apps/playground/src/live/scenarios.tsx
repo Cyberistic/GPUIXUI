@@ -34,6 +34,7 @@ import { collapsibleHeightScenario } from "../scenarios/collapsible.js";
 import { layoutScenario } from "../scenarios/layout.js";
 import { layoutGridScenario } from "../scenarios/layout-grid.js";
 import { typographyScenario } from "../scenarios/typography.js";
+import { chartScenario } from "../scenarios/chart.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
@@ -6537,6 +6538,164 @@ const liveMarkdown: LiveScenario = {
     }),
 };
 
+/** The three bar values the chart fixture paints, in paint order. */
+const CHART_BARS = [96, 64, 32] as const;
+
+const liveChart: LiveScenario = {
+  id: "live-chart",
+  title: "Live chart: bar geometry, svg layers and the img colour layer",
+  capability: "chart",
+  view: chartScenario.view,
+  ready: "chart-bars-plot",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const plot = yield* boxOf(ctx, "chart-bars-plot");
+      yield* ctx.expectNear(
+        "the live plot keeps its declared width",
+        plot.width,
+        320,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live plot keeps its declared height",
+        plot.height,
+        148,
+        0.5,
+      );
+
+      yield* Effect.forEach(
+        CHART_BARS,
+        (value, index) =>
+          Effect.gen(function* () {
+            const box = yield* boxOf(ctx, `chart-bar-${index}`);
+            yield* ctx.expectNear(
+              `live bar ${index} keeps its width`,
+              box.width,
+              56,
+              0.5,
+            );
+            yield* ctx.expectNear(
+              `live bar ${index} paints its value as its height`,
+              box.height,
+              value,
+              0.5,
+            );
+            yield* ctx.expectNear(
+              `live bar ${index} stands on the plot baseline`,
+              box.y + box.height,
+              plot.y + plot.height,
+              0.5,
+            );
+          }),
+        { concurrency: 1 },
+      );
+
+      const first = yield* boxOf(ctx, "chart-bar-0");
+      const second = yield* boxOf(ctx, "chart-bar-1");
+      const third = yield* boxOf(ctx, "chart-bar-2");
+      yield* ctx.expectNear(
+        "live bars advance by their width plus the gap",
+        second.x - first.x,
+        72,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live third bar follows the same rule",
+        third.x - second.x,
+        72,
+        0.5,
+      );
+
+      yield* ctx.host.click("chart-bar-1");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live painted bar is hit-testable and selects its series",
+        yield* textOf(ctx, "chart-selected"),
+        "series=beta value=64",
+      );
+      yield* ctx.expectEqual(
+        "a live value label paints the measurement",
+        yield* textOf(ctx, "chart-value-1"),
+        "64",
+      );
+      yield* ctx.expectEqual(
+        "live axis labels are real text nodes",
+        yield* textOf(ctx, "chart-label-0"),
+        "Jan",
+      );
+
+      // One <svg> layer per series, both on the same plot box.
+      const primary = yield* boxOf(ctx, "chart-series-0");
+      const success = yield* boxOf(ctx, "chart-series-1");
+      yield* ctx.expectNear(
+        "the live primary svg layer keeps the plot width",
+        primary.width,
+        480,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live primary svg layer keeps the plot height",
+        primary.height,
+        160,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "both live svg layers share their origin",
+        success.x,
+        primary.x,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "both live svg layers share a top edge",
+        success.y,
+        primary.y,
+        0.5,
+      );
+
+      // SVG children are retained, but the rasterizer drops them from the paint.
+      yield* ctx.expectContains(
+        "the live svg child stays in the retained tree",
+        yield* textOf(ctx, "chart-svg-child"),
+        "svg-child-text",
+      );
+      const painted = Arr.join(yield* ctx.host.paintedText(), "\n");
+      yield* ctx.expectEqual(
+        "live svg children are dropped from the paint",
+        Str.includes("svg-child-text")(painted),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "live text authored inside the svg is rasterized away",
+        Str.includes("svg-internal-label")(painted),
+        false,
+      );
+
+      // The full-colour layer is an <img>. Unlike the raster data URL in plan
+      // `577` (a 1 px per-axis tracker loss), an SVG source keeps its declared
+      // box live — measured here as exactly 480 × 120.
+      const image = yield* boxOf(ctx, "chart-image");
+      yield* ctx.expectNear(
+        "the live colour chart keeps its declared width",
+        image.width,
+        480,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live colour chart keeps its declared height",
+        image.height,
+        120,
+        0.5,
+      );
+      yield* ctx.expectEqual(
+        "the live svg data URL decodes as a colour image",
+        Str.includes("img: load failed")(painted),
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveChart.id}.png`);
+    }),
+};
+
 /** Waits for `needle`, then asserts it is in the layers readout. */
 const expectLayer = (ctx: LiveContext, needle: string, label: string) =>
   Effect.gen(function* () {
@@ -10603,6 +10762,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveLayoutGrid,
   liveTypography,
   liveCollapsible,
+  liveChart,
   menuBar,
   multiPaneEditor,
   dataToolbar,

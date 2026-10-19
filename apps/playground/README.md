@@ -294,6 +294,25 @@ the same view in the window and drives it through the paused live motion clock:
 The recipe is therefore real in a window, not just offscreen: a component can
 keep its body mounted, measure it while clipped, animate it and keep its state.
 
+## The chart recipe in a real window (plan `593`)
+
+`chart-svg` decides the Tier 3 chart recipe; `live-chart` confirms the parts a
+window can answer:
+
+| Fact | Measured live |
+| ---- | ------------- |
+| bars | `56` wide, `96 / 64 / 32` tall, each bottom on the plot baseline, advancing by `72` |
+| hit target | a click on `chart-bar-1` selects `series=beta value=64` |
+| labels | `chart-value-1` paints `64`, `chart-label-0` paints `Jan` |
+| vectors | both `<svg>` layers paint the same `480 × 160` box |
+| SVG children | the authored `chart-svg-child` answers its text but is **absent** from `paintedText()` |
+| full colour | the SVG data-URL `<img>` keeps its declared `480 × 120` box |
+
+The last row refines plan `577`: a **raster** data URL loses 1 px per axis in
+the live tracker, but an **SVG** source keeps its declared box. A chart
+component can therefore size its colour layer exactly; only its pixels are
+screenshot evidence.
+
 ## The shipped Tier 1 components (plan `168`)
 
 The scenarios above prove runtime mechanisms; these three mount

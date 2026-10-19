@@ -62,6 +62,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[x]` Prove the **chart recipe in a real window** per plan `593`: `chart-svg`
+      was the last Tier 3 rendering recipe with only `TestRenderer` evidence.
+      `live-chart` (40 checks) proves the bars (`56` wide, `96/64/32` tall, on
+      the baseline, `72` apart), a real click selecting a series, both `<svg>`
+      layers at `480 × 160`, a retained-but-unpainted SVG child, and the SVG
+      data-URL `<img>` at exactly `480 × 120`. **Finding:** an SVG source keeps
+      its declared box live; the raster data URL's 1 px loss (plan `577`) does
+      not apply. **1/1** focused, two green runs, live `80 → 81`; three
+      mutation proofs observed and reverted; `check`/`lint`/`test` green, full
+      headless **103/103** (`3653` checks, 64 capabilities).
+
 `[x]` Prove the **collapsible height recipe in a real window** per plan `592`:
       `live-collapsible` (37 checks) mounts the `collapsible-height` view in the
       real 1100×720 window through the paused live motion clock. Measured:
