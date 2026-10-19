@@ -1329,7 +1329,10 @@ focused id is `live-frames`.
       (playground 424, testing 61, components 308, primitives 282, tokens 196,
       tw 103, icons 19, docs 7). The gate's first run exposed a real-time
       fixture budget in `live-toast` — its 5 s cards expired under load — fixed
-      to 60 s with a two-direction proof (plan `623` §10).
+      to 60 s with a two-direction proof (plan `623` §10). **Addendum (plan
+      `633`):** `live-tier2-navigation` gained six checks (20 → 26, same id)
+      after that gate, so the supervisor's merge gate must cover the current
+      head; no registered id changed, so the total stays **90**.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
