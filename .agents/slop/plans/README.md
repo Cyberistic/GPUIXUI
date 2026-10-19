@@ -266,6 +266,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | done |
 | [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | done |
 | [582](./582-native-highlight-code-surface.md) | The find highlight on the painted code surface | F | 569, 573, 574, 581 | done |
+| [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2969,6 +2970,20 @@ washes over it, and Aero light names the XP recipe's own steps (`#0E5135`,
 (Windows light `warningText` on `selected`) and `successText`/`muted` to 8.03:1
 (Windows light). No pair count, floor or check kind moves, and no other colour
 changes.
+
+Plan `583` publishes the fades and ink wash the native document paints, which
+only the shipped-theme suite held and only on `card`. The runtime fades a diff
+line at 92%, its markers at 90%, the row tint at 5.5%, the blockquote rail at
+60% and its wash at 5%, the list marker at 85% and the gutter at 80%/50%, and
+paints code on a 3.5% ink wash; the `nativeTextTheme` JSDoc claimed
+`themeContrastFailures` held them while the catalogue said the suite did, and
+neither held a consumer's theme. Two valid edits prove it: `successText`
+`#bebebe` on identity dark measures **6.405:1** through the ink and
+`mutedForeground` `#bebebe` **6.335:1** in a blockquote, while `themeFailures`
+returned `[]`. `nativeTextFades` and `nativeTextOverFades` own the fractions,
+`themeNativeTextFailures` is the ninth check on all four `nativeTextSurfaces`,
+and the word-level 28% diff wash is documented as a deliberate omission with its
+measured 4.389:1. No colour, pair, floor or metric moves.
 
 ## How to use a plan
 
