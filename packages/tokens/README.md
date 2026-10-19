@@ -332,10 +332,11 @@ the surfaces both are documented on. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
 selected row, whose title is `foreground`. `themeDirectionFailures` is the
 ninth: `stateLadders` names the four filled families, the panel action, the
-generic wash and the selected step, and each step must move away from the
-canvas — darker in light, lighter in dark — so a light `primaryHover` that is
-lighter than its `primary` is reported even though the 1.05:1 step floor passes.
-An equal pair stays the step lists' defect. A runnable example lives in
+generic wash, the selected step and the selectable row's press, and each step
+must move away from the canvas — darker in light, lighter in dark — so a light
+`primaryHover` that is lighter than its `primary`, or a dark row whose `active`
+press is darker than its `accent` hover, is reported even though the 1.05:1 step
+floor passes. An equal pair stays the step lists' defect. A runnable example lives in
 [`src/theme-check.example.ts`](./src/theme-check.example.ts).
 
 The library holds every shipped set to that same call. `shippedThemes` is the

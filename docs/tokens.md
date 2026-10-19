@@ -2682,8 +2682,9 @@ while every pair passes.
 four filled families, derived from `filledControlFamilies` (`x`, `xHover`,
 `xActive`), the action a soft status panel carries (`softAction`,
 `softActionHover`, `softActionActive`), the generic wash a ghost or outline
-control paints (`hover`, `active`) and the selected step past the accent a row
-hovers with (`accent`, `selected`).
+control paints (`hover`, `active`), the selected step past the accent a row
+hovers with (`accent`, `selected`) and the selectable row's press past that same
+accent hover (`accent`, `active`, the direction of `rowPressStepPairs`).
 
 `themeDirectionFailures(theme)` reads the direction the theme's declared mode
 requires — `darker` in light, `lighter` in dark — compares each consecutive pair
@@ -2707,8 +2708,8 @@ themeDirectionFailures(inverted); // two `darker` failures, one per step
 ```
 
 An **equal** pair is not reported here: `stateStepPairs`, `softActionStepPairs`,
-`washStepPairs` and `selectionStepPairs` own the collapsed step, so one edit
-produces one diagnostic. Every shipped identity theme, platform variant and
+`washStepPairs`, `selectionStepPairs` and `rowPressStepPairs` own the collapsed
+step, so one edit produces one diagnostic. Every shipped identity theme, platform variant and
 recipe steps the expected way on every ladder, so a shipped set returns `[]` and
 no colour moves; the check exists for the theme a consumer edits. The
 `filled-states.test.ts` suite still asserts the same direction on the shipped
@@ -2988,11 +2989,15 @@ the same way (`washStepPairs`, `active` from `hover`). Every shipped set clears
 both ladders, so the floors guard an edited theme rather than a shipped value.
 The **direction** of a step is measured beside its distance:
 `themeDirectionFailures` walks `stateLadders` — the four filled families, the
-panel action, the wash and the selected step — and reports a step that moves
-toward the canvas, because a symmetric ratio cannot see one. Every shipped set
-steps the expected way (darker in light, lighter in dark), so the check guards
-an edited theme; an equal pair stays the step lists' defect and is not reported
-twice.
+panel action, the wash, the selected step and the selectable row's press — and
+reports a step that moves toward the canvas, because a symmetric ratio cannot
+see one. Every shipped set steps the expected way (darker in light, lighter in
+dark), so the check guards an edited theme; an equal pair stays the step lists'
+defect and is not reported twice. The row press is the composition
+`rowPressStepPairs` publishes the distance for: a dark row that presses darker
+than its `accent` hover is a 1.094:1 step and passes every contrast pair, and
+only the direction walk reports it. The executed inversion is
+[`src/row-press.example.ts`](../packages/tokens/src/row-press.example.ts).
 The boundary is also measured on the `muted` panel,
 the four washes and the four soft status fills, because an unchecked checkbox or
 a field keeps its `borderStrong` edge while the row moves or inside an Alert.

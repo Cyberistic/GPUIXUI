@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 264/336
+`[x]` `[████████░░]` 265/337
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2232,6 +2232,14 @@ was checked against one `body` em, so a copied theme with a 24px body and a
 24px segment returned `[]` while the `HH`/`MM` value it edits could not be
 shown; the bound is 1.3 body ems (two tabular digits at a 0.65em advance),
 rounded up, and every shipped 26px segment still passes at 19 (plan 621)
+`[x]` Walk the selectable row's press in the direction check — plan 619
+published the press **distance** (`rowPressStepPairs`: `active` one 1.05:1 step
+from the `accent` hover) but `stateLadders` named only the filled families, the
+panel action, the wash and the selected step, so a copied dark theme whose row
+pressed **darker** than its hover returned `[]` from every check while the
+1.094:1 step passed; the row press is now its own ladder (`accent` → `active`),
+derived in the suite from the published pair so the two cannot drift, and every
+shipped set already steps the expected way (plan 622)
 
 ## Phase C — Tier 1–2 components
 
