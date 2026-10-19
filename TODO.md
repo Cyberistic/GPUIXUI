@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 152/152
+`[x]` `[████████████]` 153/153
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2021,6 +2021,16 @@ retired once both branches are one
       and never an empty group) now feeds `CheckboxGroup`, `RadioGroup` and
       `ToggleGroup`; core + 3 element cases, all four failing against the old
       rule (plan `639`).
+
+`[x]` `packages/primitives`: **a selection mark did not scale with its box** —
+      measured (2026-10-19): `Checkbox` and `CheckboxGroup` painted the tick at
+      `theme.iconSize.sm` (14 px) at every `size`, while the box is 14/16/20, so
+      the mark overhung `sm`'s 12 px content square and stayed `md`-sized in
+      `lg` — the only selection mark that ignored `size` (the radio dot and
+      switch thumb already scale). One `selectionMarkSize` rule (the box's
+      content square, 12/14/18) now serves both painters; `md` is unchanged.
+      3 core + 3 element cases (6 fail against the old expression) and a
+      6-case runtime file proving the painted side and containment (plan `640`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -158,6 +158,7 @@ export {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionMarkSize,
   selectionRowStyle,
   switchThumbStyle,
   switchTrackStyle,

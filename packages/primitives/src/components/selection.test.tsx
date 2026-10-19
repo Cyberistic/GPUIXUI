@@ -171,6 +171,48 @@ describe("Checkbox", () => {
     expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
     expect(onValueChange).toHaveBeenCalledTimes(0);
   });
+
+  it("scales the tick with the box instead of pinning it to one step", () => {
+    // The bug guarded (plan 640): the tick used `theme.iconSize.sm` (14) at
+    // every size, so it stayed 14 px in a 14/16/20 box — larger than `sm`'s
+    // 12 px content square and visibly small in `lg`, while the radio dot and
+    // switch thumb already scaled.
+    const markSize = (size: "sm" | "md" | "lg"): unknown =>
+      expectSome(
+        elementProp(
+          expectSome(
+            Arr.head(
+              elementChildren(
+                renderCheckbox(
+                  { checked: true, size },
+                  testTheme,
+                  checked(true),
+                  idle,
+                  vi.fn(),
+                ),
+              ),
+            ),
+          ),
+          "size",
+        ),
+      );
+    expect(Arr.map(["sm", "md", "lg"] as const, markSize)).toEqual([
+      12, 14, 18,
+    ]);
+  });
+
+  it("scales the indeterminate dash by the same rule", () => {
+    const element = renderCheckbox(
+      { indeterminate: true, size: "sm" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    const mark = expectSome(Arr.head(elementChildren(element)));
+    expect(expectSome(elementProp(mark, "name"))).toBe("minus");
+    expect(expectSome(elementProp(mark, "size"))).toBe(12);
+  });
 });
 
 describe("Switch", () => {
@@ -849,6 +891,21 @@ describe("CheckboxGroup", () => {
     // The enabled neighbour still reports, so the case above is not vacuous.
     expectSome(hostHandler(row(element, 0), "onKeyDown"))(keyEvent("enter"));
     expect(onToggle).toHaveBeenCalledWith("email");
+  });
+
+  it("scales a row's tick with the group's size", () => {
+    // Plan 640's second copy: the row painted the same fixed `iconSize.sm`
+    // mark as the standalone box, so the group drifted the same way.
+    const markSize = (size: "sm" | "md" | "lg"): unknown =>
+      expectSome(
+        elementProp(
+          expectSome(Arr.head(elementChildren(box(render({ size }), 0)))),
+          "size",
+        ),
+      );
+    expect(Arr.map(["sm", "md", "lg"] as const, markSize)).toEqual([
+      12, 14, 18,
+    ]);
   });
 });
 

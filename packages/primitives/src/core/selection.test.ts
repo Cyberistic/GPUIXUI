@@ -5,6 +5,7 @@ import {
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionMarkSize,
   selectionRowStyle,
   switchThumbOffset,
   switchThumbStyle,
@@ -307,5 +308,42 @@ describe("groupDisabled", () => {
     expect(groupDisabled(false, [enabled])).toBe(false);
     // An empty group has no option to disable, so it is not disabled.
     expect(groupDisabled(false, [])).toBe(false);
+  });
+});
+
+describe("selectionMarkSize", () => {
+  const sizes = ["sm", "md", "lg"] as const;
+
+  it("gives the tick the box's content square at every size", () => {
+    // The bug guarded (plan 640): the tick was pinned to `iconSize.sm`, so it
+    // stayed 14 px in a 14/16/20 box — overhanging `sm`'s 12 px content square
+    // and shrinking relative to `lg`, while the radio dot and switch thumb
+    // already scaled.
+    expect(
+      Arr.map(sizes, (size) => selectionMarkSize(size, testTheme)),
+    ).toEqual([12, 14, 18]);
+    expect(
+      Arr.map(
+        sizes,
+        (size) => testTheme.iconSize[size] - 2 * testTheme.borderWidth.thin,
+      ),
+    ).toEqual([12, 14, 18]);
+  });
+
+  it("leaves the default size's tick where it was", () => {
+    // `md`'s 14 px was the accidental coincidence between `iconSize.sm` and the
+    // 16 px box's content square; the default look is not part of the defect.
+    expect(selectionMarkSize("md", testTheme)).toBe(14);
+  });
+
+  it("is strictly smaller than the box and grows with it", () => {
+    const sm = selectionMarkSize("sm", testTheme);
+    const md = selectionMarkSize("md", testTheme);
+    const lg = selectionMarkSize("lg", testTheme);
+    expect(sm).toBeLessThan(testTheme.iconSize.sm);
+    expect(md).toBeLessThan(testTheme.iconSize.md);
+    expect(lg).toBeLessThan(testTheme.iconSize.lg);
+    expect(sm).toBeLessThan(md);
+    expect(md).toBeLessThan(lg);
   });
 });

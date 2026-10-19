@@ -40,7 +40,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `indeterminate` | `boolean` | `false` | paints a dash and announces `mixed`; overrides `checked` |
 | `disabled` | `boolean` | `false` | refuses pointer and keys, leaves the tab order |
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
@@ -85,7 +85,10 @@ clearing.
 
 `selectionBoxStyle` resolves box side from `iconSize`, radius from `radius.sm`,
 border from `input`/`destructive`, fill from the accent role and the mark from
-`selectionMarkColor`. Hover and press are declared in `style.hover`/`style.active`,
+`selectionMarkColor`. The tick itself is `selectionMarkSize`'s content square —
+the box side less the 1 px border on both sides, 12 / 14 / 18 px for
+`sm`/`md`/`lg` — so the mark scales with the box instead of staying one step
+behind it (plan `640`). Hover and press are declared in `style.hover`/`style.active`,
 not scripted. An invalid **empty** box keeps the destructive border through both
 — the border is the error cue, so the healthy interaction rule never paints over
 it — while a chosen box keeps its accent feedback (plan 356). Disabled adds half
@@ -131,9 +134,12 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 - `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
   invalid) reaching the painted style.
 
-- `src/core/selection.test.ts` — the three-state paint and mark colour.
+- `src/core/selection.test.ts` — the three-state paint, mark colour and the
+  mark's content square at every control size (plan `640`).
 - `src/components/selection.test.tsx` — toggle, indeterminate and disabled
-  wiring at the render seam.
+  wiring at the render seam; the tick `Icon` carries the size rule (plan `640`).
+- `runtime/selection-mark.runtime.test.tsx` — the painted tick is 12 / 14 / 18 px
+  at `sm`/`md`/`lg` and stays inside the box (plan `640`).
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
   role is `CheckBox`; focus paints the ring and moves it with focus.

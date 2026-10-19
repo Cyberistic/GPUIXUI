@@ -14,6 +14,7 @@ import { decideActivation } from "../core/keyboard.js";
 import {
   selectionBoxStyle,
   selectionMarkColor,
+  selectionMarkSize,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -147,7 +148,7 @@ export const renderCheckbox = (
       {current === "unchecked" ? null : (
         <Icon
           name={markName(current)}
-          size={theme.iconSize.sm}
+          size={selectionMarkSize(spec.size, theme)}
           color={selectionMarkColor(spec, theme)}
         />
       )}

@@ -35,6 +35,7 @@ import {
   groupDisabled,
   selectionBoxStyle,
   selectionMarkColor,
+  selectionMarkSize,
   selectionRowStyle,
   type SelectionAccent,
   type SelectionSpec,
@@ -231,7 +232,7 @@ const renderRow = (
         {state === "unchecked" ? null : (
           <Icon
             name={state === "indeterminate" ? "minus" : "check"}
-            size={theme.iconSize.sm}
+            size={selectionMarkSize(size, theme)}
             color={selectionMarkColor(painted, theme)}
           />
         )}

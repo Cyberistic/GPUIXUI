@@ -56,7 +56,7 @@ Uncontrolled, with no parent row:
 | `onValueChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
 | `selectAll` | `string` | none | renders one parent row with this visible name and a derived state; a blank name renders no row |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | row flow |
-| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; each row's tick is the box's content square (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `disabled` | `boolean` | `false` | disables every row, the parent included |
 | `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
@@ -134,7 +134,10 @@ order. A press that changes nothing does not call `onValueChange`.
 Each row paints through `core/selection.ts`, the same resolver `Checkbox`,
 `RadioGroup` and `Switch` use: box side from `iconSize`, radius from `radius.sm`,
 empty border from `input` (or `destructive` when `invalid`), fill from the accent
-role, mark from `selectionMarkColor`. The **row** — the element that owns the
+role, mark from `selectionMarkColor`. Each row's tick is `selectionMarkSize`'s
+content square — the box side less the 1 px border, 12 / 14 / 18 px for
+`sm`/`md`/`lg` — so a `lg` group does not carry the `md` mark (plan `640`). The
+**row** — the element that owns the
 role, the name, the tab stop and both handlers — takes its layout and pointer
 feedback from `selectionRowStyle`: a `colors.hover` wash on hover and
 `colors.active` on press, and **neither** while disabled, so the label column
@@ -229,7 +232,9 @@ the row that owns the hit area, the tab stop and the accessible name:
   winning last (plan 355); an option description becomes the row's
   `aria-description`, a blank one stays absent from the tree and paints no
   caption (plans 500, `577`); a blank `selectAll` creates no parent row (plan
-  `578`).
+  `578`); each row's tick carries the size rule (plan `640`).
+- `runtime/selection-mark.runtime.test.tsx` — a group row's painted tick is
+  12 / 18 px at `sm`/`lg` (plan `640`).
 - `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a

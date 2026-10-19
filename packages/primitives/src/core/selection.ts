@@ -74,6 +74,20 @@ export const selectionMarkColor = (
       : theme.colors.mutedForeground;
 
 /**
+ * The side of the tick a box paints inside its border.
+ *
+ * The box's **content square**: the icon size for the control size less the
+ * thin border on both sides. A tick is drawn in the space the border leaves, so
+ * it scales with `size` instead of being pinned to one step (measured, plan
+ * `640`: the 14 px tick stayed 14 in a 20 px `lg` box and overhung `sm`'s 12 px
+ * content square, while the radio dot and switch thumb already scaled).
+ */
+export const selectionMarkSize = (
+  size: ControlSize,
+  theme: PrimitiveTheme,
+): number => theme.iconSize[size] - 2 * theme.borderWidth.thin;
+
+/**
  * The border an unfilled selection surface paints while interacting.
  *
  * Interaction feedback is a border change, so the healthy hover/press rule
