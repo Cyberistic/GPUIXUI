@@ -1145,6 +1145,14 @@ the two helpers, and no token, colour, pair or floor moves (plan 376)
 leave the page quoting a ratio the package no longer produces while every pair
 passed; both are now derived from the 24 shipped sets and no value moves
 (plan 377)
+`[ ]` Hold the token-input chip to the chrome inside it — `dimensions.chipMinWidth`
+was only positive, so a chip of 10 passed every check while its content box
+(`10 − 2 × spacing.sm`) was negative and could hold neither its caption label
+nor its remove control; plan 384 declined the half on the false rationale that
+the chip's padding has no token (it is `spacing.sm`). The chip's own minimum now
+holds two `spacing.sm` insets, one `caption` glyph, the `spacing.xs` gap and the
+`fieldAdornmentSize` remove control, the shipped 80 clears the 44 bound, and
+`chip-chrome-fit.test.ts` states the erased-chip regression (plan 667)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

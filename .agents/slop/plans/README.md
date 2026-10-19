@@ -321,6 +321,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | done |
 | [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | done |
 | [666](./666-scrim-explanation-chips.md) | The scrim explanation names the three chips it counts | F | 099, 375, 508, 610, 617 | done |
+| [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
