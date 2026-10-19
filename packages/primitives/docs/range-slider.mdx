@@ -67,9 +67,9 @@ Each thumb is its own tab stop and answers:
 | `Home` / `End` | `min` / `max`, clamped at the other thumb |
 
 A press moves native focus to the thumb it grabbed, so the arrows that follow
-act on the end the user is holding. The focused thumb paints the ring. Only the
-**primary button** starts a press: a right or middle click moves neither end and
-takes no focus.
+act on the end the user is holding. The focused thumb paints the ring, and the
+ring clears when focus leaves the group. Only the **primary button** starts a
+press: a right or middle click moves neither end and takes no focus.
 
 ## Accessibility
 
@@ -78,8 +78,9 @@ takes no focus.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). Role, name, tab order, keyboard operation and activation
-  are unaffected.
+  late (plan `590`). The same sample clears the ring and the thumb cursor when
+  focus moves to a host outside the group (plans `601`, `602`). Role, name, tab
+  order, keyboard operation and activation are unaffected.
 - The group is `role="group"` with `aria-label`; each thumb is `role="slider"`
   (AccessKit `Slider` and `Group`, verified in the real renderer).
 - Each thumb announces its own value through `aria-valuetext`. There is no

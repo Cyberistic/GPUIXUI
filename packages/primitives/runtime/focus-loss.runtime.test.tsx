@@ -10,7 +10,10 @@
  * indicator), and a `RadioGroup` whose controlled parent defers resumed its
  * arrow walk from the abandoned item instead of from the tab stop it returned
  * to. `CheckboxGroup` is the control — its only focus source is the native
- * tracker, so it was immune by accident.
+ * tracker, so it was immune by accident. `RangeSlider` (plan `602`) had the
+ * same defect one component later: its thumbs hand-rolled the id map, event
+ * cursor and tracker merge, so a thumb the user had left kept a second ring.
+ * Every focus owner now uses `useRovingFocus` or `useFocus`.
  *
  * Each case waits for the tracker's sample (`settleFocus`), because the clear
  * is a sample-driven effect and the tracker polls every 50 ms.
@@ -24,6 +27,7 @@ import { Button } from "../src/components/Button.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
+import { RangeSlider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
@@ -124,6 +128,21 @@ it("clears a Rating's ring when focus leaves", async () => {
   expect(ringWithin(runtime, "rating-star-3")).toBe(true);
   await leave(runtime);
   expect(ringWithin(runtime, "rating-star-3")).toBe(false);
+  expect(ringCount(runtime)).toBe(1);
+});
+
+it("clears a RangeSlider thumb's ring when focus leaves", async () => {
+  const runtime = await mount(
+    <Stack direction="row">
+      {before}
+      <RangeSlider testId="rs" label="Band" defaultValue={[20, 60]} />
+    </Stack>,
+  );
+  runtime.click("rs");
+  await settleFocus();
+  expect(ringWithin(runtime, "rs-thumb-end")).toBe(true);
+  await leave(runtime);
+  expect(ringWithin(runtime, "rs-thumb-end")).toBe(false);
   expect(ringCount(runtime)).toBe(1);
 });
 

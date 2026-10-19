@@ -21,7 +21,7 @@
  * component, not a mode of the first.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useRef, type ReactElement } from "react";
 import type {
   EventPayload,
   NativeRenderer,
@@ -59,10 +59,9 @@ import {
   composeHandler,
   composeRef,
   resolvePartStyle,
-  trackedFocusIndex,
   useControlState,
   useFocus,
-  useNativeFocusId,
+  useRovingFocus,
   usableLabel,
   type FocusState,
   type StateStyle,
@@ -256,7 +255,7 @@ export const renderSlider = (
 
 /** Which thumb holds focus, and how the group learns that it moved. */
 export interface RangeSliderFocus {
-  readonly focusedIndex: Option.Option<0 | 1>;
+  readonly focusedIndex: Option.Option<number>;
   readonly onFocus: (index: 0 | 1) => void;
   readonly onBlur: (index: 0 | 1) => void;
 }
@@ -454,12 +453,9 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     range,
   );
   const trackId = useRef<number | null>(null);
-  const thumbIds = useRef<Map<0 | 1, number>>(new Map());
   const activeEnd = useRef<"start" | "end">("start");
   const dragging = useRef(false);
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<0 | 1>>(
-    Option.none(),
-  );
+  const focus = useRovingFocus();
   const state = useControlState<readonly [number, number]>(
     props.value,
     [initial.start, initial.end],
@@ -467,46 +463,29 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   );
   const inset = sliderInset(props.size ?? "md", theme);
   const focusThumb = (index: 0 | 1): void => {
-    Option.match(Option.fromNullishOr(thumbIds.current.get(index)), {
+    Option.match(focus.idOf(index), {
       onNone: () => {},
       onSome: (id) => renderer?.focusElement?.(id),
     });
-    setFocusedIndex(Option.some(index));
+    focus.onFocus(index);
   };
   const change = (end: "start" | "end", value: number): void =>
     state.set(spanAfterMove(state.value.current, end, value, range));
-  const trackedId = useNativeFocusId();
-  const trackedIndex = trackedFocusIndex(thumbIds.current, trackedId);
-  const mergedFocus: Option.Option<0 | 1> = Option.isSome(focusedIndex)
-    ? focusedIndex
-    : Option.flatMap(trackedIndex, (index) =>
-        index === 0
-          ? Option.some(0 as const)
-          : index === 1
-            ? Option.some(1 as const)
-            : Option.none(),
-      );
   return renderRangeSlider(
     props,
     theme,
     state.value,
     {
-      focusedIndex: mergedFocus,
-      onFocus: (index) => setFocusedIndex(Option.some(index)),
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
+      focusedIndex: focus.focusedIndex,
+      onFocus: focus.onFocus,
+      onBlur: focus.onBlur,
     },
     {
       onSpanChange: state.set,
       registerTrack: (instance) => {
         trackId.current = instance?.id ?? null;
       },
-      registerThumb: (index) => (instance) => {
-        if (instance === null) thumbIds.current.delete(index);
-        else thumbIds.current.set(index, instance.id);
-      },
+      registerThumb: focus.registerItem,
       onPointerDown: (event) => {
         if (props.disabled === true || event.button !== 0) return;
         const span = spanOf(state.value.current, range);

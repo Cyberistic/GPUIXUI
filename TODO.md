@@ -1535,6 +1535,21 @@ retired once both branches are one
       scoped focus/disabled/tab-order/roving suites green (plan `601`; runtime
       737 → 742 in 53 files).
 
+`[x]` `packages/primitives`: **a `RangeSlider` thumb's ring outlived focus** —
+      measured (2026-10-19): a track press focused `rs-thumb-end`, and after a
+      click on an outside button the window painted **two** rings — the outside
+      button's and the abandoned thumb's — because the thumbs hand-rolled the
+      item id map, event cursor and tracker merge (`mergedFocus` preferred the
+      event state, which the pinned runtime can never clear: no `onBlur`,
+      plan `583`). That is plan `601`'s class one component later; both thumbs
+      now use `useRovingFocus`, the one hook that clears a stale cursor when a
+      sample names none of the group's items, and `Slider.tsx` loses the
+      duplicate state. The case joins `runtime/focus-loss.runtime.test.tsx`
+      (6/6) and fails with the old state restored; scoped focus-ring, disabled,
+      tab-order, roving-arrows, value, state-style and controls are green
+      (plan `602`; offline 59 files / 820 tests, full runtime 53 files / 743
+      tests green on the release-tag build).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
