@@ -5,7 +5,7 @@
  * have their own floor pairs, but `textTiers` named no pair for the relationship,
  * so a theme whose label out-contrasted its title still passed every check.
  *
- * The four fills are the surfaces both roles are documented on; the identity,
+ * The five fills are the surfaces both roles are documented on; the identity,
  * every platform variant and every recipe already keep the label at least one
  * 1.05:1 step below the title there.
  */
@@ -26,7 +26,13 @@ import { themeFailures } from "./theme-check.js";
 
 const dimmer = "selectedForeground" as const;
 const brighter = "foreground" as const;
-const fillOrder = ["hover", "active", "accent", "selected"] as const;
+const fillOrder = [
+  "hover",
+  "active",
+  "accent",
+  "selected",
+  "selectedActive",
+] as const;
 
 const surfacesOf = (
   role: keyof ThemeColors,
@@ -43,7 +49,7 @@ const sharedSurfaces = (): ReadonlyArray<keyof ThemeColors> => {
 };
 
 describe("the selected row's label below its title", () => {
-  it("keeps every shipped set one step below on the four fills", () => {
+  it("keeps every shipped set one step below on the five fills", () => {
     const failures = shippedThemes.flatMap(({ theme }) =>
       fillOrder.flatMap((surface) => {
         const title = contrastRatio(
@@ -92,7 +98,7 @@ describe("the selected row's label below its title", () => {
     );
 
     expect(themeContrastFailures(regressed)).toEqual([]);
-    expect(tierFailures).toHaveLength(4);
+    expect(tierFailures).toHaveLength(5);
     tierFailures.forEach((failure) => {
       expect(failure.step).toBe(contrastFloors.default.step);
       expect(failure.dimmerRatio).toBeCloseTo(failure.brighterRatio, 10);
@@ -101,7 +107,7 @@ describe("the selected row's label below its title", () => {
       themeFailures(regressed).filter(
         (failure) => failure.kind === "hierarchy",
       ),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it("reports a label brighter than the title", () => {
@@ -124,12 +130,12 @@ describe("the selected row's label below its title", () => {
       themeTextTierFailures(regressed).filter(
         (failure) => failure.dimmer === dimmer && failure.brighter === brighter,
       ),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
     expect(
       themeFailures(regressed).filter(
         (failure) => failure.kind === "hierarchy",
       ),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it("publishes the pair once, as a state on the four row fills", () => {

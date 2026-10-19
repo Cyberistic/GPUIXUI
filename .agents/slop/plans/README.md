@@ -312,6 +312,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [646](./646-f32-metric-range.md) | A metric must survive the renderer's 32-bit cast | F | 358, 360, 364, 368, 531, 532, 641, 643 | done |
 | [649](./649-native-highlight-diff-tint.md) | The find highlight on the native diff's row tint | F | 569, 573, 574, 581, 582, 591, 602 | done |
 | [650](./650-disabled-field-input.md) | The disabled field's label on the fill it edits | F | 306, 317, 510, 524, 539 | done |
+| [651](./651-selected-row-press.md) | The selected row's press | F | 381, 506, 619, 623 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3429,6 +3430,8 @@ the 3:1 inactive floor. `input` joins the one owner, so `inactivePairs` and
 wash pair already exists because `input` is one of the nine `selectionSurfaces`,
 and every shipped set already clears both new pairs (6.610:1 at rest and
 4.944:1 washed at the tightest), so no colour moves.
+
+Plan `651` closes the selected row's missing press. Plans `381` and `619` hold the row's hover-to-selection step and the press of an *unselected* row, but nothing held the press of a selected one: the design system claimed it "still presses to `active` … and walk[s] away from the canvas like every ladder", while identity light measured **1.001:1** (the selection and the press wash are the same luminance), eleven of twelve default palettes sat under the 1.05:1 step floor and eight moved the wrong way — and both the contrast and direction checks returned `[]`. The press is a different state: it previews the row's return to the canvas when a click deselects it. `selectedActive` is the designed fill, a 24% canvas veil over `selected` (derived with `compositeOver`, shipped as an editable literal in every palette), `selectionPressStepPairs` publishes its step, `selectionPressPairs` holds the ten inks and three chrome roles a pressed row paints, and `StateLadder` gains a per-ladder `direction` so the one toward-canvas ladder can exist. Every shipped set passes as-is — no existing value moves — and the opaque fill keeps the selection readable while the pointer is down.
 
 ## How to use a plan
 

@@ -44,6 +44,7 @@ describe("the status text pairs derive from the tone index", () => {
       "active",
       "accent",
       "selected",
+      "selectedActive",
     ]);
     expect(new Set(surfaces).size).toBe(surfaces.length);
   });

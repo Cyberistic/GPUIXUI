@@ -242,6 +242,13 @@ export interface ThemeColors {
    * `accent` wash a selectable row hovers with.
    */
   readonly selected: string;
+  /**
+   * A selected row or item while pressed. The press previews the row's return
+   * to the canvas when a click deselects it, so this is the one pointer fill
+   * that steps **toward** the canvas: a 24% veil of the canvas colour over
+   * `selected`, shipped as an opaque, editable literal.
+   */
+  readonly selectedActive: string;
   /** Text and icons on `selected`. */
   readonly selectedForeground: string;
   /** Disabled surface. Deliberately allowed to sit near the panel: no neutral clears both a white card and the quiet panel, so a disabled control paints its `border` edge on this fill to keep its shape. */
@@ -373,6 +380,7 @@ export const lightColors = {
   hover: palette.neutral[100],
   active: palette.neutral[200],
   selected: palette.iris[100],
+  selectedActive: "#E7EAFF",
   selectedForeground: palette.iris[800],
   disabled: palette.neutral[100],
   disabledForeground: palette.neutral[600],
@@ -488,6 +496,7 @@ export const darkColors = {
   // a perceivable step from the accent hover it follows (plan 619).
   active: "#2E3543",
   selected: "#402F94",
+  selectedActive: "#312471",
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],
   disabledForeground: "#B0B8C6",
@@ -498,7 +507,7 @@ export const darkColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast light roles. The same 70 roles as {@link lightColors}, with
+ * High-contrast light roles. The same 71 roles as {@link lightColors}, with
  * values chosen for AAA body text (7:1) and 4.5:1 essential boundaries. The
  * skeleton is a perceivable step off the pressed wash (plan 094). The divider is
  * darker than the neutral press step, so an outlined control keeps its 3:1 edge
@@ -581,6 +590,7 @@ export const highContrastLightColors = {
   hover: "#E8E8E8",
   active: "#D6D6D6",
   selected: "#D8DBFF",
+  selectedActive: "#E1E4FF",
   selectedForeground: palette.iris[950],
   disabled: "#E8E8E8",
   disabledForeground: "#444444",
@@ -591,7 +601,7 @@ export const highContrastLightColors = {
 } satisfies ThemeColors;
 
 /**
- * High-contrast dark roles. The same 70 roles as {@link darkColors}, with the
+ * High-contrast dark roles. The same 71 roles as {@link darkColors}, with the
  * floors of {@link highContrastLightColors}. The divider is lighter than the
  * pressed fill so the edge clears the AAA divider floor on it — the generic
  * `active` wash (plan 080) and the designed neutral press step (plan 318) — and
@@ -684,6 +694,7 @@ export const highContrastDarkColors = {
   hover: "#2E2E2E",
   active: "#3D3D3D",
   selected: "#33257A",
+  selectedActive: "#271C5D",
   selectedForeground: "#E0E3FF",
   disabled: "#2E2E2E",
   disabledForeground: "#D0D0D0",
@@ -822,6 +833,7 @@ export const colorRoles = [
   "hover",
   "active",
   "selected",
+  "selectedActive",
   "selectedForeground",
   "disabled",
   "disabledForeground",

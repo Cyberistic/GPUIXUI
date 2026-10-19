@@ -79,9 +79,9 @@ describe("the interactive fill a control paints inside a field", () => {
     const tightest = measurements.reduce((lowest, entry) =>
       entry.ratio < lowest.ratio ? entry : lowest,
     );
-    expect(tightest.fill).toBe("accent");
-    expect(tightest.theme).toBe("Dark · Windows");
-    expect(tightest.ratio).toBeCloseTo(1.1176, 3);
+    expect(tightest.fill).toBe("selectedActive");
+    expect(tightest.theme).toBe("Dark · Linux");
+    expect(tightest.ratio).toBeCloseTo(1.0695, 3);
   });
 
   it("keeps the ghost wash ladder the stepper paints", () => {

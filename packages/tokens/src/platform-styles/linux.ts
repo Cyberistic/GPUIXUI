@@ -68,6 +68,7 @@ export const linuxPlatformStyle = {
       ring: "#1C71D8",
       selection: "#1C71D833",
       selected: "#D7E6F9",
+      selectedActive: "#E1ECFA",
       selectedForeground: "#0F3D77",
       // The hint clears the secondary floor on the row washes a field inside a
       // row paints, not only on the plain surfaces (plan 527).
@@ -105,6 +106,7 @@ export const linuxPlatformStyle = {
       ring: "#78AEED",
       selection: "#1C71D833",
       selected: "#27476A",
+      selectedActive: "#1E3651",
       selectedForeground: "#D6E7FA",
       placeholder: "#B7B6B2",
       destructiveSoft: palette.red[950],

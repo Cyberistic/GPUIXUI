@@ -37,6 +37,7 @@ const surfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 const themes: ReadonlyArray<readonly [string, Theme]> = shippedThemes.map(
@@ -127,6 +128,7 @@ describe("brand-toned text", () => {
       "muted",
       "popover",
       "selected",
+      "selectedActive",
       "successSoft",
       "warningSoft",
     ]);

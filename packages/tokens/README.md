@@ -276,7 +276,7 @@ const size = isControlSize(storedSize) ? storedSize : "md";
 ## High contrast
 
 Each mode has a high-contrast variant with AAA text floors (7:1) and 4.5:1
-essential boundaries. It reuses the same 70 roles, so no component changes.
+essential boundaries. It reuses the same 71 roles, so no component changes.
 
 ```ts
 import { getTheme } from "@gpuixui/tokens";
@@ -603,7 +603,7 @@ that matches its panel is not a state and a field hosts its own controls. The
 `NumberField` steppers paint `hover`/`active` on the field's `input` fill, so a
 theme whose `input` equalled its `hover` passed every check while the stepper's
 wash measured **1.000:1** (plan 595); every shipped set already clears the floor
-there (tightest **1.1176:1**, `accent` on `input` in Dark · Windows). The
+there (tightest **1.0695:1**, `selectedActive` on `input` in Dark · Linux). The
 identity light `muted` was the same value as its `hover` and `secondary`, the
 identity dark `hover` was its `muted` and `popover`, macOS light `selected`
 measured 1.021:1 on its canvas and Linux light `accent` 1.001:1 on the panel

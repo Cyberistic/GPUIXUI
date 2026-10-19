@@ -29,12 +29,13 @@ const chipSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("soft status edge on the surfaces a chip sits on", () => {
-  it("measures every tone on the eight chip surfaces", () => {
+  it("measures every tone on the nine chip surfaces", () => {
     expect(softBorderSurfacePairs).toHaveLength(
       statusTones.length * chipSurfaces.length,
     );

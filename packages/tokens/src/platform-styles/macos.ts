@@ -85,6 +85,7 @@ export const macosPlatformStyle = {
       ring: "#0071E3",
       selection: "#0071E333",
       selected: "#CFE3FA",
+      selectedActive: "#DAEAFB",
       selectedForeground: "#004A9E",
       // The hint clears the secondary floor on the row washes a field inside a
       // row paints, not only on the plain surfaces (plan 527).
@@ -122,6 +123,7 @@ export const macosPlatformStyle = {
       ring: "#409CFF",
       selection: "#0A84FF33",
       selected: "#1A4568",
+      selectedActive: "#14344F",
       selectedForeground: "#CFE8FF",
       placeholder: "#B1B1B6",
       // The modal scrim is 82%: the floating face (#2C2C2E) met the scrim over

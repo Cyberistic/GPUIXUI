@@ -127,9 +127,9 @@ describe("the scrim over the resting fills it excluded", () => {
 
   it("grows the two composite walks without publishing a row", () => {
     // The scrim and the dialog face are separate published walks, like the
-    // elevation shadow, so the plain `contrastPairs` list stays 422.
+    // elevation shadow, so only plan 651's press pairs grow the plain list.
     expect(overlayWashPairs).toHaveLength(21);
     expect(dialogSurfacePairs).toHaveLength(21);
-    expect(contrastPairs.length).toBe(422);
+    expect(contrastPairs.length).toBe(451);
   });
 });

@@ -73,6 +73,7 @@ export const aeroPlatformRecipe = {
       ring: "#1565C0",
       selection: "#1565C03D",
       selected: "#CCE4FA",
+      selectedActive: "#D8EAFB",
       selectedForeground: "#0B3A6B",
       // The hint clears the secondary floor on the row washes a field inside a
       // row paints, not only on the plain surfaces (plan 527).

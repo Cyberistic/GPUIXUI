@@ -148,7 +148,7 @@ missing here is not public.
 | `Theme` | A complete resolved theme. |
 | `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
 | `ThemeChoiceKey` | A query key from `themeChoiceKeys`. |
-| `ThemeColors` | The 70 semantic colour roles. |
+| `ThemeColors` | The 71 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `ring`, `highlight`, `nativeText`, `hierarchy`, `direction` or `metric`. |
@@ -178,7 +178,7 @@ control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
 outline control, and `accent` for an outline toggle that is on — so the divider
 is held to its floor on those fills too, not only on the plain surfaces.
 
-There are 70 roles. The four status families — `info`, `success`, `warning` and
+There are 71 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
 a readable foreground on it, a soft pair (`xSoft` / `xSoftForeground`) with an
 edge (`xSoftBorder`) for a tone-tinted Alert or Badge, and a text role (`xText`)
@@ -263,10 +263,10 @@ A runnable example lives in
 | `softActionForeground` | `#191D25` | `#F6F8FB` | text and icons on `softAction` and on the panel a ghost action rests on |
 | `softActionHover` | `#F5F5F5` | `#454D5B` | `softAction` while hovered, and a ghost action's hover wash |
 | `softActionActive` | `#EBEBEB` | `#4C5462` | `softAction` while pressed, and a ghost action's press wash |
-| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#0E5739` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#8F2126` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `infoText` | `#1B45AC` | `#C5D8FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `successText` | `#0E5739` | `#A8F0C6` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `warningText` | `#6B4500` | `#FFDE8A` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `destructiveText` | `#8F2126` | `#FFC6C6` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
@@ -279,6 +279,7 @@ A runnable example lives in
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
 | `active` | `#E1E5EC` | `#2E3543` | pressed wash; one step from the `accent` row hover |
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
+| `selectedActive` | `#E7EAFF` | `#312471` | selected row or item while pressed; a step toward the canvas, because the press previews deselection |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#545D6C` | `#B0B8C6` | disabled text, held to the `inactive` floor |
@@ -329,7 +330,7 @@ readable text colour from the solid colour at runtime. Each also has a text
 role for the case the other two cannot serve: a status label, icon or indicator
 dot drawn directly on a surface — `background`, `card`, `popover`, the `muted`
 quiet panel a sidebar paints, or one of the state washes a row paints (`hover`,
-`active`, `accent`, `selected`).
+`active`, `accent`, `selected`, and the pressed `selectedActive`).
 
 | Tone | Solid fill | Soft surface | Text on the soft surface | Edge on the soft surface | Text on a plain surface |
 | ---- | ---------- | ------------ | ----------------------- | ------------------------ | ----------------------- |
@@ -342,8 +343,9 @@ The solid roles are fills, not foregrounds. Light `warning` (`#F5B01F`) is
 1.78:1 against `background` and 1.89:1 against `card`, under the 3:1 non-text
 floor, and light `success` is 4.26:1, under the 4.5:1 text floor. `xText` is the
 readable tonality for the plain surfaces (`background`, `card` and `popover`),
-the `muted` quiet panel a sidebar or settings group paints, and the four state
-washes a row paints (`hover`, `active`, `accent` and `selected`); it is held to
+the `muted` quiet panel a sidebar or settings group paints, and the row washes
+a row paints (`hover`, `active`, `accent`, `selected` and the pressed
+`selectedActive`); it is held to
 4.5:1 in the default themes and 7:1 in the high-contrast variants. That is not
 theoretical: a warning label in a pressed row measured 4.22:1 on macOS light,
 4.24:1 on Linux light and 4.36:1 on Windows light, and high-contrast light
@@ -363,14 +365,14 @@ scrim and selection pairs from that one edit.
 
 The label itself is indexed too: `statusTextSurfaces` is the ordered list a
 status label, icon or dot paints on — `background`, `card`, `popover`, the
-`muted` quiet panel and the four state washes. The `xText` pairs derive from
+`muted` quiet panel, the four state washes and the pressed `selectedActive`. The `xText` pairs derive from
 `statusTextSurfaces` and the tone index, so a fifth family's label joins the
 contract with the same one edit.
 
 Because the solid role is a fill, it is held like one: `statusFillPairs`
-measures each of the four solid fills on the eight surfaces a status chip sits
-on — `background`, `card`, `popover`, the `muted` panel and the four row washes
-— at 1.05:1 in both contrast levels. The tightest shipped pair is
+measures each of the four solid fills on the nine surfaces a status chip sits
+on — `background`, `card`, `popover`, the `muted` panel, the four row washes and
+the pressed `selectedActive` — at 1.05:1 in both contrast levels. The tightest shipped pair is
 **1.244:1** (XP light `warning` on `active`), so the pairs guard an edited
 theme rather than a shipped value. A status *dot* is still `xText`: a fill that
 is perceptible as a large chip is not a mark, and the light `warning` fill is
@@ -385,9 +387,9 @@ tightest, Linux dark `infoSoftForeground`), so the pair is a guard against an
 edited theme, not a change to the palette.
 
 The edge is a role, not a mixture: `xSoftBorder` is designed per tone and
-measured on the fill it borders and on the eight surfaces a chip sits on
-(`background`, `card`, `popover`, the `muted` panel and the `hover`, `active`,
-`accent` and `selected` washes) at the divider floor: 1.05:1 in the default
+measured on the fill it borders and on the nine surfaces a chip sits on
+(`background`, `card`, `popover`, the `muted` panel, the `hover`, `active`,
+`accent`, `selected` washes and the pressed `selectedActive`) at the divider floor: 1.05:1 in the default
 themes and 3:1 at high contrast. The outer pair is not academic: a Badge's fill
 is deliberately close to a row wash, so the edge is the shape a reader sees. The
 light warning edge sat at 1.036:1 on the macOS light pressed wash and 1.042:1 on
@@ -491,7 +493,7 @@ neutral washes are not a supported action surface inside a status panel, and
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
-`Theme` — the same 70 roles and the same type, spacing, radius, density,
+`Theme` — the same 71 roles and the same type, spacing, radius, density,
 component dimensions, border width and icon scales — with colour values chosen
 to meet stricter floors: AAA
 body text (7:1), 7:1 secondary and on-colour text, and 4.5:1 focus rings and
@@ -561,10 +563,10 @@ carries, so it cannot claim another.
 | `softActionForeground` | `#000000` | `#FFFFFF` | text and icons on `softAction` and on the panel a ghost action rests on |
 | `softActionHover` | `#F5F5F5` | `#454D5B` | `softAction` while hovered, and a ghost action's hover wash |
 | `softActionActive` | `#EBEBEB` | `#4C5462` | `softAction` while pressed, and a ghost action's press wash |
-| `infoText` | `#102352` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `successText` | `#082C1D` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `warningText` | `#3A2500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
-| `destructiveText` | `#4E1215` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes |
+| `infoText` | `#102352` | `#DEE9FF` | info text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `successText` | `#082C1D` | `#D3F9E2` | success text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `warningText` | `#3A2500` | `#FFEFC6` | warning text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
+| `destructiveText` | `#4E1215` | `#FFE0E0` | destructive text and indicators on `background`/`card`/`popover`, the `muted` panel and the `hover`/`active`/`accent`/`selected` washes and the pressed `selectedActive` |
 | `border` | `#575E6B` | `#A0A0A0` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
@@ -577,6 +579,7 @@ carries, so it cannot claim another.
 | `hover` | `#E8E8E8` | `#2E2E2E` | hover wash for ghost surfaces |
 | `active` | `#D6D6D6` | `#3D3D3D` | pressed wash |
 | `selected` | `#D8DBFF` | `#33257A` | selected row or item, one step past the `accent` hover wash |
+| `selectedActive` | `#E1E4FF` | `#271C5D` | selected row or item while pressed; a step toward the canvas, because the press previews deselection |
 | `selectedForeground` | `#1C1547` | `#E0E3FF` | text on `selected` |
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#444444` | `#D0D0D0` | disabled text, held to the `inactive` floor |
@@ -2547,7 +2550,7 @@ and `#RRGGBBAA` and false for every other CSS colour. The runtime is broader —
 GPUix delegates colour parsing to `csscolorparser`, so a name, `rgb(…)`, `hsl(…)`
 or `#RGB` is paintable — but `alpha`, `compositeOver` and `contrastRatio` can
 only read hex, and the theme is authored data in the package's own convention.
-`themeColorFailures(theme)` walks all 70 `colorRoles` and returns the role and
+`themeColorFailures(theme)` walks all 71 `colorRoles` and returns the role and
 the value of every entry outside that form:
 
 ```ts
@@ -2728,13 +2731,13 @@ const flattened = extendTheme(identity, {
 themeTextTierFailures(flattened); // a failure per surface the tiers share
 ```
 
-The surfaces are derived from `contrastPairs`, not retyped: twelve shared
+The surfaces are derived from `contrastPairs`, not retyped: thirteen shared
 surfaces for secondary text below body copy, one `card` for `cardForeground`,
 four for `popoverForeground` (`popover` and the three row washes it shares), the
 nine surfaces typed text is documented on for `inputForeground` (`muted`,
-`background`, `card`, `popover`, `input` and the four row washes), thirteen for the
+`background`, `card`, `popover`, `input` and the four row washes), fourteen for the
 inactive label below secondary text (every surface `inactivePairs` measures
-except the `disabled` fill, which carries no secondary text), nine for a hint and
+except the `disabled` fill, which carries no secondary text), ten for a hint and
 a caption, five for the disabled panel-action label below the enabled one
 (`softAction` and the four soft fills), and four for the selected row's label
 below its title (the `hover`/`active`/`accent`/`selected` fills both roles are
@@ -2775,11 +2778,15 @@ four filled families, derived from `filledControlFamilies` (`x`, `xHover`,
 `xActive`), the action a soft status panel carries (`softAction`,
 `softActionHover`, `softActionActive`), the generic wash a ghost or outline
 control paints (`hover`, `active`), the selected step past the accent a row
-hovers with (`accent`, `selected`) and the selectable row's press past that same
-accent hover (`accent`, `active`, the direction of `rowPressStepPairs`).
+hovers with (`accent`, `selected`), the selectable row's press past that same
+accent hover (`accent`, `active`, the direction of `rowPressStepPairs`), and the
+selected row's press (`selected`, `selectedActive`), the one ladder that moves
+**toward** the canvas: pressing a chosen row previews the row it returns to when
+the click deselects it.
 
 `themeDirectionFailures(theme)` reads the direction the theme's declared mode
-requires — `darker` in light, `lighter` in dark — compares each consecutive pair
+requires — `darker` in light, `lighter` in dark, and the reverse for a ladder
+whose `direction` is `"toward"` — compares each consecutive pair
 with `relativeLuminance`, and reports a step that moves the other way as a
 `DirectionFailure` carrying the ladder, both roles, the expected direction and
 both luminances. A value the token maths cannot parse is reported too, because
@@ -2800,7 +2807,8 @@ themeDirectionFailures(inverted); // two `darker` failures, one per step
 ```
 
 An **equal** pair is not reported here: `stateStepPairs`, `softActionStepPairs`,
-`washStepPairs`, `selectionStepPairs` and `rowPressStepPairs` own the collapsed
+`washStepPairs`, `selectionStepPairs`, `rowPressStepPairs` and
+`selectionPressStepPairs` own the collapsed
 step, so one edit produces one diagnostic. Every shipped identity theme, platform variant and
 recipe steps the expected way on every ladder, so a shipped set returns `[]` and
 no colour moves; the check exists for the theme a consumer edits. The
@@ -3055,8 +3063,10 @@ text; 4.5:1 for secondary and on-colour text in the default themes, including
 text on a hovered or pressed filled action, ghost text on the `hover` and `active` washes,
 muted text on `background`, `card`, `popover`, the `input` fill a field
 paints for its own chrome and the four soft status fills a status panel's
-caption sits on, secondary text on the `hover`, `active`, `accent`
-and `selected` washes a row paints behind a description, and status text (`xText`) on `background`, `card`, `popover`, the `muted` panel and those four washes;
+caption sits on, secondary text on the `hover`, `active`, `accent`, `selected`
+and `selectedActive` washes a row paints behind a description, and status text
+(`xText`) on `background`, `card`, `popover`, the `muted` panel, those four
+washes and the pressed `selectedActive`;
 3:1 for focus and essential boundaries, including the `destructive` ring an
 invalid control paints, in the default themes; 4.5:1 for them in the
 high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
@@ -3082,9 +3092,10 @@ the same way (`washStepPairs`, `active` from `hover`). Every shipped set clears
 both ladders, so the floors guard an edited theme rather than a shipped value.
 The **direction** of a step is measured beside its distance:
 `themeDirectionFailures` walks `stateLadders` — the four filled families, the
-panel action, the wash, the selected step and the selectable row's press — and
-reports a step that moves toward the canvas, because a symmetric ratio cannot
-see one. Every shipped set steps the expected way (darker in light, lighter in
+panel action, the wash, the selected step, the selectable row's press and the
+selected row's press — and reports a step that moves the wrong way, because a
+symmetric ratio cannot see one. The selected row's press is the one ladder whose
+direction is `"toward"` the canvas. Every shipped set steps the expected way (darker in light, lighter in
 dark), so the check guards an edited theme; an equal pair stays the step lists'
 defect and is not reported twice. The row press is the composition
 `rowPressStepPairs` publishes the distance for: a dark row that presses darker
@@ -3102,8 +3113,8 @@ deeper — or if a loading skeleton is indistinguishable
 on any surface or row wash it fills (also 1.05:1), if a decorative `border` is imperceptible on
 those surfaces, on the `secondary`, `secondaryHover`, `secondaryActive`, `hover`,
 `active`, `accent`, `accentHover` and `accentActive` fills a bordered control
-paints, on the `selected` fill an outline action sits on in a selected row, or
-on the four soft status fills a status panel
+paints, on the `selected`/`selectedActive` fills an outline action sits on in a selected
+row, or on the four soft status fills a status panel
 divides (1.05:1, and 3:1 at high contrast), or if body text over
 the composited `selection` wash drops below its body floor on any surface a glyph
 is selected on — `background`, `card`, `muted`, `hover`, `active`, `accent`,
@@ -3116,16 +3127,18 @@ dark's `destructiveSoft` (`#6B1A1D`) 1.040:1, under the 1.05:1 divider floor.
 The two soft fills move one step darker and keep the surface floor on every
 canvas.
 Each soft surface also has a role for its edge (`xSoftBorder`), held to the
-divider floor on that fill and on the eight surfaces a chip sits on —
-`background`, `card` and `popover`, the `muted` panel and the four row washes —
+divider floor on that fill and on the nine surfaces a chip sits on —
+`background`, `card` and `popover`, the `muted` panel, the four row washes and
+the pressed selected fill —
 so the shape a badge shows is measured where it is painted; the light warning
 edge measured 1.036:1 on the macOS light pressed wash and 1.042:1 on the Linux
 light one until plan `308` moved it, and the 30% mixture it replaced measured
 1.12:1 on the high-contrast light `warning` surface, under the 3:1 that theme
 requires.
 A loading skeleton is a surface too: it is held to 1.05:1 against `background`,
-`card`, `popover`, `muted`, `hover`, `active`, `accent` and `selected`, so a
-placeholder never disappears into the card it fills or the row it sits in. The
+`card`, `popover`, `muted`, `hover`, `active`, `accent`, `selected` and
+`selectedActive`, so a placeholder never disappears into the card it fills or the
+row it sits in. The
 `accent` wash is the fill a selectable list row paints on hover, and a
 placeholder row has no designed edge to keep its shape if the fill matches. The
 audit found the placeholder was the `active` fill in the identity and
@@ -3133,7 +3146,7 @@ high-contrast themes, so a pressed loading row erased the placeholder (1.000:1);
 the light and dark skeleton moved one ramp step away, and each dark platform
 style carries its own. A skeleton also pulses: the primitive paints the role at
 `skeletonPulseOpacity` (0.6) for half of every cycle, so the role is painted
-through an alpha on the same eight surfaces. `skeletonPulsePairs` composites
+through an alpha on the same nine surfaces. `skeletonPulsePairs` composites
 that dim frame and `themeContrastFailures` reports it with the fraction as
 `opacity`, because an opaque pair cannot see a fade. The audit found identity
 dark at **1.008:1** on `selected` — its opaque pair was only 1.058:1, so the
@@ -3141,7 +3154,7 @@ fade crossed the floor — and the dark skeleton moved a half-step to `#434C5A`,
 where the dim frame measures **1.074:1** and the opaque pair 1.179:1. The other
 seven surfaces are wider, and every other shipped set already cleared 1.05:1 at
 0.6 (the next tightest is 1.072:1), so no other value moves.
-Brand-toned text is checked on the eight surfaces a link paints —
+Brand-toned text is checked on the nine surfaces a link paints —
 `background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
 `accent`/`selected` fills a selectable row paints — and on the four soft status
 fills a link in a status panel sits on
@@ -3192,8 +3205,8 @@ set cleared it. The edge is now `#868FA0`, which clears the floor on all four
 soft fills. Palette edits must keep it green.
 
 Default body text is measured on `background`, `card`, the `muted` panel,
-`popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft
-status fills an Alert's description paints
+`popover`, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes and
+the four soft status fills an Alert's description paints
 (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is
 `inputForeground` on the `input` fill, on the four `Surface` tones a transparent
 field can sit on (`background`, `card`, `popover`, `muted`) and on the four row
@@ -3356,6 +3369,22 @@ Windows 7 light at **1.059:1**. The row keeps `active` rather than
 `accentActive`: that role is a filled control's press, and on macOS dark a row
 label measures **6.677:1** on it, under the 7:1 body floor.
 
+A **chosen** row is the third state. It keeps `selected` under the pointer — the
+hover wash is for the unselected row — and paints `selectedActive` while
+pressed. That press previews the canvas the click returns it to when it
+deselects the row, so it is the one pointer state that moves toward the canvas;
+`selectedActive` is a 24% veil of the canvas colour over `selected`, shipped as
+an editable opaque literal in every palette. `selectionPressStepPairs` publishes
+the step, `selectionPressPairs` holds the five text roles, the disabled label
+and the three chrome roles a pressed row paints, the four status labels come
+from `statusTextSurfaces`, and `stateLadders` carries the ladder with
+`direction: "toward"`. Before plan `651` the design system claimed the chosen row
+pressed to `active`: identity light measured **1.001:1** there, eleven of twelve
+default palettes sat under the 1.05:1 floor and eight moved the wrong way while
+both checks returned `[]`. The transient fill is deliberately outside the
+selection-wash, modal-scrim and elevation walks, which measure the persistent
+`selected` fill at rest, like the other pointer washes (plan `359`).
+
 The action a soft status panel carries is the last composition a canvas role
 could not serve. `hover`, `active` and `secondary` are tuned against
 `background`, `card`, `popover` and the quiet `muted` panel, and the four soft
@@ -3371,7 +3400,7 @@ holds
 `softActionForeground` on the three fills (the secondary floor) and on the four
 soft fills a ghost action's label rests on (the body floor) — taking it from 339
 to **360**. Every shipped set clears every pair, so no existing colour moves.
-Plan `399` adds the solid status fill on the eight surfaces a status chip sits
+Plan `399` adds the solid status fill on the nine surfaces a status chip sits
 on (`statusFillPairs`) — `destructive`'s four base surfaces are already
 measured as an action fill — taking it from 360 to **388**; every shipped set
 clears the floor (1.244:1 at the tightest), so no colour moves. Plan `503` adds
@@ -3518,7 +3547,7 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **422** across plans `527`, `557`, `595`, `619` and `650`.
+396 to **451** across plans `527`, `557`, `595`, `619`, `650` and `651`.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -3586,8 +3615,8 @@ its own controls: the
 matches the field is not a state. An edited theme with `input = hover` returned
 `[]` from every check while the stepper's wash measured **1.000:1** — the same
 wash on the card was still 1.133:1 — so the field fill joins the list (plan
-`595`); every shipped set already clears the floor there (tightest **1.1176:1**,
-`accent` on `input` in Dark · Windows) and no colour moves.
+`595`); every shipped set already clears the floor there (tightest **1.0695:1**,
+`selectedActive` on `input` in Dark · Linux) and no colour moves.
 `stateFillRoles` derives every filled family's rest, hover and press from
 `filledControlFamilies` and adds the two generic washes and `selected`;
 `stateFillSurfaces` is its surface list, so a fifth family joins the family
@@ -3690,10 +3719,11 @@ rule, because the shipped guard alone never saw a copied level. Before plan
 nothing and the same value was duplicated three times per set; the split keeps
 every shipped hex byte-for-byte.
 
-The focus ring is measured on the nine surfaces a focused control can sit on —
+The focus ring is measured on the ten surfaces a focused control can sit on —
 the canvas, card and popover, the `muted` panel a sidebar control sits on, the
-`accent` wash a selectable row paints, the `hover`, `active` and `selected`
-washes, and the `track` groove a focused slider's thumb is centred on — because
+`accent` wash a selectable row paints, the `hover`, `active`, `selected` and
+pressed `selectedActive` washes, and the `track` groove a focused slider's thumb
+is centred on — because
 focus and selection co-occur in rows and a slider's ring paints over its own
 value indicator. It is also measured on the
 four soft status fills, because an Alert's action button is focused while it sits
@@ -3781,7 +3811,7 @@ Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionFillInactivePairs`, `softPanelTextPairs`, `selectionInactivePairs` and
 `overlayWashPairs` measure the
 painted roles — `inactivePairs` is the fourteen-surface
-inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
+inactive list, `softBorderSurfacePairs` the nine-surface chip edge,
 `statusFillPairs` the solid status fill on the same chip surfaces and `disabled`
 is measured as its own fill — and
 `themeContrastFailures` measures `shadow` composited at each elevation level's
@@ -3791,7 +3821,7 @@ pinned runtime paints the platform scrollbar and exposes no tint. A new role tha
 is neither measured nor argued fails the suite, so the catalogue cannot grow a
 blind spot like the ones plans `076`–`348` closed. The roles are still held to
 the **form** the helpers parse:
-`themeColorFailures` reports any of the 70 roles outside the six- or eight-digit
+`themeColorFailures` reports any of the 71 roles outside the six- or eight-digit
 hex form, and `isHexColor` is the single-value predicate. A measured role in
 another CSS form already fails the contrast check as `NaN`; plan `085` applies
 `shadow` through `alpha()`, so an unparseable tint painted every elevation level

@@ -206,6 +206,8 @@ import {
   ringSoftPairs,
   ringTrackPairs,
   rowPressStepPairs,
+  selectionPressPairs,
+  selectionPressStepPairs,
   selectionFillPairs,
   selectionFillInactivePairs,
   selectionFillWashPairs,
@@ -299,6 +301,8 @@ const publishedPairLists: Readonly<
   ringSoftPairs,
   ringTrackPairs,
   rowPressStepPairs,
+  selectionPressPairs,
+  selectionPressStepPairs,
   selectionFillInactivePairs,
   selectionFillPairs,
   selectionFillWashPairs,
@@ -498,9 +502,9 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    // 14 status/selection surfaces plus the code plane's body pairs on the
+    // 15 status/selection surfaces plus the code plane's body pairs on the
     // four `Surface` tones a native document may name.
-    expect(plain).toHaveLength(18);
+    expect(plain).toHaveLength(19);
     expect(selected).toHaveLength(13);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -519,6 +523,7 @@ describe("themeContrastFailures", () => {
         "muted",
         "popover",
         "selected",
+        "selectedActive",
         "destructiveSoft",
         "successSoft",
         "warningSoft",
@@ -611,7 +616,7 @@ describe("themeContrastFailures", () => {
     const failures = themeContrastFailures(typo).filter(
       ({ foreground }) => foreground === "placeholder",
     );
-    expect(failures).toHaveLength(9);
+    expect(failures).toHaveLength(10);
     expect(new Set(failures.map(({ background }) => background))).toEqual(
       new Set([
         "input",
@@ -623,14 +628,15 @@ describe("themeContrastFailures", () => {
         "active",
         "accent",
         "selected",
+        "selectedActive",
       ]),
     );
     failures.forEach(({ ratio }) => expect(Number.isNaN(ratio)).toBe(true));
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(422);
-    expect(statusFillPairs).toHaveLength(28);
+    expect(contrastPairs.length).toBe(451);
+    expect(statusFillPairs).toHaveLength(32);
     expect(
       statusFillPairs.map(([foreground, background]) => [
         foreground,
@@ -647,6 +653,7 @@ describe("themeContrastFailures", () => {
           "active",
           "accent",
           "selected",
+          "selectedActive",
         ]
           .filter(
             (surface) =>
@@ -665,7 +672,7 @@ describe("themeContrastFailures", () => {
     expect(selectionStepPairs).toHaveLength(1);
     expect(softPanelTextPairs).toHaveLength(8);
     expect(toastTonePairs).toHaveLength(4);
-    expect(softBorderSurfacePairs.length).toBe(32);
+    expect(softBorderSurfacePairs.length).toBe(36);
     expect(
       softBorderSurfacePairs.map(([foreground, background]) => [
         foreground,
@@ -682,6 +689,7 @@ describe("themeContrastFailures", () => {
           "active",
           "accent",
           "selected",
+          "selectedActive",
         ].map((surface) => [`${tone}SoftBorder`, surface]),
       ),
     );
@@ -835,6 +843,7 @@ describe("themeContrastFailures", () => {
       "accentHover",
       "accentActive",
       "selected",
+      "selectedActive",
     ]);
     expect(failures.every(({ floor }) => floor === 3)).toBe(true);
     // Only the four white surfaces are the border's own value; the control
@@ -1030,6 +1039,7 @@ describe("contract completeness", () => {
     [
       ...contrastPairs,
       ...selectionPairs,
+      ...selectionPressPairs,
       ...selectionStatusPairs,
       ...selectionLinkPairs,
       ...selectionWashPairs,

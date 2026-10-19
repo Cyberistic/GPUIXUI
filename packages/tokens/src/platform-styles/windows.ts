@@ -80,6 +80,7 @@ export const windowsPlatformStyle = {
       ring: "#0067C0",
       selection: "#0067C033",
       selected: "#C2E2FF",
+      selectedActive: "#D1E9FF",
       selectedForeground: "#003A6B",
       // The hint clears the secondary floor on the row washes a field inside a
       // row paints, not only on the plain surfaces (plan 527).
@@ -117,6 +118,7 @@ export const windowsPlatformStyle = {
       ring: "#4CC2FF",
       selection: "#0067C055",
       selected: "#094771",
+      selectedActive: "#073656",
       selectedForeground: "#CFE9FF",
       placeholder: "#B5B5B5",
       destructiveSoft: darkColors.destructiveSoft,

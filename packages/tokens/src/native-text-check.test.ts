@@ -252,7 +252,7 @@ describe("native text check", () => {
 
   it("reports a code header separator the plain pairs accept", () => {
     const planted = extendTheme(getPlatformTheme("darwin", "dark"), {
-      colors: { border: "#303030" },
+      colors: { border: "#303030", selectedActive: "#101010" },
     });
     expect(
       themeFailures(planted).filter((failure) => failure.kind !== "nativeText"),
@@ -367,7 +367,7 @@ describe("native text check", () => {
 
   it("pins the chrome figures the reference quotes", () => {
     const planted = extendTheme(getPlatformTheme("darwin", "dark"), {
-      colors: { border: "#303030" },
+      colors: { border: "#303030", selectedActive: "#101010" },
     });
     const ratio = contrastRatio(
       planted.colors.border,

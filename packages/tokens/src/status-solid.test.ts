@@ -40,6 +40,7 @@ const chipSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 describe("the solid status family", () => {

@@ -103,6 +103,7 @@ const skeletonSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 /**
@@ -146,6 +147,7 @@ const trackSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
   ...softSurfaceRoles,
 ] as const;
 
@@ -193,6 +195,7 @@ const chipSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 /** Each soft status edge measured on the surfaces a chip sits on. */
@@ -285,9 +288,9 @@ const familyFills = <Family extends FilledControlFamily>(
 
 /**
  * The interactive fills a control or a row paints as its own shape: the two
- * generic washes, the selected fill, and every filled-action family at rest,
- * hover and press. A filled control is a surface, so its fill has to stay
- * perceivable on the surface behind it.
+ * generic washes, the selected fill and its pressed step, and every
+ * filled-action family at rest, hover and press. A filled control is a surface,
+ * so its fill has to stay perceivable on the surface behind it.
  *
  * The four designed families' rest, hover and press are derived from
  * `filledControlFamilies`, so a fifth family joins the family index alone.
@@ -297,6 +300,7 @@ export const stateFillRoles = [
   "hover",
   "active",
   "selected",
+  "selectedActive",
 ] as const;
 
 /**
@@ -404,6 +408,45 @@ export const selectionStepPairs: readonly ContrastPair[] = [
  */
 export const rowPressStepPairs: readonly ContrastPair[] = [
   ["active", "accent", "step"],
+];
+
+/**
+ * The selected row's press. A chosen row keeps `selected` under the pointer and
+ * paints `selectedActive` while pressed; the press previews the canvas the row
+ * returns to when the click deselects it, so it is the one state ladder that
+ * moves toward the canvas. The fill is designed as a 24% veil of the canvas
+ * colour over `selected` ({@link compositeOver}), and every shipped palette
+ * names the composited literal so a copied style can edit it directly.
+ */
+export const selectionPressStepPairs: readonly ContrastPair[] = [
+  ["selectedActive", "selected", "step"],
+];
+
+/**
+ * The text and chrome a pressed selected row paints. `selectedActive` is a row
+ * surface like `selected`: a title (`foreground`), the inherited label
+ * (`selectedForeground`), metadata, a hint, a brand-toned link and a disabled
+ * control sit on it; the four status labels are derived from
+ * {@link statusTextSurfaces}, which names it too, and the row's control edge, focus ring,
+ * divider and loading skeleton paint there too. The groove and the skeleton are
+ * measured through {@link trackSurfacePairs} and {@link skeletonPulsePairs}, and
+ * the fill on the surfaces it paints on through {@link stateFillSurfacePairs}.
+ *
+ * The transient state is deliberately outside the selection-wash, modal-scrim
+ * and elevation walks: a reader drags a selection or opens a dialog at rest, so
+ * the persistent `selected` fill is what those contracts measure, exactly as
+ * plan 359 excludes the `hover`/`active` washes from the scrim.
+ */
+export const selectionPressPairs: readonly ContrastPair[] = [
+  ["foreground", "selectedActive", "body"],
+  ["selectedForeground", "selectedActive", "secondary"],
+  ["mutedForeground", "selectedActive", "secondary"],
+  ["placeholder", "selectedActive", "secondary"],
+  ["primaryText", "selectedActive", "secondary"],
+  ["disabledForeground", "selectedActive", "inactive"],
+  ["borderStrong", "selectedActive", "boundary"],
+  ["ring", "selectedActive", "boundary"],
+  ["border", "selectedActive", "divider"],
 ];
 
 /**
@@ -657,6 +700,7 @@ export const statusTextSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
 ] as const;
 
 /**
@@ -977,7 +1021,12 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * the same class) — otherwise hovering one row looks like selecting another and
  * the click changes nothing. The same row presses to `active`, so that press is
  * held one step from the accent hover it follows (`rowPressStepPairs`, the same
- * class), not only from the generic `hover` wash.
+ * class), not only from the generic `hover` wash. A **chosen** row is the third
+ * state: it keeps `selected` under the pointer and paints `selectedActive`
+ * while pressed, a fill that previews the canvas the click returns it to
+ * (`selectionPressStepPairs`), so it is the one ladder that runs toward the
+ * canvas; the perspective is published by `selectionPressPairs` and the
+ * direction by `stateLadders`.
  *
  * A solid role painted as a **mark** — a progress segment, a slider fill, a
  * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
@@ -1089,6 +1138,8 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...washStepPairs,
   ...selectionStepPairs,
   ...rowPressStepPairs,
+  ...selectionPressStepPairs,
+  ...selectionPressPairs,
   ...markPairs,
 ];
 

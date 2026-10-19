@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 283/357
+`[x]` `[████████░░]` 284/358
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2384,6 +2384,20 @@ with its disabled label at **2.494:1** on `input`; `input` joins the one owner,
 `inactivePairs` and `selectionInactivePairs` grow 13 → 14, `contrastPairs` grows
 421 → **422**, every shipped set already passes (6.610:1 at rest, 4.944:1
 washed) and no colour moves (plan 650)
+
+`[x]` Give a **selected** row its press — the design system claimed a chosen
+row "still presses to `active` … and walk[s] away from the canvas like every
+ladder", but identity light measured **1.001:1** on that press (the selection
+and the press wash are the same luminance), eleven of twelve default palettes
+sat under the 1.05:1 step floor and eight moved the wrong way while both the
+contrast and direction checks returned `[]`. The press is the one state that
+previews deselection, so `selectedActive` is a 24% canvas veil over `selected`
+(the one `stateLadders` entry with `direction: "toward"`),
+`selectionPressStepPairs` publishes its step, `selectionPressPairs` holds the
+text and chrome a pressed row paints, `statusTextSurfaces` adds the fill, and
+`selectedActive` joins the interactive-fill, skeleton and track surfaces, the
+solid chip fill and the soft chip edge; every shipped set passes as-is, the
+contract grows 422 → 451 and no existing value moves (plan 651)
 
 ## Phase C — Tier 1–2 components
 

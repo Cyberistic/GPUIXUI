@@ -70,6 +70,7 @@ describe("secondary text on the field a time picker paints", () => {
       // The progress groove is a different composition: `mutedForeground` is
       // the muted progress tone's fill, so it is a mark on `track`, not text.
       ["track", "mark"],
+      ["selectedActive", "secondary"],
     ]);
   });
 

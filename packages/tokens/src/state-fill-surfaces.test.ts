@@ -48,7 +48,7 @@ describe("interactive fills on the surfaces they paint on", () => {
         stateFillSurfaces.map((surface) => [fill, surface]),
       ),
     );
-    expect(stateFillSurfacePairs).toHaveLength(75);
+    expect(stateFillSurfacePairs).toHaveLength(80);
   });
 
   it("derives every filled family's three fills from the family index", () => {
@@ -61,6 +61,7 @@ describe("interactive fills on the surfaces they paint on", () => {
       "hover",
       "active",
       "selected",
+      "selectedActive",
     ]);
   });
 

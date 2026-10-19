@@ -56,6 +56,7 @@ const trackSurfaces = [
   "active",
   "accent",
   "selected",
+  "selectedActive",
   "infoSoft",
   "successSoft",
   "warningSoft",

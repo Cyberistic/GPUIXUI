@@ -51,6 +51,7 @@ describe("the placeholder on every surface a field sits on", () => {
       ["placeholder", "active", "secondary"],
       ["placeholder", "accent", "secondary"],
       ["placeholder", "selected", "secondary"],
+      ["placeholder", "selectedActive", "secondary"],
     ]);
     placeholderPairs.forEach(([foreground, , pairClass]) => {
       expect(foreground).toBe("placeholder");

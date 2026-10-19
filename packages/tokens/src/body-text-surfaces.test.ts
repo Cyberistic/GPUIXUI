@@ -54,6 +54,7 @@ describe("default body text surfaces", () => {
       "successSoft",
       "warningSoft",
       "destructiveSoft",
+      "selectedActive",
     ]);
   });
 
