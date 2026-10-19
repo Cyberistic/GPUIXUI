@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 265/337
+`[x]` `[████████░░]` 265/338
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -680,6 +680,17 @@ and any icon taking that tone need `destructiveText` too (plan 079 audit; owner:
 `internal/theme.ts` seam. Both should read `primaryText`, which is held to the
 text floor on every surface a link paints; the solid `primary` is a fill. The
 old value fails on macOS and Linux (plan 082; owner: `primitives`, `components`)
+`[ ]` Cross-team: `primitives` unifies its theme provider with
+`@gpuixui/tokens/react` — its README still says the two contexts will merge
+"when `@gpuixui/tokens/react` is consumable without a JSX shim", but plan 061
+removed the package's only JSX and a consumer-shaped type check guards it, so
+the stated blocker is gone. `ThemeProvider` still keeps a second context with no
+fallback while `components` reads the tokens context (which falls back to the
+light theme), so an app composing both must mount both; either `primitives`
+reads the tokens context (layering its density override and native-focus
+tracker) or the nesting is documented as permanent. The docs site already
+mounts both; the README's parenthetical is now false (owner: `primitives`; plan
+061)
 `[ ]` Cross-team: `primitives` and `components` depend on `@gpuixui/tokens`
 directly and delete their structural copies of the theme and role list, their
 local focus-ring helpers (`primitives/src/core/style.ts`,
