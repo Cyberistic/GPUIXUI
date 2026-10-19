@@ -1205,12 +1205,13 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plans 611/612/619/649/650):
-      all three exit 0; the unit suite is 468 tests in 46 files. The native
-      behaviour suite is **820 passed / 31 failed of 851** — every failure is
-      a recorded plan-540 binding defect (focus/blur delivery, box
-      measurement), not a component regression (run on this tree 2026-10-19,
-      after plan 657).
+      re-run from the components worktree on 2026-10-19 (plans 660/661):
+      all three exit 0; the unit suite is 470 tests in 46 files. The full native
+      behaviour suite was last run at **820 passed / 31 failed of 851** after
+      plan 657 — every failure a recorded plan-540 binding defect (focus/blur
+      delivery, box measurement), not a component regression. Plans 660/661 ran
+      their targeted files (Search input 18/18, Stepper 12/12) and add five
+      cases, so the next full run should collect 856; it was not re-run here.
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)
