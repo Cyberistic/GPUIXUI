@@ -71,7 +71,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 113/113 plans-and-harness
+`[x]` `[██████████]` 114/114 plans-and-harness
+
+`[x]` **Add pixel evidence to the native suite** per plan `674`: `packages/testing` gained a pure PNG decoder (`Pixels.decodePng`, all five filters, colour types 0/2/4/6, injected inflate) with 7 tests, and `pixel-colour` + `live-pixel-colour` decode a real captured frame and sample the centre of three literal boxes, the theme's `primary` and the canvas background. Measured on this host: device scale **2** (`2560 × 1600` offscreen, `2200 × 1440` live), literals `#FF0000FF`/`#00FF00FF`/`#0000FFFF`, `primary` `#A7A9FF`, background `#11141A`, all exact; **22 checks per host**. Full headless **106/106 (3824 checks, 65 capabilities)**, exit `0`; focused live `live-pixel-colour` green; four mutation proofs (swap the boxes, ignore the scale, break the `Sub` filter, remove the capture — each exits `1`, §8). `nub run check`/`lint`/`test` green (testing 68). Focused ids run: `pixel-colour`, `live-pixel-colour`.
 
 `[x]` **Run the promotion gate on the head that includes plan `658`'s Tier 1
       window evidence** per plan `659`: verification only, at `69392032` (the
@@ -1595,7 +1597,10 @@ focused id is `live-frames`.
       on code head `d9346a9d` — live **94/94** (**2469** checks, 61
       capabilities, 1021.6 s) and headless **105/105** (3802 checks), both exit
       `0`, so the 22 new checks are included in the current promotion gate. The
-      owner/supervisor still performs the fast-forward.
+      owner/supervisor still performs the fast-forward. **Addendum (plan `674`,
+      2026-10-19):** the registry gained `live-pixel-colour` (22 checks), so the
+      gate above no longer covers every live id; only the focused twin has run on
+      this head, and the merge gate must include the whole 95-scenario registry.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

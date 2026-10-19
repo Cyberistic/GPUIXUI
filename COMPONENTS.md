@@ -55,7 +55,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | float | `float-tab`, `live-float` | verified |
 | preview | `preview-card`, `live-preview` | verified |
 | command | `command-palette`, `live-command-palette` | verified |
-| theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform`, `live-theme`, `live-theme-platform` | verified |
+| theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform`, `pixel-colour`, `live-theme`, `live-theme-platform`, `live-pixel-colour` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse`, `collapsible-height`, `live-motion`, `live-collapsible` | verified |
 | content | `native-surfaces`, `live-content`, `markdown-surface`, `live-markdown`, `diff-surface`, `live-diff` | verified |
@@ -96,7 +96,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3802 checks**, 65 capabilities, 155.6 s; plan `658` added 37 of them to `primitives-display`). The live suite **last ran in full at 94/94**
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities, **150.4 s**; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 94/94**
 (`live-report.json`, **2469 checks**, 61 capabilities, **1021.6 s**, exit `0`)
 on 2026-10-19, the merge/release gate on the final branch (plan `659`, code
 head `d9346a9d`). That total is plan `657`'s 2447 plus the **22 checks plan
@@ -113,8 +113,21 @@ styles in a window), all through plan `656`'s capture-capable live runner
 lines carry the pins. The
 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin and a
 borderless size — is what every geometry check now asserts. **Registered live
-scenarios are 94**, and the gate covers all of them; the live registry is guarded
-by `liveScenarioProblems` (plan `639`).
+scenarios are 95**; the full gate above predates `live-pixel-colour`, which was
+run focused (plan `674`), so the next full gate covers it. The live registry is
+guarded by `liveScenarioProblems` (plan `639`).
+
+**Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
+`live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s
+`Pixels` module decodes it (8-bit non-interlaced PNG, all five filters, colour
+types 0/2/4/6) and samples a box centre mapped through `framePoint`. Both hosts
+report a device scale of **2** (`2560 × 1600` for the offscreen 1280 × 800
+window, `2200 × 1440` for the real 1100 × 720 one); the three literal boxes come
+back exactly (`#FF0000FF`, `#00FF00FF`, `#0000FFFF`), the theme's `primary` as
+`#A7A9FF` and the background as `#11141A`. It settles **colour**, not
+anti-aliased edges, gradients, glyphs or an image path/URL load (the plan-`586`
+limitation stands). 22 checks in each host; the four mutation proofs are in plan
+`674` §8.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
 `getDebugFrameOverlayStats()` counts **paints**, not frame-loop ticks — an idle
@@ -711,7 +724,7 @@ README/types document it, but no run has confirmed it here).
 | Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. **Runtime (055):** a control's painted height follows the active density preset, colours stay the theme's, and selection boxes remain icon-sized. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. **Runtime (055):** a code role's `fontFamily` changes with `platformTheme`, and switching platform repaints the mounted tree. **Playground (`theme-platform`):** the mono role paints `Menlo` (default/macOS), `DejaVu Sans Mono` (Linux) and `Consolas` (Windows) through the runtime's own style report, `sans` stays `.SystemUIFont`, and the surface colour does not move. **Live (`live-theme-platform`, plan `654`):** a real click cycles Default → macOS → Linux → Windows → Default, the painted readout follows each stop, the code run stays painted, the mono/sans runs and the palette surface keep their exact boxes across the cycle, and every switch repaints. The **resolved family stays headless**: the live tree has no `style`, and a host missing a declared family falls back silently, so no glyph-width claim is made. |
-| Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`), plus the platform type-style cycle `theme-platform` (plan `170`) and its window twin `live-theme-platform` (plan `654`). **The shell path (plan `182`, `shell-selection`):** clicking `theme-mode-light` repaints the whole shell to the light background, keeps the selected scenario and leaves its view mounted. |
+| Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`), plus the platform type-style cycle `theme-platform` (plan `170`) and its window twin `live-theme-platform` (plan `654`). **The shell path (plan `182`, `shell-selection`):** clicking `theme-mode-light` repaints the whole shell to the light background, keeps the selected scenario and leaves its view mounted. **Colour in the frame (plans `674`, `pixel-colour` + `live-pixel-colour`):** the captured frame's `primary` is `#A7A9FF` and its background `#11141A` in both hosts, exactly, at device scale 2. |
 
 ---
 

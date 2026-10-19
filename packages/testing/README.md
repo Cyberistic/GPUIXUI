@@ -29,6 +29,7 @@ import { Binding, Report, Runtime, Smoke, State } from "@gpuixui/testing";
 | `Smoke`   | `SmokeHost`, `SmokeScenario`, `runScenarios`, `SmokeReport`, capability union — plus the async twins `AsyncSmokeHost`, `AsyncSmokeScenario`, `runAsyncScenarios` and `SmokeHostError` |
 | `Report`  | `formatReport`, `reportJson`, `passed`, `exitCode` |
 | `Native`  | `createHost(renderer)`, the structural `NativeRenderer` port, and the lookups (`find`, `allElements`, `boundsOf`, `hitBoundsOf`, `centerOf`, `subtreeText`, `focusedElement`) |
+| `Pixels`  | `decodePng`, `pixelAt`, `hexToRgba`, `rgbaNear`, `frameScale`, `framePoint` — a pure PNG decoder and pixel lookups for a captured native frame |
 | `State`   | `runCommands(runtime, commands)` — fold a component runtime's commands and read its part-shaped queries, with no renderer |
 | `Binding` | `BindingPin` (the source a binding was built from), `describeBinding`, and `fingerprintIssue` — the release fingerprint from plan `529` |
 
@@ -86,6 +87,17 @@ deltas around a change it makes itself, never an absolute count.
 the same value `useWindowSize()` reads, so a scenario can compare a painted
 readout to the host's own report instead of hard-coding the runner's size
 (plan `526`).
+
+`Pixels.decodePng(bytes, inflate)` turns the PNG a host wrote (`screenshot` /
+`captureScreenshot`) into row-major RGBA. The inflate is **injected** — the
+playground passes `node:zlib`'s `inflateSync` — so the package keeps no Node or
+GPUix import. It accepts the 8-bit, non-interlaced colour types GPUI writes
+(0/2/4/6), unfilters all five row filters, and fails with a `PngDecodeError`
+naming the unsupported field. `pixelAt` and `framePoint` are total (`None`
+outside the frame); `frameScale` accepts only an integer device scale (the
+captured frame is 2× the window on this host) and `hexToRgba` parses the three
+token forms. This is how a scenario asserts the colour the runtime actually
+painted, not the authored style (plan `674`).
 
 Nullish returns on `SmokeHost` are the runtime boundary: a missing `testId`
 comes back as `null`, a scenario converts it with `Option.fromNullishOr` and

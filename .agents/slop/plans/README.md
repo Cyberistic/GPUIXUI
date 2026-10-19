@@ -237,7 +237,9 @@ interaction contract takes `648`; the promotion gate on the head that includes
 tokens-theme workstreams first, so the live coverage guard takes `653` and the
 platform-style live twin takes `654`; the promotion gate on the head that
 includes it takes `655`; the live capture CLI takes `656`, and the promotion
-gate on the head that includes it takes `657`.
+gate on the head that includes it takes `657`; the components and tokens
+workstreams then claimed `660`–`673`, so this workstream's pixel-evidence plan
+takes `674`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -393,6 +395,7 @@ gate on the head that includes it takes `657`.
 | [658](./658-tier1-range-button-group-loading.md) | The last Tier 1 controls with no window evidence: RangeSlider, ButtonGroup and the loading indicators | F | `168`, `169`, `170`, `197`, `529`, `570`, `591` | **landed** — `primitives-display` **16 → 53 checks** and `live-primitives-display` **12 → 34** (three focused green runs): a real RangeSlider press at 10 % → start `9`, `Right` → `10` with the end still `80`, press at 90 % → end `89`, `Left` → `88`; attached/separated ButtonGroups 0/6 px; Spinner `34 × 10` and `Status "Syncing"`; indeterminate Progress 6 px with value `loading`. Four mutation proofs. **Null result:** the frame counter cannot prove the indicator animated (72 → 76 frames in 400 ms with no indicator), so that check was removed and the step advance stays headless (D93) |
 | [657](./657-promotion-gate-with-live-capture.md) | The promotion gate on the head that includes the live capture CLI | F | `639`, `649`, `653`, `654`, `655`, `656`, `517`, `529` | **landed** — verification only: the live runner's shared `program`/`mount` path changed in plan `656` and only `live-shell` had exercised it. On `034d78df`: headless **105/105** (**3765** checks, 65 capabilities, 136.3 s) and live **94/94** (**2447** checks, 61 capabilities, **921.6 s**), both exit `0`, `live-shell` included; the live check total is identical to plan `655`'s, so the capture branch is inert without `--capture`, and a plain `--all` wrote no frame or sidecar. Exact totals in §8. |
 | [659](./659-promotion-gate-with-tier1-evidence.md) | The promotion gate on the head that includes the last Tier 1 window evidence | F | `639`, `649`, `653`, `654`, `655`, `656`, `657`, `658` | **landed** — verification only, at `69392032` (the docs-only plan commit on code head `d9346a9d`): headless **105/105** (**3802** checks, 65 capabilities, 155.6 s) and live **94/94** (**2469** checks, 61 capabilities, **1021.6 s**), both exit `0`, and an independent full run on the same head agreed on every count. The live total is exactly plan `657`'s 2447 plus plan `658`'s 22 added checks; a plain `--all` wrote no `provenance.json`, and `check`/`lint`/`test` are green. This is the gate for the promotion merge; no source change. |
+| [674](./674-pixel-evidence.md) | Pixel evidence: assert what the native frame actually painted | F | `100`, `110`, `120`, `140`, `150`, `189`, `197` | **landed** — a pure PNG decoder in `packages/testing` (7 tests) plus `pixel-colour` and `live-pixel-colour`: both hosts report device scale **2** and the exact colours `#FF0000FF`/`#00FF00FF`/`#0000FFFF`, the theme's primary `#A7A9FF` and background `#11141A` (22 checks each); full headless **106/106** (3824 checks), focused live green; four mutation proofs (§8) |
 
 Cross-cutting records:
 

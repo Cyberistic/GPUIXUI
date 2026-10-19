@@ -7,6 +7,7 @@
  */
 export * as Binding from "./binding.js";
 export * as Native from "./native.js";
+export * as Pixels from "./pixels.js";
 export * as Report from "./report.js";
 export * as Runtime from "./runtime.js";
 export * as Smoke from "./smoke.js";

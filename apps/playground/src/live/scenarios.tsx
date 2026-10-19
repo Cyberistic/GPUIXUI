@@ -109,6 +109,10 @@ import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
 import { themeColorRolesView, platformThemeView } from "../scenarios/theme.js";
+import {
+  pixelColourLiveScenario,
+  pixelColourView,
+} from "../scenarios/pixels.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -12192,6 +12196,28 @@ const liveThemePlatform: LiveScenario = {
 };
 
 /**
+ * The same boxes in a real window (plan `674`).
+ *
+ * `live-theme` proves the switch interaction but not the colour: the live tree
+ * has no style report. This twin decodes a real window's frame and samples the
+ * theme's `primary`, three literals and the background, so colour is no longer
+ * headless-only evidence.
+ */
+const livePixelColour: LiveScenario = {
+  ...pixelColourLiveScenario,
+  view: pixelColourView,
+  ready: "pixel-canvas",
+  steps: (ctx) =>
+    pixelColourLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-pixel-colour.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13323,6 +13349,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   media,
   liveTheme,
   liveThemePlatform,
+  livePixelColour,
   terminal,
   selectionSignal,
 ];

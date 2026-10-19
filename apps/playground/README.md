@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (105/105 green); -> 2 on a host with no binding
+# -> 0 here (106/106 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -1564,8 +1564,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 105-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 94 scenarios. `smoke:live` opens
+The 106-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 95 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -2022,13 +2022,50 @@ image route, and colour/pixel readback (screenshot evidence only). A player must
 own its decoder and clock in the app; the component renders the state it is
 given.
 
+## Pixel evidence (plan `674`)
+
+Every colour claim used to stop at "screenshot evidence": `paintedStyle` is the
+authored style and headless only, and the live tree has no `style`. The runtime
+does write the frame, so `pixel-colour` and `live-pixel-colour` decode it and
+sample it.
+
+`packages/testing` gained a pure `Pixels` module: an 8-bit, non-interlaced PNG
+decoder (all five filters, colour types 0/2/4/6), `pixelAt`, `hexToRgba`,
+`rgbaNear`, `frameScale` and `framePoint`. The inflate is injected, so the
+package still has no Node or GPUix import; the scenario passes `node:zlib`'s
+`inflateSync` and writes the capture through a temporary file it removes in
+`Effect.ensuring`.
+
+| Fact | Measured |
+| ---- | -------- |
+| headless frame | `2560 × 1600` for a `1280 × 800` window — device scale **2** |
+| live frame | `2200 × 1440` for the `1100 × 720` window — device scale **2** |
+| literals | `pixel-red` `#FF0000FF`, `pixel-green` `#00FF00FF`, `pixel-blue` `#0000FFFF`, exact |
+| theme primary | `#A7A9FF` — `palettes.dark.colors.primary`, exact |
+| theme background | `#11141A` at the canvas top-left, exact |
+| cost | headless 22 checks, ~8–20 s (the offscreen 2560 × 1600 capture dominates); live 22 checks, ~7–11 s |
+
+The scenario reads each box's **real bounds**, maps the centre through
+`framePoint`, and only then samples, so a wrong device scale cannot silently
+read a nearby pixel. Four mutation proofs were observed and reverted: swapping
+the red/blue boxes fails `red paints red: expected #ff0000ff, got #0000ffff`;
+ignoring the scale fails `green paints green: expected #00ff00ff, got
+#ff0000ff`; breaking the `Sub` unfilter fails the package test; and removing the
+capture fails with the named `ENOENT` reason instead of a crash.
+
+This settles **colour**, not pixels of everything: anti-aliased edges,
+gradients, glyph rendering and the image path/URL loader are still out of
+scope (plan `586`'s screenshot limitation stands). Bitmap **data URLs and
+bytes** can now be checked by colour; a path/URL still cannot.
+
 ## Evidence on this host
 
-The suite is **105/105 green** here (`exit 0`, 3802 checks, 2026-10-19; plan
+The suite is **106/106 green** here (`exit 0`, 3824 checks, 65 capabilities,
+150.4 s, 2026-10-19; plan `674` added `pixel-colour`'s 22 checks and plan
 `658` added 37 checks to `primitives-display`):
 
 ```
-105/105 scenarios passed · capabilities: layout=verified root=verified text=verified
+106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2240,7 +2277,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (105/105, 3802 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (106/106, 3824 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -2258,7 +2295,9 @@ narrower. Each deviation is deliberate and measured:
   `559`'s `live-tree`, plan `565`'s two tab-strip twins, the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
   drag, and the shipped Tier 2 scroller/command paths) and the twins through
-  plans `591`–`643` are all included. The suite covers —
+  plans `591`–`643` are all included. The registry has since gained
+  `live-pixel-colour` (plan `674`, 22 checks, run focused at 5.6–10.6 s), so the
+  next full gate covers **95** live ids. The suite covers —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
