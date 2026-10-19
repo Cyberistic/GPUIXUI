@@ -9,6 +9,13 @@
  * `getPlatformRecipeTheme` each still rendered `<ThemeProvider>` without
  * importing it, one documentation surface over.
  *
+ * Plan 655 closes the half plan 356 left open: the import case filtered out a
+ * block with no import as a contextual continuation, which is right for a docs
+ * page and wrong for a source example. Fourteen source examples called the API
+ * (five with an undeclared `theme`) and could not be copied; every source
+ * block now imports the package, and the case below fails if one stops doing
+ * so.
+ *
  * This is not a compiler: a snippet is a contextual fragment, so `theme`,
  * `children` and `brandTheme` have no module scope. It checks the four facts a
  * fragment can still get wrong about this package — that its imports exist,
@@ -218,6 +225,13 @@ const usesWithoutImport = (code: string, name: string): boolean => {
 describe("documented snippets", () => {
   it("has snippets to check", () => {
     expect(snippets.length).toBeGreaterThan(40);
+  });
+
+  it("makes every source example a copyable module", () => {
+    const missingImports = sourceSnippets
+      .filter(({ code }) => [...code.matchAll(importPattern)].length === 0)
+      .map(({ label, index }) => `${label} #${index}`);
+    expect(missingImports).toEqual([]);
   });
 
   it("finds an example in every module that documents one", () => {

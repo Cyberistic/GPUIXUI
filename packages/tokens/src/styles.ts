@@ -33,9 +33,13 @@ const roleFamily: Readonly<Record<TextRole, "sans" | "mono">> = {
  *
  * @example
  * ```tsx
+ * import { getTheme, textStyle } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ *
  * <text style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}>
  *   Save changes
- * </text>
+ * </text>;
  * ```
  */
 export function textStyle(theme: Theme, role: TextRole): TextStyleProperties {
@@ -117,7 +121,11 @@ export interface StatusToneStyle {
  *
  * @example
  * ```tsx
+ * import { getTheme, statusTone } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
  * const tone = statusTone(theme, "info");
+ *
  * tone.solid.background; // "#2559D6" in the light theme — the solid chip fill
  * <div
  *   style={{
@@ -125,7 +133,7 @@ export interface StatusToneStyle {
  *     borderColor: tone.border,
  *     borderWidth: theme.borderWidth.thin,
  *   }}
- * />
+ * />;
  * ```
  */
 export function statusTone(theme: Theme, tone: StatusTone): StatusToneStyle {
@@ -181,7 +189,11 @@ export interface FilledControlStyle {
  *
  * @example
  * ```tsx
+ * import { filledControl, getTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
  * const states = filledControl(theme, "primary");
+ *
  * <div
  *   style={{
  *     backgroundColor: states.background,
@@ -189,7 +201,7 @@ export interface FilledControlStyle {
  *     hover: { backgroundColor: states.hover },
  *     active: { backgroundColor: states.active },
  *   }}
- * />
+ * />;
  * ```
  */
 export function filledControl(
@@ -344,7 +356,12 @@ export interface FocusRing {
  *
  * @example
  * ```tsx
- * <div style={focused ? focusRing(theme) : undefined} />
+ * import { focusRing, getTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ * const focused = true;
+ *
+ * <div style={focused ? focusRing(theme) : undefined} />;
  * ```
  */
 export function focusRing(theme: Theme): FocusRing {
@@ -382,6 +399,10 @@ export interface SelectionStyle {
  *
  * @example
  * ```tsx
+ * import { getTheme, selectionStyle } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ *
  * <div style={selectionStyle(theme)}>{children}</div>;
  * ```
  */

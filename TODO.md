@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 284/358
+`[x]` `[████████░░]` 285/359
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -176,6 +176,12 @@ tightest shipped at 1.059:1). `accentActive` is a filled control's press, not a
 row fill: on macOS dark a row label measures 6.677:1 on it, under the 7:1 body
 floor, so the migration the old row proposed is withdrawn (plan 619; owner:
 `tokens-theme`)
+`[x]` Make every source `@example` a copyable module — the snippet guard's
+import case skipped a block with no import as a contextual continuation, so 14
+of the package's 44 JSDoc blocks called the API with no import and five painted
+with an undeclared `theme` while `snippets.test.ts` stayed green; every block
+now imports what it calls and declares its theme with `getTheme`, and the new
+case names every block that stops being copyable (plan 655)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

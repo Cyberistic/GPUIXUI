@@ -360,6 +360,8 @@ export const highContrastThemes: Readonly<Record<ThemeMode, Theme>> = {
  *
  * @example
  * ```ts
+ * import { getTheme } from "@gpuixui/tokens";
+ *
  * const accessible = getTheme("dark", "high");
  * ```
  */

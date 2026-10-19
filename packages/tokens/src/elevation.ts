@@ -72,7 +72,11 @@ const paint = (theme: Theme, shape: ElevationShape): BoxShadow => {
  *
  * @example
  * ```tsx
- * <div style={{ boxShadow: elevationShadow(theme, "md") }} />
+ * import { elevationShadow, getTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ *
+ * <div style={{ boxShadow: elevationShadow(theme, "md") }} />;
  * ```
  */
 export function elevationShadow(
@@ -90,6 +94,9 @@ export function elevationShadow(
  *
  * @example
  * ```ts
+ * import { elevationShadows, getTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
  * const shadows = elevationShadows(theme, "lg");
  * ```
  */

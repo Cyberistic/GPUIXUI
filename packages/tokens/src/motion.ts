@@ -119,6 +119,10 @@ export interface MotionTransition {
  *
  * @example
  * ```tsx
+ * import { getTheme, motionTransition } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ *
  * motionTransition(theme, "normal", "enter"); // { duration: 0.2, ease: "easeOut" }
  * ```
  */

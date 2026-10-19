@@ -718,6 +718,8 @@ const hexColor = /^#([0-9A-Fa-f]{6})(?:[0-9A-Fa-f]{2})?$/;
  *
  * @example
  * ```ts
+ * import { isHexColor } from "@gpuixui/tokens";
+ *
  * isHexColor("#191D25"); // true
  * isHexColor("#7567F23D"); // true
  * isHexColor("rebeccapurple"); // false
@@ -737,6 +739,8 @@ export const isHexColor = (value: string): boolean => hexColor.test(value);
  *
  * @example
  * ```ts
+ * import { alpha } from "@gpuixui/tokens";
+ *
  * alpha("#2559D6", 0.3); // "#2559D64D"
  * ```
  */

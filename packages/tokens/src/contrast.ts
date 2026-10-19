@@ -1344,6 +1344,8 @@ const luminance = (hex: string): number =>
  *
  * @example
  * ```ts
+ * import { relativeLuminance } from "@gpuixui/tokens";
+ *
  * relativeLuminance("#FFFFFF"); // 1
  * relativeLuminance("#000000"); // 0
  * ```
@@ -1363,6 +1365,8 @@ export function relativeLuminance(color: string): number {
  *
  * @example
  * ```ts
+ * import { contrastRatio } from "@gpuixui/tokens";
+ *
  * contrastRatio("#FFFFFF", "#000000"); // 21
  * ```
  */
@@ -1388,6 +1392,8 @@ export function contrastRatio(foreground: string, background: string): number {
  *
  * @example
  * ```ts
+ * import { compositeOver } from "@gpuixui/tokens";
+ *
  * compositeOver("#00000080", "#FFFFFF"); // "#7F7F7F"
  * ```
  */
