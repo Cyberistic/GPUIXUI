@@ -218,3 +218,24 @@ Stop and report instead of improvising if:
 - `nub run check`, `nub run lint` and `nub run test` pass.
 - `TODO.md` shows the task ticked and the progress bar equals the checked/total
   count of the section; `COMPONENTS.md` names the inverse.
+
+## 10. Execution report
+
+Landed as `9f1378c8` on `agent/tokens-theme` (pushed).
+
+- `packages/tokens/src/theme-diff.test.ts`: 12/12 pass.
+- Two-directions check (the repo's `scripts/verify-two-directions.sh` is
+  `jj`-based and cannot run here, see `TODO.md`): with `themeOverrides` forced to
+  return `{}`, **10 of 12** cases fail (every round-trip and the example
+  assertions); the two that still pass are the identity `{}` minimality case and
+  the mode-mismatch case, which do not exercise the diff. Restored: 12/12.
+- `nub run --filter @gpuixui/tokens test`: 192 files, 6736 tests, all pass.
+- `nub run check`: check:tests, lint, format and type-check pass.
+- `nub run test`: 192 files, 6736 tests, all pass.
+
+The `ThemeOverrides | undefined` return is an intentional exception to the
+enforcer's `prefer-option-over-null` advice: `@gpuixui/tokens` ships zero runtime
+dependencies by design (`docs/tokens.md` § *Import*, `theme-choice.ts`'s
+`ThemeParamSource` note), so absence is the platform's union here rather than an
+`Option` this package would have to pull in. The absence is documented and
+tested, not silent.
