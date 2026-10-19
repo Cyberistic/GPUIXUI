@@ -35,6 +35,7 @@ import { layoutScenario } from "../scenarios/layout.js";
 import { layoutGridScenario } from "../scenarios/layout-grid.js";
 import { typographyScenario } from "../scenarios/typography.js";
 import { chartScenario } from "../scenarios/chart.js";
+import { qrScenario } from "../scenarios/qr-code.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
@@ -6964,6 +6965,237 @@ const liveChart: LiveScenario = {
     }),
 };
 
+/**
+ * `live-qr` — plan `518`'s QR recipe in a real window (plan `596`).
+ *
+ * The headless probe is the only evidence for the three rendering routes: a
+ * `div` per dark module, one sourced `<svg>` mask and one SVG data-URL
+ * `<img>`. This twin measures what a window can settle — the matrix-relative
+ * geometry of the 226-node absolute grid, the absent light module, the module
+ * hit target, both single-node routes and the v4 scale. Colour
+ * (`paintedStyle`), the retained-node cost (`retainedElements`) and the
+ * AccessKit `Image` node stay headless: the live renderer exposes none of them
+ * (plan `197`).
+ */
+const liveQr: LiveScenario = {
+  id: "live-qr",
+  title: "Live QR: the module grid, both single-node routes and the v4 scale",
+  capability: "qr",
+  view: qrScenario.view,
+  ready: "qr-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.expectEqual(
+        "the live probe mounts the v1 module grid",
+        yield* textOf(ctx, "qr-state"),
+        "mode=div version=v1 dark=226 size=174 hit=none",
+      );
+
+      // Every offset below is measured from the matrix, never the window.
+      const matrix = yield* boxOf(ctx, "qr-matrix");
+      yield* ctx.expectNear(
+        "the live v1 matrix keeps its width",
+        matrix.width,
+        174,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live v1 matrix keeps its height",
+        matrix.height,
+        174,
+        0.5,
+      );
+
+      const corner = yield* boxOf(ctx, "qr-dot-0-0");
+      yield* ctx.expectNear(
+        "the live quiet zone offsets x",
+        corner.x - matrix.x,
+        24,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live quiet zone offsets y",
+        corner.y - matrix.y,
+        24,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "a live module keeps its size",
+        corner.width,
+        6,
+        0.5,
+      );
+
+      const next = yield* boxOf(ctx, "qr-dot-0-1");
+      yield* ctx.expectNear(
+        "a live module advances by its size on x",
+        next.x - corner.x,
+        6,
+        0.5,
+      );
+      const rightFinder = yield* boxOf(ctx, "qr-dot-0-6");
+      yield* ctx.expectNear(
+        "the live top-right finder starts",
+        rightFinder.x - matrix.x,
+        60,
+        0.5,
+      );
+      const lowerFinder = yield* boxOf(ctx, "qr-dot-6-0");
+      yield* ctx.expectNear(
+        "the live bottom-left finder starts",
+        lowerFinder.y - matrix.y,
+        60,
+        0.5,
+      );
+      const centre = yield* boxOf(ctx, "qr-dot-3-3");
+      yield* ctx.expectNear(
+        "the live finder centre is at (42, 42) on x",
+        centre.x - matrix.x,
+        42,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live finder centre is at (42, 42) on y",
+        centre.y - matrix.y,
+        42,
+        0.5,
+      );
+
+      yield* ctx.expectEqual(
+        "a live light module paints nothing",
+        (yield* ctx.host.bounds("qr-dot-1-1")) === null,
+        true,
+      );
+
+      yield* ctx.host.click("qr-dot-3-3");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a live module is a real hit target",
+        yield* textOf(ctx, "qr-hit"),
+        "hit=r3c3",
+      );
+
+      // The single tinted SVG mask: one node, the matrix box, no modules.
+      yield* ctx.host.click("qr-mode-svg");
+      yield* ctx.host.waitFor("qr-svg");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live svg route is selected",
+        yield* textOf(ctx, "qr-state"),
+        "mode=svg",
+      );
+      const svgBox = yield* boxOf(ctx, "qr-svg");
+      yield* ctx.expectNear(
+        "the live svg keeps the matrix width",
+        svgBox.width,
+        174,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live svg keeps the matrix height",
+        svgBox.height,
+        174,
+        0.5,
+      );
+      yield* ctx.expectEqual(
+        "the live svg route has no module nodes",
+        (yield* ctx.host.bounds("qr-dot-3-3")) === null,
+        true,
+      );
+
+      // The full-colour image route: one node, and — unlike the raster data
+      // URL's 1 px per-axis loss (plan `577`) — an SVG source keeps its box
+      // (plan `593`, re-confirmed here at 174 × 174).
+      yield* ctx.host.click("qr-mode-img");
+      yield* ctx.host.waitFor("qr-img");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live image route is selected",
+        yield* textOf(ctx, "qr-state"),
+        "mode=img",
+      );
+      const imgBox = yield* boxOf(ctx, "qr-img");
+      yield* ctx.expectNear(
+        "the live image keeps the matrix width",
+        imgBox.width,
+        174,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live image keeps the matrix height",
+        imgBox.height,
+        174,
+        0.5,
+      );
+      const painted = Arr.join(yield* ctx.host.paintedText(), "\n");
+      yield* ctx.expectEqual(
+        "the live data URL decodes without a load fallback",
+        Str.includes("img: load failed")(painted),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the live data URL has a source",
+        Str.includes("img: no src")(painted),
+        false,
+      );
+
+      // Returning to the grid leaves no residue and no drift.
+      yield* ctx.host.click("qr-mode-div");
+      yield* ctx.host.waitFor("qr-dot-3-3");
+      yield* settle;
+      const restored = yield* boxOf(ctx, "qr-dot-3-3");
+      yield* ctx.expectNear(
+        "the live module grid remounts at the same x",
+        restored.x - matrix.x,
+        42,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live module grid remounts at the same y",
+        restored.y - matrix.y,
+        42,
+        0.5,
+      );
+
+      // The version scale: a wider matrix, a smaller module, the same rules.
+      yield* ctx.host.click("qr-version");
+      yield* waitForText(ctx, "qr-state", "dark=591");
+      yield* ctx.expectContains(
+        "the live version toggle swaps the fixture",
+        yield* textOf(ctx, "qr-state"),
+        "dark=591",
+      );
+      const v4 = yield* boxOf(ctx, "qr-matrix");
+      yield* ctx.expectNear(
+        "the live v4 matrix keeps its width",
+        v4.width,
+        164,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the live v4 matrix keeps its height",
+        v4.height,
+        164,
+        0.5,
+      );
+      const v4Corner = yield* boxOf(ctx, "qr-dot-0-0");
+      yield* ctx.expectNear(
+        "the live v4 quiet zone is exact",
+        v4Corner.x - v4.x,
+        16,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "a live v4 module keeps its size",
+        v4Corner.width,
+        4,
+        0.5,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveQr.id}.png`);
+    }),
+};
+
 /** Waits for `needle`, then asserts it is in the layers readout. */
 const expectLayer = (ctx: LiveContext, needle: string, label: string) =>
   Effect.gen(function* () {
@@ -11033,6 +11265,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTypography,
   liveCollapsible,
   liveChart,
+  liveQr,
   menuBar,
   multiPaneEditor,
   dataToolbar,

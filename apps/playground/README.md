@@ -313,6 +313,25 @@ the live tracker, but an **SVG** source keeps its declared box. A chart
 component can therefore size its colour layer exactly; only its pixels are
 screenshot evidence.
 
+## The QR recipe in a real window (plan `596`)
+
+`qr-code` decides how a matrix can be drawn; `live-qr` (45 checks) measures the
+226-node absolute grid and both single-node routes in a window:
+
+| Fact | Measured live |
+| ---- | ------------- |
+| matrix | `174 × 174` for v1, `164 × 164` for v4 |
+| modules | `6 × 6` at v1 and `4 × 4` at v4, advancing by exactly one module |
+| quiet zone | the first dark module starts `+24` (v1) / `+16` (v4) from the matrix |
+| finders | top-right at `x + 60`, bottom-left at `y + 60`, centre at `(42, 42)` |
+| light module | `bounds` is `null` — the runtime retains no node for it |
+| hit target | a click on `qr-dot-3-3` reports `hit=r3c3` |
+| SVG mask | one painted `174 × 174` node and no module nodes |
+| image | the SVG data URL keeps `174 × 174` and paints no `img:` fallback |
+
+Colour, the retained-node cost and the `Image` accessibility node stay headless:
+the live renderer exposes no style, retained count or a11y dump (plan `197`).
+
 ## The shipped Tier 1 components (plan `168`)
 
 The scenarios above prove runtime mechanisms; these three mount
@@ -1469,6 +1488,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
 | `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
 | `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
+| `live-qr` | the QR matrix in a window: the 226-node absolute grid paints at the headless offsets (quiet zone `+24`, module `6`, finders `+60`/`(42, 42)`), a light module has no bounds, a real click reports `hit=r3c3`, the SVG mask and the SVG data-URL image each paint one `174 × 174` node, and the v4 scale is exact (`164`, `+16`, `4`) — 45 checks (plan `596`) |
 
 ### Search and replace in a real window (plan `587`)
 

@@ -89,7 +89,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | cell-editing | `grid-cell-editing`, `live-grid-cell-editing` | verified |
 | upload | `file-upload` | verified |
 | menubar | `menu-bar`, `live-menu-bar` | verified |
-| qr | `qr-code` | verified |
+| qr | `qr-code`, `live-qr` | verified |
 | media | `media-surface`, `live-media` | verified |
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |

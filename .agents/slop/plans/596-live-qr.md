@@ -184,8 +184,10 @@ claim a green total.
 
 ## 8. Measured record
 
-**Result:** `live-qr` green twice in a focused run, exit `0`, one screenshot.
-Live registry **`83 → 84`** (derived).
+**Result:** `live-qr` green twice in a focused run, exit `0`, one screenshot at
+`apps/playground/.artifacts/live/live-qr.png`. Live registry **`83 → 84`**
+(derived). The scenario records **45 checks** (29 explicit assertions plus the
+16 `boxOf`/`textOf` existence checks).
 
 | Measurement | Value |
 | ----------- | ----- |
@@ -197,8 +199,24 @@ Live registry **`83 → 84`** (derived).
 | hit target | click `qr-dot-3-3` → `hit=r3c3` |
 | svg route | `174 × 174`, no module nodes |
 | image route | `174 × 174`, no `img: no src` / `img: load failed` |
+| remount | the module returns at the same matrix-relative `(42, 42)` |
 | v4 | matrix `164 × 164`, quiet `+16`, module `4 × 4` |
-| live checks | `live-qr` **?** |
+| live checks | `live-qr` **45** |
+| focused runs | two green in a row |
+| mutation proofs | M1 `got 0`, M2 `size=168`, M3 `hit=none`, M4 `got 160`, M5 `got false`, M6 `got 205` |
 
-Fill this table with the values the focused run printed; do not transcribe the
-headless figures as if they were live measurements.
+**Mutation proofs, each observed and reverted:**
+
+| # | Mutation | Observed |
+| - | -------- | -------- |
+| M1 | `moduleOrigin` ignores the quiet zone | "the live quiet zone offsets x": expected `24 ± 0.5`, got `0` |
+| M2 | `matrixSize` drops one module | "the live probe mounts the v1 module grid": `size=168` instead of `174` (the mount readout catches it before the box check) |
+| M3 | the module's `onClick` records nothing | "a live module is a real hit target": expected `hit=r3c3`, got `hit=none` |
+| M4 | the `<img>` renders `14` px narrower | "the live image keeps the matrix width": expected `174 ± 0.5`, got `160` (the SVG check before it still passed) |
+| M5 | one light module is rendered | "a live light module paints nothing": expected `true`, got `false` |
+| M6 | `SPECS.v4.module` `4 → 5` | "the live v4 matrix keeps its width": expected `164 ± 0.5`, got `205` |
+
+**Not claimed live:** token colour (`paintedStyle`), the retained-node delta
+(`retainedElements`) and the AccessKit `Image` node — the live renderer exposes
+none of them (plan `197`). They stay with `qr-code` (53 checks), which was
+re-run green as the control.
