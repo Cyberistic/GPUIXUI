@@ -185,7 +185,8 @@ already required), never a change to what `bounds` means.
   was one); that case now waits for the tracker's sample after the disable, as
   the rest of its suite does (plan `592`), and two consecutive full runs are
   732/732.
-- Offline suite: **58 files / 812 tests**, all passing.
+- Offline suite: **58 files / 813 tests**, all passing (one case pins
+  `selectListOverhang` to the style that paints it).
 - `check-types`, `check` and `lint` green.
 - `fields` 75/75, `value` 21/21, `layout` 29/29, `controls` 51/51,
   `number-field` 24/24, `examples` 19/19, `theme-axes` 4/4, `overflow` 11/11.

@@ -1376,7 +1376,7 @@ retired once both branches are one
       the suites that measure those hosts opt in. Three scrolled-child
       assertions are reclassified with a measured reason (a child inside a
       scroller reports its unscrolled position). Plan `597`; runtime
-      730→732 tests, 37→0 failures; offline 812/812.
+      730→732 tests, 37→0 failures; offline 813/813.
 `[x]` `packages/primitives`: (historical record, resolved by plan `597`) the
       full live suite was not green —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
