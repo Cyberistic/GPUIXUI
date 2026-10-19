@@ -480,8 +480,8 @@ a ring that vanishes on a selected row or a value indicator is caught; every
 shipped variant already clears those floors, so the pairs are a guarantee rather
 than a fix (plans 093 and 516). An invalid control recolours the ring
 with `destructive`, and the runtime can draw only one, so the error ring is the
-focus indicator: the same surfaces are measured for it too (`invalidRingPairs`,
-plan 340). The modal scrim is measured the same way:
+focus indicator: every ring surface except the canvas and the slider's `track`
+groove is measured for it too (`invalidRingPairs`, plans 340 and 671). The modal scrim is measured the same way:
 `overlay` composited over the twenty-one surfaces a dialog covers — the four base
 surfaces, the `input` fill a form paints, the persistent `selected` fill a
 table or list keeps, the four resting filled actions, the three solid status

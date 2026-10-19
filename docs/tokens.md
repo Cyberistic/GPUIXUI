@@ -1466,8 +1466,10 @@ border box and takes no space in layout.
 An invalid control recolours that ring with `destructive` (the runtime can draw
 only one), so the error colour becomes the focus indicator. `invalidRingPairs`
 holds it to the boundary floor on the surfaces a control sits on, which are not
-the field's own fill; `destructive` on `background` is shared with the invalid
-field edge.
+the field's own fill, the pressed `selectedActive` a focused field inside a
+chosen row keeps included; `destructive` on `background` is shared with the
+invalid field edge, and an invalid slider keeps the accent ring on its `track`
+groove.
 
 A slider is the one control whose ring is painted over its own value
 indicator: the thumb is centred on the rail, so the shadow's left and right arcs
@@ -3649,7 +3651,8 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **460** across plans `527`, `557`, `595`, `619`, `650`, `651` and `659`.
+396 to **461** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`
+and `671`.
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already

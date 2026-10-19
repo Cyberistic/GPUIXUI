@@ -1177,6 +1177,14 @@ linking it", but its guard enforced only the import, so thirteen examples
 `status-panel`) were linked from neither the catalogue, the design system nor the
 README; each now sits in the section it belongs to, and `examples.test.ts` fails
 on an unlinked example or a link with no file (plan 670)
+`[x]` Hold the invalid focus ring on a pressed selected row — plan 651 gave a
+chosen row its `selectedActive` press and both documents listed the invalid ring
+on "the same surfaces" as `ring`, but `invalidRingPairs` predates that surface,
+so a theme whose `destructive` measured **1.0596:1** on light `selectedActive`
+cleared the chip's 1.05:1 floor and the boundary check returned `[]` while the
+error ring vanished; the pair joins `invalidRingPairs`, every shipped set already
+passes (3.761:1 at the tightest, XP light), and the contract grows 460 → 461
+(plan 671)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

@@ -43,6 +43,7 @@ const invalidRingSurfaces = [
   "hover",
   "active",
   "selected",
+  "selectedActive",
   "infoSoft",
   "successSoft",
   "warningSoft",

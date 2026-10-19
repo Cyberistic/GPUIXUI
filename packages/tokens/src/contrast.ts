@@ -673,7 +673,8 @@ export const ringSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
  * `destructive` when a field fails validation, and the runtime can draw only
  * one ring, so the error ring is the control's only focus indicator. It is
  * painted outside the control on the same surfaces the regular ring sits on,
- * not on the field's own fill.
+ * not on the field's own fill, and on the pressed `selectedActive` a focused
+ * field inside a chosen row keeps.
  */
 export const invalidRingPairs: readonly ContrastPair[] = [
   // `destructive` on `background` is already the ColorPicker hex field's error
@@ -682,6 +683,12 @@ export const invalidRingPairs: readonly ContrastPair[] = [
   ...ringSurfaces
     .filter((background) => background !== "background")
     .map((background): ContrastPair => ["destructive", background, "boundary"]),
+  // A selected row's press: an inline-edit field inside a chosen row is
+  // focused, invalid and pressed at once, and the field's error ring lands on
+  // `selectedActive`. Plan 651 held the normal `ring` there through
+  // `selectionPressPairs`; the error ring is this list and was missed (plan
+  // 671). `track` stays out because an invalid slider keeps the accent ring.
+  ["destructive", "selectedActive", "boundary"],
   ...softSurfaceRoles.map(
     (background): ContrastPair => ["destructive", background, "boundary"],
   ),

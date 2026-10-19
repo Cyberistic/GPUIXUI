@@ -325,6 +325,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [668](./668-scale-indexes.md) | The numeric scales' ordered indexes | F | 056, 058, 324, 358, 519, 531, 552, 066 | done |
 | [669](./669-metric-member-index-owner.md) | The metric-member index's documented owner | F | 324, 531, 668 | done |
 | [670](./670-example-links.md) | Every executed example is linked from a consumer document | F | 350, 355, 356, 616, 668 | done |
+| [671](./671-invalid-ring-pressed-row.md) | The invalid focus ring on a pressed selected row | F | 325, 340, 352, 354, 383, 651 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3538,6 +3539,16 @@ so thirteen examples were linked from neither the catalogue, the design system
 nor the README. Each now sits in the section it explains, and two cases hold the
 link set to `readdirSync(src)` in both directions: every example is linked, and
 every example link names a file that exists. No source or token value changes.
+
+Plan `671` closes the error ring on plan `651`'s new surface. `selectedActive` is
+the fill a chosen row keeps under the pointer, and both documents said an
+invalid control paints its `destructive` ring "on the same surfaces" as `ring` —
+which now includes that fill — but `invalidRingPairs` predates it. A planted
+`destructive: #E1E5EC` measures 1.0596:1 on light `selectedActive`: it clears the
+chip's 1.05:1 floor, so no surface pair caught it, and the boundary check
+returned `[]` for an error ring a reader could not see. The pair joins the list,
+every shipped set already clears its floor (3.761:1 at the tightest, XP light),
+and the contract grows 460 → 461. No colour, floor or shipped metric moves.
 
 ## How to use a plan
 
