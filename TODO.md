@@ -62,6 +62,23 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[x]` Prove the **panel and floating-layer primitives in a real window** per
+      plan `594`: `live-panel-nested` (30 checks) drives the vertical split
+      `180 → 228` and the nested split `300 → 360` without moving the other, the
+      sidebar collapsing to painted width **`0`** (not `null`) and restoring
+      `160`, a clicked divider taking native focus with Right/Left `376/360`,
+      and traversal leaving it. `live-floating` (17) measures the `1100 × 720`
+      probe frame, bottom/start content `(209, 175)`, right/start `(335, 129)`,
+      the measured `align="center"` defect (content bottom `147`, the anchor's
+      centre line) and the edge snap `641..719` instead of a flip. **2/2**
+      focused, exit `0`, two green runs after seven mutation proofs
+      (M1 `43`, M2 `167`, M3 panel bottom `1727` vs `720`, M4 `outer=360`,
+      M5 height `320`, M6 `inner=360`, M7 width `160`); a `side="top"` edge
+      mutation **passed** and is recorded as a null result. Live registry
+      `81 → 83`; the full live suite was not run (merge gate). Headless controls
+      `panel-nested,floating-placement` unchanged; the accessibility half
+      (`role`/`aria-valuetext`) stays headless (plan `197`).
+
 `[x]` Prove the **chart recipe in a real window** per plan `593`: `chart-svg`
       was the last Tier 3 rendering recipe with only `TestRenderer` evidence.
       `live-chart` (40 checks) proves the bars (`56` wide, `96/64/32` tall, on

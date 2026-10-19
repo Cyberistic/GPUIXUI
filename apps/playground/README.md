@@ -1410,7 +1410,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 76 scenarios. `smoke:live` opens
+live registry lists 83 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1432,8 +1432,10 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-tab-overflow` | a horizontal tab strip in a window: a real `deltaX` wheel pans `-240`, a vertical wheel is inert, the clipped last tab keeps painted bounds, the component reveal lands it at the trailing edge (4 px past — the strip's padding), the revealed neighbour click/focus works, the exact `scrollTo` reaches `-400`, and Home/End move selection, native focus and the reveal together — 35 checks (plan `565`) |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
+| `live-panel-nested` | the nested workspace in a window: the vertical drag grows `outer 180 → 228` and the nested drag `inner 300 → 360` without touching the other split, the sidebar collapses to painted width `0` and restores to `160`, a clicked divider takes native focus and Right/Left step it `376/360`, and traversal leaves it — 30 checks (plan `594`). `role`/`aria-valuetext` stay headless (no live a11y report) |
 | `live-motion` | the paused clock collapses a 240 px sidebar exactly: 96 px at 80 ms of a 200 ms linear tween, the inner pane stays 240 px, `onMotionComplete` fires once per tween, and a leaving toast stays painted until the exit settles — 25 checks. **`onExitComplete` fires twice live for one exit**; treat it as idempotent |
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
+| `live-floating` | the placement engine in a window: the probe frame is `1100 × 720`, the panel content sits at `(209, 175)` for bottom/start and `(335, 129)` for right/start, `align=center` still ends at the anchor's centre line (`147`) — the measured 0.10.0 defect — and the edge layer snaps to `641..719` inside the window instead of flipping — 17 checks (plan `594`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
 | `live-tab-focus` | the tab strip's focus model in a window: a synthetic `tab` key reaches the focused tab but does not traverse (so the live tab-order proof uses the renderer's own `focusNext`), nine traversal steps reach the last clipped tab with the strip's offset unchanged (focus does not reveal), one more leaves the strip, the roving strip is one stop, and End/Home move selection, focus and the reveal — 18 checks (plan `565`) |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
@@ -2067,9 +2069,11 @@ narrower. Each deviation is deliberate and measured:
   `559`'s `live-tree`, plan `565`'s two tab-strip twins and the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
   drag, and the shipped Tier 2 scroller/command paths) are all included.
-  The registry is **75**. The full suite is a **merge/release gate** —
+  The registry is **83** after the focused twins since that gate (plans
+  `591`–`594`); the full suite is a **merge/release gate** and the next run must
+  cover all 83 —
   layout, **root**, input, scroll,
-  panel, **motion**, overlay, **focus**, **selection**, **context menus**,
+  panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
   with its exact anchor, a painted **find** probe, a **live hover** card, the
   **message scroller**, the **Tier 2 choice and form families**, the

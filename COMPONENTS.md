@@ -40,12 +40,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus` | verified |
 | overlay | `overlay-dialog` | verified |
 | modal | `modal-focus-trap` | verified |
-| floating | `floating-placement` | verified |
+| floating | `floating-placement`, `live-floating` | verified |
 | select | `select-choose`, `live-select` | verified |
 | combobox | `combobox-filter`, `live-combobox` | verified |
 | tooltip | `tooltip-open`, `live-tooltip` | verified |
 | scroll | `scroll-container`, `scroll-into-view`, `tab-strip-overflow` | verified |
-| panel | `panel-resize`, `panel-nested` | verified |
+| panel | `panel-resize`, `panel-nested`, `live-panel`, `live-panel-nested` | verified |
 | virtual-list | `virtual-list-window`, `variable-rows`, `live-table`, `live-variable-rows` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table`, `live-table-sort` | verified |
 | tree | `tree-view`, `virtualized-tree`, `live-tree` | verified |
@@ -94,12 +94,15 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**). The live suite last ran in full at **75/75**
+The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**). The live suite **last ran in full at 75/75**
 (`live-report.json`, **1697 checks**, exit `0`) on 2026-10-19, the merge/release
-gate on the final branch: it includes every focused addition through plan
-`581`'s shipped Tier 2 consumer paths, so no live scenario is unrun. Both `host`
-lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a
-content origin and a borderless size — is what every geometry check now asserts.
+gate on the final branch; it covered every live scenario registered at that
+point. Every live twin added since — through plan `594`'s `live-panel-nested`
+and `live-floating` — is green in a **focused** run, so the registry now lists
+**83** scenarios and the next merge gate must run all of them; do not read the
+`75/75` total as covering them. Both `host` lines carry the pins. The 0.10.0 box
+contract (plan `529` §6.3) — bounds report a content origin and a borderless
+size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
 `getDebugFrameOverlayStats()` counts **paints**, not frame-loop ticks — an idle
@@ -150,7 +153,7 @@ a trackpad from a line wheel in a test.
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
 **75/75 green** (1697 checks) on the release-tag binding, and the **full
-live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
+live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too
 — the shell fills the window and navigates by click and
@@ -203,7 +206,14 @@ hover-opened card clicks, the grace close fires from the last hovered child, a
 re-enter cancels, and a final leave closes (`closes=2`). It also measured that
 the card's enter and the trigger's leave arrive in **one React batch** live, so
 a `prev`/`last` readout collapses them while an append-only log keeps both.
-Colour and the accessibility dump stay `TestRenderer`-only
+**`live-panel-nested` / `live-floating` (plan `594`)** close the last two
+layout/overlay gaps: the vertical split drags `180 → 228` and the nested split
+`300 → 360` without moving its parent, the sidebar collapses to a painted
+width **0**, the focused divider steps `376/360` with Right/Left, and
+`float-window` is the `1100 × 720` frame with the panel at `(209, 175)` for
+bottom/start, `(335, 129)` for right/start, `align="center"` ending at the
+anchor's centre line (`147`) and the edge layer snapping to `641..719` instead
+of flipping. Colour and the accessibility dump stay `TestRenderer`-only
 for a measured reason, not an assumption: the live automation tree carries
 `id`/`type`/`testId`/`bounds` and **no `style`**, and `GpuixRenderer` exposes no
 a11y method (`getA11yTree` is on `TestRenderer` alone).

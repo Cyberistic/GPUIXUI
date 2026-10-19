@@ -38,7 +38,9 @@ import { chartScenario } from "../scenarios/chart.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
+import { floatingScenario } from "../scenarios/floating.js";
 import { panelScenario } from "../scenarios/panel.js";
+import { panelNestedScenario } from "../scenarios/panel-nested.js";
 import { previewScenario } from "../scenarios/preview.js";
 import {
   primitivesActionsScenario,
@@ -789,6 +791,272 @@ const panel: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${panel.id}.png`);
+    }),
+};
+
+/**
+ * The nested workspace in a window.
+ *
+ * A live click focuses the divider natively (plan `190`), so the keyboard half
+ * is driven by the focused element rather than a synthetic dispatch. The
+ * divider's `role` and `aria-valuetext` stay headless: the live tree carries no
+ * accessibility report (plan `197`).
+ */
+const livePanelNested: LiveScenario = {
+  id: "live-panel-nested",
+  title: "Live panels: a vertical split, nested isolation and a collapse",
+  capability: "panel",
+  view: panelNestedScenario.view,
+  ready: "panel-state",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const state = () => textOf(ctx, "panel-state");
+      const sidebarWidth = Effect.gen(function* () {
+        const bounds = yield* ctx.host.bounds("panel-sidebar");
+        return Option.match(Option.fromNullishOr(bounds), {
+          onNone: () => 0,
+          onSome: (box) => box.width,
+        });
+      });
+
+      yield* waitForText(ctx, "panel-state", "outer=180 inner=300 sidebar=160");
+      yield* ctx.expectContains(
+        "the live workspace starts at its defaults",
+        yield* state(),
+        "outer=180 inner=300 sidebar=160",
+      );
+      yield* ctx.expectNear(
+        "the top live pane paints its initial height",
+        (yield* boxOf(ctx, "outer-pane-a")).height,
+        180,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the inner live pane paints its initial width",
+        (yield* boxOf(ctx, "inner-pane-a")).width,
+        300,
+        2,
+      );
+
+      yield* ctx.host.drag("outer-divider", 0, 48, 6);
+      yield* waitForText(ctx, "panel-state", "outer=228");
+      yield* ctx.expectContains(
+        "the live vertical drag grew the top pane",
+        yield* state(),
+        "outer=228",
+      );
+      yield* ctx.expectNear(
+        "the vertical pane repainted at its new height live",
+        (yield* boxOf(ctx, "outer-pane-a")).height,
+        228,
+        2,
+      );
+      yield* ctx.expectContains(
+        "the live vertical drag left the nested split alone",
+        yield* state(),
+        "inner=300",
+      );
+
+      yield* ctx.host.drag("inner-divider", 60, 0, 6);
+      yield* waitForText(ctx, "panel-state", "inner=360");
+      yield* ctx.expectContains(
+        "the live nested drag grew the inner pane",
+        yield* state(),
+        "inner=360",
+      );
+      yield* ctx.expectNear(
+        "the nested pane repainted at its new width live",
+        (yield* boxOf(ctx, "inner-pane-a")).width,
+        360,
+        2,
+      );
+      yield* ctx.expectContains(
+        "the live nested drag left its parent alone",
+        yield* state(),
+        "outer=228",
+      );
+
+      yield* ctx.host.click("panel-sidebar-toggle");
+      yield* waitForText(ctx, "panel-state", "sidebar=0");
+      const collapsed = yield* sidebarWidth;
+      yield* ctx.expectEqual(
+        `the collapsed live sidebar leaves the paint [width ${collapsed}]`,
+        collapsed <= 1,
+        true,
+      );
+      yield* ctx.expectContains(
+        "the live collapse left the nested split alone",
+        yield* state(),
+        "inner=360",
+      );
+
+      yield* ctx.host.click("panel-sidebar-toggle");
+      yield* waitForText(ctx, "panel-state", "sidebar=160");
+      yield* ctx.expectNear(
+        "the expanded live sidebar paints its width",
+        yield* sidebarWidth,
+        160,
+        2,
+      );
+
+      yield* ctx.host.click("inner-divider");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live divider takes native focus",
+        yield* focusedOf(ctx),
+        "inner-divider",
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "panel-state", "inner=376");
+      yield* ctx.expectContains(
+        "ArrowRight grows the focused live divider's pane",
+        yield* state(),
+        "inner=376",
+      );
+      yield* ctx.expectNear(
+        "the live keyboard resize repaints",
+        (yield* boxOf(ctx, "inner-pane-a")).width,
+        376,
+        2,
+      );
+
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* waitForText(ctx, "panel-state", "inner=360");
+      yield* ctx.expectContains(
+        "ArrowLeft shrinks it back live",
+        yield* state(),
+        "inner=360",
+      );
+
+      yield* ctx.host.focusNext();
+      yield* settle;
+      const afterDivider = yield* focusedOf(ctx);
+      yield* ctx.expectEqual(
+        `live traversal leaves the divider (to ${afterDivider})`,
+        afterDivider === "inner-divider",
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${livePanelNested.id}.png`);
+    }),
+};
+
+/**
+ * The placement engine in a window.
+ *
+ * The probe sizes itself from `useWindowSize()`, so `float-window` is the
+ * window frame and every offset below is window-relative. `align="center"`
+ * keeps the measured 0.10.0 defect here: it ends the panel at the anchor's
+ * centre line instead of centring it.
+ */
+const liveFloating: LiveScenario = {
+  id: "live-floating",
+  title:
+    "Live floating layer: side, align, the centre defect and the edge snap",
+  capability: "floating",
+  view: floatingScenario.view,
+  ready: "float-window",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForBounds(
+        ctx,
+        "float-window",
+        (box) =>
+          Math.abs(box.width - WINDOW.width) <= 1 &&
+          Math.abs(box.height - WINDOW.height) <= 1,
+      );
+      const frame = yield* boxOf(ctx, "float-window");
+      yield* ctx.expectNear(
+        "the live probe takes the window width",
+        frame.width,
+        WINDOW.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live probe takes the window height",
+        frame.height,
+        WINDOW.height,
+        1,
+      );
+
+      yield* ctx.host.click("float-anchor");
+      yield* waitForText(
+        ctx,
+        "float-readout",
+        "open=true side=bottom align=start",
+      );
+      const anchor = yield* boxOf(ctx, "float-anchor");
+      const below = yield* boxOf(ctx, "float-panel");
+      // 9 px: 1 px border + 8 px padding — the 0.10.0 content-origin box.
+      yield* ctx.expectNear(
+        "side=bottom sits one gap below the live anchor",
+        below.y,
+        anchor.y + anchor.height + 6 + 9,
+        1,
+      );
+      yield* ctx.expectNear(
+        "align=start puts the live panel on the anchor's left edge",
+        below.x,
+        anchor.x + 9,
+        1,
+      );
+
+      yield* ctx.host.click("float-switch");
+      yield* waitForText(
+        ctx,
+        "float-readout",
+        "open=true side=right align=start",
+      );
+      const right = yield* boxOf(ctx, "float-panel");
+      yield* ctx.expectNear(
+        "side=right sits one gap right of the live anchor",
+        right.x,
+        anchor.x + anchor.width + 6 + 9,
+        1,
+      );
+      yield* ctx.expectNear(
+        "align=start keeps the live panel at the anchor's top edge",
+        right.y,
+        anchor.y + 9,
+        1,
+      );
+
+      yield* ctx.host.click("float-align");
+      yield* waitForText(ctx, "float-readout", "align=center");
+      const centre = yield* boxOf(ctx, "float-panel");
+      yield* ctx.expectNear(
+        "align=center still ends at the live anchor's centre line",
+        centre.y + centre.height,
+        anchor.y + anchor.height / 2 + 7,
+        1,
+      );
+
+      yield* ctx.host.click("float-anchor");
+      yield* waitForText(ctx, "float-readout", "open=false");
+      yield* ctx.host.click("float-edge-anchor");
+      yield* waitForText(ctx, "float-readout", "edge=true");
+      const edgeAnchor = yield* boxOf(ctx, "float-edge-anchor");
+      const edgePanel = yield* boxOf(ctx, "float-panel");
+      yield* ctx.expectEqual(
+        `the live layer snapped inside the window [panel bottom ${edgePanel.y + edgePanel.height}, window bottom ${frame.y + frame.height}]`,
+        edgePanel.y + edgePanel.height <= frame.y + frame.height + 1,
+        true,
+      );
+      yield* ctx.expectEqual(
+        `the live layer stayed past the top margin [panel top ${edgePanel.y}]`,
+        edgePanel.y >= 8,
+        true,
+      );
+      yield* ctx.expectEqual(
+        `0.10.0 snaps above the live anchor instead of flipping [panel ${Math.round(edgePanel.y)}..${Math.round(edgePanel.y + edgePanel.height)}, anchor ${Math.round(edgeAnchor.y)}..${Math.round(edgeAnchor.y + edgeAnchor.height)}]`,
+        edgePanel.y + edgePanel.height > edgeAnchor.y,
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveFloating.id}.png`);
     }),
 };
 
@@ -10707,8 +10975,10 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   scroll,
   tabOverflow,
   panel,
+  livePanelNested,
   motion,
   overlay,
+  liveFloating,
   focus,
   tabFocus,
   selection,
