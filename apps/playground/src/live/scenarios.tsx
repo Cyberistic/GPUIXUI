@@ -82,6 +82,14 @@ import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
 import { tier2NavigationScenario } from "../scenarios/tier2-navigation.js";
 import { tier2ToastScenario } from "../scenarios/tier2-toast.js";
+import {
+  CARD_HEIGHT,
+  CARD_WIDTH,
+  EXIT_MS,
+  GAP,
+  INSET,
+  toastScenario,
+} from "../scenarios/toast.js";
 import { tier2ChoiceScenario } from "../scenarios/tier2-choice.js";
 import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
 import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
@@ -4266,6 +4274,223 @@ const tier2Toast: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${tier2Toast.id}.png`);
+    }),
+};
+
+const liveToast: LiveScenario = {
+  id: "live-toast",
+  title: "Live toast viewport: layering, hit-testing and focus",
+  capability: "toast",
+  view: toastScenario.view,
+  ready: "toast-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // The exit tween is driven by the clock, never by a race with a paint.
+      yield* ctx.host.pauseMotion();
+
+      yield* waitForBounds(
+        ctx,
+        "toast-root",
+        (box) =>
+          Math.abs(box.width - WINDOW.width) <= 1 &&
+          Math.abs(box.height - WINDOW.height) <= 1,
+      );
+      const frame = yield* boxOf(ctx, "toast-root");
+      yield* ctx.expectNear(
+        "the live probe takes the window width",
+        frame.width,
+        WINDOW.width,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live probe takes the window height",
+        frame.height,
+        WINDOW.height,
+        1,
+      );
+      yield* waitForText(ctx, "toast-readout", "count=0");
+
+      // One card: right/bottom placement and the 0.10.0 content box.
+      yield* ctx.host.click("toast-show");
+      yield* ctx.host.waitFor("toast-1");
+      yield* settle;
+      const first = yield* boxOf(ctx, "toast-1");
+      yield* ctx.expectNear(
+        "the card's content is inset from the right",
+        frame.x + frame.width - (first.x + first.width),
+        INSET + 9,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the card's content is inset from the bottom",
+        frame.y + frame.height - (first.y + first.height),
+        INSET + 17,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the card keeps its fixed content width",
+        first.width,
+        CARD_WIDTH - 2,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the card paints its title",
+        yield* textOf(ctx, "toast-1"),
+        "Toast 1",
+      );
+
+      // Two cards: the stack grows upward with one gap; the newest owns the
+      // bottom inset.
+      yield* ctx.host.click("toast-show");
+      yield* ctx.host.waitFor("toast-2");
+      yield* settle;
+      const firstLifted = yield* boxOf(ctx, "toast-1");
+      const second = yield* boxOf(ctx, "toast-2");
+      yield* ctx.expectNear(
+        "the second card sits one gap above the first",
+        second.y - (firstLifted.y + CARD_HEIGHT),
+        GAP,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the newest card owns the bottom inset",
+        frame.y + frame.height - (second.y + second.height),
+        INSET + 17,
+        1,
+      );
+
+      // Three cards, then the two hit-testing claims. `toast-under` sits inside
+      // the viewport's painted strip, left of the cards: `pointerEvents: "none"`
+      // is what lets the click through in a window.
+      yield* ctx.host.click("toast-show");
+      yield* ctx.host.waitFor("toast-3");
+      yield* settle;
+      yield* ctx.host.click("toast-under");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the viewport's empty strip does not block the page",
+        yield* textOf(ctx, "toast-readout"),
+        "under=1",
+      );
+      yield* ctx.host.click("toast-action");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a click beside the stack reaches the page",
+        yield* textOf(ctx, "toast-readout"),
+        "action=1",
+      );
+
+      // A painted card owns its box: the surface below it never sees the click.
+      yield* ctx.host.click("toast-2");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the page under a card never sees the click",
+        yield* textOf(ctx, "toast-readout"),
+        "behind=0",
+      );
+
+      // Dismiss through the card's own control: a real click, a frozen exit, then
+      // one clock jump. A timer racing a paint is not a deterministic exit point
+      // (plans 336 and 597).
+      yield* ctx.host.click("toast-dismiss-3");
+      yield* settle;
+      yield* ctx.expectContains(
+        "dismissing removes exactly the clicked card",
+        yield* textOf(ctx, "toast-readout"),
+        "count=2",
+      );
+      yield* ctx.expectContains(
+        "the dismiss click did not reach the page below",
+        yield* textOf(ctx, "toast-readout"),
+        "behind=0",
+      );
+      yield* ctx.expectSome(
+        "the dismissed card is still laid out while its exit is frozen",
+        Option.fromNullishOr(yield* ctx.host.bounds("toast-3")),
+      );
+      yield* ctx.host.fastForwardMotion(EXIT_MS);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the dismissed card left the tree after its exit",
+        (yield* ctx.host.bounds("toast-3")) === null,
+        true,
+      );
+      const oneAfter = yield* boxOf(ctx, "toast-1");
+      const twoAfter = yield* boxOf(ctx, "toast-2");
+      yield* ctx.expectNear(
+        "the survivors reflow with the same gap",
+        twoAfter.y - (oneAfter.y + CARD_HEIGHT),
+        GAP,
+        1,
+      );
+
+      // Focus: the field keeps focus when its submit pushes a toast, and that
+      // toast's dismiss control is the next Tab stop.
+      yield* ctx.host.click("toast-field");
+      yield* waitForFocus(ctx, "toast-field");
+      yield* ctx.host.key("enter");
+      yield* waitForText(ctx, "toast-readout", "count=3");
+      yield* ctx.expectEqual(
+        "showing a toast does not steal focus",
+        yield* focusedOf(ctx),
+        "toast-field",
+      );
+      yield* ctx.host.focusNext();
+      yield* settle;
+      yield* ctx.expectContains(
+        "Tab reaches a toast dismiss control",
+        yield* focusedOf(ctx),
+        "toast-dismiss-",
+      );
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Escape leaves the stack alone",
+        yield* textOf(ctx, "toast-readout"),
+        "count=3",
+      );
+
+      // Hover is per element and crosses the pointerEvents chain.
+      yield* ctx.host.hover("toast-4");
+      yield* waitForText(ctx, "toast-readout", "hover=4");
+      yield* ctx.host.hover("toast-field");
+      yield* waitForText(ctx, "toast-readout", "hover=none");
+
+      // A real timer removes only its own card. Freeze the clock and name both
+      // cards before the 250 ms timer starts.
+      yield* ctx.host.click("toast-clear");
+      yield* waitForText(ctx, "toast-readout", "count=0");
+      yield* ctx.host.click("toast-show");
+      yield* ctx.host.waitFor("toast-5");
+      yield* ctx.host.click("toast-show-short");
+      yield* ctx.host.waitFor("toast-6");
+      yield* waitForText(ctx, "toast-readout", "dismissed=Short");
+      yield* ctx.expectContains(
+        "only the long toast remains queued",
+        yield* textOf(ctx, "toast-readout"),
+        "count=1",
+      );
+      yield* ctx.expectSome(
+        "the long toast survived its sibling's timer",
+        Option.fromNullishOr(yield* ctx.host.bounds("toast-5")),
+      );
+      yield* ctx.host.fastForwardMotion(0);
+      yield* ctx.host.fastForwardMotion(EXIT_MS + 1);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the short toast leaves the layout after its exit",
+        (yield* ctx.host.bounds("toast-6")) === null,
+        true,
+      );
+      const survivor = yield* boxOf(ctx, "toast-5");
+      yield* ctx.expectNear(
+        "the survivor reflows to the bottom inset",
+        frame.y + frame.height - (survivor.y + survivor.height),
+        INSET + 17,
+        1,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveToast.id}.png`);
     }),
 };
 
@@ -12094,6 +12319,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Dialog,
   tier2Menu,
   tier2Toast,
+  liveToast,
   keyRouting,
   tier2Foundation,
   tier2Navigation,

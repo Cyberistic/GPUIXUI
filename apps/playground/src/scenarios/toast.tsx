@@ -40,11 +40,11 @@ import {
 } from "./toast-state.js";
 import { awaitReadout } from "./await-readout.js";
 
-const CARD_WIDTH = 380;
-const CARD_HEIGHT = 56;
-const GAP = 8;
-const INSET = 24;
-const EXIT_MS = 120;
+export const CARD_WIDTH = 380;
+export const CARD_HEIGHT = 56;
+export const GAP = 8;
+export const INSET = 24;
+export const EXIT_MS = 120;
 const LONG_MS = 5000;
 const SHORT_MS = 250;
 

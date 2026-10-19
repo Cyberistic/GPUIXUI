@@ -1418,6 +1418,16 @@ root's **last child**, because paint order is the only stacking model.
 | removal evidence | use `bounds` (`null` after the exit). `getPaintedText()` can still report the removed card's title for that frame |
 | a11y | `role="status"` + `aria-label="Notifications"` is an AccessKit `Status`; the dismiss control is a `Button` labelled `Dismiss`. There is **no live-region/announcement field**, so the static region label is all the runtime exposes |
 
+**`live-toast` (plan `623`, 38 checks) repeats the pointer chain and stacking
+rows in a real 1100 × 720 window.** A real click on the page control under the
+viewport's strip lands (`under=1`), a real click on a painted card never reaches
+the surface below it (`behind=0`), the card's 33/41 px insets and 378 px content
+width are identical to headless, a toast pushed from the focused field does not
+steal focus, and `focusNext` lands on a dismiss control. Removing
+`pointerEvents: "none"` fails the strip check; rendering the overlap surface
+after the viewport fails the dismissal. The card's own `pointerEvents: "auto"`
+is **not** load-bearing in either harness (measured null result).
+
 Same caveat as every Tier 2 probe: this is the mechanism, not `@gpuixui/components`.
 Mount the real `ToastProvider`/`ToastViewport` once that package is on the
 integration branch.

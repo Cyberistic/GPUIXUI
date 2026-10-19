@@ -66,6 +66,33 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 104/104 plans-and-harness
 
+`[x]` Prove the **toast viewport's layering and focus contract in a real window**
+      per plan `623`: `toast` was one of the last capabilities with only
+      `TestRenderer` evidence for its hit-testing and stacking mechanism.
+      `live-toast` (**38 checks**, green twice focused) reuses plan `183`'s
+      `toast-lifecycle` view in the real 1100×720 window: a click on the page
+      control under the viewport's `pointerEvents: "none"` strip lands
+      (`under=1`), a painted card owns its box and the surface below never sees
+      the click (`behind=0`), a toast pushed from the focused field's
+      `onSubmit` leaves focus there and `focusNext` lands on a
+      `toast-dismiss-*` control, Escape leaves the stack alone, a synchronous
+      dismissal stays laid out while the clock is frozen and leaves after one
+      `fastForwardMotion(EXIT_MS)` + `settle`, and a real 250 ms timer removes
+      only its own card. The 33/41 px insets and 378 px content width are
+      **identical** to headless, so the 0.10.0 box needs no live correction.
+      **Three mutation proofs** observed and reverted: removing the viewport's
+      `pointerEvents: "none"` fails the strip check (`got "under=0"`); painting
+      the overlap surface after the viewport fails the dismissal
+      (`count=3 … behind=1`); a clock jump + `settle` before the frozen read
+      fails with `expected a value, got none`. **Two measured null results:**
+      removing the card's own `pointerEvents: "auto"` changes nothing (it is
+      not load-bearing), and a clock jump without a following `settle` still
+      reports the card (the removal read needs the commit). Focused ids run:
+      `live-toast` (twice), `toast-lifecycle`; then the full headless registry
+      **104/104** (**3672** checks, 64 capabilities) and `nub run check`,
+      `nub run lint`, `nub run test` green (playground 424 tests). Live registry
+      `88 → 89`. **The full live suite was not run** (merge/release gate).
+
 `[x]` Prove the **cost model's retention half in a real window** per plan `620`:
       `live-scale` reuses plan `302`'s `scale-cost` view and adds
       `AsyncSmokeHost.retainedNodes()` over the automation tree (the same tree
@@ -1231,7 +1258,10 @@ focused id is `live-frames`.
       `nub run test` pass at that head. Artifacts:
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
-      owner/supervisor performs the final merge.
+      owner/supervisor performs the final merge. **Addendum (plan `623`):**
+      `live-toast` is registered after that gate (89 live scenarios); it was
+      verified twice focused, so the next full live run covers it and the
+      recorded 88/88 total predates it.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
