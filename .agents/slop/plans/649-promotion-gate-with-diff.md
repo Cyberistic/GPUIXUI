@@ -124,15 +124,34 @@ summary.
 
 ## 7. Acceptance
 
-- [ ] Steps 1–4 pass; the registry counts are `105` and `93`.
-- [ ] Headless full run: `105/105`, exit `0`, every capability `verified`.
-- [ ] Live full run: `93/93`, exit `0`, including `live-diff`.
-- [ ] `nub run check`, `nub run lint`, `nub run test` pass; per-package counts
+- [x] Steps 1–4 pass; the registry counts are `105` and `93`.
+- [x] Headless full run: `105/105`, exit `0`, every capability `verified`.
+- [x] Live full run: `93/93`, exit `0`, including `live-diff`.
+- [x] `nub run check`, `nub run lint`, `nub run test` pass; per-package counts
       recorded.
-- [ ] The four ledgers name this gate's numbers, not the 92/92 run.
-- [ ] Committed on `agent/playground` and pushed to `origin`.
-- [ ] The promotion row stays `[~]` (owner merges); never push to `master`.
+- [x] The four ledgers name this gate's numbers, not the 92/92 run.
+- [x] Committed on `agent/playground` and pushed to `origin`.
+- [x] The promotion row stays `[~]` (owner merges); never push to `master`.
 
 ## 8. Landed
 
-_(filled in after the run)_
+Executed 2026-10-19 on the head that adds plan `648`.
+
+- **Headless:** `105/105`, **3765** checks, 65 capabilities, exit `0`
+  (`.artifacts/smoke-report.json`; `diff=verified`).
+- **Live:** `93/93`, **2402** checks, 61 capabilities, **1062.5 s**, exit `0`
+  (`.artifacts/live-report.json`; `live-diff` included, `diff=verified`).
+- **Gates:** `nub run check`, `nub run lint` and `nub run test` green
+  (playground **432**, testing 61, components 308, primitives 282, tokens 196,
+  tw 103, icons 19, docs 7).
+- **Ledgers:** `TODO.md`'s promotion row, `COMPONENTS.md` (both totals),
+  `apps/playground/README.md` (both totals) and plan `648`/its index row now
+  cite this run; no ledger still calls the pre-`live-diff` 92/92 gate current.
+- **Left for the owner/supervisor:** the fast-forward merge of
+  `agent/playground` into `main`. The workstream never pushes to `master`.
+
+One collision to record: a second live `swarm:playground` session wrote this
+plan and committed the ledger edits at the same time as the primary session
+(B3), so the plan was committed by the primary session's next `git add`. No work
+was lost and both runs agreed; the duplicate-writer note in `TODO.md` is the
+permanent place for it.

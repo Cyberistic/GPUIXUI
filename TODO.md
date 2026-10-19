@@ -1533,6 +1533,15 @@ the duplication cost ~15 minutes and no work was lost. The turn's promotion
 record and this session's independent gate agreed (each ran the full suite);
 the ledger kept one copy. The guard is still the one-writer fix in `scripts/`.
 
+**B3 recurred again 2026-10-19 ~13:20–13:40.** Two live `swarm:playground`
+sessions (PIDs `26906` and `40524`) worked the plan-648 head at once. The second
+wrote and indexed plan `649` (the promotion gate) and committed the primary
+session's pending `PLAN.md`/`TODO.md`/README edits as `9cfa3acf`; the primary
+session's next `git add -A` then committed the untracked plan `649`. No work was
+lost, both sessions agreed on the measured gate (93/93 live, 105/105 headless),
+and plan `649` §8 is now filled with that run. The duplicate-writer guard is
+still the `scripts/` fix; this is recorded, not worked around by hand.
+
 
 ## Phase B — working foundation
 
