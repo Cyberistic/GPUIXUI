@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 153/153
+`[x]` `[████████████]` 154/154
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2031,6 +2031,15 @@ retired once both branches are one
       content square, 12/14/18) now serves both painters; `md` is unchanged.
       3 core + 3 element cases (6 fail against the old expression) and a
       6-case runtime file proving the painted side and containment (plan `640`).
+
+`[x]` `packages/primitives`: **the inventory's suite counts were unguarded, and
+      one was stale** — plan `588` made the README state the provable **file**
+      count and no test count, but `COMPONENTS.md` kept its own copy of both:
+      "57 files / 797 tests" against a measured 57/799. Plan `640` makes the
+      current count 58 files, and two new cases read both current-run passages
+      in the inventory and require exactly `${count} files`. The stale number,
+      a returning `/ 805 tests` and a deleted passage each fail by name; the
+      historical "N tests at plan …" record is left alone (plan `641`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
