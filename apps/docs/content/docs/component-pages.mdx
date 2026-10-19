@@ -90,8 +90,10 @@ approximation, where the record declares one, follows them:
 
 Two traps are worth naming: a self-closing `include` tag is silently skipped by
 Fumadocs, so the page renders without source and no build error; and an
-`auto-type-table` whose `name` is a typo renders an empty table. Both are caught
-by `src/content-references.test.ts`.
+`auto-type-table` whose `name` is a typo renders an empty table. Both are
+caught: `src/content-references.test.ts` compares the page's type names with
+the record, and `src/component-api-tables.test.ts` resolves each table against
+the file it names and requires at least one row.
 
 ## The preview
 
@@ -204,6 +206,7 @@ dark page (plan 457 §9).
 | `src/component-pages.test.ts` | every section, the usage example, the API table and the source include |
 | `src/component-truth.test.ts` | every repository path a page names exists; no placeholder prose |
 | `src/content-references.test.ts` | every include and props table resolves; the record and page agree on `api` |
+| `src/component-api-tables.test.ts` | every props table renders at least one row from the file it names |
 | `src/component-meta/registry.test.ts` | status, parts and limitations agree with the package and `COMPONENTS.md` |
 | `src/component-meta/dependencies.test.ts` | the dependency list equals the entry file's imports |
 | `src/component-meta/native-coverage.test.ts` | the runtime suite file exists and imports the component |

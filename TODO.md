@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–579)
+## Docs site workstream (plans 410–499, plus 500–581)
 
-`[~]` `[██████████]` 148/149
+`[~]` `[██████████]` 149/150
+
+`[x]` **An API table that renders nothing fails by name (plan 581)** — a
+      renamed props type or a part file that moved left the page heading with no
+      table, and nothing failed: `content-references.test.ts` compares type
+      *names*, not whether the path + name pair resolves. `type-tables.ts` parses
+      every declaration (fence-aware), and `component-api-tables.test.ts` runs
+      the app's own generator over 147 tables on 66 pages and requires at least
+      one row each. Two forced failures measured (a wrong file and an unknown
+      type) and reverted; 95 files / 676 docs tests, `check` green.
 
 `[x]` **A part name ranks its component first (plan 580)** — plan 481 made
       `CardTitle`, `FieldError`, `DialogClose` and every other declared part
