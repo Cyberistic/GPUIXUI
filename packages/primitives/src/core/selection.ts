@@ -341,6 +341,22 @@ export interface SelectableOption {
   readonly disabled?: boolean;
 }
 
+/**
+ * Whether a group reads as disabled: its own prop, or every option disabled.
+ *
+ * The group-level `StateStyle` state promises "every option is disabled"
+ * (`docs/checkbox-group.mdx`, `radio-group.mdx`, `toggle-group.mdx`), while the
+ * behaviour only needs the prop. An **empty** group is not disabled — it has no
+ * option to disable (plan `639`).
+ */
+export const groupDisabled = (
+  disabled: boolean,
+  options: ReadonlyArray<SelectableOption>,
+): boolean =>
+  disabled ||
+  (!Arr.isReadonlyArrayEmpty(options) &&
+    Arr.every(options, (option) => option.disabled === true));
+
 /** The group's tab stop: the selected option's index, else the first enabled one. */
 export const initialActiveIndex = <Item extends SelectableOption>(
   options: ReadonlyArray<Item>,

@@ -2012,6 +2012,16 @@ retired once both branches are one
       role/name/tab stop already used); a labelled area still opens on hover and
       `Tab`. 1 element + 1 runtime case, both directions proven (plan `638`).
 
+`[x]` `packages/primitives`: **an all-disabled selection group told its style
+      callback it was enabled** — the three group pages define the group
+      `StateStyle.disabled` as "every row/option/item is disabled", but each
+      root passed only its own prop: `<CheckboxGroup options={[{…, disabled:
+      true}]}>` delivered `disabled: false` while every row refused input and no
+      row was a tab stop. One `groupDisabled` rule (the prop **or** every option,
+      and never an empty group) now feeds `CheckboxGroup`, `RadioGroup` and
+      `ToggleGroup`; core + 3 element cases, all four failing against the old
+      rule (plan `639`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

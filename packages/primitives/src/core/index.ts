@@ -151,6 +151,7 @@ export type {
 } from "./layout.js";
 
 export {
+  groupDisabled,
   initialActiveIndex,
   radioDotStyle,
   SELECTION_ACCENTS,

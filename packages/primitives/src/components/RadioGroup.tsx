@@ -29,6 +29,7 @@ import {
   moveFrom,
 } from "../core/keyboard.js";
 import {
+  groupDisabled,
   initialActiveIndex,
   radioDotStyle,
   selectionBoxStyle,
@@ -223,7 +224,7 @@ export const renderRadioGroup = (
         },
         props.style,
         {
-          disabled: props.disabled === true,
+          disabled: groupDisabled(props.disabled === true, options),
           invalid: props.invalid === true,
         },
       )}

@@ -30,7 +30,7 @@ import {
   decideMove,
   moveFrom,
 } from "../core/keyboard.js";
-import { initialActiveIndex } from "../core/selection.js";
+import { groupDisabled, initialActiveIndex } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import {
   isPressed,
@@ -185,7 +185,7 @@ export const renderToggleGroup = (
           gap: theme.spacing["2xs"],
         },
         props.style,
-        { disabled: props.disabled === true },
+        { disabled: groupDisabled(props.disabled === true, options) },
       )}
     >
       {Arr.map(options, (option, index) => {

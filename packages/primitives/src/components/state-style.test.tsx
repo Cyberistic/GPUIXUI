@@ -374,6 +374,63 @@ describe("group roots and overlays", () => {
     expect(background(element)).toBe(PAINT);
   });
 
+  it("CheckboxGroup reports disabled when every option is disabled", () => {
+    // The bug guarded (plan 639): the group state passed only the group prop,
+    // so an all-disabled group told a style callback it was enabled while every
+    // row reported disabled and refused input.
+    const record = recorder<CheckboxGroupState>();
+    renderCheckboxGroup(
+      {
+        options: [{ value: "alpha", label: "Alpha", disabled: true }],
+        style: record.style,
+      },
+      testTheme,
+      arrayState([]),
+      groupFocus,
+      { onToggle: vi.fn(), onToggleAll: vi.fn() },
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: false,
+    });
+  });
+
+  it("RadioGroup reports disabled when every option is disabled", () => {
+    const record = recorder<RadioGroupState>();
+    renderRadioGroup(
+      {
+        options: [{ value: "alpha", label: "Alpha", disabled: true }],
+        style: record.style,
+      },
+      testTheme,
+      textState("alpha"),
+      0,
+      groupFocus,
+      { onSelect: vi.fn(), onFocusMove: vi.fn(), registerItem: () => () => {} },
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      invalid: false,
+    });
+  });
+
+  it("ToggleGroup reports disabled when every option is disabled", () => {
+    const record = recorder<ToggleGroupState>();
+    renderToggleGroup(
+      {
+        type: "multiple",
+        options: [{ value: "bold", label: "Bold", disabled: true }],
+        style: record.style,
+      },
+      testTheme,
+      arrayState([]),
+      0,
+      groupFocus,
+      { onPress: vi.fn(), onFocusMove: vi.fn(), registerItem: () => () => {} },
+    );
+    expect(lastState(record.seen)).toStrictEqual({ disabled: true });
+  });
+
   it("Rating reports disabled and invalid on its box", () => {
     const record = recorder<RatingState>();
     const handlers: RatingHandlers = {

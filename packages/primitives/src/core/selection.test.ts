@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {
+  groupDisabled,
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
@@ -288,5 +289,23 @@ describe("switch", () => {
       switchTrackStyle(spec({ focused: true }), testTheme).boxShadow?.color,
     ).toBe(testTheme.colors.ring);
     expect(switchTrackStyle(spec(), testTheme).boxShadow).toBeUndefined();
+  });
+});
+
+describe("groupDisabled", () => {
+  it("reads a group as disabled when its prop or every option is disabled", () => {
+    // The bug guarded (plan 639): the three group pages define the group
+    // `StateStyle.disabled` as "every option is disabled", but each root passed
+    // only its own prop, so an all-disabled group told a style callback it was
+    // enabled while every row refused input.
+    const enabled = { value: "b" } as const;
+    const disabled = { value: "a", disabled: true } as const;
+    expect(groupDisabled(true, [])).toBe(true);
+    expect(groupDisabled(true, [enabled])).toBe(true);
+    expect(groupDisabled(false, [disabled])).toBe(true);
+    expect(groupDisabled(false, [disabled, enabled])).toBe(false);
+    expect(groupDisabled(false, [enabled])).toBe(false);
+    // An empty group has no option to disable, so it is not disabled.
+    expect(groupDisabled(false, [])).toBe(false);
   });
 });
