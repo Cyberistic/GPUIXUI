@@ -24,10 +24,18 @@ features documented on `references/gpuix` `main`, which is ahead of the release.
 **Measured native evidence** is separate, and it is what a `done` row needs. It
 comes from the native smoke suite in this repo, run **on this host** against a
 `@gpuix/native@0.10.0` built from source with `gpui_macos/runtime_shaders`
-(ADR 0003). **Provenance caveat (plan `529`):** that artifact is compiled from
-the `references/gpuix` **`main`** tree, not the published 0.10.0 release tag
-(`9fcd6288…`), so a verdict read from it describes GPUix's current source, not
-necessarily what a consumer installs. Plan `529` records the measured deltas.
+(ADR 0003). **Provenance caveat (plan `529`):** the artifact this table was first
+measured on was compiled from the `references/gpuix` **`main`** tree, not the
+published 0.10.0 release tag (`9fcd6288…`), so a verdict read from it described
+GPUix's current source, not necessarily what a consumer installs. Plan `529`
+records the measured deltas.
+The artifact in the shared store is now the **release-tag** build (plan `529`;
+`strings` reports `focusVisible=0`). It delivers **no `onFocus`/`onBlur`**
+(measured, plan `583`), so the focus rings in the Tier 1 rows below are **not**
+evidence for a 0.10.0 consumer: on the release runtime a control paints no ring,
+while role, name, tab order, keys and activation still work. Every focusable
+page states that limitation, and `src/docs-focus-events.test.ts` guards the
+claim.
 The Tier 1 rows below stay `wip` until their suite is re-run on a published-tag
 build. Reproduce it with:
 
@@ -87,7 +95,7 @@ README/types document it, but no run has confirmed it here).
 | Theme extension | done | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. The gallery mounts through `ThemeProvider` and the switch re-renders the subtree natively. |
 | High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; `theme-color-roles` asserts all 47 roles in high contrast and that its colour set differs from dark and light. Docs in `docs/tokens.md`. **Runtime (055):** Tier 1 paints only the high-contrast palette in both modes, and a switch from high-contrast light to dark repaints the mounted tree. |
 | Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. The soft roles are covered by `theme-color-roles`. |
-| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. **Release-runtime caveat (583):** the published 0.10.0 build never dispatches `onFocus`/`onBlur`, so the ring cannot paint on a consumer install; every focusable page states it and `docs/gpuix-capabilities.md` §4 has the probe. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. **Runtime (055):** a control's painted height follows the active density preset, colours stay the theme's, and selection boxes remain icon-sized. **Conformance exception (370, 372):** the whole field family (`Input`, `TextArea`, `Select`'s trigger, `NumberField`, `OTPField`) reads shadcn's new-york-v4 field recipe through `@gpuixui/tw` (36 px, one size) and `Button` reads the button table (32/36/40), so those do not follow density; the presets and every other control do. The runtime density proof therefore uses `Toggle`. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. **Runtime (055):** a code role's `fontFamily` changes with `platformTheme`, and switching platform repaints the mounted tree. Native visual check of the sans sentinel is still pending the playground (B1). |
 | Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`). |

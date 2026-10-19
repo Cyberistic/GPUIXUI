@@ -189,7 +189,7 @@ a value, and must report it through the accessibility tree (plan `574`).
 
 | Capability | GPUix 0.10.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332). An **attached `ButtonGroup`** clips at its buttons' edge, so a button in one paints the same ring as an inset overlay on its own edge instead (plan 344) |
+| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332). An **attached `ButtonGroup`** clips at its buttons' edge, so a button in one paints the same ring as an inset overlay on its own edge instead (plan 344). **The published 0.10.0 runtime delivers no `onFocus`/`onBlur`**, so the ring is absent on a consumer install of the pinned release; it paints on GPUix `main`. The probe and the decision are in [`docs/gpuix-capabilities.md`](../../docs/gpuix-capabilities.md#focus-events) and plan `583` |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
@@ -254,11 +254,15 @@ offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
 runtime-proven too. Measured 2026-10-19 on this host: **46 files, 700 tests, 589
-passing / 111 failing** — the failures are the focus-ring and absolute-geometry
-delta of the locally built `main`-derived binding, recorded with evidence in
-`TODO.md` (the full-live-suite row) and plan `529`; the same suite was green on
-the previous day's 21:25 baseline, and no assertion has been re-baselined on the
-newer artifact. The contracts it proves include a theme switch on a mounted tree, using the shipped `lightTheme` /
+passing / 111 failing**. The failures are measured runtime facts, not an
+artifact guess: the store artifact is the **release-tag** build (plan `529`;
+`strings` reports `focusVisible=0`), it delivers **no focus events** (plan
+`583`), and its `getElementBounds` reports the published box model (plan `529`
+§6.5). The focus-ring cases therefore paint no ring and the absolute-geometry
+cases are short by the box's padding/border. No assertion has been
+re-baselined on this build; the ring's limitation is documented on every
+focusable page (plan [`583-release-runtime-focus.md`](../../.agents/slop/plans/583-release-runtime-focus.md)). The contracts it covers include a theme switch on a mounted tree,
+using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching

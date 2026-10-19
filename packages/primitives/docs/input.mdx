@@ -62,6 +62,12 @@ handler, not to a field.
 
 ## Accessibility
 
+- **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
+  delivers no `onFocus`/`onBlur` to a component
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
+  control paints no focus ring on a consumer install of 0.10.0; the ring paints
+  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
+  keyboard operation and activation are unaffected.
 - The native element is announced as `TextInput`.
 - The name comes from `label`; there is no `aria-labelledby`, so a visible
   `Label` is not associated by reference.

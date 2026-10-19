@@ -136,7 +136,7 @@ verdict, the evidence, and the honest workaround.
 | Animation interruption | **supported** | a target change resumes from the current visible value | — |
 | Reduced-motion detection | **unverified** | no documented API or type in 0.10.0 | expose an app-owned preference prop |
 | Custom paint (`<canvas>`) | **unverified** | the element is in `ElementType`, but the README marks custom drawing "planned" and no drawing API is published | `<svg>` for static shapes; `setImagePixels` for frames |
-| Pointer, keyboard, focus and scroll events | **supported** | `host.d.ts` · `HostProps` handlers: `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange` | — |
+| Pointer, keyboard, focus and scroll events | **partial** | `host.d.ts` · `HostProps` declares `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange`. **Focus events are not delivered:** measured on 0.10.0, native focus moves and `getFocusedElementId()` tracks it, but `onFocus`/`onBlur` never run (see [Focus events](#focus-events)) | drive focus from the renderer (`focusElement`, `focusNext`, `getFocusedElementId`); a focus **ring** cannot follow — document it per control and paint the ring on a runtime that dispatches the events |
 | Scroll offset and layout reporting (`onScrollChange`, `onLayout`) | **not supported** | no `onScrollChange` and no `onLayout` in the 0.10.0 `HostProps` (main-only; §6) | read `renderer.getScrollOffset(elementId)` — it is already the post-scroll, clamped offset inside the `onScroll` handler (measured, plan `337`); measure with `getElementBounds` |
 | `role` plus a subset of `aria-*` | **partial** | `host.d.ts` · `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`/`max`, `aria-disabled`, `aria-labelledby`, `aria-describedby`, `aria-invalid` | carry state in `aria-valuetext`/`aria-selected`; describe with `aria-description`; put a label inside one interactive element |
 | System appearance or high-contrast detection | **unverified** | `GpuixTheme.appearance` is set by the app; no OS preference API in 0.10.0 | the app owns the theme choice |
@@ -168,7 +168,40 @@ Consequences, all recorded in component rows:
 - text does not name an interactive ancestor: a text-only `Button` derives its
   name from its children in component code;
 - a focus ring is a zero-blur, spread-only `boxShadow` applied while the
-  component holds focus, so a mouse press shows it too.
+  component holds focus, so a mouse press shows it too. **On published 0.10.0
+  that ring never appears**, because no focus event reaches the component (see
+  below).
+
+### Focus events
+
+`HostProps` declares `onFocus` and `onBlur`, and `@gpuix/native` keeps focus
+handles for anything with a `tabIndex`, a key listener or a focus listener. The
+published 0.10.0 build nonetheless delivers **neither event**. Measured on this
+host, 2026-10-19, against the release-tag build of plan 529 (`strings` reports
+`focusVisible=0`, so it is not the main-derived artifact):
+
+| Action | `getFocusedElementId()` | `onFocus` | `onBlur` | `onKeyDown` |
+| ------ | ----------------------- | --------- | -------- | ----------- |
+| mount | `null` | 0 | 0 | 0 |
+| `renderer.focusElement(id)` + `dispatchNativeEvents()` | `1` | **0** | **0** | 0 |
+| `renderer.focusNext()` + `dispatchNativeEvents()` | `1` | **0** | **0** | 0 |
+| `nativeSimulateClick(x, y)` | `1` | **0** | **0** | 0 |
+| `nativeSimulateKeyDown(id, "enter")` | `1` | 0 | 0 | **1** |
+
+Focus itself is real: the id is reported exactly, and key delivery follows it.
+Only the **events** are missing. Consequences:
+
+- a component can **move** focus (`renderer.focusElement`, `focusNext`) and can
+  **read** the focused id, but cannot be notified when focus arrives or leaves;
+- every Tier 1 focus ring is paint-while-focused, so it is absent on a 0.10.0
+  consumer install. The same 19-case focus matrix passes on the main-derived
+  binding, so this is a runtime defect, not a component one;
+- keyboard operation is unaffected: Tab order, key delivery, activation and the
+  accessible name all work. The missing cue is the visible ring;
+- a polling tracker is the only workaround (read `getFocusedElementId` on a
+  timer). It costs a cross-thread query per tick and up to one tick of latency,
+  so the package documents the limitation instead; the design and the decision
+  are in plan `583` §7.
 
 ### Animation and motion
 
@@ -223,7 +256,10 @@ These are library laws, not suggestions:
    headless part does **not** paint one for you: GPUix's `SelectTrigger` sets
    `tabIndex` and the key/click handlers but no focus state and no ring, so a
    themed wrapper tracks focus itself and rings while its popover is open too
-   (plan `083`).
+   (plan `083`). **The published 0.10.0 runtime delivers no focus event**, so
+   that tracked state cannot become true; see [Focus events](#focus-events) and
+   plan `583`. Paint the ring from `onFocus` for runtimes that dispatch it, and
+   state the limitation wherever a consumer meets the control.
 2. **State for assistive technology** rides on `role`, `aria-valuetext`,
    `aria-selected`, `aria-expanded` and `aria-description`; there is no checked
    or numeric-value prop.
@@ -284,6 +320,20 @@ grep -c 'class TestRenderer' "$T"               # 1
 grep -c 'unverified' docs/gpuix-capabilities.md # at least 3
 nub run --filter @gpuixui/primitives test       # the doc contract test passes
 ```
+
+Focus events are a behavioural fact, not a type one. Reproduce the
+measurement in [Focus events](#focus-events) with the focus matrix:
+
+```sh
+cd packages/primitives
+nub exec vitest run --config vitest.runtime.config.ts runtime/focus-ring.runtime.test.tsx
+# release-tag 0.10.0 build: 19 failed — "the control painted no ring"
+# main-derived build:        19 passed
+```
+
+A release-tag build is identifiable before running anything: `strings -a
+node_modules/.store/node_modules/@gpuix/native/gpuix-native.darwin-x64.node |
+grep -c focusVisible` prints `0` (release) or `1` (main-derived).
 
 If `$H` is empty, the pinned version changed: read the new declarations and
 update the version row, the table and the contract test together. If any of the

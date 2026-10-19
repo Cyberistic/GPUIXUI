@@ -1341,17 +1341,22 @@ retired once both branches are one
       the host, not a component (plan `379` §6). Re-run from a fresh desktop
       session before merging; relative measurements (the new suites) are the
       robust shape. Owner: whoever merges this branch.
-      **Root cause, measured 2026-10-18 23:20:** the shared store's
-      `gpuix-native.darwin-x64.node` was rebuilt at 22:45 (the 21:25 baseline was
-      green at `618/618`), and the replay is **112 failed**, now also showing
-      hit-tested clicks landing off their target and the recipe heights short by
-      a border width — a *different* failure set from plan `379`'s, not the same
-      host degradation. The binding-gaps workstream's plan `529` records why the
-      artifact is not the published 0.10.0 at all: it is built from a moving
-      `references/gpuix` main, and the newer source changed bounds tracking, hit
-      testing and the frame model. Do **not** re-baseline these assertions on the
-      current artifact; the scoped relative suites remain valid, and the full
-      suite waits for plan `529`'s published-tag build.
+      **Root cause, corrected 2026-10-19:** the shared store's
+      `gpuix-native.darwin-x64.node` was rebuilt at 23:35 from the **published
+      0.10.0 release tag** (the binding-gaps workstream's plan `529`; `strings`
+      reports `focusVisible=0` and `registerFont=0`, so it is not the
+      main-derived build). The 21:25 baseline was green on the earlier artifact.
+      The replay is **112 failed**, and the two classes are now measured runtime
+      facts rather than artifact drift: (1) the release build delivers **no
+      `onFocus`/`onBlur`** — focus moves and `getFocusedElementId()` follows it,
+      but the events never run — so every ring assertion fails (19/19 in
+      `focus-ring`); that limitation is documented and guarded by plan `583`;
+      (2) `getElementBounds` reports the published box model, so absolute
+      hit-test and pixel assertions are short by a padding/border (plan `529`
+      §6.5). Do **not** re-baseline the focus assertions — the ring is absent on
+      this runtime by contract; the geometry assertions need the merged
+      published-box decision before anyone edits them. The scoped relative
+      suites remain valid.
       **Re-measured 2026-10-18 23:48 (artifact rebuilt 23:35):** 656 tests,
       **544 passed / 112 failed across 20 failing files** — the same
       focus/activation/trigger/geometry families (`fields` 30, `focus-ring` 19,
@@ -1528,8 +1533,30 @@ retired once both branches are one
       nothing, the same blank-string rule plan `026` applied to names. 1 element
       case covering all three, failing in the old direction (offline 741 → 743;
       plan `580`).
+`[x]` `packages/primitives`: **the focus ring is absent on the pinned release
+      runtime, and nothing said so** — measured on the store's release-tag build
+      (plan `529`): `focusElement`, `focusNext` and a hit-tested click all move
+      native focus and `getFocusedElementId()` reports it, while `onFocus` and
+      `onBlur` run **0** times (key delivery works: `onKeyDown` = 1). The
+      19-case focus matrix therefore fails **19/19** on the release build and
+      passes on the main-derived one, and the capability table still called
+      focus events "supported" while the README blamed the artifact. The table
+      is now `partial` with a probe table, all 19 focus-painting pages state the
+      limitation and link it, the README names the release build, and
+      `src/docs-focus-events.test.ts` (5 cases) fails by page/name in four
+      mutation directions (removed notice, reverted verdict, a new ring
+      promise, the old artifact excuse). The polling tracker is designed and
+      deferred with its cost recorded (plan `583` §7; offline 745 → 750).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
+
+`[ ]` **components + docs-site workstreams**: plan `583` measured that the
+      published 0.10.0 runtime delivers **no `onFocus`/`onBlur`**, so every Tier 2
+      focus ring is absent on a consumer install (the same defect primitives'
+      19 pages now state, guarded by `src/docs-focus-events.test.ts`). The
+      components pages and their docs-site copies still promise rings. Add the
+      same one-line notice and link; the evidence is
+      `docs/gpuix-capabilities.md#focus-events` (owners: components, docs-site).
 
 `[ ]` **docs-site workstream**: the `SUMMARIES` override table in
       `apps/docs/src/lib/api-values.ts` must drop the twelve primitives keys now

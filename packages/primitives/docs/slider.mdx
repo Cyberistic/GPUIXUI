@@ -71,6 +71,12 @@ slider is a single tab stop, and the focus ring is painted on the thumb.
 
 ## Accessibility
 
+- **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
+  delivers no `onFocus`/`onBlur` to a component
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
+  control paints no focus ring on a consumer install of 0.10.0; the ring paints
+  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
+  keyboard operation and activation are unaffected.
 - Role: `slider` (AccessKit `Slider` — verified in the real renderer).
 - The value is announced through **`aria-valuetext`**; GPUix 0.10.0 has no
   `aria-valuenow`, `aria-valuemin` or `aria-valuemax`, so a screen reader hears

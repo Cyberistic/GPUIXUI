@@ -73,6 +73,12 @@ takes no focus.
 
 ## Accessibility
 
+- **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
+  delivers no `onFocus`/`onBlur` to a component
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
+  control paints no focus ring on a consumer install of 0.10.0; the ring paints
+  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
+  keyboard operation and activation are unaffected.
 - The group is `role="group"` with `aria-label`; each thumb is `role="slider"`
   (AccessKit `Slider` and `Group`, verified in the real renderer).
 - Each thumb announces its own value through `aria-valuetext`. There is no
