@@ -527,19 +527,22 @@ const fixedMarks = [
  *   minimum width less the field's two borders and horizontal padding — and the
  *   same minimum holds the query row the token documents: the field's
  *   `spacing.md` padding, a leading `md` icon, the gap, one
- *   `body` query glyph, the same gap and the trailing `fieldAdornmentSize`
- *   action; a date
+ *   `body` query glyph, the same gap, the trailing `fieldAdornmentSize` action
+ *   and the field's two borders; a date
  *   trigger holds its own insets, its gap, one `label` glyph and the `sm`
  *   disclosure icon it paints, the overlay scroll height fits one row, because a list
- *   viewport shorter than a row clips every option, the message viewport fits
- *   one row for the same reason, a keycap's content box holds one caption line
- *   plus its two borders,
+ *   viewport shorter than a row clips every option, the message viewport holds
+ *   one row inside its own `spacing.md` padding and two borders, and the preview
+ *   card leaves a content box inside its `spacing.lg` padding and two borders.
+ *   A keycap's content box holds one caption line plus its two borders,
  *   because `Keycap` paints caption text inside it, a field's adornment holds
  *   one `caption` line, the glyph its clear control paints, the drawer widths and
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a dialog's
- *   and a drawer's smallest shell holds its padding, the header's reserved step
- *   for the close control and one `h3` title glyph, and a bottom drawer's
+ *   and a drawer's smallest shell holds the surface's `spacing["2xl"]` inset on
+ *   the left, the greater of the shell's two `spacing["2xl"]` right insets and
+ *   the close control's reach (`spacing.lg + controlHeight.sm`) on the right,
+ *   and one `h3` title glyph, and a bottom drawer's
  *   smallest height holds the close zone, one row and its bottom padding, every
  *   one of those surfaces holding its chrome inside its own two
  *   `borderWidth.thin` edges — the shipped widths need 90 and the height 98 —
@@ -552,8 +555,9 @@ const fixedMarks = [
  *   (`borderWidth.thin`), because a mark thinner than the smallest stroke a
  *   border may paint does not read; the timeline marker already reads the rail
  *   it marks. The menu's minimum width, the Toast card and the notification inbox follow
- *   the same content-box rule: each holds its row or card chrome plus its own two
- *   borders, the Toast card counting its `toastToneBarWidth` tone bar and the
+ *   the same content-box rule: the menu charges the surface's `spacing.xs`
+ *   padding beside its row, the Toast card holds its row chrome plus its own two
+ *   borders and counts its `toastToneBarWidth` tone bar and the
  *   square `sm` dismiss control it always paints after one `spacing.lg` gap
  *   because the title column flexes and the control does not, and the inbox's
  *   maximum height contains the header above
@@ -628,6 +632,15 @@ export function themeMetricFailures(
     elevation,
     motion,
   } = theme;
+  // A dialog's or drawer's close control is a square `controlHeight.sm` at
+  // `spacing.lg` from the inner right edge. The title keeps clear of the closer
+  // of that control and the shell's right inset plus the header's reserve
+  // (`2 * spacing["2xl"]`), so the shell reserves the larger
+  // (`dialog.tsx`, `drawer.tsx`).
+  const shellCloseReserve = Math.max(
+    2 * spacing["2xl"],
+    spacing.lg + density.controlHeight.sm,
+  );
   // The shape bounds name an extreme, not a shipped member: a copied scale may
   // carry a larger corner, control or avatar, or a smaller avatar, and the
   // ladder rules already govern that member. A broken scale yields no bound, so
@@ -885,6 +898,15 @@ export function themeMetricFailures(
       ],
       "increasing",
     ),
+    // The preview card paints `spacing.lg` padding inside its own two borders,
+    // so its minimum width has to leave a content box. `spacing["2xs"]` is the
+    // hairline step a content box may not fall below (`preview-card.tsx`).
+    ...atLeast(
+      "dimensions",
+      "previewCardMinWidth",
+      dimensions.previewCardMinWidth,
+      2 * spacing.lg + spacing["2xs"] + 2 * borderWidth.thin,
+    ),
     ...ladder(
       "dimensions",
       [
@@ -905,13 +927,13 @@ export function themeMetricFailures(
     ),
     // The field's content box holds one of the two compositions its minimum
     // width exists for: a token-input chip, or the query row `docs/tokens.md`
-    // documents — a leading icon, the query and a trailing action. The chip
-    // needs the field's two borders and its horizontal control padding; the
-    // query row paints the field's own `spacing.md` padding and two gaps
-    // (`SearchInput`). The lead is the `md` icon tier the component paints and
-    // the action is the adornment the token names; the shipped tiers are equal,
-    // so the bound does not move (plan 634). The larger bound wins, so one
-    // value keeps one diagnostic.
+    // documents — a leading icon, the query and a trailing action. Both sit
+    // inside the field's two `borderWidth.thin` edges; the chip needs its
+    // horizontal control padding, the query row paints the field's own
+    // `spacing.md` padding and two gaps (`SearchInput`). The lead is the `md`
+    // icon tier the component paints and the action is the adornment the token
+    // names; the shipped tiers are equal, so the bound does not move (plans 634
+    // and 645). The larger bound wins, so one value keeps one diagnostic.
     ...atLeast(
       "dimensions",
       "fieldMinWidth",
@@ -924,28 +946,37 @@ export function themeMetricFailures(
           iconSize.md +
           2 * spacing.md +
           typography.body.fontSize +
-          dimensions.fieldAdornmentSize,
+          dimensions.fieldAdornmentSize +
+          2 * borderWidth.thin,
       ),
     ),
-    // A dialog's shell holds its own close control: `spacing["2xl"]` padding on
-    // both sides, the same step reserved in the header for the control, and one
-    // `h3` title glyph, inside the face's two `borderWidth.thin` edges (plan
-    // 627). The title wraps; the padding and the control do not, so a narrower
-    // surface clips the chrome it always paints (plan 625).
+    // A dialog's shell holds its own close control: the surface's `spacing["2xl"]`
+    // inset on the left, the greater of the shell's two `spacing["2xl"]` right
+    // insets and the close control's reach (`spacing.lg + controlHeight.sm`) on
+    // the right, and one `h3` title glyph, inside the face's two
+    // `borderWidth.thin` edges (plans 627 and 645). The title wraps; the padding
+    // and the control do not, so a narrower surface clips the chrome it always
+    // paints (plan 625).
     ...atLeast(
       "dimensions",
       "dialogWidthSm",
       dimensions.dialogWidthSm,
-      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin,
+      2 * borderWidth.thin +
+        spacing["2xl"] +
+        typography.h3.fontSize +
+        shellCloseReserve,
     ),
-    // A drawer's header is the dialog's: same padding, same reserved step, same
-    // `sm` close control and `h3` title, inside its two borders. The width ladder
-    // carries the bound to `md` and `lg`.
+    // A drawer's header is the dialog's: same inset, same close-control reserve
+    // and the same `h3` title, inside its two borders. The width ladder carries
+    // the bound to `md` and `lg`.
     ...atLeast(
       "dimensions",
       "drawerWidthSm",
       dimensions.drawerWidthSm,
-      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin,
+      2 * borderWidth.thin +
+        spacing["2xl"] +
+        typography.h3.fontSize +
+        shellCloseReserve,
     ),
     // A bottom drawer is a column: the close control's zone from the top edge
     // (`spacing.lg` plus the control, which is wider than the padding), one
@@ -975,12 +1006,14 @@ export function themeMetricFailures(
             iconSize.sm,
         )
       : []),
-    // A message viewport shorter than one row clips every message it holds.
+    // A message viewport is one row inside its own padding and borders; a
+    // theme that shrinks it to the row alone leaves no content box for that
+    // row (`chat.tsx` paints `spacing.md` and two `borderWidth.thin` edges).
     ...atLeast(
       "dimensions",
       "chatViewportMinHeight",
       dimensions.chatViewportMinHeight,
-      density.rowHeight,
+      density.rowHeight + 2 * spacing.md + 2 * borderWidth.thin,
     ),
     // The active carousel mark may elongate; it may not shrink below the idle
     // dot it replaces.
@@ -1122,17 +1155,19 @@ export function themeMetricFailures(
             2 * borderWidth.thin,
         )
       : []),
-    // The narrowest overlay row: `spacing.md` padding on both sides, one `md`
-    // leading icon (the `sm` trailing check and its gap are narrower), the
-    // `md` gap and one `label` glyph, inside the menu surface's two
-    // `borderWidth.thin` edges (plan 627). The 2px highlight bar is paid for out
-    // of the row's left padding, so it does not widen the bound.
+    // The narrowest overlay row: the menu surface's `spacing.xs` padding on
+    // both sides, a row's `spacing.md` padding on both sides, one `md` leading
+    // icon (the `sm` trailing check and its gap are narrower), the `md` gap and
+    // one `label` glyph, inside the menu surface's two `borderWidth.thin`
+    // edges (plans 627 and 645). The 2px highlight bar is paid for out of the
+    // row's left padding, so it does not widen the bound.
     ...(usableBound(dimensions.overlayMinWidth)
       ? atLeast(
           "dimensions",
           "overlayMinWidth",
           dimensions.overlayMinWidth,
-          2 * spacing.md +
+          2 * spacing.xs +
+            2 * spacing.md +
             iconSize.md +
             spacing.md +
             typography.label.fontSize +

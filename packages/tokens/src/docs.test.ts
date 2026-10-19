@@ -2704,6 +2704,7 @@ describe("docs/design-system.md", () => {
       typography.bodyStrong.fontSize +
       2 * borderWidth.thin;
     const overlayBound =
+      2 * spacing.xs +
       2 * spacing.md +
       iconSize.md +
       spacing.md +
@@ -2711,8 +2712,13 @@ describe("docs/design-system.md", () => {
       2 * borderWidth.thin;
     const headroom = (value: number, bound: number): string =>
       (value / bound).toFixed(2);
-    const sentence = `The shipped \`${dimensions.toastWidth} / ${dimensions.notificationPanelWidth} / ${dimensions.overlayMinWidth}\` clear the three by \`${headroom(dimensions.toastWidth, toastBound)}× / ${headroom(dimensions.notificationPanelWidth, panelBound)}× / ${headroom(dimensions.overlayMinWidth, overlayBound)}×\``;
+    const sentence = `The shipped \`${dimensions.toastWidth} / ${dimensions.notificationPanelWidth} / ${dimensions.overlayMinWidth}\` clear the three content bounds by \`${headroom(dimensions.toastWidth, toastBound)}× / ${headroom(dimensions.notificationPanelWidth, panelBound)}× / ${headroom(dimensions.overlayMinWidth, overlayBound)}×\``;
     expect(markdownProse).toContain(sentence);
+    const chatBound =
+      defaultDensity.rowHeight + 2 * spacing.md + 2 * borderWidth.thin;
+    const previewBound = 2 * spacing.lg + spacing["2xs"] + 2 * borderWidth.thin;
+    const secondary = `and the ${dimensions.chatViewportMinHeight}px message viewport and ${dimensions.previewCardMinWidth}px preview card clear theirs at \`${headroom(dimensions.chatViewportMinHeight, chatBound)}× / ${headroom(dimensions.previewCardMinWidth, previewBound)}×\``;
+    expect(markdownProse).toContain(secondary);
   });
 
   it("states that a fixed surface fits its own border", () => {
@@ -2743,7 +2749,8 @@ describe("docs/design-system.md", () => {
       iconSize.md +
       2 * spacing.md +
       typography.body.fontSize +
-      dimensions.fieldAdornmentSize;
+      dimensions.fieldAdornmentSize +
+      2 * borderWidth.thin;
     const chip =
       dimensions.chipMinWidth +
       2 * defaultDensity.controlPaddingX.md +
@@ -2754,7 +2761,13 @@ describe("docs/design-system.md", () => {
 
   it("states the dialog and drawer shell bounds", () => {
     const width =
-      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin;
+      2 * borderWidth.thin +
+      spacing["2xl"] +
+      typography.h3.fontSize +
+      Math.max(
+        2 * spacing["2xl"],
+        spacing.lg + defaultDensity.controlHeight.sm,
+      );
     const height =
       Math.max(spacing["2xl"], spacing.lg + defaultDensity.controlHeight.sm) +
       defaultDensity.rowHeight +

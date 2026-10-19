@@ -12,16 +12,16 @@
  *
  * The field's content box at 60px is 42px (`60 - 2 * spacing.md - 2 *
  * borderWidth.thin`), while the component paints a 16px leading glyph, an 8px
- * gap, a 14px query glyph, the same gap and a 16px clear control — 62px. The
- * rule now takes the larger of the chip's content box (102px at the shipped
- * metrics) and the query row (78px), so no shipped value or plan-384 case
- * moves.
+ * gap, a 14px query glyph, the same gap and a 16px clear control — 64px with
+ * the field's two borders. The rule now takes the larger of the chip's content
+ * box (102px at the shipped metrics) and the query row (80px), so no shipped
+ * value or plan-384 case moves.
  *
  * Plan 634: the query row's leading glyph is `<Icon size="md" />`, which
  * resolves through `iconSize.md`, while the rule charged `fieldAdornmentSize`
  * for both it and the trailing clear control. The shipped tiers are both 16,
- * so 78 hid the gap; a theme that lifted the icon tier to 20 returned `[]`
- * while the row needed 82 and the field clipped its own magnifier.
+ * so 80 hid the gap; a theme that lifted the icon tier to 20 returned `[]`
+ * while the row needed 84 and the field clipped its own magnifier.
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -37,13 +37,14 @@ const chipBound = (theme: Theme): number =>
   2 * theme.density.controlPaddingX.md +
   2 * theme.borderWidth.thin;
 
-/** The field width its own query row needs: padding, icon, gap, query, gap, action. */
+/** The field width its own query row needs: padding, icon, gaps, query, action, borders. */
 const chromeBound = (theme: Theme): number =>
   2 * theme.spacing.md +
   theme.iconSize.md +
   2 * theme.spacing.md +
   theme.typography.body.fontSize +
-  theme.dimensions.fieldAdornmentSize;
+  theme.dimensions.fieldAdornmentSize +
+  2 * theme.borderWidth.thin;
 
 const fieldFailures = (theme: Theme): ReadonlyArray<MetricFailure> =>
   themeMetricFailures(theme).filter(
@@ -64,7 +65,7 @@ describe("field query-row fit", () => {
   });
 
   it("states the two shipped bounds and the tier that keeps them equal", () => {
-    expect(chromeBound(base)).toBe(78);
+    expect(chromeBound(base)).toBe(80);
     expect(chipBound(base)).toBe(102);
     expect(base.dimensions.fieldMinWidth).toBe(200);
     // The lead is `iconSize.md` and the action `fieldAdornmentSize`; at the
@@ -85,7 +86,7 @@ describe("field query-row fit", () => {
         member: "fieldMinWidth",
         rule: "at-least",
         actual: 60,
-        bound: 78,
+        bound: 80,
       },
     ]);
   });
@@ -106,14 +107,14 @@ describe("field query-row fit", () => {
     ]);
   });
 
-  it("reads the theme's own padding, not a hardcoded 78", () => {
+  it("reads the theme's own padding, not a hardcoded 80", () => {
     const roomy = extendTheme(getTheme("light"), {
       dimensions: { chipMinWidth: 10, fieldMinWidth: 100 },
     });
     expect(fieldFailures(roomy)).toEqual([]);
 
     // `md` moves from 8 to 16 and the steps above it keep the ladder, so the
-    // query row's own bound rises from 78 to 110 and 100 no longer fits.
+    // query row's own bound rises from 80 to 112 and 100 no longer fits.
     const tightened = extendTheme(roomy, {
       spacing: {
         md: 16,
@@ -131,7 +132,7 @@ describe("field query-row fit", () => {
         member: "fieldMinWidth",
         rule: "at-least",
         actual: 100,
-        bound: 110,
+        bound: 112,
       },
     ]);
   });
@@ -145,14 +146,14 @@ describe("field query-row fit", () => {
       dimensions: { chipMinWidth: 10, fieldMinWidth: 81 },
     });
     expect(chipBound(lifted)).toBe(32);
-    expect(chromeBound(lifted)).toBe(82);
+    expect(chromeBound(lifted)).toBe(84);
     expect(fieldFailures(lifted)).toEqual([
       {
         group: "dimensions",
         member: "fieldMinWidth",
         rule: "at-least",
         actual: 81,
-        bound: 82,
+        bound: 84,
       },
     ]);
   });
@@ -160,7 +161,7 @@ describe("field query-row fit", () => {
   it("accepts the corrected bound", () => {
     const lifted = extendTheme(getTheme("light"), {
       iconSize: { xs: 12, sm: 14, md: 20, lg: 24, xl: 28 },
-      dimensions: { chipMinWidth: 10, fieldMinWidth: 82 },
+      dimensions: { chipMinWidth: 10, fieldMinWidth: 84 },
     });
     expect(fieldFailures(lifted)).toEqual([]);
   });
@@ -178,7 +179,7 @@ describe("field query-row fit", () => {
       member: "fieldMinWidth",
       rule: "at-least",
       actual: 60,
-      bound: 78,
+      bound: 80,
     });
   });
 
@@ -196,7 +197,7 @@ describe("field query-row fit", () => {
       member: "fieldMinWidth",
       rule: "at-least",
       actual: 81,
-      bound: 82,
+      bound: 84,
     });
   });
 });

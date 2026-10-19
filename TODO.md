@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 279/353
+`[x]` `[████████░░]` 280/354
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2349,6 +2349,15 @@ painting a sub-hairline smear; each is now at least the theme's own hairline
 (`borderWidth.thin`), the rule the timeline marker already applies to its rail,
 a zero or non-finite mark keeps its single `positive` diagnostic, and every
 shipped set passes unchanged (plan 643)
+`[x]` Count every inset a fixed surface paints — five bounds charged only part
+of the chrome inside them, so a message viewport at one `density.rowHeight` had
+no content box for that row, a 10px preview card was narrower than its padding,
+the menu minimum omitted the surface's `spacing.xs`, the field's query row
+omitted the field's two borders that the chip row charged, and a dialog or
+drawer reserved `2 * spacing["2xl"]` for the close control even when the control
+reached `spacing.lg + controlHeight.sm` further; all five now charge the full
+painted chrome, every shipped set passes unchanged and no colour, pair, floor,
+figure, shipped metric or component source moves (plan 645)
 
 ## Phase C — Tier 1–2 components
 

@@ -14,7 +14,7 @@
  * 66px row into 56px.
  *
  * The seven bounds now include the surface's two borders. Every shipped set
- * clears them, so no value moves; the identity bounds are 55/111/52/90/90/98
+ * clears them, so no value moves; the identity bounds are 63/111/52/90/90/98
  * and the inbox's 335 (its header above the list, plan 629); the Toast's 111
  * also holds its `toastToneBarWidth` bar and square `sm` dismiss control (plans
  * 631 and 636).
@@ -28,8 +28,9 @@ import type { Dimensions } from "./scale.js";
 
 const base = getTheme("light");
 
-/** The menu's minimum width: a row's chrome plus the surface's two borders. */
+/** The menu's minimum width: the surface's padding, a row's chrome and two borders. */
 const overlayBound = (theme: Theme): number =>
+  2 * theme.spacing.xs +
   2 * theme.spacing.md +
   theme.iconSize.md +
   theme.spacing.md +
@@ -64,9 +65,13 @@ const panelHeightBound = (theme: Theme): number =>
 
 /** A dialog's and a drawer's width: their shell chrome plus two borders. */
 const shellWidthBound = (theme: Theme): number =>
-  3 * theme.spacing["2xl"] +
+  2 * theme.borderWidth.thin +
+  theme.spacing["2xl"] +
   theme.typography.h3.fontSize +
-  2 * theme.borderWidth.thin;
+  Math.max(
+    2 * theme.spacing["2xl"],
+    theme.spacing.lg + theme.density.controlHeight.sm,
+  );
 
 /** A bottom drawer's height: the close zone, one row, padding and two borders. */
 const shellHeightBound = (theme: Theme): number =>
@@ -183,7 +188,7 @@ describe("fixed surfaces fit their own border", () => {
       return dimensionFailures(theme);
     });
     expect(failures).toEqual([]);
-    expect(tightestOverlay).toBeCloseTo(180 / 55, 4);
+    expect(tightestOverlay).toBeCloseTo(180 / 63, 4);
     expect(tightestToast).toBeCloseTo(380 / 111, 4);
     expect(tightestPanelWidth).toBeCloseTo(320 / 52, 4);
     expect(tightestPanelHeight).toBeCloseTo(380 / 335, 4);
@@ -192,7 +197,7 @@ describe("fixed surfaces fit their own border", () => {
   });
 
   it("states the shipped identity bounds", () => {
-    expect(overlayBound(base)).toBe(55);
+    expect(overlayBound(base)).toBe(63);
     expect(toastBound(base)).toBe(111);
     expect(panelWidthBound(base)).toBe(52);
     expect(panelHeightBound(base)).toBe(335);
@@ -220,7 +225,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "dialogWidthSm",
         rule: "at-least",
         actual: 88,
-        bound: 112,
+        bound: shellWidthBound(theme),
       },
     ]);
   });
@@ -237,7 +242,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "drawerWidthSm",
         rule: "at-least",
         actual: 88,
-        bound: 112,
+        bound: shellWidthBound(theme),
       },
     ]);
   });
@@ -281,7 +286,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "overlayMinWidth",
         rule: "at-least",
         actual: 53,
-        bound: 77,
+        bound: 85,
       },
     ]);
   });
@@ -349,7 +354,7 @@ describe("fixed surfaces fit their own border", () => {
       member: "dialogWidthSm",
       rule: "at-least",
       actual: 88,
-      bound: 112,
+      bound: shellWidthBound(theme),
     });
   });
 });

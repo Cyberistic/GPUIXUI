@@ -7,7 +7,7 @@ box fit), 523 (control padding), 625/627 (dialog and drawer shells), 629 (inbox
 header), 634 (field query icon), 636 (Toast tone bar) ·
 **Number block:** 500–699 (`tokens-theme` overflow; `644` is taken by
 `components`, so this is the next free) ·
-**Status:** pending
+**Status:** done
 
 ## 1. The defect
 
@@ -23,7 +23,7 @@ below returns `[]` from `themeMetricFailures` and `themeFailures` today.
 | `dimensions.previewCardMinWidth` | positive, below `previewCardMaxWidth` | the card's `spacing.lg` padding on both sides and its two `borderWidth.thin` edges | `previewCardMinWidth: 10` — narrower than the padding alone |
 | `dimensions.overlayMinWidth` | `2*spacing.md + iconSize.md + spacing.md + label.fontSize + 2*thin` | the menu surface's `spacing.xs` padding on both sides (`menu/surface.tsx`, `combobox.tsx`) | `overlayMinWidth: 57, overlayWidth: 58` — the row bound only, with no surface padding |
 | `dimensions.fieldMinWidth` | the query branch is `2*spacing.md + iconSize.md + 2*spacing.md + body.fontSize + fieldAdornmentSize` | the field's own two `borderWidth.thin` edges — the chip branch already charges them | `chipMinWidth: 10, fieldMinWidth: 79` — the query branch exactly, without the field's border |
-| `dimensions.dialogWidthSm`, `dimensions.drawerWidthSm` | `3*spacing["2xl"] + h3.fontSize + 2*thin` | the close control when it reaches further than the header's reserved step: the control is square `controlHeight.sm` at `spacing.lg` from the right edge, so the title needs a `spacing.lg + controlHeight.sm` reserve from that edge | `spacing: { "2xl": 16 }`, `dialogWidthSm: 70` — the old bound with `2*2xl = 32` reserved, where the close control reaches `12 + 28 = 40` |
+| `dimensions.dialogWidthSm`, `dimensions.drawerWidthSm` | `3*spacing["2xl"] + h3.fontSize + 2*thin` | the close control when it reaches further than the shell's two right insets: the control is square `controlHeight.sm` at `spacing.lg` from the right edge, so the title needs a `spacing.lg + controlHeight.sm` reserve from that edge | `spacing: { "2xl": 16 }`, `dialogWidthSm: 70` — the old bound with `2*2xl = 32` reserved, where the close control reaches `12 + 28 = 40` |
 
 The dialog and drawer case is the one a reader sees: the close control is
 absolutely positioned at `spacing.lg` and is `controlHeight.sm` wide
@@ -179,6 +179,11 @@ Not changed:
 | `.agents/slop/plans/645-fixed-surface-insets.md` | this plan |
 | `packages/tokens/src/metrics.ts` | replace the five bounds; add `shellCloseReserve` beside the other local helpers; extend the dimensions bullet and the `themeMetricFailures` JSDoc |
 | `packages/tokens/src/fixed-surface-insets.test.ts` | new regression suite |
+| `packages/tokens/src/field-chrome-fit.test.ts` | update the encoded query-row bound (`+ 2 * borderWidth.thin`) |
+| `packages/tokens/src/fixed-surface-fit.test.ts` | update the encoded overlay bound (`+ 2 * spacing.xs`) |
+| `packages/tokens/src/metrics.test.ts` | update the encoded message-viewport bound |
+| `packages/tokens/src/surface-border-fit.test.ts` | update the encoded overlay and shell-width bounds |
+| `packages/tokens/src/docs.test.ts` | update the three figures/formulas the document guards derive |
 | `docs/tokens.md` | update the five table rows and the component-dimensions prose |
 | `docs/design-system.md` | update §6 (dimensions) and §11's metric sentence |
 | `packages/tokens/README.md` | name the rule under *Checking the numbers* |
@@ -187,8 +192,10 @@ Not changed:
 | `.agents/slop/plans/README.md` | index this plan and add its summary |
 | `.agents/slop/rd/2026-10-19-tokens-next-645.md` | the audit note |
 
-No other file. **Do not** edit `packages/components`, `packages/primitives`,
-`apps/docs`, a platform style, a shipped value, a colour, a pair or a floor.
+No other file. Existing suites that encode the old bounds are listed above and
+must move with the rule; do not weaken a case to make it pass. **Do not** edit
+`packages/components`, `packages/primitives`, `apps/docs`, a platform style, a
+shipped value, a colour, a pair or a floor.
 
 ## 4. `packages/tokens/src/metrics.ts`
 
@@ -207,8 +214,8 @@ Keep the rules in the existing order:
 
 Extend the dimensions bullet of the `themeMetricFailures` JSDoc so it says:
 
-> A dialog's and a drawer's smallest shell reserve the greater of the header's
-> `spacing["2xl"]` step and the close control's reach
+> A dialog's and a drawer's smallest shell reserve the greater of the shell's
+> two `spacing["2xl"]` right insets and the close control's reach
 > (`spacing.lg + controlHeight.sm`); a message viewport holds one row inside its
 > own `spacing.md` padding and two borders; a preview card leaves a content box
 > inside its `spacing.lg` padding and two borders; the menu minimum charges the
@@ -292,7 +299,7 @@ not in the assertions.
     its `spacing.lg` padding and its two borders".
   - `chatViewportMinHeight`: "…held to one `density.rowHeight` inside its
     `spacing.md` padding and its two borders".
-  - `dialogWidthSm` / `drawerWidthSm`: "…the header's reserved step or the close
+  - `dialogWidthSm` / `drawerWidthSm`: "…the shell's two right insets or the close
     control's reach, whichever is larger, and one `h3` title glyph inside its
     two borders".
 - `docs/tokens.md`, the **fixed surfaces** prose: replace the overlay sentence

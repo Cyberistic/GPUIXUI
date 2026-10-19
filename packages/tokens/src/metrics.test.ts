@@ -311,14 +311,17 @@ describe("theme metric contract", () => {
     ]);
   });
 
-  it("reports a message viewport shorter than a row", () => {
+  it("reports a message viewport shorter than a row plus its insets", () => {
     expect(failuresOf({ dimensions: { chatViewportMinHeight: 20 } })).toEqual([
       {
         group: "dimensions",
         member: "chatViewportMinHeight",
         rule: "at-least",
         actual: 20,
-        bound: lightTheme.density.rowHeight,
+        bound:
+          lightTheme.density.rowHeight +
+          2 * lightTheme.spacing.md +
+          2 * lightTheme.borderWidth.thin,
       },
     ]);
   });

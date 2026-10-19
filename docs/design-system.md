@@ -242,16 +242,24 @@ dialog or a toast without touching component source. A keycap is 20px and holds
 one `caption` line plus its two borders; a field's adornment holds one `caption`
 line, the glyph its clear control paints; the metric contract reports a theme
 whose caption leading outgrows either. Every fixed surface — the menu minimum, Toast
-card, notification inbox, and the dialog and drawer shells — holds its chrome
-inside its own two borders, like a control or a field; a Toast card additionally
-holds its square `sm` dismiss control after a `spacing.lg` gap, because the
-title column flexes and the control does not. A drawer opens
+card, notification inbox, message viewport, preview card, and the dialog and
+drawer shells — holds its chrome inside its own two borders, like a control or
+a field; a Toast card additionally holds its square `sm` dismiss control after a
+`spacing.lg` gap, because the title column flexes and the control does not. The
+menu minimum charges the surface's `spacing.xs` padding as well as the row it
+contains; the message viewport holds one `density.rowHeight` row inside its
+`spacing.md` padding and two borders; and the preview card leaves a content box
+inside its `spacing.lg` padding and two borders. A drawer opens
 320/400/560px wide, or
 240/320/420px tall from the bottom; a message viewport never shrinks below 160px,
 and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
 360/480/640px wide at `sm`/`md`/`lg`, a calendar day cell is 34px, a two-digit
 time segment is 26px, and an avatar's presence dot is 10px — at most half the
-smallest avatar the theme carries. A notification inbox is 320px wide and 380px
+smallest avatar the theme carries. The dialog and drawer shells reserve the
+greater of their two `spacing["2xl"]` right insets and the close control's
+reach (`spacing.lg + controlHeight.sm`) so a title cannot sit under the
+control. A
+notification inbox is 320px wide and 380px
 tall at most, its scrolling list holds 280px, and its unread marker is 6px — the
 panel contains its header and the list, and the list holds one row. A timeline's event dot is
 8px in a 16px column — at least the rail's width and no wider than the column
@@ -813,11 +821,14 @@ nothing, silently. The check walks each group's values rather than a
 hand-written list, so a member added to a group is governed when it ships, and
 `metricMembers` is the published index of that domain. A fixed surface also
 holds the chrome painted inside it: a toast card, a notification inbox and an
-overlay minimum each need their padding, icon, gap and one title or label
-glyph — and a toast card its `toastToneBarWidth` tone bar and square `sm`
-dismiss control — so a brand that shrinks one below the content it exists to
-show is reported before a component migrates to the token (plans `620`, `631`
-and `636`).
+overlay minimum each need their padding, icon, gap and one title or label glyph
+— and a toast card its `toastToneBarWidth` tone bar and square `sm` dismiss
+control; a message viewport holds one row inside its own padding and borders; a
+preview card leaves a content box inside its padding and borders; the field's
+query row charges the field's two borders; and a dialog or drawer reserves the
+close control's reach — so a brand that shrinks one below the content it exists
+to show is reported before a component migrates to the token (plans `620`,
+`631`, `636` and `645`).
 
 The **format** check is `themeColorFailures(theme)`: every one of the 70 roles
 must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and

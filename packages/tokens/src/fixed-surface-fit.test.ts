@@ -8,12 +8,13 @@
  *   sides, a `md` tone icon, the `lg` gap and a `bodyStrong` title;
  * - `notificationPanelWidth: 20` — a notification row is `spacing.lg` padding,
  *   the unread dot, the `sm` gap and a `bodyStrong` title;
- * - `overlayMinWidth: 20` — a menu row is `spacing.md` padding, a `md` leading
- *   icon, the `md` gap and a `label` glyph.
+ * - `overlayMinWidth: 20` — a menu row is the surface's `spacing.xs` padding,
+ *   the row's `spacing.md` padding, a `md` leading icon, the `md` gap and a
+ *   `label` glyph.
  *
  * Each rule derives its bound from the theme's own spacing, icon, type and
  * border metrics, so case 6 fails if the rule becomes a hardcoded number. The
- * shipped set passes at 380/320/180 against 111/52/55, the surface's two
+ * shipped set passes at 380/320/180 against 111/52/63, the surface's two
  * `borderWidth.thin` edges and the Toast's own tone bar included (plans 627,
  * 631 and 636), so no value moves.
  */
@@ -44,6 +45,7 @@ const panelBound = (theme: Theme): number =>
   2 * theme.borderWidth.thin;
 
 const overlayBound = (theme: Theme): number =>
+  2 * theme.spacing.xs +
   2 * theme.spacing.md +
   theme.iconSize.md +
   theme.spacing.md +
@@ -89,13 +91,13 @@ describe("fixed-surface chrome fit", () => {
     expect(failures).toEqual([]);
     expect(tightest.toast).toBeCloseTo(380 / 111, 4);
     expect(tightest.panel).toBeCloseTo(6.15, 2);
-    expect(tightest.overlay).toBeCloseTo(3.27, 2);
+    expect(tightest.overlay).toBeCloseTo(180 / 63, 4);
   });
 
   it("states the shipped bounds", () => {
     expect(toastBound(base)).toBe(111);
     expect(panelBound(base)).toBe(52);
-    expect(overlayBound(base)).toBe(55);
+    expect(overlayBound(base)).toBe(63);
   });
 
   it("reports a toast narrower than its chrome", () => {
@@ -139,7 +141,7 @@ describe("fixed-surface chrome fit", () => {
         member: "overlayMinWidth",
         rule: "at-least",
         actual: 40,
-        bound: 55,
+        bound: 63,
       },
     ]);
   });
