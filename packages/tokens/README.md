@@ -1095,7 +1095,10 @@ bundle loads exactly the weights the shipped roles select.
 `statusTones` and `platformNames` do the same for the four status families and
 the four platform variants, in documentation and toggle order. `motionLevels`
 and `motionPhases` index the six timings and four easing phases, so a motion
-table iterates the scale instead of `Object.keys(motion)`.
+table iterates the scale instead of `Object.keys(motion)`. `spacingSteps`,
+`radiusSteps`, `borderWidthSteps`, `iconSizeSteps`, `avatarSizeSteps`,
+`dimensionNames` and `paletteRamps` do the same for the numeric scales, so a
+value table indexes its scale without a cast.
 
 ## Boundaries
 
