@@ -356,7 +356,11 @@ The probe is evidence, not a test; the suite case in §3.3 is the guard.
   check's example passes `themeContrastFailures`, and the old navy was close
   enough to the `#191D25` shadow tint that the new content pair correctly
   reported it. The new family keeps the inverted direction (1.248:1 and 1.252:1
-  steps, white at 10.62/8.51/6.80:1) and passes every contrast pair.
+  steps, white at 10.62/8.51/6.80:1) and passes every contrast pair. The same
+  palette moves the two teaching snippets (`direction.ts`'s JSDoc example and
+  `docs/tokens.md`'s direction block) so the example a reader copies is not also
+  a shadow collision; `theme-check.example.ts` keeps the old navy because its
+  `shadow: "black"` already makes it the deliberately broken theme.
 - Both directions were proven: with `elevationFailures` temporarily reverted to
   `elevationSurfaces` for every level, `elevation-contrast.test.ts` fails the
   collapsed-alpha case and the new content-fill regression (2 failed); restored,
