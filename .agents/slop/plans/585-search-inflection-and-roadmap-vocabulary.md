@@ -5,7 +5,7 @@
 **Depends on:** 410 (site), 419/431/561 (ranker), 504–507 (generated
 documents), 566/574/579/583 (reader vocabulary and page summaries), 518
 (roadmap document).
-**Status:** planned.
+**Status:** implemented — measured results and forced defects in §8.
 
 ## 1. The measured gap
 
