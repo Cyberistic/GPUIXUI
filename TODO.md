@@ -62,7 +62,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
-`[x]` Prove the **QR rendering recipe in a real window** per plan `596`:
+`[x]` Prove the **QR rendering recipe in a real window** per plan `599`:
       `qr-code` (plan `518`) was the last capability with only `TestRenderer`
       evidence — a 226-node absolute module grid, an SVG alpha mask and an SVG
       data-URL image. The live twin `live-qr` (45 checks) asserts the
@@ -73,6 +73,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       the `Image` a11y node stay headless (plan `197`). Six mutation proofs
       observed and reverted; registry `83 → 84`; re-verified focused
       `--only live-qr` green after the closing ledger edit.
+
+`[~]` Harden the **live InlineEdit blur entry** per plan `600`: the plan-`599`
+      merge gate's only failure (`a click away commits the open live draft`,
+      `name=live commits=1`) came from a coordinate click 200 px into a
+      **content-sized** display; when it missed, no editor opened and the Escape
+      checks were vacuous too. The scenario now asserts the swapped editor owns
+      native focus after all three entries, presses `end` before the appended
+      `z`, and asserts the click away reached `ws-elsewhere` before the commit
+      check; the coordinate clicks are gone.
 
 `[x]` Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
@@ -489,9 +498,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       click on the focusable `ws-elsewhere` **does** commit the open draft
       (`name=livez commits=2`), paints it and leaves focus on the clicked
       element; `live-tier2-editing` gains the commit, display and focus checks
-      (4 new, 30 total) and `tier2-editing`'s comment records the headless
+      (5 new, 31 total) and `tier2-editing`'s comment records the headless
       no-blur behaviour as a harness fact. Three consecutive green runs; M1
-      (remove the click away) fails with `got "name=live commits=1…"`. Focused
+      (remove the click away) fails with `got "name=live commits=1…"`. The
+      plan-596 gate also removed the coordinate click that started each edit:
+      the locator's click starts it and the component's layout effect moves
+      native focus, which the scenario now asserts directly (2026-10-19). Focused
       id: `live-tier2-editing`. Closes the cross-team `InlineEdit` row; the Tabs
       row stays open (its result is ambiguous, not merely state-dependent).
 
@@ -1101,7 +1113,7 @@ focused id is `live-frames`.
 `[x]` Prove the **foundation and navigation catalogue in a real window** — plan `344`: `live-tier2-foundation` (18 checks: Card/avatar paint, alert dismiss, empty-state action, List click/arrow/Enter selection with the disabled row skipped) and `live-tier2-navigation` (17: a click swaps the panel, a later click selects Settings, Accordion single mode + Enter close, Collapsible open/Enter close, Breadcrumb clicks, Pagination page/Next/Prev). Live `22 → 24`, checks `373 → 405`, exit `0`, two screenshots. **Two harness lessons:** a live step must `settle` after the click that establishes a row's active state before sending a key (the first run raced the commit and made List arrows look broken), and a click focuses natively without running React's `onFocus` (plan `345`), which is the real cause of the Tabs arrow result
 `[x]` Measure **live key routing** per plan `345`: `live-key-routing` (23 checks) proves a key reaches the focused element, bubbles through **every** ancestor (focusable or not), and then reaches the app-level window handler (`inner=1 middle=1 outer=1 window=1`); `autoFocus` and a real click both focus natively **without running React's `onFocus`** (`innerFocus=0 outerFocus=0`); a live `cmd-k` reaches the window handler with `modifiers.cmd`. The probe also wires `useWindowKey` into the live runner for the first time. Live `24 → 25`, checks `427 → 431`, exit `0`. **Amended by plan `390`:** a click's `onFocus` count is window/host-state dependent (the same clean code read `0` at 15:03/15:10 and `1` from 15:25), so the check is now "the click focuses the child" (22 checks) and the counter is printed, not asserted.
 `[x]` Mount the **Tier 2 choice and form catalogue** per plan `346`: `tier2-choice` drives the shipped `Popover` (anchored below, row toggle, Escape focus return, outside dismissal), `SearchInput` (typing, submit, Escape clear), `Combobox` (ranked filter, value select, disabled row, empty state), `DatePicker` (month grid, bound clamp, Enter select, clear) and `TimePicker` (segment composition, clamp, `minuteStep`, clear); `tier2-forms` drives `Field` (consumer-triggered schema message replacing the description, `Required` announcement), `Fieldset` (named `Group`, disabled token paint, refused edit, tab-order exit) and `Form` (invalid messages, decoded submit, pending lock). 59 + 34 checks, suite `74 → 76`, `2070 → 2163` checks, exit `0`; live twins `live-tier2-choice` (13) and `live-tier2-forms` (14) make the live suite `25 → 27` (`431 → 458`), exit `0`; four mutation and two reverse proofs recorded (plan `346` §8)
-`[x]` Mount the **remaining shipped Tier 2 catalogue** per plan `347`: Drawer, Stepper, Timeline, InlineEdit, TagInput, Carousel, ColorPicker, MentionInput, NavigationMenu, HotkeyRecorder, KeyboardShortcuts and Countdown. `tier2-editing` (48 checks) and `tier2-flow` (59) drive the consumer path; suite `76 → 78`, `2163 → 2270`, exit `0`; live twins `live-tier2-editing` (24) and `live-tier2-flow` (24) take live `27 → 29` (`458 → 506`), exit `0`; five mutation + two reverse proofs (plan `347` §8.3). Adds `AsyncSmokeHost.clickWindow`. Measured: a swapped editor needs a coordinate click (the locator resolves the pre-swap node), React's `onBlur` does not run for a native focus change, `Carousel`'s `display: none` does not hide a slide, and `TagInput`'s chip control has no `testId`
+`[x]` Mount the **remaining shipped Tier 2 catalogue** per plan `347`: Drawer, Stepper, Timeline, InlineEdit, TagInput, Carousel, ColorPicker, MentionInput, NavigationMenu, HotkeyRecorder, KeyboardShortcuts and Countdown. `tier2-editing` (48 checks) and `tier2-flow` (59) drive the consumer path; suite `76 → 78`, `2163 → 2270`, exit `0`; live twins `live-tier2-editing` (24) and `live-tier2-flow` (24) take live `27 → 29` (`458 → 506`), exit `0`; five mutation + two reverse proofs (plan `347` §8.3). Adds `AsyncSmokeHost.clickWindow`. Measured: a swapped editor took the edit from a coordinate click until the plan-596 gate replaced it with the locator click plus the component's own focus move (which the scenario now asserts), React's `onBlur` does not run for a native focus change headless, `Carousel`'s `display: none` does not hide a slide, and `TagInput`'s chip control has no `testId`
 `[ ]` **Cross-team (defect):** `@gpuixui/components` **Carousel** hides an inactive slide with `display: "none"`, which 0.10.0 ignores — every slide keeps painted bounds and stays hit-testable, so a carousel shows all slides stacked and a hidden link can be clicked. `tier2-flow`/`live-tier2-flow` assert the measured behaviour. Fix: the tabbed panes' absolute-slot + `visibility: "hidden"` recipe (`workspace-panes`, plan `177`), with a bounds test. Owner: `components`; evidence: plan `347` §8.2
 `[x]` **Cross-team (limitation, resolved by measurement):** `@gpuixui/components` **InlineEdit** commits on blur; plan `347` measured that React's `onBlur` did not run for a native focus change in a live window, and plan `390` found the sibling delivery window/host-state dependent. **Re-measured 2026-10-19 (plan `555`):** in the current window a click on the focusable `ws-elsewhere` **does** commit the open draft (`name=livez commits=2`), paints it and leaves focus on the clicked element; three consecutive live runs. `live-tier2-editing` now guards it (and asserts the click's focus is not stolen); the headless host still delivers no `onBlur`, so `tier2-editing` asserts the editor stays open there — a harness difference, not a component defect. No explicit commit/cancel control is needed. Owner: `components` (no change); evidence: plan `555` §8, plan `347` §8.2, plan `390` §6
 `[ ]` **Cross-team (re-verify):** `@gpuixui/components` **Tabs** sets its roving `active` only in `onFocus`. Plan `344`/`345` measured that a live click focuses a tab natively without running React's `onFocus`, so an arrow after a click started from the **first** enabled tab; plan `390` measured the same clean code with `onFocus` running (a click-then-arrow from the clicked tab), so the result is **window-state dependent** and the live suite no longer asserts the old defect. Fix anyway for robustness: set `active` in the trigger's click handler (or use the `focusRow` path `List` uses), add a headless click-then-arrow test, and re-run `live-tier2-navigation` in both states. Owner: `components`; evidence: plans `344` §8.1, `345` §6, `390` §6

@@ -162,3 +162,16 @@ commits through it; the headless host does not deliver it, so the two harnesses
 must assert their own measured behaviour. The delivery class remains
 window-state dependent (plan `390`), so the live check is the guard rather than
 a one-off claim.
+
+### Amendment (plan `596`'s merge gate, 2026-10-19)
+
+The gate found the coordinate click that started each edit could land outside a
+narrow display, leaving the edit unopened — and the later blur check vacuous.
+The scenario now clicks the display through the locator and asserts that the
+component's layout effect moved native focus to the swapped editor
+(`waitForFocus` + `focusedOf`), three times (first edit, second edit, blur
+target). That makes the check count **31**, not 30, and adds the click-away
+focus assertion; the blur commit itself is unchanged. Focused
+`--only live-tier2-editing` is 31/31 green, exit `0`. A mutation of the first
+focus expectation to `ws-elsewhere` was observed failing with
+`expected "ws-elsewhere", got "ws-name"` and reverted.

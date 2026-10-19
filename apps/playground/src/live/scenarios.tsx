@@ -4617,13 +4617,15 @@ const tier2Editing: LiveScenario = {
 
       // 1. InlineEdit: the display→editor swap, a real edit and a cancel.
       //
-      // Measured 2026-10-18/19: the automation locator's `click(testId)`
-      // resolves the pre-swap display node, so the swapped editor only takes a
-      // live pointer focus from a coordinate click inside it — what a user does
-      // anyway. React's `onFocus`/`onBlur` delivery is window-state dependent
-      // (plan `390`); in the current window a click away commits (plan `555`),
-      // while the headless host delivers no `onBlur` (plan `347`). Each claim is
-      // asserted in its own suite.
+      // The automation locator's `click(testId)` resolves the display node and
+      // starts the edit; the component's own layout effect then moves native
+      // focus to the swapped `<input>`, which `waitForFocus` asserts. A
+      // coordinate click into the editor is deliberately not used: the plan-599
+      // gate found it could land outside a narrow display, leaving the edit
+      // unopened and the later blur check vacuous. React's `onFocus`/`onBlur`
+      // delivery is window-state dependent (plan `390`); in the current window
+      // a click away commits (plan `555`), while the headless host delivers no
+      // `onBlur` (plan `347`). Each claim is asserted in its own suite.
       yield* ctx.host.click("ws-name");
       yield* settle;
       yield* ctx.expectSome(
@@ -4636,9 +4638,11 @@ const tier2Editing: LiveScenario = {
         "",
       );
       yield* waitForFocus(ctx, "ws-name");
-      const editor = yield* boxOf(ctx, "ws-name");
-      yield* ctx.host.clickWindow(editor.x + 200, editor.y + editor.height / 2);
-      yield* settle;
+      yield* ctx.expectEqual(
+        "the swapped editor owns native focus",
+        yield* focusedOf(ctx),
+        "ws-name",
+      );
       yield* ctx.host.key("cmd-a");
       yield* settle;
       yield* ctx.host.key("l i v e");
@@ -4659,9 +4663,12 @@ const tier2Editing: LiveScenario = {
 
       yield* ctx.host.click("ws-name");
       yield* settle;
-      const again = yield* boxOf(ctx, "ws-name");
-      yield* ctx.host.clickWindow(again.x + 200, again.y + again.height / 2);
-      yield* settle;
+      yield* waitForFocus(ctx, "ws-name");
+      yield* ctx.expectEqual(
+        "the second live edit owns native focus",
+        yield* focusedOf(ctx),
+        "ws-name",
+      );
       yield* ctx.host.key("x");
       yield* ctx.host.key("escape");
       yield* settle;
@@ -4680,16 +4687,24 @@ const tier2Editing: LiveScenario = {
       // open draft (plan `555`; the headless host delivers no `onBlur`).
       yield* ctx.host.click("ws-name");
       yield* settle;
-      const blurEditor = yield* boxOf(ctx, "ws-name");
-      yield* ctx.host.clickWindow(
-        blurEditor.x + 200,
-        blurEditor.y + blurEditor.height / 2,
+      yield* waitForFocus(ctx, "ws-name");
+      yield* ctx.expectEqual(
+        "the blur target edit owns native focus",
+        yield* focusedOf(ctx),
+        "ws-name",
       );
+      yield* ctx.host.key("end");
       yield* settle;
       yield* ctx.host.key("z");
       yield* settle;
       yield* ctx.host.click("ws-elsewhere");
       yield* settle;
+      yield* waitForFocus(ctx, "ws-elsewhere");
+      yield* ctx.expectEqual(
+        "the click away moves native focus",
+        yield* focusedOf(ctx),
+        "ws-elsewhere",
+      );
       yield* waitForText(ctx, "tier2-editing-readout", "name=livez commits=2");
       yield* ctx.expectContains(
         "a click away commits the open live draft",
@@ -6966,7 +6981,7 @@ const liveChart: LiveScenario = {
 };
 
 /**
- * `live-qr` — plan `518`'s QR recipe in a real window (plan `596`).
+ * `live-qr` — plan `518`'s QR recipe in a real window (plan `599`).
  *
  * The headless probe is the only evidence for the three rendering routes: a
  * `div` per dark module, one sourced `<svg>` mask and one SVG data-URL
