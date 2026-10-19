@@ -824,6 +824,36 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the native binding target table",
     },
+    {
+      query: "theme",
+      expected: "/docs/theming",
+      first: true,
+      what: "an inflected page title",
+    },
+    {
+      query: "capability",
+      expected: "/docs/capabilities",
+      first: true,
+      what: "a plural page title",
+    },
+    {
+      query: "tree",
+      expected: "/docs/data-display",
+      first: true,
+      what: "a Tier 3 subject named by its owning page",
+    },
+    {
+      query: "diff",
+      expected: "/docs/roadmap",
+      first: true,
+      what: "a roadmap target's one-word name",
+    },
+    {
+      query: "toolbar",
+      expected: "/docs/roadmap",
+      first: true,
+      what: "a promoted roadmap alias",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -429,7 +429,8 @@ pass.
 
 `/api/search` merges the MDX page index with the component registry
 (`src/lib/search.ts`). A component name is scored by its **title** — equal,
-prefix, word prefix, then substring — so `button` reaches
+prefix, word prefix, an inflected stem, then a substring of at least four
+characters — so `button` reaches
 `/docs/components/button` even when prose matches first; every other query keeps
 the page index's order and appends registry hits in the tail (plan 419). The
 props types a component documents are indexed too, so `ButtonProps` and
@@ -542,6 +543,22 @@ resizable splits and inspector panels, and Layouts records that RTL layout is
 not implemented. This is the same alias table and the same authored-summary
 rule; it adds no ranker. The plan-583 table in `search.test.ts` fails by query,
 and `smoke:build` checks `cmdk` and `macos` against the production index.
+
+A fourth measured pass (plan 585) fixed two spelling assumptions. A title is now
+matched by its **stem** after the exact and prefix tiers, so `theme` reaches
+Theming and `capability` reaches GPUix capabilities: `Theming`/`theme` and
+`capabilities`/`capability` are the same word to a reader. A substring shorter
+than four characters no longer names a page — `log` was matching `Dialogs` and
+outranking the page that owns log viewers. The pages that own a subject name it
+(Data display: tree views, log viewers, charts, key-value displays;
+Accessibility: keyboard focus), and the guarded `src/lib/roadmap-aliases.ts`
+adds the one-word name of a multiword target: `diff` → Diff viewer, `editor` →
+Code editor integration, `drag` → Drag and drop, `markdown`/`rich text` →
+Rich-text editing, `toolbar` → Toolbars. Keycap also learned
+`keybinding`/`keybindings`. The plan-585 table in `search.test.ts` requires 14
+owning pages **first**, a guard keeps `table`, `panel`, `input` and `label` where
+the earlier passes put them, and `smoke:build` checks `theme`, `capability`,
+`tree`, `diff` and `toolbar` against the production index.
 
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter

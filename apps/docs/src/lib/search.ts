@@ -157,10 +157,39 @@ const summaryPages = new Map(
 );
 
 /**
+ * The English inflections a page title uses where the plain spelling differs:
+ * `capabilities`/`capability`, `Theming`/`theme`, `running`/`run`. Stems are
+ * compared only in `matchRank`, after the exact and prefix tiers, so an exact
+ * name still wins and a fragment inside a word is still rank `3` (plan 585).
+ */
+const stem = (word: string): string => {
+  if (word.length < 4) return word;
+  const plural = word
+    .replace(/ies$/, "y")
+    .replace(/(?:s|x|z|ch|sh)es$/, "")
+    .replace(/(?<!s|u|i)s$/, "");
+  const gerund = plural.replace(/ing$/, "").replace(/([a-z])\1$/, "$1");
+  const base = gerund.length < 3 ? plural : gerund;
+  return base.length > 3 ? base.replace(/e$/, "") : base;
+};
+
+/** The stems of the words in a name, in order. */
+const stems = (value: string): ReadonlyArray<string> =>
+  value
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 0)
+    .map(stem);
+
+/**
  * How closely a component name matches a query: `0` equal, `1` prefix, `2` a
  * word prefix, `3` substring anywhere, `undefined` no match. A component name
  * is the strongest signal a reader can give ⌘K, so it is scored, not left to
  * the index's body-text ranking (plan 431).
+ *
+ * The word tiers also compare stems (plan 585), so a title in another
+ * inflection (`Theming`, `GPUix capabilities`) is still named by the query,
+ * while the substring tier keeps plan 568's whole-spelling rule.
  */
 const matchRank = (name: string, query: string): number | undefined => {
   const normalized = name.trim().toLowerCase();
@@ -168,9 +197,18 @@ const matchRank = (name: string, query: string): number | undefined => {
   if (needle.length === 0) return undefined;
   if (normalized === needle) return 0;
   if (normalized.startsWith(needle)) return 1;
-  if (normalized.split(/[^a-z0-9]+/).some((word) => word.startsWith(needle)))
-    return 2;
-  return normalized.includes(needle) ? 3 : undefined;
+  const nameWords = normalized.split(/[^a-z0-9]+/);
+  if (nameWords.some((word) => word.startsWith(needle))) return 2;
+  const queryStem = stem(needle);
+  const wordStems = stems(normalized);
+  if (nameWords.length === 1 && wordStems[0] === queryStem) return 1;
+  if (wordStems.some((word) => word === queryStem)) return 2;
+  /**
+   * A three-letter fragment is too weak to name a page: `log` is a substring
+   * of `Dialogs` and used to outrank the page that owns log viewers. Longer
+   * fragments keep plan 431's tier.
+   */
+  return needle.length >= 4 && normalized.includes(needle) ? 3 : undefined;
 };
 
 /** Words that can name something; a single character is noise. */

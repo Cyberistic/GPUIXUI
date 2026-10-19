@@ -1,4 +1,5 @@
 import { plainNote } from "./roadmap-note";
+import { roadmapAliasTerms } from "./roadmap-aliases";
 import { roadmapTargets } from "./roadmap.generated";
 import type { GeneratedSearchEntry } from "./generated-search";
 
@@ -10,11 +11,17 @@ import type { GeneratedSearchEntry } from "./generated-search";
  *
  * Only **multiword** names are promoted. A single word (`Tables`, `Toolbars`,
  * `Charts`) is indexed but keeps its prose result, the rule plans 504 and 505
- * established for plain words such as `input` and `theme`.
+ * established for plain words such as `input` and `theme`. A target whose
+ * subject has no other owner may add the one word a reader uses in
+ * `roadmap-aliases.ts` (plan 585); that table is guarded against shadowing a
+ * component, a page title or another alias.
  */
-const PROMOTED_NAMES = roadmapTargets
-  .map((target) => target.name)
-  .filter((name) => name.includes(" "));
+const PROMOTED_NAMES = [
+  ...roadmapTargets
+    .map((target) => target.name)
+    .filter((name) => name.includes(" ")),
+  ...roadmapAliasTerms,
+];
 
 const describe = (target: {
   readonly tier: number;

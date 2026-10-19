@@ -566,6 +566,78 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 585: the ranker compared spellings, not words, so a page titled in
+   * another inflection (`Theming`, `GPUix capabilities`) earned no title rank;
+   * Data display and Accessibility did not name the subjects they own; and a
+   * multiword roadmap target was promoted only as the whole phrase. Each row
+   * below fails by query when its rule is removed: the stem branch in
+   * `matchRank`, a summary word, a `roadmapAliases` term or the `keycap` alias.
+   */
+  it("reaches an inflected name, an owned subject and a target's word (plan 585)", async () => {
+    const expected = [
+      ["theme", "/docs/theming"],
+      ["capability", "/docs/capabilities"],
+      ["tree", "/docs/data-display"],
+      ["log", "/docs/data-display"],
+      ["chart", "/docs/data-display"],
+      ["charts", "/docs/data-display"],
+      ["focus", "/docs/accessibility"],
+      ["diff", "/docs/roadmap"],
+      ["editor", "/docs/roadmap"],
+      ["drag", "/docs/roadmap"],
+      ["markdown", "/docs/roadmap"],
+      ["rich text", "/docs/roadmap"],
+      ["toolbar", "/docs/roadmap"],
+      ["keybinding", "/docs/components/keycap"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * Plan 585's new rules must not steal the words the earlier passes assigned:
+   * a summary word or a roadmap alias that claims `table`, `panel`, `input` or
+   * `label` is a regression, not a recovered query.
+   */
+  it("keeps the words the earlier passes assigned (plan 585)", async () => {
+    const expected = [
+      ["table", "/docs/data-display"],
+      ["panel", "/docs/workspace"],
+      ["input", "/docs/components/text-input"],
+      ["label", "/docs/components/label"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The boundary of plan 585: a two-word phrase that names a promoted roadmap
+   * target keeps the target row, even though Data display's summary also names
+   * the subject. Plan 564's target rule outranks a description, and that is the
+   * honest answer — the row carries the status and support the page cannot.
+   */
+  it("keeps a two-word target phrase on the roadmap (plan 585)", async () => {
+    const [first] = await search("key value", 5);
+    expect(first?.url).toBe("/docs/roadmap");
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });
@@ -701,6 +773,40 @@ describe("mergeResults", () => {
       "toast",
     );
     expect(merged).toHaveLength(1);
+  });
+});
+
+/**
+ * Plan 585: a title in another inflection is still the same name. Without the
+ * stem branch these two queries leave the page candidate unranked and the prose
+ * result wins.
+ */
+describe("inflected page titles (plan 585)", () => {
+  it("finds Theming by theme", () => {
+    const merged = mergeResults(
+      [textResult("tokens-1", "/docs/tokens-api#theme-shapes")],
+      [titledPage("/docs/theming", "Theming")],
+      "theme",
+    );
+    expect(merged[0]?.url).toBe("/docs/theming");
+  });
+
+  it("finds GPUix capabilities by capability", () => {
+    const merged = mergeResults(
+      [textResult("native-1", "/docs/native-testing#the-check-model")],
+      [titledPage("/docs/capabilities", "GPUix capabilities")],
+      "capability",
+    );
+    expect(merged[0]?.url).toBe("/docs/capabilities");
+  });
+
+  it("keeps an exact title ahead of a stem match", () => {
+    const merged = mergeResults(
+      [titledPage("/docs/theming", "Theming")],
+      [titledPage("/docs/theme-editor", "Theme")],
+      "theme",
+    );
+    expect(merged[0]?.url).toBe("/docs/theme-editor");
   });
 });
 

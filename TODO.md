@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–583)
+## Docs site workstream (plans 410–499, plus 500–585)
 
-`[~]` `[█████████░]` 150/153
+`[~]` `[█████████░]` 151/154
+
+`[x]` **Search reads an inflected name and a target's one word (plan 585)** —
+      `theme`, `capability`, `tree`, `log`, `chart`, `focus`, `diff`, `editor`,
+      `drag`, `markdown`, `rich text`, `toolbar` and `keybinding` reached a
+      fragment of another page or nothing. `matchRank` now compares word stems,
+      a substring shorter than four characters cannot name a page, Data display
+      and Accessibility name their subjects, and a guarded roadmap alias table
+      promotes the one-word name of a multiword target. 14 measured queries,
+      four forced defects, 100 files / 724 docs tests and a 98-page
+      `smoke:build`; results in plan 585 §8.
 
 `[x]` **Installation states its prerequisites and native targets (plan 584)** —
       the page now names Node 24.18.0, nub ^0.9.6 and GPUix 0.10.0, renders the

@@ -64,7 +64,10 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["fieldset", ["field group"]],
   ["toast", ["snackbar"]],
   ["spinner", ["busy"]],
-  ["keycap", ["kbd"]],
+  [
+    "keycap",
+    ["kbd", "keybinding", "keybindings", "key binding", "key bindings"],
+  ],
   ["color-picker", ["colour picker", "colourpicker", "swatch", "swatches"]],
   ["preview-card", ["hover card", "hovercard"]],
   ["collapsible", ["collapse", "collapsed section"]],

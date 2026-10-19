@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { componentAliases } from "./component-aliases";
+import { components } from "@/component-meta/registry";
+import { componentSymbols } from "@/component-meta/symbols";
 import { plainNote } from "./roadmap-note";
+import { roadmapAliases } from "./roadmap-aliases";
 import { roadmapTargets } from "./roadmap.generated";
 import { roadmapSearchEntry } from "./roadmap-search";
 import { search } from "./search";
+import { source } from "./source";
 
 /**
  * Guards the roadmap's search document (plan 518). The page renders its rows
@@ -25,12 +30,85 @@ describe("the roadmap is indexed", () => {
     expect(missing).toEqual([]);
   });
 
-  it("promotes exactly the multiword names", () => {
-    const expected = roadmapTargets
+  it("promotes exactly the multiword names and the guarded aliases", () => {
+    const multiword = roadmapTargets
       .map((target) => target.name)
       .filter((name) => name.includes(" "));
-    expect(roadmapSearchEntry.names).toEqual(expected);
+    const aliases = [...roadmapAliases.values()].flat();
+    expect(roadmapSearchEntry.names).toEqual([...multiword, ...aliases]);
     expect(roadmapSearchEntry.names).not.toContain("Tables");
+  });
+});
+
+/**
+ * Plan 585: a reader names a multiword target by one word (`diff`, `editor`,
+ * `drag`, `markdown`, `toolbar`). The table is editorial vocabulary, so it must
+ * name a real target, use a word the target already contains, and never shadow
+ * a component, a page title or another alias.
+ */
+describe("roadmap aliases (plan 585)", () => {
+  const terms = (): ReadonlyArray<{ target: string; term: string }> =>
+    [...roadmapAliases].flatMap(([target, aliases]) =>
+      aliases.map((term) => ({ target, term })),
+    );
+
+  it("keys every alias to a real target and uses a word the target contains", () => {
+    const words = (value: string): ReadonlyArray<string> =>
+      value
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length > 0);
+    const missing = [...roadmapAliases].flatMap(([name, aliases]) => {
+      const target = roadmapTargets.find((entry) => entry.name === name);
+      if (target === undefined) return [name];
+      const targetWords = words(`${target.name} ${target.note}`);
+      return aliases
+        .filter((term) =>
+          words(term).every(
+            (word) => !targetWords.some((entry) => entry.startsWith(word)),
+          ),
+        )
+        .map((term) => `${name}: ${term}`);
+    });
+    expect(missing).toEqual([]);
+  });
+
+  it("stores every term lower-case, trimmed and for one target only", () => {
+    const malformed = terms()
+      .filter(({ term }) => term !== term.trim().toLowerCase())
+      .map(({ term }) => term);
+    expect(malformed).toEqual([]);
+    const counts = new Map<string, number>();
+    terms().forEach(({ term }) =>
+      counts.set(term, (counts.get(term) ?? 0) + 1),
+    );
+    expect(
+      [...counts].filter(([, count]) => count > 1).map(([term]) => term),
+    ).toEqual([]);
+  });
+
+  it("does not shadow a component, a page title or another alias", () => {
+    const componentNames = new Set(
+      components.flatMap((component) => [
+        component.title.trim().toLowerCase(),
+        ...componentSymbols(component).map((name) => name.toLowerCase()),
+      ]),
+    );
+    const aliasTerms = new Set(
+      [...componentAliases.values()].flat().map((term) => term.toLowerCase()),
+    );
+    const pageTitles = new Set(
+      source.getPages().map((page) => (page.data.title ?? "").toLowerCase()),
+    );
+    const shadowing = terms()
+      .filter(
+        ({ term }) =>
+          componentNames.has(term) ||
+          aliasTerms.has(term) ||
+          pageTitles.has(term),
+      )
+      .map(({ term }) => term);
+    expect(shadowing).toEqual([]);
   });
 });
 
