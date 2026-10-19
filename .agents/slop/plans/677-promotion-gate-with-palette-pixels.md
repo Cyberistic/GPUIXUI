@@ -308,22 +308,24 @@ The gate ran at `86057653` (the plan-676 code head) plus this plan's commit
 so no merge was needed.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities, **110.6 s** (`durationMs` 110574; the
-concurrent first run measured 95.9 s). `--list` printed 106 ids. Host:
+`0`, **3824 checks**, 65 capabilities, **110.6 s** (`durationMs` 110574; a
+concurrent run measured 95.9 s, and the report on disk at the close is a third
+run — see "Artifacts on disk" below). `--list` printed 106 ids. Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
-`.artifacts/smoke-report.json` was rewritten (mtime 17:34).
+A plain run rewrote `.artifacts/smoke-report.json`; the report on disk at the
+close is listed below.
 
 **Live** — `nub apps/playground/dist/live/run.js --all` is **95/95**, exit
 `0`, **2521 checks**, 61 capabilities, **1136.2 s** (`durationMs` 1136182; the
 concurrent first run measured 1106.8 s).
 `--list` printed 95 ids and `live-theme` was among them; it reports **39
-checks** (73.2 s), so the palette's frame pixels ran inside the full
+checks**, so the palette's frame pixels ran inside the full
 sequence. Host:
 `gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 The check total is exactly plan `675`'s 2491 minus `live-theme`'s old 9 plus
-its new 39 (`2491 − 9 + 39 = 2521`). `.artifacts/live-report.json` was
-rewritten (mtime 17:53); a plain `--all` wrote **no** `provenance.json` (no
-`--capture`).
+its new 39 (`2491 − 9 + 39 = 2521`). A plain `--all` wrote **no**
+`provenance.json` (no
+`--capture`); the reports on disk and their exact `durationMs` are listed below.
 
 **Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
 Test counts: playground **442**, testing **68**, components **308**,
@@ -335,6 +337,22 @@ concurrent duplicate `swarm:playground` session recorded under B3 — agreed on
 every count (106/106 · 3824 · 65 headless; 95/95 · 2521 · 61 live;
 `live-theme` 39 checks), differing only in wall-clock. Two full windows
 reaching the same 2521 checks is stronger evidence than one run.
+
+**Artifacts on disk at the close.** Two sessions ran the gate at once (B3), and
+each run overwrote the shared report files, so the files a reader inspects are
+not necessarily the run whose durations are quoted above. Read on 2026-10-19
+after the last run finished:
+
+```text
+.artifacts/smoke-report.json  mtime 17:44  durationMs  98115  (98.1 s)
+.artifacts/live-report.json   mtime 17:57  durationMs 1120700  (1120.7 s)
+```
+
+Every concurrent run agreed on the counts — headless 106/106 · 3824 · 65 and
+live 95/95 · 2521 · 61 with `live-theme` at 39 — and differed only in
+wall-clock under load; the live report on disk is the one this session's
+`--all` wrote. The ledgers below cite the on-disk artifacts and note the
+concurrent runs' spread rather than pretending one duration is exact.
 
 **No source change.** No scenario, view, host verb, component, registry entry
 or test was edited. The owner/supervisor still performs the promotion merge;

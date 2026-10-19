@@ -96,8 +96,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities, **110.6 s**; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
-(`live-report.json`, **2521 checks**, 61 capabilities, **1136.2 s**, exit `0`)
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities, **98.1 s**; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
+(`live-report.json`, **2521 checks**, 61 capabilities, **1120.7 s**, exit `0`)
 on 2026-10-19, the merge/release gate (plan `677`, head `86057653` at the gate).
 That total is plan `659`'s 2469 plus the **22 checks `live-pixel-colour`** added
 (plan `674`) plus the **30 that plan `676` added to `live-theme`** (9 → 39), so
@@ -180,7 +180,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**95/95 green** (2521 checks, 61 capabilities, 1106.8 s) on the release-tag
+**95/95 green** (2521 checks, 61 capabilities, 1120.7 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `677`'s gate on
 head `86057653`, including `live-theme`'s 39 pixel checks and
 `live-pixel-colour`; a plain `--all` wrote no

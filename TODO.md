@@ -83,8 +83,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Run the promotion gate on the head that includes plan `676`'s palette
       frame pixels** per plan `677`: verification only at `86057653` (no merge
       was needed — 0 behind `origin/master`) — headless **106/106** (`3824`
-      checks, 65 capabilities, 110.6 s) and live **95/95** (**2521** checks, 61
-      capabilities, **1136.2 s**), both exit `0`. `live-theme` reports **39
+      checks, 65 capabilities, 98.1 s) and live **95/95** (**2521** checks, 61
+      capabilities, **1120.7 s**), both exit `0` (durations are the report
+      artifacts on disk at the close). `live-theme` reports **39
       checks** inside the full registry (73.2 s), so the total is plan `675`'s
       2491 − 9 + 39, and a plain `--all` wrote no `provenance.json`.
       `nub run check`/`lint`/`test` green (playground 442, testing 68,
@@ -1781,6 +1782,18 @@ twice concurrently in two windows and **agreed on every count** — headless
 capabilities), both exit `0`; only wall-clock differed. The ledgers now cite the
 run whose artifacts are on disk, and plan `675` §8 records both. No work was
 lost; the guard remains the one-writer fix in `scripts/`.
+
+**B3 recurred again 2026-10-19 ~17:38–17:57.** The same pair ran plan `677` at
+once: the rotating turn committed `d5fdbb8f` (the plan-677 gate record and all
+four ledgers) while this session's full `--all` window was still running, then
+`c3f93302`/`f856f9fe` reconciled its durations. Every concurrent full registry
+**agreed on every count** — headless 106/106 (3824 checks, 65 capabilities),
+live 95/95 (2521 checks, 61 capabilities), `live-theme` 39 — and only
+wall-clock differed, so the tree was consistent. Because each run overwrote the
+shared reports, this session's follow-up aligns the ledgers with the artifacts
+on disk (`durationMs` 98115 headless, 1120700 live) instead of one run's
+wall-clock. No work was lost; the guard remains the one-writer fix in
+`scripts/`.
 
 
 ## Phase B — working foundation
