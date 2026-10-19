@@ -100,6 +100,8 @@ interface NotificationCentreContextValue {
   readonly trigger: RefObject<PublicInstance | null>;
   /** Native row handles by notification id, for keyboard focus. */
   readonly rowRefs: RefObject<Map<string, PublicInstance>>;
+  /** Bring one row into the list's visible box; a no-op when it already is. */
+  readonly revealRow: RefObject<(id: string) => void>;
   readonly active: Option.Option<string>;
   readonly setActive: (id: string) => void;
   readonly moveActive: (delta: 1 | -1) => void;
@@ -161,6 +163,7 @@ export const NotificationCentre = ({
   });
   const trigger = useRef<PublicInstance | null>(null);
   const rowRefs = useRef(new Map<string, PublicInstance>());
+  const revealRow = useRef<(id: string) => void>(() => undefined);
   const [activeId, setActiveId] = useState<Option.Option<string>>(
     Option.none(),
   );
@@ -224,12 +227,13 @@ export const NotificationCentre = ({
             onNone: () => undefined,
             onSome: (element) => {
               renderer?.focusElement?.(element.id);
+              revealRow.current(item.id);
             },
           });
         },
       });
     },
-    [active, notifications, renderer, setActive],
+    [active, notifications, renderer, revealRow, setActive],
   );
 
   const context = useMemo<NotificationCentreContextValue>(
@@ -243,6 +247,7 @@ export const NotificationCentre = ({
       empty,
       trigger,
       rowRefs,
+      revealRow,
       active,
       setActive,
       moveActive,
@@ -262,6 +267,7 @@ export const NotificationCentre = ({
       open,
       read,
       readActive,
+      revealRow,
       rows,
       setActive,
       setOpen,
@@ -632,17 +638,78 @@ export const NotificationCentreList = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const viewport = useRef<PublicInstance | null>(null);
+  const frame = useRef<PublicInstance | null>(null);
+  const sentinel = useRef<PublicInstance | null>(null);
   const setViewport = useMergedRef<PublicInstance | null>(viewport, ref);
-  const { rows, notifications, active, empty, rowRefs, setActive, read } =
-    useNotificationCentre();
+  const {
+    rows,
+    notifications,
+    active,
+    empty,
+    rowRefs,
+    revealRow,
+    setActive,
+    read,
+  } = useNotificationCentre();
 
   /**
-   * The reader's anchor, so a prepend above the viewport does not move the row
-   * they are reading. The scroll container keeps its pixel offset, so the
-   * inserted rows push the content down; this measures the surviving anchor's
-   * shift and restores the offset. `expected` corrects for a scroll between
-   * commits, because the bounds are viewport-relative.
+   * Bring a row into the frame's visible box with one measured scroll. The frame
+   * is unscrolled, so its box is window space; the sentinel gives the current
+   * scroll position without `getScrollOffset`, which reports nothing at offset
+   * zero on this binding (plan 644).
    */
+  const reveal = useCallback(
+    (id: string) => {
+      const row = rowRefs.current.get(id);
+      const frameId = frame.current?.id;
+      const viewportId = viewport.current?.id;
+      const sentinelId = sentinel.current?.id;
+      if (
+        row === undefined ||
+        frameId === undefined ||
+        viewportId === undefined ||
+        sentinelId === undefined
+      ) {
+        return;
+      }
+      const box = (elementId: number) =>
+        Option.fromNullishOr(renderer?.getElementBounds?.(elementId));
+      pipe(
+        Option.all({
+          frame: box(frameId),
+          row: box(row.id),
+          sentinel: box(sentinelId),
+        }),
+        Option.match({
+          onNone: () => undefined,
+          onSome: ({ frame: visible, row: target, sentinel: top }) => {
+            const scrollTop = visible.y - top.y;
+            const margin = theme.spacing.sm;
+            const above = target.y - (visible.y + margin);
+            const below =
+              target.y + target.height - (visible.y + visible.height - margin);
+            const next =
+              above < 0
+                ? scrollTop + above
+                : below > 0
+                  ? scrollTop + below
+                  : scrollTop;
+            if (next === scrollTop) return;
+            renderer?.scrollTo?.(viewportId, 0, -Math.max(0, next));
+          },
+        }),
+      );
+    },
+    [renderer, rowRefs, theme.spacing.sm],
+  );
+
+  useLayoutEffect(() => {
+    revealRow.current = reveal;
+    return () => {
+      revealRow.current = () => undefined;
+    };
+  }, [reveal, revealRow]);
+
   const anchor = useRef<
     | {
         readonly items: ReadonlyArray<NotificationItem>;
@@ -727,53 +794,67 @@ export const NotificationCentreList = ({
 
   return (
     <div
-      {...rest}
-      ref={setViewport}
-      testId={testId}
+      ref={frame}
+      testId={testId === undefined ? undefined : `${testId}-frame`}
       style={mergeStyles(
         {
           display: "flex",
           flexDirection: "column",
           maxHeight: 280,
-          overflowY: "scroll",
+          overflow: "hidden",
         },
         style,
       )}
     >
-      {Arr.map(rows, (row) =>
-        row.kind === "header" ? (
-          <text
-            key={row.key}
-            style={{
-              ...textStyle(theme, "caption"),
-              color: theme.colors.mutedForeground,
-              paddingLeft: theme.spacing.lg,
-              paddingRight: theme.spacing.lg,
-              paddingTop: theme.spacing.sm,
-              paddingBottom: theme.spacing["2xs"],
-            }}
-          >
-            {row.label}
-          </text>
-        ) : (
-          <NotificationRowView
-            key={row.key}
-            item={row.item}
-            active={Option.contains(active, row.item.id)}
-            testId={
-              testId === undefined ? undefined : `${testId}-${row.item.id}`
-            }
-            register={(instance) => {
-              if (instance === null) rowRefs.current.delete(row.item.id);
-              else rowRefs.current.set(row.item.id, instance);
-            }}
-            onActivate={() => {
-              setActive(row.item.id);
-              read(row.item.id);
-            }}
-          />
-        ),
-      )}
+      <div
+        {...rest}
+        ref={setViewport}
+        testId={testId}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          overflowY: "scroll",
+          minHeight: 0,
+          flexGrow: 1,
+          flexShrink: 1,
+        }}
+      >
+        <div ref={sentinel} style={{ height: 0, flexShrink: 0 }} />
+        {Arr.map(rows, (row) =>
+          row.kind === "header" ? (
+            <text
+              key={row.key}
+              style={{
+                ...textStyle(theme, "caption"),
+                color: theme.colors.mutedForeground,
+                paddingLeft: theme.spacing.lg,
+                paddingRight: theme.spacing.lg,
+                paddingTop: theme.spacing.sm,
+                paddingBottom: theme.spacing["2xs"],
+              }}
+            >
+              {row.label}
+            </text>
+          ) : (
+            <NotificationRowView
+              key={row.key}
+              item={row.item}
+              active={Option.contains(active, row.item.id)}
+              testId={
+                testId === undefined ? undefined : `${testId}-${row.item.id}`
+              }
+              register={(instance) => {
+                if (instance === null) rowRefs.current.delete(row.item.id);
+                else rowRefs.current.set(row.item.id, instance);
+              }}
+              onActivate={() => {
+                setActive(row.item.id);
+                read(row.item.id);
+              }}
+            />
+          ),
+        )}
+      </div>
     </div>
   );
 };
@@ -915,7 +996,7 @@ export const notificationCentreMeta = {
     "read state and the notifications themselves are the caller's: `onRead`/`onMarkAllRead`/`onClear` are requests, so a remount resets nothing the caller persists",
     "no `aria-live` in 0.10.0, so an arrival is not announced while the panel is closed; the trigger's accessible name carries the count",
     "the panel is non-modal: no focus trap and no `aria-modal`; `Tab` leaves it",
-    "keyboard focus moves best-effort through `renderer.focusElement`; the active row's accent fill and ring are the visible cursor, because 0.10.0 has no `aria-activedescendant`",
+    "keyboard focus moves best-effort through `renderer.focusElement`; the active row's accent fill and ring are the visible cursor, and the feed scrolls it into view (plan 644), because 0.10.0 has no `aria-activedescendant`",
   ],
   docs: "docs/notification-centre.mdx",
   example: "examples/notification-centre.example.tsx",

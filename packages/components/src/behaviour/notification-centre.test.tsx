@@ -347,6 +347,52 @@ describe("NotificationCentre", () => {
     root.unmount();
   });
 
+  it("reveals the row an arrow moves to below the viewport", () => {
+    const items: ReadonlyArray<NotificationItem> = Array.from(
+      { length: 20 },
+      (_, index) => ({ id: `n${index}`, title: `Notification ${index}` }),
+    );
+    const root = renderComponent(<Centre notifications={items} defaultOpen />);
+    const frame = requireBounds(root, "feed-frame");
+
+    Arr.forEach(Arr.range(1, 10), () => press(root, "down"));
+
+    const row = requireBounds(root, "feed-n10");
+    expect(root.renderer.getFocusedElementId?.()).toBe(
+      root.renderer.findByTestId("feed-n10")?.id,
+    );
+    expect(row.y).toBeGreaterThanOrEqual(frame.y);
+    expect(row.y + row.height).toBeLessThanOrEqual(frame.y + frame.height);
+
+    root.unmount();
+  });
+
+  it("reveals the row an arrow moves to above a scrolled viewport", () => {
+    const items: ReadonlyArray<NotificationItem> = Array.from(
+      { length: 20 },
+      (_, index) => ({ id: `n${index}`, title: `Notification ${index}` }),
+    );
+    const root = renderComponent(<Centre notifications={items} defaultOpen />);
+    const frame = requireBounds(root, "feed-frame");
+
+    root.renderer.nativeSimulateScrollWheel(
+      frame.x + frame.width / 2,
+      frame.y + frame.height / 2,
+      0,
+      -400,
+    );
+    const scrolled = offsetOf(root);
+
+    press(root, "down");
+
+    const row = requireBounds(root, "feed-n1");
+    expect(row.y).toBeGreaterThanOrEqual(frame.y);
+    expect(row.y + row.height).toBeLessThanOrEqual(frame.y + frame.height);
+    expect(offsetOf(root)).toBeGreaterThan(scrolled);
+
+    root.unmount();
+  });
+
   it("runs a header action without reading the active row", () => {
     const onRead = vi.fn();
     const onMarkAllRead = vi.fn();
