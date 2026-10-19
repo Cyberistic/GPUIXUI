@@ -1208,8 +1208,9 @@ export const contrastFloors: Readonly<
  *
  * The last two pairs are **states** rather than body tiers: a selected row's
  * inherited label (`selectedForeground`) stays one step below its title
- * (`foreground`) on the four fills both roles are documented on — `hover`,
- * `active`, `accent` and `selected` — and a status-panel action's unavailable
+ * (`foreground`) on the five fills both roles are documented on — `hover`,
+ * `active`, `accent`, `selected` and the pressed `selectedActive` — and a
+ * status-panel action's unavailable
  * label stays below the enabled one. `selectedForeground` is never compared on
  * the plain surfaces, because it is not a body tier there: it is the
  * secondary-strength tint an inherited label keeps inside a selected row. The

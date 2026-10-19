@@ -318,7 +318,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [658](./658-recipe-edit-family.md) | The documented recipe edit must own its whole family | F | 310, 311, 318, 327, 330, 331, 355, 389 | done |
 | [659](./659-field-content-surfaces.md) | The field's own content inside a status panel and a pressed selected row | F | 092, 306, 307, 315, 317, 319, 391, 527, 649, 651 | done |
 | [663](./663-selected-label-fills.md) | The pressed selected row's label and text-role count in the prose | F | 316, 506, 623, 651, 659 | done |
-| [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | in progress |
+| [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

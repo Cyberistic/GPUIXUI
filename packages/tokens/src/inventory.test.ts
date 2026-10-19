@@ -31,19 +31,26 @@ import {
   contrastPairClasses,
   contrastPairs,
   dialogSurfacePairs,
+  inactivePanelActionPairs,
   nativeSyntaxPairs,
   overlayWashPairs,
+  selectionFillPairs,
+  selectionFillWashPairs,
+  selectionInactivePairs,
   selectionLinkPairs,
   selectionPairs,
+  selectionPressPairs,
   selectionSoftPairs,
   selectionSoftWashPairs,
   selectionStatusPairs,
   selectionWashPairs,
 } from "./contrast.js";
+import { tierSurfaces } from "./figures.js";
 import { motionLevels, motionPhases } from "./motion.js";
 import { metricGroups } from "./metrics.js";
 import { translucentRoles } from "./opacity.js";
 import { platformNames, platformTypes } from "./platforms.js";
+import { statusTones } from "./styles.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
@@ -140,15 +147,31 @@ describe("COMPONENTS.md design-system rows", () => {
       `${nativeSyntaxPairs.length} native syntax pairs`,
       `${selectionPairs.length} selection pairs`,
       `${selectionStatusPairs.length} status-selection text pairs`,
+      `${selectionPressPairs.length} pressed-row pairs`,
+      `${countWord(statusTones.length)} status labels on the pressed row`,
       `${selectionLinkPairs.length} link-selection text pairs`,
       `${selectionSoftPairs.length} soft-selection text pairs`,
+      `${selectionInactivePairs.length} inactive-selection text pairs`,
       `${selectionWashPairs.length} wash pairs`,
       `${selectionSoftWashPairs.length} soft wash pairs`,
+      `${selectionFillPairs.length} fill-selection text pairs`,
+      `${selectionFillWashPairs.length} fill-veil pairs`,
+      `${inactivePanelActionPairs.length} panel-action inactive pair`,
       `${overlayWashPairs.length} scrim pairs`,
       `${dialogSurfacePairs.length} dialog-face pairs`,
     ].forEach((phrase) => {
       expect(contrast, phrase).toContain(phrase);
     });
+  });
+
+  it("states the hierarchy's selected-label fill count from its tier", () => {
+    const fills = tierSurfaces(["selectedForeground", "foreground"]);
+    const total = row("Total theme check");
+
+    // Derived, not typed: a sixth shared fill moves the word with it.
+    expect(fills).toContain("selectedActive");
+    expect(total).toContain(`on the ${countWord(fills.length)} fills it keeps`);
+    expect(total).not.toContain("on the four fills it keeps");
   });
 
   it("states the floor table the checker reads", () => {

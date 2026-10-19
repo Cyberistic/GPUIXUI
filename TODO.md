@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 290/363
+`[x]` `[████████░░]` 291/364
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2437,6 +2437,15 @@ in three places (the row-text paragraph named only three washes beside
 both documents now name every fill, and two guards derive the count and the
 list from `selectionPairs`, `selectionPressPairs` and `contrastPairs`; no
 colour, pair, floor or metric moves (plan 663)
+`[x]` Make the ledger count the pairs it names — plan 659 added a seventh
+`selectionPressPairs` entry, so the contrast row's "9 pressed-row pairs" was one
+short, and five further counts in the same row (the pressed row's status labels,
+the inactive-selection, both fill-selection lists and the panel-action pair)
+were hand-typed with no owner; the total-check row and the design system also
+said the hierarchy compares the selected label on "the four fills it keeps"
+after plan 651 made `selectedActive` a fifth. Every count now derives from its
+list, the tier word from `tierSurfaces`, and no colour, pair, floor, metric or
+shipped theme moves (plan 664)
 
 ## Phase C — Tier 1–2 components
 

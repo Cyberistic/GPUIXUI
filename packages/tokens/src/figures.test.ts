@@ -182,11 +182,30 @@ describe("tier figures the documents state in the present tense", () => {
 
     const roles = bodyRoles.map((role) => `\`${role}\``);
     const bodyList = `${roles.slice(0, -1).join(", ")} and ${roles[roles.length - 1]}`;
+    const fillCountWords = [
+      "zero",
+      "one",
+      "two",
+      "three",
+      "four",
+      "five",
+      "six",
+      "seven",
+      "eight",
+      "nine",
+      "ten",
+    ] as const;
+    const countWord = (count: number): string =>
+      fillCountWords[count] ?? String(count);
+    const selectedLabelFills = tierSurfaces([
+      "selectedForeground",
+      "foreground",
+    ]);
     const sentence =
       `every shipped set clears it — secondary text sits ${[...bodyMinima][0]}:1 below ${bodyList}; ` +
       `the unavailable label ${minimum("disabledForeground", "mutedForeground")}:1 and the hint ${minimum("placeholder", "mutedForeground")}:1 below secondary text; ` +
       `the disabled label of a status-panel action ${minimum("disabledForeground", "softActionForeground")}:1 below the enabled one; ` +
-      `and a selected row's inherited label ${minimum("selectedForeground", "foreground")}:1 below its title on the four fills it keeps.`;
+      `and a selected row's inherited label ${minimum("selectedForeground", "foreground")}:1 below its title on the ${countWord(selectedLabelFills.length)} fills it keeps.`;
 
     expect(
       documents["docs/design-system.md"].replaceAll(/\s+/g, " "),
