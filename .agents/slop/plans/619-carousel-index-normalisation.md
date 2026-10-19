@@ -109,7 +109,9 @@ Measured on 2026-10-19, real `TestRenderer`, this host:
 - after the fix — Carousel `20 tests | 1 failed`, the one failure being the
   pre-existing plan-540 focus-ring case (`expected undefined to be defined` at
   the root's `boxShadow`), which is red on `HEAD` too; the two new cases pass;
-- `src/carousel/logic.test.ts` — 5/5.
+- `src/carousel/logic.test.ts` — 5/5;
+- the full native suite — 785 passed / 35 failed of 820, the same 35 plan-540
+  binding cases as the 783/35-of-818 baseline, so no component regressed.
 
 ### Commands and expected results
 

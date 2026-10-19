@@ -1022,9 +1022,9 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plans 611/612): all
-      three exit 0; the unit suite is 449 tests in 44 files. The native
-      behaviour suite is **776 passed / 35 failed of 811** — every failure is
+      re-run from the components worktree on 2026-10-19 (plans 611/612/619): all
+      three exit 0; the unit suite is 454 tests in 45 files. The native
+      behaviour suite is **785 passed / 35 failed of 820** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19).
       Re-run before release, since every later merge can change them
