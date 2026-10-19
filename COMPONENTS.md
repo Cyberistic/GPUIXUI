@@ -96,9 +96,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities; **115.5 s** for the surviving full run; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities; **115.5 s** at the plan-`691` gate and **282.4 s** on an independent re-run under load, identical counts; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
 (`live-report.json`, **2545 checks**, 61 capabilities; **1094.3 s**, exit `0`)
-on 2026-10-19, the merge/release gate (plan `691`, head `836b4d63` at the gate).
+on 2026-10-19, the merge/release gate (plan `691`, head `47068722` at the gate).
 That total is plan `659`'s 2469 plus the **22 checks `live-pixel-colour`** added
 (plan `674`) plus the **30 that plan `676` added to `live-theme`** (9 → 39) plus
 the **24 that plan `690` added to `live-content`** (44 → 68), so
@@ -185,7 +185,7 @@ A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
 **95/95 green** (2545 checks, 61 capabilities; 1094.3 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `691`'s gate on
-head `836b4d63`, including `live-theme`'s 39 pixel checks,
+head `47068722`, including `live-theme`'s 39 pixel checks,
 `live-pixel-colour` and `live-content`'s 68 image-source checks; a plain `--all`
 wrote no frame or `provenance.json`), and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,

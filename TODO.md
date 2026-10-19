@@ -81,8 +81,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        (`ecbda2cf`, `scripts/swarm-model.sh` only) as `76edbe63`, re-ran the
        full headless suite and edited the same ledgers while this session's own
        live gate was running; it was then stopped. Both sessions' runs are real
-       and agree on every count: headless 106/106 · 3824 · 65 (two runs; the
-       surviving artifact records 115.5 s) and live
+       and agree on every count: headless 106/106 · 3824 · 65 (three runs;
+       115.5 s at the gate, 282.4 s on the independent re-run that rewrote the
+       artifact) and live
        95/95 · **2545** · 61 · 1094.3 s (this
        session's run at 18:40). The duplicate then committed the surviving
        session's working plan/ledger edits as `c05ac09f`; the surviving session

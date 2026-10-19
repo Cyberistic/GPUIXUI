@@ -322,10 +322,11 @@ The gate ran on the plan-690 code head `836b4d63` plus this plan's commit
 affect any suite input.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities, **115.5 s** (the report on disk:
-298,394 bytes, 18:39). A concurrent B3 headless run reported the identical
-counts and host, but its report was overwritten; only the surviving artifact's
-duration is cited. `--list` printed 106 ids.
+`0`, **3824 checks**, 65 capabilities, **115.5 s** at the gate. An independent
+re-run on the same head after the session restart measured **282.4 s** with the
+identical counts and host (the machine was carrying the live gate and the
+re-run); the duration is load-dependent, the counts are not. `--list` printed
+106 ids.
 Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 
@@ -343,10 +344,11 @@ Test counts: playground **442**, testing **68**, components **308**,
 primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7** —
 unchanged from plan `690` (this plan changes prose only).
 
-**Artifacts** — `.artifacts/smoke-report.json` (298,394 bytes, 18:39,
-`durationMs 115523`) and `.artifacts/live-report.json` (202,776 bytes, 18:40,
-`durationMs 1094268`) are the files on disk; the totals above were read back
-from them rather than from the console.
+**Artifacts** — `.artifacts/live-report.json` (202,776 bytes, 18:40,
+`durationMs 1094268`) is the gate's own report, and `.artifacts/smoke-report.json`
+was rewritten by the independent re-run (298,418 bytes, 18:52,
+`durationMs 282383`; the gate's own 18:39 report recorded `115523`). The totals
+above were read back from the artifacts rather than from the console.
 
 **Concurrent runs (B3).** A second `swarm:playground` session wrote this tree
 during the gate — it created the `76edbe63` merge, re-ran the headless suite,

@@ -2089,7 +2089,7 @@ media=verified window=verified frames=verified
 
 The last full merge/release gate ran **95/95** (`exit 0`, **2545** checks, 61
 capabilities; **1094.3 s**; `.artifacts/live-report.json`, 2026-10-19) on head
-`836b4d63` (plan `691`),
+`47068722` (plan `691`),
 including every scenario this branch added through `live-theme-platform` (plan
 `654`, the platform type styles in a window), `live-shell` through plan `656`'s
 capture-capable runner, plan `658`'s Tier 1 additions — `live-primitives-display`
@@ -2299,7 +2299,7 @@ narrower. Each deviation is deliberate and measured:
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **95/95** on
   2026-10-19 (**2545** checks, 61 capabilities; 1094.3 s; exit `0`, the merge
-  gate; plan `691` on head `836b4d63`, including `live-theme`'s 39 pixel checks,
+  gate; plan `691` on head `47068722`, including `live-theme`'s 39 pixel checks,
   `live-pixel-colour`, `live-content`'s 68 image-source checks and
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
