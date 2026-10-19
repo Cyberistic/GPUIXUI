@@ -95,7 +95,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **104/104 green here** (exit `0`, `.artifacts/smoke-report.json`, **3672 checks**, 64 capabilities). The live suite **last ran in full at 87/87**
-(`live-report.json`, **2203 checks**, 57 capabilities, 913.3 s, exit `0`) on
+(`live-report.json`, **2203 checks**, 57 capabilities, 932.5 s, exit `0`) on
 2026-10-19, the merge/release gate on the final branch; it covered every live
 scenario registered at that point, including `live-selection-signal` (plan
 `615`, the window's selection-change event). Both `host` lines carry the

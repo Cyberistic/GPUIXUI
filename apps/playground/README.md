@@ -1916,7 +1916,7 @@ frames=verified
 ```
 
 The last full merge/release gate ran **87/87** (`exit 0`, 2203 checks, 57
-capabilities, 913.3 s, `.artifacts/live-report.json`, 2026-10-19), including the
+capabilities, 932.5 s, `.artifacts/live-report.json`, 2026-10-19), including the
 two scenarios this branch added last: `live-data-grid` (plans `606`/`607`) and
 `live-selection-signal` (plan `615`). The full live suite is a merge/release
 gate rather than a per-task check.

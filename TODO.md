@@ -88,7 +88,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       change` fails). Focused ids run: `selection-signal`,
       `live-selection-signal`; then the whole headless registry
       **104/104** (**3672** checks, 64 capabilities) and the whole live registry
-      **87/87** (**2203** checks, 57 capabilities, 913.3 s), both exit `0`.
+      **87/87** (**2203** checks, 57 capabilities, 932.5 s), both exit `0`.
       Also verified: `nub run check`, `nub run lint`, `nub run test`.
 
 `[x]` Reset the **data-grid anchor in the row-set update** per plan `607`:
@@ -1188,9 +1188,9 @@ focused id is `live-frames`.
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
 `[~]` **Promote the playground workstream to the integration branch** —
-      **prepared and pushed on this branch 2026-10-19** (`da651b97`, ledger
-      `0d083cef`): an owner/supervisor runs the fast-forward; the workstream
-      itself never pushes to master. **Preparation:** `agent/playground` merged
+      **prepared and pushed on this branch 2026-10-19:** an owner/supervisor
+      runs the fast-forward; the workstream itself never pushes to master.
+      **Preparation:** `agent/playground` merged
       `origin/master` (43 commits: the docs site and its Blocks/Theme Editor,
       `@gpuixui/tw`, the zIndex patch and the transform work). The six
       conflicts were resolved here: `apps/playground/src/smoke/run.ts` and its
@@ -1205,7 +1205,7 @@ focused id is `live-frames`.
       promotion is a fast-forward. Merge/release gate **re-run on the plan-615
       code (2026-10-19):** headless **104/104** (`3672` checks, 64
       capabilities) and live **87/87** (`2203` checks, 57 capabilities,
-      913.3 s), both exit `0`; `nub run check`, `nub run lint` and
+      932.5 s), both exit `0`; `nub run check`, `nub run lint` and
       `nub run test` pass at that head. Artifacts:
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
@@ -1298,6 +1298,15 @@ interactive session committed a renumber of the same file. The additions were
 consistent with the gate and were kept in `979de6e0`; no work was lost. The
 supervisor still cannot see an interactive session, so this remains a
 `scripts/swarm-supervisor.sh` fix, not a workstream one.
+
+**B3 recurred again 2026-10-19 ~08:28–08:43.** A rotating turn (PID `98015`,
+started 08:28) ran the merge gate and committed `0d083cef` (the 607 gate record)
+and `aa34395b` (promotion prepared) while the interactive session was running its
+own full live gate. Both gates were green and agreed (86/86, 2172 checks), so
+the duplication cost ~15 minutes and no work was lost. The turn's promotion
+record and this session's independent gate agreed (each ran the full suite);
+the ledger kept one copy. The guard is still the one-writer fix in `scripts/`.
+
 
 ## Phase B — working foundation
 
