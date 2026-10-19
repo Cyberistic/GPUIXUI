@@ -288,6 +288,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [611](./611-content-ring.md) | A ring that stays visible on arbitrary content | F | 017, 069, 071, 332, 383, 391, 398, 399, 609, 610 | done |
 | [613](./613-ring-figures.md) | The content ring's quoted figures | F | 544, 611 | done |
 | [616](./616-docs-source-links.md) | The catalogue's four dead source links, and a link guard | F | 355, 356, 613 | done |
+| [617](./617-ledger-check-counts.md) | The ledger's check counts, in one owner | F | 398, 567, 602, 611 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3101,6 +3102,16 @@ example with a test, plus the catalogue, design-system, ledger and TODO
 sentences. No colour, pair, floor, metric or theme moves: `track` on `popover`
 is already measured and the bar's `xText` is held on its surfaces, so a new
 pair would be a guard no consistent palette can fail.
+
+Plan `617` applies plan `567`'s count rule to the last prose document that
+retyped the guarantee: `COMPONENTS.md`. Plan `611` made `ring` the tenth check,
+but the **Total theme check** row still said `inventory.test.ts` held "this
+row's nine names", its present-tense "the ten kinds" was the only count with no
+test, and four historical audits in the contrast and metric rows still said
+`six`/`nine` checks. The name sentence is count-free now, the one present-tense
+count is held to `countWord(themeChecks.length)`, the four audits say "every
+check", and the new `inventory.test.ts` case proves its pattern rejects both
+historical spellings. No token, pair, floor, metric or theme moves.
 
 ## How to use a plan
 
