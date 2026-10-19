@@ -1454,7 +1454,11 @@ focused id is `live-frames`.
       capabilities), both exit `0`; `nub run check`, `nub run lint` and
       `nub run test` pass (playground **432**, testing 61, components 308,
       primitives 282, tokens 196, tw 103, icons 19, docs 7). This is the gate
-      for the promotion merge.
+      for the promotion merge. **Addendum (plan `653`):** two test-only commits
+      follow it (`6809eed5`, `405a8ec7`); they change no scenario, view or host
+      verb, and `nub run check`/`lint`/`test` are green at `405a8ec7`
+      (playground **436**), so the recorded live gate still describes the
+      promotion's scenario code.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
