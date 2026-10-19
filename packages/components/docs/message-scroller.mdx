@@ -53,11 +53,13 @@ token.
 | `pinned` controlled | the caller's value wins; every accepted change reports through `onPinnedChange` |
 
 A scroll within the threshold (default 24px, the theme's `spacing["2xl"]`) still
-counts as "at the end", so a wheel nudge does not switch following off. The pin
-is measured against the **scroller root's visible box**: GPUix 0.10.0 reports a
-scroll container's own box in scrolled content space (measured: `y: -1080` at
-offset `-1080`) while its rows are in window space, so the root is the reliable
-frame (plan 582).
+counts as "at the end", so a wheel nudge does not switch following off. A
+negative threshold counts as zero; an absent or non-finite one uses the default,
+so a malformed value can never disable following or leave the affordance
+counting forever. The pin is measured against the **scroller root's visible
+box**: GPUix 0.10.0 reports a scroll container's own box in scrolled content
+space (measured: `y: -1080` at offset `-1080`) while its rows are in window
+space, so the root is the reliable frame (plan 582).
 
 ## API
 
@@ -114,13 +116,14 @@ change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (13 tests):
 it wheels the scroller root, appends rows, grows the tail, clicks the affordance
 and measures that the affordance floats inside the transcript's corner, then
 reads the real `getScrollOffset`/bounds. One case returns exactly to the end to
-prove the pin can be re-read after scrolling up.
+prove the pin can be re-read after scrolling up, and one does the same with a
+non-finite threshold.
 `src/message-scroller/logic.test.ts` covers the pin/unread fold without a
-window.
+window, including the threshold fallback.
 
 ## Credit
 

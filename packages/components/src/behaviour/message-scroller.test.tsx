@@ -36,6 +36,8 @@ interface TranscriptProps {
   readonly count: number;
   /** Give the last row extra height, as a streamed reply would gain. */
   readonly grown?: boolean;
+  /** The pin distance; a malformed value must still follow the end. */
+  readonly threshold?: number;
   readonly onPinnedChange?: (pinned: boolean) => void;
 }
 
@@ -43,12 +45,14 @@ interface TranscriptProps {
 const Transcript = ({
   count,
   grown = false,
+  threshold,
   onPinnedChange,
 }: TranscriptProps) => (
   <div style={{ width: 480 }}>
     <MessageScroller
       testId="scroller"
       label="Conversation"
+      threshold={threshold}
       onPinnedChange={onPinnedChange}
     >
       <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
@@ -205,6 +209,23 @@ describe("MessageScroller", () => {
     // Back to the end in one move. The old viewport-box rule read the tail as
     // 1000+ px below the visible bottom (the container's box is content-space)
     // and could never re-pin (plan 582).
+    wheel(root, -120);
+    expect(endIsVisible(root, 39)).toBe(true);
+    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+
+    root.unmount();
+  });
+
+  it("re-pins at the end when the threshold is not a number", () => {
+    const root = renderComponent(
+      <Transcript count={40} threshold={Number.NaN} />,
+    );
+
+    wheel(root, 120);
+    expect(root.renderer.findByTestId("jump")).toBeDefined();
+
+    // `distanceFromEnd <= NaN` is false, so the old threshold could never
+    // re-pin and every arrival counted as unread (plan 652).
     wheel(root, -120);
     expect(endIsVisible(root, 39)).toBe(true);
     expect(root.renderer.findByTestId("jump")).toBeUndefined();

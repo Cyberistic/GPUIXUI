@@ -21,6 +21,19 @@ export const initialMessageScrollerState: MessageScrollerState = {
   unread: 0,
 };
 
+/**
+ * The pin distance: a finite caller value clamped at zero, or the fallback
+ * token when the value is absent or not a distance. A malformed threshold must
+ * not disable following the end.
+ */
+export const pinThreshold = (
+  value: number | undefined,
+  fallback: number,
+): number =>
+  value === undefined || !Number.isFinite(value)
+    ? fallback
+    : Math.max(0, value);
+
 /** One measurement of the viewport's distance from its newest row. */
 export interface ScrollObservation {
   /** Pixels between the bottom of the viewport and the tail sentinel. */

@@ -60,6 +60,7 @@ import { useTheme } from "./internal/theme.js";
 import {
   addItems,
   observeScroll,
+  pinThreshold,
   requestLatest,
   type MessageScrollerState,
 } from "./message-scroller/logic.js";
@@ -97,7 +98,8 @@ export interface MessageScrollerProps extends Omit<Props, "children"> {
   readonly label: string;
   /**
    * Distance from the tail that still counts as "at the end". Defaults to the
-   * theme's `spacing["2xl"]` (24px) — a layout token, not a literal.
+   * theme's `spacing["2xl"]` (24px) — a layout token, not a literal. A negative
+   * value counts as zero; an absent or non-finite one uses the default.
    */
   readonly threshold?: number;
   /** The controlled pinned state. `undefined` means uncontrolled. */
@@ -126,7 +128,7 @@ export const MessageScroller = ({
     onChange: onPinnedChange,
   });
   const [unread, setUnread] = useState(0);
-  const threshold = thresholdProp ?? theme.spacing["2xl"];
+  const threshold = pinThreshold(thresholdProp, theme.spacing["2xl"]);
   const rootRef = useRef<PublicInstance | null>(null);
   const setRoot = useMergedRef(rootRef, ref);
   assertParts(messageScrollerRoot, children);

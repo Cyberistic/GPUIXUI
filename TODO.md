@@ -517,6 +517,16 @@ retired once both branches are one
       the same 3 recorded plan-540 failures), both-direction proof (the 3 native
       cases fail on the old source); docs, `COMPONENTS.md`, `PLAN.md` D30 and the
       inventory synced (owner: components)
+    - [x] A malformed pin threshold stops the scroller following — plan 652.
+      Measured: `observeScroll(initial, { distanceFromEnd: 0, threshold: NaN })`
+      read `pinned: false`, because `Math.max(0, NaN)` is `NaN` and
+      `distanceFromEnd <= NaN` is always false, so an appended row was never
+      followed, wheeling back to the end could not re-pin and every arrival
+      stayed counted. `pinThreshold` falls back to the theme's 24px default for
+      an absent or non-finite value and clamps a negative one to zero; 2 pure +
+      1 native case (unit 464, Message scroller 13), the native case failing on
+      the old wiring; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
     - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
       it is its own tab stop (`tabIndex 0`) and takes native focus
       (`getFocusedElementId() = search-clear`), but has no `focused` state or

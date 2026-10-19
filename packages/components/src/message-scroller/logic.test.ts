@@ -12,11 +12,27 @@ import {
   addItems,
   initialMessageScrollerState,
   observeScroll,
+  pinThreshold,
   requestLatest,
   type MessageScrollerState,
 } from "./logic.js";
 
 const unpinned: MessageScrollerState = { pinned: false, unread: 0 };
+
+describe("pinThreshold", () => {
+  it("uses the fallback when the value is absent or not a distance", () => {
+    expect(pinThreshold(Number.NaN, 24)).toBe(24);
+    expect(pinThreshold(Number.POSITIVE_INFINITY, 24)).toBe(24);
+    expect(pinThreshold(Number.NEGATIVE_INFINITY, 24)).toBe(24);
+    expect(pinThreshold(undefined, 24)).toBe(24);
+  });
+
+  it("keeps a finite distance and clamps a negative one", () => {
+    expect(pinThreshold(12, 24)).toBe(12);
+    expect(pinThreshold(0, 24)).toBe(0);
+    expect(pinThreshold(-4, 24)).toBe(0);
+  });
+});
 
 describe("observeScroll", () => {
   it("stays pinned within the threshold", () => {
