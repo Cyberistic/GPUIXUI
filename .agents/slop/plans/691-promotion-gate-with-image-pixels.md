@@ -348,7 +348,9 @@ unchanged from plan `690` (this plan changes prose only).
 `durationMs 1094268`) is the gate's own report, and `.artifacts/smoke-report.json`
 was rewritten by the independent re-run (298,418 bytes, 18:52,
 `durationMs 282383`; the gate's own 18:39 report recorded `115523`). The totals
-above were read back from the artifacts rather than from the console.
+above were read back from the artifacts rather than from the console; every
+check in both reports carries `outcome: { _tag: "passed" }` — headless
+**3824/3824**, live **2545/2545** — and `live-content` is 68/68.
 
 **Concurrent runs (B3).** A second `swarm:playground` session wrote this tree
 during the gate — it created the `76edbe63` merge, re-ran the headless suite,
