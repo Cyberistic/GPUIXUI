@@ -287,6 +287,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [610](./610-scrim-over-resting-fills.md) | The scrim over the fills it excluded | F | 099, 359, 375, 394, 395, 399, 508, 509, 584 | done |
 | [611](./611-content-ring.md) | A ring that stays visible on arbitrary content | F | 017, 069, 071, 332, 383, 391, 398, 399, 609, 610 | done |
 | [613](./613-ring-figures.md) | The content ring's quoted figures | F | 544, 611 | done |
+| [616](./616-docs-source-links.md) | The catalogue's four dead source links, and a link guard | F | 355, 356, 613 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

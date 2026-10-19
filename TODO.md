@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 258/330
+`[x]` `[████████░░]` 259/331
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2186,6 +2186,14 @@ finding is the Notification centre's open row, which uses the transient
 `accent` wash, loses it under the pointer and rings itself while unfocused
 (recorded cross-team); the TagInput chip's `0.6` dim joins the existing
 disabled-dim row (2026-10-19 audit)
+`[x]` Resolve the catalogue's four dead source links — `docs/tokens.md` linked
+the native field, the two find-highlight suites and the native-text example as
+`./src/…`, which from `docs/` resolves to a `docs/src/` that does not exist, so
+four "runnable" links were dead while no test read a target; the paths now climb
+to `../packages/tokens/src/…`, and `docs-links.test.ts` resolves every relative
+Markdown link in the catalogue, the design system and the README against the
+document's own directory, with synthetic cases proving it reports a
+document-relative miss and accepts a target that climbs out (plan 616)
 
 ## Phase C — Tier 1–2 components
 

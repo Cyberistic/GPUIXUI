@@ -1637,7 +1637,7 @@ field keeps the runtime's built-in dark caret (`#7C86FF`), which measures
 the 4.5:1 mark floor the AAA theme declares. Apply it beside the field's style; a
 consumer that wants a different caret replaces the field of the returned object.
 A runnable example lives in
-[`src/native-field.example.ts`](./src/native-field.example.ts).
+[`src/native-field.example.ts`](../packages/tokens/src/native-field.example.ts).
 
 ```tsx
 import { nativeFieldTheme } from "@gpuixui/tokens";
@@ -1871,9 +1871,9 @@ surface: the tightest painted pairs are **5.21:1** and **4.51:1**, body text
 quiet panel through the active match there, under 4.5:1, while every check
 returned `[]`; both take the XP step, so every shipped set passes and no other
 value moves. `themeHighlightFailures` is that check, composed into
-`themeFailures`; [`native-highlight.test.ts`](./src/native-highlight.test.ts)
+`themeFailures`; [`native-highlight.test.ts`](../packages/tokens/src/native-highlight.test.ts)
 derives every figure above, and
-[`native-highlight-code-surface.test.ts`](./src/native-highlight-code-surface.test.ts)
+[`native-highlight-code-surface.test.ts`](../packages/tokens/src/native-highlight-code-surface.test.ts)
 holds the painted surface.
 
 The same check holds the step itself. An active match that is not one
@@ -1886,7 +1886,7 @@ sees the collapsed match. A text failure keeps its `pairClass: "secondary"` and
 the wash, surface, role and ratio it always had.
 
 A runnable example lives in
-[`src/native-text.example.ts`](./src/native-text.example.ts).
+[`src/native-text.example.ts`](../packages/tokens/src/native-text.example.ts).
 
 ### Scrollbars
 
