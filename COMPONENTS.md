@@ -90,9 +90,12 @@ gap instead.
 for a programmatic move (plans `536`/`540`) and a live window's delivery is
 window-state dependent (playground plans `390`/`603`/`605`), so a ring after a
 programmatic or pointer focus move appears only when the host sends the event.
-No component fakes it with a timer or poll. The claim is stated on all 36
-component pages whose parts can take focus, `ComponentMeta.focusable` marks
-them, and `inventory.test.ts` holds the pages to it (plan `608`).
+No component fakes it with a timer or poll. The one sampled focus signal is
+`InlineEdit`'s commit watcher (plan `613`): it runs only while an edit is open,
+samples the renderer's focused host so a click away cannot leave the editor
+stuck, and never paints a ring. The claim is stated on all 36 component pages
+whose parts can take focus, `ComponentMeta.focusable` marks them, and
+`inventory.test.ts` holds the pages to it (plan `608`).
 
 ### Not provided — needs real implementation
 
