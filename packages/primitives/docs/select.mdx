@@ -334,7 +334,9 @@ paint `y 2..12`, inside the margin; it now opens below.
 reports (`useWindowSize`), so a resize re-decides the side, re-caps the list and
 re-measures the trigger while the list is open. The runtime's own `fit="snap"`
 still clamps without flipping, which is why the decision has to be ours
-(plan `604`).
+(plan `604`). The observer sleeps while the list is closed — a closed select has
+no placement to correct — and reads the current size when it opens, so opening
+after a resize still places the first frame correctly (plan `609`).
 
 ## Style by state
 
@@ -382,11 +384,12 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **Options are data.** No rich option content and no compound escape hatch in
   the public API; use `RadioGroup` for those. A group is a heading and a run of
   options, not a custom row.
-- **The window is observed; a trigger's own width is measured.** `useWindowSize`
-  follows a resize, so the side, the cap and the trigger's measured width update
-  while the list is open. A trigger whose width changes without a resize or a
-  prop change (a sibling reflowing, say) keeps the old `minWidth` until the list
-  reopens.
+- **The window is observed while the list is open; a trigger's own width is
+  measured.** `useWindowSize` follows a resize while the list is open, so the
+  side, the cap and the trigger's measured width update; it sleeps while
+  closed, and opening reads the current size (plan `609`). A trigger whose width
+  changes without a resize or a prop change (a sibling reflowing, say) keeps the
+  old `minWidth` until the list reopens.
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
   room, the list is capped to the roomier one and scrolls. An explicit

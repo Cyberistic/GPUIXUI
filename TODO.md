@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 150/150
+`[x]` `[████████████]` 151/151
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1654,6 +1654,18 @@ retired once both branches are one
       `src/composed-app-docs.test.ts` derives the case count from the runtime
       file and fails on the old autoFocus or partial-pass claims. 4 cases, all
       four failure directions measured (plan `608`).
+
+`[x]` `packages/primitives`: **a closed `Select` sampled the window forever** —
+      measured 2026-10-19 by counting `renderer.getWindowSize` around one
+      mounted select: 4 calls in 450 ms while the list was closed, with no
+      placement to correct; `Tooltip` had slept while closed since plan `604`,
+      `Select` had not. The observer is now
+      `useWindowSize({ intervalMs: open ? 100 : false })`, and it reads the
+      current size when it subscribes, so opening after a resize still places
+      the first frame exactly. The `floating-resize` case counts the calls (two
+      at mount, none closed, sampling open, none after Escape); the old default
+      fails with 3 closed-state calls and a permanently-false interval fails
+      the open half (plan `609`; runtime 795 → 796 tests, offline unchanged).
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

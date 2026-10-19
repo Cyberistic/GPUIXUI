@@ -15,6 +15,11 @@
  * reports — the same signal `useWindowSize` polls. The layer's own layout still
  * runs against the real window, so the assertions are about our decision (which
  * side, what cap), never about the runtime's clamp.
+ *
+ * **Plan `609`:** `Tooltip` slept while closed, but `Select` used the default
+ * 100 ms observer for its whole mounted life — measured, a closed select asked
+ * `getWindowSize` 4 times in 450 ms with nothing to place. The last case holds
+ * the control to the same rule: no interval while closed, sampling while open.
  */
 
 import { expect, it } from "vitest";
@@ -24,7 +29,7 @@ import { Select } from "../src/components/Select.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { FLOATING_MARGIN } from "../src/core/index.js";
 import type { Bounds, Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus, sleep } from "./fixture.js";
+import { Surface, WINDOW, openWindow, settleFocus, sleep } from "./fixture.js";
 
 const LONG = Array.from({ length: 60 }, (_, index) => `word${index}`).join(" ");
 
@@ -158,4 +163,45 @@ it("moves a Select list above when the host window shrinks", async () => {
 
   const after = boundsOf(runtime, "sel-content");
   expect(after.y + after.height).toBeLessThanOrEqual(target.y + 1);
+});
+
+it("a closed Select does not sample the window", async () => {
+  const runtime = await openWindow();
+  let calls = 0;
+  const size = WINDOW;
+  runtime.renderer.getWindowSize = () => {
+    calls += 1;
+    return { ...size };
+  };
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>,
+  );
+  // The state initialiser and the observer's immediate read: two reads at mount.
+  expect(calls).toBe(2);
+
+  const closedAt = calls;
+  await sleep(WINDOW_SETTLE_MS + 100);
+  expect(calls - closedAt).toBe(0);
+
+  runtime.click("sel-trigger");
+  runtime.flush();
+  const openAt = calls;
+  await sleep(WINDOW_SETTLE_MS + 100);
+  expect(calls - openAt).toBeGreaterThanOrEqual(2);
+
+  runtime.keyDown("sel-trigger", "escape");
+  runtime.flush();
+  await sleep(20);
+  const reclosedAt = calls;
+  await sleep(WINDOW_SETTLE_MS + 100);
+  expect(calls - reclosedAt).toBe(0);
 });

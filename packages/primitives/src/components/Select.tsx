@@ -697,7 +697,6 @@ interface TriggerBox {
 export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const viewport = useWindowSize();
   const [triggerBox, setTriggerBox] = useState<TriggerBox | undefined>(
     undefined,
   );
@@ -718,6 +717,14 @@ export const Select = (props: SelectProps): ReactElement => {
       openState.set(false);
   }, [props.disabled, openState.value.current]);
   const open = selectOpen(openState.value.current, props.disabled === true);
+  /**
+   * The host window, sampled only while the list is painted.
+   *
+   * A closed select has no placement to correct, and the observer reads the
+   * current size when it subscribes, so opening after a resize is still exact
+   * (plan `609`; the `Tooltip` rule from plan `604`).
+   */
+  const viewport = useWindowSize({ intervalMs: open ? 100 : false });
   /**
    * The list's own chrome, for the box correction and the estimate.
    *
