@@ -10,6 +10,9 @@
  * Plan 547 derives the fill list from `filledControlFamilies`: the hand list it
  * replaced omitted any family added to the index, so the fill-on-surface pairs
  * 309 introduced could skip a new family with every case green.
+ *
+ * Plan 595 adds the fifth surface: a field hosts its own controls, so the
+ * NumberField steppers paint `hover`/`active` on the field's `input` fill.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -31,7 +34,7 @@ import {
 const shipped: ReadonlyArray<Theme> = shippedThemes.map(({ theme }) => theme);
 
 describe("interactive fills on the surfaces they paint on", () => {
-  it("measures every fill on the four surfaces it paints on", () => {
+  it("measures every fill on the five surfaces it paints on", () => {
     expect(stateFillSurfacePairs).toHaveLength(
       stateFillRoles.length * stateFillSurfaces.length,
     );
@@ -45,7 +48,7 @@ describe("interactive fills on the surfaces they paint on", () => {
         stateFillSurfaces.map((surface) => [fill, surface]),
       ),
     );
-    expect(stateFillSurfacePairs).toHaveLength(60);
+    expect(stateFillSurfacePairs).toHaveLength(75);
   });
 
   it("derives every filled family's three fills from the family index", () => {

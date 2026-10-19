@@ -301,14 +301,19 @@ export const stateFillRoles = [
 
 /**
  * The surfaces an interactive fill is painted on: the canvas, a card, a
- * popover (a menu item) and the quiet `muted` panel (a sidebar row or a
- * settings-group control). A fill that matches its panel is not a state.
+ * popover (a menu item), the quiet `muted` panel (a sidebar row or a
+ * settings-group control) and the field's `input` fill. A field hosts its own
+ * controls — the `NumberField` steppers, a field adornment action or an
+ * input-group button — and a chip can sit inside it, so a wash or fill that
+ * matches the field is not a state. A fill that matches its panel is not one
+ * either.
  */
 export const stateFillSurfaces = [
   "background",
   "card",
   "popover",
   "muted",
+  "input",
 ] as const;
 
 /** Every interactive fill, measured on each surface it paints on. */

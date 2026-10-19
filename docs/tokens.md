@@ -3271,7 +3271,7 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **405** across plans `527` and `557`.
+396 to **420** across plans `527`, `557` and `595`.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -3331,12 +3331,20 @@ An interactive fill is a surface too. `stateFillSurfacePairs` holds the fifteen
 fills a control or row paints as its own shape — the `hover` and `active` washes,
 the `accent` family at rest, hover and press, `selected`, and the `primary`,
 `secondary` and `destructive` families at rest, hover and press — to the 1.05:1
-surface floor on the four
-surfaces they paint on: `background`, `card`, `popover` and the quiet `muted`
-panel. `stateFillRoles` derives every filled family's rest, hover and press from
+surface floor on the five surfaces they paint on: `background`, `card`,
+`popover`, the quiet `muted` panel and the field's `input` fill. A field hosts
+its own controls: the
+`NumberField` steppers paint `hover` and `active` inside a field whose chrome is
+`input`, and a field adornment action or a chip sits there too, so a wash that
+matches the field is not a state. An edited theme with `input = hover` returned
+`[]` from every check while the stepper's wash measured **1.000:1** — the same
+wash on the card was still 1.133:1 — so the field fill joins the list (plan
+`595`); every shipped set already clears the floor there (tightest **1.1176:1**,
+`accent` on `input` in Dark · Windows) and no colour moves.
+`stateFillRoles` derives every filled family's rest, hover and press from
 `filledControlFamilies` and adds the two generic washes and `selected`;
 `stateFillSurfaces` is its surface list, so a fifth family joins the family
-index alone and a fifth surface joins the surface list alone. The audit found
+index alone and a sixth surface joins the surface list alone. The audit found
 21 shipped pairs under the floor: the identity light `muted`, `hover` and
 `secondary` were the same value (`#EEF1F5`), so a sidebar row had no hover
 feedback, a secondary button had no shape and a selected row was invisible; the

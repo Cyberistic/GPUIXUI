@@ -586,8 +586,12 @@ platform variants on their own canvas, not the identity's.
 An interactive fill is a surface in its own right: `stateFillSurfacePairs` holds
 every interactive fill — the two washes, the `accent` family at rest, hover and
 press, `selected` and the `primary`/`secondary`/`destructive` families — to
-1.05:1 on `background`, `card`,
-`popover` and `muted`, because a fill that matches its panel is not a state. The
+1.05:1 on `background`, `card`, `popover`, `muted` and `input`, because a fill
+that matches its panel is not a state and a field hosts its own controls. The
+`NumberField` steppers paint `hover`/`active` on the field's `input` fill, so a
+theme whose `input` equalled its `hover` passed every check while the stepper's
+wash measured **1.000:1** (plan 595); every shipped set already clears the floor
+there (tightest **1.1176:1**, `accent` on `input` in Dark · Windows). The
 identity light `muted` was the same value as its `hover` and `secondary`, the
 identity dark `hover` was its `muted` and `popover`, macOS light `selected`
 measured 1.021:1 on its canvas and Linux light `accent` 1.001:1 on the panel

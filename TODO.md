@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 244/320
+`[x]` `[████████░░]` 245/320
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2036,6 +2036,14 @@ runtime painted 11–12px chrome through. `nativeTextChrome` and
 `nativeTextLineRatio` publish the fixed type, `nativeTextTheme` floors the four
 boxes at **19 / 18 / 18 / 18** and the marker at one code em, and no shipped box
 moves (plan 592)
+`[x]` Hold every interactive fill on the field's `input` fill — the
+`NumberField` steppers paint `hover`/`active` inside a field whose chrome is
+`input`, and a theme with `input = hover` passed all nine checks while the
+stepper's wash measured **1.000:1** (the same wash on the card was still
+1.133:1); the surface joins `stateFillSurfaces` (60 → 75 fill-on-surface pairs,
+405 → 420 in the contract), every shipped set already clears 1.05:1 on it
+(1.1176:1 at the tightest, Dark · Windows `accent`) and no colour moves
+(plan 595)
 
 ## Phase C — Tier 1–2 components
 
