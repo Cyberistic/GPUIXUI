@@ -309,6 +309,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [642](./642-elevation-shape-count.md) | A level the runtime half-paints | F | 018, 085, 369, 566, 641 | done |
 | [643](./643-mark-stroke-floor.md) | A mark thinner than the hairline | F | 332, 353, 556, 598, 601, 604, 636 | done |
 | [645](./645-fixed-surface-insets.md) | The fixed surfaces count every inset they paint | F | 353, 365, 384, 523, 625, 627, 629, 634, 636 | done |
+| [646](./646-f32-metric-range.md) | A metric must survive the renderer's 32-bit cast | F | 358, 360, 364, 368, 531, 532, 641, 643 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3382,6 +3383,22 @@ controlHeight.sm` further. Each bound now charges the full painted chrome, every
 shipped set passes unchanged (the shipped `160`, `240`, `180`, `200`, `360` and
 `320` are far above the new minima) and no colour, pair, floor, figure or
 shipped metric moves.
+
+Plan `646` makes `finite` mean finite **after the renderer's cast**. The style
+path casts every metric with `value as f32`
+(`references/gpuix/packages/native/src/renderer.rs`), and the runtime's own
+`Metrics::apply` names the consequence — a value that overflows `f32` becomes an
+infinity Taffy rejects and gpui renders nothing. `Number.isFinite` passed `1e39`,
+so a metric in every group (`spacing`, `radius`, `borderWidth`, `iconSize`,
+`avatarSize`, `dimensions`, `typography`, `elevation`, `motion`) returned `[]`
+for a value that painted nothing; `1e-50` passed `positive` and painted at size
+zero; and a huge `density.rowHeight` cascaded into four dependent bounds that
+blamed the rows and surfaces. `paints` is now
+`Number.isFinite(Math.fround(value))`, every
+bound and ladder waits for a paintable value, the sign rules read the cast, and
+the theme's extremes skip an unpaintable step, so one broken number keeps one
+diagnostic. Every shipped set passes unchanged and no colour, pair, floor,
+figure or shipped metric moves.
 
 ## How to use a plan
 
