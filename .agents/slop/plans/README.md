@@ -278,6 +278,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [596](./596-control-glyph-fit.md) | The matching icon must fit its control | F | 358, 372, 384, 517, 521, 552 | done |
 | [598](./598-notification-panel-dimensions.md) | The notification inbox's fixed surface metrics | F | 353, 358, 365, 384, 530, 556, 568 | done |
 | [601](./601-date-field-width.md) | The date field's fixed width and the overlay's false calendar claim | F | 353, 358, 384, 556, 598 | done |
+| [602](./602-diagnostic-order-truth.md) | The diagnostic order the documents retype | F | 383, 398, 540, 573, 583 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

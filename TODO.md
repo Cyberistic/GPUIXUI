@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 248/322
+`[x]` `[████████░░]` 248/323
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2072,6 +2072,14 @@ that sizes it (plan 601)
 `[ ]` Cross-team: `components` reads `theme.dimensions.dateFieldWidth` for
 `date-picker.tsx`'s trigger width, beside `calendarCellSize` for `CELL`
 (owner: `components`; plan 601)
+
+`[~]` Hold every document that retypes the diagnostic order to `themeChecks` —
+the README named seven of the nine checks and called `themeTextTierFailures`
+“the fifth” and `themeDirectionFailures` “the sixth” after plans 573 and 583
+inserted `highlight` and `nativeText`, its payload list omitted
+`HighlightFailure` and `NativeTextFailure`, and the design system omitted both
+checks and `themeNativeTextFailures`, while only the count was guarded (plan
+602)
 
 ## Phase C — Tier 1–2 components
 
