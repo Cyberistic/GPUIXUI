@@ -324,6 +324,41 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 574: the summary rule only sees words an author wrote. Four generated-
+   * table pages described themselves without naming the subjects they own, so
+   * `spacing`, `radius`, `density` and `elevation` returned the Tokens API or
+   * Box, `font`/`font family`/`font weight` the Tokens API, `wasm`, `screenshot`
+   * and `approximation` the Values API or Architecture, and `virtualized`
+   * Message scroller. A row fails by name when a rewritten description loses
+   * its subject. `split panes` is deliberately absent: the roadmap promotes the
+   * inventory target of that name (plan 564).
+   */
+  it("names every subject its page owns in the summary (plan 574)", async () => {
+    const expected = [
+      ["spacing", "/docs/theming"],
+      ["radius", "/docs/theming"],
+      ["density", "/docs/theming"],
+      ["elevation", "/docs/theming"],
+      ["font", "/docs/typography"],
+      ["font family", "/docs/typography"],
+      ["font weight", "/docs/typography"],
+      ["wasm", "/docs/previews"],
+      ["screenshot", "/docs/previews"],
+      ["approximation", "/docs/previews"],
+      ["virtualized", "/docs/data-display"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });

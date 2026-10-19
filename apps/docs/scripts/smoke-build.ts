@@ -758,6 +758,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a generated token table that already answered",
     },
+    {
+      query: "spacing",
+      expected: "/docs/theming",
+      first: true,
+      what: "a token group named by the page that owns it",
+    },
+    {
+      query: "font family",
+      expected: "/docs/typography",
+      first: true,
+      what: "a type family named by the typography page",
+    },
+    {
+      query: "screenshot",
+      expected: "/docs/previews",
+      first: true,
+      what: "a preview tier named by the preview guide",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–573)
+## Docs site workstream (plans 410–499, plus 500–574)
 
-`[x]` `[██████████]` 140/140
+`[x]` `[██████████]` 141/141
+
+`[x]` **A page summary names every subject it owns (plan 574)** — `spacing`,
+      `radius`, `density` and `elevation` returned the Tokens API or Box,
+      `font`/`font family`/`font weight` returned the Tokens API, `wasm`,
+      `screenshot` and `approximation` returned the Values API or Architecture,
+      and `virtualized` returned Message scroller; the four owning pages now name
+      those subjects in their authored summary, an 11-query table in
+      `search.test.ts` requires each page first and `smoke:build` checks three
+      against the production index.
 
 `[x]` **Form's valid submit runs on the live surface (plan 573)** — plan 572
       proved the invalid press only, while the page told a reader to fill the

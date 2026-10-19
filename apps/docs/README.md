@@ -487,6 +487,18 @@ headings, and `src/lib/search.test.ts` guards the five measured queries
 component-summary rules. `smoke:build` asserts `table` and `aria` against the
 production index.
 
+A summary must **name every subject its page owns** (plan 574). The description
+rule only sees words an author wrote, so four pages whose subjects are generated
+tables described themselves without them: `spacing`, `radius`, `density` and
+`elevation` reached the Tokens API or Box, `font`, `font family` and `font
+weight` reached the Tokens API, `wasm`, `screenshot` and `approximation` reached
+the Values API or Architecture, and `virtualized` reached Message scroller. The
+Theming, Typography, Previews and Data display descriptions now name them; an
+11-query table in `src/lib/search.test.ts` requires the owning page **first**,
+and `smoke:build` checks `spacing`, `font family` and `screenshot` against the
+production index. `split panes` stays on the Roadmap because plan 564 promotes
+the inventory target of that name.
+
 A promoted name is a candidate even when the lexical index misses it (plan 569).
 The Fumadocs index tokenises `focusRing` as one word, so `focus ring` returned
 Number field prose and `elevation shadow` only a table chunk. `generatedNameHits`
