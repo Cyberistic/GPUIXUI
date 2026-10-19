@@ -33,7 +33,12 @@ export const aeroPlatformRecipe = {
       popover: "#FFFFFF",
       muted: "#EBF3FC",
       foreground: "#101828",
-      mutedForeground: "#3D4C5F",
+      // The secondary and primary inks take one designed step darker so the
+      // active find match keeps the secondary floor over the native diff's 5.5%
+      // row tints (plan 649): the inherited values measured 4.437–4.498:1 on
+      // the quiet panel and the canvas, under 4.5:1, while the code-ink and
+      // plain arms passed.
+      mutedForeground: "#36455A",
       border: "#BCC9DA",
       borderStrong: "#66758C",
       input: "#FFFFFF",
@@ -50,7 +55,7 @@ export const aeroPlatformRecipe = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0F55A3",
       primaryActive: "#0B478A",
-      primaryText: "#0C4A8C",
+      primaryText: "#0A417A",
       // The information and warning inks take one designed step darker so a
       // native document's syntax captures keep the body floor on the quiet
       // panel through the runtime's 3.5% ink wash (plan 574). The success and

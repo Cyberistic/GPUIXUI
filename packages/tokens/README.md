@@ -537,7 +537,7 @@ checked on the `input` fill a field paints for its own chrome — a time picker'
 separator and clear control — and on `hover`, `active`, `accent` and `selected`
 too, so a row description stays readable while the row moves — macOS dark
 shipped at 4.41:1 and 3.55:1 until plan 079 — and on the four soft status fills
-a status panel's caption sits on, tightest at 6.61:1 (Aero light, plan 346). Status text is checked on the same four washes and on the
+a status panel's caption sits on, tightest at 6.69:1 (Windows light, plan 346). Status text is checked on the same four washes and on the
 `muted` quiet panel a sidebar paints (plan 314), so a status dot in a list,
 table, menu row or settings sidebar is readable on the fill it sits on: every light set
 had a warning label under 4.5:1 on the pressed wash (macOS 4.22:1, Linux 4.24:1,
@@ -884,8 +884,9 @@ seeds its default washes from the text theme's `accent`, and that field is
 identity dark. `nativeHighlight` returns the `selection` role and one
 `nativeHighlightStep` stronger for the active match; the returned `radius` is
 the theme's inline-mark corner (`radius.sm`); `nativeHighlightPairs`
-holds every matchable role to the secondary floor on the document tone and again
-on the code block's painted 3.5% ink surface, and `themeHighlightFailures`
+holds every matchable role to the secondary floor on the document tone, again
+on the code block's painted 3.5% ink surface, and on the two 5.5% diff row tints
+a changed line paints (`nativeSyntaxTints`); `themeHighlightFailures`
 composes the check into `themeFailures` — including the active match's `step`
 above the match, so a near-opaque `selection` that paints both washes the same
 colour is reported.

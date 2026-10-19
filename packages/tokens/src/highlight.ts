@@ -5,8 +5,13 @@ import {
   contrastRatio,
   type ContrastPair,
 } from "./contrast.js";
-import { nativeInk } from "./native-ink.js";
-import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
+import { nativeInk, nativeInkOpacity } from "./native-ink.js";
+import { nativeSyntaxTints } from "./native-text-check.js";
+import {
+  nativeSyntaxRoles,
+  nativeTextRoles,
+  nativeTextSurfaces,
+} from "./native-text.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
@@ -48,7 +53,7 @@ export type HighlightFailure =
       readonly pairClass: "secondary";
       /** Which of the two washes was painted. */
       readonly wash: "match" | "active";
-      /** The document tone the match sits on; its code block paints an ink wash. */
+      /** The document tone the match sits on; the runtime paints it under the ink or a tint. */
       readonly surface: keyof ThemeColors;
       /** The text role the wash sat behind. */
       readonly foreground: keyof ThemeColors;
@@ -56,6 +61,12 @@ export type HighlightFailure =
       readonly floor: number;
       /** The measured ratio; `NaN` when a role is not a colour the maths parses. */
       readonly ratio: number;
+      /** The code block's ink fraction, when the wash sat on its painted surface. */
+      readonly ink?: number;
+      /** The diff row tint's role, when the wash sat on a changed diff line. */
+      readonly tint?: keyof ThemeColors;
+      /** The diff row tint's fraction, when `tint` is present. */
+      readonly tintOpacity?: number;
     }
   | {
       /** The active match is not a perceivable step above the match. */
@@ -66,6 +77,12 @@ export type HighlightFailure =
       readonly floor: number;
       /** The measured ratio between the two painted washes. */
       readonly ratio: number;
+      /** The code block's ink fraction, when the step sat on its painted surface. */
+      readonly ink?: number;
+      /** The diff row tint's role, when the step sat on a changed diff line. */
+      readonly tint?: keyof ThemeColors;
+      /** The diff row tint's fraction, when `tint` is present. */
+      readonly tintOpacity?: number;
     };
 
 const alphaByte = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})$/;
@@ -102,8 +119,55 @@ export const nativeHighlightPairs: readonly ContrastPair[] = [
   ),
 );
 
-const painted = (paint: string, surface: keyof ThemeColors, theme: Theme) =>
-  compositeOver(paint, nativeInk(theme, surface));
+/** One way the runtime paints a document tone under a find wash. */
+type SurfacePaint =
+  | { readonly kind: "code"; readonly ink: number }
+  | {
+      readonly kind: "tint";
+      readonly tint: keyof ThemeColors;
+      readonly opacity: number;
+    };
+
+/**
+ * The surfaces the runtime paints under a find wash: the code block's fixed 3.5%
+ * ink, and the two 5.5% diff row tints. A `<diff>` paints its rows directly on
+ * `bg` (`diff.rs`: `.bg(theme.bg)`) and then tints a changed row, so a diff tint
+ * is composited over the tone rather than over the code block's ink.
+ */
+const surfacePaints: ReadonlyArray<SurfacePaint> = [
+  { kind: "code", ink: nativeInkOpacity },
+  ...nativeSyntaxTints.map(
+    (tint): SurfacePaint => ({
+      kind: "tint",
+      tint: nativeTextRoles[tint.wash],
+      opacity: tint.opacity,
+    }),
+  ),
+];
+
+const paintSurface = (
+  surface: keyof ThemeColors,
+  theme: Theme,
+  paint: SurfacePaint,
+): string =>
+  paint.kind === "code"
+    ? nativeInk(theme, surface, paint.ink)
+    : compositeOver(
+        alpha(theme.colors[paint.tint], paint.opacity),
+        theme.colors[surface],
+      );
+
+/** The paint a failure measured, so a code-ink row and a tint row are distinct. */
+const paintFields = (
+  paint: SurfacePaint,
+): {
+  readonly ink?: number;
+  readonly tint?: keyof ThemeColors;
+  readonly tintOpacity?: number;
+} =>
+  paint.kind === "code"
+    ? { ink: paint.ink }
+    : { tint: paint.tint, tintOpacity: paint.opacity };
 
 /**
  * The find-highlight paints for a native text document.
@@ -157,20 +221,23 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
  *
  * The match wash is the `selection` role at its own alpha; the active wash is
  * one {@link nativeHighlightStep} stronger. Both are composited over the
- * surface the runtime actually paints — the document tone, and the code block's
- * 3.5% ink wash over that tone — and measured against the `secondary` floor.
- * A highlight is transient chrome over code, and keeping every syntax token at
- * body strength would need a wash that paints nothing. The wash's own
- * visibility is the contrast check's `selection` pair: a selection that
- * vanishes into its surface is reported there.
+ * surfaces the runtime actually paints — the code block's 3.5% ink wash and the
+ * two 5.5% diff row tints {@link nativeSyntaxTints} owns, each over every
+ * document tone — and measured against the `secondary` floor. The plain tone is
+ * not walked separately: the runtime's ink moves the tone toward the text role,
+ * so it is the harder of the two for text, and the step is measured on the same
+ * painted surfaces. A highlight is transient chrome over code, and keeping every
+ * syntax token at body strength would need a wash that paints nothing. The
+ * wash's own visibility is the contrast check's `selection` pair: a selection
+ * that vanishes into its surface is reported there.
  *
  * The same walk reports the **step** between the two washes: an active match
  * that is not one `contrastFloors[level].step` above the match is reported on
  * the surface where the pair collapses. The step is an absolute alpha, so a
  * near-opaque `selection` paints both washes the same colour even though every
  * text pair still passes; the floor is the one the filled families and the
- * selected row publish. The code-block ink darkens or lightens both washes
- * together, so the step is measured on that painted surface too.
+ * selected row publish. The ink and the diff tints move the tone, so the step
+ * is measured on each painted surface too.
  */
 export function themeHighlightFailures(
   theme: Theme,
@@ -182,41 +249,48 @@ export function themeHighlightFailures(
     ["match", highlight.color],
     ["active", highlight.activeColor],
   ] as const;
-  const textFailures = washes.flatMap(([wash, paint]) =>
-    nativeHighlightPairs.flatMap(([foreground, surface]) => {
+  const textFailures = surfacePaints.flatMap((paint) =>
+    washes.flatMap(([wash, washColor]) =>
+      nativeHighlightPairs.flatMap(([foreground, surface]) => {
+        const ratio = contrastRatio(
+          theme.colors[foreground],
+          compositeOver(washColor, paintSurface(surface, theme, paint)),
+        );
+        return ratio >= floors.secondary
+          ? []
+          : [
+              {
+                pairClass: "secondary" as const,
+                wash,
+                surface,
+                foreground,
+                floor: floors.secondary,
+                ratio,
+                ...paintFields(paint),
+              },
+            ];
+      }),
+    ),
+  );
+  const stepFailures = surfacePaints.flatMap((paint) =>
+    nativeTextSurfaces.flatMap((surface) => {
+      const painted = paintSurface(surface, theme, paint);
       const ratio = contrastRatio(
-        theme.colors[foreground],
-        painted(paint, surface, theme),
+        compositeOver(highlight.activeColor, painted),
+        compositeOver(highlight.color, painted),
       );
-      return ratio >= floors.secondary
+      return ratio >= floors.step
         ? []
         : [
             {
-              pairClass: "secondary" as const,
-              wash,
+              pairClass: "step" as const,
               surface,
-              foreground,
-              floor: floors.secondary,
+              floor: floors.step,
               ratio,
+              ...paintFields(paint),
             },
           ];
     }),
   );
-  const stepFailures = nativeTextSurfaces.flatMap((surface) => {
-    const ratio = contrastRatio(
-      painted(highlight.activeColor, surface, theme),
-      painted(highlight.color, surface, theme),
-    );
-    return ratio >= floors.step
-      ? []
-      : [
-          {
-            pairClass: "step" as const,
-            surface,
-            floor: floors.step,
-            ratio,
-          },
-        ];
-  });
   return [...textFailures, ...stepFailures];
 }

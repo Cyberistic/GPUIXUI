@@ -653,9 +653,11 @@ inline-mark step, `radius.sm`, so a square theme paints a square match.
 `themeHighlightFailures`
 holds every matchable role to the **secondary** floor on `background`, `card`,
 `popover` and `muted` while body text keeps the body floor. The runtime paints a
-code block on that tone under a fixed 3.5% ink wash, so the check measures every
-pair again through the painted surface — a find inside fenced code sits behind
-both washes. The runtime's own default seeds the wash from
+code block on that tone under a fixed 3.5% ink wash, and a changed diff row
+directly on the tone under a 5.5% add/delete tint (`nativeSyntaxTints`), so the
+check measures every pair on both painted surfaces — a find inside fenced code
+or on a changed diff line sits behind both washes. The runtime's own default
+seeds the wash from
 `nativeTextTheme`'s `accent`, which is an ink, not a wash; the catalogue's
 [Find highlighting](tokens.md#find-highlighting) section states the measured
 evidence.

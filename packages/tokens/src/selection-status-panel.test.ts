@@ -197,7 +197,7 @@ describe("text selection in a status panel", () => {
   it("quotes the tightest shipped body and caption", () => {
     const quotedFigures = [
       ["foreground", "infoSoft", "identity dark", 8.14],
-      ["mutedForeground", "destructiveSoft", "Aero light", 4.78],
+      ["mutedForeground", "destructiveSoft", "Windows light", 5.08],
     ] as const;
 
     quotedFigures.forEach(([foreground, background, label, value]) => {

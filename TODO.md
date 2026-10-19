@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 281/355
+`[x]` `[████████░░]` 282/356
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2368,6 +2368,14 @@ four dependent bounds that blamed the rows and surfaces. `paints` now means
 finite after the cast, `positive`/`non-negative` read the painted value, and
 dependent bounds wait for a paintable one; every shipped set passes unchanged
 and no colour, pair, floor, figure or shipped metric moves (plan 646)
+`[x]` Hold the find highlight on the native diff's row tint — the check measured
+the wash over the code block's 3.5% ink only, while `<diff>` paints a changed
+row directly on `bg` under a 5.5% `diffAdd`/`diffDel` tint; on Aero light the
+active match put `mutedForeground` at 4.437:1 and `primaryText` at 4.481:1 on
+the quiet panel, under the 4.5:1 floor, while `themeHighlightFailures` returned
+`[]`. The check now walks both tints for the match, the active match and the
+step, the payload names the tint and its fraction, Aero light's two inks take
+one designed step, every shipped set passes (plan 649)
 
 ## Phase C — Tier 1–2 components
 

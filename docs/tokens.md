@@ -1549,8 +1549,8 @@ roles a status panel carries — the tone's `xSoftForeground`, the body
 and `selectionSoftWashPairs` the wash's
 own perceivability, so a selected Alert or Badge keeps its body and
 secondary floors and still shows the highlight. Every shipped set passes: the
-identity dark body on `infoSoft` is **8.14:1** at the tightest and Aero light's
-caption on `destructiveSoft` **4.78:1**, so no colour moves. Status text is held
+identity dark body on `infoSoft` is **8.14:1** at the tightest and Windows light's
+caption on `destructiveSoft` **5.08:1**, so no colour moves. Status text is held
 through the same wash on the same nine surfaces (`selectionStatusPairs`), because
 `xText` is the role plan 083 gave a status label, icon or dot in a row and a
 selectable row's label is dragged over with the copy around it. The audit found
@@ -1928,11 +1928,11 @@ tone it paints on. No visible wash keeps a syntax token at body strength:
 the neutral `hover` wash is **1.06:1** at its weakest and still leaves syntax at
 **6.74:1**. So `nativeHighlightPairs` holds the body and secondary tiers and
 every syntax capture to the **secondary** floor on all four `Surface` tones
-`bg` may name; the tightest shipped pairs are **5.59:1** for the match and
-**4.80:1** for the active match, while body text stays at **9.65:1** and
+`bg` may name; the tightest shipped pairs are **5.77:1** for the match and
+**4.99:1** for the active match, while body text stays at **9.65:1** and
 **8.03:1**. The runtime paints a code block on that tone under a fixed 3.5% ink
 wash (plan `574`), so the check measures every pair again on the painted
-surface: the tightest painted pairs are **5.21:1** and **4.51:1**, body text
+surface: the tightest painted pairs are **5.38:1** and **4.64:1**, body text
 **8.93:1** and **7.31:1**, and the step **1.06:1** from the match and
 **1.25:1** from the tone. Aero light's inherited `successText` and
 `destructiveText` measured **4.445:1** on the canvas and **4.429:1** on the
@@ -1943,6 +1943,17 @@ value moves. `themeHighlightFailures` is that check, composed into
 derives every figure above, and
 [`native-highlight-code-surface.test.ts`](../packages/tokens/src/native-highlight-code-surface.test.ts)
 holds the painted surface.
+
+A find on a changed diff row sits on neither of those surfaces: `<diff>` paints
+its rows directly on `bg` and tints a whole changed line with 5.5% of `diffAdd`
+or `diffDel` (`nativeSyntaxTints`). The check walks both tints for the match, the
+active match and the step. Aero light's `mutedForeground` and `primaryText`
+measured **4.437:1** and **4.481:1** through the active match on the quiet panel,
+under the 4.5:1 floor, while every check returned `[]`; both take one designed
+step darker (`#36455A`, `#0A417A`) and every shipped set passes. The failure
+names the tint role and its fraction beside the surface, so a code-ink row and a
+diff-row row are distinguishable. See
+[`native-highlight-diff-tint.test.ts`](../packages/tokens/src/native-highlight-diff-tint.test.ts).
 
 The same check holds the step itself. An active match that is not one
 `contrastFloors[level].step` above the match on the surface it paints on is
@@ -3143,7 +3154,7 @@ it inherits. The same loop holds secondary text on each variant's washes: macOS
 dark shipped at 4.41:1 on `hover` and 3.55:1 on `active` until plan `079` moved
 its secondary grey and pressed wash. A status panel's caption is checked on the
 four soft status fills too (`softPanelTextPairs`), tightest at
-`mutedForeground` on `destructiveSoft` at **6.61:1** (Aero light), so no value
+`mutedForeground` on `destructiveSoft` at **6.69:1** (Windows light), so no value
 moves. The control edge is held there too: four
 sets had `border` equal to the fill it sits on (identity light `active`,
 identity dark `secondary`/`active`/`accent`, macOS dark `hover`/`secondary`/
@@ -3271,7 +3282,7 @@ to **338**. Plan `362` adds a status panel's body (`foreground`) and caption
 (`mutedForeground`) to `selectionSoftPairs`, beside the plain `contrastPairs`
 list — the soft list grows from 4 to **12** and the plain count stays **338**;
 the tightest new pairs were **7.26:1** (identity dark, `infoSoft`) and
-**4.78:1** (Aero light, `destructiveSoft`); plan `506`'s weaker identity wash
+**5.08:1** (Windows light, `destructiveSoft`); plan `506`'s weaker identity wash
 lifts the body figure to **8.14:1**, so no colour moves. Plan `363` adds
 the card's own `cardForeground` to `selectionPairs` (18 → 19) beside the default
 `foreground`, because the two are apart in both Windows recipes and only the
@@ -3719,8 +3730,8 @@ way: `selectionSoftPairs` holds the tone's `xSoftForeground`, the body
 and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 `successSoftForeground` measured 5.83:1 and Windows dark's wash over
 `destructiveSoft` 1.005:1 (plan `091`). Every shipped set clears the two roles
-added in plan `362` — the identity dark body on `infoSoft` at **8.14:1** and Aero
-light's caption on `destructiveSoft` at **4.78:1** at the tightest — and the
+added in plan `362` — the identity dark body on `infoSoft` at **8.14:1** and Windows
+light's caption on `destructiveSoft` at **5.08:1** at the tightest — and the
 ghost action's label plan `394` moved off `foreground` joins them in plan `512`:
 every shipped set clears **8.667:1** (identity dark on `infoSoft`), so no colour
 moves. A status panel now keeps its description, its action and its caption

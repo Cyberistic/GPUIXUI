@@ -109,7 +109,7 @@ describe("soft status panel text", () => {
 
   it("quotes the weakest shipped caption and link", () => {
     const quoted = [
-      ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
+      ["mutedForeground", "destructiveSoft", "Windows light", 6.69],
       ["primaryText", "destructiveSoft", "identity light", 6.19],
     ] as const;
 

@@ -49,9 +49,9 @@ const painted = (
 describe("the find highlight on the painted code surface", () => {
   it("reports the four Aero pairs the opaque check missed", () => {
     const failures = themeHighlightFailures(preFixAero);
-    const text = failures.filter(
-      (failure) => failure.pairClass === "secondary",
-    );
+    const text = failures
+      .filter((failure) => failure.pairClass === "secondary")
+      .filter((failure) => failure.ink !== undefined);
 
     expect(text).toHaveLength(4);
     expect(
@@ -89,9 +89,11 @@ describe("the find highlight on the painted code surface", () => {
     // planted pre-fix `successText` on its own diff-row tint, so only the
     // highlight count is asserted here.
     const all = themeFailures(preFixAero);
-    expect(all.filter((failure) => failure.kind === "highlight")).toHaveLength(
-      4,
-    );
+    expect(
+      all.filter(
+        (failure) => failure.kind === "highlight" && failure.ink !== undefined,
+      ),
+    ).toHaveLength(4);
     expect(
       all.every(
         (failure) =>
