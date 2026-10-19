@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–560)
 
-`[x]` `[██████████]` 124/124
+`[x]` `[██████████]` 125/125
+
+`[x]` **Every preview split is derived from the scene registry (plan 523)** —
+      the tier-L paragraph still said "21 more" gesture scenes while the
+      registry shipped 22; the record/composed, pattern-page and README totals
+      are now read from `LIVE_SCENES`, the registry and `SCENE_PAGE` by
+      `preview-gaps.test.ts`, and the three documents cannot state a total the
+      code does not ship.
 
 `[x]` **The command palette has a real pattern page (plan 522)** —
       `/docs/patterns/command-palette` mounts the real `CommandMenu` closed, and

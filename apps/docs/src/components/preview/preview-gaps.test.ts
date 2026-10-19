@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
@@ -9,6 +10,7 @@ import {
   LIVE_SCENES,
   SCENE_GESTURE,
   SCENE_LABEL,
+  SCENE_PAGE,
   isLiveScene,
 } from "../../../preview/scenes";
 import { components } from "../../component-meta/registry";
@@ -33,6 +35,43 @@ const readme = readFileSync(
   fileURLToPath(new URL("../../../README.md", import.meta.url)),
   "utf8",
 );
+
+const componentPages = readFileSync(
+  fileURLToPath(
+    new URL("../../../content/docs/component-pages.mdx", import.meta.url),
+  ),
+  "utf8",
+);
+
+/**
+ * The two scene kinds: one per delivered record, and one per composed page
+ * (`SCENE_PAGE`, which has no component record). Both totals are derived here
+ * once so no document can remember a number the registry does not ship.
+ */
+const liveRecordScenes = pipe(
+  components,
+  Arr.filterMap((component) => {
+    const scene = component.liveScene;
+    return scene === null || !isLiveScene(scene)
+      ? Result.failVoid
+      : Result.succeed({ scene, title: component.title });
+  }),
+);
+
+const composedScenes = Arr.filter(
+  LIVE_SCENES,
+  (scene) => SCENE_PAGE[scene] !== undefined,
+);
+
+const patternScenes = Arr.filter(
+  composedScenes,
+  (scene) => SCENE_PAGE[scene] !== "/docs/showcase",
+);
+
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five"] as const;
+
+const numberWord = (value: number): string =>
+  Option.getOrElse(Arr.get(NUMBER_WORDS, value), () => `${value}`);
 
 const heading = "### Pages with neither a live scene nor an illustration";
 
@@ -104,9 +143,28 @@ describe("preview counts", () => {
   const countIn = (source: string, pattern: RegExp): number =>
     Number(pattern.exec(source)?.[1] ?? Number.NaN);
 
+  const wordIn = (source: string, pattern: RegExp): string =>
+    pattern.exec(source)?.[1] ?? "";
+
   it("states the scene total the code ships", () => {
     const stated = countIn(document, /(\d+) scenes ship today/);
     expect(stated).toBe(Arr.length(LIVE_SCENES));
+  });
+
+  it("states the record and composed split the strategy ships", () => {
+    const stated = {
+      records: countIn(document, /(\d+) are one per record/),
+      composed: wordIn(document, /and (\w+) are composed pages/),
+    };
+    expect(stated).toEqual({
+      records: Arr.length(liveRecordScenes),
+      composed: numberWord(Arr.length(composedScenes)),
+    });
+  });
+
+  it("states the open and gesture split in the tier-L paragraph", () => {
+    const stated = countIn(document, /(\d+) more are opened by a real gesture/);
+    expect(stated).toBe(gestureCount);
   });
 
   it("states the gesture total the code ships, in both documents", () => {
@@ -118,6 +176,26 @@ describe("preview counts", () => {
       readme: countIn(readme, /(\d+) of\s+those/),
     };
     expect(stated).toEqual({ document: gestureCount, readme: gestureCount });
+  });
+
+  it("states the component-scene total in the README", () => {
+    const stated = countIn(readme, /\((\d+) today\)/);
+    expect(stated).toBe(Arr.length(liveRecordScenes));
+  });
+
+  it("states the scene split on the component-pages template", () => {
+    expect(Arr.length(patternScenes)).toBeGreaterThanOrEqual(1);
+    const stated = {
+      scenes: countIn(componentPages, /(\d+) scenes today/),
+      patterns: wordIn(
+        componentPages,
+        /the Showcase page and the (\w+) pattern pages/,
+      ),
+    };
+    expect(stated).toEqual({
+      scenes: Arr.length(LIVE_SCENES),
+      patterns: numberWord(Arr.length(patternScenes)),
+    });
   });
 
   it("lists one gesture row per gesture scene", () => {
@@ -141,18 +219,8 @@ describe("preview counts", () => {
  * proves equals `COMPONENTS.md`.
  */
 describe("the strategy names the code's scenes", () => {
-  const scenes = pipe(
-    components,
-    Arr.filterMap((component) => {
-      const scene = component.liveScene;
-      return scene === null || !isLiveScene(scene)
-        ? Result.failVoid
-        : Result.succeed({ scene, title: component.title });
-    }),
-  );
-
   const gestures = Arr.filter(
-    scenes,
+    liveRecordScenes,
     ({ scene }) => SCENE_GESTURE[scene] !== undefined,
   );
 
@@ -178,7 +246,7 @@ describe("the strategy names the code's scenes", () => {
     );
 
   const expectedTitles = Arr.sort(
-    Arr.map(scenes, ({ title }) => title),
+    Arr.map(liveRecordScenes, ({ title }) => title),
     Order.String,
   );
   const expectedGestures = Arr.sort(
