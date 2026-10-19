@@ -32,6 +32,7 @@ import {
   useModalFocus,
   useModalState,
 } from "./internal/modal.js";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   assertParts,
@@ -350,14 +351,20 @@ export const DrawerHeader = ({ children, style, ...rest }: Props) => {
   );
 };
 
-/** The drawer's heading, announced as a level-2 heading. */
-export const DrawerTitle = ({ style, ...rest }: Props) => {
+/** {@link DrawerTitle} props. */
+export interface DrawerTitleProps extends Props {
+  /** The heading level in the document outline. Default `2`. */
+  readonly level?: HeadingLevel;
+}
+
+/** The drawer's heading; its level belongs to the surrounding outline. */
+export const DrawerTitle = ({ level, style, ...rest }: DrawerTitleProps) => {
   const theme = useTheme();
   return (
     <text
       role="heading"
-      aria-level={2}
       {...rest}
+      aria-level={headingLevel(level, rest["aria-level"], 2)}
       style={mergeStyles(
         { ...textStyle(theme, "h3"), color: theme.colors.popoverForeground },
         style,

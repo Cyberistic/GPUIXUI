@@ -51,3 +51,4 @@ export * from "./time-picker.js";
 export * from "./toast.js";
 
 export type { PartChildren } from "./internal/parts.js";
+export type { HeadingLevel } from "./internal/heading.js";

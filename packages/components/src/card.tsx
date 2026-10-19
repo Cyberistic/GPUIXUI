@@ -10,6 +10,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import {
   assertParts,
   type PartChildren,
@@ -102,14 +103,20 @@ export const CardHeader = ({ children, style, ...rest }: CardHeaderProps) => {
   );
 };
 
-/** The card's heading. Announced as a level-3 heading. */
-export const CardTitle = ({ style, ...rest }: Props) => {
+/** The card's heading. Announced as a level-3 heading unless `level` says otherwise. */
+export interface CardTitleProps extends Props {
+  /** The heading level in the document outline. Default `3`. */
+  readonly level?: HeadingLevel;
+}
+
+/** The card's heading; its level belongs to the surrounding outline. */
+export const CardTitle = ({ level, style, ...rest }: CardTitleProps) => {
   const theme = useTheme();
   return (
     <text
       role="heading"
-      aria-level={3}
       {...rest}
+      aria-level={headingLevel(level, rest["aria-level"], 3)}
       style={mergeStyles(
         { ...textStyle(theme, "h3"), color: theme.colors.foreground },
         style,

@@ -2,8 +2,9 @@
  * Card behaviour, driven through the real GPUix test renderer.
  *
  * The bugs these guard: a variant that does not change the surface treatment; a
- * part that renders nothing; the title losing its heading role or level; and a
- * consumer's `style` losing to the variant instead of overriding it.
+ * part that renders nothing; the title losing its heading role or level, or
+ * ignoring the caller's level; and a consumer's `style` losing to the variant
+ * instead of overriding it.
  *
  * Runs wherever GPUix publishes a native binding, which on 2026-10-17 includes
  * this Intel Mac because plan 140's locally built `darwin-x64` binding is in the
@@ -89,6 +90,48 @@ describe("Card", () => {
     expect(headings.map((node) => node.name)).toEqual(["Pro plan"]);
 
     card.unmount();
+  });
+
+  it("takes the heading level from the caller", () => {
+    const explicit = renderComponent(
+      <Card>
+        <CardHeader>
+          <CardTitle level={2}>Pro plan</CardTitle>
+        </CardHeader>
+      </Card>,
+    );
+    expect(
+      nodesWithRole(explicit.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2)]);
+    explicit.unmount();
+
+    // The typed prop wins over the raw attribute it replaces.
+    const both = renderComponent(
+      <Card>
+        <CardHeader>
+          <CardTitle level={2} aria-level={5}>
+            Pro plan
+          </CardTitle>
+        </CardHeader>
+      </Card>,
+    );
+    expect(
+      nodesWithRole(both.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2)]);
+    both.unmount();
+
+    // The raw attribute still works when no typed level is supplied.
+    const authored = renderComponent(
+      <Card>
+        <CardHeader>
+          <CardTitle aria-level={4}>Pro plan</CardTitle>
+        </CardHeader>
+      </Card>,
+    );
+    expect(
+      nodesWithRole(authored.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(4)]);
+    authored.unmount();
   });
 
   it("lets a consumer's style win over the variant", () => {

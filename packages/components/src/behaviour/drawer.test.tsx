@@ -31,7 +31,8 @@ import {
   requireBounds,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { a11yNodes } from "../internal/a11y.js";
+import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
+import type { HeadingLevel } from "../internal/heading.js";
 import * as Option from "effect/Option";
 
 /** A filter drawer with a real cancel/apply path. */
@@ -42,6 +43,7 @@ const Workspace = ({
   onBehind,
   side,
   size,
+  titleLevel,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
@@ -49,6 +51,7 @@ const Workspace = ({
   readonly onBehind?: () => void;
   readonly side?: DrawerSide;
   readonly size?: DrawerSize;
+  readonly titleLevel?: HeadingLevel;
 }) => (
   <div style={{ padding: 20 }}>
     <Button testId="behind" onClick={onBehind}>
@@ -58,7 +61,7 @@ const Workspace = ({
       <DrawerTrigger testId="open">Filters</DrawerTrigger>
       <DrawerContent label="Filters" testId="drawer" side={side} size={size}>
         <DrawerHeader>
-          <DrawerTitle>Filters</DrawerTitle>
+          <DrawerTitle level={titleLevel}>Filters</DrawerTitle>
           <DrawerDescription>Narrow the result set.</DrawerDescription>
         </DrawerHeader>
         <DrawerFooter>
@@ -106,6 +109,22 @@ describe("Drawer", () => {
     ).toHaveLength(1);
 
     drawer.unmount();
+  });
+
+  it("takes the title's heading level from the caller", () => {
+    const standard = renderComponent(<Workspace />);
+    clickCentreOf(standard, "open");
+    expect(
+      nodesWithRole(standard.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2)]);
+    standard.unmount();
+
+    const custom = renderComponent(<Workspace titleLevel={6} />);
+    clickCentreOf(custom, "open");
+    expect(
+      nodesWithRole(custom.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(6)]);
+    custom.unmount();
   });
 
   it("dims the whole window", () => {

@@ -33,6 +33,7 @@ import {
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   handleModalKeyDown,
@@ -345,14 +346,20 @@ export const DialogHeader = ({
   );
 };
 
-/** The dialog's heading, announced as a level-2 heading. */
-export const DialogTitle = ({ style, ...rest }: Props) => {
+/** {@link DialogTitle} props. */
+export interface DialogTitleProps extends Props {
+  /** The heading level in the document outline. Default `2`. */
+  readonly level?: HeadingLevel;
+}
+
+/** The dialog's heading; its level belongs to the surrounding outline. */
+export const DialogTitle = ({ level, style, ...rest }: DialogTitleProps) => {
   const theme = useTheme();
   return (
     <text
       role="heading"
-      aria-level={2}
       {...rest}
+      aria-level={headingLevel(level, rest["aria-level"], 2)}
       style={mergeStyles(
         { ...textStyle(theme, "h3"), color: theme.colors.popoverForeground },
         style,

@@ -32,7 +32,8 @@ import {
   focusedTestId,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
-import { a11yNodes } from "../internal/a11y.js";
+import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
+import type { HeadingLevel } from "../internal/heading.js";
 import * as Option from "effect/Option";
 
 /** A destructive-confirmation-shaped dialog, with a real cancel path. */
@@ -41,11 +42,13 @@ const Workspace = ({
   onOpenChange,
   dismissible = true,
   onBehind,
+  titleLevel,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly dismissible?: boolean;
   readonly onBehind?: () => void;
+  readonly titleLevel?: HeadingLevel;
 }) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 20, padding: 20 }}
@@ -57,7 +60,7 @@ const Workspace = ({
       <DialogTrigger testId="open">Delete workspace</DialogTrigger>
       <DialogContent label="Delete workspace" testId="dialog" size="sm">
         <DialogHeader>
-          <DialogTitle>Delete workspace</DialogTitle>
+          <DialogTitle level={titleLevel}>Delete workspace</DialogTitle>
           <DialogDescription>This cannot be undone.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -104,6 +107,22 @@ describe("Dialog", () => {
     expect(dialog.renderer.findByType("svg")).toHaveLength(1);
 
     dialog.unmount();
+  });
+
+  it("takes the title's heading level from the caller", () => {
+    const standard = renderComponent(<Workspace />);
+    clickCentreOf(standard, "open");
+    expect(
+      nodesWithRole(standard.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2)]);
+    standard.unmount();
+
+    const custom = renderComponent(<Workspace titleLevel={4} />);
+    clickCentreOf(custom, "open");
+    expect(
+      nodesWithRole(custom.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(4)]);
+    custom.unmount();
   });
 
   it("dims the whole window, not the parent's box", () => {

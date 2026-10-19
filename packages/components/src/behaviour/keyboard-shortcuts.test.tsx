@@ -128,6 +128,25 @@ describe("KeyboardShortcuts", () => {
     sheet.unmount();
   });
 
+  it("takes each group heading's level from the caller", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Editor shortcuts">
+        <KeyboardShortcutsGroup label="File" level={2}>
+          <KeyboardShortcut label="New file" accelerator="mod+n" />
+        </KeyboardShortcutsGroup>
+        <KeyboardShortcutsGroup label="Navigation">
+          <KeyboardShortcut label="Go to line" accelerator="mod+g" />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(
+      nodesWithRole(sheet.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(2), Option.some(3)]);
+
+    sheet.unmount();
+  });
+
   it("paints the keycap surface from the muted roles", () => {
     const sheet = renderComponent(<Sheet />);
 
