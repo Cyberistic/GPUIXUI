@@ -7,7 +7,9 @@ plan 334 (the remaining button-shaped parts), plan 522 (focus ring on swatches),
 plan 383/608 (docs truth), plan 630 (the last sweep of the same kind).
 **Status:** implemented — 2 new native cases (Color picker 13). The Space-down
 case fails on the old source (`onValueChange("#2a303b")` on press); the Enter
-case pins the existing path. Docs and `COMPONENTS.md` synced.
+case pins the existing path. The full behaviour suite is 805 passed / 35 failed
+of 840 — the same 35 recorded plan-540 binding failures, none in this file except
+the pre-existing swatch focus-ring case. Docs and `COMPONENTS.md` synced.
 
 ## 1. The bug
 

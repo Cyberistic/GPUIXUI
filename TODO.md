@@ -458,8 +458,10 @@ retired once both branches are one
       a colour on press, before it could be cancelled. The swatch now uses the
       shared `activationHandlers`, so `Enter` activates on key down and Space on
       key up; 2 native cases (Color picker 13, the Space-down case failing with
-      `onValueChange("#2a303b")` on the old source); docs, `COMPONENTS.md`,
-      `PLAN.md` D30 and the plan index synced (owner: components)
+      `onValueChange("#2a303b")` on the old source); the full behaviour suite is
+      805 passed / 35 failed of 840 (the same plan-540 binding failures); docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced (owner:
+      components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
