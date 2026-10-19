@@ -469,7 +469,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–587)
+## Docs site workstream (plans 410–499, plus 500–589)
 
 `[~]` `[██████████]` 155/158
 
