@@ -12,9 +12,10 @@
  *
  * The popup is a dismiss layer like every other overlay here (plan 398): GPUix's
  * headless handlers close it but cannot claim the event, so without our layer one
- * Escape or backdrop press closed the popup **and** an enclosing dialog, and a
- * trigger press toggled it back open. The layer claims the event through the
- * shared stack, and a re-open that belongs to the dismissing gesture is ignored.
+ * Escape or backdrop press closed the popup **and** an enclosing dialog. A press
+ * on our own trigger is claimed but does not close: the click that follows in a
+ * later task closes the popup (plan 583), and the headless close it also triggers
+ * is ignored once.
  *
  * Focus, the active row and Enter/arrow handling stay GPUix's: those are proven
  * in its own suite and reimplementing them here would be a second, worse copy.
@@ -84,6 +85,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { scrollRowIntoView } from "./internal/scroll.js";
 import { stateDescription } from "./internal/state-description.js";
@@ -124,8 +126,8 @@ interface ComboboxContextValue {
   readonly revealRow: (row: PublicInstance) => void;
   /** An Escape press: close and return focus to the trigger. */
   readonly noteEscape: () => void;
-  /** An outside press already moved focus, so do not restore it. */
-  readonly noteOutsidePress: () => void;
+  /** An outside press: it already moved focus, and it may have been the trigger. */
+  readonly noteOutsidePress: (event: EventPayload) => void;
 }
 
 const ComboboxContext = createContext<ComboboxContextValue | undefined>(
@@ -255,7 +257,8 @@ export const Combobox = ({
   const list = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
   const wasOpen = useRef(false);
-  const dismissedByOutsidePress = useRef(false);
+  /** Whether the outside press that is closing the popup landed on our trigger. */
+  const dismissedOnTrigger = useRef(false);
   const close = useRef<() => void>(() => undefined);
 
   // `onQueryChange` is reported through a debounce when the caller asks for one
@@ -371,21 +374,15 @@ export const Combobox = ({
 
   // The popup is a dismiss layer, like every other overlay here. GPUix closes it
   // on Escape and outside presses but cannot claim the event, so without this an
-  // enclosing dialog closed on the same Escape (plan 398).
+  // enclosing dialog closed on the same Escape (plan 398). A press on our own
+  // trigger is claimed without closing: the click that follows in a later task
+  // closes the popup (plan 583).
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
+      if (dismissedOnTrigger.current) return;
       close.current();
-      if (event.eventType === "keyDown") {
-        restoreFocus.current = true;
-        return;
-      }
-      // The press already moved focus, and the click it belongs to must not
-      // re-open what the same gesture just dismissed.
-      dismissedByOutsidePress.current = true;
-      queueMicrotask(() => {
-        dismissedByOutsidePress.current = false;
-      });
+      if (event.eventType === "keyDown") restoreFocus.current = true;
     });
   }, [open]);
 
@@ -418,8 +415,13 @@ export const Combobox = ({
         noteEscape: () => {
           restoreFocus.current = true;
         },
-        noteOutsidePress: () => {
+        noteOutsidePress: (event) => {
           restoreFocus.current = false;
+          dismissedOnTrigger.current = pressedOn(
+            renderer,
+            trigger.current,
+            event,
+          );
         },
       }}
     >
@@ -465,16 +467,18 @@ export const Combobox = ({
         open={open}
         onOpenChange={(next) => {
           if (next) {
-            // The click that follows the press which dismissed this popup hangs
-            // onto the same gesture; it must not re-open it (plan 398).
-            if (dismissedByOutsidePress.current) {
-              dismissedByOutsidePress.current = false;
-              return;
-            }
             restoreFocus.current = false;
             setQuery("");
             reportQuery("", true);
             setOpen(true);
+            return;
+          }
+          // The headless content closes itself on the same outside press our
+          // layer just claimed. When the press was our trigger, the click that
+          // follows closes the popup; closing here would let that click re-open
+          // it (plan 583).
+          if (dismissedOnTrigger.current) {
+            dismissedOnTrigger.current = false;
             return;
           }
           close.current();
@@ -660,7 +664,7 @@ export const ComboboxContent = ({
       ref={setSurface}
       {...rest}
       onMouseDownOutside={(event) => {
-        noteOutsidePress();
+        noteOutsidePress(event);
         dismissTopLayer(event);
         onMouseDownOutside?.(event);
       }}

@@ -40,6 +40,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -213,9 +214,18 @@ export const PreviewCardContent = ({
   // One dismiss layer for the card, as Popover does: Escape closes the topmost
   // overlay only, and returns focus to the trigger. The restored focus is not
   // the user focusing the trigger, so it must not re-open the card (plan 515).
+  // A press on the trigger is that trigger's gesture: claim it but let the click
+  // close the card, because the press and the click arrive in separate tasks
+  // (plan 583).
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
+      if (
+        event.eventType !== "keyDown" &&
+        pressedOn(renderer, trigger.current, event)
+      ) {
+        return;
+      }
       close.current();
       if (event.eventType !== "keyDown") return;
       const target = trigger.current;

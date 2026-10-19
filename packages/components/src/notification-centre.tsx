@@ -62,6 +62,7 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { isDismiss, isDown, isEnter, isUp } from "./internal/key.js";
+import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   elevationShadow,
@@ -405,6 +406,15 @@ export const NotificationCentreContent = ({
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
+      // A press on the panel's own trigger is its gesture: claim it and let the
+      // click close (the press and the click arrive in separate tasks — plan
+      // 583). An Escape still closes and returns focus.
+      if (
+        event.eventType !== "keyDown" &&
+        pressedOn(renderer, trigger.current, event)
+      ) {
+        return;
+      }
       close.current();
       if (event.eventType !== "keyDown") return;
       const target = trigger.current;

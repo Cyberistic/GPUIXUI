@@ -3,9 +3,9 @@
  *
  * Positioning is GPUix's own `FloatingLayer` (`<anchored>` with collision
  * handling), so this component owns only the parts 0.10.0 leaves to the library:
- * the open state, the dismissal rules, the trigger's re-open guard and the
- * measured placement correction (the runtime snaps but does not flip, and its
- * `center` centres on the containing block; plan 323).
+ * the open state, the dismissal rules and the measured placement correction (the
+ * runtime snaps but does not flip, and its `center` centres on the containing
+ * block; plan 323).
  *
  * Dismissal rules (all measured — plan 112 §1c):
  *
@@ -16,12 +16,14 @@
  *   popover is not modal, so trapping would be wrong; a close without moving
  *   focus would strand the user on an unmounted surface;
  * - an outside press closes it without moving focus, because the press already
- *   gave focus to whatever was pressed.
+ *   gave focus to whatever was pressed. A press on this popover's own trigger is
+ *   not an outside press: the trigger's click closes it, in a later task than the
+ *   press (plan 583).
  *
  * A press outside fires before the click that follows it, so closing on the press
- * would let that same click toggle the trigger open again. The trigger therefore
- * remembers that it was pressed while open, and the close handler marks the next
- * click as already handled — the technique `@gpuix/react@0.10.0`'s Select uses.
+ * would let that same click toggle the trigger open again. That is why the layer
+ * reads the press position and leaves its own trigger's gesture alone, instead of
+ * marking the click.
  */
 
 import type { PublicInstance } from "@gpuix/react";
@@ -59,6 +61,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -68,8 +71,6 @@ interface PopoverContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
   readonly trigger: RefObject<PublicInstance | null>;
-  /** Set by a dismissing outside press, consumed by the click that follows it. */
-  readonly dismissedByOutsidePress: RefObject<boolean>;
 }
 
 const PopoverContext = createContext<PopoverContextValue | undefined>(
@@ -111,10 +112,9 @@ export const Popover = ({
     onChange: onOpenChange,
   });
   const trigger = useRef<PublicInstance | null>(null);
-  const dismissedByOutsidePress = useRef(false);
 
   const context = useMemo<PopoverContextValue>(
-    () => ({ open, setOpen, trigger, dismissedByOutsidePress }),
+    () => ({ open, setOpen, trigger }),
     [open, setOpen],
   );
 
@@ -129,8 +129,7 @@ export const Popover = ({
 
 /** Opens the popover it sits in. An ordinary button in every other respect. */
 export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
-  const { open, setOpen, trigger, dismissedByOutsidePress } =
-    usePopoverContext();
+  const { open, setOpen, trigger } = usePopoverContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -140,12 +139,6 @@ export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       aria-expanded={open}
       onClick={(event) => {
         onClick?.(event);
-        // The press that dismissed the popover owns this click: toggling here
-        // would re-open what the same gesture just closed.
-        if (dismissedByOutsidePress.current) {
-          dismissedByOutsidePress.current = false;
-          return;
-        }
         setOpen(!open);
       }}
     />
@@ -243,8 +236,7 @@ const PopoverSurface = ({
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, dismissedByOutsidePress } =
-    usePopoverContext();
+  const { open, setOpen, trigger } = usePopoverContext();
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -289,23 +281,26 @@ const PopoverSurface = ({
 
   // A popover is a dismiss layer so a dialog underneath does not also close on
   // the same event. Escape restores focus to the trigger; an outside press must
-  // not, because it already moved focus to whatever was pressed.
+  // not, because it already moved focus to whatever was pressed. A press on the
+  // trigger itself is that trigger's gesture: claim it (so an enclosing dialog
+  // stays open) and let the click close the popover, because the press and the
+  // click arrive in separate tasks (plan 583).
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
+      if (
+        event.eventType !== "keyDown" &&
+        pressedOn(renderer, trigger.current, event)
+      ) {
+        return;
+      }
       close.current();
       if (event.eventType === "keyDown") {
         const target = trigger.current;
         if (target !== null) renderer?.focusElement?.(target.id);
-        return;
       }
-      // Mark the press so the click it belongs to cannot re-open the popover.
-      dismissedByOutsidePress.current = true;
-      queueMicrotask(() => {
-        dismissedByOutsidePress.current = false;
-      });
     });
-  }, [dismissedByOutsidePress, open, renderer, trigger]);
+  }, [open, renderer, trigger]);
 
   /** Close and hand focus to the app control after (or before) the trigger. */
   const leave = (backwards: boolean): void => {

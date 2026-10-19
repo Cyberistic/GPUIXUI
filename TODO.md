@@ -262,6 +262,14 @@ retired once both branches are one
       never re-pin. The pin and the suite now use the unscrolled root's box, and
       a new re-pin case fails with the old rule (12 tests, behaviour 741/35);
       docs, `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] A press on an overlay's own trigger closes it once — plan 583; measured:
+      the runtime delivers `mouseDownOutside` on the press and the trigger's click
+      on release in separate tasks, so the microtask-cleared one-gesture mark was
+      gone and the click re-opened every overlay — a user could not close a
+      Popover, Dropdown menu, Combobox, Preview card, Navigation menu or
+      Notification centre by pressing its trigger. The layer now reads the press
+      position and claims it without closing; 6 native cases, both-direction proof;
+      docs, `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

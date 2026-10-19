@@ -51,6 +51,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
@@ -223,7 +224,9 @@ export const NavigationMenu = ({
   );
 
   // One dismiss layer for the whole nav: Escape closes only this panel when the
-  // nav sits over a dialog, and focus returns to the open item's trigger.
+  // nav sits over a dialog, and focus returns to the open item's trigger. A press
+  // on that trigger is its own gesture (plan 583), so the layer claims it without
+  // closing; the click closes the panel.
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
     dismiss.current = () => {
@@ -234,14 +237,21 @@ export const NavigationMenu = ({
   });
   useLayoutEffect(() => {
     if (open === null) return;
+    const trigger = triggerFor(open);
     return pushDismissLayer((event) => {
+      if (
+        event.eventType !== "keyDown" &&
+        pressedOn(renderer, trigger ?? null, event)
+      ) {
+        return;
+      }
       if (event.eventType === "keyDown") {
         dismiss.current();
         return;
       }
       setOpen(null);
     });
-  }, [open, setOpen]);
+  }, [open, renderer, setOpen, triggerFor]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({

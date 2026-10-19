@@ -10,7 +10,8 @@
  * trigger that opens (on hover, on press, or on an arrow key) or moves focus
  * with the arrow keys, `openOnHover={false}` that still opens, a bottom
  * panel that covers its trigger at the window's edge, and a caller `ref` that is
- * discarded in favour of the internal panel ref.
+ * discarded in favour of the internal panel ref. A held trigger press closed on
+ * the press and re-opened on the release (plan 583).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -231,6 +232,27 @@ describe("NavigationMenu", () => {
     nav.renderer.nativeSimulateClick(12, 12);
 
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const nav = renderComponent(<Workspace openOnHover={false} />);
+    clickCentreOf(nav, "trigger-platform");
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+
+    const { x, y, width, height } = requireBounds(nav, "trigger-platform");
+    nav.renderer.nativeSimulateMouseDown(x + width / 2, y + height / 2);
+    // The runtime delivers the release in a later task; the old panel closed on
+    // the press and the click re-opened it.
+    await after(10);
+    nav.renderer.nativeSimulateMouseUp(x + width / 2, y + height / 2);
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    clickCentreOf(nav, "trigger-platform");
+
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
 
     nav.unmount();
   });

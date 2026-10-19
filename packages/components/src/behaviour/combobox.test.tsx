@@ -25,6 +25,10 @@
  * Trigger surface (plan 565): the trigger took native focus but painted no focus
  * ring, so a keyboard user saw nothing; and its literal style overwrote the
  * caller's, so `style` never reached the runtime.
+ *
+ * Held press (plan 583): the outside press closed the popup and marked the click
+ * that follows, but the mark was cleared on a microtask while the runtime delivers
+ * the click in a later task — a real press-and-release re-opened the popup.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -499,6 +503,28 @@ describe("Combobox", () => {
     // A separate press is a new gesture and opens it again.
     clickCentreOf(picker, "combobox-trigger");
     await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const picker = renderComponent(<Picker />);
+    await open(picker);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    const { x, y, width, height } = requireBounds(picker, "combobox-trigger");
+    picker.renderer.nativeSimulateMouseDown(x + width / 2, y + height / 2);
+    // The runtime delivers the release in a later task; the old popup closed on
+    // the press and the headless trigger's click re-opened it.
+    await wait(10);
+    picker.renderer.nativeSimulateMouseUp(x + width / 2, y + height / 2);
+    await settle();
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    await open(picker);
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
 

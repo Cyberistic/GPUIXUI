@@ -54,9 +54,9 @@ so a caller can compose the rows of a custom list from the same root.
 
 The popup is a dismiss layer like every other overlay in the library: open it
 inside a `Dialog`, `Popover` or menu and **one Escape or outside press closes one
-surface** — the popup first, the enclosing surface second. Pressing the trigger
-while the popup is open closes it; the click that belongs to that same press does
-not re-open it.
+surface** — the popup first, the enclosing surface second. A press on the trigger
+is claimed but does not close the popup; the click that follows in a later task
+closes it, so one press never closes and re-opens it.
 
 ## Values, not labels
 
@@ -304,7 +304,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (45 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (46 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), the trigger's own ring (auto-focused in both themes; given up while the
 popup's field holds focus), a caller `style` merging over the trigger's base, a
@@ -314,7 +314,8 @@ trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
 add/remove with order, the disabled row, Escape restoring focus, a second trigger
-press closing the popup (and the next press opening it), one surface per Escape
+press closing the popup (and the next press opening it), a **held** trigger press
+closing it on release, one surface per Escape
 and per backdrop press inside a dialog,
 prefix-before-substring ranking, both themes, the pointer path — selecting an
 option, toggling several while skipping a disabled one, closing on an outside

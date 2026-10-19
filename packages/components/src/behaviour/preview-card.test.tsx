@@ -9,7 +9,8 @@
  * bottom edge covering the trigger instead of flipping above it; a disabled
  * trigger that opened on hover and on focus; an Escape that closed the card
  * and the dialog around it (plan 514); and a dismissal that restored focus and
- * re-opened the card (plan 515).
+ * re-opened the card (plan 515). A held trigger press closed on the press and
+ * re-opened through the hover delay on the release (plan 583).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -119,6 +120,31 @@ describe("PreviewCard", () => {
     );
     expect(focused.renderer.findByTestId("preview")).toBeDefined();
     focused.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const card = renderComponent(<Workspace />);
+
+    const bounds = requireBounds(card, "trigger");
+    const x = bounds.x + bounds.width / 2;
+    const y = bounds.y + bounds.height / 2;
+    card.renderer.nativeSimulateClick(x, y);
+    await until(() => isShown(card, "preview"));
+
+    card.renderer.nativeSimulateMouseDown(x, y);
+    // The runtime delivers the release in a later task; the old card closed on
+    // the press and the click re-opened it through the hover delay.
+    await after(30);
+    card.renderer.nativeSimulateMouseUp(x, y);
+    await after(80);
+
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+
+    card.renderer.nativeSimulateClick(x, y);
+    await until(() => isShown(card, "preview"));
+    expect(card.renderer.findByTestId("preview")).toBeDefined();
+
+    card.unmount();
   });
 
   it("never opens from a disabled trigger on hover", async () => {

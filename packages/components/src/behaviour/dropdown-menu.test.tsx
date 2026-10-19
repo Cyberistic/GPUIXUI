@@ -36,6 +36,11 @@
  * the panel stayed painted with focus inside it until Escape or an outside
  * press. Hover now goes through the shared `useHoverTravel` policy; a leave
  * closes one level after `closeDelay` and returns focus to the row.
+ *
+ * Held-press regression: the outside press closed the menu and marked the click
+ * that follows, but the mark was cleared on a microtask and the runtime delivers
+ * the click in a later task — so a real press-and-release left the menu open
+ * (plan 583).
  */
 
 import * as Option from "effect/Option";
@@ -658,6 +663,27 @@ describe("DropdownMenu", () => {
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     clickCentreOf(menu, "trigger");
     expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    menu.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const menu = renderComponent(<FileActions onSelect={vi.fn()} />);
+    clickCentreOf(menu, "trigger");
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
+
+    const { x, y, width, height } = requireBounds(menu, "trigger");
+    menu.renderer.nativeSimulateMouseDown(x + width / 2, y + height / 2);
+    // The runtime delivers the release in a later task; the old one-gesture mark
+    // was already cleared, so the click re-opened the menu.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    menu.renderer.nativeSimulateMouseUp(x + width / 2, y + height / 2);
+
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+
+    clickCentreOf(menu, "trigger");
+
+    expect(menu.renderer.findByTestId("menu")).toBeDefined();
 
     menu.unmount();
   });

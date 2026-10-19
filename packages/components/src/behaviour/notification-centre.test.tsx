@@ -7,7 +7,8 @@
  * row or a caller's order re-sorted; a dot painted on read rows; header actions
  * that do nothing or dismiss the panel; Escape and an outside press that leave
  * the panel open; arrow keys that walk group headings instead of notifications;
- * and a surface that only works in the dark theme.
+ * and a surface that only works in the dark theme. A held trigger press closed
+ * on the press and re-opened on the release (plan 583).
  */
 
 import * as Arr from "effect/Array";
@@ -301,6 +302,26 @@ describe("NotificationCentre", () => {
 
     expect(isShown(root, "panel")).toBe(false);
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
+
+    root.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const root = renderComponent(<Centre notifications={seed} defaultOpen />);
+    expect(isShown(root, "panel")).toBe(true);
+
+    const { x, y, width, height } = requireBounds(root, "bell");
+    root.renderer.nativeSimulateMouseDown(x + width / 2, y + height / 2);
+    // The runtime delivers the release in a later task; the old panel closed on
+    // the press and the click re-opened it.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    root.renderer.nativeSimulateMouseUp(x + width / 2, y + height / 2);
+
+    expect(isShown(root, "panel")).toBe(false);
+
+    clickCentreOf(root, "bell");
+
+    expect(isShown(root, "panel")).toBe(true);
 
     root.unmount();
   });

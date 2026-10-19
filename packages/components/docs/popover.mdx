@@ -9,8 +9,7 @@ window modal. Positioning is GPUix's own `anchored` layer. Measured against
 and its `center` alignment centres on the trigger's containing block rather than
 the trigger. The component therefore owns the placement correction: it flips a
 snapped surface back off its trigger and converts `align="center"` into a
-measured centre. It also owns the open state, the dismissal rules and the
-trigger's re-open guard.
+measured centre. It also owns the open state and the dismissal rules.
 
 ```tsx
 import {
@@ -55,9 +54,11 @@ side. `align="center"` is exact: the runtime's `center` is not used.
 | click the trigger while open | closes it |
 
 The popover is a layer in the same dismiss stack as `Dialog`, so pressing outside
-both closes the popover first and leaves the dialog open. The trigger records
-whether it was open at **mouse-down**, which is what stops a press on the trigger
-from closing and then immediately re-opening the popover on the following click.
+both closes the popover first and leaves the dialog open. A press on the
+popover's own trigger is not an outside press: the layer claims it and the click
+that follows closes the popover. The runtime delivers that click in a later task
+than the press, so the rule reads the press position rather than marking the next
+click.
 
 ## Controlled and uncontrolled
 
@@ -126,11 +127,12 @@ transform, so no scale is faked.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (20 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
-closing without the following click re-opening it, a press inside keeping it
+closing without the following click re-opening it, a **held** press on the
+trigger closing it on release and staying closed, a press inside keeping it
 open, Tab closing a control-less panel while handing focus to the next app
 control, opening focus on the first control, Tab walking the panel's controls
 (two presses, panel still open), Tab past the last control closing and continuing

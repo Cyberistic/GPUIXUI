@@ -9,7 +9,9 @@
  * second control was unreachable; and Tab closing the panel while leaving focus
  * on the unmounted surface (`null`), stranding a keyboard user. A caller `ref` on
  * the trigger was also discarded in favour of the internal one, so the picker that
- * composes this trigger lost focus after a selection.
+ * composes this trigger lost focus after a selection. A held trigger press closed
+ * on the press and re-opened on the release, because the one-gesture mark was
+ * cleared before the click (plan 583).
  */
 
 import * as Option from "effect/Option";
@@ -243,6 +245,30 @@ describe("Popover", () => {
     // The real runtime delivers the press and the next click in separate tasks,
     // so the one-gesture dismiss mark has been cleared by now.
     await Promise.resolve();
+
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.unmount();
+  });
+
+  it("stays closed after a held trigger press, and a new press opens it", async () => {
+    const popover = renderComponent(<Filters />);
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    const { x, y, width, height } = requireBounds(popover, "trigger");
+    popover.renderer.nativeSimulateMouseDown(x + width / 2, y + height / 2);
+    // The runtime delivers the release in a later task; a one-gesture mark
+    // cleared on a microtask was already gone, so the click re-opened the panel.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    popover.renderer.nativeSimulateMouseUp(x + width / 2, y + height / 2);
+    finishMotion(popover);
+
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
 
     clickCentreOf(popover, "trigger");
     finishMotion(popover);

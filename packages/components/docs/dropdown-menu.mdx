@@ -129,9 +129,11 @@ close the menu. Menus are layers in the same dismiss stack as `Dialog` and
 `Popover`, so a menu opened inside a dialog closes first and leaves the dialog
 open.
 
-The trigger records that the menu was open at **mouse-down**. The press itself is
-an outside press that closes the menu, so the click that follows the same gesture
-must not re-open it — without that guard the menu flickers shut and open.
+A press on the menu's own trigger is not an outside press: the menu's dismiss
+layer claims the press (so an enclosing dialog stays open) and the click that
+follows closes the menu. The runtime delivers that click in a later task than the
+press, which is why the rule reads the press position instead of marking the
+next click.
 
 ## Checkbox rows and tones
 
@@ -312,14 +314,15 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (51 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (52 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
 centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
-dismissal, checkbox toggling and its check mark, the destructive colour, the
+dismissal (including a **held** trigger press, whose release arrives in a later
+task), checkbox toggling and its check mark, the destructive colour, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
 Shift, window expiry, unmatched-prefix reset), the submenu rules — keyboard,
 hover and pointer opening, right-edge placement — including a right-edge row

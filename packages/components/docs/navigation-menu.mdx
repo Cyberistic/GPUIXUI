@@ -130,10 +130,11 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 ## Verification
 
-`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (21 tests):
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (22 tests):
 declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
-Escape with focus return, outside-press dismissal, a link running once and
+Escape with focus return, outside-press dismissal, a **held** trigger press
+closing on release, a link running once and
 closing, a controlled nav staying closed, both themes, eight hover cases —
 delayed open without focus, switching triggers, pointer travel into the panel,
 leaving a panel for another trigger, `openOnHover={false}`, a disabled trigger,
