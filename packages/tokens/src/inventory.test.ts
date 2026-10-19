@@ -15,6 +15,13 @@
  * Plan 313 found the row's second role count stale (`62 semantic roles` beside
  * “the current 58” after plan 311 added four), so every `<number> role` phrase in
  * the row is now held to `colorRoles.length`, not just the opening count.
+ *
+ * Plan 611 made `ring` the tenth check `themeFailures` composes. The ledger's
+ * Total theme check row still said `inventory.test.ts` held "this row's nine
+ * names", and its present-tense count ("the ten kinds") was the only count in
+ * the ledger with no owner, so an eleventh kind would leave the row quoting the
+ * old size while every suite stayed green. The row is count-free where it
+ * reports history and its one present-tense count is held to `themeChecks`.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -64,6 +71,32 @@ const floorRow = (contrast: keyof typeof contrastFloors): string => {
     .join(" / ")
     .concat(` ${contrast}`);
 };
+
+const countWords = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+] as const;
+
+const countWord = (count: number): string => countWords[count] ?? String(count);
 
 /** The individual check function each kind belongs to. */
 const checkFunctions = {
@@ -235,6 +268,34 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(total).toContain(
       `in diagnostic order — ${order} — tagging each entry with its \`kind\``,
     );
+  });
+
+  it("states the check count from the index, never a stale total", () => {
+    const total = row("Total theme check");
+    expect(total).toContain(
+      `\`themeChecks\` is the ordered index of the ${countWord(themeChecks.length)} kinds`,
+    );
+    expect(total).toContain(
+      "`inventory.test.ts` holds this row's names and order to `themeChecks`",
+    );
+
+    // A past audit keeps its fact ("every check returned []"), not the
+    // population it ran over; plan 567's rule applied to the last ledger row
+    // that retyped it. Only word numerals are matched, so a `(plan 596)` or a
+    // pair count is not a false positive.
+    const retypedCheckCount =
+      /\b(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+checks\b/;
+    ["Theme contrast check", "Total theme check", "Theme metric check"].forEach(
+      (firstCell) => {
+        expect(row(firstCell), firstCell).not.toMatch(retypedCheckCount);
+      },
+    );
+
+    // The pattern is a guard, not a tautology: both historical spellings it
+    // replaces fail it, and the replacement prose passes.
+    expect(retypedCheckCount.test("while all six checks returned")).toBe(true);
+    expect(retypedCheckCount.test("while all nine checks returned")).toBe(true);
+    expect(retypedCheckCount.test("while every check returned")).toBe(false);
   });
 
   it("names the Toast countdown's groove exception", () => {

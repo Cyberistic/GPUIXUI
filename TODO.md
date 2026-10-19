@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 259/331
+`[x]` `[████████░░]` 260/332
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2194,6 +2194,13 @@ to `../packages/tokens/src/…`, and `docs-links.test.ts` resolves every relativ
 Markdown link in the catalogue, the design system and the README against the
 document's own directory, with synthetic cases proving it reports a
 document-relative miss and accepts a target that climbs out (plan 616)
+`[x]` Give the ledger's check counts one owner — plan 611 made `ring` the tenth
+check, but the **Total theme check** row still said `inventory.test.ts` held
+"this row's nine names", its present-tense "the ten kinds" had no test, and four
+historical audits in the contrast and metric rows still retyped `six`/`nine`
+checks against plan 567's rule; the row now names the test without a count, the
+one present-tense count is held to `themeChecks.length`, the four audits say
+"every check", and no token, pair, floor or metric moves (plan 617)
 
 ## Phase C — Tier 1–2 components
 
