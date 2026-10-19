@@ -111,7 +111,7 @@ missing here is not public.
 | `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
-| `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
+| `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes and the theme's inline-mark corner (`radius.sm`). |
 | `NativeInlineCode` | The inline-code pair: the text field painted on its opaque wash, and the floor it must clear. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeSyntaxTint` | A syntax role painted on one of the native diff's row tints, with the tint's field and fraction. |
@@ -1779,6 +1779,11 @@ const theme = getTheme("dark");
   highlight={{ ...nativeHighlight(theme), query }}
 />;
 ```
+
+The wash's corner is the theme's inline-mark radius, `radius.sm`
+(`nativeHighlight` returns it as `radius`), so a square copied style paints a
+square match and the Windows variant keeps its own 2px corner; the runtime's
+own 2px default is a literal no radius scale owns.
 
 The active wash is at least **1.08:1** from the match and **1.28:1** from the
 tone it paints on. No visible wash keeps a syntax token at body strength:

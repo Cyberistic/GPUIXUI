@@ -831,7 +831,8 @@ A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime
 seeds its default washes from the text theme's `accent`, and that field is
 `primaryText` — an ink: body text measured 2.81:1 through the active default in
 identity dark. `nativeHighlight` returns the `selection` role and one
-`nativeHighlightStep` stronger for the active match; `nativeHighlightPairs`
+`nativeHighlightStep` stronger for the active match; the returned `radius` is
+the theme's inline-mark corner (`radius.sm`); `nativeHighlightPairs`
 holds every matchable role to the secondary floor on the document tone and again
 on the code block's painted 3.5% ink surface, and `themeHighlightFailures`
 composes the check into `themeFailures` — including the active match's `step`

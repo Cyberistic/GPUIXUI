@@ -616,7 +616,9 @@ find wash is transient chrome over code, and no perceivable wash keeps every
 syntax token at body strength — the only neutral candidate is invisible at its
 weakest and still leaves syntax under the body floor. `nativeHighlight(theme)`
 is the prop a find bar passes: the `selection` role, plus one
-`nativeHighlightStep` stronger for the active match. `themeHighlightFailures`
+`nativeHighlightStep` stronger for the active match. Its corner is the theme's
+inline-mark step, `radius.sm`, so a square theme paints a square match.
+`themeHighlightFailures`
 holds every matchable role to the **secondary** floor on `background`, `card`,
 `popover` and `muted` while body text keeps the body floor. The runtime paints a
 code block on that tone under a fixed 3.5% ink wash, so the check measures every

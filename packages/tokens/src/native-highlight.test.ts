@@ -18,6 +18,11 @@
  * every text pair passes and `themeHighlightFailures`/`themeFailures` returned
  * `[]`.
  * The check now publishes the step on the four surfaces `bg` may name.
+ *
+ * Plan 607: the wash's corner was the one shape `nativeHighlight` left to the
+ * runtime's 2px literal (`HighlightSpec.radius`), so a copied square style
+ * still painted a rounded match. The helper now returns `theme.radius.sm`, and
+ * the documents name it.
  */
 import { describe, expect, it } from "vitest";
 // `node:fs` is deliberate, as in the other tree-local documentation guards: the
@@ -30,6 +35,7 @@ import {
   contrastFloors,
   contrastRatio,
   extendTheme,
+  getPlatformTheme,
   getTheme,
   lightTheme,
   nativeHighlight,
@@ -98,7 +104,31 @@ describe("the native find-highlight contract", () => {
     expect(nativeHighlight(opaque)).toEqual({
       color: "#123456",
       activeColor: "#123456FF",
+      radius: lightTheme.radius.sm,
     });
+  });
+
+  it("owns the wash's corner through the theme's inline radius", () => {
+    shippedThemes.forEach(({ theme }) => {
+      expect(nativeHighlight(theme).radius, theme.name).toBe(theme.radius.sm);
+    });
+
+    // The identity ships the inline step every other mark uses, not the
+    // runtime's 2px default.
+    expect(nativeHighlight(getTheme("light")).radius).toBe(4);
+    expect(nativeHighlight(getTheme("dark")).radius).toBe(4);
+
+    // A square copied style paints a square match, and a wider step follows.
+    expect(
+      nativeHighlight(extendTheme(lightTheme, { radius: { sm: 0 } })).radius,
+    ).toBe(0);
+    expect(
+      nativeHighlight(extendTheme(lightTheme, { radius: { sm: 12 } })).radius,
+    ).toBe(12);
+
+    // The Windows style ships `sm: 2`, which is the runtime's old literal; the
+    // value comes from the style, not from the plan.
+    expect(nativeHighlight(getPlatformTheme("win32", "light")).radius).toBe(2);
   });
 
   it("keeps every matchable role readable through both washes in every shipped theme", () => {
@@ -310,8 +340,27 @@ describe("the native find-highlight contract", () => {
     );
   });
 
+  it("names the wash's corner in the documents", () => {
+    const sources = {
+      catalogue: readFileSync(
+        new URL("../../../docs/tokens.md", import.meta.url),
+        "utf8",
+      ),
+      design: readFileSync(
+        new URL("../../../docs/design-system.md", import.meta.url),
+        "utf8",
+      ),
+      readme: readFileSync(new URL("../README.md", import.meta.url), "utf8"),
+    };
+    Object.entries(sources).forEach(([name, text]) => {
+      expect(text, name).toContain("inline-mark");
+      expect(text, name).toContain("radius.sm");
+    });
+  });
+
   it("runs the example", () => {
     expect(findBar.highlight.color).toBe(lightTheme.colors.selection);
+    expect(findBar.highlight.radius).toBe(lightTheme.radius.sm);
     expect(darkFindBar.highlight.color).toBe(getTheme("dark").colors.selection);
     expect(activeStep).toBe(nativeHighlightStep);
   });

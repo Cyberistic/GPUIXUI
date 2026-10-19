@@ -32,6 +32,13 @@ export interface NativeHighlight {
    * {@link nativeHighlightStep} stronger.
    */
   readonly activeColor: string;
+  /**
+   * The wash's corner radius: the theme's inline-mark step, `radius.sm` — the
+   * same step inline code uses. The runtime defaults to 2px, a literal no
+   * radius scale owns, so a copied platform style could not square or round a
+   * find match; `radius.sm` is 0 in a square theme and 2 in the Windows style.
+   */
+  readonly radius: number;
 }
 
 /** A find-highlight pair that misses its floor. */
@@ -115,6 +122,11 @@ const painted = (paint: string, surface: keyof ThemeColors, theme: Theme) =>
  * on the code block's painted ink surface, because no perceivable wash can keep
  * a syntax token at body strength; see `docs/tokens.md`.
  *
+ * The wash's corner is `theme.radius.sm`, the inline-mark step inline code
+ * uses: the runtime's 2px default is a literal no theme owns, so a square
+ * copied style paints a square match and the Windows style keeps its 2px
+ * corner.
+ *
  * @example
  * ```tsx
  * import { getTheme, nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";
@@ -136,6 +148,7 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
       color,
       Math.min(1, ownAlpha(color) + nativeHighlightStep),
     ),
+    radius: 2,
   };
 }
 

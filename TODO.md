@@ -2114,6 +2114,12 @@ example builds a full Button shape from it, the catalogue, design system and
 README name it, and the helper's label and edge are held to the inactive and
 divider floors on every shipped set with no colour, pair or metric moving
 (plan 605)
+`[x]` Own the find wash's corner — GPUix 0.10.0's `HighlightSpec` defaults
+`radius` to 2px and `nativeHighlight` never set it, so a square copied style
+still painted a rounded match while every check returned `[]`;
+`nativeHighlight(theme).radius` is the theme's inline-mark step (`radius.sm`,
+the same step inline code uses), the docs and README name it, and no colour,
+pair, floor or metric moves (plan 607)
 
 ## Phase C — Tier 1–2 components
 
