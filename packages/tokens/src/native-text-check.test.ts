@@ -30,14 +30,24 @@
  * Two edits that pass every other check prove the earlier gap. On `Dark ·
  * Linux`, `successText: "#bebebe"` measures **6.405:1** for a string token
  * through the ink wash and `mutedForeground: "#bebebe"` measures **6.315:1**
- * for a blockquote's body over the accent wash, both under the 7:1 body floor,
- * while `themeFailures` returned `[]`. `themeNativeTextFailures` is the ninth
+ * for a blockquote's container role over the accent wash, both under the 7:1
+ * body floor, while `themeFailures` returned `[]`. `themeNativeTextFailures` is the seventh
  * check; it measures the fades, the two-fade compositions, the chrome washes
  * and the ink wash on every tone `nativeTextSurfaces` names.
+ *
+ * Plan 695 corrects the blockquote composition: the container names
+ * `text_muted`, but every non-code markdown run carries `theme.text`
+ * (`foreground`) and `SelectableText` paints those runs, so the authored body
+ * ink was unmeasured. On `Dark · Linux`, `foreground: "#bebebe"` paints a
+ * blockquote body at **6.315:1** on the `card`, `popover` and `muted` tones
+ * while the pre-fix check returned no accent-wash entry at all. Both roles are
+ * held; the container entry stays because the pinned binary is not inspectable.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  alpha,
+  compositeOver,
   contrastRatio,
   extendTheme,
   getPlatformRecipeTheme,
@@ -117,6 +127,42 @@ describe("native text check", () => {
     expect(failure?.ratio).toBeCloseTo(6.315, 2);
   });
 
+  it("reports the body run a blockquote actually paints", () => {
+    // Plan 695: the container names `text_muted`, but every non-code run is
+    // `theme.text` and `SelectableText` paints the runs, so the authored ink
+    // was unmeasured while the container role was reported instead.
+    const planted = extendTheme(linuxDark, {
+      colors: { foreground: "#bebebe" },
+    });
+
+    const failure = themeNativeTextFailures(planted).find(
+      (candidate) =>
+        candidate.field === "text" &&
+        candidate.wash === "primaryText" &&
+        candidate.washOpacity === 0.05,
+    );
+    expect(failure?.role).toBe("foreground");
+    expect(failure?.surface).toBe("card");
+    expect(failure?.opacity).toBe(1);
+    expect(failure?.pairClass).toBe("body");
+    expect(failure?.ratio).toBeCloseTo(6.315, 2);
+  });
+
+  it("holds the painted blockquote body on every shipped set", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const ratios = nativeTextSurfaces.map((surface) =>
+        contrastRatio(
+          theme.colors.foreground,
+          compositeOver(
+            alpha(theme.colors.primaryText, 0.05),
+            theme.colors[surface],
+          ),
+        ),
+      );
+      expect(Math.min(...ratios), theme.name).toBeGreaterThanOrEqual(7);
+    });
+  });
+
   it("publishes every runtime fraction", () => {
     expect(
       nativeTextFades.map((fade) => `${fade.field}@${fade.opacity}`),
@@ -148,6 +194,7 @@ describe("native text check", () => {
       "diffDel@0.9>diffDel@0.055",
       "diffAdd@0.55>diffAdd@0.055",
       "diffDel@0.55>diffDel@0.055",
+      "text@1>accent@0.05",
       "textMuted@1>accent@0.05",
     ]);
   });

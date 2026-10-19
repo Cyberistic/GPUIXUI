@@ -86,7 +86,8 @@ export const nativeInlineCode: NativeInlineCode = {
 
 /**
  * Text the runtime paints over a second faded role: a diff line's body over the
- * row tint, and a blockquote's body over the accent wash.
+ * row tint, and a blockquote's body run (and its container fallback role) over
+ * the accent wash.
  */
 export interface NativeTextOverFade {
   /** The text field whose role is painted. */
@@ -106,8 +107,15 @@ export interface NativeTextOverFade {
  * {@link nativeTextSurfaces} tone.
  *
  * A changed diff line's `text` is 92% over 5.5% of the add/delete role, and its
- * gutter, number/marker and accent bar sit on that same tint. A blockquote
- * paints its body role whole over 5% of the accent ink. The runtime's 28%
+ * gutter, number/marker and accent bar sit on that same tint.
+ *
+ * A blockquote is the one composition with two roles. Its paragraph runs carry
+ * `theme.text` (`foreground`): `flatten_runs` gives every non-code run that
+ * colour and `SelectableText` paints the runs, so the container's
+ * `text_color(theme.text_muted)` is overridden. The container still names
+ * `text_muted`, and the pinned 0.10.0 package ships a binary whose inheritance
+ * cannot be inspected, so both the painted run colour and the container
+ * fallback are held over the 5% accent wash at the body floor. The runtime's 28%
  * word-level diff wash is deliberately absent: it paints a changed token's own
  * syntax colour over a wash of the add/delete family, which measures
  * **4.389:1** for `destructiveText` on its own wash in `Dark · Linux` and
@@ -170,6 +178,13 @@ export const nativeTextOverFades: readonly NativeTextOverFade[] = [
     wash: "diffDel",
     washOpacity: 0.055,
     pairClass: "surface",
+  },
+  {
+    field: "text",
+    opacity: 1,
+    wash: "accent",
+    washOpacity: 0.05,
+    pairClass: "body",
   },
   {
     field: "textMuted",
@@ -295,8 +310,10 @@ export interface NativeTextFailure {
  * role lifted until its opaque pair just passes is still under the floor once
  * the runtime fades or washes it. A copied theme with `successText: "#bebebe"`
  * on identity dark returns `[]` from the other checks while a string token
- * measures **6.405:1** through the ink wash, and a `mutedForeground` of
- * `"#bebebe"` paints a blockquote at **6.315:1**, both under the body floor. A
+ * measures **6.405:1** through the ink wash, and a blockquote's body — the
+ * `foreground` run the reference paints, with the container's `mutedForeground`
+ * held as the fallback — measures **6.315:1** over the 5% accent wash on
+ * `Dark · Linux`, both under the body floor. A
  * `border: "#303030"` theme on `Dark · macOS` clears every plain-surface pair
  * and measures **1.002:1** on the code header's 2% wash; on `Dark`, a
  * `border: "#222222"` measures **1.036:1** on the block's own 3.5% body wash.

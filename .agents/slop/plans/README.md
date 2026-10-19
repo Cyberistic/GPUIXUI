@@ -352,6 +352,7 @@ references without buying correctness.
 | [688](./688-plan-number-collision.md) | The plan-number collision at `433`, and the rule it exposes | F | 311, 052 | done |
 | [689](./689-field-text-selection.md) | A field's typed text through a text selection | F | 071, 087, 362, 506, 510, 527, 528, 659 | done |
 | [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
+| [695](./695-blockquote-body-role.md) | The blockquote's painted body role | F | 569, 583, 588, 649 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3624,6 +3625,17 @@ lists; the divider case also found the persistent `selected` fill plan 335 has
 measured since, missing from the same row. `disabledRowStyle` paints the
 composition in the executable example. No colour, pair, floor, metric or shipped
 theme moves.
+
+Plan `695` corrects the blockquote composition's role. `nativeTextOverFades`
+held `textMuted` over the 5% accent wash because the reference blockquote
+container names `text_muted`, but every non-code markdown run carries
+`theme.text` and `SelectableText` paints those runs, so the authored body ink
+was unmeasured. A planted `foreground: "#bebebe"` on `Dark · Linux` paints a
+6.315:1 body on the card, popover and quiet panel while the pre-fix check
+returned no accent-wash entry. `text@1>accent@0.05` joins the list beside the
+container fallback, which is kept because the pinned binary is not inspectable;
+every shipped set already passes, so no colour, pair count, floor or shipped
+metric moves.
 
 ## How to use a plan
 

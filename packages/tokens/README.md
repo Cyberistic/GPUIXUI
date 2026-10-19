@@ -890,7 +890,11 @@ document may paint on (`nativeTextSurfaces`). The runtime's fixed fade fractions
 and 3.5% code-block ink wash are measured by `themeNativeTextFailures` on the
 same tones, at the body, secondary, mark and perceivability floors the lists
 name; a role lifted until its opaque pair just passes is still reported once it
-is faded (6.405:1 and 6.315:1 for the two planted edits the suite states).
+is faded (6.405:1 and 6.315:1 for the two planted edits the suite states). A
+blockquote's body is held in both roles: every non-code run carries `text`
+(`foreground`), while its container names `textMuted`, and the pinned binary is
+not inspectable, so `nativeTextOverFades` measures both over the 5% accent wash
+at the body floor.
 `nativeTextWashes` adds the runtime's own chrome — a code block's body frame on
 the 3.5% ink wash and its language header and separator on 2%, a diff file header
 on 2.5% and its hover on 5% — so a `border` or label that clears every

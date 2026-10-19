@@ -1858,7 +1858,9 @@ tint 5.5%; a markdown list marker is 85% of the accent ink, the blockquote rail
 60% and its wash 5%; and a code block paints every syntax role on a 3.5% ink
 wash. `nativeTextFades` and `nativeTextOverFades` own those fractions and
 `themeNativeTextFailures` composites each on every `nativeTextSurfaces` tone: a
-diff line and the blockquote's body on the **body** floor, the add/delete
+diff line on the **body** floor, a blockquote's body in both the painted run
+colour (`text`, the role `flatten_runs` gives every non-code run) and the
+container's `textMuted` fallback, the add/delete
 markers on **secondary**, the list marker on **mark**, and the bars, rails,
 tints and gutters on **perceivability**. The gutter's two fades are
 perceivability pairs rather than text pairs because the runtime dims chrome:
@@ -1908,9 +1910,12 @@ other check returns `[]`.
 
 A role chosen for its opaque floor still has to clear the faded one. On
 `Dark · Linux`, `successText: "#bebebe"` passes every other check while a string
-token measures **6.405:1** through the ink wash, and `mutedForeground:
-"#bebebe"` passes while a blockquote's body measures **6.315:1** over the accent
-wash, both under the body floor.
+token measures **6.405:1** through the ink wash. A blockquote's body is the
+same story with two roles: the container names `textMuted`, while every
+non-code run is `foreground`, so both are held. A `mutedForeground` of
+`"#bebebe"` passes every other check and measures **6.315:1** over the accent
+wash, and a `foreground` of `"#bebebe"` measures the same ratio on the `card`,
+`popover` and quiet panel, under the body floor.
 
 One composition is deliberately out: the runtime's **28% word-level diff wash**
 paints a changed token's own syntax colour over a wash of the add/delete family.

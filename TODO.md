@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 313/390
+`[x]` `[████████░░]` 314/391
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2641,6 +2641,14 @@ its own local copy of the three names. `PlatformVariant` now lives beside
 `knownPlatform` derives from `platformNames`, the fallback derives from the
 registry, and the suites use `platformVariants` plus an unknown-platform case
 (plan 692)
+`[x]` Hold the blockquote's painted body role — `nativeTextOverFades` measured
+`mutedForeground` over the 5% accent wash, but the reference runtime gives every
+non-code markdown run `theme.text` and `SelectableText` paints those runs, so a
+theme with `foreground: "#bebebe"` on `Dark · Linux` painted a 6.315:1 body on
+the card, popover and quiet panel while `themeNativeTextFailures` reported no
+accent-wash entry; `text@1>accent@0.05` joins the composition beside the
+container's `textMuted` fallback, which is kept because the pinned binary is not
+inspectable, and every shipped set already passes (plan 695)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now
