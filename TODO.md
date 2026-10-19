@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 236/302
+`[x]` `[████████░░]` 237/314
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1950,6 +1950,14 @@ owns the runtime's fraction and ink choice, the check measures both washes over
 it, Aero light names the XP steps (`#0E5135`, `#7E1D21`), and every shipped set
 passes (opaque minima 5.59/4.80, painted 5.21/4.51; no pair count, floor or
 check kind moves) (plan 582)
+`[x]` Publish the native document's fades and ink wash — the runtime paints a
+diff line at 92%, its markers at 90%, the row tint at 5.5%, the quote wash at
+5%, the list marker at 85%, the gutter at 80%/50% and code on a 3.5% ink wash,
+but only `card` and only shipped themes were guarded; two valid edits
+(`successText: "#bebebe"` and `mutedForeground: "#bebebe"` on `Dark · Linux`)
+measured **6.405:1** through the ink and **6.335:1** in a quote while
+`themeFailures` returned `[]`; `themeNativeTextFailures` is the ninth check and
+`nativeTextFades`/`nativeTextOverFades` own the fractions (plan 583)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

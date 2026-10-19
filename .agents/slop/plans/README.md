@@ -266,7 +266,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | done |
 | [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | done |
 | [582](./582-native-highlight-code-surface.md) | The find highlight on the painted code surface | F | 569, 573, 574, 581 | done |
-| [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | in progress |
+| [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

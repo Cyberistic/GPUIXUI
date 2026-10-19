@@ -830,11 +830,13 @@ and the code/diff gutters and table floors are the runtime's shipped proportions
 resolved against those roles. The runtime's chrome metrics without a token — the
 code gutter's floor, the diff accent bar and the runtime's own per-digit and
 max-content estimates — remain at its defaults. The runtime fades
-some values at fixed fractions a theme cannot change, so the suite holds the
-chosen roles through every composite on every shipped set; the syntax palette is
-held to the body floor on all four `Surface` tones a document may paint on
-(`nativeTextSurfaces`, `nativeSyntaxPairs`) and through the 3.5% ink wash the
-code block paints over each. The find highlight is held on that tone and on the
+some values at fixed fractions a theme cannot change, so
+`themeNativeTextFailures` holds the chosen roles through every composite on all
+four `Surface` tones a document may paint on; the syntax palette is held to the
+body floor both opaque (`nativeSyntaxPairs`) and through the 3.5% ink wash the
+code block paints over each, and the word-level 28% diff wash is documented as
+the one omission because a changed token's own colour sits on a wash of its own
+family. The find highlight is held on that tone and on the
 same painted surface, and its active match one `step` above the match, so an
 edited near-opaque `selection` that paints both washes the same colour is
 reported. A document painted directly on the canvas overrides

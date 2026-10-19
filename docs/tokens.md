@@ -112,7 +112,10 @@ missing here is not public.
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
 | `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
+| `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
+| `NativeTextFailure` | One native document fade, two-fade composition or ink wash a theme misses, with its field, role, surface and ratios. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales. |
+| `NativeTextOverFade` | Text painted over a second faded role, with both fractions. |
 | `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
 | `OpacityFailure` | A colour role whose alpha channel is not the form it is painted in, with the form it needed. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
@@ -140,7 +143,7 @@ missing here is not public.
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `highlight`, `hierarchy`, `direction` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `highlight`, `nativeText`, `hierarchy`, `direction` or `metric`. |
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
@@ -1594,15 +1597,38 @@ on — `nativeTextSurfaces` is `background`, `card`, `popover` and `muted` —
 through `nativeSyntaxPairs`, because code is body copy, not a status label.
 `foreground` is not in the list: the body pairs already hold it on all four.
 Every shipped set clears the opaque floor; the tightest is `primaryText` at
-**7.562:1** (`Light · Windows XP`). The runtime fades some values at fractions a
-theme cannot change: a diff line at 92%, an add/delete marker and its numbers at
-90%, the 3px accent bar at 55%, the row wash at 5.5%, a list marker at 85%, the
-blockquote rail at 60% and its wash at 5%, and the code block's 3.5% ink wash.
-Those are not tokens, so `native-text.test.ts` holds the chosen roles through
-each composite on every shipped set, and holds the syntax palette to the body
-floor on the painted ink wash over every surface; the tightest is `warningText`
-at **7.008:1** (`Light · macOS`). The opaque pairs are the binding public floor;
-the ink composite is the suite's stricter code-surface guard. The light platform
+**7.562:1** (`Light · Windows XP`).
+
+The runtime also paints through fades a theme cannot change. A diff line is 92%
+of `text`, its gutter number 80% and its unchanged marker 50% of `textFaint`;
+an add/delete marker is 90% of the status text role, its 3px bar 55% and its row
+tint 5.5%; a markdown list marker is 85% of the accent ink, the blockquote rail
+60% and its wash 5%; and a code block paints every syntax role on a 3.5% ink
+wash. `nativeTextFades` and `nativeTextOverFades` own those fractions and
+`themeNativeTextFailures` composites each on every `nativeTextSurfaces` tone: a
+diff line and the blockquote's body on the **body** floor, the add/delete
+markers on **secondary**, the list marker on **mark**, and the bars, rails,
+tints and gutters on **perceivability**. The gutter's two fades are
+perceivability pairs rather than text pairs because the runtime dims chrome:
+they measure 3.595:1 at 80% and 2.082:1 at 50% on Aero light's quiet panel,
+below the secondary floor by design. The ink wash is held for every syntax role
+on the same four tones; the tightest is `warningText` at **7.008:1**
+(`Light · macOS`).
+
+A role chosen for its opaque floor still has to clear the faded one. On
+`Dark · Linux`, `successText: "#bebebe"` passes every other check while a string
+token measures **6.405:1** through the ink wash, and `mutedForeground:
+"#bebebe"` passes while a blockquote's body measures **6.335:1** over the accent
+wash, both under the body floor.
+
+One composition is deliberately out: the runtime's **28% word-level diff wash**
+paints a changed token's own syntax colour over a wash of the add/delete family.
+`destructiveText` on its own 28% wash measures **4.389:1** (`Dark · Linux`) and
+`successText`'s string token 5.813:1 in identity dark, so no perceivable
+same-family wash can keep a syntax token at text strength. It is transient
+emphasis on a line whose body is held at 92% over the 5.5% row tint; a consumer
+that enables word-level diffs keeps the line readable and accepts the emphasis
+wash. The light platform
 styles own the steps their canvases need: macOS, Windows, Windows XP and Aero
 name `infoText` `#173A88`; XP adds `successText` `#0E5135`, `warningText`
 `#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `successText`
@@ -1891,9 +1917,9 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is eight checks — colour
-format, role opacity, typeface form, contrast, find highlight, text hierarchy,
-interaction direction and numeric metrics — and
+the same floors as the shipped ones. The guarantee is nine checks — colour
+format, role opacity, typeface form, contrast, find highlight, native text
+fades, text hierarchy, interaction direction and numeric metrics — and
 [`themeFailures`](#one-check) runs all of them in one call; the sections below
 explain each one it composes.
 
@@ -2500,7 +2526,8 @@ every elevation level fully opaque, a translucent `shadow` tint whose byte
 `sans: "Inter, system-ui, sans-serif"`
 stack, which silently paints the system face, a `disabledForeground` raised
 to body strength, a find highlight that erases its own text or collapses the
-active match into the match, or a light pointer ladder that lightens on hover
+active match into the match, a native document whose fade or ink wash erases its
+text, or a light pointer ladder that lightens on hover
 returns `[]`
 from `themeContrastFailures` while being unusable.
 `themeFailures(theme, contrast = theme.contrast)` composes all of them and tags
@@ -2523,13 +2550,13 @@ The order is diagnostic: the format checks first — `color`, `opacity`,
 then `typeface`, so a malformed role is named before the `NaN` ratios it causes,
 an alpha channel before the tint it repaints and a malformed family before the
 type scale painted with it — then `contrast`, then `highlight`, then
-`hierarchy`, then `direction`, then `metric`. `themeChecks` is that order as a
-list and
+`nativeText`, then `hierarchy`, then `direction`, then `metric`. `themeChecks`
+is that order as a list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
 index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
-`TypefaceFailure`, `ContrastFailure`, `HighlightFailure`, `TextTierFailure`,
-`DirectionFailure` or
+`TypefaceFailure`, `ContrastFailure`, `HighlightFailure`, `NativeTextFailure`,
+`TextTierFailure`, `DirectionFailure` or
 `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. A
 `HighlightFailure` is either arm: `pairClass: "secondary"` carries the wash,

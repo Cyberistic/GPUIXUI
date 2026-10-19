@@ -54,6 +54,7 @@ import {
   themeHighlightFailures,
   themeMetricFailures,
   themeModes,
+  themeNativeTextFailures,
   themeOpacityFailures,
   themeTextTierFailures,
   themeTypefaceFailures,
@@ -100,6 +101,7 @@ describe("one total theme check", () => {
         themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
         themeHighlightFailures(brokenTheme).length +
+        themeNativeTextFailures(brokenTheme).length +
         themeTextTierFailures(brokenTheme).length +
         themeDirectionFailures(brokenTheme).length +
         themeMetricFailures(brokenTheme).length,

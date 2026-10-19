@@ -188,8 +188,8 @@ export interface NativeTextTheme {
  * The four `Surface` tones a native text document may paint on. `bg` is `card`
  * by default; a document painted directly on the canvas overrides it with
  * `background`, and a document in a command palette or sidebar uses `popover`
- * or `muted`. The syntax pairs and the suite's runtime ink-wash guard measure
- * the same list.
+ * or `muted`. The syntax pairs and the runtime fades and ink wash in
+ * `themeNativeTextFailures` measure the same list.
  */
 export const nativeTextSurfaces = [
   "background",
@@ -347,8 +347,9 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  * `{ ...nativeTextTheme(theme), bg: theme.colors.background }`. The four tones
  * {@link nativeTextSurfaces} names are the whole set a document may paint on:
  * the opaque syntax palette is held to the body floor on every one
- * (`nativeSyntaxPairs`), and the suite holds the same palette through the
- * runtime's fixed 3.5% code-block ink wash on every one too. `foreground` is
+ * (`nativeSyntaxPairs`), and `themeNativeTextFailures` holds the same palette
+ * through the runtime's fixed 3.5% code-block ink wash on every one too.
+ * `foreground` is
  * omitted from the syntax pairs because the body pairs already hold it on all
  * four.
  *
@@ -358,11 +359,14 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  * 65%. Pass `nativeHighlight` instead.
  *
  * The runtime fades some of these values at fixed fractions (a diff line at
- * 92%, a marker at 90%, the accent bar at 55%, the row wash at 5.5%, a list
- * marker at 85%, the quote rail at 60% and its wash at 5%, and the code block's
- * ink wash at 3.5%). Those compositions are held by
- * `themeContrastFailures`; a role chosen for its opaque floor still has to
- * clear the faded one.
+ * 92%, its gutter at 80% and 50%, a marker at 90%, the accent bar at 55%, the
+ * row wash at 5.5%, a list marker at 85%, the quote rail at 60% and its wash at
+ * 5%, and the code block's ink wash at 3.5%). Those compositions are held by
+ * `themeNativeTextFailures` on the four tones above; a role chosen for its
+ * opaque floor still has to clear the faded one. The runtime's 28% word-level
+ * diff wash is deliberately out of the contract — it paints a changed token's
+ * own syntax colour over a wash of the add/delete family, which cannot clear a
+ * text floor while staying visible; `docs/tokens.md` states the omission.
  *
  * @example
  * ```tsx

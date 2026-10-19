@@ -2034,6 +2034,7 @@ describe("docs/tokens.md typeface contract", () => {
       typeface: "typeface form",
       contrast: "contrast",
       highlight: "find highlight",
+      nativeText: "native text fades",
       hierarchy: "text hierarchy",
       direction: "interaction direction",
       metric: "numeric metrics",
@@ -2048,6 +2049,7 @@ describe("docs/tokens.md typeface contract", () => {
       "six",
       "seven",
       "eight",
+      "nine",
     ] as const;
     const names = themeChecks.map((kind) => checkNames[kind]);
     const sentence = `${names.slice(0, -1).join(", ")} and ${names.slice(-1).join("")}`;

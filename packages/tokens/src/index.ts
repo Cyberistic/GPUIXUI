@@ -6,6 +6,7 @@ export * from "./highlight.js";
 export * from "./metrics.js";
 export * from "./motion.js";
 export * from "./native-text.js";
+export * from "./native-text-check.js";
 export * from "./opacity.js";
 export * from "./platform-recipes.js";
 export * from "./platforms.js";

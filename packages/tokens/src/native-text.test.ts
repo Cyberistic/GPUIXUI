@@ -12,8 +12,9 @@
  * The runtime also fades some values at fixed fractions (a diff line at 92%, a
  * marker at 90%, the accent bar at 55%, the row wash at 5.5%, a list marker at
  * 85%, the quote rail at 60% and its wash at 5%, and the code block's ink wash
- * at 3.5%). Those fractions are not tokens, so this suite holds the chosen
- * roles through each composition on every shipped set.
+ * at 3.5%). Plan 583 publishes them through `themeNativeTextFailures` on every
+ * `nativeTextSurfaces` tone; this suite holds the bridge's own mapping and the
+ * figures the catalogue quotes.
  *
  * Plan 574: the syntax palette was held on `card` only while `nativeTextTheme`
  * said every role was measured on all four `Surface` tones `bg` may name. On
@@ -26,8 +27,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
-  alpha,
-  compositeOver,
   contrastFloors,
   contrastPairs,
   contrastRatio,
@@ -44,6 +43,7 @@ import {
   nativeTextTheme,
   themeContrastFailures,
   themeFailures,
+  themeNativeTextFailures,
   type ContrastPair,
   type Theme,
   type ThemeColors,
@@ -119,43 +119,6 @@ const syntaxSpec: ReadonlyArray<
 const syntaxRoles: ReadonlyArray<keyof ThemeColors> = syntaxSpec.map(
   ([role]) => role,
 );
-
-/** The runtime's fixed fractions, cited in `theme.rs`/`markdown/render.rs`. */
-const runtimeFades = {
-  diffLineOpacity: 0.92,
-  diffMarkerOpacity: 0.9,
-  diffBarOpacity: 0.55,
-  diffRowWashOpacity: 0.055,
-  listMarkerOpacity: 0.85,
-  quoteRailOpacity: 0.6,
-  quoteWashOpacity: 0.05,
-} as const;
-
-/** The syntax roles that miss the body floor on the painted code surface. */
-const inkFailures = (
-  theme: Theme,
-  surface: keyof ThemeColors = "card",
-): ReadonlyArray<readonly [keyof ThemeColors, number]> => {
-  const floor = contrastFloors[theme.contrast].body;
-  return syntaxRoles.flatMap((role) => {
-    const ratio = contrastRatio(theme.colors[role], nativeInk(theme, surface));
-    return ratio >= floor ? [] : [[role, ratio] as const];
-  });
-};
-
-const faded = (color: string, opacity: number, surface: string): number =>
-  contrastRatio(compositeOver(alpha(color, opacity), surface), surface);
-
-const fadedOverWash = (
-  color: string,
-  opacity: number,
-  wash: string,
-  washOpacity: number,
-  surface: string,
-): number => {
-  const painted = compositeOver(alpha(wash, washOpacity), surface);
-  return contrastRatio(compositeOver(alpha(color, opacity), painted), painted);
-};
 
 describe("native text theme", () => {
   it("selects the runtime base from the theme's mode", () => {
@@ -271,12 +234,12 @@ describe("native text theme", () => {
 
   it("holds the syntax palette to the body floor on every painted document surface", () => {
     shippedThemes.forEach(({ theme }) => {
-      nativeTextSurfaces.forEach((surface) => {
-        expect(
-          inkFailures(theme, surface),
-          `${theme.name} on ${surface}`,
-        ).toEqual([]);
-      });
+      expect(
+        themeNativeTextFailures(theme).filter(
+          (failure) => failure.ink !== undefined,
+        ),
+        theme.name,
+      ).toEqual([]);
     });
   });
 
@@ -416,85 +379,13 @@ describe("native text theme", () => {
           failure.pairClass === "body",
       ),
     ).toBe(false);
-    const failure = inkFailures(planted, "card").find(
-      ([role]) => role === "infoText",
+    const failure = themeNativeTextFailures(planted).find(
+      (candidate) =>
+        candidate.role === "infoText" &&
+        candidate.surface === "card" &&
+        candidate.ink !== undefined,
     );
-    expect(failure?.[1]).toBeCloseTo(6.384, 3);
-  });
-
-  it("holds the runtime's fixed fades on every shipped set", () => {
-    shippedThemes.forEach(({ theme }) => {
-      const card = theme.colors.card;
-      const floor = contrastFloors[theme.contrast];
-      const colors = theme.colors;
-
-      expect(
-        faded(colors.foreground, runtimeFades.diffLineOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.body);
-      expect(
-        faded(colors.successText, runtimeFades.diffMarkerOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.secondary);
-      expect(
-        faded(colors.destructiveText, runtimeFades.diffMarkerOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.secondary);
-      expect(
-        faded(colors.successText, runtimeFades.diffBarOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.surface);
-      expect(
-        faded(colors.destructiveText, runtimeFades.diffBarOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.surface);
-      expect(
-        faded(colors.successText, runtimeFades.diffRowWashOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.surface);
-      expect(
-        faded(colors.primaryText, runtimeFades.listMarkerOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.mark);
-      expect(
-        faded(colors.primaryText, runtimeFades.quoteRailOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.surface);
-      expect(
-        faded(colors.primaryText, runtimeFades.quoteWashOpacity, card),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.surface);
-      expect(
-        fadedOverWash(
-          colors.foreground,
-          runtimeFades.diffLineOpacity,
-          colors.successText,
-          runtimeFades.diffRowWashOpacity,
-          card,
-        ),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.body);
-      expect(
-        fadedOverWash(
-          colors.foreground,
-          runtimeFades.diffLineOpacity,
-          colors.destructiveText,
-          runtimeFades.diffRowWashOpacity,
-          card,
-        ),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.body);
-      expect(
-        fadedOverWash(
-          colors.mutedForeground,
-          1,
-          colors.primaryText,
-          runtimeFades.quoteWashOpacity,
-          card,
-        ),
-        theme.name,
-      ).toBeGreaterThanOrEqual(floor.body);
-    });
+    expect(failure?.ratio).toBeCloseTo(6.384, 3);
   });
 
   it("runs the example", () => {

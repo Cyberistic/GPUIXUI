@@ -9,6 +9,10 @@ import {
 import { themeDirectionFailures, type DirectionFailure } from "./direction.js";
 import { themeHighlightFailures, type HighlightFailure } from "./highlight.js";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
+import {
+  themeNativeTextFailures,
+  type NativeTextFailure,
+} from "./native-text-check.js";
 import { themeOpacityFailures, type OpacityFailure } from "./opacity.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
@@ -27,6 +31,7 @@ export const themeChecks = [
   "typeface",
   "contrast",
   "highlight",
+  "nativeText",
   "hierarchy",
   "direction",
   "metric",
@@ -42,6 +47,7 @@ type FailurePayload = {
   readonly typeface: TypefaceFailure;
   readonly contrast: ContrastFailure;
   readonly highlight: HighlightFailure;
+  readonly nativeText: NativeTextFailure;
   readonly hierarchy: TextTierFailure;
   readonly direction: DirectionFailure;
   readonly metric: MetricFailure;
@@ -54,7 +60,8 @@ type FailurePayload = {
  * cannot resolve as written, `contrast` is a documented pair
  * below its floor, `highlight` is a find-highlight wash whose text misses its
  * floor or whose active match is not a perceivable step above the match,
- * `hierarchy` is a text tier that is not a perceivable step
+ * `nativeText` is a native document fade, two-fade composition or ink wash below
+ * its floor, `hierarchy` is a text tier that is not a perceivable step
  * below the tier above it, `direction` is a pointer ladder that steps toward the
  * canvas instead of away from it, and `metric` is a numeric invariant a
  * component relies on.
@@ -69,20 +76,21 @@ export type ThemeFailure = {
  * Every defect in an edited theme, from one call.
  *
  * The extension mechanism's guarantee is only whole when the colour-format,
- * opacity, typeface, contrast, find-highlight, text-hierarchy, direction and
- * metric checks all run: a theme whose only defect is a `shadow: "black"` tint,
- * a translucent elevation tint the paint discards, a solid modal scrim, a zero
- * focus-ring spread, a CSS family stack, a disabled label raised to body
- * strength, a find highlight that erases its own text or collapses the active
- * match into the match, or a light pointer ladder
+ * opacity, typeface, contrast, find-highlight, native-document, text-hierarchy,
+ * direction and metric checks all run: a theme whose only defect is a `shadow:
+ * "black"` tint, a translucent elevation tint the paint discards, a solid modal
+ * scrim, a zero focus-ring spread, a CSS family stack, a disabled label raised
+ * to body strength, a find highlight that erases its own text or collapses the
+ * active match into the match, a native document whose fade or ink wash erases
+ * its text, or a light pointer ladder
  * whose hover and press lighten returns `[]` from the contrast check alone. This
  * function composes them all in diagnostic order — the order
  * {@link themeChecks} owns — the three format checks first, so a malformed role
  * is named before the `NaN` ratios it causes, an alpha channel before the tint
  * it repaints and a malformed family before the type scale painted with it,
- * then contrast, then the find-highlight washes, then the text hierarchy, then
- * the interaction direction, then metrics — and tags each failure with the check
- * that found it.
+ * then contrast, then the find-highlight washes, then the native document
+ * paints, then the text hierarchy, then the interaction direction, then metrics
+ * — and tags each failure with the check that found it.
  *
  * `contrast` defaults to the level the theme declares, exactly like
  * {@link themeContrastFailures}, so a high-contrast theme is checked against
@@ -122,6 +130,9 @@ export function themeFailures(
     ),
     ...themeHighlightFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "highlight", ...failure }),
+    ),
+    ...themeNativeTextFailures(theme, contrast).map(
+      (failure): ThemeFailure => ({ kind: "nativeText", ...failure }),
     ),
     ...themeTextTierFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "hierarchy", ...failure }),

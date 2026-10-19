@@ -1,6 +1,6 @@
 # Plan 583 — The native document's fades and ink wash in the public contract
 
-Status: ready · Phase F · Owner: `tokens-theme` · Paths: `packages/tokens`,
+Status: done · Phase F · Owner: `tokens-theme` · Paths: `packages/tokens`,
 `docs/tokens.md`, `docs/design-system.md`, `COMPONENTS.md`, `TODO.md`,
 `.agents/slop/plans/README.md`
 
@@ -32,11 +32,11 @@ checks and can ship a document whose fades disappear.
 Measured on the shipped sets, two valid edits prove the gap. Both return `[]`
 from `themeFailures` today:
 
-1. `extendTheme(getTheme("dark"), { colors: { successText: "#bebebe" } })` — a
+1. `extendTheme(getPlatformTheme("linux", "dark"), { colors: { successText: "#bebebe" } })` — a
    string token (`successText`) through the 3.5% ink wash on the dark card,
    popover and quiet panel measures **6.405:1**, under the 7:1 body floor it
    clears opaque.
-2. `extendTheme(getTheme("dark"), { colors: { mutedForeground: "#bebebe" } })` —
+2. `extendTheme(getPlatformTheme("linux", "dark"), { colors: { mutedForeground: "#bebebe" } })` —
    a blockquote's body (`mutedForeground`) over the 5% accent wash measures
    **6.335:1** on the same three tones, under the 7:1 the suite states for it.
 
@@ -160,21 +160,25 @@ number. Cases:
    `card`, `popover` and `muted`, ratio ≈ 6.405 (toBeCloseTo 3).
 3. **Over-fade regression** — the `mutedForeground: "#bebebe"` dark edit:
    `themeFailures(planted)` is `[]`; the new check reports
-   `field: "textMuted"`, `wash: "accent"`, `washOpacity: 0.05`, `opacity: 1`,
-   ratio ≈ 6.335.
-4. **Every fade entry can fail** — for each `nativeTextFades` entry, set its
+   `field: "textMuted"`, `wash: "primaryText"` (the role the `accent` field
+   resolves to), `washOpacity: 0.05`, `opacity: 1`, ratio ≈ 6.335.
+4. **Every runtime fraction is published** — assert the exact
+   `field@opacity` order of `nativeTextFades` and the
+   `field@opacity>wash@washOpacity` order of `nativeTextOverFades`, so a
+   deleted runtime composition fails the suite.
+5. **Every fade entry can fail** — for each `nativeTextFades` entry, set its
    role to the light `card` colour on the light theme and assert a failure with
    the entry's `field`, `opacity` and `pairClass` appears for `card`. This is the
    completeness guard: a new entry that the function forgets fails here.
-5. **Every over-fade entry can fail** — same construction for the three entries
+6. **Every over-fade entry can fail** — same construction for the three entries
    (set text and wash roles to the card colour).
-6. **Every syntax role is held through the ink** — set every unique
+7. **Every syntax role is held through the ink** — set every unique
    `nativeSyntaxRoles` value to the card colour and assert the failure set names
    each role on all four `nativeTextSurfaces`.
-7. **The kind and the order** — `themeFailures` tags an ink failure
+8. **The kind and the order** — `themeFailures` tags an ink failure
    `kind: "nativeText"` and `themeChecks.indexOf("nativeText")` is
    `themeChecks.indexOf("highlight") + 1` and before `"hierarchy"`.
-8. **The reference names every composition** — `docs.test.ts` owns the page
+9. **The reference names every composition** — `docs.test.ts` owns the page
    guard; here assert `docs/tokens.md` contains `themeNativeTextFailures`,
    `nativeTextFades`, `nativeTextOverFades` and `NativeTextFailure` (mirrors the
    existing native-field docs case).

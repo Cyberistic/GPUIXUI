@@ -293,12 +293,13 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of eight checks, and running it alone is not the guarantee: a zero
+That is one of nine checks, and running it alone is not the guarantee: a zero
 `borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a
 translucent `shadow` tint the paint discards, a solid `overlay` scrim, a CSS
-family stack, a `disabledForeground` raised to body strength or a light pointer
-ladder whose hover lightens passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all eight and tags each
+family stack, a `disabledForeground` raised to body strength, a native document
+whose fade or ink wash erases its text, or a light pointer ladder whose hover
+lightens passes it.
+`themeFailures(theme, contrast = theme.contrast)` composes all nine and tags each
 entry with the `kind` that found it:
 
 ```ts
@@ -784,8 +785,12 @@ import { nativeTextTheme } from "@gpuixui/tokens";
 `nativeTextRoles` and `nativeSyntaxRoles` publish the mapping, and
 `nativeSyntaxPairs` holds code to the body floor on every `Surface` tone a
 document may paint on (`nativeTextSurfaces`). The runtime's fixed fade fractions
-and 3.5% code-block ink wash are measured by `native-text.test.ts` on every
-shipped set and every surface; the light platform styles name their own status
+and 3.5% code-block ink wash are measured by `themeNativeTextFailures` on the
+same tones, at the body, secondary, mark and perceivability floors the lists
+name; a role lifted until its opaque pair just passes is still reported once it
+is faded (6.405:1 and 6.335:1 for the two planted edits the suite states). The
+word-level 28% diff wash is the one documented omission. The light platform
+styles name their own status
 text steps where the inherited ink missed the body floor through the wash or a
 find highlight. The chrome metrics the scale does not name stay at the runtime's defaults. A runnable
 example lives in [`src/native-text.example.ts`](./src/native-text.example.ts).
