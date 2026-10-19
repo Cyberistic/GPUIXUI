@@ -252,10 +252,11 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19
-(**53 files / 742 tests, all passing on the store's release-tag build**; two
+(**57 files / 789 tests, all passing on the store's release-tag build**; two
 consecutive runs are identical by name). Plan `597` corrected the published box
-model, plan `598` a scroller's own report, and plan `599` `Select`'s off-by-one
-scroll reveal; before them the same suite reported 37 failures at plan `596`.
+model, plan `598` a scroller's own report, plan `599` `Select`'s off-by-one
+scroll reveal, and plan `606` the focus reveal a scroll region owes its
+controls; before them the same suite reported 37 failures at plan `596`.
 The native-focus tracker restored the 19 focus-matrix cases and the disabled
 ring cases (both files are green in a fresh process); plan `591` restored the
 lifetime of a seeded focus state and the `NumberField` blur commit, plan `592`
