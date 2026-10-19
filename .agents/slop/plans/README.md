@@ -281,6 +281,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [602](./602-diagnostic-order-truth.md) | The diagnostic order the documents retype | F | 383, 398, 540, 573, 583 | done |
 | [603](./603-toast-countdown-groove.md) | The Toast countdown's groove | F | 347, 348, 503, 602 | done |
 | [604](./604-timeline-marker-metrics.md) | The Timeline marker's fixed metrics | B/F | 353, 358, 530, 552, 554, 556, 568, 598, 601 | done |
+| [605](./605-disabled-control-helper.md) | The disabled state as one call | F | 306, 307, 510, 514, 520, 524, 539 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
