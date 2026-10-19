@@ -239,7 +239,8 @@ platform-style live twin takes `654`; the promotion gate on the head that
 includes it takes `655`; the live capture CLI takes `656`, and the promotion
 gate on the head that includes it takes `657`; the components and tokens
 workstreams then claimed `660`–`673`, so this workstream's pixel-evidence plan
-takes `674`.
+takes `674`; the promotion gate on that head takes `675`, the palette-switch
+frame evidence takes `676`, and the promotion gate on that head takes `677`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -398,6 +399,7 @@ takes `674`.
 | [659](./659-promotion-gate-with-tier1-evidence.md) | The promotion gate on the head that includes the last Tier 1 window evidence | F | `639`, `649`, `653`, `654`, `655`, `656`, `657`, `658` | **landed** — verification only, at `69392032` (the docs-only plan commit on code head `d9346a9d`): headless **105/105** (**3802** checks, 65 capabilities, 155.6 s) and live **94/94** (**2469** checks, 61 capabilities, **1021.6 s**), both exit `0`, and an independent full run on the same head agreed on every count. The live total is exactly plan `657`'s 2447 plus plan `658`'s 22 added checks; a plain `--all` wrote no `provenance.json`, and `check`/`lint`/`test` are green. This is the gate for the promotion merge; no source change. |
 | [674](./674-pixel-evidence.md) | Pixel evidence: assert what the native frame actually painted | F | `100`, `110`, `120`, `140`, `150`, `189`, `197` | **landed** — a pure PNG decoder in `packages/testing` (7 tests) plus `pixel-colour` and `live-pixel-colour`: both hosts report device scale **2** and the exact colours `#FF0000FF`/`#00FF00FF`/`#0000FFFF`, the theme's primary `#A7A9FF` and background `#11141A` (22 checks each); full headless **106/106** (3824 checks), focused live green; four mutation proofs (§8) |
 | [675](./675-promotion-gate-with-pixel-evidence.md) | The promotion gate on the head that includes pixel evidence | F | `639`, `649`, `653`, `654`, `655`, `656`, `657`, `659`, `674` | **landed** — merged the one docs-only `origin/master` commit (`2b4eb0d9`) at `d206df18`; verification only: headless **106/106** (`3824` checks, 65 capabilities, 106.5 s) and live **95/95** (`2491` checks, 61 capabilities, 1057.2 s), both exit `0`, `live-pixel-colour` included in the full registry; a second concurrent run on the same head agreed on every count (§8); `check`/`lint`/`test` green (playground 439, testing 68). No source change |
+| [677](./677-promotion-gate-with-palette-pixels.md) | The promotion gate on the head that includes the palette's frame pixels | F | `639`, `653`, `656`, `675`, `676` | planned — verification only: both full registries on the head that grew `live-theme` from 9 to 39 checks; expected headless **106/106** (`3824`) and live **95/95** (`2521`), then the four ledgers cite the run |
 
 Cross-cutting records:
 
