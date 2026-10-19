@@ -58,7 +58,7 @@ the selection actually changed.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `type` | `"single" \| "multiple"` | required | which selection rule applies |
-| `options` | `ReadonlyArray<{ value, label, disabled? }>` | required | the items, in visual order |
+| `options` | `ReadonlyArray<{ value, label, disabled? }>` | required | the items, in visual order; a blank `label` paints and announces the `value` |
 | `value` / `defaultValue` | `string` for `single`, `readonly string[]` for `multiple` | — | controlled selection, or the uncontrolled start |
 | `onValueChange` | `(value) => void` | — | the new selection, only on a real change |
 | `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` | flex direction and arrow axis |
@@ -114,7 +114,8 @@ instead of repeating the first move (plan `359`).
   on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
   keyboard operation and activation are unaffected.
 - The group is a named `group` (AccessKit `Group`); each item is a named
-  `button` (`Button`) whose accessible name is the option's `label`.
+  `button` (`Button`) whose accessible name is the option's `label`, falling
+  back to its `value` when the label is blank (plan `589`).
 - **GPUix 0.10.0 has no `aria-pressed`** and no `aria-selected` for buttons, so
   the pressed state is announced through `aria-valuetext` — `"pressed"` /
   `"not pressed"` — exactly like `Toggle`, `Checkbox` and `Switch`. A screen

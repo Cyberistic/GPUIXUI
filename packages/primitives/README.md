@@ -193,7 +193,7 @@ a value, and must report it through the accessibility tree (plan `574`).
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
-| `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once; a label beside a control is inert, so `CheckboxGroup` makes the whole row one interactive element instead of pairing a box with a `Text` |
+| `aria-labelledby` | absent | a control carries its own `aria-label`, written from its `label` prop; `labelledBy(name)` returns `{ label }` so the name is written once; a label beside a control is inert, so `CheckboxGroup` makes the whole row one interactive element instead of pairing a box with a `Text`. A data option's `label` falls back to its `value` when blank, so an option row is never an unnamed focus stop (plan `589`) |
 | `aria-describedby` | absent | `Tooltip` writes a string tip onto the trigger as `aria-description` and exposes the open tip as a named `role="tooltip"` node; the trigger still owns its role and name, and a non-string tip has no description (plan `071`). Every single-root focusable control forwards the slot contract (plan `345`); a native `<input>`/`<textarea>` host receives no `onMouseEnter`, so a field's tip opens on keyboard focus only. Roving composites are documented non-triggers |
 | scrollbar tint, fade mask | absent | `ScrollArea` paints no chrome; the thumb is platform-themed. A **labelled** area is a named focusable `region` whose arrows/page/Home/End scroll it through the runtime's `scrollTo`; the handler only fires when the region itself holds focus, so fields inside keep their keys (plan `072`). `onScrollPositionChange` reports the runtime's absolute, clamped offset after a wheel or a keyboard move — the scroll event itself carries deltas only, and a component-performed scroll dispatches none; the `ref` handle's `scrollTo` moves the region and reports where it landed (plan `337`). |
 | rotation, colour interpolation | absent | `Spinner` advances a discrete step on a timer instead of spinning. Native `motion` **is** available for one-way position changes — the `Switch` thumb slides 200 ms from `switchThumbOffset`'s two ends — but it has no `repeat`, so the looping indicators keep their steps (plans `020`, `329`) |
@@ -232,7 +232,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**55 test files**, all passing, including a package-wide guard that a caller's
+**56 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -253,7 +253,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **49 test files**. The latest run's
+runtime-proven too. The runtime suite is **50 test files**. The latest run's
 totals live in `TODO.md`'s live-suite row and plan `583`, not here: a prose
 count cannot be held true by a test.
 The failures are measured runtime facts, not an

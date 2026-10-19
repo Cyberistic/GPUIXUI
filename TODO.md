@@ -1617,6 +1617,16 @@ retired once both branches are one
       cannot be held true by a test. `src/docs-counts.test.ts` fails by value
       when either file count drifts or a numeric test count returns; three
       failure directions measured (plan `588`).
+`[x]` `packages/primitives`: **a data option with a blank label was an unnamed
+      control** — measured 2026-10-19: `CheckboxGroup`, `RadioGroup` and
+      `ToggleGroup` published `CheckBox:""`/`RadioButton:""`/`Button:""` for an
+      option whose computed label trimmed to nothing (a named focus stop with
+      no name, the class plan `578` fixed for select-all), and a selected blank
+      `Select` option announced and painted `"   "`. One `optionText` rule now
+      uses the label, else the option's `value`, for paint and name in all four,
+      while a real label keeps its verbatim paint; 5 offline + 4 scoped runtime
+      cases, both directions proven (plan `589`; offline 56 files / 796 tests,
+      scoped live 4/4).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

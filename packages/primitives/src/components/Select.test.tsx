@@ -421,8 +421,9 @@ describe("Select", () => {
     expect(Option.isNone(elementProp(option, "testId"))).toBe(true);
   });
 
-  it("publishes a blank label as absent on the trigger, list and options", () => {
-    // Plan 026: a computed empty label must not name three surfaces with it.
+  it("publishes a blank label as absent on the trigger and list, and names an option by its value", () => {
+    // Plan 026 (the field's own label) + plan 589: an option has a second
+    // identity — its value — so a blank label must not leave it unnamed.
     const element = renderSelect(
       { options: [{ value: "alpha", label: "   " }], label: "   " },
       testTheme,
@@ -436,8 +437,8 @@ describe("Select", () => {
     );
     const list = childAt(element, 1);
     expect(elementProp(list, "aria-label")).toStrictEqual(Option.none());
-    expect(elementProp(childAt(list, 0), "aria-label")).toStrictEqual(
-      Option.none(),
+    expect(expectSome(elementProp(childAt(list, 0), "aria-label"))).toBe(
+      "alpha",
     );
   });
 

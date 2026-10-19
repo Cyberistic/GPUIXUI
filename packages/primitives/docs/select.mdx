@@ -102,7 +102,7 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading |
+| `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading; a blank `label` paints and announces the `value` |
 | `value` | `string` | — | controlled selection; `""` is a real value (see below) |
 | `defaultValue` | `string` | — | initial selection when uncontrolled; omit it (with `value`) for no selection |
 | `onValueChange` | `(value: string) => void` | none | committed value |
@@ -224,7 +224,9 @@ mappings (`role_from_aria`):
   string is never mistaken for "no choice" (plan `501`).
 - The list is a **`listbox`** named by the same `label`.
 - Each item is an **`option`** with its own label and `aria-selected` on the
-  chosen one. AccessKit reports `ListBox`, `ListBoxOption`, `selected`.
+  chosen one. AccessKit reports `ListBox`, `ListBoxOption`, `selected`. A blank
+  label paints and announces the option's `value`, so a selected row is never
+  whitespace or an unnamed option (plan `589`).
 - A group is a **`group`** named by its heading, because the runtime has no
   `aria-labelledby`. AccessKit reports `Group` with that label; the visible
   heading is painted beside it as text.

@@ -43,6 +43,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   hasText,
+  optionText,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -228,6 +229,7 @@ export const renderRadioGroup = (
     >
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
+        const text = optionText(option.label, option.value);
         const disabled = props.disabled === true || option.disabled === true;
         const focused = Option.exists(
           focus.focusedIndex,
@@ -247,7 +249,7 @@ export const renderRadioGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="radio"
-            aria-label={ariaName(option.label)}
+            aria-label={ariaName(text)}
             aria-description={ariaName(option.description)}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
@@ -284,7 +286,7 @@ export const renderRadioGroup = (
               tone={disabled ? "muted" : "default"}
               style={shrinkLayoutStyle}
             >
-              {option.label}
+              {text}
             </Text>
             {hasText(option.description) ? (
               <Text role="caption" tone="muted" style={shrinkLayoutStyle}>

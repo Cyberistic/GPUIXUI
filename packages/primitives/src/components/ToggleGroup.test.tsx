@@ -122,8 +122,9 @@ describe("ToggleGroup", () => {
     ).toStrictEqual(["Align left", "Align centre", "Align right"]);
   });
 
-  it("publishes a blank group or item label as absent", () => {
-    // Plan 026: the group and each data option carry a name.
+  it("publishes a blank group label as absent and names an item by its value", () => {
+    // Plan 026 (group) + plan 589: the item is the group's focus stop, so a
+    // blank data label falls back to the option's value.
     const blankOptions: ToggleGroupSingleProps = {
       type: "single",
       label: "   ",
@@ -140,7 +141,7 @@ describe("ToggleGroup", () => {
     );
     expect(hostProp(group, "aria-label")).toStrictEqual(Option.none());
     const item = expectSome(Option.fromNullishOr(elementChildren(group)[0]));
-    expect(hostProp(item, "aria-label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(item, "aria-label"))).toBe("left");
   });
 
   it("announces the pressed set through value text, never aria-pressed", () => {

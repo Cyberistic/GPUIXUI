@@ -46,6 +46,7 @@ import { selectionValueText } from "./Checkbox.js";
 import {
   ariaName,
   hasText,
+  optionText,
   resolvePartStyle,
   usableLabel,
   useControlState,
@@ -310,7 +311,7 @@ export const renderCheckboxGroup = (
       {
         value: Option.some(option.value),
         state: rowState,
-        label: option.label,
+        label: optionText(option.label, option.value),
         description: option.description,
         disabled,
         invalid: props.invalid === true,

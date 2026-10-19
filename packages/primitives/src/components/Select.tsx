@@ -93,6 +93,7 @@ import {
 import {
   ariaName,
   composeHandler,
+  optionText,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -517,42 +518,48 @@ export const renderSelect = (
     Option.flatMap(Option.fromNullishOr(selected), (value) =>
       Option.map(
         Arr.findFirst(flat, (option) => option.value === value),
-        (option) => option.label,
+        (option) => optionText(option.label, option.value),
       ),
     ),
     () => undefined,
   );
-  const items = Arr.map(flat, (option) => ({
-    value: option.value,
-    label: option.label,
-    textValue: option.label,
-    disabled: option.disabled === true,
-  }));
-  const row = (choice: SelectOption): ReactElement => (
-    <SelectItem
-      key={choice.value}
-      ref={handlers.registerItem(choice.value)}
-      value={choice.value}
-      role="option"
-      aria-label={ariaName(choice.label)}
-      aria-selected={choice.value === selected}
-      disabled={choice.disabled}
-      testId={selectOptionTestId(testId, choice.value)}
-      style={selectItemStyle(theme)}
-    >
-      {(state) => (
-        <>
-          {state.highlighted ? (
-            <ScrollWhenHighlighted
-              value={choice.value}
-              onHighlight={handlers.onHighlight}
-            />
-          ) : null}
-          <div style={controlLabelStyle}>{choice.label}</div>
-        </>
-      )}
-    </SelectItem>
-  );
+  const items = Arr.map(flat, (option) => {
+    const text = optionText(option.label, option.value);
+    return {
+      value: option.value,
+      label: text,
+      textValue: text,
+      disabled: option.disabled === true,
+    };
+  });
+  const row = (choice: SelectOption): ReactElement => {
+    const text = optionText(choice.label, choice.value);
+    return (
+      <SelectItem
+        key={choice.value}
+        ref={handlers.registerItem(choice.value)}
+        value={choice.value}
+        role="option"
+        aria-label={ariaName(text)}
+        aria-selected={choice.value === selected}
+        disabled={choice.disabled}
+        testId={selectOptionTestId(testId, choice.value)}
+        style={selectItemStyle(theme)}
+      >
+        {(state) => (
+          <>
+            {state.highlighted ? (
+              <ScrollWhenHighlighted
+                value={choice.value}
+                onHighlight={handlers.onHighlight}
+              />
+            ) : null}
+            <div style={controlLabelStyle}>{text}</div>
+          </>
+        )}
+      </SelectItem>
+    );
+  };
   return (
     <GpuixSelect
       items={items}

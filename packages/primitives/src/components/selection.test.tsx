@@ -266,8 +266,10 @@ describe("RadioGroup", () => {
     expect(onSelect).toHaveBeenCalledWith("beta");
   });
 
-  it("publishes a blank group or option label as absent", () => {
-    // Plan 026: both the group's and the option's label are names.
+  it("publishes a blank group label as absent and names an option by its value", () => {
+    // Plan 026 (group) + plan 589: a blank label is not a name, but an option
+    // has a second identity — its value — so the row must not be an unnamed
+    // focus stop.
     const element = renderRadioGroup(
       { label: "   ", options: [{ value: "alpha", label: "   " }] },
       testTheme,
@@ -278,7 +280,7 @@ describe("RadioGroup", () => {
     );
     expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
     const option = expectSome(Arr.head(elementChildren(element)));
-    expect(hostProp(option, "aria-label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(option, "aria-label"))).toBe("alpha");
   });
 
   it("publishes an option description as its accessible description", () => {
@@ -636,16 +638,15 @@ describe("CheckboxGroup", () => {
     );
   });
 
-  it("publishes a blank group or row label as absent", () => {
-    // Plan 026: the group name and each row's data label follow one rule.
+  it("publishes a blank group label as absent and names a row by its value", () => {
+    // Plan 026 (group) + plan 589: a data row's value is its second identity,
+    // so a blank label must not publish an unnamed focus stop.
     const element = render({
       label: "   ",
       options: [{ value: "email", label: "   " }],
     });
     expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
-    expect(hostProp(row(element, 0), "aria-label")).toStrictEqual(
-      Option.none(),
-    );
+    expect(expectSome(hostProp(row(element, 0), "aria-label"))).toBe("email");
   });
 
   it("names each row with its label and describes it with the option text", () => {

@@ -49,6 +49,7 @@ import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import {
   ariaName,
   mergeStyle,
+  optionText,
   resolvePartStyle,
   useControlState,
   type FocusState,
@@ -188,6 +189,7 @@ export const renderToggleGroup = (
     >
       {Arr.map(options, (option, index) => {
         const pressed = isPressed(state.current, option.value);
+        const text = optionText(option.label, option.value);
         const disabled = isDisabled(index);
         const spec: ControlSpec = {
           variant: pressed ? paint.pressed : paint.rest,
@@ -217,7 +219,7 @@ export const renderToggleGroup = (
             key={option.value}
             ref={handlers.registerItem(index)}
             role="button"
-            aria-label={ariaName(option.label)}
+            aria-label={ariaName(text)}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
             testId={
@@ -252,7 +254,7 @@ export const renderToggleGroup = (
               },
             )}
           >
-            <div style={controlLabelStyle}>{option.label}</div>
+            <div style={controlLabelStyle}>{text}</div>
           </div>
         );
       })}

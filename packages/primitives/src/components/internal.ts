@@ -182,7 +182,7 @@ export const ariaNameOr = (
  * the rule around a hole (plan `577`). It is `core/text.ts`'s rule, re-exported
  * here so a component has one import for its text helpers.
  */
-export { hasText } from "../core/text.js";
+export { hasText, optionText } from "../core/text.js";
 
 /**
  * A control's name: an explicit label that says something, else its text

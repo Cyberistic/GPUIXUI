@@ -50,7 +50,7 @@ Uncontrolled, with no parent row:
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `CheckboxGroupOption[]` | required | `value`, `label`, optional `description` and `disabled` |
+| `options` | `CheckboxGroupOption[]` | required | `value`, `label`, optional `description` and `disabled`; a blank `label` paints and announces the `value` |
 | `value` | `readonly string[]` | — | controlled selection; omit to let the group keep its own |
 | `defaultValue` | `readonly string[]` | `[]` | initial selection when uncontrolled |
 | `onValueChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
@@ -105,7 +105,9 @@ order. A press that changes nothing does not call `onValueChange`.
   control paints no focus ring on a consumer install of 0.10.0; the ring paints
   on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
   keyboard operation and activation are unaffected.
-- The group is a named `group`; each row is a `checkbox` named by its `label`.
+- The group is a named `group`; each row is a `checkbox` named by its `label`,
+  falling back to its `value` when the label is blank — a blank row would
+  otherwise be an unnamed tab stop (plan `589`).
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
 - The **whole row** — box, label and description — is one interactive element and

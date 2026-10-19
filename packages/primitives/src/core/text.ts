@@ -22,3 +22,14 @@ export const usableText = (value: string | undefined): Option.Option<string> =>
 /** Whether a string says something: non-blank after trimming. */
 export const hasText = (value: string | undefined): boolean =>
   Option.isSome(usableText(value));
+
+/**
+ * The text a data option paints and announces.
+ *
+ * An option's `label` is often computed and can trim to nothing; its `value`
+ * is the only other name the caller supplied, so a blank label falls back to
+ * it instead of painting an empty row and publishing an unnamed focus stop
+ * (plan 589). A real label is returned verbatim: padding is the caller's.
+ */
+export const optionText = (label: string, value: string): string =>
+  hasText(label) ? label : Str.trim(value);

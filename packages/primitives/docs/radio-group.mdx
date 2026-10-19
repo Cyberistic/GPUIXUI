@@ -30,7 +30,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `options` | `ReadonlyArray<RadioOption>` | — (required) | the choices, in order |
+| `options` | `ReadonlyArray<RadioOption>` | — (required) | the choices, in order; a blank `label` paints and announces the `value` |
 | `value` | `string` | — | controlled selection; `""` is a real value (see below) |
 | `defaultValue` | `string` | — | initial selection when uncontrolled; omit it (with `value`) for no selection |
 | `onValueChange` | `(value: string) => void` | none | the selected option's value |
@@ -99,8 +99,9 @@ selected), so Tab still enters on what is selected.
 - The group's name comes from `label`.
 - Each option announces its selected state through **`aria-valuetext`**
   (`checked` / `unchecked`); there is no `aria-checked`.
-- An option's own `label` is its accessible name; the visible text beside the
-  circle is a separate `Text`.
+- An option's own `label` is its accessible name and its visible text; a blank
+  label falls back to the option's `value`, so the row is never an unnamed stop
+  (plan `589`). The text beside the circle is a separate `Text`.
 - Disabled options are skipped by the arrows and are not tab stops.
 - The focused option paints a ring (the `ring` role, spread by
   `borderWidth.strong`), tracked per item because GPUix dispatches focus to the
