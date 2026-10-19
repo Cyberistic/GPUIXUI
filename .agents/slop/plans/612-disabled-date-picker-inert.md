@@ -11,6 +11,9 @@ opens the picker (`defaultOpen`, or a controlled `open`) with `disabled` still
 gets a fully operable calendar: days focus and choose, the header browses
 months, the month chooser opens, and the Clear action writes `null`.
 
+**Status now:** done (2026-10-19) — the surface is inert, three native cases
+pin it, and every gate is green. Results in §8.
+
 This is the plan-394 contract ("disabled means inert: no hover, no press, no
 ring, no tab stop") applied to the one popup it never reached: plan 394 swept
 `TimePicker`'s segments, but not `DatePicker`'s calendar.
@@ -159,10 +162,14 @@ forced-open picker that still chose a day and cleared its value.
    `disabled`; press `right` through the focused day; the focused day is still
    `date-day-2026-10-17`, no ring is painted, and `onValueChange` was not called.
 
-Both directions: revert only the two root guards → case 1 fails on the value
-choices; revert only the calendar's `disabled` treatment (guards, header, tab
-stop, ring, Clear) → cases 2 and 3 fail. Record the exact failures in the plan
-status when done.
+Both directions, as measured: reverting `date-picker.tsx` to its state before
+this plan fails all three cases (`3 failed | 1 passed | 33 skipped`; the pass is
+the existing "does not open when disabled"). The root `choose`/`clear` guards
+are defence in depth and are not independently observable through the UI: the
+calendar's `interactive` gate removes the click handler, so removing only the
+root guards still passes. Removing the calendar treatment while keeping the root
+guards is likewise not a supported configuration — the two layers guard the same
+action from opposite sides.
 
 Commands (this host has the locally built `darwin-x64` binding):
 
@@ -201,3 +208,28 @@ pre-existing).
 - The three native cases fail without the fix and pass with it.
 - Docs, `COMPONENTS.md`, `TODO.md` and the plan index state the same contract and
   the same test count.
+
+## 8. Results (2026-10-19, this host)
+
+**Probe before the fix** — the forced-open disabled picker measured: content
+painted, `date-day-2026-10-17` focused with `tabIndex 0` and a ring, day cursor
+`pointer`, prev/next/month `tabIndex 0`, Clear painted, grid description absent;
+a press on 18 reported `"2026-10-18"`, a press on Clear reported `null`.
+
+**Probe after the fix** — the same fixture measured: content painted, nothing
+focused, day `tabIndex -1`, no ring, cursor `not-allowed`, prev/next/month
+`tabIndex -1` with `aria-description "Disabled"`, Clear absent, grid
+`aria-description "Disabled"`.
+
+**Tests** — `nub run test:behaviour src/behaviour/date-picker.test.tsx`:
+`37 passed (37)`.
+
+**Both directions** — `git show HEAD:.../date-picker.tsx` over the working file
+and the same suite: `3 failed | 1 passed | 33 skipped` (the three new cases fail,
+the pre-existing disabled-trigger case passes). Restored file: all 37 pass.
+
+**Gates** (this worktree, 2026-10-19) — `nub run check` exit `0`; `nub run lint`
+exit `0`; `nub run test` exit `0` (449 tests in 44 files); the full native suite
+`776 passed / 35 failed of 811`, with every failure one of the recorded plan-540
+binding defects (no new failure, and `date-picker.test.tsx` is not in the failed
+list). The same counts are recorded in `TODO.md` Phase G.

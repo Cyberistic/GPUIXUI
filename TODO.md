@@ -349,6 +349,15 @@ retired once both branches are one
       control ORs the caller's `disabled` and guards its handler. 4 pure + 4
       native cases (unit 449, Pagination 17), both-direction proof; docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] A disabled date picker is inert even when it is open — plan 612:
+      measured that a `disabled defaultOpen` picker focused a day, reported
+      `2026-10-18` from a press and `null` from Clear, kept the header browsing
+      and the grid undescribed. The surface now stays painted but takes no
+      focus, puts every day/month/header control out of the tab order with no
+      hover or ring, announces `Disabled` on the grid, hides Clear, and the
+      root's `choose`/`clear` refuse. 3 native cases (DatePicker 37,
+      behaviour 811), both-direction proof; docs, `COMPONENTS.md` and the
+      inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -981,9 +990,9 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plans 606/608): all
-      three exit 0; the unit suite is 445 tests in 44 files. The native
-      behaviour suite is **769 passed / 35 failed of 804** — every failure is
+      re-run from the components worktree on 2026-10-19 (plans 611/612): all
+      three exit 0; the unit suite is 449 tests in 44 files. The native
+      behaviour suite is **776 passed / 35 failed of 811** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19).
       Re-run before release, since every later merge can change them

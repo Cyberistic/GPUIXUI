@@ -155,6 +155,34 @@ selection path.
 The action is opt-in so an existing field does not gain a row; the caller still
 owns `null` as the "no date" state.
 
+## Disabled
+
+`disabled` makes the whole picker inert, including a surface the caller forces
+open with `defaultOpen` or a controlled `open`. The surface stays painted (a
+controlled popup does not disappear under the caller), but it cannot change the
+value:
+
+```tsx
+<DatePicker disabled defaultOpen value={due} clearable>
+  <DatePickerTrigger label="Due date" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
+```
+
+- No day or month cell is a tab stop, clickable, hovered or ringed.
+- The previous/next month and year controls and the month label are disabled, so
+  the calendar cannot be browsed or switched to the month chooser.
+- The arrow/Home/End/PageUp/PageDown handler and the chooser's key handler do
+  nothing.
+- Opening a disabled picker does not move focus into it, and a picker that turns
+  disabled while open keeps focus where it was while the day it is on stops
+  painting a ring.
+- `Clear` is not rendered, and `onValueChange` is never called.
+- The grid carries `aria-description: "Disabled"` (0.10.0 has no
+  `aria-disabled`).
+
 ## Labels
 
 Every string the calendar paints can come from the caller: month names, weekday
@@ -263,7 +291,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   not by an attribute.
 - **No `aria-disabled`** in `@gpuix/native@0.10.0`: an unavailable day leaves the
   tab order, does not activate, and is named as unavailable instead of carrying a
-  disabled state.
+  disabled state. A disabled picker puts the same signal on the grid through the
+  supported `aria-description` channel, and its cells leave the tab order.
 - **`min` after `max`** makes the grid inert (see Bounds) rather than throwing.
 - **Labels are the caller's.** The defaults are English; `labels` supplies the
   month names, weekday headings, unavailable suffix, the two month controls, the
@@ -297,7 +326,7 @@ caller weekday list, month availability from an interior day, year availability
 in both directions, keeping the day-of-month when a shorter month is chosen, and
 keyboard month stepping without a year wrap.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (34 tests):
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (37 tests):
 open + day focus, `defaultOpen`, the controlled open/close contract (a refused
 close leaves the surface painted and focus in place), a no-value open on today, a
 no-value open clamped to `min`, selection
@@ -312,8 +341,10 @@ label object keeping the remaining defaults, the month chooser opening and
 marking the viewed month, a choice that moves the view without writing the value,
 a shorter month clamping the day, a year step in both directions, an unavailable
 month and year stepper staying inert under the bounds, the year label returning
-to the grid, keyboard month movement and selection, and the chooser's own label
-names.
+to the grid, keyboard month movement and selection, the chooser's own label
+names, and a forced-open disabled picker that refuses a day, hides `Clear`,
+leaves every control out of the tab order with a `Disabled` description and no
+focus, and ignores the arrow keys after it turns disabled.
 
 ```sh
 nub run --filter @gpuixui/components test
