@@ -300,6 +300,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [627](./627-surface-border-fit.md) | The fixed surfaces fit their own border | F | 353, 358, 384, 598, 620, 625 | done |
 | [629](./629-notification-inbox-header.md) | The notification inbox holds its header | F | 353, 358, 598, 620, 625, 627 | done |
 | [631](./631-toast-dismiss-control.md) | The Toast card holds its dismiss control | F | 353, 358, 620, 627, 629 | done |
+| [632](./632-date-disclosure-icon.md) | The date field's disclosure glyph is the icon tier it paints | F | 353, 358, 384, 556, 601, 627, 631 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3271,6 +3272,19 @@ the same gap at 128. The bound now counts the gap and the square control; the
 shipped 380 clears 108 at 3.52×, so no colour, pair, floor, metric or shipped
 theme value moves. This supersedes the Toast's 68px bound and 5.59× figure
 quoted in plan `627`'s summary; its other six bounds are unchanged.
+
+Plan `632` closes the sibling undercount plan `631`'s audit left behind. The
+date trigger's bound charged `typography.caption.fontSize` for its disclosure
+marker, but `DatePickerTrigger` paints `<Icon size="sm" />`, which
+`packages/icons` resolves through `iconSize` — 14px against the caption type's
+12px at the shipped identity. A copied theme at the old `51`px bound returned
+`[]` from every check while the trigger needed `53`, and a theme that lifted
+`iconSize.sm` to 16 was read as `12`. The bound now charges the theme's own
+`iconSize.sm` beside the one `label` glyph; the shipped `220` clears the
+corrected `53` at `4.15×`, so no colour, pair, floor, metric or shipped theme
+value moves. The suite states the 53, the 52px plant, the lifted 55 and the
+total-check entry, and the catalogue, design system and JSDoc name the `sm`
+disclosure icon.
 
 ## How to use a plan
 

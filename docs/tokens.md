@@ -1064,7 +1064,7 @@ every density.
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, a leading glyph, the query, the action and their two gaps, or a token-input chip |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
-| `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its insets, gap, disclosure glyph and one `label` glyph |
+| `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
 | `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |

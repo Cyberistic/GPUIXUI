@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 271/344
+`[x]` `[████████░░]` 272/345
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2291,6 +2291,13 @@ theme with `toastWidth: 100` returned `[]` while the card needed 108 and
 `overflow: "hidden"` clipped the control; the bound now counts the gap and the
 dismiss control, every shipped set still passes (380 against 108) and no value
 moves (plan 631)
+`[x]` Charge the date trigger the icon it paints — `dateFieldWidth` was held to
+its insets, gap, one `label` glyph and a `caption` disclosure glyph, but
+`DatePickerTrigger` paints `<Icon size="sm" />`, which resolves to
+`iconSize.sm`; a theme at the old 51px bound returned `[]` while the trigger
+needed 53, and a lifted icon tier was never read. The bound now charges
+`iconSize.sm`, every shipped set still passes (220 against 53) and no value
+moves (plan 632)
 
 ## Phase C — Tier 1–2 components
 

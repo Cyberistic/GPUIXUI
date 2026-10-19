@@ -511,8 +511,8 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   same minimum holds the query row the token documents: the field's
  *   `spacing.md` padding, a leading `fieldAdornmentSize` glyph, the gap, one
  *   `body` query glyph, the same gap and the trailing action; a date
- *   trigger holds its own insets, its gap, one `label` glyph and its `caption`
- *   disclosure glyph, the overlay scroll height fits one row, because a list
+ *   trigger holds its own insets, its gap, one `label` glyph and the `sm`
+ *   disclosure icon it paints, the overlay scroll height fits one row, because a list
  *   viewport shorter than a row clips every option, the message viewport fits
  *   one row for the same reason, a keycap's content box holds one caption line
  *   plus its two borders,
@@ -895,9 +895,10 @@ export function themeMetricFailures(
         spacing["2xl"] +
         2 * borderWidth.thin,
     ),
-    // A date trigger paints its value and a disclosure glyph inside its own
-    // insets and gap; a field narrower than that chrome clips one of them. A
-    // zero or non-finite width is its own rule's diagnostic.
+    // A date trigger paints its value and the `sm` disclosure icon inside its
+    // own insets and gap; a field narrower than that chrome clips one of them.
+    // The marker is the icon tier `Icon size="sm"` resolves to, not the caption
+    // type (plan 632). A zero or non-finite width is its own rule's diagnostic.
     ...(usableBound(dimensions.dateFieldWidth)
       ? atLeast(
           "dimensions",
@@ -906,7 +907,7 @@ export function themeMetricFailures(
           3 * spacing.md +
             2 * borderWidth.thin +
             typography.label.fontSize +
-            typography.caption.fontSize,
+            iconSize.sm,
         )
       : []),
     // A message viewport shorter than one row clips every message it holds.
