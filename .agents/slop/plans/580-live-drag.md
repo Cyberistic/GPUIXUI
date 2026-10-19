@@ -104,7 +104,8 @@ boundary, plan `189`):
    with `A:move` (the same post-gesture contract as the headless scenario).
 10. Screenshot to `${LIVE_ARTIFACTS}/${liveDragTargets.id}.png`.
 
-Expected: **10–12 checks**. Record the measured number.
+Expected: **10–12 checks**. Measured: **20** (each `expectNear`/
+`expectContains` is a check).
 
 ### 3.2 `live-drag-autoscroll`
 
@@ -144,7 +145,8 @@ Steps:
    `drag-plain-log` contains `move` (the gesture is live). `releasePointer`.
 9. Screenshot to `${LIVE_ARTIFACTS}/${liveDragAutoscroll.id}.png`.
 
-Expected: **10–12 checks**. Record the measured number.
+Expected: **10–12 checks**. Measured: **29**, including the painted-row check
+added after M1 proved the readout alone could pass.
 
 ## 4. STOP conditions
 
