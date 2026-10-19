@@ -156,7 +156,8 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 
 The surface and rows are the shared menu look: `colors.popover`, `radius.md`,
 `borderWidth.thin` in `colors.border`, the `md` elevation, `spacing.xs` padding;
-rows use `colors.hover` with a 2px `colors.accent` bar. The trigger is a card-like
+rows use `colors.hover` with a 2px `colors.popoverForeground` bar (an ink, not
+the `accent` wash). The trigger is a card-like
 box in `colors.card` with a border and `spacing.md` padding; pass `style` to
 match the row it represents.
 
