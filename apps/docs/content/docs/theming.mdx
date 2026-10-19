@@ -114,11 +114,14 @@ choice and every preview follow.
 
 <PlatformValues />
 
+<PlatformStyles />
+
 Every component preview on the site is a **labelled browser approximation** of
 the library's token-driven appearance, unless it is a real GPUix capture or the
 live GPUix surface. The previews below read the whole active `Theme`, so the
-toggle re-renders all of them; today the visible change is the monospace family,
-because that is the only value the shipped platform styles change.
+toggle re-renders all of them. Which fields actually change is not prose: the
+table above is generated from `@gpuixui/tokens`, so it names the shipped
+difference and nothing more.
 
 <PlatformPreviews />
 
@@ -132,12 +135,12 @@ loads on request because the renderer is about 20 MB.
 
 <LiveSurface scene="button" title="Buttons" />
 
-Today the platform styles differ in their **type families and theme name** —
-GPUI resolves the `.SystemUIFont` sentinel to each platform's own UI face, and
-the monospace family is the platform's installed one (`Menlo`, `DejaVu Sans
-Mono`, `Consolas`). Control metrics and per-platform colour tuning are tracked
-in `TODO.md`; the docs show the values the package actually ships rather than
-implying more.
+The table above names the fields a platform style changes, read from
+`@gpuixui/tokens` rather than retyped. GPUI resolves the `.SystemUIFont`
+sentinel to each platform's own UI face, and each style names the monospace
+family its platform installs (`Menlo`, `DejaVu Sans Mono`, `Consolas`). Control
+metrics and per-platform colour tuning are tracked in `TODO.md`; the docs show
+the values the package actually ships rather than implying more.
 
 The browser cannot resolve `.SystemUIFont`, so this site applies the mono family
 it can render honestly. The native captures below are the proof of the UI face;

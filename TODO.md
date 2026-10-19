@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–575)
+## Docs site workstream (plans 410–499, plus 500–576)
 
-`[x]` `[██████████]` 142/142
+`[~]` `[█████████░]` 144/145
+
+`[x]` **The platform table is generated, not remembered (plan 576)** — Theming
+      restated the platform difference as "type families and theme name", which
+      would have become false when the tokens workstream ships a full platform
+      style (plan 063 deprecates `platformTheme`). `<PlatformStyles />` now
+      derives every cell from the two `Theme` values and compares with the
+      default style, so the table reads the same on any build host and fills in
+      when the style grows; the platform search document derives from the same
+      diff. 91 files / 652 tests, `check`, `lint`, `test`, `smoke:build` (98
+      pages) and four two-direction proofs recorded in plan 576 §9.
 
 `[x]` **A query-driven project browser is the fourth pattern (plan 575)** — the
       patterns section composed a settings form, a confirmation flow and a
@@ -1089,6 +1099,16 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       `preview.test.tsx`); Tabs and Toasts now prove the contract on shipped
       records (plan 462), and the Tier 3–4 pages still wait on
       `packages/data-grid` / `packages/docking`
+
+`[ ]` **Migrate the docs' platform callers when `packages/tokens` plan 063
+      lands** — that plan replaces `platformTheme` with `applyPlatformStyle` /
+      `getPlatformTheme` and deprecates the alias. The docs call it in
+      `src/components/preview/theme-surface.tsx`, `preview/main.tsx`,
+      `src/components/platform-values.tsx` and
+      `src/components/platform-styles.tsx`; plan 576's diff table already takes
+      any applied `Theme`, so only the callers and `dark-mode-page.test.ts`'s
+      export check change. Blocked until the tokens branch merges; do not
+      implement against an unmerged API.
 
 ## Cross-team tasks raised by the docs-site workstream
 

@@ -23,6 +23,7 @@ import { RelatedComponents } from "./related-components";
 import { ShowcaseComponents } from "./showcase";
 import { RoadmapTable } from "./roadmap-table";
 import { PlatformValues } from "./platform-values";
+import { PlatformStyles } from "./platform-styles";
 import { TokenColors } from "./token-colors";
 import { TokenScales } from "./token-scales";
 import { ValueIndex } from "./value-index";
@@ -57,6 +58,7 @@ export function getMDXComponents(components?: MDXComponents) {
     TokenScales,
     ValueIndex,
     PlatformValues,
+    PlatformStyles,
     ThemeCaptures,
     IconCatalogue,
     ...components,

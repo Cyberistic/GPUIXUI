@@ -2,13 +2,16 @@ import {
   colorRoles,
   darkTheme,
   lightTheme,
+  platformTheme,
   platformTypes,
+  themes,
   typography,
 } from "@gpuixui/tokens";
 import {
   isDistinctiveName,
   type GeneratedSearchEntry,
 } from "./generated-search";
+import { styleDiff } from "./platform-styles";
 import {
   elevationLevels,
   platformNames,
@@ -64,10 +67,19 @@ const scaleContent = [
   ),
 ].join("\n");
 
+const platformReference = platformTheme(themes.light, "default");
+
 const platformContent = platformNames
   .map((platform) => {
-    const type = platformTypes[platform];
-    return `${type.label} (${platform}): ${type.mono}, ${type.sans}`;
+    const applied = platformTheme(themes.light, platform);
+    const changed = styleDiff(platformReference, applied).filter(
+      (group) => group.changed.length > 0,
+    );
+    const difference =
+      changed.length === 0
+        ? "same as the default style"
+        : changed.map((group) => `${group.label}: ${group.detail}`).join("; ");
+    return `${platformTypes[platform].label} (${platform}): ${difference}; mono ${applied.typography.mono}`;
   })
   .join("\n");
 
@@ -110,7 +122,7 @@ export const tokenSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
     names: [],
     index: {
       title: "Platform styles",
-      description: "The macOS, Linux, Windows and default type families.",
+      description: "What each platform style changes, read from the package.",
       content: platformContent,
       url: "/docs/theming#platform-styles",
       breadcrumbs: ["Theming"],
