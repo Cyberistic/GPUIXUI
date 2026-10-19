@@ -127,6 +127,8 @@ export interface Dimensions {
   readonly chipMinWidth: number;
   /** 380px — the fixed width of a toast card. */
   readonly toastWidth: number;
+  /** 3px — the tone bar the Toast paints down its leading edge. */
+  readonly toastToneBarWidth: number;
   /** 240px — the narrowest preview card. */
   readonly previewCardMinWidth: number;
   /** 360px — the widest preview card. */
@@ -187,6 +189,7 @@ export const dimensions: Dimensions = {
   dateFieldWidth: 220,
   chipMinWidth: 80,
   toastWidth: 380,
+  toastToneBarWidth: 3,
   previewCardMinWidth: 240,
   previewCardMaxWidth: 360,
   keycapSize: 20,

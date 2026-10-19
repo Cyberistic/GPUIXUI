@@ -1066,7 +1066,8 @@ every density.
 | `dimensions.fieldAdornmentSize` | 16 | trailing clear control (or other adornment) inside a field; the leading query icon is `iconSize.md` |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
-| `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
+| `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, its `toastToneBarWidth` tone bar, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
+| `dimensions.toastToneBarWidth` | 3 | the tone bar the Toast paints down its leading edge; charged inside `toastWidth` |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
@@ -1102,12 +1103,13 @@ minimum, the Toast card, the notification inbox, and the dialog and drawer
 shells, exactly as a control or a field does (plan `627`).
 
 Three fixed surfaces hold the chrome painted inside them, not only a positive
-size. A toast card is `2 * spacing.lg + iconSize.md + spacing.lg +
-typography.bodyStrong.fontSize + spacing.lg + density.controlHeight.sm +
-2 * borderWidth.thin` at least — its padding, tone icon, the gap beside it, one
+size. A toast card is `2 * spacing.lg + toastToneBarWidth + iconSize.md +
+spacing.lg + typography.bodyStrong.fontSize + spacing.lg +
+density.controlHeight.sm + 2 * borderWidth.thin` at least — its padding, the
+tone bar it paints down its leading edge, its tone icon, the gap beside it, one
 title glyph, the gap after the title and the square `sm` dismiss control, with
-the 3px tone bar and the optional action left to consumer chrome, inside the
-card's two borders. The notification inbox is
+the optional action left to consumer content, inside the card's two borders. The
+notification inbox is
 `2 * spacing.lg + notificationUnreadDotSize + spacing.sm +
 typography.bodyStrong.fontSize + 2 * borderWidth.thin`, the row's padding,
 unread dot, gap and title inside the inbox's two borders. The narrowest overlay
@@ -1116,9 +1118,9 @@ holds `2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize +
 label glyph (the 2px highlight bar is paid for out of the left padding), inside
 the menu surface's two borders. Each bound reads the theme's own metrics, so
 widening a type role, a spacing step or a border moves it. The shipped
-`380 / 320 / 180` clear the three by `3.52× / 6.15× / 3.27×`, so the rules guard
+`380 / 320 / 180` clear the three by `3.42× / 6.15× / 3.27×`, so the rules guard
 an edited theme rather than a shipped value, and no value moves (plans `620`,
-`627` and `631`).
+`627`, `631` and `636`).
 
 A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
 so a theme cannot make "large" narrower than "medium". A dialog's three surface

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 273/346
+`[x]` `[████████░░]` 274/347
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -978,10 +978,10 @@ adornment, chip minimum, toast width and the preview-card range — as
 `theme.dimensions`, merged field by field, inherited by every platform variant
 and recipe, documented and guarded (plan 353)
 `[ ]` Cross-team: `components` reads `theme.dimensions` for its overlay widths
-and scroll height, toast width, preview-card range, field minimum, chip minimum
-and field adornment instead of the literals in plan 353 §1, settling the
-16px/18px adornment split on `fieldAdornmentSize` (owner: `components`; plan
-353)
+and scroll height, toast width and tone bar width, preview-card range, field
+minimum, chip minimum and field adornment instead of the literals in plan 353
+§1, settling the 16px/18px adornment split on `fieldAdornmentSize` (owner:
+`components`; plans 353 and 636)
 `[ ]` Cross-team: `primitives` reads `theme.dimensions.fieldAdornmentSize` for a
 field's clear or search glyph where it paints one (owner: `primitives`; plan
 353)
@@ -2306,6 +2306,14 @@ while the query row needed 82 against the old 78, so the field could clip its
 own leading glyph. The bound now reads `iconSize.md` for the lead and
 `fieldAdornmentSize` for the trailing action, every shipped set passes (200
 against the larger 102px chip bound) and no shipped value moves (plan 634)
+`[x]` Own the Toast's tone bar and hold the card to it — `toastWidth`'s bound
+left out the 3px tone bar `ToastCard` paints inside the card as a sibling of
+its content row, calling it consumer chrome, so a copied theme at 110 returned
+`[]` while the content row needed 111 under `overflow: "hidden"`, and the bar
+was the last fixed mark in the dimensions group with no token;
+`toastToneBarWidth` (3) now ships beside `toastWidth`, the bound charges it,
+every shipped set passes (380 against 111) and no colour, pair, floor or other
+metric moves (plan 636)
 
 ## Phase C — Tier 1–2 components
 

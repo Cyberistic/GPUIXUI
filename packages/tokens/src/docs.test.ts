@@ -2682,6 +2682,7 @@ describe("docs/design-system.md", () => {
   it("states the fixed-surface chrome fits", () => {
     const toastBound =
       2 * spacing.lg +
+      dimensions.toastToneBarWidth +
       iconSize.md +
       spacing.lg +
       typography.bodyStrong.fontSize +

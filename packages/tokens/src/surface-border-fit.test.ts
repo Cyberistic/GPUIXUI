@@ -14,9 +14,10 @@
  * 66px row into 56px.
  *
  * The seven bounds now include the surface's two borders. Every shipped set
- * clears them, so no value moves; the identity bounds are 55/108/52/90/90/98
- * and the inbox's 335 (its header above the list, plan 629); the Toast's 108
- * also holds its square `sm` dismiss control (plan 631).
+ * clears them, so no value moves; the identity bounds are 55/111/52/90/90/98
+ * and the inbox's 335 (its header above the list, plan 629); the Toast's 111
+ * also holds its `toastToneBarWidth` bar and square `sm` dismiss control (plans
+ * 631 and 636).
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -35,9 +36,10 @@ const overlayBound = (theme: Theme): number =>
   theme.typography.label.fontSize +
   2 * theme.borderWidth.thin;
 
-/** The Toast card: its content row, dismiss control and its two borders. */
+/** The Toast card: its tone bar, content row, dismiss control and two borders. */
 const toastBound = (theme: Theme): number =>
   2 * theme.spacing.lg +
+  theme.dimensions.toastToneBarWidth +
   theme.iconSize.md +
   theme.spacing.lg +
   theme.typography.bodyStrong.fontSize +
@@ -176,7 +178,7 @@ describe("fixed surfaces fit their own border", () => {
     });
     expect(failures).toEqual([]);
     expect(tightestOverlay).toBeCloseTo(180 / 55, 4);
-    expect(tightestToast).toBeCloseTo(380 / 108, 4);
+    expect(tightestToast).toBeCloseTo(380 / 111, 4);
     expect(tightestPanelWidth).toBeCloseTo(320 / 52, 4);
     expect(tightestPanelHeight).toBeCloseTo(380 / 335, 4);
     expect(tightestShellWidth).toBeCloseTo(320 / 90, 4);
@@ -185,7 +187,7 @@ describe("fixed surfaces fit their own border", () => {
 
   it("states the shipped identity bounds", () => {
     expect(overlayBound(base)).toBe(55);
-    expect(toastBound(base)).toBe(108);
+    expect(toastBound(base)).toBe(111);
     expect(panelWidthBound(base)).toBe(52);
     expect(panelHeightBound(base)).toBe(335);
     expect(shellWidthBound(base)).toBe(90);
@@ -259,7 +261,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 80,
-        bound: 150,
+        bound: 153,
       },
     ]);
   });

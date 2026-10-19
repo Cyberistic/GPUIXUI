@@ -6,7 +6,7 @@
 **Number block:** 500–699 (`tokens-theme` overflow; 630 is in use by
 `components`, 633 by `playground`, 635 by `primitives`, so 636 is the next free
 number in every worktree) ·
-**Status:** planned
+**Status:** done
 
 ## 1. The defect
 
@@ -196,8 +196,10 @@ Add:
 1. On the pre-fix tree (`git stash push -- packages/tokens/src/scale.ts
    packages/tokens/src/metrics.ts`), run
    `cd packages/tokens && nub x vitest run src/toast-chrome-fit.test.ts`:
-   the ownership case throws on the missing member, and the shipped/lifted/roomy
-   figures report 108/128/156 instead of 111/131/159 — five failures.
+   the suite helper reads `dimensions.toastToneBarWidth`, which the pre-fix
+   theme does not carry, so **all nine cases** fail — the ownership case on the
+   missing key and every bound case on a `NaN` comparison. (With the plan-631 helper
+   expression the same six figures would read 108/128/156.)
 2. With the fix: all cases pass.
 3. `nub run --filter @gpuixui/tokens test` → all suites green.
 
@@ -295,7 +297,8 @@ Stop and report, do not improvise, if:
   catalogue, and read by the Toast bound from the theme.
 - Every shipped identity theme, platform variant and recipe passes; no colour,
   pair, floor or other metric moves, and `toastWidth` stays 380.
-- The ownership and bar-tier cases fail on the pre-fix tree and pass after it.
+- The suite fails on the pre-fix tree — the helper reads the missing dimension,
+  so every case reports — and passes after it.
 - The catalogue, design system, inventory and JSDoc name the bar; the plan,
   audit note and README index are current.
 - `nub run check`, `nub run lint` and `nub run test` pass.

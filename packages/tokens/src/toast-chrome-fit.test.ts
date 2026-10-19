@@ -1,19 +1,23 @@
 /**
- * Guards the defect plan 631 fixes: plan 620 bounded the Toast card by its
- * padding, tone icon, one gap and one `bodyStrong` title glyph, and plan 627
- * added the card's two borders, but `toast/viewport.tsx` also paints an
- * unconditional `IconButton label="Dismiss" size="sm"` after a second
- * `spacing.lg` gap. `IconButton` is a square `controlHeight.sm` wide, so a
- * theme with `toastWidth: 100` returned `[]` from every check while the card
- * needed 108 inside its `overflow: "hidden"` — the dismiss control was painted
- * outside the card and the toast could not be closed.
+ * Guards two defects. Plan 631: plan 620 bounded the Toast card by its padding,
+ * tone icon, one gap and one `bodyStrong` title glyph, and plan 627 added the
+ * card's two borders, but `toast/viewport.tsx` also paints an unconditional
+ * `IconButton label="Dismiss" size="sm"` after a second `spacing.lg` gap.
+ * `IconButton` is a square `controlHeight.sm` wide, so a theme with
+ * `toastWidth: 100` returned `[]` from every check while the card needed 108
+ * inside its `overflow: "hidden"` — the dismiss control was painted outside the
+ * card and the toast could not be closed.
  *
- * The bound now reads the gap and the square control from the theme's own
- * spacing and density. Every shipped set clears it (the identity 380 against
- * 108), so no colour, pair, floor, metric or shipped theme value moves.
+ * Plan 636 closes the bar plan 631 left out. `ToastCard` paints a 3px tone bar
+ * as a sibling of its content row inside the card's own width, but the token
+ * set did not own it and the bound did not charge it, so a theme at 110 passed
+ * while the content row needed 111 under `overflow: "hidden"`. The bar is now
+ * `dimensions.toastToneBarWidth` and the bound reads it; the shipped 380 clears
+ * the corrected 111 at 3.42×.
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
+import { dimensions } from "./scale.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { extendTheme, getTheme, type Theme } from "./theme.js";
 import { themeFailures } from "./theme-check.js";
@@ -21,6 +25,7 @@ import { themeFailures } from "./theme-check.js";
 /** The card's chrome, read from the theme the card will paint with. */
 const toastBound = (theme: Theme): number =>
   2 * theme.spacing.lg +
+  theme.dimensions.toastToneBarWidth +
   theme.iconSize.md +
   theme.spacing.lg +
   theme.typography.bodyStrong.fontSize +
@@ -50,12 +55,38 @@ describe("Toast card chrome fit", () => {
       return dimensionFailures(theme);
     });
     expect(failures).toEqual([]);
-    expect(tightest).toBeCloseTo(380 / 108, 4);
+    expect(tightest).toBeCloseTo(380 / 111, 4);
   });
 
   it("states the shipped bound", () => {
-    expect(toastBound(getTheme("light"))).toBe(108);
+    expect(toastBound(getTheme("light"))).toBe(111);
     expect(getTheme("light").dimensions.toastWidth).toBe(380);
+  });
+
+  it("owns the tone bar as a dimension", () => {
+    expect(getTheme("light").dimensions.toastToneBarWidth).toBe(3);
+    expect(Object.keys(dimensions)).toContain("toastToneBarWidth");
+  });
+
+  it("reads the tone bar from the theme", () => {
+    const wideBar = extendTheme(getTheme("light"), {
+      dimensions: { toastToneBarWidth: 6, toastWidth: 111 },
+    });
+    expect(toastBound(wideBar)).toBe(114);
+    expect(dimensionFailures(wideBar)).toEqual([
+      {
+        group: "dimensions",
+        member: "toastWidth",
+        rule: "at-least",
+        actual: 111,
+        bound: 114,
+      },
+    ]);
+    expect(
+      dimensionFailures(
+        extendTheme(wideBar, { dimensions: { toastWidth: 114 } }),
+      ),
+    ).toEqual([]);
   });
 
   it("reports the 100px card the title-only bound accepted", () => {
@@ -68,7 +99,7 @@ describe("Toast card chrome fit", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 100,
-        bound: 108,
+        bound: 111,
       },
     ]);
   });
@@ -78,31 +109,31 @@ describe("Toast card chrome fit", () => {
       dimensionFailures(
         extendTheme(getTheme("light"), { dimensions: { toastWidth } }),
       );
-    expect(at(108)).toEqual([]);
+    expect(at(111)).toEqual([]);
     expect(at(107)).toEqual([
       {
         group: "dimensions",
         member: "toastWidth",
         rule: "at-least",
         actual: 107,
-        bound: 108,
+        bound: 111,
       },
     ]);
   });
 
   it("reads the dismiss control from the theme's own density", () => {
-    expect(toastBound(lifted)).toBe(128);
+    expect(toastBound(lifted)).toBe(131);
     expect(dimensionFailures(lifted)).toEqual([
       {
         group: "dimensions",
         member: "toastWidth",
         rule: "at-least",
         actual: 90,
-        bound: 128,
+        bound: 131,
       },
     ]);
 
-    const fits = extendTheme(lifted, { dimensions: { toastWidth: 128 } });
+    const fits = extendTheme(lifted, { dimensions: { toastWidth: 131 } });
     expect(dimensionFailures(fits)).toEqual([]);
   });
 
@@ -117,7 +148,7 @@ describe("Toast card chrome fit", () => {
         "5xl": 72,
       },
     });
-    expect(toastBound(roomy)).toBe(156);
+    expect(toastBound(roomy)).toBe(159);
     expect(
       dimensionFailures(
         extendTheme(roomy, { dimensions: { toastWidth: 155 } }),
@@ -128,12 +159,12 @@ describe("Toast card chrome fit", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 155,
-        bound: 156,
+        bound: 159,
       },
     ]);
     expect(
       dimensionFailures(
-        extendTheme(roomy, { dimensions: { toastWidth: 156 } }),
+        extendTheme(roomy, { dimensions: { toastWidth: 159 } }),
       ),
     ).toEqual([]);
   });
@@ -150,7 +181,7 @@ describe("Toast card chrome fit", () => {
       member: "toastWidth",
       rule: "at-least",
       actual: 100,
-      bound: 108,
+      bound: 111,
     });
   });
 });

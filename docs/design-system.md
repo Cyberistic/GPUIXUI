@@ -807,9 +807,10 @@ hand-written list, so a member added to a group is governed when it ships, and
 `metricMembers` is the published index of that domain. A fixed surface also
 holds the chrome painted inside it: a toast card, a notification inbox and an
 overlay minimum each need their padding, icon, gap and one title or label
-glyph — and a toast card its square `sm` dismiss control — so a brand that
-shrinks one below the content it exists to show is reported before a component
-migrates to the token (plans `620` and `631`).
+glyph — and a toast card its `toastToneBarWidth` tone bar and square `sm`
+dismiss control — so a brand that shrinks one below the content it exists to
+show is reported before a component migrates to the token (plans `620`, `631`
+and `636`).
 
 The **format** check is `themeColorFailures(theme)`: every one of the 70 roles
 must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and
