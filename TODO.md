@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–562)
 
-`[x]` `[██████████]` 129/129
+`[x]` `[██████████]` 130/130
+
+`[x]` **Search is proved where readers use it (plan 563)** — the gate only
+      pressed ⌘K at 640 px, so the phone click path and the Components page's
+      own filter were unproven; `smoke:search` now drives `?q=zzzzzz`, the empty
+      state, **Clear filter**, a typed `combobox` (one card) and the 390 px
+      `Open Search` trigger through navigation and destination focus. Both
+      forced failures (a removed `onChange`, a hidden trigger) measured and
+      reverted; 95 pages, 66 records, all gates green.
 
 `[x]` **Every page loads with a clean browser console (plan 562)** — all other
       production gates read server HTML or one named piece of hydrated state, so

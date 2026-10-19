@@ -281,6 +281,14 @@ opener (or the trigger), moves focus back when Escape dismissed the palette and
 into the new page when a result was chosen. `src/search/focus.test.ts` pins the
 decision rules.
 
+The same smoke drives the two search surfaces the palette does not cover. On
+`/docs/components` it types `combobox` and asserts the live count and the one
+card, then a no-match query and the empty state's **Clear filter** control,
+returning the full list. At 390×844 it uses the only control a phone reader has
+— the `Open Search` icon button — and proves the palette opens focused, lists
+Installation, navigates on Enter, lands focus on the destination and does not
+scroll sideways.
+
 ```sh
 nub run --filter docs smoke:search
 # or against a running server:

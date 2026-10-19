@@ -14,6 +14,7 @@
  * server or Chrome) — "unverified" is never a pass.
  */
 
+import { components } from "../src/component-meta/registry.ts";
 import { findChrome, startSession, type Session } from "./chrome-session.ts";
 import {
   SetupError,
@@ -146,6 +147,203 @@ const focusedTrigger = (session: Session): Promise<unknown> =>
     });
   })()`);
 
+const COMPONENTS_PAGE = "/docs/components";
+const PHONE_VIEWPORT = { width: 390, height: 844 } as const;
+
+interface FilterState {
+  readonly count: string;
+  readonly links: ReadonlyArray<string>;
+  readonly empty: boolean;
+  readonly search: string;
+}
+
+/** What the component index shows and what its filter recorded in the URL. */
+const filterState = async (session: Session): Promise<FilterState> => {
+  const value = await session.evaluate(`(() => {
+    const article = document.querySelector("#nd-page");
+    return JSON.stringify({
+      count: (document.querySelector("#component-filter-count")?.textContent ?? "").trim(),
+      links: [...(article?.querySelectorAll('ul > li > a[href^="/docs/components/"]') ?? [])]
+        .map((link) => link.getAttribute("href") ?? "")
+        .filter((href) => href !== ${JSON.stringify(COMPONENTS_PAGE)}),
+      empty: (article?.innerText ?? "").includes("No component matches"),
+      search: location.search,
+    });
+  })()`);
+  return JSON.parse(String(value)) as FilterState;
+};
+
+/**
+ * The Components page has its own search field, separate from the palette and
+ * `/api/search`. Its rules are unit-tested; this proves the hydrated wiring:
+ * input → visible cards → the live count → the empty state's clear control.
+ */
+const checkIndexFilter = async (
+  session: Session,
+  baseUrl: string,
+): Promise<ReadonlyArray<string>> => {
+  const total = components.length;
+  const problems: string[] = [];
+  const count = `document.querySelector("#component-filter-count")?.textContent?.trim()`;
+  const value = `document.querySelector("#component-filter")?.value`;
+
+  // A `?q=` link is applied by the index's mount effect, so waiting for it is
+  // also the hydration signal — `data-platform` lands before the article's
+  // handlers are attached (measured: typing straight after it left the value
+  // in the DOM and React state empty).
+  await session.navigate(`${new URL(COMPONENTS_PAGE, baseUrl).href}?q=zzzzzz`);
+  const empty = await session.waitFor(
+    `${value} === "zzzzzz" &&
+      ${count} === "0 of ${total} components" &&
+      (document.querySelector("#nd-page")?.innerText ?? "").includes("No component matches")`,
+  );
+  const emptyState = await filterState(session);
+  if (!empty || !emptyState.empty || emptyState.links.length !== 0) {
+    problems.push(
+      `component filter: "?q=zzzzzz" left "${emptyState.count}" and ${emptyState.links.length} card link(s)`,
+    );
+  }
+
+  const cleared = await session.evaluate(`(() => {
+    const button = [...document.querySelectorAll("#nd-page button")].find(
+      (candidate) => (candidate.textContent ?? "").trim() === "Clear filter",
+    );
+    if (button === undefined) return false;
+    button.click();
+    return true;
+  })()`);
+  const restored = await session.waitFor(
+    `${value} === "" && ${count} === "${total} of ${total} components"`,
+  );
+  const after = await filterState(session);
+  if (cleared !== true || !restored || after.search.includes("q=")) {
+    problems.push(
+      `component filter: clear left "${after.count}" and ${after.search || "no query"}`,
+    );
+  }
+
+  await session.evaluate('document.querySelector("#component-filter").focus()');
+  await session.type("combobox");
+  const one = await session.waitFor(
+    `${value} === "combobox" && ${count} === "1 of ${total} components"`,
+  );
+  const filtered = await filterState(session);
+  if (!one || filtered.count !== `1 of ${total} components`) {
+    problems.push(
+      `component filter: "combobox" left "${filtered.count}" with ${filtered.links.length} card link(s)`,
+    );
+  } else if (
+    filtered.links.length !== 1 ||
+    filtered.links[0] !== "/docs/components/combobox"
+  ) {
+    problems.push(
+      `component filter: "combobox" rendered [${filtered.links.join(", ")}]`,
+    );
+  } else if (!filtered.search.includes("q=combobox")) {
+    problems.push(
+      `component filter: typed query did not reach the URL (${filtered.search || "no query"})`,
+    );
+  }
+
+  return problems;
+};
+
+/**
+ * At 390 px the header has no full search field, so a phone reader has one
+ * control: the 34 px icon button. This proves that path opens the palette,
+ * finds a page, lands focus on it and does not scroll sideways.
+ */
+const checkPhonePalette = async (
+  session: Session,
+  baseUrl: string,
+): Promise<ReadonlyArray<string>> => {
+  const problems: string[] = [];
+  await session.setViewport(PHONE_VIEWPORT.width, PHONE_VIEWPORT.height);
+  await session.navigate(new URL(PAGE, baseUrl).href);
+  const ready = await session.waitFor(
+    `document.querySelector('button[aria-label="Open Search"]') !== null &&
+      document.documentElement.dataset.platform !== undefined`,
+  );
+  if (!ready) throw new SetupError(`${PAGE} did not hydrate at 390 px`);
+
+  const trigger = JSON.parse(
+    String(
+      await session.evaluate(`(() => {
+        const visible = [...document.querySelectorAll('button[aria-label="Open Search"]')]
+          .filter((button) => {
+            const box = button.getBoundingClientRect();
+            const style = getComputedStyle(button);
+            return box.width > 0 && box.height > 0 &&
+              style.display !== "none" && style.visibility !== "hidden" &&
+              box.left >= 0 && box.right <= innerWidth;
+          });
+        return JSON.stringify({
+          visible: visible.length,
+          full: [...document.querySelectorAll("button[data-search-full]")]
+            .filter((button) => button.getClientRects().length > 0).length,
+        });
+      })()`),
+    ),
+  ) as { readonly visible: number; readonly full: number };
+  if (trigger.visible < 1 || trigger.full !== 0) {
+    return [
+      `phone palette: expected a visible Open Search button and no full field, found ${trigger.visible} and ${trigger.full}`,
+    ];
+  }
+
+  const clicked = await session.evaluate(`(() => {
+    const button = [...document.querySelectorAll('button[aria-label="Open Search"]')]
+      .find((candidate) => {
+        const box = candidate.getBoundingClientRect();
+        const style = getComputedStyle(candidate);
+        return box.width > 0 && box.height > 0 &&
+          style.display !== "none" && style.visibility !== "hidden" &&
+          box.left >= 0 && box.right <= innerWidth;
+      });
+    if (button === undefined) return false;
+    button.click();
+    return true;
+  })()`);
+  const opened = await session.waitFor(
+    `document.querySelector(${JSON.stringify(PALETTE)}) !== null`,
+  );
+  const state = await paletteState(session);
+  if (clicked !== true || !opened || !state.focused) {
+    problems.push(
+      `phone palette: the click ${clicked === true ? "opened" : "found no"} palette${state.focused ? "" : " with the input unfocused"}`,
+    );
+    return problems;
+  }
+
+  await session.type(QUERY);
+  const listed = await session.waitFor(
+    `[...document.querySelectorAll('[role="option"]')].some(
+      (option) => (option.textContent ?? "").includes("Installation"),
+    )`,
+    5_000,
+  );
+  if (!listed)
+    problems.push(`phone palette: "${QUERY}" listed no Installation`);
+  await session.press("Enter");
+  const navigated = await session.waitFor(
+    `location.pathname === ${JSON.stringify(RESULT)}`,
+    5_000,
+  );
+  const landed = await session.waitFor(
+    `document.activeElement !== null && document.activeElement.id === "nd-page"`,
+    5_000,
+  );
+  const overflow = await session.evaluate(
+    "document.documentElement.scrollWidth > innerWidth",
+  );
+  if (!navigated) problems.push(`phone palette: Enter did not open ${RESULT}`);
+  if (!landed) problems.push("phone palette: focus did not land on the page");
+  if (overflow === true) {
+    problems.push("phone palette: the page scrolled sideways at 390 px");
+  }
+  return problems;
+};
+
 const checkSearch = async (
   session: Session,
   baseUrl: string,
@@ -274,6 +472,12 @@ const checkSearch = async (
     );
   }
 
+  // 6. The component index's own filter, with its live count and clear state.
+  problems.push(...(await checkIndexFilter(session, baseUrl)));
+
+  // 7. The only search control a phone reader has.
+  problems.push(...(await checkPhonePalette(session, baseUrl)));
+
   return problems;
 };
 
@@ -304,7 +508,7 @@ const main = async (): Promise<number> => {
     const problems = await checkSearch(session, baseUrl);
 
     if (problems.length === 0) {
-      console.log("smoke: search palette checked");
+      console.log("smoke: search palette, index filter and phone path checked");
       return 0;
     }
     for (const problem of problems) {
