@@ -5,7 +5,8 @@ site is a browser app. This document records how the site shows a native
 component without pretending a browser imitation is the real thing. It is the
 source of truth for every preview; plan `412-preview-strategy.md` implements it.
 The reader-facing version — the one linked from the site — is `/docs/previews`
-(plan `571`).
+(plans `571`, `578`); it lists every shipped scene and the gesture that opens
+it.
 
 ## The honest tiers
 

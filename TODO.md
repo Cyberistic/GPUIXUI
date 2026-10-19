@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–576)
+## Docs site workstream (plans 410–499, plus 500–578)
 
-`[~]` `[██████████]` 145/146
+`[~]` `[██████████]` 146/147
+
+`[x]` **Previews lists every shipped scene on-site (plan 578)** — `/docs/previews`
+      promised "the full list of scenes and gestures" and delivered two raw GitHub
+      links to `docs/preview-strategy.md`, which the default branch does not serve
+      (measured 404). `<LiveSceneIndex />` now derives one row per `LIVE_SCENES`
+      entry (49: 45 record, 4 composed) with its page and the `SCENE_INTERACTION`
+      instruction, and the page links the on-site live-scene authoring guide
+      instead. Six tests; five forced defects measured in plan 578 §6; 93 files /
+      664 docs tests, `check`, `check-types` and `smoke:build` (98 pages / 1 277
+      anchors) green.
 
 `[x]` **Copyable imports resolve (plan 577)** — a fence is text, so nothing
       type-checked the 219 `@gpuixui/*` named imports the pages tell a reader to

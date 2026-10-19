@@ -34,8 +34,16 @@ it lacks.
 A scene may mount in the state it documents (an open menu or dialog), or the
 smoke may drive a real gesture — a click, a key, typing, a commit, a wheel. The
 smoke proves the scene's text is absent before the gesture and present after it.
-The full list of scenes and gestures is in the
-[preview strategy](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/preview-strategy.md).
+Every shipped scene, the page it runs on and what it takes to see its state are
+listed below.
+
+## Every live scene
+
+A scene is either mounted in the state it documents or opened by the gesture the
+smoke drives. The table is generated from `LIVE_SCENES` in
+`preview/scenes.ts`, so a new scene appears here with no docs edit.
+
+<LiveSceneIndex />
 
 ## Native evidence
 
@@ -89,8 +97,9 @@ matrix and the evidence behind each verdict.
 ## The full rules
 
 The maintainer specification — the tier table, the capture provenance rules,
-the scene requirements and the measured limits — is
-[`docs/preview-strategy.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/preview-strategy.md).
+the scene requirements and the measured limits — is `docs/preview-strategy.md`
+in the repository. The [Live scenes](/docs/component-pages#live-scenes) section
+of the component-page template is the on-site authoring guide.
 The [components index](/docs/components) shows each record's status and GPUix
 support, and the [capability matrix](/docs/capabilities) records what the
 pinned runtime actually does.

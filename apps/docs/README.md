@@ -990,10 +990,19 @@ Keyboard shortcuts. Every one is a static rest state built only from the
 of them. The pages without one are interactions (dialog, confirm dialog,
 popover, the context and command menus, toast, tooltip, combobox, date picker,
 drawer, navigation menu, mention input, hotkey recorder, scroll area),
-animations (skeleton, spinner) or the icon glyph set; they stay at tier V/X, and
-`scene-contract.test.ts` requires a measured reason for each interaction gap.
-`theme-surface.test.ts` also proves every `--preview-*` name a preview reads is
-one the surface defines.
+animations (skeleton, spinner) or the icon glyph set; they are proved by a
+live scene (tier L) and their native suite (tier V), never by a browser
+approximation. `scene-contract.test.ts` requires a measured reason for each
+interaction gap. `theme-surface.test.ts` also proves every `--preview-*` name a
+preview reads is one the surface defines.
+
+`/docs/previews` also renders `<LiveSceneIndex />` (plan 578): one row per
+`LIVE_SCENES` entry with the page that mounts it and the reader instruction from
+`SCENE_INTERACTION`, or "Mounts in the state it documents" when no gesture is
+needed. The rows and the caption derive from `preview/scenes.ts`, so a new scene
+needs no docs edit. Two raw GitHub links to `docs/preview-strategy.md` were
+removed from that page: the default branch does not serve the path (measured
+404), and the on-site list is now the reader's copy.
 
 An approximation is never a fallback. The only way to render one is
 `<IllustrativeApproximation>`, which always renders the mandated banner.
