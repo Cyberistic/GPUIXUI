@@ -87,7 +87,7 @@ merges `style` last.
 | `DrawerClose` | button | `onClick`, button props |
 | `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?`, children |
 | `DrawerHeader` | heading block | children |
-| `DrawerTitle` | level-2 heading | text props |
+| `DrawerTitle` | heading (level 2 by default) | `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6`, text props |
 | `DrawerDescription` | muted copy | text props |
 | `DrawerFooter` | right-aligned actions | children |
 
@@ -106,6 +106,8 @@ with no code change — see [Theming](/docs/theming).
 - `DrawerContent` is a `dialog` named by the required `label`; `0.10.0` has no
   `aria-modal` or `aria-labelledby`, and its title is a heading, not the dialog's
   accessible name.
+- `DrawerTitle`'s `level` is the caller's, defaulting to 2; a raw `aria-level`
+  is still honoured when no `level` is given, and an explicit `level` wins.
 - Focus enters the surface and returns to the opener. `initialFocus` can put it
   on a specific control after the surface takes focus.
 - A disabled `dismissible={false}` drawer cannot be escaped by keyboard or
@@ -129,8 +131,9 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (14 tests): open
-lifecycle, dialog naming and `aria-expanded`, full-window veil, focus in/return,
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (15 tests): open
+lifecycle, dialog naming and `aria-expanded`, the title's default and caller-set
+heading levels, full-window veil, focus in/return,
 backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
 uninterruptible drawer, a controlled drawer that stays closed, and the motion —
 entry props, the measured slide on both axes, and a closing surface that stays

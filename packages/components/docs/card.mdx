@@ -38,13 +38,17 @@ import {
 
 <Card>
   <CardHeader>
-    <CardTitle>Pro plan</CardTitle>
+    <CardTitle level={2}>Pro plan</CardTitle>
     <CardDescription>Everything in Starter, plus seats and invoicing.</CardDescription>
   </CardHeader>
   <CardContent>{/* rows, a form, a chart */}</CardContent>
   <CardFooter>{/* actions */}</CardFooter>
 </Card>;
 ```
+
+`level` is the heading's place in the document outline: a card that is a
+top-level section under the page title is level 2, one nested in a settings group
+is level 4. Omitting it keeps the component's own default (3).
 
 The full build is the `card` example in
 `packages/components/examples/card.example.tsx`, registered in
@@ -69,7 +73,7 @@ any rule without forking the component.
 | ---- | ------- | ----- |
 | `Card` | `div` | `variant?: "outline" \| "elevated" \| "plain"` (default `"outline"`) |
 | `CardHeader` | `div` | — |
-| `CardTitle` | `text` | — (`role="heading"`, `aria-level={3}`) |
+| `CardTitle` | `text` | `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6` (default `3`; `role="heading"`) |
 | `CardDescription` | `text` | — |
 | `CardContent` | `div` | — |
 | `CardFooter` | `div` | — |
@@ -88,7 +92,9 @@ in the component, so a custom theme changes the card with no code change. See
 
 ## Accessibility
 
-- `CardTitle` renders a `<text>` with `role="heading"` and `aria-level={3}`.
+- `CardTitle` renders a `<text>` with `role="heading"`. Its `level` is the
+  caller's, defaulting to 3; a raw `aria-level` is still honoured when no
+  `level` is given, and an explicit `level` wins over it.
 - A card is not focusable and not a landmark; it contributes no role of its own.
 - A card's accessible name comes from its heading, not from a wrapper label.
 
@@ -101,9 +107,10 @@ in the component, so a custom theme changes the card with no code change. See
 
 ## Verification
 
-`src/behaviour/card.test.tsx` runs in the real GPUix renderer (5 tests): the parts'
-text in tree order, each variant's surface treatment, the level-3 heading role in
-the accessibility dump, a consumer `style` winning over the variant, and the card
+`src/behaviour/card.test.tsx` runs in the real GPUix renderer (6 tests): the parts'
+text in tree order, each variant's surface treatment, the default level-3 heading
+in the accessibility dump, a caller `level` replacing it (with the raw
+`aria-level` fallback), a consumer `style` winning over the variant, and the card
 fill from both themes. Run it with:
 
 ```sh

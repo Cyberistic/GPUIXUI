@@ -375,6 +375,14 @@ retired once both branches are one
       1 native case (Carousel 18), both-direction proof (two carousel reports
       before the gate); docs, `COMPONENTS.md` and the plan indexed
       (owner: components)
+    - [x] Heading levels belong to the caller — plan 617; Card, Dialog, Drawer
+      and the Keyboard shortcuts group hard-coded their `aria-level`, so a
+      consumer could not fit them into the document outline (and the shortcuts
+      group had no escape hatch at all). Each heading part now takes an optional
+      typed `level` (1–6) with its shipped default, and the raw `aria-level`
+      still works; 4 native cases (Card 6, Dialog 17, Drawer 15, Keyboard
+      shortcuts 7), four mutation proofs; docs, `COMPONENTS.md` and the
+      inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

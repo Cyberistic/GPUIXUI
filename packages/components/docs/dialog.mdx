@@ -45,7 +45,7 @@ import { Button } from "@gpuixui/primitives";
 | `DialogTrigger` | a button that toggles the dialog, `aria-expanded` included |
 | `DialogContent` | the veil and the surface: focus, Tab, Escape and outside press |
 | `DialogHeader` | title + description block, with room for the close control |
-| `DialogTitle` | the heading (level 2) |
+| `DialogTitle` | the heading (level 2 by default, or the caller's `level`) |
 | `DialogDescription` | one paragraph of supporting copy |
 | `DialogFooter` | right-aligned actions |
 | `DialogClose` | a button that closes the enclosing dialog |
@@ -116,6 +116,8 @@ as unsupported: GPUI has no transform, so no scale is faked.
   `@gpuix/native/dist/host.d.ts`), so the dialog's *name* is `label` and its title
   is a separate heading. Screen readers hear the name, not the heading, as the
   dialog's label.
+- `DialogTitle`'s `level` is the caller's, defaulting to 2. A raw `aria-level`
+  is still honoured when no `level` is given, and an explicit `level` wins.
 - **The veil is an `anchored` layer at window coordinates.** 0.10.0 ships no
   portal, and `position:"absolute"` resolves against the mount parent, so a dialog
   must be mounted at (or near) the root of the tree. It then paints over the whole
@@ -153,6 +155,7 @@ children; they draw no state of their own.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `DialogHeader` | `div` | — |
+| `DialogTitle` | `text` with `role="heading"` | `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6` (default `2`) |
 | `DialogDescription` | `text` | — |
 | `DialogFooter` | `div` | — |
 
@@ -162,11 +165,12 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (16 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (17 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
 entering and returning, Escape and backdrop dismissal, a popover inside the dialog
 closed by the first Escape with the dialog kept open, Tab wrapping at both ends,
-`role`/`aria-label` in the accessibility dump, both themes reading
+`role`/`aria-label` in the accessibility dump, the title's default and caller-set
+heading levels, both themes reading
 `colors.popover`/`colors.overlay`, a non-dismissible dialog ignoring both
 dismissals, a controlled dialog staying closed, the caller's own close control,
 a caller content `ref`, the 100 ms enter recipe, and the surface remaining for

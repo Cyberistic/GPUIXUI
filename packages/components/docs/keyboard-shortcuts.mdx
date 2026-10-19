@@ -34,12 +34,15 @@ import {
 } from "@gpuixui/components";
 
 <KeyboardShortcuts label="Editor shortcuts">
-  <KeyboardShortcutsGroup label="File">
+  <KeyboardShortcutsGroup label="File" level={4}>
     <KeyboardShortcut label="New file" accelerator="mod+n" />
     <KeyboardShortcut label="Save" accelerator="mod+s" />
   </KeyboardShortcutsGroup>
 </KeyboardShortcuts>;
 ```
+
+A group's `level` is the heading's place in the document outline (default 3); the
+cheat sheet's visual style does not change with it.
 
 The runnable build is `examples/keyboard-shortcuts.example.tsx`, registered in
 `examples/index.ts`, mounted by the package's native example suite, and shows the
@@ -83,7 +86,7 @@ merges `style` last.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `KeyboardShortcuts` | `div` with `role="list"` | `label?`, `children` |
-| `KeyboardShortcutsGroup` | `div` with `role="group"` and a level-3 heading | `label` (required), `children` |
+| `KeyboardShortcutsGroup` | `div` with `role="group"` and a level-3 heading | `label` (required), `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6`, `children` |
 | `KeyboardShortcut` | `div` with `role="listitem"` | `label` (required), `accelerator` (required), `platform?`, `style?: StateStyle<KeyboardShortcutState>` |
 | `Keycap` | one key cap | `children: string`, `style?: StateStyle<KeycapState>` |
 
@@ -101,7 +104,7 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 ## Accessibility
 
 - The root is a named `list`; every shortcut is a `listitem`; each group is a
-  named `group` with a level-3 heading.
+  named `group` with a heading whose level is the caller's (`level`, default 3).
 - Keycaps are text; a screen reader reads the chord's glyphs in order. On macOS
   that is "⌘ N"; on Windows "Ctrl N".
 - There is no `aria-keyshortcuts` in `@gpuix/native@0.10.0`, so a keycap cannot
@@ -117,8 +120,9 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (6 tests):
-declaration order, list/group/listitem roles, level-3 headings, the
+`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (7 tests):
+declaration order, list/group/listitem roles, the default level-3 headings and a
+caller-set group level, the
 muted keycap surface, a consumer style callback receiving the formatted keys,
 and both themes. `src/shortcut/accelerator.test.ts` adds 10 pure tests for the
 grammar.

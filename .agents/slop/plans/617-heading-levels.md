@@ -198,6 +198,18 @@ Two-direction proof, recorded in the plan index and the commit:
    assert 2. This may live in the Card case, so the raw escape hatch cannot
    silently beat the typed prop.
 
+### Measured during implementation (2026-10-19)
+
+- All four new cases fail with the source restored to `HEAD` and pass with §4:
+  Card reported level 3 for `level={2}`, Dialog 2 for `level={4}`, Drawer 2 for
+  `level={6}` and Keyboard shortcuts 3 for a group `level={2}`. The default
+  assertions pass in both directions.
+- The Card case also pins precedence: `level={2}` with a raw `aria-level={5}`
+  announces 2, and a raw `aria-level={4}` without `level` announces 4.
+- The Drawer file keeps one pre-existing failure, `opens from the right, left or
+  bottom at the requested size` (`width` 398 against 400), which is the recorded
+  plan-540 `getElementBounds` box convention and does not involve a heading.
+
 ## 7. STOP conditions
 
 - **STOP** if `nodesWithRole` does not report `level` for a `<text role="heading">`
