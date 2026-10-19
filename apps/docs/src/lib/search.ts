@@ -17,6 +17,7 @@ import {
   type GeneratedSearchEntry,
 } from "./generated-search";
 import { iconSearchEntry } from "./icon-search";
+import { platformSearchEntry } from "./platform-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import {
   sceneInstructionByUrl,
@@ -123,6 +124,7 @@ const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   tokensApiSearchEntry,
   capabilitySearchEntry,
   iconSearchEntry,
+  platformSearchEntry,
   roadmapSearchEntry,
   scenesIndexEntry,
 ];

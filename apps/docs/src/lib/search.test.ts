@@ -543,6 +543,29 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  it("finds the installation prerequisites and native platform support (plan 584)", async () => {
+    const expected = [
+      ["prerequisites", "/docs/installation"],
+      ["system requirements", "/docs/installation"],
+      ["requirements", "/docs/installation"],
+      ["platform support", "/docs/installation"],
+      ["x86_64", "/docs/installation"],
+      ["arm64", "/docs/installation"],
+      ["intel mac", "/docs/installation"],
+      ["apple silicon", "/docs/installation"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });

@@ -471,7 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–583)
 
-`[~]` `[██████████]` 149/152
+`[~]` `[█████████░]` 150/153
+
+`[x]` **Installation states its prerequisites and native targets (plan 584)** —
+      the page now names Node 24.18.0, nub ^0.9.6 and GPUix 0.10.0, renders the
+      three published `@gpuix/native` targets from the installed package, and
+      records the Intel macOS absence with the real
+      `apps/playground/scripts/build-native-binding.sh` remedy. Eight measured
+      queries (`prerequisites`, `system requirements`, `requirements`,
+      `platform support`, `x86_64`, `arm64`, `intel mac`, `apple silicon`) reach
+      the page, and a generated entry makes the rendered table searchable;
+      100 files / 715 docs tests, 98-page `smoke:build`, three forced defects
+      recorded in plan 584 §6.
 
 `[x]` **Reader vocabulary and page subjects, third pass (plan 583)** — `cmdk`,
       `autosuggest`, `gauge`, `pill`, `callout`, `busy` and `sheet` reach their

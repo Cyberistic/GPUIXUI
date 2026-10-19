@@ -649,6 +649,24 @@ scene is not a component record; `preview/scenes.ts` maps it to its page with
 entry, the delivered records it names and the landing-page link. The page's
 component list is generated from `SHOWCASE_SLUGS`, so no title is typed twice.
 
+## Installation facts
+
+The Installation page's prerequisites and native-binding table are derived facts,
+not remembered prose (plan 584). `src/lib/native-platforms.ts` lists the platforms
+a reader can install; `native-platforms.test.tsx` compares its published rows with
+the installed `@gpuix/native` package's real `napi.targets` and optional binary
+dependencies. Intel macOS is an explicit unpublished row, not a claim: the pinned
+0.10.0 release has no `x86_64-apple-darwin` binary, and the page names the
+repository's `apps/playground/scripts/build-native-binding.sh` remedy.
+`installation-page.test.ts` compares the displayed Node, nub and GPUix versions
+with `.node-version`, `devEngines.packageManager` and the workspace catalog, and
+resolves the build script on disk. Because the table is rendered React, a
+generated `platformSearchEntry` carries every target into ⌘K and promotes
+`platform support` / `native bindings`; `platform-search.test.ts` keeps a plain
+word on the page that owns it. The page summary names `prerequisites`,
+`requirements` and `platform support`; `search.test.ts` guards eight measured
+queries and `smoke:build` checks two of them against the production index.
+
 ## Theme
 
 The site's light and dark palette **is** the library's palette. The Fumadocs

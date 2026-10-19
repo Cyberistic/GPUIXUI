@@ -1,11 +1,50 @@
 ---
 title: Installation
-description: Add GPUIXUI to a GPUix application.
+description: "Add GPUIXUI to a GPUix application: prerequisites and system requirements, platform support for the native binding targets on macOS, Linux and Windows, and the install commands."
 ---
 
 GPUIXUI is consumed inside a [GPUix](https://github.com/remorses/gpuix)
 application. GPUix renders with GPUI; install and pin it exactly as its own
 documentation describes before adding the component packages.
+
+## Prerequisites
+
+GPUIXUI runs inside a GPUix application, so install and pin GPUix first. A
+clean checkout of this repository also needs the following. The versions are
+the ones the workspace pins, and a test fails when this table and the manifests
+disagree.
+
+| Requirement | Pinned version | Why |
+| ----------- | -------------- | --- |
+| Node.js | `24.18.0` | `.node-version`; `engines.node` in the root `package.json` |
+| nub | `^0.9.6` | `devEngines.packageManager`; every command in this repository runs through it |
+| GPUix | `0.10.0` | `@gpuix/react` and `@gpuix/native` are pinned together in the workspace catalog |
+| A desktop session | — | a native GPUix window needs one; `check-types` and the unit suites run headless |
+
+## Native bindings
+
+`@gpuix/native` ships a prebuilt binary for macOS on Apple silicon
+(`aarch64-apple-darwin`, arm64), Linux x64 (`x86_64-unknown-linux-gnu`) and
+Windows x64 (`x86_64-pc-windows-msvc`). A platform without one installs the
+JavaScript package but cannot create a window.
+
+<NativePlatforms />
+
+GPUix **0.10.0 publishes no Intel Mac (`x86_64-apple-darwin`) binary**. This
+repository builds the identical 0.10.0 source on that host with `gpui_macos`'s
+`runtime_shaders` feature:
+
+```sh
+sh apps/playground/scripts/build-native-binding.sh
+```
+
+The script installs the pinned Rust toolchain, builds the cdylib and places
+`gpuix-native.darwin-x64.node` under `node_modules/@gpuix/native/`. It is the
+same repository remedy the playground's native suite documents; the shipped
+package's provenance and the measured result are on [GPUix
+capabilities](/docs/capabilities) and [Native smoke
+suite](/docs/native-testing). A published-binary run on CI remains the gold
+standard.
 
 ## Packages are not published yet
 

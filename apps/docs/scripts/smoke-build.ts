@@ -812,6 +812,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the scene index itself",
     },
+    {
+      query: "prerequisites",
+      expected: "/docs/installation",
+      first: true,
+      what: "the installation page's prerequisites section",
+    },
+    {
+      query: "platform support",
+      expected: "/docs/installation",
+      first: true,
+      what: "the native binding target table",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

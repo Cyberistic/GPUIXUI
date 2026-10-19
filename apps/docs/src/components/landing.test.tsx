@@ -24,11 +24,17 @@ const installation = readFileSync(
   "utf8",
 );
 
-const installationCommands = (
-  installation.match(/```sh\n([\s\S]*?)```/)?.[1] ?? ""
-)
-  .trim()
-  .split("\n");
+const installationCommands =
+  // The page has more than one `sh` block: the Intel macOS build script sits
+  // before the quick start (plan 584). The landing page mirrors the install
+  // block, so select that one by its command rather than by position.
+  (
+    [...installation.matchAll(/```sh\n([\s\S]*?)```/g)]
+      .map((match) => match[1] ?? "")
+      .find((block) => block.includes("nub install")) ?? ""
+  )
+    .trim()
+    .split("\n");
 
 const html = renderToStaticMarkup(<Landing />);
 

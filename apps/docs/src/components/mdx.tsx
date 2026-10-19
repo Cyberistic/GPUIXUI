@@ -16,6 +16,7 @@ import { NativePreview } from "./preview/native-preview";
 import { IconCatalogue } from "./icon-catalogue";
 import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
+import { NativePlatforms } from "./native-platforms";
 import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewTiers } from "./preview/preview-tiers";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
@@ -47,6 +48,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RoadmapTable,
     CapabilityMatrix,
     NativePreview,
+    NativePlatforms,
     LiveSurface,
     LiveSceneIndex,
     ComponentPreview,
