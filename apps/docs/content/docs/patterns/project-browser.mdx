@@ -1,0 +1,89 @@
+---
+title: Project browser
+description: A searchable project list that filters as you type, shows the no-match state and opens the match.
+---
+
+A pattern is a composition with a job. This one is the ordinary desktop task
+behind every "recent projects" surface: find a project by name or by what it
+does, then open it. It is built from public packages only — `SearchInput`,
+`List`, `EmptyState`, `Card`, `Badge` and the primitive layout — and it runs on
+**GPUix's published WebAssembly renderer**, the same real surface every live
+scene uses. It is not the native desktop binary; the component pages carry that
+evidence.
+
+It is a **list**, not a table. GPUix can paint a table, but `@gpuixui/data-grid`
+is still a target, and a docs-owned grid would be the placeholder the project
+refuses to ship. The [roadmap](/docs/roadmap) records that target and its status.
+
+## The task
+
+Atlas, Beacon, Cinder, Delta, Ember and Fjord are six projects with a status.
+A query filters the list as it is typed; a query that matches nothing paints the
+empty state with a way back to all six; opening a row shows its detail. The
+scene starts with the full list, so the filter is part of the pattern rather
+than a state mounted by a prop.
+
+## Composition
+
+<LiveSurface scene="project-browser" title="Project browser" />
+
+The flow composes:
+
+- `SearchInput` for the controlled query, the clear control and the keyboard
+  path;
+- `List` and `ListItem` for the single-selection rows, their roving tab stop and
+  `onActivate`;
+- `EmptyState` for a query that matches nothing, with a `Button` that clears it;
+- `Card`, `CardHeader` and `CardContent` for the surface and its header;
+- `Badge` for each project's status, from the shared status palette;
+- `Stack` and `Text` for the opened project's detail, with every colour, space
+  and type value from the active theme.
+
+The composition lives in `preview/patterns/project-browser.tsx`, not in the
+component demos: a pattern page shows one workflow, not the parts separately.
+The filter is one pure rule in `project-browser-logic.ts`.
+
+## State
+
+The page owns the query, the selected row and the opened project. `SearchInput`
+owns the field's text and the clear affordance; `List` owns the roving focus and
+the selection contract; the page owns the derived set and the detail block.
+
+The filter is case-insensitive and reads both the name and the description, so
+`release` finds Beacon by what it does, not only by its title. A blank query
+keeps every row; surrounding space is ignored. The rule is pure and tested, so
+the composition cannot disagree with its page.
+
+The data is in memory. There is no async query, no debounce, no pagination and
+no persistence: a real application debounces its own fetch and owns its storage.
+The list is not virtualised; six rows do not need a window.
+
+## What is verified
+
+| Check | What it proves |
+| ----- | -------------- |
+| `nub run --filter docs smoke:preview` | types a no-match query and asserts `No projects match` is absent before and present after; clears it, clicks the Atlas row, and asserts the detail is absent before and present after |
+| `packages/components` behaviour suites | `SearchInput`'s typing, clear, Enter and Escape; `List`'s focus, selection and activation; `EmptyState`'s action; `Badge`'s status variants |
+| `packages/primitives` runtime suites | `Button`'s activation and the layout the card composes |
+| `nub run --filter docs test` | the filter rule, the scene contract, the page's required sections and the derived scene totals |
+
+Limits, stated rather than implied: the surface is the WebAssembly renderer,
+not a desktop window; the list is six in-memory rows, not a data source; and
+the statuses are display labels, not a workflow.
+
+## Source
+
+<include lang="tsx" meta='title="apps/docs/preview/patterns/project-browser.tsx"'>
+  ../../../preview/patterns/project-browser.tsx
+</include>
+
+<include lang="ts" meta='title="apps/docs/preview/patterns/project-browser-logic.ts"'>
+  ../../../preview/patterns/project-browser-logic.ts
+</include>
+
+## Related
+
+- [Search input](/docs/components/search-input) · [List](/docs/components/list)
+- [Empty state](/docs/components/empty-state) · [Card](/docs/components/card)
+- [Patterns](/docs/patterns) · [Command palette](/docs/patterns/command-palette)
+- [Roadmap](/docs/roadmap)

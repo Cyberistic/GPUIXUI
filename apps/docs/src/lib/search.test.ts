@@ -83,6 +83,13 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results.map((result) => result.url)).toContain("/docs/previews");
   });
 
+  it("finds the project-browser pattern by its name (plan 575)", async () => {
+    const results = await search("project browser", 5);
+    expect(results.map((result) => result.url)).toContain(
+      "/docs/patterns/project-browser",
+    );
+  });
+
   it("points a planned record at the filtered index instead of a page", () => {
     // No Tier 1–2 record is planned after plan 461, so the rule is proven on a
     // fixture: a future record must not promise a page it does not have.

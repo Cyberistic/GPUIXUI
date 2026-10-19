@@ -4,9 +4,9 @@ description: Realistic compositions, not isolated controls.
 ---
 
 Patterns are where components meet real tasks: a settings page with validation,
-a confirmation flow, a searchable command menu, a data table with filters. Each
-page shows the composition, explains the state it owns, and says which parts are
-verified in the native runtime.
+a confirmation flow, a searchable command menu, a searchable list with filters.
+Each page shows the composition, explains the state it owns, and says which
+parts are verified in the native runtime.
 
 ## Settings form
 
@@ -36,6 +36,16 @@ Enter or a click, and `Duplicate project` adds a named copy through a pure
 rule. It runs as a live scene on GPUix's published WebAssembly renderer, and the
 release smoke opens the palette and runs the command so the result is proved
 rather than illustrated.
+
+## Project browser
+
+The fourth pattern is the ordinary find-and-open task
+([`/docs/patterns/project-browser`](/docs/patterns/project-browser)): a real
+`SearchInput` filters a real `List` by name or description, a no-match query
+paints the `EmptyState` with a way back, and opening a row shows its detail. It
+runs as a live scene on GPUix's published WebAssembly renderer, and the release
+smoke types the name, proves the count changed and opens the match. It is a
+list, not a table: `@gpuixui/data-grid` is still a roadmap target.
 
 ## Still to come
 

@@ -187,6 +187,7 @@ import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
 import { CommandPalette } from "./patterns/command-palette";
 import { ConfirmationFlow } from "./patterns/confirmation-flow";
+import { ProjectBrowser } from "./patterns/project-browser";
 import { EMPTY_FORM, FormValues } from "./form-scene";
 import type { LiveScene } from "./scenes";
 
@@ -1453,6 +1454,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     showcase: ShowcaseScene,
     "confirmation-flow": ConfirmationFlow,
     "command-palette": CommandPalette,
+    "project-browser": ProjectBrowser,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

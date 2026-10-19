@@ -1,4 +1,10 @@
 {
   "title": "Patterns",
-  "pages": ["index", "settings-form", "confirmation-flow", "command-palette"]
+  "pages": [
+    "index",
+    "settings-form",
+    "confirmation-flow",
+    "command-palette",
+    "project-browser"
+  ]
 }

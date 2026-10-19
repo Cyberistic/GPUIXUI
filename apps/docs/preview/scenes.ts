@@ -57,6 +57,7 @@ export const LIVE_SCENES = [
   "showcase",
   "confirmation-flow",
   "command-palette",
+  "project-browser",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -119,6 +120,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   showcase: "Three people can edit this workspace.",
   "confirmation-flow": "Workspace deleted",
   "command-palette": "Duplicated the project into a new copy.",
+  "project-browser": "Opened from the project list.",
 };
 
 /**
@@ -131,6 +133,7 @@ export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
   showcase: "/docs/showcase",
   "confirmation-flow": "/docs/patterns/confirmation-flow",
   "command-palette": "/docs/patterns/command-palette",
+  "project-browser": "/docs/patterns/project-browser",
 };
 
 /**
@@ -146,6 +149,7 @@ export const SCENE_STEP_TEXT: Readonly<
   Partial<Record<LiveScene, Readonly<Record<number, string>>>>
 > = {
   form: { 1: FORM_MESSAGE },
+  "project-browser": { 1: "No projects match" },
 };
 
 /**
@@ -160,6 +164,7 @@ export const SCENE_LABEL: ReadonlyArray<{
   { scene: "showcase", title: "Showcase" },
   { scene: "confirmation-flow", title: "Confirmation flow" },
   { scene: "command-palette", title: "Command palette" },
+  { scene: "project-browser", title: "Project browser" },
 ];
 
 /**
@@ -250,6 +255,11 @@ export const SCENE_GESTURE: Readonly<
     { kind: "click", testId: "scene-palette-trigger" },
     { kind: "click", testId: "command-duplicate" },
   ],
+  "project-browser": [
+    { kind: "fill", testId: "scene-project-search", text: "zzz" },
+    { kind: "click", testId: "scene-project-clear" },
+    { kind: "click-text", text: "Atlas", within: "scene-project-list" },
+  ],
 };
 
 /**
@@ -282,6 +292,8 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "message-scroller": "Wheel up in the log to leave the tail.",
   "confirmation-flow": "Type the workspace name, then confirm.",
   "command-palette": "Open the palette, then run Duplicate project.",
+  "project-browser":
+    "Type a query that matches nothing, clear it, then open a project.",
 };
 
 /**

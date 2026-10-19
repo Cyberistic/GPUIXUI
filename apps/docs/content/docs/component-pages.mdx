@@ -118,8 +118,8 @@ the page documents is one a still cannot prove; a static page uses a labelled
 tier-A illustration instead. A scene is never a browser reimplementation of the
 component — it mounts the package.
 
-The build ships 48 scenes today. Every component scene comes from a record
-that declares `liveScene`; the Showcase page and the two pattern pages add one
+The build ships 49 scenes today. Every component scene comes from a record
+that declares `liveScene`; the Showcase page and the three pattern pages add one
 composition each. These files own the mechanism:
 
 | Path | What it owns |
@@ -129,6 +129,7 @@ composition each. These files own the mechanism:
 | `preview/scene-views.tsx` | `LIVE_SCENE_VIEWS`: one real composition per scene |
 | `preview/patterns/confirmation-flow.tsx` | a composed page's scene, kept out of `scene-views.tsx` so its source stays readable on the page |
 | `preview/patterns/command-palette.tsx` | the second composed scene: the real palette opens from a control |
+| `preview/patterns/project-browser.tsx` | the third composed scene: a query filters a real list, then a row opens |
 | `preview/main.tsx` | the isolated document, both theme providers and the readiness contract |
 
 The expectation table is the contract, not decoration:
