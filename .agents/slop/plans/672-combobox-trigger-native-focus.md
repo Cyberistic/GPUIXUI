@@ -240,8 +240,10 @@ component wirings must restore both failures.
 
 - A trigger focused by code, Tab or a restored close paints the token ring; the
   ring is gone while the popup's field holds focus and while disabled.
-- Exactly one sample implementation exists in `packages/components/src`, used by
-  both SearchInput and ComboboxTrigger.
+- Exactly one focus-id sample for ring painting exists in
+  `packages/components/src`, shared by SearchInput and ComboboxTrigger;
+  `InlineEdit` keeps its separate commit-on-focus-leave sample, which watches a
+  different question.
 - `combobox.test.tsx` is 54 tests, all passing; SearchInput stays 18/18; the unit
   suite is unchanged; `nub run check` and `nub run lint` exit `0`.
 - `docs/combobox.mdx`, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the plan
