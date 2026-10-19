@@ -188,3 +188,10 @@ every commit of `origin/master`).
 
 No source, scenario or host verb changed; the only writes are the plan and the
 ledger rows listed in §2.
+
+**Concurrent-writer note (B3).** A duplicate `swarm:playground` session was still
+live while this plan ran. It committed its own 94/94 gate ledgers as `5d7ba326`
+and swept this plan (then untracked) into the same `git add`; the follow-up
+commit `a38cd4f5` is the landed version above. The two runs agree on every check
+count (94/94, 2447 checks); only the duration differs. The tree has had one
+writer since, and the permanent fix remains `scripts/` plan `022` §5.

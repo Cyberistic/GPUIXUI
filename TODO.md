@@ -61,6 +61,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       them into its commits. The result is consistent (the same plan and the same
       fix), but the tree was written by two agents and neither noticed the other
       until `git log` showed it. Still needs the supervisor fix.
+      **Update 2026-10-19 14:34:** recurred once more — a duplicate session
+      committed `5d7ba326` (its own 94/94 gate ledgers) and, in the same
+      `git add`, swept this session's then-untracked plan `655` and its ledger
+      edits into that commit. The two runs agreed on every number (94/94,
+      2447 checks; only wall-clock differs), so the tree is consistent; this
+      session's follow-up commit `a38cd4f5` is the landed plan. The count has
+      read `1` since. Fix still lives in `scripts/` (plan `022` §5).
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
