@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: How to work on GPUIXUI on GitHub in worktrees, where to report bugs or open issues and pull requests, and the gates a change must pass.
+description: How to work on GPUIXUI on GitHub in worktrees, where to report bugs or open issues and pull requests, the gates a change must pass, and the docs site's own discovery output — sitemap, robots, llms.txt, favicon, social metadata, SEO and the no-PWA install limit.
 ---
 
 GPUIXUI is a TypeScript-first monorepo. Every command runs through **nub** on
@@ -84,6 +84,28 @@ every check your change can affect:
 The smokes exit `2` when Chrome or the server is missing. An unverified site is
 not a passing one: treat `2` as "run it where the check can run", never as a
 pass.
+
+### Site output
+
+The site publishes its own discovery documents from the modules its pages read,
+so a route cannot describe a page the sitemap does not serve:
+
+| Route | What it serves | Source |
+| ----- | -------------- | ------ |
+| `/sitemap.xml` | every page URL the site serves | `apps/docs/src/lib/sitemap.ts` |
+| `/robots.txt` | crawlers, naming the sitemap | `apps/docs/src/routes/robots[.]txt.ts` |
+| `/llms.txt` | every page, absolutely linked, for an LLM crawler | `apps/docs/src/lib/llms.ts` |
+| `/llms-full.txt` | every page as processed Markdown | `apps/docs/src/lib/llms.ts` |
+| `/site.webmanifest` | the install document: name, start URL, palette colours and both icons | `apps/docs/src/lib/site-manifest.ts` |
+
+Every page inherits the favicon (the SVG mark `/brand/mark.svg` plus a 32 px
+`/brand/favicon-32.png`), the apple-touch icon
+(`/brand/apple-touch-icon.png`) and the 1200×630 social card
+(`/brand/og.png`), a canonical URL and OpenGraph/Twitter tags from
+`apps/docs/src/lib/site-head.ts`. The manifest declares `display: "browser"` and
+there is **no service worker**, so the site makes no PWA or offline claim. The
+maintainer detail, including how the raster icons were made, is in
+`apps/docs/README.md`.
 
 ### Authoring
 

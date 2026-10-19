@@ -981,6 +981,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "an inflected summary word (`resizable`)",
     },
+    {
+      query: "favicon",
+      expected: "/docs/contributing",
+      first: true,
+      what: "the docs site's own output, which only the Contributing page documents",
+    },
+    {
+      query: "graph",
+      expected: "/docs/data-display",
+      first: true,
+      what: "a subject word the Data display summary names (`graphs`)",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

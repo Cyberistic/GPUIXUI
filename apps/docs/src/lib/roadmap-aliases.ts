@@ -15,6 +15,7 @@ export const roadmapAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["Drag and drop", ["drag", "drop"]],
   ["Rich-text editing", ["markdown", "rich text"]],
   ["Toolbars", ["toolbar"]],
+  ["Virtualized lists", ["virtual list"]],
 ]);
 
 /** Every alias term, flattening the table for the search document. */

@@ -193,13 +193,13 @@ const stems = (value: string): ReadonlyArray<string> =>
 
 /**
  * How closely a component name matches a query: `0` equal, `1` prefix, `2` a
- * word prefix, `3` substring anywhere, `undefined` no match. A component name
+ * word prefix, `3` a word suffix, `undefined` no match. A component name
  * is the strongest signal a reader can give ⌘K, so it is scored, not left to
  * the index's body-text ranking (plan 431).
  *
  * The word tiers also compare stems (plan 585), so a title in another
  * inflection (`Theming`, `GPUix capabilities`) is still named by the query,
- * while the substring tier keeps plan 568's whole-spelling rule.
+ * while the suffix tier keeps plan 568's whole-spelling rule.
  */
 const matchRank = (name: string, query: string): number | undefined => {
   const normalized = name.trim().toLowerCase();
@@ -215,10 +215,14 @@ const matchRank = (name: string, query: string): number | undefined => {
   if (wordStems.some((word) => word === queryStem)) return 2;
   /**
    * A three-letter fragment is too weak to name a page: `log` is a substring
-   * of `Dialogs` and used to outrank the page that owns log viewers. Longer
-   * fragments keep plan 431's tier.
+   * of `Dialogs` and used to outrank the page that owns log viewers. A longer
+   * fragment must **end** a word — `picker` in `datepicker` — because a
+   * fragment buried in the middle (`graph` in `typography`) is a coincidence,
+   * not a name (plans 431, 594).
    */
-  return needle.length >= 4 && normalized.includes(needle) ? 3 : undefined;
+  return needle.length >= 4 && nameWords.some((word) => word.endsWith(needle))
+    ? 3
+    : undefined;
 };
 
 /** Words that can name something; a single character is noise. */

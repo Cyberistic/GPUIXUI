@@ -828,6 +828,57 @@ describe("search", { timeout: 120_000 }, () => {
   });
 
   /**
+   * Plan 594: the ninth measured sweep. The site's own discovery output had no
+   * reader-facing page, so `favicon`, `robots`, `llms` and `pwa` returned
+   * nothing and `seo` returned Icons; Contributing now names them in its
+   * summary and its `Site output` section. `graph` named **Typo·graph·y**
+   * because the substring tier matched inside a word; the tier now requires the
+   * fragment to end a word, and Data display's summary names `graphs`.
+   * `virtual list` is a tracked target, so the Roadmap alias owns it rather
+   * than the Lists page that mentions `virtual-list` in passing.
+   */
+  it("finds the docs site's own output and two subject words (plan 594)", async () => {
+    const expected = [
+      ["favicon", "/docs/contributing"],
+      ["robots", "/docs/contributing"],
+      ["llms", "/docs/contributing"],
+      ["pwa", "/docs/contributing"],
+      ["seo", "/docs/contributing"],
+      ["sitemap", "/docs/contributing"],
+      ["graph", "/docs/data-display"],
+      ["virtual list", "/docs/roadmap"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The ranker change in plan 594 removes only the mid-word tier. A fragment
+   * that ends a word (`picker` in `datepicker`) still names a page, and a fully
+   * typed title still wins its exact match.
+   */
+  it("does not name a page from a fragment inside a word (plan 594)", async () => {
+    const graph = await search("graph", 5);
+    expect(graph.map((result) => result.url.split("#")[0])).not.toContain(
+      "/docs/typography",
+    );
+
+    const [typography] = await search("typography", 5);
+    expect(typography?.url.split("#")[0]).toBe("/docs/typography");
+
+    const [picker] = await search("picker", 5);
+    expect(picker?.url.split("#")[0]).toBe("/docs/components/color-picker");
+  });
+
+  /**
    * Plan 591: a component's URL slug is the name in its canonical link. Eight
    * of 66 slugs reached a pattern page or Date pickers because the registry
    * document and the name list never contained the slug (`button-group`,
@@ -1025,6 +1076,24 @@ describe("mergeResults", () => {
       "input",
     );
     expect(merged[0]?.url).toBe("/docs/components/text-input");
+  });
+
+  it("keeps a fragment that ends a name word (plan 594)", () => {
+    const merged = mergeResults(
+      [textResult("architecture-1", "/docs/architecture")],
+      [titledPage("/docs/components/date-picker", "DatePicker")],
+      "picker",
+    );
+    expect(merged[0]?.url).toBe("/docs/components/date-picker");
+  });
+
+  it("does not name a title from the middle of a word (plan 594)", () => {
+    const merged = mergeResults(
+      [textResult("data-display-1", "/docs/data-display")],
+      [titledPage("/docs/typography", "Typography")],
+      "graph",
+    );
+    expect(merged[0]?.url).toBe("/docs/data-display");
   });
 
   it("moves an exported name match ahead of prose too", () => {

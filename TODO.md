@@ -469,9 +469,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–591)
+## Docs site workstream (plans 410–499, plus 500–594)
 
-`[~]` `[██████████]` 159/160
+`[x]` `[██████████]` 161/161
+
+`[x]` **The docs site documents its own output (plan 594)** — the five discovery
+      routes (`sitemap.xml`, `robots.txt`, `llms.txt`, `llms-full.txt`,
+      `site.webmanifest`) and the generated brand head were documented only in
+      `apps/docs/README.md`, so `favicon`, `robots`, `llms`, `pwa` and `seo`
+      returned nothing or Icons; Contributing's `### Site output` section and
+      summary now own them, `contributing-page.test.ts` ties the prose to the
+      real routes, assets and manifest, `graph` stops matching inside
+      Typography, and `virtual list` reaches the Roadmap. Eight measured rows,
+      six two-direction proofs; 106 files / 773 docs tests, 98-page
+      `smoke:build`, root gates green.
 
 `[x]` **Reader vocabulary, eighth pass (plan 593)** — an inflected summary word
       now matches (`resize` → Workspace), `svg`/`glyph` reach Icons,
