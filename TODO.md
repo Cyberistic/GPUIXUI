@@ -2166,15 +2166,25 @@ theme's `background` beside the content and `foreground` outside it at
 `themeFailures` composes it as the tenth kind, `ring`; the executed one-element
 composition is a border plus a spread shadow, and no colour, pair, floor or
 metric moves (plan 611)
+`[x]` Hold the content ring's quoted figures — plan 611 wrote 3.98/4.58/3.70 and
+the 15.86/21 pair figures into `docs/tokens.md`, `docs/design-system.md`, the
+README, `COMPONENTS.md` and the `ring.ts` JSDoc, but only the catalogue's three
+numbers were derived (as a presence check) and nothing held the named set or the
+other four surfaces, so a palette edit could leave `Dark · Linux` named after
+another set became tightest, or leave four pages and the JSDoc quoting a bound
+the package no longer produces; `figures.ts` gains the `ring` measurement
+(`sqrt` of the pair's contrast) and twelve entries across the five surfaces, and
+the table's size sentence moves to **28** (plan 613)
 `[x]` Audit the token contract after plans 609–611 — re-ran the ten checks over all
 24 shipped sets, walked every role, pair list, numeric group, native-text bridge
 and documented figure, and compared the contract against every composition the
-shipped `components`/`primitives` trees paint. No token-native gap remains: every
-role a consumer paints is measured on the surface it paints, the numeric rules
-cover the fixed surfaces, and the shipped sets pass the total check. The one new
-finding is consumer-side — the Notification centre's open row uses the transient
+shipped `components`/`primitives` trees paint. Every role a consumer paints is
+measured on the surface it paints and the numeric rules cover the fixed surfaces;
+the audit's one new token-side finding is the content ring's quoted figures
+outside the catalogue's presence check, closed by plan 613. Its consumer-side
+finding is the Notification centre's open row, which uses the transient
 `accent` wash, loses it under the pointer and rings itself while unfocused
-(recorded cross-team) — and the TagInput chip's `0.6` dim joins the existing
+(recorded cross-team); the TagInput chip's `0.6` dim joins the existing
 disabled-dim row (2026-10-19 audit)
 
 ## Phase C — Tier 1–2 components
