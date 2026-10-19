@@ -3,11 +3,14 @@
  * `primary` **fill** because the accent is a `mark` pair on the `input` fill and
  * the four `Surface` tones; plan 527 established that `InlineEdit` swaps a row's
  * text for a field in place, on the four row washes the caret inherits onto.
- * On the shipped macOS dark set that fill measures **2.748:1** on `selected` and
- * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
- * inline edit vanished while every theme check returned `[]`. The caret is the
- * accent's readable ink (`primaryText`): the eight text surfaces already hold it
- * at the secondary floor, and `caretPairs` adds the field's own `input` fill.
+ * On the shipped macOS dark set the `#0A84FF` fill measured **2.748:1** on
+ * `selected` and **2.836:1** on `active`, under the 3:1 mark floor, so a caret
+ * in a selected inline edit vanished while every theme check returned `[]`. The
+ * caret is the accent's readable ink (`primaryText`): the eight text surfaces
+ * already hold it at the secondary floor, and `caretPairs` adds the field's own
+ * `input` fill. Plan 698 later moved that accent family lighter so the selected
+ * option's check clears the same fill; the caret remains the ink because a
+ * caret is a mark, not a label on a fill — the two roles are separate.
  *
  * The plan-511 regression the role already fixed stays: the runtime's built-in
  * dark caret (`#7C86FF`) measures 3.129:1 on the AAA light `input` and 2.795:1
