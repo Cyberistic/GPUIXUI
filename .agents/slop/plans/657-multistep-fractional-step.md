@@ -4,7 +4,8 @@
 **Owner:** components workstream (`packages/components`)
 **Depends on:** 110, 390, 397, 502/508, 619 (the same rule on Carousel), 651
 (the shared "normalise once" precedent)
-**Status:** planned
+**Status:** done — 4 pure + 2 native cases; the fractional native case fails on
+the pre-fix source, and the `NaN` pin passes in both directions.
 
 ---
 

@@ -161,9 +161,11 @@ changes.
 | `MultiStepForm` | `div` (`role="form"` when `label` is given) + `Stepper` + the summary | `schema: Schema.ConstraintDecoder<T>` (required), `value: unknown` (required), `steps: readonly [MultiStepFormStep, ...MultiStepFormStep[]]` (required), `onSubmit: (value: T) => void` (required), `pending?: boolean`, `revalidate?: boolean`, `label?: string`, `step?: number`, `defaultStep?: number`, `onStepChange?: (index: number) => void`, `children: (state: MultiStepFormState) => ReactNode` |
 
 `step` is controlled, `defaultStep` (default `0`) uncontrolled, and
-`onStepChange` reports every accepted move in both modes. A controlled index
-outside the range is clamped, so a shrinking `steps` array cannot crash the
-render.
+`onStepChange` reports every accepted move in both modes. The resolved step is
+always a whole, in-range index: a finite value is truncated and clamped, so a
+controlled index outside the range or a fractional one cannot crash the render
+or name no step, and a non-finite value starts at the first step. The controlled
+value itself is never rewritten; `next` reports the whole index it moved to.
 
 Every part takes the GPUix host props and merges `style` last.
 
@@ -207,13 +209,15 @@ from the theme. There are no literal colours or sizes.
 
 ## Verification
 
-`src/behaviour/multi-step-form.test.tsx` runs in the real GPUix renderer (15 tests): the first step and the indicator's current item, an invalid `next` showing
+`src/behaviour/multi-step-form.test.tsx` runs in the real GPUix renderer (17 tests): the first step and the indicator's current item, an invalid `next` showing
 its message in both themes, a valid `next` advancing once and clearing the
 message, `back` leaving a failing step, the last-step submit delivering the
 decoded instance in both themes, an invalid final submit showing every message,
 `submit` before the last step doing nothing, `pending` locking all three actions,
 a controlled `step` staying authoritative, an out-of-range controlled index
-clamping, a controlled move hiding the previous step's message, one alert
+clamping, a fractional controlled index naming the whole step below it (and
+`next` reporting a whole index), a non-finite controlled index starting at the
+first step, a controlled move hiding the previous step's message, one alert
 with one text node per distinct message, no validation before the first failed
 action, a failed step re-checking when the draft changes, and messages
 persisting when `revalidate` is off.

@@ -3,13 +3,12 @@
  *
  * A slide index is whole. A caller that computes `1.5` (or `NaN`) names no
  * slide: `index === active` then fails for every slide, so the track paints
- * nothing and a step adds to a fraction that still matches no slide. Truncation
- * matches Pagination's page rule; a non-finite value starts at the first slide
- * because it cannot name a later one. An empty track reports `0` and nothing is
- * painted either way.
+ * nothing and a step adds to a fraction that still matches no slide. The rule is
+ * shared with every indexed collection (`wholeIndex`): truncate a finite value,
+ * start a non-finite one at the first slide, and report `0` for an empty track.
  */
-export const slideIndex = (value: number, count: number): number => {
-  if (count <= 0) return 0;
-  const whole = Number.isFinite(value) ? Math.trunc(value) : 0;
-  return Math.min(Math.max(whole, 0), count - 1);
-};
+
+import { wholeIndex } from "../internal/count.js";
+
+export const slideIndex = (value: number, count: number): number =>
+  wholeIndex(value, count);

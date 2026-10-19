@@ -534,6 +534,16 @@ retired once both branches are one
       `Disabled` by the shared description helper; 1 native case (Confirmation
       dialog 7), both-direction proof; docs, `COMPONENTS.md`, `PLAN.md` D30 and
       the inventory synced (owner: components)
+    - [x] A fractional multi-step index names no step — plan 657. Measured:
+      `step={1.5}` with three steps painted step one while reporting
+      `1.5:false:false`, and `next` reported `2.5`, skipping a step, because
+      `Number.clamp` truncates nothing. The rule is now the shared
+      `wholeIndex` (truncate a finite value, start a non-finite one at the first
+      entry, clamp in range), which Carousel's `slideIndex` delegates to; 4 pure
+      + 2 native cases (unit 468, Multi-step form 17, behaviour 820/31 of 851 —
+      the same recorded binding failures), the fractional case failing on the
+      old source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
       it is its own tab stop (`tabIndex 0`) and takes native focus
       (`getFocusedElementId() = search-clear`), but has no `focused` state or
@@ -1178,11 +1188,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 611/612/619/649/650):
-      all three exit 0; the unit suite is 457 tests in 45 files. The native
-      behaviour suite is **813 passed / 31 failed of 844** — every failure is
+      all three exit 0; the unit suite is 468 tests in 46 files. The native
+      behaviour suite is **820 passed / 31 failed of 851** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19,
-      after plan 650).
+      after plan 657).
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)

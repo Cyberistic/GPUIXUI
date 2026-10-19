@@ -11,13 +11,16 @@
  * no one-frame flash of stale text. With `revalidate`, a failed action is
  * re-checked whenever the owned draft changes, using the schema that produced
  * the stored messages. The draft is compared by identity.
+ *
+ * The resolved step is always a whole, in-range index (`wholeIndex`): a
+ * fractional `step` is truncated, a non-finite one starts at the first step, and
+ * the controlled value is never rewritten.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
-import * as Num from "effect/Number";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
@@ -29,6 +32,7 @@ import {
   type ReactNode,
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
+import { wholeIndex } from "./internal/count.js";
 import { ErrorSummary } from "./internal/error-summary.js";
 import { useTheme } from "./internal/theme.js";
 import { Stepper, StepperStep } from "./stepper.js";
@@ -145,8 +149,9 @@ export const MultiStepForm = <T,>({
     defaultValue: defaultStep,
     onChange: onStepChange,
   });
-  // A controlled index can outlive a shorter `steps` array; clamp before use.
-  const index = Num.clamp({ minimum: 0, maximum: steps.length - 1 })(rawIndex);
+  // A controlled index can outlive a shorter `steps` array or arrive
+  // fractional; one rule makes it name a real step before anything reads it.
+  const index = wholeIndex(rawIndex, steps.length);
   const step = steps[index] ?? steps[0];
   const isFirst = index === 0;
   const isLast = index === steps.length - 1;

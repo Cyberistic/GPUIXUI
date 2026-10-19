@@ -5,7 +5,9 @@
  * failing step's message on the next one; a `back` that traps the user on an
  * invalid step; `submit` firing before the last step (or submitting the raw
  * draft); `pending` still moving the workflow; a controlled `step` that moves
- * itself; an out-of-range controlled index crashing the render.
+ * itself; an out-of-range controlled index crashing the render; a fractional
+ * controlled index painting one step while claiming another and skipping the
+ * step between (plan 657).
  *
  * Runs wherever GPUix publishes a native binding; on this Intel Mac that is plan
  * 140's locally built `darwin-x64` binding.
@@ -51,6 +53,13 @@ const steps = [
   { id: "billing", label: "Billing", schema: BillingFields },
 ] as const satisfies readonly [MultiStepFormStep, ...MultiStepFormStep[]];
 
+/** A third step, so a fractional index can land between two real neighbours. */
+const threeSteps = [
+  { id: "account", label: "Account", schema: AccountFields },
+  { id: "billing", label: "Billing", schema: BillingFields },
+  { id: "review", label: "Review", schema: AccountFields },
+] as const satisfies readonly [MultiStepFormStep, ...MultiStepFormStep[]];
+
 const valid = { email: "ada@example.com", card: "4242" };
 
 /** A workflow whose visible state is the index, the flags and the messages. */
@@ -62,6 +71,7 @@ const Harness = ({
   step,
   defaultStep,
   onStepChange,
+  stepsOverride,
 }: {
   readonly value: unknown;
   readonly pending?: boolean;
@@ -70,11 +80,12 @@ const Harness = ({
   readonly step?: number;
   readonly defaultStep?: number;
   readonly onStepChange?: (index: number) => void;
+  readonly stepsOverride?: readonly [MultiStepFormStep, ...MultiStepFormStep[]];
 }) => (
   <MultiStepForm
     schema={Checkout}
     value={value}
-    steps={steps}
+    steps={stepsOverride ?? steps}
     onSubmit={onSubmit}
     pending={pending}
     revalidate={revalidate}
@@ -339,6 +350,54 @@ describe("Multi-step form", () => {
     expect(form.renderer.getAllText()).toEqual(
       expect.arrayContaining(["0:true:false:false", "account"]),
     );
+
+    form.unmount();
+  });
+
+  it("normalises a fractional controlled step to the whole step below it", () => {
+    const onStepChange = vi.fn();
+    const form = renderComponent(
+      <Harness
+        value={valid}
+        stepsOverride={threeSteps}
+        step={1.5}
+        onStepChange={onStepChange}
+      />,
+    );
+
+    // The step the fraction lies in, not the fallback (the first step) while
+    // the state reports 1.5.
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining(["1:false:false:false", "billing"]),
+    );
+
+    clickCentreOf(form, "next");
+
+    // Advancing from the resolved step reports 2, never 2.5.
+    expect(onStepChange).toHaveBeenCalledWith(2);
+    expect(onStepChange).not.toHaveBeenCalledWith(2.5);
+
+    form.unmount();
+  });
+
+  it("starts a non-finite controlled step at the first step", () => {
+    const onStepChange = vi.fn();
+    const form = renderComponent(
+      <Harness
+        value={valid}
+        stepsOverride={threeSteps}
+        step={Number.NaN}
+        onStepChange={onStepChange}
+      />,
+    );
+
+    expect(form.renderer.getAllText()).toEqual(
+      expect.arrayContaining(["0:true:false:false", "account"]),
+    );
+
+    clickCentreOf(form, "next");
+
+    expect(onStepChange).toHaveBeenCalledWith(1);
 
     form.unmount();
   });
