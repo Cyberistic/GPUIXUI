@@ -263,6 +263,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [569](./569-native-text-theme.md) | The native text theme: code, diff and markdown | F | 011, 051, 082, 332, 337, 399, 511, 527, 557 | done |
 | [572](./572-native-text-metric-scale.md) | The native text metrics that hold type | F | 367, 569 | done |
 | [573](./573-native-find-highlight.md) | The find-highlight wash the native text theme feeds | F | 069, 081, 087, 337, 569 | done |
+| [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2926,6 +2927,20 @@ composes. A highlight cannot keep a syntax token at body strength and stay
 visible, so the pairs are held at the secondary floor (5.34:1 match, 4.61:1
 active) with body text above the body floor; the reference, README, design
 system and ledger state the same derived facts, and no colour moves.
+
+Plan `574` closes the last surface the native text bridge's syntax palette was
+never measured on. `nativeSyntaxPairs` held every capture to the body floor on
+`card`, but the catalogue said the prop's roles were measured on all four
+`Surface` tones a `bg` override may name; on Windows XP (Luna) light the
+inherited `infoText` and `warningText` measured 6.903:1 and 6.951:1 on the beige
+canvas while every check returned `[]`. `nativeTextSurfaces` becomes the one
+owner of the four tones, `nativeSyntaxPairs` publishes six roles on each (24
+pairs, `contrastPairs` unchanged at 405), and the suite holds the same palette
+through the runtime's 3.5% ink wash on every surface, which found six more
+under-floor pairs on XP and Aero. Eight platform text roles take one designed
+family step darker — local to macOS, Windows, XP and Aero light — so every
+shipped set clears the body floor both opaque and painted, and the reference's
+two hand-computed native figures (7.83/7.06) become derived.
 
 ## How to use a plan
 
