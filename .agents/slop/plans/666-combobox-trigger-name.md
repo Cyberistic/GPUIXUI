@@ -137,10 +137,9 @@ cd packages/components
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/combobox.test.tsx
 ```
 
-Expected after the fix: `Test Files 1 passed`, `Tests 54 passed` (the suite had
-53 before this plan; add the three new cases and the count becomes 56 — count the
-actual output when it runs and use the real number in the docs if the docs state
-one). The suite deliberately does **not** run the rest of the behaviour files.
+Expected after the fix: `Test Files 1 passed`, `Tests 52 passed` (the suite had
+49 before this plan; the three new cases bring it to 52). The suite deliberately
+does **not** run the rest of the behaviour files.
 
 Then:
 
