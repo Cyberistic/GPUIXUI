@@ -579,6 +579,15 @@ retired once both branches are one
       means no cap; 2 pure + 1 native case (unit 472, Tag / token input 16), the
       fractional assertions failing on the old source; docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] A combobox trigger without a label is unnamed — plan 666; measured
+      2026-10-19: 0.10.0 does not lift a role-bearing div's text child into its
+      accessible name, and `ComboboxTrigger` wrote `aria-label` only when the
+      optional `label` was authored, so an unlabelled trigger painted "Select…"
+      but announced `button` with no name. `controlName` now names it from the
+      visible selected labels or placeholder, and a caller `aria-label` still
+      wins and is trimmed; 3 native cases (Combobox 52), the placeholder and
+      selected-label cases failing on the old source; docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

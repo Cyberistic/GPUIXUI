@@ -79,6 +79,7 @@ import {
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss } from "./internal/key.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -560,10 +561,13 @@ export const ComboboxTrigger = ({
           Arr.map(selectedValues, (value) => labelFor(value)),
           ", ",
         );
+  // 0.10.0 does not lift the trigger's text child into its name (plan 391), and
+  // `label` is optional — fall back to the visible text, exactly as a browser
+  // names `<button>Select…</button>` (plan 666).
+  const name = controlName(rest["aria-label"] ?? label, display);
 
   return (
     <HeadlessTrigger
-      {...(label === undefined ? {} : { "aria-label": label })}
       role="button"
       aria-expanded={open}
       ref={registerTrigger}
@@ -571,6 +575,7 @@ export const ComboboxTrigger = ({
       disabled={disabled}
       autoFocus={autoFocus && !disabled}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       {...stateDescription(disabled, rest["aria-description"])}
       onFocus={(event) => {
         setFocused(true);

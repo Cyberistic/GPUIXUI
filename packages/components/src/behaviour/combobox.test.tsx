@@ -29,6 +29,10 @@
  * Held press (plan 583): the outside press closed the popup and marked the click
  * that follows, but the mark was cleared on a microtask while the runtime delivers
  * the click in a later task — a real press-and-release re-opened the popup.
+ *
+ * Trigger name (plan 666): `label` is optional, and 0.10.0 does not name a
+ * role-bearing div from its text child, so a trigger with no label and no caller
+ * `aria-label` was an unnamed button even though it painted "Select…".
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -768,6 +772,48 @@ describe("Combobox", () => {
         "aria-label"
       ],
     ).toBe("Reviewer");
+
+    picker.unmount();
+  });
+
+  it("names a trigger from its placeholder when no label is authored", () => {
+    const picker = renderComponent(
+      <Combobox options={options}>
+        <ComboboxTrigger placeholder="Pick a reviewer" />
+      </Combobox>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(picker.renderer, "button"), (node) => node.name),
+    ).toEqual(["Pick a reviewer"]);
+
+    picker.unmount();
+  });
+
+  it("names a trigger from its selected labels when no label is authored", () => {
+    const picker = renderComponent(
+      <Combobox options={options} defaultValue="calendar">
+        <ComboboxTrigger />
+      </Combobox>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(picker.renderer, "button"), (node) => node.name),
+    ).toEqual(["Calendar"]);
+
+    picker.unmount();
+  });
+
+  it("keeps a caller aria-label on an unlabelled trigger", () => {
+    const picker = renderComponent(
+      <Combobox options={options}>
+        <ComboboxTrigger aria-label="  Reviewer  " />
+      </Combobox>,
+    );
+
+    expect(
+      Arr.map(nodesWithRole(picker.renderer, "button"), (node) => node.name),
+    ).toEqual(["Reviewer"]);
 
     picker.unmount();
   });

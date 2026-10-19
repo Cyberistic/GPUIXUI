@@ -275,7 +275,7 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `debounce?: number` (default `0`), `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
-| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string`, `testId?: string` (default `"combobox-trigger"`), plus the host props it accepts (`style`, `autoFocus`, focus/key handlers and `aria-*`) |
+| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string` (the accessible name; when omitted the visible selected labels or placeholder name it), `testId?: string` (default `"combobox-trigger"`), plus the host props it accepts (`style`, `autoFocus`, focus/key handlers and `aria-*`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
 | `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `testId?: string` (default `"combobox-list"`), `itemStyle?: StateStyle<ComboboxItemState>` |
@@ -326,6 +326,10 @@ same shape for a row composed by hand.
 - `align="center"` is clamped by the snap margin near a window edge.
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
+- The trigger's accessible name is `label` when authored, otherwise its visible
+  text (the selected labels, or the placeholder). Pass `label` for a
+  field-shaped name such as "Assign reviewer"; without one the control is named
+  by its content, as a browser names a button (plan 666).
 - The locally built native binding (`c0e554b…`) delivers no `focus`/`blur` for a
   programmatic or pointer focus change, so "the ring leaves while the popup
   stays open" is a live-window check, not a renderer assertion (plan 536).
@@ -336,15 +340,16 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (49 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (52 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), `defaultOpen` with its one empty-query report, the controlled
 open/close contract (a refused close leaves the popup painted), the trigger's own
 ring (auto-focused in both themes; given up while the
 popup's field holds focus), a caller `style` merging over the trigger's base, a
-disabled trigger painting no ring, a centred popup and a near-bottom popup that
-opens above its
-trigger, the trigger exposed as a button with its expanded state, filtering,
+disabled trigger painting no ring, a trigger named from its placeholder and from
+its selected labels when no `label` is authored (a caller `aria-label` still
+wins and is trimmed), a centred popup and a near-bottom popup that opens above
+its trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
 add/remove with order, the disabled row, Escape restoring focus, a second trigger

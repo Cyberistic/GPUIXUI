@@ -2,7 +2,9 @@
 
 **Workstream:** components (Tier 2). **Phase:** F, hardening.
 **Depends on:** 110, 116, 200, 201, 369, 391, 516, 565, 608.
-**Status:** planned.
+**Status:** done — `controlName` names the trigger from its display when no
+`label` is authored; 3 native cases (Combobox 52), the placeholder and selected-
+label cases failing on the old source; docs and `COMPONENTS.md` synced.
 
 ## 1. The bug, measured
 
@@ -60,15 +62,11 @@ and it keeps the documented advice to pass `label` for a field-shaped name.
 const name = controlName(rest["aria-label"] ?? label, display);
 ```
 
-- Replace the current label spread with:
-
-```tsx
-{...(name === undefined ? {} : { "aria-label": name })}
-```
-
-Keep it before `{...rest}` so a caller's `aria-label` in `rest` is still the
-value React sees last. `controlName` already reads that same value, so the two
-agree; the ordering only keeps the existing convention.
+- Spread `{...rest}` first, then `{...(name === undefined ? {} : { "aria-label": name })}`.
+  This is the convention `internal/button.tsx` uses: `controlName` has already
+  read the caller's `aria-label` from `rest`, so the computed (trimmed) name must
+  be the value React sees last. Do not leave the raw `rest` spread after the
+  computed name, or `aria-label="  Reviewer  "` would bypass trimming.
 
 Do **not** add a default `label` string such as `"Select"`; that would overload
 the placeholder and hide the fact that the field has no descriptive name. Do
