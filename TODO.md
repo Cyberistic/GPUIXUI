@@ -644,6 +644,15 @@ retired once both branches are one
       dumped `menuitemcheckbox` role. 3 native cases (Dropdown menu 53 → 56),
       the label-child and label-prop cases failing on the old source; docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] A disabled link paints no hover — plan 691; measured on 2026-10-19:
+      `NavigationMenuLink` always hands the shared button its accent `hover`,
+      and the caller's `style` merges last, so a disabled link carried the
+      enabled hover fill while `cursor` read `not-allowed` — an inert control
+      looked live. The shared `Button`/`IconButton` now drops `hover`/`active`
+      after the merge when disabled, so no wrapper can reintroduce them; 1
+      Button + 1 Navigation menu native case (Button 14 → 15, Navigation menu
+      22 → 23), both failing without the guard; docs, `COMPONENTS.md`, the
+      plan index and the inventory count synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1299,8 +1308,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
       count before plan 680 was 836/31 of 867 after plan 677. Plan 685 re-ran
       all three gates on 2026-10-19: exit 0, unit 477 in 46 files; the full
       native suite is 844 passed / 31 failed of 875 (the same plan-540 binding
-      defects). Re-run it before release — every later merge can change the
-      count.
+      defects). Plan 691 re-ran `check`, `lint`, `test` and the full native
+      suite on 2026-10-19: all three gates exit 0, unit 477 in 46 files, native
+      849 passed / 31 failed of 880 (the same plan-540 defects). Re-run it
+      before release — every later merge can change the count.
 
 ## Swarm-owned blockers (fix these)
 

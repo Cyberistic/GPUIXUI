@@ -145,6 +145,20 @@ const disabledStyle = (disabled: boolean): StyleDesc =>
     : { opacity: 1, cursor: "pointer" };
 
 /**
+ * Strip interaction diffs a caller's `style` may reintroduce.
+ * `disabledStyle` clears the variant's own hover/press, but the caller's style
+ * merges last, and a wrapper that always supplies a hover would otherwise light
+ * an inert control (plan 691).
+ */
+const inertInteraction = (
+  disabled: boolean,
+  resolved: StyleDesc | undefined,
+): StyleDesc | undefined =>
+  disabled && resolved !== undefined
+    ? { ...resolved, hover: undefined, active: undefined }
+    : resolved;
+
+/**
  * A labelled action. `variant` picks the look, `size` the density-defined
  * height; the caller's `style` is merged last and wins.
  */
@@ -187,13 +201,16 @@ export const Button = ({
         setFocused(false);
         onBlur?.(event);
       }}
-      style={mergeStyles(
-        {
-          ...controlStyle(theme, variant, size),
-          ...disabledStyle(disabled),
-          ...(focused ? focusRing(theme) : {}),
-        },
-        style,
+      style={inertInteraction(
+        disabled,
+        mergeStyles(
+          {
+            ...controlStyle(theme, variant, size),
+            ...disabledStyle(disabled),
+            ...(focused ? focusRing(theme) : {}),
+          },
+          style,
+        ),
       )}
     >
       {children}
@@ -243,26 +260,29 @@ export const IconButton = ({
         setFocused(false);
         onBlur?.(event);
       }}
-      style={mergeStyles(
-        {
-          ...textStyle(theme, "label"),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          width: side,
-          height: side,
-          borderRadius: theme.radius.md,
-          color: theme.colors.mutedForeground,
-          hover: {
-            backgroundColor: theme.colors.hover,
-            color: theme.colors.foreground,
+      style={inertInteraction(
+        disabled,
+        mergeStyles(
+          {
+            ...textStyle(theme, "label"),
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            width: side,
+            height: side,
+            borderRadius: theme.radius.md,
+            color: theme.colors.mutedForeground,
+            hover: {
+              backgroundColor: theme.colors.hover,
+              color: theme.colors.foreground,
+            },
+            active: { backgroundColor: theme.colors.active },
+            ...disabledStyle(disabled),
+            ...(focused ? focusRing(theme) : {}),
           },
-          active: { backgroundColor: theme.colors.active },
-          ...disabledStyle(disabled),
-          ...(focused ? focusRing(theme) : {}),
-        },
-        style,
+          style,
+        ),
       )}
     />
   );

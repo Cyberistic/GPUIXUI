@@ -180,6 +180,44 @@ describe("Button", () => {
     pair.unmount();
   });
 
+  it("strips a caller's interaction style while disabled", () => {
+    // A wrapper's own hover must not survive the merge on an inert control
+    // (plan 691).
+    const pair = renderComponent(
+      <div style={{ display: "flex", flexDirection: "row", gap: 16 }}>
+        <Button
+          testId="disabled"
+          disabled
+          style={{
+            hover: { backgroundColor: darkTheme.colors.accent },
+            active: { backgroundColor: darkTheme.colors.active },
+          }}
+        >
+          Save
+        </Button>
+        <Button
+          testId="enabled"
+          style={{
+            hover: { backgroundColor: darkTheme.colors.accent },
+            active: { backgroundColor: darkTheme.colors.active },
+          }}
+        >
+          Save
+        </Button>
+      </div>,
+    );
+
+    const disabled = pair.renderer.findByTestId("disabled")?.style;
+    const enabled = pair.renderer.findByTestId("enabled")?.style;
+
+    expect(disabled?.hover).toBeUndefined();
+    expect(disabled?.active).toBeUndefined();
+    expect(enabled?.hover).toBeDefined();
+    expect(enabled?.active).toBeDefined();
+
+    pair.unmount();
+  });
+
   it("is a button that a tab stop can reach", () => {
     const button = renderComponent(<Button testId="button">Save</Button>);
 

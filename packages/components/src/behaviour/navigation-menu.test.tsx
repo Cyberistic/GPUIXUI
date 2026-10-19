@@ -399,6 +399,55 @@ describe("NavigationMenu", () => {
     nav.unmount();
   });
 
+  it("keeps a disabled link inert, including its hover", () => {
+    // `NavigationMenuLink` always supplies a hover to the shared button, and the
+    // caller's style merges last; an inert link must still not light up
+    // (plan 691).
+    const onSelect = vi.fn();
+    const nav = renderComponent(
+      <NavigationMenu label="Product" defaultValue="platform">
+        <NavigationMenuList>
+          <NavigationMenuItem value="platform">
+            <NavigationMenuTrigger testId="trigger-platform">
+              Platform
+            </NavigationMenuTrigger>
+            <NavigationMenuContent testId="panel-platform">
+              <NavigationMenuLink
+                testId="link-runtime"
+                disabled
+                onSelect={() => onSelect("runtime")}
+              >
+                Runtime
+              </NavigationMenuLink>
+              <NavigationMenuLink
+                testId="link-overview"
+                onSelect={() => onSelect("overview")}
+              >
+                Overview
+              </NavigationMenuLink>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        </NavigationMenuList>
+      </NavigationMenu>,
+    );
+
+    const disabled = nav.renderer.findByTestId("link-runtime");
+    const enabled = nav.renderer.findByTestId("link-overview");
+
+    expect(disabled?.style.hover).toBeUndefined();
+    expect(disabled?.style.cursor).toBe("not-allowed");
+    expect(disabled?.customProps?.["aria-description"]).toContain("Disabled");
+    expect(enabled?.style.hover).toBeDefined();
+
+    clickCentreOf(nav, "link-runtime");
+    expect(onSelect).not.toHaveBeenCalled();
+
+    clickCentreOf(nav, "link-overview");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+
+    nav.unmount();
+  });
+
   it("ignores arrow keys on a disabled trigger and still forwards the caller's", () => {
     const onKeyDown = vi.fn();
     const nav = renderComponent(
