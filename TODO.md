@@ -1141,13 +1141,16 @@ retired once both branches are one
       recipe and the density exception, the density case asserts 36 square under
       compact and spacious, and the matrix gains the icon button (plan `375`;
       runtime 612 → 613).
-`[ ]` `packages/primitives`: **the toggle and selection families join the shadcn
-      slice** — `Toggle`/`ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/
-      `RadioGroup` still read the invented `comfortable` metrics and the icon
-      size scale. Their recipes (`toggle.tsx`'s `toggleVariants`, `checkbox.tsx`,
-      `switch.tsx`, `radio-group.tsx`'s item, `select.tsx`'s item) are **not** in
-      `@gpuixui/tw`; add the constants there first (see the `packages/tw` row),
-      then consume them from `core/recipes.ts` (plan `372` §1).
+`[!]` `packages/primitives`: **the toggle and selection families join the shadcn
+      slice** — **blocked on `packages/tw`** (another workstream). `Toggle`/
+      `ToggleGroup` and `Checkbox`/`CheckboxGroup`/`Switch`/`RadioGroup` still
+      read the invented `comfortable` metrics and the icon size scale; their
+      recipes (`toggle.tsx`'s `toggleVariants`, `checkbox.tsx`, `switch.tsx`,
+      `radio-group.tsx`'s item, `select.tsx`'s item) are **not** in
+      `@gpuixui/tw`, and this package must not copy class strings. Add the
+      constants there first (see the `packages/tw` row), then consume them from
+      `core/recipes.ts` (plan `372` §1). Re-checked 2026-10-19: `packages/tw`'s
+      `recipes.ts` exports only `INPUT_*` and `BUTTON_*`.
 `[ ]` **tokens workstream**: `docs/tokens.md` §Density and
       `docs/design-system.md` §6 still say density moves every control; plans
       `370`–`372` pin the field family (36 px, one size) and Button (32/36/40)
