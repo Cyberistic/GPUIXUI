@@ -832,7 +832,11 @@ beside the eight surfaces the `primaryText` text pairs already cover. The
 built-in dark caret it replaces measures **3.129:1** on the AAA light `input`
 and **2.795:1** on its quiet panel, under the 4.5:1 mark floor. A runnable
 example lives in
-[`src/native-field.example.ts`](./src/native-field.example.ts). Content painted
+[`src/native-field.example.ts`](./src/native-field.example.ts). A field's typed
+text is held through the inherited wash on every surface a field sits on
+(`selectionInputPairs`): the four `Surface` tones, the four row washes an
+in-place editor paints and the four soft status fills, beside the `input` fill
+`selectionPairs` already holds. Content painted
 on an opaque filled surface — a filled action such as `softAction`, or a solid
 status chip — uses `selectionStyle(theme, "fill")`: the accent-tinted wash
 composites to 1.000:1 on `primary` in six shipped palettes, so `selectionOnFill`

@@ -42,6 +42,7 @@ const appliedLists = [
   "selectionWashPairs",
   "selectionSoftPairs",
   "selectionSoftWashPairs",
+  "selectionInputPairs",
   "selectionFillPairs",
   "selectionFillInactivePairs",
   "selectionFillWashPairs",

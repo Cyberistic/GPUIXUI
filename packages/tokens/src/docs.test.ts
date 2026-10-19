@@ -1431,11 +1431,14 @@ describe("docs/tokens.md quoted figures", () => {
       "so selected text keeps the body contrast on every surface a glyph can be " +
       "selected on: `background`, `card`, `muted`, `hover`, `active` and `accent` " +
       "with `foreground`; `popover` with `popoverForeground`; `input` with " +
-      "`inputForeground`; and `selected` with both of the roles a selected row " +
-      "paints — its title `foreground` at the body floor and its inherited label " +
-      "`selectedForeground` at the secondary floor; a soft status surface carries its own tone with " +
-      "`xSoftForeground`, its description with `foreground`, its panel action with " +
-      "`softActionForeground` and its caption with `mutedForeground`.";
+      "`inputForeground`, and the same role on the `background`/`card`/`popover`/`muted` " +
+      "tones, the `hover`/`active`/`accent`/`selected` washes and the four soft status " +
+      "fills a transparent field sits on; and `selected` with both of the roles a " +
+      "selected row paints — its title `foreground` at the body floor and its inherited " +
+      "label `selectedForeground` at the secondary floor; a soft status surface carries " +
+      "its own tone with `xSoftForeground`, its description with `foreground`, its " +
+      "panel action with `softActionForeground`, its field's typed text with " +
+      "`inputForeground` and its caption with `mutedForeground`.";
     expect(markdownProse).toContain(sentence);
 
     const secondary =
@@ -1453,6 +1456,7 @@ describe("docs/tokens.md quoted figures", () => {
       "`selectionWashPairs` holds the wash itself",
       "`selectionSoftPairs` measures all four text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",
+      "`selectionInputPairs` holds `inputForeground` through the wash on the twelve surfaces a field sits on",
     ].forEach((claim) => {
       expect(markdownProse, claim).toContain(claim);
     });
@@ -3036,6 +3040,7 @@ describe("docs/design-system.md", () => {
       `| a Toast's tone glyph and bar (\`infoSoftForeground\`/\`successSoftForeground\`/\`warningSoftForeground\`/\`destructiveSoftForeground\` on \`popover\`, the shipped composition until \`components\` paints \`xText\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| status text (\`xText\`) on \`background\`/\`card\`/\`popover\`, the \`muted\` panel, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the pressed \`selectedActive\` | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection (body text over the composited \`selection\` wash on \`background\`/\`card\`/\`muted\`/\`hover\`/\`active\`/\`accent\`/\`popover\`/\`input\`, a card's own \`cardForeground\` on \`card\` and a selected row's title \`foreground\` on \`selected\`) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| text selection of typed text in a field (\`inputForeground\` over the composited \`selection\` wash on the \`background\`/\`card\`/\`popover\`/\`muted\` tones, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills; the \`input\` fill is the body-text row) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| text selection on a soft status fill (\`xSoftForeground\`, \`foreground\`, \`softActionForeground\` and \`mutedForeground\` over the wash on \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\`) | ${contrastFloors.default.body}:1 / ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.body}:1 / ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a selected row's inherited label (\`selectedForeground\` over the wash on \`selected\`, the \`accent\` wash a hovered selectable row paints and the \`hover\`/\`active\` pointer washes) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection of a menu row's label (\`popoverForeground\` over the composited \`selection\` wash on \`hover\`/\`active\`/\`selected\`) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

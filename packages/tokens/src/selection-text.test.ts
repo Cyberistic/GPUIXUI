@@ -151,10 +151,12 @@ describe("the selection wash on painted surfaces", () => {
       ({ wash, background, foreground }) =>
         wash === "selection" &&
         !statusTextRoles.has(foreground) &&
-        // The inactive label has its own washed list (plan 510), and the
-        // brand-toned link has its own (plan 528).
+        // The inactive label has its own washed list (plan 510), the
+        // brand-toned link has its own (plan 528) and a field's typed text has
+        // its own (plan 689).
         foreground !== "disabledForeground" &&
         foreground !== "primaryText" &&
+        foreground !== "inputForeground" &&
         selectionSurfaces.some((surface) => surface === background),
     );
 

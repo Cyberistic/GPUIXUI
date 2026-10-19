@@ -350,6 +350,7 @@ references without buying correctness.
 | [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
 | [686](./686-density-boundary-truth.md) | A stale density keeps the preset; the page says it empties the metrics | F | 068, 089, 380, 534, 685 | done |
 | [688](./688-plan-number-collision.md) | The plan-number collision at `433`, and the rule it exposes | F | 311, 052 | done |
+| [689](./689-field-text-selection.md) | A field's typed text through a text selection | F | 071, 087, 362, 506, 510, 527, 528, 659 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

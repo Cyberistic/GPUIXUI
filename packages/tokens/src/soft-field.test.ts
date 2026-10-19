@@ -176,9 +176,20 @@ describe("the field's content inside a soft status panel", () => {
       "body",
     ]);
 
-    expect(failures).toHaveLength(1);
+    expect(failures).toHaveLength(2);
+    // The at-rest pair comes from `softFieldPairs`, the washed one from
+    // `selectionInputPairs` (plan 689); both read the same erased composition.
+    expect(failures.map(({ wash }) => wash ?? "at-rest")).toEqual([
+      "at-rest",
+      "selection",
+    ]);
+    // The erased ink is the fill itself at rest; through the wash the fill
+    // moves 1.292:1 away, which is still far under the body floor.
     expect(failures[0]?.ratio).toBe(1);
-    expect(failures[0]?.floor).toBe(contrastFloors.default.body);
+    expect(failures[1]?.ratio).toBeLessThan(contrastFloors.default.body);
+    failures.forEach(({ floor }) =>
+      expect(floor).toBe(contrastFloors.default.body),
+    );
   });
 
   it("leaves every shipped set passing the whole guarantee", () => {

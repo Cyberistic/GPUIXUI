@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 311/388
+`[x]` `[████████░░]` 312/389
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2623,6 +2623,15 @@ pinned `@gpuix/native@0.10.0` exposes no `registerFont` (verified again on a
 resolved install), so the plan stays blocked upstream rather than on B1, and
 its evidence command now discovers the package instead of naming one worktree
 (plan 688)
+`[x]` Hold a field's typed text through a text selection on every surface a
+field sits on — `inputForeground` had at-rest pairs on thirteen surfaces, plus the
+pressed selected row, but a washed pair on `input` only, so an edited dark theme with
+`inputForeground: "#D3D8E1"` returned `[]` from every check while its selected
+text measured 5.657:1 on `selected`, 6.600:1 on `active` and under 7:1 on all
+four soft status fills; `selectionInputPairs` adds the twelve washed pairs (the
+`input` fill stays in `selectionPairs`), a structural guard holds it to the
+at-rest domain, and the catalogue, design system, README and ledger name it
+(plan 689)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`. Add a check that fails

@@ -112,8 +112,12 @@ describe("typed text on the canvas field", () => {
       colors: { muted: lightColors.inputForeground },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ foreground, background }) =>
-        foreground === "inputForeground" && background === "muted",
+      ({ foreground, background, wash }) =>
+        foreground === "inputForeground" &&
+        background === "muted" &&
+        // The washed pair is `selectionInputPairs`; this case is the at-rest
+        // canvas a transparent field paints.
+        wash === undefined,
     );
 
     expect(failures).toHaveLength(1);

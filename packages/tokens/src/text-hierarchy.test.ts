@@ -105,9 +105,14 @@ describe("text hierarchy", () => {
         colors: { [role]: identity.colors.mutedForeground },
       });
 
-      // The floor check cannot see it: identity light's secondary text measures
-      // 9.671:1 on a card and on a field, above the 7:1 body floor.
-      expect(themeContrastFailures(flattened), role).toEqual([]);
+      // The hierarchy is the check that sees a card or a menu flattened:
+      // identity light's secondary text measures 9.671:1 on a card and on a
+      // field at rest, above the 7:1 body floor. A field's ink is also measured
+      // through the selection wash on the surfaces a field sits on, so that
+      // flattening is a contrast failure too (plan 689).
+      expect(themeContrastFailures(flattened).length === 0, role).toBe(
+        role !== "inputForeground",
+      );
       expect(themeTextTierFailures(flattened), role).toContainEqual(
         expect.objectContaining({
           dimmer: "mutedForeground",

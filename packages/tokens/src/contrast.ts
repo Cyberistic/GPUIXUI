@@ -1741,6 +1741,28 @@ export const selectionSoftWashPairs: readonly ContrastPair[] =
   softSurfaceRoles.map((role): ContrastPair => ["selection", role, "surface"]);
 
 /**
+ * The surfaces a field's typed text sits on beyond the `input` fill
+ * {@link selectionPairs} already holds: the four `Surface` tones a transparent
+ * field paints, the four washes an in-place editor paints and the four soft
+ * status fills a field inside a status panel paints. The role is
+ * `inputForeground`, not the `foreground` the surface's body copy uses — a theme
+ * may give a field its own ink — and a reader selects typed text on every one
+ * of them. A probe on the dark identity with `inputForeground: "#D3D8E1"`
+ * returned `[]` from every check while the selected text measured **5.657:1**
+ * on `selected`, under the body floor (plan 689).
+ *
+ * The hint (`placeholder`) is deliberately absent: a placeholder is not typed
+ * text and is not a selection a reader can drag. The pressed `selectedActive`
+ * row is absent for the same reason it stays out of the selection-wash
+ * contract: a row is selected at rest.
+ */
+export const selectionInputPairs: readonly ContrastPair[] = [
+  ...inputTextSurfaces,
+  ...stateWashes,
+  ...softSurfaceRoles,
+].map((background): ContrastPair => ["inputForeground", background, "body"]);
+
+/**
  * The page layout a modal covers: the canvas, a card, the quiet panel, the
  * field fill a form paints, the persistent `selected` fill a table or list keeps
  * and the floating surface a nested dialog opens on. The scrim's perceivability
@@ -2017,6 +2039,10 @@ const elevationFailures = (
  *   part of the same list. `selectionLinkPairs` holds the brand-toned link
  *   through the same wash on the same surfaces, because `primaryText` is text a
  *   reader selects.
+ * - `selectionInputPairs` — a field's typed text (`inputForeground`) through the
+ *   same wash on the surfaces a field sits on beyond its own `input` fill; the
+ *   fill itself is the `inputForeground` pair in `selectionPairs`, so together
+ *   they cover every surface the role is measured on at rest.
  * - `selectionInactivePairs` — the unavailable label through the same wash, on
  *   `inactiveSurfaces`; the floor is the library's own inactive design floor,
  *   because a disabled control is still read.
@@ -2103,6 +2129,7 @@ export function themeContrastFailures(
     ...textOverWashFailures(selectionInactivePairs, "selection", theme, floors),
     ...washVisibilityFailures(selectionWashPairs, "selection", theme, floors),
     ...textOverWashFailures(selectionSoftPairs, "selection", theme, floors),
+    ...textOverWashFailures(selectionInputPairs, "selection", theme, floors),
     ...washVisibilityFailures(
       selectionSoftWashPairs,
       "selection",

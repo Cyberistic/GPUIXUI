@@ -212,6 +212,7 @@ import {
   selectionFillInactivePairs,
   selectionFillWashPairs,
   selectionInactivePairs,
+  selectionInputPairs,
   selectionLinkPairs,
   selectionPairs,
   selectionSoftPairs,
@@ -308,6 +309,7 @@ const publishedPairLists: Readonly<
   selectionFillPairs,
   selectionFillWashPairs,
   selectionInactivePairs,
+  selectionInputPairs,
   selectionLinkPairs,
   selectionPairs,
   selectionSoftPairs,
@@ -588,6 +590,10 @@ describe("themeContrastFailures", () => {
         foreground,
         background,
       ]),
+      ...selectionInputPairs.map(([foreground, background]) => [
+        foreground,
+        background,
+      ]),
     ]);
   });
 
@@ -723,6 +729,7 @@ describe("themeContrastFailures", () => {
     expect(selectionLinkPairs).toHaveLength(13);
     expect(selectionWashPairs.length).toBe(10);
     expect(selectionSoftPairs.length).toBe(16);
+    expect(selectionInputPairs).toHaveLength(12);
     expect(selectionSoftWashPairs.length).toBe(4);
     expect(selectionFillPairs).toHaveLength(8);
     expect(selectionFillInactivePairs).toHaveLength(1);
@@ -1050,6 +1057,7 @@ describe("contract completeness", () => {
       ...selectionLinkPairs,
       ...selectionWashPairs,
       ...selectionSoftPairs,
+      ...selectionInputPairs,
       ...selectionSoftWashPairs,
       ...selectionFillPairs,
       ...selectionFillWashPairs,

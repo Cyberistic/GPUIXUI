@@ -1586,11 +1586,14 @@ translucent (24% in the light default theme, 14% in dark and 30% at high
 contrast), so selected text keeps the body contrast on every surface a glyph can
 be selected on: `background`, `card`, `muted`, `hover`, `active` and `accent`
 with `foreground`; `popover` with `popoverForeground`; `input` with
-`inputForeground`; and `selected` with both of the roles a selected row
-paints — its title `foreground` at the body floor and its inherited label
-`selectedForeground` at the secondary floor; a soft status surface carries its
-own tone with `xSoftForeground`, its description with `foreground`, its panel
-action with `softActionForeground` and its caption with `mutedForeground`. A card
+`inputForeground`, and the same role on the `background`/`card`/`popover`/`muted`
+tones, the `hover`/`active`/`accent`/`selected` washes and the four soft status
+fills a transparent field sits on; and `selected` with both of the roles a
+selected row paints — its title `foreground` at the body floor and its inherited
+label `selectedForeground` at the secondary floor; a soft status surface carries
+its own tone with `xSoftForeground`, its description with `foreground`, its
+panel action with `softActionForeground`, its field's typed text with
+`inputForeground` and its caption with `mutedForeground`. A card
 carries two text roles — the default `foreground` a `CardTitle` paints and its
 own `cardForeground`, which a context menu trigger sets on its `card` fill — so
 both are measured through the wash. A surface can carry a second body role. A
@@ -1604,7 +1607,18 @@ wash, under 7:1, while every check returned `[]`; the value moves one iris step
 tightest, no other colour moving.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
-message timestamp is selected with the body copy around it. The soft surfaces
+message timestamp is selected with the body copy around it. A field's typed text
+is measured separately: `selectionInputPairs` holds `inputForeground` through the
+wash on the twelve surfaces a field sits on beyond its own `input` fill — the
+four `Surface` tones, the four washes an in-place editor paints and the four soft
+status fills. The `input` fill is the `inputForeground` pair in `selectionPairs`,
+so the two lists together cover every surface the role is measured on at rest.
+The hint is not typed text, so `placeholder` is deliberately absent, and so is
+the pressed `selectedActive` row a reader does not select in. A theme may give a
+field its own ink apart from `foreground`: an edited dark identity with
+`inputForeground: "#D3D8E1"` returned `[]` from every check while its selected
+text measured **5.657:1** on `selected`, under the body floor (plan `689`). Every
+shipped set clears the floor as shipped, so no colour moves. The soft surfaces
 are held in both directions too: `selectionSoftPairs` measures all four text
 roles a status panel carries — the tone's `xSoftForeground`, the body
 `foreground` its description paints, the panel action's
@@ -3942,7 +3956,10 @@ list — `selectionInactivePairs` holds `disabledForeground` over the wash on th
 fourteen `inactiveSurfaces`, because a selected disabled label measured
 **2.586:1** on Windows light's `selected` fill and 3.430 / 4.357:1 in the AAA
 sets while every check returned `[]`; the three values moved and the tightest
-washed pair is **3.177:1** (plan `510`).
+washed pair is **3.177:1** (plan `510`). A field's typed text is held on the
+twelve surfaces a field sits on beyond its `input` fill (`selectionInputPairs`),
+whose own pair is in `selectionPairs`, so the two lists cover the role's whole
+at-rest domain (plan `689`).
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over the twenty-one surfaces `overlaySurfaces` names — `background`, `card`,
@@ -3971,7 +3988,7 @@ move no colour.
 
 Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionWashPairs`, `selectionSoftPairs`, `selectionSoftWashPairs`,
-`selectionFillPairs`, `selectionFillWashPairs`,
+`selectionInputPairs`, `selectionFillPairs`, `selectionFillWashPairs`,
 `selectionFillInactivePairs`, `softPanelTextPairs`, `selectionInactivePairs` and
 `overlayWashPairs` measure the
 painted roles — `inactivePairs` is the fourteen-surface
