@@ -2139,6 +2139,18 @@ retired once both branches are one
       `691`; offline 62 files / 868 tests, full runtime 59 files / 823 tests
       green twice.
 
+`[x]` `packages/primitives`: **a composite identified its focused item and its
+      `multiple` tab stop by array index** — a reordered/filtered `options` prop
+      moved both to whichever item now sat at that index. `useRovingFocus` now
+      stores the focused **host id** and keys the registry by the caller's
+      ordered values (React does not re-run a moved row's ref), `ToggleGroup`
+      derives its `multiple` stop from the option's **value**, and
+      `CheckboxGroup` uses the one hook instead of a second copy of the focus
+      state. `runtime/focus-identity.runtime.test.tsx` fails 2/3 in the old
+      direction (`Tab` landed on `tg-italic`; the checkbox ring painted on
+      `cg-beta`) and 3/3 green; affected suites 104/104, full runtime 60 files /
+      826 tests, offline 62 files / 868 tests (plan `692`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the
