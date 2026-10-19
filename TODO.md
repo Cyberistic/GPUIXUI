@@ -118,6 +118,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       headless **103/103** (**3653** checks, 64 capabilities), exit `0`; the
       ledger totals moved from 3632. Plan `586` §9.
 
+`[x]` Prove the **document half of search and replace in a real window** per
+      plan `587`: `live-search-replace` (48 checks) reuses the `search-replace`
+      view in the real `1100×720` window — real typing drives the query
+      (`errorx` → `total=0`, Backspace → `5`), the find cursor steps, one
+      replace recounts/re-washes (`total=4`, `an fixed follows`), replace-all
+      empties the document, reset restores (`fired=1`), a count-preserving
+      `ERROR` replace moves the washes without a count event, longer/shorter
+      replacements put the survivor at starts `7`/`4`, the length-changing
+      replace-all rewrites once, and `<code>` re-highlights by prop. **Measured
+      harness trap:** a reset restores `total=5` before the keyed remount
+      commits, so the twin waits for `sr-doc-text`; without it the longer/
+      shorter checks read zero washes. Six mutation proofs observed and
+      reverted (plan §8). Live registry `75 → 76`; focused id run:
+      `live-search-replace` (four green, six mutation runs) plus headless
+      `search-replace`.
+
 `[ ]` **Cross-team:** any future image-preview component (owner:
       `components`/`primitives`) must own its **error state** — 0.10.0's
       `<img>` exposes no load/error event, a failed path/URL paints only a

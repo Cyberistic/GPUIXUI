@@ -46,7 +46,7 @@ const EDITOR_TEXT = "error in the editor";
 const INPUT_TEXT = "error in an input";
 
 /** Washes whose every box sits inside `box`, with a pixel of tolerance. */
-const inside = (
+export const inside = (
   box: Smoke.Bounds,
   washes: ReadonlyArray<Smoke.HighlightMatch>,
 ): ReadonlyArray<Smoke.HighlightMatch> =>
@@ -62,7 +62,7 @@ const inside = (
   );
 
 /** The washes painted in one known line. */
-const inLine = (
+export const inLine = (
   washes: ReadonlyArray<Smoke.HighlightMatch>,
   line: string,
 ): ReadonlyArray<Smoke.HighlightMatch> =>

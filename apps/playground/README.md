@@ -1353,7 +1353,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 75 scenarios. `smoke:live` opens
+live registry lists 76 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1388,6 +1388,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-variable-rows` | the variable-height list in a window: rows stack at 20/40/60 px, a real click expands row 2 to 120 px and moves the rows below by exactly `+60` with the anchor unmoved, a second click collapses, `scrollToItem(30)` sits row 30 at the viewport top, and a real wheel keeps its in-row offset — 49 checks (plan `534`) |
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
+| `live-search-replace` | the document half of find/replace in a window: real typing drives the query (`errorx` → `total=0`, Backspace → `total=5`), the cursor steps, one replace recounts and re-washes (`total=4`, `an fixed follows`), replace-all empties the document, reset restores (`fired=1`), a count-preserving `ERROR` replace moves the washes without a new count event, longer/shorter replacements shift survivors (start `7` / `4`), a length-changing replace-all rewrites once, and `<code>` re-highlights by prop — 48 checks (plan `587`) |
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
 | `live-log` | the log viewer opens at the tail (`[30,0]`), a real click and append follow to `[50,0]`, a real wheel over the wrapper moves the reader to `[31,0]` and leaves the tail unpainted, an append while scrolled up keeps `[31,0]` and does not yank, the at-end sentinel returns to `[70,0]`, and the next append follows to `[90,0]` — 26 checks (plan `571`). Measured: a **bottom-aligned** list reports the anchor as `[count, 0]` at the tail, not the max-scroll row/offset a plain list reports |
 | `live-restore` | the shipped `workspace-restore` probe in a window: a paced divider drag paints 320 → 400, a tab activation makes `active=two`, `scrollToItem(120, 16)` anchors the list, and save → reset → restore re-applies the split, the tab and the anchor exactly (`[120,16]`, row 120 painted, row 0 absent). Native focus is **not** restored, and a click on row 121 focuses the restored list |
@@ -1409,6 +1410,28 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
 | `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
 | `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
+
+### Search and replace in a real window (plan `587`)
+
+The **document** half of the find/replace contract (plan `334`) was measured only
+offscreen, while the editor half already had `live-replace`. `live-search-replace`
+(48 checks) reuses the `search-replace` view in the real window.
+
+| Fact | Measured in the window |
+| ---- | ---------------------- |
+| typing | the query is the native editor: `error` + `x` makes `total=0`, Backspace restores `5` |
+| one replace | from cursor 2 → `total=4`; `an fixed follows` paints no wash and the active wash is on `the last error` |
+| replace-all | `total=0`, 0 document washes, no `error` left; stepping is inert |
+| reset | `total=5` and `fired=1`; the surface is keyed, so the reset is a real remount |
+| count-preserving replace | `ERROR error here` paints `ERROR,error` and `sr-events` does **not** change |
+| length changes | a longer replacement (`errors`) leaves the next match at start `7`; a shorter one (`err`) leaves the survivor at `4` |
+| fold order | a length-changing replace-all rewrites each match exactly once |
+| `<code>` | two washes before the prop rewrite, none after |
+
+**Harness lesson:** after a reset the count is already `5` before the remount
+commits, so waiting on `total=5` alone returns immediately and the next click
+lands on the old tree. The twin waits for `sr-doc-text` after every reset.
+Six mutation proofs are recorded in plan `587` §8.
 
 ### The content surfaces in a real window (plan `577`)
 

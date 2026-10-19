@@ -61,6 +61,12 @@ import { logViewerScenario } from "../scenarios/log-viewer.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
 import { workspacePanesScenario } from "../scenarios/workspace-panes.js";
 import { replaceScenario } from "../scenarios/replace.js";
+import {
+  inLine,
+  inside,
+  searchReplaceScenario,
+} from "../scenarios/search-replace.js";
+import { matchText } from "../scenarios/replace-state.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
 import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
 import { tier2MenuScenario } from "../scenarios/tier2-menu.js";
@@ -4610,6 +4616,261 @@ const replace: LiveScenario = {
       yield* waitForText(ctx, "replace-state", "last=noop");
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${replace.id}.png`);
+    }),
+};
+
+const searchReplace: LiveScenario = {
+  id: "live-search-replace",
+  title: "Live search and replace: document mutation, washes and the cursor",
+  capability: "search",
+  view: searchReplaceScenario.view,
+  ready: "sr-doc",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const docWashes = Effect.gen(function* () {
+        const box = yield* boxOf(ctx, "sr-doc");
+        return inside(box, yield* ctx.host.highlights());
+      });
+      const lineWashes = (line: string) =>
+        Effect.map(ctx.host.highlights(), (washes) => inLine(washes, line));
+
+      // 1. The baseline document: five matches, the first active.
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* ctx.expectContains(
+        "the live find bar counts every document match",
+        yield* textOf(ctx, "sr-total"),
+        "total=5",
+      );
+      yield* ctx.expectContains(
+        "the live find cursor starts on the first match",
+        yield* textOf(ctx, "sr-total"),
+        "active=0",
+      );
+      yield* ctx.expectContains(
+        "the live document paints its fixture lines",
+        yield* textOf(ctx, "sr-doc-text"),
+        "error error here|an error follows|no match|the last error|another error closes",
+      );
+      const initial = yield* docWashes;
+      yield* ctx.expectEqual(
+        "the live document paints one wash per match",
+        Arr.length(initial),
+        5,
+      );
+      yield* ctx.expectEqual(
+        "every live document wash is the queried word",
+        Arr.every(
+          initial,
+          (match) =>
+            Str.toLowerCase(matchText(match.text, [match.start, match.end])) ===
+            "error",
+        ),
+        true,
+      );
+
+      // 2. Real typing drives the query field, not component-only state.
+      yield* ctx.host.click("sr-query");
+      yield* settle;
+      yield* ctx.host.key("end");
+      yield* ctx.host.key("x");
+      yield* waitForText(ctx, "sr-total", "total=0");
+      yield* ctx.expectContains(
+        "a real keystroke rewrites the live query",
+        yield* textOf(ctx, "sr-total"),
+        "total=0",
+      );
+      yield* ctx.host.key("backspace");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* ctx.expectContains(
+        "deleting the keystroke restores the live matches",
+        yield* textOf(ctx, "sr-total"),
+        "total=5",
+      );
+
+      // 3. The cursor and one replacement.
+      yield* ctx.host.click("sr-next");
+      yield* ctx.host.click("sr-next");
+      yield* waitForText(ctx, "sr-total", "active=2");
+      yield* ctx.expectContains(
+        "the live cursor reaches the third match",
+        yield* textOf(ctx, "sr-total"),
+        "active=2",
+      );
+      yield* ctx.host.click("sr-replace-one");
+      yield* waitForText(ctx, "sr-total", "total=4");
+      yield* ctx.expectContains(
+        "one live replace decrements the count",
+        yield* textOf(ctx, "sr-total"),
+        "total=4",
+      );
+      yield* ctx.expectContains(
+        "the live replaced line loses its match",
+        yield* textOf(ctx, "sr-doc-text"),
+        "an fixed follows",
+      );
+      const afterOne = yield* lineWashes("an fixed follows");
+      yield* ctx.expectEqual(
+        "the live replaced line paints no wash",
+        Arr.length(afterOne),
+        0,
+      );
+      yield* ctx.expectContains(
+        "the live cursor stays on the following match",
+        yield* textOf(ctx, "sr-total"),
+        "active=2",
+      );
+      yield* ctx.expectEqual(
+        "the live active wash is on the fourth line",
+        Arr.length(yield* lineWashes("the last error")),
+        1,
+      );
+
+      // 4. Replace-all empties the document.
+      yield* ctx.host.click("sr-replace-all");
+      yield* waitForText(ctx, "sr-total", "total=0");
+      yield* ctx.expectContains(
+        "live replace-all empties the match count",
+        yield* textOf(ctx, "sr-total"),
+        "total=0",
+      );
+      yield* ctx.expectEqual(
+        "live replace-all clears every document wash",
+        Arr.length(yield* docWashes),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "live replace-all rewrites every matching line",
+        Str.includes("error")(yield* textOf(ctx, "sr-doc-text")),
+        false,
+      );
+      yield* ctx.host.click("sr-next");
+      yield* ctx.host.click("sr-previous");
+      yield* settle;
+      yield* ctx.expectContains(
+        "stepping an empty live result set keeps the cursor at zero",
+        yield* textOf(ctx, "sr-total"),
+        "total=0 active=0",
+      );
+
+      // 5. Reset, then a count-preserving replacement (the wash moves, the
+      // count event must not).
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "error error here");
+      yield* ctx.expectContains(
+        "live reset restores every match",
+        yield* textOf(ctx, "sr-total"),
+        "total=5",
+      );
+      yield* ctx.expectContains(
+        "one live count event paints the restored document",
+        yield* textOf(ctx, "sr-events"),
+        "fired=1",
+      );
+      const eventsBefore = yield* textOf(ctx, "sr-events");
+      yield* ctx.host.click("sr-uppercase");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "ERROR error here");
+      yield* ctx.expectEqual(
+        "a live count-preserving replace fires no new event",
+        yield* textOf(ctx, "sr-events"),
+        eventsBefore,
+      );
+      yield* ctx.expectEqual(
+        "the live count-preserving wash follows the rewritten run",
+        Arr.join(Arr.map(yield* lineWashes("ERROR error here"), matched), ","),
+        "ERROR,error",
+      );
+
+      // 6. A longer replacement shifts the survivor by its delta.
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "error error here");
+      yield* ctx.host.click("sr-longer");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "errors error here");
+      const longer = yield* lineWashes("errors error here");
+      yield* ctx.expectEqual(
+        "a live longer replacement paints both matches",
+        Arr.length(longer),
+        2,
+      );
+      yield* ctx.expectEqual(
+        "a live longer replacement shifts the next match by its delta",
+        Option.getOrElse(
+          Option.map(Arr.get(longer, 1), (match) => match.start),
+          () => -1,
+        ),
+        7,
+      );
+
+      // 7. A shorter replacement shrinks the count and the survivor offset.
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "error error here");
+      yield* ctx.host.click("sr-shorter");
+      yield* waitForText(ctx, "sr-total", "total=4");
+      yield* waitForText(ctx, "sr-doc-text", "err error here");
+      const shorter = yield* lineWashes("err error here");
+      yield* ctx.expectEqual(
+        "the live survivor keeps its offset after the shrink",
+        Option.getOrElse(
+          Option.map(Arr.head(shorter), (match) => match.start),
+          () => -1,
+        ),
+        4,
+      );
+
+      // 8. The length-changing replace-all: the fold order is load-bearing.
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "error error here");
+      yield* ctx.host.click("sr-replace-all-short");
+      yield* waitForText(ctx, "sr-total", "total=0");
+      yield* ctx.expectEqual(
+        "a live length-changing replace-all rewrites every match once",
+        yield* textOf(ctx, "sr-doc-text"),
+        "err err here|an err follows|no match|the last err|another err closes",
+      );
+
+      // 9. A rendered code block replaces by prop and its washes follow.
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* waitForText(ctx, "sr-doc-text", "error error here");
+      const codeBefore = Arr.filter(
+        yield* ctx.host.highlights(),
+        (match) =>
+          Str.startsWith("const error")(match.text) ||
+          Str.startsWith("console.log")(match.text),
+      );
+      yield* ctx.expectEqual(
+        "the live code block paints its two matches",
+        Arr.length(codeBefore),
+        2,
+      );
+      yield* ctx.host.click("sr-code-replace");
+      yield* waitForText(ctx, "sr-code-text", "const value = 1;");
+      yield* ctx.expectContains(
+        "the live code block's source is replaced",
+        yield* textOf(ctx, "sr-code-text"),
+        "const value = 1;|console.log(value);",
+      );
+      yield* ctx.expectEqual(
+        "replacing the live source removes its washes",
+        Arr.length(
+          Arr.filter(
+            yield* ctx.host.highlights(),
+            (match) =>
+              Str.includes("const error")(match.text) ||
+              Str.includes("console.log(error)")(match.text),
+          ),
+        ),
+        0,
+      );
+
+      yield* ctx.host.click("sr-reset");
+      yield* waitForText(ctx, "sr-total", "total=5");
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${searchReplace.id}.png`);
     }),
 };
 
@@ -9733,6 +9994,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTier2Command,
   commandPalette,
   replace,
+  searchReplace,
   inspector,
   dataGridColumns,
   grid,
