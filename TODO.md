@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 241/319
+`[x]` `[████████░░]` 242/320
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2010,6 +2010,15 @@ measured **1.036:1** inside the block while `themeFailures` returned `[]`;
 shipped set already clears the 1.05:1 floor (1.130:1 at the tightest,
 `Dark · Linux`) so no colour moves, and the reference, design system, README and
 ledger name it (plan 589)
+`[x]` Hold inline code on its accent wash — a markdown document paints
+`codeText` (`primaryText`) on an opaque `codeWash` (`accent`) quad, but the only
+pair for that combination was the accent row fill's secondary floor, so four
+shipped sets measured 6.506:1 (`Light · Windows XP`), 6.898:1 (`Dark · Linux`),
+6.953:1 (`Light · Windows`) and 6.960:1 (`Dark · macOS`) under the body floor
+while `themeFailures` returned `[]`; `nativeInlineCode` owns the pair at the
+body floor, the four inks (and macOS light's three-decimal 7.006:1 pass) take
+one designed step, the tightest is 7.102:1 (`Light · Windows XP`), and the
+reference, design system, README and ledger name it (plan 590)
 
 ## Phase C — Tier 1–2 components
 

@@ -64,7 +64,7 @@ export const windowsPlatformStyle = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#005BA1",
       primaryActive: "#004E8C",
-      primaryText: "#004F8A",
+      primaryText: "#004A82",
       // The native code surface: the inherited blue-700 ink measured 7.000:1 on
       // the canvas through the runtime's 3.5% ink wash — a three-decimal pass
       // with no margin — so the document's type-name captures take one blue step

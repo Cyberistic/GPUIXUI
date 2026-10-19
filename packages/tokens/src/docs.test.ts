@@ -1441,7 +1441,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
   it("quotes the row-text and status ratios the shipped themes produce", () => {
     const quoted = [
-      ["primaryText", "selected", "Linux dark", 5.68],
+      ["primaryText", "selected", "Windows dark", 5.69],
       ["foreground", "selected", "Linux dark", 8.44],
       ["popoverForeground", "selected", "Linux dark", 8.98],
       ["selectedForeground", "active", "macOS light", 6.22],

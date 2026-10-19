@@ -227,8 +227,8 @@ describe("a brand-toned link through a text selection", () => {
 
     const selected = tightestOn("selected");
     expect([selected.name, selected.ratio.toFixed(3)]).toEqual([
-      "Dark · Linux",
-      "5.675",
+      "Dark · Windows",
+      "5.688",
     ]);
   });
 

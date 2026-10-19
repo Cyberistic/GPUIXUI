@@ -97,7 +97,7 @@ export const linuxPlatformStyle = {
       primaryForeground: "#000000",
       primaryHover: "#99C1F1",
       primaryActive: "#A9CCF5",
-      primaryText: "#A5CBF5",
+      primaryText: "#B4D5F7",
       accent: "#1B3A5C",
       accentForeground: "#B4D5F7",
       accentHover: "#20446C",

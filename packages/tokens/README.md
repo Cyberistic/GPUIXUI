@@ -791,12 +791,15 @@ document may paint on (`nativeTextSurfaces`). The runtime's fixed fade fractions
 and 3.5% code-block ink wash are measured by `themeNativeTextFailures` on the
 same tones, at the body, secondary, mark and perceivability floors the lists
 name; a role lifted until its opaque pair just passes is still reported once it
-is faded (6.405:1 and 6.335:1 for the two planted edits the suite states).
+is faded (6.405:1 and 6.315:1 for the two planted edits the suite states).
 `nativeTextWashes` adds the runtime's own chrome — a code block's body frame on
 the 3.5% ink wash and its language header and separator on 2%, a diff file header
 on 2.5% and its hover on 5% — so a `border` or label that clears every
-plain-surface pair cannot disappear into the wash. The
-word-level 28% diff wash is the one documented omission. The light platform
+plain-surface pair cannot disappear into the wash. `nativeInlineCode` holds the
+other composition on a fill: `codeText` (`primaryText`) on the opaque `codeWash`
+(`accent`) quad is body copy, so it takes the body floor; four sets measured
+6.506–6.960:1 and their ink takes one designed step. The word-level 28% diff
+wash and the runtime's fixed neutral hairlines are documented omissions. The light platform
 styles name their own status
 text steps where the inherited ink missed the body floor through the wash or a
 find highlight. `NativeTextMetrics` carries the runtime's two token-less chrome

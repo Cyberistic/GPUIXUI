@@ -58,6 +58,33 @@ export const nativeTextFades: readonly NativeTextFade[] = [
 ];
 
 /**
+ * The inline-code composition: `codeText` is body copy painted on the opaque
+ * `codeWash` quad the runtime draws under the runs, so the wash is the surface.
+ */
+export interface NativeInlineCode {
+  /** The `NativeTextTheme` field painted. */
+  readonly text: keyof typeof nativeTextRoles;
+  /** The field painted behind it, as an opaque surface. */
+  readonly wash: keyof typeof nativeTextRoles;
+  /** The floor the painted text must clear. */
+  readonly pairClass: ContrastPairClass;
+}
+
+/**
+ * Inline code is `codeText` (`primaryText`) on the opaque `codeWash` (`accent`)
+ * quad the runtime paints under the runs. Unlike a fade, nothing is composited:
+ * the wash *is* the surface. The text is body copy, so the pair is held to the
+ * body floor — the secondary floor the accent row fill already has for a link
+ * is too weak. Four shipped sets measured 6.506–6.960:1 before their ink took
+ * one designed step.
+ */
+export const nativeInlineCode: NativeInlineCode = {
+  text: "codeText",
+  wash: "codeWash",
+  pairClass: "body",
+};
+
+/**
  * Text the runtime paints over a second faded role: a diff line's body over the
  * row tint, and a blockquote's body over the accent wash.
  */
@@ -164,7 +191,7 @@ export interface NativeTextFailure {
   readonly field?: keyof typeof nativeTextRoles;
   /** The semantic role measured. */
   readonly role: keyof ThemeColors;
-  /** The document tone the paint sat on. */
+  /** The document tone, or the opaque wash, the paint sat on. */
   readonly surface: keyof ThemeColors;
   /** The fraction of the role painted; `1` when it is painted whole. */
   readonly opacity: number;
@@ -192,19 +219,25 @@ export interface NativeTextFailure {
  * not own; none of those compositions is a token pair, so
  * {@link themeContrastFailures} cannot see them. This is the ninth check: it
  * holds {@link nativeTextFades}, {@link nativeTextOverFades},
- * {@link nativeTextWashes} and every syntax role through {@link nativeInk} on
- * all four {@link nativeTextSurfaces} tones, at the floors
- * {@link contrastFloors} owns.
+ * {@link nativeInlineCode}, {@link nativeTextWashes} and every syntax role
+ * through {@link nativeInk} on all four {@link nativeTextSurfaces} tones, at the
+ * floors {@link contrastFloors} owns.
  *
  * The check is what makes the extension guarantee whole for a native document: a
  * role lifted until its opaque pair just passes is still under the floor once
  * the runtime fades or washes it. A copied theme with `successText: "#bebebe"`
  * on identity dark returns `[]` from the other checks while a string token
  * measures **6.405:1** through the ink wash, and a `mutedForeground` of
- * `"#bebebe"` paints a blockquote at **6.335:1**, both under the body floor. A
+ * `"#bebebe"` paints a blockquote at **6.315:1**, both under the body floor. A
  * `border: "#303030"` theme on `Dark · macOS` clears every plain-surface pair
  * and measures **1.002:1** on the code header's 2% wash; on `Dark`, a
  * `border: "#222222"` measures **1.036:1** on the block's own 3.5% body wash.
+ *
+ * Inline code is a text-on-fill pair, not a fade: `codeText` (`primaryText`) is
+ * painted on the opaque `codeWash` (`accent`) quad. Four shipped sets measured
+ * 6.506–6.960:1 there, under the body floor, while every other check returned
+ * `[]`; their ink takes one designed step. {@link nativeInlineCode} owns the
+ * pair and reports any theme that resolves it below the body floor.
  *
  * @example
  * ```ts
@@ -272,6 +305,26 @@ export function themeNativeTextFailures(
           ];
     });
   });
+  const inlineRole = nativeTextRoles[nativeInlineCode.text];
+  const inlineWash = nativeTextRoles[nativeInlineCode.wash];
+  const inlineRatio = contrastRatio(
+    theme.colors[inlineRole],
+    theme.colors[inlineWash],
+  );
+  const inlineFailures =
+    inlineRatio >= floors[nativeInlineCode.pairClass]
+      ? []
+      : [
+          {
+            field: nativeInlineCode.text,
+            role: inlineRole,
+            surface: inlineWash,
+            opacity: 1,
+            pairClass: nativeInlineCode.pairClass,
+            floor: floors[nativeInlineCode.pairClass],
+            ratio: inlineRatio,
+          },
+        ];
   const washFailures = nativeTextWashes.flatMap((wash) => {
     const role = nativeTextRoles[wash.field];
     return nativeTextSurfaces.flatMap((surface) => {
@@ -318,6 +371,7 @@ export function themeNativeTextFailures(
   return [
     ...fadeFailures,
     ...overFadeFailures,
+    ...inlineFailures,
     ...washFailures,
     ...inkFailures,
   ];

@@ -69,7 +69,7 @@ export const macosPlatformStyle = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0063CC",
       primaryActive: "#004C99",
-      primaryText: "#004A9A",
+      primaryText: "#00478F",
       // The native code surface: the inherited blue-700 ink measured 6.96:1 on
       // macOS' canvas through the runtime's 3.5% ink wash, under the 7:1 body
       // floor, so the document's type-name captures take one blue step (plan
@@ -111,7 +111,7 @@ export const macosPlatformStyle = {
       primaryForeground: "#000000",
       primaryHover: "#409CFF",
       primaryActive: "#64B5FF",
-      primaryText: "#96CDFF",
+      primaryText: "#A4D4FF",
       accent: "#1C3A57",
       accentForeground: "#A8D4FF",
       accentHover: "#284F73",

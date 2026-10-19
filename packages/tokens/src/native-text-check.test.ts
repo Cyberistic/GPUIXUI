@@ -21,9 +21,15 @@
  * plain-surface pair and measures **1.036:1** on the body wash while every other
  * check returns `[]`.
  *
+ * Plan 590 adds inline code: `codeText` (`primaryText`) is painted on the opaque
+ * `codeWash` (`accent`) quad, but only the secondary floor of the accent row
+ * fill was measured. Four shipped sets measured 6.506–6.960:1 there under the
+ * body floor while every other check returned `[]`; `nativeInlineCode` owns the
+ * pair and their ink takes one designed step.
+ *
  * Two edits that pass every other check prove the earlier gap. On `Dark ·
  * Linux`, `successText: "#bebebe"` measures **6.405:1** for a string token
- * through the ink wash and `mutedForeground: "#bebebe"` measures **6.335:1**
+ * through the ink wash and `mutedForeground: "#bebebe"` measures **6.315:1**
  * for a blockquote's body over the accent wash, both under the 7:1 body floor,
  * while `themeFailures` returned `[]`. `themeNativeTextFailures` is the ninth
  * check; it measures the fades, the two-fade compositions, the chrome washes
@@ -34,8 +40,11 @@ import { readFileSync } from "node:fs";
 import {
   contrastRatio,
   extendTheme,
+  getPlatformRecipeTheme,
   getPlatformTheme,
   getTheme,
+  nativeInlineCode,
+  nativeSyntaxPairs,
   nativeSyntaxRoles,
   nativeTextFades,
   nativeTextOverFades,
@@ -105,7 +114,7 @@ describe("native text check", () => {
     expect(failure?.washOpacity).toBe(0.05);
     expect(failure?.opacity).toBe(1);
     expect(failure?.pairClass).toBe("body");
-    expect(failure?.ratio).toBeCloseTo(6.335, 2);
+    expect(failure?.ratio).toBeCloseTo(6.315, 2);
   });
 
   it("publishes every runtime fraction", () => {
@@ -271,6 +280,65 @@ describe("native text check", () => {
     expect(failure?.ratio).toBeCloseTo(1.036, 2);
   });
 
+  it("publishes the inline-code pair", () => {
+    expect(nativeInlineCode).toEqual({
+      text: "codeText",
+      wash: "codeWash",
+      pairClass: "body",
+    });
+  });
+
+  it("reports inline code the accent row fill accepts", () => {
+    const planted = extendTheme(getPlatformRecipeTheme("xp", "light"), {
+      colors: { primaryText: "#003FA8" },
+    });
+    expect(
+      themeFailures(planted).filter((failure) => failure.kind !== "nativeText"),
+    ).toEqual([]);
+
+    const failure = themeNativeTextFailures(planted).find(
+      (candidate) => candidate.field === "codeText",
+    );
+    expect(failure?.role).toBe("primaryText");
+    expect(failure?.surface).toBe("accent");
+    expect(failure?.pairClass).toBe("body");
+    expect(failure?.opacity).toBe(1);
+    expect(failure?.ratio).toBeCloseTo(6.506, 2);
+  });
+
+  it("pins the inline-code and syntax figures the reference quotes", () => {
+    const inline = shippedThemes.map(({ theme }) => ({
+      name: theme.name,
+      ratio: contrastRatio(theme.colors.primaryText, theme.colors.accent),
+    }));
+    const tightestInline = inline.reduce((min, entry) =>
+      entry.ratio < min.ratio ? entry : min,
+    );
+    const syntax = shippedThemes.flatMap(({ theme }) =>
+      nativeSyntaxPairs.map(([foreground, background]) => ({
+        name: theme.name,
+        foreground,
+        background,
+        ratio: contrastRatio(
+          theme.colors[foreground],
+          theme.colors[background],
+        ),
+      })),
+    );
+    const tightestSyntax = syntax.reduce((min, entry) =>
+      entry.ratio < min.ratio ? entry : min,
+    );
+    const docs = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    expect(docs).toContain(`**${tightestInline.ratio.toFixed(3)}:1**`);
+    expect(docs).toContain(`\`${tightestInline.name}\``);
+    expect(docs).toContain(`\`${tightestSyntax.foreground}\` at`);
+    expect(docs).toContain(`**${tightestSyntax.ratio.toFixed(3)}:1**`);
+    expect(docs).toContain(`\`${tightestSyntax.name}\``);
+  });
+
   it("can fail every published chrome wash on its own surface", () => {
     nativeTextWashes.forEach((wash) => {
       const role = nativeTextRoles[wash.field];
@@ -327,9 +395,11 @@ describe("native text check", () => {
       "themeNativeTextFailures",
       "nativeTextFades",
       "nativeTextOverFades",
+      "nativeInlineCode",
       "nativeTextWashes",
       "NativeTextFade",
       "NativeTextOverFade",
+      "NativeInlineCode",
       "NativeTextWash",
       "NativeTextFailure",
     ].forEach((name) =>

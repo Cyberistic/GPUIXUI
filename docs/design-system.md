@@ -830,7 +830,9 @@ design system cannot compensate for a missing role.
 The native text bridge is one call: `nativeTextTheme(theme)` maps `text`,
 `textMuted`, `textFaint` and `textDim` to the body, secondary, hint and secondary
 roles; `accent` and the caret to `primaryText` (the ink, not the fill); inline
-code to `primaryText` on the `accent` wash; diff add/delete to the status **text**
+code to `primaryText` on the `accent` wash, held to the body floor through
+`nativeInlineCode` because it is body copy (four sets measured
+6.506–6.960:1 there and took one ink step); diff add/delete to the status **text**
 roles; and every syntax capture to a text role, never a solid fill. The layout
 comes from `codeBlock`, `body`, `h1`–`h3`, spacing and the small/large radii,
 and the code/diff gutters and table floors are the runtime's shipped proportions
@@ -844,8 +846,11 @@ some values at fixed fractions a theme cannot change, so
 four `Surface` tones a document may paint on; the syntax palette is held to the
 body floor both opaque (`nativeSyntaxPairs`) and through the 3.5% ink wash the
 code block paints over each, and the word-level 28% diff wash is documented as
-the one omission because a changed token's own colour sits on a wash of its own
-family. The runtime's own chrome is held too: a code block's body frame (the
+an omission because a changed token's own colour sits on a wash of its own
+family. The runtime's two fixed neutral hairlines — a diff file header's 4% top
+edge and a markdown table's 10% rule — are the other omissions: they are ink,
+not a theme role, so no edit can move them. The runtime's own chrome is held
+too: a code block's body frame (the
 theme's `border` on the 3.5% body wash), its language header and separator
 (`textMuted` and the theme's `border` on the 2% header wash), and a diff file
 header (2.5%, and 5% under the pointer, under `textMuted`, `diffAdd` and

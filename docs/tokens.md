@@ -111,9 +111,10 @@ missing here is not public.
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
 | `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
+| `NativeInlineCode` | The inline-code pair: the text field painted on its opaque wash, and the floor it must clear. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
-| `NativeTextFailure` | One native document fade, two-fade composition, chrome wash or ink wash a theme misses, with its field, role, surface and ratios. |
+| `NativeTextFailure` | One native document fade, two-fade composition, inline-code pair, chrome wash or ink wash a theme misses, with its field, role, surface and ratios. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales, plus the two runtime-only members a brand may set: the gutter floor and the diff accent bar. |
 | `NativeTextOverFade` | Text painted over a second faded role, with both fractions. |
 | `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
@@ -202,7 +203,7 @@ Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 `accent`/`selected` fills a selectable row paints under it, and on the four soft
 status fills a link in a status panel sits on. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
-on the pressed wash, while its text step `#004A9A` clears both.
+on the pressed wash, while its text step `#00478F` clears both.
 
 A runnable example lives in
 [`src/primary-text.example.ts`](../packages/tokens/src/primary-text.example.ts).
@@ -219,7 +220,7 @@ A runnable example lives in
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills and through a text selection |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills, inline code on the `accent` wash and through a text selection |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -1602,8 +1603,8 @@ The captures are held to the **body** floor on every tone a document may paint
 on — `nativeTextSurfaces` is `background`, `card`, `popover` and `muted` —
 through `nativeSyntaxPairs`, because code is body copy, not a status label.
 `foreground` is not in the list: the body pairs already hold it on all four.
-Every shipped set clears the opaque floor; the tightest is `primaryText` at
-**7.562:1** (`Light · Windows XP`).
+Every shipped set clears the opaque floor; the tightest is `warningText` at
+**7.599:1** (`Light · macOS`).
 
 The runtime also paints through fades a theme cannot change. A diff line is 92%
 of `text`, its gutter number 80% and its unchanged marker 50% of `textFaint`;
@@ -1619,7 +1620,16 @@ perceivability pairs rather than text pairs because the runtime dims chrome:
 they measure 3.595:1 at 80% and 2.082:1 at 50% on Aero light's quiet panel,
 below the secondary floor by design. The ink wash is held for every syntax role
 on the same four tones; the tightest is `warningText` at **7.008:1**
-(`Light · macOS`).
+(`Light · macOS`). Inline code is the one native-text composition on an opaque
+fill: the runtime paints `codeText` (`primaryText`) on a `codeWash` (`accent`)
+quad behind the run. The accent row fill already measures a link at the
+secondary floor, but inline code is body copy, so `nativeInlineCode` holds the
+pair to the body floor. Four sets were under it — `Light · Windows XP`
+6.506:1, `Dark · Linux` 6.898:1, `Light · Windows` 6.953:1 and `Dark · macOS`
+6.960:1 — while `themeFailures` returned `[]`. Their `primaryText` takes one
+designed step in its own family, macOS light takes one more so the tightest is
+not a three-decimal pass, and the tightest shipped pair is **7.102:1**
+(`Light · Windows XP`).
 
 The runtime's own chrome sits on lighter ink washes the theme does not own.
 A code block's language header is a **2%** wash under `textMuted`, and the
@@ -1639,7 +1649,7 @@ other check returns `[]`.
 A role chosen for its opaque floor still has to clear the faded one. On
 `Dark · Linux`, `successText: "#bebebe"` passes every other check while a string
 token measures **6.405:1** through the ink wash, and `mutedForeground:
-"#bebebe"` passes while a blockquote's body measures **6.335:1** over the accent
+"#bebebe"` passes while a blockquote's body measures **6.315:1** over the accent
 wash, both under the body floor.
 
 One composition is deliberately out: the runtime's **28% word-level diff wash**
@@ -2874,7 +2884,7 @@ ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
 high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
 by plan `314`; the tightest shipped pair is `primaryText` on `selected` at
-**5.68:1** (Linux dark), and the soft fills are tightest at
+**5.69:1** (Windows dark), and the soft fills are tightest at
 `primaryText` on `destructiveSoft` at **6.19:1** (identity light), so no value
 moves.
 Every platform variant is checked on its own canvas, not the identity's, so a

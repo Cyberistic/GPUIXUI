@@ -52,7 +52,7 @@ export const xpPlatformRecipe = {
       primaryForeground: "#FFFFFF",
       primaryHover: "#0046BD",
       primaryActive: "#003A9C",
-      primaryText: "#003FA8",
+      primaryText: "#003A9C",
       // The native code surface: the inherited light status inks measured
       // 6.41–6.95:1 on the beige canvas, opaque and through the runtime's 3.5%
       // ink wash, under the 7:1 body floor. Each takes one designed step in its
