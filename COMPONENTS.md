@@ -403,7 +403,7 @@ Tier 1 table are a cross-team `TODO.md` row.
 
 **Composed app (327):** `examples/basic-app` — the settings workflow that uses
 the whole Tier 1 set — now mounts in the real `TestRenderer`
-(`nub run --filter @gpuixui/basic-app test:runtime`, 6 tests): the skeleton hands
+(`nub run --filter @gpuixui/basic-app test:runtime`, 7 tests): the skeleton hands
 over to the form, the consent row paints its own label and is clickable, Save is
 refused until it is accepted and stays refused for an invalid email, the save
 lifecycle runs, and the Select paints its option's label. Its consent control is
@@ -411,10 +411,12 @@ a one-row **`CheckboxGroup`**, because a standalone `Checkbox`'s `label` is only
 an accessible name: measured, the app painted an empty box under a caption that
 never named the agreement (the `Label`-beside-a-box class of plan `087`). The
 form is taller than its scroll region, so the suite wheels the region to the row
-and asserts it is reachable. One measured limitation is recorded in the app's
-README: a field mounted after the first render does not receive `autoFocus`
-(`runtime.focused()` was empty after the skeleton), so `autoFocus` is proven on
-the initial mount only (plan `064`).
+and asserts it is reachable. The first field takes `autoFocus` after the
+skeleton: measured, a field mounted after the first render **does** take native
+focus (plan `584`); plan `327`'s empty `runtime.focused()` was a locator
+artifact, not a runtime limitation. On the release-tag build the suite is
+**7/7**, including the consent row's reachability after a real wheel (plan
+`598`).
 
 **Both themes (021/042/352):** every painted colour in the Tier 1 scene comes from
 the active palette, and re-rendering with the dark palette repaints every asserted

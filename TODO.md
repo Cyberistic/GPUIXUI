@@ -1643,6 +1643,18 @@ retired once both branches are one
       `597`); 2 runtime cases, both directions proven — removing the chain fails
       both, removing the style fails the padded one by 8 px (plan `636`).
 
+`[x]` `packages/primitives` + `COMPONENTS.md` + `examples/basic-app`: **the
+      composed-app ledger recorded two claims plans `584`/`598` disproved** —
+      `COMPONENTS.md` said the app suite had 6 tests and that a field mounted
+      after the first render cannot take `autoFocus` (plan `327`'s empty
+      `runtime.focused()` was a locator artifact, as plan `584` measured), and
+      the app README said only 6 of 7 cases pass when plan `598` made the
+      reachability case green. Both passages now state the measured result
+      (**7 tests / 7 passing**, `autoFocus` after the skeleton), and
+      `src/composed-app-docs.test.ts` derives the case count from the runtime
+      file and fails on the old autoFocus or partial-pass claims. 4 cases, all
+      four failure directions measured (plan `608`).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
