@@ -43,15 +43,15 @@ export interface RingFailure {
  * One role cannot ring every colour: a ring painted with `foreground` measures
  * **1.000:1** on a `foreground` swatch. Two tones fix that. The inner tone is
  * `background`, adjacent to the content; the outer is `foreground`, adjacent to
- * the surface. For a content colour `C`, the contrast against each tone is
- * `(max(C, tone) + 0.05) / (min(C, tone) + 0.05)`, so the two ratios multiply
- * to the tone pair's own ratio for every `C` between them. Their maximum is
- * smallest where they are equal, which makes the worst case over **every**
- * colour the square root of the tone pair's contrast. The shipped identity light
- * pair (15.86:1) guarantees **3.98:1**, the AAA pairs (21:1) **4.58:1**, and the
- * tightest shipped set (`Dark · Linux`) **3.70:1**, all above the mark floor
- * (`contrastFloors[level].mark`). {@link themeRingFailures} reports a theme that
- * falls below it.
+ * the surface. For a content luminance `c` and a tone luminance `t`, the
+ * contrast is `(max(c, t) + 0.05) / (min(c, t) + 0.05)`, so the two ratios
+ * multiply to the tone pair's own ratio for every `c` between them. Their
+ * maximum is smallest where they are equal, which makes the worst case over
+ * **every** colour the square root of the tone pair's contrast. The shipped
+ * identity light pair (15.86:1) guarantees **3.98:1**, the AAA pairs (21:1)
+ * **4.58:1**, and the tightest shipped set (`Dark · Linux`) **3.70:1**, all
+ * above the mark floor (`contrastFloors[level].mark`).
+ * {@link themeRingFailures} reports a theme that falls below it.
  *
  * The outer tone's surface side is already measured: `foreground` is held at the
  * body floor on `background`, `card`, `popover`, `muted`, the row washes and the
@@ -87,7 +87,7 @@ export function contrastRing(theme: Theme): ContrastRing {
 }
 
 /**
- * Every shipped set's two-tone ring that misses its mark floor in a theme.
+ * A two-tone ring that misses its mark floor in a theme.
  *
  * The measured ratio is the guarantee's worst case, not a painted pair:
  * `sqrt(contrastRatio(foreground, background))`. The mark floor is 3:1 at the
