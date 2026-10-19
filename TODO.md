@@ -64,7 +64,30 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 109/109 plans-and-harness
+`[x]` `[██████████]` 110/110 plans-and-harness
+
+`[x]` Prove the **platform type styles in a real window** per plan `654`: the
+      design system's platform variants were the last theming contract with
+      headless-only evidence (`theme-platform` reads families through
+      `paintedStyle`). `live-theme-platform` (**45 checks**, three consecutive
+      focused green runs) mounts the **same view** in the real 1100 × 720
+      window: a real click cycles Default → macOS → Linux → Windows → Default,
+      the painted readout is asserted at every stop, the code run stays painted,
+      the mono/sans runs and the palette surface keep their exact opening boxes
+      (a platform style changes type declarations, not layout), and
+      `frameStats().frames` grows on every switch. Live registry **93 → 94**;
+      headless unchanged at **105**. **The family stays headless** — the live
+      tree has no `style` and a missing host family falls back silently, so no
+      glyph-width assertion is made. Mutation proofs: **M1** (`nextPlatform.darwin
+      = "darwin"`) failed `the switch reaches Linux: expected a string containing
+      "platform=linux label=Linux", got "platform=darwin label=macOS"`; **M3** (a
+      1 px Linux surface) failed `the Linux style does not move the palette
+      surface`; **M2** (pinning `platformTheme(..., "default")` while the readout
+      advances) **passed** — a recorded null result proving the twin observes the
+      switch path and repaint, not the applied family. Commands: `nub run
+      --filter playground build`, `nub apps/playground/dist/live/run.js --only
+      live-theme-platform` (×4), `nub apps/playground/dist/smoke/run.js --only
+      theme-platform`.
 
 `[x]` Guard the **native-evidence invariant** per plan `653`: every capability
       the headless registry mounts must have live evidence, and the live

@@ -216,6 +216,18 @@ live renderer exposes no style report (plan `197`), so the token values remain
 `theme-color-roles`' `paintedStyle` evidence; the twin proves the interaction
 and that the switched subtree keeps its layout.
 
+`live-theme-platform` (plan `654`) is the window twin of `theme-platform`: a
+real click cycles Default → macOS → Linux → Windows → Default, the painted
+readout follows each stop, the code run stays painted, the mono/sans runs and
+the palette surface keep their exact opening boxes (a platform style changes
+type declarations, not layout), and the paint counter grows on every switch.
+**The resolved family stays headless**: the live tree carries no `style`, and a
+host missing `DejaVu Sans Mono` / `Consolas` falls back silently, so a glyph
+width would be a host-specific assertion rather than a contract. A measured
+null result: pinning `platformTheme(..., "default")` while the readout still
+advances passes the twin — the switch path and its repaint are live evidence;
+the family application is `theme-platform`'s.
+
 Two honest notes:
 
 - The ring check is a **style** proof. Focus delivery itself is
@@ -1526,7 +1538,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 105-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 93 scenarios. `smoke:live` opens
+live registry lists 94 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -2012,7 +2024,9 @@ every scenario this branch added through `live-theme` (plan `643`),
 and `live-diff` (plan `648`, the diff interaction contract). It supersedes plan
 `643`'s 92/92 run and is the gate for the promotion
 merge; the owner/supervisor performs that merge. The full live suite is a
-merge/release gate rather than a per-task check.
+merge/release gate rather than a per-task check. **After that gate** the registry
+gained `live-theme-platform` (plan `654`, 45 checks, three focused green runs),
+so the next merge gate must cover **94** ids; no new full total is claimed here.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 

@@ -442,6 +442,9 @@ const PlatformProbe = () => {
   );
 };
 
+/** The platform probe as a plain view, so the live twin mounts the same tree. */
+export const platformThemeView = (): ReactNode => <PlatformProbe />;
+
 const family = (
   ctx: Smoke.SmokeContext,
   testId: string,

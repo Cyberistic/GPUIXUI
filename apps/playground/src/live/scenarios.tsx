@@ -108,7 +108,7 @@ import {
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
-import { themeColorRolesView } from "../scenarios/theme.js";
+import { themeColorRolesView, platformThemeView } from "../scenarios/theme.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -11969,6 +11969,115 @@ const liveTheme: LiveScenario = {
 };
 
 /**
+ * The platform type styles in a real window (plan `654`).
+ *
+ * Plan `170` proves the families through `paintedStyle`, which only the
+ * `TestRenderer` has. The window cannot read a family — the live automation
+ * tree carries no `style` (plan `197`) — so this twin proves what a window can:
+ * a real click cycles Default → macOS → Linux → Windows → Default, the painted
+ * readout follows, the mono/sans runs and the palette-derived surface keep
+ * their exact boxes (a platform style changes type declarations, never
+ * layout), and each switch repaints. A host that lacks a declared family falls
+ * back silently, so no glyph-width assertion is made (§1 of the plan).
+ */
+const liveThemePlatform: LiveScenario = {
+  id: "live-theme-platform",
+  title: "Live platform styles: the type themes cycle in a window",
+  capability: "theme",
+  view: platformThemeView,
+  ready: "platform-readout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const boxes = () =>
+        Effect.all(
+          {
+            surface: boxOf(ctx, "platform-surface"),
+            mono: boxOf(ctx, "platform-mono"),
+            sans: boxOf(ctx, "platform-sans"),
+          },
+          { concurrency: 1 },
+        ).pipe(
+          Effect.map(({ surface, mono, sans }) => ({
+            surface: `${surface.x},${surface.y},${surface.width},${surface.height}`,
+            mono: `${mono.x},${mono.y},${mono.width},${mono.height}`,
+            sans: `${sans.x},${sans.y},${sans.width},${sans.height}`,
+          })),
+        );
+
+      yield* waitForText(ctx, "platform-readout", "platform=default");
+      yield* ctx.expectContains(
+        "opens on the default platform",
+        yield* textOf(ctx, "platform-readout"),
+        "platform=default label=Default",
+      );
+      const opening = yield* boxes();
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveThemePlatform.id}-default.png`,
+      );
+
+      const stops = [
+        { token: "darwin", label: "macOS" },
+        { token: "linux", label: "Linux" },
+        { token: "win32", label: "Windows" },
+        { token: "default", label: "Default" },
+      ] as const;
+
+      yield* Effect.forEach(
+        stops,
+        (stop) =>
+          Effect.gen(function* () {
+            const before = yield* ctx.host.frameStats();
+            yield* ctx.host.click("platform-next");
+            yield* waitForText(
+              ctx,
+              "platform-readout",
+              `platform=${stop.token} label=${stop.label}`,
+            );
+            yield* settle;
+            yield* ctx.expectContains(
+              `the switch reaches ${stop.label}`,
+              yield* textOf(ctx, "platform-readout"),
+              `platform=${stop.token} label=${stop.label}`,
+            );
+            const after = yield* ctx.host.frameStats();
+            yield* ctx.expectEqual(
+              `the ${stop.label} switch repaints the window`,
+              after.frames > before.frames,
+              true,
+            );
+
+            const current = yield* boxes();
+            yield* ctx.expectEqual(
+              `the ${stop.label} style does not move the palette surface`,
+              current.surface,
+              opening.surface,
+            );
+            yield* ctx.expectEqual(
+              `the ${stop.label} style does not move the mono run`,
+              current.mono,
+              opening.mono,
+            );
+            yield* ctx.expectEqual(
+              `the ${stop.label} style does not move the sans run`,
+              current.sans,
+              opening.sans,
+            );
+            const painted = yield* ctx.host.paintedText();
+            yield* ctx.expectEqual(
+              `the ${stop.label} style keeps the code run painted`,
+              Arr.some(painted, Str.includes("code: the quick brown fox")),
+              true,
+            );
+            yield* ctx.host.screenshot(
+              `${LIVE_ARTIFACTS}/${liveThemePlatform.id}-${stop.token}.png`,
+            );
+          }),
+        { concurrency: 1 },
+      );
+    }),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13099,6 +13208,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveRovingFocus,
   media,
   liveTheme,
+  liveThemePlatform,
   terminal,
   selectionSignal,
 ];
