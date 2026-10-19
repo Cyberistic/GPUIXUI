@@ -96,8 +96,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities, **152.8 s**; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
-(`live-report.json`, **2491 checks**, 61 capabilities, **1058.8 s**, exit `0`)
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities, **106.5 s**; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
+(`live-report.json`, **2491 checks**, 61 capabilities, **1057.2 s**, exit `0`)
 on 2026-10-19, the merge/release gate on the merged branch (plan `675`, code
 head `d206df18` after the one docs-only `origin/master` commit). That total is
 plan `659`'s 2469 plus the **22 checks `live-pixel-colour`** added (plan `674`),
@@ -177,7 +177,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**95/95 green** (2491 checks, 61 capabilities, 1058.8 s) on the release-tag
+**95/95 green** (2491 checks, 61 capabilities, 1057.2 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `675`'s gate on
 merged head `d206df18`, including `live-pixel-colour`; a plain `--all` wrote no
 frame or `provenance.json`), and the **full

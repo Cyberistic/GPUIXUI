@@ -78,8 +78,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Run the promotion gate on the head that includes plan `674`'s pixel
       evidence** per plan `675`: merged `origin/master` (one docs-only commit,
       `2b4eb0d9`), then verification only — headless **106/106** (`3824`
-      checks, 65 capabilities, 152.8 s) and live **95/95** (`2491` checks, 61
-      capabilities, 1058.8 s), both exit `0`; the live total is plan `659`'s
+      checks, 65 capabilities, 106.5 s) and live **95/95** (`2491` checks, 61
+      capabilities, 1057.2 s), both exit `0`; the live total is plan `659`'s
       2469 plus `live-pixel-colour`'s 22, so the new scenario ran in the full
       registry, and a plain `--all` wrote no `provenance.json`. `nub run
       check`/`lint`/`test` green (playground 439, testing 68, components 308,
@@ -1613,7 +1613,7 @@ focused id is `live-frames`.
       2026-10-19):** the registry gained `live-pixel-colour` (22 checks).
       **Superseded by plan `675`:** merged `origin/master` (one docs-only
       commit) and re-ran both registries on `d206df18` — live **95/95**
-      (**2491** checks, 61 capabilities, 1058.8 s) and headless **106/106**
+      (**2491** checks, 61 capabilities, 1057.2 s) and headless **106/106**
       (3824 checks, 65 capabilities), both exit `0`, so the pixel evidence is in
       the current promotion gate. The owner/supervisor still performs the
       fast-forward.

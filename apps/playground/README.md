@@ -2061,7 +2061,7 @@ bytes** can now be checked by colour; a path/URL still cannot.
 ## Evidence on this host
 
 The suite is **106/106 green** here (`exit 0`, 3824 checks, 65 capabilities,
-152.8 s, 2026-10-19; plan `675`'s gate, after the docs-only `origin/master`
+106.5 s, 2026-10-19; plan `675`'s gate, after the docs-only `origin/master`
 merge; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37
 checks to `primitives-display`):
 
@@ -2084,7 +2084,7 @@ media=verified window=verified frames=verified
 ```
 
 The last full merge/release gate ran **95/95** (`exit 0`, **2491** checks, 61
-capabilities, **1058.8 s**, `.artifacts/live-report.json`, 2026-10-19) on merged
+capabilities, **1057.2 s**, `.artifacts/live-report.json`, 2026-10-19) on merged
 head `d206df18` (plan `675`, after the one docs-only `origin/master` commit),
 including every scenario this branch added through `live-theme-platform` (plan
 `654`, the platform type styles in a window), `live-shell` through plan `656`'s
@@ -2288,7 +2288,7 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **95/95** on
-  2026-10-19 (**2491** checks, 61 capabilities, 1058.8 s, exit `0`, the merge
+  2026-10-19 (**2491** checks, 61 capabilities, 1057.2 s, exit `0`, the merge
   gate; plan `675` on merged head `d206df18`, including `live-pixel-colour` and
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`

@@ -338,13 +338,13 @@ measured totals describe the same app and package code the promotion merge
 sees.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities, **152.8 s** (`durationMs` 152833).
+`0`, **3824 checks**, 65 capabilities, **106.5 s** (`durationMs` 106454).
 `--list` printed 106 ids. Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
-`.artifacts/smoke-report.json` was rewritten by this run.
+`.artifacts/smoke-report.json` was rewritten by this run (mtime 16:52:13).
 
 **Live** — `nub apps/playground/dist/live/run.js --all` is **95/95**, exit
-`0`, **2491 checks**, 61 capabilities, **1058.8 s** (`durationMs` 1058798).
+`0`, **2491 checks**, 61 capabilities, **1057.2 s** (`durationMs` 1057168).
 `--list` printed 95 ids and `live-pixel-colour` was among them. Host:
 `gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 The check total is exactly the plan-`659` 2469 plus the 22 that
@@ -356,11 +356,10 @@ registry. `.artifacts/live-report.json` was rewritten; a plain `--all` wrote
 each of two concurrent `swarm:playground` sessions (the recurring B3
 duplicate-writer issue). Both agreed on every scenario/check/capability count —
 headless `106/106` / `3824` / `65` and live `95/95` / `2491` / `61`, both exit
-`0`; only wall-clock differed (134.5 s and 1018.7 s in the first, 152.8 s and
-1058.8 s in the second, run concurrently in two windows). The artifacts on disk
-are the **second** run, so their mtimes and durations are the numbers above:
-`smoke-report.json` at 16:48:56 and `live-report.json` at 17:06:52 on
-2026-10-19.
+`0`; only wall-clock differed (the first recorded 134.5 s and 1018.7 s). The
+artifacts on disk are the **latest** run, so their mtimes and durations are the
+numbers above: `smoke-report.json` at 16:52:13 and `live-report.json` at
+17:09:59 on 2026-10-19.
 
 **Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
 Test counts: playground **439**, testing **68**, components **308**,
