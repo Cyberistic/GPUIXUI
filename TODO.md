@@ -73,6 +73,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 111/111 plans-and-harness
 
+`[~]` Re-run the **promotion gate on the head that includes the live capture
+      CLI** per plan `657`: plan `656` changed the live runner's shared
+      `program`/`mount` path after the last full gate (`655` on `651e2419`), and
+      only `live-shell` had exercised it. Headless and live registries run in
+      full; the exact ids are both whole registries (`--all`). Owner performs
+      the merge.
+
 `[x]` Give the **live runner** the capture contract the docs publish per plan
       `656`: `--capture <dir>` writes one frame per selected scenario after the
       view is mounted and its `ready` gate settled (the opening state, before
