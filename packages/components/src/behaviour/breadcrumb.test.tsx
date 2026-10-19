@@ -6,7 +6,8 @@
  * the tab order; a link that only answered the mouse; Space activating a link on
  * key down instead of on release; an authored separator glyph that was replaced
  * by `/`; a collapsed middle that used the fallback separator instead of the
- * hidden entry's; and a current page announced by colour alone.
+ * hidden entry's; and a current page announced by colour alone; and a
+ * non-finite `maxItems` that painted an ellipsis over a missing tail (plan 649).
  */
 
 import * as Option from "effect/Option";
@@ -139,6 +140,22 @@ describe("Breadcrumb", () => {
     expect(texts).not.toContain("GPUIXUI");
     expect(texts).not.toContain("packages");
     expect(texts).toContain("…");
+
+    trail.unmount();
+  });
+
+  it("keeps the whole trail when maxItems is not a finite number", () => {
+    // The bug this guards (plan 649): a `NaN` budget skipped the "fits" branch,
+    // `Arr.takeRight` treated the NaN tail length as 0, and the trail painted
+    // `Projects …` — the current page and every middle entry were gone.
+    const trail = renderComponent(<Trail maxItems={Number.NaN} />);
+    const texts = trail.renderer.getAllText();
+
+    expect(texts).toContain("Projects");
+    expect(texts).toContain("GPUIXUI");
+    expect(texts).toContain("packages");
+    expect(texts).toContain("components");
+    expect(texts).not.toContain("…");
 
     trail.unmount();
   });

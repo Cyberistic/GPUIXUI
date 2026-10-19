@@ -50,7 +50,10 @@ import {
 
 `maxItems` below 3 is clamped to 3, so the trail can always show its start, a gap
 and its end. When the trail fits, every entry renders. Otherwise the control
-keeps the first entry, an ellipsis, and the last `maxItems - 2` entries. A hidden
+keeps the first entry, an ellipsis, and the last `maxItems - 2` entries. A
+non-finite value (`NaN` or an infinity) is treated as "no budget": the whole
+trail renders, so a budget computed from a measurement can never hide the
+current page. A hidden
 entry takes its separator with it — the list pairs each separator with the item
 that follows it — and the ellipsis keeps the separator authored before the first
 hidden entry, so a composed trail never falls back to `/` in the middle.
@@ -75,7 +78,7 @@ Every part takes the GPUix host props and **merges `style` last**.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Breadcrumb` | `div` (`role="navigation"`) | `maxItems?: number` (clamped to at least 3), `separator?: ReactNode` (default `/`), `currentLabel?: string` (default `"Current page"`) |
+| `Breadcrumb` | `div` (`role="navigation"`) | `maxItems?: number` (clamped to at least 3; a non-finite value means no collapse), `separator?: ReactNode` (default `/`), `currentLabel?: string` (default `"Current page"`) |
 | `BreadcrumbList` | `div` (`role="list"`) | — |
 | `BreadcrumbItem` | `div` (`role="listitem"`) | — |
 | `BreadcrumbLink` | `div` (`role="link"`), or `text` when `current` | `onSelect?: () => void`, `current?: boolean` |
@@ -109,15 +112,16 @@ Links and separators use the `caption` type role; links are
 
 ## Verification
 
-`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/breadcrumb.test.tsx` runs in the real GPUix renderer (13 tests):
 the trail and its separator count, an authored separator glyph, selecting a link
 but not the current page, Enter on press and Space on release, collapsing the
-middle while keeping both ends and the authored separator, the ellipsis staying
+middle while keeping both ends and the authored separator, a non-finite
+`maxItems` keeping the whole trail, the ellipsis staying
 out of the tab order, and the current item's description (`BreadcrumbPage` and
 `BreadcrumbLink current`, with a caller label and description).
 
-`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8 and
-budgets 3–6.
+`src/breadcrumb/logic.test.ts` covers the collapse arithmetic for lengths 0–8,
+budgets 3–6 and a non-finite budget.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

@@ -2,8 +2,9 @@
  * Breadcrumb collapsing.
  *
  * The bugs these guard: a long path dropped the current page (the tail was
- * computed from the wrong end), and `maxItems: 1` produced a trail with no
- * first entry and no last entry, so the ellipsis stood alone.
+ * computed from the wrong end), `maxItems: 1` produced a trail with no first
+ * entry and no last entry, so the ellipsis stood alone, and a non-finite budget
+ * (`NaN`) skipped the "fits" branch and dropped the whole tail (plan 649).
  */
 
 import { describe, expect, it } from "vitest";
@@ -44,6 +45,21 @@ describe("collapse", () => {
   it("always keeps the last entry, which is the current page", () => {
     const crumbs = collapse(items("a", "b", "c", "d", "e", "f", "g"), 3);
     expect(rendered(crumbs)).toEqual(["a", "…", "g"]);
+  });
+
+  it("ignores a non-finite budget instead of hiding the tail", () => {
+    // `Arr.takeRight` treats `NaN` as 0, so the old `Math.max(3, NaN)` budget
+    // painted only `a …` and dropped the current page (plan 649).
+    expect(collapse(items("a", "b", "c", "d", "e"), Number.NaN)).toEqual([
+      crumb("a"),
+      crumb("b"),
+      crumb("c"),
+      crumb("d"),
+      crumb("e"),
+    ]);
+    expect(
+      collapse(items("a", "b", "c", "d", "e"), Number.POSITIVE_INFINITY),
+    ).toHaveLength(5);
   });
 
   it("never renders more entries than the budget", () => {

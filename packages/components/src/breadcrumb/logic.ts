@@ -20,13 +20,17 @@ const minimum = 3;
 /**
  * The crumbs to render. A trail that fits is returned unchanged; a longer one
  * keeps the first entry, an ellipsis, and the last `maxItems - 2` entries, so
- * the current page is always visible.
+ * the current page is always visible. A non-finite budget names no number of
+ * entries, so the trail is returned whole — hiding the tail would hide the
+ * current page.
  */
 export const collapse = <A>(
   items: ReadonlyArray<A>,
   maxItems: number,
 ): ReadonlyArray<Crumb<A>> => {
-  const budget = Math.max(minimum, Math.trunc(maxItems));
+  const budget = Number.isFinite(maxItems)
+    ? Math.max(minimum, Math.trunc(maxItems))
+    : Arr.length(items);
   if (Arr.length(items) <= budget) return Arr.map(items, crumb);
   return [
     ...Arr.map(Arr.take(items, 1), crumb),
