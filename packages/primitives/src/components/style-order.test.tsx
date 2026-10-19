@@ -145,6 +145,7 @@ const selectHandlers = (): SelectHandlers => ({
 
 const sliderHandlers = (): SliderHandlers => ({
   onValueChange: vi.fn(),
+  onCommit: vi.fn(),
   registerTrack: () => {},
   onPointerDown: vi.fn(),
   onPointerMove: vi.fn(),
@@ -153,6 +154,7 @@ const sliderHandlers = (): SliderHandlers => ({
 
 const rangeHandlers = (): RangeSliderHandlers => ({
   onSpanChange: vi.fn(),
+  onSpanCommit: vi.fn(),
   registerTrack: () => {},
   registerThumb: () => () => {},
   onPointerDown: vi.fn(),

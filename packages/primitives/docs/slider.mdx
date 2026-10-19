@@ -16,13 +16,17 @@ import { Slider, Stack, Text } from "@gpuixui/primitives";
 import { useState } from "react";
 
 const [quality, setQuality] = useState(62);
+const [savedQuality, setSavedQuality] = useState(62);
 
 <Stack direction="column" gap="sm">
-  <Text role="caption" tone="muted">Quality · {quality}%</Text>
+  <Text role="caption" tone="muted">
+    Quality · {quality}% (saved {savedQuality}%)
+  </Text>
   <Slider
     label="Quality"
     value={quality}
     onValueChange={setQuality}
+    onValueCommit={setSavedQuality}
     formatValue={(value) => `${value}%`}
   />
 </Stack>;
@@ -40,6 +44,17 @@ track. An infinity is simply out of range, so it clamps to its own end:
 `+Infinity` reads as `max` and `-Infinity` as `min` (the rule the meter and the
 number field follow too).
 
+## Change and commit
+
+`onValueChange` is the continuous stream: every pointer move during a drag and
+every key step. `onValueCommit` is the settled half: **one** call when a drag is
+released, with the value it ended on, and one call per keyboard step. A form that
+saves or revalidates on a finished gesture uses the commit callback instead of
+debouncing the stream. A gesture that ends on the value it started from reports
+no commit — the stream still reported the values it passed through on the way —
+and a press that never changed the value reports neither callback, the same no-op
+rule the rest of the package follows.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -47,6 +62,7 @@ number field follow too).
 | `value` | `number` | — | controlled value |
 | `defaultValue` | `number` | `min` | uncontrolled start |
 | `onValueChange` | `(value: number) => void` | — | called only when the value changed |
+| `onValueCommit` | `(value: number) => void` | — | one call when a changed drag is released, or per key step |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous (arrows move 1% of the span) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb `iconSize`, track `density.controlHeight` |
@@ -69,7 +85,9 @@ number field follow too).
 | `Home` / `End` | `min` / `max` |
 
 Any other key is left alone, so a slider inside a form does not swallow it. The
-slider is a single tab stop, and the focus ring is painted on the thumb.
+slider is a single tab stop, and the focus ring is painted on the thumb. Each
+accepted key step also reports `onValueCommit` once with the settled value; a key
+that cannot move the value (an arrow at a bound) reports nothing.
 
 ## Accessibility
 
@@ -191,7 +209,9 @@ the thumb:
   by Tab, a drag that leaves the track keeps tracking and clamps at both ends,
   and a right/middle click is refused. A coarse step (`0..10` by `3`) paints
   `value={10}` further than `9` and ArrowLeft from the end lands on `9` (plan
-  `331`). Measured 2026-10-17; plans 053 §11, 063 §6 and 331 §8 record the
+  `331`). A drag reports `onValueCommit` once on release, a key step reports it
+  immediately, and an unchanged or refused gesture reports nothing (plan `646`).
+  Measured 2026-10-17; plans 053 §11, 063 §6, 331 §8 and 646 §6 record the
   probes.
 
 ```sh

@@ -481,6 +481,7 @@ describe("group roots and overlays", () => {
     const range = recorder<RangeSliderState>();
     const sliderHandlers: SliderHandlers = {
       onValueChange: vi.fn(),
+      onCommit: vi.fn(),
       registerTrack: () => {},
       onPointerDown: vi.fn(),
       onPointerMove: vi.fn(),
@@ -488,6 +489,7 @@ describe("group roots and overlays", () => {
     };
     const rangeHandlers: RangeSliderHandlers = {
       onSpanChange: vi.fn(),
+      onSpanCommit: vi.fn(),
       registerTrack: () => {},
       registerThumb: () => () => {},
       onPointerDown: vi.fn(),
@@ -808,6 +810,7 @@ describe("per-item style", () => {
     const record = recorder<SliderThumbState>();
     const handlers: SliderHandlers = {
       onValueChange: vi.fn(),
+      onCommit: vi.fn(),
       registerTrack: () => {},
       onPointerDown: vi.fn(),
       onPointerMove: vi.fn(),
@@ -833,6 +836,7 @@ describe("per-item style", () => {
     const record = recorder<RangeSliderThumbState>();
     const handlers: RangeSliderHandlers = {
       onSpanChange: vi.fn(),
+      onSpanCommit: vi.fn(),
       registerTrack: () => {},
       registerThumb: () => () => {},
       onPointerDown: vi.fn(),

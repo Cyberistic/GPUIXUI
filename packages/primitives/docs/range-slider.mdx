@@ -15,6 +15,7 @@ import { RangeSlider, Stack, Text } from "@gpuixui/primitives";
 import { useState } from "react";
 
 const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
+const [savedPrice, setSavedPrice] = useState<readonly [number, number]>([20, 80]);
 
 <Stack direction="column" gap="sm">
   <Text role="caption" tone="muted">${price[0]} – ${price[1]}</Text>
@@ -22,6 +23,7 @@ const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
     label="Budget"
     value={price}
     onValueChange={setPrice}
+    onValueCommit={setSavedPrice}
     step={5}
     formatValue={(value) => `$${value}`}
   />
@@ -39,6 +41,13 @@ maximum — reports nothing, the same no-op rule `Slider` follows. Each end is
 clamped before the pair is ordered: `NaN` reads as `min`, `+Infinity` as `max`
 and `-Infinity` as `min`, so `[0, Infinity]` is the full band.
 
+`onValueChange` is the continuous stream; `onValueCommit` is the settled half —
+one call when a drag is released with the ordered pair it ended on, and one call
+per keyboard step. A form can save a finished gesture without debouncing. A
+gesture that ends on its starting pair reports no commit (the stream still
+reported the pairs it passed through), and a press that changed nothing reports
+neither callback.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -46,6 +55,7 @@ and `-Infinity` as `min`, so `[0, Infinity]` is the full band.
 | `value` | `readonly [number, number]` | — | controlled span |
 | `defaultValue` | `readonly [number, number]` | `[min, max]` | uncontrolled start |
 | `onValueChange` | `(value: readonly [number, number]) => void` | — | called with the ordered pair, only when it changed |
+| `onValueCommit` | `(value: readonly [number, number]) => void` | — | one call when a changed drag is released, or per key step |
 | `min` / `max` | `number` | `0` / `100` | the closed range |
 | `step` | `number` | `1` | quantisation; `0` is continuous, and **`max` is always a stop** |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | thumb and track metrics |
@@ -71,7 +81,10 @@ Each thumb is its own tab stop and answers:
 A press moves native focus to the thumb it grabbed, so the arrows that follow
 act on the end the user is holding. The focused thumb paints the ring, and the
 ring clears when focus leaves the group. Only the **primary button** starts a
-press: a right or middle click moves neither end and takes no focus.
+press: a right or middle click moves neither end and takes no focus. Each
+accepted key step reports `onValueCommit` once with the settled pair; a step
+that cannot move — an arrow at a bound, or one blocked by the other thumb —
+reports nothing.
 
 ## Accessibility
 
@@ -177,8 +190,10 @@ one slider reads the same focus/disabled/invalid fields on the other.
   the end; focus follows the grabbed thumb; an arrow moves only that end; a
   start dragged past the end stops on it; a dragged end keeps tracking outside
   the track; a right click is refused; a default span with a coarse step reaches
-  the track's end (plan `331`). Measured 2026-10-17 (plans 053 §11, 063 §6 and
-  331 §8).
+  the track's end (plan `331`); a drag reports `onValueCommit` once on release
+  and a key step reports it immediately, while an unchanged gesture reports
+  nothing (plan `646`). Measured 2026-10-17; plans 053 §11, 063 §6, 331 §8 and
+  646 §6 record the probes.
 
 ```sh
 nub run --filter @gpuixui/primitives test

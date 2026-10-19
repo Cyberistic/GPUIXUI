@@ -99,6 +99,13 @@ export interface SliderProps extends TriggerHandlers {
   readonly value?: number;
   readonly defaultValue?: number;
   readonly onValueChange?: (value: number) => void;
+  /**
+   * Called when a gesture that changed the value finishes: once on pointer
+   * release with the value the drag ended on, or immediately after a keyboard
+   * step. A gesture that ends on its starting value — or a refused press —
+   * reports no commit; `onValueChange` is the continuous stream.
+   */
+  readonly onValueCommit?: (value: number) => void;
   /** Defaults to 0. */
   readonly min?: number;
   /** Defaults to 100. */
@@ -128,6 +135,12 @@ export interface RangeSliderProps {
   readonly value?: readonly [number, number];
   readonly defaultValue?: readonly [number, number];
   readonly onValueChange?: (value: readonly [number, number]) => void;
+  /**
+   * Called when a gesture that changed the pair finishes: once on pointer
+   * release with the ordered pair it ended on, or immediately after a keyboard
+   * step. An unchanged or refused gesture reports no commit.
+   */
+  readonly onValueCommit?: (value: readonly [number, number]) => void;
   readonly min?: number;
   readonly max?: number;
   readonly step?: number;
@@ -165,6 +178,8 @@ export const sliderValueText = (
 /** What a rendered slider needs from the component that owns its state. */
 export interface SliderHandlers {
   readonly onValueChange: (next: number) => void;
+  /** Report a completed keyboard step, which is a whole gesture. */
+  readonly onCommit: (next: number) => void;
   readonly registerTrack: (instance: PublicInstance | null) => void;
   readonly onPointerDown: (event: EventPayload) => void;
   readonly onPointerMove: (event: EventPayload) => void;
@@ -217,7 +232,10 @@ export const renderSlider = (
         if (props.disabled !== true) {
           Option.match(decideValueKey(value, range, event.key ?? ""), {
             onNone: () => {},
-            onSome: handlers.onValueChange,
+            onSome: (next) => {
+              handlers.onValueChange(next);
+              if (next !== value) handlers.onCommit(next);
+            },
           });
         }
         props.onKeyDown?.(event);
@@ -262,6 +280,8 @@ export interface RangeSliderFocus {
 
 export interface RangeSliderHandlers {
   readonly onSpanChange: (next: readonly [number, number]) => void;
+  /** Report a completed keyboard step, which is a whole gesture. */
+  readonly onSpanCommit: (next: readonly [number, number]) => void;
   readonly registerTrack: (instance: PublicInstance | null) => void;
   readonly registerThumb: (
     index: 0 | 1,
@@ -318,10 +338,11 @@ export const renderRangeSlider = (
           if (props.disabled === true) return;
           Option.match(decideValueKey(value, range, event.key ?? ""), {
             onNone: () => {},
-            onSome: (next) =>
-              handlers.onSpanChange(
-                spanAfterMove(state.current, end, next, range),
-              ),
+            onSome: (next) => {
+              const moved = spanAfterMove(state.current, end, next, range);
+              handlers.onSpanChange(moved);
+              if (moved !== state.current) handlers.onSpanCommit(moved);
+            },
           });
         }}
         testId={
@@ -397,6 +418,12 @@ const pointerOf = (
   );
 };
 
+/** The value a pointer gesture started from, and the last value it resolved. */
+interface SliderGesture {
+  readonly start: number;
+  readonly last: number;
+}
+
 /** A value on a track, by click, drag or keyboard. */
 export const Slider = (props: SliderProps): ReactElement => {
   const theme = useTheme();
@@ -405,6 +432,7 @@ export const Slider = (props: SliderProps): ReactElement => {
   const focus = useFocus(false, () => trackId.current ?? undefined);
   const range = sliderRange(props);
   const dragging = useRef(false);
+  const gesture = useRef<Option.Option<SliderGesture>>(Option.none());
   const state = useControlState(
     props.value,
     clampValue(props.defaultValue ?? range.min, range),
@@ -414,31 +442,66 @@ export const Slider = (props: SliderProps): ReactElement => {
   const apply = (event: EventPayload): void =>
     Option.match(pointerOf(event, renderer, trackId.current, range, inset), {
       onNone: () => {},
-      onSome: state.set,
+      onSome: (value) => {
+        gesture.current = Option.map(gesture.current, (current) => ({
+          start: current.start,
+          last: value,
+        }));
+        state.set(value);
+      },
     });
+  /**
+   * A released drag is one finished gesture. The value reported is the one the
+   * gesture resolved, not a re-read of possibly deferred state, and a gesture
+   * that ends where it began is not an edit (plan `646`).
+   */
+  const endGesture = (): void => {
+    const current = Option.getOrUndefined(gesture.current);
+    gesture.current = Option.none();
+    if (current !== undefined && current.last !== current.start)
+      props.onValueCommit?.(current.last);
+  };
   return renderSlider(props, theme, state.value, focus, {
     onValueChange: state.set,
+    onCommit: (next) => props.onValueCommit?.(next),
     registerTrack: (instance) => {
       trackId.current = instance?.id ?? null;
     },
     onPointerDown: (event) => {
       if (props.disabled === true || event.button !== 0) return;
       dragging.current = true;
-      apply(event);
+      Option.match(pointerOf(event, renderer, trackId.current, range, inset), {
+        onNone: () => {},
+        onSome: (value) => {
+          gesture.current = Option.some({
+            start: clampValue(state.value.current, range),
+            last: value,
+          });
+          state.set(value);
+        },
+      });
     },
     onPointerMove: (event) => {
       if (props.disabled === true || !dragging.current) return;
       if (event.pressedButton !== 0) {
         dragging.current = false;
+        endGesture();
         return;
       }
       apply(event);
     },
     onPointerUp: () => {
       dragging.current = false;
+      endGesture();
     },
   });
 };
+
+/** The ordered pair a range gesture started from, and the last pair it resolved. */
+interface RangeGesture {
+  readonly start: readonly [number, number];
+  readonly last: readonly [number, number];
+}
 
 /** Two values on one track. */
 export const RangeSlider = (props: RangeSliderProps): ReactElement => {
@@ -455,6 +518,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   const trackId = useRef<number | null>(null);
   const activeEnd = useRef<"start" | "end">("start");
   const dragging = useRef(false);
+  const gesture = useRef<Option.Option<RangeGesture>>(Option.none());
   const focus = useRovingFocus();
   const state = useControlState<readonly [number, number]>(
     props.value,
@@ -469,8 +533,25 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     });
     focus.onFocus(index);
   };
-  const change = (end: "start" | "end", value: number): void =>
-    state.set(spanAfterMove(state.value.current, end, value, range));
+  const change = (
+    end: "start" | "end",
+    value: number,
+  ): readonly [number, number] => {
+    const next = spanAfterMove(state.value.current, end, value, range);
+    state.set(next);
+    return next;
+  };
+  /** One released drag reports its final pair; an unchanged gesture is not an edit. */
+  const endGesture = (): void => {
+    const current = Option.getOrUndefined(gesture.current);
+    gesture.current = Option.none();
+    if (
+      current !== undefined &&
+      (current.last[0] !== current.start[0] ||
+        current.last[1] !== current.start[1])
+    )
+      props.onValueCommit?.(current.last);
+  };
   return renderRangeSlider(
     props,
     theme,
@@ -482,6 +563,7 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
     },
     {
       onSpanChange: state.set,
+      onSpanCommit: (next) => props.onValueCommit?.(next),
       registerTrack: (instance) => {
         trackId.current = instance?.id ?? null;
       },
@@ -497,7 +579,11 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
               const end = nearestEnd(value, span);
               activeEnd.current = end;
               dragging.current = true;
-              change(end, value);
+              const next = change(end, value);
+              gesture.current = Option.some({
+                start: [span.start, span.end] as const,
+                last: next,
+              });
               focusThumb(end === "start" ? 0 : 1);
             },
           },
@@ -507,18 +593,26 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
         if (props.disabled === true || !dragging.current) return;
         if (event.pressedButton !== 0) {
           dragging.current = false;
+          endGesture();
           return;
         }
         Option.match(
           pointerOf(event, renderer, trackId.current, range, inset),
           {
             onNone: () => {},
-            onSome: (value) => change(activeEnd.current, value),
+            onSome: (value) => {
+              const next = change(activeEnd.current, value);
+              gesture.current = Option.map(gesture.current, (current) => ({
+                start: current.start,
+                last: next,
+              }));
+            },
           },
         );
       },
       onPointerUp: () => {
         dragging.current = false;
+        endGesture();
       },
     },
   );

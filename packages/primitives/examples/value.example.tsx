@@ -46,6 +46,7 @@ const Row = ({
 export const ValueExample = (): ReactElement => {
   const theme = useTheme();
   const [quality, setQuality] = useState(62);
+  const [savedQuality, setSavedQuality] = useState(62);
   const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
   const [depth, setDepth] = useState(10);
   const diskUsed = 68;
@@ -68,6 +69,7 @@ export const ValueExample = (): ReactElement => {
             label="Quality"
             value={quality}
             onValueChange={setQuality}
+            onValueCommit={setSavedQuality}
             formatValue={(value) => `${value}%`}
           />
         </Row>
@@ -115,7 +117,7 @@ export const ValueExample = (): ReactElement => {
 
         <Text role="caption" tone="muted">
           Theme step: {theme.spacing.md}px · drag the thumb or use the arrow
-          keys.
+          keys · quality saved at {savedQuality}%.
         </Text>
       </Stack>
     </Box>

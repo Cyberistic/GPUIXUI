@@ -65,6 +65,7 @@ const selectHandlers = (): SelectHandlers => ({
 
 const sliderHandlers = (): SliderHandlers => ({
   onValueChange: vi.fn(),
+  onCommit: vi.fn(),
   registerTrack: () => {},
   onPointerDown: vi.fn(),
   onPointerMove: vi.fn(),

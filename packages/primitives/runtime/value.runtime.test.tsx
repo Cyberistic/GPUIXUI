@@ -12,6 +12,9 @@
  * Each test names the defect it guards — most importantly the negative-margin
  * thumb geometry (plan 053 §6), which is the one assumption a style resolver
  * cannot prove.
+ *
+ * Plan `646` adds the commit contract: one `onValueCommit` per released drag,
+ * one per keyboard step, and nothing for an unchanged or refused gesture.
  */
 
 import type { ReactNode } from "react";
@@ -558,4 +561,158 @@ it("starts a default RangeSlider at its maximum", async () => {
     boundsOf(runtime, `${testId}-thumb-end`).x - boundsOf(runtime, testId).x;
   expect(offset("full")).toBeGreaterThan(offset("nine"));
   expect(announced(runtime, "Full maximum")).toBe("10");
+});
+
+/**
+ * The commit contract (plan `646`).
+ *
+ * `onValueChange` is continuous; `onValueCommit` is the settled edge a form
+ * saves on. These cases guard the three rules: one commit per released drag,
+ * one per keyboard step, and nothing for a gesture that ends where it began or
+ * a press that was refused. Before the prop existed there was no callback to
+ * observe at all, so every case below is a liveness proof for the wiring.
+ */
+it("reports one commit when a drag is released, not on every move", async () => {
+  const changes = vi.fn();
+  const commits = vi.fn();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={25}
+      onValueChange={changes}
+      onValueCommit={commits}
+    />,
+  );
+  const start = pointAt(runtime, "s", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.5).x, start.y, 0);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.75).x, start.y, 0);
+  expect(commits).toHaveBeenCalledTimes(0);
+  runtime.mouseUpAt(pointAt(runtime, "s", 0.75).x, start.y);
+  expect(commits.mock.calls).toStrictEqual([[75]]);
+  expect(changes).toHaveBeenLastCalledWith(75);
+});
+
+it("commits each keyboard step immediately, and nothing at a bound", async () => {
+  const commits = vi.fn();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={50}
+      onValueCommit={commits}
+    />,
+  );
+  runtime.keyDown("s", "right");
+  runtime.keyDown("s", "end");
+  runtime.keyDown("s", "end");
+  expect(commits.mock.calls).toStrictEqual([[51], [100]]);
+});
+
+it("commits nothing for a gesture that ends where it began", async () => {
+  const changes = vi.fn();
+  const commits = vi.fn();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      defaultValue={25}
+      onValueChange={changes}
+      onValueCommit={commits}
+    />,
+  );
+  const start = pointAt(runtime, "s", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.6).x, start.y, 0);
+  runtime.mouseMoveAt(start.x, start.y, 0);
+  runtime.mouseUpAt(start.x, start.y);
+  expect(changes).toHaveBeenCalled();
+  expect(commits).toHaveBeenCalledTimes(0);
+});
+
+it("commits nothing for a refused press", async () => {
+  const commits = vi.fn();
+  const runtime = await mount(
+    <Stack direction="column" gap="md">
+      <Slider
+        testId="s"
+        label="Volume"
+        defaultValue={25}
+        onValueCommit={commits}
+      />
+      <Slider
+        testId="d"
+        label="Disabled"
+        defaultValue={25}
+        disabled
+        onValueCommit={commits}
+      />
+    </Stack>,
+  );
+  const point = pointAt(runtime, "s", 0.75);
+  runtime.renderer.nativeSimulateMouseDown(point.x, point.y, 2);
+  runtime.renderer.nativeSimulateMouseUp(point.x, point.y, 2);
+  const disabled = pointAt(runtime, "d", 0.75);
+  runtime.clickAt(disabled.x, disabled.y);
+  expect(commits).toHaveBeenCalledTimes(0);
+  runtime.clickAt(point.x, point.y);
+  expect(commits.mock.calls).toStrictEqual([[75]]);
+});
+
+it("reports one commit for a range drag, with the final ordered pair", async () => {
+  const commits = vi.fn();
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[20, 80] as const}
+      onValueCommit={commits}
+    />,
+  );
+  const start = pointAt(runtime, "r", 0.2);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "r", 0.4).x, start.y, 0);
+  expect(commits).toHaveBeenCalledTimes(0);
+  runtime.mouseUpAt(pointAt(runtime, "r", 0.4).x, start.y);
+  expect(commits.mock.calls).toStrictEqual([[[40, 80]]]);
+});
+
+it("commits a range keyboard step immediately, and nothing at a bound", async () => {
+  const commits = vi.fn();
+  const runtime = await mount(
+    <RangeSlider
+      testId="r"
+      label="Price"
+      defaultValue={[20, 80] as const}
+      onValueCommit={commits}
+    />,
+  );
+  runtime.keyDown("r-thumb-start", "right");
+  runtime.keyDown("r-thumb-start", "home");
+  runtime.keyDown("r-thumb-start", "home");
+  expect(commits.mock.calls).toStrictEqual([[[21, 80]], [[0, 80]]]);
+});
+
+it("commits the value a drag resolved, not a deferred state re-read", async () => {
+  // A controlled parent that never applies the change must still see the
+  // gesture's result: the commit is the value this drag resolved, not the
+  // painted value it was given (plan `646` §2).
+  const commits = vi.fn();
+  const runtime = await mount(
+    <Slider
+      testId="s"
+      label="Volume"
+      value={25}
+      onValueChange={() => {}}
+      onValueCommit={commits}
+    />,
+  );
+  const start = pointAt(runtime, "s", 0.25);
+  runtime.mouseDownAt(start.x, start.y);
+  runtime.mouseMoveAt(pointAt(runtime, "s", 0.75).x, start.y, 0);
+  runtime.mouseUpAt(pointAt(runtime, "s", 0.75).x, start.y);
+  // The painted value is still 25; the commit is the gesture's 75.
+  expect(announced(runtime, "Volume")).toBe("25");
+  expect(commits.mock.calls).toStrictEqual([[75]]);
 });

@@ -2084,6 +2084,14 @@ retired once both branches are one
       (offline 60 files / 860 tests, full runtime 58 files / 812 tests; plan
       `645`).
 
+`[x]` `packages/primitives`: **the sliders had no commit signal** — `Slider` and
+      `RangeSlider` exposed only the continuous `onValueChange`, so a settings
+      screen had to debounce a drag that has a real settled edge; the
+      shadcn/Radix reference exposes `onValueCommit`. Both parts now report once
+      on pointer release with the gesture's final value and once per keyboard
+      step, and report nothing for a gesture that ends where it began or a
+      refused press (plan `646`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

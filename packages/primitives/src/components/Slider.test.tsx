@@ -63,6 +63,7 @@ const sliderHandlers = (
   onValueChange: (next: number) => void,
 ): SliderHandlers => ({
   onValueChange,
+  onCommit: () => {},
   registerTrack: () => {},
   onPointerDown: () => {},
   onPointerMove: () => {},
@@ -73,6 +74,7 @@ const rangeHandlers = (
   onSpanChange: (next: readonly [number, number]) => void,
 ): RangeSliderHandlers => ({
   onSpanChange,
+  onSpanCommit: () => {},
   registerTrack: () => {},
   registerThumb: () => () => {},
   onPointerDown: () => {},
