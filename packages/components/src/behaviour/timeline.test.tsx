@@ -116,10 +116,16 @@ describe("Timeline", () => {
       darkTheme.colors.primary,
     );
     expect(dotOf(history, "deploy")?.style.backgroundColor).toBe(
-      darkTheme.colors.muted,
+      darkTheme.colors.mutedForeground,
     );
 
     history.unmount();
+
+    const light = renderComponent(<History />, "light");
+    expect(dotOf(light, "deploy")?.style.backgroundColor).toBe(
+      lightTheme.colors.mutedForeground,
+    );
+    light.unmount();
   });
 
   it("draws a connector after every event but the last", () => {

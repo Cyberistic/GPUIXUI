@@ -87,9 +87,11 @@ export const menuRowStyle = (
   height: controlHeight(theme, "sm"),
   paddingRight: theme.spacing.md,
   // The 2px bar is always present, so highlighting never shifts the label.
+  // It is the row's ink, not a wash: `accent` on `popover` is about 1.1:1, so
+  // the bar that shows the highlight would be invisible.
   paddingLeft: theme.spacing.md - theme.borderWidth.strong,
   borderLeftWidth: theme.borderWidth.strong,
-  borderColor: active ? theme.colors.accent : theme.colors.popover,
+  borderColor: active ? theme.colors.popoverForeground : theme.colors.popover,
   borderRadius: theme.radius.sm,
   backgroundColor: active ? theme.colors.hover : undefined,
   color:
@@ -290,7 +292,11 @@ export const MenuCheckboxItem = ({
             }}
           >
             {checked ? (
-              <Icon name="check" color={theme.colors.accent} size="sm" />
+              <Icon
+                name="check"
+                color={theme.colors.popoverForeground}
+                size="sm"
+              />
             ) : null}
           </div>
         )

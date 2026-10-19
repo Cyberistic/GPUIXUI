@@ -318,7 +318,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (52 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (53 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
@@ -326,7 +326,9 @@ centred surface and a near-bottom surface that opens above its trigger, arrow
 focus skipping a disabled row and wrapping, `Home`/`End`, Enter firing once and
 restoring focus, clicked and disabled rows, Escape/outside press/trigger re-press
 dismissal (including a **held** trigger press, whose release arrives in a later
-task), checkbox toggling and its check mark, the destructive colour, the
+task), checkbox toggling and its check mark, the highlight bar and choice marks
+painted with the row's `popoverForeground` ink (the `accent` wash is about 1.1:1
+on the surface), the destructive colour, the
 surface in both themes, type-ahead (prefix, repeat cycling, disabled skip,
 Shift, window expiry, unmatched-prefix reset), the submenu rules — keyboard,
 hover and pointer opening, right-edge placement — including a right-edge row

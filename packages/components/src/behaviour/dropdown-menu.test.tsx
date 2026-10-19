@@ -708,6 +708,9 @@ describe("DropdownMenu", () => {
       menu.renderer.findByTestId("hidden")?.customProps?.["aria-selected"],
     ).toBe(true);
     expect(menu.renderer.findByType("svg")).toHaveLength(1);
+    expect(menu.renderer.findByType("svg")[0]?.style.color).toBe(
+      darkTheme.colors.popoverForeground,
+    );
 
     menu.unmount();
   });
@@ -1222,6 +1225,34 @@ describe("DropdownMenu radio groups", () => {
         true,
     );
     expect(marked).toEqual(["sort-modified"]);
+
+    menu.unmount();
+  });
+
+  it("paints the highlight bar and the radio dot with the row's text role", () => {
+    // `accent` is a wash: on the menu's popover it measures about 1.1:1, so the
+    // bar and dot that carry the highlight and the chosen value were invisible.
+    // The row's own ink is the readable role on the popover and its washes.
+    const menu = renderComponent(<RadioMenu />);
+    clickCentreOf(menu, "trigger");
+
+    menu.renderer.simulateKeystrokes("down");
+
+    expect(menu.renderer.findByTestId("sort-name")?.style.borderColor).toBe(
+      darkTheme.colors.popoverForeground,
+    );
+
+    clickCentreOf(menu, "sort-modified");
+
+    const row = menu.renderer.findByTestId("sort-modified");
+    const leadingId = row?.children[0];
+    const leading =
+      leadingId === undefined ? undefined : menu.renderer.getElement(leadingId);
+    const dotId = leading?.children[0];
+    const dot =
+      dotId === undefined ? undefined : menu.renderer.getElement(dotId);
+
+    expect(dot?.style.backgroundColor).toBe(darkTheme.colors.popoverForeground);
 
     menu.unmount();
   });

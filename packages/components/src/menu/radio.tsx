@@ -165,7 +165,7 @@ export const MenuRadioItem = ({
                 width: theme.spacing.sm,
                 height: theme.spacing.sm,
                 borderRadius: theme.radius.full,
-                backgroundColor: theme.colors.accent,
+                backgroundColor: theme.colors.popoverForeground,
               }}
             />
           ) : null}

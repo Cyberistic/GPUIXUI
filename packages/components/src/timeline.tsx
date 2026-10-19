@@ -42,7 +42,7 @@ const dotFill = (theme: Theme, status: TimelineStatus): string =>
     ? theme.colors.primary
     : status === "complete"
       ? theme.colors.foreground
-      : theme.colors.muted;
+      : theme.colors.mutedForeground;
 
 /** {@link Timeline} props. */
 export interface TimelineProps extends Omit<Props, "children"> {

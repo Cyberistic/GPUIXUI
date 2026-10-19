@@ -207,7 +207,9 @@ nested level is open — and a radio row selected from the pointer that keeps th
 menu open. Hover open, the delayed close on a leave (one level, focus back on the
 row) and a `disabled` row that opens nothing are shared with the Dropdown menu's
 submenus and proven by `src/behaviour/dropdown-menu.test.tsx`; this suite does not
-repeat them.
+repeat them. The shared row parts also paint the highlight bar and the
+checkbox/radio marks with the row's `popoverForeground` ink, because `accent` is
+a wash and measures about 1.1:1 on the menu surface.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
