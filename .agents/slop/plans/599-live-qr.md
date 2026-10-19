@@ -1,4 +1,4 @@
-# 596 — The QR rendering recipe in a real window
+# 599 — The QR rendering recipe in a real window
 
 **Owner:** playground workstream (`apps/playground`).
 **Depends on:** `518` (`qr-code`), `161` (content surfaces), `180` (the SVG alpha
@@ -42,7 +42,7 @@ stay headless claims and the scenario's header says so.
 | `COMPONENTS.md` | the capability table's `qr` row cites `live-qr`; the live-suite paragraph states the new derived registry count and keeps the last full-run total honest. |
 | `PLAN.md` | one `D72` row with the measured result. |
 | `TODO.md` | add the task and tick it with the measured check count and the exact focused ids. |
-| `.agents/slop/plans/README.md` | index row `596`; the playground narrative line records that `595` was taken by `components` and this twin takes `596`. |
+| `.agents/slop/plans/README.md` | index row `599`; the playground narrative line records that `595`–`598` were taken by other workstreams, so this twin takes `599`. |
 
 No `packages/testing` change: `bounds`, `text`, `paintedText`, `click` and
 `waitFor` already exist (plans `189`, `197`). No probe-view change: the headless
