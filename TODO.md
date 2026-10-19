@@ -473,6 +473,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[~]` `[██████████]` 153/156
 
+`[ ]` **Reader vocabulary, fourth pass (plan 588)** — seven measured queries
+      still miss their page: `alertdialog` returns nothing, `alert dialog`
+      returns Alerts, `scrollbar`/`scrollbars` return a text chunk and Theming,
+      `a11y`/`wcag` return Contributing, and `webview` returns nothing. Two
+      aliases and two page-summary words fix them; no ranker change.
+
 `[x]` **The shared host props have one documented home (plan 587)** — every part
       inherits the runtime's `HostProps`, so `testId`, `onKeyDown` and
       `onMouseDownOutside` appeared in every generated props table but were
