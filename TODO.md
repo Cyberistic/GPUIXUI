@@ -471,7 +471,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–566)
 
-`[x]` `[██████████]` 133/133
+`[~]` `[█████████░]` 133/134
+
+`[~]` **Color picker and Inline edit get live scenes (plan 567)** — both pages
+      documented a selection and an edit state with only a tier-A illustration;
+      a real swatch press and a click → type → Enter commit now run on the wasm
+      renderer, and the scene, gesture and count guards move with them.
 
 `[x]` **Reader vocabulary reaches the component it names (plan 566)** —
       `textbox`, `navbar`, `snackbar`, `kbd` and `searchbox` returned nothing,
