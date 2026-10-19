@@ -326,6 +326,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [669](./669-metric-member-index-owner.md) | The metric-member index's documented owner | F | 324, 531, 668 | done |
 | [670](./670-example-links.md) | Every executed example is linked from a consumer document | F | 350, 355, 356, 616, 668 | done |
 | [671](./671-invalid-ring-pressed-row.md) | The invalid focus ring on a pressed selected row | F | 325, 340, 352, 354, 383, 651 | done |
+| [672](./672-link-pressed-row-surfaces.md) | The pressed row among the link's surface lists | F | 314, 346, 528, 651, 671 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3549,6 +3550,16 @@ chip's 1.05:1 floor, so no surface pair caught it, and the boundary check
 returned `[]` for an error ring a reader could not see. The pair joins the list,
 every shipped set already clears its floor (3.761:1 at the tightest, XP light),
 and the contract grows 460 → 461. No colour, floor or shipped metric moves.
+
+Plan `672` finishes plan `651`'s count in the four prose surfaces it did not
+touch. Plan `651` changed the catalogue's "eight surfaces a link paints" to
+"nine" when it added `primaryText` on `selectedActive`, but the sentence still
+enumerated eight, and the two `primaryText` role-table use cells, the *Brand
+action* paragraph and the package README repeated the omission while the
+design-system interaction-state guard stayed green because its own link row
+already named the pressed fill. All five passages name it now, and a derived
+`docs.test.ts` case reads the nine at-rest surfaces from `contrastPairs` and
+holds every passage to them. No token value, pair, floor or metric moves.
 
 ## How to use a plan
 
