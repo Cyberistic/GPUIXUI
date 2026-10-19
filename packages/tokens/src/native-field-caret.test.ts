@@ -12,7 +12,12 @@
  * The plan-511 regression the role already fixed stays: the runtime's built-in
  * dark caret (`#7C86FF`) measures 3.129:1 on the AAA light `input` and 2.795:1
  * on its quiet panel, under the 4.5:1 mark floor.
+ *
+ * The JSDoc on `nativeFieldTheme` used to credit `caretPairs` with all nine
+ * surfaces; it publishes one. The case below holds the sentence to the two
+ * lists that actually do.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   caretPairs,
@@ -190,6 +195,32 @@ describe("native field caret", () => {
           pairClass === "mark",
       ),
     ).toBe(true);
+  });
+
+  it("states which pair publishes each of the nine surfaces", () => {
+    // The JSDoc credited `caretPairs` with all nine; it publishes the one mark
+    // pair on `input`. The eight text surfaces belong to `primaryTextPairs`.
+    const source = readFileSync(new URL("./styles.ts", import.meta.url), "utf8")
+      .replace(/\n\s*\* ?/g, " ")
+      .replace(/\s+/g, " ");
+    expect(source).toContain(
+      "`primaryTextPairs` holds the eight and {@link caretPairs} adds the field's own `input` fill as a mark",
+    );
+
+    const markSurfaces = caretPairs.map(([, background]) => background);
+    const textSurfaces = contrastPairs
+      .filter(
+        ([foreground, background, pairClass]) =>
+          foreground === "primaryText" &&
+          pairClass !== "mark" &&
+          caretSurfaces.some((surface) => surface === background),
+      )
+      .map(([, background]) => background);
+
+    expect(new Set(textSurfaces).size).toBe(8);
+    expect([...new Set([...textSurfaces, ...markSurfaces])].toSorted()).toEqual(
+      [...caretSurfaces].toSorted(),
+    );
   });
 
   it("runs the example", () => {

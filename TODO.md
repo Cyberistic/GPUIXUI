@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 303/379
+`[x]` `[████████░░]` 304/380
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -107,6 +107,14 @@ contradicts; `check-ordinals.test.ts` reads every source claim and fails on a
 wrong ordinal, an undeclared function or a missing word, the two sentences name
 their function first, and the reference names the guard; no colour, pair, floor,
 metric or shipped theme moves (plan 681)
+`[x]` Give the caret's nine surfaces their two owners — `nativeFieldTheme`'s
+JSDoc credited `caretPairs` with publishing all nine, but it publishes the one
+`mark` pair on the field's `input` fill; the other eight are the
+`primaryTextPairs` text pairs, as the `contrast.ts` JSDoc and the README already
+said. The sentence now names both lists, and `native-field-caret.test.ts`
+derives the eight non-mark pairs and the one mark pair and holds them to its
+nine-surface list, so the sentence cannot credit one pair with nine again; no
+colour, pair, floor, metric or shipped theme moves (plan 682)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

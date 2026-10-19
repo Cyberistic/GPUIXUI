@@ -467,9 +467,10 @@ export interface NativeFieldTheme {
  * shipped macOS dark set the fill measures **2.748:1** on a selected row and
  * **2.836:1** on a pressed one, under the 3:1 mark floor, so a caret in an
  * in-place editor (`InlineEdit`, which plan 527 holds on the four row washes)
- * vanished there. `primaryText` clears the floor on every surface a field sits
- * on — {@link caretPairs} publishes the nine — in all 24 shipped sets (5.587:1
- * at the tightest).
+ * vanished there. `primaryText` clears the floor on all nine surfaces a field
+ * sits on — `primaryTextPairs` holds the eight and {@link caretPairs} adds the
+ * field's own `input` fill as a mark — in all 24 shipped sets (5.587:1 at the
+ * tightest).
  *
  * Without this prop the field keeps the runtime's built-in dark caret, which
  * measures 3.129:1 on the AAA light `input` and 2.795:1 on its quiet panel,
