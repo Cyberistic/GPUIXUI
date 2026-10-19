@@ -572,6 +572,13 @@ retired once both branches are one
       2 pure + 2 native cases (unit 470, Stepper 12), all failing on the old
       source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
+    - [x] A fractional tag cap admits one token too many — plan 662; measured
+      2026-10-19: the cap was compared with the raw number, so `max={1.5}` with
+      one token admitted a second (`1 >= 1.5` is false). `wholeCap` now
+      normalises it once, so a fractional cap truncates and a non-finite one
+      means no cap; 2 pure + 1 native case (unit 472, Tag / token input 16), the
+      fractional assertions failing on the old source; docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1206,12 +1213,14 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 660/661):
-      all three exit 0; the unit suite is 470 tests in 46 files. The full native
+      all three exit 0; the unit suite is 472 tests in 46 files. The full native
       behaviour suite was last run at **820 passed / 31 failed of 851** after
       plan 657 — every failure a recorded plan-540 binding defect (focus/blur
-      delivery, box measurement), not a component regression. Plans 660/661 ran
-      their targeted files (Search input 18/18, Stepper 12/12) and add five
-      cases, so the next full run should collect 856; it was not re-run here.
+      delivery, box measurement), not a component regression. Plans 660–662 ran
+      their targeted files (Search input 18/18, Stepper 12/12, the TagInput
+      fractional-cap case; its focus-ring case remains the recorded plan-540
+      failure) and add six cases, so the next full run should collect 857; it
+      was not re-run here.
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)
