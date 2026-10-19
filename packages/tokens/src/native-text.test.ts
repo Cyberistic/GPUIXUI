@@ -41,6 +41,7 @@ import {
 import {
   canvasDocument,
   diffViewer,
+  largeCodeTheme,
   markdownDocument,
 } from "./native-text.example.js";
 import { shippedThemes } from "./shipped-themes.js";
@@ -211,19 +212,21 @@ describe("native text theme", () => {
   it("derives the layout from the theme's type, spacing and radius scales", () => {
     const edited = extendTheme(lightTheme, {
       typography: {
-        body: { fontSize: 17, lineHeight: 25 },
+        body: { fontSize: 16, lineHeight: 24 },
         h1: { fontSize: 30, lineHeight: 40 },
+        codeBlock: { fontSize: 24, lineHeight: 34 },
+        code: { fontSize: 26, lineHeight: 36 },
       },
       spacing: { lg: 15 },
       radius: { sm: 5 },
     });
     const native = nativeTextTheme(edited);
 
-    expect(native.metrics.mdTextSize).toBe(17);
-    expect(native.metrics.mdLineHeight).toBe(25);
+    expect(native.metrics.mdTextSize).toBe(16);
+    expect(native.metrics.mdLineHeight).toBe(24);
     expect(native.metrics.mdHeadingSizes[0]).toBe(30);
     expect(native.metrics.mdHeadingLineHeights[0]).toBe(40);
-    expect(native.metrics.mdHeadingSizes[3]).toBe(17);
+    expect(native.metrics.mdHeadingSizes[3]).toBe(16);
     expect(native.metrics.diffFileHeaderHeight).toBe(
       edited.typography.label.lineHeight + 2 * edited.spacing.md,
     );
@@ -236,6 +239,33 @@ describe("native text theme", () => {
     expect(native.metrics.mdCodeHeaderTextSize).toBe(
       edited.typography.caption.fontSize,
     );
+    // The runtime's own proportions, resolved against the edited roles: 7px at
+    // 12.5px code, 36px at 12px diff and 96/48px at 14px body.
+    expect(native.metrics.codeGutterDigitWidth).toBe(14);
+    expect(native.metrics.diffGutterWidth).toBe(72);
+    expect(native.metrics.mdTableMinColumnWidth).toBe(110);
+    expect(native.metrics.mdTableMinColumnContent).toBe(55);
+  });
+
+  it("keeps the runtime's shipped metrics at the shipped type sizes", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const { metrics } = nativeTextTheme(theme);
+      expect(metrics.codeGutterDigitWidth, theme.name).toBe(7);
+      expect(metrics.diffGutterWidth, theme.name).toBe(36);
+      expect(metrics.mdTableMinColumnWidth, theme.name).toBe(96);
+      expect(metrics.mdTableMinColumnContent, theme.name).toBe(48);
+    });
+  });
+
+  it("scales the code gutter with the example's larger code role", () => {
+    const shipped = markdownDocument.theme.metrics;
+    const larger = largeCodeTheme.theme.metrics;
+
+    expect(larger.codeGutterDigitWidth).toBeGreaterThan(
+      shipped.codeGutterDigitWidth,
+    );
+    expect(larger.codeGutterDigitWidth).toBe(14);
+    expect(larger.diffGutterWidth).toBe(72);
   });
 
   it("holds the syntax palette to the body floor on the painted code surface", () => {

@@ -60,15 +60,22 @@ export interface NativeSyntaxTheme {
 
 /**
  * The native text layout metrics this package derives from the theme's type,
- * spacing and radius scales. Fields the runtime also has but no token names
- * (gutter widths, table columns, the diff row's own heights) are omitted and
- * keep the runtime's defaults; see `docs/tokens.md`.
+ * spacing and radius scales. The runtime's remaining fields — the code gutter's
+ * floor, the diff accent bar and its hardcoded per-digit estimate, and the
+ * table's max-content share — have no token source and keep the runtime's
+ * defaults; see `docs/tokens.md`.
  */
 export interface NativeTextMetrics {
   /** Code block text size; the `codeBlock` role. */
   readonly codeTextSize: number;
   /** Code block line height; the `codeBlock` role. */
   readonly codeLineHeight: number;
+  /**
+   * Width of one line-number digit; `codeBlock.fontSize` at the runtime's own
+   * 7px-per-digit proportion for 12.5px type, so a larger code role widens the
+   * gutter instead of overlapping its digits.
+   */
+  readonly codeGutterDigitWidth: number;
   /** Right padding of the code gutter; `spacing.lg`. */
   readonly codeGutterPaddingRight: number;
   /** Diff text size; the `codeBlock` role. */
@@ -83,6 +90,12 @@ export interface NativeTextMetrics {
   readonly diffNoticeHeight: number;
   /** Padding below the diff body; `spacing.md`. */
   readonly diffBodyBottomPad: number;
+  /**
+   * Minimum width of one line-number gutter column; `codeBlock.fontSize` at the
+   * runtime's own 36px-at-12px proportion. The runtime still computes its
+   * per-digit advance from a constant, so this is a floor, not the whole width.
+   */
+  readonly diffGutterWidth: number;
   /** Width of the `+`/`−` column; `spacing["2xl"]`. */
   readonly diffMarkerWidth: number;
   /** Horizontal padding of a diff row; `spacing.xl`. */
@@ -94,11 +107,21 @@ export interface NativeTextMetrics {
   /** Gap between markdown blocks; `spacing.lg`. */
   readonly mdBlockGap: number;
   /** Markdown heading sizes, `[h1, h2, h3, h4to6]`; the last is `body`. */
-  readonly mdHeadingSizes: number[];
+  readonly mdHeadingSizes: ReadonlyArray<number>;
   /** Markdown heading leadings, in the same order as `mdHeadingSizes`. */
-  readonly mdHeadingLineHeights: number[];
+  readonly mdHeadingLineHeights: ReadonlyArray<number>;
   /** Markdown table cell padding; `spacing.lg`. */
   readonly mdTableCellPadding: number;
+  /**
+   * Width below which a markdown table column stops shrinking;
+   * `body.fontSize` at the runtime's 96px-at-14px proportion.
+   */
+  readonly mdTableMinColumnWidth: number;
+  /**
+   * Floor for a markdown column's max-content share; `body.fontSize` at the
+   * runtime's 48px-at-14px proportion.
+   */
+  readonly mdTableMinColumnContent: number;
   /** Inline-code corner radius; `radius.sm`. */
   readonly mdInlineCodeRadius: number;
   /** Fenced code block horizontal padding; `spacing.lg`. */
@@ -253,11 +276,20 @@ const syntaxOf = (theme: Theme): NativeSyntaxTheme => {
   };
 };
 
+/**
+ * Scale a runtime default that was tuned to `base` pixels to a theme's own role
+ * size. Rounding up keeps a gutter wide enough for the glyph; the multiply is
+ * before the divide so an exact proportion (14 × 96 / 14) stays exact.
+ */
+const scaledMetric = (size: number, shippedAt: number, base: number): number =>
+  Math.ceil((size * shippedAt) / base);
+
 const metricsOf = (theme: Theme): NativeTextMetrics => {
   const { body, caption, codeBlock, h1, h2, h3, label } = theme.typography;
   return {
     codeTextSize: codeBlock.fontSize,
     codeLineHeight: codeBlock.lineHeight,
+    codeGutterDigitWidth: scaledMetric(codeBlock.fontSize, 7, 12.5),
     codeGutterPaddingRight: theme.spacing.lg,
     diffTextSize: codeBlock.fontSize,
     diffLineHeight: codeBlock.lineHeight,
@@ -265,6 +297,7 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
     diffHunkHeaderHeight: caption.lineHeight + 2 * theme.spacing.xs,
     diffNoticeHeight: caption.lineHeight + 2 * theme.spacing["2xs"],
     diffBodyBottomPad: theme.spacing.md,
+    diffGutterWidth: scaledMetric(codeBlock.fontSize, 36, 12),
     diffMarkerWidth: theme.spacing["2xl"],
     diffRowPaddingX: theme.spacing.xl,
     mdTextSize: body.fontSize,
@@ -273,6 +306,8 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
     mdHeadingSizes: [h1, h2, h3, body].map((role) => role.fontSize),
     mdHeadingLineHeights: [h1, h2, h3, body].map((role) => role.lineHeight),
     mdTableCellPadding: theme.spacing.lg,
+    mdTableMinColumnWidth: scaledMetric(body.fontSize, 96, 14),
+    mdTableMinColumnContent: scaledMetric(body.fontSize, 48, 14),
     mdInlineCodeRadius: theme.radius.sm,
     mdCodePaddingX: theme.spacing.lg,
     mdCodePaddingY: theme.spacing.md,

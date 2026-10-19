@@ -261,6 +261,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [567](./567-contract-prose-counts.md) | The guarantee's two counts have one owner each | F | 387, 398, 540, 543, 544 | done |
 | [568](./568-theme-extreme-bounds.md) | The largest and smallest are the theme's own | F | 361, 372, 531, 552, 554, 566 | done |
 | [569](./569-native-text-theme.md) | The native text theme: code, diff and markdown | F | 011, 051, 082, 332, 337, 399, 511, 527, 557 | done |
+| [572](./572-native-text-metric-scale.md) | The native text metrics that hold type | F | 367, 569 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2895,6 +2896,21 @@ first cut cascaded into the presence dot until `orderedScale` gated it. Six
 cases cover the avatar, control and corner extensions, the decoded smaller
 avatar, the valid bound and the shipped pass; no shipped value, pair, floor,
 metric, platform style, recipe or theme moves.
+
+Plan `572` finishes the native text bridge plan `569` began. `nativeTextTheme`
+sent the native engine's type sizes from `codeBlock`/`body`, but left four layout
+fields at the runtime's defaults — the code gutter's 7px per digit (tuned to
+12.5px code), the 36px diff gutter (12px) and the 96/48px markdown table floors
+(14px). A copied theme with a 24px code role therefore reserved 7px per
+line-number digit while the glyph advanced about 13px, and a 16px body role
+squeezed table columns; every check returned `[]` because the native metrics are
+not part of `Theme`. The four fields now resolve the runtime's own proportions
+against the role that decides the text they hold, with `Math.ceil` and an exact
+integer multiply so the shipped sizes resolve to the same 7/36/96/48px and no
+pixel moves; the remaining runtime fields (the code gutter floor, the diff accent
+bar and the runtime's per-digit and max-content estimates) stay defaults and the
+catalogue says why. `native-text.example.ts` ships a larger code role and
+`native-text.test.ts` holds both directions.
 
 ## How to use a plan
 

@@ -1598,10 +1598,20 @@ the suite's stricter code-surface guard.
 The metrics come from the theme's own scales: `codeTextSize`/`codeLineHeight`
 from `codeBlock`, `mdTextSize`/`mdLineHeight` from `body`, the heading sizes from
 `h1`/`h2`/`h3`/`body`, the insets from spacing, and the inline-code and code-card
-radii from `radius.sm`/`radius.lg`. The remaining runtime fields — gutter widths,
-table column minima and the diff's own header constants — have no token in this
-scale yet and stay at the runtime's defaults; a brand that needs them sets them
-on the returned object.
+radii from `radius.sm`/`radius.lg`. The gutters and table floors scale with the
+type they hold, at the runtime's own shipped proportions: `codeGutterDigitWidth`
+is `codeBlock.fontSize` at 7px per digit per 12.5px of code, `diffGutterWidth` is
+`codeBlock.fontSize` at 36px per 12px, and `mdTableMinColumnWidth`/
+`mdTableMinColumnContent` are `body.fontSize` at 96px/48px per 14px. At the
+shipped sizes those resolve to the runtime's own 7px, 36px, 96px and 48px, so no
+pixel moves; a copied theme that enlarges code or body text widens them instead
+of overlapping line numbers or squeezing a table's columns.
+
+The runtime's remaining fields have no token source and stay at its defaults: the
+code gutter's 28px floor (the computed width already exceeds it as the type
+grows), the 3px diff accent bar, and the diff's hardcoded per-digit advance and
+the table's max-content share, which only raise or lower a column around the
+floors above. A brand that needs them sets them on the returned object.
 
 `bg` is the raised `card` plane a code block, diff or document is painted on. A
 document painted directly on the canvas overrides only that field; every role is

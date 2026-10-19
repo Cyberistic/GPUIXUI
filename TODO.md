@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 231/299
+`[x]` `[████████░░]` 232/300
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1903,6 +1903,15 @@ fixed fade fractions and 3.5% ink wash are held on every shipped set, the
 syntax palette joins the public checker at the body floor on `card`
 (`nativeSyntaxPairs`), and `bg` is the one field a canvas document overrides
 (plan 569)
+`[x]` Scale the native text metrics with the type they hold — `nativeTextTheme`
+sent `codeTextSize`/`diffTextSize` from `codeBlock` and `mdTextSize` from
+`body`, but left the code gutter's per-digit width (7px at 12.5px), the diff
+gutter minimum (36px at 12px) and the two markdown table floors (96/48px at
+14px) at the runtime's defaults, so a copied theme with a 24px code role asked
+7px per line-number digit while the glyph advanced ~13px and a 16px body role
+squeezed table columns; the four fields now resolve the runtime's own
+proportions against those roles, still 7/36/96/48px at the shipped sizes, and
+the example's larger code role is held by the suite (plan 572)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the
