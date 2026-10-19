@@ -66,6 +66,23 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 104/104 plans-and-harness
 
+`[x]` Prove **Tabs' vertical axis through the consumer path** per plan `633`:
+      the shipped `orientation="vertical"` had package tests but neither
+      `tier2-navigation` nor `live-tier2-navigation` set it. A vertical fixture
+      now proves the rail stacks with the panel beside it, `End`/`Home` seed the
+      roving index, `Up`/`Down` skip the disabled row and wrap, `Right`/`Left`
+      are inert, the disabled trigger is not a tab stop, and each selected panel
+      replaces the last — **55 → 78 checks**. `live-tier2-navigation`
+      (**20 → 26**) proves the stack, a real click, native focus and the inert
+      disabled row in the 1100 × 720 window. Measured: a headless
+      `keyDown(trigger)` bubbles to `TabsList`; the window does not (plan `344`),
+      so arrows stay headless. Six mutation proofs observed and reverted
+      (vertical root/list arms, inverted deltas, a lateral fallback, an ignored
+      `delta`, and the live `orientation` removed). Focused ids run:
+      `tier2-navigation`, `live-tier2-navigation`; then the full headless
+      **104/104** (**3695** checks), exit `0`, plus `nub run check`, `lint`,
+      `test` (playground 424).
+
 `[x]` Prove the **native text-entry contract in a real window** per plan `624`:
       `live-text-entry` (**71 checks**, three consecutive focused runs, ~6.9 s)
       reuses plan `188`'s `text-entry` view in the real 1100×720 window and reads

@@ -5310,6 +5310,52 @@ const tier2Navigation: LiveScenario = {
         "tab=settings",
       );
 
+      // The vertical axis: the rail stacks, the panel sits beside it, a real
+      // click selects, and the disabled row is inert.
+      const liveVtabA = yield* boxOf(ctx, "vtab-a");
+      const liveVtabD = yield* boxOf(ctx, "vtab-d");
+      yield* ctx.expectEqual(
+        "the vertical rail stacks live",
+        Math.abs(liveVtabA.x - liveVtabD.x) <= 1 &&
+          liveVtabD.y >= liveVtabA.y + liveVtabA.height,
+        true,
+      );
+      const liveOverview = yield* boxOf(ctx, "tab-overview");
+      const liveSettings = yield* boxOf(ctx, "tab-settings");
+      yield* ctx.expectEqual(
+        "the horizontal rail stays a row live",
+        Math.abs(liveOverview.y - liveSettings.y) <= 1 &&
+          liveSettings.x >= liveOverview.x + liveOverview.width,
+        true,
+      );
+      yield* ctx.host.click("vtab-c");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "vtab=vc");
+      const livePanelC = yield* boxOf(ctx, "vpanel-c");
+      yield* ctx.expectEqual(
+        "the live vertical panel sits beside the rail",
+        livePanelC.x >= liveVtabA.x + liveVtabA.width,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the previous vertical panel left the live tree",
+        (yield* ctx.host.bounds("vpanel-a")) === null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the clicked vertical tab holds focus live",
+        yield* focusedOf(ctx),
+        "vtab-c",
+      );
+      yield* ctx.host.click("vtab-b");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-navigation-readout", "vtab=vc");
+      yield* ctx.expectEqual(
+        "the disabled vertical tab paints no panel live",
+        (yield* ctx.host.bounds("vpanel-b")) === null,
+        true,
+      );
+
       yield* ctx.host.click("acc-trigger-shipping");
       yield* settle;
       yield* waitForText(ctx, "tier2-navigation-readout", "open=shipping");

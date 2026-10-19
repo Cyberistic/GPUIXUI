@@ -53,6 +53,7 @@ const Probe = () => {
   const theme = useTheme();
   const window = useWindowSize();
   const [tab, setTab] = useState("overview");
+  const [vert, setVert] = useState("va");
   const [open, setOpen] = useState<string | null>(null);
   const [collapsible, setCollapsible] = useState(false);
   const [path, setPath] = useState("home");
@@ -152,6 +153,67 @@ const Probe = () => {
               style={{ color: theme.colors.foreground }}
             >
               Workspace preferences
+            </text>
+          </TabsContent>
+        </Tabs>
+        <Tabs value={vert} onValueChange={setVert} orientation="vertical">
+          <TabsList testId="vtabs-list">
+            <TabsTrigger
+              testId="vtab-a"
+              aria-id="vtab-a"
+              aria-label="Alpha"
+              value="va"
+            >
+              Alpha
+            </TabsTrigger>
+            <TabsTrigger
+              testId="vtab-b"
+              aria-id="vtab-b"
+              aria-label="Beta"
+              value="vb"
+              disabled
+            >
+              Beta
+            </TabsTrigger>
+            <TabsTrigger
+              testId="vtab-c"
+              aria-id="vtab-c"
+              aria-label="Gamma"
+              value="vc"
+            >
+              Gamma
+            </TabsTrigger>
+            <TabsTrigger
+              testId="vtab-d"
+              aria-id="vtab-d"
+              aria-label="Delta"
+              value="vd"
+            >
+              Delta
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent testId="vpanel-a" aria-id="vpanel-a" value="va">
+            <text
+              testId="vpanel-a-text"
+              style={{ color: theme.colors.foreground }}
+            >
+              Alpha panel
+            </text>
+          </TabsContent>
+          <TabsContent testId="vpanel-c" aria-id="vpanel-c" value="vc">
+            <text
+              testId="vpanel-c-text"
+              style={{ color: theme.colors.foreground }}
+            >
+              Gamma panel
+            </text>
+          </TabsContent>
+          <TabsContent testId="vpanel-d" aria-id="vpanel-d" value="vd">
+            <text
+              testId="vpanel-d-text"
+              style={{ color: theme.colors.foreground }}
+            >
+              Delta panel
             </text>
           </TabsContent>
         </Tabs>
@@ -273,7 +335,7 @@ const Probe = () => {
           <PaginationNext testId="page-next" />
         </Pagination>
         <Readout testId="tier2-navigation-readout">
-          {`tab=${tab} open=${open ?? "none"} collapsible=${
+          {`tab=${tab} vtab=${vert} open=${open ?? "none"} collapsible=${
             collapsible ? "open" : "closed"
           } path=${path} page=${page}`}
         </Readout>
@@ -398,6 +460,132 @@ export const tier2NavigationScenario: PlaygroundScenario = {
         "the disabled tab never selects",
         Option.isNone(painted(ctx, "panel-activity")),
         true,
+      );
+
+      // The shipped consumer path's other axis: `orientation="vertical"` turns
+      // the root into a row and the rail into a column, and only Down/Up move.
+      const vertList = yield* ctx.expectSome(
+        "the vertical tab list is painted",
+        painted(ctx, "vtabs-list"),
+      );
+      const vtabA = yield* ctx.expectSome(
+        "the first vertical tab is painted",
+        painted(ctx, "vtab-a"),
+      );
+      const vtabD = yield* ctx.expectSome(
+        "the last vertical tab is painted",
+        painted(ctx, "vtab-d"),
+      );
+      yield* ctx.expectEqual(
+        "a vertical tab set stacks its triggers",
+        Math.abs(vtabA.x - vtabD.x) <= 1 && vtabD.y >= vtabA.y + vtabA.height,
+        true,
+      );
+      const tabOverview = yield* ctx.expectSome(
+        "the horizontal rail still paints its first tab",
+        painted(ctx, "tab-overview"),
+      );
+      const tabSettings = yield* ctx.expectSome(
+        "the horizontal rail still paints its last tab",
+        painted(ctx, "tab-settings"),
+      );
+      yield* ctx.expectEqual(
+        "the horizontal set keeps its row",
+        Math.abs(tabOverview.y - tabSettings.y) <= 1 &&
+          tabSettings.x >= tabOverview.x + tabOverview.width,
+        true,
+      );
+      const vpanelA = yield* ctx.expectSome(
+        "the vertical panel paints beside its rail",
+        painted(ctx, "vpanel-a"),
+      );
+      yield* ctx.expectEqual(
+        "a vertical panel sits to the right of the list",
+        vpanelA.x >= vertList.x + vertList.width,
+        true,
+      );
+
+      // `End` seeds the roving index through `jumpTo`; that is the documented
+      // route when `onFocus` never arrives (plan `529` §6.5), so the arrows
+      // below move from a known row instead of from `None`.
+      ctx.host.keyDown("vtab-a", "end");
+      yield* ctx.expectContains(
+        "End selects the last enabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vd",
+      );
+      yield* ctx.expectEqual(
+        "End focused the last vertical tab",
+        focusedId(ctx),
+        "vtab-d",
+      );
+      yield* ctx.expectSome(
+        "the vertical panel follows the selection",
+        painted(ctx, "vpanel-d"),
+      );
+      yield* ctx.expectEqual(
+        "the previous vertical panel left the tree",
+        Option.isNone(painted(ctx, "vpanel-a")),
+        true,
+      );
+
+      ctx.host.keyDown("vtab-d", "up");
+      yield* ctx.expectContains(
+        "Up moves to the previous enabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vc",
+      );
+      yield* ctx.expectEqual(
+        "Up moved native focus with the selection",
+        focusedId(ctx),
+        "vtab-c",
+      );
+      ctx.host.keyDown("vtab-c", "up");
+      yield* ctx.expectContains(
+        "Up skips the disabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=va",
+      );
+      ctx.host.keyDown("vtab-a", "down");
+      yield* ctx.expectContains(
+        "Down skips the disabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vc",
+      );
+      ctx.host.keyDown("vtab-c", "down");
+      yield* ctx.expectContains(
+        "Down reaches the last enabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vd",
+      );
+      ctx.host.keyDown("vtab-d", "right");
+      yield* ctx.expectContains(
+        "Right is inert in a vertical tab set",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vd",
+      );
+      yield* ctx.expectEqual(
+        "Right leaves vertical focus alone",
+        focusedId(ctx),
+        "vtab-d",
+      );
+      ctx.host.keyDown("vtab-d", "left");
+      yield* ctx.expectContains(
+        "Left is inert in a vertical tab set",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=vd",
+      );
+      ctx.host.focusNext();
+      yield* ctx.expectEqual(
+        "the disabled vertical tab is not a tab stop",
+        focusedId(ctx),
+        "collapse-trigger",
+      );
+      ctx.host.keyDown("vtab-d", "home");
+      yield* ctx.expectContains(
+        "Home returns to the first enabled vertical tab",
+        read(ctx, "tier2-navigation-readout"),
+        "vtab=va",
       );
 
       ctx.host.click("collapse-trigger");

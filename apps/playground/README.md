@@ -1531,7 +1531,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
 | `live-markdown` | the markdown surface in a window: the GFM blocks paint as text, a real drag across the boundary selects the heading and the fenced code, a real coordinate click on the link fires `onLinkClick` while prose fires nothing, and React children stay out of the paint — 19 checks (plan `577`). The article role stays headless (no live a11y dump, plan `197`) |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
-| `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 15 checks. Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
+| `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, a vertical tab set stacks its rail with the panel beside it and a real click selects (the disabled row stays inert), Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 26 checks (the vertical half is plan `633`). Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
 | `live-tier2-forms` | the schema's message paints on an explicit validate, a disabled input refuses a live edit, an invalid submit reports nothing, a valid one paints the decoded value, and a pending form locks submit — 14 checks |
 | `live-tier2-editing` | the InlineEdit swap focuses a real editor (the locator's click starts the edit; the component's layout effect moves native focus to the swapped input) and `cmd-a` types, Enter commits and Escape discards; a typed comma adds a tag; a chord records and clears; `@` + arrow + Enter inserts a mention; the Drawer opens flush right at 400 × window height, traps Tab, returns focus on Escape and closes on a **window-coordinate veil click** — 32 checks in the committed state. A click away moves native focus; whether React's `onBlur` follows is host-state dependent (plans `390`, `603`, `605`): focused runs commit, while the full-suite state leaves the editor open and the scenario then asserts that state and commits the retained draft with Enter. The headless probe asserts the other side |
@@ -1757,7 +1757,7 @@ evidence.
 | `tier2-menu` | `DropdownMenu`/`ContextMenu`: click/right-click open, disabled row skipped, Enter once, placement, dismissal | 18 |
 | `tier2-toast` | `ToastProvider`/`ToastViewport`: push, 16 px inset, stack order, action once, a real 300 ms timer | 25 |
 | `tier2-foundation` | Card's three variants, Badge token paint, Avatar initials/size/`Image`, Alert role + dismiss, EmptyState action, List selection | 42 |
-| `tier2-navigation` | Tabs swap + arrows, Accordion single mode, Collapsible, Breadcrumb landmarks, Pagination window | 55 |
+| `tier2-navigation` | Tabs swap + arrows, Tabs' vertical axis and its roving keys, Accordion single mode, Collapsible, Breadcrumb landmarks, Pagination window | 78 |
 | `tier2-choice` | Popover, SearchInput, Combobox, DatePicker, TimePicker: open, rank, select, clamp, clear | 59 |
 | `tier2-forms` | Field validation, Fieldset disable, Form messages/pending | 34 |
 | `tier2-editing` | InlineEdit swap/commit, TagInput add/remove/cap, HotkeyRecorder, MentionInput, Drawer edge/focus/trap | 48 |
@@ -1937,7 +1937,7 @@ given.
 
 ## Evidence on this host
 
-The suite is **104/104 green** here (`exit 0`, 3672 checks, 2026-10-19):
+The suite is **104/104 green** here (`exit 0`, 3695 checks, 2026-10-19):
 
 ```
 104/104 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2143,7 +2143,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (104/104, 3672 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (104/104, 3695 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
