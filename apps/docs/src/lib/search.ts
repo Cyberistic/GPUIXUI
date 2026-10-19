@@ -239,12 +239,27 @@ const aliasRank = (
   return ranks.length === 0 ? undefined : Math.min(...ranks);
 };
 
+/**
+ * A declared part is a name a reader types (`CardTitle`, `DialogClose`), and
+ * the Fumadocs index only knows it as prose inside the page, so without this it
+ * never outranks an arbitrary heading that happens to mention it (plan 580).
+ * A part name two compound records share (`MenuGroup`) ranks both; the existing
+ * tie-break picks one, and the shared name cannot honestly pick a single page.
+ */
+const componentNames = (
+  component: Pick<ComponentMetaInput, "title" | "api" | "parts">,
+): ReadonlyArray<string> => [
+  component.title,
+  ...componentSymbols(component),
+  ...component.parts.map((part) => part.name),
+];
+
 const componentRank = (
   component: ComponentMetaInput,
   query: string,
 ): number | undefined => {
   const ranks = [
-    nameRank([component.title, ...componentSymbols(component)], query),
+    nameRank(componentNames(component), query),
     aliasRank(component, query),
   ].filter((rank): rank is number => rank !== undefined);
   return ranks.length === 0 ? undefined : Math.min(...ranks);

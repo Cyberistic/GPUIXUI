@@ -539,6 +539,14 @@ The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 navigates and focuses the destination page, an unknown query shows the empty
 state, and Escape closes it with focus returned to the search trigger.
 
+A declared **part** is a name too (plan 580). `CardTitle`, `FieldError` and
+`DialogClose` are scored like a title, so the component page is the first
+result rather than a limitations paragraph that mentions the name. The ranker
+reads every name the record owns — title, props-type symbol, declared part,
+props type and alias — and `search.test.ts` walks all of them against the real
+index. A part two compound records share (`MenuGroup`) ranks both; the tie-break
+chooses one and the guard accepts either owner.
+
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those
 synthetic headings buried the authored prose that answers an accessibility

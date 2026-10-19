@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–579)
 
-`[~]` `[██████████]` 147/148
+`[~]` `[██████████]` 148/149
+
+`[x]` **A part name ranks its component first (plan 580)** — plan 481 made
+      `CardTitle`, `FieldError`, `DialogClose` and every other declared part
+      *findable*, but the ranker never read `record.parts`, so the first result
+      was a limitations paragraph or a state section that mentioned the name.
+      The record's parts now join the title, props-type symbols and aliases in
+      `componentNames`, and one exhaustive guard walks every name all 66 records
+      own against the real index (shared `MenuGroup` names accept either owner).
+      Measured ten queries fixed and two-direction proofs in plan 580 §4.
 
 `[x]` **Reader vocabulary, second pass (plan 579)** — a second measured sweep of
       the real search index found 26 component terms and 2 page terms that still

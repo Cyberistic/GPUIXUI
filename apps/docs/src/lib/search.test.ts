@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { SortedResult } from "fumadocs-core/search";
+import { components } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
+import { componentSymbols } from "@/component-meta/symbols";
+import { aliasesFor } from "./component-aliases";
 import {
   componentSearchIndex,
   componentSearchUrl,
@@ -172,6 +175,73 @@ describe("search", { timeout: 120_000 }, () => {
   it("finds a component by one of its part names", async () => {
     const results = await search("DialogTitle", 5);
     expect(results[0]?.url).toBe("/docs/components/dialog");
+  });
+
+  /**
+   * Plan 580: plan 481 made a part name *findable*, but the ranker only read
+   * the title, the props-type symbols and the aliases. These ten queries
+   * returned an authored chunk that mentions the part — the card limitations
+   * list, the dialog state section — and the component page came second or
+   * third. A part name is a name a reader types, so it is scored like a title.
+   */
+  it("ranks a part name above prose that mentions it", async () => {
+    const expected: ReadonlyArray<readonly [string, string]> = [
+      ["CardTitle", "card"],
+      ["CardDescription", "card"],
+      ["CardContent", "card"],
+      ["FieldDescription", "inline-validation"],
+      ["FieldError", "inline-validation"],
+      ["DialogClose", "dialog"],
+      ["CollapsibleContent", "collapsible"],
+      ["BreadcrumbPage", "breadcrumb"],
+      ["DropdownMenuGroup", "dropdown-menu"],
+      ["ContextMenuGroup", "context-menu"],
+    ];
+    const misses = await Promise.all(
+      expected.map(async ([name, slug]) => {
+        const results = await search(name, 3);
+        return results[0]?.url === `/docs/components/${slug}`
+          ? null
+          : `${name} -> ${results[0]?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The mechanical form of plan 481: every name a record owns — its title, the
+   * symbol a props type implies, a declared part, a props type, a reader alias
+   * — reaches one of the pages that own it first. `MenuGroup`/`MenuGroupProps`
+   * are documented by both menus and are the only shared names; a shared name is
+   * satisfied by either owner. `componentNames` dropping parts fails this case
+   * with the list of every part that fell behind a mentioning paragraph.
+   */
+  it("ranks every recorded name on one of its owning pages", async () => {
+    const owners = new Map<string, string[]>();
+    components.forEach((record) =>
+      [
+        record.title,
+        ...componentSymbols(record),
+        ...record.parts.map((part) => part.name),
+        ...record.api,
+        ...aliasesFor(record.slug),
+      ].forEach((name) => {
+        owners.set(name, [
+          ...(owners.get(name) ?? []),
+          componentSearchUrl(record),
+        ]);
+      }),
+    );
+    const misses = await Promise.all(
+      [...owners].map(async ([name, urls]) => {
+        const results = await search(name, 3);
+        const first = results[0]?.url ?? "nothing";
+        return urls.includes(first)
+          ? null
+          : `${name} -> ${first} (owners: ${urls.join(", ")})`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
   /**
