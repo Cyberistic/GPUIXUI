@@ -473,6 +473,13 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[~]` `[██████████]` 154/157
 
+`[ ]` **Overlay layering is a documented convention (plan 589)** — the component
+      API page has no layering story, so `z-index` returns the Values API,
+      `zindex` a Toast limitation and `layering` nothing. Add a `Layering`
+      section with the paint-order rule, the no-portal veil limitation, the
+      topmost-dismiss rule and the real dismiss stack, plus a generated search
+      entry for the four words a reader types.
+
 `[x]` **Reader vocabulary, fourth pass (plan 588)** — seven measured queries
       missed their page: `alertdialog` returned nothing, `alert dialog`
       returned Alerts, `scrollbar`/`scrollbars` returned a text chunk and
