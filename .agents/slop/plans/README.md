@@ -308,6 +308,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [641](./641-fit-bound-usability.md) | A fit bound that is no bound | F | 358, 521, 522, 532 | done |
 | [642](./642-elevation-shape-count.md) | A level the runtime half-paints | F | 018, 085, 369, 566, 641 | done |
 | [643](./643-mark-stroke-floor.md) | A mark thinner than the hairline | F | 332, 353, 556, 598, 601, 604, 636 | done |
+| [645](./645-fixed-surface-insets.md) | The fixed surfaces count every inset they paint | F | 353, 365, 384, 523, 625, 627, 629, 634, 636 | pending |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3369,6 +3370,18 @@ painting a sub-hairline smear. Each now holds at least the theme's own hairline
 (`borderWidth.thin`), a zero or non-finite mark keeps its single `positive`
 diagnostic, a borderless theme invents no bound, and every shipped set passes
 unchanged. No colour, pair, floor, figure or other metric moves.
+
+Plan `645` closes the fixed-surface bounds that still counted only part of the
+chrome painted inside them. A message viewport at one row had no content box
+once its `spacing.md` padding and two borders were painted; a preview card at
+10px was narrower than its own padding; the menu minimum omitted the surface's
+`spacing.xs`; the field's query row omitted the field's two borders while the
+chip row charged them; and a dialog or drawer reserved `2 * spacing["2xl"]` for
+the close control even when the control reached `spacing.lg +
+controlHeight.sm` further. Each bound now charges the full painted chrome, every
+shipped set passes unchanged (the shipped `160`, `240`, `180`, `200`, `360` and
+`320` are far above the new minima) and no colour, pair, floor, figure or
+shipped metric moves.
 
 ## How to use a plan
 
