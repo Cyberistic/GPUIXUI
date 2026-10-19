@@ -276,9 +276,10 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
 - **A `center` tip measures once per size.** The runtime has no layout callback,
   so the tip's box is known only after its first layout; the offset is applied
   in a layout effect before paint, so there is no visible jump. A content change
-  while the tip is open re-measures (plan `391`), and a window resize re-places
-  the tip and re-caps it (plan `604`); a *trigger* that moves under an open tip
-  without a resize is still not re-placed.
+  while the tip is open re-measures (plan `391`), a window resize re-places the
+  tip and re-caps it (plan `604`), and a trigger that moves under an open tip is
+  re-measured on the same 100 ms cadence (plan `645`). The correction lands on
+  the next sample, not in the same frame: GPUix has no `onLayout`.
 - **The flip estimates one line, then measures.** The side is first chosen from
   `tooltipHeight` (padding + one caption line + border) because the tip does not
   exist yet. Once it is painted, its measured height drives the decision, so a
@@ -301,8 +302,8 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
   an `onOpenChange(false)` request keeps the tip open — it owns the value.
 - **A controlled tip is placed from its trigger's box, not from an event.** The
   root is measured while the tip is closed, so opening from code chooses the
-  side before the first painted frame. Nothing re-measures the trigger while
-  the tip stays open; a trigger that moves under an open tip is not re-placed.
+  side before the first painted frame. While the tip stays open the trigger is
+  re-sampled every 100 ms (plan `645`), so a layout change is followed too.
 
 ## Verification
 
@@ -330,7 +331,9 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
   observed: a `bottom` tip flips above after a shrink, a long tip is re-capped to
   a narrower window, a re-wrapped long tip flips below when it no longer fits
   above, and a `Select` list proves the same signal (plan `604`; the failing
-  directions are recorded in that plan's §8).
+  directions are recorded in that plan's §8). The same file follows a trigger
+  that moves while open — a top-side tip that covered its moved trigger flips
+  below — and proves the sampler is silent while the tip is closed (plan `645`).
 - `runtime/tooltip-dismiss.runtime.test.tsx` — a focus-opened tip is dismissed
   by a real click on every single-root trigger (`Button`, `IconButton`, `Toggle`,
   `Checkbox`, `Switch`, `Input`, `TextArea`, `NumberField`, `Select`, `Slider`,

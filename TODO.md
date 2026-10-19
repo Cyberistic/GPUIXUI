@@ -2113,6 +2113,17 @@ retired once both branches are one
       old claims, a missing gap name, or a row flipped to `done`; offline 61
       files / 864 tests, both directions measured (plan `648`).
 
+`[x]` `packages/primitives`: **the floating pages denied the trigger-follow they
+      ship** — plan `645` made `Tooltip` and `Select` re-sample a moving trigger
+      every 100 ms while open, but `docs/tooltip.mdx` still ended two limitation
+      bullets with "not re-placed" (contradicting its own §Placement body) and
+      `docs/info-tip.mdx` repeated the claim. Both pages now state the follow and
+      its one-tick latency, an `InfoTip` runtime case flips a tip below a trigger
+      that moved to the top edge (fails at `8 ≥ 27` without the sampler), and
+      `src/docs-floating-follow.test.ts` fails by page/line on each old sentence
+      and by file when either wrapper loses its `useFloatingFollow` call. Plan
+      `649`; offline 62 files, InfoTip 8/8.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

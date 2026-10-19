@@ -91,9 +91,10 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   window. A single unbreakable token can still paint past the cap, because
   `StyleDesc` has no word-break property. Keep `content` to a sentence or two
   anyway; a long explanation belongs in a popover.
-- **A window resize re-places the tip** and re-applies its cap (inherited from
-  `Tooltip`, plan `604`); a trigger that moves under an open tip without a
-  resize is still not re-placed.
+- **A window resize or a moving trigger re-places the tip** (inherited from
+  `Tooltip`, plans `604` and `645`). The trigger is re-sampled every 100 ms
+  while the tip is open, so a layout change is corrected on the next tick; the
+  sampler sleeps while the tip is closed.
 
 ## Verification
 
@@ -106,7 +107,9 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   tip is a named `Tooltip`; leaving focus closes it; the painted `boxShadow`
   equals `focusRing(theme)`; a 230-character tip stays inside the window and
   paints more than one line, while a short one paints exactly one (plan `395`);
-  blank content paints no tip and publishes no description (plan `573`).
+  a tip that is open while its trigger moves to the top edge flips below the
+  trigger on the next follow sample (plan `649`); blank content paints no tip
+  and publishes no description (plan `573`).
 - `runtime/blank-name.runtime.test.tsx` — a blank `InfoTip` label announces
   "More information" and still takes focus (plan `573`).
 - `src/docs-tooltip-wrap.test.ts` — the resolver's capped form is `normal` and

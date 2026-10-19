@@ -10,12 +10,19 @@
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
+import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { InfoTip } from "../src/components/InfoTip.js";
 import { Stack } from "../src/components/Stack.js";
-import { FLOATING_MARGIN } from "../src/core/floating.js";
-import { a11yNode, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
+import { FLOATING_FOLLOW_MS, FLOATING_MARGIN } from "../src/core/floating.js";
+import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
+import {
+  Surface,
+  openWindow,
+  settleFocus,
+  sleep,
+  testTheme,
+} from "./fixture.js";
 
 const CONTENT = "Booked revenue, net of refunds.";
 
@@ -191,4 +198,49 @@ it("keeps a short tip on one line", async () => {
   expect(short.height).toBeLessThan(
     2 * testTheme.typography.caption.lineHeight,
   );
+});
+
+/** The painted box of a locator, for a host that reports from its content origin. */
+const boundsOf = (runtime: Runtime, testId: string): Bounds =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
+    expect.fail(`the runtime painted no box for ${testId}`),
+  );
+
+it("follows its trigger when the trigger moves while the tip is open", async () => {
+  // Plan `645` made `Tooltip` re-sample its trigger every 100 ms while open;
+  // `InfoTip` is a `Tooltip`, so the same rule holds. The page denied it until
+  // plan `649`; this case is the measured half of that correction.
+  const runtime = await openWindow();
+  const view = (offset: number) => (
+    <Surface>
+      <Box tone="background" style={{ height: offset }} />
+      <InfoTip
+        content={CONTENT}
+        label="Revenue definition"
+        testId="trigger"
+        tipTestId="tip"
+      />
+    </Surface>
+  );
+  runtime.render(view(700));
+  runtime.hover("trigger");
+  runtime.flush();
+  const firstTarget = boundsOf(runtime, "trigger");
+  const firstTip = boundsOf(runtime, "tip");
+  // The default top side starts above a trigger low in the column.
+  expect(firstTip.y).toBeLessThan(firstTarget.y);
+
+  // A layout change moves the trigger to the top edge, where a top-side tip has
+  // no room. The runtime re-anchors the layer; the wrapper must re-decide the
+  // side or the tip covers its own trigger (measured before the fix: 13…37
+  // over a trigger at 12…36).
+  runtime.render(view(0));
+  await sleep(FLOATING_FOLLOW_MS + 80);
+  runtime.flush();
+  await sleep(30);
+  runtime.flush();
+
+  const target = boundsOf(runtime, "trigger");
+  const tip = boundsOf(runtime, "tip");
+  expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height - 1);
 });
