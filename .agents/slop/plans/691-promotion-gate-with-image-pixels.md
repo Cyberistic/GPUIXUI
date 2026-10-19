@@ -349,13 +349,13 @@ unchanged from plan `690` (this plan changes prose only).
 from them rather than from the console.
 
 **Concurrent runs (B3).** A second `swarm:playground` session wrote this tree
-during the gate — it created the `76edbe63` merge, re-ran the headless suite
-and its own ledger wording, and its uncommitted B3 note records that it was
-stopped. Every number it produced agrees with this session's run (headless
-106/106 · 3824 · 65; live 95/95 · 2545 · 61 with `live-content` at 68), so the
-tree is consistent; the recurrence itself is the still-open `scripts/` guard
-(`TODO.md` → Process). Two independent headless runs and the live artifact
-agreeing is stronger evidence than one, and no work was lost.
+during the gate — it created the `76edbe63` merge, re-ran the headless suite,
+committed the surviving session's working plan/ledger edits as `c05ac09f`, and
+was then stopped. Every number it produced agrees with this session's run
+(headless 106/106 · 3824 · 65; live 95/95 · 2545 · 61 with `live-content` at
+68), so the tree is consistent; the recurrence itself is the still-open
+`scripts/` guard (`TODO.md` → Process). Two independent headless runs and the
+live artifact agreeing is stronger evidence than one, and no work was lost.
 
 **No source change.** No scenario, view, host verb, component, registry entry
 or test was edited. The owner/supervisor still performs the promotion merge;

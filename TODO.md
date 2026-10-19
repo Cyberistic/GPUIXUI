@@ -84,10 +84,11 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        and agree on every count: headless 106/106 · 3824 · 65 (two runs; the
        surviving artifact records 115.5 s) and live
        95/95 · **2545** · 61 · 1094.3 s (this
-       session's run at 18:40). The surviving session verified the artifacts,
-       corrected the plan to record both headless runs, re-ran `check`, `lint`
-       and `test` green on the merged head, and committed; the count is `1`
-       again. Fix still in `scripts/`.
+       session's run at 18:40). The duplicate then committed the surviving
+       session's working plan/ledger edits as `c05ac09f`; the surviving session
+       reconciled the remaining ledgers, re-ran `check` and `test` green on the
+       merged head, committed `28d94c33`, pushed, and stopped the duplicate
+       (PID 37192); the count is `1` again. Fix still in `scripts/`.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
