@@ -231,7 +231,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-19: **51 files, 734 tests,
+`src/components/testing/element.ts`. Measured 2026-10-19: **52 files, 751 tests,
 all passing**, including a package-wide guard that a caller's `style` wins last
 on every part (plan `097`), the axis-aware floating alignment rule
 (plan `098`), a guard that every documented `theme.…` path and
@@ -254,7 +254,9 @@ offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
 runtime-proven too. Measured 2026-10-19 on this host: **46 files, 700 tests, 589
-passing / 111 failing**. The failures are measured runtime facts, not an
+passing / 111 failing**; plan `584` adds `runtime/auto-focus.runtime.test.tsx`
+(7 passing cases, scoped run), so the next full run is 47 files / 707 tests.
+The failures are measured runtime facts, not an
 artifact guess: the store artifact is the **release-tag** build (plan `529`;
 `strings` reports `focusVisible=0`), it delivers **no focus events** (plan
 `583`), and its `getElementBounds` reports the published box model (plan `529`
@@ -290,7 +292,8 @@ empty stars only (plan 070), a labelled scroll region scrolled by
 PageDown/arrow/Home/End through the runtime while an `Input` inside it kept its
 arrow keys (plan 072), and `InfoTip` opening on hover and on `focusNext` with
 its name, description and painted focus ring (plan 073), an `OTPField` that
-is one roving tab stop instead of six (plan 076), and a decimal `NumberField`
+is one roving tab stop instead of six (plan 076), a field added after a loading
+state taking `autoFocus` on every field shape (plan 584), and a decimal `NumberField`
 step that reports `0.3` instead of binary noise (plan 077), an attached
 button group whose buttons share one square-edged, clipped surface (plan 078),
 whose focused button paints its ring inside that clip rather than under it

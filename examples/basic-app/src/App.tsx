@@ -202,6 +202,8 @@ export const App = ({ initialMode = "light" }: AppProps): ReactElement => {
                     description="Shown on invitations and in the app switcher."
                   >
                     <Input
+                      testId="settings-workspace"
+                      autoFocus
                       value={workspace}
                       onValueChange={setWorkspace}
                       label="Workspace name"

@@ -103,6 +103,23 @@ describe("NumberField", () => {
     ).toBe("Quantity");
   });
 
+  it("names the inner text host, so a focused field is addressable", () => {
+    // The bug guarded (plan 584): `focused()` reports the focused element's
+    // `testId`; the wrapper owned it, the input did not, so a NumberField that
+    // held focus looked unfocused to every native test. The host takes the
+    // child locator the rest of the package uses (`-trigger`, `-cell-N`).
+    const withId = render({ testId: "nf", label: "Amount" }, 1, "1");
+    expect(expectSome(hostProp(withId, "testId"))).toBe("nf");
+    expect(expectSome(hostProp(partsOf(withId).input, "testId"))).toBe(
+      "nf-input",
+    );
+    const anonymous = render({ label: "Amount" }, 1, "1");
+    expect(hostProp(anonymous, "testId")).toStrictEqual(Option.none());
+    expect(hostProp(partsOf(anonymous).input, "testId")).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("routes only the keys the runtime delivers", () => {
     const onValue = vi.fn();
     const onCommit = vi.fn();

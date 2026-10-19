@@ -39,6 +39,8 @@ Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`,
 `aria-description`, `style`, `testId`. `size` has no effect in the shadcn slice
 (one recipe size) and `fullWidth` is implied by the recipe's `w-full`.
+`autoFocus` takes focus on every mount, including a field added after a loading
+state (plan `584`).
 
 Its padding, radius, type and paint come from the same new-york-v4 recipe as
 `Input` (`px-3 py-1 rounded-md text-sm`, plan `370`). Its **height** comes from

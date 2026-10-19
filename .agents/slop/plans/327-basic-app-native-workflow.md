@@ -381,6 +381,12 @@ What the run established, beyond the assertions:
   `runtime.focused()` was empty: the email field is added when the skeleton is
   replaced, and the runtime grants `autoFocus` only on the initial mount (plan
   `064`). The app no longer sets it, and the README records the measurement.
+  **Corrected by plan `584`:** the empty `runtime.focused()` was a locator
+  artifact — the app's field had no `testId`, and `focused()` returns the focused
+  element's `testId`. A later mount **does** receive `autoFocus` (measured for
+  `Input`, controlled `Input`, `TextArea`, `OTPField` and `NumberField`); plan
+  `584` gives the app's first field a `testId`, restores the prop and proves the
+  focus in this suite.
 
 ### 7.2 Two-direction proof
 

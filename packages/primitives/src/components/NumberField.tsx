@@ -198,6 +198,9 @@ export const renderNumberField = (
       <input
         {...passiveTriggerHandlers(props)}
         ref={handlers.registerInput}
+        testId={
+          props.testId === undefined ? undefined : `${props.testId}-input`
+        }
         value={text}
         placeholder={props.placeholder}
         readOnly={disabled}

@@ -26,15 +26,16 @@ remains the missing step. What *is* verified is the composition, below.
 | --- | --- |
 | verified | `nub run --filter @gpuixui/basic-app check-types` — every component is used with its real props |
 | verified | the components themselves in the real GPUix 0.10.0 `TestRenderer` (`packages/primitives/runtime/`) — layout, controls, fields, loading, both themes, the labelled scroll region and the info tip |
-| verified | **this composition** in the same real `TestRenderer` — `nub run --filter @gpuixui/basic-app test:runtime` (5 tests): it mounts, the skeleton hands over to the form, the consent row's label is painted and clickable, Save is refused until it is accepted, an invalid e-mail keeps it refused, the save lifecycle runs, and the Select paints the option's label. The form is taller than its region, so the suite scrolls the region with a real wheel to reach the consent row — a row below the fold must be reachable, and that is asserted too. |
+| verified | **this composition** in the same real `TestRenderer` — `nub run --filter @gpuixui/basic-app test:runtime` (7 cases): it mounts, the skeleton hands over to the form, the first field takes focus, the consent row's label is painted and clickable, Save is refused until it is accepted, an invalid e-mail keeps it refused, the save lifecycle runs, and the Select paints the option's label. The form is taller than its region, so the suite scrolls the region with a real wheel to reach the consent row — a row below the fold must be reachable. On this host 6 of the 7 pass; the reachability assertion is short by the published box model of the release-tag binding (plan `529` §6.5), not by a component change. |
 | **not verified** | *the native window* — `bun src/main.tsx` opening on a machine with a desktop session. The `TestRenderer` is offscreen: it proves layout, paint, hit-testing and focus dispatch, not the window chrome. |
 
-One measured consequence, recorded rather than papered over: a field that mounts
-*after* the first render (here, when the skeleton is replaced by the form) does
-**not** receive `autoFocus` from the runtime — `runtime.focused()` was empty
-after load. Plan `064` proved `autoFocus` on the initial mount only. The e-mail
-field therefore sets no `autoFocus`; the header is the first tab stop, and focus
-is the user's or the host window's decision.
+One measured fact, recorded rather than papered over: the runtime **does** grant
+`autoFocus` to a field that mounts after the first render (here, when the
+skeleton is replaced by the form). Plan `327` reported an empty
+`runtime.focused()` because the e-mail field had no `testId`, and `focused()`
+names the focused element's `testId`; that was a locator artifact, not a runtime
+limitation. The first field now sets `autoFocus` and the suite proves focus
+lands on it after the handover (plan `584`).
 
 ## Theme
 

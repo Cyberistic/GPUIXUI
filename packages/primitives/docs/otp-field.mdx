@@ -60,7 +60,7 @@ mistyped digit again without the user clearing a cell first (plan `360`).
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` (`"Code digit N"` when blank) |
-| `autoFocus` | `boolean` | `false` | focuses the first cell on mount; its ring paints from mount |
+| `autoFocus` | `boolean` | `false` | focuses the first cell on every mount, including a field added after a loading state (plan `584`); its ring paints from mount |
 | `style` | `StateStyle<OTPFieldState>` | — | merged last on the group; an object or a state callback |
 | `cellStyle` | `StateStyle<OTPCellState>` | — | merged last on each cell; an object or a state callback |
 | `testId` | `string` | — | the group's locator; cells are `<testId>-cell-N` |

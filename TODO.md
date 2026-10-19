@@ -902,6 +902,16 @@ retired once both branches are one
       The docs state what is and is not announced; the form example shows a
       required field. 6 element-tree + 3 scoped runtime cases, both directions
       proven (plan `581`).
+`[x]` `packages/primitives` + `examples/basic-app`: **the false `autoFocus`
+      limitation** — `basic-app` said a field added after the first render cannot
+      take `autoFocus`, removed the prop, and documented a runtime limit. Plan
+      `327`'s probe was empty because `runtime.focused()` names the focused
+      element's `testId` and the app's field had none. Measured (plan `584`):
+      `Input`, controlled `Input`, `TextArea`, `OTPField` and `NumberField` all
+      take focus on a later mount. `NumberField`'s inner host gains
+      `${testId}-input`, the app's first field takes focus after its skeleton,
+      and a 7-case matrix proves the contract both ways (offline 52 files,
+      scoped live 7/7, app live 6/7 — the known plan `529` reachability case).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site
       workstream). **Audited 2026-10-19:** the docs site has 68 component pages
       and the package's parts table has 31 parts; **six have no page** —

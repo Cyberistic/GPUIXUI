@@ -113,6 +113,15 @@ it("mounts the composed workflow after the skeleton", async () => {
   );
 });
 
+it("focuses the first field when the form replaces the skeleton", async () => {
+  // The bug guarded (plan 584): the app said a later mount could not take
+  // `autoFocus`, because `runtime.focused()` was empty after the skeleton. The
+  // field had no `testId`, and `focused()` names the focused element's
+  // `testId` — the probe could not see a working field. It is focused.
+  const runtime = await openApp();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("settings-workspace");
+});
+
 it("paints the consent copy the user has to agree to", async () => {
   const runtime = await openApp();
 

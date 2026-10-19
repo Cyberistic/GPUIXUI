@@ -90,10 +90,10 @@ remains a display rule — it never rounds the value a caller receives.
 | `label` | `string` | none | accessible name |
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `placeholder` | `string` | none | empty-field hint |
-| `autoFocus` | `boolean` | `false` | focus on mount; the ring paints from mount |
+| `autoFocus` | `boolean` | `false` | focus on every mount, including a field added after a loading state (plan `584`); the ring paints from mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
 | `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
-| `testId` | `string` | — | stable locator on the field's chrome |
+| `testId` | `string` | — | stable locator on the field's chrome; the inner text host is `${testId}-input` |
 
 ## Keyboard
 
