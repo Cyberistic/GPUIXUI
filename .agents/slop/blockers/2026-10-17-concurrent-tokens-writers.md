@@ -129,3 +129,22 @@ in sync with `origin` at `17e3943`. But the outcome was luck, not isolation —
 the peer's commit swept this session's staged edits, and a commit could as
 easily have captured a half-written file. The harness guard in `primitives`
 plan 022 is still the required fix.
+
+## Recurrence — 2026-10-19, plan 607
+
+The race is still live and bit a landed unit. Two `swarm:tokens-theme`
+sessions ran in this worktree at once (the batch client shown by `ps` at
+07:34, PID 35726, plus the session writing plan 607):
+
+- plan 607 committed `radius: theme.radius.sm`; a peer wrote `radius: 2` into
+  `packages/tokens/src/highlight.ts` at 07:36:28, so the commit captured the
+  peer's probe value;
+- the peer then rewrote `packages/tokens/src/native-highlight.test.ts` at
+  07:37:34 with stricter document assertions, and `docs/tokens.md` at
+  07:37:23.
+
+Recovery: commit `80b82861` restores `theme.radius.sm` and keeps the stricter
+assertions; the suite and both gates were re-run from the corrected tree.
+Nothing was lost, but the branch briefly carried a wrong value that the suite
+would have caught only on the next run. This is the single-writer guard in the
+harness TODO (`022-swarm-single-writer.md`) failing, not a tokens defect.
