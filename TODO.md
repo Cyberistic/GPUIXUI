@@ -60,6 +60,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 100/100 plans-and-harness
 
+`[~]` Prove the **tabbed panes in a real window** per plan `575` and prove the
+      nested-scroller wheel guard in both harnesses: the guard was toggled but
+      never exercised (the pointer could not reach the inner scroller after an
+      ancestor scroll). Exercise it **first** (guard on, wheel the inner, the
+      outer must stay), then chain with it off, and add `live-workspace-panes`
+      for hidden-pane state, tab order and a paced live resize.
+
 `[x]` Prove the **log viewer in a real window** per plan `571`: the Tier 4
       log-viewer follow contract was headless-only and its no-snap-back claim
       was untested. `live-log` (26 checks) reuses the `log-viewer` view behind
