@@ -927,6 +927,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the repository destination the Contributing summary names",
     },
+    {
+      query: "setup",
+      expected: "/docs/installation",
+      first: true,
+      what: "the Installation summary's setup word",
+    },
+    {
+      query: "helper text",
+      expected: "/docs/components/inline-validation",
+      first: true,
+      what: "the helper-text alias of Inline validation",
+    },
+    {
+      query: "compound",
+      expected: "/docs/component-api",
+      first: true,
+      what: "the compound convention the Component API summary names",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

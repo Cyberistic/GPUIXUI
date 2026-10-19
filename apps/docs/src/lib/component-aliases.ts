@@ -102,6 +102,8 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   ["popover", ["popup"]],
   ["select", ["select box", "dropdown list", "multi select", "multi-select"]],
+  ["inline-validation", ["helper text", "error message"]],
+  ["time-picker", ["time"]],
 ]);
 
 /** The aliases for a record, or an empty list when it has none. */

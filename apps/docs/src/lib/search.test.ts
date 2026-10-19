@@ -631,6 +631,93 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 591: the sixth measured sweep. `setup` and `testing` returned nothing,
+   * `test` returned the Component pages gesture table, `border`/`shadow`/`overlay`
+   * returned Tokens API chunks, `compound` returned Extending's related chunk,
+   * `helper text` returned Text and `error message` returned Message scroller,
+   * while `time` returned Timeline. Each row is a page subject its owning
+   * summary should name, or a component synonym the record cannot spell; no
+   * ranker rule is added.
+   */
+  it("finds the sixth set of reader words and page subjects (plan 591)", async () => {
+    const expected = [
+      ["setup", "/docs/installation"],
+      ["test", "/docs/native-testing"],
+      ["testing", "/docs/native-testing"],
+      ["border", "/docs/theming"],
+      ["shadow", "/docs/theming"],
+      ["overlay", "/docs/component-api"],
+      ["compound", "/docs/component-api"],
+      ["helper text", "/docs/components/inline-validation"],
+      ["error message", "/docs/components/inline-validation"],
+      ["time", "/docs/components/time-picker"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The new words must not steal a subject an earlier pass assigned, and an
+   * alias must stay a whole-query match: `message`, `error` and `time picker`
+   * keep their previous pages.
+   */
+  it("keeps the subjects the earlier passes assigned (plan 591)", async () => {
+    const expected = [
+      ["theme", "/docs/theming"],
+      ["table", "/docs/data-display"],
+      ["aria", "/docs/accessibility"],
+      ["spacing", "/docs/theming"],
+      ["radius", "/docs/theming"],
+      ["density", "/docs/theming"],
+      ["elevation", "/docs/theming"],
+      ["font", "/docs/typography"],
+      ["message", "/docs/components/message-scroller"],
+      ["error", "/docs/components/inline-validation"],
+      ["time picker", "/docs/components/time-picker"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * Plan 591: a component's URL slug is the name in its canonical link. Eight
+   * of 66 slugs reached a pattern page or Date pickers because the registry
+   * document and the name list never contained the slug (`button-group`,
+   * `text-input`, `text-area`, `radio-group`, `empty-state`, `command-menu`,
+   * `search-input`, `time-picker`). The exhaustive loop fails by slug if it is
+   * dropped from either `componentSearchIndex` or `componentNames`.
+   */
+  it("reaches every component by its URL slug (plan 591)", async () => {
+    const misses = await Promise.all(
+      components.map(async (component) => {
+        const [first] = await search(component.slug, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" &&
+          destination === `/docs/components/${component.slug}`
+          ? null
+          : `${component.slug} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("finds the installation prerequisites and native platform support (plan 584)", async () => {
     const expected = [
       ["prerequisites", "/docs/installation"],

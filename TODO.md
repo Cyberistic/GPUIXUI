@@ -469,9 +469,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–590)
+## Docs site workstream (plans 410–499, plus 500–591)
 
-`[~]` `[██████████]` 156/158
+`[~]` `[██████████]` 157/159
+
+`[x]` **Reader vocabulary, sixth pass (plan 591)** — `setup` and `testing`
+      returned nothing, `test` returned the Component pages gesture table,
+      `border`/`shadow`/`overlay` returned Tokens API chunks, `compound`
+      returned Extending's related chunk, `helper text` returned Text and
+      `error message` returned Message scroller, while `time` returned
+      Timeline. Four authored summaries (Installation, Native smoke suite,
+      Theming, Component API) and three guarded aliases (Inline validation ×2,
+      Time pickers) fix the ten queries; a separate sweep of all 66 component
+      slugs found eight that reached a pattern page or Date pickers, so the
+      slug now joins the registry document and the name list. Three forced
+      defects measured, 105 files / 760 docs tests, 98-page `smoke:build`,
+      root gates green.
 
 `[x]` **Reader vocabulary, fifth pass (plan 590)** — `quickstart` and
       `overview` returned nothing, `hello world` returned Accessibility,

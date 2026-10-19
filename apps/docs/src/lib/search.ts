@@ -60,6 +60,7 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
   content: [
     component.title,
     component.summary,
+    component.slug,
     ...component.parts.map((part) => part.name),
     ...component.api,
     ...aliasesFor(component.slug),
@@ -68,6 +69,7 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
   breadcrumbs: ["Components"],
   keywords: [
     component.packageName,
+    component.slug,
     ...component.parts.map((part) => part.name),
     ...component.api,
     ...aliasesFor(component.slug),
@@ -298,8 +300,9 @@ const aliasRank = (
  * tie-break picks one, and the shared name cannot honestly pick a single page.
  */
 const componentNames = (
-  component: Pick<ComponentMetaInput, "title" | "api" | "parts">,
+  component: Pick<ComponentMetaInput, "slug" | "title" | "api" | "parts">,
 ): ReadonlyArray<string> => [
+  component.slug,
   component.title,
   ...componentSymbols(component),
   ...component.parts.map((part) => part.name),

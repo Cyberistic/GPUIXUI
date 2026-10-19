@@ -892,7 +892,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
     "inline-validation",
     "Inline validation",
     "2",
-    "Field-level error and hint messaging.",
+    "Field-level error message and helper text around one input.",
     {
       gpuix: "partial",
       sourcePath: "packages/components/src/field.tsx",
