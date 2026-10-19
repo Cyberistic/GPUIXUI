@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 302/378
+`[x]` `[████████░░]` 303/379
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -98,6 +98,15 @@ a consumer had to spread `focusRing` and replace its colour (`primitives`
 `controlFocusStyle` does exactly that); `invalidFocusRing(theme)` shares the
 valid ring's geometry and paints `destructive`, the Focus sections name it and
 an executed example paints a failed field's edge and ring (plan 679)
+`[x]` Hold the two JSDoc check ordinals to `themeChecks` — `themeRingFailures`
+said "the tenth check" and `themeNativeTextFailures` "the ninth", counting the
+order the checks were *added*, while the public index, the reference and the
+README count the composition order (`ring` fifth, `nativeText` seventh), so the
+hover text on two public functions named a position the package's own index
+contradicts; `check-ordinals.test.ts` reads every source claim and fails on a
+wrong ordinal, an undeclared function or a missing word, the two sentences name
+their function first, and the reference names the guard; no colour, pair, floor,
+metric or shipped theme moves (plan 681)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

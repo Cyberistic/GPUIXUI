@@ -284,8 +284,8 @@ export interface NativeTextFailure {
  * the theme's `border` on that same wash, and washes its own chrome — a code
  * header, a diff file header, their hover — with a lighter ink the theme does
  * not own; none of those compositions is a token pair, so
- * {@link themeContrastFailures} cannot see them. This is the ninth check: it
- * holds {@link nativeTextFades}, {@link nativeTextOverFades},
+ * {@link themeContrastFailures} cannot see them. `themeNativeTextFailures` is
+ * the seventh check: it holds {@link nativeTextFades}, {@link nativeTextOverFades},
  * {@link nativeSyntaxTints}, {@link nativeInlineCode},
  * {@link nativeTextWashes} and every syntax role
  * through {@link nativeInk} on all four {@link nativeTextSurfaces} tones, at the

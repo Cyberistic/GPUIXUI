@@ -94,7 +94,8 @@ export function contrastRing(theme: Theme): ContrastRing {
  * default level and 4.5:1 at AAA, the non-text floor an indicator needs. A theme
  * can clear every documented pair with a 7:1 ink/canvas pair whose ring worst
  * case is only `sqrt(7) = 2.65:1`, so the contrast check alone cannot see a
- * collapsed ring. This is the tenth check composed by `themeFailures`.
+ * collapsed ring. `themeRingFailures` is the fifth check composed by
+ * `themeFailures`.
  *
  * @example
  * ```ts

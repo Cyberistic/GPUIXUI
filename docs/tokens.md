@@ -2942,9 +2942,10 @@ type scale painted with it — then `contrast`, then `ring`, then `highlight`, t
 is that order as a list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
-index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
-`TypefaceFailure`, `ContrastFailure`, `RingFailure`, `HighlightFailure`,
-`NativeTextFailure`,
+index. Each check's own JSDoc names its position in that list, held by
+`check-ordinals.test.ts`. A `ThemeFailure` is the underlying `ColorFailure`,
+`OpacityFailure`, `TypefaceFailure`, `ContrastFailure`, `RingFailure`,
+`HighlightFailure`, `NativeTextFailure`,
 `TextTierFailure`, `DirectionFailure` or
 `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. A
