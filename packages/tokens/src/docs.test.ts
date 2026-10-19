@@ -350,6 +350,13 @@ const countWords = [
   "sixteen",
   "seventeen",
   "eighteen",
+  "nineteen",
+  "twenty",
+  "twenty-one",
+  "twenty-two",
+  "twenty-three",
+  "twenty-four",
+  "twenty-five",
 ] as const;
 
 const countWord = (count: number): string => countWords[count] ?? String(count);

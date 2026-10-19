@@ -2121,9 +2121,11 @@ surface beneath it: `overlayWashPairs` composites `overlay` over the surfaces a
 dialog covers — `overlaySurfaces` is `background`, `card`, `muted`, `input`,
 `selected`, `popover`, the resting filled actions (`primary`, `secondary`,
 `accent`, `destructive`), the three solid status chips a Badge paints (`info`,
-`success`, `warning`), the raised action a status panel carries (`softAction`)
-and the four soft status panels (`infoSoft`,
-`successSoft`, `warningSoft`, `destructiveSoft`) — and holds the painted value
+`success`, `warning`), the raised action a status panel carries (`softAction`),
+the four soft status panels (`infoSoft`,
+`successSoft`, `warningSoft`, `destructiveSoft`), a disabled control
+(`disabled`), a loading row (`skeleton`) and a value indicator's groove
+(`track`) — and holds the painted value
 to the `surface` floor. A scrim that composites to its own surface is an
 invisible modal backdrop; the audit found high-contrast dark's `#000000CC`
 measured **1.000:1** on its pure black canvas, so the AAA dark theme now veils
@@ -2132,13 +2134,16 @@ The failures are reported with `wash: "overlay"`. The transient pointer washes
 (`hover`, `active`) and the filled families' `xHover`/`xActive` steps are
 deliberately not scrim surfaces: the pointer leaves the row to reach the dialog,
 so a scrim over a transient state is not a composition the system supports.
-`selected`, `input`, the resting filled actions and the soft status panels are
-not transient — a table, list or tree keeps a selected row while a modal opens
+`selected`, `input`, the resting filled actions, the soft status panels and the
+three resting fills are not transient — a table, list or tree keeps a selected
+row while a modal opens
 over it, every field in the layout behind a form dialog sits on the `input`
 fill, the page's buttons keep their resting fills, a Badge keeps its solid status
 chip, a status panel's action keeps
-its raised fill, and a tone-tinted Alert stays
-on screen — so plans `359`, `375`, `395` and `508` measured them too. The gap was real: macOS
+its raised fill, a tone-tinted Alert stays
+on screen, a disabled control stays unavailable and a loading row and a value
+groove stay painted — so plans `359`, `375`, `395`, `508` and `610` measured
+them too. The gap was real: macOS
 light's own `selected` fill used as `overlay` composited to **1.000:1** on a
 selected row while the checker returned `[]`, because the four base surfaces all
 passed. The tightest shipped pair is **1.060:1** (high-contrast dark, `overlay`
@@ -2147,8 +2152,9 @@ on `info`), so no colour moves.
 The element the scrim carries is measured too: a dialog, drawer or command
 palette paints `popover` over it, so `dialogSurfacePairs` composites `overlay`
 over every surface `overlaySurfaces` names — the six layout surfaces and the
-twelve resting content fills a window shows, because a dialog opens over a
-status chip or an action as easily as over the canvas — and holds the face to
+fifteen resting content fills a window shows, because a dialog opens over a
+status chip, an action, a disabled control, a loading row or a value groove as
+easily as over the canvas — and holds the face to
 the same `surface` floor, reported with `wash: "overlay"`. A theme whose scrim
 meets its own floating surface leaves the dialog with no face; the tightest
 shipped pair is **1.079:1** (identity Linux dark on `destructive`).
@@ -2702,7 +2708,7 @@ consumer theme may share an untouched set or replace it through `extendTheme`.
 An elevation level is geometry plus an alpha, so a replaced level composes with
 the theme's `colors.shadow` tint like a shipped one. `elevationLevels` is the
 ordered level index, `elevationSurfaces` the six page surfaces the contrast
-check paints each level over and `elevationContentSurfaces` the twelve resting
+check paints each level over and `elevationContentSurfaces` the fifteen resting
 content fills it also paints a floating `md` shadow over.
 
 #### Every shipped theme
@@ -3223,7 +3229,7 @@ the six page surfaces, and plan `375` had already made the scrim total over the
 resting actions, status chips and soft status panels a window shows — because a
 dialog opens over an action as easily as over the canvas. A menu does too: a
 dropdown opens across the button beside its trigger and a context menu over a
-Badge. `elevationContentSurfaces` publishes the twelve resting content fills,
+Badge. `elevationContentSurfaces` publishes the fifteen resting content fills,
 the `md` walk measures the page surfaces and those fills (a `sm` card is placed
 in the layout and a `lg` dialog sits on the scrim), and an edited theme whose
 `shadow` meets a content fill is now reported instead of returning `[]`. Every
@@ -3557,21 +3563,23 @@ washed pair is **3.177:1** (plan `510`).
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
 over `background`, `card`, `muted`, `input`, `selected`, `popover`, the
 resting filled actions (`primary`, `secondary`, `accent`, `destructive`), the
-raised action a status panel carries (`softAction`) and the
+raised action a status panel carries (`softAction`), the
 four soft status panels (`infoSoft`, `successSoft`, `warningSoft`,
-`destructiveSoft`), and holds the result to 1.05:1, because a scrim that paints
-its own surface is an invisible modal backdrop. The transient pointer washes and
-the filled families' hover and press steps are excluded — the pointer leaves the
-row to reach the dialog — but `selected` persists, `input` is part of the
-layout, the page's actions and the panel's action keep their resting fills and a
-status panel stays on
-screen, so all of them are measured (plans `359`, `375` and `395`). The audit found
+`destructiveSoft`), a disabled control (`disabled`), a loading row (`skeleton`)
+and a value groove (`track`), and holds the result to 1.05:1, because a scrim
+that paints its own surface is an invisible modal backdrop. The transient
+pointer washes and the filled families' hover and press steps are excluded — the
+pointer leaves the row to reach the dialog — but `selected` persists, `input` is
+part of the
+layout, the page's actions and the panel's action keep their resting fills, a
+status panel stays on screen and the three resting fills stay painted, so all of
+them are measured (plans `359`, `375`, `395` and `610`). The audit found
 high-contrast dark's `#000000CC` measured **1.000:1** on the pure black canvas —
 an 80% black veil over black — while every other shipped set cleared the floor.
 The AAA dark theme now veils with light (`#FFFFFF26`): a dialog's separation
 cannot come from darkening a canvas that is already black. `overlay` stops being
 an exempt role; it is measured like the selection wash and reported with
-`wash: "overlay"` (plan `099`). The tightest of the eighteen pairs is
+`wash: "overlay"` (plan `099`). The tightest of the twenty-one pairs is
 **1.060:1** (high-contrast dark, `overlay` on `info`), so the new surfaces
 move no colour.
 

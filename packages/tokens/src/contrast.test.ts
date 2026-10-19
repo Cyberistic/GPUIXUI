@@ -720,7 +720,7 @@ describe("themeContrastFailures", () => {
       "warning",
       "softAction",
     ]);
-    expect(overlayWashPairs.length).toBe(18);
+    expect(overlayWashPairs.length).toBe(21);
   });
 
   it("reports a soft status surface that vanishes into its canvas", () => {
@@ -936,6 +936,9 @@ describe("the elevation shadow", () => {
       "successSoft",
       "warningSoft",
       "destructiveSoft",
+      "disabled",
+      "skeleton",
+      "track",
     ]);
   });
 

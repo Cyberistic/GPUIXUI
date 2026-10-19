@@ -143,6 +143,9 @@ describe("modal scrim", () => {
       ["overlay", "successSoft", "surface"],
       ["overlay", "warningSoft", "surface"],
       ["overlay", "destructiveSoft", "surface"],
+      ["overlay", "disabled", "surface"],
+      ["overlay", "skeleton", "surface"],
+      ["overlay", "track", "surface"],
     ]);
   });
 

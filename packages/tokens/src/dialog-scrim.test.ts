@@ -75,7 +75,7 @@ describe("the dialog's face on the scrim", () => {
     const tightest = tightestFace();
 
     expect(failures).toEqual([]);
-    expect(darkestFace(getTheme("dark"))).toBeCloseTo(1.1993, 3);
+    expect(darkestFace(getTheme("dark"))).toBeCloseTo(1.1549, 3);
     expect([tightest.name, tightest.surface]).toEqual([
       "Dark · Linux",
       "destructive",

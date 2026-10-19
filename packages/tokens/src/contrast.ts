@@ -1635,11 +1635,18 @@ const layoutSurfaces = [
 /**
  * The content fills a window shows behind the scrim: the four resting filled
  * actions, the three solid status chips a Badge paints (`destructive` is already
- * an action family), the raised action a status panel carries and the four soft
- * status panels. The scrim's own perceivability is measured on them
+ * an action family), the raised action a status panel carries, the four soft
+ * status panels, a disabled control, a loading row and a value indicator's
+ * groove. The scrim's own perceivability is measured on them
  * (`overlayWashPairs`), and so is the dialog's face (`dialogSurfacePairs`): a
  * dialog opens over a status chip or an action as easily as over the page
  * layout, and the face — not the 1px edge — is what separates it.
+ *
+ * The last three are resting fills, not pointer states: a disabled control and a
+ * loading row stay on screen while a dialog is open, and a progress or slider
+ * groove is a painted indicator, so the scrim must dim them with the window. A
+ * scrim that composites to one of them leaves an element that looks live above
+ * the modal while the layout around it recedes.
  */
 const contentFillSurfaces = [
   "primary",
@@ -1649,6 +1656,9 @@ const contentFillSurfaces = [
   ...statusTones.filter((tone) => tone !== "destructive"),
   "softAction",
   ...softSurfaceRoles,
+  "disabled",
+  "skeleton",
+  "track",
 ] as const;
 
 /**
@@ -1669,10 +1679,10 @@ const contentFillSurfaces = [
  * `accent` is included because it is also the resting fill of a toggled-on
  * control, not only the wash a selectable row hovers; `softAction` is the raised
  * action a tone-tinted Alert paints (plan 394), so it is a resting fill a window
- * shows too, while its hover and press are transient. `disabled`, `skeleton`
- * and `track` are not the content a dialog opens over: a scrim that is
- * invisible on a disabled control, a loading placeholder or a progress groove
- * still dims the layout the reader is looking at.
+ * shows too, while its hover and press are transient. `disabled`, `skeleton` and
+ * `track` are resting fills as well — a disabled control and a loading row stay
+ * on screen while the dialog is open, and a value indicator's groove is a
+ * painted indicator — so they are measured by the same rule.
  */
 export const overlaySurfaces = [
   ...layoutSurfaces,
@@ -1722,11 +1732,12 @@ export const elevationSurfaces = layoutSurfaces;
 /**
  * The resting content fills a floating `md` element opens over. A menu,
  * popover or combobox list is anchored to a control but paints across whatever
- * is beside it, so its shadow lands on the actions, status chips and soft
- * status panels a window shows exactly as the modal scrim does
- * (`overlaySurfaces`). The list is measured for `md` only: a `sm` card is
- * placed in the layout rather than floating over an action, and a `lg` dialog's
- * face and shadow sit on the scrim, which `dialogSurfacePairs` measures.
+ * is beside it, so its shadow lands on the actions, status chips, soft status
+ * panels, disabled controls, loading rows and value grooves a window shows
+ * exactly as the modal scrim does (`overlaySurfaces`). The list is measured for
+ * `md` only: a `sm` card is placed in the layout rather than floating over an
+ * action, and a `lg` dialog's face and shadow sit on the scrim, which
+ * `dialogSurfacePairs` measures.
  */
 export const elevationContentSurfaces = contentFillSurfaces;
 
@@ -1738,9 +1749,10 @@ export const elevationContentSurfaces = contentFillSurfaces;
  * `selected` persists while the modal opens, `input` is a layout surface, the
  * filled actions are the resting fills on the page, a Badge keeps its solid
  * status chip (`info`, `success` or `warning`), the panel action
- * (`softAction`) is the resting fill inside a status panel and `accent` is also
- * the resting fill of a toggled-on control, so all of them are measured.
- * `disabled`, `skeleton` and `track` are not the content a dialog opens over.
+ * (`softAction`) is the resting fill inside a status panel, `accent` is also the
+ * resting fill of a toggled-on control, and a disabled control, a loading row
+ * and a value groove stay on screen behind the dialog, so all of them are
+ * measured.
  */
 export const overlayWashPairs: readonly ContrastPair[] = overlaySurfaces.map(
   (surface): ContrastPair => ["overlay", surface, "surface"],

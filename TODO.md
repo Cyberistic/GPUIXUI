@@ -2131,6 +2131,14 @@ never above 1.374:1; `insetFocusRing(theme, family)` returns the family's
 on-colour at `borderWidth.strong` (4.697:1 at the tightest on a fill), the
 three cross-team rows point at one call, and no colour, pair, floor, metric or
 shipped theme moves (plan 609)
+`[x]` Hold the modal scrim and the floating menu's shadow over the three resting
+fills it excluded — a dark theme with `disabled`, `skeleton` and `track` set to
+`#000000` passed all nine checks while the shipped black scrim composited to
+**1.000:1** on each, so a disabled control, a loading row and a progress groove
+sat undimmed behind a dialog; the three join `contentFillSurfaces`, taking the
+scrim and dialog-face walks 18 → 21 pairs and the `md` elevation walk 12 → 15
+fills, every shipped set already clears 1.05:1 (1.284:1 at the tightest) and no
+colour moves (plan 610)
 
 ## Phase C — Tier 1–2 components
 
