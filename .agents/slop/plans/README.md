@@ -265,6 +265,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [573](./573-native-find-highlight.md) | The find-highlight wash the native text theme feeds | F | 069, 081, 087, 337, 569 | done |
 | [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | done |
 | [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | done |
+| [582](./582-native-highlight-code-surface.md) | The find highlight on the painted code surface | F | 569, 573, 574, 581 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2952,6 +2953,22 @@ same 1.05:1 floor plan 342 published for the filled families and plan 381 for
 the selected row — discriminated by `pairClass`, so `themeFailures` reports a
 collapsed active match without a ninth check kind. No shipped value, pair,
 floor or count moves.
+
+Plan `582` measures the find highlight where the runtime paints it. Plan 574
+established that a code block paints on the document tone under a fixed 3.5% ink
+wash, and plan 573 held every matchable role through the highlight on the plain
+tone only; a find inside fenced code therefore sat behind two washes the check
+never composited. On Aero light the inherited `successText` and
+`destructiveText` measured **4.445:1** on the canvas and **4.429:1** on the
+quiet panel through the active match, under the 4.5:1 secondary floor, while
+every check returned `[]`. A new internal `nativeInk(theme, surface)` owns the
+runtime's fraction and ink choice, `themeHighlightFailures` composites both
+washes over it, and Aero light names the XP recipe's own steps (`#0E5135`,
+`#7E1D21`). The opaque minima are now 5.59/4.80 and the painted minima
+5.21/4.51; the Aero step also moves the status-selection tightest to 4.858:1
+(Windows light `warningText` on `selected`) and `successText`/`muted` to 8.03:1
+(Windows light). No pair count, floor or check kind moves, and no other colour
+changes.
 
 ## How to use a plan
 
