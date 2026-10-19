@@ -4,7 +4,15 @@
 **Owner:** components workstream (`packages/components`)
 **Depends on:** plan 117 (verification gate), plan 611/619/649/650 (the
 normalise-at-the-boundary rule), plans 113/116/114 (the three components).
-**Status:** planned.
+**Status:** implemented — measured before the fix: `pageWindow({ page: 5,
+pageCount: 10, siblingCount: NaN })` → `[1, …, 10]`, `rankMentions(["ada",
+"adam", "bob"], "a", NaN)` → `[]`, `recordRecent(["a", "b", "c"], "d", NaN)`
+→ `[]`.
+One shared `wholeCap` now treats a non-finite bound as no bound; 1 helper case
+file + 3 pure + 3 native cases (unit 462, the three touched behaviour files
+58 → 61 with the same 3 recorded plan-540 failures). The three native cases fail
+on the old source. Docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the
+inventory are synced.
 
 ## 1. The bug
 
@@ -90,11 +98,12 @@ current page or a match fails by name.
   `wholeCap(Infinity) === Infinity`, `wholeCap(-Infinity) === Infinity`.
 - Pagination: `pageWindow({ page: 5, pageCount: 10, siblingCount: NaN })` equals
   `pages(1..10)`, and the same case for `siblingCount: Infinity`.
-- Mention: `rankMentions(["ada", "adam", "bob"], "a", NaN)` equals
-  `["ada", "adam"]`; `maxVisible: 1` still equals `["ada"]` (a finite cap is
-  untouched).
-- Command menu: `recordRecent(["b", "c"], "a", NaN)` equals `["a", "b", "c"]`;
-  `recordRecent` with `1` still keeps one entry (the documented minimum).
+- Mention: `rankMentions(["ana", "anna", "joana"], "an", NaN)` equals
+  `["ana", "anna", "joana"]`; the existing `maxVisible: 2` case still caps
+  (a finite bound is untouched).
+- Command menu: `recordRecent(["save", "export"], "open", NaN)` equals
+  `["open", "save", "export"]`; the existing `limit: 2` case still caps and
+  `limit: 0` still means the documented minimum of one.
 - Native cases assert the rendered tree: every page number, every suggestion
   row, and a `Recent` group row.
 
@@ -108,14 +117,17 @@ when `wholeCap` is replaced by the old expression (one mutation per component).
 Run from `packages/components`:
 
 ```bash
-nub run test                 # unit suite, expect 45 files -> 46 with count.test.ts, all green
-nub run test:behaviour -- pagination mention-input command-menu
+nub run test                 # unit suite, expect 46 files, 462 tests, all green
+nub exec vitest run --config vitest.behaviour.config.ts \
+  src/behaviour/pagination.test.tsx \
+  src/behaviour/mention-input.test.tsx \
+  src/behaviour/command-menu.test.tsx
 ```
 
-The behaviour filter form used by this package is the vitest file filter after
-`--`; if it does not narrow, run the three files with
-`nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/pagination.test.tsx src/behaviour/mention-input.test.tsx src/behaviour/command-menu.test.tsx`.
-Then from the repo root:
+Expected for the behaviour command: 61 tests, 58 passing and the same 3
+recorded plan-540 failures (`keeps the highlighted row inside the list
+viewport`, `composes the caller's field handlers`, `paints the focus ring on a
+focused row`) as at `HEAD`. Then from the repo root:
 
 ```bash
 nub run check
