@@ -36,6 +36,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { slideIndex } from "./carousel/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -117,7 +118,7 @@ export const Carousel = ({
   const [count, setCount] = useState(0);
   assertParts(carouselRoot, children);
 
-  const active = count === 0 ? 0 : Math.min(Math.max(value, 0), count - 1);
+  const active = slideIndex(value, count);
 
   const context = useMemo<CarouselContextValue>(
     () => ({

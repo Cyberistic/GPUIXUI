@@ -383,12 +383,12 @@ retired once both branches are one
       still works; 4 native cases (Card 6, Dialog 17, Drawer 15, Keyboard
       shortcuts 7), four mutation proofs; docs, `COMPONENTS.md` and the
       inventory synced (owner: components)
-    - [ ] A carousel index that names no slide hides every slide — plan 619.
-      Measured: `value={1.5}` / `value={NaN}` makes `active` fractional, so no
-      slide compares equal and the whole track paints nothing (and stepping
-      cannot recover). One pure `slideIndex` rule truncates and clamps; 5 rule
-      cases + 2 native cases, both-direction proof; docs and `COMPONENTS.md`
-      synced (owner: components)
+    - [x] A carousel index that names no slide hides every slide — plan 619.
+      Measured: `value={1.5}` / `value={NaN}` made `active` fractional, so no
+      slide compared equal and the whole track painted nothing (and stepping
+      could not recover). One pure `slideIndex` rule truncates and clamps; 5 rule
+      + 2 native cases (Carousel 20), both new cases failing on the old
+      derivation; docs and `COMPONENTS.md` synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

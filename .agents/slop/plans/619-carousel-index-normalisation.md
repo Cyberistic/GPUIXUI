@@ -100,8 +100,16 @@ Add to the existing `Carousel` describe (count goes 18 → 20):
    *(Fails on `HEAD`: nothing paints and the report is `NaN`.)*
 
 Both-direction proof: run the two new cases **before** applying the step-2
-change (they must fail), then after (they must pass). Record both runs in the
-plan status/commit.
+change (they must fail), then after (they must pass).
+
+Measured on 2026-10-19, real `TestRenderer`, this host:
+
+- before the fix — `fractional controlled index`: `expected [] to deeply equal
+  [ "Two" ]`; `non-finite index`: `expected [] to deeply equal [ "One" ]`;
+- after the fix — Carousel `20 tests | 1 failed`, the one failure being the
+  pre-existing plan-540 focus-ring case (`expected undefined to be defined` at
+  the root's `boxShadow`), which is red on `HEAD` too; the two new cases pass;
+- `src/carousel/logic.test.ts` — 5/5.
 
 ### Commands and expected results
 

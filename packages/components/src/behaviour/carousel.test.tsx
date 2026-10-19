@@ -7,7 +7,9 @@
  * not move, a controlled carousel that moves on its own, a style callback that
  * cannot see the active slide, a slide that could only be reached by repeated
  * stepping (the indicator dots), and a nested widget's arrow keys also stepping
- * the carousel (plan 614).
+ * the carousel (plan 614), and an index that is not a whole slide (a fractional
+ * or non-finite `value`) hiding every slide because none compared equal (plan
+ * 619).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -611,6 +613,50 @@ describe("Carousel", () => {
     expect(
       gallery.renderer.findByTestId("carousel")?.style.boxShadow,
     ).toBeDefined();
+
+    gallery.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 619): `active` was the raw `value` clamped only by
+   * `Math.min`/`Math.max`, so a fractional index never equalled a slide index —
+   * every slide took the hidden style — and a `NaN` index could not be stepped
+   * away from because `NaN + 1` is still `NaN`.
+   */
+  it("paints the slide a fractional controlled index names", () => {
+    const gallery = renderComponent(<IndicatorGallery value={1.5} />);
+
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-0")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-1")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(true);
+    expect(
+      gallery.renderer.findByTestId("carousel-indicator-2")?.customProps?.[
+        "aria-selected"
+      ],
+    ).toBe(false);
+
+    gallery.unmount();
+  });
+
+  it("recovers from a non-finite index on the next step", () => {
+    const onValueChange = vi.fn();
+    const gallery = renderComponent(
+      <StatefulGallery initial={Number.NaN} onValueChange={onValueChange} />,
+    );
+
+    expect(paintedSlides(gallery)).toEqual(["One"]);
+
+    clickCentreOf(gallery, "next");
+    expect(onValueChange).toHaveBeenLastCalledWith(1);
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
 
     gallery.unmount();
   });
