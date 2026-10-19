@@ -322,6 +322,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | done |
 | [666](./666-scrim-explanation-chips.md) | The scrim explanation names the three chips it counts | F | 099, 375, 508, 610, 617 | done |
 | [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | done |
+| [668](./668-scale-indexes.md) | The numeric scales' ordered indexes | F | 056, 058, 324, 358, 519, 531, 552, 066 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
