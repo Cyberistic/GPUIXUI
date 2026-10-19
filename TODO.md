@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 305/381
+`[x]` `[████████░░]` 306/382
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -124,6 +124,15 @@ nine, the README names `selectedActive`, and `soft-edge-surfaces.test.ts` derive
 the nine from `softBorderSurfacePairs` and holds the prose to it; the two
 historical “eight” mentions in `COMPONENTS.md` describe plans 308 and 399 and
 stay. No colour, pair, floor, metric or shipped theme moves (plan 683)
+`[x]` Finish the chip and skeleton counts — the design-system §8 `status` row
+still said the solid fill was held on "the eight surfaces a status chip sits
+on", and the README's skeleton paragraph still said "the same eight surfaces"
+and ended its enumeration at `selected`; both lists hold nine since plan 651.
+Both sentences say nine, the README names `selectedActive`, `docs.test.ts`
+derives the chip count from `statusFillPairs`, and a new `readme.test.ts` case
+derives the skeleton count from `skeletonPulsePairs` and holds the enumeration;
+the two historical "eight" mentions in `COMPONENTS.md` stay. No colour, pair,
+floor, metric or shipped theme moves (plan 684)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

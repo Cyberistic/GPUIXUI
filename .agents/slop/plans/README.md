@@ -334,6 +334,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [681](./681-check-ordinals.md) | The check ordinals the JSDoc retyped | F | 056, 602, 617 | done |
 | [682](./682-caret-surface-owner.md) | The caret sentence publishes one pair as nine | F | 557, 681 | done |
 | [683](./683-chip-surface-count.md) | The chip surface count plan 651 left at eight | F | 308, 399, 651, 682 | done |
+| [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

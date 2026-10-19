@@ -3339,6 +3339,9 @@ describe("docs/design-system.md", () => {
       expect(rowText, surface).toContain(`\`${surface}\``);
       expect(designSystem, surface).toContain(`\`${surface}\``);
     });
+    expect(designSystem).toContain(
+      `on the ${countWord(surfaces.length)} surfaces a status chip sits on`,
+    );
     expect(markdown).toContain("statusFillPairs");
     expect(designSystem).toContain("statusFillPairs");
   });

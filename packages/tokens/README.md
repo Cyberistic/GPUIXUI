@@ -565,10 +565,11 @@ inherited the tint, so a sidebar badge measured 1.023:1 on Linux, 1.036:1 on
 macOS and 1.043:1 on Windows until plan 300 moved the four light tints one small
 step deeper — and
 the loading skeleton on those three, the `muted` panel and the
-`hover`/`active`/`accent`/`selected` washes a loading row paints — the identity and
-high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved
-them one ramp step — and the pulse's dim frame, the role composited at
-`skeletonPulseOpacity` (0.6) on the same eight surfaces (`skeletonPulsePairs`),
+`hover`/`active`/`accent`/`selected`/`selectedActive` washes a loading row
+paints — the identity and high-contrast skeletons *were* the pressed fill
+(1.000:1) until plan 094 moved them one ramp step — and the pulse's dim frame,
+the role composited at
+`skeletonPulseOpacity` (0.6) on the same nine surfaces (`skeletonPulsePairs`),
 because half of every cycle is a fade an opaque pair cannot see; identity dark
 measured **1.008:1** on `selected` until plan 393 moved its skeleton a half-step
 to `#434C5A` (1.074:1 at the dim frame) — and the decorative `border` at 1.05:1

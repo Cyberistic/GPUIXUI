@@ -19,7 +19,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
-import { contrastFloors, stateFillSurfaces } from "./contrast.js";
+import {
+  contrastFloors,
+  skeletonPulsePairs,
+  stateFillSurfaces,
+} from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
 import { motion } from "./motion.js";
 import {
@@ -45,6 +49,22 @@ const sentenceList = (values: ReadonlyArray<string>): string =>
   values.length < 2
     ? values.join("")
     : `${values.slice(0, -1).join(", ")} and ${values.slice(-1).join("")}`;
+
+const countWords = [
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine",
+  "ten",
+] as const;
+
+const countWord = (count: number): string => countWords[count] ?? String(count);
 
 /** The failure type each check returns, keyed by the kind that tags it. */
 const failureTypes = {
@@ -235,10 +255,23 @@ describe("packages/tokens/README.md", () => {
 
   it("states the skeleton floor the checker enforces", () => {
     expect(readme).toContain(
-      `the loading skeleton on those three, the \`muted\` panel and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes a loading row paints`,
+      "the loading skeleton on those three, the `muted` panel and the",
     );
     expect(readme).toContain(
       "the identity and high-contrast skeletons *were* the pressed fill (1.000:1) until plan 094 moved them one ramp step",
+    );
+  });
+
+  it("states the nine surfaces the skeleton pulse is measured on", () => {
+    const surfaces = [
+      ...new Set(skeletonPulsePairs.map(([, background]) => background)),
+    ];
+    expect(surfaces).toHaveLength(9);
+    expect(readme).toContain(
+      `on the same ${countWord(surfaces.length)} surfaces (\`skeletonPulsePairs\`)`,
+    );
+    expect(readme).toContain(
+      "`hover`/`active`/`accent`/`selected`/`selectedActive` washes a loading row paints",
     );
   });
 
