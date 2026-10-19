@@ -1694,6 +1694,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ["primaryText", "selected", "Windows dark", 5.69],
       ["foreground", "selected", "Linux dark", 8.44],
       ["popoverForeground", "selected", "Linux dark", 8.98],
+      ["popoverForeground", "selectedActive", "Linux dark", 11.59],
       ["selectedForeground", "active", "macOS light", 6.22],
       ["selectedForeground", "accent", "macOS light", 6.93],
       ["successText", "muted", "Windows light", 8.03],
@@ -3027,7 +3028,7 @@ describe("docs/design-system.md", () => {
       .join("/");
     const rows = [
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\`, the \`hover\`/\`active\`/\`accent\`/\`selected\`/\`selectedActive\` washes and the four soft status fills an Alert's description paints; typed text on \`input\`, on the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, on the \`hover\`/\`active\`/\`accent\`/\`selected\`/\`selectedActive\` washes a field inside a row paints and on the four soft status fills a field inside a status panel paints | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
-      `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
+      `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, on \`selected\` for a selected \`Select\` option and on the pressed \`selectedActive\` while it is held) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| selected row label (\`selectedForeground\` on \`selected\` and the pressed \`selectedActive\`, the \`accent\` wash a hovered selectable row paints and the \`hover\`/\`active\` pointer washes) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| secondary text (\`mutedForeground\` on plain surfaces, on the \`input\` fill a field paints for its own chrome, on the \`hover\`, \`active\`, \`accent\`, \`selected\` and \`selectedActive\` washes and on the four soft status fills a status panel's caption sits on), on-colour text, placeholder text on the \`input\` fill, the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on, the \`hover\`/\`active\`/\`accent\`/\`selected\`/\`selectedActive\` washes a field inside a row paints and the four soft status fills a field inside a status panel paints, ghost text on the \`hover\`/\`active\` washes | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| brand-toned text (\`primaryText\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\` washes, the \`accent\`/\`selected\`/\`selectedActive\` row fills and the four soft status fills a link in a status panel sits on | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,

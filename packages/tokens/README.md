@@ -465,8 +465,9 @@ own `cardForeground` is measured beside the default `foreground`, because both
 Windows recipes ship the two apart
 (plan 363), and a selected row's title (`foreground`) is measured beside its
 inherited `selectedForeground`, because the title is the brighter of the two
-roles (plan 506). A menu row's `popoverForeground` is measured on the three
-washes it highlights with and the selected row's inherited `selectedForeground`
+roles (plan 506). A menu row's `popoverForeground` is measured on the four
+fills it keeps — `hover`, `active`, `selected` and the pressed `selectedActive`
+(plans 525 and 700) — and the selected row's inherited `selectedForeground`
 on all five fills it keeps (plan 525; the pressed `selectedActive` joined them
 in plan 651). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
@@ -546,7 +547,8 @@ after the move, Linux dark on `active`); the identity light hint then measured
 659 moved both a half-step and every shipped set clears all four soft fills at
 4.575:1 or better. A menu
 row's `popoverForeground` on
-`hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
+`hover`/`active`, a selected `Select` option's on `selected` and the pressed
+`selectedActive` (plans 314 and 700), and a
 selected row's inherited `selectedForeground` on the `accent` wash a selectable
 row hovers and on the `hover`/`active` pointer washes are checked
 too (plan 316), and a field's `border` edge is checked on its own `input` fill

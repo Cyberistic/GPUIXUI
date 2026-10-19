@@ -425,7 +425,8 @@ export const selectionPressStepPairs: readonly ContrastPair[] = [
 /**
  * The text and chrome a pressed selected row paints. `selectedActive` is a row
  * surface like `selected`: a title (`foreground`), the inherited label
- * (`selectedForeground`), metadata, typed text in an in-place editor, a hint, a
+ * (`selectedForeground`), a menu option's own label (`popoverForeground`),
+ * metadata, typed text in an in-place editor, a hint, a
  * brand-toned link and a disabled control sit on it; the four status labels are
  * derived from
  * {@link statusTextSurfaces}, which names it too, and the row's control edge, focus ring,
@@ -440,6 +441,7 @@ export const selectionPressStepPairs: readonly ContrastPair[] = [
  */
 export const selectionPressPairs: readonly ContrastPair[] = [
   ["foreground", "selectedActive", "body"],
+  ["popoverForeground", "selectedActive", "body"],
   ["selectedForeground", "selectedActive", "secondary"],
   ["mutedForeground", "selectedActive", "secondary"],
   ["inputForeground", "selectedActive", "body"],

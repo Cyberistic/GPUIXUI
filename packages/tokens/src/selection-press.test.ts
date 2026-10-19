@@ -11,6 +11,13 @@
  *
  * The press is the one state that previews deselection, so it moves **toward**
  * the canvas: `selectedActive` is a 24% canvas veil over `selected`.
+ *
+ * Plan 700 closes the pressed row's last own label. `checked-control.example.ts`
+ * (plan 698) declares a selected option's `foreground` as `popoverForeground` on
+ * both `selected` and the pressed `selectedActive`, but only the resting fill was
+ * measured, so an edited theme could erase the chosen option's label on the
+ * press while the checker returned `[]`. The menu option's label joins the list
+ * at the body floor.
  */
 
 import { describe, expect, it } from "vitest";
@@ -50,6 +57,7 @@ describe("a selected row's press", () => {
     ]);
     expect(selectionPressPairs.map(([foreground]) => foreground)).toEqual([
       "foreground",
+      "popoverForeground",
       "selectedForeground",
       "mutedForeground",
       "inputForeground",
@@ -172,5 +180,71 @@ describe("a selected row's press", () => {
       colors: { selected: selectionPressTheme.colors.selectedActive },
     });
     expect(pressStepFailures(stale)).toHaveLength(1);
+  });
+});
+
+describe("a menu option's label on the pressed fill", () => {
+  const pressedLabelFailures = (theme: ReturnType<typeof getTheme>) =>
+    themeContrastFailures(theme).filter(
+      ({ foreground, background }) =>
+        foreground === "popoverForeground" && background === "selectedActive",
+    );
+
+  it("publishes the option's label on the pressed fill once", () => {
+    const pair = ["popoverForeground", "selectedActive", "body"] as const;
+    expect(selectionPressPairs).toContainEqual([...pair]);
+    expect(
+      contrastPairs.filter(
+        ([foreground, background, pairClass]) =>
+          foreground === pair[0] &&
+          background === pair[1] &&
+          pairClass === pair[2],
+      ),
+    ).toEqual([pair]);
+  });
+
+  it("holds every shipped set above the body floor on the pressed fill", () => {
+    const failures = shippedThemes.flatMap(({ theme }) => {
+      const floor = contrastFloors[theme.contrast].body;
+      const ratio = contrastRatio(
+        theme.colors.popoverForeground,
+        theme.colors.selectedActive,
+      );
+      return ratio >= floor ? [] : [`${theme.name}: ${ratio} < ${floor}`];
+    });
+    expect(failures).toEqual([]);
+  });
+
+  it("pins the pressed-fill figure the catalogue quotes", () => {
+    const worst = shippedThemes
+      .map(
+        ({ theme }) =>
+          [
+            theme.name,
+            contrastRatio(
+              theme.colors.popoverForeground,
+              theme.colors.selectedActive,
+            ),
+          ] as const,
+      )
+      .reduce((tightest, current) =>
+        current[1] < tightest[1] ? current : tightest,
+      );
+    expect([worst[0], Number(worst[1].toFixed(3))]).toEqual([
+      "Dark · Linux",
+      11.592,
+    ]);
+  });
+
+  it("reports the option's label erased on the pressed fill", () => {
+    const light = getTheme("light");
+    const regressed = extendTheme(light, {
+      colors: { popoverForeground: light.colors.selectedActive },
+    });
+    const erased = pressedLabelFailures(regressed);
+
+    expect(erased).toHaveLength(1);
+    expect(erased[0]?.pairClass).toBe("body");
+    expect(erased[0]?.floor).toBe(contrastFloors.default.body);
   });
 });

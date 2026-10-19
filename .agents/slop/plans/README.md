@@ -354,6 +354,7 @@ references without buying correctness.
 | [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
 | [695](./695-blockquote-body-role.md) | The blockquote's painted body role | F | 569, 583, 588, 649 | done |
 | [698](./698-selected-option-check.md) | The selected option's check on its selected fill | F | 332, 341, 557, 651 | done |
+| [700](./700-pressed-option-label.md) | A menu option's label on the pressed selected fill | F | 314, 359, 651, 659, 698 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3649,6 +3650,15 @@ pairs); the macOS dark accent moves one designed step (`#0A84FF` → `#2E93FF`,
 documented brand example lightens its primary family (`#9579FF`, 3.146:1 on the
 inherited selection) and drops the scrim override its lighter fill no longer
 needs. No other shipped set or role moves.
+
+Plan `700` closes the selected menu option's label on the pressed fill.
+`selectionPressPairs` already measured the menu foreground on a pressed row, and
+`rowTextPairs` measured `popoverForeground` on `selected`, but a selected
+`Select` option keeps the same foreground on `selectedActive` while the row is
+held, and nothing measured it there. The pair joins `selectionPressPairs`
+(463 → 464 pairs); every shipped set already clears the 7:1 body floor — Linux
+dark at **11.59:1**, the tightest, beside 8.98:1 on `selected` — so no colour,
+floor or shipped metric moves.
 
 ## How to use a plan
 

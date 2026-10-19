@@ -2863,7 +2863,7 @@ themeTextTierFailures(flattened); // a failure per surface the tiers share
 
 The surfaces are derived from `contrastPairs`, not retyped: thirteen shared
 surfaces for secondary text below body copy, one `card` for `cardForeground`,
-four for `popoverForeground` (`popover` and the three row washes it shares), the
+five for `popoverForeground` (`popover` and the four row fills it shares), the
 fourteen surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover`, `input`, the pressed `selectedActive` and the
 four row washes, plus the four soft status fills a field inside a status panel
@@ -3405,8 +3405,9 @@ break them silently.
 
 The other row text roles have their own pairs. A menu row paints
 `popoverForeground` on `hover`/`active`, a selected `Select` option paints it on
-`selected` — the shipped `selectItemStyle` keeps the menu foreground when the row
-fills — and a selected row under the pointer keeps its inherited
+`selected` while the row fills and keeps it on `selectedActive` while held — the
+shipped `selectItemStyle` keeps the menu foreground when the row fills — and a
+selected row under the pointer keeps its inherited
 `selectedForeground` on `accent`, `hover`, `active` and the pressed
 `selectedActive`; all four take the secondary floor, matching
 `selectedForeground` on `selected`. The `accent` fill
@@ -3414,6 +3415,7 @@ is the one a selectable `ListItem` paints on hover, so it is a composition the
 list API invites, not a spare surface. The tightest shipped values are
 `foreground` on `selected` at **8.44:1** (Linux dark),
 `popoverForeground` on `selected` at **8.98:1** (Linux dark),
+`popoverForeground` on `selectedActive` at **11.59:1** (Linux dark),
 `selectedForeground` on `active` at **6.22:1** (macOS light) and
 `selectedForeground` on `accent` at **6.93:1** (macOS light), so no colour moves.
 A text field's edge is `border` on its own `input` fill, measured at the divider
@@ -3545,7 +3547,7 @@ pressed. That press previews the canvas the click returns it to when it
 deselects the row, so it is the one pointer state that moves toward the canvas;
 `selectedActive` is a 24% veil of the canvas colour over `selected`, shipped as
 an editable opaque literal in every palette. `selectionPressStepPairs` publishes
-the step, `selectionPressPairs` holds the six text roles, the disabled label
+the step, `selectionPressPairs` holds the seven text roles, the disabled label
 and the three chrome roles a pressed row paints, the four status labels come
 from `statusTextSurfaces`, and `stateLadders` carries the ladder with
 `direction: "toward"`. Before plan `651` the design system claimed the chosen row
@@ -3717,8 +3719,8 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **463** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
-`671` and `698`.
+396 to **464** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
+`671`, `698` and `700`.
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already

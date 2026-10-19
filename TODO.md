@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 315/392
+`[x]` `[████████░░]` 316/393
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2658,6 +2658,12 @@ two fills join `comboboxCheckPairs`, macOS dark's accent family moves one
 designed step (`#0A84FF` → `#2E93FF`, **3.214:1** on `selected`), the documented
 brand example moves its primary family to `#9579FF` (**3.146:1** on the
 inherited selection), and every shipped set passes (plan 698)
+`[x]` Hold a selected menu option's label on the pressed fill — a selected
+`Select` option paints `popoverForeground` on `selected`, but the contract
+measured it only there; the same foreground stays while the row presses to
+`selectedActive`. The pair joins `selectionPressPairs`, every shipped set
+already clears the body floor (**11.59:1** at the tightest, Linux dark), so no
+colour moves (plan 700)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now
