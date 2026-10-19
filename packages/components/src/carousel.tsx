@@ -13,7 +13,12 @@
  * rule.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import {
+  useGpuix,
+  type EventPayload,
+  type Props,
+  type PublicInstance,
+} from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -28,6 +33,7 @@ import {
   useContext,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
@@ -100,6 +106,8 @@ export const Carousel = ({
   ...rest
 }: CarouselProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const root = useRef<PublicInstance | null>(null);
   const [focused, setFocused] = useState(autoFocus);
   const [value, setValue] = useControllableState({
     value: valueProp,
@@ -140,6 +148,7 @@ export const Carousel = ({
     <CarouselContext.Provider value={context}>
       <div
         {...rest}
+        ref={root}
         role="group"
         aria-label={label}
         autoFocus={autoFocus}
@@ -153,10 +162,18 @@ export const Carousel = ({
           onBlur?.(event);
         }}
         onKeyDown={(event: EventPayload) => {
-          if (isRight(event)) context.step(1);
-          else if (isLeft(event)) context.step(-1);
-          else if (isFirst(event)) context.goTo(0);
-          else if (isLast(event)) context.goTo(count - 1);
+          // A key that bubbles from a control in a slide belongs to that
+          // control, so the root steps only while it is the focused element
+          // (plan 614); the caller still sees every key.
+          if (
+            root.current !== null &&
+            renderer?.getFocusedElementId?.() === root.current.id
+          ) {
+            if (isRight(event)) context.step(1);
+            else if (isLeft(event)) context.step(-1);
+            else if (isFirst(event)) context.goTo(0);
+            else if (isLast(event)) context.goTo(count - 1);
+          }
           onKeyDown?.(event);
         }}
         style={mergeStyles(

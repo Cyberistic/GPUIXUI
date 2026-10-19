@@ -366,11 +366,14 @@ retired once both branches are one
       focus. 2 native cases (InlineEdit 19), both-direction proof (the focus
       case fails with the sampler removed); docs, `COMPONENTS.md`, `TODO.md`
       and the inventory synced (owner: components)
-    - [ ] A control inside a carousel slide owns its keys — plan 614; the docs
-      say arrows/Home/End work when the **carousel** is focused, but the root
-      handles every bubbled key, so a field or nested widget in a slide loses
-      its editing keys to a slide step. The root gates its branches on the
-      renderer's focused id at key time; 2 native cases, both-direction proof
+    - [x] A control inside a carousel slide owns its keys — plan 614; the docs
+      said arrows/Home/End work when the **carousel** is focused, but the root
+      handled every bubbled key, so `ArrowRight`/`End` on a nested tab rail also
+      stepped the carousel (the host `<input>` consumes its own arrow keys, so
+      the case uses a nested widget). The root gates its branches on
+      `getFocusedElementId()` at key time and forwards every key to the caller;
+      1 native case (Carousel 18), both-direction proof (two carousel reports
+      before the gate); docs, `COMPONENTS.md` and the plan indexed
       (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121

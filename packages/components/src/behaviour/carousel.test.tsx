@@ -5,8 +5,9 @@
  * `display: "none"` — plan 365), an inactive slide taking the active slide's
  * click, a step that runs past the last slide, loop ignored, arrow keys that do
  * not move, a controlled carousel that moves on its own, a style callback that
- * cannot see the active slide, and a slide that could only be reached by
- * repeated stepping (the indicator dots).
+ * cannot see the active slide, a slide that could only be reached by repeated
+ * stepping (the indicator dots), and a nested widget's arrow keys also stepping
+ * the carousel (plan 614).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -20,6 +21,7 @@ import {
   CarouselSlide,
   CarouselTrack,
 } from "../carousel.js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs.js";
 import {
   boundsOf,
   clickCentreOf,
@@ -139,6 +141,52 @@ const StatefulIndicators = ({ initial = 0 }: { readonly initial?: number }) => {
   const [value, setValue] = useState(initial);
   return <IndicatorGallery value={value} onValueChange={setValue} />;
 };
+
+/** A gallery whose active slide hosts a widget with its own arrow keys. */
+const KeyGallery = ({
+  onValueChange,
+  onInnerValueChange,
+}: {
+  readonly onValueChange?: (value: number) => void;
+  readonly onInnerValueChange?: (value: string) => void;
+}) => (
+  <div style={{ width: 480 }}>
+    <Carousel
+      testId="carousel"
+      label="Screenshots"
+      value={0}
+      onValueChange={onValueChange}
+    >
+      <CarouselTrack testId="track">
+        <CarouselSlide testId="slide-0">
+          <Tabs
+            testId="inner-tabs"
+            defaultValue="one"
+            onValueChange={onInnerValueChange}
+          >
+            <TabsList>
+              <TabsTrigger testId="inner-tab-one" value="one">
+                First tab
+              </TabsTrigger>
+              <TabsTrigger testId="inner-tab-two" value="two">
+                Second tab
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="one">
+              <text>First panel</text>
+            </TabsContent>
+            <TabsContent value="two">
+              <text>Second panel</text>
+            </TabsContent>
+          </Tabs>
+        </CarouselSlide>
+        <CarouselSlide testId="slide-1">
+          <text>Two</text>
+        </CarouselSlide>
+      </CarouselTrack>
+    </Carousel>
+  </div>
+);
 
 /** The slide labels the renderer actually painted. */
 const paintedSlides = (root: ComponentTestRoot): ReadonlyArray<string> => {
@@ -305,6 +353,37 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "prev");
     expect(onValueChange).toHaveBeenLastCalledWith(2);
+
+    gallery.unmount();
+  });
+
+  it("leaves a nested control's keys to that control", () => {
+    const onValueChange = vi.fn();
+    const onInnerValueChange = vi.fn();
+    const gallery = renderComponent(
+      <KeyGallery
+        onValueChange={onValueChange}
+        onInnerValueChange={onInnerValueChange}
+      />,
+    );
+
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("inner-tab-one")?.id ?? -1,
+    );
+    expect(focusedTestId(gallery)).toEqual(Option.some("inner-tab-one"));
+
+    gallery.renderer.simulateKeystrokes("right");
+    gallery.renderer.simulateKeystrokes("end");
+
+    expect(onInnerValueChange).toHaveBeenLastCalledWith("two");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("carousel")?.id ?? -1,
+    );
+    gallery.renderer.simulateKeystrokes("right");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(1);
 
     gallery.unmount();
   });

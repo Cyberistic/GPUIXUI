@@ -51,9 +51,9 @@ limit). Root-only is the one honest test.
 | File | Change |
 | ---- | ------ |
 | `packages/components/src/carousel.tsx` | attach a ref to the root, read the renderer's focused id at key time, and gate every internal branch on the root owning focus |
-| `packages/components/src/behaviour/carousel.test.tsx` | header comment + two native cases: an input in a slide keeps its keys; a nested focusable control receives the key while the carousel does not step (and the existing root-focus case stays the other direction) |
-| `packages/components/docs/carousel.mdx` | state the ownership rule; verification count `17 → 19` |
-| `COMPONENTS.md` | Carousel row: `17 → 19` native tests and the ownership sentence |
+| `packages/components/src/behaviour/carousel.test.tsx` | header comment + one native case: a nested tab rail keeps `ArrowRight`/`End` while the carousel does not step, and the focused root still steps (the other direction) |
+| `packages/components/docs/carousel.mdx` | state the ownership rule; verification count `17 → 18` |
+| `COMPONENTS.md` | Carousel row: `17 → 18` native tests and the ownership sentence |
 | `.agents/slop/plans/README.md` | index `614` |
 | `TODO.md` | tick the task under Tier 2 hardening |
 | `PLAN.md` | D30: take `614` |
@@ -108,32 +108,42 @@ the bubble order is unchanged for descendants.
 
 ## 5. Tests (write them first)
 
-Add to `src/behaviour/carousel.test.tsx`, beside "steps with arrows and jumps
-with Home/End":
+Add one native case to `src/behaviour/carousel.test.tsx`, beside "steps with
+arrows and jumps with Home/End":
 
-1. **"leaves a slide's editing keys to its field"**
-   - fixture: the existing `Gallery`, but slide 0 also contains
-     `<input testId="slide-field" />`; the simplest change is to extend
-     `Gallery`'s slide 0 (no other case looks at slide 0's children).
-   - focus `slide-field` via `renderer.focusElement(...)`; assert
-     `focusedTestId(gallery) === Option.some("slide-field")`.
-   - `simulateKeystrokes("right")`, `simulateKeystrokes("end")`; assert
-     `onValueChange` was not called.
-   - focus `carousel`, `simulateKeystrokes("right")`; assert the last call is
-     `1` (the gate is not over-broad).
-2. **"lets a nested control handle the key it receives"**
-   - fixture: a focusable `div` (`role="button"`, `tabIndex={0}`,
-     `testId="slide-action"`) in slide 0 with an `onKeyDown` spy.
-   - focus it, `simulateKeystrokes("right")`; assert the nested spy ran **and**
-     `onValueChange` did not.
+**"leaves a nested control's keys to that control"**
 
-Both cases are inside `describe("Carousel", ...)` with the existing renderer and
-teardown; do not add a helper that hides the assertion.
+- fixture: a new `KeyGallery` whose slide 0 hosts a two-tab `Tabs` (its own
+  `onValueChange` spy) over two panels; slide 1 is plain text.
+- focus `inner-tab-one` via `renderer.focusElement(...)`; assert
+  `focusedTestId(gallery) === Option.some("inner-tab-one")`.
+- `simulateKeystrokes("right")`, then `simulateKeystrokes("end")`; assert the
+  inner tabs reported `"two"` and the carousel's `onValueChange` was **not**
+  called.
+- focus `carousel`, `simulateKeystrokes("right")`; assert the carousel reported
+  `1` (the gate is not over-broad).
 
-Expected: 19 tests in the file. Both new cases fail on the current source (the
-first reports `onValueChange` called with `1`, the second also steps), and pass
+The case is inside `describe("Carousel", ...)` with the existing renderer and
+teardown.
+
+Expected: 18 tests in the file. The new case fails on the current source with
+`onValueChange` called **twice** (`1` on `right`, `1` on `end`), and passes
 after §4. The existing "steps with arrows" case must stay green: it focuses the
-root explicitly.
+root explicitly. The file's one focus-ring failure
+(`paints the focus ring on the group and the focused dot`) is the recorded
+plan-540/536 binding defect: a programmatic focus move dispatches no React
+`focus`, so the ring is not painted. It is present before and after this change
+and is not part of this plan.
+
+### Measured during implementation (2026-10-19)
+
+A first attempt focused an `<input>` inside the slide. It **passed before the
+fix**: the host `<input>` consumes `ArrowRight`/`Home`/`End`, so those keys never
+bubble to the carousel. That is the STOP condition in §7 and the case was
+replaced with a nested widget that does not consume them. The text-field half of
+the claim in §1 therefore does not reproduce for arrow keys in 0.10.0; the
+nested-widget half does, and the docs now say "a control inside a slide owns the
+key it receives".
 
 ## 6. Commands and expected results
 
@@ -144,15 +154,16 @@ nub run --filter @gpuixui/components test
 nub run check && nub run lint && nub run test
 ```
 
-Expected: type-check clean; Carousel 17 → 19 with the two new cases green and
-no other case changed; unit suite unchanged (449); the three gates exit 0.
+Expected: type-check clean; Carousel 17 → 18 with the new case green and no
+other case changed; unit suite unchanged (449); the three gates exit 0.
 
 Two-direction proof, recorded in the plan index and the commit:
 
-1. With §4: both new cases pass, the root case keeps passing.
-2. Restore the old unconditional `onKeyDown` (or make the gate `true`): both
-   new cases fail, naming `onValueChange` calls; record the exact failure of the
-   first one.
+1. With §4: the new case passes (inner tabs `"two"`, carousel not reported),
+   and the existing root-focus case keeps passing.
+2. Restore the old unconditional `onKeyDown` (or make the gate `true`): the new
+   case fails with `onValueChange` called twice — `[1]` on `right` and `[1]` on
+   `end` — before the root-focus assertion can run. Measured 2026-10-19.
 
 The full native suite still carries the recorded plan-540 binding failures
 (36 red of 812 on 2026-10-19). Run the Carousel file, not the full suite, while

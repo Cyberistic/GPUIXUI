@@ -54,11 +54,17 @@ slide the same index.
 | indicator press, or `Enter`/`Space` on a focused dot | jumps to that slide |
 | `loop` | wraps in both directions |
 | `ArrowRight` / `ArrowLeft` (carousel focused) | same as the controls |
-| `Home` / `End` | first / last slide |
+| `Home` / `End` (carousel focused) | first / last slide |
 | `value` controlled | the caller's index wins; the control still reports |
 
 The root is focusable and named by `label`. The active index is clamped to the
 slide count, so a controlled value past the end cannot blank the carousel.
+
+The keys belong to the focused control, not to the carousel. The root steps only
+while it is the natively focused element, so a field or a nested widget inside a
+slide (a tab rail, a list, an editor) keeps its `ArrowLeft`/`ArrowRight` and
+`Home`/`End`; a key that bubbles from it is left alone. The caller's root
+`onKeyDown` still receives every key.
 
 ## API
 
@@ -90,6 +96,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - The root is a named `group` and takes focus for the arrow keys; the root and
   every dot paint the token focus ring, and a root `autoFocus` seeds its ring.
+- A control inside a slide owns the keys it receives. Moving the carousel from
+  the keyboard is the root's job, so tab back to the root (or press a control)
+  rather than expecting arrows to work from a nested field.
 - Controls are buttons named "Previous slide" / "Next slide"; a control at an
   edge is disabled (out of the tab order, dimmed) unless `loop`.
 - Each indicator is a button named "Go to slide N"; the active one carries
@@ -115,11 +124,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (18 tests):
 exactly one slide painted, an inactive slide with no layout box, the active slide
 taking a click the inactive one used to take, a hidden slide keeping its state
 across a step, control stepping, edge clamping, loop wrapping, arrows and
-Home/End, a controlled carousel, region naming and disabled edges, one named
+Home/End, a control inside a slide keeping its own keys while the focused root
+still steps, a controlled carousel, region naming and disabled edges, one named
 indicator per slide with the active one marked (press and `Enter`/`Space` both
 jump), the root and dot focus rings (including the `autoFocus` seed), and a
 style callback receiving `{ active, index }` in both themes.
