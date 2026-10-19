@@ -13,7 +13,9 @@
  *
  * Plan 579 measured the next set (`typeahead`, `passcode`, `wizard`,
  * `segmented control`, `hover card`, …): a term is added only when the record's
- * own fields cannot match it and a whole-query match is unambiguous.
+ * own fields cannot match it and a whole-query match is unambiguous. Plan 583
+ * adds the third measured set (`cmdk`, `autosuggest`, `gauge`, `pill`,
+ * `callout`, `busy`, `sheet`) under the same rule.
  */
 export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -30,6 +32,8 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "autocomplete",
       "auto complete",
       "auto-complete",
+      "autosuggest",
+      "auto suggest",
       "suggestions",
     ],
   ],
@@ -46,17 +50,20 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["dialog", ["modal", "modal window"]],
+  ["command-menu", ["cmdk"]],
   [
     "navigation-menu",
     ["navbar", "nav bar", "menubar", "menu bar", "hamburger", "hamburger menu"],
   ],
   ["search-input", ["searchbox", "search box", "search bar", "search field"]],
   ["number-field", ["number input", "numeric input"]],
+  ["meter", ["gauge", "gauges"]],
   ["tag-input", ["chips", "chips input", "tags input"]],
   ["hotkey-input", ["shortcut recorder"]],
-  ["drawer", ["side sheet", "side panel", "sidepanel"]],
+  ["drawer", ["side sheet", "side panel", "sidepanel", "sheet"]],
   ["fieldset", ["field group"]],
   ["toast", ["snackbar"]],
+  ["spinner", ["busy"]],
   ["keycap", ["kbd"]],
   ["color-picker", ["colour picker", "colourpicker", "swatch", "swatches"]],
   ["preview-card", ["hover card", "hovercard"]],
@@ -83,7 +90,8 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ["segmented control", "segmented", "toggle group", "toggle-group"],
   ],
   ["stepper", ["wizard", "multi step", "multi-step", "multi step form"]],
-  ["alert", ["banner"]],
+  ["badge", ["pill"]],
+  ["alert", ["banner", "callout", "callouts"]],
   ["scroll-area", ["scrollview", "scroll view", "scroll pane"]],
   ["popover", ["popup"]],
   ["select", ["select box", "dropdown list", "multi select", "multi-select"]],

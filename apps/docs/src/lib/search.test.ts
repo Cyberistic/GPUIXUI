@@ -504,6 +504,45 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 583: a third measured sweep. `cmdk`, `autosuggest`, `gauge`, `pill`,
+   * `callout`, `busy` and `sheet` still returned nothing or another page; the
+   * Theming summary did not name the three platform styles it owns, the
+   * Workspace summary did not name resizable splits or inspector panels, and the
+   * Layouts page had no RTL sentence, so `rtl` had no answer. A row fails by
+   * query when its alias, summary word or sentence is removed.
+   */
+  it("finds the third set of reader words and page subjects (plan 583)", async () => {
+    const expected = [
+      ["cmdk", "/docs/components/command-menu"],
+      ["autosuggest", "/docs/components/combobox"],
+      ["auto suggest", "/docs/components/combobox"],
+      ["gauge", "/docs/components/meter"],
+      ["gauges", "/docs/components/meter"],
+      ["pill", "/docs/components/badge"],
+      ["callout", "/docs/components/alert"],
+      ["callouts", "/docs/components/alert"],
+      ["busy", "/docs/components/spinner"],
+      ["sheet", "/docs/components/drawer"],
+      ["macos", "/docs/theming"],
+      ["linux", "/docs/theming"],
+      ["windows", "/docs/theming"],
+      ["resizable", "/docs/workspace"],
+      ["inspector", "/docs/workspace"],
+      ["rtl", "/docs/layouts"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });

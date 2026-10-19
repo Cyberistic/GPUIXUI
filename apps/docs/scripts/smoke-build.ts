@@ -735,6 +735,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "reader vocabulary recovered by the second alias pass",
     },
     {
+      query: "cmdk",
+      expected: "/docs/components/command-menu",
+      first: true,
+      what: "reader vocabulary recovered by the third alias pass",
+    },
+    {
+      query: "macos",
+      expected: "/docs/theming",
+      first: true,
+      what: "a platform name authored in the Theming summary",
+    },
+    {
       query: "datagrid",
       expected: "/docs/data-display",
       first: true,

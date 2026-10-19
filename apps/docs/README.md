@@ -534,6 +534,15 @@ stays on the Stack page: `Grid` is a real exported layout primitive and plan
 The `search.test.ts` plan-579 tables fail by query, and `smoke:build` checks
 `typeahead` and `datagrid` against the production index.
 
+A third pass (plan 583) added the next measured words: `cmdk` → Command menus,
+`autosuggest` → Comboboxes, `gauge` → Meter, `pill` → Badges, `callout` →
+Alerts, `busy` → Loading indicators and `sheet` → Drawers. Theming's summary now
+names the macOS, Linux and Windows platform styles it owns, Workspace's names
+resizable splits and inspector panels, and Layouts records that RTL layout is
+not implemented. This is the same alias table and the same authored-summary
+rule; it adds no ranker. The plan-583 table in `search.test.ts` fails by query,
+and `smoke:build` checks `cmdk` and `macos` against the production index.
+
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
 navigates and focuses the destination page, an unknown query shows the empty

@@ -29,3 +29,8 @@ Spacing is always a theme step (`2xs` … `5xl`), never a pixel value at the cal
 site, so a layout cannot drift from the design system. What the runtime cannot
 do — responsive breakpoints, ragged grids, a tinted scrollbar — is recorded on
 the component page rather than worked around in a wrapper.
+
+Right-to-left layout is not implemented: the pinned runtime's style surface has
+no `direction`, and the primitives place children with `row`/`column` only, so
+nothing mirrors for an RTL locale. That is a library limitation, not a theme
+option.
