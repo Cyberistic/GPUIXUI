@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 280/354
+`[x]` `[████████░░]` 281/355
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2358,6 +2358,16 @@ drawer reserved `2 * spacing["2xl"]` for the close control even when the control
 reached `spacing.lg + controlHeight.sm` further; all five now charge the full
 painted chrome, every shipped set passes unchanged and no colour, pair, floor,
 figure, shipped metric or component source moves (plan 645)
+`[x]` Hold a metric to the renderer's 32-bit cast — the `finite` rule checked
+`Number.isFinite`, which is true for a JavaScript number beyond `f32`'s range;
+the renderer casts every metric with `value as f32`, so `1e39` became an
+infinity Taffy rejects and the element painted nothing while every check
+returned `[]`, and `1e-50` became zero so a positive surface size painted
+nothing while `positive` passed. A huge `density.rowHeight` also cascaded into
+four dependent bounds that blamed the rows and surfaces. `paints` now means
+finite after the cast, `positive`/`non-negative` read the painted value, and
+dependent bounds wait for a paintable one; every shipped set passes unchanged
+and no colour, pair, floor, figure or shipped metric moves (plan 646)
 
 ## Phase C — Tier 1–2 components
 

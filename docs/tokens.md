@@ -2478,12 +2478,16 @@ level rises — a dialog that feathers less than a resting card makes "lg" a
 shallower level than "sm". Opacity is not part of the ladder: a fainter large
 shadow or a flat theme is a design. Every other numeric metric — a type size, leading or
 weight, a border width, a density or dimension metric, an icon, avatar, radius or
-spacing step, and every motion timing — must be a **finite** number too, because
-the renderer casts each to a 32-bit float and an infinity becomes invalid layout
-it paints as nothing, with no error. The check walks each group's values instead
-of a hand-written list, so a member added to a group is governed the moment it
-ships; a non-finite value is reported as `finite`, while a finite value outside
-its range keeps `within`. A weight is also held to `1…1000`: a zero,
+spacing step, and every motion timing — must be a **finite** number too — finite
+**after the renderer's 32-bit cast**: GPUix receives it as a JavaScript double and
+casts it with `value as f32`, so a value beyond `f32`'s range becomes an infinity
+Taffy rejects, and `1e39` is reported while it paints nothing, with no error. The
+check walks each group's values instead of a hand-written list, so a member added
+to a group is governed the moment it ships; a value that does not survive the
+cast is reported as `finite`, while a value that does but sits outside its range
+keeps `within`. A positive size is judged on the same cast: `1e-50` rounds to
+zero, so a dimension or named size that would paint nothing is reported as
+`positive`. A weight is also held to `1…1000`: a zero,
 a negative or a `NaN` selects no weight, so the text system has nothing to
 paint. `radius` and the motion timings are
 deliberately non-decreasing rather than strict: Linux and Windows ship

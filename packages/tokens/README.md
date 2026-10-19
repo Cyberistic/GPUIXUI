@@ -692,9 +692,10 @@ hairline (`spacing["2xs"]`), invert a size ladder — the size ladders are read
 from the theme's own scale objects, so a step a brand adds is held too — name an
 icon or avatar size of zero, shrink
 `strong` below `thin` so the focus ring is thinner than a divider, scroll
-an overlay in less than one row, ship a non-finite
-spacing step, radius, type size or dimension the renderer casts to a 32-bit
-float, ship a zero or negative surface dimension or a negative border width —
+an overlay in less than one row, ship a spacing step, radius, type size or
+dimension that does not survive the renderer's 32-bit cast — `1e39` overflows to
+the infinity Taffy rejects, and a positive `1e-50` rounds to zero, which the
+`positive` rule reports — ship a zero or negative surface dimension or a negative border width —
 both walked from the theme's own group, so a member a copied style adds is held
 too, and a zero `thin` is a borderless design — ship a non-finite motion timing or a cubic-bezier easing the runtime
 cannot interpolate, ship a fixed mark below the theme's own hairline

@@ -816,8 +816,11 @@ border width, dimension, icon or avatar, or hand
 returned `[]` from the colour check. Every shipped theme, platform variant and
 recipe passes, so the checker exists for the theme a consumer edits, not to
 change a value. Every numeric metric must be a **finite** number: the renderer
-casts each to a 32-bit float, and an infinity is invalid layout it paints as
-nothing, silently. The check walks each group's values rather than a
+casts each to a 32-bit float, and a value that does not survive that cast — a
+`NaN`, an infinity, or a JavaScript double beyond `f32`'s range such as `1e39` —
+is invalid layout it paints as nothing, silently. A positive size is judged on
+the same cast, so `1e-50` rounds to zero and is reported as `positive`. The check
+walks each group's values rather than a
 hand-written list, so a member added to a group is governed when it ships, and
 `metricMembers` is the published index of that domain. A fixed surface also
 holds the chrome painted inside it: a toast card, a notification inbox and an

@@ -148,23 +148,38 @@ const failure = (
 ): MetricFailure => ({ group, member, rule, actual, bound });
 
 /**
- * Sign rules describe a value that is a number: a size at or below zero paints
- * nothing, and a negative step points the wrong way. A `NaN` is the finite
- * rule's diagnostic, so these comparisons are written to stay silent for it.
+ * The renderer's own number. GPUix receives a metric as a JavaScript `f64` and
+ * casts it to the `f32` GPUI lays out with (`renderer.rs`: `px(value as f32)`),
+ * so a value beyond `f32`'s range becomes an infinity Taffy rejects and a
+ * positive value below its smallest subnormal becomes zero. `Math.fround` is
+ * that cast, so this is the predicate the contract means by "paintable".
+ */
+const paints = (value: number): boolean => Number.isFinite(Math.fround(value));
+
+/**
+ * Sign rules describe a value the renderer can paint: a size that paints at or
+ * below zero has no shape, and a negative step points the wrong way. The
+ * comparison reads the cast, so a positive size that rounds to zero is still a
+ * size that paints nothing. A `NaN` or an infinity is the finite rule's
+ * diagnostic, so these comparisons are written to stay silent for it.
  */
 const positive = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual <= 0 ? [failure(group, member, "positive", actual, 0)] : [];
+  Math.fround(actual) <= 0
+    ? [failure(group, member, "positive", actual, 0)]
+    : [];
 
 const nonNegative = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  actual < 0 ? [failure(group, member, "non-negative", actual, 0)] : [];
+  Math.fround(actual) < 0
+    ? [failure(group, member, "non-negative", actual, 0)]
+    : [];
 
 const zero = (
   group: MetricGroup,
@@ -175,16 +190,17 @@ const zero = (
 
 /**
  * A value the renderer can paint. `NaN` and the infinities are numbers no
- * `StyleDesc` accepts, so a shadow carrying one paints nothing — the same
- * silent loss as a zero focus-ring spread, one metric group over. A negative
- * offset or spread is a direction and stays valid; only finiteness is checked.
+ * `StyleDesc` accepts, and neither is a finite `f64` beyond `f32`'s range:
+ * `px(value as f32)` turns it into an infinity, the same silent loss as a zero
+ * focus-ring spread, one metric group over. A negative offset or spread is a
+ * direction and stays valid; only paintability is checked.
  */
 const finite = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual) ? [] : [failure(group, member, "finite", actual, 0)];
+  paints(actual) ? [] : [failure(group, member, "finite", actual, 0)];
 
 /**
  * The two bounds. A value the finite rule already rejects is not compared: one
@@ -197,7 +213,7 @@ const atLeast = (
   actual: number,
   bound: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual) && Number.isFinite(bound) && actual < bound
+  paints(actual) && paints(bound) && actual < bound
     ? [failure(group, member, "at-least", actual, bound)]
     : [];
 
@@ -207,21 +223,22 @@ const atMost = (
   actual: number,
   bound: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual) && Number.isFinite(bound) && actual > bound
+  paints(actual) && paints(bound) && actual > bound
     ? [failure(group, member, "at-most", actual, bound)]
     : [];
 
 /**
  * Whether a dependent fit rule has a bound worth comparing. A zero, negative or
- * non-finite bound is already its own rule's diagnostic — a zero
- * `avatarSize.xs`, `controlHeight.sm` or `body.fontSize` — so comparing against
- * it would report one cause twice, blaming the metric that fits inside it. The
- * same guard applies to a fit whose bound is a line or a row: an inline icon
- * above a caption or label line, and an inline avatar above a dense row, are
- * reported only when the line or row is itself a usable size.
+ * unpaintable bound is already its own rule's diagnostic — a zero
+ * `avatarSize.xs`, `controlHeight.sm` or `body.fontSize`, or a line that
+ * overflows the renderer's `f32` cast — so comparing against it would report one
+ * cause twice, blaming the metric that fits inside it. The same guard applies to
+ * a fit whose bound is a line or a row: an inline icon above a caption or label
+ * line, and an inline avatar above a dense row, are reported only when the line
+ * or row is itself a usable size.
  */
 const usableBound = (bound: number): boolean =>
-  Number.isFinite(bound) && bound > 0;
+  paints(bound) && Math.fround(bound) > 0;
 
 /**
  * A tabular digit advances at most 0.65em in the UI families the platform
@@ -232,16 +249,16 @@ const usableBound = (bound: number): boolean =>
 const digitAdvanceEm = 0.65;
 
 /**
- * An elevation alpha is a fraction. Finiteness is the walk's job, so this rule
- * only reports a finite value outside `0…1`; `alpha()` clamps such a value, but
- * a fraction the theme did not design is still a broken level.
+ * An elevation alpha is a fraction. Paintability is the walk's job, so this
+ * rule only reports a paintable value outside `0…1`; `alpha()` clamps such a
+ * value, but a fraction the theme did not design is still a broken level.
  */
 const fraction = (
   group: MetricGroup,
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual) && (actual < 0 || actual > 1)
+  paints(actual) && (actual < 0 || actual > 1)
     ? [failure(group, member, "within", actual, 1)]
     : [];
 
@@ -265,8 +282,8 @@ const easing = (
       ];
 
 /**
- * A font weight is a number in the CSS weight range. Finiteness is the walk's
- * job, so this rule only reports a finite value the range cannot select: the
+ * A font weight is a number in the CSS weight range. Paintability is the walk's
+ * job, so this rule only reports a paintable value the range cannot select: the
  * runtime chooses the nearest weight the family provides, and a weight outside
  * `1…1000` names none.
  */
@@ -274,7 +291,7 @@ const weighable = (
   member: string,
   actual: number,
 ): ReadonlyArray<MetricFailure> =>
-  Number.isFinite(actual)
+  paints(actual)
     ? [
         ...atLeast("typography", member, actual, 1),
         ...atMost("typography", member, actual, 1000),
@@ -307,11 +324,7 @@ const ladder = (
       stepRule === "positive"
         ? positive(group, member, value)
         : nonNegative(group, member, value);
-    if (
-      previous === undefined ||
-      !Number.isFinite(value) ||
-      !Number.isFinite(previous[1])
-    ) {
+    if (previous === undefined || !paints(value) || !paints(previous[1])) {
       return sign;
     }
     const ok =
@@ -394,7 +407,7 @@ const extremeSize = (
 ): number | undefined =>
   scaleSteps(scale)
     .flatMap(([member, value]) =>
-      excluded.includes(member) || !Number.isFinite(value) ? [] : [value],
+      excluded.includes(member) || !paints(value) ? [] : [value],
     )
     .reduce<number | undefined>(
       (extreme, value) =>
@@ -423,8 +436,8 @@ const orderedScale = (
     const previous = steps[index - 1];
     return (
       previous === undefined ||
-      !Number.isFinite(value) ||
-      !Number.isFinite(previous[1]) ||
+      !paints(value) ||
+      !paints(previous[1]) ||
       value >= previous[1]
     );
   });
@@ -459,8 +472,8 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
     const previous = steps[index - 1];
     if (
       previous === undefined ||
-      !Number.isFinite(blur) ||
-      !Number.isFinite(previous[1]) ||
+      !paints(blur) ||
+      !paints(previous[1]) ||
       blur < 0 ||
       previous[1] < 0
     ) {
@@ -600,12 +613,15 @@ const fixedMarks = [
  *
  * The level is not a parameter: these rules are the same at every contrast
  * setting, because they describe shapes, not colour. Every numeric member of
- * every group is also **finite**, and that half is walked from the group value
- * instead of a hand-written list: a member added to a group is governed the
- * moment it ships, because the renderer casts each one to a 32-bit float and an
- * infinity becomes invalid layout it paints as nothing, silently. A non-finite
- * value is reported as `finite`; a finite value outside its range is `within`.
- * {@link metricMembers} is the published index of the walked domain.
+ * every group is also **paintable**, and that half is walked from the group
+ * value instead of a hand-written list: the renderer casts each one to a 32-bit
+ * float and a value that overflows that cast becomes an infinity it paints as
+ * nothing, silently, so `finite` means finite **after** the cast and `1e39` is
+ * reported. A positive size that rounds to zero in the same cast is the
+ * `positive` rule's diagnostic. A member added to a group is governed the
+ * moment it ships. A non-finite value is reported as `finite`; a finite value
+ * outside its range is `within`. {@link metricMembers} is the published index
+ * of the walked domain.
  *
  * @example
  * ```ts
