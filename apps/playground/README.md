@@ -2046,7 +2046,7 @@ media=verified window=verified frames=verified
 ```
 
 The last full merge/release gate ran **94/94** (`exit 0`, **2469** checks, 61
-capabilities, **1040.8 s**, `.artifacts/live-report.json`, 2026-10-19) on the
+capabilities, **1021.6 s**, `.artifacts/live-report.json`, 2026-10-19) on the
 code head `d9346a9d` (plan `659`), including every scenario this branch added
 through `live-theme-platform` (plan `654`, the platform type styles in a
 window), `live-shell` through plan `656`'s capture-capable runner, and plan
@@ -2249,7 +2249,7 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **94/94** on
-  2026-10-19 (**2469** checks, 61 capabilities, 1040.8 s, exit `0`, the merge
+  2026-10-19 (**2469** checks, 61 capabilities, 1021.6 s, exit `0`, the merge
   gate; plan `659` on code head `d9346a9d`, including plan `658`'s Tier 1
   checks, `live-theme-platform` and `live-shell`) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,

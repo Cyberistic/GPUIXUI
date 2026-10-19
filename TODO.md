@@ -76,11 +76,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Run the promotion gate on the head that includes plan `658`'s Tier 1
       window evidence** per plan `659`: verification only, at `69392032` (the
       docs-only plan commit on code head `d9346a9d`) — headless **105/105**
-      (**3802** checks, 65 capabilities, 128.6 s) and live **94/94** (**2469**
-      checks, 61 capabilities, **1040.8 s**), both exit `0`. The live total is
-      plan `657`'s 2447 plus plan `658`'s 22 added checks, so the new Tier 1
-      checks ran in the full registry; a plain `--all` wrote no frame or
-      `provenance.json`. `nub run check`, `nub run lint` and `nub run test`
+      (**3802** checks, 65 capabilities, 155.6 s) and live **94/94** (**2469**
+      checks, 61 capabilities, **1021.6 s**), both exit `0`. An independent full
+      run on the same head agreed on every count (only wall-clock differed).
+      The live total is plan `657`'s 2447 plus plan `658`'s 22 added checks, so
+      the new Tier 1 checks ran in the full registry; a plain `--all` wrote no
+      frame or `provenance.json`. `nub run check`, `nub run lint` and `nub run test`
       green (playground 439, components 308, primitives 282, tokens 196,
       tw 103, testing 61, icons 19, docs 7). No source change. Exact ids: the
       whole headless registry and the whole live registry (`--all`).
@@ -1592,7 +1593,7 @@ focused id is `live-frames`.
       gained 22 checks (12 → 34) for the RangeSlider, ButtonGroup and
       loading-indicator evidence. **Superseded by plan `659`:** the gate re-ran
       on code head `d9346a9d` — live **94/94** (**2469** checks, 61
-      capabilities, 1040.8 s) and headless **105/105** (3802 checks), both exit
+      capabilities, 1021.6 s) and headless **105/105** (3802 checks), both exit
       `0`, so the 22 new checks are included in the current promotion gate. The
       owner/supervisor still performs the fast-forward.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
@@ -1700,6 +1701,16 @@ session's next `git add -A` then committed the untracked plan `649`. No work was
 lost, both sessions agreed on the measured gate (93/93 live, 105/105 headless),
 and plan `649` §8 is now filled with that run. The duplicate-writer guard is
 still the `scripts/` fix; this is recorded, not worked around by hand.
+
+**B3 recurred again 2026-10-19 ~15:50–16:10.** Two live `swarm:playground`
+sessions ran plan `659` at once: the rotating turn committed `860c9aed` (the
+plan-659 gate record and all four ledgers) at 16:05 while the interactive
+session's own full live gate was still running. Both full registries were run
+twice concurrently in two windows and **agreed on every count** — headless
+105/105 (3802 checks, 65 capabilities) and live 94/94 (2469 checks, 61
+capabilities), both exit `0`; only wall-clock differed. The ledgers now cite the
+run whose artifacts are on disk, and plan `659` §8 records both. No work was
+lost; the guard remains the one-writer fix in `scripts/`.
 
 
 ## Phase B — working foundation

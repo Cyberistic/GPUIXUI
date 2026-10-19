@@ -96,8 +96,8 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3802 checks**, 65 capabilities, 128.6 s; plan `658` added 37 of them to `primitives-display`). The live suite **last ran in full at 94/94**
-(`live-report.json`, **2469 checks**, 61 capabilities, **1040.8 s**, exit `0`)
+The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3802 checks**, 65 capabilities, 155.6 s; plan `658` added 37 of them to `primitives-display`). The live suite **last ran in full at 94/94**
+(`live-report.json`, **2469 checks**, 61 capabilities, **1021.6 s**, exit `0`)
 on 2026-10-19, the merge/release gate on the final branch (plan `659`, code
 head `d9346a9d`). That total is plan `657`'s 2447 plus the **22 checks plan
 `658` added to `live-primitives-display`** (12 → 34), so the added Tier 1
@@ -164,7 +164,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**94/94 green** (2469 checks, 61 capabilities, 1040.8 s) on the release-tag
+**94/94 green** (2469 checks, 61 capabilities, 1021.6 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `659`'s gate on
 code head `d9346a9d`; a plain `--all` wrote no frame or `provenance.json`), and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
