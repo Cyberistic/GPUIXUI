@@ -87,15 +87,18 @@ The container paints `colors.background`, a `borderWidth.thin` border in
 0.10.0 has no `outline`. The ring follows the natively focused host: the field
 surface while the input holds focus, the clear control while it holds focus, and
 neither once focus leaves the field. The field samples the renderer's focused
-host every 50 ms, because the binding delivers no React `focus`/`blur` for a
-native focus change (plans 536/540, plan 659).
+host every 50 ms while it is enabled, because the binding delivers no React
+`focus`/`blur` for a native focus change (plans 536/540, 659/660); an empty field
+is sampled too, and a disabled field paints no ring.
 
 ## Style by state
 
 `SearchInput.style` takes a `StyleDesc` or a function of `SearchInputState`
 (`{ disabled, focused }`); the style is applied to the field surface, not the
-inner `<input>`. `focused` is true while either the input or the clear control
-holds focus, because both belong to the field.
+inner `<input>`. `focused` follows the natively focused host in every enabled
+state — an empty field included — and is true while either the input or the
+clear control holds focus, because both belong to the field. It is false while
+the field is disabled, even if it was focused when the prop changed.
 
 ```tsx
 <SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
@@ -120,23 +123,25 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605). This field's own ring is the exception: while there is
-  text to clear it samples the natively focused host, so the input, the clear
-  control and neither are painted truthfully (plan 659). The sampler does not
-  exist for an empty field, whose ring still depends on `autoFocus` and React
-  focus events.
+  (plans 390/603/605). This field's own ring is the exception: while it is
+  enabled it samples the natively focused host, so the input, the clear control
+  and neither are painted truthfully — for an empty field as well as one with
+  text, and after a focus move in either direction (plans 659/660). A disabled
+  field paints no ring at all.
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (18 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
 text and never on a disabled field, a disabled field ignoring Escape and Enter,
 clearing and returning focus, clearing from the keyboard on Space
 release, Enter submitting, Escape clearing once, the clear keeping its dialog
 open while an empty field's Escape closes it, the controlled contract, a
 caller `ref` composed with the internal one, the clear control painting the
-focus ring when it takes native focus, and the ring following focus out of and
-back into the field.
+focus ring when it takes native focus, the ring following focus out of and
+back into the field, the ring painting on an empty field focused by code,
+clearing when an empty field loses focus, and dropping when a focused field
+becomes disabled.
 
 The field merges its own focus ref with the caller's, so `ref` receives the same
 `<input>` instance that clearing focuses.

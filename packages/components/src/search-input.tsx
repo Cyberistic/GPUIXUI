@@ -12,8 +12,8 @@
  *
  * The focus ring follows the natively focused host — the input, the clear
  * control, or neither. The binding delivers no React `focus`/`blur` for that
- * move (plans 536/540), so the field samples `getFocusedElementId()` while
- * there is text to clear (plan 659).
+ * move (plans 536/540), so an enabled field samples `getFocusedElementId()`;
+ * a disabled field paints no ring (plans 659/660).
  */
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
@@ -100,11 +100,10 @@ export const SearchInput = ({
   }, []);
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
 
-  const hasText = value !== "" && !disabled;
-
   useEffect(() => {
-    if (!hasText || disabled || renderer == null) {
+    if (disabled || renderer == null) {
       setClearFocused(false);
+      setFocused(false);
       return;
     }
     const read = (): void => {
@@ -113,14 +112,14 @@ export const SearchInput = ({
       const inputId = input.current?.id ?? null;
       const onClear = clearId !== null && focusedId === clearId;
       setClearFocused(onClear);
-      // No React blur is delivered for a native focus change, so the sample is
-      // the only signal that the field lost focus (plans 536/540).
+      // No React focus/blur is delivered for a native focus change, so the
+      // sample is the only signal in either direction (plans 536/540).
       setFocused(focusedId !== null && (focusedId === inputId || onClear));
     };
     read();
     const timer = setInterval(read, FOCUS_SAMPLE_MS);
     return () => clearInterval(timer);
-  }, [disabled, hasText, renderer]);
+  }, [disabled, renderer]);
 
   const clear = (): void => {
     if (disabled || value === "") return;
@@ -147,7 +146,7 @@ export const SearchInput = ({
           borderColor: theme.colors.border,
           borderRadius: theme.radius.md,
           opacity: disabled ? 0.5 : 1,
-          ...(focused && !clearFocused ? focusRing(theme) : {}),
+          ...(focused && !clearFocused && !disabled ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),
       )}
@@ -234,6 +233,7 @@ export const searchInputMeta = {
   limitations: [
     "no debounce: the consumer debounces its own query",
     "Enter arrives as submit, Escape as keyDown (measured in 0.10.0)",
+    "the focus ring follows a 50 ms sample of the renderer's focused host until a shared native-focus tracker exists",
   ],
   docs: "docs/search-input.mdx",
   example: "examples/search-input.example.tsx",

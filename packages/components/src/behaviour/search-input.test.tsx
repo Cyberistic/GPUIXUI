@@ -334,7 +334,7 @@ describe("SearchInput", () => {
     const search = renderComponent(
       <div style={{ width: 360, padding: 40, gap: 8 }}>
         <SearchInput testId="search" autoFocus defaultValue="abc" />
-        <SearchInput testId="other" />
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }} />
       </div>,
     );
     // `findByTestId("search")` is the inner input; the ring is painted by the
@@ -361,6 +361,116 @@ describe("SearchInput", () => {
     await until(() => ringed().length === 1);
 
     expect(ringed()).toEqual([undefined]);
+
+    search.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 660): the sampler only ran while the field had
+   * text, so `focusElement` on an empty field moved native focus without
+   * painting the ring, because the binding delivers no React `onFocus`.
+   */
+  it("paints the ring on an empty field focused by code", async () => {
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40, gap: 8 }}>
+        <SearchInput testId="search" />
+        <SearchInput testId="other" />
+      </div>,
+    );
+    const ringed = (): ReadonlyArray<string | undefined> =>
+      search.renderer
+        .findByType("div")
+        .filter((div) => div.style?.boxShadow !== undefined)
+        .map((div) => div.testId);
+
+    search.renderer.focusElement(
+      search.renderer.findByTestId("search")?.id ?? -1,
+    );
+
+    await until(() => ringed().length === 1);
+
+    expect(ringed()).toEqual([undefined]);
+    expect(focusedTestId(search)).toEqual(Option.some("search"));
+
+    search.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 660): the seeded ring on an empty field never
+   * cleared after a native focus move, because no React `blur` is delivered
+   * (plans 536/540) and the sampler did not run without text.
+   */
+  it("clears the ring when an empty field loses focus", async () => {
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40, gap: 8 }}>
+        <SearchInput testId="search" autoFocus />
+        <div testId="elsewhere" tabIndex={0} style={{ height: 20 }} />
+      </div>,
+    );
+    const ringed = (): ReadonlyArray<string | undefined> =>
+      search.renderer
+        .findByType("div")
+        .filter((div) => div.style?.boxShadow !== undefined)
+        .map((div) => div.testId);
+
+    expect(ringed()).toEqual([undefined]);
+
+    search.renderer.focusNext();
+
+    await until(() => ringed().length === 0);
+
+    expect(ringed()).toEqual([]);
+    expect(focusedTestId(search)).toEqual(Option.some("elsewhere"));
+
+    search.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 660, plan 394): disabling a focused field
+   * cleared only the clear control's state, so the surface kept the ring and
+   * the public `focused` state stayed true on a control the user cannot edit.
+   */
+  it("drops the ring when a focused field becomes disabled", async () => {
+    const states: Array<boolean> = [];
+    const style = (state: { readonly focused: boolean }) => {
+      states.push(state.focused);
+      return {};
+    };
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <SearchInput
+          testId="search"
+          autoFocus
+          defaultValue="abc"
+          style={style}
+        />
+      </div>,
+    );
+    const ringed = (): ReadonlyArray<string | undefined> =>
+      search.renderer
+        .findByType("div")
+        .filter((div) => div.style?.boxShadow !== undefined)
+        .map((div) => div.testId);
+
+    expect(ringed()).toEqual([undefined]);
+
+    search.rerender(
+      <div style={{ width: 360, padding: 40 }}>
+        <SearchInput
+          testId="search"
+          autoFocus
+          defaultValue="abc"
+          disabled
+          style={style}
+        />
+      </div>,
+    );
+
+    await until(() => ringed().length === 0);
+    await until(() => states.at(-1) === false);
+
+    expect(ringed()).toEqual([]);
+    expect(states.at(-1)).toBe(false);
 
     search.unmount();
   });

@@ -555,6 +555,15 @@ retired once both branches are one
       three mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the
       inventory synced. The shared-focus-tracker interlock on `primitives`
       remains the long-term home for the sample (owner: components)
+    - [x] A search field's ring follows focus in every state — plan 660;
+      measured 2026-10-19: plan 659's sample ran only while the field had text,
+      so an empty seeded field kept its ring after `focusNext()`, an empty field
+      focused by `focusElement()` painted none, and disabling a focused field
+      kept both the ring and `focused: true`. The sample now runs while the field
+      is enabled, the disabled branch clears both states and the ring never
+      paints while disabled; 3 native cases (Search input 18), all failing on the
+      old source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
