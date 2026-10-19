@@ -1498,6 +1498,16 @@ retired once both branches are one
       trimmed, so the painted label and the announced name agree; row indices
       follow the row that actually exists. 1 element-tree case, failing in the
       old direction (offline 738 → 739; plan `578`).
+`[x]` `packages/primitives`: **a `Select` group with a blank heading painted an
+      orphan caption and mis-sized the list** — a group with options always
+      painted its `SelectLabel` and counted a heading, so a computed blank group
+      name left an empty caption row, an unnamed `group` node and a list one
+      caption row taller than `selectRowCounts` estimated (the same class as
+      plan `363`'s empty group, which counted nothing while painting a title).
+      A blank heading now paints its options flat and counts nothing, and a real
+      heading is trimmed. `hasText` moved to `core/text.ts` so the paint and the
+      row model share one rule. 1 core + 1 element-tree case, both failing in
+      the old direction (offline 739 → 741; plan `579`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

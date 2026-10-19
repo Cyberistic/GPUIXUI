@@ -175,6 +175,10 @@ without stopping on a title (plan `075`).
   and contributes nothing to the height estimate (plan `363`: the branch used to
   paint the heading anyway, leaving a title over blank space and a list one
   caption row taller than the estimate that chose its side).
+- A group whose `label` **says nothing** is not a heading: its options paint
+  flat, with no empty caption row and no unnamed `group` node, and the estimate
+  counts only its options. A real heading is trimmed, so the painted caption and
+  the group's `aria-label` agree (plan `579`).
 - Option values stay unique across groups; the wrapper passes the flat list to
   GPUix, which keys items by value.
 - The group is a named `group` node in the accessibility tree. GPUix has no
@@ -272,8 +276,9 @@ covering the field the user had just pressed (plan `066` §1).
 The choice costs one estimate, because the side is decided before the list
 exists: the surface's padding and borders, one `controlHeight.sm` row per
 option, one caption row per non-empty group, and the row gap — the same numbers
-`selectContentStyle`, `selectItemStyle` and `selectHeadingStyle` paint. When
-neither side has room, the side with more room wins (the runtime still clamps).
+`selectContentStyle`, `selectItemStyle` and `selectHeadingStyle` paint. Only a
+group that has a heading is counted; a blank heading paints flat (plan `579`).
+When neither side has room, the side with more room wins (the runtime still clamps).
 An explicit `top`/`bottom` is the same rule's **preference**, so it flips when
 it cannot fit (plan `336`).
 
@@ -408,11 +413,12 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   and the option locators `${testId}-option-${value}`, grouped options
   included, with none invented when `testId` is absent (plan `390`); and the
   empty-string selection passing through as `""` while no selection stays
-  `undefined` (plan `501`).
+  `undefined` (plan `501`); a group with a blank heading painting its options
+  flat (plan `579`).
 - `src/core/select.test.ts` — the entry model: a flat list reads as itself, a
   group flattens in paint order without its heading, an empty group contributes
-  nothing, disabled flags survive the flatten, and a disabled select is closed
-  whatever its requested open says (plan `346`).
+  nothing, a blank heading counts nothing, disabled flags survive the flatten,
+  and a disabled select is closed whatever its requested open says (plan `346`).
 - `src/core/floating.test.ts` — the side decision: fits below, does not fit
   below but fits above, the collision margin, an exact fit, the more-room
   fallback, a preferred side, and the space on each side — including the height

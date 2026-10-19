@@ -76,6 +76,7 @@ import {
 } from "../core/select.js";
 import { controlLabelStyle, surfaceStyle } from "../core/style.js";
 import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
+import { hasText } from "../core/text.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -611,29 +612,35 @@ export const renderSelect = (
           placement.maxWidth,
         )}
       >
-        {Arr.map(options, (entry, index) =>
+        {Arr.flatMap(options, (entry, index) =>
           isSelectGroup(entry)
             ? Arr.match(entry.options, {
                 // The height estimate already counts an empty group as nothing
                 // (`selectRowCounts`), so painting its heading would leave a
                 // section title over blank space and a list taller than the
                 // number that chose its side (plan 363).
-                onEmpty: () => null,
-                onNonEmpty: (rows) => (
-                  <SelectGroup
-                    key={`${index}-${entry.label}`}
-                    role="group"
-                    aria-label={ariaName(entry.label)}
-                    style={selectGroupStyle(theme)}
-                  >
-                    <SelectLabel style={selectHeadingStyle(theme)}>
-                      {entry.label}
-                    </SelectLabel>
-                    {Arr.map(rows, row)}
-                  </SelectGroup>
-                ),
+                onEmpty: () => [],
+                // A heading with no text is not a heading: it would paint an
+                // empty caption row and expose an unnamed `group` node, while
+                // the estimate counts it as flat options (plan 579).
+                onNonEmpty: (rows) =>
+                  hasText(entry.label)
+                    ? [
+                        <SelectGroup
+                          key={`${index}-${entry.label}`}
+                          role="group"
+                          aria-label={ariaName(entry.label)}
+                          style={selectGroupStyle(theme)}
+                        >
+                          <SelectLabel style={selectHeadingStyle(theme)}>
+                            {entry.label}
+                          </SelectLabel>
+                          {Arr.map(rows, row)}
+                        </SelectGroup>,
+                      ]
+                    : Arr.map(rows, row),
               })
-            : row(entry),
+            : [row(entry)],
         )}
       </SelectContent>
     </GpuixSelect>

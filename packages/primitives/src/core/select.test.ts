@@ -60,6 +60,18 @@ describe("select entries", () => {
     expect(selectOptions([{ label: "Empty", options: [] }])).toStrictEqual([]);
   });
 
+  it("does not count a heading whose name says nothing", () => {
+    // The bug guarded (plan 579): a group with a computed blank heading still
+    // counted and painted one, so the list was one caption row taller than the
+    // placement estimate and the heading was an empty line. A blank name is
+    // absence, like every other blank string in the package (plans 026, 577).
+    expect(
+      selectRowCounts([
+        { label: "   ", options: [{ value: "eu", label: "Europe West" }] },
+      ]),
+    ).toStrictEqual({ options: 1, headings: 0 });
+  });
+
   it("distinguishes a group from an option by its options list", () => {
     expect(isSelectGroup({ label: "Europe", options: [] })).toBe(true);
     expect(isSelectGroup({ value: "eu", label: "Europe West" })).toBe(false);

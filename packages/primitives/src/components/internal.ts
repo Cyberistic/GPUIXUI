@@ -22,6 +22,7 @@ import {
   withValue,
   type ValueState,
 } from "../core/state.js";
+import { usableText } from "../core/text.js";
 import type { Density, PrimitiveTheme } from "../core/theme.js";
 
 /** The caller's style wins, property by property. */
@@ -142,13 +143,10 @@ export const textOf = (children: ReactNode): Option.Option<string> => {
  * whitespace. That is not a name: treating it as one either erases the name a
  * control already derives from its content or creates a focus stop nothing can
  * announce. The value is trimmed, so padding cannot make a blank name look
- * present (plan `396`).
+ * present (plan `396`). The rule itself lives in `core/text.ts`, because the
+ * list model needs the same test (plan `579`).
  */
-export const usableLabel = (label: string | undefined): Option.Option<string> =>
-  Option.filter(
-    Option.map(Option.fromNullishOr(label), Str.trim),
-    Str.isNonEmpty,
-  );
+export const usableLabel = usableText;
 
 /**
  * A caller's label as an `aria-label` value: trimmed, or absent when blank.
@@ -178,11 +176,10 @@ export const ariaNameOr = (
  * The caption rule for a visible description or a separator's label. A caller
  * often computes one (`description={row.help}`), and a conditional that only
  * tests `undefined` paints an empty caption line — or, on a `Separator`, splits
- * the rule around a hole (plan `577`). It uses the same trimmed test as
- * `ariaName`, so the paint and the accessibility tree agree.
+ * the rule around a hole (plan `577`). It is `core/text.ts`'s rule, re-exported
+ * here so a component has one import for its text helpers.
  */
-export const hasText = (value: string | undefined): boolean =>
-  Option.isSome(usableLabel(value));
+export { hasText } from "../core/text.js";
 
 /**
  * A control's name: an explicit label that says something, else its text

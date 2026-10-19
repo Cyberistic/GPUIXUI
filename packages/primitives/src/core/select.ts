@@ -8,6 +8,7 @@
  */
 
 import * as Arr from "effect/Array";
+import { hasText } from "./text.js";
 
 /** One selectable choice. */
 export interface SelectOption {
@@ -65,7 +66,8 @@ export const selectOpen = (
  * The row counts the height estimate needs.
  *
  * An empty group paints no heading, so it counts as nothing rather than leaving
- * a section title over blank space.
+ * a section title over blank space; a group whose name says nothing paints no
+ * heading either, so it counts as a flat run of options (plans 363, 579).
  */
 export const selectRowCounts = (
   entries: ReadonlyArray<SelectEntry>,
@@ -76,7 +78,7 @@ export const selectRowCounts = (
           onEmpty: () => counts,
           onNonEmpty: (options) => ({
             options: counts.options + options.length,
-            headings: counts.headings + 1,
+            headings: counts.headings + (hasText(entry.label) ? 1 : 0),
           }),
         })
       : { ...counts, options: counts.options + 1 },

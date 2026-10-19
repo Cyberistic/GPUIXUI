@@ -459,6 +459,42 @@ describe("Select", () => {
     );
   });
 
+  it("paints no heading for a group whose name says nothing", () => {
+    // The bug guarded (plan 579): a group's heading was painted and counted
+    // whenever the group had options, so a computed blank group name left an
+    // empty caption row above its options and made the list one caption taller
+    // than `selectRowCounts` estimated. The group's rows paint flat instead.
+    const element = renderSelect(
+      {
+        options: [
+          {
+            label: "   ",
+            options: [{ value: "eu", label: "Europe West" }],
+          },
+          { value: "us", label: "United States" },
+        ],
+        label: "Region",
+        testId: "region",
+      },
+      testTheme,
+      valueState("eu"),
+      true,
+      noFocus,
+      handlers,
+    );
+    const children = elementChildren(childAt(element, 1));
+    expect(
+      children.map((child) =>
+        Option.getOrUndefined(elementProp(child, "role")),
+      ),
+    ).toStrictEqual(["option", "option"]);
+    expect(
+      children.map((child) =>
+        Option.getOrUndefined(elementProp(child, "testId")),
+      ),
+    ).toStrictEqual(["region-option-eu", "region-option-us"]);
+  });
+
   it("renders a named group with its heading and options, and reads its label", () => {
     // The bug guarded (plan 075): a grouped list could not be expressed, so a
     // long list was one undifferentiated run of options.
