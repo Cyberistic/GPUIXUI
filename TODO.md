@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 261/333
+`[x]` `[████████░░]` 262/334
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -144,6 +144,14 @@ theme, platform variant and recipe passes, so no value moves (plan 358)
 light's `selected` measured **1.000:1** on that row while
 `themeContrastFailures` returned `[]`. Six scrim pairs now, every shipped set
 passes (1.164:1 at the tightest), so no colour moves (plan 359)
+`[x]` Publish the selectable row's press step — a `List` row hovers `accent`
+and presses `active`, but the contract measured only `hover` → `active` and
+`accent` → `selected`; identity dark (1.004:1) and XP light (1.019:1) changed hue
+but not luminance while `themeFailures` returned `[]`. `rowPressStepPairs`
+publishes `active`/`accent` under the `step` class, the two `active` values move
+one designed step (`#2A303B` → `#2E3543`, `#DDD7BE` → `#D8D2B7`), and every
+shipped set clears 1.05:1 (Windows 7 light 1.059:1 at the tightest);
+`contrastPairs` grows 420 → 421, no other value moves (plan 619)
 `[ ]` Cross-team: `components` moves the secondary Button off the mixed
 `secondary` → `hover` → `active` ladder — `internal/button.tsx` rests on
 `secondary` and hovers to `hover`, and the pair is under the 1.05:1 step floor in
@@ -152,13 +160,14 @@ sets, macOS light and dark, Linux dark, Windows dark, the XP/Aero dark halves
 and the `default` variants), so the shipped secondary control has no hover state
 there; use `secondaryHover`/`secondaryActive`, the designed family plan 097
 shipped and plan 334 already holds the label on (plan 357; owner: `components`)
-`[ ]` Cross-team: `components` moves a selectable `List` row's press off the
-neutral `active` wash — `list.tsx` hovers to `accent` and presses to `active`,
-which measure **1.004:1** in identity dark and the `default` dark half and
-**1.019:1** in the XP light recipe, under the 1.05:1 step floor, so a pressed row
-changes hue but not luminance; use `accentActive`, the designed pressed accent
-plan 327 shipped and the family steps already measure (plan 357; owner:
-`components`)
+`[x]` Resolved by the token palette, no consumer change: a selectable `List`
+row's press stays `active`, and `rowPressStepPairs` now holds it one 1.05:1 step
+from the `accent` hover; identity dark and XP light moved their `active` one
+designed step (1.004:1 → 1.073:1 and 1.019:1 → 1.071:1, Windows 7 light the
+tightest shipped at 1.059:1). `accentActive` is a filled control's press, not a
+row fill: on macOS dark a row label measures 6.677:1 on it, under the 7:1 body
+floor, so the migration the old row proposed is withdrawn (plan 619; owner:
+`tokens-theme`)
 `[x]` Ship the avatar diameter scale (`avatarSize`) so `components` can delete
 its local `DIAMETER` (plan 054)
 `[x]` Ship designed `primaryHover` / `destructiveHover` roles so filled controls

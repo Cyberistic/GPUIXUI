@@ -78,17 +78,20 @@ describe("the control edge on the fills it paints", () => {
 
   it("names the fill when a theme regresses", () => {
     const regressed = extendTheme(getTheme("dark"), {
-      // The pre-080 divider: the same value as the secondary and pressed fills.
-      colors: { border: "#2A303B" },
+      // The pre-080 divider: the same value as the pressed fill, which is also
+      // painted on the four soft status panels.
+      colors: { border: "#2E3543" },
     });
     const failures = themeContrastFailures(regressed).filter(
       ({ foreground }) => foreground === "border",
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
-      "accent",
       "active",
-      "secondary",
+      "destructiveSoft",
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
     ]);
     expect(
       failures.every(

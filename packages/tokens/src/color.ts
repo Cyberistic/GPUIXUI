@@ -484,7 +484,9 @@ export const darkColors = {
   selectionOnFill: "#FFFFFF26",
   overlay: "#000000A6",
   hover: "#262C36",
-  active: palette.neutral[800],
+  // One designed step lighter than neutral-800 so a selectable row's press is
+  // a perceivable step from the accent hover it follows (plan 619).
+  active: "#2E3543",
   selected: "#402F94",
   selectedForeground: palette.iris[200],
   disabled: palette.neutral[850],

@@ -14,7 +14,7 @@
  * returned `[]`.
  *
  * The pairs are a guard, not a palette fix: every shipped set already clears its
- * declared boundary floor (3.401:1 on Linux dark at the tightest), so no colour
+ * declared boundary floor (3.357:1 on XP light at the tightest), so no colour
  * moves. `destructive` on `background` is not re-added: the ColorPicker hex
  * field's error edge already measures that composition.
  */
@@ -156,7 +156,7 @@ describe("the invalid control's focus ring", () => {
       defaultLabel,
       defaultSurface,
       Number(defaultRatio.toFixed(3)),
-    ]).toEqual(["Dark · Linux", "active", 3.401]);
+    ]).toEqual(["Light · Windows XP", "active", 3.357]);
     expect([highLabel, highSurface, Number(highRatio.toFixed(3))]).toEqual([
       "High contrast dark",
       "active",

@@ -82,6 +82,11 @@ export const contosoPlatformStyle = {
       accentForeground: "#BCE0FF",
       accentHover: "#17497A",
       accentActive: "#245F96",
+      // A selectable row presses to `active`, so this style names the pressed
+      // wash and the divider it carries: the identity pair is not a perceivable
+      // step from Contoso's deep accent (plan 619).
+      active: "#183A5C",
+      border: "#444D5C",
       ring: "#5CB8FF",
       selected: "#082F52",
       selectedForeground: "#D6EBFF",

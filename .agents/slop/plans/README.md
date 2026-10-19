@@ -290,6 +290,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [616](./616-docs-source-links.md) | The catalogue's four dead source links, and a link guard | F | 355, 356, 613 | done |
 | [617](./617-ledger-check-counts.md) | The ledger's check counts, in one owner | F | 398, 567, 602, 611 | done |
 | [618](./618-applied-default-elevation.md) | A default request takes the requested palette's elevation opacity | F | 301, 373, 505, 541, 545, 551 | done |
+| [619](./619-selection-row-press.md) | The selectable row's press step | F | 327, 357, 381, 502, 595 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3126,6 +3127,22 @@ palette's elevation, a named level still wins, and a same-level base keeps its
 edits. Every shipped style names `sm`/`md`/`lg`, so no shipped pixel moves; the
 new `applied-level-elevation.test.ts` states the pre-fix composition and the
 executed example gains the copied colour-only style.
+
+Plan `619` closes the last pointer state a row paints without a measured step.
+A selectable `List` row hovers `accent` and presses `active`, but the contract
+measured the generic `hover` → `active` wash ladder and the `accent` → `selected`
+selection step, never the transition the shipped row makes. Identity dark
+measured **1.004:1** and XP light **1.019:1** on that press — it changed hue but
+not luminance — while `themeFailures` returned `[]`; the old cross-team row told
+`components` to move the press to `accentActive`, but that is a filled control's
+press: on macOS dark a row label measures **6.677:1** on it, under the 7:1 body
+floor. `rowPressStepPairs` publishes `active`/`accent` under the `step` class,
+identity dark `active` moves `#2A303B` → `#2E3543` and XP light `#DDD7BE` →
+`#D8D2B7`, every shipped set clears 1.05:1 (Windows 7 light 1.059:1 at the
+tightest), and the contract grows 420 → 421. The wider `active` move shifts a
+few quoted tightest figures — the invalid ring, the field hint, the selection
+link, the neutral fill-on-tint band and the generic wash ladder — and every one
+is re-derived by its guard; no other colour, role, floor or metric moves.
 
 ## How to use a plan
 

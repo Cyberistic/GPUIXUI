@@ -108,7 +108,7 @@ describe("selected secondary text", () => {
     expect(failures).toHaveLength(8);
     expect(
       failures.find(({ background }) => background === "active")?.ratio,
-    ).toBeCloseTo(4.25, 2);
+    ).toBeCloseTo(3.99, 2);
   });
 });
 

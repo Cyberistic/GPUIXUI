@@ -10,7 +10,7 @@
  * The omission hid twelve failing shipped sets. With `selection` composited over
  * the thirteen surfaces a link can sit on, the AAA light link measured
  * **5.376:1** on `destructiveSoft` under its 7:1 floor, macOS dark **3.708:1**
- * on `selected`, Windows light 3.995:1, XP light 4.378:1, Aero light 4.022:1,
+ * on `selected`, Windows light 3.995:1, XP light 4.295:1, Aero light 4.022:1,
  * macOS light 4.106:1 and Linux dark 4.485:1 under 4.5:1 — while
  * `themeContrastFailures` returned `[]` for every one of them.
  */
@@ -160,8 +160,8 @@ describe("a brand-toned link through a text selection", () => {
         getPlatformRecipeTheme("xp", "light"),
         "#0046BD",
         2,
-        "selected",
-        "4.378",
+        "active",
+        "4.295",
       ],
       [
         "Aero light",

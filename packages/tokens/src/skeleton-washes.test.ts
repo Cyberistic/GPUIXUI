@@ -82,7 +82,9 @@ describe("the loading skeleton on a row surface", () => {
     expect(contrastRatio(palette.neutral[200], light.active)).toBeLessThan(
       contrastFloors.default.surface,
     );
-    expect(contrastRatio(palette.neutral[800], dark.active)).toBeLessThan(
+    // The pre-094 skeleton was the pressed wash itself; the plant now reads
+    // the wash it matched so a future palette move cannot quietly restore it.
+    expect(contrastRatio(dark.active, dark.active)).toBeLessThan(
       contrastFloors.default.surface,
     );
     surfaces.forEach((surface) => {

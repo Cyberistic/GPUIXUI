@@ -52,10 +52,14 @@ describe("generic wash steps", () => {
   });
 
   it("measures the tightest shipped ladder rather than assuming it", () => {
-    const dark = getTheme("dark");
-    expect(
-      contrastRatio(dark.colors.hover, dark.colors.active).toFixed(3),
-    ).toBe("1.059");
+    const [tightest] = shippedThemes
+      .map(({ theme }) => ({
+        name: theme.name,
+        ratio: contrastRatio(theme.colors.hover, theme.colors.active),
+      }))
+      .toSorted((left, right) => left.ratio - right.ratio);
+    expect(tightest?.name).toBe("Light · Windows 7");
+    expect(tightest?.ratio.toFixed(3)).toBe("1.071");
   });
 
   it("exports one pair, on the generic washes", () => {
@@ -100,6 +104,13 @@ describe("generic wash steps", () => {
         pairClass: "step",
         floor: contrastFloors.default.step,
         ratio: 1,
+      },
+      {
+        foreground: "active",
+        background: "accent",
+        pairClass: "step",
+        floor: contrastFloors.default.step,
+        ratio: 1.0003993326538831,
       },
     ]);
   });

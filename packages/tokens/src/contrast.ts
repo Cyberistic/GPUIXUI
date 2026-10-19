@@ -395,6 +395,18 @@ export const selectionStepPairs: readonly ContrastPair[] = [
 ];
 
 /**
+ * The selectable row's press. A row paints `accent` under the pointer and
+ * `active` while pressed, so the press must be a perceivable step from the
+ * accent hover, not only from the generic `hover` wash {@link washStepPairs}
+ * measures. Identity dark (1.004:1) and XP light (1.019:1) shipped a press that
+ * changed hue but not luminance; the two `active` values move one designed step
+ * so every shipped set clears the floor.
+ */
+export const rowPressStepPairs: readonly ContrastPair[] = [
+  ["active", "accent", "step"],
+];
+
+/**
  * The solid roles painted as marks, and the surfaces they sit on. A progress
  * segment (`primitives/src/core/style.ts` `progressFillStyle`) and a slider fill
  * paint over the `muted` track; a slider thumb rings its own `input` fill with
@@ -949,7 +961,9 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * paints under the pointer and `selected` the fill it keeps once chosen, so
  * `selected` is held one perceivable step from `accent` (`selectionStepPairs`,
  * the same class) — otherwise hovering one row looks like selecting another and
- * the click changes nothing.
+ * the click changes nothing. The same row presses to `active`, so that press is
+ * held one step from the accent hover it follows (`rowPressStepPairs`, the same
+ * class), not only from the generic `hover` wash.
  *
  * A solid role painted as a **mark** — a progress segment, a slider fill, a
  * slider thumb's ring, a rating star, a combobox check or a timeline dot — is a
@@ -969,7 +983,7 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  *
  * A **status panel's action** is the one family the canvas washes cannot carry:
  * the four soft status fills sit in one narrow luminance band in each mode, so a
- * neutral wash has the tint's own value there — 80 of the 288 shipped
+ * neutral wash has the tint's own value there — 84 of the 288 shipped
  * fill-on-tint pairs measured under the surface floor, the worst at 1.0042:1.
  * `softAction` is a raised neutral fill, `softActionHover`/`softActionActive` are
  * its ladder and `softActionForeground` is the one label role; each fill is
@@ -1060,6 +1074,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...stateStepPairs,
   ...washStepPairs,
   ...selectionStepPairs,
+  ...rowPressStepPairs,
   ...markPairs,
 ];
 
@@ -1460,7 +1475,7 @@ export const selectionStatusPairs: readonly ContrastPair[] =
  * The audit found the omission hiding twelve failing shipped sets: the AAA light
  * link measured **5.376:1** through the wash on `destructiveSoft` under its 7:1
  * floor, macOS dark **3.708:1** on `selected`, Windows light 3.995:1, XP light
- * 4.378:1, Aero light 4.022:1, macOS light 4.106:1 on `active` and Linux dark
+ * 4.295:1, Aero light 4.022:1, macOS light 4.106:1 on `active` and Linux dark
  * 4.485:1 on `selected`, all under 4.5:1. Seven values move inside their own
  * families and every shipped set clears its floor (4.729:1 at the tightest,
  * Windows dark; 7.484:1 at AAA).

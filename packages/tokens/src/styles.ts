@@ -246,7 +246,7 @@ export function insetFocusRing(
  *
  * A canvas-tuned wash (`hover`, `active`) and the neutral fill (`secondary`)
  * cannot be perceived on a soft status fill: the four tints sit in a narrow
- * luminance band in each mode, and 80 of the 288 shipped fill-on-tint pairs are
+ * luminance band in each mode, and 84 of the 288 shipped fill-on-tint pairs are
  * under the 1.05:1 floor. An action inside a tone-tinted Alert or Badge paints
  * this raised family instead. A ghost action skips `background` and paints
  * `softActionHover` and `softActionActive` on the panel; a filled action uses

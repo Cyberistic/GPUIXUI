@@ -196,7 +196,7 @@ every platform dark style.
 
 A status panel's action is a family of its own: `softAction` with
 `softActionHover`/`softActionActive` and `softActionForeground`. The neutral
-washes cannot be perceived on a tone tint — 80 of the 288 shipped fill-on-tint
+washes cannot be perceived on a tone tint — 84 of the 288 shipped fill-on-tint
 pairs measured under 1.05:1 — so the action inside a tone-tinted Alert or Badge
 panel is a raised fill instead (see
 [An action inside a status panel](#an-action-inside-a-status-panel)).
@@ -277,7 +277,7 @@ A runnable example lives in
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
 | `overlay` | `#00000073` | `#000000A6` | modal scrim; the face a dialog paints on it is measured through the wash |
 | `hover` | `#EEF1F5` | `#262C36` | hover wash for ghost surfaces |
-| `active` | `#E1E5EC` | `#2A303B` | pressed wash |
+| `active` | `#E1E5EC` | `#2E3543` | pressed wash; one step from the `accent` row hover |
 | `selected` | `#E0E3FF` | `#402F94` | selected row or item, one step past the `accent` hover wash |
 | `selectedForeground` | `#3B2C8F` | `#C7CBFF` | text on `selected` |
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
@@ -371,7 +371,7 @@ Because the solid role is a fill, it is held like one: `statusFillPairs`
 measures each of the four solid fills on the eight surfaces a status chip sits
 on — `background`, `card`, `popover`, the `muted` panel and the four row washes
 — at 1.05:1 in both contrast levels. The tightest shipped pair is
-**1.262:1** (XP light `warning` on `selected`), so the pairs guard an edited
+**1.244:1** (XP light `warning` on `active`), so the pairs guard an edited
 theme rather than a shipped value. A status *dot* is still `xText`: a fill that
 is perceptible as a large chip is not a mark, and the light `warning` fill is
 1.78:1 on the canvas, under the 3:1 a mark needs.
@@ -1501,7 +1501,7 @@ link is the last text role the washed contract covers (`selectionLinkPairs`):
 text a reader selects with the copy around it, and calling it a deliberate
 omission hid twelve failing shipped sets — the AAA light link measured
 **5.376:1** through the wash on `destructiveSoft` under its 7:1 floor, macOS dark
-**3.708:1** on `selected`, Windows light 3.995:1, XP light 4.378:1, Aero light
+**3.708:1** on `selected`, Windows light 3.995:1, XP light 4.295:1, Aero light
 4.022:1, macOS light 4.106:1 and Linux dark 4.485:1 under 4.5:1. Seven values
 move one designed step inside their own families — AAA light `#3B2C8F` →
 `#241C5C`, macOS `#0055B3` → `#004A9A` in light and `#64B5FF` → `#96CDFF` in
@@ -3098,7 +3098,7 @@ twelve default sets missed the 4.5:1 floor on at least one wash — macOS light
 `themeContrastFailures` returned `[]`. Plan `527` adds the four washes to both
 lists, moves the fourteen shipped hints (the twelve default sets and the two AAA
 palettes every high-contrast variant reads), and the tightest new pair is
-**4.651:1** (Linux dark on `active`) with the AAA sets at 7.113:1 or better. The
+**4.589:1** (Light · Windows XP on `active`) with the AAA sets at 7.113:1 or better. The
 panel and the floating surface are not academic: an avatar's fallback initials
 sit on `muted`, and a date picker's month header sits on its `popover`. The row
 washes are not either: a selectable list row paints `accent` on hover and
@@ -3233,6 +3233,16 @@ step (plus the authored Contoso light style), and macOS light's
 pair kept the old blue at 4.5:1. The measurement is in `selection-states.test.ts`, and the pair
 is part of the plain contract — taking it from 338 to **339** (plan `381`).
 
+The same row presses to `active` while the pointer is down, so the press must be
+a perceivable step from the `accent` hover it follows, not only from the generic
+`hover` wash. `rowPressStepPairs` publishes that step. Identity dark measured
+**1.004:1** and XP light **1.019:1** on the row's actual press until plan `619`
+moved the two `active` values one designed step (`#2A303B` → `#2E3543`,
+`#DDD7BE` → `#D8D2B7`); every shipped set now clears 1.05:1, the tightest being
+Windows 7 light at **1.059:1**. The row keeps `active` rather than
+`accentActive`: that role is a filled control's press, and on macOS dark a row
+label measures **6.677:1** on it, under the 7:1 body floor.
+
 The action a soft status panel carries is the last composition a canvas role
 could not serve. `hover`, `active` and `secondary` are tuned against
 `background`, `card`, `popover` and the quiet `muted` panel, and the four soft
@@ -3250,7 +3260,7 @@ to **360**. Every shipped set clears every pair, so no existing colour moves.
 Plan `399` adds the solid status fill on the eight surfaces a status chip sits
 on (`statusFillPairs`) — `destructive`'s four base surfaces are already
 measured as an action fill — taking it from 360 to **388**; every shipped set
-clears the floor (1.262:1 at the tightest), so no colour moves. Plan `503` adds
+clears the floor (1.244:1 at the tightest), so no colour moves. Plan `503` adds
 the value indicator's groove on the `hover`/`active` washes and the four soft
 status fills — the surfaces plan `347` had left out — after identity light
 `track` on `destructiveSoft` measured **1.009:1**, macOS light on `active`
@@ -3370,7 +3380,7 @@ AAA palettes read by every high-contrast variant measured 5.665:1 (light) and
 fourteen shipped hints move one designed step (identity dark `#858F9F` →
 `#A8B0BD`, AAA
 light `#4A4F58` → `#3D4047`, AAA dark `#B0B0B0` → `#D1D1D1`), every shipped set
-passes (4.651:1 at the tightest, Linux dark on `active`; 7.113:1 at AAA) and the
+passes (4.589:1 at the tightest, XP light on `active`; 7.113:1 at AAA) and the
 hint stays a step below `mutedForeground` (1.157:1 at the tightest).
 Plan `528` measures the last text role the washed contract omitted:
 `primaryText` through the selection wash. The reference called an accent-toned
@@ -3381,7 +3391,7 @@ around it. `selectionLinkPairs` publishes the role on the nine surfaces and the
 four soft status fills (thirteen pairs); the audit found twelve of the
 shipped sets below their floor, the AAA light link at **5.376:1** on
 `destructiveSoft` under 7:1, macOS dark **3.708:1** on `selected`, Windows light
-3.995:1, XP light 4.378:1, Aero light 4.022:1, macOS light 4.106:1 and Linux
+3.995:1, XP light 4.295:1, Aero light 4.022:1, macOS light 4.106:1 and Linux
 dark 4.485:1 under 4.5:1. Seven values move one designed step inside their own
 families (AAA light `#3B2C8F` → `#241C5C`, macOS `#0055B3` → `#004A9A` light and
 `#64B5FF` → `#96CDFF` dark, Linux dark `#99C1F1` → `#A5CBF5`, Windows light
@@ -3394,7 +3404,7 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **420** across plans `527`, `557` and `595`.
+396 to **421** across plans `527`, `557`, `595` and `619`.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -3502,7 +3512,7 @@ the shipped secondary control still paints that pair while it migrates to the
 designed family. `washStepPairs` holds `active` to 1.05:1 from `hover` under the
 same `step` class, so an edited theme that sets them equal is reported instead of
 returning `[]`. Every shipped set already clears the floor — identity dark is
-tightest at **1.059:1** — so no colour moves. The audit also found two shipped
+tightest at **1.071:1** — so no colour moves. The audit also found two shipped
 compositions on the *wrong* role pair: a secondary control whose `hover` is its
 own resting `secondary` fill (the same value in 19 of the shipped sets), and a
 selectable row that presses to the neutral `active` while it hovers to `accent`
@@ -3733,7 +3743,7 @@ examples caught two `<ThemeProvider>` blocks that never imported it.
 
 `packages/tokens/src/soft-action.test.ts` holds the panel action: every shipped
 set clears the three lists, the reviewed neutral composition is still measured
-at 80 of 288 pairs with the Windows light worst figure, and the public checker
+at 84 of 288 pairs with the Windows light worst figure, and the public checker
 reports an erased fill, a collapsed press and the label on a tint.
 `packages/tokens/src/status-solid.test.ts` holds the third status tonality:
 `statusTone(...).solid` resolves the fill and its on-colour in every shipped
@@ -3811,7 +3821,7 @@ still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to
   has one.
 - The neutral washes (`hover`, `active`) and the neutral fill (`secondary`) are
   **not** a supported action surface inside a soft status panel: the four tints
-  sit in the same luminance band as those fills, and 80 of the 288 shipped
+  sit in the same luminance band as those fills, and 84 of the 288 shipped
   fill-on-tint pairs measure under 1.05:1 (worst **1.0042:1**, Windows light
   `active` on `destructiveSoft`). An action there paints `softAction(theme)`; the
   `components` migration is recorded in `TODO.md` (plan `394`).

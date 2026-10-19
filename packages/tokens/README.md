@@ -199,7 +199,7 @@ the index (`primary`, `secondary`, `destructive`, `accent`) and
 An action inside a soft status panel is a family of its own: `softAction(theme)`
 returns `softAction`/`softActionHover`/`softActionActive` and
 `softActionForeground`. The four soft fills sit in the same luminance band as the
-canvas washes, so **80 of the 288** shipped `hover`/`active`/`secondary`-on-tint
+canvas washes, so **84 of the 288** shipped `hover`/`active`/`secondary`-on-tint
 pairs measure under 1.05:1 — the worst Windows light `active` on
 `destructiveSoft` at **1.0042:1** — and an Alert's dismiss control had no press
 state. `softActionPairs`, `softActionStepPairs` and `softActionLabelPairs` hold
@@ -519,7 +519,7 @@ sidebar or a dialog is not tied to one fill and an in-place edit sits in the row
 it replaces; identity dark measured 4.03:1 on
 the quiet panel and the floating surface until plan 317 moved it one step, then
 **3.132:1** on the `selected` fill until plan 527 moved it again, and every one
-of the twelve default sets missed the row-wash floor (4.651:1 at the tightest
+of the twelve default sets missed the row-wash floor (4.589:1 at the tightest
 after the move, Linux dark on `active`). A menu
 row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a

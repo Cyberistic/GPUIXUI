@@ -417,6 +417,36 @@ describe("docs/tokens.md contract counts", () => {
     expect(prose).toContain("plans `076`–`348` closed");
   });
 
+  it("states the selectable row's press step from the measured values", () => {
+    const prose = markdown.replace(/\s+/g, " ");
+    expect(prose).toContain("`rowPressStepPairs`");
+    expect(designSystem).toContain("`rowPressStepPairs`");
+
+    const oldDark = extendTheme(getTheme("dark"), {
+      colors: { active: "#2A303B" },
+    });
+    const oldXp = extendTheme(getPlatformRecipeTheme("xp", "light"), {
+      colors: { active: "#DDD7BE" },
+    });
+    const darkRatio = Tokens.contrastRatio(
+      oldDark.colors.active,
+      oldDark.colors.accent,
+    ).toFixed(3);
+    const xpRatio = Tokens.contrastRatio(
+      oldXp.colors.active,
+      oldXp.colors.accent,
+    ).toFixed(3);
+    expect(prose).toContain(`Identity dark measured **${darkRatio}:1**`);
+    expect(prose).toContain(`XP light **${xpRatio}:1**`);
+
+    const tightest = Math.min(
+      ...shippedThemes.map(({ theme }) =>
+        Tokens.contrastRatio(theme.colors.active, theme.colors.accent),
+      ),
+    );
+    expect(prose).toContain(`Windows 7 light at **${tightest.toFixed(3)}:1**`);
+  });
+
   it("states the disabled panel action's resting pair", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
@@ -1530,9 +1560,9 @@ describe("docs/tokens.md quoted tightest figures", () => {
       weakest.surface,
       weakest.label,
       Number(weakest.ratio.toFixed(3)),
-    ]).toEqual(["warning", "selected", "XP light", 1.262]);
+    ]).toEqual(["warning", "active", "XP light", 1.244]);
     expect(markdownProse).toContain(
-      "**1.262:1** (XP light `warning` on `selected`)",
+      "**1.244:1** (XP light `warning` on `active`)",
     );
   });
 
@@ -2453,7 +2483,7 @@ describe("docs/tokens.md contrast surfaces", () => {
 
   it("states where default body text is measured", () => {
     const sentence =
-      "Default body text is measured on `background`, `card`, the `muted` panel, `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description paints (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is `inputForeground` on the `input` fill, on the four `Surface` tones a transparent field can sit on (`background`, `card`, `popover`, `muted`) and on the four row washes a field inside a row paints. The placeholder is held to the same secondary floor on that same nine-surface list; a disabled field is out of scope for these body pairs because the designed state reads `disabledForeground`, which `inactivePairs` measures — the shipped primitives still dim the field at 50%, which measures **3.273:1** on the macOS light `input` fill, under both the body and the secondary floor — while a field inside a row is measured on the four row washes (plan `527`). Identity dark `#7C8595` measured 4.03:1 on the quiet panel and the floating surface until plan `317` moved it to `#858F9F`; that hint then measured **3.132:1** on the `selected` fill a row keeps, and every one of the twelve default sets missed the 4.5:1 floor on at least one wash — macOS light 3.714:1 on `active`, Windows dark 3.939:1, XP light 3.877:1 — while `themeContrastFailures` returned `[]`. Plan `527` adds the four washes to both lists, moves the fourteen shipped hints (the twelve default sets and the two AAA palettes every high-contrast variant reads), and the tightest new pair is **4.651:1** (Linux dark on `active`) with the AAA sets at 7.113:1 or better. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no other value moves; the pairs exist so an edited theme cannot break them silently.";
+      "Default body text is measured on `background`, `card`, the `muted` panel, `popover`, the `hover`/`active`/`accent`/`selected` washes and the four soft status fills an Alert's description paints (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is `inputForeground` on the `input` fill, on the four `Surface` tones a transparent field can sit on (`background`, `card`, `popover`, `muted`) and on the four row washes a field inside a row paints. The placeholder is held to the same secondary floor on that same nine-surface list; a disabled field is out of scope for these body pairs because the designed state reads `disabledForeground`, which `inactivePairs` measures — the shipped primitives still dim the field at 50%, which measures **3.273:1** on the macOS light `input` fill, under both the body and the secondary floor — while a field inside a row is measured on the four row washes (plan `527`). Identity dark `#7C8595` measured 4.03:1 on the quiet panel and the floating surface until plan `317` moved it to `#858F9F`; that hint then measured **3.132:1** on the `selected` fill a row keeps, and every one of the twelve default sets missed the 4.5:1 floor on at least one wash — macOS light 3.714:1 on `active`, Windows dark 3.939:1, XP light 3.877:1 — while `themeContrastFailures` returned `[]`. Plan `527` adds the four washes to both lists, moves the fourteen shipped hints (the twelve default sets and the two AAA palettes every high-contrast variant reads), and the tightest new pair is **4.589:1** (Light · Windows XP on `active`) with the AAA sets at 7.113:1 or better. The panel and the floating surface are not academic: an avatar's fallback initials sit on `muted`, and a date picker's month header sits on its `popover`. The row washes are not either: a selectable list row paints `accent` on hover and `selected` when selected, and its title is `foreground` on both — a `ListItemTitle` sets its own colour, so it overrides the `selectedForeground` the row inherits. Every pair clears the body floor with margin in every shipped set, so no other value moves; the pairs exist so an edited theme cannot break them silently.";
     expect(markdown.replace(/\s+/g, " ")).toContain(sentence);
   });
 

@@ -1,7 +1,7 @@
 /**
  * Guards the bug plan 394 closes: an action inside a soft status panel paints
  * the canvas-tuned washes or the neutral fill, which cannot be perceived on a
- * tone tint — **80 of the 288 shipped `hover`/`active`/`secondary`-on-`xSoft`
+ * tone tint — **84 of the 288 shipped `hover`/`active`/`secondary`-on-`xSoft`
  * pairs measured under 1.05:1**, the worst Windows light `active` on
  * `destructiveSoft` at **1.0042:1** — so an Alert's dismiss control had no press
  * state and the documented "Try again" action had no fill, while
@@ -74,7 +74,7 @@ describe("the action inside a soft status panel", () => {
     expect(measured).toHaveLength(
       shippedThemes.length * neutralFills.length * softSurfaces.length,
     );
-    expect(failing).toHaveLength(80);
+    expect(failing).toHaveLength(84);
 
     const worst = failing.toSorted((a, b) => a.ratio - b.ratio)[0];
     expect(worst?.theme.name).toContain("Windows");

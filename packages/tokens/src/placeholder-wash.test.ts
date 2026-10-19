@@ -86,10 +86,10 @@ describe("a field's text and hint on the row washes", () => {
       );
 
     expect([tightest.label, tightest.surface]).toEqual([
-      "Dark · Linux",
+      "Light · Windows XP",
       "active",
     ]);
-    expect(tightest.ratio).toBeCloseTo(4.651, 3);
+    expect(tightest.ratio).toBeCloseTo(4.589, 3);
 
     const smallestAaa = Math.min(
       ...themes

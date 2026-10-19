@@ -160,7 +160,7 @@
  * and that pair was measured only as two washes against surfaces. `washStepPairs`
  * holds `active` one perceivable `step` from `hover` at both contrast levels.
  * Every shipped set already clears 1.05:1 (identity dark is tightest at
- * 1.059:1), so no colour moves.
+ * 1.071:1), so no colour moves.
  *
  * Plan 509 gives the elevation walk the two persistent surfaces plan 359 added
  * to the scrim: a context menu or preview card opens over the `selected` fill a
@@ -205,6 +205,7 @@ import {
   overlayWashPairs,
   ringSoftPairs,
   ringTrackPairs,
+  rowPressStepPairs,
   selectionFillPairs,
   selectionFillInactivePairs,
   selectionFillWashPairs,
@@ -297,6 +298,7 @@ const publishedPairLists: Readonly<
   overlayWashPairs,
   ringSoftPairs,
   ringTrackPairs,
+  rowPressStepPairs,
   selectionFillInactivePairs,
   selectionFillPairs,
   selectionFillWashPairs,
@@ -627,7 +629,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(420);
+    expect(contrastPairs.length).toBe(421);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [

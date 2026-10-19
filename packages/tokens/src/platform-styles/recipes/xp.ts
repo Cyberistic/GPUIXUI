@@ -41,7 +41,9 @@ export const xpPlatformRecipe = {
       input: "#FFFFFF",
       inputForeground: "#1A1A1A",
       hover: "#E4DFC9",
-      active: "#DDD7BE",
+      // One designed step darker so a selectable row's press is a perceivable
+      // step from the accent hover it follows (plan 619).
+      active: "#D8D2B7",
       secondary: "#E2DCC7",
       secondaryForeground: "#1A1A1A",
       secondaryHover: "#D6CFB4",
