@@ -133,9 +133,10 @@ renderer (the browser's GPU backend) and exports one document per scene:
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for every record that declares a
-  `liveScene` (42 today), plus the Showcase page and the confirmation-flow
-  pattern's composed screens (plans 560 and 521); `docs/preview-strategy.md`
-  owns the tier table and names them all. 21 of those document state only a
+  `liveScene` (42 today), plus the Showcase page and the two composed pattern
+  screens — the confirmation flow and the command palette (plans 560, 521 and
+  522); `docs/preview-strategy.md`
+  owns the tier table and names them all. 22 of those document state only a
   gesture produces — an open
   overlay, an opened list, a checked control, a value a key reaches or text a
   reader types — so
@@ -801,8 +802,11 @@ until you do.
 
 A pattern page documents a **real composition**, not a component.
 `content/docs/patterns/settings-form.mdx` shows the `examples/basic-app` screen,
-and `content/docs/patterns/confirmation-flow.mdx` shows a destructive workflow
-that runs as a live scene (`preview/patterns/confirmation-flow.tsx`, plan 521).
+`content/docs/patterns/confirmation-flow.mdx` shows a destructive workflow
+that runs as a live scene (`preview/patterns/confirmation-flow.tsx`, plan 521),
+and `content/docs/patterns/command-palette.mdx` runs the real `CommandMenu`
+through an open and a command executed (`preview/patterns/command-palette.tsx`,
+plan 522).
 The contract (`src/pattern-pages.test.ts`) is: six sections (`The task`,
 `Composition`, `State`, `What is verified`, `Source`, `Related`), at least one
 real `<include>` that resolves inside the repository, no placeholder prose, and

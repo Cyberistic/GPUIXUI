@@ -12,7 +12,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB. The two composed pages (Showcase and the confirmation-flow pattern) have no component record. |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB. The three composed pages (Showcase, the confirmation-flow pattern and the command-palette pattern) have no component record. |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -203,9 +203,9 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **44 scenes ship today**: 42 are one per record that declares a
-  `liveScene`, and two are composed pages (Showcase and the confirmation-flow
-  pattern); the tier table above names them all. They are chosen because a still
+  blank frame. **45 scenes ship today**: 42 are one per record that declares a
+  `liveScene`, and three are composed pages (Showcase, the confirmation-flow
+  pattern and the command-palette pattern); the tier table above names them all. They are chosen because a still
   cannot prove the point: an open overlay and its focus entry, a grouped palette,
   real SVG markup tinted by the theme, wheel scrolling, a pulse, an edge panel, a
   transient message, an opened list, a checked control, a value a key reaches,
@@ -219,7 +219,7 @@ the source for a component that is no longer `planned`.
 
 ## Gestures are proved, not implied
 
-21 scenes document state only a gesture produces: a component that owns its
+22 scenes document state only a gesture produces: a component that owns its
 open state and exposes no `defaultOpen`, a list that opens on a click, controls
 whose checked paint is not text, a value a key moves, a row a reader selects, a
 field a reader types into and a transcript a reader wheels away from its tail.
@@ -253,6 +253,7 @@ first assertion, and a broken gesture fails the second.
 | Carousel | press the next control | the active slide replaces the first |
 | Message scroller | wheel up in the viewport | the scroller leaves the tail and paints its "Jump to latest" affordance |
 | Confirmation flow | type the workspace name, then confirm | the destructive action commits only through the typed check, and the toast proves it succeeded |
+| Command palette | click Commands, then Duplicate project | a control opens the palette and the chosen command changes the document |
 
 Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
 is the same path a reader's keyboard takes. A typed character arrives without a

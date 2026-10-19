@@ -27,12 +27,22 @@ toast when it does. It runs as a live scene on GPUix's published WebAssembly
 renderer, and the release smoke types the name and confirms so the success
 state is proved rather than illustrated.
 
+## Command palette
+
+The third pattern runs a project command without a menu tree
+([`/docs/patterns/command-palette`](/docs/patterns/command-palette)): the real
+`CommandMenu` opens from a `Commands` control, the highlighted command runs on
+Enter or a click, and `Duplicate project` adds a named copy through a pure
+rule. It runs as a live scene on GPUix's published WebAssembly renderer, and the
+release smoke opens the palette and runs the command so the result is proved
+rather than illustrated.
+
 ## Still to come
 
-The command palette has every component it needs — `CommandMenu`, `Dialog` and
-the search input are implemented and native-tested — but it still waits on its
-own runnable composition. The inspector workspace waits on `packages/docking`,
-which does not exist yet.
+The inspector workspace waits on `packages/docking`, which does not exist yet.
+The command palette's **package** example is still owed by the component
+workstream; the page above is a docs-owned composition, not a substitute for a
+package example.
 
 A pattern is never assembled from browser imitations and presented as working
 native behaviour.

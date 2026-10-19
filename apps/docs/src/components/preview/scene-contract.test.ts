@@ -184,6 +184,9 @@ describe("gesture scenes", () => {
       // The confirmation-flow pattern's action is `ConfirmDialog`'s own footer
       // button; the composed page supplies the dialog, not the button.
       ["confirmation-flow", ["confirm-accept"]],
+      // The command-palette pattern's rows are `CommandMenu`'s own; the composed
+      // page supplies the actions, not the row element.
+      ["command-palette", ["command-duplicate"]],
     ],
   );
 

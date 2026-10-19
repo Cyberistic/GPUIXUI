@@ -471,7 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–560)
 
-`[x]` `[██████████]` 123/123
+`[x]` `[██████████]` 124/124
+
+`[x]` **The command palette has a real pattern page (plan 522)** —
+      `/docs/patterns/command-palette` mounts the real `CommandMenu` closed, and
+      the smoke opens it from a `Commands` control and runs `Duplicate project`,
+      which adds a copy through a tested naming rule; the result text is absent
+      before the two gestures and present after. The page documents state
+      ownership, the simulated clipboard limit and its real source.
 
 `[x]` **The confirmation-flow pattern runs on the live surface (plan 521)** —
       `/docs/patterns/confirmation-flow` mounts a real `ConfirmDialog` with a
@@ -972,11 +979,11 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 `[x]` Components/primitives: export tsdoc-annotated props types the docs site can turn into API tables — `ButtonProps` generates the real 14-row table on the Buttons page (plan 422); the contract is executable in `apps/docs/src/lib/type-table.fixture.tsx` / `type-table.test.ts` (plan 415)
 `[ ]` Playground: add a **per-component** screen (one per delivered component) so component pages can move from tier V to tier S — the capture script exists and produced 20/20 frames (`nub apps/playground/dist/smoke/run.js --screenshots`), but the scenarios are capability probes, not component screens. The sidecar contract (`provenance.json` beside each PNG) is enforced by `preview.test.tsx`, so a capture without it will not render
 `[ ]` **Components/examples**: provide one real composed source for the command
-      palette (`CommandMenu` + `Dialog`) — plan 427's remaining pattern page
-      waits on it; do not write a page from separate component examples and
-      call it a pattern. The confirmation-flow pattern landed from a docs-owned
-      composition (plan 521), which does not replace the package example
-      (`ConfirmDialog` + a form + `Toast`); both are worth having.
+      palette (`CommandMenu` + `Dialog`) — do not write a page from separate
+      component examples and call it a pattern. **Docs half done (plan 522):**
+      `/docs/patterns/command-palette` runs a docs-owned composition that opens
+      the real palette and runs a duplicate command; the package-owned example
+      remains owed, as with the confirmation flow (plan 521).
 `[x]` Docs site: the first real component page — Buttons shows its source via `<include>`, generates its API table from `ButtonProps`, sits in `content/docs/components/meta.json` and the sitemap, and relates to a planned component without a 404 link (plan 422)
 `[ ]` Primitives: the `packages/primitives/docs/tooltip.mdx` usage snippet imports `Icon` from `@gpuixui/primitives`; it lives in `@gpuixui/icons`. The docs-site page was corrected during the truth pass (plan 424); fix the package page too
 `[ ]` **Primitives**: declare `effect` as a runtime dependency — `RadioGroup`, `Select` and `Spinner` import `effect/Array` / `effect/Option` at runtime, but `packages/primitives/package.json` lists `effect` only in `devDependencies`. Found while deriving the docs dependency lists (plan 428)

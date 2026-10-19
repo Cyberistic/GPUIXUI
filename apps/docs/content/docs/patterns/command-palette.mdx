@@ -1,0 +1,79 @@
+---
+title: Command palette
+description: A searchable project palette that opens from a control and runs a real command.
+---
+
+A pattern is a composition with a job: here, running a project command without
+walking a menu tree. It is built from public packages only — `CommandMenu`,
+`Dialog`, `Button` and the primitive layout — and it runs on **GPUix's
+published WebAssembly renderer**, the same real surface every live scene uses.
+It is not the native desktop binary; the component pages carry that evidence.
+
+## The task
+
+Duplicate a project, copy its link, or see how a disabled command is still
+presented. The palette is searchable, grouped, and driven by the keyboard: the
+field keeps focus while the highlight moves, Enter runs the highlighted
+command, and Escape closes the surface. The scene starts closed, so opening it
+is part of the pattern.
+
+## Composition
+
+The rest state is a project surface; its `Commands` control opens the real
+palette:
+
+<LiveSurface scene="command-palette" title="Command palette" />
+
+The flow composes:
+
+- `CommandMenu` for the modal, its focused search field, grouped matches and the
+  dismiss layer;
+- `CommandMenuInput`, `CommandMenuList` and `CommandMenuEmpty` as the parts the
+  root expects — the palette renders what it is given;
+- `Button` for the control that opens it;
+- `Text` and `Stack` for the project list and the result line, with every
+  colour, space and type value from the active theme.
+
+The composition lives in `preview/patterns/command-palette.tsx`, not in the
+component demos: a pattern page shows one workflow, not the parts separately.
+
+## State
+
+The composition owns whether the palette is open, the project list and the last
+result sentence. `CommandMenu` owns the query, the highlight and the rule that a
+run closes the palette; `duplicate` computes its copy name with a pure rule
+(`atlas copy`, then `atlas copy 2`) so the visible list cannot repeat a name.
+
+The application owns the `⌘K` shortcut. `CommandMenu` binds no chord, and the
+preview document's window handler belongs to the harness, so the scene reaches
+the same state through the `Commands` control. A real app wires its window key
+handler to `onOpenChange(true)`.
+
+`Delete project` is disabled: a row stays visible and un-runnable, which is the
+palette's disabled contract, not a hidden action.
+
+## What is verified
+
+| Check | What it proves |
+| ----- | -------------- |
+| `nub run --filter docs smoke:preview` | drives the real gestures: clicks `Commands`, then `Duplicate project`, and asserts the result is absent before and present after; the page loads the iframe with the docs' mode and platform |
+| `packages/components` behaviour suites | `CommandMenu`'s ranked filter, highlight movement, Enter, Escape and close-on-run; the dialog's focus entry and return |
+| `packages/primitives` runtime suites | `Button`'s activation and the controlled edit path the search field uses |
+| `nub run --filter docs test` | the copy-name rule, the scene contract and this page's required sections |
+
+Limits, stated rather than implied: the surface is the WebAssembly renderer,
+not a desktop window; `Copy link` reports a simulated link because the runtime
+has no clipboard primitive; and no project is persisted, so a reload restores
+the single starting project.
+
+## Source
+
+<include lang="tsx" meta='title="apps/docs/preview/patterns/command-palette.tsx"'>
+  ../../../preview/patterns/command-palette.tsx
+</include>
+
+## Related
+
+- [Command menu](/docs/components/command-menu) · [Dialog](/docs/components/dialog)
+- [Button](/docs/components/button)
+- [Patterns](/docs/patterns) · [Confirmation flow](/docs/patterns/confirmation-flow)

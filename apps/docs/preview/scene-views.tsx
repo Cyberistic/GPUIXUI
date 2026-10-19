@@ -181,6 +181,7 @@ import {
 } from "@gpuixui/components/time-picker";
 import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
+import { CommandPalette } from "./patterns/command-palette";
 import { ConfirmationFlow } from "./patterns/confirmation-flow";
 import type { LiveScene } from "./scenes";
 
@@ -1357,6 +1358,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "message-scroller": MessageScrollerScene,
     showcase: ShowcaseScene,
     "confirmation-flow": ConfirmationFlow,
+    "command-palette": CommandPalette,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

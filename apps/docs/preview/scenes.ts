@@ -51,6 +51,7 @@ export const LIVE_SCENES = [
   "message-scroller",
   "showcase",
   "confirmation-flow",
+  "command-palette",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -109,6 +110,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "message-scroller": "Jump to latest",
   showcase: "Three people can edit this workspace.",
   "confirmation-flow": "Workspace deleted",
+  "command-palette": "Duplicated the project into a new copy.",
 };
 
 /**
@@ -120,6 +122,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
 export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
   showcase: "/docs/showcase",
   "confirmation-flow": "/docs/patterns/confirmation-flow",
+  "command-palette": "/docs/patterns/command-palette",
 };
 
 /**
@@ -133,6 +136,7 @@ export const SCENE_LABEL: ReadonlyArray<{
 }> = [
   { scene: "showcase", title: "Showcase" },
   { scene: "confirmation-flow", title: "Confirmation flow" },
+  { scene: "command-palette", title: "Command palette" },
 ];
 
 /**
@@ -207,6 +211,10 @@ export const SCENE_GESTURE: Readonly<
     { kind: "fill", testId: "scene-confirm-name", text: "atlas" },
     { kind: "click", testId: "confirm-accept" },
   ],
+  "command-palette": [
+    { kind: "click", testId: "scene-palette-trigger" },
+    { kind: "click", testId: "command-duplicate" },
+  ],
 };
 
 /**
@@ -235,6 +243,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   carousel: "Press the next control to see the second slide.",
   "message-scroller": "Wheel up in the log to leave the tail.",
   "confirmation-flow": "Type the workspace name, then confirm.",
+  "command-palette": "Open the palette, then run Duplicate project.",
 };
 
 /**
