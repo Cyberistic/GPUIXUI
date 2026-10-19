@@ -2098,20 +2098,20 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **95/95** (`exit 0`, **2545** checks, 61
-capabilities; **1094.3 s**; `.artifacts/live-report.json`, 2026-10-19) on head
-`47068722` (plan `691`),
+The last full merge/release gate ran **95/95** (`exit 0`, **2576** checks, 61
+capabilities; **1078.0 s**; `.artifacts/live-report.json`, 2026-10-19) on head
+`21d02b2a` (plan `699`),
 including every scenario this branch added through `live-theme-platform` (plan
 `654`, the platform type styles in a window), `live-shell` through plan `656`'s
 capture-capable runner, plan `658`'s Tier 1 additions — `live-primitives-display`
 is 34 checks — `live-theme`'s 39 frame-pixel checks (plan `676`), plan
-`674`'s `live-pixel-colour` (22 checks) and plan `690`'s `live-content` image
-pixels (44 → 68). The total is
+`674`'s `live-pixel-colour` (22 checks), plan `690`'s `live-content` image
+pixels (44 → 68) and plan `697`'s `live-chart` colour pixels (40 → 71). The total is
 plan `659`'s 2469 plus `live-pixel-colour`'s 22 plus `live-theme`'s +30 plus
-`live-content`'s +24. A plain
+`live-content`'s +24 plus `live-chart`'s +31. A plain
 `--all` wrote no frame and no
 `provenance.json`; plan `656` holds the focused capture evidence. This gate
-supersedes plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
+supersedes plan `691`'s 2545 on `47068722`, plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
 plan `659`'s 94/94 on `d9346a9d`,
 plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
@@ -2309,9 +2309,10 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **95/95** on
-  2026-10-19 (**2545** checks, 61 capabilities; 1094.3 s; exit `0`, the merge
-  gate; plan `691` on head `47068722`, including `live-theme`'s 39 pixel checks,
-  `live-pixel-colour`, `live-content`'s 68 image-source checks and
+  2026-10-19 (**2576** checks, 61 capabilities; 1078.0 s; exit `0`, the merge
+  gate; plan `699` on head `21d02b2a`, including `live-theme`'s 39 pixel checks,
+  `live-pixel-colour`, `live-content`'s 68 image-source checks, `live-chart`'s
+  71 chart-colour checks and
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
   pointer twins, plan `554`'s select/combobox/tooltip twins, plan `556`'s

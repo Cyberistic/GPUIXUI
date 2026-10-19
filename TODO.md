@@ -97,6 +97,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 118/118 plans-and-harness
 
+`[x]` **Run the promotion gate on the head that includes plan `697`'s chart
+      colour pixels** per plan `699`: verification only on `4101684e` (code
+      head `21d02b2a`; 0 behind `origin/master`) — headless **106/106** (`3824`
+      checks, 65 capabilities, 78.9 s) and live **95/95** (**2576** checks, 61
+      capabilities, 1078.0 s), both exit `0`, so plan `697`'s 31 new
+      `live-chart` checks ran inside the full sequence (`2545 + 31`;
+      `live-chart` reports **71**, `chart-svg` stays **52**).
+      `live-tier2-editing` reported its 33-check missed-blur branch, so the
+      total is the top of the predicted 2575–2576 range. A plain `--all` wrote
+      no `provenance.json`, both `host` lines carry the release-tag pins, and
+      the totals were read back from `.artifacts/smoke-report.json` /
+      `live-report.json`. `nub run check`/`lint`/`test` green (playground 442,
+      testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
+      docs 7). No source change. Exact ids: the whole headless registry and the
+      whole live registry (`--all`).
+
 `[x]` **The chart recipe's colour contract in a real window** per plan `697`:
       the sourced `<svg>` tint, the image's two opaque fills and both gradients
       were `paintedStyle`/screenshot-only since plans `180`/`593`. The view
@@ -1736,7 +1752,14 @@ focused id is `live-frames`.
       (**3824** checks, 65 capabilities), both exit `0`, with no
       `provenance.json`. `nub run check`/`lint`/`test` green (playground 442,
       testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
-      docs 7). **This is the current gate for the promotion fast-forward.**
+      docs 7). **Addendum (plan `699`, 2026-10-19):** plan `697` then added 31
+      checks to `live-chart` (40 → 71), so both registries ran again on
+      `4101684e` (code head `21d02b2a`): live **95/95** (**2576** checks, 61
+      capabilities, 1078.0 s) and headless **106/106** (**3824** checks, 65
+      capabilities), both exit `0`, with no `provenance.json`. `nub run
+      check`/`lint`/`test` green (playground 442, testing 68, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
+      current gate for the promotion fast-forward.**
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release verification) |
 | Owner | playground |
 | Depends on | `517` (focused live runs), `529` (the release-tag binding), `639` (the live-registry guard), `653` (capability coverage), `656` (the capture-capable live runner), `674` (pixel evidence), `677` (the palette-pixel gate), `691` (the image-pixel gate), `697` (the chart colour pixels) |
@@ -323,4 +323,42 @@ proves those checks executed inside the full registry.
 
 ## 8. Results
 
-Filled in by the executor after the run.
+Landed 2026-10-19 on `agent/playground`, darwin-x64 with the release-tag
+binding. The gate ran on `4101684e` (this plan's commit) over the code head
+`21d02b2a` (plan `697`); the tree was clean and `origin/master` had not advanced
+(`git rev-list --count HEAD..origin/master` = `0`). **No source changed.**
+
+**Registry** (re-derived after the rebuild, not remembered): headless **106**
+ids, live **95** ids, `live-chart` present.
+
+**Headless full suite** — `nub apps/playground/dist/smoke/run.js`:
+
+- **106/106** scenarios, **3824** checks, **65** capabilities, exit `0`;
+- **78.9 s** (`durationMs` 78863), started `2026-10-19T16:22:06Z`;
+- `chart-svg` **52** checks, unchanged;
+- `.artifacts/smoke-report.json` rewritten at **19:23:25 +03**;
+- host: `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288,
+  zed 81c99f81, runtime shaders)`.
+
+**Live full suite** — `nub apps/playground/dist/live/run.js --all`:
+
+- **95/95** scenarios, **2576** checks, **61** capabilities, exit `0`;
+- **1078.0 s** (`durationMs` 1078040), started `2026-10-19T16:23:37Z`;
+- `live-chart` **71** checks (7245 ms) — the plan-697 colour contract ran inside
+  the full sequence;
+- `live-tier2-editing` **33** checks, the missed-blur branch, so the total sits
+  at the top of the predicted **2575–2576** range (`2545 + 31`);
+- `.artifacts/live-report.json` rewritten at **19:41:35 +03**; one screenshot per
+  scenario under `.artifacts/live/`, **no** `provenance.json` (plain `--all`);
+- host: `gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288,
+  zed 81c99f81, runtime shaders)`.
+
+**Gates** — `nub run check`, `nub run lint`, `nub run test`, all exit `0`:
+playground **442**, testing **68**, components **308**, primitives **282**,
+tokens **196**, tw **103**, icons **19**, docs **7**. Every count matched the
+plan; no merge was needed, so none is attributable to an upstream change.
+
+Totals were read back from the artifacts with the §4.5 commands, not from the
+console summary. The ledgers (`COMPONENTS.md`, `apps/playground/README.md`,
+`TODO.md`, the plan index) now cite this run; the stale plan-691 (2545) sentence
+is history only.
