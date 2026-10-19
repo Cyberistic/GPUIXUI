@@ -291,6 +291,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [617](./617-ledger-check-counts.md) | The ledger's check counts, in one owner | F | 398, 567, 602, 611 | done |
 | [618](./618-applied-default-elevation.md) | A default request takes the requested palette's elevation opacity | F | 301, 373, 505, 541, 545, 551 | done |
 | [619](./619-selection-row-press.md) | The selectable row's press step | F | 327, 357, 381, 502, 595 | done |
+| [620](./620-fixed-surface-chrome.md) | The fixed surfaces hold their own chrome | F | 353, 358, 384, 531, 556, 598, 601, 604, 619 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3143,6 +3144,18 @@ tightest), and the contract grows 420 → 421. The wider `active` move shifts a
 few quoted tightest figures — the invalid ring, the field hint, the selection
 link, the neutral fill-on-tint band and the generic wash ladder — and every one
 is re-derived by its guard; no other colour, role, floor or metric moves.
+
+Plan `620` closes the last fixed surfaces whose horizontal chrome never wraps.
+`themeMetricFailures` held `toastWidth`, `notificationPanelWidth` and
+`overlayMinWidth` only as positive sizes (or only ordered against a sibling), so
+a copied platform style could set a 20px toast card — narrower than its own
+`spacing.lg` padding, `md` tone icon, gap and title — and `themeFailures`
+returned `[]`. Three `at-least` rules now derive each bound from the theme's own
+spacing, icon and type metrics: the toast `2·lg + md + lg + bodyStrong`, the
+notification panel `2·lg + unreadDot + sm + bodyStrong`, and the overlay
+`2·md + md + md + label`. Every shipped set clears them (380/320/180 against
+66/50/53 at the shipped identity), so no value moves; the guards protect the
+`components` migrations `TODO.md` already schedules.
 
 ## How to use a plan
 
