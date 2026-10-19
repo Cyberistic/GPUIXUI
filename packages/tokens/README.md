@@ -336,8 +336,10 @@ body tier: it is the secondary-strength tint an inherited label keeps inside a
 selected row, documented only on the four row fills. It is a state tier there:
 the label stays one 1.05:1 step below the row title `foreground` on the
 `hover`/`active`/`accent`/`selected` fills, and every shipped set clears the step. `themeDirectionFailures` is the
-ninth: `stateLadders` names the four filled families, the panel action, the
-generic wash, the selected step and the selectable row's press, and each step
+ninth: `stateLadders` — indexed by `stateLadderNames` — walks the four filled
+families, the panel action (`softAction`), the generic wash (`wash`), the
+selected step (`selection`) and both row presses (`rowPress` and
+`selectionPress`), and each step
 must move away from the canvas — darker in light, lighter in dark — so a light
 `primaryHover` that is lighter than its `primary`, or a dark row whose `active`
 press is darker than its `accent` hover, is reported even though the 1.05:1 step

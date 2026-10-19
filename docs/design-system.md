@@ -1047,9 +1047,9 @@ fixing. The direction half is `themeDirectionFailures`: a pointer ladder must
 step away from the canvas — darker in light, lighter in dark — so a light
 `primaryHover` that is lighter than its `primary` is reported even though it
 clears the 1.05:1 step, the on-colour floor and the surface floor. The ladder
-list includes the selectable row's press (`accent` → `active`), not only the
-filled families, the panel action, the wash and the selected step, so a dark row
-that presses darker than its hover is reported while the 1.094:1 step passes. Each part is
+list, `stateLadderNames`, covers both row presses — `accent` → `active` and
+`selected` → `selectedActive` — so a dark row that presses darker than its hover
+is reported while the 1.094:1 step passes. Each part is
 available on its own — `themeColorFailures`, `themeOpacityFailures`,
 `themeTypefaceFailures`,
 `themeContrastFailures`, `themeRingFailures`, `themeHighlightFailures`,

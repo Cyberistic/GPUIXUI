@@ -1193,6 +1193,18 @@ package README repeated the omission while the design-system guard stayed green.
 All five now name the pressed row, and a derived `docs.test.ts` case reads the
 nine at-rest surfaces from `contrastPairs` and holds each passage to them; no
 token value, pair, floor or metric moves (plan 672)
+`[x]` Give the interaction ladders an ordered index — `stateLadders` was the one
+interaction catalogue with no typed owner, and every prose surface that retyped
+it had drifted one plan behind: `DirectionFailure.ladder` named five of the six
+ladders after plan 622 added `rowPress`, `themeDirectionFailures`' JSDoc named
+five of the six step-pair lists after plan 651 added
+`selectionPressStepPairs`, and the README omitted the selected row's press
+entirely. `stateLadderNames` and `StateLadderName` now own the order, both
+fields narrow to the union, a copyable `state-ladder-index.example.ts` groups a
+theme's failures by ladder, and `direction-reference.test.ts` derives the step
+lists from `contrast.ts` and holds the source paragraphs, both pages and the
+README to them; no colour, pair, floor, metric or shipped theme moves
+(plan 673)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

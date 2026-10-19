@@ -327,6 +327,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [670](./670-example-links.md) | Every executed example is linked from a consumer document | F | 350, 355, 356, 616, 668 | done |
 | [671](./671-invalid-ring-pressed-row.md) | The invalid focus ring on a pressed selected row | F | 325, 340, 352, 354, 383, 651 | done |
 | [672](./672-link-pressed-row-surfaces.md) | The pressed row among the link's surface lists | F | 314, 346, 528, 651, 671 | done |
+| [673](./673-state-ladder-index.md) | The interaction ladders' ordered index | F | 502, 622, 651, 668, 672 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

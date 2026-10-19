@@ -20,6 +20,7 @@ import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
 import { contrastFloors, stateFillSurfaces } from "./contrast.js";
+import { stateLadderNames } from "./direction.js";
 import { motion } from "./motion.js";
 import {
   platformNames,
@@ -29,7 +30,7 @@ import {
 } from "./platforms.js";
 import { shippedThemes } from "./shipped-themes.js";
 import { platformTableCells } from "./platform-table.js";
-import { statusTones } from "./styles.js";
+import { filledControlFamilies, statusTones } from "./styles.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { typefaceRules } from "./typeface.js";
@@ -138,6 +139,15 @@ describe("packages/tokens/README.md", () => {
     expect(readme).toContain(
       `The payload is the same ${types.slice(0, -1).join(", ")} or ${types.at(-1)} the individual check returns`,
     );
+  });
+
+  it("names every interaction ladder from the index", () => {
+    expect(readme).toContain("`stateLadderNames`");
+    const fixed = stateLadderNames.filter(
+      (name) => !filledControlFamilies.some((family) => family === name),
+    );
+    expect(fixed.length).toBeGreaterThan(0);
+    fixed.forEach((name) => expect(readme, name).toContain(`\`${name}\``));
   });
 
   it("states each check's ordinal from the index", () => {

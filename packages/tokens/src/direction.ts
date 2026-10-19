@@ -15,10 +15,38 @@ import { relativeLuminance } from "./contrast.js";
 import { filledControlFamilies } from "./styles.js";
 import type { Theme } from "./theme.js";
 
+/**
+ * Every interaction ladder the library documents, in documentation order: the
+ * four filled families, derived from `filledControlFamilies`, then the panel
+ * action, the generic wash, the selected step and the two row presses.
+ * `StateLadderName` derives from this list, so a new ladder joins the type,
+ * `stateLadders` and every diagnostics table from one edit.
+ *
+ * @example
+ * ```ts
+ * import { stateLadderNames, stateLadders } from "@gpuixui/tokens";
+ *
+ * const covered = stateLadderNames.every((name) =>
+ *   stateLadders.some((ladder) => ladder.name === name),
+ * );
+ * ```
+ */
+export const stateLadderNames = [
+  ...filledControlFamilies,
+  "softAction",
+  "wash",
+  "selection",
+  "selectionPress",
+  "rowPress",
+] as const;
+
+/** A ladder from {@link stateLadderNames}. */
+export type StateLadderName = (typeof stateLadderNames)[number];
+
 /** One interaction ladder: a resting fill followed by its pointer states. */
 export interface StateLadder {
-  /** The family or mechanism the ladder belongs to, for diagnostics. */
-  readonly name: string;
+  /** The ladder's name: one member of `stateLadderNames`. */
+  readonly name: StateLadderName;
   /** The fills from rest upward — at least a rest and one state. */
   readonly roles: ReadonlyArray<keyof ThemeColors>;
   /**
@@ -37,7 +65,7 @@ export interface StateLadder {
  * paints, the selected step past the accent a row hovers with, the selectable
  * row's press past that same accent hover — the direction of
  * `rowPressStepPairs` — and the selected row's press, the one ladder that moves
- * toward the canvas.
+ * toward the canvas. `stateLadderNames` is that list's ordered index.
  */
 export const stateLadders: ReadonlyArray<StateLadder> = [
   ...filledControlFamilies.map(
@@ -68,8 +96,8 @@ export const stateLadders: ReadonlyArray<StateLadder> = [
 
 /** A ladder step that moves toward the canvas instead of away from it. */
 export interface DirectionFailure {
-  /** The ladder the step belongs to — a family, `softAction`, `wash`, `selection` or `selectionPress`. */
-  readonly ladder: string;
+  /** The ladder the step belongs to, one member of `stateLadderNames`. */
+  readonly ladder: StateLadderName;
   /** The fill the step starts from. */
   readonly from: keyof ThemeColors;
   /** The fill it moves to. */
@@ -84,14 +112,17 @@ export interface DirectionFailure {
 
 /**
  * Every ladder step that moves the wrong way, the selectable row's press
- * included — not only the filled families and the wash.
+ * included — not only the filled families and the wash. The ladders are
+ * `stateLadders`, indexed by `stateLadderNames`; each step is compared with the
+ * one before it.
  *
  * An `away` ladder (the default) steps darker in a light theme and lighter in a
  * dark one, the same direction `filled-states.test.ts` asserts on the shipped
  * values; a `toward` ladder — the selected row's press, which previews
  * deselection — runs the other way. An equal pair is not
  * reported here — `stateStepPairs`, `washStepPairs`, `selectionStepPairs`,
- * `rowPressStepPairs` and `softActionStepPairs` report a collapsed step — and a
+ * `rowPressStepPairs`, `selectionPressStepPairs` and `softActionStepPairs`
+ * report a collapsed step — and a
  * value the maths cannot parse is reported because no direction can be
  * established.
  *

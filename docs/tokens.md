@@ -139,6 +139,7 @@ missing here is not public.
 | `ShippedTheme` | One shipped set, discriminated by `source`: identity, platform or recipe. |
 | `Spacing` | The spacing scale shared by padding, margin and gap. |
 | `StateLadder` | One interaction ladder: a resting fill and its pointer states. |
+| `StateLadderName` | A ladder from `stateLadderNames`: the four filled families plus `softAction`, `wash`, `selection`, `selectionPress` and `rowPress`. |
 | `StatusTone` | `"info"`, `"success"`, `"warning"` or `"destructive"`. |
 | `StatusToneStyle` | The four roles a soft status surface needs. |
 | `TextRole` | A key of `textRoles`, excluding the family fields. |
@@ -2849,7 +2850,9 @@ step, the on-colour floor and the surface floor as the designed direction — th
 is exactly the defect plan `097` replaced, and a copied theme can reintroduce it
 while every pair passes.
 
-`stateLadders` is the ordered list of ladders the design system documents: the
+`stateLadders` is the ordered list of ladders the design system documents —
+`stateLadderNames` is its index, so a diagnostics table iterates the names
+instead of retyping them: the
 four filled families, derived from `filledControlFamilies` (`x`, `xHover`,
 `xActive`), the action a soft status panel carries (`softAction`,
 `softActionHover`, `softActionActive`), the generic wash a ghost or outline
@@ -3116,12 +3119,15 @@ const rows = spacingSteps.map((step) => ({ step, value: spacing[step] }));
 
 `densityNames` and `densityPresets` are the preset order and its metrics;
 `controlSizes`, `elevationLevels`, `motionLevels`, `motionPhases`,
-`typefaceRoles` and `metricGroups` index the remaining groups. A scale member
+`typefaceRoles`, `metricGroups` and `stateLadderNames` index the remaining
+groups. A scale member
 that is not in its index fails `scale-indexes.test.ts`, so a value table cannot
 silently omit it.
 
 A runnable table builder is
-[`src/scale-indexes.example.ts`](../packages/tokens/src/scale-indexes.example.ts).
+[`src/scale-indexes.example.ts`](../packages/tokens/src/scale-indexes.example.ts),
+and [`src/state-ladder-index.example.ts`](../packages/tokens/src/state-ladder-index.example.ts)
+groups a theme's direction failures by ladder.
 
 `textRoles` does the same for type: it lists the ten typographic roles in
 documentation order and excludes the `sans` and `mono` families, so a type table
