@@ -471,7 +471,22 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–560)
 
-`[x]` `[██████████]` 125/125
+`[x]` `[██████████]` 127/127
+
+`[x]` **The docs tests see every page (plan 524)** — Vitest's filesystem module
+      cache was keyed by `src/lib/source.ts`'s content, and that module is one
+      baked `import.meta.glob`: adding a page without editing it left the cached
+      list behind (measured 15 of 94), so every source-based guard was green
+      over a sixth of the site. The cache is now keyed by the page set, and
+      `source-completeness.test.ts` compares `source` with the `.mdx` files on
+      disk in both directions; cold 52 s, warm 13 s.
+
+`[x]` **The documentation has a machine-readable index (plan 525)** —
+      `/llms.txt` lists every page from the page tree, absolutely, under the
+      site's summary, and `/llms-full.txt` returns each page as processed
+      Markdown; `smoke:build` compares the index with the sitemap in both
+      directions, so a page a crawler sees cannot be absent and a link cannot
+      point at a page the site does not serve.
 
 `[x]` **Every preview split is derived from the scene registry (plan 523)** —
       the tier-L paragraph still said "21 more" gesture scenes while the

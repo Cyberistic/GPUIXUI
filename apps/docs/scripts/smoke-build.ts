@@ -559,6 +559,78 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   problems.push(...manifestIcons);
   console.log(`smoke: install metadata checked`);
 
+  // Machine discovery (plan 525). Both documents are generated from the page
+  // tree, so the index and the sitemap must agree in both directions: a page a
+  // crawler sees cannot be absent from the index, and an index link cannot point
+  // at a page this site does not serve.
+  const llmsIndex = await request(`${baseUrl}/llms.txt`);
+  const llmsFull = await request(`${baseUrl}/llms-full.txt`);
+  for (const [path, response] of [
+    ["/llms.txt", llmsIndex],
+    ["/llms-full.txt", llmsFull],
+  ] as const) {
+    if (response === null) {
+      problems.push({ where: path, what: "request failed" });
+    } else if (response.status !== 200) {
+      problems.push({
+        where: path,
+        what: `expected 200, got ${response.status}`,
+      });
+    } else if (response.contentType?.startsWith("text/plain") !== true) {
+      problems.push({
+        where: path,
+        what: `content-type ${response.contentType ?? "missing"} is not text/plain`,
+      });
+    }
+  }
+  if (llmsIndex?.status === 200) {
+    const linked = new Set(
+      [...llmsIndex.body.matchAll(/\]\((https?:\/\/[^)\s]+)\)/g)].flatMap(
+        (match) => {
+          const url = match[1];
+          if (url === undefined) return [];
+          try {
+            return [new URL(url).pathname];
+          } catch {
+            problems.push({ where: "/llms.txt", what: `${url} is not a URL` });
+            return [];
+          }
+        },
+      ),
+    );
+    const documented = paths.filter((path) => path.startsWith("/docs"));
+    for (const path of documented) {
+      if (!linked.has(path)) {
+        problems.push({ where: "/llms.txt", what: `missing ${path}` });
+      }
+    }
+    for (const path of linked) {
+      if (!paths.includes(path)) {
+        problems.push({
+          where: "/llms.txt",
+          what: `links ${path}, which the sitemap does not serve`,
+        });
+      }
+    }
+    if (!llmsIndex.body.startsWith("# GPUIXUI")) {
+      problems.push({
+        where: "/llms.txt",
+        what: "does not open with # GPUIXUI",
+      });
+    }
+  }
+  if (
+    llmsFull?.status === 200 &&
+    (!llmsFull.body.includes("# Buttons") ||
+      !llmsFull.body.includes("Source: https://"))
+  ) {
+    problems.push({
+      where: "/llms-full.txt",
+      what: "does not render the Buttons page as Markdown",
+    });
+  }
+  console.log(`smoke: llms discovery checked`);
+
   const ids = new Map(
     pages.map(({ path, page }) => [path, elementIds(page.body)] as const),
   );

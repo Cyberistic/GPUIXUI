@@ -1,5 +1,6 @@
 {
   "title": "GPUIXUI",
+  "description": "A native UI component library rendered by GPUix through React, with the components, tokens, APIs and measured runtime capabilities documented here.",
   "pages": [
     "index",
     "installation",

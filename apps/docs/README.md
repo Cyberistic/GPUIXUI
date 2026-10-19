@@ -62,6 +62,14 @@ nub run --filter docs studio        # author the MDX in Fumadocs Studio (dev-onl
 nub run check                       # repo gate: test quality, lint, format, types
 ```
 
+`vitest.config.ts` keys its filesystem module cache by the set of page files
+under `content/docs`. `src/lib/source.ts` is compiled into one
+`import.meta.glob`, and Vitest keys a cached transform by the module's content —
+so a page added without editing `source.ts` reused a stale page list (measured:
+15 of 94, with every source-based guard green). The key makes an add or a remove
+recompile it; `src/lib/source-completeness.test.ts` compares `source` with the
+files on disk in both directions.
+
 ## Authoring
 
 Component pages are edited in **Fumadocs Studio** (`nub run --filter docs
@@ -557,6 +565,25 @@ VITE_SITE_URL=https://preview.example.com nub run --filter docs build
 `/sitemap.xml` and `/robots.txt` are generated from the Fumadocs source by
 `src/routes/sitemap[.]xml.ts` and `src/routes/robots[.]txt.ts`; a new page needs
 no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
+
+## Machine discovery
+
+Two routes serve the documentation to a reader that is not a browser, both
+generated from the page tree so a new page needs no edit here:
+
+- `/llms.txt` (`src/routes/llms[.]txt.ts`) is the index: every page's title,
+  summary and absolute URL, grouped by the sidebar. The root `meta.json`
+  description is the document's summary.
+- `/llms-full.txt` (`src/routes/llms-full[.]txt.ts`) renders every page with
+  `page.data.getText("processed")` — the authored Markdown, with the title,
+  description and absolute source URL above it. Data-driven MDX blocks stay as
+  component tags because they are React, not prose.
+
+`src/lib/llms.test.ts` proves the index links every source page once, absolutely,
+and that the full document renders each page. `smoke:build` compares the served
+index with the sitemap in **both** directions: a page a crawler sees cannot be
+missing from the index, and an index link cannot point at a page the site does
+not serve.
 
 ## Adding a component page
 
