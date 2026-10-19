@@ -474,6 +474,16 @@ below an exact name, and a **single** word is never promoted: `input`, `label`,
 `search`, `copy` and `list` keep their own pages. `src/lib/generated-search.test.ts`
 guards the rule and the four generated indexes prove it end to end.
 
+Reader vocabulary is one guarded table (plan 566):
+`src/lib/component-aliases.ts` maps a record slug to the terms a reader types
+when the title cannot match — `textbox` → Text inputs, `one time password` →
+OTP Field, `modal` → Dialogs, `colour picker` → Color picker. The registry
+index, the ranker and the index filter all read it, and an alias is matched as a
+whole query, so `modal focus` still reaches the `modal-focus-trap` capability
+row. `component-aliases.test.ts` rejects a shared term or one that shadows
+another component's title, and `smoke:build` queries two recovered terms
+against the production index.
+
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
 navigates and focuses the destination page, an unknown query shows the empty

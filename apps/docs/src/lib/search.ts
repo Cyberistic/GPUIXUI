@@ -10,6 +10,7 @@ import { componentSymbols } from "@/component-meta/symbols";
 import { accessibilitySearchEntry } from "./accessibility-search";
 import { valueExports } from "./api-values.generated";
 import { capabilitySearchEntry } from "./capability-search";
+import { aliasesFor } from "./component-aliases";
 import {
   promotedNameRank,
   TOKEN_MATCH_RANK,
@@ -51,6 +52,7 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
     component.summary,
     ...component.parts.map((part) => part.name),
     ...component.api,
+    ...aliasesFor(component.slug),
   ].join("\n"),
   url: componentSearchUrl(component),
   breadcrumbs: ["Components"],
@@ -58,6 +60,7 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
     component.packageName,
     ...component.parts.map((part) => part.name),
     ...component.api,
+    ...aliasesFor(component.slug),
   ].join(" "),
 });
 
@@ -162,16 +165,38 @@ const nameRank = (
 };
 
 /**
- * The best rank a record earns for a query. Its title and every exported name
- * its props types imply are names a reader can type: `Spinner` is what the
- * consumer imports, even though the page is titled "Loading indicators"
- * (plan 500).
+ * The best rank a record earns for a query. Its title, every exported name its
+ * props types imply, and the reader's own vocabulary (plan 566) are names a
+ * reader can type: `Spinner` is what the consumer imports even though the page
+ * is titled "Loading indicators", and `textbox` is what a reader types for
+ * "Text inputs".
+ *
+ * An alias is matched as a whole query only. A phrase keeps `nameRank`'s token
+ * rule for titles, so `modal focus` still reaches the `modal-focus-trap`
+ * capability row instead of the Dialogs page merely because one of its aliases
+ * is `modal`.
  */
+const aliasRank = (
+  component: ComponentMetaInput,
+  query: string,
+): number | undefined => {
+  const ranks = aliasesFor(component.slug).flatMap((alias) => {
+    const rank = matchRank(alias, query);
+    return rank === undefined ? [] : [rank];
+  });
+  return ranks.length === 0 ? undefined : Math.min(...ranks);
+};
+
 const componentRank = (
   component: ComponentMetaInput,
   query: string,
-): number | undefined =>
-  nameRank([component.title, ...componentSymbols(component)], query);
+): number | undefined => {
+  const ranks = [
+    nameRank([component.title, ...componentSymbols(component)], query),
+    aliasRank(component, query),
+  ].filter((rank): rank is number => rank !== undefined);
+  return ranks.length === 0 ? undefined : Math.min(...ranks);
+};
 
 /**
  * The same rule for hand-authored pages: the page index can answer a title

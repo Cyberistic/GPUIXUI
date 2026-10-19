@@ -8,6 +8,7 @@ import {
 } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
 import { supportLegend, supportMeaning } from "@/component-meta/support";
+import { aliasesFor } from "@/lib/component-aliases";
 
 const card =
   "flex flex-col gap-1 rounded-lg border border-fd-border bg-fd-card p-3";
@@ -15,11 +16,12 @@ const card =
 /**
  * Whether a component matches a filter query. Case-insensitive and whitespace
  * trimmed; an empty query matches everything because every string contains "".
- * The record's documented props types, exported part names and limitations are
- * searched too: a reader who knows `ButtonProps`, `TabsList`, or the
- * `aria-checked` gap that decides their adoption finds the component without
- * leaving the index (plans 454 and 481). Exported for the test: server-rendered
- * markup can only prove the initial state.
+ * The record's documented props types, exported part names, limitations and
+ * reader vocabulary are searched too: a reader who knows `ButtonProps`,
+ * `TabsList`, the `aria-checked` gap that decides their adoption, or the word
+ * `textbox` finds the component without leaving the index (plans 454, 481 and
+ * 566). Exported for the test: server-rendered markup can only prove the
+ * initial state.
  */
 export const matchesComponent = (
   component: ComponentMetaInput,
@@ -32,6 +34,7 @@ export const matchesComponent = (
     ...component.api,
     ...component.parts.map((part) => part.name),
     ...component.limitations,
+    ...aliasesFor(component.slug),
   ].some((field) => field.toLowerCase().includes(needle));
 };
 

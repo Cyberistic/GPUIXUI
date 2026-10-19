@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–565)
+## Docs site workstream (plans 410–499, plus 500–566)
 
-`[x]` `[██████████]` 132/132
+`[x]` `[██████████]` 133/133
+
+`[x]` **Reader vocabulary reaches the component it names (plan 566)** —
+      `textbox`, `navbar`, `snackbar`, `kbd` and `searchbox` returned nothing,
+      and `check box`, `modal`, `one time password` and `colour picker` landed
+      on a different page; one guarded alias table now feeds the registry
+      index, the ranker and the component index's filter, an alias matches a
+      whole query only (so `modal focus` keeps the `modal-focus-trap`
+      capability row), and the production crawl queries two recovered terms.
 
 `[x]` **The accessibility page derives its claims from the runtime (plan 565)** —
       `/docs/accessibility` states the supported and absent `aria-*` sets, the

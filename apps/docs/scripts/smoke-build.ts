@@ -716,6 +716,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a missing ARIA attribute from the generated accessibility index",
     },
+    {
+      query: "textbox",
+      expected: "/docs/components/text-input",
+      first: true,
+      what: "reader vocabulary for a component's title",
+    },
+    {
+      query: "one time password",
+      expected: "/docs/components/otp-field",
+      first: true,
+      what: "reader vocabulary that expands an abbreviation",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -114,6 +114,17 @@ describe("component filter", () => {
     expect(matchesComponent(button, "DialogTitle")).toBe(false);
   });
 
+  it("matches the words readers use for a component (plan 566)", () => {
+    expect(matchesComponent(record("text-input"), "textbox")).toBe(true);
+    expect(matchesComponent(record("checkbox"), "check box")).toBe(true);
+    expect(matchesComponent(record("otp-field"), "one time password")).toBe(
+      true,
+    );
+    // An alias belongs to one record: `check box` must not find Boxes.
+    expect(matchesComponent(record("box"), "check box")).toBe(false);
+    expect(matchesComponent(record("combobox"), "check box")).toBe(false);
+  });
+
   it("matches a documented limitation and returns the records that name it", () => {
     expect(matchesComponent(record("checkbox"), "aria-checked")).toBe(true);
     const slugs = Arr.flatMap(filterGroups("aria-checked"), (group) =>

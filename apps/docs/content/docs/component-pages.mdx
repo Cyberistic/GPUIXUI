@@ -39,6 +39,21 @@ A compound component also declares `parts` (name and source path) and
 its `persistence` and a `playgroundScreen`. Those rules live in
 `src/component-meta/contract.ts` and are enforced before a page is written.
 
+### Search vocabulary
+
+Some components are never named the way a reader names them: `Text inputs` is
+not `textbox`, and `OTP Field` never contains "one time password". Those terms
+live in `apps/docs/src/lib/component-aliases.ts`, keyed by slug, and feed the
+registry search document, the ranker and the index filter. Add a term only when
+a reader would type it and the record's own fields cannot match it; an alias
+that names another component is rejected, because it would misroute the query.
+
+| Check | What it proves |
+| ----- | -------------- |
+| `src/lib/component-aliases.test.ts` | every key is a record, no term is shared or shadows a title or symbol, and the record's search document carries it |
+| `src/lib/search.test.ts` | every alias reaches its component first, and a plain word keeps its own page |
+| `apps/docs/scripts/smoke-build.ts` | two recovered terms reach their page in the production index |
+
 ## The sections
 
 The section list is a function of the record's `pattern`. It is generated from

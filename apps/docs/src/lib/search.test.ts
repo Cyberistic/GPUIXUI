@@ -144,6 +144,68 @@ describe("search", { timeout: 120_000 }, () => {
   });
 
   /**
+   * Plan 566: a reader names a component in their own words, not the record's
+   * title. These queries returned nothing (`textbox`, `navbar`, `snackbar`,
+   * `kbd`, `searchbox`) or a different component (`check box`, `modal`, `one
+   * time password`, `colour picker`) before the alias table existed.
+   */
+  it("finds a component by the words readers use for it", async () => {
+    const expected = [
+      ["textbox", "text-input"],
+      ["text box", "text-input"],
+      ["check box", "checkbox"],
+      ["tick box", "checkbox"],
+      ["radio button", "radio-group"],
+      ["combo box", "combobox"],
+      ["one time password", "otp-field"],
+      ["one-time code", "otp-field"],
+      ["modal", "dialog"],
+      ["navbar", "navigation-menu"],
+      ["searchbox", "search-input"],
+      ["search box", "search-input"],
+      ["number input", "number-field"],
+      ["tags input", "tag-input"],
+      ["chips", "tag-input"],
+      ["shortcut recorder", "hotkey-input"],
+      ["side sheet", "drawer"],
+      ["field group", "fieldset"],
+      ["snackbar", "toast"],
+      ["kbd", "keycap"],
+      ["colour picker", "color-picker"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, slug]) => {
+        const results = await search(query, 5);
+        return results[0]?.url === `/docs/components/${slug}`
+          ? null
+          : `${query} -> ${results[0]?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("keeps a plain word on the page that titles it", async () => {
+    const expected = [
+      ["box", "box"],
+      ["input", "text-input"],
+      ["search", "search-input"],
+      ["menu", "context-menu"],
+      ["field", "inline-validation"],
+      ["list", "list"],
+      ["select", "select"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, slug]) => {
+        const results = await search(query, 5);
+        return results[0]?.url === `/docs/components/${slug}`
+          ? null
+          : `${query} -> ${results[0]?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
    * Plan 561: a reader types a phrase, not a title. The whole-query ranker
    * missed every component named as one word of it, so body text decided.
    */
