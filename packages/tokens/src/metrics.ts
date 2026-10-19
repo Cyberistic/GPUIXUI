@@ -883,6 +883,22 @@ export function themeMetricFailures(
           smallestAvatar / 2,
         )
       : []),
+    // The notification list scrolls: a viewport shorter than one row clips
+    // every notification it holds.
+    ...atLeast(
+      "dimensions",
+      "notificationListMaxHeight",
+      dimensions.notificationListMaxHeight,
+      density.rowHeight,
+    ),
+    // The inbox clips its contents, so its maximum height must contain the
+    // list it wraps rather than cutting rows off.
+    ...atLeast(
+      "dimensions",
+      "notificationPanelMaxHeight",
+      dimensions.notificationPanelMaxHeight,
+      dimensions.notificationListMaxHeight,
+    ),
     ...finiteGroup("elevation", elevation),
     ...elevationLevels.flatMap((level) => {
       const shapes = elevation[level];

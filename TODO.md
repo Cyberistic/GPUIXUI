@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 246/320
+`[x]` `[████████░░]` 247/321
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2052,6 +2052,16 @@ default `iconSize.md`, so `iconSize.lg: 48` returned `[]` from all nine checks
 while a large glyph overflowed its control; every size is now held to its own
 content box, every shipped pair keeps at least 8px and no value moves
 (plan 596).
+`[x]` Ship the notification inbox's fixed surface metrics — the panel is 320×380,
+its scrolling list holds 280px and its unread marker is 6px, all literals in
+`notification-centre.tsx`, so a brand could not own the inbox and
+`themeMetricFailures` returned `[]` for a panel shorter than its list or a
+viewport below one row; the four values join `theme.dimensions` with the two
+containment floors, every shipped set passes and no pixel moves (plan 598)
+`[ ]` Cross-team: `components` reads `theme.dimensions.notificationPanelWidth`,
+`notificationPanelMaxHeight`, `notificationListMaxHeight` and
+`notificationUnreadDotSize` for `notification-centre.tsx`'s `panelStyle`, list
+`maxHeight` and unread dot (owner: `components`; plan 598)
 
 ## Phase C — Tier 1–2 components
 

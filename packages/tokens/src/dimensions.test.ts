@@ -107,6 +107,8 @@ describe("component dimensions", () => {
     expect(narrowDrawerTheme.dimensions.dialogWidthSm).toBe(360);
     expect(narrowDrawerTheme.dimensions.dialogWidthLg).toBe(640);
     expect(narrowDrawerTheme.dimensions.chatViewportMinHeight).toBe(200);
+    expect(narrowDrawerTheme.dimensions.notificationPanelWidth).toBe(360);
+    expect(narrowDrawerTheme.dimensions.notificationListMaxHeight).toBe(320);
     expect(dimensionsBaseTheme.dimensions).toEqual(dimensions);
     expect(themeFailures(narrowDrawerTheme)).toEqual([]);
   });

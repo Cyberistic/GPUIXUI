@@ -2521,6 +2521,11 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the notification inbox dimensions", () => {
+    const sentence = `A notification inbox is ${dimensions.notificationPanelWidth}px wide and ${dimensions.notificationPanelMaxHeight}px tall at most, its scrolling list holds ${dimensions.notificationListMaxHeight}px, and its unread marker is ${dimensions.notificationUnreadDotSize}px — the panel contains the list, and the list holds one row.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+  });
+
   it("states that the shape bounds read the theme's own extremes", () => {
     expect(markdownProse).toContain(
       "`radius.full` must round the largest corner step the theme carries",

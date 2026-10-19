@@ -245,7 +245,9 @@ whose caption leading outgrows it. A drawer opens 320/400/560px wide, or
 and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
 360/480/640px wide at `sm`/`md`/`lg`, a calendar day cell is 34px, a two-digit
 time segment is 26px, and an avatar's presence dot is 10px — at most half the
-smallest avatar the theme carries.
+smallest avatar the theme carries. A notification inbox is 320px wide and 380px
+tall at most, its scrolling list holds 280px, and its unread marker is 6px — the
+panel contains the list, and the list holds one row.
 
 ## 7. Radii, borders and elevation
 

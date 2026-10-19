@@ -161,6 +161,14 @@ export interface Dimensions {
   readonly timeSegmentWidth: number;
   /** 10px — an avatar's presence dot; at most half the smallest avatar. */
   readonly avatarPresenceDotSize: number;
+  /** 320px — the anchored notification inbox's width. */
+  readonly notificationPanelWidth: number;
+  /** 380px — the notification inbox's maximum height. */
+  readonly notificationPanelMaxHeight: number;
+  /** 280px — the height at which the notification list scrolls. */
+  readonly notificationListMaxHeight: number;
+  /** 6px — the unread marker on a notification row. */
+  readonly notificationUnreadDotSize: number;
 }
 
 /** Default component dimensions. */
@@ -190,6 +198,10 @@ export const dimensions: Dimensions = {
   calendarCellSize: 34,
   timeSegmentWidth: 26,
   avatarPresenceDotSize: 10,
+  notificationPanelWidth: 320,
+  notificationPanelMaxHeight: 380,
+  notificationListMaxHeight: 280,
+  notificationUnreadDotSize: 6,
 };
 
 /**

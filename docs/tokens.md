@@ -1076,6 +1076,10 @@ every density.
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least one `body` em |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
+| `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width |
+| `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum |
+| `dimensions.notificationListMaxHeight` | 280 | notification list scroll height; held to one `density.rowHeight` |
+| `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row |
 
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
@@ -1090,6 +1094,10 @@ its cell fits the theme's own small control; a time segment holds two body
 digits, so it is at least one `body` em wide; and an avatar's presence dot is at
 most half the smallest avatar the theme carries, because it sits on that
 avatar's corner.
+
+A notification inbox clips its contents, so its panel maximum contains its list
+maximum, and the list is held to one `density.rowHeight` like every other scroll
+viewport; the unread marker is a mark a brand can size.
 
 A metric override merges field by field, like the spacing and radius scales:
 

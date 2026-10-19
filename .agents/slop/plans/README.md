@@ -276,6 +276,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [592](./592-native-diff-chrome-type.md) | The native diff chrome must fit the type the runtime paints | F | 569, 572, 585, 588, 591 | done |
 | [595](./595-field-control-fill.md) | The interactive fill a control paints inside a field | F | 309, 353, 357, 394, 503, 527 | done |
 | [596](./596-control-glyph-fit.md) | The matching icon must fit its control | F | 358, 372, 384, 517, 521, 552 | done |
+| [598](./598-notification-panel-dimensions.md) | The notification inbox's fixed surface metrics | F | 353, 358, 365, 384, 530, 556, 568 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
