@@ -1999,11 +1999,12 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **92/92** (`exit 0`, 2378 checks, 60
-capabilities, 965.0 s, `.artifacts/live-report.json`, 2026-10-19), including
-every scenario this branch added through `live-theme` (plan `643`) and
-`live-roving-focus` (plan `637`), and the `live-toast` fixture fix (plan `623`
-§10). It supersedes plan `639`'s 91/91 run and is the gate for the promotion
+The last full merge/release gate ran **93/93** (`exit 0`, 2402 checks, 61
+capabilities, 1062.5 s, `.artifacts/live-report.json`, 2026-10-19), including
+every scenario this branch added through `live-theme` (plan `643`),
+`live-roving-focus` (plan `637`), the `live-toast` fixture fix (plan `623` §10)
+and `live-diff` (plan `648`, the diff interaction contract). It supersedes plan
+`643`'s 92/92 run and is the gate for the promotion
 merge; the owner/supervisor performs that merge. The full live suite is a
 merge/release gate rather than a per-task check.
 
@@ -2197,9 +2198,9 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **92/92** on
-  2026-10-19 (2378 checks, 60 capabilities, 965.0 s, exit `0`, the merge gate;
-  plan `643`, superseding plan `639`'s 91/91) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **93/93** on
+  2026-10-19 (2402 checks, 61 capabilities, 1062.5 s, exit `0`, the merge gate;
+  plan `643`'s 92/92 superseded here by plan `648`'s `live-diff`) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan

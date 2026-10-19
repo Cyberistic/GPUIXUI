@@ -119,7 +119,10 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       tests for the consumer transitions; **nine mutation proofs** observed and
       reverted (§7.1). Full headless **105/105** (**3765** checks, 65
       capabilities), exit `0`; `nub run check`/`lint`/`test` green (playground
-      432). Focused ids: `diff-surface`, `live-diff`.
+      432). Focused ids: `diff-surface`, `live-diff`. The full merge/release
+      gate on this head: live **93/93** (**2402** checks, 61 capabilities,
+      1062.5 s), headless **105/105** (**3765** checks, 65 capabilities), both
+      exit `0`.
 
 `[ ]` **Cross-team:** `apps/docs/src/lib/capabilities.ts` + its test must gain
       the `diff` capability and the ids `diff-surface` + `live-diff`, and the
@@ -1425,6 +1428,14 @@ focused id is `live-frames`.
       exit `0`. **Superseded by plan `643`:** the final gate on the head that
       adds `live-theme` is **92/92** (**2378** checks, 60 capabilities,
       965.0 s), so the promotion is ready for the owner/supervisor.
+      **Superseded by plan `648` (2026-10-19):** the current head adds
+      `diff-surface` (70 checks) and `live-diff` (24) and the `diff`
+      capability; the whole registry ran at **93/93** (**2402** checks, 61
+      capabilities, 1062.5 s) and headless at **105/105** (**3765** checks, 65
+      capabilities), both exit `0`; `nub run check`, `nub run lint` and
+      `nub run test` pass (playground **432**, testing 61, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). This is the gate
+      for the promotion merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

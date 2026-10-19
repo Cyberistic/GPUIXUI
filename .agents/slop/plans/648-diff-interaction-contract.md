@@ -413,7 +413,9 @@ Focused runs: `nub apps/playground/dist/smoke/run.js --only diff-surface` (70
 checks) and `nub apps/playground/dist/live/run.js --only live-diff` (24 checks,
 two consecutive runs), both exit `0`; `nub run check`, `nub run lint` and
 `nub run test` green (playground **432** tests). The end-of-task headless suite
-is **105/105** (**3765** checks, 65 capabilities), exit `0`.
+is **105/105** (**3765** checks, 65 capabilities), exit `0`. The full live
+merge/release gate ran the whole registry at **93/93** (**2402** checks, 61
+capabilities, 1062.5 s), exit `0`, with `diff=verified`.
 
 ## 8. Acceptance
 
