@@ -111,6 +111,8 @@ import { tier2ChoiceScenario } from "./tier2-choice.js";
 import { tier2EditingScenario } from "./tier2-editing.js";
 import { tier2FlowScenario } from "./tier2-flow.js";
 import { tier2FormsScenario } from "./tier2-forms.js";
+import { tier2ScrollerScenario } from "./tier2-scroller.js";
+import { tier2CommandScenario } from "./tier2-command.js";
 import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
@@ -283,6 +285,8 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tier2ToastScenario,
   tier2ChoiceScenario,
   tier2FormsScenario,
+  tier2ScrollerScenario,
+  tier2CommandScenario,
   tier2EditingScenario,
   tier2FlowScenario,
   declaredStylesScenario,

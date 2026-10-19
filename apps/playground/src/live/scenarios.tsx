@@ -70,6 +70,8 @@ import { tier2ChoiceScenario } from "../scenarios/tier2-choice.js";
 import { EMAIL_MESSAGE, tier2FormsScenario } from "../scenarios/tier2-forms.js";
 import { tier2EditingScenario } from "../scenarios/tier2-editing.js";
 import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
+import { tier2ScrollerScenario } from "../scenarios/tier2-scroller.js";
+import { tier2CommandScenario } from "../scenarios/tier2-command.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { gridScenario } from "../scenarios/grid.js";
@@ -9382,6 +9384,242 @@ const liveDragAutoscroll: LiveScenario = {
     }),
 };
 
+/** Whether the last row's bottom sits inside the viewport (the component's rule). */
+const endVisible = (row: Smoke.Bounds, viewport: Smoke.Bounds): boolean =>
+  row.y + row.height <= viewport.y + viewport.height + 1;
+
+const liveTier2Scroller: LiveScenario = {
+  id: "live-tier2-scroller",
+  title: "Live Tier 2: the shipped MessageScroller",
+  capability: "tier2",
+  view: tier2ScrollerScenario.view,
+  ready: "tier2-scroller-viewport",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const offset = (id: string) =>
+        Effect.gen(function* () {
+          const value = yield* ctx.host.scrollOffset(id);
+          return yield* ctx.expectSome(
+            `${id} reports a scroll offset`,
+            Option.fromNullishOr(value),
+          );
+        });
+
+      yield* waitForText(ctx, "tier2-scroller-readout", "count=40");
+
+      // 1. The live window mounts the transcript at its end.
+      const start = yield* offset("tier2-scroller-viewport");
+      yield* ctx.expectEqual(
+        "the live scroller starts scrolled",
+        start.y < 0,
+        true,
+      );
+      // A live scroller's own reported box moves with its scroll (plan `556`),
+      // so the frame is the non-scrolling root plus the declared height.
+      const frame = {
+        ...(yield* boxOf(ctx, "tier2-scroller")),
+        height: 240,
+      };
+      const tail = yield* boxOf(ctx, "tier2-scroller-row-40");
+      yield* ctx.expectEqual(
+        "the live tail starts visible",
+        endVisible(tail, frame),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a pinned live reader sees no affordance",
+        (yield* ctx.host.bounds("tier2-scroller-jump")) === null,
+        true,
+      );
+
+      // 2. A real click appends while pinned and the view follows.
+      yield* ctx.host.click("scroller-append");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-scroller-readout", "count=41");
+      const appended = yield* boxOf(ctx, "tier2-scroller-row-41");
+      yield* ctx.expectEqual(
+        "the live pinned append keeps the tail visible",
+        endVisible(appended, frame),
+        true,
+      );
+
+      // 3. A real wheel unpins; the affordance paints.
+      yield* ctx.host.wheel("tier2-scroller", 0, 120);
+      yield* settle;
+      yield* waitForBounds(ctx, "tier2-scroller-jump", () => true);
+      const unpinned = yield* offset("tier2-scroller-viewport");
+      yield* ctx.expectEqual(
+        "the live wheel moved toward older rows",
+        unpinned.y > start.y,
+        true,
+      );
+      yield* ctx.expectContains(
+        "the live consumer sees the pin change",
+        yield* textOf(ctx, "tier2-scroller-readout"),
+        "pinned=false",
+      );
+
+      // 4. An arrival while unpinned does not move the reader.
+      yield* ctx.host.click("scroller-append");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-scroller-readout", "count=42");
+      const afterAppend = yield* offset("tier2-scroller-viewport");
+      yield* ctx.expectNear(
+        "the live unpinned append does not yank the reader",
+        afterAppend.y,
+        unpinned.y,
+        1,
+      );
+      yield* waitForText(ctx, "tier2-scroller-jump", "1 new message");
+
+      // 5. A grown last row below the viewport leaves the offset alone.
+      const beforeStream = yield* boxOf(ctx, "tier2-scroller-row-42");
+      yield* ctx.host.click("scroller-stream");
+      yield* settle;
+      const afterStream = yield* offset("tier2-scroller-viewport");
+      const grown = yield* boxOf(ctx, "tier2-scroller-row-42");
+      yield* ctx.expectEqual(
+        "the live streamed row grew",
+        grown.height > beforeStream.height,
+        true,
+      );
+      yield* ctx.expectNear(
+        "the live unpinned stream leaves the reader in place",
+        afterStream.y,
+        unpinned.y,
+        1,
+      );
+
+      // 6. Jump returns to the end and re-pins.
+      yield* ctx.host.click("tier2-scroller-jump");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-scroller-readout", "pinned=true");
+      yield* ctx.expectEqual(
+        "the live jump hides the affordance",
+        (yield* ctx.host.bounds("tier2-scroller-jump")) === null,
+        true,
+      );
+      const resumedTail = yield* boxOf(ctx, "tier2-scroller-row-42");
+      yield* ctx.expectEqual(
+        "the live jump returns to the tail",
+        endVisible(resumedTail, frame),
+        true,
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveTier2Scroller.id}.png`,
+      );
+    }),
+};
+
+const liveTier2Command: LiveScenario = {
+  id: "live-tier2-command",
+  title: "Live Tier 2: the shipped CommandMenu",
+  capability: "tier2",
+  view: tier2CommandScenario.view,
+  ready: "command-open",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* waitForText(ctx, "tier2-command-readout", "open=false");
+
+      // 1. A real click opens the dialog and its input takes native focus.
+      yield* ctx.host.click("command-open");
+      yield* ctx.host.waitFor("command-input");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-command-readout", "open=true");
+      yield* ctx.expectEqual(
+        "the live search input takes focus",
+        yield* focusedOf(ctx),
+        "command-input",
+      );
+      const labels = (yield* ctx.host.paintedText()).join("\n");
+      yield* ctx.expectContains(
+        "the live list paints its groups",
+        labels,
+        "Navigation",
+      );
+      yield* ctx.expectContains(
+        "the live list paints a later group",
+        labels,
+        "View",
+      );
+
+      // 2. Typing filters while focus stays in the input.
+      yield* ctx.host.key("s a v e");
+      yield* settle;
+      yield* ctx.expectSome(
+        "the live match survives the query",
+        Option.fromNullishOr(yield* ctx.host.bounds("command-save")),
+      );
+      yield* ctx.expectEqual(
+        "a live non-match leaves the list",
+        (yield* ctx.host.bounds("command-toggle-sidebar")) === null,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "typing keeps focus in the input live",
+        yield* focusedOf(ctx),
+        "command-input",
+      );
+
+      // 3. Enter runs the match, closes and returns focus.
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-command-readout", "ran=Save");
+      yield* waitForText(ctx, "tier2-command-readout", "open=false");
+      yield* ctx.expectEqual(
+        "the live dialog left the tree",
+        (yield* ctx.host.bounds("command-menu")) === null,
+        true,
+      );
+      // Measured defect (plan `581`): closing leaves no focus owner instead of
+      // returning it to the opener — `CommandMenuInput`'s `autoFocus` is
+      // captured before the dialog records the previous owner.
+      yield* ctx.expectEqual(
+        "the live close leaves no focus owner (measured defect)",
+        yield* focusedOf(ctx),
+        "none",
+      );
+
+      // 4. Escape closes without running anything.
+      yield* ctx.host.click("command-open");
+      yield* ctx.host.waitFor("command-input");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      yield* waitForText(ctx, "tier2-command-readout", "open=false");
+      yield* ctx.expectContains(
+        "Escape ran nothing live",
+        yield* textOf(ctx, "tier2-command-readout"),
+        "ran=Save",
+      );
+
+      // 5. Reopening clears the query; a miss paints the empty state.
+      yield* ctx.host.click("command-open");
+      yield* ctx.host.waitFor("command-input");
+      yield* settle;
+      yield* ctx.host.key("z z z");
+      yield* settle;
+      yield* waitForPainted(ctx, "No commands");
+      yield* ctx.expectContains(
+        "the live empty state is painted",
+        yield* textOf(ctx, "command-empty"),
+        "No commands",
+      );
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Enter on the live empty list runs nothing",
+        yield* textOf(ctx, "tier2-command-readout"),
+        "ran=Save",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveTier2Command.id}.png`,
+      );
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -9432,6 +9670,8 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   tier2Forms,
   tier2Editing,
   tier2Flow,
+  liveTier2Scroller,
+  liveTier2Command,
   commandPalette,
   replace,
   inspector,
