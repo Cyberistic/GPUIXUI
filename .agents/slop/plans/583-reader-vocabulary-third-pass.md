@@ -6,7 +6,7 @@
 566 (the first alias table), 568/569 (page description and generated-name
 ranks), 574 (page subjects), 579 (the second alias pass), 582 (the last
 search-facing change)
-**Status:** planned
+**Status:** implemented
 
 ## 1. The measured defect
 
@@ -315,30 +315,34 @@ never a pass. A command that did not run is not a pass.
 
 ## 6. Results (measured 2026-10-19)
 
-_To be filled by the executor after the gates run._
-
 | Command | Result |
 | ------- | ------ |
-| focused search/alias suites | |
-| `nub run --filter docs test` | |
-| `nub run --filter docs check-types` | |
-| `nub run --filter docs smoke:build` | |
-| `nub run check` | |
-| `nub run lint` | |
-| `nub run test` | |
+| `cd apps/docs && nub exec vitest run src/lib/search.test.ts src/lib/component-aliases.test.ts` | 2 files / **70 tests passed** |
+| `nub run --filter docs test` | **97 files / 697 tests passed** |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs smoke:build` | **98 pages, 121 links, 1 277 anchors**, exit `0`; `cmdk` and `macos` green |
+| `nub run check` | exit `0` (test quality, lint, format, every workspace's types) |
+| `nub run lint` | exit `0` |
+| `nub run test` | exit `0`; docs **697**, primitives **282**, components and the remaining suites green |
+
+The 16 measured queries now return the owning page first (URL split at `#`):
+`cmdk` → Command menus, `autosuggest` / `auto suggest` → Comboboxes, `gauge` /
+`gauges` → Meter, `pill` → Badges, `callout` / `callouts` → Alerts, `busy` →
+Loading indicators, `sheet` → Drawers, `macos` / `linux` / `windows` → Theming,
+`resizable` / `inspector` → Workspace, `rtl` → Layouts.
 
 Two-direction proofs, each run alone with the focused suite and then restored:
 
 | Forced defect | Measured failure |
 | ------------- | ---------------- |
-| `cmdk` alias removed | |
-| `pill` alias removed | |
-| `busy` alias removed | |
-| `macOS` removed from Theming summary | |
-| `inspector` removed from Workspace summary | |
-| RTL sentence removed from Layouts | |
-| `panel` added as a Drawer alias | |
-| all restored | |
+| `cmdk` alias removed | `cmdk -> nothing` |
+| `pill` alias removed | `pill -> /docs/components/range-slider` |
+| `busy` alias removed | `busy -> /docs/components/confirm-dialog` |
+| `macOS` removed from Theming summary | `macos -> /docs/components/hotkey-input` |
+| `inspector` removed from Workspace summary | `inspector -> /docs/components/stack` |
+| RTL sentence removed from Layouts | `rtl -> nothing` |
+| `panel` added as a Drawer alias | plan 574's case failed `panel -> /docs/components/drawer` |
+| all restored | 70 focused tests green again |
 
 ## 7. Acceptance
 

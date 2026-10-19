@@ -471,13 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–583)
 
-`[~]` `[██████████]` 148/152
+`[~]` `[██████████]` 149/152
 
-`[~]` **Reader vocabulary and page subjects, third pass (plan 583)** —
-      `cmdk`, `autosuggest`, `gauge`, `pill`, `callout`, `busy` and `sheet`
-      reach their components; Theming names the macOS/Linux/Windows platform
-      styles and Workspace names resizable splits and inspector panels; Layouts
-      records the RTL limitation so `rtl` has an answer.
+`[x]` **Reader vocabulary and page subjects, third pass (plan 583)** — `cmdk`,
+      `autosuggest`, `gauge`, `pill`, `callout`, `busy` and `sheet` reach their
+      components; Theming names the macOS/Linux/Windows platform styles and
+      Workspace names resizable splits and inspector panels; Layouts records the
+      RTL limitation so `rtl` has an answer. 16 measured queries, seven forced
+      defects and the two new production search checks recorded in plan 583 §6;
+      97 files / 697 docs tests, `check`, `lint`, `test` and `smoke:build` green.
 
 `[x]` **A live scene's instruction is searchable (plan 582)** — the gesture
       sentences are rendered React from `preview/scenes.ts`, so `wheel up`
