@@ -324,9 +324,10 @@ export const tier2NavigationScenario: PlaygroundScenario = {
       );
 
       // The first tab stop is the selected tab. Arrow navigation needs the
-      // component's roving index, which Tabs seeds in `onFocus` — an event
-      // published 0.10.0 never dispatches (TODO 549), so the click path selects
-      // the next tab here and the arrow defect is pinned separately below.
+      // component's roving index, which Tabs seeds in `onFocus` — an event the
+      // release-tag 0.10.0 never dispatches (plan `529` §6.5), so the click path
+      // selects the next tab here and the arrow defect is pinned separately
+      // below. The fix is the Tabs re-verify row in `TODO.md` (plans 344/345/390).
       ctx.host.focusNext();
       yield* ctx.expectEqual(
         "the selected tab is the first stop",
@@ -335,7 +336,7 @@ export const tier2NavigationScenario: PlaygroundScenario = {
       );
       ctx.host.key("right");
       yield* ctx.expectContains(
-        "Right leaves the selection on the first tab (TODO 549)",
+        "Right leaves the selection on the first tab (plan 529; TODO.md Tabs row)",
         read(ctx, "tier2-navigation-readout"),
         "tab=overview",
       );
@@ -384,8 +385,9 @@ export const tier2NavigationScenario: PlaygroundScenario = {
       );
 
       // The arrow's disabled-skip cannot run on published 0.10.0: the roving
-      // index stays where `onFocus` last seeded it (TODO 549). A click on the
-      // next enabled tab is the working path; the disabled tab must stay inert.
+      // index stays where `onFocus` last seeded it (plan `529` §6.5). A click on
+      // the next enabled tab is the working path; the disabled tab must stay
+      // inert.
       ctx.host.click("tab-settings");
       yield* ctx.expectContains(
         "a click selects the next enabled tab",

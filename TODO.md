@@ -74,11 +74,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       corrected to those numbers, the `scroller` evidence row gained its live
       and shipped-tier-2 ids, and `focus-traversal`'s header now states the
       measured event contract (`onFocus` is not dispatched; `onBlur` is) with
-      the scenario re-run green after the comment-only edit. No scenario
-      behaviour changed, so there is no mutation proof; the full suites are the
-      two-direction evidence. Exact ids: the whole headless registry and the
-      whole live registry (last focused live ids before this run:
-      `live-tier2-scroller,live-tier2-command`).
+      the scenario re-run green after the comment-only edit, and
+      `tier2-navigation`'s two stale `TODO 549` references now point at plan
+      `529` and the Tabs re-verify row. No scenario behaviour changed, so there
+      is no mutation proof; the full suites are the two-direction evidence.
+      Exact ids: the whole headless registry and the whole live registry (last
+      focused live ids before this run: `live-tier2-scroller,live-tier2-command`).
 
 `[x]` Close the **last two shipped Tier 2 consumer paths** per plan `581`:
       `tier2-scroller` (43 checks) and `tier2-command` (35) mount the shipped
