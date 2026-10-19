@@ -457,7 +457,8 @@ Windows recipes ship the two apart
 inherited `selectedForeground`, because the title is the brighter of the two
 roles (plan 506). A menu row's `popoverForeground` is measured on the three
 washes it highlights with and the selected row's inherited `selectedForeground`
-on all four fills it keeps (plan 525). High-contrast dark shipped at 6.48:1 on `hover`
+on all five fills it keeps (plan 525; the pressed `selectedActive` joined them
+in plan 651). High-contrast dark shipped at 6.48:1 on `hover`
 and 5.49:1 on `active`, Linux dark at 6.92:1 and Windows dark at 6.84:1 on
 `active`, until plan 081 darkened the three wash bases. An Alert or Badge
 is measured the same way: the tone's `xSoftForeground` is held to the body floor
@@ -633,10 +634,11 @@ control; the two uses of the ring role are separate pairs.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
 `disabled` fill, the field's `input` fill, the four plain surfaces, the four row
-washes and the four soft
-status fills a tone-tinted Alert's action sits on (`inactiveSoftPairs`), because a
-disabled `Select` item paints the label straight onto the menu's `popover` and
-measured 1.99:1 on Linux dark until plan 306. A disabled field keeps its own
+washes, the pressed `selectedActive` a chosen row keeps (`selectionPressPairs`)
+and the four soft status fills a tone-tinted Alert's action sits on
+(`inactiveSoftPairs`), because a disabled `Select` item paints the label
+straight onto the menu's `popover` and measured 1.99:1 on Linux dark until plan
+306. A disabled field keeps its own
 `input` fill — it is the surface it edits — so that fill is the pair plan 650
 added. The `disabled` fill is allowed to
 sit near the panel — no neutral clears both a white card and the quiet panel — so

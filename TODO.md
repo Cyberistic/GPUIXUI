@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 295/369
+`[x]` `[████████░░]` 296/370
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -1205,6 +1205,20 @@ theme's failures by ladder, and `direction-reference.test.ts` derives the step
 lists from `contrast.ts` and holds the source paragraphs, both pages and the
 README to them; no colour, pair, floor, metric or shipped theme moves
 (plan 673)
+`[x]` Hold the pressed selected row in the rest of the documentation —
+`selectionPressPairs` has measured `disabledForeground` on `selectedActive` at
+the inactive floor and `border` on it at the divider floor since plan 651, and
+the selected row's label tier gained its fifth shared fill, but the §8
+`disabled` row, the §9 inactive-label and divider rows, the catalogue's
+Verification and tier paragraphs and the README still stopped at the persistent
+washes (the tier paragraph even counted four fills while the design system said
+five). The `disabled` state row's derived guard read only
+`inactivePairs`/`selectionInactivePairs`, and both §9 rows were hand-typed
+strings. The prose names the pressed row now, `docs.test.ts` derives every
+`disabledForeground` surface, `disabled-press-surfaces.test.ts` derives both
+floor rows and every tier count, and `disabledRowStyle` paints the composition
+in the executed example; no colour, pair, floor, metric or shipped theme moves
+(plan 674)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

@@ -14,7 +14,10 @@
 import { describe, expect, it } from "vitest";
 import { alpha, type ThemeColors } from "./color.js";
 import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
-import { disabledButtonStyle } from "./disabled-state.example.js";
+import {
+  disabledButtonStyle,
+  disabledRowStyle,
+} from "./disabled-state.example.js";
 import { disabledDimOpacity } from "./figures.js";
 import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import { disabledControl } from "./styles.js";
@@ -94,6 +97,17 @@ describe("the disabled state a control paints", () => {
         borderRadius: theme.radius.md,
       });
       expect(style.height).toBeGreaterThan(0);
+    });
+  });
+
+  it("paints a chosen row's disabled label on both fills", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const rest = disabledRowStyle(theme);
+      const pressed = disabledRowStyle(theme, true);
+      expect(rest.backgroundColor).toBe(theme.colors.selected);
+      expect(pressed.backgroundColor).toBe(theme.colors.selectedActive);
+      expect(rest.color).toBe(theme.colors.disabledForeground);
+      expect(pressed.color).toBe(theme.colors.disabledForeground);
     });
   });
 

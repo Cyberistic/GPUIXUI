@@ -2816,9 +2816,9 @@ paints), fourteen for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), fourteen for a hint
 and a caption, five for the disabled panel-action label below the enabled one
-(`softAction` and the four soft fills), and four for the selected row's label
-below its title (the `hover`/`active`/`accent`/`selected` fills both roles are
-documented on). Every shipped set clears the step; the
+(`softAction` and the four soft fills), and five for the selected row's label
+below its title (the `hover`/`active`/`accent`/`selected`/`selectedActive` fills
+both roles are documented on). Every shipped set clears the step; the
 tightest are **1.274:1**
 (`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
@@ -3171,9 +3171,10 @@ invalid control paints, in the default themes; 4.5:1 for them in the
 high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
 measures `disabledForeground` on its own fill, the field's `input` fill (plan
-`650`), the plain surfaces, the four row
-washes and the four soft status fills a tone-tinted Alert's action sits on
-(plan `307`), because a disabled `Select` item paints it on the menu's `popover`
+`650`), the plain surfaces, the four row washes, the pressed `selectedActive` a
+chosen row keeps while a disabled control is pressed (`selectionPressPairs`) and
+the four soft status fills a tone-tinted Alert's action sits on (plan `307`),
+because a disabled `Select` item paints it on the menu's `popover`
 with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
 stays near the panel by design, so a disabled control's shape is carried by its
 `border` edge — held to the divider floor on `disabled`, and on the `muted` panel

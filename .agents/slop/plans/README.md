@@ -328,6 +328,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [671](./671-invalid-ring-pressed-row.md) | The invalid focus ring on a pressed selected row | F | 325, 340, 352, 354, 383, 651 | done |
 | [672](./672-link-pressed-row-surfaces.md) | The pressed row among the link's surface lists | F | 314, 346, 528, 651, 671 | done |
 | [673](./673-state-ladder-index.md) | The interaction ladders' ordered index | F | 502, 622, 651, 668, 672 | done |
+| [674](./674-disabled-press-surfaces.md) | The disabled label and the divider on the pressed selected row | F | 306, 335, 510, 650, 651, 671 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3561,6 +3562,22 @@ design-system interaction-state guard stayed green because its own link row
 already named the pressed fill. All five passages name it now, and a derived
 `docs.test.ts` case reads the nine at-rest surfaces from `contrastPairs` and
 holds every passage to them. No token value, pair, floor or metric moves.
+
+Plan `674` finishes plan `651`'s surface list for the two roles that still
+stopped at the persistent washes. `selectionPressPairs` measures
+`disabledForeground` on the pressed `selectedActive` at the inactive floor, and
+`border` on it at the divider floor, but the §8 `disabled` row, the §9
+inactive-label and decorative-divider rows, the catalogue's Verification
+paragraph and the README named only `hover`/`active`/`accent`/`selected`. The
+`disabled` state row's derived guard read `inactivePairs` and
+`selectionInactivePairs`, never `selectionPressPairs`, and both §9 rows were
+compared with a hand-written string, so nothing could catch it. The prose names
+the pressed row now, `docs.test.ts` derives every `disabledForeground` surface,
+and `disabled-press-surfaces.test.ts` derives the two floor rows from the pair
+lists; the divider case also found the persistent `selected` fill plan 335 has
+measured since, missing from the same row. `disabledRowStyle` paints the
+composition in the executable example. No colour, pair, floor, metric or shipped
+theme moves.
 
 ## How to use a plan
 

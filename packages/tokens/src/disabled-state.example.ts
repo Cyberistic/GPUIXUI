@@ -33,3 +33,18 @@ export const disabledButtonStyle = (
   paddingRight: controlPaddingX(theme, size),
   borderRadius: theme.radius.md,
 });
+
+/**
+ * The same designed pair on a row label: a selectable row that is chosen keeps
+ * its `selected` fill and paints `disabledForeground`; while pressed it keeps
+ * the `selectedActive` step (plan 651) and the same label. The contract
+ * measures the label on both fills at the inactive floor, so a disabled row
+ * item cannot vanish into the row the pointer is over.
+ */
+export const disabledRowStyle = (theme: Theme, pressed = false) => ({
+  backgroundColor: pressed
+    ? theme.colors.selectedActive
+    : theme.colors.selected,
+  color: theme.colors.disabledForeground,
+  userSelect: "none" as const,
+});
