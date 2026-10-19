@@ -4813,10 +4813,13 @@ const tier2Editing: LiveScenario = {
       // focus to the swapped `<input>`, which `waitForFocus` asserts. A
       // coordinate click into the editor is deliberately not used: the plan-599
       // gate found it could land outside a narrow display, leaving the edit
-      // unopened and the later blur check vacuous. React's `onFocus`/`onBlur`
-      // delivery is window-state dependent (plan `390`); in the current window
-      // a click away commits (plan `555`), while the headless host delivers no
-      // `onBlur` (plan `347`). Each claim is asserted in its own suite.
+      // unopened and the later blur check vacuous. React's `onBlur` for the
+      // replaced editor is host-state dependent (D70; plans `390`, `603`, `605`):
+      // focused runs deliver it and the click away commits, while the full gate
+      // moves native focus without it and leaves the editor open. The blur block
+      // asserts whichever state the window delivers, and in the missed state
+      // refocuses the open editor and commits the retained draft with Enter. The
+      // headless host delivers no `onBlur` at all (plan `347`).
       yield* ctx.host.click("ws-name");
       yield* settle;
       yield* ctx.expectSome(
@@ -4896,22 +4899,51 @@ const tier2Editing: LiveScenario = {
         yield* focusedOf(ctx),
         "ws-elsewhere",
       );
-      yield* waitForText(ctx, "tier2-editing-readout", "name=livez commits=2");
-      yield* ctx.expectContains(
-        "a click away commits the open live draft",
-        yield* textOf(ctx, "tier2-editing-readout"),
-        "name=livez commits=2",
-      );
+      // A missed blur is not a skip: the open editor still holds the draft.
+      const afterBlur = yield* textOf(ctx, "ws-name");
+      if (afterBlur === "livez") {
+        yield* ctx.expectContains(
+          "a click away commits the open live draft",
+          yield* textOf(ctx, "tier2-editing-readout"),
+          "name=livez commits=2",
+        );
+        yield* ctx.expectEqual(
+          "the click's focus is not stolen by the commit",
+          yield* focusedOf(ctx),
+          "ws-elsewhere",
+        );
+      } else {
+        yield* ctx.expectEqual(
+          "a missed blur leaves the editor open",
+          afterBlur,
+          "",
+        );
+        yield* ctx.host.click("ws-name");
+        yield* settle;
+        yield* waitForFocus(ctx, "ws-name");
+        yield* ctx.host.key("enter");
+        yield* settle;
+        yield* waitForText(
+          ctx,
+          "tier2-editing-readout",
+          "name=livez commits=2",
+        );
+        yield* ctx.expectContains(
+          "the retained draft commits once the editor is focused again",
+          yield* textOf(ctx, "tier2-editing-readout"),
+          "name=livez commits=2",
+        );
+        yield* waitForFocus(ctx, "ws-name");
+        yield* ctx.expectEqual(
+          "the Enter commit returns focus to the display",
+          yield* focusedOf(ctx),
+          "ws-name",
+        );
+      }
       yield* ctx.expectContains(
         "the committed display paints the draft",
         yield* textOf(ctx, "ws-name"),
         "livez",
-      );
-      yield* waitForFocus(ctx, "ws-elsewhere");
-      yield* ctx.expectEqual(
-        "the click's focus is not stolen by the commit",
-        yield* focusedOf(ctx),
-        "ws-elsewhere",
       );
 
       // 2. TagInput: a typed comma adds a live token.
@@ -8898,15 +8930,18 @@ const queryBuilder: LiveScenario = {
       yield* settle;
       yield* ctx.host.click("qb-rule-0-field");
       yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-field-content", "Owner");
       yield* ctx.host.click("qb-rule-0-field-item-owner");
       yield* settle;
       yield* ctx.host.click("qb-rule-0-value");
       yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-value-content", "Ada");
       yield* ctx.host.click("qb-rule-0-value-item-Ada");
       yield* settle;
       yield* waitForText(ctx, "qb-state", "matched=30");
       yield* ctx.host.click("qb-rule-0-op");
       yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-op-content", "is not");
       yield* ctx.host.click("qb-rule-0-op-item-isNot");
       yield* settle;
       yield* waitForText(ctx, "qb-state", "matched=90");
@@ -8957,6 +8992,7 @@ const queryBuilder: LiveScenario = {
       yield* waitForText(ctx, "qb-state", "selected=31");
       yield* ctx.host.click("qb-rule-0-value");
       yield* settle;
+      yield* waitForText(ctx, "qb-rule-0-value-content", "paused");
       yield* ctx.host.click("qb-rule-0-value-item-paused");
       yield* settle;
       yield* waitForAnchor(ctx, "qb-list", "0,0");

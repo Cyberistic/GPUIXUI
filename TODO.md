@@ -92,6 +92,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       removed click away) fail at the new focus assertions, and M2 (`end`
       removed) is a null result because a fresh input already sits at the end.
 
+`[~]` Assert **both live blur states** per plan `605`: the next gate moved
+      native focus away but did not deliver React's `onBlur`, so the editor kept
+      its draft and `commits` stayed `1`. `live-tier2-editing` now branches on the
+      display: `livez` asserts the commit, `""` asserts the open editor, refocuses
+      it and commits the retained draft with Enter. Focused runs take the commit
+      branch (**32 checks**, three green); the gate exercises the open branch.
+
 `[x]` Prove the **element scroll route in a real window** per plan `601`:
       `scroll-into-view` was the last scroll primitive with only `TestRenderer`
       evidence, and `AsyncSmokeHost` had no `scrollIntoView` at all. The live
@@ -110,15 +117,18 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       reverted. Headless control `scroll-into-view` green at 34 checks.
       Focused ids run: `live-scroll-into-view`, `scroll-into-view`.
 
-`[~]` Correct the **`autoFocus` `onFocus` claim** per plan `603`: the plan-`600`
+`[x]` Correct the **`autoFocus` `onFocus` claim** per plan `603`: the plan-`600`
       gate's only failure was `autoFocus does not run React's onFocus`
       (`innerFocus=1`); the same code read `innerFocus=0` in earlier runs, so the
       `autoFocus` half is as state-dependent as the click half plan `390`
       corrected. The assertion is gone (`live-key-routing` 21 → 20 checks) and both
       counters stay in the readout; native focus, key delivery and the `cmd-k`
-      chord are still asserted.
+      chord are still asserted. **M1** (asserting `innerFocus=1`) failed focused
+      with `innerFocus=0`, proving both states; **M2** (a wrong ancestor count)
+      still fails. Three focused runs green; the next gate read `focus=verified`
+      (the only failure was the unrelated blur check).
 
-[x] Prove the **panel and floating-layer primitives in a real window** per
+`[x]` Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
       `180 → 228` and the nested split `300 → 360` without moving the other, the
       sidebar collapsing to painted width **`0`** (not `null`) and restoring
@@ -1703,6 +1713,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 ## Swarm-owned blockers (fix these)
 
 - **B1** ~~GPUix native bindings fail to install~~ **resolved** — the `darwin-x64` 0.10.0 binding builds from source (`gpui_macos/runtime_shaders`) and both native suites are green on this host (headless 101/101, live 61/61; plan `140`, ADR 0003).
+`[ ]` **Cross-team:** `@gpuixui/components` **InlineEdit** commits only on
+      React `onBlur` or Enter. A real window can move native focus away without
+      delivering `onBlur` (plans `555`, `605`: the full-suite state read `commits=1`
+      with the editor still open), so a consumer cannot rely on the blur commit.
+      Add a component-owned outside-press or focus-loss path (the measured
+      event-claim + bounds route), or document that a blur commit needs an explicit
+      Enter or click. `live-tier2-editing` asserts both measured states. Owner:
+      `components`; evidence: plan `605` §8.
+
 - **B2** No durable scheduler — the swarm runs on a detached daemon; launchd and cron do not fire here.
 
 Both are specified in ; each fix starts with a plan under .
