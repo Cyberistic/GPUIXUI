@@ -48,6 +48,7 @@ nub run --filter docs check-types   # fumadocs-mdx generate + tsc --noEmit
 nub run --filter docs test          # registry, IA, search, theme and preview tests
 nub run --filter docs smoke:build   # build, serve and crawl the production output
 nub run --filter docs smoke:browser # hydrate the production output in headless Chrome
+nub run --filter docs smoke:console # every page loads with a clean browser console
 nub run --filter docs smoke:preview # drive the live GPUix surface in headless Chrome
 nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real browser
 nub run --filter docs smoke:platform # the toggle: click, URL, storage, arrows
@@ -129,6 +130,26 @@ nub apps/docs/scripts/smoke-build.ts --base-url http://127.0.0.1:4173
 It is deliberately **not** part of `nub run test`: the build takes ~13 s and
 starts a worker, which would slow every checkout. Run it before a release and
 after a layout or content change.
+
+## Console smoke check
+
+`smoke:console` loads **every sitemap page** in the production build and fails on
+a client error: a `console.error`, an uncaught exception, or an error-level log
+entry such as a failed `/assets/*.js`. That is the class the server-HTML crawl
+and `smoke:browser` cannot see: a redeploy with stale asset hashes serves a 200
+document and 404s every chunk, and a thrown client effect fails after
+hydration. The report model (`scripts/page-errors.ts`) is unit-tested; the
+sweep runs once in light because a console error is not painted by a theme.
+Warnings and info logs are ignored — a gate on them would become an allowlist.
+
+```sh
+nub run --filter docs smoke:console
+# or against a running server, one page:
+nub apps/docs/scripts/smoke-console.ts --base-url http://127.0.0.1:4173 --no-build --only /docs/installation
+```
+
+Exit `1` names the page and the error, exit `2` means the build, server or
+Chrome was missing — never a pass.
 
 ## Live GPUix surface (tier L)
 

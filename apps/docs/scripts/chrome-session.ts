@@ -13,6 +13,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { pageErrorFromEvent, type PageError } from "./page-errors.ts";
 import { SetupError } from "./setup-error.ts";
 
 const CHROME_CANDIDATES = [
@@ -49,6 +50,9 @@ export interface Session {
     expression: string,
     timeoutMs?: number,
   ) => Promise<boolean>;
+  /** Console errors, exceptions and error-level logs since the last reset. */
+  readonly errors: () => ReadonlyArray<PageError>;
+  readonly resetErrors: () => void;
   readonly captureScreenshot: () => Promise<string>;
   readonly stop: () => Promise<void>;
 }
@@ -172,14 +176,23 @@ export const startSession = async (
 
   let nextId = 1;
   const pending = new Map<number, (value: unknown) => void>();
+  const errors: PageError[] = [];
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(String(event.data)) as {
       id?: number;
+      method?: string;
+      params?: unknown;
       result?: unknown;
     };
-    const resolve =
-      message.id === undefined ? undefined : pending.get(message.id);
-    if (resolve !== undefined && message.id !== undefined) {
+    if (message.id === undefined) {
+      if (message.method !== undefined) {
+        const error = pageErrorFromEvent(message.method, message.params);
+        if (error !== null) errors.push(error);
+      }
+      return;
+    }
+    const resolve = pending.get(message.id);
+    if (resolve !== undefined) {
       pending.delete(message.id);
       resolve(message.result);
     }
@@ -194,6 +207,7 @@ export const startSession = async (
 
   await send("Page.enable");
   await send("Runtime.enable");
+  await send("Log.enable");
 
   const evaluate = async (expression: string): Promise<unknown> => {
     const result = (await send("Runtime.evaluate", {
@@ -311,6 +325,10 @@ export const startSession = async (
     pressShortcut,
     type,
     waitFor,
+    errors: () => errors,
+    resetErrors: () => {
+      errors.length = 0;
+    },
     captureScreenshot,
     stop,
   };

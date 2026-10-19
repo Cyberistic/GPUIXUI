@@ -469,9 +469,19 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–561)
+## Docs site workstream (plans 410–499, plus 500–562)
 
-`[x]` `[██████████]` 128/128
+`[x]` `[██████████]` 129/129
+
+`[x]` **Every page loads with a clean browser console (plan 562)** — all other
+      production gates read server HTML or one named piece of hydrated state, so
+      a redeploy with stale asset hashes (document 200, every chunk 404) or a
+      thrown client effect loaded silently; `smoke:console` loads every sitemap
+      page and fails on a console error, uncaught exception or error-level log
+      entry, naming the page and the error. 95 pages / 0 errors, 11 new tests,
+      both forced failures (a thrown effect and a 404 image) measured and
+      reverted; 78 files / 545 docs tests, `check`, `smoke:build` and
+      `smoke:console` green.
 
 `[x]` **Search ranks a component named inside a phrase (plan 561)** — the
       ranker compared the whole query with a name, so `popover placement`

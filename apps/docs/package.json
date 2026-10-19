@@ -23,6 +23,7 @@
     "smoke:theme": "nub scripts/smoke-theme.ts",
     "smoke:a11y": "nub scripts/smoke-a11y.ts",
     "smoke:responsive": "nub scripts/smoke-responsive.ts",
+    "smoke:console": "nub scripts/smoke-console.ts",
     "studio": "fumadocs-studio"
   },
   "dependencies": {
