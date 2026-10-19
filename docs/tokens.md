@@ -100,6 +100,7 @@ missing here is not public.
 | `HighlightFailure` | A find-highlight pair that misses its floor: a text role under the secondary floor through a wash, or an active match that is not a perceivable step above the match. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `IdentityShippedTheme` | An identity set in `shippedThemes`, with no platform style. |
+| `InsetFocusRing` | The on-fill focus indicator: the family's on-colour and the outer ring's thickness. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
 | `MetricGroup` | A group of theme metrics from `metricGroups`. |
 | `MetricRule` | One of `metricRules`: `positive`, `non-negative`, `zero`, `finite`, `increasing`, `non-decreasing`, `at-least`, `at-most` or `within`. |
@@ -1363,8 +1364,17 @@ that reason. An invalid slider keeps the accent ring — it recolours the fill a
 the thumb border, not `focusRing` — so the groove is deliberately not an
 `invalidRingPairs` surface.
 
+A focus indicator painted **inside** a filled control is a border, not the outer
+shadow: a clipped button group, a calendar day whose cell is the fill, or a
+selection box cannot draw outside its own box, and `ring` is designed for the
+surface behind a control — it meets `primary` at **1.000:1** in **16** shipped sets. `insetFocusRing(theme, family)` returns the family's on-colour, which the
+on-colour pairs already hold on the resting, hover and pressed fill
+(4.697:1 at the tightest), at the outer ring's `borderWidth.strong`. A control
+that already has a border applies `borderColor` alone.
+
 A runnable example lives in
-[`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts).
+[`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts) and
+[`src/inset-focus-ring.example.ts`](../packages/tokens/src/inset-focus-ring.example.ts).
 
 ## Text selection
 
@@ -2761,7 +2771,9 @@ Rules:
    dividers.
 5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
    `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
-   the ring is never a border and never changes layout. See [Focus](#focus).
+   the outer ring never changes layout. A control that clips the shadow, or
+   paints the indicator inside a filled cell, uses `insetFocusRing(theme,
+   family)` — the family's on-colour at the same thickness. See [Focus](#focus).
 6. A filled control reads its resting, hover and pressed fills from
    `filledControl(theme, family)`; never composite `alpha(fill, …)` for a state.
 7. Text paints a foreground role: `foreground`/`mutedForeground`, the surface's

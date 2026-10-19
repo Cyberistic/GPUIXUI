@@ -737,6 +737,20 @@ Apply it while the control is focused. A mouse press shows the ring too, because
 the runtime has no `:focus-visible` equivalent. A runnable example lives in
 [`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
 
+A control that clips its shadow, or paints the indicator inside a filled cell,
+uses a border instead. `ring` is designed for the surface behind a control and
+meets `primary` at 1.000:1 in the shipped sets; the family's on-colour is the
+measured inset signal, at the outer ring's thickness:
+
+```ts
+import { getTheme, insetFocusRing } from "@gpuixui/tokens";
+
+const ring = insetFocusRing(getTheme("dark"), "primary"); // primaryForeground
+```
+
+A runnable example lives in
+[`src/inset-focus-ring.example.ts`](./src/inset-focus-ring.example.ts).
+
 ## Selection and scrollbars
 
 `selectionStyle(theme)` maps the translucent `selection` role to the runtime's

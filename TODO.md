@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 253/326
+`[x]` `[████████░░]` 254/327
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -433,7 +433,9 @@ change on its only state signal; both also hover and press at
 `alpha(fill, 0.9/0.8)`, the plan-097 defect one component over.
 `filledControl(theme, family)` returns the designed trio and its one foreground,
 so the press becomes a measured fill step while the ring stays the focus
-indicator (plan 342 audit; owner: `primitives`)
+indicator (plan 342 audit; owner: `primitives`). The designed on-fill focus
+indicator is `insetFocusRing(theme, family)` — the family's on-colour at
+`borderWidth.strong` (plan 609)
 `[ ]` Cross-team: `components` moves the menu row's highlight bar off `accent` —
 `menu/item.tsx:91` paints a 2px left border in `accent` on the highlighted row,
 and `accent` measures 1.118–1.392:1 on the menu's `popover` and 1.000–1.113:1 on
@@ -1115,9 +1117,9 @@ is already a mark-floor role there (plan 332; owner: `components`).
 selected day — `date-picker.tsx:630-641` paints `borderColor: primary` on a cell
 whose fill is also `primary` when selected, so the ring composites to
 **1.000:1** and only the today signal disappears (the fill and
-`primaryForeground` still show selection). Paint the ring with
-`primaryForeground` — the on-colour role already measured on `primary` — or
-`ring` when the cell is selected, keeping `primary` on the `popover` at rest;
+`primaryForeground` still show selection). Paint the selected cell's ring with
+`insetFocusRing(theme, "primary")` — the family's on-colour at
+`borderWidth.strong` (plan 609) — and keep `primary` on the `popover` at rest;
 `primary` on `popover`/`hover` is already a mark pair (plan 341; owner:
 `components`).
 `[ ]` Cross-team: `components` keeps a selected `List` row's fill under the
@@ -1275,14 +1277,15 @@ the weight set and the avatar/icon ranges are now derived from `colorRoles`,
 `textRoles`, `motion`, `typography`, `avatarSize` and `iconSize` (plan 396)
 `[ ]` Cross-team: `primitives` paints a clipped ButtonGroup's focus ring as an
 inset border in `ring` on the button's own fill (`core/style.ts`
-`clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` equals
-`primary` in seven shipped sets — identity dark, both AAA sets, macOS light,
-Linux light and dark, Windows light and dark — so a focused primary button in an
-attached group has **1.000:1** and no focus indicator; paint it with the
-family's foreground (the DatePicker today-ring precedent) or keep the outer
-shadow, then the tokens contract can hold `ring` on the filled families at the
-boundary floor (owner: `primitives`; found while auditing the contrast contract
-for plan 393)
+`clippedFocusRingStyle`, `Button.tsx`, `ButtonGroup.tsx`), and `ring` is
+**1.000:1** on `primary` in sixteen shipped sets — both identity dark themes,
+every platform light half, the dark half of Linux, Windows, XP and Aero, and
+every AAA dark half — so a focused primary button in an attached group has no
+focus indicator; paint it with `insetFocusRing(theme, family)` — the family's
+on-colour at `borderWidth.strong`, the measured inset ring (plan 609) — or keep
+the outer shadow, then the tokens contract can hold `ring` on the filled families
+at the boundary floor (owner: `primitives`; found while auditing the contrast
+contract for plan 393)
 `[x]` Hold the panel action's scope — the reference, the design system, the
 README and the JSDoc offered `softAction` to "an Alert, Badge or Toast", but a
 Toast is a `popover` card (`toast/viewport.tsx:100`) and `softAction` equals that
@@ -2121,6 +2124,13 @@ still painted a rounded match while every check returned `[]`;
 `nativeHighlight(theme).radius` is the theme's inline-mark step (`radius.sm`,
 the same step inline code uses), the docs and README name it, and no colour,
 pair, floor or metric moves (plan 607)
+`[x]` Ship the inset focus indicator — a clipped ButtonGroup, a selected
+calendar day and a pressed selection control paint their ring on the control's
+own fill, where `ring` is **1.000:1** on `primary` in sixteen shipped sets and
+never above 1.374:1; `insetFocusRing(theme, family)` returns the family's
+on-colour at `borderWidth.strong` (4.697:1 at the tightest on a fill), the
+three cross-team rows point at one call, and no colour, pair, floor, metric or
+shipped theme moves (plan 609)
 
 ## Phase C — Tier 1–2 components
 

@@ -204,6 +204,43 @@ export function filledControl(
   };
 }
 
+/** The inset focus indicator a filled control paints inside its own box. */
+export interface InsetFocusRing {
+  /** The family's on-colour, readable on its resting, hover and pressed fills. */
+  readonly borderColor: string;
+  /** The indicator thickness, the same as the outer ring's spread. */
+  readonly borderWidth: number;
+}
+
+/**
+ * The focus indicator for a filled control that cannot draw the outer shadow —
+ * a clipped button inside a group, a calendar day whose cell is the fill, or a
+ * selection box. `ring` is designed for the surface behind a control and
+ * measures 1.000:1 against `primary` in sixteen shipped sets, so an inset ring
+ * painted with it disappears. This returns the family's on-colour instead, which
+ * the on-colour pairs already hold on the resting, hover and pressed fill
+ * (4.697:1 at the tightest in the shipped sets), at the outer ring's
+ * `borderWidth.strong`. A control that already carries a border can apply
+ * `borderColor` alone.
+ *
+ * @example
+ * ```ts
+ * import { getTheme, insetFocusRing } from "@gpuixui/tokens";
+ *
+ * const focused = insetFocusRing(getTheme("dark"), "primary");
+ * focused.borderColor; // primaryForeground
+ * ```
+ */
+export function insetFocusRing(
+  theme: Theme,
+  family: FilledControlFamily,
+): InsetFocusRing {
+  return {
+    borderColor: filledControl(theme, family).foreground,
+    borderWidth: theme.borderWidth.strong,
+  };
+}
+
 /**
  * Resolve the action family for a tone-tinted status panel.
  *
