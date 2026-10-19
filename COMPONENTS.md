@@ -201,15 +201,25 @@ carries an evidenced limitation. The capability evidence lives in
 ## Tier 1 — foundational
 
 **Why every row below is `wip`:** each one has code, a behaviour test, a mounted
-example, a docs page (in-package and on the docs site) and a measured runtime
-interaction — the `done` bar above. The status stays `wip` because the suite has
-now been run on the **release-tag** build (plan `583`) and one measured runtime
-fact still fails there: its box model is 2 px smaller than the main-derived one
-(plan `529` §6.5), so the absolute-geometry assertions are short. The focus
-rings are green there since plan `590` restored them through
-`getFocusedElementId()`. Flipping the rows to `done` before a
-consumer-installable build passes would turn the remaining geometry gap into a
-completion claim.
+example, an in-package docs page and a measured runtime interaction on the
+release-tag build — the `done` bar above. The status stays `wip` for two
+reasons, and neither is a failing suite:
+
+- **Provenance.** The native evidence comes from a **source build of the
+  published `0.10.0` tag** on Intel macOS, not from a published prebuilt binary
+  (ADR `0003`). The gold-standard CI run on a published binary is the playground
+  workstream's task. The runtime suite passes on that build (see §"How the two
+  evidence columns are decided" above).
+- **Docs site.** Six public parts still have no page on the Fumadocs site —
+  `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip` and
+  `ThemeProvider` — because that site is a separate deliverable with its own
+  workstream (`TODO.md` records the list). Every part has an in-package page
+  today.
+
+The published box model is **not** a remaining gap: plans `597`/`598` replaced
+the content-origin reading with `paintBounds` and corrected a scroller's own
+offset, and the suite has been green since. Flipping a row to `done` is a
+deliberate ledger change; the two items above are why it has not happened.
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |

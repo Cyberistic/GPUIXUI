@@ -233,14 +233,15 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**60 test files**, all passing, including a package-wide guard that a caller's
+**61 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
 that every public component is rendered by at least one example (plan `374`),
-one that holds the composed-app ledger to its real suite (plan `608`),
-and one that fails by file name when a runtime suite has no header or is named
-like a scratch probe (plan `390`).
+one that holds the composed-app ledger to its real suite (plan `608`), one that
+keeps the Tier 1 inventory's "why wip" true (plan `648`), and one that fails by
+file name when a runtime suite has no header or is named like a scratch probe
+(plan `390`).
 
 **What the element-tree suites cannot reach:** a component *function* is a React
 hook holder, so a test cannot call `Button(props)` — it asserts on the render

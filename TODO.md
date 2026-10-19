@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 156/156
+`[x]` `[████████████]` 157/157
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2100,6 +2100,18 @@ retired once both branches are one
       on pointer release with the gesture's final value and once per keyboard
       step, and report nothing for a gesture that ends where it began or a
       refused press (plan `646`).
+
+`[x]` `packages/primitives`: **the Tier 1 inventory's "why wip" was false** — the
+      preamble above the 28 rows said they stay `wip` because the release-tag box
+      model is 2 px smaller and the geometry assertions are short, but plans
+      `597`/`598` corrected the box model and the runtime suite is green; it also
+      said every row has a docs page "in-package and on the docs site" while six
+      parts (`IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`,
+      `ThemeProvider`) have no Fumadocs page. The paragraph now names the two
+      real reasons — source-build provenance (ADR `0003`) and the six docs-site
+      gaps — and the rows stay `wip`. `src/inventory-status.test.ts` fails on the
+      old claims, a missing gap name, or a row flipped to `done`; offline 61
+      files / 864 tests, both directions measured (plan `648`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
