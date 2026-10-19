@@ -557,7 +557,7 @@ collapse and expand is the consumer's, driven by three events.
 
 | Prop | Measured |
 | ---- | -------- |
-| `onToggleFile` | a **file header** click emits `value = file.path`; nothing else collapses. `collapsedPaths` removes the hunk, lines and body pad (a two-file 354 px document becomes 192 px), and the other file stays |
+| `onToggleFile` | a **file header** click emits `value = file.path`; nothing else collapses. `collapsedPaths` removes the hunk, lines and body pad (collapsing the first file of a 354 px document leaves 192 px; the second leaves 234 px), and the other file stays |
 | `maxLines` | a **global** cap on line rows, not per file. It appends `Show N more lines` and emits `showMore` with `value = "N"` as a **string**; the element does not expand. The consumer adds N to its cap (`maxLines` 3 → `show 7` → 10 restores all rows) |
 | `onLineClick` | `value` is the line text, `oldLine`/`newLine` are the side numbers (`1/1`, `2/none`, `none/2`). Hunk and file headers emit neither |
 | `wordDiff` | paints word washes only; the box and every row stay identical — **screenshot evidence** (no pixel readback) |

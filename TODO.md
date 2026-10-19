@@ -64,7 +64,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 107/107 plans-and-harness
+`[x]` `[██████████]` 108/108 plans-and-harness
 
 `[x]` **The final merge/release gate ran on the current head** per plan `639`:
       the last recorded gate predated `live-tier2-navigation`'s six new checks
