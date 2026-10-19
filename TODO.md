@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 306/382
+`[x]` `[████████░░]` 308/384
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -1032,7 +1032,8 @@ bridge — its `runtime/theme-axes.runtime.test.tsx` imports it and
 mode)` and the bridge is then deleted from tokens (owner: `primitives`; plan 302)
 `[ ]` Cross-team: `primitives` updates its theme fixture to this branch's token
 generation — `src/core/testing/theme.fixture.ts` still declares the 47-role
-palette (66 ship now, `track` included), an elevation level as `{ …, color }`
+palette (71 ship now, `track`, the four `softAction` roles and `selectedActive`
+included), an elevation level as `{ …, color }`
 (it is `{ …, alpha }` since plan 085) and a `Theme` without `contrast`, `motion`
 or `avatarSize`, so it cannot type-check against the merged package (owner:
 `primitives`; plans 019, 054, 073, 085, 302, 347)
@@ -2587,6 +2588,15 @@ guard reads every enumerating paragraph (dash, not a comma reference),
 normalises its wrap and derives both the count word and the members from
 `elevationContentSurfaces`; no colour, pair, floor, metric or shipped theme
 moves (plan 665)
+`[x]` Ship the inverse of `extendTheme` — `themeOverrides(base, theme)` returns
+the minimal overrides that rebuild an edited theme, so a runtime editor can store
+or print an edit instead of a whole theme object; each group is compared field
+by field, a tuned density is expressed against the preset it names, an elevation
+level is replaced whole, and a different mode returns `undefined` because the
+mode is not overridable. All 24 shipped sets, a platform over another platform,
+a high base to an explicit default and an edit touching every group round-trip,
+the minimal shapes are pinned, and the docs, README, design system and ledger
+name the call (plan 685)
 `[x]` Name the three status chips in the scrim explanation — the contrast audit
 paragraph enumerated 18 of the 21 surfaces `overlaySurfaces` names while its
 next sentence quoted "the tightest of the twenty-one pairs", and its rationale

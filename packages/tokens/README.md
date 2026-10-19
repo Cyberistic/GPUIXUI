@@ -191,6 +191,14 @@ A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
 `themeContrastFailures` by the package's tests.
 
+`themeOverrides(base, theme)` is the inverse of `extendTheme`: the minimal
+overrides that rebuild `theme` from `base`, for an editor that stores or prints
+an edit rather than a whole theme object. Each group is compared field by field
+and an unchanged group is omitted; a tuned density is expressed against the
+preset it names, an elevation level is replaced whole, and `undefined` means the
+modes differ, because `extendTheme` cannot change the mode. A runnable example
+lives in [`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
+
 A filled control reads its states from `filledControl(theme, family)` — the
 resting, hover and pressed fills and the one foreground readable on all three —
 rather than compositing `alpha(fill, …)`. A translucent state takes its colour

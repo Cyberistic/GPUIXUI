@@ -16,6 +16,7 @@ export * from "./shipped-themes.js";
 export * from "./styles.js";
 export * from "./theme-check.js";
 export * from "./theme-choice.js";
+export * from "./theme-diff.js";
 export * from "./theme.js";
 export * from "./typeface.js";
 export * from "./typography.js";

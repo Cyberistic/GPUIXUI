@@ -979,6 +979,10 @@ The extension mechanism is deliberately small:
   (Windows XP, Windows 7); `isPlatformRecipeName` narrows a stored choice.
 - `ThemeProvider theme={…}` — scope a theme to a subtree; nested providers
   allow a branded panel inside a neutral shell.
+- `themeOverrides(base, theme)` — the inverse of `extendTheme`: the minimal
+  override set that rebuilds an edited theme, so an editor can store or print an
+  edit instead of a whole theme object. A different mode returns `undefined`,
+  because the mode is not overridable.
 
 A choice that survives a restart — the mode, the contrast variant, the density,
 the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,

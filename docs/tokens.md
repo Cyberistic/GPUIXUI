@@ -2228,6 +2228,28 @@ Merge rules:
 - nothing is mutated. The returned theme may share untouched token objects. The
   contract is no mutation, not deep cloning.
 
+### Deriving a theme back to overrides
+
+`themeOverrides(base, theme)` is the inverse of `extendTheme`: the minimal
+override set that rebuilds `theme` from `base`, for an editor that stores or
+prints an edit instead of a whole theme object. Groups are compared field by
+field the way `extendTheme` merges them, and a group with no change is omitted,
+so `themeOverrides(theme, theme)` is `{}`. A tuned density is expressed against
+the preset it names — `mergeDensity` starts from that preset, not from the base's
+metrics — and an elevation level is replaced whole, matching the documented merge
+rule. A different `mode` returns `undefined`, because `extendTheme` cannot change
+the mode: choose a base of the theme's mode. The executed example is
+[`src/theme-diff.example.ts`](../packages/tokens/src/theme-diff.example.ts).
+
+```ts
+import { extendTheme, getTheme, themeOverrides } from "@gpuixui/tokens";
+
+const base = getTheme("dark");
+const edited = extendTheme(base, { density: "compact", radius: { md: 8 } });
+
+themeOverrides(base, edited); // { radius: { md: 8 }, density: "compact" }
+```
+
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to

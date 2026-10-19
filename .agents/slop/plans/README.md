@@ -335,6 +335,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [682](./682-caret-surface-owner.md) | The caret sentence publishes one pair as nine | F | 557, 681 | done |
 | [683](./683-chip-surface-count.md) | The chip surface count plan 651 left at eight | F | 308, 399, 651, 682 | done |
 | [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
+| [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1936,6 +1937,19 @@ metric moves. The audit that found it also recorded two follow-ups in `TODO.md`:
 the fills an action paints inside a soft status panel (80 shipped pairs under
 1.05:1) and the clipped ButtonGroup's inset ring on a filled button (seven sets
 at 1.000:1), which is a `primitives` fix.
+
+Plan `685` closes the extension mechanism's last direction. `extendTheme(base,
+overrides)` derives a theme; nothing expressed an edited theme back as the
+overrides that produced it, so a runtime editor held a whole `Theme` and could
+only persist it as a whole object — the boundary the catalogue deliberately
+leaves to the application's `Schema`. `themeOverrides(base, theme)` returns the
+minimal `ThemeOverrides` that `extendTheme` reproduces, comparing each group
+field by field; a tuned density is emitted against the preset it names, an
+elevation level is replaced whole, and a different mode returns `undefined`
+because the mode is not overridable. The suite round-trips all 24 shipped sets,
+a platform over another platform, a high base to an explicit default, and an
+edit touching every expressible group, and pins the minimal shapes. No colour,
+pair, floor, metric or shipped theme moves.
 
 ### Reference adoption (block `200–299`)
 
