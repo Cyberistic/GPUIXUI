@@ -466,13 +466,17 @@ export const markPairs: readonly ContrastPair[] = [
 
 /**
  * The surfaces an inactive label paints on, beyond the soft status fills: its
- * own `disabled` fill, the plain surfaces a ghost disabled action sits on, and
- * the row washes a disabled control inside a hovered or selected row paints. A
- * disabled `Select` item is the shipped case — it paints `disabledForeground` on
- * the menu's `popover` with no fill behind it.
+ * own `disabled` fill, the field's `input` fill, the plain surfaces a ghost
+ * disabled action sits on, and the row washes a disabled control inside a
+ * hovered or selected row paints. A disabled `Select` item is the shipped case
+ * on `popover` — it paints `disabledForeground` on the menu's surface with no
+ * fill behind it — and a disabled field is the case on `input`: the designed
+ * state (`disabledControl`) keeps the field on its own fill, so the label is
+ * read there (plan 650).
  */
 const inactiveBaseSurfaces = [
   "disabled",
+  "input",
   "background",
   "card",
   "popover",
@@ -493,13 +497,23 @@ export const inactiveSoftPairs: readonly ContrastPair[] = softSurfaceRoles.map(
   (background): ContrastPair => ["disabledForeground", background, "inactive"],
 );
 
-/** Every surface an inactive label paints on, in documentation order. */
+/**
+ * Every surface an inactive label paints on, in documentation order: the
+ * control's `disabled` fill, the field's `input` fill, the plain surfaces, the
+ * row washes and the soft status fills. `input` is also one of the
+ * `selectionSurfaces`, so the washed list's ground is measured by
+ * `selectionWashPairs` without a second entry (plan 650).
+ */
 export const inactiveSurfaces = [
   ...inactiveBaseSurfaces,
   ...softSurfaceRoles,
 ] as const;
 
-/** The inactive label measured on each surface in {@link inactiveSurfaces}. */
+/**
+ * The inactive label measured on each surface in {@link inactiveSurfaces}. A
+ * disabled field keeps its `input` fill and paints `disabledForeground` on it,
+ * so the designed state the catalogue teaches is measured on the fill it edits.
+ */
 export const inactivePairs: readonly ContrastPair[] = [
   ...inactiveBaseSurfaces.map(
     (background): ContrastPair => [

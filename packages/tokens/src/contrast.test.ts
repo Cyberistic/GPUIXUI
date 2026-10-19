@@ -629,7 +629,7 @@ describe("themeContrastFailures", () => {
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(421);
+    expect(contrastPairs.length).toBe(422);
     expect(statusFillPairs).toHaveLength(28);
     expect(
       statusFillPairs.map(([foreground, background]) => [
@@ -685,9 +685,10 @@ describe("themeContrastFailures", () => {
         ].map((surface) => [`${tone}SoftBorder`, surface]),
       ),
     );
-    expect(inactivePairs.length).toBe(13);
+    expect(inactivePairs.length).toBe(14);
     expect(inactivePairs.map(([, background]) => background)).toEqual([
       "disabled",
+      "input",
       "background",
       "card",
       "popover",

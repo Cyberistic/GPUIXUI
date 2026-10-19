@@ -2224,7 +2224,7 @@ it. An Alert or Badge is measured the same way:
 label and the caption through the wash, and `selectionSoftWashPairs` the
 highlight's own perceivability on the four soft fills. An unavailable label is measured too:
 `selectionInactivePairs` holds `disabledForeground` through the same wash on the
-thirteen `inactiveSurfaces` it paints on, at the `inactive` floor, because
+fourteen `inactiveSurfaces` it paints on, at the `inactive` floor, because
 `selectionColor` inherits into that text. The wash itself is compared with each
 surface it paints on, so a highlight that has become imperceptible is reported
 as well; `selectionWashPairs` is that list. It also holds the `disabled` fill,
@@ -2333,12 +2333,16 @@ with light (plan `505`). The tightest shipped pair is **1.058:1** (AAA dark,
 `sm` on `background`) and the AAA dark page pair is **1.207:1**.
 
 The inactive state has its own floor. `disabledForeground` is measured on the
-thirteen surfaces an unavailable label paints — the `disabled` fill
-(`inactivePairs`), the four plain surfaces, the `hover`/`active`/`accent`/
+fourteen surfaces an unavailable label paints — the `disabled` fill and the
+field's `input` fill (`inactivePairs`), the four plain surfaces, the
+`hover`/`active`/`accent`/
 `selected` washes a disabled control inside a row sits on, and the four soft
 status fills a tone-tinted Alert's action sits on (`inactiveSoftPairs`;
 `inactiveSurfaces` is the ordered list) — at 3:1, and at 4.5:1 in the
-high-contrast themes. WCAG 1.4.3 exempts inactive components;
+high-contrast themes. A disabled field is the reason the `input` fill is there:
+`disabledControl(theme)` keeps the field on its own fill and paints the label on
+it, so an edited field fill cannot erase what the field says it holds. WCAG
+1.4.3 exempts inactive components;
 that exemption is not a licence to erase the state, because the point of an
 unavailable control is that a reader can find out what is unavailable. A disabled
 `Select` item paints this role straight onto the menu's `popover` with no fill
@@ -2359,7 +2363,7 @@ measured **2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on t
 other default light sets, and the AAA sets **3.430:1** (light,
 `destructiveSoft`) and **4.357:1** (dark, `active`), against 3:1 and 4.5:1.
 `selectionInactivePairs` holds `disabledForeground` through the wash on the same
-thirteen `inactiveSurfaces` at the same floor. Three values moved one designed
+fourteen `inactiveSurfaces` at the same floor. Three values moved one designed
 step away from the panel in plan `510`: identity light `#6E7787` → `#545D6C`
 (neutral 600), AAA light `#5A5A5A` → `#444444` and AAA dark `#A9A9A9` →
 `#B0B0B0`; every high-contrast platform variant inherits the AAA palettes, and
@@ -2728,7 +2732,7 @@ The surfaces are derived from `contrastPairs`, not retyped: twelve shared
 surfaces for secondary text below body copy, one `card` for `cardForeground`,
 four for `popoverForeground` (`popover` and the three row washes it shares), the
 nine surfaces typed text is documented on for `inputForeground` (`muted`,
-`background`, `card`, `popover`, `input` and the four row washes), twelve for the
+`background`, `card`, `popover`, `input` and the four row washes), thirteen for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), nine for a hint and
 a caption, five for the disabled panel-action label below the enabled one
@@ -3057,7 +3061,8 @@ and `selected` washes a row paints behind a description, and status text (`xText
 invalid control paints, in the default themes; 4.5:1 for them in the
 high-contrast variants; and 3:1 for an inactive label, raised to 4.5:1 at
 high contrast). The inactive floor is new in plan `306`: `inactivePairs`
-measures `disabledForeground` on its own fill, the plain surfaces, the four row
+measures `disabledForeground` on its own fill, the field's `input` fill (plan
+`650`), the plain surfaces, the four row
 washes and the four soft status fills a tone-tinted Alert's action sits on
 (plan `307`), because a disabled `Select` item paints it on the menu's `popover`
 with no fill behind it and measured 1.99:1 on Linux dark. The `disabled` fill
@@ -3513,7 +3518,7 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **421** across plans `527`, `557`, `595` and `619`.
+396 to **422** across plans `527`, `557`, `595`, `619` and `650`.
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
@@ -3742,7 +3747,7 @@ theme whose card text is readable at rest cannot lose it under the wash — the
 two roles are already apart in both Windows recipes, and Windows dark is the
 tightest at **9.65:1**, so no colour moves. The unavailable label joins the
 list — `selectionInactivePairs` holds `disabledForeground` over the wash on the
-thirteen `inactiveSurfaces`, because a selected disabled label measured
+fourteen `inactiveSurfaces`, because a selected disabled label measured
 **2.586:1** on Windows light's `selected` fill and 3.430 / 4.357:1 in the AAA
 sets while every check returned `[]`; the three values moved and the tightest
 washed pair is **3.177:1** (plan `510`).
@@ -3775,7 +3780,7 @@ Every colour role is accounted for: `contrastPairs`, `selectionPairs`,
 `selectionFillPairs`, `selectionFillWashPairs`,
 `selectionFillInactivePairs`, `softPanelTextPairs`, `selectionInactivePairs` and
 `overlayWashPairs` measure the
-painted roles — `inactivePairs` is the thirteen-surface
+painted roles — `inactivePairs` is the fourteen-surface
 inactive list, `softBorderSurfacePairs` the eight-surface chip edge,
 `statusFillPairs` the solid status fill on the same chip surfaces and `disabled`
 is measured as its own fill — and

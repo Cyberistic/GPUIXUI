@@ -311,6 +311,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [645](./645-fixed-surface-insets.md) | The fixed surfaces count every inset they paint | F | 353, 365, 384, 523, 625, 627, 629, 634, 636 | done |
 | [646](./646-f32-metric-range.md) | A metric must survive the renderer's 32-bit cast | F | 358, 360, 364, 368, 531, 532, 641, 643 | done |
 | [649](./649-native-highlight-diff-tint.md) | The find highlight on the native diff's row tint | F | 569, 573, 574, 581, 582, 591, 602 | done |
+| [650](./650-disabled-field-input.md) | The disabled field's label on the fill it edits | F | 306, 317, 510, 524, 539 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3415,6 +3416,19 @@ and Aero light's two inks take one designed step (`#3D4C5F` → `#36455A`,
 `#0C4A8C` → `#0A417A`). Every shipped set passes (4.586:1 at the tightest tint
 pair), the code-ink arm still names its own fraction, and no other colour, pair,
 floor or metric moves.
+
+Plan `650` closes the last surface the inactive label was not measured on. The
+catalogue said a disabled field is out of scope for the body pairs because the
+designed state reads `disabledForeground`, "which `inactivePairs` measures", but
+`inactiveBaseSurfaces` held the `disabled` fill and the four plain surfaces and
+never the field's own `input` fill — the fill `disabledControl(theme)` keeps a
+field on. A planted theme with a coherent `input` fill passed all ten checks on
+the pre-650 tree while its disabled label measured **2.494:1** on `input`, under
+the 3:1 inactive floor. `input` joins the one owner, so `inactivePairs` and
+`selectionInactivePairs` each grow 13 → 14 and `contrastPairs` 421 → 422; the
+wash pair already exists because `input` is one of the nine `selectionSurfaces`,
+and every shipped set already clears both new pairs (6.610:1 at rest and
+4.944:1 washed at the tightest), so no colour moves.
 
 ## How to use a plan
 

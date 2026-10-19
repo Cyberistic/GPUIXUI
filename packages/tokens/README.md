@@ -624,10 +624,13 @@ A field's pointer edges are both measured on its own `input` fill:
 control; the two uses of the ring role are separate pairs.
 The inactive state is measured too, and its floor is a design floor rather than a
 WCAG one: `inactivePairs` holds `disabledForeground` to 3:1 (4.5:1 at AAA) on the
-`disabled` fill, the four plain surfaces, the four row washes and the four soft
+`disabled` fill, the field's `input` fill, the four plain surfaces, the four row
+washes and the four soft
 status fills a tone-tinted Alert's action sits on (`inactiveSoftPairs`), because a
 disabled `Select` item paints the label straight onto the menu's `popover` and
-measured 1.99:1 on Linux dark until plan 306. The `disabled` fill is allowed to
+measured 1.99:1 on Linux dark until plan 306. A disabled field keeps its own
+`input` fill — it is the surface it edits — so that fill is the pair plan 650
+added. The `disabled` fill is allowed to
 sit near the panel — no neutral clears both a white card and the quiet panel — so
 a disabled control paints its `border` edge, measured on `disabled` and on the
 `muted` panel a settings sidebar divides. A disabled control is not an
@@ -637,7 +640,7 @@ returns the three properties and
 [`src/disabled-state.example.ts`](./src/disabled-state.example.ts) builds the
 Button shape from it.
 `selectionInactivePairs` holds that label through the text-selection wash on the
-same thirteen surfaces, because `selectionColor` inherits into it: the previous
+same fourteen surfaces, because `selectionColor` inherits into it: the previous
 light `#6E7787` measured **2.586:1** on Windows light's `selected` fill and the
 AAA sets 3.43:1 / 4.36:1 while every check returned `[]`, so `#545D6C`,
 `#444444` and `#D0D0D0` ship and the tightest washed pair is **3.177:1** (Aero

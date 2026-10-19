@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 282/356
+`[x]` `[████████░░]` 283/357
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2376,6 +2376,14 @@ the quiet panel, under the 4.5:1 floor, while `themeHighlightFailures` returned
 `[]`. The check now walks both tints for the match, the active match and the
 step, the payload names the tint and its fraction, Aero light's two inks take
 one designed step, every shipped set passes (plan 649)
+`[x]` Hold the designed disabled field on its own fill — the catalogue said a
+disabled field is out of scope for the body pairs because `disabledForeground`
+is what it reads and "which `inactivePairs` measures", but the inactive surface
+list omitted the field's `input` fill, so a coherent theme passed all ten checks
+with its disabled label at **2.494:1** on `input`; `input` joins the one owner,
+`inactivePairs` and `selectionInactivePairs` grow 13 → 14, `contrastPairs` grows
+421 → **422**, every shipped set already passes (6.610:1 at rest, 4.944:1
+washed) and no colour moves (plan 650)
 
 ## Phase C — Tier 1–2 components
 

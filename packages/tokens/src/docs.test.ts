@@ -384,7 +384,7 @@ describe("docs/tokens.md contract counts", () => {
     );
     expect(prose).not.toContain("nine-surface inactive list");
     expect(prose).toContain(
-      "`inactivePairs` measures `disabledForeground` on its own fill, the plain surfaces, the four row washes and the four soft status fills",
+      "`inactivePairs` measures `disabledForeground` on its own fill, the field's `input` fill (plan `650`), the plain surfaces, the four row washes and the four soft status fills",
     );
     expect(prose).toContain(
       `the ${countWord(softBorderSurfacePairs.length / statusTones.length)}-surface chip edge`,
@@ -2876,7 +2876,7 @@ describe("docs/design-system.md", () => {
       `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the eight surfaces a chip sits on) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
-      `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills, and through the composited \`selection\` wash on the same thirteen surfaces) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
+      `| inactive label (\`disabledForeground\` on the \`disabled\` fill, the field's \`input\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills, and through the composited \`selection\` wash on the same fourteen surfaces) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, and its dim pulse frame at \`skeletonPulseOpacity\` on the same eight surfaces (\`skeletonPulsePairs\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on ${elevationSurfaceNames}, the surfaces \`elevationSurfaces\` names, and — for \`md\` — the resting content fills ${elevationContentNames}, the surfaces \`elevationContentSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
