@@ -5,7 +5,7 @@
 | Phase | F (Tier 2 hardening) |
 | Owner | `components` (`packages/components`) |
 | Depends on | 110, 112, 114, 301, 329, 340, 388, 523, 530, playground 581 |
-| Status | **planned** |
+| Status | **landed** — `CommandMenuInput` no longer claims mount focus; the dead `Home`/`End` branches are gone; 1 new native case (Command menu 24); full native suite 748/35 of 783 |
 | Claimed number | first free after `588` (checked every worktree; recorded in `PLAN.md` D30) |
 
 ## 0. Why this plan exists
@@ -234,4 +234,25 @@ does not guard the defect.
 
 ## 7. Results
 
-To be filled when the plan lands.
+- `command-menu.tsx`: `CommandMenuInput` no longer sets `autoFocus`; the
+  dialog's `initialFocus` focuses the field after `useModalFocus` has recorded
+  the opener, so closing restores focus to that opener. The ring stays seeded
+  from the open state for the same reason as plan 523 (the runtime's focus
+  change dispatches no React `onFocus`). `isFirst`/`isLast` and their branches
+  are removed; the host `<input>` never forwards those keys.
+- `src/behaviour/command-menu.test.tsx`: the fixture gains a `defaultOpen`
+  parameter (default `true`, so the other cases are unchanged) and one new case
+  covers both close paths — Escape and running a command with Enter — returning
+  focus to the control that was focused before the palette opened.
+- Both-direction proof: on `HEAD` the case failed with
+  `expected Some("open-palette"), received None`; after the fix it passed;
+  re-adding `autoFocus` failed it again; reverting passed.
+- The file is 23 passed / 1 failed of 24; the one failure
+  (`keeps the highlighted row inside the list viewport`, `588 ≤ 410`) is the
+  pre-existing plan-540 binding position defect — it fails identically at `HEAD`.
+- Full native suite: 748 passing / 35 known plan-540 failures of 783 (was
+  747/35 of 782). Unit suite: 43 files / 432 tests. `nub run check`,
+  `nub run lint` and `nub run test` exit `0`.
+- Docs and inventory synced: `docs/command-menu.mdx` (key table, focus
+  paragraph, limitations, verification), the `COMPONENTS.md` row, `TODO.md`,
+  `PLAN.md` D30 and the plan index.

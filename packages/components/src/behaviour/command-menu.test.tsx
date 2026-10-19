@@ -109,13 +109,15 @@ const ReopenablePalette = ({
   recent,
   defaultRecent,
   onRecentChange,
+  defaultOpen = true,
 }: {
   readonly perform: (id: string) => void;
   readonly recent?: ReadonlyArray<string>;
   readonly defaultRecent?: ReadonlyArray<string>;
   readonly onRecentChange?: (recent: ReadonlyArray<string>) => void;
+  readonly defaultOpen?: boolean;
 }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ width: 640, height: 640 }}>
       <div
@@ -636,6 +638,42 @@ describe("CommandMenu", () => {
     expect(
       palette.renderer.findByTestId("command-input")?.style.boxShadow,
     ).toBeDefined();
+
+    palette.unmount();
+  });
+
+  /**
+   * The bug this guards (plans 581/589), measured in a real window: closing the
+   * palette left `focused = none`. `CommandMenuInput`'s `autoFocus` took native
+   * focus in the same commit, before `useModalFocus` recorded the opener, so the
+   * saved id was the field being destroyed. The dialog's `initialFocus` already
+   * focuses the field; the field must not claim focus before the opener is read.
+   */
+  it("returns focus to the control that opened it", () => {
+    const palette = renderComponent(
+      <ReopenablePalette perform={vi.fn()} defaultOpen={false} />,
+    );
+
+    // A press does not focus a plain div in 0.10.0, so pin the precondition.
+    palette.renderer.focusElement(
+      palette.renderer.findByTestId("open-palette")?.id ?? -1,
+    );
+    clickCentreOf(palette, "open-palette");
+    expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+
+    palette.renderer.simulateKeystrokes("escape");
+    finishMotion(palette);
+
+    expect(focusedTestId(palette)).toEqual(Option.some("open-palette"));
+
+    // Running a command is the path the playground measured (`Enter` closes
+    // through the same `onOpenChange(false)`).
+    clickCentreOf(palette, "open-palette");
+    expect(focusedTestId(palette)).toEqual(Option.some("command-input"));
+    palette.renderer.simulateKeystrokes("enter");
+    finishMotion(palette);
+
+    expect(focusedTestId(palette)).toEqual(Option.some("open-palette"));
 
     palette.unmount();
   });

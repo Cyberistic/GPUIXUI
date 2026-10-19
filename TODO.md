@@ -281,16 +281,15 @@ retired once both branches are one
       tests that only passed on the short claim are named in the plan; docs,
       `docs/component-api.md`, `COMPONENTS.md` and the inventory synced (owner:
       components)
-    - [ ] Command menu closing leaves no focus owner — the playground's
-      `tier2-command` and `live-tier2-command` both measured `focused=none`
-      (plan 581). Cause: `CommandMenuInput`'s `autoFocus` takes native focus in
-      the same commit, before `useModalFocus` records the opener, so the saved id
-      is the input being destroyed. Fix: drop `autoFocus` (the dialog's
-      `initialFocus` already focuses the input) and keep the ring seeded from the
-      open state; add a close-focus case. The same plan measured `Home`/`End`
-      as consumed by the native input, so the palette's `isFirst`/`isLast`
-      branches are dead on 0.10.0 and must be removed or documented. Owner:
-      components; not started.
+    - [x] Closing the command menu returns focus to its opener — plan 589; the
+      playground's `tier2-command` and `live-tier2-command` both measured
+      `focused=none` (plan 581). `CommandMenuInput`'s `autoFocus` took native
+      focus in the same commit, before `useModalFocus` recorded the opener, so
+      the saved id was the input being destroyed. The field now relies on the
+      dialog's `initialFocus` (the ring stays seeded from the open state), and
+      the dead `Home`/`End` branches (consumed by the host input) are gone; 1
+      native case (Command menu 24), mutation proof; docs, `COMPONENTS.md` and
+      the inventory synced (owner: components).
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

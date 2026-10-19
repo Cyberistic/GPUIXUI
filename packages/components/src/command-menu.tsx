@@ -41,7 +41,7 @@ import {
 import { Dialog, DialogContent } from "./dialog.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
-import { isDismiss, isDown, isFirst, isLast, isUp } from "./internal/key.js";
+import { isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
   type PartChildren,
@@ -221,8 +221,6 @@ export const CommandMenu = ({
     }
     if (isDown(event)) step({ _tag: "Move", delta: 1 });
     else if (isUp(event)) step({ _tag: "Move", delta: -1 });
-    else if (isFirst(event)) step({ _tag: "First" });
-    else if (isLast(event)) step({ _tag: "Last" });
   };
 
   assertParts(commandMenuRoot, children);
@@ -281,8 +279,10 @@ export const CommandMenuInput = ({
   const theme = useTheme();
   const { query, setQuery, runActive, handleKeyDown, registerInput } =
     useCommandMenu();
-  // The palette always `autoFocus`es this field and the runtime focuses it after
-  // React's effects, so `onFocus` never runs on mount (plans 388, 523).
+  // The dialog focuses this field through `initialFocus` after recording the
+  // opener; an `autoFocus` here would claim focus first and break the restore
+  // (plan 589). The runtime focuses after React's effects, so `onFocus` never
+  // runs on mount (plans 388, 523) and the ring is seeded from the open state.
   const [focused, setFocused] = useState(true);
 
   return (
@@ -291,7 +291,6 @@ export const CommandMenuInput = ({
       testId="command-input"
       aria-label={label}
       placeholder={placeholder}
-      autoFocus
       value={query}
       onChange={(event) => setQuery(event.value ?? "")}
       onSubmit={runActive}

@@ -50,11 +50,14 @@ first arrow key. That is why this palette does not reuse the menu registry, only
 the pure `menu/logic.ts` arithmetic. The list scrolls the highlighted row into
 view as it moves, so `Enter` never runs a row the user cannot see (plan 530).
 
+Closing the palette — `Escape` or running a command — returns focus to the
+control that held it before the palette opened, through the dialog's recorded
+opener (plan 589).
+
 | Key | Result |
 | ---- | ------ |
 | type | filters; the highlight resets to the first enabled match |
 | `ArrowDown` / `ArrowUp` | move the highlight, wrapping and skipping disabled rows |
-| `Home` / `End` | handled by the component, but not delivered by the GPUix `<input>` in 0.10.0 (measured); use the arrows or the pointer |
 | `Enter` | runs the highlighted action and closes |
 | `Escape` | closes |
 | `Tab` | follows the dialog's trap |
@@ -163,26 +166,26 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
   state unless the app owns and persists `recent`; there is no per-query history.
 - `Home` and `End` do not reach the palette while the GPUix `<input>` holds
   focus: the host consumes them and no key-down is emitted (measured in 0.10.0;
-  the scroll offset does not change). The component keeps its branches for when
-  the runtime forwards them, and the arrows are the working path.
+  the scroll offset does not change). The palette has no branch for them, so the
+  arrows are the path to the first and last rows.
 - The 320 px list scrolls with the highlight; a row that left the viewport is
   brought back on the next move (plan 530).
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (23 tests):
-focus landing on the input, the input's focus ring, typing filtering the list
-while focus stays put, ArrowDown + Enter running the second match and closing, a
-clicked row, the empty label, a custom filter, a disabled action refusing to run,
-Escape closing, a non-contiguous query matching initials, ranking deciding the
-default `Enter` target, group order surviving ranking, an empty query keeping
-declaration order, a caller-supplied empty state, the input's placeholder/name
-coming from the part, a caller-composed row running its `onClick` before the
-action, a highlighted row staying inside the list viewport after 24 arrow
-presses and returning to the top as the highlight moves back up, and recents: a
-run command shown first on reopen, recency order without a duplicate row,
-`defaultRecent`, normal ranking while a query is typed, and a controlled list
-that reports without moving.
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (24 tests):
+focus landing on the input, the input's focus ring, closing returning focus to
+the control that opened the palette, typing filtering the list while focus stays
+put, ArrowDown + Enter running the second match and closing, a clicked row, the
+empty label, a custom filter, a disabled action refusing to run, Escape closing,
+a non-contiguous query matching initials, ranking deciding the default `Enter`
+target, group order surviving ranking, an empty query keeping declaration order,
+a caller-supplied empty state, the input's placeholder/name coming from the part,
+a caller-composed row running its `onClick` before the action, a highlighted row
+staying inside the list viewport after 24 arrow presses and returning to the top
+as the highlight moves back up, and recents: a run command shown first on reopen,
+recency order without a duplicate row, `defaultRecent`, normal ranking while a
+query is typed, and a controlled list that reports without moving.
 
 `src/command-menu/logic.test.ts` covers recording (front insert, dedupe, cap,
 head no-op) and the empty-query ordering (recent group, declaration order,
