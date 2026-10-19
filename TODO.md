@@ -435,6 +435,13 @@ retired once both branches are one
       disabled; 1 new native case (Color picker 11), proven to fail on the old
       input and a pin keeps the enabled field reachable; docs, `COMPONENTS.md`
       and the inventory synced (owner: components)
+    - [x] Keyboard shortcuts: a raw `aria-level` is honoured, and never leaks
+      onto the group — plan 630. Plan 617 promised the raw fallback; the group
+      only wired the typed `level` and spread `aria-level` onto its
+      `role="group"` element. The heading now reads
+      `headingLevel(level, authoredLevel, 3)` and the raw prop is destructured
+      off `rest`; 2 native cases (Keyboard shortcuts 9), both failing on the old
+      source; docs and `COMPONENTS.md` synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

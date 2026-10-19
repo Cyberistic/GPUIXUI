@@ -18,7 +18,7 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Children, isValidElement } from "react";
-import { type HeadingLevel } from "./internal/heading.js";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import {
   assertParts,
   type PartChildren,
@@ -80,13 +80,13 @@ export interface KeyboardShortcutsGroupProps extends Omit<Props, "children"> {
 export const KeyboardShortcutsGroup = ({
   label,
   level,
+  "aria-level": authoredLevel,
   children,
   style,
   ...rest
 }: KeyboardShortcutsGroupProps) => {
   const theme = useTheme();
   assertParts(shortcutsGroup, children);
-  const headingAt = level ?? 3;
 
   const rows = Children.toArray(children);
   const lastShortcut = rows.reduce(
@@ -111,7 +111,7 @@ export const KeyboardShortcutsGroup = ({
     >
       <text
         role="heading"
-        aria-level={headingAt}
+        aria-level={headingLevel(level, authoredLevel, 3)}
         style={{
           ...textStyle(theme, "caption"),
           color: theme.colors.mutedForeground,

@@ -147,6 +147,41 @@ describe("KeyboardShortcuts", () => {
     sheet.unmount();
   });
 
+  it("honours a raw aria-level, and the typed level wins", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Editor shortcuts">
+        <KeyboardShortcutsGroup label="Raw" aria-level={4} testId="raw-group">
+          <KeyboardShortcut label="New file" accelerator="mod+n" />
+        </KeyboardShortcutsGroup>
+        <KeyboardShortcutsGroup label="Typed" level={2} aria-level={4}>
+          <KeyboardShortcut label="Save" accelerator="mod+s" />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(
+      nodesWithRole(sheet.renderer, "heading").map((node) => node.level),
+    ).toEqual([Option.some(4), Option.some(2)]);
+
+    sheet.unmount();
+  });
+
+  it("keeps a raw aria-level off the group element", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Editor shortcuts">
+        <KeyboardShortcutsGroup label="Raw" aria-level={4} testId="raw-group">
+          <KeyboardShortcut label="New file" accelerator="mod+n" />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(
+      sheet.renderer.findByTestId("raw-group")?.customProps?.["aria-level"],
+    ).toBeUndefined();
+
+    sheet.unmount();
+  });
+
   it("paints the keycap surface from the muted roles", () => {
     const sheet = renderComponent(<Sheet />);
 
