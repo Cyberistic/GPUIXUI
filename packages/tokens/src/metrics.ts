@@ -855,6 +855,29 @@ export function themeMetricFailures(
       dimensions.carouselIndicatorActiveWidth,
       dimensions.carouselIndicatorSize,
     ),
+    // The timeline connector is `borderWidth.thin`; a marker thinner than the
+    // rail it marks does not read as a dot. A zero marker is the positive
+    // rule's single diagnostic, so the dependent rules wait for a usable one.
+    ...(usableBound(dimensions.timelineMarkerSize)
+      ? atLeast(
+          "dimensions",
+          "timelineMarkerSize",
+          dimensions.timelineMarkerSize,
+          borderWidth.thin,
+        )
+      : []),
+    // The dot is centred in the column the rail occupies, so the column must
+    // contain it: a marker wider than its column paints outside the rail. A
+    // zero column is its own positive diagnostic, so the fit rule waits too.
+    ...(usableBound(dimensions.timelineMarkerSize) &&
+    usableBound(dimensions.timelineMarkerColumnWidth)
+      ? atLeast(
+          "dimensions",
+          "timelineMarkerColumnWidth",
+          dimensions.timelineMarkerColumnWidth,
+          dimensions.timelineMarkerSize,
+        )
+      : []),
     // A dialog is offered in three sizes and "large" may not be narrower than
     // "medium": the surface a consumer asks for by name must grow.
     ...ladder(

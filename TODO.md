@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 249/323
+`[x]` `[████████░░]` 251/324
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2096,6 +2096,15 @@ every default-contrast platform and recipe dark set) while `track` clears the
 floor at 1.069:1 in the tightest set; a copyable `countdownStyle` example, the
 catalogue and design-system sentences, the ledger clause and derived docs guards
 ship, with no token or pair change (plan 603)
+
+`[x]` Ship the timeline marker's fixed metrics — `timelineMarkerSize` (8) and
+`timelineMarkerColumnWidth` (16) replace the 16/8 literals in
+`components/timeline.tsx`, and the metric contract holds the dot to the rail's
+`borderWidth.thin` and to the column that centres it; the copy-and-own
+dimensions example sizes both, and no shipped pixel moves (plan 604)
+`[ ]` Cross-team: `components` reads `theme.dimensions.timelineMarkerSize` and
+`theme.dimensions.timelineMarkerColumnWidth` for `timeline.tsx`'s 16px marker
+column and 8px dot instead of the literals (owner: `components`; plan 604)
 
 ## Phase C — Tier 1–2 components
 

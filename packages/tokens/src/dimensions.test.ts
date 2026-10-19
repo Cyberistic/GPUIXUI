@@ -108,6 +108,8 @@ describe("component dimensions", () => {
     expect(narrowDrawerTheme.dimensions.dialogWidthLg).toBe(640);
     expect(narrowDrawerTheme.dimensions.chatViewportMinHeight).toBe(200);
     expect(narrowDrawerTheme.dimensions.dateFieldWidth).toBe(240);
+    expect(narrowDrawerTheme.dimensions.timelineMarkerSize).toBe(12);
+    expect(narrowDrawerTheme.dimensions.timelineMarkerColumnWidth).toBe(24);
     expect(narrowDrawerTheme.dimensions.notificationPanelWidth).toBe(360);
     expect(narrowDrawerTheme.dimensions.notificationListMaxHeight).toBe(320);
     expect(dimensionsBaseTheme.dimensions).toEqual(dimensions);

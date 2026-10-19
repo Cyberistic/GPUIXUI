@@ -151,6 +151,10 @@ export interface Dimensions {
   readonly carouselIndicatorSize: number;
   /** 18px — the active carousel indicator's width. */
   readonly carouselIndicatorActiveWidth: number;
+  /** 8px — the event dot on a timeline rail; at least the rail's width. */
+  readonly timelineMarkerSize: number;
+  /** 16px — the column the timeline dot and its connector sit in. */
+  readonly timelineMarkerColumnWidth: number;
   /** 360px — a small dialog's maximum surface width. */
   readonly dialogWidthSm: number;
   /** 480px — the default dialog's maximum surface width. */
@@ -195,6 +199,8 @@ export const dimensions: Dimensions = {
   chatViewportMinHeight: 160,
   carouselIndicatorSize: 8,
   carouselIndicatorActiveWidth: 18,
+  timelineMarkerSize: 8,
+  timelineMarkerColumnWidth: 16,
   dialogWidthSm: 360,
   dialogWidthMd: 480,
   dialogWidthLg: 640,

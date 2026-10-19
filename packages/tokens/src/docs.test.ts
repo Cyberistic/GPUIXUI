@@ -2611,6 +2611,14 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the timeline marker dimensions and rule", () => {
+    const sentence = `A timeline's event dot is ${dimensions.timelineMarkerSize}px in a ${dimensions.timelineMarkerColumnWidth}px column — at least the rail's width and no wider than the column that centres it.`;
+    expect(designSystem.includes(sentence), sentence).toBe(true);
+    expect(markdownProse).toContain(
+      "A timeline's marker is the same kind of fixed mark: its dot is at least the `borderWidth.thin` connector it sits on and no wider than the column that centres it, so a brand can size the rail's mark without painting it outside the rail.",
+    );
+  });
+
   it("states that the shape bounds read the theme's own extremes", () => {
     expect(markdownProse).toContain(
       "`radius.full` must round the largest corner step the theme carries",

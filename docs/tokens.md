@@ -1071,6 +1071,8 @@ every density.
 | `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
 | `dimensions.carouselIndicatorSize` | 8 | inactive carousel indicator |
 | `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
+| `dimensions.timelineMarkerSize` | 8 | event dot on a timeline rail; at least the rail's width (`borderWidth.thin`) |
+| `dimensions.timelineMarkerColumnWidth` | 16 | column the dot and its connector sit in; at least the marker |
 | `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width |
 | `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width |
 | `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow |
@@ -1090,7 +1092,10 @@ A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both ax
 so a theme cannot make "large" narrower than "medium". A dialog's three surface
 widths are a third ladder for the same reason — `lg` may not be narrower than
 `md`. A carousel's active mark may elongate but never shrink below its idle dot,
-and a message viewport holds at least one row. A calendar day is a control, so
+and a message viewport holds at least one row. A timeline's marker is the same
+kind of fixed mark: its dot is at least the `borderWidth.thin` connector it
+sits on and no wider than the column that centres it, so a brand can size the
+rail's mark without painting it outside the rail. A calendar day is a control, so
 its cell fits the theme's own small control; a time segment holds two body
 digits, so it is at least one `body` em wide; and an avatar's presence dot is at
 most half the smallest avatar the theme carries, because it sits on that

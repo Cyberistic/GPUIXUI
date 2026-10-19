@@ -144,7 +144,8 @@ not overridable. An explicitly `undefined`
 value is treated as omitted, so a partial config spread cannot erase a token.
 Component dimensions include the drawer and dialog ladders, the date field
 width, the calendar day cell, the time segment, the avatar presence mark, the
-shortest message viewport, the carousel marks and the notification inbox's
+shortest message viewport, the carousel marks, the timeline marker and the
+notification inbox's
 panel, list and unread mark;
 they merge field by field with the rest of the group. A
 runnable example lives in
