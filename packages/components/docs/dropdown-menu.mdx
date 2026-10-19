@@ -273,7 +273,7 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `DropdownMenuSeparator` | `div` (`role="separator"`) | — |
 | `DropdownMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
 | `DropdownMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
-| `DropdownMenuSubContent` | anchored surface | `label?: string` |
+| `DropdownMenuSubContent` | anchored surface | `label?: string`, `ref?: Ref<PublicInstance>` (composed with the level's internal surface ref, shared with `ContextMenuSubContent`) |
 
 ## Theming
 
@@ -337,7 +337,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (56 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (57 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
@@ -362,9 +362,10 @@ clickable, its deepest row running once, and an outside press still closing ever
 level — and the radio group: one marked row, the reported value, the menu
 staying open, a controlled value that does not drift, `Enter`/`Space` selection,
 a skipped disabled row, the `menuitemradio` role and its selected state, and a
-group inside a submenu that closes one level on `Escape` — and group naming: a
+group inside a submenu that closes one level on `Escape` — group naming: a
 group named from its label child, its `label` prop, and a caller `aria-label`
-winning over both.
+winning over both — and a caller `ref` on a submenu composed with the level's
+internal surface ref, so a press inside it still runs its row (plan 696).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

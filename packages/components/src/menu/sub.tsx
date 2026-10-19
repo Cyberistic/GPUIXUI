@@ -241,6 +241,7 @@ export const MenuSubContent = ({
   onMouseLeave,
   style,
   testId,
+  ref,
   ...rest
 }: MenuSubContentProps) => {
   const renderer = useGpuix().renderer;
@@ -331,9 +332,10 @@ export const MenuSubContent = ({
     [renderer, stack],
   );
 
-  const setSurface = useCallback((next: PublicInstance | null) => {
+  const attachSurface = useCallback((next: PublicInstance | null) => {
     surface.current = next;
   }, []);
+  const setSurface = useMergedRef<PublicInstance | null>(attachSurface, ref);
 
   useLayoutEffect(() => {
     if (!open) return;

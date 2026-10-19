@@ -275,7 +275,7 @@ ReadonlyArray<string>`. Every part merges `style` last where it takes one.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Combobox` | GPUix's headless combobox root | `options: ReadonlyArray<ComboboxOption>` (required), `value?: string \| ReadonlyArray<string>`, `defaultValue?: string \| ReadonlyArray<string>`, `onValueChange?: (value: ComboboxSelection) => void`, `multiple?: boolean` (default `false`), `disabled?: boolean`, `onQueryChange?: (query: string) => void`, `debounce?: number` (default `0`), `shouldFilter?: boolean` (default `true`), `loading?: boolean`, `onCreate?: (query: string) => void`, `createLabel?: (query: string) => string` |
-| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string` (the accessible name; when omitted the visible selected labels or placeholder name it), `testId?: string` (default `"combobox-trigger"`), plus the host props it accepts (`style`, `autoFocus`, focus/key handlers and `aria-*`) |
+| `ComboboxTrigger` | headless trigger (`role="button"`, `aria-expanded`) | `placeholder?: string` (default `"Select…"`), `label?: string` (the accessible name; when omitted the visible selected labels or placeholder name it), `testId?: string` (default `"combobox-trigger"`), `ref?: Ref<PublicInstance>` (composed with the root's registration), plus the host props it accepts (`style`, `autoFocus`, focus/key handlers and `aria-*`) |
 | `ComboboxContent` | anchored popup | `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `ComboboxInput` | `input` | `placeholder?: string` (default `"Search…"`), `label?: string` (default `"Search options"`), `onChange?: (event: EventPayload) => void` |
 | `ComboboxList` | GPUix's listbox: one labelled group per contiguous run, one row per visible option | `label?: string` (default `"Options"`), `testId?: string` (default `"combobox-list"`), `itemStyle?: StateStyle<ComboboxItemState>` |
@@ -342,14 +342,15 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (54 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (55 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), `defaultOpen` with its one empty-query report, the controlled
 open/close contract (a refused close leaves the popup painted), the trigger's own
 ring (auto-focused in both themes; given up while the
 popup's field holds focus; painted from the sampled native focus when the
 trigger is reached by code and when an accepted close returns focus), a caller
-`style` merging over the trigger's base, a
+`style` merging over the trigger's base, a caller `ref` composed with the root's
+registration so a press on the open trigger still closes it once (plan 696), a
 disabled trigger painting no ring, a trigger named from its placeholder and from
 its selected labels when no `label` is authored (a caller `aria-label` still
 wins and is trimmed), a centred popup and a near-bottom popup that opens above

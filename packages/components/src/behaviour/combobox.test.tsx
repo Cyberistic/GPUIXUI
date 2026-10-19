@@ -36,9 +36,10 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useState } from "react";
+import { createRef, useState, type Ref } from "react";
 import { nodesWithRole, type A11yNode } from "../internal/a11y.js";
 import {
   finishMotion,
@@ -96,6 +97,7 @@ const Picker = ({
   shouldFilter,
   loading,
   optionList,
+  triggerRef,
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
@@ -115,6 +117,7 @@ const Picker = ({
   readonly shouldFilter?: boolean;
   readonly loading?: boolean;
   readonly optionList?: ReadonlyArray<ComboboxOption>;
+  readonly triggerRef?: Ref<PublicInstance>;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
@@ -140,6 +143,7 @@ const Picker = ({
       onValueChange={onValueChange}
     >
       <ComboboxTrigger
+        ref={triggerRef}
         label={triggerLabel}
         {...(triggerPlaceholder === undefined
           ? {}
@@ -1372,6 +1376,41 @@ describe("Combobox", () => {
 
     expect(trigger?.style.backgroundColor).toBe("#FF0000");
     expect(trigger?.style.borderRadius).toBe(darkTheme.radius.md);
+
+    picker.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 696): the trigger spread its props after passing
+   * the root's registration ref, so a caller's `ref` — part of the public prop
+   * type — replaced the registration instead of composing with it. The popup
+   * then read no trigger, and a press on its own trigger counted as an outside
+   * press: closing and immediately re-opening.
+   */
+  it("feeds both the internal and the caller's trigger ref", async () => {
+    const ref = createRef<PublicInstance>();
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker triggerRef={ref} onOpenChange={onOpenChange} />,
+    );
+
+    expect(picker.renderer.findByTestId("combobox-trigger")).toBeDefined();
+    expect(ref.current).not.toBeNull();
+    expect(ref.current?.id).toBe(
+      picker.renderer.findByTestId("combobox-trigger")?.id,
+    );
+
+    await open(picker);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    // The internal registration still knows where the trigger is, so a press
+    // on it closes the popup instead of closing then re-opening.
+    onOpenChange.mockClear();
+    clickCentreOf(picker, "combobox-trigger");
+    await settle();
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).not.toHaveBeenCalledWith(true);
 
     picker.unmount();
   });

@@ -140,7 +140,7 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | ---- | ------- | ----- |
 | `ContextMenu` | provider (no host element) | `open?: boolean`, `defaultOpen?: boolean` (default `false`), `onOpenChange?: (open: boolean) => void` |
 | `ContextMenuTrigger` | `div` (the right-click target) | `disabled?: boolean` (default `false`) |
-| `ContextMenuContent` | anchored surface | `label?: string` (default `"Context menu"`), `testId?: string` (default `"context-menu"`) |
+| `ContextMenuContent` | anchored surface | `label?: string` (default `"Context menu"`), `testId?: string` (default `"context-menu"`), `ref?: Ref<PublicInstance>` (composed with the surface's internal ref) |
 | `ContextMenuItem` | `div` (`role="menuitem"`) | the shared row props |
 | `ContextMenuCheckboxItem` | `div` (`role="menuitemcheckbox"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
 | `ContextMenuRadioGroup` | `div` (`role="group"`) | `value: string \| null` (required), `onValueChange: (value: string) => void` (required), `label?: string` |
@@ -150,7 +150,7 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `ContextMenuSeparator` | `div` (`role="separator"`) | — |
 | `ContextMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
 | `ContextMenuSubTrigger` | `div` (`role="menuitem"`, `aria-expanded`) | the shared row props except `onSelect`, `closeOnSelect` and `tone` |
-| `ContextMenuSubContent` | anchored surface | `label?: string` |
+| `ContextMenuSubContent` | anchored surface | `label?: string`, `ref?: Ref<PublicInstance>` (composed with the level's internal surface ref, shared with `DropdownMenuSubContent`) |
 
 ## Theming
 
@@ -196,7 +196,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (21 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (22 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
@@ -212,7 +212,8 @@ row) and a `disabled` row that opens nothing are shared with the Dropdown menu's
 submenus and proven by `src/behaviour/dropdown-menu.test.tsx`; this suite does not
 repeat them. The shared row parts also paint the highlight bar and the
 checkbox/radio marks with the row's `popoverForeground` ink, because `accent` is
-a wash and measures about 1.1:1 on the menu surface.
+a wash and measures about 1.1:1 on the menu surface. A caller `ref` on
+`ContextMenuContent` is composed with the surface's internal ref (plan 696).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

@@ -13,9 +13,10 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useState } from "react";
+import { createRef, useState } from "react";
 import {
   Carousel,
   CarouselControl,
@@ -656,6 +657,42 @@ describe("Carousel", () => {
 
     clickCentreOf(gallery, "next");
     expect(onValueChange).toHaveBeenLastCalledWith(1);
+    expect(paintedSlides(gallery)).toEqual(["Two"]);
+
+    gallery.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 696): the root spread its props and then passed
+   * its own `ref`, so a caller's `ref` — part of the public prop type — never
+   * ran and stayed `null`.
+   */
+  it("feeds both the internal and the caller's root ref", () => {
+    const ref = createRef<PublicInstance>();
+    const gallery = renderComponent(
+      <div style={{ width: 480 }}>
+        <Carousel ref={ref} testId="carousel" label="Screenshots">
+          <CarouselTrack testId="track">
+            <CarouselSlide testId="slide-0">
+              <text>One</text>
+            </CarouselSlide>
+            <CarouselSlide testId="slide-1">
+              <text>Two</text>
+            </CarouselSlide>
+          </CarouselTrack>
+        </Carousel>
+      </div>,
+    );
+
+    expect(ref.current?.id).toBe(gallery.renderer.findByTestId("carousel")?.id);
+
+    // The internal ref still owns the keyboard: the root steps only while it
+    // is the focused element (plan 614).
+    gallery.renderer.focusElement(
+      gallery.renderer.findByTestId("carousel")?.id ?? -1,
+    );
+    gallery.renderer.simulateKeystrokes("right");
+
     expect(paintedSlides(gallery)).toEqual(["Two"]);
 
     gallery.unmount();

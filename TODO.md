@@ -671,6 +671,16 @@ retired once both branches are one
       shortcuts 9 → 10, accelerator tests 10 → 11, capture tests 8 → 9), all
       three failing at `HEAD`; docs, `COMPONENTS.md`, the plan index and
       `PLAN.md` D30 synced (owner: components)
+    - [x] A caller ref reaches the late parts too — plan 696; measured on
+      2026-10-19: `Carousel` and `ContextMenuContent` spread `ref` and then
+      overwrote it, so a caller's ref stayed `null`, while `ComboboxTrigger` and
+      the two submenu aliases spread it **after** their own ref, so a caller's
+      ref disabled the internal registration (a trigger press closed then
+      re-opened the popup; a press inside a submenu closed it before its row
+      ran). All four now merge with `useMergedRef`; 4 native cases (Carousel 21,
+      Combobox 55, Context menu 22, Dropdown menu 57), each failing at `HEAD`
+      for its recorded reason; docs, `COMPONENTS.md`, `PLAN.md` D30 and the
+      inventory count synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1331,8 +1341,12 @@ the docs-site workstream; the `packages/components` half is plan 337)
       849 passed / 31 failed of 880 (the same plan-540 defects). Plans 693/694
       re-ran the same gates on 2026-10-19: all three exit 0, unit 479 in 46
       files, native **851 passed / 31 failed of 882** — the same plan-540
-      binding defects and no new failure. Re-run it before release — every later
-      merge can change the count.
+      binding defects and no new failure. Plan 696 re-ran all three gates on
+      2026-10-19 after the caller-ref composition: `check`, `lint` and `test`
+      exit 0 (unit 479 in 46 files), and the full native suite is
+      **855 passed / 31 failed of 886** — the same plan-540 binding defects and
+      the four new caller-ref cases among the passes. Re-run it before release —
+      every later merge can change the count.
 
 ## Swarm-owned blockers (fix these)
 

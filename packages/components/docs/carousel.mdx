@@ -75,7 +75,7 @@ merges `style` last.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `Carousel` | `role="group"` with `aria-label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, children |
+| `Carousel` | `role="group"` with `aria-label`, `tabIndex={0}` | `label` (required), `value?`, `defaultValue?` (0), `onValueChange?`, `loop?`, `ref?: Ref<PublicInstance>` (composed with the root's internal ref), children |
 | `CarouselTrack` | the slide row | children |
 | `CarouselSlide` | one slide, inactive ones hidden with `visibility` and a collapsed box | `style?: StateStyle<CarouselSlideState>`, children |
 | `CarouselControl` | button | `direction: "previous" \| "next"`, `label?`, `disabled?` |
@@ -130,7 +130,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/carousel.test.tsx` runs in the real GPUix renderer (21 tests):
 exactly one slide painted, an inactive slide with no layout box, the active slide
 taking a click the inactive one used to take, a hidden slide keeping its state
 across a step, control stepping, edge clamping, loop wrapping, arrows and
@@ -138,8 +138,9 @@ Home/End, a control inside a slide keeping its own keys while the focused root
 still steps, a controlled carousel, region naming and disabled edges, one named
 indicator per slide with the active one marked (press and `Enter`/`Space` both
 jump), a fractional or non-finite index still naming exactly one slide, the root
-and dot focus rings (including the `autoFocus` seed), and a style callback
-receiving `{ active, index }` in both themes.
+and dot focus rings (including the `autoFocus` seed), a style callback receiving
+`{ active, index }` in both themes, and a caller `ref` receiving the root
+without losing the internal key-ownership ref (plan 696).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

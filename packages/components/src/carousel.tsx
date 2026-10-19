@@ -47,6 +47,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import { focusRing, useTheme } from "./internal/theme.js";
 
 /** The rules a carousel part follows; throws outside a {@link Carousel}. */
@@ -100,6 +101,7 @@ export const Carousel = ({
   label,
   children,
   style,
+  ref,
   onKeyDown,
   onFocus,
   onBlur,
@@ -109,6 +111,7 @@ export const Carousel = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const root = useRef<PublicInstance | null>(null);
+  const setRoot = useMergedRef<PublicInstance | null>(root, ref);
   const [focused, setFocused] = useState(autoFocus);
   const [value, setValue] = useControllableState({
     value: valueProp,
@@ -149,7 +152,7 @@ export const Carousel = ({
     <CarouselContext.Provider value={context}>
       <div
         {...rest}
-        ref={root}
+        ref={setRoot}
         role="group"
         aria-label={label}
         autoFocus={autoFocus}

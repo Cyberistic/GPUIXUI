@@ -51,7 +51,7 @@
 
 import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef, useState } from "react";
+import { createRef, useState, type Ref } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -198,8 +198,10 @@ const Searchable = ({
 /** A menu with two submenus and an outside target. */
 const WithSubmenus = ({
   onSelect,
+  submenuRef,
 }: {
   readonly onSelect: (action: string) => void;
+  readonly submenuRef?: Ref<PublicInstance>;
 }) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
@@ -212,7 +214,11 @@ const WithSubmenus = ({
         </DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger testId="share">Share</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent testId="submenu" label="Share">
+          <DropdownMenuSubContent
+            ref={submenuRef}
+            testId="submenu"
+            label="Share"
+          >
             <DropdownMenuItem
               testId="copy-link"
               onSelect={() => onSelect("copy-link")}
@@ -434,14 +440,22 @@ const RadioSubmenu = ({
 };
 
 /** A menu at the right edge, where a right-hand submenu cannot fit. */
-const RightEdgeSubmenu = () => (
+const RightEdgeSubmenu = ({
+  submenuRef,
+}: {
+  readonly submenuRef?: Ref<PublicInstance>;
+}) => (
   <div style={{ paddingLeft: 1000, paddingTop: 100 }}>
     <DropdownMenu defaultOpen>
       <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
       <DropdownMenuContent testId="menu" label="Actions">
         <DropdownMenuSub>
           <DropdownMenuSubTrigger testId="share">Share</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent testId="submenu" label="Share">
+          <DropdownMenuSubContent
+            ref={submenuRef}
+            testId="submenu"
+            label="Share"
+          >
             <DropdownMenuItem testId="copy">Copy link</DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
@@ -934,6 +948,34 @@ describe("DropdownMenu submenus", () => {
     expect(surface.x + surface.width).toBeLessThanOrEqual(row.x);
     expect(surface.x).toBeGreaterThanOrEqual(8);
     expect(Math.abs(surface.y - row.y)).toBeLessThanOrEqual(8);
+
+    menu.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 696): the surface spread its props after passing
+   * its own `ref`, so a caller's `ref` — part of the public prop type —
+   * replaced the internal surface ref instead of composing with it. The flip
+   * measurement then read no surface and a right-edge submenu stopped opening
+   * left.
+   */
+  it("feeds both the internal and the caller's submenu ref", () => {
+    const ref = createRef<PublicInstance>();
+    const onSelect = vi.fn();
+    const menu = renderComponent(
+      <WithSubmenus submenuRef={ref} onSelect={onSelect} />,
+    );
+    clickCentreOf(menu, "trigger");
+    clickCentreOf(menu, "share");
+
+    expect(ref.current).not.toBeNull();
+    expect(ref.current?.id).toBe(menu.renderer.findByTestId("submenu")?.id);
+
+    // The internal surface ref still recognises a press inside the level, so
+    // the row runs once instead of the surface closing first (plan 389).
+    clickCentreOf(menu, "copy-link");
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(onSelect).toHaveBeenCalledWith("copy-link");
 
     menu.unmount();
   });

@@ -546,11 +546,13 @@ export const ComboboxTrigger = ({
   onBlur,
   onKeyDown,
   style,
+  ref,
   ...rest
 }: ComboboxTriggerProps) => {
   const theme = useTheme();
   const { selectedValues, open, disabled, labelFor, registerTrigger, trigger } =
     useCombobox();
+  const setTrigger = useMergedRef<PublicInstance | null>(registerTrigger, ref);
   // The runtime delivers no React `focus`/`blur` for a native focus change
   // (plans 536/540), so the ring follows the host the renderer reports —
   // whether the trigger was tabbed onto, pressed, or given focus back by an
@@ -577,7 +579,7 @@ export const ComboboxTrigger = ({
     <HeadlessTrigger
       role="button"
       aria-expanded={open}
-      ref={registerTrigger}
+      ref={setTrigger}
       testId={testId}
       disabled={disabled}
       autoFocus={autoFocus && !disabled}

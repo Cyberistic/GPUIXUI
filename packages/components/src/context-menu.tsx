@@ -290,10 +290,12 @@ export const ContextMenuContent = ({
   testId = "context-menu",
   style,
   onMouseDownOutside,
+  ref,
   ...rest
 }: ContextMenuContentProps) => {
   const { open, point } = useContextMenuContext();
   const surface = useRef<PublicInstance | null>(null);
+  const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const surfaceStack = useMemo(() => [surface], [surface]);
   assertParts(contextMenuContent, children);
 
@@ -306,7 +308,7 @@ export const ContextMenuContent = ({
           {...rest}
           label={label}
           testId={testId}
-          ref={surface}
+          ref={setSurface}
           onMouseDownOutside={(event) => {
             onMouseDownOutside?.(event);
             dismissTopLayer(event);

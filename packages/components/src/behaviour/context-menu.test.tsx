@@ -22,7 +22,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef } from "react";
+import { createRef, type Ref } from "react";
 import * as Option from "effect/Option";
 import {
   boundsOf,
@@ -56,9 +56,11 @@ const rightClickAt = (root: ComponentTestRoot, x: number, y: number): void => {
 const ProjectRow = ({
   onSelect,
   disabled,
+  contentRef,
 }: {
   readonly onSelect: (action: string) => void;
   readonly disabled?: boolean;
+  readonly contentRef?: Ref<PublicInstance>;
 }) => (
   <ContextMenu>
     <ContextMenuTrigger
@@ -68,7 +70,7 @@ const ProjectRow = ({
     >
       <text>Project</text>
     </ContextMenuTrigger>
-    <ContextMenuContent testId="menu" label="Project actions">
+    <ContextMenuContent ref={contentRef} testId="menu" label="Project actions">
       <ContextMenuItem testId="open" onSelect={() => onSelect("open")}>
         Open
       </ContextMenuItem>
@@ -386,6 +388,29 @@ describe("ContextMenu", () => {
     row.renderer.simulateKeystrokes("shift-f10");
     row.renderer.simulateKeystrokes("escape");
     expect(focusedTestId(row)).toEqual(Option.some("row"));
+
+    row.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 696): the surface spread its props and then
+   * passed its own `ref`, so a caller's `ref` — part of the public prop type —
+   * never ran and stayed `null`.
+   */
+  it("feeds both the internal and the caller's content ref", () => {
+    const ref = createRef<PublicInstance>();
+    const row = renderComponent(
+      <ProjectRow contentRef={ref} onSelect={vi.fn()} />,
+    );
+    const origin = rowOrigin(row);
+    rightClickAt(row, origin.x + 40, origin.y + 40);
+
+    expect(ref.current).not.toBeNull();
+    expect(ref.current?.id).toBe(row.renderer.findByTestId("menu")?.id);
+
+    // The internal surface ref still drives dismissal.
+    row.renderer.simulateKeystrokes("escape");
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
 
     row.unmount();
   });
