@@ -1490,6 +1490,14 @@ retired once both branches are one
       applied, so the paint and the accessibility tree agree; the text of a real
       caption is unchanged. 4 element-tree cases, all four failing against the
       old gate and passing after (offline 734 → 738; plan `577`).
+`[x]` `packages/primitives`: **a blank `selectAll` created an unnamed focus stop**
+      — the `CheckboxGroup` parent row is a focusable `checkbox`, and it was
+      rendered whenever the `selectAll` prop was present, so a computed empty
+      translation published a tab stop with no name (the class plan `573` fixed
+      for `InfoTip`). A blank name now renders no parent row and a real one is
+      trimmed, so the painted label and the announced name agree; row indices
+      follow the row that actually exists. 1 element-tree case, failing in the
+      old direction (offline 738 → 739; plan `578`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

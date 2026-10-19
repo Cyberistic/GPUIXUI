@@ -682,6 +682,24 @@ describe("CheckboxGroup", () => {
     expect(elementChildren(column(blank))).toHaveLength(1);
   });
 
+  it("renders no unnamed select-all row when its name says nothing", () => {
+    // The bug guarded (plan 578): `selectAll` created a focusable `checkbox`
+    // row whenever the prop was present, so a computed blank string produced
+    // an unnamed tab stop — the class plan 573 fixed for `InfoTip`. Absence is
+    // the rule: a blank name creates no parent row.
+    const blank = render({ selectAll: "   " });
+    expect(elementChildren(blank)).toHaveLength(options.length);
+    expect(hostProp(row(blank, 0), "aria-label")).toStrictEqual(
+      Option.some("Email"),
+    );
+    const named = render({ selectAll: "  All channels  " });
+    expect(elementChildren(named)).toHaveLength(options.length + 1);
+    expect(expectSome(hostProp(row(named, 0), "aria-label"))).toBe(
+      "All channels",
+    );
+    expect(expectSome(hostProp(row(named, 0), "role"))).toBe("checkbox");
+  });
+
   it("renders the select-all parent with the state derived from the options", () => {
     const partial = render({ selectAll: "All channels" });
     expect(expectSome(hostProp(row(partial, 0), "aria-label"))).toBe(

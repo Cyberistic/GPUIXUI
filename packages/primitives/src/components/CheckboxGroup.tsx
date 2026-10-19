@@ -47,6 +47,7 @@ import {
   ariaName,
   hasText,
   resolvePartStyle,
+  usableLabel,
   useControlState,
   type StateStyle,
 } from "./internal.js";
@@ -257,6 +258,15 @@ export const renderCheckboxGroup = (
   } = props;
   const rowId = (suffix: string): string | undefined =>
     props.testId === undefined ? undefined : `${props.testId}-${suffix}`;
+  /**
+   * The select-all name, trimmed, or absent.
+   *
+   * A blank name must not create the row: the parent is a focusable
+   * `checkbox`, so a whitespace label would publish an unnamed tab stop (the
+   * class plan 573 fixed for `InfoTip`). Presence of the name is what asks for
+   * the row (plan `578`).
+   */
+  const selectAllLabel = Option.getOrUndefined(usableLabel(selectAll));
   const isFocused = (index: number): boolean =>
     Option.exists(focus.focusedIndex, (focused) => focused === index);
   const parentState = groupParentState(state.current, options);
@@ -266,13 +276,13 @@ export const renderCheckboxGroup = (
       Arr.filter(options, (option) => option.disabled !== true),
     );
   const parent =
-    selectAll === undefined
+    selectAllLabel === undefined
       ? null
       : renderRow(
           {
             value: Option.none(),
             state: parentState,
-            label: selectAll,
+            label: selectAllLabel,
             disabled: parentDisabled,
             invalid: props.invalid === true,
             size,
@@ -288,7 +298,7 @@ export const renderCheckboxGroup = (
           "-all",
         );
   const rows = Arr.map(options, (option, optionIndex) => {
-    const index = optionIndex + (selectAll === undefined ? 0 : 1);
+    const index = optionIndex + (selectAllLabel === undefined ? 0 : 1);
     const rowState: SelectionState = isGroupSelected(
       state.current,
       option.value,

@@ -54,7 +54,7 @@ Uncontrolled, with no parent row:
 | `value` | `readonly string[]` | — | controlled selection; omit to let the group keep its own |
 | `defaultValue` | `readonly string[]` | `[]` | initial selection when uncontrolled |
 | `onValueChange` | `(value: readonly string[]) => void` | none | the next set, only when it changed |
-| `selectAll` | `string` | none | renders one parent row with this visible name and a derived state |
+| `selectAll` | `string` | none | renders one parent row with this visible name and a derived state; a blank name renders no row |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | row flow |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
@@ -115,6 +115,10 @@ order. A press that changes nothing does not call `onValueChange`.
   announced with the name. GPUix has no `aria-describedby`, but it exposes the
   string form; a blank description is absent — neither announced nor painted
   (plans 500, `577`).
+- A blank `selectAll` renders **no parent row**: the parent is a focusable
+  `checkbox`, so a computed empty name would publish an unnamed tab stop (the
+  class plan 573 fixed for `InfoTip`). The name is trimmed; a real one is both
+  painted and announced (plan `578`).
 
 ## Theming
 
@@ -215,7 +219,8 @@ the row that owns the hit area, the tab stop and the accessible name:
   hover/active wash, absent on a disabled row, and the caller's `rowStyle`
   winning last (plan 355); an option description becomes the row's
   `aria-description`, a blank one stays absent from the tree and paints no
-  caption (plans 500, `577`).
+  caption (plans 500, `577`); a blank `selectAll` creates no parent row (plan
+  `578`).
 - `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a
