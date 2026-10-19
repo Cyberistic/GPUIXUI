@@ -540,7 +540,12 @@ the `hover`/`active` washes a row or a slider paints under the pointer and the
 four soft status fills a status panel provides, and its four progress fills are
 marks against it (plans `347` and `503`). A rail that disappears while the row
 is hovered or inside an Alert erases an indeterminate indicator, because the
-groove *is* the value until the fill moves.
+groove *is* the value until the fill moves. The Toast's countdown is the second
+shipped indicator: its 2px groove paints `muted` today, which is `popover` in
+the identity dark theme and every default-contrast platform and recipe dark set
+— a **1.000:1** groove — so the unfilled remainder has no shape. The designed
+composition is `track` for the groove and the tone's `xText` for the bar
+(plan `603`).
 A bordered control keeps its `border` edge on the fill it paints, so the divider
 floor covers `secondary`, `secondaryHover`, `secondaryActive`, `hover`, `active`,
 `accent`, `accentHover` and `accentActive`; a state fill never takes the

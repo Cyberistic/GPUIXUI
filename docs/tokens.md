@@ -3443,8 +3443,15 @@ clear the pressed wash: the inherited identity green forced the groove toward th
 canvas while XP's `active` fill forced it away. The tightest shipped pair is
 Linux light `track` on the `active` wash at **1.050:1**, while identity dark's
 `track` on its `selected` fill measures **1.058:1**; the tightest mark is macOS
-light `success` on the groove at **3.04:1**. `primitives` still paints `muted`;
-the migration is recorded in `TODO.md`.
+light `success` on the groove at **3.04:1**. `primitives` still paints `muted`
+for `Progress` and a `Slider`'s rail, and the Toast's 2px countdown groove paints
+it too (`toast/viewport.tsx`); both migrations are recorded in `TODO.md`. The
+shipped groove measures **1.000:1** on the `popover` card in the identity dark
+theme and every default-contrast platform and recipe dark set, while the designed
+`track` clears the floor there at **1.069:1** in the tightest shipped set
+(Windows dark). [`src/toast-countdown.example.ts`](../packages/tokens/src/toast-countdown.example.ts)
+is the copyable composition: `track` for the groove and the tone's `xText` for
+the bar.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and

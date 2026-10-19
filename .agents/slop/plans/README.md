@@ -279,6 +279,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [598](./598-notification-panel-dimensions.md) | The notification inbox's fixed surface metrics | F | 353, 358, 365, 384, 530, 556, 568 | done |
 | [601](./601-date-field-width.md) | The date field's fixed width and the overlay's false calendar claim | F | 353, 358, 384, 556, 598 | done |
 | [602](./602-diagnostic-order-truth.md) | The diagnostic order the documents retype | F | 383, 398, 540, 573, 583 | done |
+| [603](./603-toast-countdown-groove.md) | The Toast countdown's groove | F | 347, 348, 503, 602 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3076,6 +3077,22 @@ field becomes `dimensions.dateFieldWidth`, a content-fit rule holds it to its
 own insets, gap, one `label` glyph and its `caption` chevron, and the documents
 derive the calendar's grid from `calendarCellSize`. No shipped colour, pair or
 pixel moves.
+
+Plan `603` closes the second shipped instance of the track audit plan `503`
+left in a consumer. `Progress`, `Meter` and `Slider` paint their unfilled groove
+with `track`, but the Toast countdown paints its 2px groove with `muted`
+(`components/src/toast/viewport.tsx:230`) on a `popover` card; `muted` is
+`popover` in the identity dark theme and every platform and recipe dark set, so
+the groove measures **1.000:1** and the unfilled remainder of the countdown has
+no shape, while the designed `track` clears the floor at **1.069:1** in the
+tightest shipped set (Dark · Windows). The catalogue's sentence named only
+`primitives` and said the migration was recorded, but no `TODO.md` row named the
+Toast. This plan records the `components` handoff and ships the copyable
+two-role composition (`track` groove, `statusTone(...).text` bar) as an executed
+example with a test, plus the catalogue, design-system, ledger and TODO
+sentences. No colour, pair, floor, metric or theme moves: `track` on `popover`
+is already measured and the bar's `xText` is held on its surfaces, so a new
+pair would be a guard no consistent palette can fail.
 
 ## How to use a plan
 

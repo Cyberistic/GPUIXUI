@@ -494,6 +494,15 @@ foreground designed for its own tint, on the `popover` card; use
 `statusTone(...).text` (`xText`), which the status-text contract measures on
 `popover` (plan 332; owner: `components`); the shipped pair is held by
 `toastTonePairs` at the secondary floor until this lands (plan 348)
+`[ ]` Cross-team: `components` paints the Toast countdown's 2px groove with
+`theme.colors.track` and its bar with `statusTone(theme, tone).text` —
+`toast/viewport.tsx:230` paints `muted` on a `popover` card, which is the same
+value in the identity dark theme and every default-contrast platform and recipe
+dark set (**1.000:1**), so the unfilled remainder has no shape; `track` is the
+designed groove (`trackSurfacePairs`, **1.069:1** at the tightest on `popover`,
+Windows dark) and `xText` is the readable tone the plan-348 row already asks for.
+Copy `countdownStyle` from `packages/tokens/src/toast-countdown.example.ts`
+(owner: `components`; plan 603)
 `[ ]` Cross-team: `components` sets the `placeholder` role on the transparent
 fields painted on `background` (SearchInput, InlineEdit, ColorPicker, TagInput,
 MentionInput) and adds an `input`-fill placeholder only where it owns that fill —
@@ -2081,6 +2090,12 @@ inserted `highlight` and `nativeText`, its payload list omitted
 checks and `themeNativeTextFailures`, while only the count was guarded; the
 README, the design system, the catalogue and the ledger now derive their order,
 functions, payloads and ordinals from the index (plan 602)
+`[x]` Name the Toast countdown's groove as the second shipped value indicator —
+its 2px track paints `muted` on `popover` (1.000:1 in the identity dark theme and
+every default-contrast platform and recipe dark set) while `track` clears the
+floor at 1.069:1 in the tightest set; a copyable `countdownStyle` example, the
+catalogue and design-system sentences, the ledger clause and derived docs guards
+ship, with no token or pair change (plan 603)
 
 ## Phase C — Tier 1–2 components
 

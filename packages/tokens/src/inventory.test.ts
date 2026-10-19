@@ -235,4 +235,15 @@ describe("COMPONENTS.md design-system rows", () => {
       `in diagnostic order — ${order} — tagging each entry with its \`kind\``,
     );
   });
+
+  it("names the Toast countdown's groove exception", () => {
+    const tokens = row("Design tokens");
+    expect(tokens).toContain(
+      "the shipped Toast countdown still paints its 2px groove with `muted`",
+    );
+    expect(tokens).toContain(
+      "1.000:1 on every default-contrast dark `popover`",
+    );
+    expect(tokens).toContain("(plan 603)");
+  });
 });

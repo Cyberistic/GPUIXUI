@@ -1801,6 +1801,39 @@ describe("docs/tokens.md quoted tightest figures", () => {
     expect(markdownProse).toContain("all at **1.000:1**");
   });
 
+  it("names the Toast countdown's groove and the designed track", () => {
+    const darkSets = shippedThemes.filter(
+      ({ theme }) => theme.mode === "dark" && theme.contrast === "default",
+    );
+    expect(darkSets.length).toBeGreaterThan(0);
+    darkSets.forEach(({ theme }) => {
+      expect(
+        contrastRatio(theme.colors.muted, theme.colors.popover),
+        theme.name,
+      ).toBeLessThan(contrastFloors.default.surface);
+    });
+
+    const [label, ratio] = tightest("track", "popover");
+    expect([label, ratio.toFixed(3)]).toEqual(["Windows dark", "1.069"]);
+
+    expect(markdownProse).toContain(
+      "the Toast's 2px countdown groove paints it too (`toast/viewport.tsx`); both migrations are recorded in `TODO.md`",
+    );
+    expect(markdownProse).toContain(
+      "**1.000:1** on the `popover` card in the identity dark theme and every default-contrast platform and recipe dark set",
+    );
+    expect(markdownProse).toContain(
+      `**${ratio.toFixed(3)}:1** in the tightest shipped set (${label})`,
+    );
+    expect(markdownProse).toContain("toast-countdown.example.ts");
+    expect(designSystem).toContain(
+      "The Toast's countdown is the second shipped indicator",
+    );
+    expect(designSystem).toContain(
+      "`track` for the groove and the tone's `xText` for the bar (plan `603`)",
+    );
+  });
+
   it("quotes the ceiling a translucent fill cannot pass", () => {
     const ceiling = contrastRatio(
       "#FFFFFF",
