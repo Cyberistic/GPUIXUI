@@ -263,7 +263,7 @@ it("steps the number-field example's copies and repaints its summary", async () 
   const runtime = await openWindow();
   renderExample(runtime, "numberField");
   const field = Option.getOrElse(
-    runtime.bounds("number-field-example-copies"),
+    runtime.paintBounds("number-field-example-copies"),
     () => expect.fail("the copies field painted no box"),
   );
   runtime.clickAt(field.x + field.width - 8, field.y + field.height * 0.25);

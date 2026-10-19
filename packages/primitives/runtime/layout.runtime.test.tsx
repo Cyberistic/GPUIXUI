@@ -33,12 +33,20 @@ import {
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
+import {
+  SURFACE,
+  Surface,
+  WINDOW,
+  openWindow,
+  settleFocus,
+  testTheme,
+} from "./fixture.js";
 
 const next = { width: WINDOW.width - testTheme.spacing.lg * 2 } as const;
 
+/** The painted box: every surface here is a plain `div` (plan `597`). */
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
-  Option.getOrElse(runtime.bounds(testId), () =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
@@ -385,6 +393,10 @@ it("scrolls a labelled ScrollArea with the keyboard", async () => {
   const runtime = await openWindow();
   runtime.render(scrollScene({ label: "Properties" }));
   runtime.focusNext();
+  runtime.flush();
+  // The ring is derived from the tracker's sample, not the (missing) focus
+  // event, so it paints on the next tick (plan `590`).
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("s");
   // The region's name reaches assistive technology, not just the prop.
   expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Region" }))).toBe(

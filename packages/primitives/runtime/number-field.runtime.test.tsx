@@ -25,8 +25,9 @@ import {
 } from "../src/testing/index.js";
 import { Surface, openWindow, settleFocus } from "./fixture.js";
 
+/** The painted box: the field's root reports from its content origin. */
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
-  Option.getOrElse(runtime.bounds(testId), () =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 

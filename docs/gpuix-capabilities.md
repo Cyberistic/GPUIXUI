@@ -227,6 +227,34 @@ Measured in the `TestRenderer`: `clockFastForward(ms)` then `flush()` drives it
 (`advanceTime` does not), and the painted `getElementBounds` follows the
 transition.
 
+### Bounds and the box model
+
+`getElementBounds` does **not** return one box. Measured on the pinned
+release-tag build (plan `597`):
+
+| Element | Authored | Report |
+| --- | --- | --- |
+| plain `div`, `width: 100`, `padding: 10`, `borderWidth: 1`, at (12, 12) | 100 × 36 at (12, 12) | `{ x: 23, y: 23, width: 98, height: 34 }` |
+| plain `div`, no border/padding | as authored | as authored |
+| `Button`, `height: 36`, padding 8/16 | 36 high at the group's edge | 36 high at the group's edge (border box) |
+
+The first row is a hybrid: the origin is the **content origin** (inside the
+border and padding) while the size excludes only the border, so padding is
+counted in both. A real pointer hits the full 100 px from x 12 to 111 — the
+painted box is the border box, and the report is short. A `Button` reports its
+border box, and the difference cannot be inferred from the style: the same
+padding produces either shape depending on the host.
+
+Therefore: read `paintBounds` (`paintedBox` in `core/`) **only** for a host
+known to report the content origin — floating surfaces, raw `div` triggers,
+field roots, the slider track — and keep `bounds` for a `Button` and anything
+whose report is already the border box (plan `597`, `packages/primitives`).
+
+A child inside a scrolled container reports its **unscrolled** content
+position on this build (measured: a list capped to 63 px reports a row at 822),
+so visibility inside a scroller cannot be asserted through `getElementBounds`;
+assert the scroll offset instead.
+
 ### Text and input
 
 Text is selectable (with `userSelect` and `selectionColor`), but there is no

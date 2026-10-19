@@ -61,6 +61,7 @@ import {
   tipWidthCap,
   type VerticalSide,
 } from "../core/floating.js";
+import { paintedBox } from "../core/bounds.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { ariaName, mergeStyle, useControlState } from "./internal.js";
@@ -338,17 +339,27 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     // trigger's real box (plan 347).
     const rootId = root.current?.id;
     if (rootId === undefined) return;
-    const bounds = renderer?.getElementBounds?.(rootId);
+    const rawRoot = renderer?.getElementBounds?.(rootId);
     if (
-      bounds === null ||
-      bounds === undefined ||
-      bounds.width <= 0 ||
-      bounds.height <= 0
+      rawRoot === null ||
+      rawRoot === undefined ||
+      rawRoot.width <= 0 ||
+      rawRoot.height <= 0
     )
       return;
+    // The runtime reports a plain `div` from its content origin; the tip's
+    // padding and border are chrome the layout chose around it (plan `597`).
+    const bounds = paintedBox(
+      rawRoot,
+      mergeStyle(tooltipRootStyle, props.style),
+    );
     const tipId = open ? tip.current?.id : undefined;
-    const tipBounds =
+    const rawTip =
       tipId === undefined ? undefined : renderer?.getElementBounds?.(tipId);
+    const tipBounds =
+      rawTip === null || rawTip === undefined
+        ? undefined
+        : paintedBox(rawTip, tooltipStyle(theme));
     setBox({
       left: bounds.x,
       right: bounds.x + bounds.width,
@@ -357,17 +368,16 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
       width: bounds.width,
       height: bounds.height,
       tipWidth:
-        tipBounds === null || tipBounds === undefined || tipBounds.width <= 0
+        tipBounds === undefined || tipBounds.width <= 0
           ? undefined
           : tipBounds.width,
       tipHeight:
-        tipBounds === null || tipBounds === undefined || tipBounds.height <= 0
+        tipBounds === undefined || tipBounds.height <= 0
           ? undefined
           : tipBounds.height,
-      tipLeft:
-        tipBounds === null || tipBounds === undefined ? undefined : tipBounds.x,
+      tipLeft: tipBounds?.x,
     });
-  }, [renderer, open, props.content]);
+  }, [renderer, open, props.content, props.style, theme]);
   const viewport = readWindowSize(renderer);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",

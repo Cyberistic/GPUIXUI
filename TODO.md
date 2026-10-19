@@ -1362,7 +1362,23 @@ retired once both branches are one
       and missed the tip. The tip now declares `userSelect: "none"` (a caller can
       opt back in through `Tooltip.style`), and the chrome-selection class file
       gains one runtime case (plan `398`).
-`[ ]` `packages/primitives`: **the full live suite is not green on this host** —
+`[x]` `packages/primitives`: **the full live suite is green on this host** — closed
+      by plan `597` (2026-10-19): **51 files / 732 tests, 0 failed**. The last
+      class was the published box model, and its resolution is recorded below.
+`[x]` `packages/primitives`: **the published box model** — measured: a plain
+      `div` reports from its **content origin** with a padding-box size while a
+      real pointer hits its **border box** (100 px from x 12…111), and a
+      `Button` reports its border box, so the style alone cannot say which shape
+      a host took. `core/bounds.ts` `paintedBox` + `testing/` `paintBounds` are
+      opt-in for content-origin hosts; `Select` (trigger box, minWidth, side
+      estimate, and the layer's padding overhang), `Tooltip` (root + tip) and
+      `Slider`/`RangeSlider` (track → rail-exact pointer mapping) use them, and
+      the suites that measure those hosts opt in. Three scrolled-child
+      assertions are reclassified with a measured reason (a child inside a
+      scroller reports its unscrolled position). Plan `597`; runtime
+      730→732 tests, 37→0 failures; offline 812/812.
+`[x]` `packages/primitives`: (historical record, resolved by plan `597`) the
+      full live suite was not green —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
       a full `test:runtime` run degrades partway: measured 2026-10-18 22:46,
       **523 passed / 110 failed across 19** focus- and window-dependent files,

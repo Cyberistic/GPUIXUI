@@ -488,7 +488,9 @@ it("paints an attached group's focus ring inside its clip", async () => {
     buttonRecipeRing(testTheme)?.spreadRadius,
   );
   expect(ring.style.borderColor).toBe(buttonRecipeRing(testTheme)?.color);
-  const ringBounds = Option.getOrElse(runtime.boundsOfId(ring.id), () =>
+  // The overlay is a bordered `div`, so its report is its content origin; the
+  // band's edge is the button's edge (plan `597`).
+  const ringBounds = Option.getOrElse(runtime.paintBoundsOfId(ring.id), () =>
     expect.fail("the ring painted no box"),
   );
   // The ring's edge is the button's edge: the whole band is inside the clip.
@@ -776,7 +778,9 @@ it("slides the switch thumb to its new end instead of jumping", async () => {
       <Switch testId="sw" label="Wifi" />
     </Surface>,
   );
-  const track = boundsOf(runtime, "sw");
+  const track = Option.getOrElse(runtime.paintBounds("sw"), () =>
+    expect.fail("the switch painted no track"),
+  );
   const rest = switchThumb(runtime, "sw");
   expect(rest.x - track.x).toBe(3);
   expect(rest.y - track.y).toBe(2);
@@ -803,8 +807,11 @@ it("rests a controlled switch at the end it mounted with", async () => {
       <Switch testId="sw" label="Wifi" checked />
     </Surface>,
   );
-  // Mount applies `initial`, so a switch that starts on paints no slide.
-  const track = boundsOf(runtime, "sw");
+  // Mount applies `initial`, so a switch that starts on paints no slide. The
+  // track's painted box is the border box the thumb's `left` is measured from.
+  const track = Option.getOrElse(runtime.paintBounds("sw"), () =>
+    expect.fail("the switch painted no track"),
+  );
   expect(switchThumb(runtime, "sw").x - track.x).toBe(13);
 });
 

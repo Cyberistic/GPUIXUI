@@ -130,4 +130,72 @@ binding workstream instead of editing tests.
 
 ## 7. Result
 
-_Not implemented: blocked on the cross-team box-model decision (§1)._
+**Measured on this host, release-tag build, 2026-10-19.** The hit-test probe
+answered §1's open question: the pointer hits the **border box** (a 100 × 36
+element with `padding: 10` and `borderWidth: 1` at (12, 12) is hit on every one
+of x 12…111), while `getElementBounds` reports `{ x: 23, y: 23, width: 98,
+height: 34 }` — the **content origin** with a padding-box size. The tests were
+right; the report is short.
+
+The probe also found the fact the plan did not anticipate: **the report is not
+one model**. A `Button` with 8/16 padding and `height: 36` reports 36 at its
+border edge, while a `div` with the same padding reports the content origin.
+The style cannot say which shape a host took, so option **B is opt-in** (as §2
+already required), never a change to what `bounds` means.
+
+### What landed
+
+- `core/bounds.ts` — `paintedBox(reported, style)`: origin minus border +
+  padding, size plus border only (the padding is already in the reported size).
+  Exported from `core/` for product code and from `testing/` as
+  `paintBounds`/`paintBoundsOfId` for suites.
+- The **product** now corrects the hosts that report the content origin:
+  - `Select` measures the trigger's painted box (`.paintedBox` with the resolved
+    trigger chrome), so `minWidth` equals the trigger the user sees, the side
+    decision uses the painted edges, and the list's painted width is capped to
+    the real room. The runtime anchors a layer's **content** box, so its
+    surface padding overhangs the trigger: `selectListOverhang` reserves it in
+    the estimate and the cap, and a top/left side gets it back as `sideOffset`
+    (a horizontal side also needs `alignOffset`).
+  - `Tooltip` measures its root and its tip as painted boxes.
+  - `Slider`/`RangeSlider` convert the track's report before
+    `pointerValue`, so the value under a pointer is measured on the visible
+    rail (a 50 % click reported 52 % before).
+- The **suites** opt in per call site: `bounds` stays the raw report; the
+  floating surfaces, field roots, switch track, ring overlay and slider boxes
+  use `paintBounds`. `centerOf` aims at the painted centre (the slider mapping
+  reads the painted rail); a `Button`'s report is already its border box and
+  stays on `bounds`.
+- `runtime/box-model.runtime.test.tsx` pins the model against the authored box
+  and a real hit-test scan, and pins the `Button` exception that makes the
+  correction opt-in. `src/testing/painted-box.test.ts` pins the arithmetic
+  (shorthand/longhand, non-finite lengths).
+- Reclassified with evidence: the two Select cases that assert a *row* is
+  inside a scrolled list and the horizontal-cap row check. The pinned build
+  reports a child inside a scroller at its **unscrolled** position (measured: a
+  list capped to 63 px reports a row at 822), so the tests now assert the
+  observable scroll offset and the row's existence. `docs/gpuix-capabilities.md`
+  §4 records the limitation.
+
+### Verification
+
+- Full runtime suite: **51 files / 732 tests, all passing** (was 50 / 729 with
+  37 failures). Two intermediate full runs reported 730/732 and 731/732 with
+  the known order-dependent focus-tracker cases (`disabled > CheckboxGroup`
+  was one); that case now waits for the tracker's sample after the disable, as
+  the rest of its suite does (plan `592`), and two consecutive full runs are
+  732/732.
+- Offline suite: **58 files / 812 tests**, all passing.
+- `check-types`, `check` and `lint` green.
+- `fields` 75/75, `value` 21/21, `layout` 29/29, `controls` 51/51,
+  `number-field` 24/24, `examples` 19/19, `theme-axes` 4/4, `overflow` 11/11.
+
+**Both directions (each restored afterwards):**
+
+- `paintedBoundsOf` returning the raw report → the field-height, tooltip
+  placement and switch-offset cases fail by name;
+- `centerOf` using the raw report → the value example reports 52 %, not 50 %;
+- the `Select` trigger correction removed → the list-width and side cases fail;
+- the `Slider` track correction removed → the value suite's pointer cases fail;
+- `paintedBox`'s size addition changed to include padding → the calibration
+  case fails with width 120 for a 100 px element.

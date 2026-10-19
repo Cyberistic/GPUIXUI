@@ -36,6 +36,7 @@ import type {
   TestRenderer,
 } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
+import { paintedBox } from "../core/bounds.js";
 
 /**
  * An element's painted box, in window pixels.
@@ -84,10 +85,24 @@ export interface Runtime {
   readonly element: (testId: string) => Option.Option<TestElement>;
   /** Every element the runtime retained, depth-first — how a test finds one with no `testId`. */
   readonly all: () => ReadonlyArray<TestElement>;
-  /** An element's painted bounds, or the nearest ancestor's. */
+  /**
+   * An element's bounds **as the runtime reports them**, or the nearest
+   * ancestor's. See `paintBounds` for the box it paints (plan `597`).
+   */
   readonly bounds: (testId: string) => Option.Option<Bounds>;
-  /** An element's painted bounds, or the nearest ancestor's, by element id. */
+  /** An element's reported bounds, or the nearest ancestor's, by element id. */
   readonly boundsOfId: (id: number) => Option.Option<Bounds>;
+  /**
+   * An element's **painted** box, or the nearest ancestor's, corrected from the
+   * runtime's reported box and the element's authored border and padding.
+   *
+   * Opt-in: the runtime reports a plain `div` from its content origin and a
+   * `Button` from its border box, so a call site uses this only where the
+   * element is known to report the content origin (plan `597`).
+   */
+  readonly paintBounds: (testId: string) => Option.Option<Bounds>;
+  /** An element's painted box, or the nearest ancestor's, by element id. */
+  readonly paintBoundsOfId: (id: number) => Option.Option<Bounds>;
   /** Own text plus every descendant's, concatenated like DOM `textContent`. */
   readonly text: (testId: string) => Option.Option<string>;
   /** Every string painted in the last frame, in paint order (native text like `<code>` only). */
@@ -199,12 +214,48 @@ const boundsOf = (renderer: TestRenderer, id: number): Option.Option<Bounds> =>
       ),
   });
 
+/**
+ * The box an element paints, or the nearest ancestor's.
+ *
+ * Opt-in, because the runtime's report is not one model: a plain `div` reports
+ * its **content** origin (inside its padding), while a `Button` reports its
+ * border box, so the authored style alone cannot say which shape a given host
+ * took. Call this only where the element is known to report the content origin
+ * — the floating surfaces and raw `div` triggers in these suites (plan `597`).
+ */
+const paintedBoundsOf = (
+  renderer: TestRenderer,
+  id: number,
+): Option.Option<Bounds> =>
+  Option.match(
+    Option.all({
+      element: Option.fromNullishOr(renderer.getElement(id)),
+      reported: Option.fromNullishOr(renderer.getElementBounds(id)),
+    }),
+    {
+      onSome: ({ element, reported }) =>
+        Option.some(paintedBox(reported, element.style)),
+      onNone: () =>
+        Option.flatMap(
+          Option.fromNullishOr(renderer.getElement(id)?.parentId ?? null),
+          (parentId) => paintedBoundsOf(renderer, parentId),
+        ),
+    },
+  );
+
+/**
+ * The centre of an element's **painted** box.
+ *
+ * A component that maps a pointer to a value reads the painted rail (the
+ * slider's track), and the report's centre sits inside its padding, so aiming
+ * at the reported centre put a 50 % click at 52 % (measured, plan `597`).
+ */
 const centerOf = (
   renderer: TestRenderer,
   testId: string,
 ): Option.Option<{ readonly x: number; readonly y: number }> =>
   Option.flatMap(idOf(renderer, testId), (id) =>
-    Option.map(boundsOf(renderer, id), (bounds) => ({
+    Option.map(paintedBoundsOf(renderer, id), (bounds) => ({
       x: bounds.x + bounds.width / 2,
       y: bounds.y + bounds.height / 2,
     })),
@@ -325,6 +376,11 @@ export const createRuntime = (
       bounds: (testId) =>
         Option.flatMap(idOf(renderer, testId), (id) => boundsOf(renderer, id)),
       boundsOfId: (id) => boundsOf(renderer, id),
+      paintBounds: (testId) =>
+        Option.flatMap(idOf(renderer, testId), (id) =>
+          paintedBoundsOf(renderer, id),
+        ),
+      paintBoundsOfId: (id) => paintedBoundsOf(renderer, id),
       text: (testId) =>
         Option.map(elementOf(renderer, testId), (element) =>
           subtreeText(renderer, element),

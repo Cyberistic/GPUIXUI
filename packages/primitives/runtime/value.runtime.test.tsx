@@ -28,8 +28,12 @@ import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
 
 const INSET = sliderInset("md", testTheme);
 
+/**
+ * The painted box: the runtime reports a plain `div` from its content origin,
+ * and every box this file measures is a slider track or thumb (plan `597`).
+ */
 const boundsOf = (runtime: Runtime, testId: string) =>
-  Option.getOrElse(runtime.bounds(testId), () =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
     expect.fail(`the runtime painted no box for ${testId}`),
   );
 
@@ -63,7 +67,7 @@ const announced = (runtime: Runtime, label: string): string =>
 /** The centre of a thumb, as the frame painted it. */
 const thumbCentre = (runtime: Runtime, testId: string): number => {
   const thumb = thumbOf(runtime, testId);
-  const bounds = Option.getOrElse(runtime.boundsOfId(thumb.id), () =>
+  const bounds = Option.getOrElse(runtime.paintBoundsOfId(thumb.id), () =>
     expect.fail(`the thumb of ${testId} painted no box`),
   );
   return bounds.x + bounds.width / 2;
@@ -419,7 +423,7 @@ it("announces a meter's measurement and paints it inside its own range", async (
   expect(announced(runtime, "Disk")).toBe("25");
   const track = boundsOf(runtime, "m");
   const fill = elementById(runtime, trackOf(runtime, "m").children[0] ?? -1);
-  const fillBox = Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+  const fillBox = Option.getOrElse(runtime.paintBoundsOfId(fill.id), () =>
     expect.fail("the meter painted no fill"),
   );
   expect(Math.abs(fillBox.width - track.width / 2)).toBeLessThan(2);
@@ -449,7 +453,7 @@ it("paints the maximum of a step that does not divide the span", async () => {
   const fillWidth = (testId: string): number => {
     const fill = partsOf(runtime, testId)[0];
     if (fill === undefined) return expect.fail(`${testId} painted no fill`);
-    return Option.getOrElse(runtime.boundsOfId(fill.id), () =>
+    return Option.getOrElse(runtime.paintBoundsOfId(fill.id), () =>
       expect.fail(`${testId} painted no fill box`),
     ).width;
   };

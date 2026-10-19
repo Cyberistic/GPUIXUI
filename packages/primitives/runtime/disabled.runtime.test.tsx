@@ -392,6 +392,9 @@ it.each(Arr.map(RINGS, (testCase) => [testCase.name, testCase] as const))(
     expect(ringCount(runtime)).toBe(1);
     runtime.render(<Surface>{testCase.node(true)}</Surface>);
     runtime.flush();
+    // The ring is derived from the tracker's sample, which clears on its next
+    // tick; assert after it, as the rest of this suite does (plan `592`).
+    await settleFocus();
     expect(ringCount(runtime)).toBe(0);
   },
 );

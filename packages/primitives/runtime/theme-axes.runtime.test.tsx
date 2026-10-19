@@ -95,13 +95,13 @@ const paletteOf = (theme: PrimitiveTheme): ReadonlyArray<string> =>
 
 /** A pixel height the runtime painted for `testId`, failing when absent. */
 const heightOf = (runtime: Runtime, testId: string): number =>
-  Option.getOrElse(runtime.bounds(testId), () =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
     expect.fail(`the runtime painted no ${testId}`),
   ).height;
 
 /** A pixel width the runtime painted for `testId`, failing when absent. */
 const widthOf = (runtime: Runtime, testId: string): number =>
-  Option.getOrElse(runtime.bounds(testId), () =>
+  Option.getOrElse(runtime.paintBounds(testId), () =>
     expect.fail(`the runtime painted no ${testId}`),
   ).width;
 
@@ -144,13 +144,11 @@ it("a density override moves control heights and leaves colour alone", async () 
     // Toggle still follows density, so the axis itself is still proven.
     expect(heightOf(runtime, "toggle")).toBe(density.controlHeight.md);
     // The field family is fixed (plans 370, 372): a Button is `h-9` (36), a
-    // NumberField's row is 36, and a native `<input>` reports its content box,
-    // two thin borders shorter.
+    // NumberField's row is 36, and a native `<input>` paints the same 36 even
+    // though it reports its content box (plan `597`).
     expect(heightOf(runtime, "button")).toBe(36);
     expect(heightOf(runtime, "number")).toBe(36);
-    expect(heightOf(runtime, "input")).toBe(
-      36 - 2 * lightTheme.borderWidth.thin,
-    );
+    expect(heightOf(runtime, "input")).toBe(36);
     // The icon button is the square member of the same slice: `size-9` (36)
     // at `md`, not compact's `controlHeight.md` (32) or spacious's (40).
     expect(heightOf(runtime, "icon-button")).toBe(36);

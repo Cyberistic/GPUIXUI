@@ -44,6 +44,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactElement,
@@ -75,6 +76,7 @@ import {
   type SelectOptionGroup,
 } from "../core/select.js";
 import { controlLabelStyle, surfaceStyle } from "../core/style.js";
+import { paintedBox } from "../core/bounds.js";
 import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
 import { hasText } from "../core/text.js";
 import type { ValueState } from "../core/state.js";
@@ -398,6 +400,18 @@ export const selectListHeight = (
 };
 
 /**
+ * The list's padding on the side that faces its trigger.
+ *
+ * The runtime anchors a layer's **content** box to the trigger, so the surface's
+ * padding is laid back toward the trigger: a list opening above overlapped its
+ * field by the padding, and one below ran that far past the window margin. The
+ * side decision and the cap reserve it, so the painted surface touches the
+ * trigger without covering it (measured, plan `597`).
+ */
+export const selectListOverhang = (theme: PrimitiveTheme): number =>
+  theme.spacing.xs;
+
+/**
  * The locator an option row carries: `${testId}-option-${value}`.
  *
  * The trigger and its indicator are already named (plans `083`, `343`); the
@@ -613,6 +627,16 @@ export const renderSelect = (
         aria-label={ariaName(label)}
         testId={testId === undefined ? undefined : `${testId}-content`}
         side={placement.side}
+        sideOffset={
+          placement.side === "top" || placement.side === "left"
+            ? selectListOverhang(theme)
+            : undefined
+        }
+        alignOffset={
+          placement.side === "left" || placement.side === "right"
+            ? -selectListOverhang(theme)
+            : undefined
+        }
         collisionPadding={placement.collisionPadding}
         style={selectContentStyle(
           theme,
@@ -690,6 +714,35 @@ export const Select = (props: SelectProps): ReactElement => {
       openState.set(false);
   }, [props.disabled, openState.value.current]);
   const open = selectOpen(openState.value.current, props.disabled === true);
+  /**
+   * The list's own chrome, for the box correction and the estimate.
+   *
+   * The runtime reports a plain `div` from its content origin, so a raw width
+   * is short by both borders and a raw top sits inside the list's padding
+   * (plan `597`).
+   */
+  const contentChrome = useMemo(() => selectContentStyle(theme), [theme]);
+  /**
+   * The trigger's chrome, for the same correction. The runtime state only
+   * changes colour and ring, so a neutral state yields the real insets.
+   */
+  const triggerChrome = useMemo(
+    () =>
+      selectTriggerPartStyle(
+        {
+          invalid: props.invalid === true,
+          fullWidth: props.fullWidth === true,
+        },
+        theme,
+        false,
+        props.triggerStyle,
+      )({
+        open: false,
+        disabled: props.disabled === true,
+        placeholder: true,
+      }),
+    [theme, props.invalid, props.fullWidth, props.disabled, props.triggerStyle],
+  );
   const state = useControlState<string | undefined>(
     props.value,
     props.defaultValue,
@@ -721,12 +774,13 @@ export const Select = (props: SelectProps): ReactElement => {
     if (id === null) return;
     const bounds = renderer?.getElementBounds?.(id);
     if (bounds === null || bounds === undefined || bounds.width <= 0) return;
+    const painted = paintedBox(bounds, triggerChrome);
     setTriggerBox({
-      width: bounds.width,
-      left: bounds.x,
-      right: bounds.x + bounds.width,
-      top: bounds.y,
-      bottom: bounds.y + bounds.height,
+      width: painted.width,
+      left: painted.x,
+      right: painted.x + painted.width,
+      top: painted.y,
+      bottom: painted.y + painted.height,
     });
     const contentId = open ? content.current : null;
     const contentBounds =
@@ -736,13 +790,18 @@ export const Select = (props: SelectProps): ReactElement => {
         contentBounds === undefined ||
         contentBounds.width <= 0
         ? undefined
-        : contentBounds.width,
+        : paintedBox(contentBounds, contentChrome).width,
     );
   }, [
     renderer,
     open,
     props.size,
     props.fullWidth,
+    props.invalid,
+    props.disabled,
+    props.triggerStyle,
+    triggerChrome,
+    contentChrome,
     viewport.height,
     viewport.width,
   ]);
@@ -752,7 +811,12 @@ export const Select = (props: SelectProps): ReactElement => {
     (box): PlacementRequest => ({
       triggerTop: box.top,
       triggerBottom: box.bottom,
-      layerHeight: selectListHeight(counts.options, theme, counts.headings),
+      // `selectListHeight` already includes the surface's padding, gaps and
+      // both borders; the extra overhang is the padding that falls back toward
+      // the trigger (plan `597`).
+      layerHeight:
+        selectListHeight(counts.options, theme, counts.headings) +
+        selectListOverhang(theme),
       viewportHeight: viewport.height,
       margin: FLOATING_MARGIN,
     }),
@@ -787,7 +851,8 @@ export const Select = (props: SelectProps): ReactElement => {
   const maxHeight = Option.getOrUndefined(
     Option.flatMap(request, (measurement) =>
       Option.flatMap(side, (resolvedSide) => {
-        const space = availableOn(measurement, resolvedSide);
+        const space =
+          availableOn(measurement, resolvedSide) - selectListOverhang(theme);
         return measurement.layerHeight > space
           ? Option.some(Math.max(space, 0))
           : Option.none();
@@ -833,7 +898,7 @@ export const Select = (props: SelectProps): ReactElement => {
                   margin: FLOATING_MARGIN,
                 },
                 Option.getOrElse(side, () => "bottom"),
-              ),
+              ) - selectListOverhang(theme),
             ),
     },
   );

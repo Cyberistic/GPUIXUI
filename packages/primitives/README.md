@@ -232,7 +232,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**57 test files**, all passing, including a package-wide guard that a caller's
+**58 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -253,16 +253,19 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **50 test files**. The latest run's
-totals live in `TODO.md`'s live-suite row and plan `583`, not here: a prose
+runtime-proven too. The runtime suite is **51 test files**. The latest run's
+totals live in `TODO.md`'s live-suite row and plan `597`, not here: a prose
 count cannot be held true by a test.
-The failures are measured runtime facts, not an
-artifact guess: the store artifact is the **release-tag** build (plan `529`;
-`strings` reports `focusVisible=0`), it delivers **no focus events** (plan
-`583`), and its `getElementBounds` reports the published box model (plan `529`
-§6.5). The focus rings are restored by the native-focus tracker (plan `590`),
-so the focus matrix passes on this build after `settleFocus`; the
-absolute-geometry cases are still short by the box's padding/border. No
+The store artifact is the **release-tag** build (plan `529`;
+`strings` reports `focusVisible=0`), and it delivers **no focus events** (plan
+`583`); the native-focus tracker restores the rings (plan `590`), so the
+matrix passes after `settleFocus`. Its `getElementBounds` reports a hybrid box
+— a plain `div` from its content origin, a `Button` from its border box — so
+the suites read `paintBounds` for the hosts that report the former, and the
+adapter's calibration case pins the model against a real hit-test (plan `597`).
+A child inside a scrolled container still reports its **unscrolled** position,
+which is recorded as a limitation on the affected Select cases rather than
+asserted. No
 assertion has been re-baselined on this build, and the remaining limitation is
 documented on every focusable page (plan
 [`583-release-runtime-focus.md`](../../.agents/slop/plans/583-release-runtime-focus.md)).

@@ -51,6 +51,7 @@ import {
   sliderTrackStyle,
   type SliderSpec,
 } from "../core/style.js";
+import { paintedBox } from "../core/bounds.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -383,8 +384,15 @@ const pointerOf = (
   inset: number,
 ): Option.Option<number> => {
   if (trackId === null) return Option.none();
-  const box = renderer?.getElementBounds?.(trackId);
-  if (box === null || box === undefined) return Option.none();
+  const reported = renderer?.getElementBounds?.(trackId);
+  if (reported === null || reported === undefined) return Option.none();
+  // The track reports from its content origin, which is already inside the
+  // padding the rail fills; `pointerValue` expects the painted track and
+  // subtracts that inset itself (plan `597`).
+  const box = paintedBox(reported, {
+    paddingLeft: inset,
+    paddingRight: inset,
+  });
   return Option.some(
     clampValue(pointerValue(event.x ?? 0, box, range, inset), range),
   );
