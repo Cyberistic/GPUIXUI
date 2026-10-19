@@ -99,6 +99,7 @@ const spanState = (value: readonly [number, number]) =>
 const numberHandlers = (): NumberFieldHandlers => ({
   onTextChange: vi.fn(),
   onCommit: vi.fn(),
+  onBlurCommit: vi.fn(),
   onValue: vi.fn(),
   registerInput: () => {},
 });

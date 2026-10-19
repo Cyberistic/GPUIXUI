@@ -49,6 +49,7 @@ const numberState = (value: number) => initValueState(Option.some(value), 0);
 const numberHandlers = (): NumberFieldHandlers => ({
   onTextChange: vi.fn(),
   onCommit: vi.fn(),
+  onBlurCommit: vi.fn(),
   onValue: vi.fn(),
   registerInput: () => {},
 });

@@ -2041,6 +2041,25 @@ retired once both branches are one
       a returning `/ 805 tests` and a deleted passage each fail by name; the
       historical "N tests at plan …" record is left alone (plan `641`).
 
+`[x]` `packages/primitives`: **a draft typed after Enter skipped its commit on
+      blur** — measured (2026-10-19): pressing Enter committed `1.5` to `1.50`
+      and set the host-blur de-duplication flag, which is only cleared when
+      focus is next gained; typing `x` and leaving the field left `1.50x`
+      painted on an unfocused field, because the tracker saw `handledByEvent`
+      still `true` and skipped the commit. Only the host's own `onBlur` may
+      mark a loss handled: the renderer now has separate `onCommit` (Enter) and
+      `onBlurCommit` (host blur) paths, one runtime case fails with `1.50x`
+      before the fix, and the docs/ledger record it (plan `642`).
+
+`[ ]` `packages/primitives`: **the capability table still says a `ScrollArea`
+      stays hover-only.** `docs/gpuix-capabilities.md` line 140's workaround
+      ends "a `ScrollArea` keeps its imperative `ref` and stays hover-only",
+      but plan `610` made the handle expose the viewport `id`, so a wrapped
+      labelled region opens its tip on `Tab` (and `COMPONENTS.md` and the
+      ScrollArea row already say so). Correct the sentence and extend the
+      capability guard so the two documents cannot disagree again. Evidence:
+      plan `610` §7; owner: primitives.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

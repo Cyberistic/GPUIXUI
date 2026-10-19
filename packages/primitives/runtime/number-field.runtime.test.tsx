@@ -215,6 +215,31 @@ it("commits and reformats the draft on Enter", async () => {
   expect(runtime.paintedText()).toContain("1.50");
 });
 
+it("commits a draft typed after Enter when focus leaves", async () => {
+  // The bug guarded (plan 642): Enter set the host-blur de-duplication flag,
+  // so a draft typed in the same focus session skipped its tracked commit on
+  // blur — an invalid trailing edit stayed painted on an unfocused field.
+  const runtime = await mount(
+    <Stack direction="row">
+      <NumberField testId="nf" label="Amount" autoFocus precision={2} />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  const input = inputOf(runtime, "nf");
+  runtime.type("1 . 5");
+  runtime.renderer.nativeSimulateKeyDown(input.id, "enter");
+  runtime.renderer.nativeSimulateKeyUp(input.id, "enter");
+  runtime.flush();
+  expect(runtime.paintedText()).toContain("1.50");
+  runtime.type("x");
+  expect(runtime.paintedText()).toContain("1.50x");
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(runtime.paintedText()).not.toContain("1.50x");
+  expect(runtime.paintedText()).toContain("1.50");
+});
+
 it("calls the caller's onSubmit once on Enter", async () => {
   const submits: string[] = [];
   const runtime = await mount(

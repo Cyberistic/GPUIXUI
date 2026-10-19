@@ -127,7 +127,13 @@ export const numberRange = (props: {
 /** What the rendered field needs from the component that owns its state. */
 export interface NumberFieldHandlers {
   readonly onTextChange: (text: string) => void;
+  /** Enter: the host reports it as `submit`, not as a key event. */
   readonly onCommit: () => void;
+  /**
+   * The host's own blur. Distinct from `onCommit` because it is the loss the
+   * native-focus tracker may also report: only this path marks it handled.
+   */
+  readonly onBlurCommit: () => void;
   readonly onValue: (next: number) => void;
   readonly registerInput: (instance: PublicInstance | null) => void;
 }
@@ -246,7 +252,7 @@ export const renderNumberField = (
           // A disabled field is inert on every path (plan 362): the draft is
           // committed by a commit, not by losing a caret a disabled field no
           // longer owns.
-          if (!disabled) handlers.onCommit();
+          if (!disabled) handlers.onBlurCommit();
           props.onBlur?.(event);
         }}
       />
@@ -356,6 +362,12 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       });
     },
     onCommit: () => {
+      commitDraft();
+    },
+    onBlurCommit: () => {
+      // Only a host blur can be the same loss the tracker reports. Enter must
+      // not set this flag: a draft typed after it would then skip its commit
+      // (plan 642).
       blurHandledByEvent.current = true;
       commitDraft();
     },

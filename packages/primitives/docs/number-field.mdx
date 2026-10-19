@@ -218,7 +218,10 @@ after the wrapper's chrome:
   `1.50`, and a deferring controlled parent receives the second value — while
   the event path still wins where the runtime sends one. The `autoFocus` ring
   also clears once the tracker sees another host, and the disabled case still
-  reports nothing. **Plan `593`:** a `formatValue` returning only whitespace (a
+  reports nothing. **Plan `642`:** a draft typed after an earlier `Enter` still
+  commits when focus leaves — the host-blur de-duplication flag is owned only
+  by the host-blur path, so `1.50x` does not stay painted on an unfocused
+  field. **Plan `593`:** a `formatValue` returning only whitespace (a
   missing computed unit) no longer blanks the field — `numberDisplay` falls back
   to the fixed-decimal text, and the runtime reads `12.00`. **Plan `371`:** a
   non-finite bound is ignored and an inverted pair is swapped — four fields

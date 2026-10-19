@@ -48,6 +48,7 @@ const handlers = (
 ): NumberFieldHandlers => ({
   onTextChange: vi.fn(),
   onCommit: vi.fn(),
+  onBlurCommit: vi.fn(),
   onValue: vi.fn(),
   registerInput: () => {},
   ...over,
