@@ -1,5 +1,9 @@
 import { darkColors } from "../color.js";
-import { systemUiFont, type PlatformStyle } from "../platform-types.js";
+import {
+  platformMonos,
+  systemUiFont,
+  type PlatformStyle,
+} from "../platform-types.js";
 
 /**
  * Windows 11: Fluent's blue accent (`#0067C0` light, `#4CC2FF` dark), almost
@@ -37,7 +41,7 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * (plan 574).
  */
 export const windowsPlatformStyle = {
-  types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
+  types: { label: "Windows", sans: systemUiFont, mono: platformMonos.win32 },
   structure: {
     density: "comfortable",
     radius: { sm: 2, md: 4, lg: 8, xl: 8 },

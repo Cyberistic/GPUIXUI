@@ -1,4 +1,8 @@
-import { systemUiFont, type PlatformStyle } from "../../platform-types.js";
+import {
+  platformMonos,
+  systemUiFont,
+  type PlatformStyle,
+} from "../../platform-types.js";
 import { windowsPlatformStyle } from "../windows.js";
 
 /**
@@ -22,7 +26,11 @@ import { windowsPlatformStyle } from "../windows.js";
  * by `platform-recipes.test.ts`.
  */
 export const xpPlatformRecipe = {
-  types: { label: "Windows XP", sans: systemUiFont, mono: "Consolas" },
+  types: {
+    label: "Windows XP",
+    sans: systemUiFont,
+    mono: platformMonos.win32,
+  },
   structure: {
     density: "compact",
     radius: { sm: 2, md: 3, lg: 6, xl: 8 },

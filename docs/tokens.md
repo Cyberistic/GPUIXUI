@@ -657,13 +657,16 @@ built-in identity.
 | `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
 | `linux` (Linux) | `.SystemUIFont` | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
 | `win32` (Windows) | `.SystemUIFont` | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
-| `default` (Default) | `.SystemUIFont` | `Menlo` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
+| `default` (Default) | `.SystemUIFont` | `Menlo` / `DejaVu Sans Mono` / `Consolas` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
 
 A row states the **resolved** theme: a style that names one radius inherits the
-rest, and a density override prints the preset it starts from.
+rest, and a density override prints the preset it starts from. The Default row
+names the identity's mono on each shipped platform, because
+`getPlatformTheme("default", mode)` returns the identity unchanged and
+`systemMonoFamily` is the running platform's installed family.
 
 The Default variant has no overrides — `getPlatformTheme("default", mode)`
-returns the identity unchanged. Each real variant changes its type family,
+returns the identity unchanged, mono included. Each real variant changes its type family,
 radii, density, motion, surfaces (including the loading skeleton), accent and
 shadows; roles it does not name (the other status roles, disabled, scrollbar) and
 every non-colour scale inherit the identity, so the default stays the design

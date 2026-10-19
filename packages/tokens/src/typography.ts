@@ -1,4 +1,4 @@
-import { systemMonoFamily, systemUiFont } from "./platforms.js";
+import { systemMonoFamily, systemUiFont } from "./platform-types.js";
 
 /**
  * A CSS numeric font weight, `1…1000`. The shipped scale uses `400` regular,

@@ -1,5 +1,9 @@
 import { darkColors } from "../color.js";
-import { systemUiFont, type PlatformStyle } from "../platform-types.js";
+import {
+  platformMonos,
+  systemUiFont,
+  type PlatformStyle,
+} from "../platform-types.js";
 
 /**
  * macOS: Apple's blue accent (`#0071E3` light, `#0A84FF` dark), grouped-canvas
@@ -42,7 +46,7 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * the runtime's 3.5% ink wash (plan 574).
  */
 export const macosPlatformStyle = {
-  types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
+  types: { label: "macOS", sans: systemUiFont, mono: platformMonos.darwin },
   structure: {
     density: "compact",
     radius: { sm: 4, md: 6, lg: 10, xl: 12 },

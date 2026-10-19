@@ -7,7 +7,12 @@
  * as — a style may name one radius or tune the preset its density starts from.
  */
 
-import type { PlatformStyle } from "./platform-types.js";
+import {
+  platformNames,
+  type PlatformName,
+  type PlatformStyle,
+} from "./platform-types.js";
+import { platformTypes } from "./platforms.js";
 import type { DensityName, Radius } from "./scale.js";
 import { applyPlatformStyle, getTheme } from "./theme.js";
 
@@ -46,3 +51,18 @@ export const platformTableCells = (
     selected: light.colors.selected,
   };
 };
+
+/**
+ * The mono cell a platform row prints. The Default row is the identity, so its
+ * family is the running platform's: print every shipped family rather than the
+ * one the machine running the suite happens to resolve.
+ *
+ * @param platform - A shipped platform name.
+ */
+export const platformMonoCell = (platform: PlatformName): string =>
+  platform === "default"
+    ? platformNames
+        .filter((name) => name !== "default")
+        .map((name) => `\`${platformTypes[name].mono}\``)
+        .join(" / ")
+    : `\`${platformTypes[platform].mono}\``;

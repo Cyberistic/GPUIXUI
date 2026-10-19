@@ -1,5 +1,9 @@
 import { palette } from "../color.js";
-import { systemUiFont, type PlatformStyle } from "../platform-types.js";
+import {
+  platformMonos,
+  systemUiFont,
+  type PlatformStyle,
+} from "../platform-types.js";
 
 /**
  * Linux (GNOME / Adwaita): Adwaita's blue accent (`#1C71D8` light, `#78AEED`
@@ -33,7 +37,11 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * through the selection wash (plan 528).
  */
 export const linuxPlatformStyle = {
-  types: { label: "Linux", sans: systemUiFont, mono: "DejaVu Sans Mono" },
+  types: {
+    label: "Linux",
+    sans: systemUiFont,
+    mono: platformMonos.linux,
+  },
   structure: {
     density: "comfortable",
     radius: { sm: 4, md: 6, lg: 12, xl: 12 },

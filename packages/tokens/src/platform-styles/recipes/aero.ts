@@ -1,4 +1,8 @@
-import { systemUiFont, type PlatformStyle } from "../../platform-types.js";
+import {
+  platformMonos,
+  systemUiFont,
+  type PlatformStyle,
+} from "../../platform-types.js";
 import { windowsPlatformStyle } from "../windows.js";
 
 /**
@@ -20,7 +24,11 @@ import { windowsPlatformStyle } from "../windows.js";
  * held to `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const aeroPlatformRecipe = {
-  types: { label: "Windows 7", sans: systemUiFont, mono: "Consolas" },
+  types: {
+    label: "Windows 7",
+    sans: systemUiFont,
+    mono: platformMonos.win32,
+  },
   structure: {
     density: "comfortable",
     radius: { sm: 3, md: 5, lg: 8, xl: 10 },

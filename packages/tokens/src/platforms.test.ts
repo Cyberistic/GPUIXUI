@@ -36,6 +36,7 @@ import {
   systemUiFont,
   type PlatformStyle,
 } from "./platforms.js";
+import { platformMonos } from "./platform-types.js";
 import {
   resolveDensePlatformTheme,
   resolvePlatformTheme,
@@ -111,7 +112,15 @@ describe("platformTypes", () => {
   it("gives each real platform its own monospace family", () => {
     const monos = variants.map((platform) => platformTypes[platform].mono);
     expect(new Set(monos).size).toBe(monos.length);
-    expect(platformTypes.default.mono).toBe(platformTypes.darwin.mono);
+    expect(platformTypes.default.mono).toBe(systemMonoFamily);
+  });
+
+  it("names every real family from the one installed-mono registry", () => {
+    variants.forEach((platform) => {
+      expect(platformTypes[platform].mono, platform).toBe(
+        platformMonos[platform],
+      );
+    });
   });
 });
 
@@ -146,6 +155,10 @@ describe("platformStyles", () => {
     expect(style.colors.dark).toEqual({});
     expect(style.elevation.light).toEqual({});
     expect(style.elevation.dark).toEqual({});
+    // `types` is the one group the emptiness claim used to skip: a hardcoded
+    // `Menlo` named a macOS face on Linux and Windows.
+    expect(style.types.sans).toBe(systemUiFont);
+    expect(style.types.mono).toBe(systemMonoFamily);
   });
 
   it("gives every real variant shape and a colour set for both modes", () => {

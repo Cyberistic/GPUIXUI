@@ -188,7 +188,7 @@ import {
   systemUiFont,
   type PlatformName,
 } from "./platforms.js";
-import { platformTableCells } from "./platform-table.js";
+import { platformMonoCell, platformTableCells } from "./platform-table.js";
 import {
   avatarSize,
   borderWidth,
@@ -1253,9 +1253,21 @@ describe("docs/tokens.md platform table", () => {
     platformNames.forEach((platform) => {
       const cells = platformTableCells(platformStyles[platform]);
       expect(markdown, platform).toContain(
-        `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | \`${platformTypes[platform].mono}\` | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`,
+        `| \`${platform}\` (${platformTypes[platform].label}) | \`${systemUiFont}\` | ${platformMonoCell(platform)} | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`,
       );
     });
+  });
+
+  it("prints the Default row's mono for every shipped platform", () => {
+    const families = platformNames
+      .filter((platform) => platform !== "default")
+      .map((platform) => `\`${platformTypes[platform].mono}\``)
+      .join(" / ");
+    expect(platformMonoCell("default")).toBe(families);
+    expect(markdown).toContain("The Default row");
+    expect(markdown).toContain(
+      "names the identity's mono on each shipped platform",
+    );
   });
 
   it("states that a row prints the resolved theme", () => {
@@ -2972,7 +2984,7 @@ describe("docs/design-system.md", () => {
     const sentinel = `Sans is GPUI's \`${systemUiFont}\` sentinel`;
     expect(designSystem.includes(sentinel), sentinel).toBe(true);
 
-    const families = `Mono comes from the platform table (\`platformTypes\`): \`${platformTypes.darwin.mono}\` on macOS, \`${platformTypes.linux.mono}\` on Linux, \`${platformTypes.win32.mono}\` on Windows, \`${platformTypes.default.mono}\` for a platform the library does not know.`;
+    const families = `Mono comes from the platform table (\`platformTypes\`): \`${platformTypes.darwin.mono}\` on macOS, \`${platformTypes.linux.mono}\` on Linux, \`${platformTypes.win32.mono}\` on Windows. The Default variant carries \`systemMonoFamily\`, the running platform's family, because it is the identity.`;
     expect(designSystem.includes(families), families).toBe(true);
   });
 

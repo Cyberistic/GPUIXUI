@@ -152,8 +152,9 @@ Sans is GPUI's `.SystemUIFont` sentinel, which GPUI resolves to the operating
 system's own UI font, so the reading face follows the platform without the
 library naming a face the machine may not have. Mono comes from the platform
 table (`platformTypes`): `Menlo` on macOS, `DejaVu Sans Mono` on Linux,
-`Consolas` on Windows, `Menlo` for a platform the library does not know. The type
-scale is shared by both themes and is not changed by density.
+`Consolas` on Windows. The Default variant carries `systemMonoFamily`, the
+running platform's family, because it is the identity. The type scale is shared
+by both themes and is not changed by density.
 
 A platform style is a **real theme**, not a docs-only style sheet:
 `getPlatformTheme(platform, mode, contrast?)` derives one from the identity with

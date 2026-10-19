@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 296/370
+`[x]` `[████████░░]` 297/371
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -78,6 +78,13 @@ prebuilt `dist` (plan 016)
 `[x]` Ship four platform style variants — macOS, Linux, Windows and Default — as
 editable `platformStyles` themes and `getPlatformTheme(platform, mode, contrast)`,
 with the high-contrast colour set winning over platform resemblance (plan 063)
+`[x]` Hold the Default platform variant to the identity's mono — it carried the
+literal `Menlo`, so on Linux and Windows `applyPlatformStyle(base,
+platformStyles.default)` named a macOS-only family while
+`getPlatformTheme("default", mode)` returned `DejaVu Sans Mono` / `Consolas`;
+`platformMonos` now owns the installed families, `systemMonoFamily` derives from
+it, the Default style carries the running platform's family, and simulated
+Linux/Windows cases prove every path agrees (plan 678)
 `[x]` Add the design-system rows to `COMPONENTS.md`
 `[x]` Hold the Toast's tone on its floating card — it paints its glyph and 3px
 bar with `xSoftForeground` on `popover`, which the contract measured only on its

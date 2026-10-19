@@ -40,6 +40,39 @@ export type PlatformName = (typeof platformNames)[number];
 export const isPlatformName = (value: unknown): value is PlatformName =>
   platformNames.some((name) => name === value);
 
+/**
+ * The monospace family each shipped platform installs. The owner for the
+ * families the identity and the Default variant share: each platform style
+ * names its own family from this record, and {@link systemMonoFamily} resolves
+ * the running platform from the same values.
+ */
+export const platformMonos = {
+  darwin: "Menlo",
+  linux: "DejaVu Sans Mono",
+  win32: "Consolas",
+} as const;
+
+/** The identity's fallback where the runtime reports no known platform. */
+const fallbackMono = "Menlo";
+
+const knownPlatform = (name: string): PlatformName =>
+  name === "darwin" || name === "linux" || name === "win32" ? name : "default";
+
+/**
+ * The platform this code runs on, or `default` where the runtime exposes none
+ * (a browser) or one the library does not know.
+ */
+export const currentPlatform: PlatformName =
+  typeof process === "undefined" ? "default" : knownPlatform(process.platform);
+
+/**
+ * The monospace family the identity's `typography.mono` names: the running
+ * platform's installed family, so a theme never names a face the machine may
+ * not have.
+ */
+export const systemMonoFamily: string =
+  currentPlatform === "default" ? fallbackMono : platformMonos[currentPlatform];
+
 /** The families one platform's type resolves to. */
 export interface PlatformType {
   /** Human-readable name for documentation and previews. */

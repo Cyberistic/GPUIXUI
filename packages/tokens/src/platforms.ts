@@ -24,8 +24,10 @@ import type {
 } from "./platform-types.js";
 
 export {
+  currentPlatform,
   isPlatformName,
   platformNames,
+  systemMonoFamily,
   systemUiFont,
 } from "./platform-types.js";
 export type {
@@ -51,8 +53,9 @@ export const platformStyles: Readonly<Record<PlatformName, PlatformStyle>> = {
  * The families per platform, derived from {@link platformStyles}. `sans` is
  * GPUI's sentinel everywhere — GPUI maps it to the platform's own UI font, so a
  * theme never names a face the operating system may not have. `mono` names the
- * family each platform installs. `default` covers a platform the library does not
- * know.
+ * family each platform installs; `default` is the identity, so it carries
+ * {@link systemMonoFamily}, the running platform's family, rather than one
+ * platform's face.
  */
 export const platformTypes: Readonly<Record<PlatformName, PlatformType>> = {
   darwin: macosPlatformStyle.types,
@@ -60,16 +63,3 @@ export const platformTypes: Readonly<Record<PlatformName, PlatformType>> = {
   win32: windowsPlatformStyle.types,
   default: defaultPlatformStyle.types,
 };
-
-const knownPlatform = (name: string): PlatformName =>
-  name === "darwin" || name === "linux" || name === "win32" ? name : "default";
-
-/**
- * The platform the code runs on, or `default` when it is not one the library
- * knows — a browser, for example.
- */
-export const currentPlatform: PlatformName =
-  typeof process === "undefined" ? "default" : knownPlatform(process.platform);
-
-/** The platform's monospace family. */
-export const systemMonoFamily: string = platformTypes[currentPlatform].mono;

@@ -29,7 +29,7 @@ import {
   type PlatformName,
 } from "./platforms.js";
 import { shippedThemes } from "./shipped-themes.js";
-import { platformTableCells } from "./platform-table.js";
+import { platformMonoCell, platformTableCells } from "./platform-table.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
@@ -345,7 +345,7 @@ describe("packages/tokens/README.md", () => {
 const platformRow = (platform: PlatformName): string => {
   const style = platformStyles[platform];
   const cells = platformTableCells(style);
-  return `| ${platformTypes[platform].label} (\`${platform}\`) | \`${style.types.mono}\` | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`;
+  return `| ${platformTypes[platform].label} (\`${platform}\`) | ${platformMonoCell(platform)} | ${cells.radius.sm} / ${cells.radius.md} / ${cells.radius.lg} / ${cells.radius.xl} | \`${cells.density}\` | \`${cells.light}\` | \`${cells.dark}\` |`;
 };
 
 describe("packages/tokens/README.md platform table", () => {
@@ -367,6 +367,20 @@ describe("packages/tokens/README.md platform table", () => {
     expect(readme).toContain(
       "A row states the **resolved** theme: a style that names one radius inherits the rest, and a density override prints the preset it starts from.",
     );
+  });
+
+  it("explains the Default row's platform-dependent family", () => {
+    expect(platformMonoCell("default")).toBe(
+      platformNames
+        .filter((platform) => platform !== "default")
+        .map((platform) => `\`${platformTypes[platform].mono}\``)
+        .join(" / "),
+    );
+    expect(readme).toContain("The Default row");
+    expect(readme).toContain(
+      "names the identity's mono on each shipped platform",
+    );
+    expect(readme).toContain("`systemMonoFamily`");
   });
 
   it("states that a style names the dark tint it owns", () => {
