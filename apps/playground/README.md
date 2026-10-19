@@ -2026,7 +2026,8 @@ and `live-diff` (plan `648`, the diff interaction contract). It supersedes plan
 merge; the owner/supervisor performs that merge. The full live suite is a
 merge/release gate rather than a per-task check. **After that gate** the registry
 gained `live-theme-platform` (plan `654`, 45 checks, three focused green runs),
-so the next merge gate must cover **94** ids; no new full total is claimed here.
+and the whole registry then ran at **94/94** (**2447** checks, 61 capabilities,
+984.3 s), exit `0`. That is the current gate for the promotion merge.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 

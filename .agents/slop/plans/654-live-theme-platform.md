@@ -160,3 +160,9 @@ the real 1100 × 720 window on this host.
   back silently.
 - `nub run --filter playground test` — 37 files, **436** tests, exit `0` (the
   registry guard accepts the new entry unchanged).
+
+**Full live merge/release gate on this head (2026-10-19):** `nub
+apps/playground/dist/live/run.js --all` ran the whole registry at **94/94**
+(**2447** checks, 61 capabilities, 984.3 s), exit `0`. Headless remains
+**105/105** (3765 checks). This supersedes plan `649`'s 93/93 gate for the
+promotion merge; the owner/supervisor performs the merge.
