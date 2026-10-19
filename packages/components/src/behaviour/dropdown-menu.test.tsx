@@ -41,6 +41,12 @@
  * that follows, but the mark was cleared on a microtask and the runtime delivers
  * the click in a later task — so a real press-and-release left the menu open
  * (plan 583).
+ *
+ * Group-naming regression: the page promised that a `DropdownMenuLabel` named a
+ * group, but neither a sibling label nor a label child reached the group's
+ * accessible name, so assistive technology heard an anonymous group. `MenuGroup`
+ * now takes `label` and falls back to its first label child, with a caller
+ * `aria-label` winning (plan 689).
  */
 
 import * as Option from "effect/Option";
@@ -68,7 +74,9 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
@@ -1378,6 +1386,63 @@ describe("DropdownMenu radio groups", () => {
     expect(menu.renderer.findByTestId("submenu")).toBeUndefined();
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(menu)).toEqual(Option.some("sort"));
+
+    menu.unmount();
+  });
+});
+
+/** A group whose name can come from a child label, a prop or a caller. */
+const GroupedMenu = ({
+  label,
+  ariaLabel,
+}: {
+  readonly label?: string;
+  readonly ariaLabel?: string;
+}) => (
+  <DropdownMenu defaultOpen>
+    <DropdownMenuContent>
+      <DropdownMenuGroup testId="group" label={label} aria-label={ariaLabel}>
+        <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+        <DropdownMenuItem testId="compact">Compact</DropdownMenuItem>
+      </DropdownMenuGroup>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
+
+describe("Menu groups", () => {
+  it("names a group from its label child", () => {
+    const menu = renderComponent(<GroupedMenu />);
+
+    expect(
+      menu.renderer.findByTestId("group")?.customProps?.["aria-label"],
+    ).toBe("Appearance");
+    expect(
+      a11yNodes(menu.renderer).some(
+        (node) => node.role === "group" && node.name === "Appearance",
+      ),
+    ).toBe(true);
+
+    menu.unmount();
+  });
+
+  it("names a group from its label prop", () => {
+    const menu = renderComponent(<GroupedMenu label="View" />);
+
+    expect(
+      menu.renderer.findByTestId("group")?.customProps?.["aria-label"],
+    ).toBe("View");
+
+    menu.unmount();
+  });
+
+  it("keeps the caller's name over the label", () => {
+    const menu = renderComponent(
+      <GroupedMenu label="View" ariaLabel="Caller" />,
+    );
+
+    expect(
+      menu.renderer.findByTestId("group")?.customProps?.["aria-label"],
+    ).toBe("Caller");
 
     menu.unmount();
   });

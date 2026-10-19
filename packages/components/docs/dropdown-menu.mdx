@@ -153,6 +153,23 @@ is the point. It shows a check icon when checked and carries `aria-selected`.
 signal, not a confirmation step: pair a destructive row with **Confirmation
 dialog** when the action cannot be undone.
 
+## Groups and labels
+
+A group of related rows can carry a name:
+
+```tsx
+<DropdownMenuGroup>
+  <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+  <DropdownMenuItem>Compact</DropdownMenuItem>
+</DropdownMenuGroup>
+```
+
+The group is a `role="group"`; its first `DropdownMenuLabel` child names it, so
+assistive technology hears the heading before the rows. `label` names the group
+without a visible heading, and a caller `aria-label` wins over both. A label
+placed **beside** a group (rather than inside it) is visual only — it does not
+name the group.
+
 ## Radio rows
 
 A radio group expresses one exclusive setting — sort order, view mode, density:
@@ -173,9 +190,9 @@ The group is controlled: it renders `value` and reports the chosen row through
 `onValueChange`; it never changes its own mark. Choosing the row that is already
 marked reports nothing. A radio row keeps the menu open —
 choosing a setting is not an action — and the leading dot marks exactly one row
-in the group. The group is a `role="group"`; `label` names it, or a
-`DropdownMenuLabel` above it does. A disabled row is skipped by arrows and
-type-ahead and cannot be chosen.
+in the group. The group is a `role="group"`; its `label` prop names it. A
+`DropdownMenuLabel` placed beside the group is visual only. A disabled row is
+skipped by arrows and type-ahead and cannot be chosen.
 
 The same group and row work inside a `DropdownMenuSubContent`, so a submenu can
 carry the setting too.
@@ -248,10 +265,10 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `DropdownMenuTrigger` | `div` (`role="button"`, `aria-expanded`) | the button's `variant`, `size` and `disabled` |
 | `DropdownMenuContent` | anchored surface | `label?: string`, `side?: "top" \| "right" \| "bottom" \| "left"` (default `"bottom"`), `align?: "start" \| "center" \| "end"` (default `"start"`), `sideOffset?: number` (default `4`), `alignOffset?: number` (default `0`) |
 | `DropdownMenuItem` | `div` (`role="menuitem"`) | the shared row props |
-| `DropdownMenuCheckboxItem` | `div` (`role="menuitem"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
+| `DropdownMenuCheckboxItem` | `div` (`role="menuitemcheckbox"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
 | `DropdownMenuRadioGroup` | `div` (`role="group"`) | `value: string \| null` (required), `onValueChange: (value: string) => void` (required), `label?: string` |
 | `DropdownMenuRadioItem` | `div` (`role="menuitemradio"`) | `value: string` (required), plus the shared row props except `leading`, `closeOnSelect` and `style` (`style?: StateStyle<MenuRadioItemState>`) |
-| `DropdownMenuGroup` | `div` (`role="group"`) | — |
+| `DropdownMenuGroup` | `div` (`role="group"`) | `label?: string`; the first `DropdownMenuLabel` child names it when omitted |
 | `DropdownMenuLabel` | `text` | — |
 | `DropdownMenuSeparator` | `div` (`role="separator"`) | — |
 | `DropdownMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
@@ -290,6 +307,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - `role="menu"` on the surface, `role="menuitem"` / `role="menuitemcheckbox"` /
   `role="menuitemradio"` on rows, `role="group"` on a group, `aria-expanded` on
   the trigger, and `aria-selected` for a checkbox or radio row's state.
+- A group is named by its `label`, else by its first `DropdownMenuLabel` child
+  (a caller `aria-label` wins); a label placed beside the group is visual only.
 - A row's accessible name comes from its plain-text child; a row composed from
   elements must pass `aria-label`, because 0.10.0 does not lift the child text
   into the name.
@@ -318,7 +337,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (53 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (56 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
@@ -343,7 +362,9 @@ clickable, its deepest row running once, and an outside press still closing ever
 level — and the radio group: one marked row, the reported value, the menu
 staying open, a controlled value that does not drift, `Enter`/`Space` selection,
 a skipped disabled row, the `menuitemradio` role and its selected state, and a
-group inside a submenu that closes one level on `Escape`.
+group inside a submenu that closes one level on `Escape` — and group naming: a
+group named from its label child, its `label` prop, and a caller `aria-label`
+winning over both.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

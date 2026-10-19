@@ -16,15 +16,20 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import {
+  Children,
+  isValidElement,
   useCallback,
   useLayoutEffect,
   useRef,
   useState,
+  type ReactElement,
   type ReactNode,
 } from "react";
+import { controlName } from "../internal/name.js";
 import { controlHeight, textStyle, useTheme } from "../internal/theme.js";
 import {
   assertParts,
@@ -352,17 +357,47 @@ export const MenuLabel = ({ style, ...rest }: Props) => {
 
 /** A labelled group of rows. */
 export interface MenuGroupProps extends Omit<Props, "children"> {
+  /**
+   * The group's accessible name. The first `MenuLabel` child names the group
+   * when this is omitted; a caller `aria-label` wins over both.
+   */
+  readonly label?: string;
   readonly children?: PartChildren;
 }
 
+/** The text of the group's first direct `MenuLabel`, if it has one. */
+const labelChildOf = (children: ReactNode): string | undefined =>
+  Option.getOrUndefined(
+    Option.flatMap(
+      Arr.findFirst(
+        Children.toArray(children),
+        (child): child is ReactElement<Props> =>
+          isValidElement(child) && child.type === MenuLabel,
+      ),
+      (label) =>
+        Option.fromNullishOr(
+          controlName(label.props["aria-label"], label.props.children),
+        ),
+    ),
+  );
+
 /** A labelled group of rows. */
-export const MenuGroup = ({ children, style, ...rest }: MenuGroupProps) => {
+export const MenuGroup = ({
+  label,
+  children,
+  style,
+  ...rest
+}: MenuGroupProps) => {
   const theme = useTheme();
   assertParts(menuGroup, children);
+  // The caller's host prop wins, then the typed label, then the visible heading.
+  const name =
+    rest["aria-label"] ?? controlName(label, []) ?? labelChildOf(children);
   return (
     <div
       role="group"
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(
         {
           display: "flex",

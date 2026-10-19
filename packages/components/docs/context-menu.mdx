@@ -142,10 +142,10 @@ StateStyle<{ disabled: boolean; highlighted: boolean }>`.
 | `ContextMenuTrigger` | `div` (the right-click target) | `disabled?: boolean` (default `false`) |
 | `ContextMenuContent` | anchored surface | `label?: string` (default `"Context menu"`), `testId?: string` (default `"context-menu"`) |
 | `ContextMenuItem` | `div` (`role="menuitem"`) | the shared row props |
-| `ContextMenuCheckboxItem` | `div` (`role="menuitem"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
+| `ContextMenuCheckboxItem` | `div` (`role="menuitemcheckbox"`) | `checked: boolean` (required), `onCheckedChange: (checked: boolean) => void` (required), plus the shared row props |
 | `ContextMenuRadioGroup` | `div` (`role="group"`) | `value: string \| null` (required), `onValueChange: (value: string) => void` (required), `label?: string` |
 | `ContextMenuRadioItem` | `div` (`role="menuitemradio"`) | `value: string` (required), plus the shared row props except `leading`, `closeOnSelect` and `style` (`style?: StateStyle<MenuRadioItemState>`) |
-| `ContextMenuGroup` | `div` (`role="group"`) | — |
+| `ContextMenuGroup` | `div` (`role="group"`) | `label?: string`; the first `ContextMenuLabel` child names it when omitted |
 | `ContextMenuLabel` | `text` | — |
 | `ContextMenuSeparator` | `div` (`role="separator"`) | — |
 | `ContextMenuSub` | provider (no host element) | `closeDelay?: number` (default `150`) |
@@ -177,7 +177,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - `role="menu"` on the surface, `menuitem`/`menuitemcheckbox`/`menuitemradio` on
   rows and `group` on a group; a checkbox or radio row carries `aria-selected`
-  because 0.10.0 has no `aria-checked`. No
+  because 0.10.0 has no `aria-checked`. A group is named by its `label`, else by
+  its first `ContextMenuLabel` child (a caller `aria-label` wins); a label placed
+  beside the group is visual only. No
   `aria-haspopup` on the trigger (not available in 0.10.0), so the keyboard route
   is documented rather than announced.
 - There is no portal. The surface is a sibling of the trigger painted at window

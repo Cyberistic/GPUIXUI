@@ -635,6 +635,15 @@ retired once both branches are one
        probe is the pin), full suite 843/31 of 874 with the same plan-540
        binding failures; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
        synced (owner: components)
+    - [x] A menu group is named by its label — plan 689; measured on 2026-10-19:
+      a `MenuLabel` beside a group did **not** name it (the docs promised it
+      did), and neither did a label inside it, although `MenuGroup` accepts one,
+      so the accessibility tree carried anonymous `role="group"` nodes.
+      `MenuGroup` now takes `label` and falls back to its first label child,
+      with a caller `aria-label` winning; the two pages also now state the
+      dumped `menuitemcheckbox` role. 3 native cases (Dropdown menu 53 → 56),
+      the label-child and label-prop cases failing on the old source; docs,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
