@@ -91,7 +91,7 @@ remains a display rule — it never rounds the value a caller receives.
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on every mount, including a field added after a loading state (plan `584`); the ring paints from mount |
-| `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |
+| `formatValue` | `(value: number) => string` | fixed decimals | display text; a blank result falls back to the fixed-decimal text (plan `593`); parsing stays decimal |
 | `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator on the field's chrome; the inner text host is `${testId}-input` |
 
@@ -217,7 +217,9 @@ after the wrapper's chrome:
   `1.50`, and a deferring controlled parent receives the second value — while
   the event path still wins where the runtime sends one. The `autoFocus` ring
   also clears once the tracker sees another host, and the disabled case still
-  reports nothing. **Plan `371`:** a
+  reports nothing. **Plan `593`:** a `formatValue` returning only whitespace (a
+  missing computed unit) no longer blanks the field — `numberDisplay` falls back
+  to the fixed-decimal text, and the runtime reads `12.00`. **Plan `371`:** a
   non-finite bound is ignored and an inverted pair is swapped — four fields
   (`min={NaN}`, `max={NaN}`, `min=100 max=0`, `step={Infinity}`) paint only
   finite values, the swapped range steps `100 → 99 → 100`, and an infinite step

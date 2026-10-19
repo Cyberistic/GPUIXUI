@@ -34,8 +34,8 @@ import {
   commitsOnTrackedBlur,
   decideNumberKey,
   draftApplies,
-  formatNumber,
   normalizeNumberRange,
+  numberDisplay,
   parseNumericText,
   stepNumber,
   type NumberDraft,
@@ -270,7 +270,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
     props.onValueChange,
   );
   const display = (value: number): string =>
-    props.formatValue?.(value) ?? formatNumber(value, props.precision ?? 0);
+    numberDisplay(value, props.formatValue?.(value), props.precision ?? 0);
   // An untouched field with no value is empty, like a native number field; it is
   // not a field that starts with a zero the user has to delete. A draft paints
   // only while the value is still the one it belongs to, so an external change

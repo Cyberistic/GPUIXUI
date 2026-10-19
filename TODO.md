@@ -1442,6 +1442,17 @@ retired once both branches are one
       §6), not a regression. The attached `ButtonGroup` ring remains in the
       box-model class, and the headless-tooltip open-on-focus cases remain the
       runtime limitation. Plan `592` §5 has the four mutation proofs.
+      **Re-run 2026-10-19 after plans `593`–`594`:** 50 files, **723 tests, 675
+      passed / 48 failed**, 10 failing files — **two consecutive full runs
+      produced the same 48 by name** (`diff` empty). Plan `594` found the cause
+      of the long-recorded "window-accumulation degradation": `openWindow`
+      never unmounted its `TestRoot`, so every test leaked a focus-tracker
+      interval; the fixture now closes every window after its test. Five
+      order-dependent cases (four activation, `disabled > Button`) left the
+      list with no new failures. The remaining 48 are the published box model
+      (~30) and the headless tooltip's open-on-focus (11), plus their overlap
+      in `fields`/`examples`; no focus, timer or order flake remains. Plan
+      `593`'s blank-formatter case also passes.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1659,6 +1670,22 @@ retired once both branches are one
       in the published box-model class and one full-run `disabled` case is the
       window-accumulation flake (passes scoped). Four mutations fail as they
       should. Plan `592`.
+
+`[x]` `packages/primitives`: **a blank `NumberField.formatValue` hides the
+      value** — `display` used `formatValue?.(value) ?? formatNumber(...)`, so a
+      computed formatter returning only whitespace (a missing unit or
+      translation) painted and announced a blank field although the value
+      existed. One `numberDisplay` rule falls back to the fixed-decimal text,
+      the same rule `Meter`/`Slider`/`RangeSlider` follow (plan `580`). 3 core
+      + 1 runtime case, both directions proven (plan `593`).
+`[x]` `packages/primitives`: **the runtime harness never unmounted a window** —
+      `openWindow` built a `TestRoot` and never called `unmount`, so every test
+      left a React root and, since plan `590`, a 50 ms focus-tracker interval
+      alive. That is the "full-run window-accumulation degradation" plan `379`
+      §6 recorded: focus and timer results depended on how many tests ran
+      before. The test adapter exposes `unmount`; the fixture closes every
+      window after its test. Two full runs are now identical — 675 passed / 48
+      failed / 723 tests, 10 failing files, no order flake (plan `594`).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

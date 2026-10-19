@@ -78,6 +78,8 @@ export interface Runtime {
   readonly renderer: TestRenderer;
   /** Mount a tree, replacing whatever was mounted before. */
   readonly render: (node: ReactNode) => void;
+  /** Unmount the React root and release the window (the test fixture does this). */
+  readonly unmount: () => void;
   /** The element carrying `testId`. */
   readonly element: (testId: string) => Option.Option<TestElement>;
   /** Every element the runtime retained, depth-first — how a test finds one with no `testId`. */
@@ -304,6 +306,7 @@ export const createRuntime = (
     return {
       renderer,
       render: (node) => root.render(node),
+      unmount: () => root.unmount(),
       element: (testId) => elementOf(renderer, testId),
       all: () => {
         const collect = (id: number): ReadonlyArray<TestElement> =>

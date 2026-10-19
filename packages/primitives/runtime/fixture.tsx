@@ -16,7 +16,9 @@
  */
 
 import { Effect } from "effect";
+import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
+import { afterEach } from "vitest";
 import { Box } from "../src/components/Box.js";
 import { NATIVE_FOCUS_POLL_MS } from "../src/components/native-focus.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
@@ -50,10 +52,31 @@ export const Surface = ({
   </ThemeProvider>
 );
 
+/** Every window opened during the current test. */
+const opened: Runtime[] = [];
+
+/**
+ * Every window is closed after its test.
+ *
+ * A `TestRoot` owns a React root; leaving it mounted leaves the theme
+ * provider's focus-tracker interval (plan `590`) running for the rest of the
+ * file, so focus and timer assertions depended on how many tests had already
+ * run (plan `379` §6). The fixture closes them after the body (plan `594`).
+ */
+afterEach(() => {
+  Arr.forEach(opened.splice(0), (runtime) => runtime.unmount());
+});
+
 /** A fresh window for one test — the test boundary (`Effect.runPromise`). */
-export const openWindow = (
+export const openWindow = async (
   size: { readonly width?: number; readonly height?: number } = {},
-): Promise<Runtime> => Effect.runPromise(createRuntime({ ...WINDOW, ...size }));
+): Promise<Runtime> => {
+  const runtime = await Effect.runPromise(
+    createRuntime({ ...WINDOW, ...size }),
+  );
+  opened.push(runtime);
+  return runtime;
+};
 
 /** A real timer, for the one thing GPUI's clock cannot advance: a JS interval. */
 export const sleep = (milliseconds: number): Promise<void> =>

@@ -500,6 +500,26 @@ it("reformats a pending draft when the tracker observes focus leaving", async ()
   ).toBe("1.50");
 });
 
+it("paints the value when a formatter returns only whitespace", async () => {
+  // The bug guarded (plan 593): `formatValue` returning a blank computed string
+  // (a missing unit or translation) left the field painting and announcing
+  // nothing even though it held a value. The fixed-decimal default stands in.
+  const runtime = await mount(
+    <NumberField
+      testId="nf"
+      label="Quantity"
+      value={12}
+      precision={2}
+      formatValue={() => "   "}
+    />,
+  );
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { role: "TextInput", label: "Quantity" }),
+    ),
+  ).toBe("12.00");
+});
+
 it("does not commit its draft once the field is disabled", async () => {
   // The bug guarded (plan 362): `onBlur` committed unconditionally, so a field
   // disabled while an edit was pending reported the draft again when focus

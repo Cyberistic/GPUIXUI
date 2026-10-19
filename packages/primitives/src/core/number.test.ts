@@ -17,6 +17,7 @@ import {
   draftApplies,
   formatNumber,
   normalizeNumberRange,
+  numberDisplay,
   parseNumericText,
   stepNumber,
   type NumberDraft,
@@ -251,6 +252,25 @@ describe("draftApplies", () => {
   it("drops a draft with no reported value on an external change", () => {
     expect(draftApplies(draft("-", 4, Option.none()), 4)).toBe(true);
     expect(draftApplies(draft("-", 4, Option.none()), 9)).toBe(false);
+  });
+});
+
+describe("numberDisplay", () => {
+  it("keeps a caller's formatted text verbatim", () => {
+    expect(numberDisplay(1.5, "$1.50", 2)).toBe("$1.50");
+  });
+
+  it("paints the fixed-decimal default without a formatter", () => {
+    expect(numberDisplay(1.5, undefined, 2)).toBe("1.50");
+    expect(numberDisplay(12, undefined)).toBe("12");
+  });
+
+  it("does not let a blank formatter hide the value", () => {
+    // The bug guarded (plan 593): `formatValue` returning only whitespace (a
+    // missing computed unit) painted and announced an empty field even though
+    // the value existed. The rule is the one plan 580 applied to value controls.
+    expect(numberDisplay(12, "   ", 2)).toBe("12.00");
+    expect(numberDisplay(12, "", 2)).toBe("12.00");
   });
 });
 

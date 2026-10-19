@@ -8,6 +8,7 @@
  */
 
 import * as Option from "effect/Option";
+import { usableText } from "./text.js";
 
 /** Optional bounds with a mandatory step. */
 export interface NumberRange {
@@ -91,6 +92,25 @@ export const formatNumber = (value: number, precision = 0): string =>
       ? Math.min(20, Math.max(0, Math.trunc(precision)))
       : 0,
   );
+
+/**
+ * The text a number field paints for a value.
+ *
+ * A formatter is often computed (`${value}${unit}`, a translated suffix) and can
+ * return only whitespace when a piece is missing. A blank result is not a
+ * display text: the fixed-decimal default stands in, the same rule every other
+ * formatted surface follows (plans `580`, `593`).
+ *
+ * @param value the number the field paints
+ * @param formatted the caller's `formatValue` result, if any
+ * @param precision decimals for the fallback text
+ */
+export const numberDisplay = (
+  value: number,
+  formatted: string | undefined,
+  precision = 0,
+): string =>
+  Option.getOrElse(usableText(formatted), () => formatNumber(value, precision));
 
 /**
  * The most decimal places a step may claim.
