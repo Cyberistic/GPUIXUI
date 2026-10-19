@@ -10,7 +10,8 @@ import {
   SCENE_LABEL,
   SCENE_PAGE,
 } from "../../../preview/scenes";
-import { LiveSceneIndex, liveSceneRows } from "./scene-index";
+import { liveSceneRows } from "@/lib/live-scenes";
+import { LiveSceneIndex } from "./scene-index";
 
 /**
  * The bug guarded: `/docs/previews` promised "the full list of scenes and

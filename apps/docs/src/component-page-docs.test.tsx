@@ -74,7 +74,7 @@ const pageGuards = (): ReadonlyArray<string> =>
     .map((file) => `src/${file.split(sep).join("/")}`);
 
 const sceneSource = readFileSync(
-  join(appDirectory, "preview/scenes.ts"),
+  join(appDirectory, "preview/scene-contract.ts"),
   "utf8",
 );
 const sceneSection = sectionBody(page, "Live scenes");
@@ -114,6 +114,7 @@ const gestureRows = (): ReadonlyArray<string> => {
 /** The real files a live scene touches and the guards that keep it honest. */
 const sceneFiles = [
   "src/component-meta/entries.ts",
+  "preview/scene-contract.ts",
   "preview/scenes.ts",
   "preview/scene-views.tsx",
   "preview/patterns/confirmation-flow.tsx",

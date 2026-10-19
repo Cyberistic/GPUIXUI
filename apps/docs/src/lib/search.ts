@@ -18,6 +18,12 @@ import {
 } from "./generated-search";
 import { iconSearchEntry } from "./icon-search";
 import { roadmapSearchEntry } from "./roadmap-search";
+import {
+  sceneInstructionByUrl,
+  sceneInstructionHits,
+  sceneInstructionRank,
+  scenesIndexEntry,
+} from "./scene-search";
 import { source } from "./source";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
@@ -118,6 +124,7 @@ const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   capabilitySearchEntry,
   iconSearchEntry,
   roadmapSearchEntry,
+  scenesIndexEntry,
 ];
 
 const generatedByUrl = new Map(
@@ -416,6 +423,7 @@ export const mergeResults = (
   registryResults: ReadonlyArray<SortedResult>,
   query: string,
   pages: ReadonlyMap<string, PageMetadata> = new Map(),
+  scenes: ReadonlyMap<string, string> = new Map(),
 ): ReadonlyArray<SortedResult> => {
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
@@ -443,6 +451,7 @@ export const mergeResults = (
       const ranks = [
         component === undefined ? undefined : componentRank(component, query),
         promotedNameRank(generated, query),
+        sceneInstructionRank(scenes.get(result.url), query),
         pageTitleRank,
         descriptionRank === undefined
           ? undefined
@@ -500,10 +509,12 @@ export const search = async (
       ...pageTitleHits(query),
       ...pageDescriptionHits(query, summaryPages),
       ...generatedNameHits(query),
+      ...sceneInstructionHits(query),
       ...registryResults,
     ],
     query,
     pageMetadata,
+    sceneInstructionByUrl,
   ).slice(0, limit);
 };
 

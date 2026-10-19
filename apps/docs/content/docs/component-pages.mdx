@@ -127,7 +127,8 @@ composition each. These files own the mechanism:
 | Path | What it owns |
 | ---- | ------------ |
 | `src/component-meta/entries.ts` | the record field `liveScene`, which opts a page in |
-| `preview/scenes.ts` | `LIVE_SCENES`, `SCENE_TEXT`, `SCENE_GESTURE`, `SCENE_INTERACTION`, `SCENE_TEXT_IS_SCENE_PROSE` |
+| `preview/scene-contract.ts` | `LIVE_SCENES`, `SCENE_GESTURE`, `SCENE_INTERACTION`, `SCENE_LABEL`, `SCENE_PAGE` and the `SceneStep` union; dependency-free, so the search document can read it |
+| `preview/scenes.ts` | `SCENE_TEXT` and `SCENE_STEP_TEXT`; re-exports the contract so every importer keeps one entry point |
 | `preview/scene-views.tsx` | `LIVE_SCENE_VIEWS`: one real composition per scene |
 | `preview/patterns/confirmation-flow.tsx` | a composed page's scene, kept out of `scene-views.tsx` so its source stays readable on the page |
 | `preview/patterns/command-palette.tsx` | the second composed scene: the real palette opens from a control |
@@ -141,7 +142,9 @@ The expectation table is the contract, not decoration:
 | `LIVE_SCENES` | every scene key the build ships; a record's `liveScene` must be one of them |
 | `SCENE_TEXT` | the text the smoke looks for in GPUI's tree |
 | `SCENE_GESTURE` | the steps that produce a state the component does not start in |
-| `SCENE_INTERACTION` | the sentence shown above the surface and in the document |
+| `SCENE_INTERACTION` | the sentence shown above the surface, and the searchable instruction |
+| `SCENE_PAGE` | the page that mounts a composition scene |
+| `SCENE_LABEL` | the reader-facing name of a composition scene |
 | `SCENE_TEXT_IS_SCENE_PROSE` | the measured exception for a component that paints no text |
 
 ### The gesture vocabulary

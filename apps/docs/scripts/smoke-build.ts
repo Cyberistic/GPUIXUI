@@ -788,6 +788,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a preview tier named by the preview guide",
     },
+    {
+      query: "wheel up",
+      expected: "/docs/components/message-scroller",
+      first: true,
+      what: "a live scene's instruction from the generated scene index",
+    },
+    {
+      query: "live scene",
+      expected: "/docs/previews",
+      first: true,
+      what: "the scene index itself",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

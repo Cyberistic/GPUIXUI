@@ -471,13 +471,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–581)
 
-`[~]` `[██████████]` 149/150
+`[~]` `[██████████]` 148/151
 
-`[ ]` **A live scene's instruction is searchable (plan 582)** — the gesture
+`[x]` **A live scene's instruction is searchable (plan 582)** — the gesture
       sentences are rendered React from `preview/scenes.ts`, so `wheel up`
       returned Radio group, `press end` returned Extending and `type a name`
-      returned Typography; one generated document per gesture scene plus the
-      Previews index must reach the page that mounts it.
+      returned Typography; the pure scene contract now feeds a `/docs/previews`
+      document and a synthesized candidate per matching phrase, and the built
+      index answers `wheel up`, `live scene` and the existing name rules.
 
 `[x]` **An API table that renders nothing fails by name (plan 581)** — a
       renamed props type or a part file that moved left the page heading with no

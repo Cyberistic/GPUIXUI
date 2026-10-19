@@ -1,56 +1,11 @@
-import { components } from "@/component-meta/registry";
-import {
-  LIVE_SCENES,
-  SCENE_GESTURE,
-  SCENE_INTERACTION,
-  SCENE_LABEL,
-  SCENE_PAGE,
-  type LiveScene,
-} from "../../../preview/scenes";
+import { liveSceneRows } from "@/lib/live-scenes";
 
 /**
  * One shipped live scene: the page that mounts it and what a reader does to
- * see the state the page documents. Derived from `preview/scenes.ts`; the
- * guide must not keep a second list.
+ * see the state the page documents. Derived from `preview/scenes.ts` by
+ * `@/lib/live-scenes`, which the search document also reads; the guide must
+ * not keep a second list.
  */
-export interface LiveSceneRow {
-  readonly scene: LiveScene;
-  readonly title: string;
-  readonly href: string | null;
-  readonly kind: "record" | "composed";
-  readonly interaction: string;
-}
-
-const interactionFor = (scene: LiveScene): string =>
-  SCENE_GESTURE[scene] === undefined
-    ? "Mounts in the state it documents."
-    : (SCENE_INTERACTION[scene] ?? "Opened by a real gesture.");
-
-/** One row per registered scene, in `LIVE_SCENES` order. */
-export const liveSceneRows = (): ReadonlyArray<LiveSceneRow> =>
-  LIVE_SCENES.map((scene) => {
-    const record = components.find(
-      (component) => component.liveScene === scene,
-    );
-    if (record !== undefined) {
-      return {
-        scene,
-        title: record.title,
-        href: `/docs/components/${record.slug}`,
-        kind: "record",
-        interaction: interactionFor(scene),
-      };
-    }
-
-    const label = SCENE_LABEL.find((entry) => entry.scene === scene);
-    return {
-      scene,
-      title: label?.title ?? scene,
-      href: SCENE_PAGE[scene] ?? null,
-      kind: "composed",
-      interaction: interactionFor(scene),
-    };
-  });
 
 /**
  * Every live scene, generated from the contract (`/docs/previews`). A reader

@@ -34,6 +34,23 @@ already rendered; they need an index document.
 
 ## 2. The change
 
+### 2.0 `apps/docs/preview/scene-contract.ts` (new) and `preview/scenes.ts`
+
+`preview/scenes.ts` imports `FORM_MESSAGE` from `form-scene.ts`, which imports
+`effect/Schema`. The search route is server code, so importing `scenes.ts`
+there puts `effect` in the server bundle. Move the dependency-free half to
+`preview/scene-contract.ts`:
+
+- `LIVE_SCENES`, `LiveScene`, `isLiveScene`;
+- `SCENE_PAGE`, `SCENE_LABEL`;
+- `SceneStep`, `SCENE_GESTURE`, `SCENE_INTERACTION`;
+- `SCENE_TEXT_IS_SCENE_PROSE`.
+
+`scenes.ts` keeps `SCENE_TEXT` and `SCENE_STEP_TEXT` (which needs
+`FORM_MESSAGE`) and re-exports every moved symbol, so no existing importer
+changes. `live-scenes.ts` imports the contract module. Update the two tests and
+the template page that name `preview/scenes.ts` as a scene file (§3).
+
 ### 2.1 `apps/docs/src/lib/live-scenes.ts` (new)
 
 Move the scene-row derivation out of the React component so both the page table
@@ -43,7 +60,7 @@ and the search document read one function:
 export interface LiveSceneRow {
   readonly scene: LiveScene;
   readonly title: string;
-  readonly href: string;
+  readonly href: string | null;
   readonly kind: "record" | "composed";
   readonly interaction: string;
   /** The reader-visible words for the steps the smoke drives. */
@@ -56,10 +73,9 @@ export const liveSceneRows = (): ReadonlyArray<LiveSceneRow>;
 
 - The record lookup is the existing one (`components.find` by `liveScene`), the
   composed title is `SCENE_LABEL`, the page is `SCENE_PAGE`.
-- `href` is non-optional: `scene-index.test.tsx` already fails when a scene has
-  no page, and the search document cannot carry a `null` URL. Throw nothing:
-  return `/docs/previews` for a scene with no page would lie; instead keep the
-  test as the guard and type `href: string` after a total lookup.
+- `href` stays nullable because `SCENE_PAGE` is partial; `scene-index.test.tsx`
+  and the new suite both fail when a scene has no page, and the search document
+  filters null rather than inventing a URL.
 - `interaction` stays exactly what the page prints (the existing `interactionFor`
   rule: `SCENE_INTERACTION` or "Mounts in the state it documents.").
 - `gesture` derives from `SCENE_GESTURE`, never from prose:
@@ -82,53 +98,76 @@ change. `scene-index.test.tsx` imports `liveSceneRows` from the new module.
 
 ### 2.3 `apps/docs/src/lib/scene-search.ts` (new)
 
-Two exports:
-
 ```ts
-/** One promoted document per gesture scene: the page that mounts it. */
-export const sceneSearchEntries: ReadonlyArray<GeneratedSearchEntry>;
-
 /** `/docs/previews` itself, which lists every scene. */
 export const scenesIndexEntry: GeneratedSearchEntry;
+
+/** The instruction each gesture scene's page shows, keyed by that page. */
+export const sceneInstructionByUrl: ReadonlyMap<string, string>;
+
+/** One page candidate per scene whose instruction matches the query. */
+export const sceneInstructionHits: (
+  query: string,
+) => ReadonlyArray<SortedResult>;
+
+/** `3` when every meaningful query word prefixes a word of the instruction. */
+export const sceneInstructionRank: (
+  instruction: string | undefined,
+  query: string,
+) => number | undefined;
 ```
 
-For each row with `gesture !== ""` (a scene no gesture opens has no instruction
-to search, and its page title already ranks):
-
-- record scene → `url = /docs/components/<slug>`, `title = record.title`;
-- composed scene → `url = SCENE_PAGE[scene]`, `title = SCENE_LABEL` title;
-- `content` = scene key, title, interaction sentence and gesture words, one per
-  line;
-- `keywords` = scene key, title, gesture words;
-- `names` = the title **and the interaction sentence**. `promotedNameRank`
-  matches a multiword query whose words prefix one name, so
-  `type a name` matches "Type a name into the field." while a single word is
-  never promoted (plan 564's rule, unchanged).
-- `breadcrumbs = ["Previews"]`.
-
-`scenesIndexEntry` is one document at `/docs/previews`:
+`scenesIndexEntry` is the generated surface's **one** document, at
+`/docs/previews`:
 
 - `title: "Live scenes"`, names `["Live scenes"]`;
-- content = every row (`title`, interaction, gesture), including the static
-  scenes the per-page entries skip;
+- content = every row (`scene` key, title, interaction, gesture), including the
+  static scenes;
 - keywords = every scene key and title.
 
-All titles, interactions and gestures come from `preview/scenes.ts` and the
-registry. No sentence is authored twice.
+There is deliberately **no document per scene**. The registry search index
+uses `url` as the document key, and a component page already has its registry
+document; adding a second one at the same URL made the built server answer
+**HTTP 500 on every query** (measured in §3.3). The per-page answer comes from
+the synthesized candidate below, not a duplicate document.
+
+`sceneInstructionRank`:
+
+- lowercases and splits both strings into words;
+- drops words of one character and stop words (`the`, `to`, `then`, …) so
+  `click the` cannot rank 26 scenes;
+- requires at least two meaningful query words, so a single plain word is never
+  promoted;
+- returns `SCENE_MATCH_RANK = 3` when every query word prefixes an instruction
+  word, otherwise `undefined`.
+
+Rank `3` is deliberate: it beats prose and a page title's **token** match
+(`TOKEN_MATCH_RANK` is 4, which is why `type the workspace name` reached
+Workspace), but loses to an exact or prefix title. `sceneInstructionHits`
+synthesizes a page candidate for each matching scene, the rule
+`pageDescriptionHits` uses, so **the lexical index does not need to return the
+document** for the query to find the page.
+
+All titles, interactions and gestures come from `preview/scene-contract.ts`
+and the registry. No sentence is authored twice.
 
 ### 2.4 `apps/docs/src/lib/search.ts`
 
-- Import the two exports and append them to `generatedEntries`; the existing
-  `generatedByUrl` map, `generatedNameHits` synthesis and `promotedNameRank`
-  then do the work. No new ranker rule and no change to `mergeResults`.
-- **Collision check:** `generatedByUrl` holds one entry per URL. The only
-  component page with an existing generated entry is Icons
-  (`iconSearchEntry`), and its scene has no gesture, so it is not in
-  `sceneSearchEntries`. Record that fact in a test (§3) so a future gesture on
-  the Icons page fails instead of silently replacing the icon document. If that
-  test fails, the fix is to merge names per URL, not to drop either document.
-- Do **not** add these words to `componentSearchIndex` as a second path: one
-  index per fact, and the scene entries already carry the page URL.
+- Append `scenesIndexEntry` to `generatedEntries`, so `live scene` reaches the
+  index page.
+- `mergeResults` takes an optional `scenes: ReadonlyMap<string, string>` (an
+  empty default keeps the fixture tests independent of the content tree) and
+  adds `sceneInstructionRank(scenes.get(result.url), query)` to a candidate's
+  ranks.
+- `search()` passes `sceneInstructionByUrl` and appends
+  `sceneInstructionHits(query)` before the registry results.
+- **No duplicate URL:** the scene index is the only added document. The Icons
+  catalogue keeps `/docs/components/icon`, and no scene document competes for
+  it. If a future scene needs its own document, it must merge into the existing
+  URL's document rather than insert a second one.
+- Do **not** add these words to `componentSearchIndex` as a second path: the
+  synthesized candidate is the one mechanism, and the index page carries the
+  full list.
 
 ### 2.5 `apps/docs/content/docs/previews.mdx`
 
@@ -142,9 +181,10 @@ Add one paragraph under `## Every live scene`:
 ### 2.6 `apps/docs/README.md`
 
 Add a paragraph to the **Search** section after plan 578's scene-index
-paragraph: the scene instruction is promoted from `preview/scenes.ts`, one
-document per gesture scene plus `/docs/previews`, and the collision rule with
-the Icons document.
+paragraph: the scene instruction is indexed from the pure scene contract, the
+`/docs/previews` document is the generated surface's one document,
+`sceneInstructionRank` scores the phrase above prose, and a second document at a
+component URL is never added (the duplicate URL 500 is recorded).
 
 ### 2.7 Index and ledger
 
@@ -170,16 +210,15 @@ the Icons document.
 
 Structural:
 
-- `sceneSearchEntries.length` equals the number of gesture scenes; every entry
-  URL is a row's `href`; every gesture scene appears once.
-- Every entry's content contains its `SCENE_INTERACTION` sentence and its
-  derived gesture words.
-- `scenesIndexEntry.index.content` contains every `LIVE_SCENES` key, including
-  static ones.
-- No entry URL collides with another generated document:
-  `sceneSearchEntries.every((entry) => entry.index.url !== "/docs/components/icon")`.
-- `promotedNameRank(entry, "click")` is `undefined` for a scene entry: a single
-  plain word is never promoted.
+- `scenesIndexEntry.index.content` contains every `LIVE_SCENES` key and every
+  `SCENE_INTERACTION` sentence, including static scenes.
+- `sceneInstructionHits(row.interaction)` returns one candidate at the page
+  that mounts every gesture scene.
+- The generated document is not at a component-page URL (no duplicate document
+  in the registry index).
+- `sceneInstructionRank` returns `undefined` for a one-word query and for
+  `click the` (stop words only), `3` for two meaningful words that both match,
+  and `undefined` when one word does not.
 
 Integration through the real `search()` (the same call `/api/search` uses):
 
@@ -194,10 +233,10 @@ Integration through the real `search()` (the same call `/api/search` uses):
 
 Negative guards, so the new names cannot swallow existing subjects:
 
-- `input` still reaches `/docs/components/text-input`? Use the existing proven
-  page instead: `button` still first `/docs/components/button`;
+- `button` still first `/docs/components/button`;
 - `modal` still first `/docs/components/dialog` (alias rule, plan 566);
-- `focus ring` still first `/docs/tokens-api` (promoted-name rule, plan 569);
+- `focus ring` still first `/docs/tokens-api#functions` (promoted-name rule,
+  plan 569);
 - a component with **no** live scene (`icon`, `button`) keeps its title rank.
 
 Use the same `MAX_SEARCH_LIMIT` and real index as `search.test.ts`; the suite's
@@ -205,18 +244,23 @@ cold budget is 120 s (plan 468).
 
 ### 3.3 Two-direction proof
 
-After the new tests pass:
+Measured on `afdd7626` with the implementation below:
 
-1. Remove `sceneSearchEntries` from `generatedEntries` (keep the previews
-   entry), run `nub x vitest run src/lib/scene-search.test.ts`; the six
-   instruction queries fail by name. Restore.
-2. Remove `scenesIndexEntry`; `live scene` fails. Restore.
-3. Rename one `SCENE_INTERACTION` sentence without changing the code; the
-   structural test fails on that scene. Restore.
-4. Change one gesture `deltaY` sign; `wheel up` fails (the derived words move
-   to `wheel down`). Restore.
+1. Force `sceneInstructionRank` to return `undefined`: **9 tests fail** — the
+   synthesized-candidate case, the phrase-rank unit case and the six instruction
+   queries plus the one-result-per-page case. Restore, 14/14 pass.
+2. Remove `scenesIndexEntry` from `generatedEntries`: `live scene` fails.
+   Restore, 14/14 pass.
+3. Rename Slider's `SCENE_INTERACTION` from "press End" to "press Home":
+   `press end` fails by query. Restore.
+4. Flip Message scroller's wheel `deltaY` to negative: the gesture-words test
+   fails because the derived phrase becomes `wheel down`. Restore.
+5. Add a second document at a component page's URL (the first implementation):
+   the unit suite passed but the built server answered **HTTP 500 on every
+   query**, because the registry index keys documents by URL. The fix is the
+   single index page plus synthesized candidates; `smoke:build` is the proof.
 
-Record the exact failing lines in the plan's status row / commit message.
+Record the exact failing lines in the status row / commit message.
 
 ## 4. Commands and expected results
 
@@ -226,14 +270,13 @@ Run from the repository root unless stated.
 | ------- | -------- |
 | `cd apps/docs && nub x vitest run src/lib/live-scenes.test.ts` | all tests pass |
 | `cd apps/docs && nub x vitest run src/lib/scene-search.test.ts` | all tests pass |
-| `nub run --filter docs test` | 97 files / 684+ tests, exit 0 |
+| `nub run --filter docs test` | 97 files / 696 tests, exit 0 |
 | `nub run --filter docs check-types` | exit 0 |
 | `nub run check` | `check:tests`, lint, format and types green |
-| `nub run --filter docs build && nub run --filter docs smoke:build` | the 98-page crawl passes; `live scene` answers with `/docs/previews` |
+| `nub run --filter docs build && nub run --filter docs smoke:build` | the 98-page crawl passes; `wheel up` and `live scene` answer in the production index |
 
-`smoke:build`'s query set should gain `live scene` (the production index, not
-only the unit call). Add it to `apps/docs/scripts/smoke-build.ts` beside the
-existing production queries and run the smoke.
+`smoke:build`'s query set gains `wheel up` (a scene instruction) and
+`live scene` (the scene index) beside the existing production queries.
 
 ## 5. STOP conditions
 

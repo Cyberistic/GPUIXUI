@@ -547,6 +547,21 @@ props type and alias — and `search.test.ts` walks all of them against the real
 index. A part two compound records share (`MenuGroup`) ranks both; the tie-break
 chooses one and the guard accepts either owner.
 
+A **live scene's instruction** is searchable too (plan 582). The sentence above
+each surface — `Type a name into the field.`, `Wheel up in the log to leave the
+tail.` — is rendered React from `preview/scenes.ts`, so the MDX index never sees
+it. `src/lib/scene-search.ts` indexes the whole scene list at
+`/docs/previews` and synthesizes a page candidate for each scene whose
+instruction matches; `sceneInstructionRank` scores a multiword phrase above
+prose and a page title's token match, but below an exact title. `wheel up`,
+`press end`, `type a name` and `right click` therefore reach Message scroller,
+Slider, Text inputs and Context menu; `live scene` reaches Previews. A
+stop-word-only phrase (`click the`) and every single word are never promoted, so
+`input` and `click` keep their own pages. There is deliberately no second
+document at a component page's URL: the registry index keys documents by URL, and
+the duplicate made every query answer HTTP 500 when this plan was first built
+(measured; the unit index accepted it).
+
 Generated prop-table rows (`#type-table-…`) are **not** returned as results
 (plan 479): every table repeats `aria-label`, `style` and `children`, so those
 synthetic headings buried the authored prose that answers an accessibility
@@ -1023,6 +1038,13 @@ needed. The rows and the caption derive from `preview/scenes.ts`, so a new scene
 needs no docs edit. Two raw GitHub links to `docs/preview-strategy.md` were
 removed from that page: the default branch does not serve the path (measured
 404), and the on-site list is now the reader's copy.
+
+The instruction is also a search document (plan 582): `scene-search.ts` indexes
+the whole list at `/docs/previews` and synthesizes a page candidate for the scene
+whose phrase matches, so the ranker scores it above prose without a second
+document at a component URL. The scene-index test still owns the rendered rows;
+the search test proves the measured gesture queries reach the page that mounts
+the scene.
 
 An approximation is never a fallback. The only way to render one is
 `<IllustrativeApproximation>`, which always renders the mandated banner.
