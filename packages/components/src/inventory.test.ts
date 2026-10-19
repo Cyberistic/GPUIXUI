@@ -382,6 +382,14 @@ describe("component API contract", () => {
     expect(markdown).toContain("| `.on_value_change(f)` | `onValueChange` |");
   });
 
+  it("states the shipped controlled precedence, with no promised warning", () => {
+    const markdown = contract();
+
+    expect(markdown).toContain("Supplying both props is");
+    expect(markdown).toContain("no warning");
+    expect(markdown).not.toContain("are mutually exclusive");
+  });
+
   it("lists every implemented component in the parts tables", () => {
     const markdown = contract();
     const missing = Arr.filter(

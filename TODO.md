@@ -1088,6 +1088,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — the registry is complete and every entry is render-proven in this package (plan 330); mounting still belongs to `apps/playground` |
 | Docs site renders `packages/components/docs/*.mdx` and the example registry | docs-site | pending |
+| The docs-site workstream's two open components hand-offs: the `./validation/logic` export and the controlled/`defaultPrevented` contract | docs-site | **answered** — the subpath export and its check landed in plan 336, and plan 685 states the shipped controlled rule (§4 already said "No default suppression"); their TODO rows can flip to done |
 | Root `README.md`'s status line still says 517 behaviour tests / 41 areas; the suite is now 611 and the package has 43 modules | repo README (coordinator) | pending — recorded by plan 373, count refreshed by plan 394 (390 last touched it); not edited from `packages/components` |
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | The shared store's `@gpuix/native` binding was **rebuilt in place by another worktree while suites were running** (2026-10-18 21:47 and 22:00, `workspaces/gpuix-zindex`; md5 `c0e554b…`). The new build changes bounds/anchoring — the combobox trigger measures `{x:549,width:738}` instead of `{x:540,width:740}` — so "centres a requested popup on its trigger" is off by 4 px and "paints the focus ring on the search field" keeps the ring after focus moves. **Both fail at `HEAD` with that binding and passed on the 21:47 build**, so no component change is at fault; every native verdict taken across the swap is suspect until one build is pinned | gpuix-zindex / playground | **wider than first measured** — plan 540 proved `getElementBounds` mixes **three** conventions inside one build (block/`flex-start`: content-box origin; centred flex: border-box origin; padding-box size in all three) and that a release-tag build (`9fcd628`, zed `81c99f81`, md5 `e7a3c64…`) reproduces it, so no harness normalisation is sound. The 59 red cases are classified: 34 position, 24 focus/blur (no `onFocus`/`onBlur` for a native focus change), 1 scroll. Fix required: one box convention for every element (border box) plus focus events; then the suite's 34 position cases pass unchanged. Artifact + build log kept in `workspaces/components/.agents/slop/scratch/gpuix-release/` |
@@ -1270,6 +1271,14 @@ the docs-site workstream; the `packages/components` half is plan 337)
       through the package name (45 entries), not merely resolves on disk; the
       check reports Node's own module error when one is not exported. 8 checks
       in `src/exports.test.ts`, unit 474
+`[x]` The controlled/uncontrolled contract is the shipped rule — plan 685: the
+      docs-site hand-off found `docs/component-api.md` §2 promising a warning
+      the hook never emitted (§4 already said "No default suppression"; no edit
+      was needed there). §2, the hook's JSDoc and `docs/tabs.mdx` now state the
+      shipped rule — both props may be supplied, `value` wins, `defaultValue` is
+      inert, no warning or error. 1 behaviour pin and 1 contract pin, both
+      proven to fail on the old text/mutation; unit 477, behaviour 844/31 of 875
+      with the same plan-540 failures; `nub run check`/`lint`/`test` green
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plan 680):
@@ -1278,8 +1287,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       31 failed of 874** — every failure is one of the recorded plan-540 binding
       defects (the focus/blur cases, the box-convention position cases and the
       command-menu scroll case), and the new disabled-inert suite is 7/7. The
-      count before plan 680 was 836/31 of 867 after plan 677. Re-run it
-      before release — every later merge can change the count.
+      count before plan 680 was 836/31 of 867 after plan 677. Plan 685 re-ran
+      all three gates on 2026-10-19: exit 0, unit 477 in 46 files; the full
+      native suite is 844 passed / 31 failed of 875 (the same plan-540 binding
+      defects). Re-run it before release — every later merge can change the
+      count.
 
 ## Swarm-owned blockers (fix these)
 

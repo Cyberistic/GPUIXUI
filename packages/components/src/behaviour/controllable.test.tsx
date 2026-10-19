@@ -6,7 +6,9 @@
  * control reported `onChange` for a request that changed nothing — pressing an
  * already-selected uncontrolled tab fired `onValueChange("profile")`. The
  * controlled path was correct, so the cases below pin both modes and the new
- * comparison must not suppress a real change.
+ * comparison must not suppress a real change. The last case pins the shipped
+ * precedence rule (plan 685): when a caller supplies both props, `value` wins
+ * and `defaultValue` is inert, with no diagnostic.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -91,6 +93,26 @@ describe("useControllableState", () => {
     expect(probe.renderer.getAllText()).toContain("value:alpha");
 
     probe.rerender(<Probe value="beta" onChange={onChange} />);
+    expect(probe.renderer.getAllText()).toContain("value:beta");
+
+    probe.unmount();
+  });
+
+  it("lets the controlled value win when both props are supplied", () => {
+    const onChange = vi.fn();
+    const probe = renderComponent(
+      <Probe value="alpha" defaultValue="beta" onChange={onChange} />,
+    );
+
+    expect(probe.renderer.getAllText()).toContain("value:alpha");
+
+    clickCentreOf(probe, "set-beta");
+    expect(onChange.mock.calls).toEqual([["beta"]]);
+    expect(probe.renderer.getAllText()).toContain("value:alpha");
+
+    probe.rerender(
+      <Probe value="beta" defaultValue="beta" onChange={onChange} />,
+    );
     expect(probe.renderer.getAllText()).toContain("value:beta");
 
     probe.unmount();

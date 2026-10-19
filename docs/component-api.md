@@ -57,8 +57,10 @@ history. No landed component currently deviates.
 
 - `value` makes the part controlled: the selection changes **only** when the
   caller supplies a new value.
-- `defaultValue` is the uncontrolled initial value. `value` and `defaultValue`
-  are mutually exclusive; a component that receives both ignores `defaultValue`.
+- `defaultValue` is the uncontrolled initial value. Supplying both props is
+  tolerated: `value` is authoritative and `defaultValue` is ignored — no warning
+  or error is emitted, because the hook cannot log through the Effect runtime and
+  this package does not use `console.*`.
 - `onValueChange(value)` fires on request and is the change callback for a
   selection. A request for the value the part already holds is a **no-op** in
   both modes: it changes nothing and calls no callback (plan `517`). A component

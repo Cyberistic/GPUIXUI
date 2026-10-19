@@ -86,7 +86,9 @@ and the vertical workspace settings.
 A controlled tab set reports a click or key but does not switch its panel until
 the consumer re-renders with the new `value` — the classic contract, tested.
 Pressing the tab that is already selected reports nothing: a request for the
-value the set already holds is a no-op in both modes (plan 517).
+value the set already holds is a no-op in both modes (plan 517). Supplying both
+`value` and `defaultValue` is tolerated: `value` wins and `defaultValue` seeds
+only the uncontrolled case, with no warning.
 
 ## A tab that changes
 

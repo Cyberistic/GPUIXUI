@@ -7,7 +7,10 @@
  * same reason). A controlled value is authoritative: setting it without
  * re-rendering with a new `value` leaves the visual state where it was, while
  * `onValueChange` still fires — the classic controlled-component contract, and
- * one the List suite asserts.
+ * one the List suite asserts. Supplying both `value` and `defaultValue` is
+ * tolerated: the controlled value wins and `defaultValue` seeds only the
+ * uncontrolled state. No diagnostic is emitted — this hook owns no logger
+ * (plan 685).
  */
 
 import { useCallback, useState } from "react";
