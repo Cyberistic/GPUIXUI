@@ -242,8 +242,8 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**after plan
-`596`: 50 files / 729 tests — 690 passed / 39 failed on the store's release-tag
-build**, 8 failing files; the two runs before `596` were identical by name). The
+`596`: 50 files / 729 tests — 692 passed / 37 failed on the store's release-tag
+build**, 8 failing files; repeated runs are identical by name). The
 native-focus tracker restored the 19 focus-matrix cases and the disabled ring
 cases (both files are green in a fresh process); plan `591` restored the lifetime
 of a seeded focus state and the `NumberField` blur commit, plan `592` made the

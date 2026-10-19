@@ -197,13 +197,15 @@ Measured on this host, release-tag build, 2026-10-19.
   hover/click/description case.
 - `runtime/info-tip.runtime.test.tsx` → **7 passed** through the generic path;
   its local `hoverOpen` wiring is deleted.
-- Whole runtime suite: **50 files / 729 tests — 690 passed / 39 failed**, 8
-  failing files (was 677 / 47 / 9). Exactly the eight focus cases left and none
-  appeared.
+- Whole runtime suite: **50 files / 729 tests — 692 passed / 37 failed**, 8
+  failing files (was 677 / 47 / 9). Ten focus cases left the list (the eight
+  reported plus `Toggle`/`IconButton`) and none appeared; two more
+  (`fields > opens a Tooltip when its trigger takes keyboard focus` and the
+  feedback example) also needed the tracker settle and now pass.
 - `nub run --filter @gpuixui/primitives test` → **57 files / 808 tests**;
   `check-types`, `check` and `lint` green.
 
-**The remaining 39** are the published box model (plan `529` §6.5) and the one
+**The remaining 37** are the published box model (plan `529` §6.5) and the one
 `ScrollArea` tooltip-hover case, which is the runtime hit-test limit, not the
 open state.
 

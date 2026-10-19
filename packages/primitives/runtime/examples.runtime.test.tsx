@@ -22,7 +22,13 @@ import * as R from "effect/Record";
 import type { ComponentType } from "react";
 import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme, testThemeDark } from "./fixture.js";
+import {
+  Surface,
+  openWindow,
+  settleFocus,
+  testTheme,
+  testThemeDark,
+} from "./fixture.js";
 
 /** The root and the headline each example must paint. */
 const SCREENS = [
@@ -179,6 +185,8 @@ it("reaches the feedback example's tooltip by keyboard, with its description", a
   );
   expect(trigger.aria?.description).toBe("Booked revenue, net of refunds.");
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe(
     "feedback-example-tooltip-trigger",
   );

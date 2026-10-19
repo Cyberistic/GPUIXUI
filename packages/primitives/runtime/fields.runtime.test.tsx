@@ -1923,6 +1923,8 @@ it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   );
   expect(runtime.allText()).not.toContain("A hint");
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(runtime.allText()).toContain("A hint");
 });

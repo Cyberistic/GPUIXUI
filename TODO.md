@@ -1458,11 +1458,11 @@ retired once both branches are one
       closes when focus leaves (7/7), so the only tooltip-open cases left are an
       arbitrary `Tooltip` around a component (8 + 1 in `examples`), which cannot
       know its trigger's host id; the rest are the published box model.
-      **Re-run 2026-10-19 after plan `596`:** 50 files, **729 tests, 690 passed
-      / 39 failed**, 8 failing files. `ref` joined the slot contract; every
+      **Re-run 2026-10-19 after plan `596`:** 50 files, **729 tests, 692 passed
+      / 37 failed**, 8 failing files. `ref` joined the slot contract; every
       single-root trigger (Button, IconButton, Toggle, Checkbox, Switch, Input,
       TextArea, NumberField, Select, Slider) now opens its tooltip on `Tab`,
-      dismissal and reopen included — `overlay-trigger` 23/23. The remaining 39
+      dismissal and reopen included — `overlay-trigger` 23/23. The remaining 37
       are the published box model and the `ScrollArea` tooltip hover limit
       (its public ref is the scroll handle); no focus, timer or order flake
       remains.
@@ -1717,7 +1717,7 @@ retired once both branches are one
       trigger forwards it composed with its own, and `Tooltip` derives focus-open
       from the tracked id with an explicit-dismiss rule. `InfoTip` returns to the
       generic path. `ScrollArea` keeps its imperative ref and is the documented
-      exception. `overlay-trigger` 23/23; full 690/729 (39 failures, 8 files);
+      exception. `overlay-trigger` 23/23; full 692/729 (37 failures, 8 files);
       both directions measured (plan `596`).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
