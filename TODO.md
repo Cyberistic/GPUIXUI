@@ -290,6 +290,10 @@ retired once both branches are one
       the dead `Home`/`End` branches (consumed by the host input) are gone; 1
       native case (Command menu 24), mutation proof; docs, `COMPONENTS.md` and
       the inventory synced (owner: components).
+    - [~] Toast progress — plan 592: publish the store's remaining time as
+      `ToastTiming`, paint a 2px determinate bar that pauses with the hover/focus
+      hold, omit it for a zero/infinite duration, and keep the dismissal clock
+      unchanged (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
