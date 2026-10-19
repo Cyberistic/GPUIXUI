@@ -62,6 +62,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[x]` **Re-run the merge/release gate on the final branch** (2026-10-19): the
+      code head `3213388c` (after plan `581`) ran the whole registry —
+      headless **103/103** (`3632` checks, 64 capabilities) and live **75/75**
+      (`1697` checks, 51 capabilities, 783.8 s), both exit `0` on the
+      release-tag binding, so every registered live scenario has now run
+      together rather than only in focused batches. `nub run check`,
+      `nub run lint` and `nub run test` pass (playground 417 tests; components
+      308; primitives 282; tokens 196; tw 103; testing 61; icons 19; docs 7).
+      The ledger totals in `COMPONENTS.md` and `apps/playground/README.md` were
+      corrected to those numbers, the `scroller` evidence row gained its live
+      and shipped-tier-2 ids, and `focus-traversal`'s header now states the
+      measured event contract (`onFocus` is not dispatched; `onBlur` is) with
+      the scenario re-run green after the comment-only edit. No scenario
+      behaviour changed, so there is no mutation proof; the full suites are the
+      two-direction evidence. Exact ids: the whole headless registry and the
+      whole live registry (last focused live ids before this run:
+      `live-tier2-scroller,live-tier2-command`).
+
 `[x]` Close the **last two shipped Tier 2 consumer paths** per plan `581`:
       `tier2-scroller` (43 checks) and `tier2-command` (35) mount the shipped
       `MessageScroller` and `CommandMenu` through the published root and the
@@ -932,11 +950,11 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      **re-run on the final branch 2026-10-19 at `e405a99e` (after plan `565`):**
-      headless **101/101** (`3536` checks, 64 capabilities) and live **63/63**
-      (`1428` checks, 48 capabilities, 717 s), both exit `0`; `nub run check`,
+      **re-run on the final code head `3213388c` (2026-10-19, after plan `581`):**
+      headless **103/103** (`3632` checks, 64 capabilities) and live **75/75**
+      (`1697` checks, 51 capabilities, 783.8 s), both exit `0`; `nub run check`,
       `nub run lint` and `nub run test` pass (playground 417 tests; components
-      308; primitives 282; tokens 196; testing 61; tw 103; icons 19; docs 7).
+      308; primitives 282; tokens 196; tw 103; testing 61; icons 19; docs 7).
       The workstream's own instruction is *never push to master*, so an
       owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
