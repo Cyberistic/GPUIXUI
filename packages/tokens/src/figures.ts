@@ -50,7 +50,13 @@ export type FigureKind =
    * the fill; {@link DocumentedFigure.panel} is the surface the control sits on,
    * because a dim takes its colour from behind the control.
    */
-  | "dim";
+  | "dim"
+  /**
+   * A two-tone content ring's worst case over an arbitrary content colour: the
+   * geometric mean of the tone pair's contrast,
+   * `sqrt(contrast(outer, inner))`.
+   */
+  | "ring";
 
 /** The opacity the shipped consumers dim a disabled control with. */
 export const disabledDimOpacity = 0.5;
@@ -60,7 +66,8 @@ export type FigureDocument =
   | "COMPONENTS.md"
   | "docs/design-system.md"
   | "docs/tokens.md"
-  | "packages/tokens/README.md";
+  | "packages/tokens/README.md"
+  | "packages/tokens/src/ring.ts";
 
 /** Which shipped axis produced a theme, with the axes read from the theme. */
 export type ShippedThemeProvenance =
@@ -188,6 +195,11 @@ const measure = (
       );
       return contrastRatio(label, fill);
     }
+    case "ring":
+      // The two tones' ratios against any content colour multiply to the tone
+      // pair's own ratio, so the worst case over every colour is its square
+      // root.
+      return Math.sqrt(contrastRatio(colors[foreground], colors[background]));
   }
 };
 
@@ -510,6 +522,128 @@ const trackSelectedFigure: DocumentedFigure = {
     "identity dark's `track` on its `selected` fill measures **{figure}:1**",
 };
 
+/** A sentence quoting the ring's derived bound, with the set it names. */
+const ringFigure = (
+  document: FigureDocument,
+  name: string,
+  provenance: ShippedThemeProvenance,
+  claim: FigureClaim,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name,
+  pairs: [["foreground", "background", "mark"]],
+  kind: "ring",
+  claim,
+  provenance,
+  decimals: 2,
+  sentence,
+});
+
+const linuxDark = platformTheme("linux", "dark", "default");
+const identityLight = identityTheme("light", "default");
+const identityLightHigh = identityTheme("light", "high");
+
+/**
+ * The content ring's figures, one entry per sentence that states one. The ring
+ * is the one composition whose worst case is not a pair ratio: it is
+ * `sqrt(contrast(outer, inner))`, so `figures.ts` measures the kind instead of
+ * wrapping the pair. `Dark · Linux` is the tightest shipped set at 3.70:1; the
+ * identity light pair is 15.86:1 (3.98:1) and both AAA sets are 21:1 (4.58:1).
+ */
+const ringFigures: ReadonlyArray<DocumentedFigure> = [
+  ringFigure(
+    "docs/tokens.md",
+    "the content ring on the identity light pair",
+    identityLight,
+    "value",
+    "The identity light pair guarantees **{figure}:1**",
+  ),
+  ringFigure(
+    "docs/tokens.md",
+    "the content ring at AAA",
+    identityLightHigh,
+    "value",
+    "the AAA pairs **{figure}:1**",
+  ),
+  ringFigure(
+    "docs/tokens.md",
+    "the content ring's tightest shipped set",
+    linuxDark,
+    "tightest",
+    "the tightest shipped set (`Dark · Linux`) guarantees **{figure}:1**",
+  ),
+  ringFigure(
+    "docs/design-system.md",
+    "the content ring's tightest shipped set",
+    linuxDark,
+    "tightest",
+    "{figure}:1 at the tightest shipped set, above the mark floor",
+  ),
+  ringFigure(
+    "packages/tokens/README.md",
+    "the content ring's tightest shipped set",
+    linuxDark,
+    "tightest",
+    "({figure}:1 at the tightest shipped set, above the mark floor)",
+  ),
+  ringFigure(
+    "COMPONENTS.md",
+    "the content ring's tightest shipped set",
+    linuxDark,
+    "tightest",
+    "{figure}:1 at the tightest shipped set, `Dark · Linux`",
+  ),
+  ringFigure(
+    "COMPONENTS.md",
+    "the content ring at AAA",
+    identityLightHigh,
+    "value",
+    "{figure}:1 at AAA",
+  ),
+  {
+    document: "packages/tokens/src/ring.ts",
+    name: "the identity light pair's contrast",
+    pairs: [["foreground", "background", "body"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityLight,
+    decimals: 2,
+    sentence: "identity light pair ({figure}:1) guarantees",
+  },
+  ringFigure(
+    "packages/tokens/src/ring.ts",
+    "the ring's identity light guarantee",
+    identityLight,
+    "value",
+    "guarantees **{figure}:1**, the AAA pairs",
+  ),
+  {
+    document: "packages/tokens/src/ring.ts",
+    name: "the AAA pair's contrast",
+    pairs: [["foreground", "background", "body"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityLightHigh,
+    decimals: 0,
+    sentence: "the AAA pairs ({figure}:1)",
+  },
+  ringFigure(
+    "packages/tokens/src/ring.ts",
+    "the ring's AAA guarantee",
+    identityLightHigh,
+    "value",
+    "**{figure}:1**, and the tightest shipped set",
+  ),
+  ringFigure(
+    "packages/tokens/src/ring.ts",
+    "the ring's tightest shipped set",
+    linuxDark,
+    "tightest",
+    "the tightest shipped set (`Dark · Linux`) **{figure}:1**",
+  ),
+];
+
 /** Every figure this table holds. */
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
@@ -517,6 +651,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...disabledDimFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
+  ...ringFigures,
 ];
 
 /** One body-role tier: secondary text below the role a surface paints. */

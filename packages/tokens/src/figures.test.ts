@@ -69,6 +69,10 @@ const documents: Readonly<Record<FigureDocument, string>> = {
     new URL("../../../COMPONENTS.md", import.meta.url),
     "utf8",
   ),
+  "packages/tokens/src/ring.ts": readFileSync(
+    new URL("./ring.ts", import.meta.url),
+    "utf8",
+  ),
 };
 
 describe("figures the catalogue states in the present tense", () => {
