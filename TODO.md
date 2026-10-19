@@ -95,6 +95,37 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       live offset check. Two component defects found and recorded
       cross-team below, and asserted as the measured behaviour.
 
+`[x]` Measure the **`<img>` source contract** per plan `586`: `COMPONENTS.md`
+      claimed path + data URL + http(s) were verified, but only data URLs and
+      `setImagePixels` had ever run. `native-surfaces` (**61 checks**) and
+      `live-content` (**44**) now mount a ref `setImage(bytes)` case (valid
+      PNG → readout `ok`, `48 × 48`, no fallback; garbage → the runtime
+      **throws** `unrecognized image format`, node keeps `img: no src`,
+      `46 × 46`), a real `apps/playground/fixtures/one-pixel.png` path, a
+      missing path (live only for the visual) and a refused
+      `https://127.0.0.1:1/…` URL. Painted-text totals: `img: no src` = 2,
+      `img: load failed` = 1. **Measured limit:** a path/URL load has **no
+      assertable signal** — `gpui::img(path|uri)`'s fallback is a plain GPUI
+      element absent from `getPaintedText()` and the tree, there is no
+      load/error event, and the offscreen loader never settles; the live
+      screenshot (red bitmap for the valid path, `img: load failed` for the
+      missing/refused) is the only visual evidence. The ledger now says data
+      URL + bytes verified, path/URL screenshot-only, with an app-owned error
+      state. Focused ids run twice: `native-surfaces`, `live-content`, both
+      exit `0`; five mutation proofs observed and reverted (M1 removed upload
+      → `got 3`; M3 asserting a path fallback → `expected 2, got 1`; M4 box →
+      `expected 32 ± 0.5, got 48`; M5 no live URL node → `got none`). Full
+      headless **103/103** (**3653** checks, 64 capabilities), exit `0`; the
+      ledger totals moved from 3632. Plan `586` §9.
+
+`[ ]` **Cross-team:** any future image-preview component (owner:
+      `components`/`primitives`) must own its **error state** — 0.10.0's
+      `<img>` exposes no load/error event, a failed path/URL paints only a
+      GPUI fallback the app cannot observe, and a bad `setImage` byte buffer
+      throws. Read and validate bytes (`FileSystem` + `setImage`) or stat the
+      path before rendering; do not cite this suite as path/URL verification
+      (evidence: plan `586`).
+
 `[ ]` **Cross-team (defect):** `@gpuixui/components` **MessageScroller** never
       re-pins when the reader wheels back to the end. `tier2-scroller` (plan
       `581`) measured the offset reaching the bottom (`-1003`) with

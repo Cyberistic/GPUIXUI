@@ -8,6 +8,15 @@
  * `on_painted`, so bounds are paint evidence), and what `<canvas>` does to its
  * children.
  *
+ * The image sources are measured separately (plan `586`): a data URL and
+ * `setImagePixels` were the only evidence for years, while an `<img src>` can
+ * also be a file path or an http(s) URL. Bytes uploaded through
+ * `ImgInstance.setImage` are assertable; a path or URL load is **not** —
+ * `gpui::img(path|uri)`'s fallback text never reaches `getPaintedText()` or
+ * the tree, there is no load/error event, and the offscreen loader never
+ * settles. The path nodes therefore assert only their box; the live scenario
+ * carries the screenshot and the refused-URL case.
+ *
  * The trap, measured: `<canvas>` is retained as a node, paints nothing, has no
  * bounds, and discards its children from the paint log. Charts and the colour
  * picker's SV square cannot be built on it here; `<svg>` and `<img>` are the
@@ -19,21 +28,53 @@
  * A valid `<img>` data URL is proven accepted (no invalid-source fallback) and
  * laid out; whether GPUI decoded the bitmap is visible only in the artifact.
  *
- * Measured facts: plan `161` §8.
+ * Measured facts: plan `161` §8 (surfaces) and plan `586` §2/§9 (sources).
  */
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
 import type { ImgInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import type { PlaygroundScenario } from "../types.js";
 
-/** A 1 × 1 transparent PNG, verified by `file` as `PNG image data, 1 x 1`. */
-const ONE_PIXEL_PNG =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+/** A 1 × 1 red RGBA pixel, verified by `file` as `PNG image data, 1 x 1`. */
+const ONE_PIXEL_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+/** The same pixel as a data URL: the decoded-image source. */
+const ONE_PIXEL_PNG = `data:image/png;base64,${ONE_PIXEL_PNG_BASE64}`;
+
+/** The same pixel as bytes: what `setImage` takes. */
+const ONE_PIXEL_PNG_BYTES = Schema.decodeUnknownSync(
+  Schema.Uint8ArrayFromBase64,
+)(ONE_PIXEL_PNG_BASE64);
+
+/**
+ * The same pixel as a real file, for the path source.
+ *
+ * `src/scenarios/` and `dist/scenarios/` are both two directories below
+ * `apps/playground/`, so `../../fixtures` resolves to
+ * `apps/playground/fixtures/` in the app and in the built runner.
+ */
+const ONE_PIXEL_PNG_PATH = fileURLToPath(
+  new URL("../../fixtures/one-pixel.png", import.meta.url),
+);
+
+/** A path no decoder can open: the runtime logs and paints nothing text-wise. */
+const MISSING_PNG_PATH = fileURLToPath(
+  new URL("../../fixtures/does-not-exist.png", import.meta.url),
+);
+
+/** Bytes no decoder claims, so `setImage` throws at the boundary. */
+const NOT_AN_IMAGE = new Uint8Array([1, 2, 3, 4]);
+
+/** A refused connection: the http(s) branch, with no server in the test. */
+const REFUSED_IMAGE_URL = "https://127.0.0.1:1/none.png";
 
 /** A data URL whose MIME type no decoder claims: `ImgSource::Invalid`. */
 const INVALID_IMAGE = "data:image/nope;base64,AAAA";
@@ -48,6 +89,24 @@ const PATCH = [
   "-const removed = 1",
   "+const added = 1",
 ].join("\n");
+
+/** How the probe draws an image-source case; one size keeps the boxes comparable. */
+const SOURCE_SIZE = 48;
+
+/** Caption under an image source, in the probe's muted colour. */
+const Caption = ({
+  testId,
+  children,
+  tone,
+}: {
+  readonly testId?: string;
+  readonly children: string;
+  readonly tone: string;
+}) => (
+  <text testId={testId} style={{ color: tone, fontSize: 11 }}>
+    {children}
+  </text>
+);
 
 /** Uploads raw RGBA through the image ref: the binary path, no JSON. */
 const LiveImage = ({
@@ -79,7 +138,79 @@ const LiveImage = ({
   );
 };
 
-const SurfacesProbe = () => {
+/**
+ * Uploads bytes through the image ref: the documented dynamic path.
+ *
+ * `setImage` throws on bytes no decoder claims, so the boundary catches it and
+ * paints the message. The readout is the assertion; the fallback under the
+ * image is the runtime's own (`img: no src`) and stays there when the upload
+ * fails.
+ */
+const BytesImage = ({
+  testId,
+  bytes,
+  tone,
+}: {
+  readonly testId: string;
+  readonly bytes: Uint8Array;
+  readonly tone: string;
+}) => {
+  const image = useRef<ImgInstance>(null);
+  const [state, setState] = useState("pending");
+  useLayoutEffect(() => {
+    // The runtime throws across the napi boundary on undecodable bytes; that
+    // is the one failure a caller must handle, so it is recorded, not hidden.
+    // (A React layout effect is a boundary; there is no Effect to lift into.)
+    try {
+      image.current?.setImage(bytes);
+      setState("ok");
+    } catch (error) {
+      setState(`error: ${String(error)}`);
+    }
+  }, [bytes]);
+  return (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 2, width: 96 }}
+    >
+      <img
+        ref={image}
+        testId={testId}
+        style={{ width: SOURCE_SIZE, height: SOURCE_SIZE }}
+      />
+      <Caption testId={`${testId}-state`} tone={tone}>
+        {state}
+      </Caption>
+    </div>
+  );
+};
+
+/** A path/URL source: only the box is assertable (plan `586` §2). */
+const SourceImage = ({
+  testId,
+  src,
+  caption,
+  tone,
+}: {
+  readonly testId: string;
+  readonly src: string;
+  readonly caption: string;
+  readonly tone: string;
+}) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 2, width: 96 }}>
+    <img
+      testId={testId}
+      src={src}
+      style={{ width: SOURCE_SIZE, height: SOURCE_SIZE }}
+    />
+    <Caption tone={tone}>{caption}</Caption>
+  </div>
+);
+
+const SurfacesProbe = ({
+  liveSources = false,
+}: {
+  readonly liveSources?: boolean;
+}) => {
   const theme = useTheme();
   const column = {
     display: "flex",
@@ -114,6 +245,38 @@ const SurfacesProbe = () => {
         style={{ width: 64, height: 64 }}
       />
       <LiveImage testId="surface-img-live" width={2} height={2} />
+      <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
+        <BytesImage
+          testId="surface-img-bytes"
+          bytes={ONE_PIXEL_PNG_BYTES}
+          tone={theme.colors.mutedForeground}
+        />
+        <BytesImage
+          testId="surface-img-bytes-bad"
+          bytes={NOT_AN_IMAGE}
+          tone={theme.colors.mutedForeground}
+        />
+        <SourceImage
+          testId="surface-img-path"
+          src={ONE_PIXEL_PNG_PATH}
+          caption="path"
+          tone={theme.colors.mutedForeground}
+        />
+        <SourceImage
+          testId="surface-img-path-missing"
+          src={MISSING_PNG_PATH}
+          caption="missing path"
+          tone={theme.colors.mutedForeground}
+        />
+        {liveSources ? (
+          <SourceImage
+            testId="surface-img-url-refused"
+            src={REFUSED_IMAGE_URL}
+            caption="refused url"
+            tone={theme.colors.mutedForeground}
+          />
+        ) : null}
+      </div>
       <diff
         testId="surface-diff"
         patch={PATCH}
@@ -125,6 +288,9 @@ const SurfacesProbe = () => {
     </div>
   );
 };
+
+/** The live twin's view: the same probe plus the http(s) source. */
+export const liveSurfacesView = () => <SurfacesProbe liveSources />;
 
 /** Asserts a `testId`'s retained element type. */
 const type = (ctx: Smoke.SmokeContext, testId: string, expected: string) =>
@@ -148,6 +314,10 @@ const occurrences = (ctx: Smoke.SmokeContext, needle: string): number =>
   Arr.length(
     Arr.filter(ctx.host.paintedText(), (entry) => Str.includes(needle)(entry)),
   );
+
+/** A readout node's text, or `""` when it never mounted. */
+const stateText = (ctx: Smoke.SmokeContext, testId: string): string =>
+  Option.getOrElse(Option.fromNullishOr(ctx.host.text(testId)), () => "");
 
 export const nativeSurfacesScenario: PlaygroundScenario = {
   id: "native-surfaces",
@@ -177,9 +347,9 @@ export const nativeSurfacesScenario: PlaygroundScenario = {
       yield* ctx.expectNear("the no-src box width", empty.width, 94, 0.5);
       yield* ctx.expectNear("the no-src box height", empty.height, 62, 0.5);
       yield* ctx.expectEqual(
-        "a missing src paints its own fallback",
+        "the empty-src and failed-bytes nodes paint the no-src fallback",
         occurrences(ctx, "img: no src"),
-        1,
+        2,
       );
 
       yield* type(ctx, "surface-img-invalid", "img");
@@ -210,6 +380,64 @@ export const nativeSurfacesScenario: PlaygroundScenario = {
       );
       yield* ctx.expectEqual(
         "pixels uploaded through the ref add no fallback",
+        occurrences(ctx, "img: load failed"),
+        1,
+      );
+
+      // 4. The image sources (plan `586`): bytes are assertable; a path is not.
+      yield* type(ctx, "surface-img-bytes", "img");
+      const bytes = yield* painted(ctx, "surface-img-bytes");
+      yield* ctx.expectNear("the bytes-upload box width", bytes.width, 48, 0.5);
+      yield* ctx.expectNear(
+        "the bytes-upload box height",
+        bytes.height,
+        48,
+        0.5,
+      );
+      yield* ctx.expectEqual(
+        "a valid byte upload reports success",
+        stateText(ctx, "surface-img-bytes-state"),
+        "ok",
+      );
+
+      yield* type(ctx, "surface-img-bytes-bad", "img");
+      const badBytes = yield* painted(ctx, "surface-img-bytes-bad");
+      // The fallback surface has a 1 px border per axis (the plan-529 box rule).
+      yield* ctx.expectNear(
+        "the failed byte upload keeps the fallback box",
+        badBytes.width,
+        46,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the failed byte upload keeps the fallback height",
+        badBytes.height,
+        46,
+        0.5,
+      );
+      yield* ctx.expectContains(
+        "an undecodable byte buffer reports the runtime's throw",
+        stateText(ctx, "surface-img-bytes-bad-state"),
+        "unrecognized image format",
+      );
+
+      // A path source loads asynchronously with no load/error event, so the
+      // offscreen renderer only proves the box. Measured in plan `586` §2: the
+      // GPUI fallback for a path/URL is not a retained text node and is absent
+      // from `getPaintedText()`; the live twin carries the screenshot.
+      yield* type(ctx, "surface-img-path", "img");
+      const path = yield* painted(ctx, "surface-img-path");
+      yield* ctx.expectNear("the path-source box width", path.width, 48, 0.5);
+      yield* type(ctx, "surface-img-path-missing", "img");
+      const missing = yield* painted(ctx, "surface-img-path-missing");
+      yield* ctx.expectNear(
+        "the missing-path box width",
+        missing.width,
+        48,
+        0.5,
+      );
+      yield* ctx.expectEqual(
+        "a path source paints no fallback text the harness can see",
         occurrences(ctx, "img: load failed"),
         1,
       );

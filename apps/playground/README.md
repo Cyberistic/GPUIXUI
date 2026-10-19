@@ -434,6 +434,29 @@ the only visual evidence, never an assertion. Charts and the colour picker
 cannot use `<canvas>`; `<svg>` and `<img>` + `setImagePixels` are the honest
 alternatives.
 
+### `<img>` sources (plan `586`)
+
+The image element has four source kinds, and only two are assertable. All four
+are mounted by `native-surfaces` (`live-content` adds the http(s) case):
+
+| Source | Asserted | Evidence |
+| ------ | -------- | -------- |
+| data URL (`src={ONE_PIXEL_PNG}`) | box `64 × 64`, no load-failure fallback | `getPaintedText` + bounds |
+| bytes (`ref.setImage(png)`) | state readout `ok`, box `48 × 48`, **no** `img: no src` | `getPaintedText` + bounds |
+| bytes, undecodable (`setImage`) | the runtime **throws** `unrecognized image format`; the node keeps `img: no src` and the `46 × 46` fallback box | the view records the caught throw |
+| file path (`src={absolutePath}`) | box only; the real window paints the bitmap | **screenshot only** |
+| http(s), refused (`https://127.0.0.1:1/…`) | box only; the real window paints `img: load failed` | **screenshot only** |
+
+The path/URL limit is measured, not assumed: `gpui::img(path|uri)` renders its
+fallback through a plain GPUI element, which is **not** a retained text node and
+never reaches `getPaintedText()`; there is no load/error event; and the
+offscreen loader does not settle, so headless paints nothing. A consumer that
+needs an error state must read the bytes itself (`FileSystem`) and validate them
+before `setImage`, or stat the path before rendering. The PNG fixture lives at
+`apps/playground/fixtures/one-pixel.png`; the bytes are decoded from the same
+base64 constant with `Schema.Uint8ArrayFromBase64`.
+
+
 ## Cross-element drag and file drops (plan `162`)
 
 `drag-targets` logs every mouse and drop event on three adjacent boxes and
@@ -1748,7 +1771,7 @@ given.
 
 ## Evidence on this host
 
-The suite is **103/103 green** here (`exit 0`, 3632 checks, 2026-10-19):
+The suite is **103/103 green** here (`exit 0`, 3653 checks, 2026-10-19):
 
 ```
 103/103 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -1948,7 +1971,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (103/103, 3632 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (103/103, 3653 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

@@ -58,7 +58,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform` | verified |
 | a11y | `a11y-tree` | verified |
 | motion | `motion-collapse`, `collapsible-height`, `live-motion` | verified |
-| content | `native-surfaces`, `markdown-surface` | verified |
+| content | `native-surfaces`, `live-content`, `markdown-surface`, `live-markdown` | verified |
 | drag | `drag-targets`, `drag-autoscroll`, `live-drag-targets`, `live-drag-autoscroll` | verified |
 | reorder | `list-reorder`, `live-reorder` | verified |
 | tree-reorder | `tree-reorder`, `live-tree-reorder` | verified |
@@ -94,7 +94,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3632 checks**). The live suite last ran in full at **75/75**
+The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**). The live suite last ran in full at **75/75**
 (`live-report.json`, **1697 checks**, exit `0`) on 2026-10-19, the merge/release
 gate on the final branch: it includes every focused addition through plan
 `581`'s shipped Tier 2 consumer paths, so no live scenario is unrun. Both `host`
@@ -690,7 +690,7 @@ is ahead of the published release — the divergence is called out below.
 | Syntax highlighting | `<code>` (bundled languages) | **verified** |
 | Markdown / rich text rendering | `<markdown>` (GFM: headings, lists, tables, fenced code, links) | **verified** (runtime: `markdown-surface`, `live-markdown`; editing is not provided) |
 | Diff viewer | `<diff>` (unified) | **verified** (runtime: `native-surfaces`, `live-content`) |
-| Image preview | `<img>` (path, data URL, http(s)) | **verified** (runtime: `native-surfaces`, `live-content`) |
+| Image preview | `<img>` (path, data URL, http(s)) and `ImgInstance.setImage` | **data URL and bytes verified; path/http(s) screenshot-only.** `native-surfaces`/`live-content` (plan `586`) prove a data URL lays out, `setImage(valid bytes)` reports success and keeps its `48 × 48` box with no fallback, and `setImage(garbage)` **throws** `unrecognized image format` (the node keeps the `img: no src` fallback) in both harnesses. A file path and a refused `https:` URL **do** load/attempt in a real window — the screenshot shows the bitmap and the `img: load failed` fallback — but `gpui::img(path\|uri)`'s fallback is a plain GPUI element: it is absent from `getPaintedText()` and the tree, there is no load/error event, and the offscreen loader never settles, so the box is the only assertion. A consumer must own the error state: read bytes and validate them before `setImage`, or stat the path first. |
 | File / folder selection | `GpuixRenderer.promptForPaths` | **docs only — not runtime-verified.** The typed renderer API exists, but no scenario calls it: the picker is a blocking OS dialog with no automation verb, and `TestRenderer.promptForPaths` forwards to GPUI's `cx.prompt_for_paths`, which waits on the platform panel. A consumer may call it; this suite cannot prove it. |
 | File drops | `onFileDrop` + `nativeSimulateFileDrop` | **verified** (runtime: `drag-targets`) |
 | Text selection / copy | window selection + `getSelectedText` | **verified** (runtime: `text-selection`) |

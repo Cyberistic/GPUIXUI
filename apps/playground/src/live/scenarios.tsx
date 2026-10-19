@@ -25,7 +25,7 @@ import { contextMenuScenario } from "../scenarios/context-menu.js";
 import { dragAutoscrollScenario } from "../scenarios/drag-autoscroll.js";
 import { dragTargetsScenario } from "../scenarios/drag-targets.js";
 import { markdownScenario } from "../scenarios/markdown.js";
-import { nativeSurfacesScenario } from "../scenarios/surfaces.js";
+import { liveSurfacesView } from "../scenarios/surfaces.js";
 import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
@@ -5828,7 +5828,7 @@ const liveContent: LiveScenario = {
   id: "live-content",
   title: "Live content surfaces: svg, img, diff and the canvas trap",
   capability: "content",
-  view: nativeSurfacesScenario.view,
+  view: liveSurfacesView,
   ready: "surface-svg",
   steps: (ctx) =>
     Effect.gen(function* () {
@@ -5858,9 +5858,9 @@ const liveContent: LiveScenario = {
         0.5,
       );
       yield* ctx.expectEqual(
-        "a missing src paints its own fallback",
+        "the empty-src and failed-bytes nodes paint the no-src fallback",
         yield* paintedCount(ctx, "img: no src"),
-        1,
+        2,
       );
 
       // 2. An undecodable data URL paints the load-failure fallback.
@@ -5900,7 +5900,66 @@ const liveContent: LiveScenario = {
         1,
       );
 
-      // 4. The diff paints its width and every patch line.
+      // 4. Image sources (plan `586`): bytes are assertable, a path/URL is not.
+      const bytes = yield* boxOf(ctx, "surface-img-bytes");
+      yield* ctx.expectNear(
+        "the live bytes-upload box width",
+        bytes.width,
+        48,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live bytes-upload box height",
+        bytes.height,
+        48,
+        1,
+      );
+      yield* waitForText(ctx, "surface-img-bytes-state", "ok");
+      yield* ctx.expectEqual(
+        "a live byte upload reports success",
+        yield* textOf(ctx, "surface-img-bytes-state"),
+        "ok",
+      );
+
+      const badBytes = yield* boxOf(ctx, "surface-img-bytes-bad");
+      yield* ctx.expectNear(
+        "the live failed-byte fallback width",
+        badBytes.width,
+        46,
+        1,
+      );
+      yield* waitForText(
+        ctx,
+        "surface-img-bytes-bad-state",
+        "unrecognized image format",
+      );
+      yield* ctx.expectContains(
+        "a live undecodable byte buffer reports the runtime's throw",
+        yield* textOf(ctx, "surface-img-bytes-bad-state"),
+        "unrecognized image format",
+      );
+
+      const path = yield* boxOf(ctx, "surface-img-path");
+      yield* ctx.expectNear("the live path-source width", path.width, 48, 1);
+      const missing = yield* boxOf(ctx, "surface-img-path-missing");
+      yield* ctx.expectNear(
+        "the live missing-path width",
+        missing.width,
+        48,
+        1,
+      );
+      const refused = yield* boxOf(ctx, "surface-img-url-refused");
+      yield* ctx.expectNear("the live refused-URL width", refused.width, 48, 1);
+      // The runtime's path/URL fallback is a plain GPUI element: it paints in
+      // the screenshot but is absent from `getPaintedText()` and the tree, and
+      // there is no load/error event. This count is the recorded limit.
+      yield* ctx.expectEqual(
+        "a path or URL source paints no fallback text the harness can see",
+        yield* paintedCount(ctx, "img: load failed"),
+        1,
+      );
+
+      // 5. The diff paints its width and every patch line.
       const diff = yield* boxOf(ctx, "surface-diff");
       yield* ctx.expectNear(
         "the live diff keeps its declared width",
@@ -5935,7 +5994,7 @@ const liveContent: LiveScenario = {
         "const removed = 1",
       );
 
-      // 5. The canvas trap: retained, unpainted, and its child stays out of the paint.
+      // 6. The canvas trap: retained, unpainted, and its child stays out of the paint.
       yield* ctx.expectEqual(
         "canvas paints nothing, so it has no bounds",
         Option.isNone(
