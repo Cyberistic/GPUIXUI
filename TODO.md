@@ -93,7 +93,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `captureCommand` case); `nub run check`, `nub run lint` and `nub run test`
       green. Focused ids run: `live-shell` (capture ×3, plain ×1) and the
       headless control `layout-flex --capture` (1/1, sidecar names the smoke
-      runner).
+      runner). End-of-task full headless registry: **105/105**, **3765** checks,
+      exit `0` (unchanged).
 
 `[x]` Re-run the **promotion gate on the head that includes
       `live-theme-platform`** per plan `655`: the last recorded gate before this

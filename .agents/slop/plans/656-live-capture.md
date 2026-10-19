@@ -205,3 +205,20 @@ frame by hand: the directory must contain exactly one PNG and one sidecar.
   decodable sidecar naming the live runner; a red/unrecordable run writes none.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 - The headless capture contract, every scenario and every check are unchanged.
+
+## 8. Measured (2026-10-19)
+
+- `--only live-shell --capture /tmp/gpuixui-live-capture` → 1/1, exit `0`; one
+  `live-shell.png` (`2200 × 1440`, the window's 2× scale) and a decodable
+  sidecar naming `dist/live/run.js`. With `--commit 78493e7a` the sidecar records
+  that value; without `--commit` it read `78493e7a` from git.
+- Re-running into the same directory removed a planted `stale.png` and left an
+  unrelated `keep.txt`; exactly one frame and one sidecar remained.
+- `GIT_DIR=/nonexistent … --capture /tmp/…` printed the unreadable-commit line
+  and exited `2` before creating the directory or opening a window. A bad id and
+  a valueless `--capture` also exit `2` before the binding.
+- A plain `--only live-shell` left the capture directory byte-identical.
+- The headless control `--only layout-flex --capture …` is 1/1 and its sidecar
+  names `dist/smoke/run.js`, so the default runner is unchanged.
+- Tests **439** (playground; +3), `nub run check`/`lint`/`test` green; the full
+  headless registry **105/105** (**3765** checks), exit `0`.
