@@ -25,6 +25,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  nextTask,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -251,7 +252,7 @@ describe("Chat", () => {
     chat.unmount();
   });
 
-  it("keeps a dialog open for the Escape that stops the request", () => {
+  it("keeps a dialog open for the Escape that stops the request", async () => {
     // Before plan 514 the stop and the dialog close both ran on one Escape.
     const onStop = vi.fn();
     const nested = renderComponent(<ChatInDialog onStop={onStop} />);
@@ -262,6 +263,8 @@ describe("Chat", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
     finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();

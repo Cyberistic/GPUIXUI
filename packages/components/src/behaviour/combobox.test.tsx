@@ -612,6 +612,8 @@ describe("Combobox", () => {
     expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await wait(0);
     nested.renderer.simulateKeystrokes("escape");
     await settle();
 

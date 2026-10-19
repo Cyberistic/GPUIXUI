@@ -19,6 +19,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  nextTask,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -113,7 +114,7 @@ describe("HotkeyRecorder", () => {
     recorder.unmount();
   });
 
-  it("keeps a dialog open for the Escape that stops recording", () => {
+  it("keeps a dialog open for the Escape that stops recording", async () => {
     // Before plan 514 the recorder stopped and the dialog closed on one Escape.
     const nested = renderComponent(<InDialog />);
     clickCentreOf(nested, "recorder");
@@ -124,6 +125,8 @@ describe("HotkeyRecorder", () => {
     expect(nested.renderer.getAllText()).not.toContain("Press keys…");
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
     finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();

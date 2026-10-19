@@ -11,6 +11,11 @@
  * layer's handler and its parent's across a microtask (playground plan 558), so
  * the microtask reset closed both layers on one Escape. Both orderings are
  * pinned below.
+ *
+ * Plan 669 measured the depth defect: the claim was consumed by the first
+ * enclosing reader, so a third reader (a menu around a submenu, inside a dialog)
+ * saw no claim and closed a second layer. A claim now stays readable for every
+ * reader in its task.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -104,6 +109,29 @@ describe("dismiss layer stack", () => {
     expect(outer).not.toHaveBeenCalled();
 
     removeInner();
+    removeOuter();
+  });
+
+  it("keeps one event to one layer with three layers nested", () => {
+    const outer = vi.fn();
+    const middle = vi.fn();
+    const inner = vi.fn();
+    const removeOuter = pushDismissLayer(outer);
+    const removeMiddle = pushDismissLayer(middle);
+    const removeInner = pushDismissLayer(inner);
+
+    // One native event reaches all three handlers (a submenu, its menu, the
+    // dialog). The claim must survive every reader, not only the first.
+    expect(dismissTopLayer(escape())).toBe(true);
+    expect(dismissTopLayer(escape())).toBe(false);
+    expect(dismissTopLayer(escape())).toBe(false);
+
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(middle).not.toHaveBeenCalled();
+    expect(outer).not.toHaveBeenCalled();
+
+    removeInner();
+    removeMiddle();
     removeOuter();
   });
 

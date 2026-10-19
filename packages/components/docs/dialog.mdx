@@ -75,11 +75,13 @@ work settles.
 
 Open dialogs share one dismiss stack (`src/internal/dismiss-layer.ts`): Escape and
 outside presses are consumed by the **topmost** overlay only, so a popover inside a
-dialog closes the popover first. One event cannot close two layers. The runtime
-hands each handler its own payload copy, so consumption is keyed on the event's
-fields (the same claim the menus use), never on object identity. A claim lives one
-task rather than one microtask, because a live window delivers a nested layer's
-handler and its parent's across a microtask (plan 587).
+dialog closes the popover first. One event cannot close two layers, however many
+surfaces enclose it (a submenu, its menu and the dialog around both — plan 669).
+The runtime hands each handler its own payload copy, so consumption is keyed on
+the event's fields (the same claim the menus use), never on object identity. A
+claim lives one task rather than one microtask, because a live window delivers a
+nested layer's handler and its parent's across a microtask (plan 587); every
+enclosing handler reads it, and a genuinely new event is a new task.
 
 ## Keyboard
 
@@ -172,11 +174,12 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (20 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (21 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
 entering and returning — including when the content contains an auto-focused
 field (plan 638) — Escape and backdrop dismissal, a popover inside the dialog
-closed by the first Escape with the dialog kept open, Tab wrapping at both ends,
+closed by the first Escape with the dialog kept open, a menu's submenu inside the
+dialog closing one layer per Escape (plan 669), Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, the description announced through
 `aria-description` (with an authored content value winning), the title's default
 and caller-set heading levels, both themes reading

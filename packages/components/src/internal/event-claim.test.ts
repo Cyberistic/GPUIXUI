@@ -5,6 +5,10 @@
  * parent's for one event across a **microtask** (playground plan 558 measured
  * it). A claim cleared in a microtask was therefore gone before the parent ran,
  * so one Escape closed both a submenu and the dialog around it.
+ *
+ * Plan 669 measured the second half: the claim must also stay readable by every
+ * enclosing handler. Consuming it on the first read left the third handler
+ * unclaimed, so one Escape closed a submenu and its menu.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -40,9 +44,12 @@ describe("event claim", () => {
     expect(isEventClaimed(key())).toBe(false);
   });
 
-  it("consumes a claim on the first reader", () => {
+  it("stays claimed for every reader in the task", async () => {
     claimEvent(key());
+    // A submenu, its menu and the dialog around both all read one event.
     expect(isEventClaimed(key())).toBe(true);
+    expect(isEventClaimed(key())).toBe(true);
+    await nextTask();
     expect(isEventClaimed(key())).toBe(false);
   });
 

@@ -588,6 +588,17 @@ retired once both branches are one
       wins and is trimmed; 3 native cases (Combobox 52), the placeholder and
       selected-label cases failing on the old source; docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] One Escape closes one layer at any nesting depth — plan 669; measured
+      2026-10-19: the event claim was consumed by the first enclosing reader, so
+      with three surfaces (a submenu, its menu, the dialog around both) one
+      Escape closed the submenu **and** the menu, and a third surface could still
+      act; `isEventClaimed` now reports without clearing for the rest of the
+      task, so every enclosing handler skips the same event. 1 claim + 1
+      dismiss-stack unit case and 1 native case (Dialog 21), the new cases
+      failing at `HEAD`; the two-Escape and two-ArrowDown suites cross a task
+      between real gestures, as plan 587 established; docs,
+      `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

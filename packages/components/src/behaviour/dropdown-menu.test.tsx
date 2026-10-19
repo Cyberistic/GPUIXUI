@@ -54,6 +54,7 @@ import {
   focusedTestId,
   hoverCentreOf,
   isShown,
+  nextTask,
   requireBounds,
   until,
 } from "../internal/interaction.js";
@@ -929,7 +930,7 @@ describe("DropdownMenu submenus", () => {
     menu.unmount();
   });
 
-  it("keeps arrow movement inside the submenu, skipping disabled rows", () => {
+  it("keeps arrow movement inside the submenu, skipping disabled rows", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
@@ -940,6 +941,8 @@ describe("DropdownMenu submenus", () => {
     menu.renderer.simulateKeystrokes("down");
     expect(focusedTestId(menu)).toEqual(Option.some("email"));
 
+    // A second real ArrowDown is a new task, not the same propagation.
+    await nextTask();
     menu.renderer.simulateKeystrokes("down");
     expect(focusedTestId(menu)).toEqual(Option.some("copy-link"));
 
@@ -980,7 +983,7 @@ describe("DropdownMenu submenus", () => {
     menu.unmount();
   });
 
-  it("closes one level on Escape and returns focus to the sub trigger", () => {
+  it("closes one level on Escape and returns focus to the sub trigger", async () => {
     const menu = renderComponent(<WithSubmenus onSelect={vi.fn()} />);
     clickCentreOf(menu, "trigger");
     clickCentreOf(menu, "share");
@@ -991,6 +994,8 @@ describe("DropdownMenu submenus", () => {
     expect(menu.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(menu)).toEqual(Option.some("share"));
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     menu.renderer.simulateKeystrokes("escape");
     expect(menu.renderer.findByTestId("menu")).toBeUndefined();
     expect(focusedTestId(menu)).toEqual(Option.some("trigger"));

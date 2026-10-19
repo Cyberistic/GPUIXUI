@@ -25,12 +25,22 @@ import {
 } from "../dialog.js";
 import { Field, FieldInput } from "../field.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "../dropdown-menu.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   boundsOf,
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  nextTask,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { a11yNodes, nodesWithRole } from "../internal/a11y.js";
@@ -89,6 +99,39 @@ const NestedOverlays = () => {
             <text>Visible columns</text>
           </PopoverContent>
         </Popover>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/** A dialog holding a menu whose submenu is open: three dismiss layers. */
+const NestedMenuLayers = () => {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger testId="open">Open</DialogTrigger>
+      <DialogContent label="Actions" testId="dialog">
+        <DialogTitle>Actions</DialogTitle>
+        <DropdownMenu>
+          <DropdownMenuTrigger testId="menu-trigger">
+            Actions
+          </DropdownMenuTrigger>
+          <DropdownMenuContent testId="menu" label="Actions">
+            <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+              Rename
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger testId="share">
+                Share
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent testId="submenu" label="Share">
+                <DropdownMenuItem testId="copy-link" onSelect={() => undefined}>
+                  Copy link
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </DialogContent>
     </Dialog>
   );
@@ -215,7 +258,7 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
-  it("closes one overlay per Escape, keeping the enclosing dialog", () => {
+  it("closes one overlay per Escape, keeping the enclosing dialog", async () => {
     const nested = renderComponent(<NestedOverlays />);
 
     clickCentreOf(nested, "columns");
@@ -227,12 +270,38 @@ describe("Dialog", () => {
     expect(nested.renderer.findByTestId("panel")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // The second Escape is a real new gesture, not the same propagation.
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
     finishMotion(nested);
 
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();
 
     nested.unmount();
+  });
+
+  it("closes one layer per Escape with three surfaces nested", async () => {
+    const scene = renderComponent(<NestedMenuLayers />);
+
+    clickCentreOf(scene, "menu-trigger");
+    scene.renderer.simulateKeystrokes("down down");
+    scene.renderer.simulateKeystrokes("right");
+    expect(scene.renderer.findByTestId("submenu")).toBeDefined();
+
+    // One event reaches the submenu, its menu and the dialog. Only the submenu
+    // may act (plan 669: the claim was consumed by the first enclosing reader).
+    scene.renderer.simulateKeystrokes("escape");
+    expect(scene.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(scene.renderer.findByTestId("dialog")).toBeDefined();
+    expect(scene.renderer.findByTestId("menu")).toBeDefined();
+
+    // A real second Escape is a new task, not the same propagation.
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    expect(scene.renderer.findByTestId("menu")).toBeUndefined();
+    expect(scene.renderer.findByTestId("dialog")).toBeDefined();
+
+    scene.unmount();
   });
 
   it("closes on a backdrop press and stays open on a press inside", () => {

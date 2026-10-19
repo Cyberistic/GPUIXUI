@@ -4,8 +4,9 @@
  * A single runtime event travels from the focused node through every enclosing
  * surface, and 0.10.0 hands **each handler its own payload copy** (measured: plan
  * `187` §9). Identity therefore cannot carry a claim across levels; the event's
- * fields can. An inner surface claims the event it handled and the enclosing
- * surface ignores the same event for the rest of the tick.
+ * fields can. An inner surface claims the event it handled and **every**
+ * enclosing surface ignores the same event for the rest of the task (a submenu,
+ * its menu and the dialog around both — plan `669`).
  *
  * The claim covers keys and pointer events: the dismiss stack uses it for
  * Escape and for outside presses, the menus for the keys they act on.
@@ -73,15 +74,13 @@ export const claimEvent = (event: EventPayload): void => {
   }, 0);
 };
 
-/** Whether an enclosing surface must leave the same key event alone. */
+/**
+ * Whether an enclosing surface must leave the same event alone.
+ *
+ * The claim is not consumed: one native event reaches **every** enclosing
+ * handler (a submenu, its menu, the dialog around both), and all of them have to
+ * skip it. The task-long cleanup in `claimEvent` bounds it; a genuinely new
+ * event is a new task. Plan 669 measured the defect the consumption caused.
+ */
 export const isEventClaimed = (event: EventPayload): boolean =>
-  Option.match(claim, {
-    onNone: () => false,
-    onSome: (current) => {
-      if (!sameClaim(current, claimOf(event))) return false;
-      // Consume: the enclosing surface is the claim's one reader. A later key
-      // with the same name is a new event even if the task has not ended.
-      claim = Option.none();
-      return true;
-    },
-  });
+  Option.exists(claim, (current) => sameClaim(current, claimOf(event)));

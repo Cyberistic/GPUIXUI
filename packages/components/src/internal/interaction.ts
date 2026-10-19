@@ -57,6 +57,14 @@ export const isShown = (root: ComponentTestRoot, testId: string): boolean =>
   root.renderer.findByTestId(testId) !== undefined;
 
 /**
+ * Let a real second gesture start a new task. The shared event claim lives one
+ * task (plans 587/669), so two identical synthetic gestures in one test task are
+ * the same event to it; a call here separates them the way the runtime does.
+ */
+export const nextTask = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
  * Wait until `check` holds, at most `attempts * intervalMs` (~2 s by default).
  *
  * A fixed sleep or one `await Promise.resolve()` is a coin flip under load:

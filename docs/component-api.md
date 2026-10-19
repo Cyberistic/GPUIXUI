@@ -152,7 +152,10 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   act on the same keystroke. A claim lives **one task**, not one microtask:
   a live window delivers the enclosing surface's handler for one propagation
   across a microtask (measured, plan `587`), so a shorter claim let one Escape
-  close two nested layers. Composite rows and cells (`List`, menu rows, grid
+  close two nested layers. Every enclosing handler reads the same claim for the
+  rest of that task — a submenu, its menu and the dialog around both all skip
+  one Escape (plan `669`) — and a genuinely new event is a new task.
+  Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.
 - **No default suppression.** `@gpuix/react@0.10.0`'s `EventPayload` has no

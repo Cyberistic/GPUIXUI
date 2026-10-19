@@ -21,6 +21,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  nextTask,
   until,
 } from "../internal/interaction.js";
 import {
@@ -158,7 +159,7 @@ describe("SearchInput", () => {
     search.unmount();
   });
 
-  it("keeps a dialog open for the Escape that clears it", () => {
+  it("keeps a dialog open for the Escape that clears it", async () => {
     // Before plan 514 a non-empty field cleared and the enclosing dialog closed
     // on the same press, because the field handled Escape without claiming it.
     const nested = renderComponent(<InDialog defaultValue="abc" />);
@@ -171,6 +172,8 @@ describe("SearchInput", () => {
     expect(nested.renderer.findByTestId("search-clear")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
     finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();

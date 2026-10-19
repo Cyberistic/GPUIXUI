@@ -22,6 +22,7 @@ import {
   finishMotion,
   clickCentreOf,
   focusedTestId,
+  nextTask,
   requireBounds,
 } from "../internal/interaction.js";
 import {
@@ -166,7 +167,7 @@ describe("InlineEdit", () => {
     edit.unmount();
   });
 
-  it("keeps a dialog open for the Escape that cancels the edit", () => {
+  it("keeps a dialog open for the Escape that cancels the edit", async () => {
     // Before plan 514 the cancel and the dialog close both ran on one Escape.
     const nested = renderComponent(<InDialog />);
     startEditing(nested);
@@ -177,6 +178,8 @@ describe("InlineEdit", () => {
     expect(nested.renderer.findByType("input")).toHaveLength(0);
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
     finishMotion(nested);
     expect(nested.renderer.findByTestId("dialog")).toBeUndefined();

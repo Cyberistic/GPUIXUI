@@ -22,6 +22,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  nextTask,
 } from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import {
@@ -202,7 +203,7 @@ describe("MentionInput", () => {
     mention.unmount();
   });
 
-  it("closes one surface per Escape inside a dialog", () => {
+  it("closes one surface per Escape inside a dialog", async () => {
     const nested = renderComponent(<InDialog />);
     type(nested, "@");
 
@@ -213,6 +214,8 @@ describe("MentionInput", () => {
     expect(nested.renderer.findByTestId("row-ana")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second Escape is a new task, not the same propagation (plan 669).
+    await nextTask();
     nested.renderer.simulateKeystrokes("escape");
 
     finishMotion(nested);
