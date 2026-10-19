@@ -113,7 +113,7 @@ export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
 export interface Dimensions {
   /** 180px — the narrowest menu surface. */
   readonly overlayMinWidth: number;
-  /** 220px — default popover, combobox and calendar width. */
+  /** 220px — default combobox and navigation-menu width. */
   readonly overlayWidth: number;
   /** 320px — the height at which a long overlay list starts to scroll. */
   readonly overlayMaxHeight: number;
@@ -121,6 +121,8 @@ export interface Dimensions {
   readonly fieldMinWidth: number;
   /** 16px — an icon or clear control inside a field. */
   readonly fieldAdornmentSize: number;
+  /** 220px — fixed width of a date trigger field. */
+  readonly dateFieldWidth: number;
   /** 80px — the minimum content width of a token-input chip. */
   readonly chipMinWidth: number;
   /** 380px — the fixed width of a toast card. */
@@ -178,6 +180,7 @@ export const dimensions: Dimensions = {
   overlayMaxHeight: 320,
   fieldMinWidth: 200,
   fieldAdornmentSize: 16,
+  dateFieldWidth: 220,
   chipMinWidth: 80,
   toastWidth: 380,
   previewCardMinWidth: 240,

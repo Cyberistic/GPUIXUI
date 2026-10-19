@@ -975,6 +975,22 @@ describe("docs/tokens.md numeric tables", () => {
       );
     });
   });
+
+  it("names the date field and does not call the calendar an overlay width", () => {
+    const grid = dimensions.calendarCellSize * 7;
+    expect(markdown, "overlayWidth").toContain(
+      `| \`dimensions.overlayWidth\` | ${dimensions.overlayWidth} | default combobox and navigation-menu width |`,
+    );
+    expect(markdown, "stale calendar claim").not.toContain(
+      "combobox and calendar width",
+    );
+    expect(markdownProse).toContain(
+      `A date trigger is a fixed-width field, so \`dateFieldWidth\` holds it rather than an overlay width. A calendar grid is seven \`calendarCellSize\` cells wide — ${grid}px at the shipped ${dimensions.calendarCellSize}px cell — before the popover's padding, so a calendar is content-sized and \`overlayWidth\` names only the combobox and navigation menu.`,
+    );
+    expect(designSystem).toContain(
+      `A date trigger is ${dimensions.dateFieldWidth}px wide and holds its insets, gap, disclosure glyph and one \`label\` glyph; its calendar grid is seven ${dimensions.calendarCellSize}px cells (${grid}px) before the popover's padding, so it is content-sized, not an \`overlayWidth\` surface.`,
+    );
+  });
 });
 
 describe("docs/tokens.md palette table", () => {

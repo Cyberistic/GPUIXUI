@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 247/321
+`[x]` `[████████░░]` 248/322
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2062,6 +2062,16 @@ containment floors, every shipped set passes and no pixel moves (plan 598)
 `notificationPanelMaxHeight`, `notificationListMaxHeight` and
 `notificationUnreadDotSize` for `notification-centre.tsx`'s `panelStyle`, list
 `maxHeight` and unread dot (owner: `components`; plan 598)
+
+`[x]` Ship the date trigger's fixed width and correct the overlay claim — the
+date picker paints a 220px field around its own insets and gap, but the width
+was a literal and `overlayWidth` was documented as the calendar width, which is
+content-sized at seven `calendarCellSize` cells; `dateFieldWidth` owns the
+field, a content-fit rule holds it, and the calendar is documented by the metric
+that sizes it (plan 601)
+`[ ]` Cross-team: `components` reads `theme.dimensions.dateFieldWidth` for
+`date-picker.tsx`'s trigger width, beside `calendarCellSize` for `CELL`
+(owner: `components`; plan 601)
 
 ## Phase C — Tier 1–2 components
 

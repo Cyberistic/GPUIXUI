@@ -247,7 +247,10 @@ and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface i
 time segment is 26px, and an avatar's presence dot is 10px — at most half the
 smallest avatar the theme carries. A notification inbox is 320px wide and 380px
 tall at most, its scrolling list holds 280px, and its unread marker is 6px — the
-panel contains the list, and the list holds one row.
+panel contains the list, and the list holds one row. A date trigger is 220px
+wide and holds its insets, gap, disclosure glyph and one `label` glyph; its
+calendar grid is seven 34px cells (238px) before the popover's padding, so it is
+content-sized, not an `overlayWidth` surface.
 
 ## 7. Radii, borders and elevation
 

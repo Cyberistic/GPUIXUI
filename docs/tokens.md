@@ -1052,10 +1052,11 @@ every density.
 | Token | Pixels | Use |
 | ----- | ------ | --- |
 | `dimensions.overlayMinWidth` | 180 | narrowest menu surface |
-| `dimensions.overlayWidth` | 220 | default popover, combobox and calendar width |
+| `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
+| `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its insets, gap, disclosure glyph and one `label` glyph |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
 | `dimensions.toastWidth` | 380 | fixed toast card width |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
@@ -1098,6 +1099,11 @@ avatar's corner.
 A notification inbox clips its contents, so its panel maximum contains its list
 maximum, and the list is held to one `density.rowHeight` like every other scroll
 viewport; the unread marker is a mark a brand can size.
+
+A date trigger is a fixed-width field, so `dateFieldWidth` holds it rather than
+an overlay width. A calendar grid is seven `calendarCellSize` cells wide —
+238px at the shipped 34px cell — before the popover's padding, so a calendar is
+content-sized and `overlayWidth` names only the combobox and navigation menu.
 
 A metric override merges field by field, like the spacing and radius scales:
 

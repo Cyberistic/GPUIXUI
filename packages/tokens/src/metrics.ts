@@ -499,10 +499,12 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **dimensions**: every surface metric — the shipped members and one a theme
  *   adds, read from the theme's own group — is positive, each documented range
  *   has a minimum below its default, a chip fits in the field's content box — its
- *   minimum width less the field's two borders and horizontal padding — the
- *   overlay scroll height fits one row, because a list viewport shorter than a
- *   row clips every option, the message viewport fits one row for the same
- *   reason, a keycap's content box holds one caption line plus its two borders,
+ *   minimum width less the field's two borders and horizontal padding — a date
+ *   trigger holds its own insets, its gap, one `label` glyph and its `caption`
+ *   disclosure glyph, the overlay scroll height fits one row, because a list
+ *   viewport shorter than a row clips every option, the message viewport fits
+ *   one row for the same reason, a keycap's content box holds one caption line
+ *   plus its two borders,
  *   because `Keycap` paints caption text inside it, the drawer widths and
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a calendar
@@ -824,6 +826,20 @@ export function themeMetricFailures(
         2 * density.controlPaddingX.md +
         2 * borderWidth.thin,
     ),
+    // A date trigger paints its value and a disclosure glyph inside its own
+    // insets and gap; a field narrower than that chrome clips one of them. A
+    // zero or non-finite width is its own rule's diagnostic.
+    ...(usableBound(dimensions.dateFieldWidth)
+      ? atLeast(
+          "dimensions",
+          "dateFieldWidth",
+          dimensions.dateFieldWidth,
+          3 * spacing.md +
+            2 * borderWidth.thin +
+            typography.label.fontSize +
+            typography.caption.fontSize,
+        )
+      : []),
     // A message viewport shorter than one row clips every message it holds.
     ...atLeast(
       "dimensions",

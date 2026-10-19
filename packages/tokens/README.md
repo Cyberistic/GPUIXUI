@@ -142,9 +142,10 @@ merge size by size over the preset an override names or the base's, component
 dimensions field by field, elevation levels replace whole arrays, and the mode is
 not overridable. An explicitly `undefined`
 value is treated as omitted, so a partial config spread cannot erase a token.
-Component dimensions include the drawer and dialog ladders, the calendar day
-cell, the time segment, the avatar presence mark, the shortest message viewport,
-the carousel marks and the notification inbox's panel, list and unread mark;
+Component dimensions include the drawer and dialog ladders, the date field
+width, the calendar day cell, the time segment, the avatar presence mark, the
+shortest message viewport, the carousel marks and the notification inbox's
+panel, list and unread mark;
 they merge field by field with the rest of the group. A
 runnable example lives in
 [`src/dimensions.example.ts`](./src/dimensions.example.ts).
