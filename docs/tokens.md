@@ -1062,8 +1062,8 @@ every density.
 | `dimensions.overlayMinWidth` | 180 | narrowest menu surface; holds a row's padding, icon, gap and one `label` glyph inside its two borders |
 | `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
-| `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, a leading glyph, the query, the action and their two gaps, or a token-input chip |
-| `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
+| `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, the `md` leading icon, the query, the `fieldAdornmentSize` action and their two gaps, or a token-input chip |
+| `dimensions.fieldAdornmentSize` | 16 | trailing clear control (or other adornment) inside a field; the leading query icon is `iconSize.md` |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
 | `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
@@ -2425,9 +2425,10 @@ must also be finite; a chip must fit inside the field's content box — the
 minimum width less the field's two borders and its `controlPaddingX.md` padding —
 because a chip equal to the outer width has no room for the chrome painted
 inside it; the same minimum also holds the query row the token documents —
-`2 * spacing.md + 2 * fieldAdornmentSize + 2 * spacing.md +
-typography.body.fontSize`, its padding, a leading glyph, the gap, one query
-glyph, the same gap and the trailing action — and the larger of the two bounds
+`2 * spacing.md + iconSize.md + 2 * spacing.md +
+typography.body.fontSize + fieldAdornmentSize`, its padding, the leading `md`
+icon, the gap, one query glyph, the same gap and the trailing
+`fieldAdornmentSize` action — and the larger of the two bounds
 is the rule, so lowering `chipMinWidth` cannot free a field that can no longer
 show its own query (plan `624`). At the shipped metrics the query row needs
 78px, the chip 102px, and the shipped 200px field clears the larger; an

@@ -2731,9 +2731,10 @@ describe("docs/design-system.md", () => {
   it("states the field's own query-row bound", () => {
     const chrome =
       2 * spacing.md +
-      2 * dimensions.fieldAdornmentSize +
+      iconSize.md +
       2 * spacing.md +
-      typography.body.fontSize;
+      typography.body.fontSize +
+      dimensions.fieldAdornmentSize;
     const chip =
       dimensions.chipMinWidth +
       2 * defaultDensity.controlPaddingX.md +

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 272/345
+`[x]` `[████████░░]` 273/346
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2298,6 +2298,14 @@ its insets, gap, one `label` glyph and a `caption` disclosure glyph, but
 needed 53, and a lifted icon tier was never read. The bound now charges
 `iconSize.sm`, every shipped set still passes (220 against 53) and no value
 moves (plan 632)
+`[x]` Charge the field's query row the icon it paints — `fieldMinWidth`
+charged both glyphs of the query row as `fieldAdornmentSize`, but `SearchInput`
+paints its leading magnifier as `<Icon size="md" />`, which resolves through
+`iconSize.md`; a copied theme that lifted the icon tier to 20 returned `[]`
+while the query row needed 82 against the old 78, so the field could clip its
+own leading glyph. The bound now reads `iconSize.md` for the lead and
+`fieldAdornmentSize` for the trailing action, every shipped set passes (200
+against the larger 102px chip bound) and no shipped value moves (plan 634)
 
 ## Phase C — Tier 1–2 components
 

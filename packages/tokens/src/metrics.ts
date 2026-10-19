@@ -509,8 +509,9 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   has a minimum below its default, a chip fits in the field's content box — its
  *   minimum width less the field's two borders and horizontal padding — and the
  *   same minimum holds the query row the token documents: the field's
- *   `spacing.md` padding, a leading `fieldAdornmentSize` glyph, the gap, one
- *   `body` query glyph, the same gap and the trailing action; a date
+ *   `spacing.md` padding, a leading `md` icon, the gap, one
+ *   `body` query glyph, the same gap and the trailing `fieldAdornmentSize`
+ *   action; a date
  *   trigger holds its own insets, its gap, one `label` glyph and the `sm`
  *   disclosure icon it paints, the overlay scroll height fits one row, because a list
  *   viewport shorter than a row clips every option, the message viewport fits
@@ -843,11 +844,13 @@ export function themeMetricFailures(
     ),
     // The field's content box holds one of the two compositions its minimum
     // width exists for: a token-input chip, or the query row `docs/tokens.md`
-    // documents — a leading glyph, the query and a trailing action. The chip
+    // documents — a leading icon, the query and a trailing action. The chip
     // needs the field's two borders and its horizontal control padding; the
     // query row paints the field's own `spacing.md` padding and two gaps
-    // (`SearchInput`). The larger bound wins, so one value keeps one
-    // diagnostic.
+    // (`SearchInput`). The lead is the `md` icon tier the component paints and
+    // the action is the adornment the token names; the shipped tiers are equal,
+    // so the bound does not move (plan 634). The larger bound wins, so one
+    // value keeps one diagnostic.
     ...atLeast(
       "dimensions",
       "fieldMinWidth",
@@ -857,9 +860,10 @@ export function themeMetricFailures(
           2 * density.controlPaddingX.md +
           2 * borderWidth.thin,
         2 * spacing.md +
-          2 * dimensions.fieldAdornmentSize +
+          iconSize.md +
           2 * spacing.md +
-          typography.body.fontSize,
+          typography.body.fontSize +
+          dimensions.fieldAdornmentSize,
       ),
     ),
     // A dialog's shell holds its own close control: `spacing["2xl"]` padding on

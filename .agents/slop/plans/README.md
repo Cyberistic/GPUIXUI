@@ -301,7 +301,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [629](./629-notification-inbox-header.md) | The notification inbox holds its header | F | 353, 358, 598, 620, 625, 627 | done |
 | [631](./631-toast-dismiss-control.md) | The Toast card holds its dismiss control | F | 353, 358, 620, 627, 629 | done |
 | [632](./632-date-disclosure-icon.md) | The date field's disclosure glyph is the icon tier it paints | F | 353, 358, 384, 556, 601, 627, 631 | done |
-| [634](./634-field-query-leading-icon.md) | The field's query row charges the icon it paints | F | 353, 358, 384, 624, 632 | planned |
+| [634](./634-field-query-leading-icon.md) | The field's query row charges the icon it paints | F | 353, 358, 384, 624, 632 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

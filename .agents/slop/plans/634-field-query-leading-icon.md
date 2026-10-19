@@ -8,7 +8,7 @@ trigger's disclosure icon) ·
 **Number block:** 500–699 (`tokens-theme` overflow; 630 is in use by
 `components`, 633 by `playground`, 631–632 by this workstream, so 634 is the
 next free number in every worktree) ·
-**Status:** planned
+**Status:** done
 
 ## 1. The defect
 
@@ -201,9 +201,10 @@ The existing "reads the theme's own padding" case still computes
 
 1. On the pre-fix tree (`git stash push -- packages/tokens/src/metrics.ts`),
    run `cd packages/tokens && nub x vitest run src/field-chrome-fit.test.ts`:
-   the lifted-tier cases report `[]`/78 where they expect the 82 failure, and
-   the total-check case finds no metric entry — four failures; the shipped and
-   spacing cases pass.
+   the lifted-tier guard returns `[]` where it expects the 82 failure and the
+   total-check case finds no metric entry — two failures; the shipped, spacing
+   and corrected-bound cases pass (the last is a fixture-coherence case, not a
+   guard).
 2. With the fix: all cases pass.
 3. `nub run --filter @gpuixui/tokens test` → all suites green.
 
@@ -298,8 +299,9 @@ Stop and report, do not improvise, if:
   metrics.
 - Every shipped identity theme, platform variant and recipe passes; no colour,
   pair, floor, metric or shipped theme value moves.
-- The new cases fail on the pre-fix tree (the 81px plant, the 82px acceptance
-  and the total-check entry) and pass after it.
+- The two guard cases fail on the pre-fix tree (the 81px plant and the
+  total-check entry) and pass after it; the 82px acceptance case proves the
+  fixture is coherent.
 - The catalogue and JSDoc name the `md` leading icon; the plan, audit note and
   README index are current.
 - `nub run check`, `nub run lint` and `nub run test` pass.
