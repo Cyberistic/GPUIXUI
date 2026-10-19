@@ -473,6 +473,12 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[~]` `[██████████]` 149/150
 
+`[ ]` **A live scene's instruction is searchable (plan 582)** — the gesture
+      sentences are rendered React from `preview/scenes.ts`, so `wheel up`
+      returned Radio group, `press end` returned Extending and `type a name`
+      returned Typography; one generated document per gesture scene plus the
+      Previews index must reach the page that mounts it.
+
 `[x]` **An API table that renders nothing fails by name (plan 581)** — a
       renamed props type or a part file that moved left the page heading with no
       table, and nothing failed: `content-references.test.ts` compares type
