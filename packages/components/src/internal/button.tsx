@@ -18,8 +18,8 @@
 import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
-import { useState } from "react";
 import { activationHandlers } from "./activate.js";
+import { useFocusState } from "./focus.js";
 import { useHoverGroupMember } from "./hover-group.js";
 import { controlName } from "./name.js";
 import { stateDescription } from "./state-description.js";
@@ -165,7 +165,7 @@ export const Button = ({
   ...rest
 }: ButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const name = controlName(rest["aria-label"], children);
   const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
 
@@ -221,7 +221,7 @@ export const IconButton = ({
   ...rest
 }: IconButtonProps) => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const side = controlHeight(theme, size);
   const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
 

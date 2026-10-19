@@ -38,8 +38,6 @@ import {
   type AccordionState,
 } from "./accordion/logic.js";
 import { activationHandlers } from "./internal/activate.js";
-import { controlName } from "./internal/name.js";
-import { stateDescription } from "./internal/state-description.js";
 import {
   firstEnabled,
   lastEnabled,
@@ -47,6 +45,9 @@ import {
   upsertValue,
   type ValueItem,
 } from "./internal/collection.js";
+import { useFocusState } from "./internal/focus.js";
+import { controlName } from "./internal/name.js";
+import { stateDescription } from "./internal/state-description.js";
 import { isDown, isFirst, isLast, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -415,7 +416,7 @@ export const AccordionTrigger = ({
     useAccordionContext();
   const { value, disabled, trigger } = useAccordionItemContext();
   const name = controlName(rest["aria-label"], children);
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );

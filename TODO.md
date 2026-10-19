@@ -624,13 +624,17 @@ retired once both branches are one
       cases fail on the old source (store 22 → 24), the native Toast suite stays
       20/20; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
-     - [~] A control disabled while focused is inert — plan 680; measured on
+     - [x] A control disabled while focused is inert — plan 680; measured on
        2026-10-19: a `Button` with `autoFocus`, a clicked `TabsTrigger` and a
        recording `HotkeyRecorder` each kept the token focus ring after the app
-       disabled them, and the recorder still painted `Press keys…`. One shared
-       `useFocusState` drops the painted focus on disable, the recorder also
-       cancels its recording, and the colour picker clears both focus states
-       (owner: components)
+       disabled them, and the recorder still painted `Press keys…` (the
+       accordion header, collapsible trigger and inline edit had the same
+       wiring). One shared `useFocusState` drops the painted focus on disable,
+       the recorder also cancels its recording, and the colour picker clears
+       both focus states; 7 native cases (6 fail at `HEAD`; the shared-hook
+       probe is the pin), full suite 843/31 of 874 with the same plan-540
+       binding failures; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+       synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1268,15 +1272,13 @@ the docs-site workstream; the `packages/components` half is plan 337)
       in `src/exports.test.ts`, unit 474
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plan 677):
+      re-run from the components worktree on 2026-10-19 (plan 680):
       all three exit 0; the unit suite is 476 tests in 46 files. The full native
-      behaviour suite was re-run after plan 677 on 2026-10-19: **836 passed /
-      31 failed of 867** — every failure is one of the recorded plan-540 binding
-      defects (the 24 focus/blur cases, the box-convention position cases and the
-      command-menu scroll case), and the Toast suite is 20/20. The count before
-      plan 677 was 820/31 of 851 after plan 657; plans 660–672 added the Search
-      input, Stepper, TagInput and Combobox cases (their targeted files green)
-      and plan 677 added two store cases, which is the 867-test total. Re-run it
+      behaviour suite was re-run after plan 680 on 2026-10-19: **843 passed /
+      31 failed of 874** — every failure is one of the recorded plan-540 binding
+      defects (the focus/blur cases, the box-convention position cases and the
+      command-menu scroll case), and the new disabled-inert suite is 7/7. The
+      count before plan 680 was 836/31 of 867 after plan 677. Re-run it
       before release — every later merge can change the count.
 
 ## Swarm-owned blockers (fix these)

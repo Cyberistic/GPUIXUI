@@ -24,6 +24,7 @@ import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { useFocusState } from "./internal/focus.js";
 import { isTab } from "./internal/key.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
@@ -89,7 +90,7 @@ export const ColorPicker = ({
     onChange: onValueChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(false);
+  const [focused, setFocused] = useFocusState(false, disabled);
   const [focusedSwatch, setFocusedSwatch] = useState<Option.Option<number>>(
     Option.none(),
   );
@@ -100,6 +101,12 @@ export const ColorPicker = ({
   useLayoutEffect(() => {
     setDraft(value);
   }, [value]);
+
+  // A disabled picker is inert: a swatch focused before the app disabled it
+  // must not keep the ring (plan 680).
+  useLayoutEffect(() => {
+    if (disabled) setFocusedSwatch(Option.none());
+  }, [disabled]);
 
   const commit = (): void => {
     Option.match(normalizeHex(draft), {
@@ -176,7 +183,7 @@ export const ColorPicker = ({
                 borderColor: selected
                   ? theme.colors.foreground
                   : theme.colors.border,
-                ...(Option.contains(focusedSwatch, index)
+                ...(!disabled && Option.contains(focusedSwatch, index)
                   ? focusRing(theme)
                   : {}),
               }}

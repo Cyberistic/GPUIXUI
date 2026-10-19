@@ -33,6 +33,7 @@ import {
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
+import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isEnter, isTab } from "./internal/key.js";
 import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
@@ -105,7 +106,7 @@ export const InlineEdit = ({
     onChange: onEditingChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [input, setInput] = useState<PublicInstance | undefined>(undefined);
   const display = useRef<PublicInstance | null>(null);
   // Enter can arrive twice (keyDown and submit); one finish per edit.

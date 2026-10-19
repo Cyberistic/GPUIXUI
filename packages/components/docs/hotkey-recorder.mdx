@@ -84,7 +84,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Recording is visual ("Press keys…") and the field keeps focus while listening.
 - There is no `aria-keyshortcuts` and no `aria-disabled` in `0.10.0`; disabled
   leaves the tab order, dims and announces `Disabled` through
-  `aria-description`.
+  `aria-description`. A recording that is open when the field becomes disabled
+  is cancelled, and a disabled field paints no ring (plan `680`).
 
 ## Limitations
 

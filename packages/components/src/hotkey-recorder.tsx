@@ -22,10 +22,11 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
+import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isEnter, isSpaceRelease, isTab } from "./internal/key.js";
 import { stateDescription } from "./internal/state-description.js";
 import { Keycap } from "./keyboard-shortcuts.js";
@@ -81,8 +82,13 @@ export const HotkeyRecorder = ({
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [clearFocused, setClearFocused] = useState(false);
+  // A disabled recorder is inert: a recording that was open when the app
+  // disabled it must not stay open and paint "Press keys…".
+  useLayoutEffect(() => {
+    if (disabled) setRecording(false);
+  }, [disabled]);
   // A press on the clear control must not also start recording on the root.
   const skipStart = useRef(false);
   // A key captured while recording must not start a new recording on release:

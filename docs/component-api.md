@@ -201,6 +201,9 @@ dependent (playground plans 390, 603, 605). A ring is therefore guaranteed for
 `autoFocus`; after a programmatic or pointer focus move it appears only when the
 host sends the event. Components never fake it with a timer or a poll, and every
 component page whose parts can take focus states the limitation (plan 608).
+A part that becomes disabled drops its painted focus even though no `blur`
+arrives, so a disabled control never shows a ring; re-enabling waits for the
+next real focus signal (plan `680`).
 
 **A part that draws an interactive role names itself.** 0.10.0 reports no
 accessible name for a `div role="button"` (or tab, link, …) whose label is only a

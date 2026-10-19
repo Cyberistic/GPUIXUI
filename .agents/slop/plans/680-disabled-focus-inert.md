@@ -76,8 +76,14 @@ asserts the part is inert:
 5. `InlineEdit` display: `autoFocus`, then disabled; ring gone.
 6. `HotkeyRecorder`: `autoFocus` + click to record, then disabled; ring gone and
    `Press keys…` is no longer painted.
-7. `ColorPicker`: click a swatch, then disable the picker; the swatch's
-   `boxShadow` is undefined and its `tabIndex` is `-1`.
+7. The shared focus rule, through a small real-host probe: a part seeded
+   focused paints the ring while enabled and none after it turns disabled.
+
+`ColorPicker`'s own swatch cannot be staged on this binding: `focusElement` and
+a click on a `div role="button"` deliver no React focus (the plan-522 swatch
+ring case is one of the recorded plan-540 focus failures), so its reset is
+covered by the shared probe and the hook, not by a swatch assertion. The
+component change remains correct for hosts that do deliver the focus event.
 
 Command:
 
@@ -88,10 +94,11 @@ nub exec vitest run --config vitest.behaviour.config.ts \
 
 Expected: 7 passed on this host (`~2 s`, native import dominates).
 
-**Both directions.** Run the suite at `HEAD` before the fix: all cases that touch
-a ring must fail; the enabled-ring assertions are the pins and pass in both
-trees. After the fix, the full suite passes. If a case passes at `HEAD`, it is
-not guarding this bug and must be strengthened or removed.
+**Both directions.** Measured at `HEAD` before the fix: all six component cases
+fail (the disabled part still paints `focusRing`, and the recorder still reads
+`Press keys…`); the shared-probe case is the new mechanism's pin and passes in
+both trees. After the fix, all seven pass. If a component case passes at `HEAD`,
+it is not guarding this bug and must be strengthened or removed.
 
 **Regression scope.** Run the whole native suite at the end of the task:
 

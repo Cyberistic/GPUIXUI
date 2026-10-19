@@ -19,11 +19,11 @@ import {
   useCallback,
   useContext,
   useRef,
-  useState,
   type RefObject,
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { useFocusState } from "./internal/focus.js";
 import { controlName } from "./internal/name.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
@@ -132,7 +132,7 @@ export const CollapsibleTrigger = ({
   const theme = useTheme();
   const { open, setOpen, trigger } = useCollapsibleContext();
   const name = controlName(rest["aria-label"], children);
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const attach = useCallback(
     (next: PublicInstance | null) => {
       trigger.current = Option.fromNullishOr(next);

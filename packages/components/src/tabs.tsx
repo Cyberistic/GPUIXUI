@@ -40,6 +40,7 @@ import {
   type CollectionItem,
 } from "./internal/collection.js";
 import { useControllableState } from "./internal/controllable.js";
+import { useFocusState } from "./internal/focus.js";
 import { controlName } from "./internal/name.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
@@ -531,7 +532,7 @@ export const TabsTrigger = ({
     select,
     noteFocus,
   } = useTabsContext();
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
