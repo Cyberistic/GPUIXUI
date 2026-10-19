@@ -9,6 +9,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
+import { wholeCap } from "../internal/count.js";
 
 /** How additions are filtered. */
 export interface AddRules {
@@ -56,9 +57,10 @@ export const addTokens = (
   current: ReadonlyArray<string>,
   incoming: ReadonlyArray<string>,
   rules: AddRules = {},
-): ReadonlyArray<string> =>
-  Arr.reduce(incoming, current, (tokens, token) => {
-    if (rules.max !== undefined && Arr.length(tokens) >= rules.max) {
+): ReadonlyArray<string> => {
+  const max = rules.max === undefined ? undefined : wholeCap(rules.max);
+  return Arr.reduce(incoming, current, (tokens, token) => {
+    if (max !== undefined && Arr.length(tokens) >= max) {
       return tokens;
     }
     if (
@@ -69,6 +71,7 @@ export const addTokens = (
     }
     return Arr.append(tokens, token);
   });
+};
 
 /** Remove the first exact match; an absent token is a no-op. */
 export const removeToken = (

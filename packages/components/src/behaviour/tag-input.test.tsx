@@ -197,6 +197,26 @@ describe("TagInput", () => {
     tags.unmount();
   });
 
+  /**
+   * The bug this guards (plan 662): the cap was compared as a raw number, so a
+   * fractional max admitted a token past its whole bound.
+   */
+  it("truncates a fractional max", () => {
+    const onValueChange = vi.fn();
+    const tags = renderComponent(
+      <Harness initial={["a"]} max={1.5} onValueChange={onValueChange} />,
+    );
+
+    type(tags, "b");
+    tags.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(tags.renderer.findByTestId("chip-b")).toBeUndefined();
+    expect(tags.renderer.findByTestId("chip-a")).toBeDefined();
+
+    tags.unmount();
+  });
+
   it("makes a disabled field read-only and drops the removal controls", () => {
     const tags = renderComponent(<Harness initial={["design"]} disabled />);
 

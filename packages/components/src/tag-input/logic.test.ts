@@ -66,6 +66,18 @@ describe("addTokens", () => {
     expect(addTokens(["a", "b"], ["c"], { max: 2 })).toEqual(["a", "b"]);
   });
 
+  it("truncates a fractional cap", () => {
+    expect(addTokens(["a"], ["b"], { max: 1.5 })).toEqual(["a"]);
+    expect(addTokens([], ["a", "b"], { max: 1.5 })).toEqual(["a"]);
+  });
+
+  it("treats a non-finite cap as no cap", () => {
+    expect(addTokens(["a"], ["b"], { max: Number.NaN })).toEqual(["a", "b"]);
+    expect(addTokens([], ["a"], { max: Number.POSITIVE_INFINITY })).toEqual([
+      "a",
+    ]);
+  });
+
   it("returns an equivalent list when nothing can be added", () => {
     expect(addTokens(["a"], [])).toEqual(["a"]);
     expect(addTokens([], ["a"], { max: 0 })).toEqual([]);
