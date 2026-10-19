@@ -31,6 +31,18 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `400–499` | docs site |
 | `500–699` | tokens and theming overflow (this workstream; numbers are shared across worktrees, so take the next free — `599` and `600` are in use by `playground`) |
 
+A number is a **global identity**, not a per-branch one. Before writing a plan,
+check every tree:
+
+```sh
+find /Users/cyberistic/GPUIXUI/workspaces -path "*/.agents/slop/plans/NNN-*"
+```
+
+If two plans already share a number and only one has been executed, the
+unexecuted one renumbers (that is plan `688`); an executed plan keeps its number
+and the duplicate is recorded for repo tooling, because renaming history rewrites
+references without buying correctness.
+
 ## The plan set
 
 ### `tokens-theme` (block `010–019`, plus overflow plans `050–099`)
