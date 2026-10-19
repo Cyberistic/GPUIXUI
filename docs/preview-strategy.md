@@ -14,7 +14,7 @@ names it.
 
 | Tier | What it is | Label the reader sees | When it is used |
 | ---- | ---------- | --------------------- | --------------- |
-| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Color picker, Inline edit, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB. The three composed pages (Showcase, the confirmation-flow pattern and the command-palette pattern) have no component record. |
+| **L** | A live GPUix surface: the library's real component code on GPUix's **published WebAssembly renderer** (the browser's GPU backend), in an isolated document | `Live GPUix surface — … It is not the native desktop window: run the playground for that.` | On a record that declares a `liveScene` (Buttons, Tabs, Dropdown menus, Dialogs, Confirmation dialogs, Popovers, Command menus, Icons, Scrollable containers, Skeletons, Loading indicators, Drawer, Navigation Menu, Mention input, Preview Card, Toasts / notifications, Tooltips, Context menus, Date pickers, Comboboxes, Hotkey-recorder input, Selects, Checkboxes, Switches, Radio groups, Slider, Range slider, Search inputs, Text inputs, Text areas, Color picker, Inline edit, Accordions, Number Field, OTP Field, Rating, Tag / token input, Toggle, Lists / list items, Collapsible sections, Pagination, Time pickers, Form, Carousel, Message scroller); click-to-load, because the renderer is about 20 MB. The three composed pages (Showcase, the confirmation-flow pattern and the command-palette pattern) have no component record. |
 | **N** | A real native run in `apps/playground` | `Run it natively: nub run dev:playground → <screen>` | Always, for every implemented component with a playground screen |
 | **S** | A real screenshot captured from the GPUix runtime | `Captured from GPUix — <platform>, GPUix <version>, <commit>` | Whenever the playground can capture one |
 | **S** (interaction) | A before/after pair or recording of a real gesture | `Recorded in GPUix — <platform>, GPUix <version>, <commit>` | When the capture proves resizing, dragging or another state change a still cannot |
@@ -37,7 +37,7 @@ desktop binary, the native window or the published native binding works — that
 is tier N/S/V. A live scene is built from the real package code:
 `@gpuixui/primitives` and `@gpuixui/components`. Some scenes mount in the state
 they document — a menu, a dialog, a popover or the command palette starts open —
-and 24 more are opened by a real gesture through the renderer's automation API;
+and 25 more are opened by a real gesture through the renderer's automation API;
 *Gestures are proved, not implied* below is that contract.
 `smoke:preview` proves every scene's text reached GPUI's tree in headless Chrome,
 that every scene's canvas is sized (a `ready` flag on a 1×1 frame does not
@@ -205,7 +205,7 @@ the source for a component that is no longer `planned`.
   playground is the interactive proof.
 - That a live scene exists for every component. A record without a `liveScene`
   falls through to its native tier; a missing build says so instead of showing a
-  blank frame. **47 scenes ship today**: 44 are one per record that declares a
+  blank frame. **48 scenes ship today**: 45 are one per record that declares a
   `liveScene`, and three are composed pages (Showcase, the confirmation-flow
   pattern and the command-palette pattern); the tier table above names them all. They are chosen because a still
   cannot prove the point: an open overlay and its focus entry, a grouped palette,
@@ -222,7 +222,7 @@ the source for a component that is no longer `planned`.
 
 ## Gestures are proved, not implied
 
-24 scenes document state only a gesture produces: a component that owns its
+25 scenes document state only a gesture produces: a component that owns its
 open state and exposes no `defaultOpen`, a list that opens on a click, controls
 whose checked paint is not text, a value a key moves, a row a reader selects, a
 field a reader types into, a swatch a reader commits, a rename a reader commits
@@ -252,6 +252,7 @@ first assertion, and a broken gesture fails the second.
 | Text areas | type into the field | the typed draft reaches the caller |
 | Color picker | press a swatch | the committed colour reaches the caller and repaints the preview |
 | Inline edit | click the display, type, press Enter | the display swaps for the real input and the committed rename reaches the caller |
+| Form | press the submit control with an empty email | the schema message appears in one alert and the caller is not called |
 | Lists / list items | click a row by its label | the row paints selected and the caller sees the value |
 | Collapsible sections | click the trigger | the content is mounted only in the open state |
 | Pagination | press next three times | the current page and its window move |

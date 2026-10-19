@@ -67,15 +67,15 @@ describe("preview guide", () => {
   });
 
   it("reports the measured split rather than a remembered one", () => {
-    // Measured 2026-10-19: every record has a suite; 44 of 66 also ship a live
+    // Measured 2026-10-19: every record has a suite; 45 of 66 also ship a live
     // scene. A new scene or capture must update this line and the prose, not
     // leave the guide behind.
     expect(previewTierCounts()).toEqual({
       total: 66,
-      live: 44,
+      live: 45,
       screenshot: 0,
       playground: 0,
-      runtime: 22,
+      runtime: 21,
       unavailable: 0,
     });
   });

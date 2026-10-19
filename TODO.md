@@ -469,9 +469,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–571)
+## Docs site workstream (plans 410–499, plus 500–572)
 
-`[x]` `[██████████]` 138/138
+`[x]` `[██████████]` 139/139
+
+`[x]` **Form's submit lifecycle runs on the live surface (plan 572)** — the one
+      delivered component whose primary documented behaviour is a press
+      (invalid submit → schema message, valid submit → decoded value) showed
+      only a tier-V suite and a tier-A idle illustration. A real `Form` scene
+      now presses **Create account** with an empty address, the schema's own
+      message paints, and `form-scene.test.ts` proves the expectation equals
+      what the real formatter emits — both directions measured. 48 scenes /
+      25 gestures; `smoke:preview` green with `form` at 9 text nodes and a
+      sized canvas; 88 files / 632 tests, `check-types`, `smoke:build` (97
+      pages / 120 links) and the root gates green.
 
 `[x]` **The preview strategy has a reader-facing page (plan 571)** — `/docs/previews`
       lists the six honest tiers, reuses the exact labels the live surface and

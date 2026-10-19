@@ -152,6 +152,8 @@ import { HotkeyRecorder } from "@gpuixui/components/hotkey-recorder";
 import { ColorPicker } from "@gpuixui/components/color-picker";
 import { InlineEdit } from "@gpuixui/components/inline-edit";
 import { SearchInput } from "@gpuixui/components/search-input";
+import { Field, FieldInput } from "@gpuixui/components/field";
+import { Form } from "@gpuixui/components/form";
 import {
   Carousel,
   CarouselControl,
@@ -185,6 +187,7 @@ import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
 import { CommandPalette } from "./patterns/command-palette";
 import { ConfirmationFlow } from "./patterns/confirmation-flow";
+import { EMPTY_FORM, FormValues } from "./form-scene";
 import type { LiveScene } from "./scenes";
 
 const ButtonScene = (): ReactElement => (
@@ -991,6 +994,51 @@ const InlineEditScene = (): ReactElement => {
   );
 };
 
+const FormScene = (): ReactElement => {
+  const [email, setEmail] = useState(EMPTY_FORM.email);
+  const [name, setName] = useState(EMPTY_FORM.name);
+  const [created, setCreated] = useState(false);
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Create account</Text>
+      <Text role="caption" tone="muted">
+        The real Form. Press Create account with an empty email to see the
+        schema's message.
+      </Text>
+      <Form
+        schema={FormValues}
+        value={{ email, name }}
+        onSubmit={() => setCreated(true)}
+        label="Create account"
+        style={{ width: 360 }}
+      >
+        {(form) => (
+          <Stack direction="column" gap="sm">
+            <Field label="Email" description="We never share it">
+              <FieldInput
+                testId="scene-form-email"
+                value={email}
+                onChange={(event) => setEmail(event.value ?? "")}
+              />
+            </Field>
+            <Field label="Name">
+              <FieldInput
+                testId="scene-form-name"
+                value={name}
+                onChange={(event) => setName(event.value ?? "")}
+              />
+            </Field>
+            <Button testId="scene-form-submit" onClick={form.submit}>
+              Create account
+            </Button>
+            {created ? <Text role="body">Account created</Text> : null}
+          </Stack>
+        )}
+      </Form>
+    </Stack>
+  );
+};
+
 const AccordionScene = (): ReactElement => (
   <Stack direction="column" gap="lg">
     <Text role="h3">Release settings</Text>
@@ -1389,6 +1437,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "text-area": TextAreaScene,
     "color-picker": ColorPickerScene,
     "inline-edit": InlineEditScene,
+    form: FormScene,
     accordion: AccordionScene,
     "number-field": NumberFieldScene,
     "otp-field": OTPFieldScene,

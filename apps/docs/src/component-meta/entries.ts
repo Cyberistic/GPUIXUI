@@ -1808,6 +1808,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
       gpuix: "partial",
       sourcePath: "packages/components/src/form.tsx",
       api: ["FormProps"],
+      liveScene: "form",
       runtime: nativeSuite(
         "@gpuixui/components",
         "src/behaviour/form.test.tsx",

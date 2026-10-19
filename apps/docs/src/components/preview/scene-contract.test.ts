@@ -24,6 +24,9 @@ import { NO_LIVE_SCENE, STATEFUL_NO_LIVE_SCENE } from "./gaps";
 const sceneViewsPath = fileURLToPath(
   new URL("../../../preview/scene-views.tsx", import.meta.url),
 );
+const formScenePath = fileURLToPath(
+  new URL("../../../preview/form-scene.ts", import.meta.url),
+);
 const patternsDirectory = fileURLToPath(
   new URL("../../../preview/patterns/", import.meta.url),
 );
@@ -35,6 +38,7 @@ const patternsDirectory = fileURLToPath(
  */
 const viewSource = [
   readFileSync(sceneViewsPath, "utf8"),
+  readFileSync(formScenePath, "utf8"),
   ...readdirSync(patternsDirectory)
     .filter((file) => file.endsWith(".tsx"))
     .map((file) => readFileSync(join(patternsDirectory, file), "utf8")),
@@ -73,6 +77,7 @@ const interactionScenes = new Map([
   ["text-area", "text-area"],
   ["color-picker", "color-picker"],
   ["inline-edit", "inline-edit"],
+  ["form", "form"],
   ["message-scroller", "message-scroller"],
 ]);
 

@@ -6,6 +6,8 @@
  * scene has real text to look for. Adding a scene means adding its key here, its
  * expectation below and its view in `scene-views.tsx`; no half may drift.
  */
+import { FORM_MESSAGE } from "./form-scene";
+
 export const LIVE_SCENES = [
   "button",
   "tabs",
@@ -39,6 +41,7 @@ export const LIVE_SCENES = [
   "text-area",
   "color-picker",
   "inline-edit",
+  "form",
   "accordion",
   "number-field",
   "otp-field",
@@ -100,6 +103,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "text-area": "Draft saved",
   "color-picker": "Accent set to red",
   "inline-edit": "Renamed Atlas Prime",
+  form: FORM_MESSAGE,
   accordion: "Email me when a deployment finishes.",
   "number-field": "Quantity is 12",
   "otp-field": "Six digits entered",
@@ -202,6 +206,7 @@ export const SCENE_GESTURE: Readonly<
     { kind: "fill", testId: "scene-inline-edit", text: "Atlas Prime" },
     { kind: "press", testId: "scene-inline-edit", keys: "enter" },
   ],
+  form: [{ kind: "click", testId: "scene-form-submit" }],
   list: [{ kind: "click-text", text: "Weekly report", within: "scene-list" }],
   collapsible: [{ kind: "click", testId: "scene-collapsible-trigger" }],
   pagination: [
@@ -248,6 +253,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "text-area": "Type a note into the field.",
   "color-picker": "Press the red swatch to commit it.",
   "inline-edit": "Click the name, type a new one and press Enter.",
+  form: "Press Create account with an empty email to see the schema's message.",
   list: "Click the weekly report to open it.",
   collapsible: "Open the advanced section.",
   pagination: "Press next three times to reach page four.",

@@ -73,6 +73,10 @@ None. The form's layout uses `spacing.lg`; the summary uses the `caption` type.
 | valid submit | errors clear; `onSubmit` receives the decoded value |
 | `pending` | `form.submit()` is a no-op; render the caller's busy state |
 
+The live surface above runs the real `Form`: press **Create account** with an
+empty email to see the schema's message, then fill the address and press it
+again to submit the decoded value.
+
 ## Composition
 
 The real example shows the whole lifecycle, including the local button
