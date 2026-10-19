@@ -96,9 +96,16 @@ The group answers **only its orientation's axis**: `orientation="horizontal"`
 cross-axis arrow is inert — the same contract as `RadioGroup`, and what keeps a
 horizontal segmented control still while a user scrolls a form.
 
-A disabled option is skipped by every movement and never receives focus; a
-disabled group has no tab stop at all. Clicking an item selects or toggles it,
-except the active item in `single` mode, which is a no-op.
+A disabled option is skipped by every movement and never receives focus from Tab
+or the arrows; a disabled group has no tab stop at all. A pointer press on a
+disabled item is refused, although the runtime still moves native focus to it
+(measured, plan `601`) — the group records neither the press nor the stop.
+Clicking an enabled item selects or toggles it, except the active item in
+`single` mode, which is a no-op. A click also records
+the item as the keyboard's return point: it moves native focus, but the pinned
+release runtime dispatches no focus event, so `multiple` writes the tab stop
+itself (plan `600`). A disabled item is never recorded, because its press is
+refused.
 
 An arrow **continues from the focused item**, not from the value-derived tab stop,
 in both modes. A controlled parent can defer or reject the value an arrow reports;
@@ -112,8 +119,10 @@ instead of repeating the first move (plan `359`).
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). Role, name, tab order, keyboard operation and activation
-  are unaffected.
+  late (plan `590`). The same sample clears the group's event-tracked cursor
+  when it names none of this group's items, so the ring and the arrow walk do
+  not outlive focus (plan `601`). Role, name, tab order and activation are
+  unaffected.
 - The group is a named `group` (AccessKit `Group`); each item is a named
   `button` (`Button`) whose accessible name is the option's `label`, falling
   back to its `value` when the label is blank (plan `589`).

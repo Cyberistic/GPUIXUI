@@ -14,7 +14,7 @@ import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, settleFocus } from "./fixture.js";
 
 const align = [
   { value: "left", label: "Left" },
@@ -155,6 +155,12 @@ it("skips a disabled item with arrows and refuses its press", async () => {
   );
   runtime.click("tg-left");
   expect(announced(runtime, "Centre")).toBe("pressed");
+  // The click moved native focus to the disabled item (the runtime does not
+  // refuse focus), so the keyboard's next move starts there once the tracker
+  // has sampled it: Right lands on the first enabled item after it (plan `601`).
+  await settleFocus();
+  runtime.keyDown("tg-left", "right");
+  expect(focused(runtime)).toBe("tg-centre");
   runtime.keyDown("tg-centre", "right");
   expect(focused(runtime)).toBe("tg-right");
   runtime.keyDown("tg-right", "right");
@@ -290,4 +296,75 @@ it("answers only its orientation's arrow axis", async () => {
   vertical.keyDown("tg-left", "down");
   expect(focused(vertical)).toBe("tg-centre");
   expect(announced(vertical, "Centre")).toBe("pressed");
+});
+
+/**
+ * The bug guarded (plan `600`): the multiple-mode tab stop is documented as the
+ * item that last held focus. A click moves native focus, but the pinned release
+ * runtime dispatches no `onFocus` (plan `583`), so the group never heard it and
+ * kept the first enabled item. A keyboard user who clicked an item and later
+ * Tabbed back entered at the wrong one.
+ */
+it("moves the multiple tab stop to an item that was clicked", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="before">Before</Button>
+        <ToggleGroup
+          type="multiple"
+          testId="tg"
+          label="Formatting"
+          options={format}
+        />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("tg-underline");
+  await settleFocus();
+  expect(focused(runtime)).toBe("tg-underline");
+  expect(announced(runtime, "Underline")).toBe("pressed");
+
+  runtime.click("before");
+  await settleFocus();
+  runtime.focusNext();
+  expect(focused(runtime)).toBe("tg-underline");
+  // One stop, not three: the next Tab leaves the group.
+  runtime.focusNext();
+  expect(focused(runtime)).toBe("after");
+});
+
+/**
+ * The other half of plan `600`: a disabled option never becomes the stop, even
+ * when a click lands on it. It has `tabIndex={undefined}`, so making it the
+ * stop would leave the whole group without a tab stop (plan `056`).
+ */
+it("keeps a disabled item out of the multiple tab stop", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="before">Before</Button>
+        <ToggleGroup
+          type="multiple"
+          testId="tg"
+          label="Formatting"
+          options={[
+            { value: "bold", label: "Bold" },
+            { value: "italic", label: "Italic", disabled: true },
+            { value: "underline", label: "Underline" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("tg-italic");
+  await settleFocus();
+  expect(announced(runtime, "Italic")).toBe("not pressed");
+
+  runtime.click("before");
+  await settleFocus();
+  runtime.focusNext();
+  expect(focused(runtime)).toBe("tg-bold");
 });

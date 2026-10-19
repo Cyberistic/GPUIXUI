@@ -94,8 +94,10 @@ selected), so Tab still enters on what is selected.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). Role, name, tab order, keyboard operation and activation
-  are unaffected.
+  late (plan `590`). The same sample clears the group's event-tracked cursor
+  when it names none of this group's options, so the ring and the arrow walk do
+  not outlive focus (plan `601`). Role, name, tab order and activation are
+  unaffected.
 - Roles: `RadioGroup` and `RadioButton` in AccessKit.
 - The group's name comes from `label`.
 - Each option announces its selected state through **`aria-valuetext`**

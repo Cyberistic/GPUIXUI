@@ -333,6 +333,56 @@ export const trackedFocusIndex = (
         ),
       );
 
+/** Which item of a roving composite holds focus, and the state that tracks it. */
+export interface RovingFocus {
+  readonly focusedIndex: Option.Option<number>;
+  readonly onFocus: (index: number) => void;
+  readonly onBlur: (index: number) => void;
+  readonly registerItem: (
+    index: number,
+  ) => (instance: PublicInstance | null) => void;
+  /** An item's host id, for `renderer.focusElement`. */
+  readonly idOf: (index: number) => Option.Option<number>;
+}
+
+/**
+ * The focused item of a roving composite.
+ *
+ * The event state is the fastest source and is all there is without a provider.
+ * It cannot *clear* itself on the pinned release runtime, which moves focus but
+ * dispatches no `onBlur` (plan `583`), so a ring and the keyboard cursor would
+ * outlive focus (plan `601`). The provider's sample clears the event state when
+ * it names none of this composite's items, exactly as `useFocus` does
+ * (plan `591`). A sample only ever clears: a focus event that beat the next
+ * sample still paints, because the effect runs when the sample changes.
+ */
+export const useRovingFocus = (): RovingFocus => {
+  const [eventFocus, setEventFocus] = useState<Option.Option<number>>(
+    Option.none(),
+  );
+  const ids = useRef<Map<number, number>>(new Map());
+  const sample = useNativeFocus();
+  const tracked = trackedFocusIndex(ids.current, sample?.focused);
+  useEffect(() => {
+    if (sample === undefined || !sample.sampled) return;
+    if (Option.isSome(trackedFocusIndex(ids.current, sample.focused))) return;
+    setEventFocus(Option.none());
+  }, [sample]);
+  return {
+    focusedIndex: Option.isSome(eventFocus) ? eventFocus : tracked,
+    onFocus: (index) => setEventFocus(Option.some(index)),
+    onBlur: (index) =>
+      setEventFocus((current) =>
+        Option.filter(current, (focused) => focused !== index),
+      ),
+    registerItem: (index) => (instance) => {
+      if (instance === null) ids.current.delete(index);
+      else ids.current.set(index, instance.id);
+    },
+    idOf: (index) => Option.fromNullishOr(ids.current.get(index)),
+  };
+};
+
 /** A control's controlled/uncontrolled value, and the setter that respects it. */
 export interface ControlState<Value> {
   readonly value: ValueState<Value>;

@@ -12,7 +12,7 @@
  * monochrome and cannot be filled by a style.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -32,9 +32,8 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   resolvePartStyle,
-  trackedFocusIndex,
   useControlState,
-  useNativeFocusId,
+  useRovingFocus,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -242,14 +241,8 @@ export const renderRating = (
 export const Rating = (props: RatingProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const itemIds = useRef<Map<number, number>>(new Map());
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
+  const focus = useRovingFocus();
   const [preview, setPreview] = useState<Option.Option<number>>(Option.none());
-  const trackedId = useNativeFocusId();
-  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
-  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
@@ -260,12 +253,9 @@ export const Rating = (props: RatingProps): ReactElement => {
     theme,
     state.value,
     {
-      focusedIndex: mergedFocus,
-      onFocus: (index) => setFocusedIndex(Option.some(index)),
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
+      focusedIndex: focus.focusedIndex,
+      onFocus: focus.onFocus,
+      onBlur: focus.onBlur,
     },
     {
       preview,
@@ -280,16 +270,13 @@ export const Rating = (props: RatingProps): ReactElement => {
         // Resolve one target for the native call and the paint so the ring
         // and the keyboard can never name different stars (plan 334).
         const target = ratingTabStop(value, ratingMax(props.max));
-        Option.match(Option.fromNullishOr(itemIds.current.get(target)), {
+        Option.match(focus.idOf(target), {
           onNone: () => {},
           onSome: (id) => renderer?.focusElement?.(id),
         });
-        setFocusedIndex(Option.some(target));
+        focus.onFocus(target);
       },
-      registerItem: (index) => (instance) => {
-        if (instance === null) itemIds.current.delete(index);
-        else itemIds.current.set(index, instance.id);
-      },
+      registerItem: focus.registerItem,
     },
   );
 };

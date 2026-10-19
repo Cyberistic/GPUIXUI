@@ -1509,6 +1509,32 @@ retired once both branches are one
       scroller's own report also slides by its scroll offset, so `paintBounds` is
       now its visible box; the last app reachability case passes 7/7). The full
       runtime suite is 52 files / 734 tests green on the release-tag build.
+`[x]` `packages/primitives`: **a multiple `ToggleGroup`'s tab stop ignored a click**
+      — measured (2026-10-19): clicking the third item moved native focus there,
+      but leaving the group and pressing Tab returned to the **first** item,
+      because the pinned release runtime dispatches no `onFocus` (plan `583`) and
+      the group's `multiple` stop is "the item that last held focus". An accepted
+      click now records the item (and a disabled click records nothing), so the
+      documented stop is real; 2 runtime cases, the first failing with `tg-bold`
+      without the fix (plan `600`; runtime 735 → 737).
+
+`[x]` `packages/primitives`: **a roving composite kept painting focus after focus
+      left, and kept an abandoned keyboard cursor** — measured (2026-10-19):
+      after a keyboard move inside `ToggleGroup`, `RadioGroup` or `Rating`, a
+      click on an outside button moved native focus but the last item stayed
+      ringed (the release build dispatches no `onBlur`, so the event state was
+      never cleared), and a deferred `RadioGroup` walk restarted from the
+      abandoned item (`Down` went to Gamma instead of Beta). One
+      `useRovingFocus` hook now clears the event cursor when the tracker's
+      sample names none of the group's items (the rule plan `591` applied to
+      `useFocus`), and it replaces three copies of the same state/id-table code.
+      A `ToggleGroup` click on a disabled item is now the cursor (it does take
+      native focus), so the first arrow lands on the next enabled item — the one
+      existing assertion is updated to that measured sequence. New
+      `runtime/focus-loss.runtime.test.tsx` (5 cases; 4 fail without the clear);
+      scoped focus/disabled/tab-order/roving suites green (plan `601`; runtime
+      737 → 742 in 53 files).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

@@ -19,7 +19,7 @@
  * `group`; there is no single-select semantic in AccessKit for buttons.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -51,9 +51,8 @@ import {
   mergeStyle,
   optionText,
   resolvePartStyle,
-  trackedFocusIndex,
   useControlState,
-  useNativeFocusId,
+  useRovingFocus,
   type FocusState,
   type StateStyle,
 } from "./internal.js";
@@ -230,7 +229,12 @@ export const renderToggleGroup = (
                 : `${props.testId}-${option.value}`
             }
             onClick={() => {
-              if (!disabled) handlers.onPress(option.value);
+              if (disabled) return;
+              // A click moves native focus to the item even where the runtime
+              // dispatches no focus event (the pinned release build, plan 583),
+              // so record the item the keyboard must return to (plan 600).
+              focus.onFocus(index);
+              handlers.onPress(option.value);
             }}
             onKeyDown={onKey("down")}
             onKeyUp={onKey("up")}
@@ -268,10 +272,7 @@ export const renderToggleGroup = (
 export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const itemIds = useRef<Map<number, number>>(new Map());
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
+  const focus = useRovingFocus();
   const [multipleIndex, setMultipleIndex] = useState(() =>
     initialActiveIndex(props.options, undefined),
   );
@@ -317,40 +318,31 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
           ),
         );
   const markFocused = (index: number): void => {
-    setFocusedIndex(Option.some(index));
+    focus.onFocus(index);
     if (props.type === "multiple") setMultipleIndex(index);
   };
   const focusItem = (index: number): void => {
-    Option.match(Option.fromNullishOr(itemIds.current.get(index)), {
+    Option.match(focus.idOf(index), {
       onNone: () => {},
       onSome: (id) => renderer?.focusElement?.(id),
     });
     markFocused(index);
   };
-  const trackedId = useNativeFocusId();
-  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
-  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   return renderToggleGroup(
     props,
     theme,
     state.value,
     activeIndex,
     {
-      focusedIndex: mergedFocus,
+      focusedIndex: focus.focusedIndex,
       onFocus: markFocused,
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
+      onBlur: focus.onBlur,
     },
     {
       onPress: (value) =>
         state.set(nextSelection(props.type, state.value.current, value)),
       onFocusMove: focusItem,
-      registerItem: (index) => (instance) => {
-        if (instance === null) itemIds.current.delete(index);
-        else itemIds.current.set(index, instance.id);
-      },
+      registerItem: focus.registerItem,
     },
   );
 };

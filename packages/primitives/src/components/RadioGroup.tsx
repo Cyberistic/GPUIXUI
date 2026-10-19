@@ -17,7 +17,7 @@
  * `COMPONENTS.md`.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
@@ -45,9 +45,8 @@ import {
   hasText,
   optionText,
   resolvePartStyle,
-  trackedFocusIndex,
   useControlState,
-  useNativeFocusId,
+  useRovingFocus,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -306,10 +305,7 @@ export const renderRadioGroup = (
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
-  const itemIds = useRef<Map<number, number>>(new Map());
+  const focus = useRovingFocus();
   const selected = useControlState<string | undefined>(
     props.value,
     props.defaultValue,
@@ -317,46 +313,31 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
       if (next !== undefined) props.onValueChange?.(next);
     },
   );
-  const trackedId = useNativeFocusId();
-  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
-  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   return renderRadioGroup(
     props,
     theme,
     selected.value,
     initialActiveIndex(props.options, selected.value.current),
     {
-      focusedIndex: mergedFocus,
-      onFocus: (index) => setFocusedIndex(Option.some(index)),
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
+      focusedIndex: focus.focusedIndex,
+      onFocus: focus.onFocus,
+      onBlur: focus.onBlur,
     },
     {
       onSelect: selected.set,
       onFocusMove: (index) =>
-        Option.match(
-          Option.all({
-            id: Option.fromNullishOr(itemIds.current.get(index)),
-            target: Option.fromNullishOr(renderer),
-          }),
-          {
-            onNone: () => {},
-            // Paint where focus is going in the same commit: the focus event
-            // follows the native call, and waiting for it would paint the ring
-            // a frame late. The call keeps its receiver — `focusElement` is a
-            // method on the renderer, not a free function.
-            onSome: ({ id, target }) => {
-              target.focusElement?.(id);
-              setFocusedIndex(Option.some(index));
-            },
+        Option.match(focus.idOf(index), {
+          onNone: () => {},
+          // Paint where focus is going in the same commit: the focus event
+          // follows the native call, and waiting for it would paint the ring
+          // a frame late. The call keeps its receiver — `focusElement` is a
+          // method on the renderer, not a free function.
+          onSome: (id) => {
+            renderer?.focusElement?.(id);
+            focus.onFocus(index);
           },
-        ),
-      registerItem: (index) => (instance) => {
-        if (instance === null) itemIds.current.delete(index);
-        else itemIds.current.set(index, instance.id);
-      },
+        }),
+      registerItem: focus.registerItem,
     },
   );
 };

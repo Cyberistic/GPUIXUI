@@ -104,8 +104,10 @@ declares `cursor: "pointer"` and keeps the press contract.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). Role, name, tab order, keyboard operation and activation
-  are unaffected.
+  late (plan `590`). The same sample clears the rating's event-tracked cursor
+  when it names none of these stars, so the ring and the arrow walk do not
+  outlive focus (plan `601`). Role, name, tab order and activation are
+  unaffected.
 - Roles: `radiogroup` with the group's `label`, and one `radio` per star
   (AccessKit `RadioGroup` / `RadioButton`).
 - Each star's name is `"N of max"` and its state is announced through
