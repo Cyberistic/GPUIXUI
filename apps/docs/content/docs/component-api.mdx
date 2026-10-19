@@ -152,6 +152,29 @@ or `aria-valuetext`) and records the gap in **Accessibility and limitations** on
 its page. The measured support matrix, with the evidence for each row, is on
 [GPUix capabilities](/docs/capabilities).
 
+## Layering
+
+GPUix has no `z-index` and no portal. A floating surface is an `<anchored>`
+layer, and stacking is paint order: the surface mounted last is on top.
+App-level surfaces such as the [Toast](/docs/components/toast) viewport are
+ordinary elements rendered last at the app root. A dialog or drawer veil is
+anchored at window coordinates, so a dialog mounted inside a scroll container
+still paints at the window origin — a runtime limitation, not a positioning
+choice.
+
+Open overlays push one dismiss stack. Escape or an outside press reaches only
+the topmost layer, so a popover inside a dialog closes first; a modal adds the
+Tab trap and focus return described under [Keyboard](#keyboard). The stack is
+the shared mechanism, included from its real source:
+
+<include lang="ts" meta='title="packages/components/src/internal/dismiss-layer.ts"'>
+  ../../../../packages/components/src/internal/dismiss-layer.ts
+</include>
+
+`@gpuix/native` 0.10.0 carries no `preventDefault`, so the stack cannot cancel
+the event. It consumes the event's identity instead: the same Escape or press
+cannot close two layers.
+
 ## State ownership
 
 A stateful component is three modules: a pure runtime (`state.ts`) that turns

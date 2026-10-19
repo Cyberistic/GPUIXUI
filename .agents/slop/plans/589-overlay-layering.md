@@ -123,9 +123,32 @@ nub run --filter docs smoke:build
 | integration | `z-index`/`zindex`/`layering`/`stacking` reach the section | drop the entry → `z-index` returns Values API |
 | production | the built index answers, not only the fixture | remove the entry → `smoke:build` fails by query |
 
-## 6. Measured runs
+## 6. Measured runs (2026-10-19)
 
-(Filled by the executor.)
+Production index (`/api/search?query=…`, first result), before → after:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `layering` | nothing | `/docs/component-api#layering` |
+| `z-index` | Values API heading | `/docs/component-api#layering` |
+| `zindex` | Toast limitations | `/docs/component-api#layering` |
+| `stacking` | Stack component | `/docs/component-api#layering` |
+| `overlay` | Tooltip theming prose | Tooltip theming prose (not promoted) |
+| `portal` | Drawer/Toast limitations | Drawer limitations (not promoted) |
+
+Forced defects, each applied alone, run, and reverted:
+
+1. Removed `layeringSearchEntry` from `generatedEntries` → **1 test failed**
+   (`z-index`, `zindex`, `layering`, `stacking`).
+2. Deleted `## Layering` from the page → **3 tests failed** (the section order,
+   the real-source include and the claim/block assertions).
+3. Added `overlay` to the promoted names → **1 test failed**
+   (`leaves overlay to the pages that use it`).
+
+Final: `nub run --filter docs test` — **105 files / 754 tests**; `check-types`
+green; `smoke:build` **98 pages / 1 282 anchors**, exit `0`, `z-index` green;
+`smoke:a11y --only /docs/component-api` **0 violations in both schemes**;
+`nub run check`, `nub run lint` and `nub run test` green at the repo root.
 
 ## 7. STOP conditions
 

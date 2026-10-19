@@ -760,6 +760,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the Introduction's one-word negative",
     },
     {
+      query: "z-index",
+      expected: "/docs/component-api",
+      first: true,
+      what: "the layering convention's DOM word",
+    },
+    {
       query: "textbox",
       expected: "/docs/components/text-input",
       first: true,

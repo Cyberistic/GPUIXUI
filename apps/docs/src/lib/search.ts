@@ -18,6 +18,7 @@ import {
 } from "./generated-search";
 import { iconSearchEntry } from "./icon-search";
 import { hostPropsSearchEntry } from "./host-props-search";
+import { layeringSearchEntry } from "./layering-search";
 import { platformSearchEntry } from "./platform-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import {
@@ -122,6 +123,7 @@ export const valueSearchIndex: Index = {
 const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   accessibilitySearchEntry,
   hostPropsSearchEntry,
+  layeringSearchEntry,
   ...tokenSearchEntries,
   tokensApiSearchEntry,
   capabilitySearchEntry,

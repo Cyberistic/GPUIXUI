@@ -29,6 +29,7 @@ const sections = [
   "Shared host props",
   "Keyboard",
   "Accessibility",
+  "Layering",
   "State ownership",
   "Where the rules live",
 ] as const;
@@ -51,6 +52,7 @@ const sources = [
   "packages/components/src/internal/parts.ts",
   "packages/components/src/internal/controllable.ts",
   "packages/primitives/src/core/keyboard.ts",
+  "packages/components/src/internal/dismiss-layer.ts",
 ] as const;
 
 describe("component API page", () => {
@@ -75,6 +77,13 @@ describe("component API page", () => {
     expect(page).toContain(
       "(/docs/accessibility#what-assistive-technology-sees)",
     );
+  });
+
+  it("states the layering limits and includes the real dismiss stack", () => {
+    expect(page).toContain("no `z-index` and no portal");
+    expect(page).toContain("stacking is paint order");
+    expect(page).toContain("the topmost layer");
+    expect(page).toContain("dismiss-layer.ts");
   });
 
   it("names the controlled props, the state type and the children type", () => {

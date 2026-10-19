@@ -471,14 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–587)
 
-`[~]` `[██████████]` 154/157
+`[~]` `[██████████]` 155/158
 
-`[ ]` **Overlay layering is a documented convention (plan 589)** — the component
-      API page has no layering story, so `z-index` returns the Values API,
-      `zindex` a Toast limitation and `layering` nothing. Add a `Layering`
-      section with the paint-order rule, the no-portal veil limitation, the
-      topmost-dismiss rule and the real dismiss stack, plus a generated search
-      entry for the four words a reader types.
+`[x]` **Overlay layering is a documented convention (plan 589)** — the component
+      API page had no layering story, so `z-index` returned the Values API,
+      `zindex` a Toast limitation and `layering` nothing. `## Layering` now
+      states the paint-order rule, the no-portal veil limitation, the
+      topmost-dismiss rule and the 0.10.0 event-identity note, and includes the
+      real `dismiss-layer.ts`; a generated entry makes `z-index`, `zindex`,
+      `layering` and `stacking` reach it first while `overlay` stays prose.
+      105 files / 754 docs tests, 98-page `smoke:build`, results in plan 589 §6.
 
 `[x]` **Reader vocabulary, fourth pass (plan 588)** — seven measured queries
       missed their page: `alertdialog` returned nothing, `alert dialog`
