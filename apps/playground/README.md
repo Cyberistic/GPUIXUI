@@ -1330,7 +1330,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 67 scenarios. `smoke:live` opens
+live registry lists 68 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1364,6 +1364,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-preview` | the **first live hover** scenario: a real mouse move over the trigger opens the card (`open=true`), the pointer reaches the card body and the fire-time presence check keeps it open past the 200 ms grace close (`closes=0`), a control inside the hover-opened card clicks, leaving closes through the last hovered child (`reason=action`), a re-enter inside the delay cancels, and a final leave closes from the trigger (`closes=2`). The card enter and trigger leave arrive in **one batch** live, so the `prev`/`last` readout collapses them — the append-only log keeps both |
 | `live-highlights` | the mounted find probe paints its four document washes with window-space rects (each inside its line), clearing removes them and restoring repaints, `search-next` moves the active match to index 1, and a jump to row 90 shows exactly one active row wash — document-wide `matchIndexOffset` numbering in a real window |
 | `live-scroller` | the message scroller opens at the latest message, a pinned append follows to the new max scroll, a real `400` wheel unpins it and paints the affordance, an append while unpinned leaves the anchor and counts unread, jump-to-latest re-pins, two streamed rows keep the tail on the viewport bottom, and the 3-row history has nowhere to scroll — 45 checks. An element that is **retained but unpainted** has no bounds: the protocol answers `NotFound` and the host maps exactly that to `null` |
+| `live-log` | the log viewer opens at the tail (`[30,0]`), a real click and append follow to `[50,0]`, a real wheel over the wrapper moves the reader to `[31,0]` and leaves the tail unpainted, an append while scrolled up keeps `[31,0]` and does not yank, the at-end sentinel returns to `[70,0]`, and the next append follows to `[90,0]` — 26 checks (plan `571`). Measured: a **bottom-aligned** list reports the anchor as `[count, 0]` at the tail, not the max-scroll row/offset a plain list reports |
 | `live-restore` | the shipped `workspace-restore` probe in a window: a paced divider drag paints 320 → 400, a tab activation makes `active=two`, `scrollToItem(120, 16)` anchors the list, and save → reset → restore re-applies the split, the tab and the anchor exactly (`[120,16]`, row 120 painted, row 0 absent). Native focus is **not** restored, and a click on row 121 focuses the restored list |
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
 | `live-grid` | the pinned, windowed grid in a window: a real wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan reaches `-360` and the last viewport at `-1700` with header/body alignment, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal — 53 checks (plan `556`). Every child of a live scroller reports a moved box whatever its `position`, so `sticky` stays a headless claim; a scroller's own box moves with its scroll and must be cached first |
@@ -1793,7 +1794,7 @@ src/scenarios/theme.tsx  also the platform type-style cycle (`theme-platform`)
 src/scenarios/shell.tsx  mounts the real App: sidebar scroll, selection, keys, palette
 src/scenarios/virtual-table.tsx a 500-row table inside <virtual-list>
 src/scenarios/tree.tsx      indentation, expand/collapse, arrow keys
-src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends)
+src/scenarios/log-viewer.tsx bottom-anchored virtual list (tail, appends, wheel, no snap-back)
 src/scenarios/modal.tsx     focus entry, Tab trap, focus return, nested Escape
 src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime

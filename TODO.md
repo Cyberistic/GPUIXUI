@@ -58,7 +58,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 99/99 plans-and-harness
+`[x]` `[██████████]` 100/100 plans-and-harness
+
+`[x]` Prove the **log viewer in a real window** per plan `571`: the Tier 4
+      log-viewer follow contract was headless-only and its no-snap-back claim
+      was untested. `live-log` (26 checks) reuses the `log-viewer` view behind
+      a real `log-viewport` wheel: opening `[30,0]`, a pinned append `[50,0]`,
+      a real wheel to `[31,0]` with the tail unpainted, an append while
+      scrolled up still `[31,0]` (no yank), the at-end sentinel `[70,0]`, and
+      a following append `[90,0]`. The headless scenario gained the same
+      wheel/no-snap-back/return checks (7 → 22 checks). **Measured:** a
+      bottom-aligned list reports `[count, 0]` at the tail, not the plain
+      list's max-scroll pair, so a pin test compares the index to the count;
+      `alignment="bottom"` alone passes everything (`followTail` is redundant
+      here — a recorded null result, not a failure). **1/1** live, exit `0`;
+      live registry `67 → 68`, headless stays `101/101`; five mutation proofs
+      (M1 no alignment → `expected "30,0", got "0,0"`; M2 no live wheel →
+      `expected "31,0", got "50,0"`; M3 no headless wheel → `expected "51,0",
+      got "70,0"`; M4 wrong sentinel → `expected "90,0", got "70,0"`; M5
+      `followTail` removed → still green, recorded). Focused ids run:
+      `log-viewer`, `live-log`; `check`/`lint`/`test` green (playground 417,
+      testing 61).
 
 `[x]` Prove the **shipped Tier 1 controls in a real window** per plan `570`:
       the foundation every other component composes was headless-only. Four

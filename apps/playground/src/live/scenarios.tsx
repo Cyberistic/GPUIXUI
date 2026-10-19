@@ -53,6 +53,7 @@ import { variableRowsScenario } from "../scenarios/variable-rows.js";
 import { pointerEntryScenario } from "../scenarios/pointer-entry.js";
 import { tableSelectSortScenario } from "../scenarios/table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
+import { logViewerScenario } from "../scenarios/log-viewer.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
 import { replaceScenario } from "../scenarios/replace.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
@@ -2826,6 +2827,153 @@ const scroller: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${scroller.id}.png`);
+    }),
+};
+
+const log: LiveScenario = {
+  id: "live-log",
+  title: "Live log viewer: tail, wheel and no snap-back",
+  capability: "log",
+  view: logViewerScenario.view,
+  ready: "log-count",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const anchor = (label: string) =>
+        Effect.gen(function* () {
+          const value = yield* ctx.expectSome(
+            label,
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("log-list")),
+          );
+          return `${value[0]},${value[1]}`;
+        });
+      const painted = (line: number) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.contains(lines, `line ${line}`),
+        );
+
+      // 1. A real window opens the log at its tail.
+      yield* waitForAnchor(ctx, "log-list", "30,0");
+      yield* ctx.expectEqual(
+        "the live log opens at the tail anchor",
+        yield* anchor("the live log reports an anchor"),
+        "30,0",
+      );
+      yield* ctx.expectEqual(
+        "the live tail is painted",
+        yield* painted(29),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live head is outside the window",
+        yield* painted(0),
+        false,
+      );
+
+      // 2. A pinned append follows through the real click path.
+      yield* ctx.host.click("log-append");
+      yield* settle;
+      yield* waitForText(ctx, "log-count", "50");
+      yield* waitForAnchor(ctx, "log-list", "50,0");
+      yield* ctx.expectEqual(
+        "the live append reached React",
+        yield* textOf(ctx, "log-count"),
+        "50",
+      );
+      yield* ctx.expectEqual(
+        "the live pinned append follows to the tail",
+        yield* anchor("the appended live log reports an anchor"),
+        "50,0",
+      );
+      yield* ctx.expectEqual(
+        "the appended live tail is painted",
+        yield* painted(49),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the old live tail left the window",
+        yield* painted(29),
+        false,
+      );
+
+      // 3. A real wheel over the wrapper moves the reader off the tail.
+      yield* ctx.host.wheel("log-viewport", 0, 100);
+      yield* settle;
+      yield* waitForAnchor(ctx, "log-list", "31,0");
+      const scrolled = yield* anchor("the scrolled live log reports an anchor");
+      yield* ctx.expectEqual(
+        "the live wheel leaves the tail",
+        scrolled,
+        "31,0",
+      );
+      yield* ctx.expectEqual(
+        "the live tail leaves the window",
+        yield* painted(49),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "an earlier live line is inside the window",
+        yield* painted(40),
+        true,
+      );
+
+      // 4. An append while scrolled up must not yank the reader.
+      yield* ctx.host.click("log-append");
+      yield* settle;
+      yield* waitForText(ctx, "log-count", "70");
+      yield* waitForAnchor(ctx, "log-list", "31,0");
+      yield* ctx.expectEqual(
+        "the live append while scrolled up reached React",
+        yield* textOf(ctx, "log-count"),
+        "70",
+      );
+      yield* ctx.expectEqual(
+        "the live append while scrolled up does not snap back",
+        yield* anchor("the unpinned live log reports an anchor"),
+        scrolled,
+      );
+      yield* ctx.expectEqual(
+        "the live appended tail stays out of the reader's window",
+        yield* painted(69),
+        false,
+      );
+
+      // 5. The at-end sentinel returns to the tail.
+      yield* ctx.host.scrollToItem("log-list", 70);
+      yield* settle;
+      yield* waitForAnchor(ctx, "log-list", "70,0");
+      yield* ctx.expectEqual(
+        "the live sentinel returns to the tail",
+        yield* anchor("the returned live log reports an anchor"),
+        "70,0",
+      );
+      yield* ctx.expectEqual(
+        "the returned live tail is painted",
+        yield* painted(69),
+        true,
+      );
+
+      // 6. An append at the tail follows again.
+      yield* ctx.host.click("log-append");
+      yield* settle;
+      yield* waitForText(ctx, "log-count", "90");
+      yield* waitForAnchor(ctx, "log-list", "90,0");
+      yield* ctx.expectEqual(
+        "the live append at the tail follows again",
+        yield* anchor("the following live log reports an anchor"),
+        "90,0",
+      );
+      yield* ctx.expectEqual(
+        "the following live tail is painted",
+        yield* painted(89),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the previous live tail leaves the window",
+        yield* painted(69),
+        false,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${log.id}.png`);
     }),
 };
 
@@ -8538,6 +8686,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   highlights,
   preview,
   scroller,
+  log,
   restore,
   tier2Dialog,
   tier2Menu,
