@@ -7,9 +7,10 @@
  * a controlled edit state the component overrides; Space starting the edit
  * on key down instead of on release; an edit that stays open when the user
  * leaves the field, because a live window does not deliver React's `onBlur` for
- * a native focus change (plan 379); a disabled display that painted a ring
- * from `autoFocus` and a hover fill (plan 394); and an Escape that cancelled
- * the edit and closed the dialog around it (plan 514).
+ * a native focus change (plans 379/605, guarded by the focused-host sample in
+ * plan 613); a disabled display that painted a ring from `autoFocus` and a hover
+ * fill (plan 394); and an Escape that cancelled the edit and closed the dialog
+ * around it (plan 514).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -194,6 +195,44 @@ describe("InlineEdit", () => {
     );
 
     expect(onCommit).toHaveBeenCalledWith("blurred");
+
+    edit.unmount();
+  });
+
+  // Plan 605's live gate: a real window moved native focus away without running
+  // React's `onBlur`, so the editor stayed open. `focusNext` reproduces that
+  // state headlessly (measured: focus moves, no focus/blur event). Without the
+  // focused-host sample the input is still mounted and `onCommit` is uncalled.
+  it("commits when native focus leaves without a blur event", async () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(<Harness onCommit={onCommit} />);
+
+    startEditing(edit);
+    type(edit, "silent");
+    edit.renderer.focusNext();
+
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(onCommit).toHaveBeenCalledWith("silent");
+    expect(edit.renderer.findByType("input")).toHaveLength(0);
+    expect(focusedTestId(edit)).toEqual(Option.some("elsewhere"));
+
+    edit.unmount();
+  });
+
+  // The sampler runs while the input keeps focus: it must not close an edit
+  // that never moved away, and the draft is untouched.
+  it("does not commit an edit that keeps focus", async () => {
+    const onCommit = vi.fn();
+    const edit = renderComponent(
+      <Harness onCommit={onCommit} host={{ defaultEditing: true }} />,
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(edit.renderer.findByType("input")).toHaveLength(1);
 
     edit.unmount();
   });

@@ -2,12 +2,14 @@
  * InlineEdit: rename a value where it is displayed.
  *
  * GPUix has no contenteditable, so the honest implementation swaps a `<text>`
- * display for a real `<input>`. The commit contract is one rule: Enter, `Tab` or
- * a press outside the field commits, Escape cancels, and an unchanged draft
- * calls nothing. Escape claims the key, so an enclosing dialog stays open
- * (plan 514). Blur still commits where the host delivers it, but a live
- * window does not run React's `onBlur` for a native focus change (plan 379), so
- * the outside press and `Tab` are the paths a real user takes.
+ * display for a real `<input>`. The commit contract is one rule: Enter, `Tab`, a
+ * press outside the field, blur or a native focus move commits, Escape cancels,
+ * and an unchanged draft calls nothing. Escape claims the key, so an enclosing
+ * dialog stays open (plan 514). A live window does not run React's `onBlur` for
+ * every native focus change (plans 347 §8.2, 605), so while an edit is open the
+ * component also samples the renderer's focused host — the same measured signal
+ * the primitives package uses — and commits when focus has left the input
+ * (plan 613).
  *
  * The component owns the draft, never the committed value — like `FieldInput`,
  * the caller owns the data. Focus is moved with the renderer's `focusElement`
@@ -21,7 +23,13 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
@@ -62,6 +70,9 @@ export interface InlineEditState {
 
 /** What focus does when an edit finishes. */
 type Refocus = "keep" | "display" | "displayIfUnfocused";
+
+/** How often an open edit asks the renderer which host holds focus, ms. */
+const FOCUS_SAMPLE_MS = 50;
 
 /** A value that swaps to an input in place. */
 export const InlineEdit = ({
@@ -148,6 +159,35 @@ export const InlineEdit = ({
     setEditing(false);
     if (commit && draft !== value) onCommit(draft);
   };
+
+  // The sampler runs outside React's events, so it reads the latest finish.
+  const finishRef = useRef(finish);
+  useLayoutEffect(() => {
+    finishRef.current = finish;
+  });
+
+  // Only a focus move after the input was seen focused can end the edit, so a
+  // controlled `editing` that never took focus does not commit on mount.
+  const heldFocus = useRef(false);
+
+  useEffect(() => {
+    if (!editing || disabled || inputId === undefined || renderer == null) {
+      heldFocus.current = false;
+      return;
+    }
+    heldFocus.current = false;
+    const read = (): void => {
+      const focused = renderer.getFocusedElementId?.() ?? null;
+      if (focused === inputId) {
+        heldFocus.current = true;
+        return;
+      }
+      if (heldFocus.current) finishRef.current(true, "keep");
+    };
+    read();
+    const timer = setInterval(read, FOCUS_SAMPLE_MS);
+    return () => clearInterval(timer);
+  }, [disabled, editing, inputId, renderer]);
 
   const cancel = (): void => finish(false, "display");
 
@@ -293,7 +333,7 @@ export const inlineEditMeta = {
   focusable: true,
   limitations: [
     "no contenteditable in 0.10.0: display and input are swapped explicitly",
-    "Enter, Tab or a press outside commits; Escape cancels; a native blur that React does not deliver is covered by the outside-press path (measured live, plan 347 §8.2)",
+    "Enter, Tab, a press outside or a native focus move commits; Escape cancels; while an edit is open the renderer's focused host is sampled every 50 ms because React blur is not delivered for every native focus change (plans 347 §8.2, 605, 613)",
     "no aria-invalid or aria-describedby, so a rejected commit is the consumer's feedback",
   ],
   docs: "docs/inline-edit.mdx",

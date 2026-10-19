@@ -2,6 +2,8 @@
  * Inline edit example: rename a workspace where its name is shown.
  *
  * The caller owns the committed value; the component only owns the draft.
+ * Pressing the other field while one is open is a real outside press, and moving
+ * native focus away commits the draft even when the host sends no blur event.
  */
 
 import { useState } from "react";

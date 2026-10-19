@@ -31,7 +31,7 @@ The runnable build is `examples/inline-edit.example.tsx`, registered in
 | `Enter` in the input | commit the draft, return to display, focus the display |
 | `Tab` in the input | commit the draft; focus moves on |
 | A press outside the field | commit the draft; the display takes focus back when the press did not land on another control |
-| Blur | commit the draft, leave focus where the user put it |
+| Blur, or native focus moving to another host | commit the draft, leave focus where the user put it |
 | `Escape` | discard the draft, return to display, focus the display; the key is claimed, so an enclosing dialog stays open |
 | Commit with an unchanged draft | nothing is called |
 | Empty text | a valid value; it clears the field (it is not "cancel") |
@@ -40,10 +40,14 @@ Commit is **one rule**, and `Enter` can arrive twice in 0.10.0 (`keyDown` and
 `submit`), so the component finishes an edit once per entry. The same guard makes
 the runtime's repeated outside-press dispatch harmless.
 
-A live window does **not** deliver React's `onBlur` for a native focus change
-(measured by the playground, plan `347` §8.2), so the outside press and `Tab` are
-the paths a real user takes. Blur still commits where the host delivers it; it is
-not the only way out.
+A live window does **not** deliver React's `onBlur` for every native focus
+change (measured by the playground, plans `347` §8.2 and `605`), so an edit must
+not depend on that event alone. While the input is open the component samples
+`renderer.getFocusedElementId()` every 50 ms and commits on the first sample
+that names another host, leaving focus where the runtime put it. The event paths
+stay primary where the host delivers them; the sample is the fallback that keeps
+a click away from leaving the editor stuck. A press on a non-focusable area does
+not move focus (plan `379`), so that path remains the outside press.
 
 `autoFocus` sets the initial `focused` state, so the display's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
@@ -94,8 +98,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - No rich text; the editor is a single-line `<input>`.
 - Commit and cancel cover Enter, Escape, `Tab` and a press outside the field. A
-  native focus change does not run React's `onBlur` in a live window, so blur is
-  a headless-only extra path — it is not how a live user leaves the editor.
+  native focus move that runs no React `onBlur` is caught by the focused-host
+  sample within 50 ms; a host that delivers blur commits immediately. The sample
+  is the only timer in the component and runs only while an edit is open.
 - No validation state of its own; `onCommit` is where a caller rejects a value,
   and the component will still have closed the edit.
 - No multi-line editor in v1; `Textarea`-based inline editing is a future variant.
@@ -106,7 +111,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/inline-edit.test.tsx` runs in the real GPUix renderer (19 tests):
 display mode, click-to-edit with focus, keyboard entry with Space starting on
 release, Enter commit with focus return, Escape discard, blur commit, an outside
 press that commits and restores the display, a press on another control that
@@ -114,8 +119,10 @@ keeps its focus, a `Tab` commit, an inside press that must not commit, the
 unchanged/disabled guards, a controlled edit state, the caller's display
 (`onClick`/`onKeyDown`) and field (`onChange`/`onSubmit`/`onFocus`/`onBlur`/
 `onMouseDownOutside`) handlers composing with the swap and the commit contract,
-a disabled display that paints neither a hover fill nor a ring, and an Escape
-that cancels the edit without closing the dialog around it.
+a disabled display that paints neither a hover fill nor a ring, an Escape
+that cancels the edit without closing the dialog around it, a native focus move
+that dispatches no blur (the plan-605 live state) committing the draft without
+stealing focus, and an open edit that keeps focus never committing by itself.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

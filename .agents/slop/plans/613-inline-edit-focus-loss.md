@@ -5,7 +5,7 @@
 | Phase | F (integration and polish) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `313` (inline edit), `326`/`327` (behaviour harness), `347` §8.2, `379` (outside press/Tab), `514`, `554`, playground `605` |
-| Status | planned |
+| Status | done — measured `focusNext()` moves focus with no React event; the open edit samples the focused host and commits, keeping the new focus. InlineEdit 17 → 19 native tests; the focus case fails on the pre-613 source. |
 
 ## 1. The problem
 
@@ -151,13 +151,13 @@ Add two cases to the existing `describe`:
    Header comment: names the live finding (plans `605`/`347`) and states that
    without the sampler the editor is still mounted and `onCommit` is uncalled.
 
-2. **The pin — an open edit that never held focus does not commit.**
+2. **The pin — the sampler does not close an edit that keeps focus.**
 
    ```tsx
-   it("does not commit an edit that never took focus", async () => {
+   it("does not commit an edit that keeps focus", async () => {
      const onCommit = vi.fn();
      const edit = renderComponent(
-       <Harness onCommit={onCommit} host={{ editing: true }} />,
+       <Harness onCommit={onCommit} host={{ defaultEditing: true }} />,
      );
 
      await new Promise((resolve) => setTimeout(resolve, 120));
@@ -168,13 +168,12 @@ Add two cases to the existing `describe`:
      edit.unmount();
    });
    ```
-   (Controlled `editing` with no `autoFocus`; the input is mounted, focus is
-   elsewhere/none, and the unchanged draft must not be reported.)
 
-   If this second case cannot be made to fail by removing the `heldFocus` gate
-   (because an unchanged draft never reports), keep it as the pin but record that
-   fact in the plan's evidence; the first case remains the required
-   two-direction proof.
+   The component focuses a newly mounted input itself, so this pins that the
+   sampler never treats a still-focused edit as a departure. Removing the
+   `heldFocus` gate does **not** fail this case (the input is focused, so the
+   gate is not consulted); the gate remains defensive for a host whose focus
+   call fails, and is recorded as such rather than claimed as test-proven.
 
 ### 3.3 `packages/components/docs/inline-edit.mdx`
 
@@ -255,7 +254,24 @@ suite, while iterating.
   state and the exact command.
 - **STOP** if any existing InlineEdit case changes outcome; report which one.
 
-## 6. Acceptance
+## 6. Evidence (2026-10-19)
+
+- Headless measurement: `<input>` id 1 focused, `renderer.focusNext()` →
+  focused id 2, zero `onFocus` and zero `onBlur` calls. The live state plan 605
+  recorded is reproducible without a window.
+- With the sampler: the focus case passes (1 commit, "silent", input unmounted,
+  focus still `elsewhere`).
+- Without it (source restored from `HEAD`): the same case fails with
+  `expected "vi.fn()" to be called 1 times, but got 0 times`.
+- The pin passes with and without the `heldFocus` gate because the component
+  focuses a mounted input itself; the gate is defensive for a failed focus call.
+- The InlineEdit file is 17 passed / 2 failed of 19 on this binding; both
+  failures (`onBlur` delivery, caller `onFocus` composition) are pre-existing
+  plan-540 event-delivery defects and reproduce identically with the pre-613
+  source.
+- Unit suite 449/449; type-check clean.
+
+## 7. Acceptance
 
 - Focus moving away without a React blur commits the draft once and leaves focus
   on the host the runtime chose.

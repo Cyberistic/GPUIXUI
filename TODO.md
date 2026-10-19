@@ -358,6 +358,14 @@ retired once both branches are one
       root's `choose`/`clear` refuse. 3 native cases (DatePicker 37,
       behaviour 811), both-direction proof; docs, `COMPONENTS.md` and the
       inventory synced (owner: components)
+    - [x] InlineEdit commits when native focus leaves without a blur event —
+      plan 613; measured `renderer.focusNext()` moves native focus while
+      dispatching no React focus/blur (the state the plan-605 live gate hit), so
+      the open edit samples `getFocusedElementId()` every 50 ms and commits once
+      the input has held focus and another host takes it, keeping the user's
+      focus. 2 native cases (InlineEdit 19), both-direction proof (the focus
+      case fails with the sampler removed); docs, `COMPONENTS.md`, `TODO.md`
+      and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -802,7 +810,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `packages/testing/src/state.ts` + test: `runCommands(runtime, commands)` for suites outside this package (plan 201) | playground | pending — `runtime.run` in `packages/components` is the same fold meanwhile |
 | Plan 347's Carousel scenario expected an inactive slide to stay hit-testable; plan 365 fixes the component, so that step should assert the fixed behaviour | playground | resolved in `packages/components`; the playground assertion needs updating |
 | `live-tier2-toast` checks `bounds("toast-5") === null` immediately after the queue count drops; the 500 ms toast exit (plan 525) keeps the card painted, so the check needs a ~650 ms wait | playground | pending — measured on 2026-10-18; the component side is correct and the scratch run passes with the wait |
-| Plan 347 §8.2 found InlineEdit's blur commit is headless-only (live `onBlur` is never delivered for a native focus change) | playground → components | **resolved** in `packages/components` — `Tab` and an outside press finish the edit, and the press restores the display only when it focused nothing (plan 379); the playground live scenario can now assert click-away |
+| Plan 347 §8.2 found InlineEdit's blur commit is headless-only (live `onBlur` is never delivered for a native focus change) | playground → components | **resolved** in `packages/components` — `Tab` and an outside press finish the edit, the press restores the display only when it focused nothing (plan 379), and plan 613 adds a focused-host sample while an edit is open: `renderer.focusNext()` moves native focus with no React event, and the draft now commits instead of leaving the editor stuck. 2 new native cases (InlineEdit 19); the live scenario's missed-blur branch stays as a harness safety net |
 | Plan 347 §8.2 found TagInput's chip removal control has no `testId`, so the live harness could only assert the chip's presence | playground → components | **resolved** — the control is named `<chip testId>-remove` (plan 381) |
 | Plan 302 §2 measured that `<virtual-list>` retains 3 host nodes per row and `<code>` reparses only when its document key changes | playground → components (COMPONENTS.md) | **resolved** — folded into the Tier 3 rows |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
