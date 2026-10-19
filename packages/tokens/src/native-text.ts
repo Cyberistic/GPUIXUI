@@ -60,10 +60,11 @@ export interface NativeSyntaxTheme {
 
 /**
  * The native text layout metrics this package derives from the theme's type,
- * spacing and radius scales. The runtime's remaining fields — the code gutter's
- * floor, the diff accent bar and its hardcoded per-digit estimate, and the
- * table's max-content share — have no token source and keep the runtime's
- * defaults; see `docs/tokens.md`.
+ * spacing and radius scales. The runtime has two chrome metrics with no token
+ * source — the code gutter's floor and the diff accent bar — so they are
+ * optional members here: the bridge leaves both unset, the runtime's own 28px
+ * and 3px values apply, and a brand that wants a different floor or bar sets it
+ * on the returned object.
  */
 export interface NativeTextMetrics {
   /** Code block text size; the `codeBlock` role. */
@@ -78,6 +79,12 @@ export interface NativeTextMetrics {
   readonly codeGutterDigitWidth: number;
   /** Right padding of the code gutter; `spacing.lg`. */
   readonly codeGutterPaddingRight: number;
+  /**
+   * Floor under the computed code-gutter width. GPUix 0.10.0 defaults to 28px
+   * and takes the larger of the computed width and this floor. The bridge leaves
+   * it unset; a brand with a wider gutter sets it on the returned metrics.
+   */
+  readonly codeGutterMinWidth?: number;
   /** Diff text size; the `codeBlock` role. */
   readonly diffTextSize: number;
   /** Diff line height; the `codeBlock` role. */
@@ -98,6 +105,12 @@ export interface NativeTextMetrics {
   readonly diffGutterWidth: number;
   /** Width of the `+`/`−` column; `spacing["2xl"]`. */
   readonly diffMarkerWidth: number;
+  /**
+   * Width of the diff's add/delete accent bar. GPUix 0.10.0 defaults to 3px. The
+   * bridge leaves it unset; a brand that wants a thicker or thinner bar sets it
+   * on the returned metrics.
+   */
+  readonly diffAccentBarWidth?: number;
   /** Horizontal padding of a diff row; `spacing.xl`. */
   readonly diffRowPaddingX: number;
   /** Markdown body size; the `body` role. */

@@ -1,4 +1,9 @@
-import { extendTheme, getTheme, nativeTextTheme } from "./index.js";
+import {
+  extendTheme,
+  getTheme,
+  nativeTextTheme,
+  type NativeTextTheme,
+} from "./index.js";
 
 const theme = getTheme("dark");
 
@@ -27,4 +32,23 @@ export const largeCodeTheme = {
       },
     }),
   ),
+};
+
+const shippedDocument = nativeTextTheme(theme);
+
+/**
+ * A brand that owns the runtime's two token-less chrome metrics. Both are
+ * optional members of `NativeTextMetrics`; the bridge leaves them unset so the
+ * runtime's 28px gutter floor and 3px diff bar apply, and a brand sets either on
+ * the returned object without a cast.
+ */
+export const customChromeTheme: { readonly theme: NativeTextTheme } = {
+  theme: {
+    ...shippedDocument,
+    metrics: {
+      ...shippedDocument.metrics,
+      codeGutterMinWidth: 36,
+      diffAccentBarWidth: 2,
+    },
+  },
 };

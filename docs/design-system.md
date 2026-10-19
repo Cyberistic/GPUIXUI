@@ -834,9 +834,11 @@ code to `primaryText` on the `accent` wash; diff add/delete to the status **text
 roles; and every syntax capture to a text role, never a solid fill. The layout
 comes from `codeBlock`, `body`, `h1`–`h3`, spacing and the small/large radii,
 and the code/diff gutters and table floors are the runtime's shipped proportions
-resolved against those roles. The runtime's chrome metrics without a token — the
-code gutter's floor, the diff accent bar and the runtime's own per-digit and
-max-content estimates — remain at its defaults. The runtime fades
+resolved against those roles. The runtime's two chrome metrics without a token —
+the code gutter's 28px floor (`codeGutterMinWidth`) and the 3px diff accent bar
+(`diffAccentBarWidth`) — stay at their defaults and are optional members of
+`NativeTextMetrics`, so a brand can set either on the returned object. The
+runtime fades
 some values at fixed fractions a theme cannot change, so
 `themeNativeTextFailures` holds the chosen roles through every composite on all
 four `Surface` tones a document may paint on; the syntax palette is held to the

@@ -114,7 +114,7 @@ missing here is not public.
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
 | `NativeTextFailure` | One native document fade, two-fade composition or ink wash a theme misses, with its field, role, surface and ratios. |
-| `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales. |
+| `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales, plus the two runtime-only members a brand may set: the gutter floor and the diff accent bar. |
 | `NativeTextOverFade` | Text painted over a second faded role, with both fractions. |
 | `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
 | `OpacityFailure` | A colour role whose alpha channel is not the form it is painted in, with the form it needed. |
@@ -1651,11 +1651,15 @@ shipped sizes those resolve to the runtime's own 7px, 36px, 96px and 48px, so no
 pixel moves; a copied theme that enlarges code or body text widens them instead
 of overlapping line numbers or squeezing a table's columns.
 
-The runtime's remaining fields have no token source and stay at its defaults: the
-code gutter's 28px floor (the computed width already exceeds it as the type
-grows), the 3px diff accent bar, and the diff's hardcoded per-digit advance and
-the table's max-content share, which only raise or lower a column around the
-floors above. A brand that needs them sets them on the returned object.
+The two runtime metrics with no token source are optional members of
+`NativeTextMetrics`: `codeGutterMinWidth` (the 28px floor under the computed
+code gutter, which already exceeds it as the type grows) and
+`diffAccentBarWidth` (the 3px diff bar). `nativeTextTheme` leaves both unset, so
+the runtime's own value applies; a brand that wants a different floor or bar
+sets it on the returned object, and the type accepts it without a cast. The
+per-digit width and the table's max-content floor are supplied, not left to the
+runtime: `codeGutterDigitWidth`, `diffGutterWidth`, `mdTableMinColumnWidth` and
+`mdTableMinColumnContent` are the floors above, resolved from the roles.
 
 `bg` is the raised `card` plane a code block, diff or document is painted on. A
 document painted directly on the canvas overrides only that field; the opaque

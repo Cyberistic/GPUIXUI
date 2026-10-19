@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 238/315
+`[x]` `[████████░░]` 239/316
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1967,6 +1967,13 @@ twelve resting content fills, the `md` walk measures the page surfaces and those
 fills (`sm` cards and `lg` dialogs stay on the page), every shipped set passes
 (1.058:1 at the tightest, AAA dark `md` on `info`) and no colour or
 `contrastPairs` count moves (plan 584)
+`[x]` Let a brand own the runtime's two token-less native-text metrics — the
+docs said to "set them on the returned object", but `NativeTextMetrics` declared
+neither `codeGutterMinWidth` nor `diffAccentBarWidth`, so the documented override
+failed `check-types` with TS2561; both are optional members now, the bridge
+leaves them unset so the runtime's 28px/3px defaults apply, and the same
+paragraphs no longer call the derived per-digit width and table floors runtime
+defaults (plan 585)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

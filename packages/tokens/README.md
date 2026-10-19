@@ -795,7 +795,9 @@ is faded (6.405:1 and 6.335:1 for the two planted edits the suite states). The
 word-level 28% diff wash is the one documented omission. The light platform
 styles name their own status
 text steps where the inherited ink missed the body floor through the wash or a
-find highlight. The chrome metrics the scale does not name stay at the runtime's defaults. A runnable
+find highlight. `NativeTextMetrics` carries the runtime's two token-less chrome
+metrics (`codeGutterMinWidth`, `diffAccentBarWidth`) as optional members, unset
+by the bridge, so a brand can set either without a cast. A runnable
 example lives in [`src/native-text.example.ts`](./src/native-text.example.ts).
 
 A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime

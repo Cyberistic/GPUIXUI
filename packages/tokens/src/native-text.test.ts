@@ -23,6 +23,13 @@
  * wash put six more pairs under the 7:1 body floor across XP and Aero, while
  * every check returned `[]`. The suite now holds the palette on all four tones,
  * opaque and painted, and the platform styles own the steps their canvases need.
+ *
+ * Plan 585: the documents told a brand to set the runtime's two token-less
+ * chrome metrics "on the returned object", but `NativeTextMetrics` declared
+ * neither `codeGutterMinWidth` nor `diffAccentBarWidth`, so the documented
+ * override failed `check-types` with TS2561. Both are optional members now and
+ * the bridge leaves them unset; the same paragraphs no longer call the derived
+ * per-digit width and table floors runtime defaults.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -50,12 +57,21 @@ import {
 } from "./index.js";
 import {
   canvasDocument,
+  customChromeTheme,
   diffViewer,
   largeCodeTheme,
   markdownDocument,
 } from "./native-text.example.js";
 import { nativeInk } from "./native-ink.js";
 import { shippedThemes } from "./shipped-themes.js";
+
+/**
+ * Read a documentation page. `node:fs` is deliberate: these are policy tests
+ * over the tree's own prose, and the tokens package ships zero runtime
+ * dependencies.
+ */
+const readDoc = (path: string): string =>
+  readFileSync(new URL(path, import.meta.url), "utf8");
 
 type NativeColourField =
   | "border"
@@ -232,6 +248,34 @@ describe("native text theme", () => {
     expect(larger.diffGutterWidth).toBe(72);
   });
 
+  it("leaves the two runtime-only metrics unset and lets a brand own them", () => {
+    const shipped = nativeTextTheme(getTheme("dark")).metrics;
+    expect(Object.hasOwn(shipped, "codeGutterMinWidth")).toBe(false);
+    expect(Object.hasOwn(shipped, "diffAccentBarWidth")).toBe(false);
+
+    const custom = customChromeTheme.theme.metrics;
+    expect(custom.codeGutterMinWidth).toBe(36);
+    expect(custom.diffAccentBarWidth).toBe(2);
+    // The derived metrics still come from the theme.
+    expect(custom.codeGutterDigitWidth).toBe(shipped.codeGutterDigitWidth);
+    expect(custom.diffGutterWidth).toBe(shipped.diffGutterWidth);
+  });
+
+  it("names the two metrics the runtime owns and not the ones the bridge derives", () => {
+    const pages = [
+      ["docs/tokens.md", readDoc("../../../docs/tokens.md")],
+      ["docs/design-system.md", readDoc("../../../docs/design-system.md")],
+    ] as const;
+    pages.forEach(([name, doc]) => {
+      expect(doc, name).toContain("`codeGutterMinWidth`");
+      expect(doc, name).toContain("`diffAccentBarWidth`");
+      expect(doc, name).toMatch(/optional members of\s+`NativeTextMetrics`/);
+      // The per-digit width and the table floors are derived since plan 572.
+      expect(doc, name).not.toContain("the table's max-content share");
+      expect(doc, name).not.toContain("max-content estimates");
+    });
+  });
+
   it("holds the syntax palette to the body floor on every painted document surface", () => {
     shippedThemes.forEach(({ theme }) => {
       expect(
@@ -397,13 +441,9 @@ describe("native text theme", () => {
   });
 
   it("names every native field and syntax capture in the reference", () => {
-    // This is a documentation policy test over the tree's own source. `node:fs`
-    // is deliberate: the tokens package ships zero runtime dependencies and has
-    // no Effect FileSystem to borrow.
-    const docs = readFileSync(
-      new URL("../../../docs/tokens.md", import.meta.url),
-      "utf8",
-    );
+    // This is a documentation policy test over the tree's own source; the
+    // package ships zero runtime dependencies (see `readDoc`).
+    const docs = readDoc("../../../docs/tokens.md");
     Object.entries(nativeTextRoles).forEach(([field, role]) => {
       expect(docs, field).toContain(`\`${field}\``);
       expect(docs, role).toContain(`\`${role}\``);
