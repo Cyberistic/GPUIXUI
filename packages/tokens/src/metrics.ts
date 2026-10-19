@@ -19,13 +19,14 @@ import {
 } from "./elevation.js";
 import { motionLevels, motionPhases, type MotionEasing } from "./motion.js";
 import {
-  avatarSize,
-  borderWidth,
+  avatarSizeSteps,
+  borderWidthSteps,
   controlSizes,
+  dimensionNames,
   dimensions,
-  iconSize,
-  radius,
-  spacing,
+  iconSizeSteps,
+  radiusSteps,
+  spacingSteps,
 } from "./scale.js";
 import type { Theme } from "./theme.js";
 import {
@@ -90,10 +91,12 @@ const easingPoints = [0, 1, 2, 3] as const;
  * than the shipped one; the ladders walk the theme's own members, so this index
  * names the shipped domain, not the limit of what is governed.
  *
- * Each list derives from the group's own default object or its ordered index
- * (`dimensions`, `controlSizes`, `elevationLevels`, `motionLevels`,
- * `motionPhases`), so a member added to the interface and its default ships in
- * the index. An elevation entry names the shape's field without the array index
+ * Each list derives from the group's ordered index (`dimensionNames`,
+ * `spacingSteps`, `radiusSteps`, `borderWidthSteps`, `iconSizeSteps`,
+ * `avatarSizeSteps`, `controlSizes`, `elevationLevels`, `motionLevels`,
+ * `motionPhases`), so the shipped domain has one owner and a member added to a
+ * scale must also join its index — `scale-indexes.test.ts` fails until it does.
+ * An elevation entry names the shape's field without the array index
  * (`md.offsetX`): the rule reads every entry in a level, while a failure names
  * the one it measured (`md[0].offsetX`). The easing points are listed even
  * though the shipped easings are named strings, because a theme may replace a
@@ -103,17 +106,17 @@ export const metricMembers = {
   typography: textRoles.flatMap((role) =>
     typeFields.map((field) => `${role}.${field}`),
   ),
-  borderWidth: Object.keys(borderWidth),
+  borderWidth: borderWidthSteps,
   density: [
     ...controlSizes.map((size) => `controlHeight.${size}`),
     ...controlSizes.map((size) => `controlPaddingX.${size}`),
     "rowHeight",
   ],
-  dimensions: Object.keys(dimensions),
-  iconSize: Object.keys(iconSize),
-  avatarSize: Object.keys(avatarSize),
-  radius: Object.keys(radius),
-  spacing: Object.keys(spacing),
+  dimensions: dimensionNames,
+  iconSize: iconSizeSteps,
+  avatarSize: avatarSizeSteps,
+  radius: radiusSteps,
+  spacing: spacingSteps,
   elevation: elevationLevels.flatMap((level) =>
     shadowFields.map((field) => `${level}.${field}`),
   ),

@@ -36,6 +36,32 @@ export const spacing: Spacing = {
   "5xl": 64,
 };
 
+/**
+ * Every spacing step, smallest first — the order the catalogue prints. A table
+ * or a diagnostics view iterates this instead of `Object.keys(spacing)`, which
+ * is a `string[]`, so the step indexes `spacing` without a cast, the way
+ * `textRoles` indexes the type roles.
+ *
+ * @example
+ * ```ts
+ * import { spacing, spacingSteps } from "@gpuixui/tokens";
+ *
+ * const rows = spacingSteps.map((step) => ({ step, value: spacing[step] }));
+ * ```
+ */
+export const spacingSteps = [
+  "2xs",
+  "xs",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "2xl",
+  "3xl",
+  "4xl",
+  "5xl",
+] as const satisfies ReadonlyArray<keyof Spacing>;
+
 /** Corner radius scale in pixels. */
 export interface Radius {
   /** Square corners. */
@@ -62,6 +88,16 @@ export const radius: Radius = {
   full: 9999,
 };
 
+/** Every radius step, square first. See {@link spacingSteps}. */
+export const radiusSteps = [
+  "none",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+  "full",
+] as const satisfies ReadonlyArray<keyof Radius>;
+
 /** Border thickness in pixels. */
 export interface BorderWidth {
   /** Decorative dividers and default control borders. */
@@ -72,6 +108,12 @@ export interface BorderWidth {
 
 /** Default border widths. */
 export const borderWidth: BorderWidth = { thin: 1, strong: 2 };
+
+/** The two border widths: decorative first, emphasis second. */
+export const borderWidthSteps = [
+  "thin",
+  "strong",
+] as const satisfies ReadonlyArray<keyof BorderWidth>;
 
 /** Square icon sizes in pixels. */
 export interface IconSize {
@@ -90,6 +132,15 @@ export interface IconSize {
 /** Default icon sizes. */
 export const iconSize: IconSize = { xs: 12, sm: 14, md: 16, lg: 20, xl: 24 };
 
+/** Every icon tier, inline first. See {@link spacingSteps}. */
+export const iconSizeSteps = [
+  "xs",
+  "sm",
+  "md",
+  "lg",
+  "xl",
+] as const satisfies ReadonlyArray<keyof IconSize>;
+
 /** Diameters for identity marks (avatars) in pixels. */
 export interface AvatarSize {
   /** 20px — inline with a dense row. */
@@ -104,6 +155,14 @@ export interface AvatarSize {
 
 /** Default avatar diameters. */
 export const avatarSize: AvatarSize = { xs: 20, sm: 26, md: 32, lg: 40 };
+
+/** Every avatar diameter, smallest first. See {@link spacingSteps}. */
+export const avatarSizeSteps = [
+  "xs",
+  "sm",
+  "md",
+  "lg",
+] as const satisfies ReadonlyArray<keyof AvatarSize>;
 
 /**
  * Fixed surface metrics shared by components. Unlike `Density`, these do not
@@ -220,6 +279,46 @@ export const dimensions: Dimensions = {
   notificationListMaxHeight: 280,
   notificationUnreadDotSize: 6,
 };
+
+/**
+ * Every fixed surface metric, in the order {@link Dimensions} declares them. A
+ * reference table groups rows by member; the index keeps the member typed.
+ */
+export const dimensionNames = [
+  "overlayMinWidth",
+  "overlayWidth",
+  "overlayMaxHeight",
+  "fieldMinWidth",
+  "fieldAdornmentSize",
+  "dateFieldWidth",
+  "chipMinWidth",
+  "toastWidth",
+  "toastToneBarWidth",
+  "previewCardMinWidth",
+  "previewCardMaxWidth",
+  "keycapSize",
+  "drawerWidthSm",
+  "drawerWidthMd",
+  "drawerWidthLg",
+  "drawerHeightSm",
+  "drawerHeightMd",
+  "drawerHeightLg",
+  "chatViewportMinHeight",
+  "carouselIndicatorSize",
+  "carouselIndicatorActiveWidth",
+  "timelineMarkerSize",
+  "timelineMarkerColumnWidth",
+  "dialogWidthSm",
+  "dialogWidthMd",
+  "dialogWidthLg",
+  "calendarCellSize",
+  "timeSegmentWidth",
+  "avatarPresenceDotSize",
+  "notificationPanelWidth",
+  "notificationPanelMaxHeight",
+  "notificationListMaxHeight",
+  "notificationUnreadDotSize",
+] as const satisfies ReadonlyArray<keyof Dimensions>;
 
 /**
  * Named control density presets, in documentation order. `DensityName` derives

@@ -3074,10 +3074,23 @@ const rows = colorRoles.map((role) => ({
 }));
 ```
 
-The other groups are already plain data with their own keys: `spacing`,
-`radius`, `densityNames`, `densityPresets`, `borderWidth`, `iconSize` and
-`palette`. `densityNames` is the order to render; `densityPresets` holds the
-metrics.
+Every numeric scale owns the same kind of index, so a table reads a member
+without a cast: `spacingSteps`, `radiusSteps`, `borderWidthSteps`,
+`iconSizeSteps`, `avatarSizeSteps`, `dimensionNames` and `paletteRamps`. Each
+is the scale's keys in documentation order, so `spacingSteps` is typed
+`keyof Spacing` and `spacing[step]` type-checks:
+
+```ts
+import { spacing, spacingSteps } from "@gpuixui/tokens";
+
+const rows = spacingSteps.map((step) => ({ step, value: spacing[step] }));
+```
+
+`densityNames` and `densityPresets` are the preset order and its metrics;
+`controlSizes`, `elevationLevels`, `motionLevels`, `motionPhases`,
+`typefaceRoles` and `metricGroups` index the remaining groups. A scale member
+that is not in its index fails `scale-indexes.test.ts`, so a value table cannot
+silently omit it.
 
 `textRoles` does the same for type: it lists the ten typographic roles in
 documentation order and excludes the `sans` and `mono` families, so a type table

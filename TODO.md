@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 294/367
+`[x]` `[████████░░]` 295/369
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -1153,6 +1153,15 @@ the chip's padding has no token (it is `spacing.sm`). The chip's own minimum now
 holds two `spacing.sm` insets, one `caption` glyph, the `spacing.xs` gap and the
 `fieldAdornmentSize` remove control, the shipped 80 clears the 44 bound, and
 `chip-chrome-fit.test.ts` states the erased-chip regression (plan 667)
+`[x]` Give the numeric scales their ordered indexes — a docs table had to cast
+`Object.keys(spacing)` back to a key type, the unsafe cast `textRoles` exists to
+avoid, and `metricMembers` kept six of the same domains as a second list.
+`spacingSteps`, `radiusSteps`, `borderWidthSteps`, `iconSizeSteps`,
+`avatarSizeSteps`, `dimensionNames` and `paletteRamps` are typed `keyof` their
+scale and documented in the docs-site section; `metricMembers` derives from them,
+`scale-indexes.example.ts` builds every table with no cast, and
+`scale-indexes.test.ts` fails when a scale gains a member without its index
+(plan 668)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

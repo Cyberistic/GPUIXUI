@@ -89,6 +89,20 @@ export const palette = {
 } as const;
 
 /**
+ * Every raw ramp, in documentation order. The palette table is built from this
+ * index instead of `Object.keys(palette)`, so a ramp name indexes `palette`
+ * without a cast.
+ */
+export const paletteRamps = [
+  "neutral",
+  "blue",
+  "iris",
+  "red",
+  "green",
+  "amber",
+] as const satisfies ReadonlyArray<keyof typeof palette>;
+
+/**
  * Semantic colour roles. A role names intent, never a shade, so a theme can
  * change every value without component source changing.
  */
