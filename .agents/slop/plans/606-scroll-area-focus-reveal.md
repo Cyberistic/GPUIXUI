@@ -116,22 +116,26 @@ focusable subject after it.
    revealed (proves the `CheckboxGroup` path).
 4. **Hand-rolled field** — an `OTPField` below the fold; its first cell is
    revealed (proves the `OTPField` path).
-5. **Up direction** — content taller than the region, wheel to the bottom, focus
+5. **Mount-focused field** — an `Input autoFocus` below the fold; the provider's
+   first sample re-runs the reveal after the box exists.
+6. **Mount-focused cell** — an `OTPField autoFocus`; the same late measurement
+   on the hand-rolled path.
+7. **Up direction** — content taller than the region, wheel to the bottom, focus
    the bottom control, then focus a control at the top programmatically; the
    region returns to the top and contains it.
-6. **Already visible** — a control at the top is focused; the offset stays
+8. **Already visible** — a control at the top is focused; the offset stays
    `{ 0, 0 }` (no gratuitous scroll).
-7. **Horizontal** — an `axis="horizontal"` region with a wide row; tab to the
+9. **Horizontal** — an `axis="horizontal"` region with a wide row; tab to the
    far button; `offset.x` is negative and the button is inside the visible box,
    while `offset.y` stays `0`.
-8. **Outside the area** — a control after the region (not a descendant) takes
-   focus; the region's offset does not move (the context is scoped).
+10. **Outside the area** — a control after the region (not a descendant) takes
+    focus; the region's offset does not move (the context is scoped).
 
-The **failure direction** is the current tree: cases 1–5 and 7 fail because no
-reveal exists (offset `0` / `-400`), while 6 and 8 pass both ways as guards.
-After the fix, revert `useScrollReveal`'s call in `useFocus` → cases 1, 5 and 7
-fail (the two guards pass by design); revert it only in `useRovingFocus` →
-case 2; only in `CheckboxGroup` → case 3; only in `OTPField` → case 4.
+The **failure direction** is the current tree: cases 1–7 and 9 fail because no
+reveal exists (offset `0` / `-400`), while 8 and 10 pass both ways as guards.
+After the fix, revert `useScrollReveal`'s call in `useFocus` → cases 1, 5, 7 and
+9 fail (case 5 is the mount-focused field); revert only in `useRovingFocus` →
+case 2; only in `CheckboxGroup` → case 3; only in `OTPField` → cases 4 and 6.
 
 **Offline.** The core cases prove the axis rule; the existing
 `src/components/ScrollArea.test.tsx` element tree must stay unchanged (the
@@ -187,14 +191,18 @@ nub run lint
   same with their own focus state; `ScrollArea` measures its painted viewport
   (`paintedBox` + `viewportBox`) and the focused host, moves by the overflow on
   the axes it scrolls, and reports the landing position.
-- **Case count:** `runtime/scroll-reveal.runtime.test.tsx` — **8/8**. Scoped
+- **Case count:** `runtime/scroll-reveal.runtime.test.tsx` — **10/10**. Scoped
   `layout`, `scroll-area-trigger` and `scroll-viewport` stay green.
-- **Failing directions:** on the old tree cases 1–5 and 7 fail (offset `0`);
-  dropping the `useFocus` call fails 1, 4 and 7; dropping the `useRovingFocus`
+- **Failing directions:** on the old tree cases 1–7 and 9 fail (offset `0`);
+  dropping the `useFocus` call fails 1, 5, 7 and 9; dropping the `useRovingFocus`
   call fails 2; dropping `CheckboxGroup`'s fails 3; dropping `OTPField`'s fails
-  the OTP case. The already-visible and outside guards pass in every direction.
+  cases 4 and 6. The already-visible and outside guards pass in every direction.
+- **A found gap while proving it:** a field that mounts with `autoFocus` was
+  focused before the first paint, so its first reveal ran before its box existed
+  and never re-ran. The reveal now depends on the provider's sample and refuses
+  a sample that names another host; both mount-focused cases fail without it.
 - `docs/scroll-area.mdx`'s “Focus does not follow into off-screen content”
   limitation is retired; the remaining limit is a focused host that reports no
   bounds (no reveal).
-- Offline **59 files / 831 tests**; full runtime **57 files / 789 tests**,
+- Offline **59 files / 831 tests**; full runtime **57 files / 791 tests**,
   green on the release-tag build.

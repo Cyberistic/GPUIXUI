@@ -251,14 +251,21 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const trackedIndex = trackedFocusIndex(cellIds.current, trackedId);
   const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   const focusedCell = Option.getOrUndefined(mergedFocus);
+  const sample = useNativeFocus();
   const reveal = useScrollReveal();
-  /* A cell that takes focus must be visible inside a ScrollArea (plan 606). */
+  /* A cell that takes focus must be visible inside a ScrollArea (plan 606).
+     An `autoFocus` cell is seeded before the first paint, so the provider's
+     first sample re-runs this once the box exists; a sample naming another
+     cell means focus has left and the seed is about to clear. */
   useLayoutEffect(() => {
     if (reveal === undefined || focusedCell === undefined) return;
     const id = cellIds.current.get(focusedCell);
-    if (id !== undefined) reveal(id);
-  }, [focusedCell, reveal]);
-  const sample = useNativeFocus();
+    if (id === undefined) return;
+    if (sample !== undefined && sample.sampled) {
+      if (!isTrackedFocus(sample.focused, id)) return;
+    }
+    reveal(id);
+  }, [focusedCell, reveal, sample]);
   /**
    * The seeded `autoFocus` state (and an event state on a runtime that
    * dispatches focus) can only be cleared by `onBlur`, which published 0.10.0

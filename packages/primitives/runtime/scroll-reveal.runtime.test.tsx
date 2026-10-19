@@ -15,6 +15,7 @@ import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
+import { Input } from "../src/components/Input.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
@@ -198,6 +199,48 @@ it("reveals the focused cell of an OTPField", async () => {
   );
 
   tabTo(runtime, "otp-cell-1");
+  await settleFocus();
+  runtime.flush();
+
+  expect(offsetOf(runtime, "s").y).toBeLessThan(0);
+  expect(
+    contains(bounds(runtime, "s"), itemBounds(runtime, "otp-cell-1")),
+  ).toBe(true);
+});
+
+it("reveals a field that mounts focused", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea label="Form" style={{ height: 120, width: 300 }} testId="s">
+        <Box tone="card" style={{ height: 400 }} />
+        <Input label="Name" autoFocus testId="field" />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.flush();
+  // The mount happens before the first paint; the tracker's first sample is
+  // what lets the area measure the field (plan 606).
+  await settleFocus();
+  runtime.flush();
+
+  expect(Option.getOrUndefined(runtime.focused())).toBe("field");
+  expect(offsetOf(runtime, "s").y).toBeLessThan(0);
+  // A native `<input>` reports from its content origin (plan 597).
+  expect(contains(bounds(runtime, "s"), bounds(runtime, "field"))).toBe(true);
+});
+
+it("reveals an autoFocus OTP cell", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea label="Code" style={{ height: 120, width: 300 }} testId="s">
+        <Box tone="card" style={{ height: 400 }} />
+        <OTPField label="Code" length={4} autoFocus testId="otp" />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.flush();
   await settleFocus();
   runtime.flush();
 

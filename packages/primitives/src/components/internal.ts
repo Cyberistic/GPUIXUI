@@ -333,8 +333,17 @@ export const useFocus = (
   useLayoutEffect(() => {
     if (!focused || reveal === undefined) return;
     const id = ownId?.() ?? own.current ?? undefined;
-    if (id !== undefined) reveal(id);
-  }, [focused, ownId, reveal]);
+    if (id === undefined) return;
+    /* An `autoFocus` field is focused before the first paint, so this effect's
+       first run can precede its measured box; the provider's first sample
+       re-runs it (the sample is a dependency). A sample naming another host
+       means focus has already left, and the clear effect above is about to say
+       so (plan 606). */
+    if (sample !== undefined && sample.sampled) {
+      if (!isTrackedFocus(sample.focused, id)) return;
+    }
+    reveal(id);
+  }, [focused, ownId, reveal, sample]);
   return {
     focused,
     onFocus: () => setEventFocused(true),

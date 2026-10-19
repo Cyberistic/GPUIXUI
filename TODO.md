@@ -1613,10 +1613,12 @@ retired once both branches are one
       `CheckboxGroup` and `OTPField` call it when their focused host changes, and
       the area measures the host and its painted viewport and moves by
       `scrollIntoViewOffsets` through `scrollTo` on the axes it scrolls (reporting
-      the landing position). 8 runtime cases (both directions, all four focus
-      owners, horizontal, report, two guards), the three failing directions
-      measured; offline 59 files / 831 tests, full runtime 57 files / 789
-      (plan `606`).
+      the landing position). A field that mounts with `autoFocus` is focused
+      before the first paint, so the reveal also follows the provider's first
+      sample once the box exists. 10 runtime cases (both directions, all four
+      focus owners, two mount-focused, horizontal, report, two guards), six
+      failing directions measured; offline 59 files / 831 tests, full runtime
+      57 files / 791 (plan `606`).
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

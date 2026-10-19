@@ -117,7 +117,8 @@ area keeps its arrow keys instead of scrolling the region.
 
 A focusable descendant that takes native focus — by `Tab`, a click, or a
 programmatic `focusElement` — is scrolled inside the region. `Tab` therefore
-cannot leave the keyboard on a control painted below the fold.
+cannot leave the keyboard on a control painted below the fold, and a field that
+mounts with `autoFocus` is revealed as soon as its box is measured.
 
 The area measures the focused host and its own painted viewport, then moves by
 the overflow on the axes it scrolls: a `vertical` area never moves `x`. The
