@@ -318,6 +318,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [658](./658-recipe-edit-family.md) | The documented recipe edit must own its whole family | F | 310, 311, 318, 327, 330, 331, 355, 389 | done |
 | [659](./659-field-content-surfaces.md) | The field's own content inside a status panel and a pressed selected row | F | 092, 306, 307, 315, 317, 319, 391, 527, 649, 651 | done |
 | [663](./663-selected-label-fills.md) | The pressed selected row's label and text-role count in the prose | F | 316, 506, 623, 651, 659 | done |
+| [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3471,6 +3472,18 @@ design system's `selected` interaction row omitted the pressed fill. Two derived
 guards now read the count and the fill list from `selectionPressPairs`,
 `selectionPairs` and `contrastPairs`, so a seventh role or a sixth fill moves the
 words with it. No colour, pair, floor, metric or shipped theme moves.
+
+Plan `664` finishes the truth pass the previous plan started, one surface over.
+Plan `659` added a seventh `selectionPressPairs` entry, so the ledger's
+"9 pressed-row pairs" under-reported the list by one, and six further phrases in
+the same row — the pressed row's status labels, the inactive-selection, two
+fill-selection lists and the panel-action pair — were hand-typed with no owner.
+The total-check row and the design system also still said the hierarchy compares
+the selected label on "the four fills it keeps", but plan `651` made
+`selectedActive` a fifth. Six phrases now derive from their lists, the tier word
+derives from `tierSurfaces`, and `figures.test.ts` builds the sentence from the
+same helper the hierarchy check uses. No colour, pair, floor, metric or shipped
+theme moves.
 
 ## How to use a plan
 
