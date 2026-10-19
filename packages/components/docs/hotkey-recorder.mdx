@@ -97,6 +97,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - A pointer clear consumes its own bubbled click, so it never starts a
   recording; a keyboard clear claims its key and leaves the recorder ready, and
   the next click starts a recording.
+- **A plus key is reported as `plus`.** The accelerator grammar reserves `+` as
+  the separator, so a captured `+` is the token `plus` and displays as `+`; a
+  stored `"mod+plus"` and `"mod++"` are the same chord (plan 694).
 - No conflict detection against already-bound chords.
 - The recorder stores a string; registering the chord with the runtime is the
   application's job.
@@ -115,7 +118,7 @@ focus ring, Space starting on release, a captured Space not reopening the
 recorder, cancellation on `Tab` and on an outside press, disabled, and both
 themes.
 
-`src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
+`src/hotkey/logic.test.ts` (9 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a
 keyless event.
 

@@ -211,6 +211,25 @@ describe("KeyboardShortcuts", () => {
     sheet.unmount();
   });
 
+  it("paints a plus chord's key, not only its modifier", () => {
+    // Cmd+Plus rendered a single ⌘ cap before plan 694.
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Zoom">
+        <KeyboardShortcutsGroup label="View">
+          <KeyboardShortcut
+            label="Zoom in"
+            accelerator="mod++"
+            platform="darwin"
+          />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(sheet.renderer.getAllText()).toEqual(["View", "Zoom in", "⌘", "+"]);
+
+    sheet.unmount();
+  });
+
   it("keeps row labels in the foreground role in both themes", () => {
     const sheet = renderComponent(<Sheet />);
     expect(styledText(sheet, "Save")?.style.color).toBe(

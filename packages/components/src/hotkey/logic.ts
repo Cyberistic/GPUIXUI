@@ -31,6 +31,9 @@ const keyToken = (key: string): string => {
   const lower = Str.toLowerCase(key);
   if (lower === "return") return "enter";
   if (lower === " ") return "space";
+  // A literal plus is the grammar's `plus` token: written as `+`, it would be
+  // read back as a doubled separator (plan 694).
+  if (lower === "+") return "plus";
   return lower;
 };
 

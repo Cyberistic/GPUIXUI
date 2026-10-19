@@ -44,6 +44,7 @@ const DISPLAY: Readonly<Record<string, (apple: boolean) => string>> = {
   pagedown: () => "PgDn",
   home: () => "Home",
   end: () => "End",
+  plus: () => "+",
 };
 
 /** One token's display string for a platform. */
@@ -56,15 +57,23 @@ const displayKey = (token: string, platform: AcceleratorPlatform): string =>
     onSome: (format) => format(isApple(platform)),
   });
 
-/** The tokens of a chord, lower-cased, with empty segments dropped. */
-export const parseAccelerator = (accelerator: string): ReadonlyArray<string> =>
-  Arr.map(
+/**
+ * The tokens of a chord, lower-cased, with stray empty segments dropped. A
+ * trailing `++` is the literal plus key (the separator doubled), because a `+`
+ * key cannot be written as one token (plan 694).
+ */
+export const parseAccelerator = (
+  accelerator: string,
+): ReadonlyArray<string> => {
+  const tokens = Arr.map(
     Arr.filter(
       Str.split("+")(accelerator),
       (segment) => Str.trim(segment) !== "",
     ),
     (segment) => Str.toLowerCase(Str.trim(segment)),
   );
+  return Str.endsWith("++")(accelerator) ? Arr.append(tokens, "plus") : tokens;
+};
 
 /** One chord's keycaps in the author's order, for the given platform. */
 export const formatAccelerator = (

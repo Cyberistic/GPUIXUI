@@ -22,6 +22,14 @@ describe("parseAccelerator", () => {
     expect(parseAccelerator("mod++k")).toEqual(["mod", "k"]);
     expect(parseAccelerator("")).toEqual([]);
   });
+
+  it("names the literal plus key", () => {
+    // A plus key is a token, not a stray separator (plan 694).
+    expect(parseAccelerator("mod++")).toEqual(["mod", "plus"]);
+    expect(parseAccelerator("++")).toEqual(["plus"]);
+    expect(formatAccelerator("mod++", "darwin")).toEqual(["⌘", "+"]);
+    expect(formatAccelerator("plus", "linux")).toEqual(["+"]);
+  });
 });
 
 describe("formatAccelerator", () => {

@@ -67,12 +67,17 @@ A chord is `+`-separated tokens, case-insensitive, trimmed:
 | `up` / `down` / `left` / `right` | `↑ ↓ ← →` | `Up Down Left Right` |
 | `pageup` / `pagedown` / `home` / `end` | `PgUp PgDn Home End` | same |
 | `f1`–`f12` | `F1`–`F12` | same |
+| `plus` | `+` | `+` |
 | one character | upper-cased | upper-cased |
 
 - **`mod` is the portable token**: on macOS it is Command, elsewhere Control.
   Use `ctrl` only when you mean the Control key on every platform.
 - **Order is preserved.** `shift+mod+k` renders `⇧ ⌘ K`; the model does not
   reorder it.
+- **A literal plus is `plus`, or a trailing `++`.** `mod++` and `mod+plus` are
+  the same chord (`⌘ +`); only a doubled separator at the **end** is the key, so
+  `mod++k` still reads as `mod` + `k`. The hotkey recorder captures a pressed `+`
+  as `plus`.
 - **Unknown multi-character tokens display verbatim** (title-cased), so a
   consumer is never blocked by a missing entry.
 
@@ -123,12 +128,12 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (9 tests):
+`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (10 tests):
 declaration order, list/group/listitem roles, the default level-3 headings, a
 caller-set group level, a raw `aria-level` fallback (and that it never reaches
-the group element), the
+the group element), a plus chord painting its `+` key, the
 muted keycap surface, a consumer style callback receiving the formatted keys,
-and both themes. `src/shortcut/accelerator.test.ts` adds 10 pure tests for the
+and both themes. `src/shortcut/accelerator.test.ts` adds 11 pure tests for the
 grammar.
 
 ```sh

@@ -9,6 +9,7 @@
 import type { EventPayload } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
+import { formatAccelerator } from "../shortcut/accelerator.js";
 import { acceleratorOf } from "./logic.js";
 
 /** One key event, with the modifiers the suite needs. */
@@ -99,5 +100,12 @@ describe("acceleratorOf", () => {
     expect(acceleratorOf(key("f10", { shift: true }), "win32")).toEqual(
       Option.some("shift+f10"),
     );
+  });
+
+  it("captures a plus key as the plus token, not a stray separator", () => {
+    // `mod++` used to render only the modifier (plan 694).
+    const captured = acceleratorOf(key("+", { cmd: true }), "darwin");
+    expect(captured).toEqual(Option.some("mod+plus"));
+    expect(formatAccelerator("mod+plus", "darwin")).toEqual(["⌘", "+"]);
   });
 });

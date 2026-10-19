@@ -662,6 +662,15 @@ retired once both branches are one
       16), failing without the fix, plus the pointer path's next-click
       assertion; docs, `COMPONENTS.md`, the plan index, `PLAN.md` D30 and the
       inventory count synced (owner: components)
+    - [x] A plus chord names its key — plan 694; measured on 2026-10-19: the
+      accelerator grammar dropped empty segments, so `mod++` parsed to `["mod"]`
+      and painted only `⌘`, and the recorder's captured `+` produced that same
+      broken string; the `plus` token and a trailing-`++` rule now paint the
+      key, while `mod++k` and `mod+` keep their old token arrays. 1 pure
+      accelerator + 1 pure capture + 1 native Keyboard shortcuts case (Keyboard
+      shortcuts 9 → 10, accelerator tests 10 → 11, capture tests 8 → 9), all
+      three failing at `HEAD`; docs, `COMPONENTS.md`, the plan index and
+      `PLAN.md` D30 synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
