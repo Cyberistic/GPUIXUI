@@ -37,15 +37,15 @@ A probe over the twenty-four shipped sets (2026-10-19) found seven pairs under
 the 4.5:1 secondary floor through the **active** match on Aero light, while
 `themeHighlightFailures` and `themeFailures` both returned `[]`:
 
-| foreground | tint | surface | ratio |
-| ---------- | ---- | ------- | ----- |
-| `mutedForeground` | `diffDel` | `muted` | **4.437:1** |
-| `mutedForeground` | `diffAdd` | `muted` | **4.440:1** |
-| `mutedForeground` | `diffDel` | `background` | **4.454:1** |
-| `primaryText` | `diffDel` | `muted` | **4.481:1** |
-| `primaryText` | `diffAdd` | `muted` | **4.484:1** |
-| `mutedForeground` | `diffAdd` | `background` | **4.491:1** |
-| `primaryText` | `diffDel` | `background` | **4.498:1** |
+| foreground | tint role | surface | ratio |
+| ---------- | --------- | ------- | ----- |
+| `mutedForeground` | `destructiveText` (`diffDel`) | `muted` | **4.437:1** |
+| `mutedForeground` | `successText` (`diffAdd`) | `muted` | **4.440:1** |
+| `mutedForeground` | `destructiveText` | `background` | **4.454:1** |
+| `primaryText` | `destructiveText` | `muted` | **4.481:1** |
+| `primaryText` | `successText` | `muted` | **4.484:1** |
+| `mutedForeground` | `successText` | `background` | **4.491:1** |
+| `primaryText` | `destructiveText` | `background` | **4.498:1** |
 
 The match wash passes every tint pair; the defect is the **active** wash, which
 is one `nativeHighlightStep` stronger. A reader searching a diff sees the
