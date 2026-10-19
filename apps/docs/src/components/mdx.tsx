@@ -8,6 +8,7 @@ import { CapabilityMatrix } from "./capability-matrix";
 import { ComponentIndex } from "./component-index";
 import { ComponentDependencies } from "./component-dependencies";
 import { ComponentState } from "./component-state";
+import { ContrastColors } from "./contrast-colors";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
 import { LiveSurface } from "./preview/live-surface";
@@ -57,6 +58,7 @@ export function getMDXComponents(components?: MDXComponents) {
     PreviewTiers,
     PreviewUnavailable,
     TokenColors,
+    ContrastColors,
     TypeScale,
     PlatformTypes,
     TokenScales,

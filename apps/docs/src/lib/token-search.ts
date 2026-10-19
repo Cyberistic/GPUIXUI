@@ -1,6 +1,8 @@
 import {
   colorRoles,
   darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
   lightTheme,
   platformTheme,
   platformTypes,
@@ -36,6 +38,13 @@ const colourContent = colorRoles
   .map(
     (role) =>
       `${role}: ${lightTheme.colors[role]} (light), ${darkTheme.colors[role]} (dark)`,
+  )
+  .join("\n");
+
+const contrastContent = colorRoles
+  .map(
+    (role) =>
+      `${role}: ${highContrastLightTheme.colors[role]} (high-contrast light), ${highContrastDarkTheme.colors[role]} (high-contrast dark)`,
   )
   .join("\n");
 
@@ -91,6 +100,24 @@ export const tokenSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
       description: "Every semantic colour role, in both themes.",
       content: colourContent,
       url: "/docs/theming#semantic-roles",
+      breadcrumbs: ["Theming"],
+      keywords: colorRoles.join(" "),
+    },
+  },
+  {
+    /**
+     * The high-contrast table is a separate heading and a separate document
+     * (plan 586). It promotes no name: a role such as `destructiveSoft` keeps
+     * the light/dark table first, while a value pasted from a high-contrast
+     * theme — which appears nowhere else — lands here.
+     */
+    names: [],
+    index: {
+      title: "High-contrast colour roles",
+      description:
+        "Every semantic colour role in the two high-contrast palettes.",
+      content: contrastContent,
+      url: "/docs/theming#high-contrast",
       breadcrumbs: ["Theming"],
       keywords: colorRoles.join(" "),
     },

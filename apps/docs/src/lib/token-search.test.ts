@@ -1,4 +1,11 @@
-import { colorRoles, darkTheme, lightTheme, typography } from "@gpuixui/tokens";
+import {
+  colorRoles,
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+  typography,
+} from "@gpuixui/tokens";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +61,7 @@ const headingsIn = (page: string): ReadonlyArray<string> =>
   );
 
 const colourUrl = "/docs/theming#semantic-roles";
+const contrastUrl = "/docs/theming#high-contrast";
 const scaleUrl = "/docs/theming#scales-and-control-metrics";
 const typeUrl = "/docs/typography";
 
@@ -100,6 +108,29 @@ describe("the token catalogue is indexed", () => {
       `destructiveSoft: ${lightTheme.colors.destructiveSoft} (light), ${darkTheme.colors.destructiveSoft} (dark)`,
     );
   });
+
+  it("lists the role's value in both high-contrast palettes", () => {
+    expect(contentAt(contrastUrl)).toContain(
+      `destructiveSoft: ${highContrastLightTheme.colors.destructiveSoft} (high-contrast light), ${highContrastDarkTheme.colors.destructiveSoft} (high-contrast dark)`,
+    );
+  });
+
+  it("lists both high-contrast values for every colour role", () => {
+    const content = contentAt(contrastUrl);
+    const missing = colorRoles.flatMap((role) => [
+      ...(content.includes(
+        `${highContrastLightTheme.colors[role]} (high-contrast light)`,
+      )
+        ? []
+        : [`${role} high-contrast light`]),
+      ...(content.includes(
+        `${highContrastDarkTheme.colors[role]} (high-contrast dark)`,
+      )
+        ? []
+        : [`${role} high-contrast dark`]),
+    ]);
+    expect(missing).toEqual([]);
+  });
 });
 
 describe("token search", { timeout: 120_000 }, () => {
@@ -126,6 +157,22 @@ describe("token search", { timeout: 120_000 }, () => {
   it("finds the role that owns a pasted light-theme value", async () => {
     const results = await search(lightTheme.colors.destructiveSoft, 5);
     expect(results[0]?.url).toBe(colourUrl);
+  });
+
+  it("finds the role that owns a pasted high-contrast value", async () => {
+    const values = [
+      highContrastLightTheme.colors.borderStrong,
+      highContrastDarkTheme.colors.borderStrong,
+    ];
+    const results = await Promise.all(
+      values.map(async (value) => ({
+        value,
+        url: (await search(value, 5))[0]?.url,
+      })),
+    );
+    expect(results).toEqual(
+      values.map((value) => ({ value, url: contrastUrl })),
+    );
   });
 
   it("does not steal an ordinary word from its component page", async () => {

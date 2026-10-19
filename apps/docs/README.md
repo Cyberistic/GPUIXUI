@@ -445,8 +445,9 @@ so `destructiveSoft` reaches the colour table and `spacing.md` reaches the scale
 table instead of returning nothing or component prose. An exact, distinctive
 token name (camelCase or dotted) is promoted like a component title; a plain word
 such as `input` or `label` is not, so the component page keeps the first result,
-and a pasted theme value finds the role that owns it. The measured capability
-matrix is its own document (plan 505), so `modal-focus-trap` and
+and a pasted value from any of the four shipped palettes finds the role that owns
+it (plan 586). The measured capability matrix is its own document (plan 505), so
+`modal-focus-trap` and
 `theme-color-roles` reach `/docs/capabilities`; only hyphenated ids are promoted,
 so `theme` and `log` still find their pages. The icon set is indexed the same
 way (plan 507): every name is in the document, and a hyphenated one such as
@@ -694,11 +695,14 @@ token package first, then the stylesheet — a mismatch fails the suite.
 
 The theming and typography pages render `<TokenColors />`, `<TypeScale />` and
 `<PlatformTypes />` from the package's data, so the documented values are the
-shipped values. `<TokenScales />` adds every remaining group — spacing, radius,
-border width, icon size, density and elevation — with tests that fail when a
-group, key or value drifts. The token root entry is the **only** `@gpuixui/*`
-import the site may make (`@gpuixui/tokens/react` is forbidden, as is every GPUix
-runtime package); `src/architecture.test.ts` enforces the allow-list.
+shipped values. `<ContrastColors />` renders the same 47 roles from the two
+high-contrast themes, and a separate search document carries their values, so a
+high-contrast value finds its role (plan 586). `<TokenScales />` adds every
+remaining group — spacing, radius, border width, icon size, density and
+elevation — with tests that fail when a group, key or value drifts. The token
+root entry is the **only** `@gpuixui/*` import the site may make
+(`@gpuixui/tokens/react` is forbidden, as is every GPUix runtime package);
+`src/architecture.test.ts` enforces the allow-list.
 
 ## Code highlighting
 

@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–585)
+## Docs site workstream (plans 410–499, plus 500–586)
 
-`[~]` `[█████████░]` 151/154
+`[~]` `[██████████]` 152/155
+
+`[x]` **Theming documents and indexes the high-contrast palettes (plan 586)** —
+      the page named `highContrastLightTheme`/`highContrastDarkTheme` and showed
+      none of their 47 values, so a reader who needs the accessible palette could
+      not see it and a pasted high-contrast value (`#4A4F58`, `#E8E8E8`,
+      `#1F1F1F`) found nothing. `<ContrastColors />` now renders both palettes
+      from the package, a separate search document carries their values, and
+      one production query proves a high-contrast value reaches the table.
+      Seven new tests; results in plan 586 §6.
 
 `[x]` **Search reads an inflected name and a target's one word (plan 585)** —
       `theme`, `capability`, `tree`, `log`, `chart`, `focus`, `diff`, `editor`,

@@ -29,6 +29,7 @@ import {
   startDocsPreview,
   type PreviewServer,
 } from "./preview-server.ts";
+import { highContrastLightTheme } from "@gpuixui/tokens";
 import { MANIFEST_ICONS, renderManifest } from "../src/lib/site-manifest.ts";
 import { SITE_NAME } from "../src/lib/site-head.ts";
 
@@ -699,6 +700,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "a token role from the generated token index",
     },
     {
+      query: highContrastLightTheme.colors.borderStrong,
+      expected: "/docs/theming#high-contrast",
+      first: true,
+      what: "a pasted high-contrast token value",
+    },
+    {
       query: "modal-focus-trap",
       expected: "/docs/capabilities",
       first: true,
@@ -858,7 +865,7 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
 
   const searchProblems = await Promise.all(
     searchChecks.map(async (check) => {
-      const where = `/api/search?query=${check.query}`;
+      const where = `/api/search?query=${encodeURIComponent(check.query)}`;
       const response = await request(baseUrl + where);
       if (response === null || response.status !== 200) {
         return [

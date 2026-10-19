@@ -1,6 +1,6 @@
 ---
 title: Theming
-description: Semantic colour roles, spacing, radius, density and elevation, light and dark themes, platform styles for macOS, Linux and Windows, and the extension mechanism.
+description: Semantic colour roles, spacing, radius, density and elevation, light, dark and high-contrast themes, platform styles for macOS, Linux and Windows, and the extension mechanism.
 ---
 
 GPUIXUI themes are semantic. Components read roles such as `background`,
@@ -52,8 +52,9 @@ palette (raw ramps)  →  semantic roles  →  component composition
 ```
 
 A component reads the middle tier only. `primary` is an intent, not a shade, so
-overriding it changes every primary action at once. Both themes expose the same
-**47 roles**; the type system and the package's colour test enforce that parity.
+overriding it changes every primary action at once. Every shipped palette exposes
+the same **47 roles**; the type system and the package's colour test enforce that
+parity.
 
 The table below is generated from `@gpuixui/tokens` at build time, so it always
 shows the values the library ships rather than a copy that can drift.
@@ -151,7 +152,13 @@ a browser preview remains an illustrative approximation.
 The package also ships `highContrastLightTheme` and `highContrastDarkTheme`.
 They expose the same roles with AAA body text (7:1) and 4.5:1 essential
 boundaries, using pure black and white canvases. Because it is a value variant of
-the same role set, no component changes.
+the same role set, no component changes. The package's own colour test holds
+those floors; this page documents the values.
+
+<ContrastColors />
+
+A high-contrast value you paste finds the role that owns it, the same as a
+light or dark value.
 
 ## Extending a theme
 

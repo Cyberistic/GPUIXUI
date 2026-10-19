@@ -1,4 +1,10 @@
-import { darkTheme, lightTheme, type ThemeColors } from "@gpuixui/tokens";
+import {
+  darkTheme,
+  highContrastDarkTheme,
+  highContrastLightTheme,
+  lightTheme,
+  type ThemeColors,
+} from "@gpuixui/tokens";
 
 /**
  * Fumadocs reads these variables; each is pinned to a library semantic role.
@@ -30,3 +36,12 @@ export const themeColors = {
   light: lightTheme.colors,
   dark: darkTheme.colors,
 } as const;
+
+/**
+ * The two high-contrast palettes, read from the same package entry. They are a
+ * separate map rather than a third mode: contrast is its own axis (plan 514).
+ */
+export const highContrastColors = {
+  light: highContrastLightTheme.colors,
+  dark: highContrastDarkTheme.colors,
+} as const satisfies Record<"light" | "dark", ThemeColors>;
