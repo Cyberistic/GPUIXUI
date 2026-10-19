@@ -5,25 +5,34 @@
  * it. The result keeps the state buckets a GPUix component applies itself
  * (`focus`, `invalid`, `disabled`, `open`/`closed`), because 0.10.0 has no
  * `focusVisible`/`data-*` style properties.
+ *
+ * `cn-*` hooks are expanded from the registry's alias table before `cn` runs,
+ * so a caller's utility still beats the recipe. Component state
+ * (`has-[>svg]`, `data-expanded`, …) is resolved from the optional `state`
+ * argument instead of being guessed.
  */
 
 import { cn } from "cn";
-import { Match } from "effect";
+import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import type { StyleDesc } from "@gpuix/react";
 import type { Theme } from "@gpuixui/tokens";
 import {
-  isRing,
-  resolveUtility,
-  ringColor,
-  ringShadow,
-  ringWidth,
-} from "./utilities.js";
+  createTwRegistry,
+  defaultRegistry,
+  registryAlias,
+  registryReason,
+  resolveRegistryUtility,
+  type TwBucket,
+  type TwRegistry,
+  type TwRegistryConfig,
+  type TwState,
+} from "./registry.js";
+import { isRing, ringColor, ringShadow, ringWidth } from "./utilities.js";
 
-/** A state bucket a component can apply when its own state matches. */
-export type TwBucket = "focus" | "invalid" | "disabled" | "open" | "closed";
+export type { TwBucket, TwState } from "./registry.js";
 
 /** Every bucket the compiler writes. */
 type Bucket = TwBucket | "base" | "hover" | "active";
@@ -144,12 +153,46 @@ const UNSUPPORTED_VARIANT = new Set([
   "supports-backdrop-filter",
   "group",
   "peer",
+  "*",
 ]);
+
+/**
+ * Whether a state variant matches the component's state.
+ *
+ * `undefined` means the variant is not state-bearing. A variant we cannot
+ * derive honestly stays out of this table and remains unsupported.
+ */
+const stateVariant = (variant: string, state: TwState): boolean | undefined =>
+  Match.value(variant).pipe(
+    Match.when("has-[>svg]", () => state.hasIcon === true),
+    Match.when(
+      "has-data-[icon=inline-start]",
+      () => state.iconSide === "start",
+    ),
+    Match.when("has-data-[icon=inline-end]", () => state.iconSide === "end"),
+    Match.when("data-expanded", () => state.expanded === true),
+    Match.when("aria-expanded", () => state.expanded === true),
+    Match.when("data-behind", () => state.behind === true),
+    Match.when("data-limited", () => state.limited === true),
+    Match.orElse(() => undefined),
+  );
 
 /** The bucket a variant list writes to, or why it is skipped. */
 const bucketOf = (
   variants: ReadonlyArray<string>,
+  registry: TwRegistry,
+  state: TwState,
 ): Bucket | "skip" | "unsupported" => {
+  const custom = Arr.reduce(
+    registry.variants,
+    Option.none<TwBucket>(),
+    (found, resolve) =>
+      Option.isSome(found)
+        ? found
+        : Option.fromNullishOr(resolve(variants, state)),
+  );
+  if (Option.isSome(custom)) return custom.value;
+
   if (Arr.some(variants, (variant) => variant === "dark")) return "skip";
   if (
     Arr.some(
@@ -163,6 +206,8 @@ const bucketOf = (
   return Option.match(Arr.last(variants), {
     onNone: () => "base",
     onSome: (last) => {
+      const matched = stateVariant(last, state);
+      if (matched !== undefined) return matched ? "base" : "skip";
       if (last === "focus" || last === "focus-visible") return "focus";
       if (last === "aria-invalid") return "invalid";
       if (last === "disabled") return "disabled";
@@ -179,11 +224,36 @@ const bucketOf = (
   });
 };
 
+/** Expands `cn-*` hooks into their recipes, keeping the caller's modifiers. */
+const expandAliases = (className: string, registry: TwRegistry): string =>
+  pipe(
+    Str.split(className, /\s+/),
+    Arr.filter(Str.isNonEmpty),
+    Arr.flatMap((token) => {
+      const { variants, utility } = splitVariants(token);
+      return Option.match(registryAlias(registry, utility), {
+        onNone: () => [token],
+        onSome: (recipe) =>
+          pipe(
+            Str.split(recipe, /\s+/),
+            Arr.filter(Str.isNonEmpty),
+            Arr.map((part) =>
+              Arr.length(variants) === 0
+                ? part
+                : `${Arr.join(variants, ":")}:${part}`,
+            ),
+          ),
+      });
+    }),
+    Arr.join(" "),
+  );
+
 /** Parses a ring utility into its width and colour, if it is one. */
 const ringOf = (utility: string, theme: Theme): Ring | undefined => {
   if (!isRing(utility)) return undefined;
   const width = ringWidth(utility);
   const color = width === undefined ? ringColor(theme, utility) : undefined;
+  if (width === undefined && color === undefined) return undefined;
   return {
     ...(width === undefined ? {} : { width }),
     ...(color === undefined ? {} : { color }),
@@ -258,12 +328,21 @@ const addRing = (
   return next;
 };
 
-/** Resolves a class string to the native style and its state buckets. */
+/**
+ * Resolves a class string to the native style and its state buckets.
+ *
+ * The optional `state` makes `has-[>svg]`, `has-data-[icon=*]`,
+ * `data-expanded`, `data-behind`, `data-limited` and `aria-expanded` honest:
+ * they apply only when the component says they do.
+ */
 export const classesToStyle = (
   className: string | undefined,
   theme: Theme,
+  registry: TwRegistry = defaultRegistry,
+  state: TwState = {},
 ): TwResult => {
-  const tokens = Str.split(className === undefined ? "" : cn(className), /\s+/);
+  const expanded = expandAliases(className ?? "", registry);
+  const tokens = Arr.filter(Str.split(cn(expanded), /\s+/), Str.isNonEmpty);
   const passed = Arr.reduce(
     tokens,
     {
@@ -271,9 +350,18 @@ export const classesToStyle = (
       rings: new Map<Bucket, Ring>(),
     } satisfies Pass,
     (current, token) => {
-      if (token.length === 0) return current;
       const { variants, utility } = splitVariants(token);
-      const bucket = bucketOf(variants);
+      if (Option.isSome(registryReason(registry, token))) {
+        return {
+          ...current,
+          result: {
+            ...current.result,
+            unsupported: Arr.append(current.result.unsupported, token),
+          },
+        };
+      }
+
+      const bucket = bucketOf(variants, registry, state);
       if (bucket === "skip") return current;
       if (bucket === "unsupported") {
         return {
@@ -312,8 +400,11 @@ export const classesToStyle = (
         };
       }
 
-      const resolved = resolveUtility(utility, theme);
+      const resolved = resolveRegistryUtility(registry, utility, theme);
       if (resolved === undefined) {
+        // A responsive token is recorded for the later breakpoint pass; its
+        // utility is not an unsupported class just because it is named-only.
+        if (Arr.length(responsive) > 0) return { ...current, result };
         return {
           ...current,
           result: {
@@ -335,4 +426,33 @@ export const classesToStyle = (
         ? result
         : apply(result, bucket, ringShadow(theme, ring.width, ring.color)),
   );
+};
+
+/** Why a class cannot resolve, including the registry's custom reasons. */
+export const unsupportedReason = (
+  className: string,
+  registry: TwRegistry = defaultRegistry,
+): string | undefined =>
+  Option.getOrUndefined(registryReason(registry, className));
+
+/** A registry with `classesToStyle` bound to it. */
+export interface TwCompiler {
+  readonly registry: TwRegistry;
+  readonly classesToStyle: (
+    className: string | undefined,
+    theme: Theme,
+    state?: TwState,
+  ) => TwResult;
+  readonly unsupportedReason: (className: string) => string | undefined;
+}
+
+/** Builds a bound compiler for a consumer's utilities, variants and aliases. */
+export const createTw = (config: TwRegistryConfig = {}): TwCompiler => {
+  const registry = createTwRegistry(config);
+  return {
+    registry,
+    classesToStyle: (className, theme, state) =>
+      classesToStyle(className, theme, registry, state),
+    unsupportedReason: (className) => unsupportedReason(className, registry),
+  };
 };

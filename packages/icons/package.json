@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Icon markup, sizing and accessibility rules for the GPUixUI component library.",
+  "description": "Icon markup, sizing and accessibility rules for the GPUIxUI component library.",
   "exports": {
     ".": {
       "types": "./src/index.ts",

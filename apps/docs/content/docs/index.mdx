@@ -1,0 +1,95 @@
+---
+title: Introduction
+description: GPUIxUI is a native component library for GPUix and React — typed parts, semantic tokens and three platform looks, rendered without a browser engine.
+---
+
+**Native components, open source, built on GPUix.**
+
+GPUIxUI is a component library for desktop software built with
+[GPUix](https://github.com/remorses/gpuix) and React. Every component renders
+through GPUix's native primitives: there is no DOM, CSS or browser runtime
+inside the library.
+
+It is built around five principles:
+
+- **Native by construction** — components are GPUix host elements, not HTML
+  painted to look like a desktop app.
+- **Composition** — every component exposes named parts with one predictable
+  contract.
+- **Semantic tokens** — colour, type, spacing, radius, elevation and density
+  come from the theme; no component carries a colour literal.
+- **Honest limits** — where GPUix 0.10.0 lacks a capability, the docs say so and
+  give the strongest working alternative.
+- **Open code** — the implementation is in the workspace, typed and readable.
+
+## Native by construction
+
+The published `@gpuix/react` 0.10.0 exposes a small set of host elements —
+`div`, `text`, `img`, `svg`, `canvas`, `input`, `textarea`, `anchored`, `code`,
+`diff`, `markdown` and `virtual-list`. GPUIxUI builds its components from those,
+so a button is a `div` with the button role and its own Enter/Space contract, and
+a dialog is an anchored veil over the window. The docs record those decisions
+instead of hiding them.
+
+<Callout title="This site is not the runtime" type="info">
+  Pages show browser previews so you can see geometry and states. The shipped
+  component is the native one in the Code tab and under **Component source**;
+  previews never stand in for a working component.
+</Callout>
+
+## Composition
+
+Components are compound: a trigger, a surface and the parts inside it. The parts
+validate their placement, so a `DialogTitle` outside a `DialogHeader` fails with
+a message naming the family. The same shape repeats across the library, which
+makes a new component predictable for both people and models.
+
+```tsx
+<Dialog>
+  <DialogTrigger>Rename project</DialogTrigger>
+  <DialogContent label="Rename project">
+    <DialogHeader>
+      <DialogTitle>Rename project</DialogTitle>
+      <DialogDescription>Used everywhere the project is named.</DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <DialogClose variant="ghost">Cancel</DialogClose>
+      <DialogClose variant="primary">Save</DialogClose>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>;
+```
+
+## Semantic tokens
+
+A theme is plain data. `ThemeProvider` puts a resolved theme in React context,
+and each component reads the role it needs — `colors.primary`, `spacing.md`,
+`radius.md` — instead of a literal. Light, dark and high-contrast themes are the
+same shape, so a brand theme overrides only what it changes.
+
+```tsx
+import { Badge } from "@gpuixui/components/badge";
+import { lightTheme } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+<ThemeProvider theme={lightTheme}>
+  <Badge tone="success">Connected</Badge>
+</ThemeProvider>;
+```
+
+## Start here
+
+<Cards>
+  <Card title="Installation" href="/docs/installation">
+    Clone the workspace, add a package and render the first component.
+  </Card>
+  <Card title="Components" href="/docs/components/button">
+    Button, Dialog, Popover and Tabs — the page pattern for the rest.
+  </Card>
+  <Card title="Theming" href="/docs/theming">
+    Semantic roles, light and dark themes, and how to override them.
+  </Card>
+  <Card title="Contributing" href="/docs/contributing">
+    The checks, the worktree rules and what a component must ship with.
+  </Card>
+</Cards>

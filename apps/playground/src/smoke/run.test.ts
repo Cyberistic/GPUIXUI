@@ -2,8 +2,9 @@
  * Guards the smoke CLI's contract.
  *
  * The bugs these catch: an unsupported host reporting success (or crashing
- * before it can explain why), a flag typo silently running the wrong set, a
- * scenario added with a duplicate id or an uncovered capability, and a
+ * before it can explain why), `--list` or a flag typo silently running the
+ * whole suite, an unknown `--only` running zero scenarios and reporting a
+ * pass, a scenario added with a duplicate id or an uncovered capability, and a
  * preflight message that does not tell the operator what to do.
  */
 import { describe, expect, it } from "@effect/vitest";
@@ -11,8 +12,21 @@ import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Runtime } from "@gpuixui/testing";
-import { scenarioProblems, scenarios } from "../scenarios/index.js";
-import { EXIT, formatUnsupported, parseArgs, runScenarioCli } from "./run.js";
+import {
+  scenarioProblems,
+  scenarios,
+  selectScenarios,
+} from "../scenarios/index.js";
+import {
+  EXIT,
+  formatMissing,
+  formatUnsupported,
+  idsOf,
+  main,
+  parseArgs,
+  runScenarioCli,
+  usage,
+} from "./run.js";
 
 const unsupported = new Runtime.RuntimeUnsupported({
   platform: "darwin",
@@ -39,6 +53,13 @@ describe("parseArgs", () => {
     expect(parsed.flags.artifacts).toBe("apps/playground/.artifacts");
   });
 
+  it("turns --list into an explicit flag", () => {
+    const parsed = parseArgs(["--list"]);
+    expect(parsed.flags.list).toBe(true);
+    expect(parsed.flags.only).toEqual(Option.none());
+    expect(parsed.unknown).toEqual([]);
+  });
+
   it("collects an unknown flag rather than ignoring it", () => {
     const parsed = parseArgs(["--onlyy", "x"]);
     expect(parsed.unknown).toContain("--onlyy");
@@ -48,6 +69,47 @@ describe("parseArgs", () => {
     expect(parseArgs(["--artifacts"]).unknown).toContain(
       "--artifacts needs a directory",
     );
+  });
+
+  it("selects exactly the scenario named by --only", () => {
+    const parsed = parseArgs(["--only", "layout-flex"]);
+    expect(
+      Arr.map(
+        selectScenarios(scenarios, parsed.flags.only),
+        (scenario) => scenario.id,
+      ),
+    ).toEqual(["layout-flex"]);
+  });
+
+  it("makes an unknown --only an empty selection, not a silent pass", () => {
+    const parsed = parseArgs(["--only", "no-such-scenario"]);
+    expect(Option.isSome(parsed.flags.only)).toBe(true);
+    expect(selectScenarios(scenarios, parsed.flags.only)).toEqual([]);
+  });
+
+  it("parses a bare run as every scenario with no unknown tokens", () => {
+    const parsed = parseArgs([]);
+    expect(parsed.flags).toEqual({
+      json: false,
+      screenshots: false,
+      list: false,
+      only: Option.none(),
+      artifacts: "apps/playground/.artifacts",
+    });
+    expect(parsed.unknown).toEqual([]);
+  });
+});
+
+describe("formatMissing", () => {
+  it("names the bad id and every valid id", () => {
+    const message = formatMissing("no-such-scenario", idsOf(scenarios));
+    expect(message).toContain("no-such-scenario");
+    expect(message).toContain("layout-flex");
+  });
+
+  it("documents --list and --only in usage", () => {
+    expect(usage).toContain("--list");
+    expect(usage).toContain("--only <scenario-id>");
   });
 });
 
@@ -71,6 +133,47 @@ describe("scenarioProblems", () => {
       (scenario) => scenario.capability !== "focus",
     );
     expect(scenarioProblems(missing)).toContain('no scenario covers "focus"');
+  });
+});
+
+describe("main", () => {
+  const probe = (argv: ReadonlyArray<string>) => {
+    let loaded = false;
+    return {
+      argv,
+      load: () => {
+        loaded = true;
+        return Promise.reject("the binding must not load");
+      },
+      loaded: () => loaded,
+    };
+  };
+
+  it.effect("lists the ids and exits 0 without loading the binding", () => {
+    const deps = probe(["--list"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.passed);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
+  it.effect("rejects an unknown flag with exit 2 before loading", () => {
+    const deps = probe(["--onlyy", "layout-flex"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
+  });
+
+  it.effect("rejects an unknown --only with exit 2 before loading", () => {
+    const deps = probe(["--only", "no-such-scenario"]);
+    return Effect.gen(function* () {
+      const code = yield* main(deps);
+      expect(code).toBe(EXIT.unverified);
+      expect(deps.loaded()).toBe(false);
+    });
   });
 });
 

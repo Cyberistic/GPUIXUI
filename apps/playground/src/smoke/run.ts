@@ -9,7 +9,9 @@
  * 120 §2 and ADR 0001.
  *
  * `nub run --filter playground smoke` is the entrypoint. The exit code is the
- * contract: `0` passed, `1` a real failure, `2` no evidence (unsupported host).
+ * contract: `0` passed, `1` a real failure, `2` no evidence (unsupported host,
+ * or an argument this CLI does not understand). Arguments are validated before
+ * the preflight, so `--list` and a typo cost no binding load.
  */
 import {
   Clock,
@@ -46,6 +48,8 @@ const DEFAULT_ARTIFACTS = "apps/playground/.artifacts";
 export interface CliFlags {
   readonly json: boolean;
   readonly screenshots: boolean;
+  /** Print the scenario ids and exit without loading the binding. */
+  readonly list: boolean;
   readonly only: Option.Option<string>;
   readonly artifacts: string;
 }
@@ -78,6 +82,9 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
           ),
           Match.when("--screenshots", () =>
             step(tail, { ...flags, screenshots: true }, unknown),
+          ),
+          Match.when("--list", () =>
+            step(tail, { ...flags, list: true }, unknown),
           ),
           Match.when("--only", () =>
             Option.match(Arr.head(tail), {
@@ -113,12 +120,46 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     {
       json: false,
       screenshots: false,
+      list: false,
       only: Option.none(),
       artifacts: DEFAULT_ARTIFACTS,
     },
     [],
   );
 };
+
+/** The scenario ids, in run order. */
+export const idsOf = <A extends { readonly id: string }>(
+  list: ReadonlyArray<A>,
+): ReadonlyArray<string> => Arr.map(list, (scenario) => scenario.id);
+
+/** The usage text, printed with every argument error. */
+export const usage: string = Arr.join(
+  [
+    "usage:",
+    "  --only <scenario-id>  run only this scenario",
+    "  --list                print the scenario ids and exit",
+    "  --json                print the JSON report after the run",
+    "  --screenshots         capture a screenshot per scenario",
+    "  --artifacts <dir>     report and screenshot directory",
+    "exit 2: the smoke suite produced no evidence",
+  ],
+  "\n",
+);
+
+/** A bad id names the id and every valid one, so a typo is self-correcting. */
+export const formatMissing = (
+  id: string,
+  known: ReadonlyArray<string>,
+): string =>
+  Arr.join(
+    [
+      `native smoke: unknown scenario id: ${id}`,
+      `  known ids: ${Arr.join(known, ", ")}`,
+      "exit 2: the smoke suite produced no evidence",
+    ],
+    "\n",
+  );
 
 /** The preflight message for a host with no GPUix binding. Actionable, not a stack trace. */
 export const formatUnsupported = (
@@ -217,10 +258,10 @@ const mount =
       : render;
   };
 
-/** The real suite: load the binding, drive every scenario, write the report. */
+/** The real suite: load the binding, drive the selected scenarios, write the report. */
 export const program = (
   flags: CliFlags,
-  unknown: ReadonlyArray<string>,
+  selected: ReadonlyArray<PlaygroundScenario>,
 ): Effect.Effect<
   ExitCode,
   PlatformError.PlatformError,
@@ -229,15 +270,6 @@ export const program = (
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-
-    yield* Effect.forEach(
-      unknown,
-      (flag) => Console.error(`ignoring unknown flag: ${flag}`),
-      {
-        concurrency: 1,
-        discard: true,
-      },
-    );
 
     const testing = yield* Effect.tryPromise({
       try: () => import("@gpuix/react/testing"),
@@ -280,7 +312,6 @@ export const program = (
         }),
     });
     const host = createNativeHost(root.renderer);
-    const selected = selectScenarios(scenarios, flags.only);
     const startedAt = yield* Clock.currentTimeMillis;
 
     const report = yield* Smoke.runScenarios(
@@ -303,27 +334,69 @@ export const program = (
     return Report.exitCode(report);
   });
 
-/** Wires the real preflight and suite. Runtime execution stays here. */
-export const main = (): Effect.Effect<ExitCode> => {
-  const parsed = parseArgs(process.argv.slice(2));
-  return runScenarioCli({
-    detect: Runtime.detectRuntime({
-      platform: process.platform,
-      arch: process.arch,
-      load: () => import("@gpuix/react/testing"),
-    }),
-    runSuite: program(parsed.flags, parsed.unknown).pipe(
-      Effect.provide(NodeFileSystem.layer),
-      Effect.provide(NodePath.layer),
-      Effect.orDie,
-    ),
+/** The process inputs the CLI needs, injected so the argument guard is testable. */
+export interface MainDeps {
+  readonly argv: ReadonlyArray<string>;
+  /** Loads the native binding; the argument guard must run first. */
+  readonly load: () => Promise<unknown>;
+}
+
+/** Validates the arguments, then wires the real preflight and suite. */
+export const main = (deps: MainDeps): Effect.Effect<ExitCode> =>
+  Effect.gen(function* () {
+    const parsed = parseArgs(deps.argv);
+
+    if (parsed.flags.list) {
+      yield* Console.log(Arr.join(idsOf(scenarios), "\n"));
+      return EXIT.passed;
+    }
+
+    if (Arr.isReadonlyArrayNonEmpty(parsed.unknown)) {
+      yield* Console.error(
+        Arr.join(
+          [
+            ...Arr.map(
+              parsed.unknown,
+              (token) => `native smoke: unknown argument: ${token}`,
+            ),
+            usage,
+          ],
+          "\n",
+        ),
+      );
+      return EXIT.unverified;
+    }
+
+    const only = parsed.flags.only;
+    const selected = selectScenarios(scenarios, only);
+    if (Option.isSome(only) && !Arr.isReadonlyArrayNonEmpty(selected)) {
+      yield* Console.error(formatMissing(only.value, idsOf(scenarios)));
+      return EXIT.unverified;
+    }
+
+    return yield* runScenarioCli({
+      detect: Runtime.detectRuntime({
+        platform: process.platform,
+        arch: process.arch,
+        load: deps.load,
+      }),
+      runSuite: program(parsed.flags, selected).pipe(
+        Effect.provide(NodeFileSystem.layer),
+        Effect.provide(NodePath.layer),
+        Effect.orDie,
+      ),
+    });
   });
-};
 
 // Run only when executed directly (`node dist/smoke/run.js`), never on import,
 // so the pure tests can import this module without launching a suite.
 // `Effect.runPromise` is the process entrypoint boundary (EF-21).
 const entry = process.argv[1];
 if (entry !== undefined && import.meta.filename === entry) {
-  process.exitCode = await Effect.runPromise(main());
+  process.exitCode = await Effect.runPromise(
+    main({
+      argv: process.argv.slice(2),
+      load: () => import("@gpuix/react/testing"),
+    }),
+  );
 }

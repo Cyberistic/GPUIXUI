@@ -1,0 +1,23 @@
+---
+title: Login
+description: A centered sign-in card — email, password, remember me and a secondary action.
+---
+
+A sign-in recipe: a `Card` with email and password fields, a `Checkbox`, and a
+primary action in the footer. Copy the recipe; it is composed from the library,
+not a new component.
+
+<BlockPreview name="login-01" />
+
+## Composition
+
+The block composes:
+
+- `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` and
+  `CardFooter` from `@gpuixui/components/card`
+- `Button`, `Checkbox`, `Input`, `Label`, `Separator`, `Stack` and `Text` from
+  `@gpuixui/primitives`
+
+Both are workspace packages already on the component page; the recipe adds no
+new dependency. Wire `signIn` to your own handler and `fullWidth` keeps the
+primary action on the card's edge.

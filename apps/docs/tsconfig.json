@@ -1,0 +1,14 @@
+{
+  "extends": "@gpuixui/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "noEmit": true
+  },
+  "include": ["src", "content", "source.config.ts", "vite.config.ts", ".source"]
+}

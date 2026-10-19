@@ -1,0 +1,89 @@
+---
+title: Dark mode
+description: Switch light, dark and high-contrast themes from application state — GPUIxUI ships no hidden OS-mode listener.
+---
+
+Dark mode is a resolved theme, not a CSS class. The application decides the mode,
+picks a `Theme`, and gives it to `ThemeProvider`. Every component below reads the
+semantic roles, so one provider swap changes the whole window.
+
+```tsx
+import { useState } from "react";
+import { getTheme, type ThemeMode } from "@gpuixui/tokens";
+import { ThemeProvider } from "@gpuixui/tokens/react";
+
+export function Root() {
+  const [mode, setMode] = useState<ThemeMode>("dark");
+  const [contrast, setContrast] = useState<"default" | "high">("default");
+
+  return (
+    <ThemeProvider theme={getTheme(mode, contrast)}>
+      <Workspace onToggleMode={() => setMode(mode === "dark" ? "light" : "dark")} />
+    </ThemeProvider>
+  );
+}
+```
+
+`getTheme(mode, contrast)` returns one of the four built-in themes:
+
+| Call | Theme |
+| ---- | ----- |
+| `getTheme("light")` | light |
+| `getTheme("dark")` | dark |
+| `getTheme("light", "high")` | high-contrast light |
+| `getTheme("dark", "high")` | high-contrast dark |
+
+## Why the app owns it
+
+GPUix 0.10.0 exposes no appearance query, so the library cannot ask the operating
+system whether it is in dark mode. Pretending to would mean guessing. The honest
+contract is explicit: the host application decides, remembers and passes the
+theme. That also makes screenshots and tests deterministic — a test provides a
+theme instead of hoping the machine is in the right mode.
+
+## Persist the choice
+
+Store the mode wherever the application already stores preferences. The library
+only needs the resolved value:
+
+```tsx
+const [mode, setMode] = useState<ThemeMode>(
+  () => (settings.themeMode ?? "dark"),
+);
+
+const change = (next: ThemeMode) => {
+  setMode(next);
+  settings.set("themeMode", next);
+};
+```
+
+## High contrast
+
+High contrast is a second axis, not a third mode. It keeps the same layout and
+raises text and boundary contrast for accessibility:
+
+```tsx
+const theme = getTheme(mode, accessible ? "high" : "default");
+```
+
+## Platform typography
+
+Mode and platform are independent. Apply `platformTheme` after choosing the mode
+to give the same palette the platform's monospace family and label:
+
+```tsx
+import { getTheme, platformTheme } from "@gpuixui/tokens";
+
+const theme = platformTheme(getTheme(mode), "win32");
+```
+
+The UI face stays GPUI's `.SystemUIFont` sentinel, which resolves to the
+operating system's own font at render time. Only the monospace family and the
+documentation label differ per platform.
+
+## Tokens and contrast
+
+Every colour role is part of the theme contract. A brand theme may change values
+but should keep the full role set; `borderStrong` is held to 3:1 for essential
+control boundaries, and body text uses the foreground roles. When adding a
+theme, verify both modes instead of assuming a colour works on both.

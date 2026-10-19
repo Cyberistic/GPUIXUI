@@ -1,0 +1,148 @@
+---
+title: Tabs
+description: A roving-focus tab list and the panels it switches.
+---
+
+`Tabs` switches between panels that share one region. Selection lives in the tab
+set, focus lives on a trigger, and the two move together unless `activation` says
+otherwise.
+
+<ComponentPreview name="tabs-demo" />
+
+## Installation
+
+<Install packageName="@gpuixui/components" importName="Tabs" />
+
+<ComponentSource name="tabs" file="packages/components/src/tabs.tsx" />
+
+## Usage
+
+```tsx
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@gpuixui/components/tabs";
+
+<Tabs defaultValue="profile">
+  <TabsList label="Account settings">
+    <TabsTrigger value="profile">Profile</TabsTrigger>
+    <TabsTrigger value="notifications">Notifications</TabsTrigger>
+  </TabsList>
+  <TabsContent value="profile">…</TabsContent>
+  <TabsContent value="notifications">…</TabsContent>
+</Tabs>;
+```
+
+## Composition
+
+| Part | Responsibility |
+| ---- | -------------- |
+| `Tabs` | the selected value, the trigger registry and the tab stop |
+| `TabsList` | `role="tablist"`, the arrow/Home/End keys and the rail |
+| `TabsTrigger` | one `role="tab"` with `aria-selected` and its own focus |
+| `TabsContent` | one `role="tabpanel"`, mounted only while selected |
+
+`TabsContent` mounts only its matching panel. A value with no matching trigger or
+panel is allowed: the set simply has nothing selected until a trigger is chosen.
+
+## Orientation
+
+`orientation` defaults to `"horizontal"`. A vertical set puts the rail in a
+column beside the panels and maps movement to `Down`/`Up`.
+
+```tsx
+<Tabs defaultValue="general" orientation="vertical">
+  <TabsList label="Workspace sections">
+    <TabsTrigger value="general">General</TabsTrigger>
+    <TabsTrigger value="members" disabled>
+      Members
+    </TabsTrigger>
+    <TabsTrigger value="billing">Billing</TabsTrigger>
+  </TabsList>
+  <TabsContent value="general">…</TabsContent>
+  <TabsContent value="billing">…</TabsContent>
+</Tabs>;
+```
+
+Disabled tabs are skipped by every key and cannot be clicked.
+
+## Activation
+
+`activation` decides whether moving focus also selects:
+
+- `"automatic"` (default) — arrow keys move focus **and** the selection.
+- `"manual"` — arrow keys move focus only; `Enter` or `Space` selects.
+
+Manual activation is the right choice when switching panels has a cost, such as
+a network read.
+
+## Controlled and uncontrolled
+
+```tsx
+<Tabs defaultValue="profile">…</Tabs>;               // remembers
+<Tabs value={tab} onValueChange={setTab}>…</Tabs>;   // app remembers
+```
+
+A controlled set reports a click or key but does not switch its panel until the
+consumer re-renders with the new value.
+
+## Keyboard
+
+| Key | Result |
+| --- | ------ |
+| `ArrowRight` / `ArrowLeft` (horizontal) | next/previous enabled tab, wrapping |
+| `ArrowDown` / `ArrowUp` (vertical) | next/previous enabled tab, wrapping |
+| `Home` / `End` | first/last enabled tab |
+| `Enter` / `Space` | select the focused tab (the only way in `manual`) |
+
+Only the selected trigger is in the tab order; every other trigger is `-1`.
+
+## API reference
+
+### Tabs
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` | uncontrolled |
+| `defaultValue` | `string` | `""` — no tab selected |
+| `onValueChange` | `(value: string) => void` | none |
+| `orientation` | `"horizontal" \| "vertical"` | `"horizontal"` |
+| `activation` | `"automatic" \| "manual"` | `"automatic"` |
+
+### TabsList
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `label` | `string` | none |
+
+### TabsTrigger
+
+| Prop | Type | Default |
+| ---- | ---- | ------- |
+| `value` | `string` (required) | none |
+| `disabled` | `boolean` | `false` |
+| `style` | `StyleDesc \| (state) => StyleDesc` | none |
+
+`TabsTriggerState` passed to a style function is
+`{ active, disabled, focused, highlighted, orientation }`.
+
+## Accessibility and limitations
+
+- `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
+  exposed; the roving tab index is the single-stop pattern. Give the list a
+  `label` so the set has a name.
+- **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in
+  `@gpuix/native@0.10.0`. The panel is named by its value, and the
+  trigger-to-panel relationship is positional.
+- The list owns the keys because a key event on a focused trigger bubbles to the
+  list — measured in the real renderer.
+- Vertical tabs are a layout and keyboard choice, not an ARIA attribute; the
+  attribute is unavailable in this runtime.
+
+## Related
+
+- **Accordion** — stacked sections with more than one open.
+- **List** — the same collection arithmetic for selectable rows.
+- **Breadcrumb** — orientation through a hierarchy rather than across peers.

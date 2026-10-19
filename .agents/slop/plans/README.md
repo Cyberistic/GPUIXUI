@@ -268,6 +268,16 @@ B1, so it is planned, not done.
 > and are merged into `main` as each workstream completes; this index is the
 > union.
 
+### Docs site (block `400–499`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [436](./436-blocks-and-theme-editor.md) | **Blocks and the Theme Editor** — the two remaining shadcn surfaces (`/docs/blocks`, `/docs/themes`) | E | `524`, `063`, `200` | done — `/docs/blocks` index + login/settings recipes and the `/docs/themes` token editor, on `agent/blocks-theme-editor` |
+
+> The earlier phase-E docs plans (`433` platform recipes, `434` landing, `435a–c`
+> Pele / Editor / RTL) are listed in the reference-adoption table above; they
+> share this block but were numbered before the docs-site section existed.
+
 ### Cross-cutting styling conformance
 
 | Plan | Title | Phase | Depends on | Status |
@@ -299,6 +309,10 @@ B1, so it is planned, not done.
 | [592](./592-toast-progress.md) | Toast: the remaining auto-dismiss time is visible | C/F | 110, 115, 117, 123, 124, 322, 370, 525, 548 | done — a 2px bottom bar over the store's published `ToastTiming`, ticking locally every 100 ms, freezing on the hover/focus hold and absent for a zero/infinite duration. 6 timing + 5 store + 1 stream + 2 native cases (Toast 20, unit 444), two mutation proofs; docs, `COMPONENTS.md` and the inventory synced |
 | [595](./595-chat-composer-focus-ring.md) | Chat composer: a focusable field that paints no focus ring | C/F | 110, 117, 207, 331, 388, 514, 522, 523, 592 | done — measured: an `autoFocus` `<textarea>` was the focused element (`focused=composer`) and painted no `boxShadow`, the one focusable part plan 522 never reached. The composer now seeds `focused` from `autoFocus`, composes the caller's `onFocus`/`onBlur` and paints the token ring only while focused; 2 native cases (Chat 12, behaviour 752/35 of 787), three mutation proofs; docs, `COMPONENTS.md` and the inventory synced |
 | [597](./597-animated-surface-identity.md) | Animated surfaces are addressable: a typed motion wrapper | F | 110, 372, 386, 525, 526, 592 | done — measured: the runtime's `MotionDiv` forwards every prop, but the published type omits `testId`/`role`/`aria-*`, so every animated box was anonymous and plan 592 measured a neighbouring row. `internal/motion.tsx` restores the host surface; Collapsible/Accordion/Popover/Drawer tween boxes carry `<part testId>-surface` and a Toast card `toast-<id>-surface` (Dialog's window-sized fade keeps `dialog-backdrop`). 6 native cases (behaviour 758/35 of 793, same 35 plan-540 failures), five mutation proofs; docs, `COMPONENTS.md` and the inventory synced |
+| [525](./525-gpui-transform.md) | GPUI transform/scale: audit the 0xErwin1 branch, merge surface, licence, and the fork-or-fallback decision | infra (renderer) | `020`, `524`, `140` | research complete — **needs port**; optional patch ported and green (`patches/gpui/`), but the fork is still not distributable; fallback recommended until gate 2. Build plumbing: `538` |
+| [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
+| [530](./530-gpuix-zindex.md) | `zIndex` in the GPUix binding: paint order and hit order | infra (runtime) | `140`, `529`, `524` | done — patch applied to the source-built `darwin-x64` binding; 27 Rust tests and 397 playground tests pass; transform/scale/rotate stay out of scope |
+| [538](./538-transform-build-fork-source.md) | Transform build plumbing: fetch the GPUix Zed fork at the pin and apply the transform patch behind `GPUIX_TRANSFORM=1` | infra (renderer) | `525`, `530`, `140` | source integration done — fetch, patch apply and flag transitions proven without a build; transform-enabled build deliberately deferred |
 
 ## How to use a plan
 

@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/preset.css";
+@import "fumadocs-ui/css/shadcn.css";
+@import "./demos.css";
+@import "./blocks.css";
+@import "./theme-editor.css";
+
+/*
+ * The docs palette is the landing's: near-black surfaces, bone text and the
+ * lime "Hunter License" accent. Fumadocs reads every colour through the shadcn
+ * variables, so this is the only place colour is declared.
+ */
+:root {
+  --background: #f6f8fa;
+  --foreground: #191d25;
+  --card: #ffffff;
+  --card-foreground: #191d25;
+  --popover: #ffffff;
+  --popover-foreground: #191d25;
+  --primary: #435300;
+  --primary-foreground: #f7ffe0;
+  --secondary: #eef1f5;
+  --secondary-foreground: #2a303b;
+  --muted: #eef1f5;
+  --muted-foreground: #545d6c;
+  --accent: #eef7d0;
+  --accent-foreground: #3d4a00;
+  --destructive: #cc3439;
+  --border: #e1e5ec;
+  --input: #e1e5ec;
+  --ring: #86b300;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #191d25;
+  --sidebar-border: #e1e5ec;
+  --sidebar-accent: #eef7d0;
+  --sidebar-accent-foreground: #3d4a00;
+  --sidebar-ring: #86b300;
+  --sidebar-primary: #435300;
+  --sidebar-primary-foreground: #f7ffe0;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+
+.dark {
+  --background: #08090b;
+  --foreground: #f4f5f7;
+  --card: #0e1114;
+  --card-foreground: #f4f5f7;
+  --popover: #12161a;
+  --popover-foreground: #f4f5f7;
+  --primary: #c6ff3d;
+  --primary-foreground: #0a0c07;
+  --secondary: #1b2026;
+  --secondary-foreground: #eef1f5;
+  --muted: #151a1f;
+  --muted-foreground: #949aa3;
+  --accent: #1b2410;
+  --accent-foreground: #d9ff8a;
+  --destructive: #ff6b6b;
+  --border: #1c1f24;
+  --input: #1c1f24;
+  --ring: #86b300;
+
+  --sidebar: #0b0d10;
+  --sidebar-foreground: #f4f5f7;
+  --sidebar-border: #1c1f24;
+  --sidebar-accent: #161b12;
+  --sidebar-accent-foreground: #c6ff3d;
+  --sidebar-ring: #86b300;
+  --sidebar-primary: #c6ff3d;
+  --sidebar-primary-foreground: #0a0c07;
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+/* The landing's mark, reused as the docs brand. */
+.gx-mark {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--primary);
+  border-radius: 5px;
+}
+
+.gx-mark::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 2px;
+  background: var(--primary);
+}
+
+/* Section labels in a sidebar and the uppercase eyebrow used on pages. */
+.gx-eyebrow {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* The component page frame: Preview / Code tabs, as shadcn presents them. */
+.gx-component {
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card);
+}
+
+.gx-component-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+
+.gx-component-tabs [role="tablist"] {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.gx-component-tabs [role="tab"] {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.gx-component-panel {
+  margin: 0;
+}
+
+.gx-component-code {
+  max-height: 520px;
+  overflow: auto;
+}
+
+.gx-component-code figure {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.gx-component-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.gx-component-note a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
