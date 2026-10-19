@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 240/318
+`[x]` `[████████░░]` 241/319
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2001,6 +2001,15 @@ returned `[]`; `nativeTextWashes` publishes the four fractions, the check holds
 them on all four `nativeTextSurfaces`, every shipped set passes (so no colour
 moves) and the type index, reference, design system, README and ledger name it
 (plan 588)
+`[x]` Hold the native code block's own frame on its body ink wash — a fenced
+block paints the theme's `border` around a body on the runtime's 3.5% ink wash,
+but plan 588 measured that role only on the 2% language-header wash, so on
+`Dark` a `border: "#222222"` that cleared every plain-surface divider pair
+measured **1.036:1** inside the block while `themeFailures` returned `[]`;
+`nativeTextWashes` now owns the body frame beside the header separator, every
+shipped set already clears the 1.05:1 floor (1.130:1 at the tightest,
+`Dark · Linux`) so no colour moves, and the reference, design system, README and
+ledger name it (plan 589)
 
 ## Phase C — Tier 1–2 components
 

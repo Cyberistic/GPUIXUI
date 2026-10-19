@@ -132,16 +132,19 @@ export interface NativeTextWash {
  * The chrome the runtime paints on its own ink washes, each measured on every
  * {@link nativeTextSurfaces} tone.
  *
- * A code block's language header is a 2% ink wash under `textMuted`, and the
- * separator below it is the theme's `border` on that same wash. A diff file
- * header is a 2.5% wash under its path (`textMuted`) and its two counts
- * (`diffAdd`/`diffDel`), and the hover wash — shared by the show-more row — is
- * 5%. The fades in {@link nativeTextFades} name the code body and the per-role
- * fades, not these four. On `Dark · macOS` the accepted `border: "#303030"`
- * theme measures **1.002:1** on the code header's 2% wash while every other
- * check returns `[]`.
+ * A code block's own frame is the theme's `border` on the 3.5% body ink wash,
+ * and its language header's separator is the same role on the 2% header wash.
+ * A diff file header is a 2.5% wash under its path (`textMuted`) and its two
+ * counts (`diffAdd`/`diffDel`), and the hover wash — shared by the show-more row
+ * — is 5%. The fades in {@link nativeTextFades} name the code body and the
+ * per-role fades, not these washes. On `Dark · macOS` the accepted
+ * `border: "#303030"` theme measures **1.002:1** on the code header's 2% wash,
+ * and on `Dark` a `border: "#222222"` that clears every plain pair measures
+ * **1.036:1** on the block's own body wash, while every other check returns
+ * `[]`.
  */
 export const nativeTextWashes: readonly NativeTextWash[] = [
+  { field: "border", ink: 0.035, pairClass: "divider" },
   { field: "border", ink: 0.02, pairClass: "divider" },
   { field: "textMuted", ink: 0.02, pairClass: "secondary" },
   { field: "textMuted", ink: 0.025, pairClass: "secondary" },
@@ -183,9 +186,10 @@ export interface NativeTextFailure {
  * Every native document paint that misses its floor in a theme.
  *
  * The runtime fades a document's text, markers, tints, rails and gutter at fixed
- * fractions, paints a code block on a black-or-white ink wash, and washes its
- * own chrome — a code header, a diff file header, their hover — with a lighter
- * ink the theme does not own; none of them is a token, so
+ * fractions, paints a code block on a black-or-white ink wash, frames it with
+ * the theme's `border` on that same wash, and washes its own chrome — a code
+ * header, a diff file header, their hover — with a lighter ink the theme does
+ * not own; none of those compositions is a token pair, so
  * {@link themeContrastFailures} cannot see them. This is the ninth check: it
  * holds {@link nativeTextFades}, {@link nativeTextOverFades},
  * {@link nativeTextWashes} and every syntax role through {@link nativeInk} on
@@ -199,7 +203,8 @@ export interface NativeTextFailure {
  * measures **6.405:1** through the ink wash, and a `mutedForeground` of
  * `"#bebebe"` paints a blockquote at **6.335:1**, both under the body floor. A
  * `border: "#303030"` theme on `Dark · macOS` clears every plain-surface pair
- * and measures **1.002:1** on the code header's 2% wash.
+ * and measures **1.002:1** on the code header's 2% wash; on `Dark`, a
+ * `border: "#222222"` measures **1.036:1** on the block's own 3.5% body wash.
  *
  * @example
  * ```ts

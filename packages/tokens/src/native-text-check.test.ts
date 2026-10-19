@@ -15,6 +15,12 @@
  * `border: "#303030"` measures **1.002:1** on the code header while every other
  * check returns `[]`.
  *
+ * Plan 589 adds the block's own frame: a fenced code block paints
+ * `border_color(theme.border)` around a body on the 3.5% ink wash, so the same
+ * role can vanish inside the block. On `Dark`, `border: "#222222"` clears every
+ * plain-surface pair and measures **1.036:1** on the body wash while every other
+ * check returns `[]`.
+ *
  * Two edits that pass every other check prove the earlier gap. On `Dark ·
  * Linux`, `successText: "#bebebe"` measures **6.405:1** for a string token
  * through the ink wash and `mutedForeground: "#bebebe"` measures **6.335:1**
@@ -217,6 +223,7 @@ describe("native text check", () => {
         (wash) => `${wash.field}@${wash.ink} ${wash.pairClass}`,
       ),
     ).toEqual([
+      "border@0.035 divider",
       "border@0.02 divider",
       "textMuted@0.02 secondary",
       "textMuted@0.025 secondary",
@@ -246,6 +253,24 @@ describe("native text check", () => {
     expect(failure?.ratio).toBeCloseTo(1.002, 2);
   });
 
+  it("reports a code block frame the plain pairs accept", () => {
+    const planted = extendTheme(getTheme("dark"), {
+      colors: { border: "#222222" },
+    });
+    expect(
+      themeFailures(planted).filter((failure) => failure.kind !== "nativeText"),
+    ).toEqual([]);
+
+    const failure = themeNativeTextFailures(planted).find(
+      (candidate) => candidate.field === "border" && candidate.ink === 0.035,
+    );
+    expect(failure?.role).toBe("border");
+    expect(failure?.surface).toBe("card");
+    expect(failure?.pairClass).toBe("divider");
+    expect(failure?.opacity).toBe(1);
+    expect(failure?.ratio).toBeCloseTo(1.036, 2);
+  });
+
   it("can fail every published chrome wash on its own surface", () => {
     nativeTextWashes.forEach((wash) => {
       const role = nativeTextRoles[wash.field];
@@ -266,13 +291,20 @@ describe("native text check", () => {
     });
   });
 
-  it("pins the code-header figure the reference quotes", () => {
+  it("pins the chrome figures the reference quotes", () => {
     const planted = extendTheme(getPlatformTheme("darwin", "dark"), {
       colors: { border: "#303030" },
     });
     const ratio = contrastRatio(
       planted.colors.border,
       nativeInk(planted, "card", 0.02),
+    );
+    const body = extendTheme(getTheme("dark"), {
+      colors: { border: "#222222" },
+    });
+    const bodyRatio = contrastRatio(
+      body.colors.border,
+      nativeInk(body, "card", 0.035),
     );
     const docs = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
@@ -281,6 +313,9 @@ describe("native text check", () => {
     expect(docs).toContain(`**${ratio.toFixed(3)}:1**`);
     expect(docs).toContain('`border: "#303030"`');
     expect(docs).toContain("`Dark · macOS`");
+    expect(docs).toContain(`**${bodyRatio.toFixed(3)}:1**`);
+    expect(docs).toContain('`border: "#222222"`');
+    expect(docs).toContain("on the `Dark` theme");
   });
 
   it("names every value in the reference", () => {

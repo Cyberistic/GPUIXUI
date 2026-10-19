@@ -845,11 +845,12 @@ four `Surface` tones a document may paint on; the syntax palette is held to the
 body floor both opaque (`nativeSyntaxPairs`) and through the 3.5% ink wash the
 code block paints over each, and the word-level 28% diff wash is documented as
 the one omission because a changed token's own colour sits on a wash of its own
-family. The runtime's own chrome is held too: a code block's language header
-(2% ink under `textMuted`, with the theme's `border` on the same wash) and a
-diff file header (2.5%, and 5% under the pointer, under `textMuted`, `diffAdd`
-and `diffDel`) are `nativeTextWashes`, measured on every tone a document may
-paint on. The find highlight is held on that tone and on the
+family. The runtime's own chrome is held too: a code block's body frame (the
+theme's `border` on the 3.5% body wash), its language header and separator
+(`textMuted` and the theme's `border` on the 2% header wash), and a diff file
+header (2.5%, and 5% under the pointer, under `textMuted`, `diffAdd` and
+`diffDel`) are `nativeTextWashes`, measured on every tone a document may paint
+on. The find highlight is held on that tone and on the
 same painted surface, and its active match one `step` above the match, so an
 edited near-opaque `selection` that paints both washes the same colour is
 reported. A document painted directly on the canvas overrides

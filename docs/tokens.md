@@ -1623,15 +1623,17 @@ on the same four tones; the tightest is `warningText` at **7.008:1**
 
 The runtime's own chrome sits on lighter ink washes the theme does not own.
 A code block's language header is a **2%** wash under `textMuted`, and the
-separator below it is the theme's `border` on that same wash; a diff file header
-is **2.5%** under its path (`textMuted`) and its two counts
+separator below it is the theme's `border` on that same wash; the block's whole
+body is framed with the same `border` on its **3.5%** ink wash; a diff file
+header is **2.5%** under its path (`textMuted`) and its two counts
 (`diffAdd`/`diffDel`), and the header's hover — shared by the show-more row — is
-**5%** under the same three roles. `nativeTextWashes` owns those four fractions
-and `themeNativeTextFailures` holds the code header's text and separator at
-secondary and divider, and the diff header's three roles at secondary, on every
+**5%** under the same three roles. `nativeTextWashes` owns those fractions and
+`themeNativeTextFailures` holds the code header's text and separator, the body
+frame, and the diff header's three roles at secondary and divider, on every
 `nativeTextSurfaces` tone. A theme whose `border` clears 1.05:1 on every plain
-surface can still lose the code separator: on `Dark · macOS`,
-`border: "#303030"` measures **1.002:1** on the header's 2% wash while every
+surface can still lose the code frame: on `Dark · macOS`, `border: "#303030"`
+measures **1.002:1** on the header's 2% wash, and on the `Dark` theme,
+`border: "#222222"` measures **1.036:1** on the block's body wash while every
 other check returns `[]`.
 
 A role chosen for its opaque floor still has to clear the faded one. On
@@ -1647,7 +1649,10 @@ paints a changed token's own syntax colour over a wash of the add/delete family.
 same-family wash can keep a syntax token at text strength. It is transient
 emphasis on a line whose body is held at 92% over the 5.5% row tint; a consumer
 that enables word-level diffs keeps the line readable and accepts the emphasis
-wash. The light platform
+wash. The runtime also draws two neutral hairlines of its own — a diff file
+header's **4%** top edge and a markdown table's **10%** rule — which are fixed
+black-or-white ink, not a theme role, so no theme edit can move them and they
+stay outside the contract. The light platform
 styles own the steps their canvases need: macOS, Windows, Windows XP and Aero
 name `infoText` `#173A88`; XP adds `successText` `#0E5135`, `warningText`
 `#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `successText`
