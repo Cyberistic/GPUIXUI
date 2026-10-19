@@ -471,7 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–591)
 
-`[~]` `[██████████]` 157/159
+`[~]` `[██████████]` 158/160
+
+`[x]` **Reader vocabulary, seventh pass (plan 592)** — a measured sweep found
+      `sorting`, `npm`, `pnpm`, `yarn` returning nothing, `sort`, `sortable`,
+      `filtering`, `columns`, `worktree` landing on another page or a prose
+      chunk, and `registry`, `publish`, `package manager` on the wrong page.
+      Three authored summaries (Data display, Installation, Contributing) and
+      one Installation sentence name the subjects; a fourteen-query table, a
+      ten-query regression table and three production queries guard them.
+      `filter` now reaches Data display (the subject owner) rather than the
+      Project browser composition; the plan records the decision and the three
+      forced-defect runs.
 
 `[x]` **Reader vocabulary, sixth pass (plan 591)** — `setup` and `testing`
       returned nothing, `test` returned the Component pages gesture table,

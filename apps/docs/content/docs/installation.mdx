@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: "Add GPUIXUI to a GPUix application: setup, prerequisites and system requirements, platform support for the native binding targets on macOS, Linux and Windows, and the install commands."
+description: "Add GPUIXUI to a GPUix application: setup, prerequisites and system requirements, package managers (nub, npm, pnpm, yarn), whether the packages are published to a registry, platform support for the native binding targets on macOS, Linux and Windows, and the install commands."
 ---
 
 GPUIXUI is consumed inside a [GPUix](https://github.com/remorses/gpuix)
@@ -50,7 +50,9 @@ standard.
 
 The workspace is under construction and the packages are **not on a registry
 yet**. The install commands below are the intended shape; until the first
-release they will not resolve. The packages are built from this repository:
+release they will not resolve. The packages are built from this repository. The
+workspace installs with `nub`; once the packages are published, the same package
+names install with npm, pnpm or yarn:
 
 ```sh
 nub install

@@ -945,6 +945,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the compound convention the Component API summary names",
     },
+    {
+      query: "sorting",
+      expected: "/docs/data-display",
+      first: true,
+      what: "the sorting subject the Data display summary names",
+    },
+    {
+      query: "npm",
+      expected: "/docs/installation",
+      first: true,
+      what: "the package manager the Installation summary names",
+    },
+    {
+      query: "worktree",
+      expected: "/docs/contributing",
+      first: true,
+      what: "the worktrees the Contributing summary names",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

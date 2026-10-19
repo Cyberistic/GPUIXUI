@@ -697,6 +697,74 @@ describe("search", { timeout: 120_000 }, () => {
   });
 
   /**
+   * Plan 592: the seventh measured sweep. `sorting`, `npm`, `pnpm` and `yarn`
+   * returned nothing; `sort`, `sortable`, `filtering`, `columns` and `worktree`
+   * landed on another page or a prose chunk; `registry`, `publish` and
+   * `package manager` reached Architecture, Extending and Examples. Each of the
+   * three owning pages already contained the word in its body, so this names
+   * the subject in its authored summary; no ranker rule is added.
+   */
+  it("finds the seventh set of reader words and page subjects (plan 592)", async () => {
+    const expected = [
+      ["sort", "/docs/data-display"],
+      ["sorting", "/docs/data-display"],
+      ["sortable", "/docs/data-display"],
+      ["filtering", "/docs/data-display"],
+      ["filter", "/docs/data-display"],
+      ["column", "/docs/data-display"],
+      ["columns", "/docs/data-display"],
+      ["npm", "/docs/installation"],
+      ["pnpm", "/docs/installation"],
+      ["yarn", "/docs/installation"],
+      ["registry", "/docs/installation"],
+      ["publish", "/docs/installation"],
+      ["package manager", "/docs/installation"],
+      ["worktree", "/docs/contributing"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The seventh pass may not steal a subject an earlier pass assigned. `filter`
+   * is deliberate: Data display owns filtering controls, so the subject page
+   * now outranks the Project browser's working composition (recorded in plan
+   * 592 §2.2).
+   */
+  it("keeps the data and install words the earlier passes assigned (plan 592)", async () => {
+    const expected = [
+      ["table", "/docs/data-display"],
+      ["tables", "/docs/data-display"],
+      ["virtualized", "/docs/data-display"],
+      ["datagrid", "/docs/data-display"],
+      ["theme", "/docs/theming"],
+      ["panel", "/docs/workspace"],
+      ["input", "/docs/components/text-input"],
+      ["label", "/docs/components/label"],
+      ["spacing", "/docs/theming"],
+      ["screen reader", "/docs/accessibility"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
    * Plan 591: a component's URL slug is the name in its canonical link. Eight
    * of 66 slugs reached a pattern page or Date pickers because the registry
    * document and the name list never contained the slug (`button-group`,
