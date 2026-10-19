@@ -12,7 +12,9 @@
  * Two measured facts shape the implementation (probe, 2026-10-17):
  *
  * - a key event fired on a focused row **bubbles** to the list's `onKeyDown`, so
- *   the list can own the keys while the row owns the focus;
+ *   the list can own the keys while the row owns the focus; the list acts only
+ *   while a registered row holds focus, so a control in a row's `leading` or
+ *   `trailing` slot keeps its own keys;
  * - `@gpuix/native@0.10.0` has no `focusVisible`, so the active row's ring shows
  *   for a click as well as for the keyboard.
  */
@@ -566,8 +568,20 @@ export const List = (props: ListProps) => {
     setAnchor(Option.some(row.value));
   });
 
+  /**
+   * Whether a registered row holds focus. A key that bubbles from a control in
+   * a row's leading/trailing slot belongs to that control; the payload names
+   * the handler's element, not the focused one, so the renderer is asked.
+   */
+  const ownsRowKeys = (): boolean => {
+    const focused = renderer?.getFocusedElementId?.();
+    if (focused === undefined || focused === null) return false;
+    return Arr.some(rows, (row) => row.nativeId === focused);
+  };
+
   const handleKeyDown = (event: EventPayload): void => {
     if (!focusable) return;
+    if (!ownsRowKeys()) return;
     const extend = multiple && event.modifiers?.shift === true;
     pipe(
       typedChar(event),

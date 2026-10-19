@@ -46,6 +46,7 @@ import {
   hoverCentreOf,
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
+import { Button } from "../internal/button.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -436,6 +437,81 @@ describe("List", () => {
     list.renderer.simulateKeystrokes("enter");
 
     expect(onValueChange).toHaveBeenCalledWith("b");
+
+    list.unmount();
+  });
+
+  it("lets a control in a row's trailing slot keep its own Enter", () => {
+    // A key from a control inside a row bubbles to the list root; the list must
+    // not also activate the row it sits in (plan 577).
+    const onActivate = vi.fn();
+    const onDelete = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single" onActivate={onActivate}>
+        <ListItem
+          testId="row-a"
+          value="a"
+          textValue="Alpha"
+          trailing={
+            <Button size="sm" testId="row-action" onClick={onDelete}>
+              Delete
+            </Button>
+          }
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    // The defect needs an active row, so reach one before focusing the control.
+    clickCentreOf(list, "row-a");
+    onActivate.mockClear();
+
+    const action = list.renderer.findByTestId("row-action");
+    if (action === undefined) throw new Error("behaviour: no row control");
+    list.renderer.nativeSimulateKeystrokes(action.id, "enter");
+
+    expect(onDelete).toHaveBeenCalledTimes(1);
+    expect(onActivate).not.toHaveBeenCalled();
+
+    list.unmount();
+  });
+
+  it("does not steal focus from a field inside a row", () => {
+    // Typing in a trailing field bubbled to type-ahead, which moved native
+    // focus out of the field on the first character (plan 577).
+    const onChange = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem
+          testId="row-alpha"
+          value="alpha"
+          textValue="Alpha"
+          trailing={
+            <input
+              testId="row-field"
+              onChange={(event) => onChange(event.value ?? "")}
+            />
+          }
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-beta" value="beta" textValue="Beta">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    const field = list.renderer.findByTestId("row-field");
+    if (field === undefined) throw new Error("behaviour: no row field");
+
+    list.renderer.nativeSimulateKeystrokes(field.id, "b");
+
+    expect(onChange).toHaveBeenCalledWith("b");
+    expect(list.renderer.getFocusedElementId?.()).toBe(field.id);
 
     list.unmount();
   });

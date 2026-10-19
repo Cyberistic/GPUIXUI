@@ -155,6 +155,10 @@ reliable double-click signal, so a click would have to mean both select and
 activate. Use `Enter`/click activation, or render an explicit action control in
 the row's `trailing` slot when the interaction must be mouse-only.
 
+A control placed in `leading` or `trailing` owns its own keys: `Enter` runs only
+that control, arrows do not move the list's focus, and typing into a field there
+never reaches type-ahead. A click on it does not activate the row either.
+
 ## Selection
 
 Controlled and uncontrolled both work, like every stateful component here:
@@ -216,7 +220,8 @@ that is gone:
 - An emptied list focuses nothing, and rows that arrive later do not grab focus.
 
 The rule follows the row the **list** focused. A focusable control placed in a
-row's `trailing` slot is the consumer's own focus target and is not tracked.
+row's `trailing` slot is the consumer's own focus target and is not tracked; it
+also owns its keys, so a key pressed in it never acts on the row.
 
 ## API
 
@@ -313,7 +318,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (50 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (52 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -334,7 +339,9 @@ entering a selection. A focus move repaints exactly the two rows that changed,
 counted through the public `style` function. Dynamic rows: a removed or newly
 disabled row never keeps the tab stop, focus follows the stop when the list held
 it, a consumer's own focus in the same update is never stolen, and an emptied
-list that refills does not grab focus.
+list that refills does not grab focus. A control in a row's `leading`/`trailing`
+slot keeps its own `Enter` (the row does not also activate) and a field there
+keeps native focus while typing.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

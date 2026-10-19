@@ -238,6 +238,12 @@ retired once both branches are one
       `EventPayload.elementId` names the handler's own element; 3 native cases
       (Notification centre 16), the first two failing without the gate; docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] A control inside a list row owns its keys — plan 577; measured: with a
+      row active, `Enter` on a trailing button ran the button **and** activated
+      the row, and typing in a trailing field moved native focus out of it on
+      every character. The list now acts only while a registered row holds
+      focus; 2 native cases (List 52), both failing without the gate; docs,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
