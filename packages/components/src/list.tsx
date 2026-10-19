@@ -244,9 +244,10 @@ interface ListBaseProps extends Omit<Props, "children"> {
 /** The modes that can run a row action. */
 interface Activatable {
   /**
-   * Run the row's action: `Enter` on the active row, a double click in single
-   * mode, or a click with no selection mode. Disabled rows never activate. A
-   * multiple-selection list has no activation.
+   * Run the row's action: `Enter` on the active row, or a press in single and
+   * no-selection modes. Disabled rows never activate. A multiple-selection
+   * list has no activation, and there is no double-click contract (the host's
+   * `clickCount` is always 1; plan 525 §2).
    */
   readonly onActivate?: (value: string) => void;
 }

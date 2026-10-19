@@ -208,6 +208,7 @@ retired once both branches are one
       `focused`, paints the token ring unless disabled or open, and merges the
       caller's style last; 4 native cases (Combobox 45), four mutation proofs;
       docs, `COMPONENTS.md` and the inventory synced
+    - [x] The `List` activation doc promised a double-click action that never existed — the measured host carries no click count (playground plan 525 §2), so the `Activatable` comment now matches the single-press contract (owner: components)
     - [x] A tab panel needs a live trigger — plan 566; a selected value that
       named a removed tab kept painting its panel, so the tab set revealed a
       region no trigger could select (the controlled case was documented; the
