@@ -19,14 +19,23 @@ import type { FloatingSide } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { focusRing } from "@gpuixui/tokens";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { ariaName, mergeStyle, useFocus, type FocusState } from "./internal.js";
+import {
+  ariaNameOr,
+  mergeStyle,
+  useFocus,
+  type FocusState,
+} from "./internal.js";
 import { Tooltip } from "./Tooltip.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface InfoTipProps {
   /** The explanation. Announced as the trigger's description. */
   readonly content: string;
-  /** The trigger's accessible name, e.g. "Revenue definition". */
+  /**
+   * The trigger's accessible name, e.g. "Revenue definition". A blank value
+   * takes the documented "More information" fallback: the trigger is a focus
+   * stop, and an unnamed one is the plan-073 failure.
+   */
   readonly label: string;
   /** Defaults to `info`. */
   readonly icon?: IconName;
@@ -55,7 +64,7 @@ export const renderInfoTip = (
   <Tooltip content={content} side={side} testId={tipTestId}>
     <div
       role="img"
-      aria-label={ariaName(label)}
+      aria-label={ariaNameOr(label, "More information")}
       tabIndex={0}
       testId={testId}
       onFocus={focus.onFocus}

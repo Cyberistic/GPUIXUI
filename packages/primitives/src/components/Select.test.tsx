@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
+import { Fragment } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
@@ -39,6 +40,7 @@ import {
   elementHandler,
   elementProp,
   expectSome,
+  hostTag,
 } from "./testing/element.js";
 import { clickEvent, keyEvent } from "./testing/event.js";
 
@@ -677,6 +679,30 @@ describe("Tooltip", () => {
       Option.none(),
     );
     expect(elementProp(tip, "aria-label")).toStrictEqual(Option.none());
+  });
+
+  it("drops a tip whose content is only whitespace", () => {
+    // Plan 573: a computed blank translation published `aria-description: "   "`
+    // and opened an empty popover named `"   "`. A whitespace-only string is no
+    // tip; the child renders unchanged.
+    const tree = renderTooltip(
+      { content: "   ", children: <div /> },
+      testTheme,
+    );
+    expect(tree.type).toBe(Fragment);
+    const children = elementChildren(tree);
+    expect(children).toHaveLength(1);
+    expect(expectSome(hostTag(expectSome(Arr.get(children, 0))))).toBe("div");
+  });
+
+  it("trims a real string tip's description and name", () => {
+    const parts = elementChildren(
+      renderTooltip({ content: "  A hint  ", children: null }, testTheme),
+    );
+    const trigger = expectSome(Arr.get(parts, 0));
+    const tip = expectSome(Arr.get(parts, 1));
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe("A hint");
+    expect(expectSome(elementProp(tip, "aria-label"))).toBe("A hint");
   });
 
   it("forwards a controlled open state and the hover-close flag to the runtime", () => {

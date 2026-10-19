@@ -1422,6 +1422,21 @@ retired once both branches are one
       both directions measured (plan `502`; offline 730 → 732, toggle-group
       10/10).
 
+`[x]` `packages/primitives`: **a blank `InfoTip` label was an unnamed focus
+      stop, and a blank `Tooltip` content painted an empty tip** — measured
+      (2026-10-19): `<InfoTip label="   ">` published a focusable
+      `role="img"` node with **no name** (the plan-073 failure, reintroduced by
+      `ariaName` dropping the blank value), while `<InfoTip content="   ">`
+      published `description: "   "` and a real `role="tooltip"` node named
+      `"   "` over an empty popover. The trigger now takes the documented
+      `"More information"` fallback (`ariaNameOr`), and a whitespace-only string
+      tip is no tip: the caller's child renders unchanged with no description
+      and no layer, while a real string's description/name is trimmed and its
+      painted text is unchanged. 3 element-tree + 2 scoped runtime cases; the
+      same 3 offline and 2 runtime cases fail without the fix (offline
+      731/734 → 734/734, scoped live 9/13 → 11/13 — the remaining two are plan
+      `529`'s artifact failures; plan `573`).
+
 `[x]` `packages/primitives`: **a selection row's visible description reached no
       assistive technology** — `CheckboxGroup` and `RadioGroup` painted
       `option.description` as a caption but the row published only its name, so

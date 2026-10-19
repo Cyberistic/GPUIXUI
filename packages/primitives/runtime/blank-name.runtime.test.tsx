@@ -17,6 +17,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { expect, it } from "vitest";
 import { Checkbox } from "../src/components/Checkbox.js";
+import { InfoTip } from "../src/components/InfoTip.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Progress } from "../src/components/Progress.js";
 import { Select } from "../src/components/Select.js";
@@ -31,6 +32,27 @@ const namesOf = (runtime: Runtime, role: string): ReadonlyArray<string> =>
     Arr.filter(a11yNodes(runtime.a11y()), (node) => node.aria?.role === role),
     (node) => (node.aria?.label ?? "").trim(),
   );
+
+it("falls back to a documented name for a blank InfoTip label", async () => {
+  // Plan 573: the blank label reached `ariaName`, which dropped it, but the
+  // trigger kept `role="img"` and `tabIndex={0}` — an unnamed focus stop.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <InfoTip content="Net of refunds." label="   " testId="tip-trigger" />
+    </Surface>,
+  );
+  const node = Option.getOrElse(
+    a11yNode(runtime.a11y(), {
+      role: "Image",
+      label: "More information",
+    }),
+    () => expect.fail("the trigger produced no named Image node"),
+  );
+  expect(node.aria?.description).toBe("Net of refunds.");
+  runtime.focusNext();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("tip-trigger");
+});
 
 it("keeps a spinner's documented name when its label is blank", async () => {
   const runtime = await openWindow();

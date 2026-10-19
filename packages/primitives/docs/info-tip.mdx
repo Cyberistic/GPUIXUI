@@ -24,6 +24,9 @@ import { InfoTip, Stack, Text } from "@gpuixui/primitives";
 ```
 
 `content` is the explanation; `label` is what a screen reader calls the icon.
+A blank `content` means there is nothing to explain, so no tip and no description
+are painted; a blank `label` falls back to "More information", because the
+trigger is a focus stop and an unnamed one is the bug plan 073 fixed.
 The icon itself is decorative, so the trigger is a single accessibility node.
 
 ## API
@@ -31,7 +34,7 @@ The icon itself is decorative, so the trigger is a single accessibility node.
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `content` | `string` | — | the tip; wraps inside the measured cap; also the trigger's `aria-description` |
-| `label` | `string` | — | the trigger's accessible name |
+| `label` | `string` | `"More information"` when blank | the trigger's accessible name; trimmed |
 | `icon` | `IconName` | `"info"` | which icon is painted |
 | `side` | `FloatingSide` | `top` | preferred side; flips when it does not fit (plan 067) |
 | `testId` | `string` | — | the **trigger's** locator |
@@ -55,6 +58,12 @@ announced on focus even while the tip is closed. The open tip is a named
 `role="tooltip"` node (plan 071). The icon is `presentation`, so one trigger
 produces one node, not two.
 
+A blank — empty or whitespace-only — `label` takes the documented
+"More information" fallback (plan `573`): a focus stop must be named, and
+`ariaName` alone would have left an unnamed `img` in the tree. A blank
+`content` is absent: the trigger paints with no description and no tip, instead
+of an empty popover named with whitespace.
+
 ## Theming
 
 The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
@@ -77,12 +86,16 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
 ## Verification
 
 - `src/components/InfoTip.test.tsx` — the trigger is a named `img` tab stop, the
-  icon is `presentation`, and the ring paints only while focused.
+  icon is `presentation`, and the ring paints only while focused; a blank label
+  takes the "More information" fallback (plan `573`).
 - `runtime/info-tip.runtime.test.tsx` — hover opens the tip; `focusNext` lands on
   the trigger, the `Image` node carries the description and the tip is a named
   `Tooltip`; the painted `boxShadow` equals `focusRing(theme)`; a 230-character
   tip stays inside the window and paints more than one line, while a short one
-  paints exactly one (plan `395`).
+  paints exactly one (plan `395`); blank content paints no tip and publishes no
+  description (plan `573`).
+- `runtime/blank-name.runtime.test.tsx` — a blank `InfoTip` label announces
+  "More information" and still takes focus (plan `573`).
 - `src/docs-tooltip-wrap.test.ts` — the resolver's capped form is `normal` and
   uncapped form `nowrap`, and no primitives page may claim a mounted tip does
   not wrap (plan `395`).

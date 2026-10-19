@@ -62,7 +62,7 @@ import {
 } from "../core/floating.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import { ariaName, mergeStyle, useControlState } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -202,6 +202,11 @@ export interface TooltipHandlers {
  * `role="tooltip"`, so a screen-reader user hears the explanation on focus and
  * can reach the open tip as its own node (plan `071`). Non-string content is
  * painted and made a `tooltip` node, but is not given an invented name.
+ *
+ * A string that trims to nothing is **no tip** (plan `573`): the child renders
+ * unchanged, so a computed blank translation cannot publish a blank description
+ * or open an empty popover. A real string is trimmed for the accessibility tree
+ * and painted exactly as the caller wrote it.
  */
 export const renderTooltip = (
   {
@@ -218,7 +223,10 @@ export const renderTooltip = (
   theme: PrimitiveTheme,
   handlers: TooltipHandlers = {},
 ): ReactElement => {
-  const description = P.isString(content) ? content : undefined;
+  const description = P.isString(content) ? ariaName(content) : undefined;
+  if (P.isString(content) && description === undefined) {
+    return <>{children}</>;
+  }
   const placed = handlers.placement ?? { align, offset: 0 };
   return (
     <GpuixTooltip

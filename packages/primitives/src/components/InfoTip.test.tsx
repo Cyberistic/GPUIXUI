@@ -42,8 +42,10 @@ describe("InfoTip", () => {
     expect(expectSome(hostProp(trigger, "tabIndex"))).toBe(0);
   });
 
-  it("publishes a blank label as absent and trims a real one", () => {
-    // Plan 026: a blank computed label must not publish an unnamed image.
+  it("falls back to a documented name for a blank label", () => {
+    // Plan 573: `ariaName` dropped the blank value but the trigger stayed a
+    // focusable `role="img"`, so the tree held an unnamed focus stop. A blank
+    // computed label now takes the same documented fallback as Spinner.
     const blank = renderInfoTip(
       { content: "Net of refunds.", label: "   " },
       testTheme,
@@ -51,7 +53,9 @@ describe("InfoTip", () => {
     const blankTrigger = expectSome(
       Option.fromNullishOr(elementChildren(blank)[0]),
     );
-    expect(hostProp(blankTrigger, "aria-label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(blankTrigger, "aria-label"))).toBe(
+      "More information",
+    );
     const padded = renderInfoTip(
       { content: "Net of refunds.", label: "  Revenue definition  " },
       testTheme,

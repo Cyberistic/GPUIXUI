@@ -69,6 +69,37 @@ it("reaches an InfoTip by keyboard, with its name and description", async () => 
   ).toBe(true);
 });
 
+it("renders no tip and no description for blank content", async () => {
+  // Plan 573: a whitespace `content` published `description: "   "` and opened
+  // an empty `role="tooltip"` node named `"   "`. There is nothing to say, so
+  // the trigger renders unchanged.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <InfoTip
+        content="   "
+        label="Revenue definition"
+        testId="trigger"
+        tipTestId="tip"
+      />
+    </Surface>,
+  );
+  const trigger = Option.getOrElse(
+    a11yNode(runtime.a11y(), {
+      role: "Image",
+      label: "Revenue definition",
+    }),
+    () => expect.fail("the trigger produced no accessibility node"),
+  );
+  expect(trigger.aria?.description).toBeUndefined();
+  runtime.hover("trigger");
+  runtime.flush();
+  expect(Option.isNone(runtime.bounds("tip"))).toBe(true);
+  expect(Option.isNone(a11yNode(runtime.a11y(), { role: "Tooltip" }))).toBe(
+    true,
+  );
+});
+
 it("paints a focus ring on the trigger", async () => {
   const runtime = await openWindow();
   renderTip(runtime);
