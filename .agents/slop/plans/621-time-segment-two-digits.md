@@ -95,6 +95,7 @@ bound would fall below the two digits it is meant to hold.
 | File | Action |
 | ---- | ------ |
 | `packages/tokens/src/metrics.ts` | add `digitAdvanceEm`; replace the one-em `timeSegmentWidth` rule; state the font assumption in the dimensions bullet of the `themeMetricFailures` JSDoc |
+| `packages/tokens/src/scale.ts` | the `Dimensions.timeSegmentWidth` JSDoc states the two-digit fit |
 | `packages/tokens/src/time-segment-fit.test.ts` | create (new suite) |
 | `packages/tokens/src/fixed-surface-metrics.test.ts` | update the case `"reports a time segment narrower than one body em"` — new title, new bound (19, not 14) |
 | `docs/tokens.md` | the table row at line 1088 and the §Component dimensions sentence at line 1121 |
