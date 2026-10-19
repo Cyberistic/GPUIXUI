@@ -14,8 +14,10 @@ import { windowsPlatformStyle } from "../windows.js";
  * link is a step darker so it keeps the secondary floor through the selection
  * wash (plan 528). The information and warning inks take one designed step
  * darker so a native document's syntax captures keep the body floor on the quiet
- * panel through the runtime's 3.5% ink wash (plan 574). The values are held to
- * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
+ * panel through the runtime's 3.5% ink wash (plan 574), and the success and
+ * destructive inks take the XP step so a find match keeps the secondary floor
+ * through the active wash on that painted surface (plan 582). The values are
+ * held to `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const aeroPlatformRecipe = {
   types: { label: "Windows 7", sans: systemUiFont, mono: "Consolas" },
@@ -49,12 +51,16 @@ export const aeroPlatformRecipe = {
       primaryHover: "#0F55A3",
       primaryActive: "#0B478A",
       primaryText: "#0C4A8C",
-      // The native code surface: the inherited light status inks measured
-      // 6.95–6.998:1 on the quiet panel through the runtime's 3.5% ink wash,
-      // under the 7:1 body floor. Both take one designed step in their own
-      // family (plan 574).
+      // The information and warning inks take one designed step darker so a
+      // native document's syntax captures keep the body floor on the quiet
+      // panel through the runtime's 3.5% ink wash (plan 574). The success and
+      // destructive inks take the XP recipe's step because a find match paints
+      // over that same ink wash: the inherited values measured 4.429–4.496:1
+      // through the active match, under the 4.5:1 secondary floor (plan 582).
       infoText: "#173A88",
       warningText: "#4B3100",
+      successText: "#0E5135",
+      destructiveText: "#7E1D21",
       accent: "#D8EAFB",
       accentForeground: "#0B478A",
       accentHover: "#CFE5FA",

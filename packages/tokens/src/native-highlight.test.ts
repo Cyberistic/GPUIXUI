@@ -47,6 +47,7 @@ import {
   darkFindBar,
   findBar,
 } from "./native-highlight.example.js";
+import { nativeInk } from "./native-ink.js";
 import { shippedThemes } from "./shipped-themes.js";
 
 const surfaces = nativeTextSurfaces;
@@ -153,7 +154,7 @@ describe("the native find-highlight contract", () => {
       (failure) => failure.pairClass === "step",
     );
     expect(step).toBeDefined();
-    expect(step?.ratio).toBeCloseTo(1.002, 3);
+    expect(step?.ratio).toBeCloseTo(1, 3);
     expect(step?.floor).toBe(contrastFloors.default.step);
 
     expect(
@@ -190,9 +191,16 @@ describe("the native find-highlight contract", () => {
       "utf8",
     );
     const themes = shippedThemes.map(({ theme }) => theme);
+    type Base = (
+      theme: (typeof themes)[number],
+      surface: keyof (typeof themes)[number]["colors"],
+    ) => string;
+    const opaque: Base = (theme, surface) => theme.colors[surface];
+    const inked: Base = (theme, surface) => nativeInk(theme, surface);
     const ratios = (
       paintOf: (theme: (typeof themes)[number]) => string,
       role: (name: string, surface: string) => boolean = () => true,
+      baseOf: Base = opaque,
     ): ReadonlyArray<number> =>
       themes.flatMap((theme) =>
         nativeHighlightPairs
@@ -202,7 +210,7 @@ describe("the native find-highlight contract", () => {
           .map(([foreground, surface]) =>
             contrastRatio(
               theme.colors[foreground],
-              compositeOver(paintOf(theme), theme.colors[surface]),
+              compositeOver(paintOf(theme), baseOf(theme, surface)),
             ),
           ),
       );
@@ -210,29 +218,46 @@ describe("the native find-highlight contract", () => {
     const active = Math.min(
       ...ratios((theme) => nativeHighlight(theme).activeColor),
     );
-    const body = (paintOf: (theme: (typeof themes)[number]) => string) =>
-      Math.min(...ratios(paintOf, (role) => role === "foreground"));
-    const step = Math.min(
-      ...themes.flatMap((theme) => {
-        const highlight = nativeHighlight(theme);
-        return surfaces.map((surface) =>
-          contrastRatio(
-            painted(highlight.activeColor, surface, theme.colors),
-            painted(highlight.color, surface, theme.colors),
-          ),
-        );
-      }),
+    const paintedMatch = Math.min(
+      ...ratios((theme) => nativeHighlight(theme).color, undefined, inked),
     );
-    const fromSurface = Math.min(
-      ...themes.flatMap((theme) =>
-        surfaces.map((surface) =>
-          contrastRatio(
-            painted(nativeHighlight(theme).activeColor, surface, theme.colors),
-            theme.colors[surface],
-          ),
-        ),
+    const paintedActive = Math.min(
+      ...ratios(
+        (theme) => nativeHighlight(theme).activeColor,
+        undefined,
+        inked,
       ),
     );
+    const body = (
+      paintOf: (theme: (typeof themes)[number]) => string,
+      baseOf: Base = opaque,
+    ) => Math.min(...ratios(paintOf, (role) => role === "foreground", baseOf));
+    const step = (baseOf: Base = opaque) =>
+      Math.min(
+        ...themes.flatMap((theme) => {
+          const highlight = nativeHighlight(theme);
+          return surfaces.map((surface) =>
+            contrastRatio(
+              compositeOver(highlight.activeColor, baseOf(theme, surface)),
+              compositeOver(highlight.color, baseOf(theme, surface)),
+            ),
+          );
+        }),
+      );
+    const fromSurface = (baseOf: Base = opaque) =>
+      Math.min(
+        ...themes.flatMap((theme) =>
+          surfaces.map((surface) =>
+            contrastRatio(
+              compositeOver(
+                nativeHighlight(theme).activeColor,
+                baseOf(theme, surface),
+              ),
+              baseOf(theme, surface),
+            ),
+          ),
+        ),
+      );
     const hover = Math.min(
       ...themes.flatMap((theme) =>
         surfaces.flatMap((surface) =>
@@ -257,8 +282,14 @@ describe("the native find-highlight contract", () => {
       active,
       body((theme) => nativeHighlight(theme).color),
       body((theme) => nativeHighlight(theme).activeColor),
-      step,
-      fromSurface,
+      step(),
+      fromSurface(),
+      paintedMatch,
+      paintedActive,
+      body((theme) => nativeHighlight(theme).color, inked),
+      body((theme) => nativeHighlight(theme).activeColor, inked),
+      step(inked),
+      fromSurface(inked),
       hover,
       hoverVisible,
     ].forEach((figure) => {

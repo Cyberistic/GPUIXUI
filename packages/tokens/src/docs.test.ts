@@ -1422,7 +1422,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
       ["popoverForeground", "selected", "Linux dark", 8.98],
       ["selectedForeground", "active", "macOS light", 6.22],
       ["selectedForeground", "accent", "macOS light", 6.93],
-      ["successText", "muted", "Aero light", 7.68],
+      ["successText", "muted", "Windows light", 8.03],
       ["mutedForeground", "destructiveSoft", "Aero light", 6.61],
       ["primaryText", "destructiveSoft", "identity light", 6.19],
     ] as const;
@@ -1589,8 +1589,8 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
     const [defaultLabel, defaultRatio] = tightest("default");
     expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
-      "Aero light successText on selected",
-      4.827,
+      "Windows light warningText on selected",
+      4.858,
     ]);
     const [highLabel, highRatio] = tightest("high");
     expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
@@ -1599,7 +1599,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
     ]);
 
     expect(markdownProse).toContain(
-      "**4.827:1** (Aero light `successText` on `selected`)",
+      "**4.858:1** (Windows light `warningText` on `selected`)",
     );
     expect(markdownProse).toContain(
       "**7.370:1** at AAA (identity light high `warningText` on `active`)",

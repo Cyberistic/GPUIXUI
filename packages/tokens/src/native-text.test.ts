@@ -42,7 +42,6 @@ import {
   nativeTextRoles,
   nativeTextSurfaces,
   nativeTextTheme,
-  relativeLuminance,
   themeContrastFailures,
   themeFailures,
   type ContrastPair,
@@ -55,6 +54,7 @@ import {
   largeCodeTheme,
   markdownDocument,
 } from "./native-text.example.js";
+import { nativeInk } from "./native-ink.js";
 import { shippedThemes } from "./shipped-themes.js";
 
 type NativeColourField =
@@ -122,7 +122,6 @@ const syntaxRoles: ReadonlyArray<keyof ThemeColors> = syntaxSpec.map(
 
 /** The runtime's fixed fractions, cited in `theme.rs`/`markdown/render.rs`. */
 const runtimeFades = {
-  codeBlockInkWashOpacity: 0.035,
   diffLineOpacity: 0.92,
   diffMarkerOpacity: 0.9,
   diffBarOpacity: 0.55,
@@ -132,16 +131,6 @@ const runtimeFades = {
   quoteWashOpacity: 0.05,
 } as const;
 
-/** The ink the runtime paints over `bg` for a code block: `ink()` in `render.rs`. */
-const inkWash = (theme: Theme, surface: keyof ThemeColors = "card"): string => {
-  const ink =
-    relativeLuminance(theme.colors[surface]) < 0.5 ? "#FFFFFF" : "#000000";
-  return compositeOver(
-    alpha(ink, runtimeFades.codeBlockInkWashOpacity),
-    theme.colors[surface],
-  );
-};
-
 /** The syntax roles that miss the body floor on the painted code surface. */
 const inkFailures = (
   theme: Theme,
@@ -149,7 +138,7 @@ const inkFailures = (
 ): ReadonlyArray<readonly [keyof ThemeColors, number]> => {
   const floor = contrastFloors[theme.contrast].body;
   return syntaxRoles.flatMap((role) => {
-    const ratio = contrastRatio(theme.colors[role], inkWash(theme, surface));
+    const ratio = contrastRatio(theme.colors[role], nativeInk(theme, surface));
     return ratio >= floor ? [] : [[role, ratio] as const];
   });
 };
@@ -383,7 +372,7 @@ describe("native text theme", () => {
           syntaxRoles.map((role) => ({
             theme: theme.name,
             role,
-            ratio: contrastRatio(theme.colors[role], inkWash(theme, surface)),
+            ratio: contrastRatio(theme.colors[role], nativeInk(theme, surface)),
           })),
         ),
       )

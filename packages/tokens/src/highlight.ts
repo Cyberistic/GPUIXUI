@@ -5,6 +5,7 @@ import {
   contrastRatio,
   type ContrastPair,
 } from "./contrast.js";
+import { nativeInk } from "./native-ink.js";
 import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
@@ -40,7 +41,7 @@ export type HighlightFailure =
       readonly pairClass: "secondary";
       /** Which of the two washes was painted. */
       readonly wash: "match" | "active";
-      /** The surface the document paints on. */
+      /** The document tone the match sits on; its code block paints an ink wash. */
       readonly surface: keyof ThemeColors;
       /** The text role the wash sat behind. */
       readonly foreground: keyof ThemeColors;
@@ -52,7 +53,7 @@ export type HighlightFailure =
   | {
       /** The active match is not a perceivable step above the match. */
       readonly pairClass: "step";
-      /** The surface the two washes were composited over. */
+      /** The document tone the two washes were composited over. */
       readonly surface: keyof ThemeColors;
       /** The `step` floor for the theme's declared contrast level. */
       readonly floor: number;
@@ -76,9 +77,11 @@ const ownAlpha = (color: string): number => {
  * The pair class is `secondary`, not `body`: a visible highlight washes code and
  * prose, and no perceivable wash can keep a syntax token at body strength. The
  * neutral `hover` wash, the only other visible candidate, is 1.06:1 at its
- * weakest and still leaves syntax at 6.30:1; the selection wash keeps every
- * shipped role at 5.34:1 (match) and 4.61:1 (active). Body text itself stays
- * above the body floor (9.65:1 match, 8.03:1 active).
+ * weakest and still leaves syntax at 6.30:1; on the plain tone the selection
+ * wash keeps every shipped role at 5.59:1 (match) and 4.80:1 (active), and on
+ * the code block's painted ink surface at 5.21:1 and 4.51:1. Body text itself
+ * stays above the body floor (9.65:1 match, 8.03:1 active; 8.93:1 and 7.31:1
+ * painted).
  */
 export const nativeHighlightPairs: readonly ContrastPair[] = [
   ...new Set([
@@ -93,7 +96,7 @@ export const nativeHighlightPairs: readonly ContrastPair[] = [
 );
 
 const painted = (paint: string, surface: keyof ThemeColors, theme: Theme) =>
-  compositeOver(paint, theme.colors[surface]);
+  compositeOver(paint, nativeInk(theme, surface));
 
 /**
  * The find-highlight paints for a native text document.
@@ -108,9 +111,9 @@ const painted = (paint: string, surface: keyof ThemeColors, theme: Theme) =>
  * This returns the `selection` role — the accent-tinted wash the package designs
  * and measures for text — and the same RGB one {@link nativeHighlightStep}
  * stronger for the active match. Every text role a find can reach is held at the
- * secondary floor on the four `Surface` tones a document paints on, because no
- * perceivable wash can keep a syntax token at body strength; see
- * `docs/tokens.md`.
+ * secondary floor on the four `Surface` tones a document paints on, and again
+ * on the code block's painted ink surface, because no perceivable wash can keep
+ * a syntax token at body strength; see `docs/tokens.md`.
  *
  * @example
  * ```tsx
@@ -140,9 +143,10 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
  * Every find-highlight pair that misses its floor in a theme.
  *
  * The match wash is the `selection` role at its own alpha; the active wash is
- * one {@link nativeHighlightStep} stronger. Both are composited over every
- * surface a document may name and measured against the `secondary` floor —
- * a highlight is transient chrome over code, and keeping every syntax token at
+ * one {@link nativeHighlightStep} stronger. Both are composited over the
+ * surface the runtime actually paints — the document tone, and the code block's
+ * 3.5% ink wash over that tone — and measured against the `secondary` floor.
+ * A highlight is transient chrome over code, and keeping every syntax token at
  * body strength would need a wash that paints nothing. The wash's own
  * visibility is the contrast check's `selection` pair: a selection that
  * vanishes into its surface is reported there.
@@ -152,7 +156,8 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
  * the surface where the pair collapses. The step is an absolute alpha, so a
  * near-opaque `selection` paints both washes the same colour even though every
  * text pair still passes; the floor is the one the filled families and the
- * selected row publish.
+ * selected row publish. The code-block ink darkens or lightens both washes
+ * together, so the step is measured on that painted surface too.
  */
 export function themeHighlightFailures(
   theme: Theme,
