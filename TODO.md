@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 268/341
+`[x]` `[████████░░]` 269/342
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2271,6 +2271,13 @@ and `drawerHeightSm: 50` returned `[]` while the shell painted a 28px control
 into a 40px surface; three `at-least` rules now read the theme's own spacing,
 control and type metrics, every shipped set clears them (360/320/240 against
 88/88/96) and no value moves (plan 625)
+`[x]` Hold the fixed surfaces to their own border — plan 384 made a size fit its
+content box, but the menu minimum, Toast card, inbox and the dialog/drawer shells
+compared the outer metric, so a theme with `borderWidth.thin: 12` and
+`dialogWidthSm: 88` painted a 72px chrome into a 64px content box while
+`themeFailures` returned `[]`; seven bounds now include `2 * borderWidth.thin`,
+every shipped set clears them (90/90/98/68/52/55 and 282) and no value moves
+(plan 627)
 
 ## Phase C — Tier 1–2 components
 

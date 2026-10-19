@@ -11,9 +11,9 @@
  * and both checks returned `[]` while `DialogContent` and `DrawerContent` paint
  * a `sm` close control (28px) and `spacing["2xl"]` padding (24px a side) into a
  * 40px surface. The width rules hold the padding and the header's reserve plus
- * one `h3` title glyph (88px at the shipped metrics); the height rule holds the
- * close zone, one row and the bottom padding (96px). Every shipped set is
- * 360/320/240, so no value moves.
+ * one `h3` title glyph (90px at the shipped metrics, the shell's two borders
+ * included); the height rule holds the close zone, one row and the bottom
+ * padding (98px). Every shipped set is 360/320/240, so no value moves.
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -23,18 +23,24 @@ import { themeFailures } from "./theme-check.js";
 
 const base = getTheme("light");
 
-/** Two paddings, the header's reserve for the close control, one title glyph. */
+/**
+ * Two paddings, the header's reserve for the close control, one title glyph, and
+ * the surface's two `borderWidth.thin` edges (plan 627).
+ */
 const widthBound = (theme: Theme): number =>
-  3 * theme.spacing["2xl"] + theme.typography.h3.fontSize;
+  3 * theme.spacing["2xl"] +
+  theme.typography.h3.fontSize +
+  2 * theme.borderWidth.thin;
 
-/** The close zone from the top, one row of content, the bottom padding. */
+/** The close zone from the top, one row of content, the bottom padding, two borders. */
 const heightBound = (theme: Theme): number =>
   Math.max(
     theme.spacing["2xl"],
     theme.spacing.lg + theme.density.controlHeight.sm,
   ) +
   theme.density.rowHeight +
-  theme.spacing["2xl"];
+  theme.spacing["2xl"] +
+  2 * theme.borderWidth.thin;
 
 const dimensionsOf = (theme: Theme): ReadonlyArray<MetricFailure> =>
   themeMetricFailures(theme).filter(({ group }) => group === "dimensions");
@@ -63,13 +69,13 @@ describe("dialog and drawer shell chrome", () => {
       return dimensionsOf(theme);
     });
     expect(failures).toEqual([]);
-    expect(tightestWidth).toBeCloseTo(320 / 88, 4);
-    expect(tightestHeight).toBeCloseTo(240 / 96, 4);
+    expect(tightestWidth).toBeCloseTo(320 / 90, 4);
+    expect(tightestHeight).toBeCloseTo(240 / 98, 4);
   });
 
   it("states the shipped bounds", () => {
-    expect(widthBound(base)).toBe(88);
-    expect(heightBound(base)).toBe(96);
+    expect(widthBound(base)).toBe(90);
+    expect(heightBound(base)).toBe(98);
     expect(base.dimensions.dialogWidthSm).toBe(360);
     expect(base.dimensions.drawerWidthSm).toBe(320);
     expect(base.dimensions.drawerHeightSm).toBe(240);
@@ -86,7 +92,7 @@ describe("dialog and drawer shell chrome", () => {
         member: "dialogWidthSm",
         rule: "at-least",
         actual: 40,
-        bound: 88,
+        bound: 90,
       },
     ]);
   });
@@ -102,7 +108,7 @@ describe("dialog and drawer shell chrome", () => {
         member: "drawerWidthSm",
         rule: "at-least",
         actual: 40,
-        bound: 88,
+        bound: 90,
       },
     ]);
   });
@@ -122,14 +128,14 @@ describe("dialog and drawer shell chrome", () => {
         member: "drawerHeightSm",
         rule: "at-least",
         actual: 50,
-        bound: 96,
+        bound: 98,
       },
     ]);
   });
 
   it("reads the theme's own spacing, not a hardcoded 88", () => {
     // `2xl` moves from 24 to 40 and the steps above it keep the ladder, so the
-    // width bound rises to 136 (`3*40 + 16`) and 120 no longer fits.
+    // width bound rises to 138 (`3*40 + 16 + 2`) and 120 no longer fits.
     const spacing = { "2xl": 40, "3xl": 48, "4xl": 64, "5xl": 80 } as const;
     const narrowDialog = extendTheme(getTheme("light"), {
       spacing,
@@ -145,11 +151,12 @@ describe("dialog and drawer shell chrome", () => {
         member: "dialogWidthSm",
         rule: "at-least",
         actual: 120,
-        bound: 136,
+        bound: 138,
       },
     ]);
 
-    // The same spacing lifts the height bound to 112 (`max(40, 40) + 32 + 40`).
+    // The same spacing lifts the height bound to 114
+    // (`max(40, 40) + 32 + 40 + 2`).
     const shortDrawer = extendTheme(getTheme("light"), {
       spacing,
       dimensions: {
@@ -164,7 +171,7 @@ describe("dialog and drawer shell chrome", () => {
         member: "drawerHeightSm",
         rule: "at-least",
         actual: 100,
-        bound: 112,
+        bound: 114,
       },
     ]);
   });
@@ -182,7 +189,7 @@ describe("dialog and drawer shell chrome", () => {
       member: "dialogWidthSm",
       rule: "at-least",
       actual: 40,
-      bound: 88,
+      bound: 90,
     });
   });
 });

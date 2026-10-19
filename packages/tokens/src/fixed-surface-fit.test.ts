@@ -11,9 +11,10 @@
  * - `overlayMinWidth: 20` — a menu row is `spacing.md` padding, a `md` leading
  *   icon, the `md` gap and a `label` glyph.
  *
- * Each rule derives its bound from the theme's own spacing, icon and type
- * metrics, so case 6 fails if the rule becomes a hardcoded number. The shipped
- * set passes at 380/320/180 against 66/50/53, so no value moves.
+ * Each rule derives its bound from the theme's own spacing, icon, type and
+ * border metrics, so case 6 fails if the rule becomes a hardcoded number. The
+ * shipped set passes at 380/320/180 against 68/52/55, the surface's two
+ * `borderWidth.thin` edges included (plan 627), so no value moves.
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -28,19 +29,22 @@ const toastBound = (theme: Theme): number =>
   2 * theme.spacing.lg +
   theme.iconSize.md +
   theme.spacing.lg +
-  theme.typography.bodyStrong.fontSize;
+  theme.typography.bodyStrong.fontSize +
+  2 * theme.borderWidth.thin;
 
 const panelBound = (theme: Theme): number =>
   2 * theme.spacing.lg +
   theme.dimensions.notificationUnreadDotSize +
   theme.spacing.sm +
-  theme.typography.bodyStrong.fontSize;
+  theme.typography.bodyStrong.fontSize +
+  2 * theme.borderWidth.thin;
 
 const overlayBound = (theme: Theme): number =>
   2 * theme.spacing.md +
   theme.iconSize.md +
   theme.spacing.md +
-  theme.typography.label.fontSize;
+  theme.typography.label.fontSize +
+  2 * theme.borderWidth.thin;
 
 const dimensionFailures = (theme: Theme): ReadonlyArray<MetricFailure> =>
   themeMetricFailures(theme).filter(({ group }) => group === "dimensions");
@@ -79,15 +83,15 @@ describe("fixed-surface chrome fit", () => {
       );
     });
     expect(failures).toEqual([]);
-    expect(tightest.toast).toBeCloseTo(5.76, 2);
-    expect(tightest.panel).toBeCloseTo(6.4, 2);
-    expect(tightest.overlay).toBeCloseTo(3.4, 2);
+    expect(tightest.toast).toBeCloseTo(5.59, 2);
+    expect(tightest.panel).toBeCloseTo(6.15, 2);
+    expect(tightest.overlay).toBeCloseTo(3.27, 2);
   });
 
   it("states the shipped bounds", () => {
-    expect(toastBound(base)).toBe(66);
-    expect(panelBound(base)).toBe(50);
-    expect(overlayBound(base)).toBe(53);
+    expect(toastBound(base)).toBe(68);
+    expect(panelBound(base)).toBe(52);
+    expect(overlayBound(base)).toBe(55);
   });
 
   it("reports a toast narrower than its chrome", () => {
@@ -100,7 +104,7 @@ describe("fixed-surface chrome fit", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 40,
-        bound: 66,
+        bound: 68,
       },
     ]);
   });
@@ -115,7 +119,7 @@ describe("fixed-surface chrome fit", () => {
         member: "notificationPanelWidth",
         rule: "at-least",
         actual: 40,
-        bound: 50,
+        bound: 52,
       },
     ]);
   });
@@ -131,7 +135,7 @@ describe("fixed-surface chrome fit", () => {
         member: "overlayMinWidth",
         rule: "at-least",
         actual: 40,
-        bound: 53,
+        bound: 55,
       },
     ]);
   });
@@ -143,7 +147,7 @@ describe("fixed-surface chrome fit", () => {
     expect(dimensionFailures(roomy)).toEqual([]);
 
     // `lg` moves from 12 to 24 (and the steps above it keep the ladder), so
-    // the toast's own bound rises from 66 to 102 and 100 no longer fits.
+    // the toast's own bound rises from 68 to 104 and 100 no longer fits.
     const tightened = extendTheme(roomy, {
       spacing: {
         lg: 24,
@@ -159,7 +163,7 @@ describe("fixed-surface chrome fit", () => {
       member: "toastWidth",
       rule: "at-least",
       actual: 100,
-      bound: 102,
+      bound: 104,
     });
   });
 

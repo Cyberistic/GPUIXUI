@@ -2684,18 +2684,33 @@ describe("docs/design-system.md", () => {
       2 * spacing.lg +
       iconSize.md +
       spacing.lg +
-      typography.bodyStrong.fontSize;
+      typography.bodyStrong.fontSize +
+      2 * borderWidth.thin;
     const panelBound =
       2 * spacing.lg +
       dimensions.notificationUnreadDotSize +
       spacing.sm +
-      typography.bodyStrong.fontSize;
+      typography.bodyStrong.fontSize +
+      2 * borderWidth.thin;
     const overlayBound =
-      2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize;
+      2 * spacing.md +
+      iconSize.md +
+      spacing.md +
+      typography.label.fontSize +
+      2 * borderWidth.thin;
     const headroom = (value: number, bound: number): string =>
       (value / bound).toFixed(2);
     const sentence = `The shipped \`${dimensions.toastWidth} / ${dimensions.notificationPanelWidth} / ${dimensions.overlayMinWidth}\` clear the three by \`${headroom(dimensions.toastWidth, toastBound)}× / ${headroom(dimensions.notificationPanelWidth, panelBound)}× / ${headroom(dimensions.overlayMinWidth, overlayBound)}×\``;
     expect(markdownProse).toContain(sentence);
+  });
+
+  it("states that a fixed surface fits its own border", () => {
+    expect(markdownProse).toContain(
+      "Every fixed surface paints its two `borderWidth.thin` edges **inside** its own",
+    );
+    expect(markdownProse).toContain(
+      "so each bound below includes `2 * borderWidth.thin`",
+    );
   });
 
   it("states the field's own query-row bound", () => {
@@ -2713,11 +2728,13 @@ describe("docs/design-system.md", () => {
   });
 
   it("states the dialog and drawer shell bounds", () => {
-    const width = 3 * spacing["2xl"] + typography.h3.fontSize;
+    const width =
+      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin;
     const height =
       Math.max(spacing["2xl"], spacing.lg + defaultDensity.controlHeight.sm) +
       defaultDensity.rowHeight +
-      spacing["2xl"];
+      spacing["2xl"] +
+      2 * borderWidth.thin;
     const headroom = (value: number, bound: number): string =>
       (value / bound).toFixed(2);
     const sentence = `At the shipped metrics the widths need ${width}px and the height ${height}px, and the shipped \`${dimensions.dialogWidthSm} / ${dimensions.drawerWidthSm} / ${dimensions.drawerHeightSm}\` clear them at \`${headroom(dimensions.dialogWidthSm, width)}× / ${headroom(dimensions.drawerWidthSm, width)}× / ${headroom(dimensions.drawerHeightSm, height)}×\``;

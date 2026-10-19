@@ -240,7 +240,10 @@ toast is 380px wide, a preview card runs 240–360px, and an icon or clear contr
 inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
 dialog or a toast without touching component source. A keycap is 20px and holds
 one `caption` line plus its two borders; the metric contract reports a theme
-whose caption leading outgrows it. A drawer opens 320/400/560px wide, or
+whose caption leading outgrows it. Every fixed surface — the menu minimum, Toast
+card, notification inbox, and the dialog and drawer shells — holds its chrome
+inside its own two borders, like a control or a field. A drawer opens
+320/400/560px wide, or
 240/320/420px tall from the bottom; a message viewport never shrinks below 160px,
 and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
 360/480/640px wide at `sm`/`md`/`lg`, a calendar day cell is 34px, a two-digit
@@ -780,6 +783,8 @@ edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink a field minimum below the query and the action its token documents,
 clip a dialog or drawer below its close control,
+leave a fixed surface too little content box after its own border for the
+chrome it paints,
 shrink the smallest control below one label line or one body line plus its
 borders, paint a control size's matching icon tier larger than that control's
 content box, raise an inline icon above the caption or label line it sits in, raise

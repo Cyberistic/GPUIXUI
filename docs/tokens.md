@@ -1059,21 +1059,21 @@ every density.
 
 | Token | Pixels | Use |
 | ----- | ------ | --- |
-| `dimensions.overlayMinWidth` | 180 | narrowest menu surface; holds a row's padding, icon, gap and one `label` glyph |
+| `dimensions.overlayMinWidth` | 180 | narrowest menu surface; holds a row's padding, icon, gap and one `label` glyph inside its two borders |
 | `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, a leading glyph, the query, the action and their two gaps, or a token-input chip |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its insets, gap, disclosure glyph and one `label` glyph |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
-| `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, gap and one `bodyStrong` title |
+| `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, gap and one `bodyStrong` title inside its two borders |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
-| `dimensions.drawerWidthSm` | 320 | narrowest drawer; holds its padding, the header's reserve for the close control and one `h3` title glyph |
+| `dimensions.drawerWidthSm` | 320 | narrowest drawer; holds its padding, the header's reserve for the close control and one `h3` title glyph inside its two borders |
 | `dimensions.drawerWidthMd` | 400 | default drawer width; holds the same chrome as `sm` through the ladder |
 | `dimensions.drawerWidthLg` | 560 | widest drawer; holds the same chrome as `sm` through the ladder |
-| `dimensions.drawerHeightSm` | 240 | shortest bottom drawer; holds the close zone, one `density.rowHeight` row and its bottom padding |
+| `dimensions.drawerHeightSm` | 240 | shortest bottom drawer; holds the close zone, one `density.rowHeight` row and its bottom padding inside its two borders |
 | `dimensions.drawerHeightMd` | 320 | default bottom drawer height |
 | `dimensions.drawerHeightLg` | 420 | tallest bottom drawer |
 | `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
@@ -1081,14 +1081,14 @@ every density.
 | `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
 | `dimensions.timelineMarkerSize` | 8 | event dot on a timeline rail; at least the rail's width (`borderWidth.thin`) |
 | `dimensions.timelineMarkerColumnWidth` | 16 | column the dot and its connector sit in; at least the marker |
-| `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width; holds its padding, the header's reserve for the close control and one `h3` title glyph |
-| `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width; holds the same chrome as `sm` through the ladder |
-| `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow and each holds the `sm` chrome |
+| `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width; holds its padding, the header's reserve for the close control and one `h3` title glyph inside its two borders |
+| `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width; holds the same chrome and two borders as `sm` through the ladder |
+| `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow and each holds the `sm` chrome and two borders |
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least 1.3 `body` ems (two tabular digits), rounded up to a pixel |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
-| `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title |
-| `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum |
+| `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title inside its two borders |
+| `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum plus its two borders |
 | `dimensions.notificationListMaxHeight` | 280 | notification list scroll height; held to one `density.rowHeight` |
 | `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row |
 
@@ -1096,33 +1096,42 @@ A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
 whose caption leading outgrows it.
 
+Every fixed surface paints its two `borderWidth.thin` edges **inside** its own
+width or height, so each bound below includes `2 * borderWidth.thin`: the menu
+minimum, the Toast card, the notification inbox, and the dialog and drawer
+shells, exactly as a control or a field does (plan `627`).
+
 Three fixed surfaces hold the chrome painted inside them, not only a positive
 size. A toast card is `2 * spacing.lg + iconSize.md + spacing.lg +
-typography.bodyStrong.fontSize` at least — its padding, tone icon, the gap beside
-it and one title glyph, with the 3px tone bar left to consumer chrome. The
-notification inbox is `2 * spacing.lg + notificationUnreadDotSize + spacing.sm +
-typography.bodyStrong.fontSize`, the row's padding, unread dot, gap and title.
-The narrowest overlay holds `2 * spacing.md + iconSize.md + spacing.md +
-typography.label.fontSize`: a menu row's two insets, its leading icon, gap and one
-label glyph (the 2px highlight bar is paid for out of the left padding). Each
-bound reads the theme's own metrics, so widening a type role or a spacing step
-moves it. The shipped `380 / 320 / 180` clear the three by `5.76× / 6.40× /
-3.40×`, so the rules guard an edited theme rather than a shipped value, and no
-value moves (plan `620`).
+typography.bodyStrong.fontSize + 2 * borderWidth.thin` at least — its padding,
+tone icon, the gap beside it and one title glyph, with the 3px tone bar left to
+consumer chrome, inside the card's two borders. The notification inbox is
+`2 * spacing.lg + notificationUnreadDotSize + spacing.sm +
+typography.bodyStrong.fontSize + 2 * borderWidth.thin`, the row's padding,
+unread dot, gap and title inside the inbox's two borders. The narrowest overlay
+holds `2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize +
+2 * borderWidth.thin`: a menu row's two insets, its leading icon, gap and one
+label glyph (the 2px highlight bar is paid for out of the left padding), inside
+the menu surface's two borders. Each bound reads the theme's own metrics, so
+widening a type role, a spacing step or a border moves it. The shipped
+`380 / 320 / 180` clear the three by `5.59× / 6.15× / 3.27×`, so the rules guard
+an edited theme rather than a shipped value, and no value moves (plans `620` and
+`627`).
 
 A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
 so a theme cannot make "large" narrower than "medium". A dialog's three surface
 widths are a third ladder for the same reason — `lg` may not be narrower than
 `md`. A dialog's and a drawer's smallest shell hold their own close control —
-`3 * spacing["2xl"] + typography.h3.fontSize`, the two paddings, the header's
-reserved step for the control and one title glyph — and a bottom drawer's
-smallest height holds `max(spacing["2xl"], spacing.lg + controlHeight.sm) +
-density.rowHeight + spacing["2xl"]`: the close zone, one row and the bottom
-padding. At the shipped metrics the widths need 88px and the height 96px, and
-the shipped `360 / 320 / 240` clear them at `4.09× / 3.64× / 2.50×`; a dialog's
-title still wraps, so this is the shell's non-reflow chrome, not a minimum
-content width (plan `625`). A carousel's active mark may elongate but never
-shrink below its idle dot,
+`3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin`, the two
+paddings, the header's reserved step for the control, one title glyph and the
+face's two borders — and a bottom drawer's smallest height holds
+`max(spacing["2xl"], spacing.lg + controlHeight.sm) + density.rowHeight +
+spacing["2xl"] + 2 * borderWidth.thin`: the close zone, one row, the bottom
+padding and its two borders. At the shipped metrics the widths need 90px and the
+height 98px, and the shipped `360 / 320 / 240` clear them at `4.00× / 3.56× /
+2.45×`; a dialog's title still wraps, so this is the shell's non-reflow chrome,
+not a minimum content width (plans `625` and `627`). A carousel's active mark may
+elongate but never shrink below its idle dot,
 and a message viewport holds at least one row. A timeline's marker is the same
 kind of fixed mark: its dot is at least the `borderWidth.thin` connector it
 sits on and no wider than the column that centres it, so a brand can size the
@@ -1134,8 +1143,8 @@ wider digits must widen it; and an avatar's presence dot is at most half the
 smallest avatar the theme carries, because it sits on that avatar's corner.
 
 A notification inbox clips its contents, so its panel maximum contains its list
-maximum, and the list is held to one `density.rowHeight` like every other scroll
-viewport; the unread marker is a mark a brand can size.
+maximum plus its two borders, and the list is held to one `density.rowHeight`
+like every other scroll viewport; the unread marker is a mark a brand can size.
 
 A date trigger is a fixed-width field, so `dateFieldWidth` holds it rather than
 an overlay width. A calendar grid is seven `calendarCellSize` cells wide —

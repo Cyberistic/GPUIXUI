@@ -521,11 +521,17 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a dialog's
  *   and a drawer's smallest shell holds its padding, the header's reserved step
  *   for the close control and one `h3` title glyph, and a bottom drawer's
- *   smallest height holds the close zone, one row and its bottom padding — the
- *   shipped widths need 88 and the height 96 — a calendar
+ *   smallest height holds the close zone, one row and its bottom padding, every
+ *   one of those surfaces holding its chrome inside its own two
+ *   `borderWidth.thin` edges — the shipped widths need 90 and the height 98 —
+ *   a calendar
  *   day cell fits the smallest control, a time segment holds two body digits
  *   (`HH`/`MM`), at a 0.65em tabular advance rounded up to a pixel, and an
  *   avatar's presence dot is at most half the smallest avatar the theme carries.
+ *   The menu's minimum width, the Toast card and the notification inbox follow
+ *   the same content-box rule: each holds its row or card chrome plus its own two
+ *   borders, and the inbox's maximum height contains the list it wraps plus those
+ *   borders.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -854,34 +860,36 @@ export function themeMetricFailures(
     ),
     // A dialog's shell holds its own close control: `spacing["2xl"]` padding on
     // both sides, the same step reserved in the header for the control, and one
-    // `h3` title glyph. The title wraps; the padding and the control do not, so
-    // a narrower surface clips the chrome it always paints (plan 625).
+    // `h3` title glyph, inside the face's two `borderWidth.thin` edges (plan
+    // 627). The title wraps; the padding and the control do not, so a narrower
+    // surface clips the chrome it always paints (plan 625).
     ...atLeast(
       "dimensions",
       "dialogWidthSm",
       dimensions.dialogWidthSm,
-      3 * spacing["2xl"] + typography.h3.fontSize,
+      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin,
     ),
     // A drawer's header is the dialog's: same padding, same reserved step, same
-    // `sm` close control and `h3` title. The width ladder carries the bound to
-    // `md` and `lg`.
+    // `sm` close control and `h3` title, inside its two borders. The width ladder
+    // carries the bound to `md` and `lg`.
     ...atLeast(
       "dimensions",
       "drawerWidthSm",
       dimensions.drawerWidthSm,
-      3 * spacing["2xl"] + typography.h3.fontSize,
+      3 * spacing["2xl"] + typography.h3.fontSize + 2 * borderWidth.thin,
     ),
     // A bottom drawer is a column: the close control's zone from the top edge
     // (`spacing.lg` plus the control, which is wider than the padding), one
-    // `density.rowHeight` row and the bottom `spacing["2xl"]`. A shorter sheet
-    // is only its chrome (plan 625).
+    // `density.rowHeight` row and the bottom `spacing["2xl"]`, inside its two
+    // borders. A shorter sheet is only its chrome (plan 625).
     ...atLeast(
       "dimensions",
       "drawerHeightSm",
       dimensions.drawerHeightSm,
       Math.max(spacing["2xl"], spacing.lg + density.controlHeight.sm) +
         density.rowHeight +
-        spacing["2xl"],
+        spacing["2xl"] +
+        2 * borderWidth.thin,
     ),
     // A date trigger paints its value and a disclosure glyph inside its own
     // insets and gap; a field narrower than that chrome clips one of them. A
@@ -989,19 +997,20 @@ export function themeMetricFailures(
       density.rowHeight,
     ),
     // The inbox clips its contents, so its maximum height must contain the
-    // list it wraps rather than cutting rows off.
+    // list it wraps plus its two borders rather than cutting rows off.
     ...atLeast(
       "dimensions",
       "notificationPanelMaxHeight",
       dimensions.notificationPanelMaxHeight,
-      dimensions.notificationListMaxHeight,
+      dimensions.notificationListMaxHeight + 2 * borderWidth.thin,
     ),
     // A Toast's fixed card holds its own chrome: the content row is `spacing.lg`
     // padding on both sides, the `md` tone icon, the `lg` gap beside it and one
-    // `bodyStrong` title glyph. The 3px tone bar is consumer chrome, not a
-    // metric, so the bound leaves it out; a card narrower than this clips the
-    // title it exists to show. A zero or non-finite width is the sign rule's
-    // diagnostic, so the fit waits for a usable value.
+    // `bodyStrong` title glyph, inside the card's two `borderWidth.thin` edges
+    // (plan 627). The 3px tone bar is consumer chrome, not a metric, so the bound
+    // leaves it out; a card narrower than this clips the title it exists to show.
+    // A zero or non-finite width is the sign rule's diagnostic, so the fit waits
+    // for a usable value.
     ...(usableBound(dimensions.toastWidth)
       ? atLeast(
           "dimensions",
@@ -1010,12 +1019,14 @@ export function themeMetricFailures(
           2 * spacing.lg +
             iconSize.md +
             spacing.lg +
-            typography.bodyStrong.fontSize,
+            typography.bodyStrong.fontSize +
+            2 * borderWidth.thin,
         )
       : []),
     // A notification row is `spacing.lg` padding on both sides, the unread dot,
-    // the `sm` gap and one `bodyStrong` title glyph. The panel is anchored at
-    // `notificationPanelWidth`, so a narrower panel clips the title of every
+    // the `sm` gap and one `bodyStrong` title glyph, and the inbox paints its two
+    // `borderWidth.thin` edges inside its width (plan 627). The panel is anchored
+    // at `notificationPanelWidth`, so a narrower panel clips the title of every
     // unread notification.
     ...(usableBound(dimensions.notificationPanelWidth)
       ? atLeast(
@@ -1025,19 +1036,25 @@ export function themeMetricFailures(
           2 * spacing.lg +
             dimensions.notificationUnreadDotSize +
             spacing.sm +
-            typography.bodyStrong.fontSize,
+            typography.bodyStrong.fontSize +
+            2 * borderWidth.thin,
         )
       : []),
     // The narrowest overlay row: `spacing.md` padding on both sides, one `md`
     // leading icon (the `sm` trailing check and its gap are narrower), the
-    // `md` gap and one `label` glyph. The 2px highlight bar is paid for out of
-    // the row's left padding, so it does not widen the bound.
+    // `md` gap and one `label` glyph, inside the menu surface's two
+    // `borderWidth.thin` edges (plan 627). The 2px highlight bar is paid for out
+    // of the row's left padding, so it does not widen the bound.
     ...(usableBound(dimensions.overlayMinWidth)
       ? atLeast(
           "dimensions",
           "overlayMinWidth",
           dimensions.overlayMinWidth,
-          2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize,
+          2 * spacing.md +
+            iconSize.md +
+            spacing.md +
+            typography.label.fontSize +
+            2 * borderWidth.thin,
         )
       : []),
     ...finiteGroup("elevation", elevation),

@@ -40,7 +40,9 @@ describe("notification inbox metrics", () => {
         member: "notificationPanelMaxHeight",
         rule: "at-least",
         actual: 240,
-        bound: lightTheme.dimensions.notificationListMaxHeight,
+        bound:
+          lightTheme.dimensions.notificationListMaxHeight +
+          2 * lightTheme.borderWidth.thin,
       },
     ]);
   });

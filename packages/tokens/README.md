@@ -678,6 +678,8 @@ than they are — including each control size's matching icon tier against its o
 `controlHeight`, which is how a large `IconButton` and a slider's thumb are
 measured — or choose a field minimum too small for the query row it documents,
 or a dialog or drawer narrower than its close control,
+or a fixed surface whose own border leaves too little content box for the chrome
+it paints,
 raise an inline icon above the caption or label line it sits in,
 raise an inline avatar above the dense row it leads,
 flush a control's horizontal padding to zero or tighter than the theme's own
