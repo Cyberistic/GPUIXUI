@@ -10,6 +10,7 @@
  */
 
 import * as Option from "effect/Option";
+import { usableText } from "./text.js";
 
 /** A closed interval with a quantisation step. `step: 0` means continuous. */
 export interface ValueRange {
@@ -155,13 +156,26 @@ export const clampValue = (value: number, range: ValueRange): number => {
   return nearestStop(stopsOf(normalized), clamped);
 };
 
-/** Where a value sits on its track: 0 at `min`, 1 at `max`. */
-export const valueFraction = (value: number, range: ValueRange): number => {
-  const { min, max } = normalizeRange(range);
-  const span = max - min;
-  if (span <= 0) return 0;
-  return (clampValue(value, range) - min) / span;
-};
+/**
+ * The text a value control announces.
+ *
+ * A caller's `formatValue` is often computed (`${value}${unit}` with a missing
+ * unit string) and can trim to nothing. A blank announcement is worse than the
+ * documented default, so the value stands in for the formatter. It is the same
+ * blank-string rule as `ariaNameOr` (plans 026, 580).
+ */
+export const valueText = (
+  value: number,
+  formatted: string | undefined,
+): string => Option.getOrElse(usableText(formatted), () => String(value));
+
+/** Where a value sits on its track: 0 at `min`, 1 at `max`. */ export const valueFraction =
+  (value: number, range: ValueRange): number => {
+    const { min, max } = normalizeRange(range);
+    const span = max - min;
+    if (span <= 0) return 0;
+    return (clampValue(value, range) - min) / span;
+  };
 
 /** The value at a fraction of the track, clamped and snapped. */
 export const fractionValue = (fraction: number, range: ValueRange): number => {

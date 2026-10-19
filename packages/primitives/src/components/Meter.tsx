@@ -19,7 +19,12 @@ import {
   type ProgressSpec,
   type ProgressTone,
 } from "../core/style.js";
-import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
+import {
+  clampValue,
+  normalizeRange,
+  valueFraction,
+  valueText,
+} from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { ariaName, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -62,7 +67,7 @@ export const renderMeter = (
     <div
       role="meter"
       aria-label={ariaName(props.label)}
-      aria-valuetext={props.formatValue?.(value) ?? String(value)}
+      aria-valuetext={valueText(value, props.formatValue?.(value))}
       testId={props.testId}
       style={mergeStyle(progressTrackStyle(spec, theme), props.style)}
     >

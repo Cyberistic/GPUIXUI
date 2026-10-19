@@ -1508,6 +1508,15 @@ retired once both branches are one
       heading is trimmed. `hasText` moved to `core/text.ts` so the paint and the
       row model share one rule. 1 core + 1 element-tree case, both failing in
       the old direction (offline 739 → 741; plan `579`).
+`[x]` `packages/primitives`: **a blank `formatValue` silenced a value control** —
+      `Meter`, `Slider` and `RangeSlider` announced `formatValue(value)` as-is,
+      so a formatter returning only whitespace (a computed unit string that was
+      missing) left `aria-valuetext` empty: a slider or meter with no announced
+      value at all, although all three document `String(value)` as the default.
+      One `valueText` rule now falls back to the value when the formatter says
+      nothing, the same blank-string rule plan `026` applied to names. 1 element
+      case covering all three, failing in the old direction (offline 741 → 743;
+      plan `580`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

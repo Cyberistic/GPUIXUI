@@ -69,6 +69,17 @@ describe("Meter", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("12 of 16");
   });
 
+  it("falls back to the value when the formatter says nothing", () => {
+    // The bug guarded (plan 580): a formatter returning only whitespace erased
+    // the announced measurement, so the meter had no value text at all even
+    // though its documented default is `String(value)` (the plan-026 rule).
+    const element = renderMeter(
+      { value: 12, formatValue: () => "   " },
+      testTheme,
+    );
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("12");
+  });
+
   it("is status, so it is never a tab stop and never takes a handler", () => {
     const element = renderMeter({ value: 10 }, testTheme);
     expect(hostProp(element, "tabIndex")).toStrictEqual(Option.none());

@@ -141,6 +141,34 @@ describe("Slider", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
   });
 
+  it("falls back to each value when the formatter says nothing", () => {
+    // The bug guarded (plan 580): a formatter that trims to nothing erased the
+    // announced value — a slider whose computed unit label was missing became
+    // silent — although the documented default is `String(value)`.
+    const slider = renderSlider(
+      { value: 42, formatValue: () => "   " },
+      testTheme,
+      valueOf(42),
+      idle,
+      sliderHandlers(vi.fn()),
+    );
+    expect(expectSome(hostProp(slider, "aria-valuetext"))).toBe("42");
+    const range = renderRangeSlider(
+      { formatValue: () => "" },
+      testTheme,
+      spanOf(20, 60),
+      { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+      rangeHandlers(vi.fn()),
+    );
+    const [, start, , end] = partsOf(range);
+    expect(
+      expectSome(hostProp(start ?? expect.fail("no thumb"), "aria-valuetext")),
+    ).toBe("20");
+    expect(
+      expectSome(hostProp(end ?? expect.fail("no thumb"), "aria-valuetext")),
+    ).toBe("60");
+  });
+
   it("moves one step with an arrow key, and clamps at the end", () => {
     const onValueChange = vi.fn();
     const element = renderSlider(

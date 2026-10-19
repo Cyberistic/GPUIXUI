@@ -39,6 +39,7 @@ import {
   pointerValue,
   spanAfterMove,
   valueFraction,
+  valueText,
   type ValueRange,
   type ValueSpan,
 } from "../core/value.js";
@@ -156,7 +157,7 @@ export const sliderRange = (props: {
 export const sliderValueText = (
   value: number,
   formatValue?: (value: number) => string,
-): string => formatValue?.(value) ?? String(value);
+): string => valueText(value, formatValue?.(value));
 
 /** What a rendered slider needs from the component that owns its state. */
 export interface SliderHandlers {

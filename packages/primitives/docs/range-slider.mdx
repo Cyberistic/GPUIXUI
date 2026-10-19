@@ -50,7 +50,7 @@ maximum — reports nothing, the same no-op rule `Slider` follows.
 | `disabled` | `boolean` | `false` | both thumbs leave the tab order |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name, trimmed; thumbs become `"<label> minimum"` / `"<label> maximum"`, and a blank label leaves the group and both thumbs unnamed |
-| `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb |
+| `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb; a blank result falls back to the value |
 | `style` | `StateStyle<RangeSliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<RangeSliderThumbState>` | — | merged last on each thumb; an object or a state callback |
 | `testId` | `string` | — | names the track; thumbs become `${testId}-thumb-start` / `-thumb-end` |
@@ -158,7 +158,8 @@ one slider reads the same focus/disabled/invalid fields on the other.
   rule (including both thumbs at one value), and the maximum as a stop when the
   step does not divide the span (plan `331`).
 - `src/components/Slider.test.tsx` — two named sliders, per-thumb keys, the
-  crossing result, per-thumb rings, disabled tab stops.
+  crossing result, per-thumb rings, disabled tab stops, and the value fallback
+  for a blank formatter on both parts (plan `580`).
 - `runtime/pointer-feedback.runtime.test.tsx` — the cross-control matrix: both
   sliders declare a hover and press rule on the track, and a disabled one
   declares no visible change (plan `361`).

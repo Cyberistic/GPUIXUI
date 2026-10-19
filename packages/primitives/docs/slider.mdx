@@ -51,7 +51,7 @@ track.
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no pointer or keys |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name, trimmed; a blank label is absent |
-| `formatValue` | `(value: number) => string` | `String` | the announced text |
+| `formatValue` | `(value: number) => string` | `String` | the announced text; a blank result falls back to the value |
 | `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<SliderThumbState>` | — | merged last on the thumb; an object or a state callback |
@@ -175,7 +175,8 @@ the thumb:
 - `runtime/pointer-feedback.runtime.test.tsx` — the cross-control matrix: an
   element that owns a pointer gesture changes something on hover and on press,
   and a disabled control changes nothing in either state (plan `361`).
-- `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint.
+- `src/components/Slider.test.tsx` — role, value text, keys, disabled, paint,
+  and the value fallback when a formatter is blank (plan `580`).
 - `runtime/value.runtime.test.tsx` — a real click at 25% reports 25, the thumb is
   centred within 1 px at 0/50/100, the ring follows focus, disabled is skipped
   by Tab, a drag that leaves the track keeps tracking and clamps at both ends,
