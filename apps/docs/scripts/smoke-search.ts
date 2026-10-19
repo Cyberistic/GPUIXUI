@@ -245,6 +245,97 @@ const checkIndexFilter = async (
     );
   }
 
+  // The live-surface facet (plan 570). A `?preview=live` load proves the mount
+  // read, and the two chip presses prove the hydrated control writes the URL
+  // and changes the visible set.
+  const live = components.filter((component) => component.liveScene !== null);
+  const liveSlugs = new Set(live.map((component) => component.slug));
+  await session.navigate(
+    `${new URL(COMPONENTS_PAGE, baseUrl).href}?preview=live`,
+  );
+  const facetLoaded = await session.waitFor(
+    `${count} === "${live.length} of ${total} components" &&
+      location.search.includes("preview=live")`,
+  );
+  const facetState = await filterState(session);
+  const facetSlugs = facetState.links.map((href) =>
+    href.replace("/docs/components/", ""),
+  );
+  if (
+    !facetLoaded ||
+    facetSlugs.length !== live.length ||
+    facetSlugs.some((slug) => !liveSlugs.has(slug))
+  ) {
+    problems.push(
+      `component filter: "?preview=live" left "${facetState.count}" and ${facetState.links.length} card link(s)`,
+    );
+  }
+
+  const pressedAll = await session.evaluate(`(() => {
+    const button = document.querySelector('[data-preview-filter="all"]');
+    if (button === null) return false;
+    button.click();
+    return true;
+  })()`);
+  const restoredAll = await session.waitFor(
+    `${count} === "${total} of ${total} components" &&
+      !location.search.includes("preview=")`,
+  );
+  if (pressedAll !== true || !restoredAll) {
+    const state = await filterState(session);
+    problems.push(
+      `component filter: "All components" did not clear the live facet (${state.search || "no query"})`,
+    );
+  }
+
+  const pressedLive = await session.evaluate(`(() => {
+    const button = document.querySelector('[data-preview-filter="live"]');
+    if (button === null) return false;
+    button.click();
+    return true;
+  })()`);
+  const restoredLive = await session.waitFor(
+    `${count} === "${live.length} of ${total} components" &&
+      location.search.includes("preview=live")`,
+  );
+  if (pressedLive !== true || !restoredLive) {
+    const state = await filterState(session);
+    problems.push(
+      `component filter: "Live surface" did not apply the facet (${state.search || "no query"})`,
+    );
+  }
+
+  // A reader can arrive with both filters set (a shared search link plus the
+  // facet). Clear filter must release both, or the page stays empty (plan 570).
+  await session.navigate(
+    `${new URL(COMPONENTS_PAGE, baseUrl).href}?q=zzzzzz&preview=live`,
+  );
+  const bothEmpty = await session.waitFor(
+    `${value} === "zzzzzz" && ${count} === "0 of ${total} components" &&
+      location.search.includes("preview=live")`,
+  );
+  if (!bothEmpty) {
+    problems.push("component filter: a combined q + live link was not applied");
+  }
+  const clearedBoth = await session.evaluate(`(() => {
+    const button = [...document.querySelectorAll("#nd-page button")].find(
+      (candidate) => (candidate.textContent ?? "").trim() === "Clear filter",
+    );
+    if (button === undefined) return false;
+    button.click();
+    return true;
+  })()`);
+  const restoredBoth = await session.waitFor(
+    `${value} === "" && ${count} === "${total} of ${total} components" &&
+      !location.search.includes("q=") && !location.search.includes("preview=")`,
+  );
+  if (clearedBoth !== true || !restoredBoth) {
+    const state = await filterState(session);
+    problems.push(
+      `component filter: clear left "${state.count}" and ${state.search || "no query"}`,
+    );
+  }
+
   return problems;
 };
 

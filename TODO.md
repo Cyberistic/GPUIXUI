@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–568)
 
-`[x]` `[██████████]` 136/136
+`[x]` `[██████████]` 137/137
+
+`[x]` **The component index exposes the live surface (plan 570)** — 44 of 66
+      records declare a `liveScene`, but the index showed only status and GPUix
+      support, so a reader could not find an interactive page without opening
+      cards. A derived `Live` badge and a shareable `?preview=live` facet now
+      mark and filter those pages, intersect with `q`, and are operated by
+      `smoke:search`; `Clear filter` releases both. 8 new tests (86 files /
+      621), `check`, `smoke:build`, `smoke:a11y` and the browser gate green;
+      five forced defects measured in plan 570 §8.
 
 `[x]` **Search: a promoted name the lexical index cannot retrieve (plan 569)** —
       measured after plan 568: `focusRing` reached the Tokens API table, but

@@ -45,6 +45,45 @@ export const filterGroups = (query: string): ReadonlyArray<ComponentGroup> =>
     return items.length === 0 ? [] : [{ ...group, items }];
   });
 
+/** The facet the index can add beside its text filter. */
+export type PreviewFilter = "all" | "live";
+
+/** A record carries a live GPUix surface exactly when it declares a scene. */
+export const isLiveComponent = (component: ComponentMetaInput): boolean =>
+  component.liveScene !== null;
+
+/**
+ * Keeps the groups whose records carry a live scene (plan 570). `liveScene` is
+ * the same field `<NativePreview>` reads, so the facet cannot drift from the
+ * tier a page renders; an empty group is dropped like the text filter's.
+ */
+export const filterByPreview = (
+  filtered: ReadonlyArray<ComponentGroup>,
+  filter: PreviewFilter,
+): ReadonlyArray<ComponentGroup> =>
+  filter === "all"
+    ? filtered
+    : filtered.flatMap((group) => {
+        const items = group.items.filter(isLiveComponent);
+        return items.length === 0 ? [] : [{ ...group, items }];
+      });
+
+/** The facet a deep link carried (`/docs/components?preview=live`). */
+export const previewQueryFromSearch = (search: string): PreviewFilter =>
+  new URLSearchParams(search).get("preview") === "live" ? "live" : "all";
+
+/** Mirrors the facet into `?preview=live`, keeping `q` and `platform`. */
+export const withPreviewFilter = (
+  search: string,
+  filter: PreviewFilter,
+): string => {
+  const params = new URLSearchParams(search);
+  if (filter === "all") params.delete("preview");
+  else params.set("preview", "live");
+  const next = params.toString();
+  return next === "" ? "" : `?${next}`;
+};
+
 /** The filter a search result arrives with (`/docs/components?q=Dialogs`). */
 export const filterQueryFromSearch = (search: string): string =>
   new URLSearchParams(search).get("q")?.trim() ?? "";
@@ -78,6 +117,15 @@ function Card({ component }: { component: ComponentMetaInput }) {
           >
             {component.gpuix}
           </span>
+          {isLiveComponent(component) ? (
+            <span
+              className="rounded-md border border-fd-border px-2 py-0.5 text-xs text-fd-muted-foreground"
+              data-preview="live"
+              title="This page carries a live GPUix surface: the real component code on the published WebAssembly renderer, not the desktop binary."
+            >
+              Live
+            </span>
+          ) : null}
         </span>
       </span>
       <span className="text-sm text-fd-muted-foreground">
@@ -99,27 +147,42 @@ function Card({ component }: { component: ComponentMetaInput }) {
  */
 export function ComponentIndex() {
   const [query, setQuery] = useState("");
-  const visible = filterGroups(query);
+  const [preview, setPreview] = useState<PreviewFilter>("all");
+  const visible = filterByPreview(filterGroups(query), preview);
   const visibleCount = visible.reduce(
     (count, group) => count + group.items.length,
     0,
   );
+  const liveCount = components.filter(isLiveComponent).length;
 
-  // The search result already carried the filter in `?q=`; apply it after
-  // mount so the server render stays deterministic.
+  // A search result or a shared facet carries its state in the URL; apply it
+  // after mount so the server render stays deterministic.
   useEffect(() => {
     setQuery(filterQueryFromSearch(window.location.search));
+    setPreview(previewQueryFromSearch(window.location.search));
   }, []);
 
-  const updateQuery = (next: string) => {
-    setQuery(next);
-    const search = withFilterQuery(window.location.search, next);
+  const replaceSearch = (search: string) =>
     window.history.replaceState(
       window.history.state,
       "",
       `${window.location.pathname}${search}${window.location.hash}`,
     );
+
+  const updateQuery = (next: string) => {
+    setQuery(next);
+    replaceSearch(withFilterQuery(window.location.search, next));
   };
+
+  const updatePreview = (next: PreviewFilter) => {
+    setPreview(next);
+    replaceSearch(withPreviewFilter(window.location.search, next));
+  };
+
+  const chip = (active: boolean) =>
+    `rounded-md border border-fd-border px-2 py-1 text-sm ${
+      active ? "bg-fd-accent" : "hover:bg-fd-accent"
+    }`;
 
   return (
     <div className="not-prose flex flex-col gap-8">
@@ -137,6 +200,26 @@ export function ComponentIndex() {
           aria-describedby="component-filter-count"
           className="w-full rounded-lg border border-fd-border bg-fd-background px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-fd-ring focus-visible:outline-none"
         />
+        <div role="group" aria-label="Preview" className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-preview-filter="all"
+            aria-pressed={preview === "all"}
+            onClick={() => updatePreview("all")}
+            className={chip(preview === "all")}
+          >
+            All components ({components.length})
+          </button>
+          <button
+            type="button"
+            data-preview-filter="live"
+            aria-pressed={preview === "live"}
+            onClick={() => updatePreview("live")}
+            className={chip(preview === "live")}
+          >
+            Live surface ({liveCount})
+          </button>
+        </div>
         <p
           id="component-filter-count"
           aria-live="polite"
@@ -160,7 +243,10 @@ export function ComponentIndex() {
           <p className="text-sm">No component matches “{query.trim()}”.</p>
           <button
             type="button"
-            onClick={() => updateQuery("")}
+            onClick={() => {
+              updateQuery("");
+              updatePreview("all");
+            }}
             className="rounded-md border border-fd-border px-2 py-1 text-sm hover:bg-fd-accent"
           >
             Clear filter

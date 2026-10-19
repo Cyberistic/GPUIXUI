@@ -6,10 +6,14 @@ import type { ComponentMetaInput } from "@/component-meta/schema";
 import { supportLegend } from "@/component-meta/support";
 import {
   ComponentIndex,
+  filterByPreview,
   filterGroups,
   filterQueryFromSearch,
+  isLiveComponent,
   matchesComponent,
+  previewQueryFromSearch,
   withFilterQuery,
+  withPreviewFilter,
 } from "./component-index";
 
 /**
@@ -48,6 +52,22 @@ describe("component index", () => {
     Arr.forEach(components, (component) => {
       expect(html).toContain(`data-gpuix="${component.gpuix}"`);
     });
+  });
+
+  it("marks every record with a live scene and no other (plan 570)", () => {
+    const live = Arr.filter(components, isLiveComponent);
+    expect(html.match(/data-preview="live"/g)).toHaveLength(live.length);
+    Arr.forEach(live, (component) => {
+      expect(html).toContain(`href="/docs/components/${component.slug}"`);
+    });
+  });
+
+  it("renders the preview facet with counts derived from the registry", () => {
+    const live = Arr.filter(components, isLiveComponent);
+    expect(html).toContain(`data-preview-filter="all"`);
+    expect(html).toContain(`data-preview-filter="live"`);
+    expect(html).toContain(`All components (${components.length})`);
+    expect(html).toContain(`Live surface (${live.length})`);
   });
 
   it("heads every group with its tier", () => {
@@ -166,6 +186,67 @@ describe("component filter", () => {
       ),
     ).toBe(true);
     expect(filterGroups("zzz")).toHaveLength(0);
+  });
+});
+
+describe("component preview facet", () => {
+  const live = Arr.filter(components, isLiveComponent);
+  const cardRecord = record("card");
+
+  it("keeps exactly the live records, once each, in registry order", () => {
+    const filtered = filterByPreview(groups, "live");
+    const slugs = Arr.flatMap(filtered, (group) =>
+      Arr.map(group.items, (item) => item.slug),
+    );
+    expect(slugs).toEqual(Arr.map(live, (component) => component.slug));
+  });
+
+  it("drops a non-live record from the live facet", () => {
+    expect(isLiveComponent(cardRecord)).toBe(false);
+    const filtered = filterByPreview(
+      [
+        {
+          tier: cardRecord.tier,
+          group: cardRecord.group,
+          items: [cardRecord],
+        },
+      ],
+      "live",
+    );
+    expect(filtered).toHaveLength(0);
+  });
+
+  it("leaves every group untouched for the all facet", () => {
+    expect(filterByPreview(groups, "all")).toBe(groups);
+  });
+
+  it("intersects with the text filter in both directions", () => {
+    const liveButton = filterByPreview(filterGroups("button"), "live");
+    expect(
+      Arr.flatMap(liveButton, (group) => Arr.map(group.items, (i) => i.slug)),
+    ).toContain("button");
+
+    expect(isLiveComponent(cardRecord)).toBe(false);
+    expect(
+      filterByPreview(filterGroups(cardRecord.title), "live"),
+    ).toHaveLength(0);
+  });
+
+  it("reads the facet a deep link carried, defaulting unknown to all", () => {
+    expect(previewQueryFromSearch("?preview=live")).toBe("live");
+    expect(previewQueryFromSearch("?preview=all")).toBe("all");
+    expect(previewQueryFromSearch("?preview=zzz")).toBe("all");
+    expect(previewQueryFromSearch("")).toBe("all");
+  });
+
+  it("writes the facet without losing the query or platform", () => {
+    expect(withPreviewFilter("?q=Dialog&platform=win32", "live")).toBe(
+      "?q=Dialog&platform=win32&preview=live",
+    );
+    expect(withPreviewFilter("?q=Dialog&preview=live", "all")).toBe(
+      "?q=Dialog",
+    );
+    expect(withPreviewFilter("", "all")).toBe("");
   });
 });
 
