@@ -60,6 +60,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 101/101 plans-and-harness
 
+`[~]` Close the **last two shipped Tier 2 consumer paths** per plan `581`:
+      `MessageScroller` and `CommandMenu` are the only shipped components with
+      no `tier2-*` scenario (the `message-scroller`/`live-scroller` probes mount
+      a local implementation, and so does `command-palette`), and the
+      message-scroller docs claim the playground mounts its example.
+      Deliverables: `tier2-scroller`, `tier2-command`, `live-tier2-scroller`,
+      `live-tier2-command`; focused runs, mutation proofs, `COMPONENTS.md`
+      evidence and the `tier2` capability row updated.
+
 `[x]` Prove the **drag family in a real window** per plan `580`: `drag-targets`
       and `drag-autoscroll` were the last interaction family with headless-only
       evidence. `live-drag-targets` (20 checks) and `live-drag-autoscroll` (29)
