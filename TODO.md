@@ -64,7 +64,30 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 104/104 plans-and-harness
+`[x]` `[██████████]` 105/105 plans-and-harness
+
+`[x]` Prove the **roving-focus contract in a real window** per plan `637`:
+      plan `158`'s two load-bearing claims were `TestRenderer`-only — a
+      component's own `renderer.focusElement` reaches a row that was never
+      clicked, and a focused virtual row survives the painted window scrolling
+      past it. `live-roving-focus` (**28 checks**, three green focused runs,
+      ~2.1 s) repeats the same view in the 1100 × 720 window: a real click,
+      Down and Enter move native focus and the roving index; the focus
+      affordance's programmatic focus reaches `roving-row-5` and the next key
+      lands there; a real `-1200` wheel moves the virtual anchor, unpaints a
+      previously painted row, and leaves native focus on `vrow-3` **and** its
+      painted row while the next Down moves to `vrow-4`; scrolling back
+      restores the path. **Measured:** focusing a virtual row already reveals
+      it (plan `166`), so the pre-wheel anchor is `3` — the original "row 0
+      unpainted" lever was vacuous (`-120` and `-20` both passed) and is
+      recorded as a null result; the check now uses the anchor plus a row that
+      was painted. Five mutation proofs observed and reverted (removed focus
+      call → `got "roving-focus-5"`; a lost post-scroll delivery → `got
+      "vrow-3"`; no wrapper box → `Element has no painted bounds`; a `-40`
+      wheel → row 4 still painted; focus moved away → `got "roving-row-5"`).
+      The additive `testId` leaves the headless control unchanged. Live
+      registry `90 → 91`; the full live suite was not run (merge/release gate).
+      Focused ids run: `live-roving-focus` (×3), `roving-focus`.
 
 `[x]` Prove **Tabs' vertical axis through the consumer path** per plan `633`:
       the shipped `orientation="vertical"` had package tests but neither

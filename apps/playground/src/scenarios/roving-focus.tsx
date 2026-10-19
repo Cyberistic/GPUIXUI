@@ -149,7 +149,10 @@ const RovingProbe = () => {
       >
         <text style={{ color: theme.colors.foreground }}>focus row 5</text>
       </div>
-      <div style={{ display: "flex", height: 280, width: 320 }}>
+      <div
+        testId="vlist-focus-viewport"
+        style={{ display: "flex", height: 280, width: 320 }}
+      >
         <virtual-list
           testId="vlist-focus"
           style={{ flexGrow: 1, minHeight: 0 }}

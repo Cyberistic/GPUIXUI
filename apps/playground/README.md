@@ -1479,8 +1479,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 86 scenarios. `smoke:live` opens
+The 104-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 91 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1507,6 +1507,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-overlay` | the modal trigger opens a painted 280 × 236 surface centred in the window, and Escape closes it (`open=false last=escape`) |
 | `live-floating` | the placement engine in a window: the probe frame is `1100 × 720`, the panel content sits at `(209, 175)` for bottom/start and `(335, 129)` for right/start, `align=center` still ends at the anchor's centre line (`147`) — the measured 0.10.0 defect — and the edge layer snaps to `641..719` inside the window instead of flipping — 17 checks (plan `594`) |
 | `live-focus` | focus enters the modal (`modal-content`), Tab and Shift-Tab walk `a → b → open-popover → close` and wrap back to the content, Escape returns focus to the trigger, and a nested popover's Escape closes only the popover and returns focus to its opener — 18 checks |
+| `live-roving-focus` | the roving-tabindex model in a window: a click + Down move native focus and the index, Enter activates, a component-owned `renderer.focusElement` reaches a never-clicked row and the next key lands there; a real `-1200` wheel moves the virtual anchor, unpaints a previously painted row and leaves native focus on `vrow-3`, which stays painted and still receives the next Down; scrolling back restores the path — 28 checks (plan `637`). **Measured:** focusing a virtual row already reveals it, so the pre-wheel anchor is `3`; the check uses the anchor, not row 0 |
 | `live-tab-focus` | the tab strip's focus model in a window: a synthetic `tab` key reaches the focused tab but does not traverse (so the live tab-order proof uses the renderer's own `focusNext`), nine traversal steps reach the last clipped tab with the strip's offset unchanged (focus does not reveal), one more leaves the strip, the roving strip is one stop, and End/Home move selection, focus and the reveal — 18 checks (plan `565`) |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
 | `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
@@ -1960,8 +1961,10 @@ frames=verified
 The last full merge/release gate ran **90/90** (`exit 0`, 2330 checks, 59
 capabilities, 881 s, `.artifacts/live-report.json`, 2026-10-19), including every
 scenario this branch added, through `live-text-entry` (plan `624`) and the
-`live-toast` fixture fix (plan `623` §10). The full live suite is a merge/release
-gate rather than a per-task check.
+`live-toast` fixture fix (plan `623` §10). The registry is now **91** after
+`live-roving-focus` (plan `637`), which is focused-green; the next full live
+run is the merge/release gate. The full live suite is a merge/release gate
+rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 

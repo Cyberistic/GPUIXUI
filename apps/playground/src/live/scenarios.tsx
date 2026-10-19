@@ -125,6 +125,7 @@ import { tabOverflowScenario } from "../scenarios/tab-overflow.js";
 import { tabFocusScenario } from "../scenarios/tab-focus.js";
 import { textEntryScenario } from "../scenarios/text-entry.js";
 import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
+import { rovingFocusScenario } from "../scenarios/roving-focus.js";
 import { scaleCostScenario } from "../scenarios/scale.js";
 import { terminalScenario } from "../scenarios/terminal.js";
 import { fieldOf } from "../scenarios/probes.js";
@@ -11182,6 +11183,200 @@ const liveTree: LiveScenario = {
 };
 
 /**
+ * The roving-focus contract in a real window (plan `637`).
+ *
+ * Plan `158` measured it offscreen and `COMPONENTS.md` cites it as the keyboard
+ * model every menu, tab strip, tree and grid builds on. The window suite only
+ * reached roving focus as a side effect of other probes, so two claims had no
+ * live evidence: a component's own `renderer.focusElement` focuses a row that
+ * was never clicked, and a focused virtual row survives the painted window
+ * scrolling past it. This twin repeats the same view in the 1100 × 720 window.
+ *
+ * The wheel targets `vlist-focus-viewport`, a plain wrapper: a `<virtual-list>`
+ * has no painted bounds live (plans `350`, `532`, `534`). The hover + settle
+ * before each wheel is the plan-`606` rule — a wheel sent in the same protocol
+ * step as its pointer move can land at the old pointer position.
+ */
+const liveRovingFocus: LiveScenario = {
+  id: "live-roving-focus",
+  title: "Live roving focus: programmatic focus and a scrolled-out row",
+  capability: "focus",
+  view: rovingFocusScenario.view,
+  ready: "roving-row-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const readout = () => textOf(ctx, "roving-readout");
+      const painted = (label: string) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.some(lines, (line) => Str.includes(label)(line)),
+        );
+
+      // 1. A real click focuses a row; Down moves focus and the roving index.
+      yield* ctx.host.click("roving-row-2");
+      yield* settle;
+      yield* waitForFocus(ctx, "roving-row-2");
+      yield* ctx.expectEqual(
+        "a real click focuses the row",
+        yield* focusedOf(ctx),
+        "roving-row-2",
+      );
+      yield* ctx.expectContains(
+        "the click selects the row",
+        yield* readout(),
+        "active=2",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Down moves native focus to the next row",
+        yield* focusedOf(ctx),
+        "roving-row-3",
+      );
+      yield* ctx.expectContains(
+        "Down moves the roving index with it",
+        yield* readout(),
+        "active=3",
+      );
+
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Enter activates the focused row",
+        yield* readout(),
+        "activated=3",
+      );
+
+      // 2. Component-owned focus reaches a row that was never clicked.
+      yield* ctx.host.click("roving-focus-5");
+      yield* settle;
+      yield* waitForFocus(ctx, "roving-row-5");
+      yield* ctx.expectEqual(
+        "a component focus call reaches a never-clicked row",
+        yield* focusedOf(ctx),
+        "roving-row-5",
+      );
+      yield* ctx.expectContains(
+        "the focus call sets the roving index",
+        yield* readout(),
+        "active=5",
+      );
+
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the focus call target receives the next key",
+        yield* focusedOf(ctx),
+        "roving-row-4",
+      );
+
+      // 3. The same path inside a `<virtual-list>`.
+      yield* ctx.host.click("vrow-2");
+      yield* settle;
+      yield* waitForFocus(ctx, "vrow-2");
+      yield* ctx.expectEqual(
+        "a real click focuses the virtual row",
+        yield* focusedOf(ctx),
+        "vrow-2",
+      );
+
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Down moves focus inside the virtual list",
+        yield* focusedOf(ctx),
+        "vrow-3",
+      );
+      yield* ctx.expectContains(
+        "the virtual index moves with focus",
+        yield* readout(),
+        "vactive=3",
+      );
+
+      // 4. A real wheel moves the window past the focused row.
+      //
+      // Focusing a virtual row already reveals it (plan `166`), so the list is
+      // anchored at `vrow-3` here. The lever is the anchor moving and a row that
+      // *was* painted leaving the window — not row 0, which is already gone.
+      const anchorIndex = () =>
+        Effect.gen(function* () {
+          const anchor = yield* ctx.expectSome(
+            "the virtual list reports an anchor",
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("vlist-focus")),
+          );
+          return anchor[0];
+        });
+      const before = yield* anchorIndex();
+      yield* ctx.expectEqual(
+        "focusing the virtual row revealed it",
+        before > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the row after the focus is painted",
+        yield* painted("virtual row 4"),
+        true,
+      );
+
+      yield* ctx.host.hover("vlist-focus-viewport");
+      yield* settle;
+      yield* ctx.host.wheel("vlist-focus-viewport", 0, -1200);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the wheel moves the virtual window",
+        (yield* anchorIndex()) > before,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the wheel unpaints a row that was painted",
+        yield* painted("virtual row 4"),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "focus stays on the scrolled-out row",
+        yield* focusedOf(ctx),
+        "vrow-3",
+      );
+      yield* ctx.expectEqual(
+        "the scrolled-out focused row stays painted",
+        yield* painted("virtual row 3"),
+        true,
+      );
+
+      // 5. The next key still reaches the row and moves on.
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "focus keeps moving after the window moved",
+        yield* focusedOf(ctx),
+        "vrow-4",
+      );
+      yield* ctx.expectContains(
+        "the virtual index keeps moving",
+        yield* readout(),
+        "vactive=4",
+      );
+
+      // 6. Scrolling back restores the path.
+      yield* ctx.host.hover("vlist-focus-viewport");
+      yield* settle;
+      yield* ctx.host.wheel("vlist-focus-viewport", 0, 1200);
+      yield* settle;
+      yield* ctx.host.click("vrow-2");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "focus can be restored and moved after scrolling back",
+        yield* focusedOf(ctx),
+        "vrow-3",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveRovingFocus.id}.png`);
+    }),
+};
+
+/**
  * The tab strip's horizontal contract in a real window (plan `565`).
  *
  * Plan `173` measured it offscreen. A real window reports a scroller's own box
@@ -12701,6 +12896,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   reorder,
   treeReorder,
   liveTree,
+  liveRovingFocus,
   media,
   terminal,
   selectionSignal,
