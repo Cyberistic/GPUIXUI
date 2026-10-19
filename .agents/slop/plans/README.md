@@ -268,6 +268,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [582](./582-native-highlight-code-surface.md) | The find highlight on the painted code surface | F | 569, 573, 574, 581 | done |
 | [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | done |
 | [584](./584-elevation-on-content.md) | The floating element's shadow on the content it opens over | F | 375, 508, 509, 526 | done |
+| [585](./585-native-text-runtime-metrics.md) | The two native-text metrics a brand is told it can set | F | 569, 572, 583 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2997,6 +2998,17 @@ in the layout and a `lg` dialog sits on the scrim), and the tightest shipped
 pair is 1.058:1 (AAA dark, `md` on `info`) while the page-surface walk keeps its
 1.061:1 and the AAA dark page pair its 1.207:1. Every shipped theme already
 passes, so no colour, role, floor or `contrastPairs` count moves.
+
+Plan `585` closes the last promise the native-text bridge made without a type.
+The documents tell a brand that needs the runtime's token-less chrome metrics to
+"set them on the returned object", but `NativeTextMetrics` declared neither
+`codeGutterMinWidth` (the 28px gutter floor) nor `diffAccentBarWidth` (the 3px
+diff bar), so the documented override failed `check-types` with TS2561. Both are
+optional members now, the bridge leaves them unset so the runtime's own values
+apply, and a copyable example proves the override compiles. The same paragraphs
+no longer list the per-digit width or the table's max-content floor among the
+runtime defaults — plan `572` derives them from `codeBlock`/`body`. No colour,
+pair, floor or metric value moves.
 
 ## How to use a plan
 
