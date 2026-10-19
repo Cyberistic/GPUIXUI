@@ -349,14 +349,14 @@ Stop and report with evidence if:
 
 ## 10. Acceptance
 
-- [ ] all twenty-two blocks in §1 import `getTheme` and bind `const theme =
+- [x] all twenty-two blocks in §1 import `getTheme` and bind `const theme =
       getTheme(…)` before the helper call;
-- [ ] the new guard fails on the pre-fix tree with the twenty-two labels and
+- [x] the new guard fails on the pre-fix tree with the twenty-two labels and
       passes after;
-- [ ] the synthetic case proves the predicate both reports and accepts;
-- [ ] no token value, role, pair, floor, metric, check, style or shipped theme
+- [x] the synthetic case proves the predicate both reports and accepts;
+- [x] no token value, role, pair, floor, metric, check, style or shipped theme
       moves;
-- [ ] `docs.test.ts`, `readme.test.ts`, `examples.test.ts`, the tokens suite,
+- [x] `docs.test.ts`, `readme.test.ts`, `examples.test.ts`, the tokens suite,
       `check:tests`, `check`, `lint` and `test` pass; the command results are
       recorded in the commit message;
-- [ ] `TODO.md`, the plan index and the audit note are updated.
+- [x] `TODO.md`, the plan index and the audit note are updated.
