@@ -45,11 +45,16 @@ child.
 
 The **live registry** (`src/live/scenarios.tsx`) is a second, hand-maintained
 list of the window twins. `liveScenarioProblems` guards it against the headless
-registry: ids must be unique and `live-`-prefixed, and every live capability
-must also be mounted by a headless scenario. A duplicate id would make `--only`
-run one of two entries while a report counts both, and an unmatched capability
-would claim live evidence for a family the offline suite never mounted. The rule
-is pure (four tests in `src/live/scenarios.test.ts`), so it costs no window.
+registry: ids must be unique and `live-`-prefixed, every live capability must
+also be mounted by a headless scenario, and **every core capability must have
+live evidence** — its own live scenario, a named alias that exists in the
+registry (`text` → `live-typography`; `modal` → `live-focus`/`live-overlay`), or
+a measured headless-only reason (`a11y`: `GpuixRenderer` has no accessibility
+dump). A duplicate id would make `--only` run one of two entries while a report
+counts both, an unmatched capability would claim live evidence for a family the
+offline suite never mounted, and an unguarded core capability would let the
+native-evidence rule become a memory. The rule is pure (eight tests in
+`src/live/scenarios.test.ts`), so it costs no window.
 
 ## Run it
 

@@ -35,11 +35,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | root | `root-single-child`, `root-wrapper` | verified |
 | grid-layout | `layout-grid`, `live-layout-grid` | verified |
 | typography | `typography-layout`, `live-typography` | verified |
-| text | `text-native` | verified |
+| text | `text-native`, `live-typography` | verified |
 | input | `input-edit`, `text-entry`, `pointer-text-entry`, `input-payload`, `live-input-payload`, `live-pointer-entry`, `live-text-entry` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus`, `live-roving-focus` | verified |
 | overlay | `overlay-dialog`, `live-overlay` | verified |
-| modal | `modal-focus-trap` | verified |
+| modal | `modal-focus-trap`, `live-overlay`, `live-focus` | verified |
 | floating | `floating-placement`, `live-floating` | verified |
 | select | `select-choose`, `live-select` | verified |
 | combobox | `combobox-filter`, `live-combobox` | verified |
