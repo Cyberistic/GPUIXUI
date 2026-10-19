@@ -551,14 +551,16 @@ const platformOverrides = (
     // A high-contrast palette keeps the opacity its tint was designed with: a
     // dark platform's 0.4–0.8 over the AAA dark set's light tint would paint a
     // near-white halo (plan 505). The style still lends its geometry, and a
-    // level it does not name stays the palette's.
+    // level it does not name stays the palette's: a same-level base keeps its
+    // edited levels because `palette` is the base, while a requested level
+    // supplies the levels its style does not name (plan 618).
     elevation:
       level === "high"
         ? mergeDefined(
             palette.elevation,
             platformElevation(palette.elevation, style.elevation[base.mode]),
           )
-        : style.elevation[base.mode],
+        : mergeDefined(palette.elevation, style.elevation[base.mode]),
     // AAA floors win over a style's colours, which are designed at the default
     // level. A same-level base keeps its own palette, edits included. An
     // undefined colour is unnamed, so it inherits from the requested palette,
@@ -584,9 +586,9 @@ const platformOverrides = (
  *   tint and the opacity designed against it stay, while the platform lends its
  *   geometry — radii, density, motion and its elevation shapes.
  * - `"default"` builds the default palette when the style contributes colours,
- *   taking the roles it does not name from the default-level identity of the
- *   same mode, so the result is a whole palette rather than half an AAA one
- *   (plan 373).
+ *   taking the roles and elevation levels it does not name from the
+ *   default-level identity of the same mode, so the result is a whole palette
+ *   and one shadow ladder rather than half an AAA one (plans 373 and 618).
  * - Omitting the argument, or naming the level the base already declares, keeps
  *   the base's palette, name and edits, so a style still overrides only what it
  *   names.

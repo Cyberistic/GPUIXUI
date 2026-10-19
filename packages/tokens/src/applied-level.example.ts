@@ -6,13 +6,15 @@
  * request on a default theme builds the AAA palette and carries the AAA `shadow`
  * tint at the opacity designed for it; a same-level base keeps its own palette,
  * name and edits, and a shape-only style changes no colour, so it keeps the
- * base's level. Re-applying the style the result already carries changes
- * nothing, so a settings panel or a restored choice can apply the platform over
- * the current theme. The result is a normal theme, so the classes and the
- * resolvers a consumer already uses apply unchanged.
+ * base's level. An omitted elevation level follows the palette too: a default
+ * request takes the levels its style does not name from the requested palette,
+ * not from the AAA base it is leaving. Re-applying the style the result already
+ * carries changes nothing, so a settings panel or a restored choice can apply
+ * the platform over the current theme. The result is a normal theme, so the
+ * classes and the resolvers a consumer already uses apply unchanged.
  */
 import { elevationShadow } from "./elevation.js";
-import { platformStyles } from "./platforms.js";
+import { platformStyles, type PlatformStyle } from "./platforms.js";
 import {
   applyPlatformStyle,
   extendTheme,
@@ -50,3 +52,21 @@ export const acmeWindowsReapplied = applyPlatformStyle(
 
 /** Or take the resolver that builds the level first, which is the same theme. */
 export const windowsHigh = getPlatformTheme("win32", "dark", "high");
+
+/** A copied style that names a colour and leaves the elevation to the palette. */
+export const colourOnlyStyle: PlatformStyle = {
+  ...platformStyles.default,
+  types: { ...platformStyles.default.types, label: "Colour only" },
+  colors: {
+    light: { primary: getTheme("light").colors.primary },
+    dark: { primary: getTheme("dark").colors.primary },
+  },
+  elevation: { light: {}, dark: {} },
+};
+
+/** A default request over the AAA dark base: the default palette's shadows. */
+export const defaultFromHighContrast = applyPlatformStyle(
+  getTheme("dark", "high"),
+  colourOnlyStyle,
+  "default",
+);
