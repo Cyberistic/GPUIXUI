@@ -389,6 +389,14 @@ retired once both branches are one
       could not recover). One pure `slideIndex` rule truncates and clamps; 5 rule
       + 2 native cases (Carousel 20), both new cases failing on the old
       derivation; docs and `COMPONENTS.md` synced (owner: components)
+    - [x] A registered row keeps its place when its state changes — plan 620.
+      Measured: a `disabled` toggle ran the registration cleanup and re-appended
+      the row, so a re-enabled middle section or list row jumped to the end of
+      the registry — the next arrow key skipped the authored neighbour, and the
+      accordion drew the divider under the wrong section. Accordion and List now
+      update a registered row in place; 2 accordion + 1 list native cases
+      (Accordion 25, List 61), all three failing at `HEAD`; docs, `PLAN.md`,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1024,7 +1032,7 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 611/612/619): all
       three exit 0; the unit suite is 454 tests in 45 files. The native
-      behaviour suite is **785 passed / 35 failed of 820** — every failure is
+      behaviour suite is **788 passed / 35 failed of 823** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19).
       Re-run before release, since every later merge can change them

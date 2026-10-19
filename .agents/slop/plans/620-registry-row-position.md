@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `111`, `113`, `117`, `200`, `201`, `510`, `564` |
-| Status | planned |
+| Status | done — 2 Accordion + 1 List native cases (Accordion 25, List 61), all three failing at `HEAD`; unit 454; the recorded plan-540 failures are unchanged |
 | Blocker | none — the assertions read focus order and authored style; no bounds and no focus-event assertion, so the plan-540 binding defects stay out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without

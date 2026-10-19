@@ -220,6 +220,9 @@ that is gone:
   user's focus.
 - Disabling that row does the same, so the stop never lands on a row that cannot
   be activated, and the disabled row stops painting the focus ring.
+- A row that changes `disabled` or `textValue` is updated in place, so its
+  authored position never drifts: arrows, `Home`/`End`, `Shift` ranges and
+  type-ahead keep the declaration order.
 - If the consumer focuses another control in the same update, the list leaves
   that focus alone.
 - An emptied list focuses nothing, and rows that arrive later do not grab focus.
@@ -338,7 +341,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (60 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (61 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -357,7 +360,8 @@ arrow key reaching the row that activates, a plain activatable list's single tab
 stop and its arrow/`Enter` path (with `Space` deliberately inert), and — in
 multiple mode — plain/`Cmd`/`Shift` clicks, `Space` toggling, `Shift+Arrow`
 ranges, `Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never
-entering a selection. A focus move repaints exactly the two rows that changed,
+entering a selection. A row that is disabled and enabled again keeps its authored
+position, so the next arrow key reaches its neighbour. A focus move repaints exactly the two rows that changed,
 counted through the public `style` function. Dynamic rows: a removed or newly
 disabled row never keeps the tab stop, focus follows the stop when the list held
 it, a consumer's own focus in the same update is never stolen, and an emptied

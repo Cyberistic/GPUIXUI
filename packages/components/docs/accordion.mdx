@@ -106,9 +106,11 @@ never dispatches `onFocus`.
 
 Triggers use the `label` type role at `controlHeight(theme, "lg")`, with
 `colors.foreground` and `colors.primary` on hover. Sections are separated by a
-`borderWidth.thin` divider in `colors.border`; the last section draws none. The
-indicator is a `chevron-down` / `chevron-up` icon because 0.10.0's `StyleDesc`
-has no `transform` — a rotation is not available.
+`borderWidth.thin` divider in `colors.border`; the last **authored** section
+draws none. A section that turns disabled and enabled again keeps its authored
+position, so the divider and the arrow order never drift. The indicator is a
+`chevron-down` / `chevron-up` icon because 0.10.0's `StyleDesc` has no
+`transform` — a rotation is not available.
 
 ## Style by state
 
@@ -150,7 +152,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (23 tests):
+`src/behaviour/accordion.test.tsx` runs in the real GPUix renderer (25 tests):
 single mode closing the previous section, the non-collapsible no-op (silent in a
 controlled accordion), the collapsible close, multiple mode keeping sections, the disabled section, Enter
 activation, Space on release, a held Enter toggling only once, the controlled
@@ -159,7 +161,8 @@ headers (wrapping past a disabled one, without opening it), a caller header
 `ref`, the closed/open tab order, state surviving a switch, the measured-height
 tween (plus the `animate={false}` snap), and a close that began inside a body
 returning focus to its header while a close that began outside does not steal
-focus.
+focus. A section disabled and enabled again keeps its authored position, so the
+next arrow key reaches its neighbour and the divider stays on the last section.
 
 `src/accordion/logic.test.ts` covers the transition table (15 cases), and
 `src/internal/collection.test.ts` covers the shared movement arithmetic.
