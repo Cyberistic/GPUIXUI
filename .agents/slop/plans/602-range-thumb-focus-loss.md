@@ -64,6 +64,7 @@ maths are untouched.
 | `packages/primitives/src/components/Slider.tsx` | `RangeSlider` uses `useRovingFocus`; drop the duplicate id map, cursor and merge; widen `RangeSliderFocus.focusedIndex`; remove the now-unused `useState`/`trackedFocusIndex`/`useNativeFocusId` imports if nothing else needs them |
 | `packages/primitives/runtime/focus-loss.runtime.test.tsx` | add the `RangeSlider` case to the class matrix (a track click focuses the end thumb, clicking `before` leaves one ring) |
 | `packages/primitives/docs/range-slider.mdx` | the focus paragraph states that the ring clears when focus leaves, on both the event runtime and the tracker |
+| `packages/primitives/README.md` | the release-runtime paragraph names the thumbs' use of `useRovingFocus` (plan `602`) |
 | `COMPONENTS.md` | the Range slider row records plan `602` |
 | `.agents/slop/plans/README.md` | index this plan |
 | `TODO.md` | one ticked row under the primitives workstream |
