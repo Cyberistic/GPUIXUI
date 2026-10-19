@@ -3166,8 +3166,9 @@ bound is now two tabular digits at a 0.65em advance, rounded up to a paintable
 pixel — `Math.ceil(2 * 0.65 * body.fontSize)`, 19px at the shipped 14px body, so
 the shipped 26px segment still passes (1.37×) and no token moves. The rule names
 its font assumption: a theme that chooses a face with wider digits must widen
-the segment. The new suite proves the pre-fix pass both directions, and the old
-one-em case in `fixed-surface-metrics.test.ts` moves with the rule.
+the segment. The new suite proves the pre-fix pass and the post-fix failure in
+both directions, and the old one-em case in `fixed-surface-metrics.test.ts`
+moves with the rule.
 
 ## How to use a plan
 
