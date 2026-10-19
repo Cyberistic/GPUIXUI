@@ -73,6 +73,15 @@ export interface ScrollAreaHandle {
   /** The viewport host element, for measuring with the renderer. */
   readonly element: PublicInstance | null;
   /**
+   * The viewport host's id, for a slot trigger.
+   *
+   * GPUix's `asChild` clones its `ref` onto the child, and a `Tooltip` learns
+   * which host the focus tracker names from that ref. `useImperativeHandle`
+   * hands a child the **handle**, not the host, so the handle carries the one
+   * property the slot reads (plan `610`).
+   */
+  readonly id: number | undefined;
+  /**
    * Scroll to an absolute offset — the runtime clamps it — and report the
    * result through `onScrollPositionChange`. An omitted axis keeps its current
    * offset. `renderer.scrollTo` called by hand dispatches no event, so use this
@@ -216,6 +225,9 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
   useImperativeHandle(props.ref, () => ({
     get element() {
       return root.current;
+    },
+    get id() {
+      return root.current?.id;
     },
     scrollTo,
   }));

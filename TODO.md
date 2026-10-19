@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 151/151
+`[x]` `[████████████]` 152/152
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1666,6 +1666,17 @@ retired once both branches are one
       at mount, none closed, sampling open, none after Escape); the old default
       fails with 3 closed-state calls and a permanently-false interval fails
       the open half (plan `609`; runtime 795 → 796 tests, offline unchanged).
+
+`[x]` `packages/primitives`: **a `Tooltip` around a `ScrollArea` was hover-only** —
+      measured: `focusNext()` put native focus on a labelled region and the tip
+      stayed shut, because GPUix's slot `ref` delivers the area's **imperative
+      handle**, not the host instance, and the handle carried no `id` for the
+      focus tracker to match. `ScrollAreaHandle` now exposes the viewport's
+      `id` beside `element` and `scrollTo`; the generic `Tooltip` path opens the
+      tip on `Tab`, Escape/click dismisses it while the region keeps focus, and
+      the region still scrolls by keyboard. 1 new runtime case; removing the
+      getter or returning a wrong id both fail it (plan `610`; runtime 796 →
+      797, offline unchanged).
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

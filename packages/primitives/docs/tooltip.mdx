@@ -28,7 +28,7 @@ accepts that contract:
 | ------- | ----- | -------------- |
 | `Button`, `IconButton`, `Toggle` | yes | yes |
 | `Checkbox`, `Switch`, `Slider`, `Select` | yes | yes |
-| `ScrollArea` (labelled) | the region itself only | yes¹ |
+| `ScrollArea` (labelled) | the region itself only | yes |
 | `Input`, `TextArea`, `NumberField` | **no** (text host) | yes |
 | `InfoTip` | yes | yes |
 | `RangeSlider`, `OTPField`, `Rating`, `CheckboxGroup`, `ToggleGroup` | no | no |
@@ -41,16 +41,13 @@ triggers; put the tip on a label, an `InfoTip`, or a wrapper `div` with a role
 and a name.
 
 A labelled `ScrollArea` is a single focusable root, so it accepts the contract
-and its tip becomes the `Region`'s description (plan `399b`). Its hover path has
-the runtime's hit-testing limit: GPUix does not bubble a mouse event to an
-ancestor, so the tip opens only when the pointer is over the region itself (an
-uncovered area, the scrollbar gutter, or content with `pointerEvents: "none"`).
-A content-filled region is a keyboard trigger.
-
-¹ The slot's focus handler is proven at the element-tree boundary (plan
-`399b`); the runtime focus-open case — like every trigger's on this host — is
-blocked by the binding artifact recorded in plans `379`/`529`, so it is not
-claimed as re-measured here.
+and its tip becomes the `Region`'s description (plan `399b`). The slot's `ref`
+receives the area's imperative handle, so the handle carries the viewport's `id`
+and the wrapper can recognise the focus the tracker reports: `Tab` opens the tip
+(plan `610`). Its hover path has the runtime's hit-testing limit: GPUix does not
+bubble a mouse event to an ancestor, so the tip opens only when the pointer is
+over the region itself (an uncovered area, the scrollbar gutter, or content with
+`pointerEvents: "none"`). A content-filled region is a keyboard trigger.
 
 ### Full-width triggers
 
@@ -204,8 +201,8 @@ or, for a hovered tip, until the pointer leaves and returns.
   forwards it, plan `596`) and compares it with the tracker's sample, so Tab
   opens the tip even though the runtime sends no `onFocus`. A click or Escape
   dismisses it while the trigger keeps focus; leaving and returning reopens it.
-  `ScrollArea` keeps its public `ref` for the scroll handle, so its wrapped tip
-  stays hover-only on this build. Role, name, tab order, keyboard operation and
+  A `ScrollArea`'s handle carries the viewport `id`, so its wrapped tip opens on
+  `Tab` too (plan `610`). Role, name, tab order, keyboard operation and
   activation are otherwise unaffected.
 - **A string tip is the trigger's description.** GPUix 0.10.0 has no
   `aria-describedby`, but it exposes `aria-description`; the wrapper writes the
