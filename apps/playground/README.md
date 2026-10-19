@@ -234,13 +234,17 @@ and `Consolas` while the sans role stays GPUI's `.SystemUIFont`; the surface
 colour does not move, because the shipped variants are type styles, not a second
 palette. The expected families come from `platformTypes`.
 
-`live-theme` (plan `643`) repeats the colour-roles gallery in the real
+`live-theme` (plans `643`, `676`) repeats the colour-roles gallery in the real
 1100 × 720 window: a real click moves `theme-next` dark → light → high, the
 painted `theme-readout` names each palette, and the `swatch-background` box is
-identical before and after the switch. **Colour itself stays headless** — the
-live renderer exposes no style report (plan `197`), so the token values remain
-`theme-color-roles`' `paintedStyle` evidence; the twin proves the interaction
-and that the switched subtree keeps its layout.
+identical before and after the switch. **Colour is now in the frame, not only
+in the style report:** each stop is captured once (the PNG is also the run
+artifact) and the centres of `swatch-background` and `swatch-primary` must equal
+that palette's `background`/`primary`, mapped through the frame's device scale
+(`2` here). Measured: dark `#11141A`/`#A7A9FF`, light `#F6F8FA`/`#5F4BDB`, high
+`#000000`/`#C7CBFF`; 39 checks. `theme-color-roles` keeps the per-role
+`paintedStyle` evidence, and the shared sampler in `src/scenarios/frames.ts`
+keeps both pixel scenarios on one scale rule.
 
 `live-theme-platform` (plan `654`) is the window twin of `theme-platform`: a
 real click cycles Default → macOS → Linux → Windows → Default, the painted

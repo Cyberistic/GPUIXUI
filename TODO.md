@@ -71,7 +71,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 115/115 plans-and-harness
+`[x]` `[██████████]` 116/116 plans-and-harness
+
+`[x]` **Prove the palette switch in the frame** per plan `676`: `live-theme`
+      used to assert only the readout and the swatch box, so a window that never
+      repainted a swatch would still pass. It now captures one frame per stop
+      (the PNG is also the run artifact) and samples `swatch-background` and
+      `swatch-primary` at the frame's device scale **2**: dark
+      `#11141A`/`#A7A9FF`, light `#F6F8FA`/`#5F4BDB`, high
+      `#000000`/`#C7CBFF`. **9 → 39 checks**, three consecutive green runs plus
+      a post-revert run; `pixel-colour` and `live-pixel-colour` keep their
+      **22** checks each through the new shared `scenarios/frames.ts` sampler,
+      and a pure `palette-pixels.ts` derives the expectations from `palettes`
+      (3 new tests, playground **439 → 442**). Four mutation proofs (a view
+      that ignores the switch → light `#f6f8faff` vs `#11141aff`; the wrong
+      swatch → `#eef1f5ff`; a halved logical point → `#222730ff`; a shared
+      background expectation → the distinctness test fails), each exit `1`.
+      `nub run check`/`lint`/`test` green. The live registry stays **95** and
+      the full suite was not run. Focused ids: `pixel-colour`, `live-theme`
+      (×4), `live-pixel-colour`.
 
 `[x]` **Add pixel evidence to the native suite** per plan `674`: `packages/testing` gained a pure PNG decoder (`Pixels.decodePng`, all five filters, colour types 0/2/4/6, injected inflate) with 7 tests, and `pixel-colour` + `live-pixel-colour` decode a real captured frame and sample the centre of three literal boxes, the theme's `primary` and the canvas background. Measured on this host: device scale **2** (`2560 × 1600` offscreen, `2200 × 1440` live), literals `#FF0000FF`/`#00FF00FF`/`#0000FFFF`, `primary` `#A7A9FF`, background `#11141A`, all exact; **22 checks per host**. Full headless **106/106 (3824 checks, 65 capabilities)**, exit `0`; focused live `live-pixel-colour` green; four mutation proofs (swap the boxes, ignore the scale, break the `Sub` filter, remove the capture — each exits `1`, §8). `nub run check`/`lint`/`test` green (testing 68). Focused ids run: `pixel-colour`, `live-pixel-colour`.
 

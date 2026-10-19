@@ -19,7 +19,7 @@ import { Duration, Effect, Schedule } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
-import type { Smoke } from "@gpuixui/testing";
+import { Pixels, type Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { contextMenuScenario } from "../scenarios/context-menu.js";
 import { dragAutoscrollScenario } from "../scenarios/drag-autoscroll.js";
@@ -113,6 +113,9 @@ import {
   pixelColourLiveScenario,
   pixelColourView,
 } from "../scenarios/pixels.js";
+import { captureLive, expectPixel, readAsync } from "../scenarios/frames.js";
+import { palettePixels } from "../scenarios/palette-pixels.js";
+import type { PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -12033,15 +12036,49 @@ const media: LiveScenario = {
 };
 
 /**
- * The palette switch in a real window (plan `643`).
+ * The palette switch in a real window (plans `643`, `676`).
  *
- * `theme` was the last core capability with no live id. Colour can only be
- * asserted through `paintedStyle`, which the live renderer does not expose
- * (plan `197`), so the twin asserts the interaction and the retained layout: a
- * real click moves the palette through `nextPalette`, the painted readout names
- * it, and the swatch grid keeps its box. The token values stay
- * `theme-color-roles`.
+ * `theme` was the last core capability with no live id. The live tree has no
+ * style report (plan `197`), so plan `643` asserted the interaction and the
+ * retained layout; plan `676` adds the missing half by decoding the frame at
+ * every stop. Each palette is captured once — the PNG is both the run artifact
+ * and the evidence — and the centres of `swatch-background` and
+ * `swatch-primary` must equal that palette's `background`/`primary` tokens at
+ * the frame's own device scale. The readout and box checks stay, so a switch
+ * that repaints without moving the interaction (or the reverse) cannot pass.
  */
+const expectPaletteFrame = (
+  ctx: LiveContext,
+  palette: PaletteId,
+  artifact: string,
+): Effect.Effect<void, Smoke.SmokeAssertionError | Smoke.SmokeHostError> =>
+  Effect.gen(function* () {
+    const frame = yield* captureLive(
+      ctx.host,
+      `${LIVE_ARTIFACTS}/${artifact}.png`,
+    );
+    const reader = readAsync(ctx.host);
+    yield* Effect.forEach(
+      palettePixels(palette),
+      (pixel) =>
+        Effect.gen(function* () {
+          const expected = yield* ctx.expectSome(
+            `${palette} ${pixel.testId} colour parses`,
+            Pixels.hexToRgba(pixel.colour),
+          );
+          yield* expectPixel(
+            ctx,
+            `${palette} ${pixel.testId} paints ${pixel.colour}`,
+            reader,
+            frame,
+            pixel.testId,
+            expected,
+          );
+        }),
+      { concurrency: 1, discard: true },
+    );
+  });
+
 const liveTheme: LiveScenario = {
   id: "live-theme",
   title: "Live theme: the palette switch repaints a window",
@@ -12057,7 +12094,7 @@ const liveTheme: LiveScenario = {
         "palette=dark",
       );
       const before = yield* boxOf(ctx, "swatch-background");
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}-dark.png`);
+      yield* expectPaletteFrame(ctx, "dark", `${liveTheme.id}-dark`);
 
       yield* ctx.host.click("theme-next");
       yield* settle;
@@ -12066,7 +12103,7 @@ const liveTheme: LiveScenario = {
         yield* textOf(ctx, "theme-readout"),
         "palette=light",
       );
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}-light.png`);
+      yield* expectPaletteFrame(ctx, "light", `${liveTheme.id}-light`);
 
       yield* ctx.host.click("theme-next");
       yield* settle;
@@ -12075,6 +12112,7 @@ const liveTheme: LiveScenario = {
         yield* textOf(ctx, "theme-readout"),
         "palette=high",
       );
+      yield* expectPaletteFrame(ctx, "high", liveTheme.id);
 
       const after = yield* boxOf(ctx, "swatch-background");
       yield* ctx.expectEqual(
@@ -12082,7 +12120,6 @@ const liveTheme: LiveScenario = {
         `${after.x},${after.y},${after.width},${after.height}`,
         `${before.x},${before.y},${before.width},${before.height}`,
       );
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}.png`);
     }),
 };
 
