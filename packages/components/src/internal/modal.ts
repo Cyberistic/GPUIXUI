@@ -10,7 +10,7 @@
 import type { EventPayload } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { useControllableState } from "./controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./dismiss-layer.js";
 import { isDismiss, isTab } from "./key.js";
@@ -65,7 +65,13 @@ export const useModalFocus = (
   initialFocus: (() => number | null) | undefined,
 ): void => {
   const renderer = useGpuix().renderer;
-  const previousFocus = useRef<number | null>(null);
+  // The surface mounts in the same commit that opens the modal, before the
+  // renderer applies any native focus change — including a child's `autoFocus`.
+  // Capture the opener at render time; the effect below waits for `contentId`,
+  // by which point that focus has already moved (plan 638).
+  const [previousFocus] = useState<number | null>(
+    () => renderer?.getFocusedElementId?.() ?? null,
+  );
   const initialFocusRef = useRef(initialFocus);
   useLayoutEffect(() => {
     initialFocusRef.current = initialFocus;
@@ -73,26 +79,24 @@ export const useModalFocus = (
 
   useLayoutEffect(() => {
     if (contentId === undefined) return;
-    previousFocus.current = renderer?.getFocusedElementId?.() ?? null;
     renderer?.focusElement?.(contentId);
     const initial = initialFocusRef.current?.() ?? null;
     if (initial !== null && initial !== contentId) {
       renderer?.focusElement?.(initial);
     }
     return () => {
-      const previous = previousFocus.current;
       // A destroyed opener must not be focused: `getElementBounds` is the
       // renderer's own existence check, and it is null once the element is gone.
       if (
-        previous === null ||
-        previous === contentId ||
-        renderer?.getElementBounds?.(previous) === null
+        previousFocus === null ||
+        previousFocus === contentId ||
+        renderer?.getElementBounds?.(previousFocus) === null
       ) {
         return;
       }
-      renderer?.focusElement?.(previous);
+      renderer?.focusElement?.(previousFocus);
     };
-  }, [contentId, renderer]);
+  }, [contentId, previousFocus, renderer]);
 };
 
 /**

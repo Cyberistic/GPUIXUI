@@ -21,6 +21,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../drawer.js";
+import { Field, FieldInput } from "../field.js";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -155,6 +156,39 @@ describe("Drawer", () => {
     const drawer = renderComponent(<Workspace />);
     clickCentreOf(drawer, "open");
 
+    expect(focusedTestId(drawer)).toEqual(Option.some("drawer"));
+
+    drawer.renderer.simulateKeystrokes("escape");
+    finishMotion(drawer, 300);
+
+    expect(drawer.renderer.findByTestId("drawer")).toBeUndefined();
+    expect(focusedTestId(drawer)).toEqual(Option.some("open"));
+
+    drawer.unmount();
+  });
+
+  it("returns focus to the trigger when content took autoFocus", () => {
+    // The opener must be captured before the surface mounts: a child's
+    // `autoFocus` moves native focus in the same commit, so recording it in
+    // the effect that waits for `contentId` saved the field being destroyed
+    // and closing left focus nowhere (plan 638).
+    const drawer = renderComponent(
+      <div style={{ padding: 20 }}>
+        <Drawer>
+          <DrawerTrigger testId="open">Edit filters</DrawerTrigger>
+          <DrawerContent label="Edit filters" testId="drawer">
+            <DrawerHeader>
+              <DrawerTitle>Edit filters</DrawerTitle>
+            </DrawerHeader>
+            <Field label="Name">
+              <FieldInput testId="name" autoFocus />
+            </Field>
+          </DrawerContent>
+        </Drawer>
+      </div>,
+    );
+
+    clickCentreOf(drawer, "open");
     expect(focusedTestId(drawer)).toEqual(Option.some("drawer"));
 
     drawer.renderer.simulateKeystrokes("escape");

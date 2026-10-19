@@ -58,6 +58,8 @@ capped by the window size.
 - The trigger opens and closes the drawer and reports `aria-expanded`.
 - Focus moves into the surface; `Tab` and `Shift+Tab` wrap inside it.
 - `Escape` closes and returns focus to the trigger; an outside press closes.
+  The opener is captured before the surface mounts, so an auto-focused control
+  inside the content does not become the saved opener (plan 638).
 - `dismissible={false}` ignores both Escape and an outside press.
 - A drawer opened inside a dialog pushes its own layer, so one Escape closes
   the drawer first (the shared dismiss stack, plan 112).
@@ -134,10 +136,11 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (16 tests): open
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (17 tests): open
 lifecycle, dialog naming and `aria-expanded`, the description announced through
 `aria-description`, the title's default and caller-set
-heading levels, full-window veil, focus in/return,
+heading levels, full-window veil, focus in/return — including when the content
+contains an auto-focused field (plan 638) —
 backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
 uninterruptible drawer, a controlled drawer that stays closed, and the motion —
 entry props, the measured slide on both axes, and a closing surface that stays

@@ -23,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../dialog.js";
+import { Field, FieldInput } from "../field.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -177,6 +178,38 @@ describe("Dialog", () => {
     finishMotion(dialog);
 
     expect(dialog.renderer.findByTestId("dialog")).toBeUndefined();
+    expect(focusedTestId(dialog)).toEqual(Option.some("open"));
+
+    dialog.unmount();
+  });
+
+  it("returns focus to the trigger when content took autoFocus", () => {
+    // The opener must be captured before the surface mounts: a child's
+    // `autoFocus` moves native focus in the same commit, so recording it in
+    // the effect that waits for `contentId` saved the field being destroyed
+    // and closing left focus nowhere (plan 638).
+    const dialog = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column", padding: 20 }}>
+        <Dialog>
+          <DialogTrigger testId="open">Edit profile</DialogTrigger>
+          <DialogContent label="Edit profile" testId="dialog">
+            <DialogHeader>
+              <DialogTitle>Edit profile</DialogTitle>
+            </DialogHeader>
+            <Field label="Name">
+              <FieldInput testId="name" autoFocus />
+            </Field>
+          </DialogContent>
+        </Dialog>
+      </div>,
+    );
+
+    clickCentreOf(dialog, "open");
+    expect(focusedTestId(dialog)).toEqual(Option.some("dialog"));
+
+    dialog.renderer.simulateKeystrokes("escape");
+    finishMotion(dialog);
+
     expect(focusedTestId(dialog)).toEqual(Option.some("open"));
 
     dialog.unmount();

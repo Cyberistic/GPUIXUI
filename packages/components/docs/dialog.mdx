@@ -90,6 +90,10 @@ handler and its parent's across a microtask (plan 587).
 | `Escape` | close, when `dismissible`; focus returns to the opener |
 | `Enter` / `Space` | activate the focused action |
 
+The opener is captured before the surface mounts, so a control inside the
+content that carries `autoFocus` (a form field, say) does not become the saved
+opener. The promise holds for that content too (plan 638).
+
 ## Sizing and theming
 
 The surface paints `colors.popover` / `colors.popoverForeground` with
@@ -168,9 +172,10 @@ button. Every part merges `style` last.
 
 ## Verification
 
-`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (19 tests): the
+`src/behaviour/dialog.test.tsx` runs in the real GPUix renderer (20 tests): the
 veil measured at the window bounds, a click on a control behind it blocked, focus
-entering and returning, Escape and backdrop dismissal, a popover inside the dialog
+entering and returning — including when the content contains an auto-focused
+field (plan 638) — Escape and backdrop dismissal, a popover inside the dialog
 closed by the first Escape with the dialog kept open, Tab wrapping at both ends,
 `role`/`aria-label` in the accessibility dump, the description announced through
 `aria-description` (with an authored content value winning), the title's default

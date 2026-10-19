@@ -4,7 +4,7 @@
 **Owner:** components workstream (`packages/components`)
 **Depends on:** plan 112 (dialogs), 309 (drawer, the shared modal rules), 589
 (CommandMenu's close focus, the first symptom), 627 (modal descriptions).
-**Status:** planned
+**Status:** done — 1 dialog + 1 drawer native case (Dialog 20, Drawer 17), both failing on the old source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
 
 ## 1. The bug
 

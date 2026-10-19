@@ -442,6 +442,16 @@ retired once both branches are one
       `headingLevel(level, authoredLevel, 3)` and the raw prop is destructured
       off `rest`; 2 native cases (Keyboard shortcuts 9), both failing on the old
       source; docs and `COMPONENTS.md` synced (owner: components)
+    - [x] A modal returns focus to its opener even when its content auto-focused
+      — plan 638. Measured: `useModalFocus` recorded the opener in the effect
+      that waits for `contentId`, by which point a child's `autoFocus` had
+      already moved native focus; a dialog or drawer with an auto-focused
+      `FieldInput` closed with focus on the field inside the exiting surface
+      (`Option.none()` after the exit). The opener is now captured at the
+      surface's first render, before any focus change; 1 dialog + 1 drawer
+      native case (Dialog 20, Drawer 17), both failing on the old source;
+      docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
