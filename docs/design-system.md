@@ -353,9 +353,11 @@ over — the canvas, a card, the quiet `muted` panel, the `input` fill a flipped
 popover opens over, the `selected` fill a context menu opens over and a floating
 surface — and every defined level
 is measured composited over them. A menu or popover (`md`) also opens across the
-resting content fills `elevationContentSurfaces` names — the four filled
-actions, the three solid status chips, the raised panel action and the four soft
-status panels — because a dropdown opens across the button beside its trigger;
+fifteen resting content fills `elevationContentSurfaces` names — `primary`,
+`secondary`, `accent`, `destructive`, `info`, `success`, `warning`,
+`softAction`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`,
+`disabled`, `skeleton` and `track` — because a dropdown opens across the button
+beside its trigger;
 the `sm` and `lg` walks stay on the page surfaces. The tightest shipped pair is
 **1.058:1** (AAA dark, `md` on `info`); over the page surfaces alone it is
 **1.061:1** (identity dark, `sm` on `background`) and the AAA dark page pair is

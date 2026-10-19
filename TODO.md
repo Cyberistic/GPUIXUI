@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 291/364
+`[x]` `[████████░░]` 292/365
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2446,6 +2446,15 @@ said the hierarchy compares the selected label on "the four fills it keeps"
 after plan 651 made `selectedActive` a fifth. Every count now derives from its
 list, the tier word from `tierSurfaces`, and no colour, pair, floor, metric or
 shipped theme moves (plan 664)
+`[x]` Name every fill in the elevation-content prose — plan 610 added
+`disabled`, `skeleton` and `track` to `elevationContentSurfaces`, but the three
+paragraphs describing the `md` walk in the catalogue and the design system
+still listed the original twelve fills while the floor table and the scrim
+paragraph said fifteen. All three enumerate the fifteen-name list now, and a
+guard reads every enumerating paragraph (dash, not a comma reference),
+normalises its wrap and derives both the count word and the members from
+`elevationContentSurfaces`; no colour, pair, floor, metric or shipped theme
+moves (plan 665)
 
 ## Phase C — Tier 1–2 components
 

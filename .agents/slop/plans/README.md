@@ -319,7 +319,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [659](./659-field-content-surfaces.md) | The field's own content inside a status panel and a pressed selected row | F | 092, 306, 307, 315, 317, 319, 391, 527, 649, 651 | done |
 | [663](./663-selected-label-fills.md) | The pressed selected row's label and text-role count in the prose | F | 316, 506, 623, 651, 659 | done |
 | [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | done |
-| [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | in progress |
+| [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3491,9 +3491,10 @@ Plan `665` follows plan `610` into the elevation prose. That plan joined
 paragraphs that describe the `md` walk in the catalogue and the design system
 still listed the original twelve fills, while the floor table and the scrim
 paragraph already said fifteen. All three enumerate the index now, and one guard
-reads every paragraph that names it — count and members both derived — so a
-fourth paragraph cannot start citing the index without listing what it holds. No
-colour, pair, floor, metric or shipped theme moves.
+reads every paragraph that enumerates it — count and members both derived, with
+the wrap normalised — so a fourth enumeration cannot start citing the index
+without listing what it holds. No colour, pair, floor, metric or shipped theme
+moves.
 
 ## How to use a plan
 

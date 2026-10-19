@@ -118,12 +118,15 @@ Add a case beside the elevation floor-row case:
 it("names every content fill in the prose that describes the md walk", () => {
   const paragraphs = [markdown, designSystemSource]
     .flatMap((document) => document.split(/\n{2,}/))
+    .map((paragraph) => paragraph.replace(/\s+/g, " "))
     .filter((paragraph) =>
-      paragraph.includes("`elevationContentSurfaces` names"),
+      paragraph.includes("`elevationContentSurfaces` names —"),
     );
 
-  // The catalogue has two (elevation section and the check) and the design
-  // system one. A new paragraph that names the index must enumerate it.
+  // The em dash marks the three paragraphs that enumerate the walk: two in the
+  // catalogue (the elevation section and the check) and one in the design
+  // system. A comma reference (the suite paragraph) and the derived floor row
+  // are not enumerations; the row has its own case above.
   expect(paragraphs).toHaveLength(3);
   paragraphs.forEach((paragraph) => {
     expect(paragraph).toContain(
@@ -136,11 +139,11 @@ it("names every content fill in the prose that describes the md walk", () => {
 });
 ```
 
+Whitespace is normalised per paragraph because the documents wrap prose at 80
+columns; a line break between "the" and "fifteen" is not a different claim.
+
 `countWord` currently lives above the `describe` blocks in this file and is
-already used by the catalogue-count cases, so no new helper is needed. If the
-flat split picks up the floor-table row (it does not, because that row says
-"the resting content fills" without the index phrase), keep the positive
-`toHaveLength(3)` assertion rather than filtering table rows out silently.
+already used by the catalogue-count cases, so no new helper is needed.
 
 ## Commands, in order
 
@@ -179,8 +182,10 @@ Expected: all green. Do not quote a test count in the commit message.
 - `elevationContentSurfaces` no longer has fifteen members: stop and report. The
   prose must follow the list, not the number this plan observed.
 - The phrase "`elevationContentSurfaces` names" appears in a paragraph this plan
-  did not update and that is not the floor row: stop and report; enumerate it in
-  this plan's style rather than letting the guard fail on an unrelated sentence.
+  did not update and is neither the floor row nor a comma reference: stop and
+  report; enumerate it in this plan's style rather than letting the guard fail on
+  an unrelated sentence. The floor row says "names)" and the suite paragraph
+  says "names, because"; neither enumerates, and the row keeps its own case.
 - Any figure other than the count word needs to move: stop. This plan moves no
   colour, pair, floor or metric.
 - A test outside `docs.test.ts` and `elevation-contrast.test.ts` fails: stop and

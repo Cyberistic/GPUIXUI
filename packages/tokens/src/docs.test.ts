@@ -3099,6 +3099,29 @@ describe("docs/design-system.md", () => {
     );
   });
 
+  it("names every content fill in the prose that describes the md walk", () => {
+    const paragraphs = [markdown, designSystemSource]
+      .flatMap((document) => document.split(/\n{2,}/))
+      .map((paragraph) => paragraph.replace(/\s+/g, " "))
+      .filter((paragraph) =>
+        paragraph.includes("`elevationContentSurfaces` names —"),
+      );
+
+    // The em dash marks the three paragraphs that enumerate the walk: two in
+    // the catalogue (the elevation section and the check) and one in the design
+    // system. A comma reference (the suite paragraph) and the derived floor row
+    // are not enumerations; the row has its own case above.
+    expect(paragraphs).toHaveLength(3);
+    paragraphs.forEach((paragraph) => {
+      expect(paragraph).toContain(
+        `the ${countWord(elevationContentSurfaces.length)} resting content fills`,
+      );
+      elevationContentSurfaces.forEach((surface) => {
+        expect(paragraph, surface).toContain(`\`${surface}\``);
+      });
+    });
+  });
+
   it("names every surface in the dialog face's floor row", () => {
     const row = tableRow("dialog face (");
     expect(row).toContain("`dialogSurfacePairs`");

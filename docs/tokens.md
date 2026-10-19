@@ -1251,9 +1251,11 @@ the quiet `muted` panel, the `input` fill a flipped popover opens over, the
 surface — and every defined level is measured
 composited at its own alpha over them (`elevationLevels` is the ordered index,
 the reserved `overlay` included). A menu or popover (`md`) also opens across the
-resting content fills `elevationContentSurfaces` names — the four filled
-actions, the three solid status chips, the raised panel action and the four soft
-status panels — so its shadow is measured there too; a `sm` card is placed in
+fifteen resting content fills `elevationContentSurfaces` names — `primary`,
+`secondary`, `accent`, `destructive`, `info`, `success`, `warning`,
+`softAction`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`,
+`disabled`, `skeleton` and `track` — so its shadow is measured there too; a
+`sm` card is placed in
 the layout and a `lg` dialog sits on the scrim, which the face paragraph
 measures instead. The tightest shipped pair is **1.058:1** (AAA dark, `md` on
 `info`); over the page surfaces alone it is **1.061:1** (identity dark, `sm` on
@@ -2358,9 +2360,10 @@ persistent page surfaces a raised card, menu, popover or preview card floats
 over, because a selected row stays chosen under its context menu and a field
 keeps its fill under a popover flipped above it — and holds the result to the
 same 1.05:1 `surface` floor. A menu or popover (`md`) also opens across the
-resting content fills `elevationContentSurfaces` names — `primary`,
+fifteen resting content fills `elevationContentSurfaces` names — `primary`,
 `secondary`, `accent`, `destructive`, `info`, `success`, `warning`,
-`softAction` and the four soft status panels — because a dropdown opens across
+`softAction`, `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`,
+`disabled`, `skeleton` and `track` — because a dropdown opens across
 the button beside its trigger and a context menu over a Badge; the `sm` and
 `lg` walks stay on the page surfaces. A dialog is the exception: its shadow
 lands on the scrim, which the face paragraph above measures instead.
