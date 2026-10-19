@@ -18,7 +18,7 @@
  * do not move between checkboxes and are deliberately not handled.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useLayoutEffect, useRef, useState, type ReactElement } from "react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
@@ -52,6 +52,7 @@ import {
   usableLabel,
   useControlState,
   useNativeFocusId,
+  useScrollReveal,
   type StateStyle,
 } from "./internal.js";
 import { Text } from "./Text.js";
@@ -382,6 +383,13 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const trackedId = useNativeFocusId();
   const trackedIndex = trackedFocusIndex(rowIds.current, trackedId);
   const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
+  const focusedRow = Option.getOrUndefined(mergedFocus);
+  const reveal = useScrollReveal();
+  useLayoutEffect(() => {
+    if (reveal === undefined || focusedRow === undefined) return;
+    const id = rowIds.current.get(focusedRow);
+    if (id !== undefined) reveal(id);
+  }, [focusedRow, reveal]);
   return renderCheckboxGroup(
     props,
     theme,

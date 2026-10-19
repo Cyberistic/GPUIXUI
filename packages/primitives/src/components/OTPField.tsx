@@ -26,7 +26,13 @@
  * cell as well, so it remembers that this key already emptied the cell.
  */
 
-import { useEffect, useRef, useState, type ReactElement } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -51,6 +57,7 @@ import {
   trackedFocusIndex,
   useControlState,
   useNativeFocusId,
+  useScrollReveal,
   type StateStyle,
 } from "./internal.js";
 import { isTrackedFocus, useNativeFocus } from "./native-focus.js";
@@ -243,6 +250,14 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const trackedId = useNativeFocusId();
   const trackedIndex = trackedFocusIndex(cellIds.current, trackedId);
   const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
+  const focusedCell = Option.getOrUndefined(mergedFocus);
+  const reveal = useScrollReveal();
+  /* A cell that takes focus must be visible inside a ScrollArea (plan 606). */
+  useLayoutEffect(() => {
+    if (reveal === undefined || focusedCell === undefined) return;
+    const id = cellIds.current.get(focusedCell);
+    if (id !== undefined) reveal(id);
+  }, [focusedCell, reveal]);
   const sample = useNativeFocus();
   /**
    * The seeded `autoFocus` state (and an event state on a runtime that

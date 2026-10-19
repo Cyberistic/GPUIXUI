@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { scrollIntoViewDelta } from "./bounds.js";
+import { scrollIntoViewDelta, scrollIntoViewOffsets } from "./bounds.js";
 
 /** A 100 px-tall viewport at the top of the window. */
 const viewport = { x: 0, y: 0, width: 200, height: 100 };
@@ -45,5 +45,36 @@ describe("scrollIntoViewDelta", () => {
     expect(
       scrollIntoViewDelta({ x: 0, y: 90, width: 100, height: 120 }, viewport),
     ).toBe(110);
+  });
+});
+
+describe("scrollIntoViewOffsets", () => {
+  it("moves each axis independently", () => {
+    // Right of a 200 px viewport and below a 100 px one.
+    expect(
+      scrollIntoViewOffsets(
+        { x: 180, y: 92, width: 100, height: 28 },
+        viewport,
+      ),
+    ).toStrictEqual({ x: 80, y: 20 });
+  });
+
+  it("reports zero on an axis the item already fits on", () => {
+    expect(
+      scrollIntoViewOffsets({ x: 10, y: 120, width: 40, height: 20 }, viewport),
+    ).toStrictEqual({ x: 0, y: 40 });
+  });
+
+  it("moves left when the item starts before the viewport", () => {
+    expect(
+      scrollIntoViewOffsets({ x: -50, y: 10, width: 40, height: 20 }, viewport),
+    ).toStrictEqual({ x: -50, y: 0 });
+  });
+
+  it("matches the vertical-only helper", () => {
+    const item = { x: 0, y: 300, width: 80, height: 36 };
+    expect(scrollIntoViewOffsets(item, viewport).y).toBe(
+      scrollIntoViewDelta(item, viewport),
+    );
   });
 });

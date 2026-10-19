@@ -40,7 +40,7 @@ adding one to every existing layout silently would be the worse default
 | `axis` | `"vertical" \| "horizontal" \| "both"` | `"vertical"` | which overflow axes are `scroll` (the others are `hidden`) |
 | `label` | `string` | none | a non-blank value names the region (trimmed) **and** makes it a focusable keyboard scroll stop; a blank one is ignored |
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
-| `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel or keyboard scroll, only when it changed |
+| `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel, keyboard or focus-reveal scroll, only when it changed |
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
 | `aria-description` | `string` | none | an extra description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its tip here) |
 | `children` | `ReactNode` | — | content |
@@ -112,6 +112,26 @@ A **labelled** area is one tab stop. While it holds focus:
 Keys for an axis the area does not scroll are ignored. The handler checks the
 runtime's focused element id against the container's own, so a field inside the
 area keeps its arrow keys instead of scrolling the region.
+
+## Focus reveal
+
+A focusable descendant that takes native focus — by `Tab`, a click, or a
+programmatic `focusElement` — is scrolled inside the region. `Tab` therefore
+cannot leave the keyboard on a control painted below the fold.
+
+The area measures the focused host and its own painted viewport, then moves by
+the overflow on the axes it scrolls: a `vertical` area never moves `x`. The
+move goes through `scrollTo`, not the runtime's `scrollIntoView` — measured,
+that verb does not move a plain scroller at all (plan `606`). A scroll the area
+performs this way reports through `onScrollPositionChange`, so a caller sees it.
+
+Every control that owns its focus state participates: the shared `useFocus` and
+`useRovingFocus` hooks (buttons, fields, the roving groups, sliders) and the two
+hand-rolled groups (`CheckboxGroup`, `OTPField`). A control outside the area has
+no reveal; with nested areas the nearest one moves.
+
+**One limit.** A focused host that reports no bounds — an element that paints no
+surface of its own — cannot be measured, so the region does not move.
 
 ## Tooltip trigger
 
@@ -197,11 +217,9 @@ property; returning `{}` keeps the default look. The state type is exported.
   moves go through the renderer, which dispatches no scroll event; use
   `onScrollPositionChange` for the position and `onScroll` only for pointer
   deltas.
-- **Focus does not follow into off-screen content.** Tab can land on a control
-  painted outside the region: focus does not bubble from a child and
-  `scrollIntoView` did not move a plain scroller in the 0.10.0 probe. The
-  labelled region's own scroll stop is the path to the content; keep interactive
-  rows short, or scroll the region before relying on Tab within it.
+- **A focused host with no reported bounds cannot be revealed.** The area
+  measures the host through `getElementBounds`, so an element that paints no
+  surface of its own is not moved into view.
 - No virtualisation: a long list mounts every row. `packages/data-grid` owns the
   virtual-list work when it lands.
 
@@ -222,6 +240,10 @@ property; returning `{}` keeps the default look. The state type is exported.
   the absolute position after a wheel and after each keyboard move — including
   that a clamped `End` reports `-480` and an immobile attempt reports nothing
   (plan 337). Measured against the locally built 0.10.0 binding (ADR 0003).
+- `runtime/scroll-reveal.runtime.test.tsx` — the focus reveal on both axes and
+  on every focus owner, the reported position, the up/back direction, and two
+  guards that must not move the region (already visible, outside the area)
+  (plan `606`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

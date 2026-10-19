@@ -23,6 +23,7 @@
  */
 
 import {
+  useCallback,
   useImperativeHandle,
   useRef,
   type ReactElement,
@@ -33,6 +34,11 @@ import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { focusRing } from "@gpuixui/tokens";
 import * as Option from "effect/Option";
+import {
+  paintedBox,
+  scrollIntoViewOffsets,
+  viewportBox,
+} from "../core/bounds.js";
 import { decideScroll, resolveScroll, scrollLine } from "../core/layout.js";
 import { scrollStyle, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -41,6 +47,7 @@ import {
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
+  ScrollRevealContext,
   usableLabel,
   useFocus,
   type StateStyle,
@@ -157,9 +164,13 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
   const root = useRef<PublicInstance | null>(null);
   const lastPosition = useRef<ScrollPosition>({ x: 0, y: 0 });
   const focus = useFocus(false, () => root.current?.id);
+  /* The caller's latest callback, so the reveal callback below can stay stable:
+     an unstable context value would re-run every focused child's effect. */
+  const onPositionChange = useRef(props.onScrollPositionChange);
+  onPositionChange.current = props.onScrollPositionChange;
 
   /** The runtime's own offset, which is already clamped after a scroll. */
-  const reportPosition = (): void => {
+  const reportPosition = useCallback((): void => {
     const id = root.current?.id;
     if (id === undefined) return;
     const position = Option.flatMap(
@@ -175,8 +186,8 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
     if (next.x === lastPosition.current.x && next.y === lastPosition.current.y)
       return;
     lastPosition.current = next;
-    props.onScrollPositionChange?.(next);
-  };
+    onPositionChange.current?.(next);
+  }, [renderer]);
 
   const onScroll = (event: EventPayload): void => {
     props.onScroll?.(event);
@@ -208,6 +219,39 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
     scrollTo,
   }));
 
+  /**
+   * A focused descendant must be visible (plan 606).
+   *
+   * The renderer's own `scrollIntoView` does not move a plain scroller and is
+   * one child short in a list (plans 599, 606), so measure both painted boxes
+   * and move by the overflow on the axes this area scrolls. `scrollTo` clamps.
+   */
+  const reveal = useCallback(
+    (hostId: number): void => {
+      const id = root.current?.id;
+      if (id === undefined || hostId === id) return;
+      const measured = Option.all({
+        region: Option.fromNullishOr(renderer?.getElementBounds?.(id)),
+        item: Option.fromNullishOr(renderer?.getElementBounds?.(hostId)),
+      });
+      if (Option.isNone(measured)) return;
+      const offset = renderer?.getScrollOffset?.(id);
+      const current = { x: offset?.[0] ?? 0, y: offset?.[1] ?? 0 };
+      const visible = viewportBox(
+        paintedBox(measured.value.region, root.current?.props.style ?? {}),
+        current,
+      );
+      const move = scrollIntoViewOffsets(measured.value.item, visible);
+      const axis = props.axis ?? "vertical";
+      const x = axis === "horizontal" || axis === "both" ? move.x : 0;
+      const y = axis === "vertical" || axis === "both" ? move.y : 0;
+      if (x === 0 && y === 0) return;
+      renderer?.scrollTo?.(id, current.x - x, current.y - y);
+      reportPosition();
+    },
+    [props.axis, renderer, reportPosition],
+  );
+
   const onKeyDown = (event: EventPayload): void => {
     if (Option.isNone(usableLabel(props.label))) return;
     const id = root.current?.id;
@@ -230,11 +274,15 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
     reportPosition();
   };
 
-  return renderScrollArea({ ...props, onScroll }, theme, {
-    ref: root,
-    focused: focus.focused,
-    onFocus: focus.onFocus,
-    onBlur: focus.onBlur,
-    onKeyDown,
-  });
+  return (
+    <ScrollRevealContext.Provider value={reveal}>
+      {renderScrollArea({ ...props, onScroll }, theme, {
+        ref: root,
+        focused: focus.focused,
+        onFocus: focus.onFocus,
+        onBlur: focus.onBlur,
+        onKeyDown,
+      })}
+    </ScrollRevealContext.Provider>
+  );
 };

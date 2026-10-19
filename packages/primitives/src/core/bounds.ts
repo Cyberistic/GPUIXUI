@@ -92,24 +92,48 @@ export const viewportBox = (
 });
 
 /**
- * The pixels to scroll so `item` is inside `viewport`; zero when it already is.
+ * One axis' overflow: past the trailing edge, else before the leading edge.
  *
- * The renderer's `scrollIntoView` cannot answer this: measured on the pinned
- * release build, it scrolls to the child **before** the target, so a highlighted
- * Select row lands 2 px below the list's bottom (plan `599`). The component
- * measures both painted boxes and moves the list by this delta through
- * `renderer.scrollTo`, which the runtime clamps to the content.
+ * A box larger than the viewport is aligned by its trailing edge, because no
+ * offset can contain it and the end is the useful half.
+ */
+const axisOverflow = (
+  start: number,
+  size: number,
+  viewStart: number,
+  viewSize: number,
+): number => {
+  const beyond = start + size - (viewStart + viewSize);
+  if (beyond > 0) return beyond;
+  const before = start - viewStart;
+  return before < 0 ? before : 0;
+};
+
+/**
+ * The movement on each axis so `item` is inside `viewport`; zero when it is.
  *
- * Positive means "scroll down" (the item is below); negative means "scroll up".
- * A row taller than the viewport keeps its bottom visible, because no offset can
- * contain it.
+ * Positive means "scroll towards the end" (down or right); negate it for a
+ * renderer offset, which is negative towards the end. The renderer's
+ * `scrollIntoView` cannot answer this: measured on the pinned release build, it
+ * scrolls to the child **before** the target, and it did not move a plain
+ * scroll container at all (plans `599`, `606`). The caller measures both painted
+ * boxes and calls `scrollTo`, which the runtime clamps to the content.
+ */
+export const scrollIntoViewOffsets = (
+  item: BoxBounds,
+  viewport: BoxBounds,
+): { readonly x: number; readonly y: number } => ({
+  x: axisOverflow(item.x, item.width, viewport.x, viewport.width),
+  y: axisOverflow(item.y, item.height, viewport.y, viewport.height),
+});
+
+/**
+ * The vertical pixels to scroll so `item` is inside `viewport`; zero when it is.
+ *
+ * The `Select` contract (plan `599`); use `scrollIntoViewOffsets` when the
+ * axis matters.
  */
 export const scrollIntoViewDelta = (
   item: BoxBounds,
   viewport: BoxBounds,
-): number => {
-  const below = item.y + item.height - (viewport.y + viewport.height);
-  if (below > 0) return below;
-  const above = item.y - viewport.y;
-  return above < 0 ? above : 0;
-};
+): number => scrollIntoViewOffsets(item, viewport).y;

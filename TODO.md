@@ -1604,6 +1604,20 @@ retired once both branches are one
       the three fields (plan `605`; offline 59 files / 820 tests, full runtime
       55 files / 778 tests).
 
+`[x]` `packages/primitives`: **a scroll region did not reveal the control that took
+      focus** — measured (2026-10-19): a `Button` at `y 412…448` took native focus
+      while a 120-high labelled `ScrollArea` painted `y 12…132` and stayed at
+      offset `0`, and the runtime's `scrollIntoView` left it at `0`, so `Tab` could
+      leave the keyboard on an invisible control. A `ScrollRevealContext` now
+      carries the nearest area's reveal; `useFocus`, `useRovingFocus`,
+      `CheckboxGroup` and `OTPField` call it when their focused host changes, and
+      the area measures the host and its painted viewport and moves by
+      `scrollIntoViewOffsets` through `scrollTo` on the axes it scrolls (reporting
+      the landing position). 8 runtime cases (both directions, all four focus
+      owners, horizontal, report, two guards), the three failing directions
+      measured; offline 59 files / 831 tests, full runtime 57 files / 789
+      (plan `606`).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

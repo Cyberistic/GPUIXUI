@@ -265,7 +265,10 @@ list (visible `y 48 … 792`, rows `28 + 2` gap), `scrollIntoView(row 26)` set t
 offset to `-39`, leaving row 26 at `794 … 822` and row 25 flush with the list's
 bottom at `764 … 792`; `scrollIntoView(row 49)` on a selected list did the same
 at `-729`. Measure the row and the list and call `scrollTo` with the overflow
-instead (`Select`, plan `599`).
+instead (`Select`, plan `599`). The same rule reveals a control that takes
+focus inside a `ScrollArea`: `scrollIntoView` does not move a plain scroller at
+all, so the area measures the host against its painted viewport and calls
+`scrollTo` (plan `606`).
 
 ### Text and input
 

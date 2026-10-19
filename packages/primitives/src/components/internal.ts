@@ -10,8 +10,11 @@
 
 import {
   Children,
+  createContext,
   useCallback,
+  useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -245,6 +248,25 @@ export const withDensity = (
 ): PrimitiveTheme => (density === undefined ? theme : { ...theme, density });
 
 /**
+ * Reveal a host that just took focus, inside the nearest `ScrollArea`.
+ *
+ * The hook family owns focus detection, so it is also the only place a control
+ * can learn it went off-screen. The callback lives in a context a labelled
+ * `ScrollArea` provides; outside one there is no callback and no reveal
+ * (plan `606`).
+ */
+export type ScrollReveal = (hostId: number) => void;
+
+/** The nearest `ScrollArea`'s reveal callback, if there is one above. */
+export const ScrollRevealContext = createContext<ScrollReveal | undefined>(
+  undefined,
+);
+
+/** The reveal callback of the nearest `ScrollArea`, or `undefined` outside one. */
+export const useScrollReveal = (): ScrollReveal | undefined =>
+  useContext(ScrollRevealContext);
+
+/**
  * Whether a control holds focus, and the handlers that track it.
  *
  * The runtime has no `focusVisible` state (plan 020 §1.2), so a focus ring has
@@ -304,8 +326,17 @@ export const useFocus = (
     if (id === undefined) return;
     if (!isTrackedFocus(sample.focused, id)) setEventFocused(false);
   }, [sample, ownId]);
+  const focused = eventFocused || isTrackedFocus(sample?.focused, hostId);
+  /* A control that just took focus must be visible: the nearest ScrollArea
+     measures it and scrolls it into view (plan 606). */
+  const reveal = useScrollReveal();
+  useLayoutEffect(() => {
+    if (!focused || reveal === undefined) return;
+    const id = ownId?.() ?? own.current ?? undefined;
+    if (id !== undefined) reveal(id);
+  }, [focused, ownId, reveal]);
   return {
-    focused: eventFocused || isTrackedFocus(sample?.focused, hostId),
+    focused,
     onFocus: () => setEventFocused(true),
     onBlur: () => setEventFocused(false),
     ref,
@@ -368,8 +399,18 @@ export const useRovingFocus = (): RovingFocus => {
     if (Option.isSome(trackedFocusIndex(ids.current, sample.focused))) return;
     setEventFocus(Option.none());
   }, [sample]);
+  const focusedIndex = Option.isSome(eventFocus) ? eventFocus : tracked;
+  const focusedItem = Option.getOrUndefined(focusedIndex);
+  /* An item that just took focus must be visible inside a ScrollArea (plan
+     606); the effect runs on the item, not on every render of the group. */
+  const reveal = useScrollReveal();
+  useLayoutEffect(() => {
+    if (reveal === undefined || focusedItem === undefined) return;
+    const id = ids.current.get(focusedItem);
+    if (id !== undefined) reveal(id);
+  }, [focusedItem, reveal]);
   return {
-    focusedIndex: Option.isSome(eventFocus) ? eventFocus : tracked,
+    focusedIndex,
     onFocus: (index) => setEventFocus(Option.some(index)),
     onBlur: (index) =>
       setEventFocus((current) =>
