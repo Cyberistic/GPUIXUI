@@ -62,6 +62,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[~]` Prove the **QR rendering recipe in a real window** per plan `596`:
+      `qr-code` (plan `518`) is the last capability with only `TestRenderer`
+      evidence — a 226-node absolute module grid, an SVG alpha mask and an SVG
+      data-URL image. The live twin `live-qr` asserts the matrix-relative
+      geometry, the absent light module, a real module click, both single-node
+      routes, the clean remount and the v4 scale; colour, the retained-node
+      cost and the `Image` a11y node stay headless (plan `197`).
+
 `[x]` Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
       `180 → 228` and the nested split `300 → 360` without moving the other, the
