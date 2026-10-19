@@ -77,7 +77,10 @@ Each item paints exactly like a standalone `Toggle`: rest from
 ## Keyboard
 
 The group is **one tab stop** — the selected item (`single`) or the item that
-last held focus (`multiple`). Tab moves into the group once and out again.
+last held focus (`multiple`); with nothing selected (`single`), the first enabled
+item holds it. An option valued `""` is an ordinary choice and does not become
+the stop merely because the group has no value (plan `502`). Tab moves into the
+group once and out again.
 
 | Key | `single` | `multiple` |
 | --- | -------- | ---------- |

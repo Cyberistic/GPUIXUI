@@ -331,6 +331,10 @@ export const radioDotStyle = (
  * `-1`/`undefined` and `Tab` skips the whole group. The fallback is the first
  * enabled option; an all-disabled group reports index 0 and makes no item
  * focusable.
+ *
+ * `value` is `undefined` when the group has no selection. An option valued `""`
+ * is a real choice ("None"), so absence must not be encoded as the empty string
+ * — it would silently win the tab stop over the first enabled option (plan 502).
  */
 export interface SelectableOption {
   readonly value: string;
@@ -340,7 +344,7 @@ export interface SelectableOption {
 /** The group's tab stop: the selected option's index, else the first enabled one. */
 export const initialActiveIndex = <Item extends SelectableOption>(
   options: ReadonlyArray<Item>,
-  value: string,
+  value: string | undefined,
 ): number => {
   const indexOf = (matches: (option: Item) => boolean): number =>
     Option.getOrElse(Arr.findFirstIndex(options, matches), () => -1);

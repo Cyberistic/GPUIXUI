@@ -61,8 +61,11 @@ const radioHandlers = (
 });
 const checked = (value: boolean): ValueState<boolean> =>
   initValueState(Option.some(value), false);
-const text = (value: string): ValueState<string> =>
-  initValueState(Option.some(value), "");
+const text = (value: string): ValueState<string | undefined> =>
+  initValueState(Option.some(value), undefined);
+/** A radio selection that has never been made. */
+const nothing = (): ValueState<string | undefined> =>
+  initValueState(Option.none(), undefined);
 const selection = (
   values: ReadonlyArray<string>,
 ): ValueState<ReadonlyArray<string>> => initValueState(Option.some(values), []);
@@ -402,7 +405,7 @@ describe("RadioGroup", () => {
     const element = renderRadioGroup(
       { options: [{ value: "alpha", label: "Alpha", disabled: true }] },
       testTheme,
-      text(""),
+      nothing(),
       0,
       unfocused,
       radioHandlers(onSelect),
@@ -419,9 +422,17 @@ describe("RadioGroup", () => {
           { value: "a", label: "A", disabled: true },
           { value: "b", label: "B" },
         ],
-        "",
+        undefined,
       ),
     ).toBe(1);
+    // An option valued "" is a real choice, not the absence (plan 502).
+    expect(initialActiveIndex([{ value: "" }, { value: "a" }], undefined)).toBe(
+      0,
+    );
+    expect(initialActiveIndex([{ value: "a" }, { value: "" }], undefined)).toBe(
+      0,
+    );
+    expect(initialActiveIndex([{ value: "a" }, { value: "" }], "")).toBe(1);
   });
 
   it("never makes a selected-but-disabled option the tab stop", () => {
@@ -457,6 +468,39 @@ describe("RadioGroup", () => {
     );
   });
 
+  it("paints a radio option valued the empty string as checked", () => {
+    // The bug guarded (plan 502): `itemState` excluded `""`, so a "None" option
+    // could be chosen and reported but never looked or announced as chosen.
+    const element = renderRadioGroup(
+      { options: [{ value: "", label: "None" }] },
+      testTheme,
+      text(""),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const item = expectSome(Option.fromNullishOr(elementChildren(element)[0]));
+    expect(hostProp(item, "aria-valuetext")).toStrictEqual(
+      Option.some("checked"),
+    );
+  });
+
+  it("keeps the empty-string option unchecked when nothing is selected", () => {
+    // The other half: absence is `undefined`, so it cannot check a real `""`.
+    const element = renderRadioGroup(
+      { options: [{ value: "", label: "None" }] },
+      testTheme,
+      nothing(),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    const item = expectSome(Option.fromNullishOr(elementChildren(element)[0]));
+    expect(hostProp(item, "aria-valuetext")).toStrictEqual(
+      Option.some("unchecked"),
+    );
+  });
+
   it("paints a failed validation on the empty circles only", () => {
     const element = renderRadioGroup(
       { options, invalid: true },
@@ -479,7 +523,7 @@ describe("RadioGroup", () => {
     const valid = renderRadioGroup(
       { options },
       testTheme,
-      text(""),
+      nothing(),
       0,
       unfocused,
       radioHandlers(vi.fn()),

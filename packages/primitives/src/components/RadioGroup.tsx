@@ -130,14 +130,22 @@ export interface RadioGroupHandlers {
 /** The index the item at `value` sits at, or the first enabled one. */
 export { initialActiveIndex };
 
-const itemState = (option: RadioOption, value: string): SelectionState =>
-  option.value === value && value !== "" ? "checked" : "unchecked";
+/**
+ * Whether an option is the selected one.
+ *
+ * A strict comparison: an option valued `""` ("None") is a real choice, and an
+ * absent selection is `undefined`, which no string equals (plan 502).
+ */
+const itemState = (
+  option: RadioOption,
+  value: string | undefined,
+): SelectionState => (option.value === value ? "checked" : "unchecked");
 
 /** The element tree `RadioGroup` renders: one option row per value. */
 export const renderRadioGroup = (
   props: RadioGroupProps,
   theme: PrimitiveTheme,
-  state: ValueState<string>,
+  state: ValueState<string | undefined>,
   activeIndex: number,
   focus: RadioGroupFocus,
   handlers: RadioGroupHandlers,
@@ -297,10 +305,12 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
     Option.none(),
   );
   const itemIds = useRef<Map<number, number>>(new Map());
-  const selected = useControlState(
+  const selected = useControlState<string | undefined>(
     props.value,
-    props.defaultValue ?? "",
-    props.onValueChange,
+    props.defaultValue,
+    (next) => {
+      if (next !== undefined) props.onValueChange?.(next);
+    },
   );
   return renderRadioGroup(
     props,

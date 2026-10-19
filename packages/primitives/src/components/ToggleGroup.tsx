@@ -269,7 +269,7 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     Option.none(),
   );
   const [multipleIndex, setMultipleIndex] = useState(() =>
-    initialActiveIndex(props.options, ""),
+    initialActiveIndex(props.options, undefined),
   );
   const controlled =
     props.type === "single"
@@ -301,16 +301,15 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     props.type === "single"
       ? initialActiveIndex(
           props.options,
-          Option.getOrElse(Arr.get(state.value.current, 0), () => ""),
+          Option.getOrUndefined(Arr.get(state.value.current, 0)),
         )
       : initialActiveIndex(
           props.options,
-          Option.getOrElse(
+          Option.getOrUndefined(
             Option.map(
               Arr.get(props.options, multipleIndex),
               (option) => option.value,
             ),
-            () => "",
           ),
         );
   const markFocused = (index: number): void => {

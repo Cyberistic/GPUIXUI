@@ -827,6 +827,45 @@ it("moves a RadioGroup's selection with the arrow keys", async () => {
   expect(announced(runtime, "Beta")).toBe("checked");
 });
 
+it("treats a radio option valued the empty string as an ordinary choice", async () => {
+  // The bug guarded (plan 502): the checked painter excluded `""`, so a "None"
+  // option could be reported but never looked or announced as chosen; and the
+  // roving index treated `""` as "no value", so that option stole the tab stop
+  // from the first enabled one.
+  const runtime = await openWindow();
+  const values: string[] = [];
+  runtime.render(
+    <Surface>
+      <RadioGroup
+        testId="rge"
+        label="Filter"
+        options={[
+          { value: "a", label: "Alpha" },
+          { value: "", label: "None" },
+        ]}
+        onValueChange={(value) => values.push(value)}
+      />
+    </Surface>,
+  );
+  // No default: nothing is checked, and the tab stop is the first enabled option.
+  expect(announced(runtime, "Alpha")).toBe("unchecked");
+  expect(announced(runtime, "None")).toBe("unchecked");
+  runtime.focusNext();
+  runtime.flush();
+  expect(Option.getOrElse(runtime.focused(), () => "<none>")).toBe("rge-a");
+
+  runtime.click("rge-");
+  runtime.flush();
+  expect(values).toStrictEqual([""]);
+  expect(announced(runtime, "None")).toBe("checked");
+  expect(announced(runtime, "Alpha")).toBe("unchecked");
+
+  // Re-selecting the current value reports nothing, as for any other option.
+  runtime.click("rge-");
+  runtime.flush();
+  expect(values).toStrictEqual([""]);
+});
+
 it("contains its options in a horizontal group", async () => {
   // The bug guarded (plan 380): a horizontal group's option row is a flex item
   // that kept its max-content width, so a long label painted 492 px outside a

@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 143/143
+`[x]` `[████████████]` 144/144
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1408,6 +1408,19 @@ retired once both branches are one
       `value`/`defaultValue` still shows the placeholder. 2 element + 2 scoped
       runtime cases, both directions measured (plan `501`; offline 728 → 730,
       scoped live 4/4).
+
+`[x]` `packages/primitives`: **a radio option valued `""` could never be checked,
+      and it stole the group's tab stop** — `itemState` excluded `""`, so a
+      "None" choice was reported but always painted and announced `unchecked`;
+      and both `RadioGroup` and `ToggleGroup` passed `""` to
+      `initialActiveIndex` for "no selection", so a `""` option later in the
+      group won the roving stop over the first enabled one (measured:
+      `focusNext` landed on `rge-`/`tge-`). `initialActiveIndex` now takes
+      `string | undefined`, the radio state follows `Select` (absence is the
+      missing prop), and `ToggleGroup` passes `undefined`; an empty-valued radio
+      is checked and announced when chosen. 1 element + 2 scoped runtime cases,
+      both directions measured (plan `502`; offline 730 → 732, toggle-group
+      10/10).
 
 `[x]` `packages/primitives`: **a selection row's visible description reached no
       assistive technology** — `CheckboxGroup` and `RadioGroup` painted

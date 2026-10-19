@@ -31,8 +31,8 @@ import { RadioGroup } from "@gpuixui/primitives";
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `options` | `ReadonlyArray<RadioOption>` | — (required) | the choices, in order |
-| `value` | `string` | — | controlled selection |
-| `defaultValue` | `string` | `""` | initial selection when uncontrolled |
+| `value` | `string` | — | controlled selection; `""` is a real value (see below) |
+| `defaultValue` | `string` | — | initial selection when uncontrolled; omit it (with `value`) for no selection |
 | `onValueChange` | `(value: string) => void` | none | the selected option's value |
 | `orientation` | `"vertical" \| "horizontal"` | `"vertical"` | layout and the arrow axis |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | radio circle size |
@@ -48,6 +48,12 @@ import { RadioGroup } from "@gpuixui/primitives";
 caption beside the name **and** the option's `aria-description`, so the visible
 hint is also announced. A blank description is absent.
 
+A selection is a **string**, and `""` is an ordinary value: a "None"/"No
+preference" choice is `{ value: "", label: "None" }` and behaves like any other
+(checked paint, announcement and `onValueChange("")`). Absence is the **missing
+prop** — supplying neither `value` nor `defaultValue` leaves every option
+unchecked (plan `502`).
+
 `invalid` is the same failed-validation paint as `Checkbox`, `Switch` and the
 fields: an **empty** circle's border takes `colors.destructive`; a chosen one
 keeps its accent, so the error cannot be mistaken for the selection.
@@ -60,11 +66,12 @@ keeps its accent, so the error cannot be mistaken for the selection.
 | ← / → (horizontal) | the same on the horizontal axis |
 | Home / End | jump to the first / last **enabled** option and select it |
 | Enter / Space | select the focused option |
-| Tab | moves to the group as **one** stop; the selected option holds it |
+| Tab | moves to the group as **one** stop; the selected option holds it, or the first enabled one when nothing is selected |
 
 Arrows and Home/End **select as they move** and take focus with them, matching
-the platform radio contract. The tab stop is the selection: a controlled
-`value` change from the parent moves the tab stop with it.
+the platform radio contract. The tab stop is the selection, or the first enabled
+option while nothing is selected; a controlled `value` change from the parent
+moves the tab stop with it.
 
 `Enter` and `Space` act on the option that **holds focus**, which is not always
 the selected one: a controlled parent can defer or reject an arrow's move (a
@@ -76,7 +83,8 @@ a held key does nothing — the shared contract in `core/keyboard.ts`.
 An arrow also **continues from the focused option**, not from the value: the ring
 is the keyboard's cursor, so a deferring parent cannot trap the keyboard by
 moving focus once and repeating the same move on every later key (plan `359`).
-The tab stop stays value-derived, so Tab still enters on what is selected.
+The tab stop stays value-derived (or the first enabled option when nothing is
+selected), so Tab still enters on what is selected.
 
 ## Accessibility
 
@@ -176,8 +184,10 @@ the option row:
   paints the empty circles destructive and leaves the chosen one on its accent;
   every enabled row declares the wash, a disabled option declares none, the
   caller's `optionStyle` wins last (plan 355), a horizontal group's rows
-  carry the content-floor removal that lets them shrink (plan 380), and an
-  option description becomes the row's `aria-description` (plan 500).
+  carry the content-floor removal that lets them shrink (plan 380), an
+  option description becomes the row's `aria-description` (plan 500), and an
+  option valued `""` is checked only when it is the selection while an absent
+  selection leaves it unchecked and does not take the tab stop (plan 502).
 - `runtime/option-description.runtime.test.tsx` — both groups' descriptions in
   the real accessibility tree, and a blank one staying absent (plan 500).
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
@@ -192,7 +202,9 @@ the option row:
   the option that holds focus, not the value's stale tab stop, and an activation
   key with no focused option still selects the tab stop (plan 353); a bounded
   horizontal group paints both option rows inside itself and wraps both labels
-  (plan 380).
+  (plan 380); and a radio option valued `""` is an ordinary choice — nothing is
+  checked without a selection, the first enabled option holds the tab stop, and
+  choosing the empty option reports `""` once and paints checked (plan 502).
 - `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that **never
   applies** a reported value: three arrows move the ring on to Beta, Gamma and
   back to Alpha and report each change; a disabled option is still skipped; the

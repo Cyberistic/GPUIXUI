@@ -188,6 +188,32 @@ it("takes one tab stop, on the selected item", async () => {
   expect(focused(runtime)).not.toBe("tg-right");
 });
 
+it("keeps the first enabled item as the tab stop when nothing is selected", async () => {
+  // The bug guarded (plan 502): the roving index fell back to `""`, which is a
+  // real option value, so an empty-valued item later in the group stole the
+  // tab stop from the first enabled one.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Button testId="before">Before</Button>
+        <ToggleGroup
+          type="single"
+          testId="tge"
+          label="Filter"
+          options={[
+            { value: "left", label: "Left" },
+            { value: "", label: "None" },
+          ]}
+        />
+      </Stack>
+    </Surface>,
+  );
+  runtime.click("before");
+  runtime.focusNext();
+  expect(focused(runtime)).toBe("tge-left");
+});
+
 it("leaves a disabled group out of the tab order and inert", async () => {
   const runtime = await openWindow();
   runtime.render(
