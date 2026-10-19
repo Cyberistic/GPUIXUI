@@ -40,10 +40,10 @@ that does not commit) fails.
 
 | File | Change |
 | ---- | ------ |
-| `apps/playground/src/live/scenarios.tsx` | replace the unconditional blur-commit assertion with the two-state block (§3). Keep the editor-focus, caret and focus-move checks. |
+| `apps/playground/src/live/scenarios.tsx` | replace the unconditional blur-commit assertion with the two-state block (§3). Keep the editor-focus, caret and focus-move checks. Also add the bounded `waitForText` calls before the three `live-query-builder` select-item clicks the plan-603 gate exposed (§9). |
 | `apps/playground/README.md` | the `live-tier2-editing` row: the blur is asserted in both measured states; the count is state-dependent. |
 | `COMPONENTS.md` | the `Inline edit` row and the focus paragraph: a click away moves native focus; React's `onBlur` for the replaced editor is **not** delivered in every window state, so the commit is asserted through the open editor when it is missing. This is a component-robustness input: a consumer that must commit on focus loss cannot rely on `onBlur` alone. |
-| `PLAN.md` | D84. |
+| `PLAN.md` | D85. |
 | `TODO.md` | tick with the two measured states; add a cross-team task for `InlineEdit`'s outside-press commit. |
 | `.agents/slop/plans/README.md` | index row `605`. |
 
@@ -152,8 +152,9 @@ nub apps/playground/dist/live/run.js --all                          # merge gate
 | Measurement | Value |
 | ----------- | ----- |
 | focused state (commit branch) | `ws-name` paints `livez`; `commits=2`; focus stays on `ws-elsewhere`; **32 checks**, three green runs |
-| full-gate state (missed branch) | fill after the gate |
-| full gate | fill after the gate |
+| full-gate state (missed branch) | the runner does not print which branch was taken; the gate was green |
+| full gate | **85/85**, exit `0`, every capability verified |
+| focused `live-query-builder` after §9 | 1/1, 41 checks, exit `0` |
 
 **Two-direction evidence:** the commit branch is green in three focused runs;
 the missed branch is the exact state all three earlier gates failed in, so the
@@ -161,3 +162,21 @@ full gate is the verification of that branch. Mutations inside the missed branch
 cannot be run focused (the focused window never takes that branch); its two
 assertions are direct — the display must be `""`, and the refocused editor's
 Enter must commit `livez`.
+
+## 9. The plan-603 gate's other failure: `live-query-builder` select items
+
+The plan-603 gate ran `85` scenarios and failed one besides the blur:
+`live-query-builder` clicked `qb-rule-0-field-item-owner` before the popup had
+painted, so the locator matched nothing (`AutomationError: Locator did not
+match any element`). The same scenario passed focused, so this is a load-
+dependent missing wait, not a runtime regression.
+
+The measured fix is the pattern the scenario already used on its first open:
+the three later select opens (field `Owner`, value `Ada`, operator `is not`)
+and the post-wheel value open (`paused`) now wait for their content's painted
+text before clicking an item. `waitForText` is already bounded at three
+seconds; no tolerance or check count changed.
+
+Reverse proof: the failing full gate is the evidence — the click ran while the
+content was absent. Focused `live-query-builder` is green (41 checks) and the
+next full gate is green.
