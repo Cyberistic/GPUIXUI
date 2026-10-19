@@ -18,6 +18,8 @@ import { Button, IconButton } from "../internal/button.js";
 import {
   clickCentreOf,
   focusedTestId,
+  hoverCentreOf,
+  requireBounds,
   sizeOf,
 } from "../internal/interaction.js";
 import { controlHeight, darkTheme } from "../internal/theme.js";
@@ -35,6 +37,34 @@ describe("Button", () => {
     clickCentreOf(button, "button");
 
     expect(onClick).toHaveBeenCalledTimes(1);
+
+    button.unmount();
+  });
+
+  it("keeps the caller's pointer handlers outside a hover group", () => {
+    // `Button` joins a List row's hover group when there is one; a control
+    // rendered anywhere else must not lose the handlers its caller passed.
+    const onMouseEnter = vi.fn();
+    const onMouseLeave = vi.fn();
+    const button = renderComponent(
+      <Button
+        testId="button"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+      >
+        Save
+      </Button>,
+    );
+
+    hoverCentreOf(button, "button");
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+
+    const bounds = requireBounds(button, "button");
+    button.renderer.nativeSimulateMouseMove(
+      bounds.x + bounds.width + 200,
+      bounds.y + bounds.height + 200,
+    );
+    expect(onMouseLeave).toHaveBeenCalledTimes(1);
 
     button.unmount();
   });

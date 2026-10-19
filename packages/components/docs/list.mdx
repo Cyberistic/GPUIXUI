@@ -266,6 +266,12 @@ density) and `density.rowHeight` when `dense` (32px). Selection paints
 a disabled row is drawn at 50% opacity with `cursor: not-allowed` and no hover or
 press fill.
 
+GPUix hover is per element: a child control's hover cancels its row's `hover`
+style, so the row would lose its tint under a trailing button. `Button` and
+`IconButton` report their pointer crossings to the enclosing row, and the row
+keeps `colors.accent` while one of them is hovered (plan 606). A custom
+interactive child does not participate; the row's own tint is per element.
+
 ## Style by state
 
 `ListItem.style` takes a `StyleDesc` or a function of `ListItemState`
@@ -320,12 +326,15 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   move on this host (`docs/performance.md`). Long collections belong in
   `virtual-list`, which is a separate component with its own API.
 - The rows are not accessible by index: the API is `value`-based.
+- Hover is per element. Only `Button` and `IconButton` report their hover to the
+  row; a custom interactive child in `leading`/`trailing` still cancels the
+  row's tint while the pointer is over it.
 - Focus tracking follows the rows the list focused. A focusable control inside a
   row's `trailing` slot is not tracked if the row disappears (see Dynamic rows).
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (56 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (59 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -333,7 +342,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 their roles, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both and carrying no pointer affordance, real
 focus moving with wrap-around past a
-disabled row, `Home`/`End`, the accent hover on a real mouse move, the dense
+disabled row, `Home`/`End`, the accent hover on a real mouse move (including
+under a trailing `Button`, and clearing when the pointer leaves), the dense
 height, the controlled list not moving its own selection, type-ahead jumping and
 cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
 click (and not by `Space`, a disabled row, a plain list without the prop, or a

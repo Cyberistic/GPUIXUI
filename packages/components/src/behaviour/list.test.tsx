@@ -50,6 +50,7 @@ import {
   clickCentreOf,
   focusedTestId,
   hoverCentreOf,
+  requireBounds,
 } from "../internal/interaction.js";
 import { List, ListItem, ListItemDescription, ListItemTitle } from "../list.js";
 import { Button } from "../internal/button.js";
@@ -647,6 +648,93 @@ describe("List", () => {
     expect(list.renderer.findByTestId("row-a")?.style.hover).toMatchObject({
       backgroundColor: darkTheme.colors.accent,
     });
+
+    list.unmount();
+  });
+
+  it("keeps the row tint while the pointer is over a trailing control", () => {
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem
+          testId="row-a"
+          value="a"
+          trailing={<Button testId="trailing-action">Open</Button>}
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    // Hover is per element: the trailing Button owns the pointer, so the row's
+    // declared `hover` refinement no longer paints. The row must script it.
+    hoverCentreOf(list, "trailing-action");
+
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).toBe(
+      darkTheme.colors.accent,
+    );
+
+    list.unmount();
+  });
+
+  it("clears the row tint when the pointer leaves the row", () => {
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem
+          testId="row-a"
+          value="a"
+          trailing={<Button testId="trailing-action">Open</Button>}
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    hoverCentreOf(list, "trailing-action");
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).toBe(
+      darkTheme.colors.accent,
+    );
+    const row = requireBounds(list, "row-a");
+    list.renderer.nativeSimulateMouseMove(row.x + row.width + 100, row.y + 400);
+
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).not.toBe(
+      darkTheme.colors.accent,
+    );
+
+    list.unmount();
+  });
+
+  it("composes the caller's pointer handlers on a member control", () => {
+    const onMouseEnter = vi.fn();
+    const onMouseLeave = vi.fn();
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem
+          testId="row-a"
+          value="a"
+          trailing={
+            <Button
+              testId="trailing-action"
+              onMouseEnter={onMouseEnter}
+              onMouseLeave={onMouseLeave}
+            >
+              Open
+            </Button>
+          }
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    hoverCentreOf(list, "trailing-action");
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).toBe(
+      darkTheme.colors.accent,
+    );
+    const row = requireBounds(list, "row-a");
+    list.renderer.nativeSimulateMouseMove(row.x + row.width + 100, row.y + 400);
+
+    expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expect(onMouseLeave).toHaveBeenCalledTimes(1);
 
     list.unmount();
   });

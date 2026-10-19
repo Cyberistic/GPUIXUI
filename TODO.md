@@ -331,6 +331,14 @@ retired once both branches are one
       accepted, and a `defaultOpen` combobox reports the empty opening query
       once; 3 native cases each (DatePicker 34, Combobox 49), four mutation
       proofs; docs, examples and `COMPONENTS.md` synced (owner: components)
+    - [x] A List row keeps its hover tint over a trailing control — plan 606:
+      measured in plan 335 §1.3 that GPUix hover is per element, so a child's
+      hover cancels the row's refinement and the row goes flat under a trailing
+      button; the row tracks its own crossing and `Button`/`IconButton` report
+      their hover through an internal hover group (unmount-safe), while a custom
+      interactive child stays per element and is documented. 3 native cases
+      (List 59), both-direction proof (all three fail before the wiring); docs,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -795,7 +803,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `@gpuixui/tw`: `classesToStyle` returns `shadow-sm/md/lg/xl` as a flat `BoxShadow`, so its `color` overwrites the element's text colour (`classesToStyle("text-popover-foreground shadow-xl", light).style.color` is `#191D2529`, the shadow, not `#191D25`). Found while evaluating the plan-524 Dialog/Popover recipes; the component integration is blocked until `shadow-*` wraps the value in `boxShadow` (plan 524 is owned by the tw workstream) | tw (plan 524) | pending — measured 2026-10-18 in this worktree |
 | A `bell` icon (and a few notification marks) for the notification centre's trigger; `ICON_NAMES` has no `bell`, so v1 uses a text label plus the count badge and accepts a custom child | icons | pending — plan 568 records the gap; no icon was copied into `packages/components` |
 | Animated surfaces now carry `<part testId>-surface` / `toast-<id>-surface` (plan 597), so a native suite can measure the tween box directly | playground | hand-off — plan 592's next-row proxy can flip to `collapse-content-surface`; no playground file was edited from this workstream |
-| Hover is per element: a child control's hover cancels its row's `hover` style (measured, plan 335 §1.3), so a List row's tint drops while the pointer is over its trailing control | components | open — decide between counter-tracking the row's children and documenting the per-element rule; no consumer has reported it as a defect |
+| Hover is per element: a child control's hover cancels its row's `hover` style (measured, plan 335 §1.3), so a List row's tint drops while the pointer is over its trailing control | components | **resolved** — plan 606: the row scripts its own crossing and `Button`/`IconButton` report their hover to the enclosing row through an internal hover group, so the accent tint survives; a custom interactive child is still per element and documented in `docs/list.mdx` |
 | Focus rings follow React `focus`/`blur`, which the published `0.10.0` does not dispatch for a native focus change (plans 536/540); only `autoFocus` seeds the ring state | components | open — a follow-up docs-truth pass should state the limitation on every focusable component page, or a native focus source must exist |
 
 ## Phase D — data and workspace components

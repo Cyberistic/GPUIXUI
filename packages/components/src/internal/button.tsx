@@ -20,6 +20,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { useState } from "react";
 import { activationHandlers } from "./activate.js";
+import { useHoverGroupMember } from "./hover-group.js";
 import { controlName } from "./name.js";
 import { stateDescription } from "./state-description.js";
 import {
@@ -157,6 +158,8 @@ export const Button = ({
   onKeyUp,
   onFocus,
   onBlur,
+  onMouseEnter,
+  onMouseLeave,
   style,
   children,
   ...rest
@@ -164,12 +167,14 @@ export const Button = ({
   const theme = useTheme();
   const [focused, setFocused] = useState(autoFocus && !disabled);
   const name = controlName(rest["aria-label"], children);
+  const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
 
   return (
     <div
       role="button"
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      {...hoverMember}
       {...(name === undefined ? {} : { "aria-label": name })}
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
@@ -210,12 +215,15 @@ export const IconButton = ({
   onKeyUp,
   onFocus,
   onBlur,
+  onMouseEnter,
+  onMouseLeave,
   style,
   ...rest
 }: IconButtonProps) => {
   const theme = useTheme();
   const [focused, setFocused] = useState(autoFocus && !disabled);
   const side = controlHeight(theme, size);
+  const hoverMember = useHoverGroupMember(onMouseEnter, onMouseLeave);
 
   return (
     <div
@@ -223,6 +231,7 @@ export const IconButton = ({
       aria-label={label}
       tabIndex={disabled ? -1 : 0}
       {...rest}
+      {...hoverMember}
       {...stateDescription(disabled, rest["aria-description"])}
       autoFocus={autoFocus && !disabled}
       {...activation(disabled, onClick, onKeyDown, onKeyUp)}

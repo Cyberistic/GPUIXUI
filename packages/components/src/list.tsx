@@ -61,6 +61,7 @@ import {
 } from "./internal/collection.js";
 import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
+import { HoverGroupContext, type HoverGroup } from "./internal/hover-group.js";
 import {
   assertParts,
   type PartChildren,
@@ -808,6 +809,8 @@ export const ListItem = ({
   children,
   onFocus,
   onClick,
+  onMouseEnter,
+  onMouseLeave,
   style,
   ref,
   ...rest
@@ -822,6 +825,16 @@ export const ListItem = ({
     noteFocus,
     register,
   } = useListContext();
+  const [selfHovered, setSelfHovered] = useState(false);
+  const [memberHovers, setMemberHovers] = useState(0);
+  const hovered = !disabled && (selfHovered || memberHovers > 0);
+  const hoverGroup = useMemo<HoverGroup>(
+    () => ({
+      enter: () => setMemberHovers((count) => count + 1),
+      leave: () => setMemberHovers((count) => (count > 0 ? count - 1 : 0)),
+    }),
+    [],
+  );
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
   );
@@ -868,95 +881,111 @@ export const ListItem = ({
   assertParts(listItem, children);
 
   return (
-    <div
-      role={selectable ? "option" : "listitem"}
-      {...(selectable ? { "aria-selected": isSelected } : {})}
-      {...rest}
-      {...stateDescription(disabled, rest["aria-description"])}
-      ref={setElement}
-      autoFocus={autoFocus && !disabled}
-      tabIndex={focusable ? (isTabbable ? 0 : -1) : undefined}
-      onFocus={(event) => {
-        noteFocus(value);
-        onFocus?.(event);
-      }}
-      onClick={
-        disabled
-          ? undefined
-          : (event) => {
-              onClick?.(event);
-              activate(value, event);
-            }
-      }
-      style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.lg,
-          paddingLeft: theme.spacing.lg,
-          paddingRight: theme.spacing.lg,
-          height: dense
-            ? theme.density.rowHeight
-            : theme.density.rowHeight + theme.spacing.md,
-          borderRadius: theme.radius.sm,
-          opacity: disabled ? 0.5 : 1,
-          cursor: disabled ? "not-allowed" : undefined,
-          ...(focusable && !disabled
-            ? {
-                cursor: "pointer",
-                hover: { backgroundColor: theme.colors.accent },
-                active: { backgroundColor: theme.colors.active },
-              }
-            : {}),
-          ...(isSelected
-            ? {
-                backgroundColor: theme.colors.selected,
-                color: theme.colors.selectedForeground,
-              }
-            : {}),
-          // No `focusVisible` in 0.10.0: the active row is ringed whenever it is
-          // the active one, keyboard or click.
-          ...(isActive ? focusRing(theme) : {}),
-        },
-        resolveStyle(style, state),
-      )}
-    >
-      {leading === undefined ? null : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            flexShrink: 0,
-          }}
-        >
-          {leading}
-        </div>
-      )}
+    <HoverGroupContext.Provider value={hoverGroup}>
       <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          minWidth: 0,
+        role={selectable ? "option" : "listitem"}
+        {...(selectable ? { "aria-selected": isSelected } : {})}
+        {...rest}
+        {...stateDescription(disabled, rest["aria-description"])}
+        ref={setElement}
+        autoFocus={autoFocus && !disabled}
+        tabIndex={focusable ? (isTabbable ? 0 : -1) : undefined}
+        onFocus={(event) => {
+          noteFocus(value);
+          onFocus?.(event);
         }}
-      >
-        {children}
-      </div>
-      {trailing === undefined ? null : (
-        <div
-          style={{
+        onClick={
+          disabled
+            ? undefined
+            : (event) => {
+                onClick?.(event);
+                activate(value, event);
+              }
+        }
+        onMouseEnter={(event) => {
+          if (!disabled) setSelfHovered(true);
+          onMouseEnter?.(event);
+        }}
+        onMouseLeave={(event) => {
+          if (selfHovered) setSelfHovered(false);
+          onMouseLeave?.(event);
+        }}
+        style={mergeStyles(
+          {
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-            flexShrink: 0,
+            gap: theme.spacing.lg,
+            paddingLeft: theme.spacing.lg,
+            paddingRight: theme.spacing.lg,
+            height: dense
+              ? theme.density.rowHeight
+              : theme.density.rowHeight + theme.spacing.md,
+            borderRadius: theme.radius.sm,
+            opacity: disabled ? 0.5 : 1,
+            cursor: disabled ? "not-allowed" : undefined,
+            ...(focusable && !disabled
+              ? {
+                  cursor: "pointer",
+                  hover: { backgroundColor: theme.colors.accent },
+                  active: { backgroundColor: theme.colors.active },
+                }
+              : {}),
+            ...(isSelected
+              ? {
+                  backgroundColor: theme.colors.selected,
+                  color: theme.colors.selectedForeground,
+                }
+              : {}),
+            // Hover is per element: a child control's hover cancels the row's
+            // declared refinement, so the row tracks its own pointer crossing
+            // (plan 606).
+            ...(hovered && focusable && !disabled
+              ? { backgroundColor: theme.colors.accent }
+              : {}),
+            // No `focusVisible` in 0.10.0: the active row is ringed whenever it is
+            // the active one, keyboard or click.
+            ...(isActive ? focusRing(theme) : {}),
+          },
+          resolveStyle(style, state),
+        )}
+      >
+        {leading === undefined ? null : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            {leading}
+          </div>
+        )}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flexGrow: 1,
+            minWidth: 0,
           }}
         >
-          {trailing}
+          {children}
         </div>
-      )}
-    </div>
+        {trailing === undefined ? null : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            {trailing}
+          </div>
+        )}
+      </div>
+    </HoverGroupContext.Provider>
   );
 };
 
