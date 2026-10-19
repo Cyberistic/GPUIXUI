@@ -43,7 +43,14 @@ import {
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
+import {
+  SURFACE,
+  Surface,
+  WINDOW,
+  openWindow,
+  settleFocus,
+  testTheme,
+} from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -175,9 +182,10 @@ it("paints the recipe's elevation on a resting field, not a ring", async () => {
 });
 
 it("paints an autoFocus Input's ring on mount, and clears it when focus leaves", async () => {
-  // The bug guarded: `autoFocus` takes native focus without dispatching
-  // `onFocus` (plan 041 §9), so the tracked state stayed false and the field
-  // that held focus looked unfocused until the next focus change.
+  // The bug guarded (plans 041 §9, 591): `autoFocus` takes native focus without
+  // dispatching `onFocus`, and the release runtime never dispatches `onBlur`
+  // either. The seeded state painted the ring on mount; without the tracker
+  // clearing it, the field that lost focus looked focused forever.
   const runtime = await openWindow();
   runtime.render(
     <Surface>
@@ -191,6 +199,7 @@ it("paints an autoFocus Input's ring on mount, and clears it when focus leaves",
   expect(ringed(runtime, "field")).toBe(true);
   runtime.click("after");
   runtime.flush();
+  await settleFocus();
   expect(ringed(runtime, "field")).toBe(false);
 });
 

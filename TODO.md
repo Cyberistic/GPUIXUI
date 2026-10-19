@@ -1423,6 +1423,16 @@ retired once both branches are one
       degradation (plan `379` §6) are unchanged — a full run can still fail a
       couple of `focus-ring` cases after many windows, which is why the matrix
       is run scoped for proof.
+      **Re-run 2026-10-19 after plan `591`:** 50 files, 722 tests, **656 passed
+      / 66 failed**, 13 failing files. Plan `591` fixed the seeded-focus
+      lifetime (`useFocus`, `OTPField`) and the `NumberField` blur commit:
+      `number-field` is down to 2 known geometry cases, `otp` is 13/13, and
+      `fields` lost its `autoFocus` Input case (30 left). The six fixed cases
+      and the new reformat case are listed in plan `591` §7; no assertion was
+      re-baselined. The remaining classes are unchanged: published box model
+      (plan `529` §6.5), headless-tooltip open-on-focus, `Select`-trigger ring
+      assertions that predate the tracker's settle, and the full-run
+      window-accumulation degradation.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1612,6 +1622,22 @@ retired once both branches are one
       in `COMPONENTS.md`; a runtime-internal focus behaviour (the headless
       tooltip's open-on-focus) still cannot follow. Both directions proven
       (provider removed → 19 failures; one control unwired → its case only).
+
+`[x]` `packages/primitives`: **`useFocus` could not clear a seeded/event focus
+      state, and `NumberField` never committed its draft on blur** — plan `590`
+      restored the focus *paint*, but it ORed the event state into the tracked
+      id, so a value only an event could clear (an `autoFocus` seed, an OTP
+      first cell, a field's blur action) never cleared on the release runtime
+      that dispatches no `onFocus`/`onBlur`. Measured: `autoFocus` fields kept
+      their ring after focus left, `OTPField` kept its first cell ringed, and
+      `1.5` with `precision={2}` stayed `1.5` after clicking away (a deferring
+      parent saw `[12]`, not `[12, 12]`). The provider now publishes a `sampled`
+      snapshot; `useFocus` and `OTPField` clear a seed the tracker contradicts,
+      and `NumberField` commits on the tracked loss through one pure
+      de-duplication rule (the event path wins, a disabled field never
+      commits). `FOCUS_SETTLE_MS` now covers the two renders the chain needs.
+      Six runtime cases fixed, no new failure; offline 805, runtime 656/722,
+      13 failing files (plan `591`).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

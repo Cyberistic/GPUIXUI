@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import {
   clampNumeric,
+  commitsOnTrackedBlur,
   decideNumberKey,
   draftApplies,
   formatNumber,
@@ -250,5 +251,44 @@ describe("draftApplies", () => {
   it("drops a draft with no reported value on an external change", () => {
     expect(draftApplies(draft("-", 4, Option.none()), 4)).toBe(true);
     expect(draftApplies(draft("-", 4, Option.none()), 9)).toBe(false);
+  });
+});
+
+describe("commitsOnTrackedBlur", () => {
+  const facts = (
+    overrides: Partial<Parameters<typeof commitsOnTrackedBlur>[0]>,
+  ) => ({
+    wasFocused: true,
+    focused: false,
+    handledByEvent: false,
+    disabled: false,
+    ...overrides,
+  });
+
+  it("commits a loss only the tracker saw", () => {
+    // The bug guarded (plan 591): published 0.10.0 dispatches no `onBlur`, so
+    // without this the documented commit-on-blur never ran on a consumer
+    // install (`1.5` stayed `1.5`, and a deferring parent saw no second value).
+    expect(commitsOnTrackedBlur(facts({}))).toBe(true);
+  });
+
+  it("leaves the loss to the host event when it already ran", () => {
+    // A runtime that dispatches blur commits from `onBlur`; the tracker's later
+    // sample must not commit the same draft again.
+    expect(commitsOnTrackedBlur(facts({ handledByEvent: true }))).toBe(false);
+  });
+
+  it("never commits a disabled field", () => {
+    // The rule plan 362 established: a disabled control changes nothing.
+    expect(commitsOnTrackedBlur(facts({ disabled: true }))).toBe(false);
+  });
+
+  it("ignores a focus gain and an unchanged state", () => {
+    expect(
+      commitsOnTrackedBlur(
+        facts({ wasFocused: false, focused: true, handledByEvent: false }),
+      ),
+    ).toBe(false);
+    expect(commitsOnTrackedBlur(facts({ wasFocused: false }))).toBe(false);
   });
 });

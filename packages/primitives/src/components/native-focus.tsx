@@ -35,14 +35,34 @@ import * as Option from "effect/Option";
 /** How often the provider asks the renderer which host holds focus. */
 export const NATIVE_FOCUS_POLL_MS = 50;
 
+/**
+ * What the provider has learned from the renderer.
+ *
+ * `sampled` is the difference between "nothing is focused" and "the provider has
+ * not asked yet": a control that mounts focused must not lose its seeded state
+ * before the first sample, while a sample that reports another host (or none)
+ * must be able to clear it (plan `591`).
+ */
+export interface NativeFocusSnapshot {
+  readonly sampled: boolean;
+  /** The focused host id, or `None` when nothing is focused. */
+  readonly focused: Option.Option<number>;
+}
+
 /** `undefined` means there is no provider above this control. */
-const NativeFocusContext = createContext<Option.Option<number> | undefined>(
+const NativeFocusContext = createContext<NativeFocusSnapshot | undefined>(
   undefined,
 );
 
-/** The focused host id, or `undefined` when no provider is mounted. */
-export const useNativeFocusId = (): Option.Option<number> | undefined =>
+/** The provider's latest sample, or `undefined` when no provider is mounted. */
+export const useNativeFocus = (): NativeFocusSnapshot | undefined =>
   useContext(NativeFocusContext);
+
+/** The focused host id, or `undefined` when no provider is mounted. */
+export const useNativeFocusId = (): Option.Option<number> | undefined => {
+  const sample = useNativeFocus();
+  return sample === undefined ? undefined : sample.focused;
+};
 
 /**
  * Whether `hostId` is the element the runtime reports as focused.
@@ -65,14 +85,18 @@ export const NativeFocusProvider = ({
   readonly children: ReactNode;
 }): ReactElement => {
   const { renderer } = useGpuix();
-  const [focused, setFocused] = useState<Option.Option<number>>(Option.none());
+  const [sample, setSample] = useState<NativeFocusSnapshot>({
+    sampled: false,
+    focused: Option.none(),
+  });
 
   const read = useCallback(() => {
     const next = Option.fromNullishOr(renderer?.getFocusedElementId?.());
-    setFocused((current) =>
-      Option.getOrUndefined(current) === Option.getOrUndefined(next)
+    setSample((current) =>
+      current.sampled &&
+      Option.getOrUndefined(current.focused) === Option.getOrUndefined(next)
         ? current
-        : next,
+        : { sampled: true, focused: next },
     );
   }, [renderer]);
 
@@ -83,7 +107,7 @@ export const NativeFocusProvider = ({
   }, [read]);
 
   return (
-    <NativeFocusContext.Provider value={focused}>
+    <NativeFocusContext.Provider value={sample}>
       {children}
     </NativeFocusContext.Provider>
   );

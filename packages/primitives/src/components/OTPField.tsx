@@ -26,7 +26,7 @@
  * cell as well, so it remembers that this key already emptied the cell.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -53,6 +53,7 @@ import {
   useNativeFocusId,
   type StateStyle,
 } from "./internal.js";
+import { isTrackedFocus, useNativeFocus } from "./native-focus.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The public state an `OTPField` style callback receives. */
@@ -242,6 +243,25 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
   const trackedId = useNativeFocusId();
   const trackedIndex = trackedFocusIndex(cellIds.current, trackedId);
   const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
+  const sample = useNativeFocus();
+  /**
+   * The seeded `autoFocus` state (and an event state on a runtime that
+   * dispatches focus) can only be cleared by `onBlur`, which published 0.10.0
+   * never sends (plans `583`, `591`). Once the tracker has sampled, it is the
+   * truth: a seeded index whose cell no longer holds native focus is stale, so
+   * the first cell stops ringing after the user leaves the field.
+   */
+  useEffect(() => {
+    if (sample === undefined || !sample.sampled) return;
+    setFocusedIndex((current) =>
+      Option.exists(current, (index) => {
+        const id = cellIds.current.get(index);
+        return id !== undefined && isTrackedFocus(sample.focused, id);
+      })
+        ? current
+        : Option.none(),
+    );
+  }, [sample]);
   const state = useControlState(
     props.value,
     normalizeOtp(props.defaultValue ?? "", limit),

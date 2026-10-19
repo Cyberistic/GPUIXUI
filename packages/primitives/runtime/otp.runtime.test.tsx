@@ -22,7 +22,7 @@ import { Button } from "../src/components/Button.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yNode, isFocusRing, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
 
 /** The reported values, in order. */
 const recorder = (): {
@@ -133,6 +133,7 @@ it("paints the first cell's ring from mount when autoFocus is set", async () => 
   expect(ringed("otp-cell-1")).toBe(true);
   runtime.click("after");
   runtime.flush();
+  await settleFocus();
   expect(ringed("otp-cell-1")).toBe(false);
 });
 
@@ -248,9 +249,12 @@ it("rings only the cell the caret is in", async () => {
   );
   runtime.click("otp-cell-2");
   runtime.flush();
-  const ringed = Arr.filter(
-    cells(runtime),
-    (cell) => cell.style["boxShadow"] !== undefined,
+  await settleFocus();
+  // A cell also paints the field recipe's resting elevation (`shadow-xs`, plan
+  // 585), so "has a shadow" is not "is focused": the ring is the one with a
+  // positive spread (plan 591).
+  const ringed = Arr.filter(cells(runtime), (cell) =>
+    isFocusRing(cell.style["boxShadow"]),
   );
   expect(ringed).toHaveLength(1);
 });

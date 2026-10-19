@@ -131,7 +131,10 @@ the caller's handler.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). Role, name, tab order, keyboard operation and activation
+  late (plan `590`). The tracker also drives the **draft commit** when focus
+  leaves, because the host never reports the blur; a runtime that does dispatch
+  `onBlur` still commits from the event first, so the two paths cannot double
+  report (plan `591`). Role, name, tab order, keyboard operation and activation
   are unaffected.
 - The input is a `TextInput` with the name from `label`; the steppers are
   `presentation`, so a screen reader sees one named number field rather than
@@ -208,7 +211,13 @@ after the wrapper's chrome:
   paints and announces `100`, `ArrowUp` reports nothing and `ArrowDown` reports
   `99`; an enabled field commits its draft on blur while a field disabled after
   the same edit reports nothing. Measured 2026-10-17 (plans 054 §9, 064 §6 and
-  077 §7) and 2026-10-18 (plans `338`, `339`, `362`). **Plan `371`:** a
+  077 §7) and 2026-10-18 (plans `338`, `339`, `362`). **Plan `591`:** the blur
+  commit runs from the native-focus tracker on a runtime that dispatches no
+  `onBlur` — typing `1.5` with `precision={2}` and leaving the field paints
+  `1.50`, and a deferring controlled parent receives the second value — while
+  the event path still wins where the runtime sends one. The `autoFocus` ring
+  also clears once the tracker sees another host, and the disabled case still
+  reports nothing. **Plan `371`:** a
   non-finite bound is ignored and an inverted pair is swapped — four fields
   (`min={NaN}`, `max={NaN}`, `min=100 max=0`, `step={Infinity}`) paint only
   finite values, the swapped range steps `100 → 99 → 100`, and an infinite step

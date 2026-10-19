@@ -24,13 +24,14 @@
  * reaches the input like every sibling's.
  */
 
-import { useRef, useState, type ReactElement } from "react";
+import { useEffect, useRef, useState, type ReactElement } from "react";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
 import { Icon } from "@gpuixui/icons";
 import {
   clampNumeric,
+  commitsOnTrackedBlur,
   decideNumberKey,
   draftApplies,
   formatNumber,
@@ -288,6 +289,44 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       onSome: (candidate) => candidate.text,
     },
   );
+  const commitDraft = (): void =>
+    Option.match(parseNumericText(text), {
+      onNone: () => setDraft(Option.none()),
+      onSome: (parsed) => {
+        const value = clampNumeric(parsed, range);
+        // Report against the value the field paints, not the parent's raw one:
+        // an out-of-range supplied value has already been normalised on screen,
+        // so committing it must not wake the parent (plan 362).
+        if (!Object.is(value, current)) state.set(value);
+        setDraft(Option.none());
+      },
+    });
+  /**
+   * Published 0.10.0 never dispatches `onBlur` (plan `583`), so the documented
+   * commit-on-blur had no trigger on a consumer install (plan `591`). The native
+   * focus tracker knows the loss; commit on its transition, but let the host
+   * event win when the runtime does send one, and never touch a disabled field
+   * (plan `362`).
+   */
+  const blurHandledByEvent = useRef(false);
+  const wasFocused = useRef(focus.focused);
+  useEffect(() => {
+    const previous = wasFocused.current;
+    wasFocused.current = focus.focused;
+    if (previous === focus.focused) return;
+    if (focus.focused) {
+      blurHandledByEvent.current = false;
+      return;
+    }
+    const tracked = commitsOnTrackedBlur({
+      wasFocused: previous,
+      focused: focus.focused,
+      handledByEvent: blurHandledByEvent.current,
+      disabled: props.disabled === true,
+    });
+    blurHandledByEvent.current = false;
+    if (tracked) commitDraft();
+  }, [focus.focused, props.disabled]);
   const focusInput = (): void =>
     Option.match(Option.fromNullishOr(inputId.current), {
       onNone: () => {},
@@ -308,18 +347,10 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
         onSome: state.set,
       });
     },
-    onCommit: () =>
-      Option.match(parseNumericText(text), {
-        onNone: () => setDraft(Option.none()),
-        onSome: (parsed) => {
-          const value = clampNumeric(parsed, range);
-          // Report against the value the field paints, not the parent's raw
-          // one: an out-of-range supplied value has already been normalised on
-          // screen, so committing it must not wake the parent (plan 362).
-          if (!Object.is(value, current)) state.set(value);
-          setDraft(Option.none());
-        },
-      }),
+    onCommit: () => {
+      blurHandledByEvent.current = true;
+      commitDraft();
+    },
     onValue: (next) => {
       setTouched(true);
       const value = clampNumeric(next, range);

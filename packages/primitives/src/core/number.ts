@@ -141,6 +141,30 @@ export const draftApplies = (draft: NumberDraft, value: number): boolean =>
   Object.is(draft.base, value) ||
   Option.exists(draft.reported, (reported) => Object.is(reported, value));
 
+/** The facts of a focus transition the tracker observed, not the host. */
+export interface TrackedBlur {
+  /** The field was focused on the previous render. */
+  readonly wasFocused: boolean;
+  /** The field is focused on this render. */
+  readonly focused: boolean;
+  /** The host's own `onBlur` already committed this loss. */
+  readonly handledByEvent: boolean;
+  /** A disabled field never commits a draft (plan 362). */
+  readonly disabled: boolean;
+}
+
+/**
+ * Whether a focus loss observed only by the tracker should commit the draft.
+ *
+ * Published GPUix 0.10.0 never dispatches `onBlur` (plan `583`), so the field's
+ * documented commit-on-blur had no trigger on a consumer install. The native
+ * focus tracker knows the loss; this rule decides when it may act on it. The
+ * event path wins so a runtime that *does* dispatch blur cannot commit twice,
+ * and a disabled field stays inert on every path (plan `362`, plan `591`).
+ */
+export const commitsOnTrackedBlur = (spec: TrackedBlur): boolean =>
+  spec.wasFocused && !spec.focused && !spec.disabled && !spec.handledByEvent;
+
 const ARROW_STEPS: Readonly<Record<string, number>> = {
   up: 1,
   down: -1,

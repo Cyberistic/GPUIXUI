@@ -23,7 +23,7 @@ import {
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, settleFocus } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -106,6 +106,7 @@ it("paints the chrome ring from mount when autoFocus is set", async () => {
   expect(ringed(runtime)).toBe(true);
   runtime.click("after");
   runtime.flush();
+  await settleFocus();
   expect(ringed(runtime)).toBe(false);
 });
 
@@ -349,7 +350,7 @@ it("paints the ring on the field's chrome when the input has focus", async () =>
     expect.fail("the input painted no box"),
   );
   runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
-  runtime.flush();
+  await settleFocus();
   const field = Option.getOrElse(runtime.element("nf"), () =>
     expect.fail("the runtime retained no field"),
   );
@@ -455,9 +456,9 @@ it("paints and announces the bound of an out-of-range supplied value", async () 
 });
 
 it("commits the draft when focus leaves an enabled field", async () => {
-  // The control direction for the disabled case below: a deferring controlled
-  // parent sees the blur commit, so its absence there is the guard, not a dead
-  // commit path. Measured before: [12, 12].
+  // The bug guarded (plan 591): published 0.10.0 dispatches no `onBlur`, so the
+  // documented commit-on-blur never ran on a consumer install — a deferring
+  // parent saw [12] here. The native-focus tracker now drives the commit.
   const field = recorder();
   const runtime = await mount(
     <Stack direction="row">
@@ -475,7 +476,28 @@ it("commits the draft when focus leaves an enabled field", async () => {
   expect(field.values).toStrictEqual([12]);
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   expect(field.values).toStrictEqual([12, 12]);
+});
+
+it("reformats a pending draft when the tracker observes focus leaving", async () => {
+  // The visible half of plan 591: the value was reported while typing, but
+  // without the tracked commit `1.5` stayed `1.5` on an unfocused field.
+  const runtime = await mount(
+    <Stack direction="row">
+      <NumberField testId="nf" label="Quantity" precision={2} autoFocus />
+      <Button testId="after">After</Button>
+    </Stack>,
+  );
+  runtime.type("1.5");
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(
+    Option.getOrUndefined(
+      a11yValueOf(runtime.a11y(), { role: "TextInput", label: "Quantity" }),
+    ),
+  ).toBe("1.50");
 });
 
 it("does not commit its draft once the field is disabled", async () => {
@@ -507,5 +529,6 @@ it("does not commit its draft once the field is disabled", async () => {
   runtime.flush();
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   expect(field.values).toStrictEqual([12]);
 });

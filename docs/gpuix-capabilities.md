@@ -206,6 +206,10 @@ Only the **events** are missing. Consequences:
   events. Cost: at most 20 renderer queries per second per window and up to
   50 ms of ring latency. It cannot restore a runtime-internal focus behaviour
   (the headless `Tooltip`'s open-on-focus still depends on the missing events).
+  The sample can also **clear** a seeded or event state the runtime contradicts
+  — otherwise an `autoFocus` control never stopped ringing — and a component's
+  blur action can be driven from that transition; `NumberField` commits its
+  draft that way (plan `591`).
   The measurement and the deferred design are in plan `583`; the tracker is
   plan `590`.
 

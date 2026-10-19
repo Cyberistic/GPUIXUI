@@ -31,7 +31,7 @@ import {
 } from "../core/state.js";
 import { usableText } from "../core/text.js";
 import type { Density, PrimitiveTheme } from "../core/theme.js";
-import { isTrackedFocus, useNativeFocusId } from "./native-focus.js";
+import { isTrackedFocus, useNativeFocus } from "./native-focus.js";
 
 /** The caller's style wins, property by property. */
 export const mergeStyle = (
@@ -262,13 +262,28 @@ export const useFocus = (
 ): FocusState => {
   const [eventFocused, setEventFocused] = useState(initiallyFocused);
   const own = useRef<number | null>(null);
-  const tracked = useNativeFocusId();
+  const sample = useNativeFocus();
   const ref = useCallback((instance: PublicInstance | null) => {
     own.current = instance?.id ?? null;
   }, []);
   const hostId = ownId?.() ?? own.current ?? undefined;
+  /**
+   * The seeded/event state can only be *cleared* by an event, and published
+   * 0.10.0 dispatches none (plan `583`). An `autoFocus` field therefore stayed
+   * focused forever once the tracker named another host: its ring never
+   * cleared and its blur action never ran (plan `591`). When the provider has
+   * sampled and the sample does not name this host, the event state is stale;
+   * the tracker only ever clears it, never sets it, so the event path stays
+   * immediate on a runtime that dispatches.
+   */
+  useEffect(() => {
+    if (sample === undefined || !sample.sampled) return;
+    const id = ownId?.() ?? own.current ?? undefined;
+    if (id === undefined) return;
+    if (!isTrackedFocus(sample.focused, id)) setEventFocused(false);
+  }, [sample, ownId]);
   return {
-    focused: eventFocused || isTrackedFocus(tracked, hostId),
+    focused: eventFocused || isTrackedFocus(sample?.focused, hostId),
     onFocus: () => setEventFocused(true),
     onBlur: () => setEventFocused(false),
     ref,
