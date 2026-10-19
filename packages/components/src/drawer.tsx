@@ -8,10 +8,12 @@
  * bottom. The shared rules — open state, dismiss layer, focus in/return, Tab
  * trap — live in `internal/modal.ts`.
  *
- * Known gaps in 0.10.0: no `aria-modal` or `aria-labelledby` (the surface is
- * named with `aria-label`) and no swipe gesture (no drag host feature). The
- * sideways slide is real: GPUix's motion animates `top`/`left` as relative
- * offsets, so the surface moves without reflowing its content.
+ * Known gaps in 0.10.0: no `aria-modal`, `aria-labelledby` or
+ * `aria-describedby` (the surface is named with `aria-label` and
+ * `DrawerDescription` reaches assistive technology through `aria-description`)
+ * and no swipe gesture (no drag host feature). The sideways slide is real:
+ * GPUix's motion animates `top`/`left` as relative offsets, so the surface moves
+ * without reflowing its content.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -23,10 +25,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
+import { useDescriptionRegistry } from "./internal/description.js";
+import { controlName } from "./internal/name.js";
 import {
   handleModalKeyDown,
   useModalFocus,
@@ -71,6 +76,9 @@ const HEIGHT: Readonly<Record<DrawerSize, number>> = {
 interface DrawerContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** The plain text a mounted {@link DrawerDescription} registers. */
+  readonly description: string | undefined;
+  readonly registerDescription: (text: string) => () => void;
 }
 
 const DrawerContext = createContext<DrawerContextValue | undefined>(undefined);
@@ -109,10 +117,12 @@ export const Drawer = ({
     onOpenChange,
     dismissible,
   });
+  const { description, register: registerDescription } =
+    useDescriptionRegistry();
 
   const context = useMemo<DrawerContextValue>(
-    () => ({ open, setOpen }),
-    [open, setOpen],
+    () => ({ description, open, registerDescription, setOpen }),
+    [description, open, registerDescription, setOpen],
   );
 
   assertParts(drawerRoot, children);
@@ -229,6 +239,7 @@ const DrawerSurface = ({
   label,
   showClose = true,
   initialFocus,
+  "aria-description": authoredDescription,
   children,
   onKeyDown,
   onMouseDownOutside,
@@ -238,7 +249,7 @@ const DrawerSurface = ({
   ...rest
 }: DrawerContentProps) => {
   const theme = useTheme();
-  const { open, setOpen } = useDrawerContext();
+  const { description, open, setOpen } = useDrawerContext();
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(drawerContent, children);
@@ -293,6 +304,7 @@ const DrawerSurface = ({
               aria-label={label}
               tabIndex={-1}
               {...rest}
+              aria-description={authoredDescription ?? description}
               ref={setContentElement}
               testId={testId}
               onMouseDownOutside={(event) => {
@@ -374,8 +386,20 @@ export const DrawerTitle = ({ level, style, ...rest }: DrawerTitleProps) => {
 };
 
 /** One paragraph of supporting copy under {@link DrawerTitle}. */
-export const DrawerDescription = ({ style, ...rest }: Props) => {
+export const DrawerDescription = ({
+  "aria-description": authoredDescription,
+  children,
+  style,
+  ...rest
+}: Props) => {
   const theme = useTheme();
+  const { registerDescription } = useDrawerContext();
+  const text = controlName(authoredDescription, children);
+  useEffect(
+    () => (text === undefined ? undefined : registerDescription(text)),
+    [registerDescription, text],
+  );
+
   return (
     <text
       {...rest}
@@ -383,7 +407,9 @@ export const DrawerDescription = ({ style, ...rest }: Props) => {
         { ...textStyle(theme, "body"), color: theme.colors.mutedForeground },
         style,
       )}
-    />
+    >
+      {children}
+    </text>
   );
 };
 
@@ -450,6 +476,7 @@ export const drawerMeta = {
     "no swipe-to-dismiss: 0.10.0 has no drag host feature",
     "no zoom/transform: the exit is a fade plus a measured top/left slide",
     "no aria-modal or aria-labelledby in 0.10.0: the surface is named with aria-label",
+    "no aria-describedby in 0.10.0: DrawerDescription is announced through aria-description, and an explicit content value wins",
     "the veil is an anchored element at window coordinates because the release ships no portal",
     "sizes are layout constants: tokens carry no drawer-size role",
   ],

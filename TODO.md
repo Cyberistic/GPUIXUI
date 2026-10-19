@@ -420,6 +420,14 @@ retired once both branches are one
       description first; 4 new native cases (Stepper 10, Timeline 8), the four
       failing on the old source; docs, `docs/component-api.md`, `COMPONENTS.md`
       and the inventory synced (owner: components)
+    - [x] A dialog or drawer announces its description — plan 627: 0.10.0 has
+      no `aria-describedby`, so `DialogDescription`/`DrawerDescription` were
+      visual only and a screen reader heard the name but not the consequence.
+      The parts register their plain text with the modal root and the surface
+      delivers it through `aria-description` (an explicit content value wins);
+      2 dialog + 1 drawer + 1 confirmation native cases (Dialog 19, Drawer 16,
+      Confirmation dialog 6), three mutation proofs; docs, `COMPONENTS.md` and
+      the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

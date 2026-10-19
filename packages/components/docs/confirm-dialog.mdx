@@ -60,7 +60,9 @@ description are unchanged: the wording, not the colour, carries the consequence.
 
 ## Accessibility and limitations
 
-- The dialog's accessible name is `title`; the description is the body text.
+- The dialog's accessible name is `title`; the description is announced to
+  assistive technology through `aria-description`, since `0.10.0` has no
+  `aria-describedby`.
 - No `aria-modal`/`aria-labelledby` in `@gpuix/native@0.10.0` — the same
   limitation as **Dialog**, with the evidence on that page.
 - The busy indicator is a `…` text glyph: `@gpuixui/primitives` now ships a
@@ -96,10 +98,11 @@ description are unchanged: the wording, not the colour, carries the consequence.
 
 ## Verification
 
-`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (5 tests):
+`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (6 tests):
 Cancel-focused-on-open, Enter cancelling without confirming, confirm reporting
-once and leaving the dialog open, both actions and Escape inert while loading, and
-the danger tone reading the destructive roles.
+once and leaving the dialog open, both actions and Escape inert while loading, the
+description announced on the dialog, and the danger tone reading the destructive
+roles.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

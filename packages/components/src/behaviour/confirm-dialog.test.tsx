@@ -19,6 +19,7 @@ import {
   focusedTestId,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
+import { nodesWithRole } from "../internal/a11y.js";
 
 /** A caller that owns the open state, exactly as the API requires. */
 const Harness = ({
@@ -96,6 +97,16 @@ describe("ConfirmDialog", () => {
 
     expect(onConfirm).not.toHaveBeenCalled();
     expect(confirm.renderer.findByTestId("confirm-accept")).toBeDefined();
+
+    confirm.unmount();
+  });
+
+  it("announces the confirmation's description", () => {
+    const confirm = renderComponent(<Harness onConfirm={vi.fn()} />);
+
+    expect(nodesWithRole(confirm.renderer, "dialog")[0]?.description).toEqual(
+      Option.some("The workspace and its 42 files are removed permanently."),
+    );
 
     confirm.unmount();
   });

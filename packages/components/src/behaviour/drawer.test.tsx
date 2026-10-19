@@ -111,6 +111,17 @@ describe("Drawer", () => {
     drawer.unmount();
   });
 
+  it("announces the description through aria-description", () => {
+    const drawer = renderComponent(<Workspace />);
+    clickCentreOf(drawer, "open");
+
+    expect(nodesWithRole(drawer.renderer, "dialog")[0]?.description).toEqual(
+      Option.some("Narrow the result set."),
+    );
+
+    drawer.unmount();
+  });
+
   it("takes the title's heading level from the caller", () => {
     const standard = renderComponent(<Workspace />);
     clickCentreOf(standard, "open");

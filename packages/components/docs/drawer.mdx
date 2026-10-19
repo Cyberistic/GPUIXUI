@@ -88,7 +88,7 @@ merges `style` last.
 | `DrawerContent` | veil + `role="dialog"` surface | `side?`, `size?`, `label` (required), `showClose?`, `initialFocus?`, children |
 | `DrawerHeader` | heading block | children |
 | `DrawerTitle` | heading (level 2 by default) | `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6`, text props |
-| `DrawerDescription` | muted copy | text props |
+| `DrawerDescription` | muted copy | registers its plain text as the drawer's `aria-description` |
 | `DrawerFooter` | right-aligned actions | children |
 
 `DrawerContent` renders nothing while the drawer is closed and through its exit
@@ -106,6 +106,9 @@ with no code change — see [Theming](/docs/theming).
 - `DrawerContent` is a `dialog` named by the required `label`; `0.10.0` has no
   `aria-modal` or `aria-labelledby`, and its title is a heading, not the dialog's
   accessible name.
+- `DrawerDescription` is announced as the drawer's description through
+  `aria-description`, because `0.10.0` also has no `aria-describedby`. An explicit
+  `aria-description` on `DrawerContent` wins over the registered part.
 - `DrawerTitle`'s `level` is the caller's, defaulting to 2; a raw `aria-level`
   is still honoured when no `level` is given, and an explicit `level` wins.
 - Focus enters the surface and returns to the opener. `initialFocus` can put it
@@ -131,8 +134,9 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (15 tests): open
-lifecycle, dialog naming and `aria-expanded`, the title's default and caller-set
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (16 tests): open
+lifecycle, dialog naming and `aria-expanded`, the description announced through
+`aria-description`, the title's default and caller-set
 heading levels, full-window veil, focus in/return,
 backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
 uninterruptible drawer, a controlled drawer that stays closed, and the motion —

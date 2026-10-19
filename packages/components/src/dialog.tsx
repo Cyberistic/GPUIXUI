@@ -13,10 +13,12 @@
  * - focus-in, focus-return and the Tab trap use the renderer's own
  *   `focusElement` / `focusNextWithin` / `focusPreviousWithin`.
  *
- * Known gaps in 0.10.0, recorded rather than papered over: no `aria-modal` and no
- * `aria-labelledby`, so the dialog is named with `aria-label` and its title is a
- * heading, not the dialog's accessible name; no `preventDefault`, so a key can be
- * observed but not cancelled.
+ * Known gaps in 0.10.0, recorded rather than papered over: no `aria-modal`, no
+ * `aria-labelledby` and no `aria-describedby`, so the dialog is named with
+ * `aria-label`, its title is a heading rather than the dialog's accessible name,
+ * and `DialogDescription` reaches assistive technology through the supported
+ * `aria-description` channel; no `preventDefault`, so a key can be observed but
+ * not cancelled.
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -28,10 +30,13 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
+import { useDescriptionRegistry } from "./internal/description.js";
+import { controlName } from "./internal/name.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
@@ -67,6 +72,9 @@ const MAX_WIDTH: Readonly<Record<DialogSize, number>> = {
 interface DialogContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** The plain text a mounted {@link DialogDescription} registers. */
+  readonly description: string | undefined;
+  readonly registerDescription: (text: string) => () => void;
 }
 
 const DialogContext = createContext<DialogContextValue | undefined>(undefined);
@@ -112,10 +120,12 @@ export const Dialog = ({
     onOpenChange,
     dismissible,
   });
+  const { description, register: registerDescription } =
+    useDescriptionRegistry();
 
   const context = useMemo<DialogContextValue>(
-    () => ({ open, setOpen }),
-    [open, setOpen],
+    () => ({ description, open, registerDescription, setOpen }),
+    [description, open, registerDescription, setOpen],
   );
 
   assertParts(dialogRoot, children);
@@ -214,6 +224,7 @@ const DialogSurface = ({
   label,
   showClose = true,
   initialFocus,
+  "aria-description": authoredDescription,
   children,
   onKeyDown,
   onMouseDownOutside,
@@ -223,7 +234,7 @@ const DialogSurface = ({
   ...rest
 }: DialogContentProps) => {
   const theme = useTheme();
-  const { open, setOpen } = useDialogContext();
+  const { description, open, setOpen } = useDialogContext();
   const renderer = useGpuix().renderer ?? undefined;
   const window = useWindowSize();
   assertParts(dialogContent, children);
@@ -272,6 +283,7 @@ const DialogSurface = ({
             aria-label={label}
             tabIndex={-1}
             {...rest}
+            aria-description={authoredDescription ?? description}
             ref={setContentElement}
             testId={testId}
             onMouseDownOutside={(event) => {
@@ -369,8 +381,20 @@ export const DialogTitle = ({ level, style, ...rest }: DialogTitleProps) => {
 };
 
 /** One paragraph of supporting copy under {@link DialogTitle}. */
-export const DialogDescription = ({ style, ...rest }: Props) => {
+export const DialogDescription = ({
+  "aria-description": authoredDescription,
+  children,
+  style,
+  ...rest
+}: Props) => {
   const theme = useTheme();
+  const { registerDescription } = useDialogContext();
+  const text = controlName(authoredDescription, children);
+  useEffect(
+    () => (text === undefined ? undefined : registerDescription(text)),
+    [registerDescription, text],
+  );
+
   return (
     <text
       {...rest}
@@ -378,7 +402,9 @@ export const DialogDescription = ({ style, ...rest }: Props) => {
         { ...textStyle(theme, "body"), color: theme.colors.mutedForeground },
         style,
       )}
-    />
+    >
+      {children}
+    </text>
   );
 };
 
@@ -450,6 +476,7 @@ export const dialogMeta = {
   focusable: true,
   limitations: [
     "no aria-modal and no aria-labelledby in 0.10.0: the dialog is named with aria-label and its title is a heading",
+    "no aria-describedby in 0.10.0: DialogDescription is announced through aria-description, and an explicit content value wins",
     "the veil is an anchored element at window coordinates because the release ships no portal; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",
     "zoom-in-95/zoom-out-95 are unsupported: GPUI has no transform, so the dialog fades for 100 ms and never scales",
   ],

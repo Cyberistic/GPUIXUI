@@ -261,6 +261,40 @@ describe("Dialog", () => {
     dialog.unmount();
   });
 
+  it("announces the description through aria-description, since 0.10.0 has no describedby", () => {
+    const dialog = renderComponent(<Workspace />);
+    clickCentreOf(dialog, "open");
+
+    expect(nodesWithRole(dialog.renderer, "dialog")[0]?.description).toEqual(
+      Option.some("This cannot be undone."),
+    );
+
+    dialog.unmount();
+  });
+
+  it("lets the caller's aria-description on the content win", () => {
+    const dialog = renderComponent(
+      <Dialog defaultOpen>
+        <DialogContent
+          label="Delete workspace"
+          testId="dialog"
+          aria-description="Custom description"
+        >
+          <DialogHeader>
+            <DialogTitle>Delete workspace</DialogTitle>
+            <DialogDescription>This cannot be undone.</DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>,
+    );
+
+    expect(nodesWithRole(dialog.renderer, "dialog")[0]?.description).toEqual(
+      Option.some("Custom description"),
+    );
+
+    dialog.unmount();
+  });
+
   it("reads the popover and overlay roles from whichever theme is active", () => {
     const assertTheme = (
       theme: TestTheme,
