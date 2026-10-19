@@ -676,7 +676,8 @@ one body line,
 fit an icon, a field adornment or a chip into a content box shorter or narrower
 than they are — including each control size's matching icon tier against its own
 `controlHeight`, which is how a large `IconButton` and a slider's thumb are
-measured, raise an inline icon above the caption or label line it sits in,
+measured — or choose a field minimum too small for the query row it documents,
+raise an inline icon above the caption or label line it sits in,
 raise an inline avatar above the dense row it leads,
 flush a control's horizontal padding to zero or tighter than the theme's own
 hairline (`spacing["2xs"]`), invert a size ladder — the size ladders are read

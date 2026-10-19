@@ -1062,7 +1062,7 @@ every density.
 | `dimensions.overlayMinWidth` | 180 | narrowest menu surface; holds a row's padding, icon, gap and one `label` glyph |
 | `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
-| `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action |
+| `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, a leading glyph, the query, the action and their two gaps, or a token-input chip |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its insets, gap, disclosure glyph and one `label` glyph |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
@@ -2400,7 +2400,13 @@ the row cannot fit it; a timing
 must also be finite; a chip must fit inside the field's content box — the
 minimum width less the field's two borders and its `controlPaddingX.md` padding —
 because a chip equal to the outer width has no room for the chrome painted
-inside it; an
+inside it; the same minimum also holds the query row the token documents —
+`2 * spacing.md + 2 * fieldAdornmentSize + 2 * spacing.md +
+typography.body.fontSize`, its padding, a leading glyph, the gap, one query
+glyph, the same gap and the trailing action — and the larger of the two bounds
+is the rule, so lowering `chipMinWidth` cannot free a field that can no longer
+show its own query (plan `624`). At the shipped metrics the query row needs
+78px, the chip 102px, and the shipped 200px field clears the larger; an
 overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
 viewport shorter than a row clips every option; a cubic-bezier easing must be
 four finite control points with both x values inside `0…1`, because the runtime

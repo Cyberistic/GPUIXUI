@@ -2698,6 +2698,20 @@ describe("docs/design-system.md", () => {
     expect(markdownProse).toContain(sentence);
   });
 
+  it("states the field's own query-row bound", () => {
+    const chrome =
+      2 * spacing.md +
+      2 * dimensions.fieldAdornmentSize +
+      2 * spacing.md +
+      typography.body.fontSize;
+    const chip =
+      dimensions.chipMinWidth +
+      2 * defaultDensity.controlPaddingX.md +
+      2 * borderWidth.thin;
+    const sentence = `At the shipped metrics the query row needs ${chrome}px, the chip ${chip}px, and the shipped ${dimensions.fieldMinWidth}px field clears the larger`;
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the drawer, chat and carousel dimensions", () => {
     const sentence = `A drawer opens ${dimensions.drawerWidthSm}/${dimensions.drawerWidthMd}/${dimensions.drawerWidthLg}px wide, or ${dimensions.drawerHeightSm}/${dimensions.drawerHeightMd}/${dimensions.drawerHeightLg}px tall from the bottom; a message viewport never shrinks below ${dimensions.chatViewportMinHeight}px, and a carousel's active dot is ${dimensions.carouselIndicatorActiveWidth}px beside an idle ${dimensions.carouselIndicatorSize}px one.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);

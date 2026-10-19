@@ -295,6 +295,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [621](./621-time-segment-two-digits.md) | The time segment holds two digits | F | 358, 384, 552, 556, 620 | done |
 | [622](./622-row-press-direction.md) | The selectable row's press direction | F | 502, 619, 621 | done |
 | [623](./623-selected-label-tier.md) | The selected row's label is a tier below its title | F | 312, 316, 381, 500 | done |
+| [624](./624-field-query-and-action.md) | The field minimum holds the query and the action it documents | F | 353, 358, 384, 523, 620 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3200,6 +3201,19 @@ moves; the tightest is **1.106:1** (`Dark · Windows` on `hover`), which the
 catalogue now derives and the page states. The old rationale in three documents
 — that adding the pair “would demand a step the design does not have and report
 every shipped set” — was false and is replaced.
+
+Plan `624` closes the last unmeasured composition in a field's minimum width.
+`dimensions.fieldMinWidth` is documented as "narrowest field that shows a query
+and an action", but plan 384 had only measured the **chip** inside it: a theme
+that lowered `chipMinWidth` to 10 and `fieldMinWidth` to 60 cleared every rule
+while a `SearchInput` paints 62px of padding, leading glyph, gap, query, gap and
+clear control in a 42px content box. The rule now takes the larger of the chip's
+content box and the field's own query row — `2 * spacing.md + 2 *
+fieldAdornmentSize + 2 * spacing.md + body.fontSize` — so one member keeps one
+diagnostic and plan 384's 102px bound is unchanged at the shipped metrics. The
+query row needs 78px, every shipped 200px field clears the larger bound at
+1.96×, and no token value moves. The suite proves both directions: the new
+cases fail on the pre-fix rule and pass after it.
 
 ## How to use a plan
 

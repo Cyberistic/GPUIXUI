@@ -775,6 +775,7 @@ its own test suite.
 The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
+shrink a field minimum below the query and the action its token documents,
 shrink the smallest control below one label line or one body line plus its
 borders, paint a control size's matching icon tier larger than that control's
 content box, raise an inline icon above the caption or label line it sits in, raise

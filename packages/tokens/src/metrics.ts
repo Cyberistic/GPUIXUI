@@ -507,7 +507,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  * - **dimensions**: every surface metric — the shipped members and one a theme
  *   adds, read from the theme's own group — is positive, each documented range
  *   has a minimum below its default, a chip fits in the field's content box — its
- *   minimum width less the field's two borders and horizontal padding — a date
+ *   minimum width less the field's two borders and horizontal padding — and the
+ *   same minimum holds the query row the token documents: the field's
+ *   `spacing.md` padding, a leading `fieldAdornmentSize` glyph, the gap, one
+ *   `body` query glyph, the same gap and the trailing action; a date
  *   trigger holds its own insets, its gap, one `label` glyph and its `caption`
  *   disclosure glyph, the overlay scroll height fits one row, because a list
  *   viewport shorter than a row clips every option, the message viewport fits
@@ -824,15 +827,26 @@ export function themeMetricFailures(
       ],
       "increasing",
     ),
-    // The chip sits inside the field's content box: the field's two borders
-    // and its horizontal control padding are inside `fieldMinWidth`.
+    // The field's content box holds one of the two compositions its minimum
+    // width exists for: a token-input chip, or the query row `docs/tokens.md`
+    // documents — a leading glyph, the query and a trailing action. The chip
+    // needs the field's two borders and its horizontal control padding; the
+    // query row paints the field's own `spacing.md` padding and two gaps
+    // (`SearchInput`). The larger bound wins, so one value keeps one
+    // diagnostic.
     ...atLeast(
       "dimensions",
       "fieldMinWidth",
       dimensions.fieldMinWidth,
-      dimensions.chipMinWidth +
-        2 * density.controlPaddingX.md +
-        2 * borderWidth.thin,
+      Math.max(
+        dimensions.chipMinWidth +
+          2 * density.controlPaddingX.md +
+          2 * borderWidth.thin,
+        2 * spacing.md +
+          2 * dimensions.fieldAdornmentSize +
+          2 * spacing.md +
+          typography.body.fontSize,
+      ),
     ),
     // A date trigger paints its value and a disclosure glyph inside its own
     // insets and gap; a field narrower than that chrome clips one of them. A

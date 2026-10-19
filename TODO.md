@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 266/339
+`[x]` `[████████░░]` 267/340
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2257,6 +2257,13 @@ the four row fills while `themeContrastFailures` and the hierarchy check both
 returned `[]`; `textTiers` gains the state pair, every shipped set already
 clears the step (1.106:1 at the tightest, `Dark · Windows` on `hover`) and no
 colour moves (plan 623)
+`[x]` Hold the field minimum to the query row it documents — `fieldMinWidth`
+was checked only against a chip, so a copied style with `chipMinWidth: 10` and
+`fieldMinWidth: 60` returned `[]` while a search field's clear control
+overlapped its query; the chip rule now takes the larger of the chip's content
+box and the field's own padding, leading glyph, gap, query glyph, gap and
+action, every shipped set still passes at the 102px chip bound and no value
+moves (plan 624)
 
 ## Phase C — Tier 1–2 components
 
