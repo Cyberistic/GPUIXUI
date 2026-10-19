@@ -1,10 +1,16 @@
-# 690 — The platform registry's retyped variant lists
+# 692 — The platform registry's retyped variant lists
 
 > **Status: executed 2026-10-19.** `PlatformVariant` moved beside `PlatformName`,
 > `platformMonos` is typed against it, `knownPlatform` and the fallback derive
 > from the registry, and the suites use `platformVariants` plus an
 > unknown-platform case. No token value, family, pair, floor or shipped theme
 > moves. Execution evidence is at the end of this plan.
+>
+> **Renumbered from `690`** on 2026-10-19: the `playground` worktree committed
+> `690-live-image-source-pixels.md` (still planned) while this plan was being
+> executed. A duplicate in the union index is worse than a minute-old rename, so
+> this plan moved to the next free number, `692`; its commit message and the
+> plan-history note keep the old number.
 
 ## Why
 
@@ -170,7 +176,7 @@ tied to the union, and the suite's "one installed-mono registry" case iterated
 its own local copy of the three names; `PlatformVariant` now lives beside
 `PlatformName`, `platformMonos` satisfies a `Record<PlatformVariant, string>`,
 `knownPlatform` derives from `platformNames`, and the tests derive the variant
-list from `platformVariants` plus an unknown-platform fallback case (plan 690)
+list from `platformVariants` plus an unknown-platform fallback case (plan 692)
 ```
 
 Also extend the existing repo-tooling uniqueness row with the `689` collision
@@ -182,7 +188,7 @@ current.
 Add one row to the tokens table:
 
 ```
-| [690](./690-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
+| [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
 ```
 
 Add a short paragraph after the `689` summary naming the fix and stating that no

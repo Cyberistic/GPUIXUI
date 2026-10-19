@@ -2640,14 +2640,14 @@ its own local copy of the three names. `PlatformVariant` now lives beside
 `PlatformName`, `platformMonos` satisfies a `Record<PlatformVariant, string>`,
 `knownPlatform` derives from `platformNames`, the fallback derives from the
 registry, and the suites use `platformVariants` plus an unknown-platform case
-(plan 690)
+(plan 692)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now
 collides too (our field-selection plan beside components' menu group name). Add
 a check that fails when two worktrees carry different plan files under one
 number, and take the next free number before writing a plan (found while
-landing plan 688; `689` found while landing plan 690)
+landing plan 688; `689` found while landing plan 692)
 
 ## Phase C — Tier 1–2 components
 
