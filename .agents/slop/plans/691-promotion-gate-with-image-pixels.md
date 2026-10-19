@@ -361,6 +361,17 @@ was then stopped. Every number it produced agrees with this session's run
 `scripts/` guard (`TODO.md` → Process). Two independent headless runs and the
 live artifact agreeing is stronger evidence than one, and no work was lost.
 
+**The ±1 branch, measured twice.** A third full `--all` run on the same head
+(the older session's own foreground run, 19:03, after the ledgers above) was
+again **95/95**, exit `0`, 61 capabilities, `live-content` at **68**, but
+reported **2544 checks** in **1171.8 s**. The one-check difference is
+`live-tier2-editing`: it branches on whether the window delivered React's
+`onBlur` (a documented window-state property, plans `390`/`555`/`605`), and the
+missed-blur branch adds three checks where the commit branch adds two. The
+2545 run took the missed-blur branch; the 2544 run took the commit branch. Both
+are green, so this registry's gate total is **2544–2545**, and a future run
+must not read the lower number as a dropped check. No number above changes.
+
 **No source change.** No scenario, view, host verb, component, registry entry
 or test was edited. The owner/supervisor still performs the promotion merge;
 this workstream never pushes to `master`.
