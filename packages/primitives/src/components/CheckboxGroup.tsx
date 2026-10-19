@@ -18,7 +18,7 @@
  * do not move between checkboxes and are deliberately not handled.
  */
 
-import { useLayoutEffect, useRef, useState, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
@@ -50,11 +50,9 @@ import {
   hasText,
   optionText,
   resolvePartStyle,
-  trackedFocusIndex,
   usableLabel,
   useControlState,
-  useNativeFocusId,
-  useScrollReveal,
+  useRovingFocus,
   type StateStyle,
 } from "./internal.js";
 import { Text } from "./Text.js";
@@ -373,46 +371,36 @@ export const renderCheckboxGroup = (
 /** Several checkboxes that make up one selection. */
 export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const theme = useTheme();
-  const rowIds = useRef<Map<number, number>>(new Map());
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
+  const focus = useRovingFocus(
+    Option.match(usableLabel(props.selectAll), {
+      onNone: () => Arr.map(props.options, (option) => option.value),
+      onSome: () =>
+        Arr.prepend(
+          Arr.map(props.options, (option) => option.value),
+          null,
+        ),
+    }),
   );
   const state = useControlState<ReadonlyArray<string>>(
     props.value,
     props.defaultValue ?? [],
     props.onValueChange,
   );
-  const trackedId = useNativeFocusId();
-  const trackedIndex = trackedFocusIndex(rowIds.current, trackedId);
-  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
-  const focusedRow = Option.getOrUndefined(mergedFocus);
-  const reveal = useScrollReveal();
-  useLayoutEffect(() => {
-    if (reveal === undefined || focusedRow === undefined) return;
-    const id = rowIds.current.get(focusedRow);
-    if (id !== undefined) reveal(id);
-  }, [focusedRow, reveal]);
   return renderCheckboxGroup(
     props,
     theme,
     state.value,
     {
-      focusedIndex: mergedFocus,
-      onFocus: (index) => setFocusedIndex(Option.some(index)),
-      onBlur: (index) =>
-        setFocusedIndex((current) =>
-          Option.filter(current, (focused) => focused !== index),
-        ),
+      focusedIndex: focus.focusedIndex,
+      onFocus: focus.onFocus,
+      onBlur: focus.onBlur,
     },
     {
       onToggle: (value) =>
         state.set(toggleGroupValue(state.value.current, value)),
       onToggleAll: () =>
         state.set(toggleGroupAll(state.value.current, props.options)),
-      registerRow: (index) => (instance) => {
-        if (instance === null) rowIds.current.delete(index);
-        else rowIds.current.set(index, instance.id);
-      },
+      registerRow: focus.registerItem,
     },
   );
 };

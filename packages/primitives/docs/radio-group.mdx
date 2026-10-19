@@ -72,7 +72,8 @@ keeps its accent, so the error cannot be mistaken for the selection.
 Arrows and Home/End **select as they move** and take focus with them, matching
 the platform radio contract. The tab stop is the selection, or the first enabled
 option while nothing is selected; a controlled `value` change from the parent
-moves the tab stop with it.
+moves the tab stop with it. The focus ring follows the focused option's
+**identity**, so reordering or filtering `options` does not move it.
 
 `Enter` and `Space` act on the option that **holds focus**, which is not always
 the selected one: a controlled parent can defer or reject an arrow's move (a

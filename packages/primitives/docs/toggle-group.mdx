@@ -80,7 +80,8 @@ The group is **one tab stop** — the selected item (`single`) or the item that
 last held focus (`multiple`); with nothing selected (`single`), the first enabled
 item holds it. An option valued `""` is an ordinary choice and does not become
 the stop merely because the group has no value (plan `502`). Tab moves into the
-group once and out again.
+group once and out again. The stop follows the item's **value**, so reordering
+or filtering `options` does not move it to whatever now sits at the old index.
 
 | Key | `single` | `multiple` |
 | --- | -------- | ---------- |

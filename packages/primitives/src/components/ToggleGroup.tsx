@@ -272,9 +272,11 @@ export const renderToggleGroup = (
 export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const focus = useRovingFocus();
-  const [multipleIndex, setMultipleIndex] = useState(() =>
-    initialActiveIndex(props.options, undefined),
+  const focus = useRovingFocus(
+    Arr.map(props.options, (option) => option.value),
+  );
+  const [multipleValue, setMultipleValue] = useState<Option.Option<string>>(
+    Option.none(),
   );
   const controlled =
     props.type === "single"
@@ -308,18 +310,13 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
           props.options,
           Option.getOrUndefined(Arr.get(state.value.current, 0)),
         )
-      : initialActiveIndex(
-          props.options,
-          Option.getOrUndefined(
-            Option.map(
-              Arr.get(props.options, multipleIndex),
-              (option) => option.value,
-            ),
-          ),
-        );
+      : initialActiveIndex(props.options, Option.getOrUndefined(multipleValue));
   const markFocused = (index: number): void => {
     focus.onFocus(index);
-    if (props.type === "multiple") setMultipleIndex(index);
+    if (props.type === "multiple")
+      setMultipleValue(
+        Option.map(Arr.get(props.options, index), (option) => option.value),
+      );
   };
   const focusItem = (index: number): void => {
     Option.match(focus.idOf(index), {

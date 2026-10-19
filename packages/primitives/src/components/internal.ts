@@ -357,25 +357,31 @@ export const useFocus = (
 };
 
 /**
- * The index of the element whose host id is the runtime's focused id.
+ * The index of the item whose host id is `hostId`, or `None` when the item is
+ * no longer mounted.
  *
  * The roving composites keep their item ids in a ref map for
  * `renderer.focusElement`. The tracked id turns that map back into the index
  * the ring paints from, so a focus change the runtime never reports still moves
  * the paint (plan `590`).
  */
+export const indexOfHost = (
+  ids: ReadonlyMap<number, number>,
+  hostId: number,
+): Option.Option<number> =>
+  Option.map(
+    Arr.findFirst(Arr.fromIterable(ids), ([, id]) => id === hostId),
+    ([index]) => index,
+  );
+
+/** The index of the element whose host id is the runtime's focused id. */
 export const trackedFocusIndex = (
   ids: ReadonlyMap<number, number>,
   tracked: Option.Option<number> | undefined,
 ): Option.Option<number> =>
   tracked === undefined
     ? Option.none()
-    : Option.flatMap(tracked, (trackedId) =>
-        Option.map(
-          Arr.findFirst(Arr.fromIterable(ids), ([, id]) => id === trackedId),
-          ([index]) => index,
-        ),
-      );
+    : Option.flatMap(tracked, (trackedId) => indexOfHost(ids, trackedId));
 
 /** Which item of a roving composite holds focus, and the state that tracks it. */
 export interface RovingFocus {
@@ -389,51 +395,110 @@ export interface RovingFocus {
   readonly idOf: (index: number) => Option.Option<number>;
 }
 
+/** The stable identity of one roving item: an option value, or an index. */
+type FocusKey = string | number | null;
+
+/** The identity of the item at `index`, given the caller's ordered keys. */
+const identityAt = (
+  keys: ReadonlyArray<FocusKey> | undefined,
+  index: number,
+): FocusKey => (keys === undefined ? index : (keys[index] ?? null));
+
 /**
  * The focused item of a roving composite.
  *
  * The event state is the fastest source and is all there is without a provider.
- * It cannot *clear* itself on the pinned release runtime, which moves focus but
- * dispatches no `onBlur` (plan `583`), so a ring and the keyboard cursor would
- * outlive focus (plan `601`). The provider's sample clears the event state when
- * it names none of this composite's items, exactly as `useFocus` does
- * (plan `591`). A sample only ever clears: a focus event that beat the next
- * sample still paints, because the effect runs when the sample changes.
+ * It is stored as the item's **host id**, not its index: the options are data, so
+ * a caller may reorder or filter them, and an index would then name a different
+ * item — the ring would jump while native focus stayed put (plan `692`). The id
+ * is the identity React and the renderer already preserve.
+ *
+ * The host id is registered under the item's **key**, not its index, for the same
+ * reason: React does not re-run a moved row's ref, so an index-keyed map would
+ * keep the old positions after a reorder. Pass the ordered keys (an option's
+ * value; `null` for a parent row) so the current index is derived from the
+ * identity each render. Without keys the index is the identity (a star, a range
+ * thumb) — those items do not reorder.
+ *
+ * The event state cannot *clear* itself on the pinned release runtime, which
+ * moves focus but dispatches no `onBlur` (plan `583`), so a ring and the
+ * keyboard cursor would outlive focus (plan `601`). The provider's sample clears
+ * the event host when it names none of this composite's items, exactly as
+ * `useFocus` does (plan `591`). A sample only ever clears: a focus event that
+ * beat the next sample still paints, because the effect runs when the sample
+ * changes.
  */
-export const useRovingFocus = (): RovingFocus => {
-  const [eventFocus, setEventFocus] = useState<Option.Option<number>>(
+export const useRovingFocus = (keys?: ReadonlyArray<FocusKey>): RovingFocus => {
+  const [eventHost, setEventHost] = useState<Option.Option<number>>(
     Option.none(),
   );
-  const ids = useRef<Map<number, number>>(new Map());
+  const hosts = useRef<Map<FocusKey, number>>(new Map());
+  const keysRef = useRef(keys);
+  keysRef.current = keys;
   const sample = useNativeFocus();
-  const tracked = trackedFocusIndex(ids.current, sample?.focused);
+  const focusedIndexOf = (hostId: number): Option.Option<number> => {
+    const currentKeys = keysRef.current;
+    return currentKeys === undefined
+      ? Option.flatMap(
+          Arr.findFirst(
+            Arr.fromIterable(hosts.current),
+            ([, id]) => id === hostId,
+          ),
+          ([key]) =>
+            typeof key === "number" ? Option.some(key) : Option.none(),
+        )
+      : Option.flatMap(
+          Arr.findFirst(
+            Arr.map(currentKeys, (key, index) => [key, index] as const),
+            ([key]) => hosts.current.get(key) === hostId,
+          ),
+          ([, index]) => Option.some(index),
+        );
+  };
+  const tracked =
+    sample === undefined
+      ? Option.none<number>()
+      : Option.flatMap(sample.focused, focusedIndexOf);
+  const trackedSome = Option.isSome(tracked);
   useEffect(() => {
-    if (sample === undefined || !sample.sampled) return;
-    if (Option.isSome(trackedFocusIndex(ids.current, sample.focused))) return;
-    setEventFocus(Option.none());
-  }, [sample]);
-  const focusedIndex = Option.isSome(eventFocus) ? eventFocus : tracked;
+    if (sample === undefined || !sample.sampled || trackedSome) return;
+    setEventHost((current) =>
+      Option.isSome(current) ? Option.none() : current,
+    );
+  }, [sample, trackedSome]);
+  const eventIndex = Option.flatMap(eventHost, focusedIndexOf);
+  const focusedIndex = Option.isSome(eventIndex) ? eventIndex : tracked;
   const focusedItem = Option.getOrUndefined(focusedIndex);
   /* An item that just took focus must be visible inside a ScrollArea (plan
      606); the effect runs on the item, not on every render of the group. */
   const reveal = useScrollReveal();
   useLayoutEffect(() => {
     if (reveal === undefined || focusedItem === undefined) return;
-    const id = ids.current.get(focusedItem);
+    const id = hosts.current.get(identityAt(keysRef.current, focusedItem));
     if (id !== undefined) reveal(id);
   }, [focusedItem, reveal]);
   return {
     focusedIndex,
-    onFocus: (index) => setEventFocus(Option.some(index)),
-    onBlur: (index) =>
-      setEventFocus((current) =>
-        Option.filter(current, (focused) => focused !== index),
+    onFocus: (index) =>
+      setEventHost(
+        Option.fromNullishOr(hosts.current.get(identityAt(keys, index))),
       ),
-    registerItem: (index) => (instance) => {
-      if (instance === null) ids.current.delete(index);
-      else ids.current.set(index, instance.id);
+    onBlur: (index) =>
+      setEventHost((current) =>
+        Option.filter(
+          current,
+          (hostId) => hosts.current.get(identityAt(keys, index)) !== hostId,
+        ),
+      ),
+    registerItem: (index) => {
+      const key = identityAt(keys, index);
+      return (instance) => {
+        if (instance === null) hosts.current.delete(key);
+        else hosts.current.set(key, instance.id);
+      };
     },
-    idOf: (index) => Option.fromNullishOr(ids.current.get(index)),
+    idOf: (index) =>
+      Option.fromNullishOr(hosts.current.get(identityAt(keys, index))),
   };
 };
 

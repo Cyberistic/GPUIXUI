@@ -306,7 +306,9 @@ export const renderRadioGroup = (
 export const RadioGroup = (props: RadioGroupProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const focus = useRovingFocus();
+  const focus = useRovingFocus(
+    Arr.map(props.options, (option) => option.value),
+  );
   const selected = useControlState<string | undefined>(
     props.value,
     props.defaultValue,

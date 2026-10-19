@@ -97,6 +97,9 @@ order. A press that changes nothing does not call `onValueChange`.
 | disabled row | Enter and Space do nothing, even when the row was focused before it became disabled (plan 332) |
 | arrows | **not handled** — arrows do not move between checkboxes on the platform |
 
+The focus ring follows the row's **value**, so reordering or filtering `options`
+does not move it to whatever now sits at the old index.
+
 ## Accessibility
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
