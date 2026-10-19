@@ -89,6 +89,7 @@ missing here is not public.
 | `DensityOverrides` | Partial density metrics and the preset they start from; they merge size by size. |
 | `Dimensions` | Fixed surface metrics: overlay, field, dialog, calendar, time-segment, toast, preview-card, drawer, chat and avatar-mark sizes. |
 | `DirectionFailure` | An interaction ladder step that moves toward the canvas, with both luminances. |
+| `DisabledControlStyle` | The designed disabled state: cleared opacity, the disabled fill, its label and the control edge. |
 | `Elevation` | Elevation levels keyed by `ElevationLevel`. |
 | `ElevationLevel` | `"sm"`, `"md"`, `"lg"` or the reserved, empty `"overlay"`, derived from `elevationLevels`. |
 | `ElevationShape` | A level's geometry plus the alpha applied to `shadow`. |
@@ -2765,11 +2766,20 @@ Rules:
    (`primary`, `success`, `warning`, `destructive`) is a surface, never a label
    colour — the light `success` fill barely clears the secondary floor on a card,
    and a platform style can take it below.
-8. An inactive control paints roles, not a fade: `disabled` with
-   `disabledForeground` on it and its `border` edge around it, and no inherited
-   `opacity`. [Copy the three properties](../packages/tokens/src/disabled-state.example.ts)
-   — an `opacity: 0.5` dim composites the label with its own fill, and its
-   readability then depends on the panel behind the control.
+8. An inactive control paints roles, not a fade: `disabledControl(theme)` returns
+   the cleared `opacity`, the `disabled` fill, the `disabledForeground` label and
+   the `border` edge that carries the shape. An `opacity: 0.5` dim composites
+   the label with its own fill, and its readability then depends on the panel
+   behind the control. [A full disabled Button
+   shape](../packages/tokens/src/disabled-state.example.ts) is in the examples.
+
+```ts
+import { disabledControl } from "@gpuixui/tokens";
+
+const style = disabledControl(theme);
+// { opacity: 1, backgroundColor: disabled,
+//   color: disabledForeground, borderColor: border }
+```
 
 ```tsx
 const theme = useTheme();

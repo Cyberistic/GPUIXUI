@@ -623,9 +623,10 @@ sit near the panel — no neutral clears both a white card and the quiet panel �
 a disabled control paints its `border` edge, measured on `disabled` and on the
 `muted` panel a settings sidebar divides. A disabled control is not an
 `opacity: 0.5` composite; it paints the designed pair and the edge — the dim
-measures **1.468:1** at worst (Linux light, a card), and
-[`src/disabled-state.example.ts`](./src/disabled-state.example.ts) returns the
-three properties.
+measures **1.468:1** at worst (Linux light, a card). `disabledControl(theme)`
+returns the three properties and
+[`src/disabled-state.example.ts`](./src/disabled-state.example.ts) builds the
+Button shape from it.
 `selectionInactivePairs` holds that label through the text-selection wash on the
 same thirteen surfaces, because `selectionColor` inherits into it: the previous
 light `#6E7787` measured **2.586:1** on Windows light's `selected` fill and the

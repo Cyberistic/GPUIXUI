@@ -14,9 +14,10 @@
 import { describe, expect, it } from "vitest";
 import { alpha, type ThemeColors } from "./color.js";
 import { compositeOver, contrastFloors, contrastRatio } from "./contrast.js";
-import { disabledPaint } from "./disabled-state.example.js";
+import { disabledButtonStyle } from "./disabled-state.example.js";
 import { disabledDimOpacity } from "./figures.js";
 import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
+import { disabledControl } from "./styles.js";
 import { getTheme, type ThemeContrast } from "./theme.js";
 
 /**
@@ -58,12 +59,41 @@ describe("the disabled state a control paints", () => {
   it("paints the designed roles, not a fade", () => {
     (["light", "dark"] as const).forEach((mode) => {
       const theme = getTheme(mode);
-      expect(disabledPaint(theme), mode).toEqual({
+      expect(disabledControl(theme), mode).toEqual({
         opacity: 1,
         backgroundColor: theme.colors.disabled,
         color: theme.colors.disabledForeground,
         borderColor: theme.colors.border,
       });
+    });
+  });
+
+  it("holds the helper's label and edge to their floors in every shipped set", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const style = disabledControl(theme);
+      expect(
+        contrastRatio(style.color, style.backgroundColor),
+        `${theme.name}: disabledForeground on disabled`,
+      ).toBeGreaterThanOrEqual(contrastFloors[theme.contrast].inactive);
+      expect(
+        contrastRatio(style.borderColor, style.backgroundColor),
+        `${theme.name}: border on disabled`,
+      ).toBeGreaterThanOrEqual(contrastFloors[theme.contrast].divider);
+    });
+  });
+
+  it("builds a real disabled Button shape from the helper", () => {
+    (["light", "dark"] as const).forEach((mode) => {
+      const theme = getTheme(mode);
+      const style = disabledButtonStyle(theme);
+      expect(style).toEqual({
+        ...disabledControl(theme),
+        height: theme.density.controlHeight.md,
+        paddingLeft: theme.density.controlPaddingX.md,
+        paddingRight: theme.density.controlPaddingX.md,
+        borderRadius: theme.radius.md,
+      });
+      expect(style.height).toBeGreaterThan(0);
     });
   });
 

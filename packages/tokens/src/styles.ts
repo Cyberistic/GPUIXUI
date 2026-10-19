@@ -242,6 +242,53 @@ export function softAction(theme: Theme): FilledControlStyle {
   };
 }
 
+/** The style properties a disabled control paints. */
+export interface DisabledControlStyle {
+  /** `1`, so a parent's dim cannot reach the control. */
+  readonly opacity: number;
+  /** The disabled fill (`disabled`). */
+  readonly backgroundColor: string;
+  /** The unavailable label (`disabledForeground`). */
+  readonly color: string;
+  /** The control edge that carries the shape (`border`). */
+  readonly borderColor: string;
+}
+
+/**
+ * The designed disabled state for a control on a normal panel.
+ *
+ * A disabled control is three roles, not a fade. GPUI composites an element and
+ * its children as one group (`StyleDesc.opacity`), so `opacity: 0.5` dims the
+ * label with the fill it sits on: a filled primary action's label measures
+ * **1.575:1** on the identity light canvas and **1.468:1** at worst (Linux
+ * light, a card), and a disabled field's typed text **3.273:1** on the macOS
+ * light `input` fill, under the 3:1 `inactive` floor. The fill is allowed to sit
+ * near the panel — no neutral clears both a white card and the quiet panel — so
+ * the `border` edge carries the control's shape.
+ *
+ * Inside a tone-tinted status panel the canvas `disabled` fill is not a panel
+ * shape: keep the resting `softAction` fill and paint `disabledForeground`
+ * (`inactivePanelActionPairs`). A disabled control receives no pointer state,
+ * so it never steps to a hover or press fill.
+ *
+ * @example
+ * ```ts
+ * import { disabledControl, getTheme } from "@gpuixui/tokens";
+ *
+ * const style = disabledControl(getTheme("light"));
+ * style.opacity; // 1
+ * style.backgroundColor; // the disabled fill
+ * ```
+ */
+export function disabledControl(theme: Theme): DisabledControlStyle {
+  return {
+    opacity: 1,
+    backgroundColor: theme.colors.disabled,
+    color: theme.colors.disabledForeground,
+    borderColor: theme.colors.border,
+  };
+}
+
 /** A focus ring, as the runtime's single-shadow shape. */
 export interface FocusRing {
   /** The shadow a component paints while it holds focus. */

@@ -681,9 +681,9 @@ visible shape until plan `306`. Every disabled control in the component packages
 still reaches the state through `opacity: 0.5`, which composites the label with
 the dimmed fill and that fill with the panel behind it — the primary label
 measures **1.468:1** on a Linux light card, under the 3:1 floor — while the
-designed pair is what a control should paint instead:
+designed state is one call: `disabledControl(theme)` returns the three roles.
 [`src/disabled-state.example.ts`](../packages/tokens/src/disabled-state.example.ts)
-returns the three roles.
+builds the Button shape from it.
 
 The label is read while it is selected, too. `selectionColor` inherits into a
 disabled control's text, and the accent-tinted wash composites over the surface

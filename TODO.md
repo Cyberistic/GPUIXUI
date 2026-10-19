@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 251/324
+`[x]` `[████████░░]` 252/325
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -849,9 +849,9 @@ dimming with the designed `disabled` / `disabledForeground` pair plus the
 label dims with its own fill: a filled primary action's label measures
 **1.575:1** on the identity light canvas and **1.468:1** at worst (Linux light, a
 card), a disabled field's typed text **3.273:1** on the macOS light `input`
-fill, and the `Select` item already paints the role; copy the three properties
-from `src/disabled-state.example.ts` (plans 306 and 539; owner: those
-workstreams)
+fill, and the `Select` item already paints the role; paint
+`disabledControl(theme)`, which returns the three properties (plans 306, 539 and
+605; owner: those workstreams)
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
@@ -2105,6 +2105,15 @@ dimensions example sizes both, and no shipped pixel moves (plan 604)
 `[ ]` Cross-team: `components` reads `theme.dimensions.timelineMarkerSize` and
 `theme.dimensions.timelineMarkerColumnWidth` for `timeline.tsx`'s 16px marker
 column and 8px dot instead of the literals (owner: `components`; plan 604)
+
+`[x]` Ship the designed disabled state as one call — `disabledControl(theme)`
+and `DisabledControlStyle` join the state helpers, so a consumer no longer
+copies the three properties out of an example: the helper returns `opacity: 1`,
+the `disabled` fill, the `disabledForeground` label and the `border` edge; the
+example builds a full Button shape from it, the catalogue, design system and
+README name it, and the helper's label and edge are held to the inactive and
+divider floors on every shipped set with no colour, pair or metric moving
+(plan 605)
 
 ## Phase C — Tier 1–2 components
 
