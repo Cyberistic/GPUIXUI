@@ -158,7 +158,9 @@ export interface NativeTextTheme {
   readonly textFaint: string;
   /** Diff file paths; `mutedForeground`. */
   readonly textDim: string;
-  /** Accent marks and links; `primaryText`, the accent's ink. */
+  /** Accent marks and links; `primaryText`, the accent's ink. The runtime also
+   * seeds its default find-highlight wash from this field, where the ink is not
+   * readable; pass `nativeHighlight(theme)` for a find bar. */
   readonly accent: string;
   /** The editor caret; `primaryText`. */
   readonly caret: string;
@@ -330,6 +332,11 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  * on. A document painted directly on the canvas overrides it:
  * `{ ...nativeTextTheme(theme), bg: theme.colors.background }` — every role the
  * prop returns is measured on all four `Surface` tones.
+ *
+ * A find bar does not read the `accent` field. The runtime seeds its default
+ * `highlight` wash from that accent at 30% and 65%, and the ink is not readable
+ * as a wash: identity dark measures 6.80:1 for body text at 30% and 2.81:1 at
+ * 65%. Pass `nativeHighlight` instead.
  *
  * The runtime fades some of these values at fixed fractions (a diff line at
  * 92%, a marker at 90%, the accent bar at 55%, the row wash at 5.5%, a list

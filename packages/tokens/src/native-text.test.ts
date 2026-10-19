@@ -411,6 +411,9 @@ describe("native text theme", () => {
       "nativeSyntaxRoles",
       "nativeSyntaxPairs",
       "appearance",
+      "nativeHighlight",
+      "nativeHighlightPairs",
+      "NativeHighlight",
     ].forEach((name) =>
       expect(
         new RegExp(`(^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_$])`).test(docs),

@@ -262,6 +262,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [568](./568-theme-extreme-bounds.md) | The largest and smallest are the theme's own | F | 361, 372, 531, 552, 554, 566 | done |
 | [569](./569-native-text-theme.md) | The native text theme: code, diff and markdown | F | 011, 051, 082, 332, 337, 399, 511, 527, 557 | done |
 | [572](./572-native-text-metric-scale.md) | The native text metrics that hold type | F | 367, 569 | done |
+| [573](./573-native-find-highlight.md) | The find-highlight wash the native text theme feeds | F | 069, 081, 087, 337, 569 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

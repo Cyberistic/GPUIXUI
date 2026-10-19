@@ -51,6 +51,7 @@ import {
   themeContrasts,
   themeDirectionFailures,
   themeFailures,
+  themeHighlightFailures,
   themeMetricFailures,
   themeModes,
   themeOpacityFailures,
@@ -98,6 +99,7 @@ describe("one total theme check", () => {
         themeOpacityFailures(brokenTheme).length +
         themeTypefaceFailures(brokenTheme).length +
         themeContrastFailures(brokenTheme).length +
+        themeHighlightFailures(brokenTheme).length +
         themeTextTierFailures(brokenTheme).length +
         themeDirectionFailures(brokenTheme).length +
         themeMetricFailures(brokenTheme).length,
@@ -112,6 +114,8 @@ describe("one total theme check", () => {
     const lastTypeface = kinds(brokenFailures).lastIndexOf("typeface");
     const firstContrast = kinds(brokenFailures).indexOf("contrast");
     const lastContrast = kinds(brokenFailures).lastIndexOf("contrast");
+    const firstHighlight = kinds(brokenFailures).indexOf("highlight");
+    const lastHighlight = kinds(brokenFailures).lastIndexOf("highlight");
     const firstHierarchy = kinds(brokenFailures).indexOf("hierarchy");
     const lastHierarchy = kinds(brokenFailures).lastIndexOf("hierarchy");
     const firstDirection = kinds(brokenFailures).indexOf("direction");
@@ -120,7 +124,8 @@ describe("one total theme check", () => {
     expect(lastColor).toBeLessThan(firstOpacity);
     expect(lastOpacity).toBeLessThan(firstTypeface);
     expect(lastTypeface).toBeLessThan(firstContrast);
-    expect(lastContrast).toBeLessThan(firstHierarchy);
+    expect(lastContrast).toBeLessThan(firstHighlight);
+    expect(lastHighlight).toBeLessThan(firstHierarchy);
     expect(lastHierarchy).toBeLessThan(firstDirection);
     expect(lastDirection).toBeLessThan(firstMetric);
   });

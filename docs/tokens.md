@@ -96,6 +96,7 @@ missing here is not public.
 | `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
 | `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500` and `600`. |
+| `HighlightFailure` | A find-highlight wash whose text misses its floor, with the wash, surface, role and ratio. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `IdentityShippedTheme` | An identity set in `shippedThemes`, with no platform style. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
@@ -109,6 +110,7 @@ missing here is not public.
 | `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
+| `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales. |
 | `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
@@ -138,7 +140,7 @@ missing here is not public.
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `hierarchy`, `direction` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `highlight`, `hierarchy`, `direction` or `metric`. |
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
@@ -1625,6 +1627,43 @@ const markdownTheme = nativeTextTheme(theme);
 const canvasTheme = { ...markdownTheme, bg: theme.colors.background };
 ```
 
+#### Find highlighting
+
+A find bar does **not** use the `accent` field. The runtime seeds `highlight`'s
+colours from that field — 30% for every match and 65% for the active match,
+used verbatim when a colour is passed
+(`references/gpuix/packages/native/src/text/search.rs`) — and `nativeTextTheme`
+maps `accent` to `primaryText`, the accent's readable **ink**. An ink is not a
+wash: in identity dark, body text measures **2.81:1** through the active
+default and **6.80:1** through the match default, under the body floor.
+
+`nativeHighlight(theme)` returns the `selection` role and the same RGB one
+`nativeHighlightStep` (`0.1`) stronger, so the active match is a perceivable
+step above the match while every highlighted role stays readable:
+
+```tsx
+import { getTheme, nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("dark");
+
+<markdown
+  source={text}
+  theme={nativeTextTheme(theme)}
+  highlight={{ ...nativeHighlight(theme), query }}
+/>;
+```
+
+The active wash is at least **1.08:1** from the match and **1.28:1** from the
+surface it paints on. No visible wash keeps a syntax token at body strength:
+the neutral `hover` wash is **1.06:1** at its weakest and still leaves syntax at
+**6.30:1**. So `nativeHighlightPairs` holds the body and secondary tiers and
+every syntax capture to the **secondary** floor on all four `Surface` tones
+`bg` may name; the tightest shipped pairs are **5.34:1** for the match and
+**4.61:1** for the active match, while body text stays at **9.65:1** and
+**8.03:1**. `themeHighlightFailures` is that check, composed into
+`themeFailures`; [`native-highlight.test.ts`](./src/native-highlight.test.ts)
+derives every figure above.
+
 A runnable example lives in
 [`src/native-text.example.ts`](./src/native-text.example.ts).
 
@@ -1820,9 +1859,9 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is seven checks — colour
-format, role opacity, typeface form, contrast, text hierarchy, interaction
-direction and numeric metrics — and
+the same floors as the shipped ones. The guarantee is eight checks — colour
+format, role opacity, typeface form, contrast, find highlight, text hierarchy,
+interaction direction and numeric metrics — and
 [`themeFailures`](#one-check) runs all of them in one call; the sections below
 explain each one it composes.
 
@@ -2449,19 +2488,20 @@ themeFailures(theme);
 The order is diagnostic: the format checks first — `color`, `opacity`,
 then `typeface`, so a malformed role is named before the `NaN` ratios it causes,
 an alpha channel before the tint it repaints and a malformed family before the
-type scale painted with it — then `contrast`, then
+type scale painted with it — then `contrast`, then `highlight`, then
 `hierarchy`, then `direction`, then `metric`. `themeChecks` is that order as a
 list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
 index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
-`TypefaceFailure`, `ContrastFailure`, `TextTierFailure`, `DirectionFailure` or
+`TypefaceFailure`, `ContrastFailure`, `HighlightFailure`, `TextTierFailure`,
+`DirectionFailure` or
 `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. The `contrast`
-argument defaults to the level the theme declares and reaches the contrast and
-hierarchy halves unchanged, so `themeFailures(theme, "high")` asks a stricter
-question of a theme that does not claim AAA floors; the opacity and metric
-halves are level-independent, because a shape does not change at AAA. A
+argument defaults to the level the theme declares and reaches the contrast,
+highlight and hierarchy halves unchanged, so `themeFailures(theme, "high")` asks
+a stricter question of a theme that does not claim AAA floors; the opacity and
+metric halves are level-independent, because a shape does not change at AAA. A
 consumer's test is one
 assertion:
 
@@ -3466,6 +3506,10 @@ still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to
   reaches, and `caretPairs` holds it on the field's `input` fill. The `placeholder`
   role covers a hint the consumer renders, and `selectionColor` covers app text;
   see [Native text fields](#native-text-fields).
+- Find highlighting is held at the secondary floor, not the body floor: the
+  runtime paints a translucent wash, and no perceivable wash keeps every syntax
+  token at body strength. `nativeHighlight(theme)` replaces the runtime's
+  unreadable accent default; see [Find highlighting](#find-highlighting).
 - No `transition`, `animation`, `transform` or colour interpolation: motion can
   only animate the eight `MotionStyle` properties, and there is no
   reduced-motion query, so a theme that wants none overrides the levels to `0`.

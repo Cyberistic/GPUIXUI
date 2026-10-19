@@ -590,6 +590,18 @@ order the ledger's floor table uses — against the floor for the class:
 | dialog face (`popover` over the composited `overlay` on `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the three solid status chips `info`/`success`/`warning`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft` — every surface `overlaySurfaces` names, `dialogSurfacePairs`) | 1.05:1 | 1.05:1 |
 | elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`input`/`selected`/`popover`, the surfaces `elevationSurfaces` names) | 1.05:1 | 1.05:1 |
 
+Find highlighting is the one painted wash held below the text tier it covers. A
+find wash is transient chrome over code, and no perceivable wash keeps every
+syntax token at body strength — the only neutral candidate is invisible at its
+weakest and still leaves syntax under the body floor. `nativeHighlight(theme)`
+is the prop a find bar passes: the `selection` role, plus one
+`nativeHighlightStep` stronger for the active match. `themeHighlightFailures`
+holds every matchable role to the **secondary** floor on `background`, `card`,
+`popover` and `muted` while body text keeps the body floor. The runtime's own
+default seeds the wash from `nativeTextTheme`'s `accent`, which is an ink, not a
+wash; the catalogue's [Find highlighting](tokens.md#find-highlighting) section
+states the measured evidence.
+
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The elevation shadow is
 measured composited, like the scrim: each defined level's painted shadow over the
@@ -908,8 +920,8 @@ step away from the canvas — darker in light, lighter in dark — so a light
 clears the 1.05:1 step, the on-colour floor and the surface floor. Each part is
 available on its own — `themeColorFailures`, `themeOpacityFailures`,
 `themeTypefaceFailures`,
-`themeContrastFailures`, `themeTextTierFailures`, `themeDirectionFailures` and
-`themeMetricFailures` — but
+`themeContrastFailures`, `themeHighlightFailures`, `themeTextTierFailures`,
+`themeDirectionFailures` and `themeMetricFailures` — but
 a consumer that runs only one has not run the guarantee: a zero focus-ring spread,
 an unparseable `shadow` tint or a translucent one the paint discards passes the
 contrast check alone. `themeChecks`

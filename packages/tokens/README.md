@@ -293,12 +293,12 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of seven checks, and running it alone is not the guarantee: a zero
+That is one of eight checks, and running it alone is not the guarantee: a zero
 `borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a
 translucent `shadow` tint the paint discards, a solid `overlay` scrim, a CSS
 family stack, a `disabledForeground` raised to body strength or a light pointer
 ladder whose hover lightens passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all seven and tags each
+`themeFailures(theme, contrast = theme.contrast)` composes all eight and tags each
 entry with the `kind` that found it:
 
 ```ts
@@ -787,6 +787,24 @@ runtime's fixed fade fractions and 3.5% code-block ink wash are measured by
 `native-text.test.ts` on every shipped set; the chrome metrics the scale does not
 name stay at the runtime's defaults. A runnable example lives in
 [`src/native-text.example.ts`](./src/native-text.example.ts).
+
+A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime
+seeds its default washes from the text theme's `accent`, and that field is
+`primaryText` — an ink: body text measured 2.81:1 through the active default in
+identity dark. `nativeHighlight` returns the `selection` role and one
+`nativeHighlightStep` stronger for the active match; `nativeHighlightPairs`
+holds every matchable role to the secondary floor, and `themeHighlightFailures`
+composes the check into `themeFailures`.
+
+```tsx
+import { nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";
+
+<markdown
+  source={text}
+  theme={nativeTextTheme(theme)}
+  highlight={{ ...nativeHighlight(theme), query }}
+/>;
+```
 
 ## Platform styles
 

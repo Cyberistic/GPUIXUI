@@ -75,6 +75,7 @@ describe("packages/tokens/README.md", () => {
       "five",
       "six",
       "seven",
+      "eight",
     ] as const;
     const count = countWords[themeChecks.length];
     expect(readme).toContain(`That is one of ${count} checks`);

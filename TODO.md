@@ -1912,6 +1912,15 @@ gutter minimum (36px at 12px) and the two markdown table floors (96/48px at
 squeezed table columns; the four fields now resolve the runtime's own
 proportions against those roles, still 7/36/96/48px at the shipped sizes, and
 the example's larger code role is held by the suite (plan 572)
+`[x]` Ship the find-highlight contract — the runtime seeds a native document's
+find washes from the text theme's `accent` at 30%/65%, and `nativeTextTheme`
+maps that field to `primaryText`, an ink: body text measured **2.81:1** through
+the active default and **6.80:1** through the match default in identity dark,
+under the body floor, while every check returned `[]`. `nativeHighlight(theme)`
+returns the `selection` role and one `nativeHighlightStep` stronger for the
+active match, `nativeHighlightPairs` holds every matchable role to the secondary
+floor on the four surfaces `bg` may name, and `themeHighlightFailures` is the
+eighth check composed into `themeFailures` (plan 573)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the
