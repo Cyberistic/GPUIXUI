@@ -96,7 +96,7 @@ describe("fixed surface and mark metrics", () => {
     ]);
   });
 
-  it("reports a time segment narrower than one body em", () => {
+  it("reports a time segment narrower than two digits", () => {
     const themed = extendTheme(lightTheme, {
       dimensions: { timeSegmentWidth: 12 },
     });
@@ -107,7 +107,7 @@ describe("fixed surface and mark metrics", () => {
         member: "timeSegmentWidth",
         rule: "at-least",
         actual: 12,
-        bound: lightTheme.typography.body.fontSize,
+        bound: 19,
       },
     ]);
   });

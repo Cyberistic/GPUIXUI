@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 263/335
+`[x]` `[████████░░]` 264/336
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2227,6 +2227,11 @@ reported 15 elevation pairs (worst 1.0175:1); the levels a style does not name
 now come from the requested palette, a named level still wins, a same-level
 base keeps its edits, and every shipped style already names `sm`/`md`/`lg`, so
 no shipped pixel moves (plan 618)
+`[x]` Hold the time segment to the two digits it paints — `timeSegmentWidth`
+was checked against one `body` em, so a copied theme with a 24px body and a
+24px segment returned `[]` while the `HH`/`MM` value it edits could not be
+shown; the bound is 1.3 body ems (two tabular digits at a 0.65em advance),
+rounded up, and every shipped 26px segment still passes at 19 (plan 621)
 
 ## Phase C — Tier 1–2 components
 

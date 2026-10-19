@@ -1085,7 +1085,7 @@ every density.
 | `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width |
 | `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow |
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
-| `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least one `body` em |
+| `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least 1.3 `body` ems (two tabular digits), rounded up to a pixel |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
 | `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title |
 | `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum |
@@ -1119,9 +1119,10 @@ kind of fixed mark: its dot is at least the `borderWidth.thin` connector it
 sits on and no wider than the column that centres it, so a brand can size the
 rail's mark without painting it outside the rail. A calendar day is a control, so
 its cell fits the theme's own small control; a time segment holds two body
-digits, so it is at least one `body` em wide; and an avatar's presence dot is at
-most half the smallest avatar the theme carries, because it sits on that
-avatar's corner.
+digits (`HH`/`MM`), so it is at least 1.3 `body` ems wide — two tabular digits at
+a 0.65em advance, rounded up to a whole pixel, and a theme that names a face with
+wider digits must widen it; and an avatar's presence dot is at most half the
+smallest avatar the theme carries, because it sits on that avatar's corner.
 
 A notification inbox clips its contents, so its panel maximum contains its list
 maximum, and the list is held to one `density.rowHeight` like every other scroll

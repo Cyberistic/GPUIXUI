@@ -163,7 +163,7 @@ export interface Dimensions {
   readonly dialogWidthLg: number;
   /** 34px — one day cell in a calendar grid; at least a small control. */
   readonly calendarCellSize: number;
-  /** 26px — the hours or minutes segment of a time field; at least one body em. */
+  /** 26px — a time field's hours or minutes segment; at least 1.3 body ems (two tabular digits, rounded up). */
   readonly timeSegmentWidth: number;
   /** 10px — an avatar's presence dot; at most half the smallest avatar. */
   readonly avatarPresenceDotSize: number;

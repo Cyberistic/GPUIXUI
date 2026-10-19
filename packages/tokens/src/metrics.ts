@@ -221,6 +221,14 @@ const usableBound = (bound: number): boolean =>
   Number.isFinite(bound) && bound > 0;
 
 /**
+ * A tabular digit advances at most 0.65em in the UI families the platform
+ * styles name; a two-digit time segment is 1.3em. The bound rounds up because a
+ * segment is painted at a whole pixel, and a theme that names a wider face must
+ * widen its segment.
+ */
+const digitAdvanceEm = 0.65;
+
+/**
  * An elevation alpha is a fraction. Finiteness is the walk's job, so this rule
  * only reports a finite value outside `0…1`; `alpha()` clamps such a value, but
  * a fraction the theme did not design is still a broken level.
@@ -508,9 +516,9 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   because `Keycap` paints caption text inside it, the drawer widths and
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a calendar
- *   day cell fits the smallest control, a time segment is at least one body em
- *   wide, and an avatar's presence dot is at most half the smallest avatar the
- *   theme carries.
+ *   day cell fits the smallest control, a time segment holds two body digits
+ *   (`HH`/`MM`), at a 0.65em tabular advance rounded up to a pixel, and an
+ *   avatar's presence dot is at most half the smallest avatar the theme carries.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -901,14 +909,15 @@ export function themeMetricFailures(
           density.controlHeight.sm,
         )
       : []),
-    // A time segment holds two body digits, so it is at least one em wide; a
-    // segment narrower than its own type clips the value it edits.
+    // A time segment holds two body digits (`HH` or `MM`), so it is at least two
+    // tabular digits wide; one em showed barely one digit at a 24px body role. A
+    // zero or non-finite body size is its own rule's diagnostic, so the fit waits.
     ...(usableBound(typography.body.fontSize)
       ? atLeast(
           "dimensions",
           "timeSegmentWidth",
           dimensions.timeSegmentWidth,
-          typography.body.fontSize,
+          Math.ceil(2 * digitAdvanceEm * typography.body.fontSize),
         )
       : []),
     // A presence dot sits on the smallest avatar's corner, so it may not be
