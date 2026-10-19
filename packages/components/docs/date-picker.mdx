@@ -40,6 +40,34 @@ depend on how it is displayed. `undefined` means uncontrolled.
 </DatePicker>;
 ```
 
+## Open state
+
+The popover is uncontrolled by default. `open` makes it controlled and
+`onOpenChange` reports every request; `defaultOpen` is the uncontrolled initial
+state. The calendar still reports the chosen ISO day through `onValueChange`.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<DatePicker
+  open={open}
+  onOpenChange={setOpen}
+  value={due}
+  onValueChange={setDue}
+>
+  <DatePickerTrigger label="Due date" />
+  <DatePickerContent>
+    <DatePickerCalendar />
+  </DatePickerContent>
+</DatePicker>;
+```
+
+The controlled state is authoritative for the painted surface: a close request
+the caller ignores leaves the calendar open. Focus follows the accepted close —
+the trigger is focused when `open` actually becomes `false` — so a refused close
+never pulls focus out of a surface that is still visible. The trigger's
+`aria-expanded` follows the resolved state in both modes.
+
 ## Anatomy
 
 | Part | Responsibility |
@@ -265,8 +293,10 @@ caller weekday list, month availability from an interior day, year availability
 in both directions, keeping the day-of-month when a shorter month is chosen, and
 keyboard month stepping without a year wrap.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (31 tests): open + day focus,
-a no-value open on today, a no-value open clamped to `min`, selection
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (34 tests):
+open + day focus, `defaultOpen`, the controlled open/close contract (a refused
+close leaves the surface painted and focus in place), a no-value open on today, a
+no-value open clamped to `min`, selection
 as an ISO value with focus return, the controlled contract, arrow/Home/End focus,
 PageDown browsing without changing the value, Escape focus-return, the
 next-month control, choosing an adjacent-month day, the muted adjacent paint,

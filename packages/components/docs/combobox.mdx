@@ -73,6 +73,34 @@ onValueChange?: (value: string | null | ReadonlyArray<string>) => void;
 
 `null` is "nothing selected" in single mode; `undefined` means uncontrolled.
 
+## Open state
+
+The popup is uncontrolled by default. `open` makes it controlled and
+`onOpenChange` reports every request; `defaultOpen` mounts it open. The trio is
+the same one `Popover` and `ContextMenu` take.
+
+```tsx
+const [open, setOpen] = useState(false);
+
+<Combobox
+  open={open}
+  onOpenChange={setOpen}
+  options={reviewers}
+  onValueChange={setReviewer}
+>
+  <ComboboxTrigger label="Assign reviewer" />
+  <ComboboxContent>
+    <ComboboxInput label="Search reviewers" />
+    <ComboboxList label="Reviewers" />
+  </ComboboxContent>
+</Combobox>;
+```
+
+A controlled value is authoritative for the painted popup: a close request the
+caller ignores leaves it open. An accepted close returns focus to the trigger; a
+`defaultOpen` popup also reports `onQueryChange("")` once, exactly like a popup
+the user opened. Ranking, selection and the dismiss stack are unchanged.
+
 ## Creating values
 
 A picker whose options come from a fixed list can still accept a new name. Pass
@@ -304,9 +332,11 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (46 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (49 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
-reopen), the trigger's own ring (auto-focused in both themes; given up while the
+reopen), `defaultOpen` with its one empty-query report, the controlled
+open/close contract (a refused close leaves the popup painted), the trigger's own
+ring (auto-focused in both themes; given up while the
 popup's field holds focus), a caller `style` merging over the trigger's base, a
 disabled trigger painting no ring, a centred popup and a near-bottom popup that
 opens above its

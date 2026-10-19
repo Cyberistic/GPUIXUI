@@ -41,6 +41,9 @@ const Picker = ({
   value,
   defaultValue,
   onValueChange,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   disabled,
   min,
   max,
@@ -52,6 +55,9 @@ const Picker = ({
   readonly value?: string | null;
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string | null) => void;
+  readonly open?: boolean;
+  readonly defaultOpen?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
   readonly disabled?: boolean;
   readonly min?: string;
   readonly max?: string;
@@ -66,6 +72,9 @@ const Picker = ({
       value={value}
       defaultValue={defaultValue}
       onValueChange={onValueChange}
+      open={openProp}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
       disabled={disabled}
       min={min}
       max={max}
@@ -111,6 +120,62 @@ describe("DatePicker", () => {
     open(picker);
 
     expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.unmount();
+  });
+
+  it("opens from defaultOpen without a trigger press", () => {
+    const picker = renderComponent(
+      <Picker defaultOpen defaultValue="2026-10-17" />,
+    );
+
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.unmount();
+  });
+
+  it("reports an open request without opening while controlled closed", () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker open={false} onOpenChange={onOpenChange} />,
+    );
+
+    open(picker);
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    finishMotion(picker);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+
+    picker.rerender(<Picker open onOpenChange={onOpenChange} />);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("leaves a controlled open surface painted until the caller closes it", () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker open defaultValue="2026-10-17" onOpenChange={onOpenChange} />,
+    );
+
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.renderer.simulateKeystrokes("escape");
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeDefined();
+
+    picker.rerender(
+      <Picker
+        open={false}
+        defaultValue="2026-10-17"
+        onOpenChange={onOpenChange}
+      />,
+    );
+    finishMotion(picker);
+    expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("date-picker-trigger"));
 
     picker.unmount();
   });

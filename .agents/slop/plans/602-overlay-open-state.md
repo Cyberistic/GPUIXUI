@@ -1,7 +1,7 @@
 # 602 — Date picker and combobox expose their open state
 
 **Phase:** F (integration and polish) · **Owner:** components workstream
-(`packages/components`) · **Status:** in progress
+(`packages/components`) · **Status:** done
 **Depends on:** 110 (package), 112 (overlays), 116 (combobox), 119 (date
 picker), 303 (date/time parts), 388 (`autoFocus` seeds focus state), 398
 (combobox dismiss stack), 517 (the controlled-state no-op rule), 523 (overlay
@@ -238,7 +238,7 @@ short controlled example. State two facts specific to this component:
 - an accepted controlled close returns focus to the trigger; a refused close
   leaves the popup and focus alone.
 
-Update the Verification paragraph with the new native count (expected 48) and
+Update the Verification paragraph with the new native count (expected 49) and
 name the open-state cases.
 
 ### 3.7 `COMPONENTS.md`
@@ -384,3 +384,27 @@ Stop and report rather than improvise if:
   agree with the suites.
 - `nub run check`, `nub run lint` and `nub run test` pass. The native suite's 35
   pre-existing plan-540 failures are unchanged and named as such.
+
+## 8. Result
+
+Implemented 2026-10-19.
+
+- Both roots now take the Popover trio through `useControllableState`; no private
+  open `useState` remains. `DatePicker` restores focus from a layout effect when
+  `open` becomes false, and `Combobox` reports `onQueryChange("")` from one
+  false→true effect, so `defaultOpen` obeys the same rule as a user open.
+- Three native cases per component: `date-picker.test.tsx` 31 → 34 and
+  `combobox.test.tsx` 46 → 49. The affected files are 84/84 green, including the
+  example mount suite.
+- Both-direction proofs, run by editing one line at a time and restoring:
+  1. dropping `defaultOpen={defaultOpen}` from the DatePicker fixture failed
+     exactly "opens from defaultOpen without a trigger press" (1/34);
+  2. putting `useState(false)` back in `DatePicker` failed all three new cases
+     (3/34);
+  3. removing the combobox reporting effect failed the default-open query case
+     plus the three existing opening-query cases (4/49);
+  4. putting `useState(false)` back in `Combobox` failed all three new cases
+     (3/49).
+- Docs, examples, `COMPONENTS.md` and the inventory counts are synced; the
+  examples demonstrate the controlled state without adding a second example
+  module.

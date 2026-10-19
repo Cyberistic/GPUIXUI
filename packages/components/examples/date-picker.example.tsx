@@ -1,8 +1,9 @@
 /**
  * DatePicker example: a booking window with a summary.
  *
- * The app owns the ISO day; the picker owns the popover, the month grid, its
- * keyboard and the bounds. `min`/`max` make out-of-window days unchosen, and
+ * The app owns the ISO day and, for the first field, the popover's open state;
+ * the picker owns the month grid, its keyboard and the bounds. `min`/`max` make
+ * out-of-window days unchosen, and
  * `clearable` returns the field to "no date" without a second control. The
  * header's month label opens a 12-month chooser, so a distant month is two
  * presses instead of a dozen. The second field is the same parts with the
@@ -48,11 +49,15 @@ const DateField = ({
   label,
   value,
   onChange,
+  open,
+  onOpenChange,
   labels,
 }: {
   readonly label: string;
   readonly value: string | null;
   readonly onChange: (value: string | null) => void;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
   readonly labels?: Partial<CalendarLabels>;
 }) => {
   const theme = useTheme();
@@ -72,6 +77,8 @@ const DateField = ({
       <DatePicker
         value={value}
         onValueChange={onChange}
+        open={open}
+        onOpenChange={onOpenChange}
         today="2026-10-17"
         min="2026-10-17"
         max="2026-12-31"
@@ -92,6 +99,7 @@ export const DatePickerExample = () => {
   const theme = useTheme();
   const [due, setDue] = useState<string | null>("2026-10-30");
   const [review, setReview] = useState<string | null>(null);
+  const [dueOpen, setDueOpen] = useState(false);
 
   return (
     <Card style={{ maxWidth: 460 }}>
@@ -110,7 +118,13 @@ export const DatePickerExample = () => {
           paddingTop: 0,
         }}
       >
-        <DateField label="Due date" value={due} onChange={setDue} />
+        <DateField
+          label="Due date"
+          value={due}
+          onChange={setDue}
+          open={dueOpen}
+          onOpenChange={setDueOpen}
+        />
         <DateField
           label="Review date"
           value={review}
@@ -125,6 +139,8 @@ export const DatePickerExample = () => {
         >
           Only 17 October–31 December 2026 is selectable; arrows clamp to the
           window. Enter selects, Clear returns the field to no date. The
+          due-date surface is controlled here: the app owns `open` and
+          `onOpenChange`, while selection still reports the ISO day. The
           header's month name opens the month chooser and its chevrons then step
           years. The second field takes its month and weekday headings from the
           app.

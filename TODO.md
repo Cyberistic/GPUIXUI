@@ -325,10 +325,12 @@ retired once both branches are one
       cases (behaviour 758/35 of 793, the same 35 plan-540 failures), five
       mutation proofs; docs, `COMPONENTS.md` and the inventory synced
       (owner: components)
-    - [~] The date picker and combobox expose their open state — plan 602:
-      both roots still own a private `useState(false)`, so a consumer cannot open
-      or observe either overlay while every other overlay takes
-      `open`/`defaultOpen`/`onOpenChange` (owner: components)
+    - [x] The date picker and combobox expose their open state — plan 602:
+      both roots now take the same `open`/`defaultOpen`/`onOpenChange` trio as
+      Popover and ContextMenu. `DatePicker` restores focus only when the close is
+      accepted, and a `defaultOpen` combobox reports the empty opening query
+      once; 3 native cases each (DatePicker 34, Combobox 49), four mutation
+      proofs; docs, examples and `COMPONENTS.md` synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

@@ -1,8 +1,9 @@
 /**
  * Combobox example: assigning a reviewer and labelling a task.
  *
- * The single picker closes on select and shows one name; the multi picker stays
- * open and reports an ordered array and groups its labels; the project picker
+ * The single picker's popup is controlled by the example and closes on select;
+ * the multi picker stays open and reports an ordered array and groups its
+ * labels; the project picker
  * offers a create row for a name that does not exist yet; the directory picker
  * filters its own rows in `onQueryChange`, which is the shape a server-backed
  * search takes. The first three share one option shape and the same ranking from
@@ -87,18 +88,24 @@ const Picker = ({
   options,
   onValueChange,
   onCreate,
+  open,
+  onOpenChange,
 }: {
   readonly label: string;
   readonly multiple?: boolean;
   readonly options: ReadonlyArray<ComboboxOption>;
   readonly onValueChange: (value: ComboboxSelection) => void;
   readonly onCreate?: (query: string) => void;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
 }) => (
   <Combobox
     multiple={multiple}
     options={options}
     onValueChange={onValueChange}
     onCreate={onCreate}
+    open={open}
+    onOpenChange={onOpenChange}
   >
     <ComboboxTrigger label={label} />
     <ComboboxContent>
@@ -113,6 +120,7 @@ const Picker = ({
 export const ComboboxExample = () => {
   const theme = useTheme();
   const [reviewer, setReviewer] = useState<string | null>(null);
+  const [reviewerOpen, setReviewerOpen] = useState(false);
   const [chosen, setChosen] = useState<ReadonlyArray<string>>([]);
   const [project, setProject] = useState<string | null>(null);
   const [projects, setProjects] =
@@ -157,6 +165,8 @@ export const ComboboxExample = () => {
           <Picker
             label="Assign reviewer"
             options={reviewers}
+            open={reviewerOpen}
+            onOpenChange={setReviewerOpen}
             onValueChange={(value) =>
               setReviewer(typeof value === "string" ? value : null)
             }
@@ -254,11 +264,13 @@ export const ComboboxExample = () => {
             color: theme.colors.mutedForeground,
           }}
         >
-          Try “ca”: Calendar and Camera stay under Work while Vacation, a
-          substring match, stays under Personal; type “cam” and the Personal
-          heading disappears with its last match. Type a project that is not
-          listed to create it: {project ?? "none"}. The directory is filtered by
-          this example, not the component: swap searchDirectory for a request (
+          The reviewer popup is controlled here: the app owns `open` and
+          `onOpenChange` while ranking and selection stay the component's. Try
+          “ca”: Calendar and Camera stay under Work while Vacation, a substring
+          match, stays under Personal; type “cam” and the Personal heading
+          disappears with its last match. Type a project that is not listed to
+          create it: {project ?? "none"}. The directory is filtered by this
+          example, not the component: swap searchDirectory for a request (
           {remote ?? "none"} selected).
         </text>
       </div>

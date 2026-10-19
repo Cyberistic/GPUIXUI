@@ -131,6 +131,12 @@ export interface DatePickerProps {
   readonly value?: string | null;
   readonly defaultValue?: string | null;
   readonly onValueChange?: (value: string | null) => void;
+  /** The controlled open state. `undefined` means uncontrolled. */
+  readonly open?: boolean;
+  /** The uncontrolled starting state. Default `false`. */
+  readonly defaultOpen?: boolean;
+  /** Called with every open or close request, in both modes. */
+  readonly onOpenChange?: (open: boolean) => void;
   /** Default `1` (Monday). */
   readonly weekStartsOn?: WeekStart;
   /**
@@ -172,6 +178,9 @@ export const DatePicker = ({
   value: valueProp,
   defaultValue,
   onValueChange,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
   weekStartsOn = 1,
   min,
   max,
@@ -196,15 +205,31 @@ export const DatePicker = ({
   const selectedIso = Option.map(selectedDay, formatIsoDay);
   const bounds = boundsOf(min, max);
   const calendarLabels = resolveCalendarLabels(labels);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableState<boolean>({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const trigger = useRef<PublicInstance | null>(null);
+  const restoreFocus = useRef(false);
+  const wasOpen = useRef(open);
 
-  /** Close the surface and hand focus back to the trigger. */
+  // A controlled close the caller refuses must not yank focus out of a surface
+  // that is still painted, so the trigger is focused when the close is accepted.
+  useLayoutEffect(() => {
+    if (wasOpen.current && !open && restoreFocus.current) {
+      const instance = trigger.current;
+      if (instance !== null) renderer?.focusElement?.(instance.id);
+    }
+    if (!open) restoreFocus.current = false;
+    wasOpen.current = open;
+  }, [open, renderer]);
+
+  /** Request a close; focus returns to the trigger when it is accepted. */
   const closeToTrigger = useCallback((): void => {
+    restoreFocus.current = true;
     setOpen(false);
-    const instance = trigger.current;
-    if (instance !== null) renderer?.focusElement?.(instance.id);
-  }, [renderer]);
+  }, [setOpen]);
 
   const choose = useCallback(
     (day: DateTime.Utc): void => {

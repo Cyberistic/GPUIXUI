@@ -76,6 +76,9 @@ const groupedOptions: ReadonlyArray<ComboboxOption> = [
 
 const Picker = ({
   onValueChange,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
   multiple,
   disabledCamera,
   empty,
@@ -92,6 +95,9 @@ const Picker = ({
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
   ) => void;
+  readonly open?: boolean;
+  readonly defaultOpen?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
   readonly multiple?: boolean;
   readonly disabledCamera?: boolean;
   readonly empty?: string;
@@ -109,6 +115,9 @@ const Picker = ({
     <Combobox
       onCreate={onCreate}
       createLabel={createLabel}
+      open={openProp}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
       onQueryChange={onQueryChange}
       debounce={debounce}
       shouldFilter={shouldFilter}
@@ -314,6 +323,62 @@ describe("Combobox", () => {
 
     expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
     expect(focusedTestId(picker)).toEqual(Option.some("combobox-input"));
+
+    picker.unmount();
+  });
+
+  it("opens from defaultOpen and reports the empty query once", () => {
+    const onQueryChange = vi.fn();
+    const picker = renderComponent(
+      <Picker defaultOpen onQueryChange={onQueryChange} />,
+    );
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+    expect(
+      picker.renderer.findByTestId("combobox-option-calendar"),
+    ).toBeDefined();
+    expect(onQueryChange).toHaveBeenCalledTimes(1);
+    expect(onQueryChange).toHaveBeenCalledWith("");
+
+    picker.rerender(<Picker defaultOpen onQueryChange={onQueryChange} />);
+    expect(onQueryChange).toHaveBeenCalledTimes(1);
+
+    picker.unmount();
+  });
+
+  it("reports an open request without opening while controlled closed", async () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(
+      <Picker open={false} onOpenChange={onOpenChange} />,
+    );
+
+    await open(picker);
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    finishMotion(picker);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+
+    picker.rerender(<Picker open onOpenChange={onOpenChange} />);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.unmount();
+  });
+
+  it("leaves a controlled open popup painted until the caller closes it", () => {
+    const onOpenChange = vi.fn();
+    const picker = renderComponent(<Picker open onOpenChange={onOpenChange} />);
+
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.renderer.simulateKeystrokes("escape");
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeDefined();
+
+    picker.rerender(<Picker open={false} onOpenChange={onOpenChange} />);
+    finishMotion(picker);
+    expect(picker.renderer.findByTestId("combobox-content")).toBeUndefined();
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
 
     picker.unmount();
   });

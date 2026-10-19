@@ -150,6 +150,12 @@ export interface ComboboxProps {
   readonly value?: string | ReadonlyArray<string>;
   readonly defaultValue?: string | ReadonlyArray<string>;
   readonly onValueChange?: (value: ComboboxSelection) => void;
+  /** The controlled popup state. `undefined` means uncontrolled. */
+  readonly open?: boolean;
+  /** The uncontrolled starting state. Default `false`. */
+  readonly defaultOpen?: boolean;
+  /** Called with every popup open or close request, in both modes. */
+  readonly onOpenChange?: (open: boolean) => void;
   /** Default `false`: one value and the popup closes on select. */
   readonly multiple?: boolean;
   readonly disabled?: boolean;
@@ -240,6 +246,9 @@ export const Combobox = ({
   value: valueProp,
   defaultValue,
   onValueChange,
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
   multiple = false,
   disabled = false,
   onQueryChange,
@@ -251,7 +260,11 @@ export const Combobox = ({
   children,
 }: ComboboxProps) => {
   const renderer = useGpuix().renderer;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableState<boolean>({
+    value: openProp,
+    defaultValue: defaultOpen,
+    onChange: onOpenChange,
+  });
   const [query, setQuery] = useState("");
   const trigger = useRef<PublicInstance | null>(null);
   const list = useRef<PublicInstance | null>(null);
@@ -292,6 +305,14 @@ export const Combobox = ({
     [cancelPendingQuery, debounce],
   );
   useLayoutEffect(() => cancelPendingQuery, [cancelPendingQuery]);
+
+  // "Opening reports an empty query" is a transition rule, so it also holds for
+  // a popup mounted with `defaultOpen`; a user open still reports exactly once.
+  const reportedOpen = useRef(false);
+  useLayoutEffect(() => {
+    if (open && !reportedOpen.current) reportQuery("", true);
+    reportedOpen.current = open;
+  }, [open, reportQuery]);
 
   // The list is the scroll viewport. `scrollIntoView` would scroll to its group
   // wrapper, so the row and the list are measured and the list is scrolled to a
@@ -469,7 +490,6 @@ export const Combobox = ({
           if (next) {
             restoreFocus.current = false;
             setQuery("");
-            reportQuery("", true);
             setOpen(true);
             return;
           }
