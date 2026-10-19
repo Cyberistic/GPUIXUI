@@ -5,8 +5,9 @@
  * not take the tone's readable colour; a description that inherits that colour
  * and becomes unreadable; a dismiss control that renders without `onDismiss`,
  * cannot be reached and fired by keyboard, or fires twice; a lost alert role; a
- * description that swallows the click of the action inside it; and a part that
- * silently renders outside its root with the default tone.
+ * description that swallows the click of the action inside it; a part that
+ * silently renders outside its root with the default tone; and a dismiss
+ * control whose handle discards the caller's `testId` (plan 675).
  */
 
 import * as Arr from "effect/Array";
@@ -174,6 +175,61 @@ describe("Alert", () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
 
     alert.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 675): `AlertDismiss` hard-coded its testId after
+   * `...rest`, so a caller's `testId` — part of the GPUix host props — was
+   * silently discarded and two alerts on a screen shared one handle. The
+   * shipped default stays `alert-dismiss`.
+   */
+  it("keeps the caller's testId on its dismiss control", () => {
+    const onDismiss = vi.fn();
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertDismiss testId="close-notice" onDismiss={onDismiss} />
+      </Alert>,
+    );
+
+    const dismiss = alert.renderer.findByTestId("close-notice");
+    expect(dismiss).toBeDefined();
+    if (dismiss === undefined) return;
+
+    alert.renderer.focusElement(dismiss.id);
+    alert.renderer.simulateKeystrokes("enter");
+
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+    expect(alert.renderer.findByTestId("alert-dismiss")).toBeUndefined();
+
+    alert.unmount();
+  });
+
+  it("gives two alerts' dismiss controls distinct handles", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const alerts = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Alert testId="first">
+          <AlertDismiss onDismiss={first} />
+        </Alert>
+        <Alert testId="second">
+          <AlertDismiss testId="second-dismiss" onDismiss={second} />
+        </Alert>
+      </div>,
+    );
+
+    const dismiss = alerts.renderer.findByTestId("second-dismiss");
+    expect(dismiss).toBeDefined();
+    expect(alerts.renderer.findByTestId("alert-dismiss")).toBeDefined();
+    if (dismiss === undefined) return;
+
+    alerts.renderer.focusElement(dismiss.id);
+    alerts.renderer.simulateKeystrokes("enter");
+
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+
+    alerts.unmount();
   });
 
   it("names its dismiss control for assistive technology", () => {

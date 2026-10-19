@@ -198,6 +198,7 @@ export interface AlertDismissProps extends Omit<Props, "children"> {
 export const AlertDismiss = ({
   onDismiss,
   label = "Dismiss",
+  testId = "alert-dismiss",
   onClick,
   ...rest
 }: AlertDismissProps) => {
@@ -208,7 +209,7 @@ export const AlertDismiss = ({
       {...rest}
       size="sm"
       label={label}
-      testId="alert-dismiss"
+      testId={testId}
       onClick={(event) => {
         onClick?.(event);
         onDismiss();

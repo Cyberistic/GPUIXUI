@@ -607,6 +607,14 @@ retired once both branches are one
       focus and is given up while the popup's field owns it; 2 native cases
       (Combobox 54), both failing on the old source; docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] A part's default `testId` no longer discards the caller's — plan 675;
+      measured: `AlertDismiss` spread `...rest` and then hard-coded
+      `testId="alert-dismiss"`, so the `testId` its host props promise did
+      nothing and two alerts on one screen shared one handle. The prop now
+      defaults and the caller's value wins, so each dismiss control is
+      addressable apart; 2 native cases (Alert 14), both failing on the old
+      source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

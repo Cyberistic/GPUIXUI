@@ -104,6 +104,7 @@ pointer and key handlers) and **merges `style` last**.
 | `AlertDescription` | — | — | — |
 | `AlertDismiss` | `onDismiss` | `() => void` (required) | — |
 | `AlertDismiss` | `label` | `string` | `"Dismiss"` |
+| `AlertDismiss` | `testId` | `string` | `"alert-dismiss"` |
 
 A part rendered outside `Alert` throws `Alert parts must be used inside Alert` —
 the tone context is the contract. (The test renderer catches render errors, so
@@ -114,8 +115,9 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 - The root is `role="alert"` — a live region, announced when it appears. An alert
   that appears out of nowhere mid-sentence should be used sparingly.
 - The dismiss control is a focusable `role="button"` with `label` as its
-  accessible name, activated by Enter or Space as well as a click. Its `testId` is
-  `alert-dismiss`.
+  accessible name, activated by Enter or Space as well as a click. Its `testId`
+  defaults to `alert-dismiss`; pass your own when more than one alert can be on
+  screen, so each control has its own handle (plan 675).
 - `AlertIcon` is decorative: it is not announced, so the title must say what the
   state is.
 - Colour is never the only signal — every alert has an `AlertTitle`.
@@ -142,12 +144,13 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 
 ## Verification
 
-`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (12 tests): the
+`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (14 tests): the
 parts render in order inside one alert region, every tone paints its root surface
 and title colour, the description keeps the page foreground, the icon takes the
 tone colour and is optional, the theme is read rather than a constant, there is no
 dismiss control unless `AlertDismiss` is composed, a click and an Enter fire it
-once, its accessible name is the default or `label`, an action in the description
+once, its accessible name is the default or `label`, a caller `testId` is the
+handle (and two alerts' controls stay distinct), an action in the description
 receives its click, a consumer `style` wins, and a caller `onClick` composes with
 `onDismiss`.
 
