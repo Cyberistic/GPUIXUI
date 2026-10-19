@@ -310,6 +310,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [643](./643-mark-stroke-floor.md) | A mark thinner than the hairline | F | 332, 353, 556, 598, 601, 604, 636 | done |
 | [645](./645-fixed-surface-insets.md) | The fixed surfaces count every inset they paint | F | 353, 365, 384, 523, 625, 627, 629, 634, 636 | done |
 | [646](./646-f32-metric-range.md) | A metric must survive the renderer's 32-bit cast | F | 358, 360, 364, 368, 531, 532, 641, 643 | done |
+| [649](./649-native-highlight-diff-tint.md) | The find highlight on the native diff's row tint | F | 569, 573, 574, 581, 582, 591, 602 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3399,6 +3400,21 @@ bound and ladder waits for a paintable value, the sign rules read the cast, and
 the theme's extremes skip an unpaintable step, so one broken number keeps one
 diagnostic. Every shipped set passes unchanged and no colour, pair, floor,
 figure or shipped metric moves.
+
+Plan `649` closes the last native-text surface the find highlight was not
+measured on. Plan `582` moved the check from the plain document tone to the code
+block's 3.5% ink wash, but a changed diff row is painted directly on `bg` under
+a 5.5% tint of `diffAdd`/`diffDel` (`nativeSyntaxTints`), so a match there sits
+behind the selection wash **and** a tint neither check measured. On Aero light
+the active match over those tints put `mutedForeground` at 4.437:1 and
+`primaryText` at 4.481:1 on the quiet panel, under the 4.5:1 secondary floor,
+while `themeHighlightFailures` and `themeFailures` returned `[]`.
+`themeHighlightFailures` now walks both tints for the match, the active match and
+the step, the failure names the tint role and its fraction beside the surface,
+and Aero light's two inks take one designed step (`#3D4C5F` → `#36455A`,
+`#0C4A8C` → `#0A417A`). Every shipped set passes (4.586:1 at the tightest tint
+pair), the code-ink arm still names its own fraction, and no other colour, pair,
+floor or metric moves.
 
 ## How to use a plan
 
