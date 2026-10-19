@@ -88,7 +88,9 @@ no `inset`, no list. A level is geometry plus an alpha applied to the `shadow`
 colour role, so retinting every elevation is one value.
 `elevationShadow(theme, level)` returns the shadow a level paints (`undefined`
 for the reserved empty `overlay` level); `elevationShadows` returns the resolved
-list for a renderer that composites.
+list for a renderer that composites. A level with more than one entry is
+reported by `themeFailures` as an `at-most` metric failure, because the native
+runtime paints only the first.
 
 ```tsx
 const shadow = elevationShadow(theme, "md");

@@ -561,7 +561,12 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   smaller than the defined level below it, in `elevationLevels` order — a
  *   defined `overlay` joins the ladder above `lg` — because the level names are
  *   an order: a dialog that feathers less than a resting card makes "lg" a
- *   shallower level than "sm". Opacity is not a step: a fainter large level and
+ *   shallower level than "sm". A level holds **at most one** shape: the native
+ *   runtime paints one shadow per element and `elevationShadow` reads the first
+ *   entry, so a second shape is geometry the theme declared and the runtime
+ *   never paints. A copied web multi-shadow level is therefore reported by the
+ *   native contract instead of silently returning `[]`; `elevationShadows`
+ *   still resolves the list. Opacity is not a step: a fainter large level and
  *   a flat theme are designs. `overlay` ships reserved and empty, and an empty
  *   level is exempt; a level a consumer defines — `overlay` included — is held
  *   to the same rules, because `elevationShadow` will paint it.
@@ -1106,19 +1111,22 @@ export function themeMetricFailures(
     ...finiteGroup("elevation", elevation),
     ...elevationLevels.flatMap((level) => {
       const shapes = elevation[level];
-      if (shapes.length === 0) {
-        return level === "overlay"
-          ? []
-          : [failure("elevation", level, "at-least", shapes.length, 1)];
-      }
-      return shapes.flatMap((shape, index) => [
-        ...nonNegative(
-          "elevation",
-          `${level}[${index}].blurRadius`,
-          shape.blurRadius,
-        ),
-        ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
-      ]);
+      return [
+        ...(shapes.length === 0 && level !== "overlay"
+          ? [failure("elevation", level, "at-least", shapes.length, 1)]
+          : []),
+        // The runtime paints one shadow per element and `elevationShadow`
+        // reads the first entry; a second shape is geometry nothing paints.
+        ...atMost("elevation", level, shapes.length, 1),
+        ...shapes.flatMap((shape, index) => [
+          ...nonNegative(
+            "elevation",
+            `${level}[${index}].blurRadius`,
+            shape.blurRadius,
+          ),
+          ...fraction("elevation", `${level}[${index}].alpha`, shape.alpha),
+        ]),
+      ];
     }),
     ...featherLadder(elevation),
     ...finiteGroup("motion", motion),

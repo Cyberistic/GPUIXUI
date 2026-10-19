@@ -1254,7 +1254,11 @@ the reserved empty `overlay` level (which `boxShadow` accepts).
 would silently render only the first, so
 `packages/tokens/src/elevation.test.ts` fails if one appears, and
 `elevation-tint.test.ts` fails if editing `colors.shadow` stops retinting a
-level.
+level. The editable-theme contract applies the same count to every level: a
+theme that declares a second shape gets an `at-most` metric failure naming the
+level, because the native runtime paints only the first. `elevationShadows`
+still resolves a web renderer's list; such a theme is simply outside the native
+guarantee.
 
 The reserved `overlay` level is empty in every shipped theme; a consumer that
 defines it places a level above `lg`, and the numeric contract holds it to that
@@ -2447,7 +2451,9 @@ shadow whose alpha is a fraction, because `alpha()` falls back to the opaque
 tint on a value it cannot parse, and whose two offsets, blur and spread are
 finite — a negative offset or spread is a direction, a `NaN` is a shadow the
 renderer cannot paint. A level's **first** entry is the shadow the runtime
-paints, so the defined levels in `elevationLevels` order — `sm` → `md` → `lg`,
+paints, and a level may hold **only** that entry — a second shape is reported as
+`at-most`, because the runtime never paints it. The defined levels in
+`elevationLevels` order — `sm` → `md` → `lg`,
 and a defined `overlay` above them — must not get a smaller `blurRadius` as the
 level rises — a dialog that feathers less than a resting card makes "lg" a
 shallower level than "sm". Opacity is not part of the ladder: a fainter large
@@ -3638,10 +3644,12 @@ the bar.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
-editing `colors.shadow` retints all three levels. Before plan `085` each level
-carried its own complete colour, so the documented tint changed nothing and the
-same value was duplicated three times per set; the split keeps every shipped hex
-byte-for-byte.
+editing `colors.shadow` retints all three levels.
+`elevation-shape-count.test.ts` holds an edited theme to the same one-entry
+rule, because the shipped guard alone never saw a copied level. Before plan
+`085` each level carried its own complete colour, so the documented tint changed
+nothing and the same value was duplicated three times per set; the split keeps
+every shipped hex byte-for-byte.
 
 The focus ring is measured on the nine surfaces a focused control can sit on —
 the canvas, card and popover, the `muted` panel a sidebar control sits on, the

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 277/351
+`[x]` `[████████░░]` 278/352
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2337,6 +2337,11 @@ against `label.lineHeight`, `avatarSize.xs` against `density.rowHeight`)
 compared a zero or negative bound and reported the correct icon or avatar as
 well as the broken metric; all three now read their bound through
 `usableBound`, every shipped set passes unchanged and no value moves (plan 641)
+`[x]` Report the second elevation shape the runtime never paints — the metric
+contract validated every shape in a level and required one, but never capped the
+count, so a copied theme with two shapes returned `[]` from every check while
+`elevationShadow` painted only the first; every level now holds at most one
+shape, every shipped set passes unchanged and no value moves (plan 642)
 
 ## Phase C — Tier 1–2 components
 

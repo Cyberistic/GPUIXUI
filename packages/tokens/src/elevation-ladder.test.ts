@@ -64,9 +64,19 @@ describe("the elevation ladder", () => {
   });
 
   it("reports the painted entry, not a later one", () => {
+    // The level is invalid for a second reason too: plan 642 reports the
+    // second shape. The ladder must still read the first entry, which is the
+    // one `elevationShadow` paints.
     expect(
       failuresOf({ elevation: { md: [feathered(0), feathered(100)] } }),
     ).toEqual([
+      {
+        group: "elevation",
+        member: "md",
+        rule: "at-most",
+        actual: 2,
+        bound: 1,
+      },
       {
         group: "elevation",
         member: "md[0].blurRadius",

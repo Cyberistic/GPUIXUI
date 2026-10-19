@@ -302,6 +302,8 @@ runtime paints one shadow per element — no `inset` and no shadow list — so a
 level is a list a web renderer can composite, a shipped level carries at most
 one entry, and the entry the runtime paints is read with
 `elevationShadow(theme, level)` (`elevationShadows` resolves the whole list).
+The numeric contract enforces that count on an edited theme too — a second entry
+is reported as an `at-most` failure, because the runtime paints only the first.
 The level names are an order, not a label: the numeric contract holds each
 level's painted feather (`blurRadius`) to be no smaller than the defined level
 below it, in `elevationLevels` order — a theme that defines the reserved
