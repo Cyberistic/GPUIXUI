@@ -860,8 +860,18 @@ A recipe names only what it changes: status tones, disabled, overlay, scrollbar
 and every non-colour scale inherit the identity, and both recipes carry the
 Windows shadow geometry and motion. The file in
 [`src/platform-styles/recipes/`](../packages/tokens/src/platform-styles/recipes/)
-is the whole recipe — copy it, edit a value, and apply it with
+is the whole recipe — copy it, edit its values, and apply it with
 `applyPlatformStyle`, exactly like a shipped variant.
+
+A fill moves with its family. A recipe's `primary` is painted as a mark and
+carries its label, so editing it alone leaves the inherited Windows foreground
+and the old hover and pressed states behind: the block this page used to show
+measured **3.999:1** for the label on its new fill, **2.696:1** as a mark on a
+card, popover, the quiet panel or a field, **2.882:1** on the value groove and
+**2.233:1** on the hover wash — seven failures from `themeFailures` (plan
+`658`). The executed
+[`src/recipe-edit.example.ts`](../packages/tokens/src/recipe-edit.example.ts)
+moves the whole family and is held to the contract.
 
 ```tsx
 import {
@@ -879,7 +889,14 @@ const mine = applyPlatformStyle(getTheme("dark"), {
   ...platformRecipes.aero,
   colors: {
     ...platformRecipes.aero.colors,
-    dark: { ...platformRecipes.aero.colors.dark, primary: "#1F6FB5" },
+    dark: {
+      ...platformRecipes.aero.colors.dark,
+      primary: "#5CB8FF",
+      primaryForeground: "#001A33",
+      primaryHover: "#8CCFFF",
+      primaryActive: "#A6DBFF",
+      primaryText: "#8CCFFF",
+    },
   },
 });
 ```

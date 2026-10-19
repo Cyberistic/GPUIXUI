@@ -39,14 +39,18 @@ import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { brandTheme } from "./brand-theme.example.js";
 import {
+  applyPlatformStyle,
   contrastFloors,
   createTheme,
   darkTheme,
   extendTheme,
+  getTheme,
+  platformRecipes,
   themeFailures,
 } from "./index.js";
 import * as tokens from "./index.js";
 import * as react from "./react.js";
+import { recipePrimary } from "./recipe-edit.example.js";
 
 const documents = [
   {
@@ -476,5 +480,72 @@ describe("documented theme examples", () => {
         floor: contrastFloors.default.mark,
       }),
     );
+  });
+});
+
+/**
+ * Guards the defect plan 658 fixes: the recipe copy-and-own block edited only
+ * `primary`, so a reader who copied it shipped a theme `themeFailures` rejects
+ * seven times — the label at 3.999:1 and the fill as a mark at 2.233–2.882:1 —
+ * while the snippet guard passed it, because it held the brand maps only and no
+ * executed example owned a recipe edit. The nested `dark` map is the documented
+ * family; it must equal `recipe-edit.example.ts` and build a clean theme.
+ */
+const nestedDarkColourMap = (
+  code: string,
+): Readonly<Record<string, string>> => {
+  const body = /dark:\s*\{([^}]*)\}/.exec(code)?.[1] ?? "";
+  return Object.fromEntries(
+    [...body.matchAll(/([A-Za-z]+):\s*"(#[0-9A-Fa-f]{6,8})"/g)].map(
+      ([, role, value]) => [role ?? "", value ?? ""],
+    ),
+  );
+};
+
+const recipeEditSnippet = snippets.find(({ code }) =>
+  code.includes("platformRecipes.aero"),
+);
+
+describe("documented recipe edit", () => {
+  it("finds the recipe copy-and-own block", () => {
+    expect(recipeEditSnippet?.label).toBe("docs/tokens.md");
+  });
+
+  it("documents the family the executed example ships", () => {
+    expect(recipeEditSnippet).toBeDefined();
+    if (recipeEditSnippet === undefined) {
+      return;
+    }
+    expect(nestedDarkColourMap(recipeEditSnippet.code)).toEqual(recipePrimary);
+  });
+
+  it("builds a theme the contract accepts", () => {
+    expect(recipeEditSnippet).toBeDefined();
+    if (recipeEditSnippet === undefined) {
+      return;
+    }
+    const documented = nestedDarkColourMap(recipeEditSnippet.code);
+    expect(
+      themeFailures(
+        applyPlatformStyle(getTheme("dark"), {
+          ...platformRecipes.aero,
+          colors: {
+            ...platformRecipes.aero.colors,
+            dark: { ...platformRecipes.aero.colors.dark, ...documented },
+          },
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("catches the one-role edit it replaced", () => {
+    const preFix = applyPlatformStyle(getTheme("dark"), {
+      ...platformRecipes.aero,
+      colors: {
+        ...platformRecipes.aero.colors,
+        dark: { ...platformRecipes.aero.colors.dark, primary: "#1F6FB5" },
+      },
+    });
+    expect(themeFailures(preFix)).not.toEqual([]);
   });
 });

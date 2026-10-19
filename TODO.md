@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 286/360
+`[x]` `[████████░░]` 288/362
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2415,6 +2415,13 @@ copied. A new case holds every package-importing block to a local binding, a
 typed parameter or a destructured callback, the seven blocks the first probe
 missed are recorded, and every block now resolves its own theme; no token
 value, pair, floor, metric or check moves (plan 656)
+`[x]` Make the documented recipe edit own its whole family — the recipe block
+edited only `primary`, so a copied Aero theme kept the Windows black
+foreground and the old pointer states and `themeFailures` rejected it seven
+times (the label 3.999:1, the fill as a mark 2.233–2.882:1) while no suite ran
+the block; the page now moves the whole family, `recipe-edit.example.ts` is the
+executed owner, and `snippets.test.ts` builds the documented map and keeps the
+pre-fix edit as its can-fail fixture (plan 658)
 
 ## Phase C — Tier 1–2 components
 
