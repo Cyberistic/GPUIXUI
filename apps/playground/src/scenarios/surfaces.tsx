@@ -11,11 +11,14 @@
  * The image sources are measured separately (plan `586`): a data URL and
  * `setImagePixels` were the only evidence for years, while an `<img src>` can
  * also be a file path or an http(s) URL. Bytes uploaded through
- * `ImgInstance.setImage` are assertable; a path or URL load is **not** —
- * `gpui::img(path|uri)`'s fallback text never reaches `getPaintedText()` or
- * the tree, there is no load/error event, and the offscreen loader never
- * settles. The path nodes therefore assert only their box; the live scenario
- * carries the screenshot and the refused-URL case.
+ * `ImgInstance.setImage` are assertable; a path or URL load is **not** on the
+ * offscreen renderer — `gpui::img(path|uri)`'s fallback text never reaches
+ * `getPaintedText()` or the tree, there is no load/error event, and the
+ * offscreen loader never settles. The path nodes therefore assert only their
+ * box here. The **live** twin goes further (plan `690`): it decodes the frame
+ * and samples the 1 × 1 red fixture in the path box, and proves the missing
+ * path and refused URL boxes do not paint it, so the path/http(s) route is
+ * pixel evidence in a window while the offscreen limitation stands.
  *
  * The trap, measured: `<canvas>` is retained as a node, paints nothing, has no
  * bounds, and discards its children from the paint log. Charts and the colour

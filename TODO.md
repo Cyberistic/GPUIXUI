@@ -78,7 +78,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 117/117 plans-and-harness
+`[x]` `[██████████]` 118/118 plans-and-harness
+
+`[x]` **Turn the image-source path/URL claim into frame pixels** per plan `690`:
+      `live-content`'s path and refused-URL boxes were **screenshot-only**
+      since plan `586` (no load/error event, no painted-text fallback), while
+      the data URL and byte routes were asserted. The scenario now captures one
+      live frame, uses the data-URL box as the reference (the 1 × 1 fixture is
+      red with **alpha 127**, so the frame paints its alpha-blended colour
+      `#860A0D` over the dark background), and proves the **path** and
+      **bytes** boxes paint that same colour and it is red-dominant, while the
+      **missing-path**, **refused-URL** and **invalid-data** boxes do not.
+      **44 → 68 checks**, two consecutive focused green runs; three mutation
+      proofs observed and reverted (path constant → missing file: the match
+      fails; fallback as reference: red-dominance fails; fallback in the match
+      list: the match fails). The offscreen loader still never settles, so the
+      path/http(s) proof is live-only; `native-surfaces` is unchanged. Focused
+      ids run: `live-content` (×2 plus three mutation runs), `native-surfaces`.
+      `nub run check`/`lint`/`test` green.
 
 `[x]` **Run the promotion gate on the head that includes plan `676`'s palette
       frame pixels** per plan `677`: verification only at `86057653` (no merge

@@ -113,7 +113,13 @@ import {
   pixelColourLiveScenario,
   pixelColourView,
 } from "../scenarios/pixels.js";
-import { captureLive, expectPixel, readAsync } from "../scenarios/frames.js";
+import {
+  captureLive,
+  expectPixel,
+  pixelAtId,
+  readAsync,
+  TOLERANCE,
+} from "../scenarios/frames.js";
 import { palettePixels } from "../scenarios/palette-pixels.js";
 import type { PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
@@ -8242,7 +8248,62 @@ const liveContent: LiveScenario = {
         "canvas-child",
       );
 
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveContent.id}.png`);
+      yield* settle;
+      const frame = yield* captureLive(
+        ctx.host,
+        `${LIVE_ARTIFACTS}/${liveContent.id}.png`,
+      );
+      const reader = readAsync(ctx.host);
+      // The fixture is red with alpha 127, so the frame carries the colour
+      // blended over the theme background. The data-URL box is the known-good
+      // decoded route: the path and byte boxes must paint the same colour.
+      const reference = yield* pixelAtId(
+        ctx,
+        reader,
+        frame,
+        "surface-img-data",
+      );
+      yield* ctx.expectEqual(
+        "the decoded fixture paints a red-dominant colour",
+        reference.r > reference.g + 40 && reference.r > reference.b + 40,
+        true,
+      );
+
+      const matchesFixture = (testId: string) =>
+        Effect.gen(function* () {
+          const actual = yield* pixelAtId(ctx, reader, frame, testId);
+          yield* ctx.expectEqual(
+            `${testId} paints the fixture's colour`,
+            Pixels.rgbaNear(actual, reference, TOLERANCE),
+            true,
+          );
+        });
+
+      const differsFromFixture = (testId: string) =>
+        Effect.gen(function* () {
+          const actual = yield* pixelAtId(ctx, reader, frame, testId);
+          yield* ctx.expectEqual(
+            `${testId} does not paint the fixture's colour`,
+            Pixels.rgbaNear(actual, reference, TOLERANCE),
+            false,
+          );
+        });
+
+      yield* Effect.forEach(
+        ["surface-img-path", "surface-img-bytes"] as const,
+        matchesFixture,
+        { concurrency: 1, discard: true },
+      );
+
+      yield* Effect.forEach(
+        [
+          "surface-img-path-missing",
+          "surface-img-url-refused",
+          "surface-img-invalid",
+        ] as const,
+        differsFromFixture,
+        { concurrency: 1, discard: true },
+      );
     }),
 };
 

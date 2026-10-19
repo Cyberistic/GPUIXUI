@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (native evidence) |
 | Owner | playground |
 | Depends on | `586` (the image-source contract), `577` (the live content twin), `674` (the PNG decoder and frame sampler), `676` (the shared capture path), `677` (the last gate) |
@@ -56,15 +56,24 @@ The fixture is a real 1 × 1 RGBA PNG, verified with `file`:
 apps/playground/fixtures/one-pixel.png: PNG image data, 1 x 1, 8-bit/color RGBA, non-interlaced
 ```
 
-The view is 680 px wide and ends at ~640 px tall, so all six source boxes are
-inside the 1100 × 720 window; the current screenshot is the visual proof. The
-fixture's pixel is **red**, so a decoded, painted image samples
-`#FF0000FF` (tolerance `2`, `frames.TOLERANCE`). The runtime paints a fallback
-for a missing/refused source, never the red fixture.
+**Measured correction (this plan's first run):** the fixture's pixel is red with
+**alpha 127** (`[255, 0, 0, 127]`), and the inline data-URL/byte fixture is the
+same pixel. Painted over the dark theme's `#11141A` background, the frame
+therefore samples **`#860A0D`**, not `#FF0000FF`; the first attempt asserted the
+opaque red and failed at `expected #ff0000ff, got #860a0dff`. The corrected
+expectation is **relative**, which is also stronger evidence: the data-URL box is
+the known-good decoded route, so the path and byte boxes must paint the *same*
+sampled colour as that box, and that colour must be red-dominant. A fallback
+cannot satisfy both. The view is 680 px wide and ends at ~640 px tall, so all
+six source boxes are inside the 1100 × 720 window; the current screenshot is the
+visual proof.
 
 `live-content` currently reports **44 checks** (plan `577`, re-check with
-`--only live-content` before changing anything). The change adds **six** colour
-checks — three red, three not-red — for **50**.
+`--only live-content` before changing anything). The change adds **24** checks —
+six sampled assertions, each backed by "is painted", "maps into the frame" and
+"has a pixel", plus the red-dominance reference — for **68**. (The first draft
+predicted 50 by counting one check per sample; the shared `pixelAtId` helper
+records three, and the run is the authority.)
 
 ## 3. Files to change
 
@@ -77,7 +86,9 @@ screenshot:
 yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveContent.id}.png`);
 ```
 
-with a captured frame that is both the artifact and the evidence:
+with a captured frame that is both the artifact and the evidence. The fixture
+is semi-transparent red, so the expected colour is the **data-URL box's**
+sampled colour (the known-good decoded route), not an invented literal:
 
 ```ts
 yield* settle;
@@ -86,36 +97,46 @@ const frame = yield* captureLive(
   `${LIVE_ARTIFACTS}/${liveContent.id}.png`,
 );
 const reader = readAsync(ctx.host);
-const red = new Pixels.Rgba({ r: 255, g: 0, b: 0, a: 255 });
-const redIds = [
-  "surface-img-path",
-  "surface-img-data",
-  "surface-img-bytes",
-] as const;
-const notRedIds = [
-  "surface-img-path-missing",
-  "surface-img-url-refused",
-  "surface-img-invalid",
-] as const;
+const reference = yield* pixelAtId(ctx, reader, frame, "surface-img-data");
+yield* ctx.expectEqual(
+  "the decoded fixture paints a red-dominant colour",
+  reference.r > reference.g + 40 && reference.r > reference.b + 40,
+  true,
+);
+
+const matchesFixture = (testId: string) =>
+  Effect.gen(function* () {
+    const actual = yield* pixelAtId(ctx, reader, frame, testId);
+    yield* ctx.expectEqual(
+      `${testId} paints the fixture's colour`,
+      Pixels.rgbaNear(actual, reference, TOLERANCE),
+      true,
+    );
+  });
+
+const differsFromFixture = (testId: string) =>
+  Effect.gen(function* () {
+    const actual = yield* pixelAtId(ctx, reader, frame, testId);
+    yield* ctx.expectEqual(
+      `${testId} does not paint the fixture's colour`,
+      Pixels.rgbaNear(actual, reference, TOLERANCE),
+      false,
+    );
+  });
 
 yield* Effect.forEach(
-  redIds,
-  (testId) =>
-    expectPixel(ctx, `${testId} paints the red fixture`, reader, frame, testId, red),
+  ["surface-img-path", "surface-img-bytes"] as const,
+  matchesFixture,
   { concurrency: 1, discard: true },
 );
 
 yield* Effect.forEach(
-  notRedIds,
-  (testId) =>
-    Effect.gen(function* () {
-      const actual = yield* pixelAtId(ctx, reader, frame, testId);
-      yield* ctx.expectEqual(
-        `${testId} does not paint the red fixture`,
-        Pixels.rgbaNear(actual, red, TOLERANCE),
-        false,
-      );
-    }),
+  [
+    "surface-img-path-missing",
+    "surface-img-url-refused",
+    "surface-img-invalid",
+  ] as const,
+  differsFromFixture,
   { concurrency: 1, discard: true },
 );
 ```
@@ -126,17 +147,19 @@ imported for the palette scenario, `pixelAtId`/`TOLERANCE` are new).
 
 Why the exact assertions can fail:
 
-- **M1** point `surface-img-path` at `MISSING_PNG_PATH` → the red check fails.
-- **M2** sample `surface-img-path-missing` for red → the red check fails (the
-  fallback is not the fixture).
-- **M3** expect `#00FF00FF` → every red check fails.
+- **M1** point `surface-img-path` at `MISSING_PNG_PATH` → the match check fails.
+- **M2** use `surface-img-path-missing` as the reference → the red-dominance
+  check fails (the fallback is not the fixture).
+- **M3** sample `surface-img-path-missing` for a match → the match check fails.
 - **M4** remove the `settle` before capture → may read a pre-load frame; if it
   still passes, record it as a null result, not a weakened check. The existing
   `ready` gate and the many preceding steps are the real load window; the
   `settle` is belt-and-braces.
 
-Do not add a tolerance above `2`; a letterboxed or unfilled box must fail by
-name rather than pass on a nearby colour.
+Do not substitute an opaque-red literal for the relative reference: the
+fixture's alpha is part of what is painted, and a literal would encode the
+background twice. Do not add a tolerance above `2`; a letterboxed or unfilled
+box must fail by name rather than pass on a nearby colour.
 
 ### 3.2 `apps/playground/src/scenarios/surfaces.tsx` (comment only)
 
@@ -163,7 +186,7 @@ In the `content` row, after the existing live sentence, add: `live-content`
 decodes the frame and samples the 1 × 1 red fixture in the path, data-URL and
 byte boxes, and asserts the missing-path, refused-URL and invalid-data boxes do
 not show it (plan `690`). The live registry stays **95** ids and the scenario
-stays one id; only its check count grows 44 → 50.
+stays one id; only its check count grows 44 → 68.
 
 ### 3.5 `TODO.md`
 
@@ -171,7 +194,7 @@ Add one ticked task in the playground section, above the plan-677 gate task,
 naming:
 
 - the gap (path/http(s) was screenshot-only since plan `586`);
-- the six checks and the 44 → 50 count;
+- the six sampled assertions and the 44 → 68 count;
 - the exact focused command and its result;
 - the mutation proofs observed;
 - that no headless scenario changed.
@@ -181,7 +204,7 @@ naming:
 Add a row after plan `677`:
 
 ```md
-| [690](./690-live-image-source-pixels.md) | Image-source pixels in a real window | F | `586`, `577`, `674`, `676` | **landed** — `live-content` 44 → 50 checks: the 1 × 1 red fixture paints in the path, data-URL and byte boxes; the missing-path, refused-URL and invalid-data boxes do not; … |
+| [690](./690-live-image-source-pixels.md) | Image-source pixels in a real window | F | `586`, `577`, `674`, `676` | **landed** — `live-content` 44 → 68 checks: the 1 × 1 red fixture paints in the path, data-URL and byte boxes; the missing-path, refused-URL and invalid-data boxes do not; … |
 ```
 
 Use the measured numbers. 690 is the first free number in the shared table
@@ -220,7 +243,7 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/playground`.
    nub apps/playground/dist/live/run.js --only live-content
    ```
 
-   Expected: `1/1`, **50 checks**, exit `0`, one
+   Expected: `1/1`, **68 checks**, exit `0`, one
    `.artifacts/live/live-content.png`. If a red check fails, STOP and record
    the actual sampled colour (do not lower the tolerance or change the
    fixture).
@@ -260,7 +283,7 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/playground`.
    - M3: expected `#00FF00FF`.
 
    Rebuild and run `--only live-content` after each; each must exit `1` and
-   name the check. Then revert all three, rebuild, and confirm **50** green
+   name the check. Then revert all three, rebuild, and confirm **68** green
    again.
 
 8. Write the ledgers (§3), commit and push:
@@ -280,8 +303,9 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/playground`.
 - `git status --porcelain` is non-empty before editing: STOP and commit the
   plan first.
 - The control `live-content` is not **44** checks: STOP; the plan is stale.
-- `surface-img-path` does not sample red in the live window: **STOP**. That is
-  the finding, not a test to weaken. Record the actual colour and the frame
+- `surface-img-path` does not sample the **same colour as the data-URL box**,
+  or that colour is not red-dominant: **STOP**. That is the finding, not a test
+  to weaken. Record the actual colour and the frame
   (`.artifacts/live/live-content.png`) and report that the path route is not
   pixel-assertable on this host; do not claim the screenshot as the assertion.
 - The path box is not inside the window (`pixelAtPoint` has no pixel): STOP and
@@ -297,8 +321,8 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/playground`.
 | It catches | How |
 | ---------- | --- |
 | a path source that stops loading | the fixture is the only red thing in that box; M1 fails |
-| a sample aimed at the wrong node | M2 samples the fallback and fails |
-| a colour comparison with no teeth | M3 changes the expected channel and fails |
+| a sample aimed at the wrong node | M2 uses the fallback as the reference and fails red-dominance; M3 samples the fallback for a match and fails |
+| a colour comparison with no teeth | the reference must be red-dominant, and the fixture's exact alpha-blended colour is what the path/bytes must match |
 | a data-URL or byte route regressing while the path passes | all three red boxes are sampled in one frame |
 | a fallback accidentally painting the fixture | the three not-red boxes fail |
 | a device-scale or decode regression | the shared `frames.ts` sampler is used, and `pixel-colour`/`live-pixel-colour`/`live-theme` already guard the scale |
@@ -308,6 +332,59 @@ This is not a screenshot diff: the assertion is an exact channel comparison on
 the frame the runtime wrote, which is the same standard as plan `674`'s
 `live-pixel-colour`. The PNG remains the run artifact.
 
-## 7. Results
+## 7. Results (2026-10-19, darwin-x64, release-tag binding)
 
-_Filled in by the executor after the run._
+The plan was committed at `c6d155f7`; the implementation head is that commit
+plus the change described here (the exact commit is the one carrying this
+section). `origin/master` was not merged; no path outside
+`apps/playground`/`COMPONENTS.md`/`TODO.md` changed.
+
+**Control** — `nub apps/playground/dist/live/run.js --only live-content` on the
+unchanged source: `1/1`, **44 checks**, exit `0`, `230 ms`.
+
+**Measured fact that corrected the first draft** — the 1 × 1 fixture is
+`[255, 0, 0, 127]`, so the frame samples the alpha-blended
+`#860A0D` over the dark background, not `#FF0000`. The first attempt asserted
+opaque red and failed with `expected #ff0000ff, got #860a0dff`. The final check
+is relative to the data-URL box (the known-good decoded route) and additionally
+asserts that reference is red-dominant, which is stronger than a literal.
+
+**Focused live** — after the final revert, `--only live-content` is `1/1`,
+**68 checks**, exit `0`, `6239 ms` and `6293 ms` on two consecutive runs. The
+artifact `.artifacts/live/live-content.png` is the decoded frame (the runner
+also writes the per-scenario screenshot). The check total is 44 + **24**: six
+sampled assertions (`surface-img-data` reference, path/bytes matches,
+missing/refused/invalid non-matches), each backed by "is painted", "maps into
+the frame" and "has a pixel".
+
+**Mutation proofs** (each observed, then reverted; every run exited `1`):
+
+| Mutation | Failing check | Detail |
+| -------- | ------------- | ------ |
+| `ONE_PIXEL_PNG_PATH` → the missing file | `surface-img-path paints the fixture's colour` | `expected true, got false` |
+| the fallback box as the reference | `the decoded fixture paints a red-dominant colour` | `expected true, got false` |
+| the fallback box in the match list | `surface-img-path-missing paints the fixture's colour` | `expected true, got false` |
+
+**Headless control** — `--only native-surfaces` is `1/1`, exit `0`,
+unchanged (the module comment is the only edit). The full headless registry is
+**106/106**, **3824 checks**, 65 capabilities, exit `0`, `103015 ms`; the count
+is unchanged, so no headless check was added or removed.
+
+**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+Test counts: playground **442**, testing **68**, components **308**,
+primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7**.
+
+**No source package change.** `packages/testing` is untouched; the only
+behavioural edit is the `live-content` scenario, plus one comment and the
+ledgers/manifest rows. The offscreen loader still never settles, so the
+path/http(s) assertion is **live-only**, as recorded in `COMPONENTS.md`.
+
+**Exact commands and ids run:**
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/live/run.js --only live-content   # 44 → 68, ×2
+nub apps/playground/dist/smoke/run.js --only native-surfaces
+nub apps/playground/dist/smoke/run.js                     # 106/106, 3824
+nub run check && nub run lint && nub run test
+```
