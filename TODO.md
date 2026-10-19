@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 275/349
+`[x]` `[████████░░]` 276/350
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2323,6 +2323,14 @@ and no test read any of it; the count, total, both bands and the two named
 ratios are derived in `soft-action.test.ts`, the five quoting surfaces are held
 by `docs.test.ts`, three 80s and the band are corrected and no colour, pair,
 floor or metric moves (plan 637)
+`[x]` Hold a field's adornment to the caption glyph it paints —
+`fieldAdornmentSize` was held only to a positive size and to fitting the smallest
+control, while the four shipped clear/remove controls inside a field
+(SearchInput, TimePicker, HotkeyRecorder and the TagInput chip) paint the
+`caption` role's `✕` in that square; a copied theme with a 20px caption leading
+and the 16px adornment returned `[]` from every check while the glyph overflowed
+its box. The `dimensions` rule now reads the theme's own `caption.lineHeight`,
+every shipped set passes at equality (16) and no shipped value moves (plan 638)
 
 ## Phase C — Tier 1–2 components
 

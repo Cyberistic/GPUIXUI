@@ -1063,7 +1063,7 @@ every density.
 | `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, the `md` leading icon, the query, the `fieldAdornmentSize` action and their two gaps, or a token-input chip |
-| `dimensions.fieldAdornmentSize` | 16 | trailing clear control (or other adornment) inside a field; the leading query icon is `iconSize.md` |
+| `dimensions.fieldAdornmentSize` | 16 | trailing clear control (or other adornment) inside a field; holds one `caption` line, the glyph its clear control paints; the leading query icon is `iconSize.md` |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
 | `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, its `toastToneBarWidth` tone bar, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
@@ -1096,6 +1096,11 @@ every density.
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
 whose caption leading outgrows it.
+
+A field's adornment is a fixed surface of the same kind: the clear and remove
+controls in SearchInput, TimePicker, HotkeyRecorder and the TagInput chip paint
+the `caption` role, so the square holds one `caption` line — a theme that grows
+that leading without growing the adornment clips the glyph (plan `638`).
 
 Every fixed surface paints its two `borderWidth.thin` edges **inside** its own
 width or height, so each bound below includes `2 * borderWidth.thin`: the menu

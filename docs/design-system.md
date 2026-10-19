@@ -239,8 +239,9 @@ Component dimensions are **fixed**, not density metrics: overlay surfaces take a
 toast is 380px wide, a preview card runs 240–360px, and an icon or clear control
 inside a field is 16px. They live in `theme.dimensions` so a brand can widen a
 dialog or a toast without touching component source. A keycap is 20px and holds
-one `caption` line plus its two borders; the metric contract reports a theme
-whose caption leading outgrows it. Every fixed surface — the menu minimum, Toast
+one `caption` line plus its two borders; a field's adornment holds one `caption`
+line, the glyph its clear control paints; the metric contract reports a theme
+whose caption leading outgrows either. Every fixed surface — the menu minimum, Toast
 card, notification inbox, and the dialog and drawer shells — holds its chrome
 inside its own two borders, like a control or a field; a Toast card additionally
 holds its square `sm` dismiss control after a `spacing.lg` gap, because the

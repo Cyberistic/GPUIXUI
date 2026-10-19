@@ -37,6 +37,9 @@ describe("the keycap surface", () => {
     // A 22px caption line in the 18px content box of the shipped 20px keycap.
     const theme = extendTheme(lightTheme, {
       typography: { caption: { fontSize: 12, lineHeight: 22 } },
+      // The field's adornment paints the same caption role; keep it coherent so
+      // this probe isolates the keycap.
+      dimensions: { fieldAdornmentSize: 22 },
     });
     const expected = [
       {

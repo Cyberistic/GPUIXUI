@@ -78,5 +78,8 @@ export const crampedFieldFailures = themeMetricFailures(crampedField);
  */
 export const clippedKeycap = extendTheme(getTheme("light"), {
   typography: { caption: { fontSize: 12, lineHeight: 22 } },
+  // The field's adornment paints the same caption role, so it grows with the
+  // line. Without this the probe would report two defects, not the keycap's.
+  dimensions: { fieldAdornmentSize: 22 },
 });
 export const clippedKeycapFailures = themeMetricFailures(clippedKeycap);

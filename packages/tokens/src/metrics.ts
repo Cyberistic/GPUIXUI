@@ -517,7 +517,8 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   viewport shorter than a row clips every option, the message viewport fits
  *   one row for the same reason, a keycap's content box holds one caption line
  *   plus its two borders,
- *   because `Keycap` paints caption text inside it, the drawer widths and
+ *   because `Keycap` paints caption text inside it, a field's adornment holds
+ *   one `caption` line, the glyph its clear control paints, the drawer widths and
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
  *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a dialog's
  *   and a drawer's smallest shell holds its padding, the header's reserved step
@@ -808,6 +809,17 @@ export function themeMetricFailures(
       "keycapSize",
       dimensions.keycapSize,
       typography.caption.lineHeight + 2 * borderWidth.thin,
+    ),
+    // A field's adornment is the square clear control inside a field:
+    // `SearchInput`, the `TimePicker`, the `HotkeyRecorder` and the TagInput
+    // chip's remove control all spread `textStyle(theme, "caption")` inside it.
+    // The control paints no border, so only the line box is charged; a caption
+    // leading taller than the square clips the glyph it centres.
+    ...atLeast(
+      "dimensions",
+      "fieldAdornmentSize",
+      dimensions.fieldAdornmentSize,
+      typography.caption.lineHeight,
     ),
     ...ladder(
       "dimensions",
