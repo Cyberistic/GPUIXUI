@@ -253,17 +253,16 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 consecutive runs are identical by name). Plan `597` corrected the published box
 model, plan `598` a scroller's own report, and plan `599` `Select`'s off-by-one
 scroll reveal; before them the same suite reported 37 failures at plan `596`.
-The
-native-focus tracker restored the 19 focus-matrix cases and the disabled ring
-cases (both files are green in a fresh process); plan `591` restored the lifetime
-of a seeded focus state and the `NumberField` blur commit, plan `592` made the
-tracker-dependent suites wait for the sample, plan `594` closed every test
-window so the leaked tracker intervals no longer make the result
+The native-focus tracker restored the 19 focus-matrix cases and the disabled
+ring cases (both files are green in a fresh process); plan `591` restored the
+lifetime of a seeded focus state and the `NumberField` blur commit, plan `592`
+made the tracker-dependent suites wait for the sample, plan `594` closed every
+test window so the leaked tracker intervals no longer make the result
 order-dependent, plan `595` made `InfoTip` open from the tracker, and plan `596`
 put the trigger's host ref into the slot contract so every single-root tooltip
-opens on keyboard focus. Earlier
-measurements: 734 tests at plan `598`; 692 passed / 37 failed at plan `596`
-(729 tests); 677 passed / 47 failed at plan `595`; 675/48 at plan `594`;
+opens on keyboard focus. Earlier measurements: 734 tests at plan `598`; 692
+passed / 37 failed at plan `596` (729 tests); 677 passed / 47 failed at plan
+`595`; 675/48 at plan `594`;
 669/53 at plan `592`; 656/66 at plan `591`; 721 tests at plan `590` — 647 passed
 / 74 failed; 700 tests in
 46 files at plan `574` — 589 passed / 111 failed; the new late-value matrix
