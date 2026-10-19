@@ -14,8 +14,9 @@
  * 66px row into 56px.
  *
  * The seven bounds now include the surface's two borders. Every shipped set
- * clears them, so no value moves; the identity bounds are 55/68/52/90/90/98 and
- * the inbox's 335 (its header above the list, plan 629).
+ * clears them, so no value moves; the identity bounds are 55/108/52/90/90/98
+ * and the inbox's 335 (its header above the list, plan 629); the Toast's 108
+ * also holds its square `sm` dismiss control (plan 631).
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -34,12 +35,14 @@ const overlayBound = (theme: Theme): number =>
   theme.typography.label.fontSize +
   2 * theme.borderWidth.thin;
 
-/** The Toast card: its content row plus its two borders. */
+/** The Toast card: its content row, dismiss control and its two borders. */
 const toastBound = (theme: Theme): number =>
   2 * theme.spacing.lg +
   theme.iconSize.md +
   theme.spacing.lg +
   theme.typography.bodyStrong.fontSize +
+  theme.spacing.lg +
+  theme.density.controlHeight.sm +
   2 * theme.borderWidth.thin;
 
 /** The inbox's width: a notification row plus its two borders. */
@@ -94,6 +97,9 @@ const bordered = (overrides: Partial<Dimensions> = {}): Theme =>
       keycapSize: 40,
       calendarCellSize: 48,
       timelineMarkerSize: 12,
+      // The 12px border, 48px `sm` control and the dismiss control put the
+      // Toast's own bound at 150, so the fixture's card must rise above it.
+      toastWidth: 160,
       // The 12px border and 48px `sm` control put the inbox's own bound at 388,
       // so the fixture's panel must rise above the shipped 380.
       notificationPanelMaxHeight: 400,
@@ -170,7 +176,7 @@ describe("fixed surfaces fit their own border", () => {
     });
     expect(failures).toEqual([]);
     expect(tightestOverlay).toBeCloseTo(180 / 55, 4);
-    expect(tightestToast).toBeCloseTo(380 / 68, 4);
+    expect(tightestToast).toBeCloseTo(380 / 108, 4);
     expect(tightestPanelWidth).toBeCloseTo(320 / 52, 4);
     expect(tightestPanelHeight).toBeCloseTo(380 / 335, 4);
     expect(tightestShellWidth).toBeCloseTo(320 / 90, 4);
@@ -179,7 +185,7 @@ describe("fixed surfaces fit their own border", () => {
 
   it("states the shipped identity bounds", () => {
     expect(overlayBound(base)).toBe(55);
-    expect(toastBound(base)).toBe(68);
+    expect(toastBound(base)).toBe(108);
     expect(panelWidthBound(base)).toBe(52);
     expect(panelHeightBound(base)).toBe(335);
     expect(shellWidthBound(base)).toBe(90);
@@ -253,7 +259,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 80,
-        bound: 90,
+        bound: 150,
       },
     ]);
   });

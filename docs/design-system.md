@@ -242,7 +242,9 @@ dialog or a toast without touching component source. A keycap is 20px and holds
 one `caption` line plus its two borders; the metric contract reports a theme
 whose caption leading outgrows it. Every fixed surface — the menu minimum, Toast
 card, notification inbox, and the dialog and drawer shells — holds its chrome
-inside its own two borders, like a control or a field. A drawer opens
+inside its own two borders, like a control or a field; a Toast card additionally
+holds its square `sm` dismiss control after a `spacing.lg` gap, because the
+title column flexes and the control does not. A drawer opens
 320/400/560px wide, or
 240/320/420px tall from the bottom; a message viewport never shrinks below 160px,
 and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface is
@@ -805,8 +807,9 @@ hand-written list, so a member added to a group is governed when it ships, and
 `metricMembers` is the published index of that domain. A fixed surface also
 holds the chrome painted inside it: a toast card, a notification inbox and an
 overlay minimum each need their padding, icon, gap and one title or label
-glyph, so a brand that shrinks one below the content it exists to show is
-reported before a component migrates to the token (plan `620`).
+glyph — and a toast card its square `sm` dismiss control — so a brand that
+shrinks one below the content it exists to show is reported before a component
+migrates to the token (plans `620` and `631`).
 
 The **format** check is `themeColorFailures(theme)`: every one of the 70 roles
 must be a six- or eight-digit hex colour, because `alpha`, `compositeOver` and

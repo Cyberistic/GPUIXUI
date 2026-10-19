@@ -13,8 +13,8 @@
  *
  * Each rule derives its bound from the theme's own spacing, icon, type and
  * border metrics, so case 6 fails if the rule becomes a hardcoded number. The
- * shipped set passes at 380/320/180 against 68/52/55, the surface's two
- * `borderWidth.thin` edges included (plan 627), so no value moves.
+ * shipped set passes at 380/320/180 against 108/52/55, the surface's two
+ * `borderWidth.thin` edges included (plans 627 and 631), so no value moves.
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -30,6 +30,8 @@ const toastBound = (theme: Theme): number =>
   theme.iconSize.md +
   theme.spacing.lg +
   theme.typography.bodyStrong.fontSize +
+  theme.spacing.lg +
+  theme.density.controlHeight.sm +
   2 * theme.borderWidth.thin;
 
 const panelBound = (theme: Theme): number =>
@@ -83,13 +85,13 @@ describe("fixed-surface chrome fit", () => {
       );
     });
     expect(failures).toEqual([]);
-    expect(tightest.toast).toBeCloseTo(5.59, 2);
+    expect(tightest.toast).toBeCloseTo(380 / 108, 4);
     expect(tightest.panel).toBeCloseTo(6.15, 2);
     expect(tightest.overlay).toBeCloseTo(3.27, 2);
   });
 
   it("states the shipped bounds", () => {
-    expect(toastBound(base)).toBe(68);
+    expect(toastBound(base)).toBe(108);
     expect(panelBound(base)).toBe(52);
     expect(overlayBound(base)).toBe(55);
   });
@@ -104,7 +106,7 @@ describe("fixed-surface chrome fit", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 40,
-        bound: 68,
+        bound: 108,
       },
     ]);
   });
@@ -142,12 +144,12 @@ describe("fixed-surface chrome fit", () => {
 
   it("reads the theme's own spacing, not a hardcoded bound", () => {
     const roomy = extendTheme(getTheme("light"), {
-      dimensions: { toastWidth: 100 },
+      dimensions: { toastWidth: 120 },
     });
     expect(dimensionFailures(roomy)).toEqual([]);
 
     // `lg` moves from 12 to 24 (and the steps above it keep the ladder), so
-    // the toast's own bound rises from 68 to 104 and 100 no longer fits.
+    // the toast's own bound rises from 108 to 156 and 120 no longer fits.
     const tightened = extendTheme(roomy, {
       spacing: {
         lg: 24,
@@ -162,8 +164,8 @@ describe("fixed-surface chrome fit", () => {
       group: "dimensions",
       member: "toastWidth",
       rule: "at-least",
-      actual: 100,
-      bound: 104,
+      actual: 120,
+      bound: 156,
     });
   });
 

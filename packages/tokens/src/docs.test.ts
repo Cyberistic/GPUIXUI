@@ -2685,6 +2685,8 @@ describe("docs/design-system.md", () => {
       iconSize.md +
       spacing.lg +
       typography.bodyStrong.fontSize +
+      spacing.lg +
+      defaultDensity.controlHeight.sm +
       2 * borderWidth.thin;
     const panelBound =
       2 * spacing.lg +

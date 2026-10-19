@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 270/343
+`[x]` `[████████░░]` 271/344
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2284,6 +2284,13 @@ header (two `spacing.lg` insets, a `sm` action, a bottom rule), so a theme with
 `notificationPanelMaxHeight: 300` and a 280px list returned `[]` while the
 header and list needed 335; the bound now counts the header, every shipped set
 clears it (380 against 335) and no value moves (plan 629)
+`[x]` Hold the Toast's dismiss control inside its card — the card bound counted
+its padding, tone icon, one gap and one title glyph, but `toast/viewport.tsx`
+always paints a square `sm` `IconButton` after another `spacing.lg` gap, so a
+theme with `toastWidth: 100` returned `[]` while the card needed 108 and
+`overflow: "hidden"` clipped the control; the bound now counts the gap and the
+dismiss control, every shipped set still passes (380 against 108) and no value
+moves (plan 631)
 
 ## Phase C — Tier 1–2 components
 

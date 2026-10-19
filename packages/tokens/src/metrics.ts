@@ -530,10 +530,12 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   avatar's presence dot is at most half the smallest avatar the theme carries.
  *   The menu's minimum width, the Toast card and the notification inbox follow
  *   the same content-box rule: each holds its row or card chrome plus its own two
- *   borders, and the inbox's maximum height contains the header above its list —
- *   two `spacing.lg` insets, one `sm` action and the header's own rule — plus the
- *   list and those two borders, because a panel capped at the list alone squeezes
- *   the header the inbox always paints.
+ *   borders, the Toast card counting the square `sm` dismiss control it always
+ *   paints after one `spacing.lg` gap because the title column flexes and the
+ *   control does not, and the inbox's maximum height contains the header above
+ *   its list — two `spacing.lg` insets, one `sm` action and the header's own rule
+ *   — plus the list and those two borders, because a panel capped at the list
+ *   alone squeezes the header the inbox always paints.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -1014,12 +1016,14 @@ export function themeMetricFailures(
         3 * borderWidth.thin,
     ),
     // A Toast's fixed card holds its own chrome: the content row is `spacing.lg`
-    // padding on both sides, the `md` tone icon, the `lg` gap beside it and one
-    // `bodyStrong` title glyph, inside the card's two `borderWidth.thin` edges
-    // (plan 627). The 3px tone bar is consumer chrome, not a metric, so the bound
-    // leaves it out; a card narrower than this clips the title it exists to show.
-    // A zero or non-finite width is the sign rule's diagnostic, so the fit waits
-    // for a usable value.
+    // padding on both sides, the `md` tone icon, the `lg` gap beside it, one
+    // `bodyStrong` title glyph, the `lg` gap after the title and the square `sm`
+    // dismiss control (`IconButton` is `controlHeight.sm` wide), inside the
+    // card's two `borderWidth.thin` edges (plans 627 and 631). The 3px tone bar
+    // is consumer chrome, not a metric, so the bound leaves it out; the action is
+    // optional and label-sized, so it is content, not chrome. A zero or
+    // non-finite width is the sign rule's diagnostic, so the fit waits for a
+    // usable value.
     ...(usableBound(dimensions.toastWidth)
       ? atLeast(
           "dimensions",
@@ -1029,6 +1033,8 @@ export function themeMetricFailures(
             iconSize.md +
             spacing.lg +
             typography.bodyStrong.fontSize +
+            spacing.lg +
+            density.controlHeight.sm +
             2 * borderWidth.thin,
         )
       : []),
