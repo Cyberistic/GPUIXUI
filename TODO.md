@@ -624,6 +624,13 @@ retired once both branches are one
       cases fail on the old source (store 22 → 24), the native Toast suite stays
       20/20; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
+     - [~] A control disabled while focused is inert — plan 680; measured on
+       2026-10-19: a `Button` with `autoFocus`, a clicked `TabsTrigger` and a
+       recording `HotkeyRecorder` each kept the token focus ring after the app
+       disabled them, and the recorder still painted `Press keys…`. One shared
+       `useFocusState` drops the painted focus on disable, the recorder also
+       cancels its recording, and the colour picker clears both focus states
+       (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
