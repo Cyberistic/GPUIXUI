@@ -1,7 +1,7 @@
 # 611 — A ring that stays visible on arbitrary content
 
 **Workstream:** tokens-theme · **Phase:** F (contract closure) · **Depends on:**
-017, 069, 071, 332, 383, 391, 398, 399, 609, 610 · **Status:** planned
+017, 069, 071, 332, 383, 391, 398, 399, 609, 610 · **Status:** done
 
 ## 1. The gap
 
