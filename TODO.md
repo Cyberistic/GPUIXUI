@@ -54,9 +54,10 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 252/325
+`[x]` `[████████░░]` 253/326
 
-`[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
+`[x]` Write and index the tokens/theme plan set (every row the plan index
+assigns to this workstream)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
