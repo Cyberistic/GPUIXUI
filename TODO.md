@@ -102,6 +102,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       Merge gate at `e405a99e`: live **63/63** (**1428** checks, 48 capabilities,
       717 s) and headless **101/101** (**3536** checks), both exit `0`.
 
+`[ ]` **Root (outside this workstream):** decide whether `playground:capture`
+      becomes a root script. It cannot carry the required directory without a
+      fragile `--` convention, so keeping the documented built-CLI command as
+      the contract is the alternative (plan `564` §8; the docs' published run
+      is already spelled out above).
+
 `[ ]` **Cross-team:** the docs' component pages still need **per-component
       screens** — the capture mechanism is now publishable, but the registry
       scenarios are capability probes, not one clean screen per delivered
