@@ -36,8 +36,10 @@ evidence for a 0.10.0 consumer: on the release runtime a control paints no ring,
 while role, name, tab order, keys and activation still work. Every focusable
 page states that limitation, and `src/docs-focus-events.test.ts` guards the
 claim.
-The Tier 1 rows below stay `wip` until their suite is re-run on a published-tag
-build. Reproduce it with:
+The Tier 1 rows below stay `wip` until their suite passes on a runtime a
+consumer installs. It has now been run on the release-tag build (plan `583`):
+the 19 focus rings and the 2 px box-model deltas fail there, while the
+main-derived build passes. Reproduce it with:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js
@@ -95,7 +97,7 @@ README/types document it, but no run has confirmed it here).
 | Theme extension | done | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. The gallery mounts through `ThemeProvider` and the switch re-renders the subtree natively. |
 | High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; `theme-color-roles` asserts all 47 roles in high contrast and that its colour set differs from dark and light. Docs in `docs/tokens.md`. **Runtime (055):** Tier 1 paints only the high-contrast palette in both modes, and a switch from high-contrast light to dark repaints the mounted tree. |
 | Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. The soft roles are covered by `theme-color-roles`. |
-| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the runtime, and `focus-traversal` the events. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. **Release-runtime caveat (583):** the published 0.10.0 build never dispatches `onFocus`/`onBlur`, so the ring cannot paint on a consumer install; every focusable page states it and `docs/gpuix-capabilities.md` §4 has the probe. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the renderer, and `focus-traversal` asserts the events on the main-derived build. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. **Release-runtime caveat (583):** the published 0.10.0 build never dispatches `onFocus`/`onBlur`, so the ring cannot paint on a consumer install; every focusable page states it and `docs/gpuix-capabilities.md` §4 has the probe. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. **Runtime (055):** a control's painted height follows the active density preset, colours stay the theme's, and selection boxes remain icon-sized. **Conformance exception (370, 372):** the whole field family (`Input`, `TextArea`, `Select`'s trigger, `NumberField`, `OTPField`) reads shadcn's new-york-v4 field recipe through `@gpuixui/tw` (36 px, one size) and `Button` reads the button table (32/36/40), so those do not follow density; the presets and every other control do. The runtime density proof therefore uses `Toggle`. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. **Runtime (055):** a code role's `fontFamily` changes with `platformTheme`, and switching platform repaints the mounted tree. Native visual check of the sans sentinel is still pending the playground (B1). |
 | Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`). |
@@ -188,12 +190,12 @@ carries an evidenced limitation. The capability evidence lives in
 
 **Why every row below is `wip`:** each one has code, a behaviour test, a mounted
 example, a docs page (in-package and on the docs site) and a measured runtime
-interaction — the `done` bar above. The status stays `wip` for one reason: the
-native evidence was produced against a locally built binding derived from
-`references/gpuix` `main`, and plan `529` proved that artifact is not the
-published 0.10.0 source. Flipping the rows to `done` before the suite is re-run
-on a published-tag build would turn a provenance gap into a completion claim.
-Re-run `test:runtime` on that build, then move the rows.
+interaction — the `done` bar above. The status stays `wip` because the suite has
+now been run on the **release-tag** build (plan `583`) and two measured runtime
+facts fail there: the build delivers no focus events, so no ring paints, and its
+box model is 2 px smaller than the main-derived one (plan `529` §6.5). Flipping
+the rows to `done` before a consumer-installable build passes would turn those
+runtime gaps into a completion claim.
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
@@ -237,8 +239,10 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**700 tests
-in 46 files at plan `574` — 589 passed / 111 failed on the host's plan-379/529
-binding delta; the new late-value matrix passes 12/12, and the 657 in 41 files
+in 46 files at plan `574` — 589 passed / 111 failed on the store's release-tag
+build: the missing focus events (plan `583`, 19/19 in `focus-ring`) and the 2 px
+published box model (plan `529` §6.5); the new late-value matrix passes 12/12,
+and the 657 in 41 files
 below is plan `391`'s measurement; the leading 640 in 36
 files is plan `383`'s measurement of the then-current tree: the new
 text-overflow file passed 3/3; 637 in 35 files at plan `382` — the new spacer file passed 4/4, and the 633 below are
