@@ -99,6 +99,34 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       **92/92** (**2378** checks, 60 capabilities, 965.0 s), both exit `0`;
       `nub run check`/`lint`/`test` green (playground 428).
 
+`[x]` Measure the **`<diff>` interaction contract** per plan `648`: plan `161`
+      proved a diff paints and plan `163` proved its copy contract, but none of
+      the seven interactive props had a scenario. `diff-surface` (**70 checks**)
+      and `live-diff` (**24**, two consecutive focused runs) measure: a **file
+      header click** emits `toggleFile` with the path and the element **never
+      collapses itself** (`collapsedPaths` removes the body: 354 → 192 px; the
+      other file stays); `maxLines` is a **global** preview cap that appends
+      `Show 7 more lines` and emits `showMore` = `"7"` (a string) without
+      expanding — the consumer's `3 + 7` restores 354 px; a **line click**
+      reports the text plus `oldLine`/`newLine` (`1/1`, `2/none`, `none/2` — the
+      added line is new-side 2, correcting the plan's first draft), while hunk
+      headers fire neither; `wordDiff` moves no geometry or text (wash =
+      screenshot evidence); `scroll` is a 240 px viewport that **keeps the
+      reader's anchor across a patch swap**, and a keyed remount is the reverse
+      proof that the runtime owns that anchor; an empty patch paints a bounded
+      `No changes`. Rows carry **no `testId`**, so all row interactions are
+      coordinate clicks against the measured 36/28/21 px metrics. Four pure
+      tests for the consumer transitions; **nine mutation proofs** observed and
+      reverted (§7.1). Full headless **105/105** (**3765** checks, 65
+      capabilities), exit `0`; `nub run check`/`lint`/`test` green (playground
+      432). Focused ids: `diff-surface`, `live-diff`.
+
+`[ ]` **Cross-team:** `apps/docs/src/lib/capabilities.ts` + its test must gain
+      the `diff` capability and the ids `diff-surface` + `live-diff`, and the
+      docs capability matrix's citation of `content` gains those ids, or its
+      gate stays red against `COMPONENTS.md` (owner: `docs-site`; evidence:
+      plan `648`).
+
 `[x]` Prove the **roving-focus contract in a real window** per plan `637`:
       plan `158`'s two load-bearing claims were `TestRenderer`-only — a
       component's own `renderer.focusElement` reaches a row that was never

@@ -26,6 +26,7 @@ import { dragAutoscrollScenario } from "../scenarios/drag-autoscroll.js";
 import { dragTargetsScenario } from "../scenarios/drag-targets.js";
 import { markdownScenario } from "../scenarios/markdown.js";
 import { liveSurfacesView } from "../scenarios/surfaces.js";
+import { diffSurfaceScenario } from "../scenarios/diff.js";
 import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
@@ -8225,6 +8226,149 @@ const liveMarkdown: LiveScenario = {
     }),
 };
 
+const liveDiff: LiveScenario = {
+  id: "live-diff",
+  title:
+    "Live diff: file toggles, the preview cap, a line click and the scroll anchor",
+  capability: "diff",
+  view: diffSurfaceScenario.view,
+  ready: "diff-readout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const box = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.expectNear(
+        "a live two-file diff is 354 px tall",
+        box.height,
+        354,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live diff keeps its declared width",
+        box.width,
+        640,
+        1,
+      );
+
+      // 1. A real header click emits and the consumer collapses the body.
+      yield* ctx.host.clickWindow(box.x + 6, box.y + 18);
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "toggles=1");
+      const collapsed = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.expectNear(
+        "the live file body collapses",
+        collapsed.height,
+        192,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live collapsed body leaves the paint",
+        yield* paintedCount(ctx, "const a = 1;"),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "the live other file still paints",
+        yield* paintedCount(ctx, "frozen: true"),
+        1,
+      );
+
+      // 2. A second click restores the document.
+      yield* ctx.host.clickWindow(collapsed.x + 6, collapsed.y + 18);
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "toggles=2");
+      const expanded = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.expectNear(
+        "the live second click restores the height",
+        expanded.height,
+        354,
+        1,
+      );
+
+      // 3. The cap paints a ShowMore row; a real click expands by its payload.
+      yield* ctx.host.click("diff-cap");
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "max=3");
+      const capped = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.expectNear(
+        "the live capped preview is 163 px tall",
+        capped.height,
+        163,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live cap paints the hidden count",
+        yield* paintedCount(ctx, "Show 7 more lines"),
+        1,
+      );
+      yield* ctx.host.clickWindow(capped.x + 20, capped.y + capped.height - 18);
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "max=10");
+      yield* ctx.expectEqual(
+        "the live show-more click reveals the rows",
+        yield* paintedCount(ctx, "const e = 6;"),
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live show-more row is gone",
+        yield* paintedCount(ctx, "Show 7 more lines"),
+        0,
+      );
+
+      // 4. A real click on a line's gutter reports its numbers.
+      yield* ctx.host.click("diff-reset");
+      yield* settle;
+      const reset = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.host.clickWindow(reset.x + 8, reset.y + 36 + 28 + 21 + 10.5);
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "lines=1");
+      yield* ctx.expectEqual(
+        "the live removed line reports its numbers",
+        yield* textOf(ctx, "diff-log"),
+        "line=2/none",
+      );
+      yield* ctx.expectEqual(
+        "the live removed line carries its text",
+        yield* textOf(ctx, "diff-line"),
+        "const b = 2;",
+      );
+
+      // 5. The scroll path keeps the reader's place across a patch update.
+      yield* ctx.host.click("diff-scroll");
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "scroll=1");
+      const scrolling = yield* boxOf(ctx, "diff-surface");
+      yield* ctx.expectNear(
+        "the live scroll diff has a fixed viewport",
+        scrolling.height,
+        240,
+        1,
+      );
+      yield* ctx.host.hover("diff-surface");
+      yield* settle;
+      yield* ctx.host.wheel("diff-surface", 0, -200);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live wheel leaves the first line behind",
+        yield* paintedCount(ctx, "const a = 1;"),
+        0,
+      );
+      yield* ctx.host.click("diff-swap");
+      yield* settle;
+      yield* waitForText(ctx, "diff-readout", "swapped=1");
+      yield* ctx.expectEqual(
+        "the live updated patch paints its new value",
+        yield* paintedCount(ctx, "const e = 60;"),
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live reader keeps their place across a patch update",
+        yield* paintedCount(ctx, "const a = 1;"),
+        0,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveDiff.id}.png`);
+    }),
+};
+
 /** The three bar values the chart fixture paints, in paint order. */
 const CHART_BARS = [96, 64, 32] as const;
 
@@ -12932,6 +13076,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveLayers,
   liveContent,
   liveMarkdown,
+  liveDiff,
   columnConfig,
   cropArea,
   appChrome,

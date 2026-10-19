@@ -97,7 +97,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (104/104 green); -> 2 on a host with no binding
+# -> 0 here (105/105 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -249,7 +249,7 @@ it. `shell-filter` and `live-shell-filter` drive it.
 | filter | typing `crop` paints `1 of 103`, keeps `nav-crop-area` and drops `nav-window-layout` from the tree; `CROP` matches the same entry |
 | stage | while the previous pick is hidden the stage follows the first match and **that row** paints `colors.accent` — the highlight is the derived current, not the stored `selected` |
 | clearing | `Escape` belongs to the sidebar container, so it clears from the focused filter **and** from a focused row (keys bubble, plan `345`); the full list returns and the pick the reader made is kept |
-| empty | `zzz` paints `0 of 103`, `No scenarios match` in the sidebar and `no scenarios` in the stage |
+| empty | `zzz` paints `0 of 105`, `No scenarios match` in the sidebar and `no scenarios` in the stage |
 | selection | filtering never rewrites `selected`: hide the pick, then clear, and the stage returns to the hidden pick (a filtered-out pick yields to the first match only while the filter is active) |
 
 ## The app root (plan `522`)
@@ -547,6 +547,30 @@ needs an error state must read the bytes itself (`FileSystem`) and validate them
 before `setImage`, or stat the path before rendering. The PNG fixture lives at
 `apps/playground/fixtures/one-pixel.png`; the bytes are decoded from the same
 base64 constant with `Schema.Uint8ArrayFromBase64`.
+
+
+## The `<diff>` interaction contract (plan `648`)
+
+`diff-surface` measures what a diff *does* (plan `161` only proved it paints).
+The element owns parsed rows but **none of the interaction state**: every open,
+collapse and expand is the consumer's, driven by three events.
+
+| Prop | Measured |
+| ---- | -------- |
+| `onToggleFile` | a **file header** click emits `value = file.path`; nothing else collapses. `collapsedPaths` removes the hunk, lines and body pad (a two-file 354 px document becomes 192 px), and the other file stays |
+| `maxLines` | a **global** cap on line rows, not per file. It appends `Show N more lines` and emits `showMore` with `value = "N"` as a **string**; the element does not expand. The consumer adds N to its cap (`maxLines` 3 → `show 7` → 10 restores all rows) |
+| `onLineClick` | `value` is the line text, `oldLine`/`newLine` are the side numbers (`1/1`, `2/none`, `none/2`). Hunk and file headers emit neither |
+| `wordDiff` | paints word washes only; the box and every row stay identical — **screenshot evidence** (no pixel readback) |
+| `scroll` | a 240 px viewport over a native list; a wheel scrolls it, and a **patch swap keeps the reader's place** (adding `key` to remount loses it — the reverse proof) |
+| empty `patch` | a bounded 640 px surface painting `No changes` |
+
+Rows are internal GPUI elements with **no `testId`**, so a consumer/test reaches
+a header or line only by coordinates: 36 px file header, 28 px hunk, 21 px line,
+8 px body pad under the default theme. A diff viewer's collapsed set and preview
+cap are app state; the probe's two pure transitions (`togglePath`,
+`revealMore`) live in `src/scenarios/diff-state.ts` with four tests.
+`live-diff` repeats the header toggle, cap, line click, wheel and anchor path in
+the real 1100 × 720 window.
 
 
 ## Cross-element drag and file drops (plan `162`)
@@ -1495,8 +1519,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 104-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 91 scenarios. `smoke:live` opens
+The 105-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 93 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1547,6 +1571,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
 | `live-markdown` | the markdown surface in a window: the GFM blocks paint as text, a real drag across the boundary selects the heading and the fenced code, a real coordinate click on the link fires `onLinkClick` while prose fires nothing, and React children stay out of the paint — 19 checks (plan `577`). The article role stays headless (no live a11y dump, plan `197`) |
+| `live-diff` | the diff interaction contract in a window: a real coordinate click on the file header emits `toggleFile` and the consumer collapse shrinks the box 354 → 192 px; a second click restores it; `maxLines` paints `Show 7 more lines`, and a real click on that row raises the cap to 10; a real click on a deleted line's gutter reports `line=2/none`; a hover + real `-200` wheel leaves the first line behind, and a patch swap paints the new value without returning to the top — 24 checks (plan `648`) |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, a vertical tab set stacks its rail with the panel beside it and a real click selects (the disabled row stays inert), Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 26 checks (the vertical half is plan `633`). Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
@@ -1954,24 +1979,24 @@ given.
 
 ## Evidence on this host
 
-The suite is **104/104 green** here (`exit 0`, 3695 checks, 2026-10-19):
+The suite is **105/105 green** here (`exit 0`, 3765 checks, 2026-10-19):
 
 ```
-104/104 scenarios passed · capabilities: layout=verified root=verified text=verified
+105/105 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
 log=verified theme=verified workspace=verified docking=verified float=verified
-preview=verified command=verified content=verified drag=verified reorder=verified
-tree-reorder=verified selection=verified menu=verified menubar=verified
-components=verified search=verified terminal=verified chart=verified toast=verified
-grid=verified data-grid=verified columns=verified column-config=verified
-chrome=verified layers=verified scroller=verified scale=verified tier2=verified
-replace=verified states=verified truncation=verified grid-layout=verified
-typography=verified inspector=verified editor=verified data-toolbar=verified
-query=verified notification=verified crop=verified wizard=verified
-cell-editing=verified upload=verified qr=verified media=verified window=verified
-frames=verified
+preview=verified command=verified content=verified diff=verified drag=verified
+reorder=verified tree-reorder=verified selection=verified menu=verified
+menubar=verified components=verified search=verified terminal=verified
+chart=verified toast=verified grid=verified data-grid=verified columns=verified
+column-config=verified chrome=verified layers=verified scroller=verified
+scale=verified tier2=verified replace=verified states=verified
+truncation=verified grid-layout=verified typography=verified inspector=verified
+editor=verified data-toolbar=verified query=verified notification=verified
+crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
+media=verified window=verified frames=verified
 ```
 
 The last full merge/release gate ran **92/92** (`exit 0`, 2378 checks, 60
@@ -2055,6 +2080,8 @@ src/scenarios/floating.tsx  side/align/offset placement and the window snap
 src/scenarios/popups.tsx    Select, Combobox and Tooltip in the runtime
 src/scenarios/a11y.tsx      the AccessKit dump: roles, names, states, window
 src/scenarios/surfaces.tsx  svg, img (fallbacks, data URL, ref upload), diff, canvas
+src/scenarios/diff.tsx      the <diff> interaction contract (rows, cap, clicks, anchor)
+src/scenarios/diff-state.ts the consumer transitions a controlled diff needs
 src/scenarios/drag-targets.tsx capture, hover during drag, file drops
 src/scenarios/text-selection.tsx selection across text, code, diff and chrome
 src/scenarios/context-menu.tsx right click, pointer placement, dismissal
@@ -2162,7 +2189,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (104/104, 3695 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (105/105, 3765 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

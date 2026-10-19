@@ -16,6 +16,7 @@ import { chartScenario } from "./chart.js";
 import { markdownScenario } from "./markdown.js";
 import { toastScenario } from "./toast.js";
 import { nativeSurfacesScenario } from "./surfaces.js";
+import { diffSurfaceScenario } from "./diff.js";
 import { dragTargetsScenario } from "./drag-targets.js";
 import { dragAutoscrollScenario } from "./drag-autoscroll.js";
 import { listReorderScenario } from "./reorder.js";
@@ -178,6 +179,7 @@ export const PROBE_CAPABILITIES = [
   "data-toolbar",
   "query",
   "notification",
+  "diff",
   "crop",
   "wizard",
   "cell-editing",
@@ -247,6 +249,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   themePlatformScenario,
   a11yScenario,
   nativeSurfacesScenario,
+  diffSurfaceScenario,
   dragTargetsScenario,
   dragAutoscrollScenario,
   listReorderScenario,
