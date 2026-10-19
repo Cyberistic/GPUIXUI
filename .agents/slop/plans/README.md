@@ -243,7 +243,9 @@ takes `674`; the promotion gate on that head takes `675`, the palette-switch
 frame evidence takes `676`, and the promotion gate on that head takes `677`;
 the image-source pixel evidence takes `690`, and the promotion gate on that
 head takes `691`; `692`–`696` were claimed by other workstreams before this one
-needed a number, so the chart's colour-contract pixels take `697`.
+needed a number, so the chart's colour-contract pixels take `697`, and `698` was
+claimed by the tokens-theme workstream first, so the promotion gate on that head
+takes `699`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
@@ -406,6 +408,7 @@ needed a number, so the chart's colour-contract pixels take `697`.
 | [690](./690-live-image-source-pixels.md) | Image-source pixels in a real window: a path and a refused URL are colour evidence | F | `586`, `577`, `674`, `676` | **landed** — `live-content` 44 → **68 checks** (two focused green runs): the 1 × 1 fixture is red with alpha `127`, so the data-URL box is the reference for the alpha-blended frame colour; the **path** and **byte** boxes paint the same colour and it is red-dominant, while the **missing-path**, **refused-URL** and **invalid-data** boxes do not. Three mutation proofs observed and reverted; the offscreen loader still never settles, so the path/http(s) proof is live-only. Full headless **106/106** (3824 checks), `check`/`lint`/`test` green (playground 442) |
 | [691](./691-promotion-gate-with-image-pixels.md) | The promotion gate on the head that includes the image-source pixels | F | `639`, `653`, `656`, `677`, `690` | **landed** — verification only on the `836b4d63` code head (a concurrent session merged `origin/master`'s `scripts/swarm-model.sh` change as `76edbe63`): headless **106/106** (`3824` checks, 65 capabilities; 115.5 s at the gate, an independent re-run at 282.4 s with identical counts) and live **95/95** (`2545` checks, 61 capabilities, 1094.3 s), both exit `0`; `live-content` reports its 68 checks inside the full sequence (`2521 + 24`), a plain `--all` wrote no `provenance.json`, `check`/`lint`/`test` green (playground 442, testing 68); no source change |
 | [697](./697-chart-colour-pixels.md) | The chart recipe's colour contract in a real window | F | `180`, `593`, `674`, `690`, `691` | **landed** — the chart view gains two `40 × 40` solid sourced masks and `live-chart` decodes one captured frame: both mask tints (`#A7A9FF`, `#3BC97F`) and the image's two fills (`#E5484D`, `#30A46C`), radial centre (`#FFD166`) and linear top/bottom are exact/dominant samples. `live-chart` **40 → 71** checks (68 predicted), `chart-svg` **52** unchanged, headless **106/106** (`3824`); `check`/`lint`/`test` green (playground 442, testing 68); six mutations fail (`exit 1`), including one variant isolating the radial left-edge check |
+| [699](./699-promotion-gate-with-chart-colour-pixels.md) | The promotion gate on the head that includes the chart colour pixels | F | `639`, `653`, `656`, `691`, `697` | **planned** — verification only: the next full merge/release gate after plan `697` grew `live-chart` 40 → 71 checks; expected headless **106/106** (`3824`) and live **95/95** (`2575–2576`, 61 capabilities), both exit `0` |
 
 Cross-cutting records:
 
