@@ -189,3 +189,19 @@ branch.
 - `TODO.md` no longer lists the hover row as open.
 - The new cases fail without the wiring and pass with it; the three
   pre-existing plan-540 failures are unchanged.
+
+## 8. Results (2026-10-19)
+
+- `src/behaviour/list.test.tsx`: **59 tests, 56 passed, 3 failed** — the three
+  failures are the recorded plan-540 row-removal focus cases, unchanged. The
+  three new cases pass; they failed before the wiring.
+- `src/behaviour/button.test.tsx`: **1 new case** — a `Button` outside a hover
+  group still receives the caller's `onMouseEnter`/`onMouseLeave`.
+- `nub run --filter @gpuixui/components test`: **44 files, 444 tests passed**.
+- `nub run check`: `check:tests`, lint, format and type-check all clean.
+- `nub run test` (workspace): every package green; components 444, primitives
+  282.
+- `nub run --filter @gpuixui/components test:behaviour`: **768 passed, 35
+  failed of 803** — the same 35 pre-existing plan-540 binding failures named in
+  `PLAN.md` D30/`TODO.md`; no new failure.
+
