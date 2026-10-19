@@ -2,11 +2,12 @@
  * Pagination behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: previous/next staying pressable at the first and last
- * page; `onPageChange` reporting an index instead of the page number, or firing
- * on the current page; an ellipsis that was a focus stop; a current page that
- * was not painted with the primary role; a root that ignored the parts the
- * caller composed; and a single hidden page reached through an ellipsis instead
- * of being rendered.
+ * page (even when a caller passes `disabled={false}`); `onPageChange` reporting
+ * an index instead of the page number, a fractional page, or firing on the
+ * current page; a fractional page count exposing a page that does not exist; an
+ * ellipsis that was a focus stop; a current page that was not painted with the
+ * primary role; a root that ignored the parts the caller composed; and a single
+ * hidden page reached through an ellipsis instead of being rendered.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -271,6 +272,82 @@ describe("Pagination", () => {
 
     clickCentreOf(pager, "extra-next");
     expect(onPageChange).toHaveBeenCalledWith(7);
+
+    pager.unmount();
+  });
+
+  it("keeps Previous inert on page one when the caller passes disabled={false}", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={1} pageCount={10} onPageChange={onPageChange}>
+        <PaginationPrevious testId="prev" disabled={false} />
+        <PaginationList />
+        <PaginationNext testId="next" />
+      </Pagination>,
+    );
+
+    expect(pager.renderer.findByTestId("prev")?.customProps?.tabIndex).toBe(-1);
+    clickCentreOf(pager, "prev");
+
+    expect(onPageChange).not.toHaveBeenCalled();
+
+    pager.unmount();
+  });
+
+  it("keeps Next inert on the last page when the caller passes disabled={false}", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={10} pageCount={10} onPageChange={onPageChange}>
+        <PaginationPrevious testId="prev" />
+        <PaginationList />
+        <PaginationNext testId="next" disabled={false} />
+      </Pagination>,
+    );
+
+    expect(pager.renderer.findByTestId("next")?.customProps?.tabIndex).toBe(-1);
+    clickCentreOf(pager, "next");
+
+    expect(onPageChange).not.toHaveBeenCalled();
+
+    pager.unmount();
+  });
+
+  it("normalises a fractional page and count", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={1.5} pageCount={5.9} onPageChange={onPageChange}>
+        <PaginationPrevious testId="prev" />
+        <PaginationList />
+        <PaginationNext testId="next" />
+      </Pagination>,
+    );
+
+    expect(pager.renderer.getAllText()).not.toContain("6");
+    expect(buttonFor(pager, "1")?.customProps?.["aria-selected"]).toBe(true);
+    expect(pager.renderer.findByTestId("prev")?.customProps?.tabIndex).toBe(-1);
+
+    clickCentreOf(pager, "next");
+
+    expect(onPageChange.mock.calls).toEqual([[2]]);
+
+    pager.unmount();
+  });
+
+  it("stops Next at the whole page count", () => {
+    const onPageChange = vi.fn();
+    const pager = renderComponent(
+      <Pagination page={5} pageCount={5.9} onPageChange={onPageChange}>
+        <PaginationPrevious testId="prev" />
+        <PaginationList />
+        <PaginationNext testId="next" />
+      </Pagination>,
+    );
+
+    expect(pager.renderer.getAllText()).not.toContain("6");
+    expect(pager.renderer.findByTestId("next")?.customProps?.tabIndex).toBe(-1);
+    clickCentreOf(pager, "next");
+
+    expect(onPageChange).not.toHaveBeenCalled();
 
     pager.unmount();
   });

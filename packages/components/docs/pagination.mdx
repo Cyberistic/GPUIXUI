@@ -57,11 +57,19 @@ window and `PaginationNext`.
 An out-of-range `page` is clamped; an ellipsis always stands for two or more
 pages, while a gap of one renders the page itself.
 
+Both numbers are **whole**: `page` is truncated before it is clamped and
+`pageCount` is truncated, so `page={1.9}` of `pageCount={5.9}` is page `1` of
+`5`, not a window with no current page and a `6` that does not exist. A
+non-finite `pageCount` renders nothing rather than an unbounded list.
+
 ## Layout and states
 
 The root lays the parts out in a row. The current page is a button with
 `aria-selected` and the primary fill; pressing it does nothing. Previous and Next
-leave the tab order at the ends instead of merely looking disabled.
+leave the tab order at the ends instead of merely looking disabled, and a caller
+`disabled` can only add to that rule: passing `disabled={false}` at an edge does
+not make the control pressable, and neither control reports a page outside
+`1…pageCount`.
 
 ## Keyboard
 
@@ -75,10 +83,10 @@ Every part takes the GPUix host props and **merges `style` last**.
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `Pagination` | `div` (`role="navigation"`, `aria-label="Pagination"`) | `page: number` (required), `pageCount: number` (required), `onPageChange: (page: number) => void` (required), `siblingCount?: number` (default `1`), `showEdges?: boolean` (default `true`) |
-| `PaginationPrevious` | `div` (`role="button"`, `aria-label="Previous page"`) | host props; disabled on the first page |
+| `PaginationPrevious` | `div` (`role="button"`, `aria-label="Previous page"`) | host props; disabled on the first page (or by `disabled`) |
 | `PaginationList` | `div` | host props |
 | `PaginationItem` | `div` (`role="button"`) | `page: number` (required), `style?: StateStyle<{ active: boolean }>` |
-| `PaginationNext` | `div` (`role="button"`, `aria-label="Next page"`) | host props; disabled on the last page |
+| `PaginationNext` | `div` (`role="button"`, `aria-label="Next page"`) | host props; disabled on the last page (or by `disabled`) |
 | `PaginationEllipsis` | `text` (`aria-label="More pages"`) | host props |
 
 ## Theming
@@ -119,18 +127,20 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (13 tests):
-disabled edges, the page number (not index) reported, the current page no-op,
-Previous/Next stepping, the ellipsis not being a tab stop, a single hidden page
-being rendered instead of an ellipsis, Enter activation, `pageCount: 0`, the
-current fill in both themes, the composed part order, an item outside the list
-reading the root's page, and a caller `onClick` composing with each page change
-(including a click on the current page, which reports the caller and changes
-nothing).
+`src/behaviour/pagination.test.tsx` runs in the real GPUix renderer (17 tests):
+disabled edges (including a caller `disabled={false}` that cannot re-enable
+them), the page number (not index) reported, the current page no-op,
+Previous/Next stepping, a fractional page and page count normalised to whole
+numbers and stopped at the real last page, the ellipsis not being a tab stop, a
+single hidden page being rendered instead of an ellipsis, Enter activation,
+`pageCount: 0`, the current fill in both themes, the composed part order, an
+item outside the list reading the root's page, and a caller `onClick` composing
+with each page change (including a click on the current page, which reports the
+caller and changes nothing).
 
 `src/pagination/logic.test.ts` covers the window table above, including clamping,
-wide siblings, unique ascending pages, and the invariant that every ellipsis
-stands for at least two pages.
+truncation of fractional and non-finite inputs, wide siblings, unique ascending
+pages, and the invariant that every ellipsis stands for at least two pages.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

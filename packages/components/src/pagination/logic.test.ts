@@ -14,7 +14,12 @@ import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
-import { pageWindow, type PageItem } from "./logic.js";
+import {
+  currentPageOf,
+  pageCountOf,
+  pageWindow,
+  type PageItem,
+} from "./logic.js";
 
 const pages = (...values: ReadonlyArray<number>): ReadonlyArray<PageItem> =>
   values.map((page) => ({ kind: "page", page }));
@@ -226,5 +231,45 @@ describe("pageWindow", () => {
         Arr.some(entries, (entry) => entry.kind === "ellipsis"),
       ),
     ).toBe(true);
+  });
+
+  it("truncates a fractional page before clamping", () => {
+    expect(currentPageOf(1.9, 10)).toBe(1);
+    expect(currentPageOf(5.9, 10)).toBe(5);
+    expect(pageWindow({ page: 1.9, pageCount: 10 })).toEqual([
+      ...pages(1, 2, 3, 4, 5),
+      gap("end"),
+      ...pages(10),
+    ]);
+  });
+
+  it("truncates a fractional page count", () => {
+    expect(pageCountOf(5.9)).toBe(5);
+    expect(pageWindow({ page: 5, pageCount: 5.9 })).toEqual(
+      pages(1, 2, 3, 4, 5),
+    );
+    expect(
+      pageWindow({ page: 5, pageCount: 5.9 }).some(
+        (entry) => entry.kind === "page" && entry.page > 5,
+      ),
+    ).toBe(false);
+  });
+
+  it("clamps a non-finite or non-positive page into range", () => {
+    expect(currentPageOf(Number.NaN, 10)).toBe(1);
+    expect(currentPageOf(Number.NEGATIVE_INFINITY, 10)).toBe(1);
+    expect(currentPageOf(Number.POSITIVE_INFINITY, 10)).toBe(10);
+    expect(pageWindow({ page: Number.NaN, pageCount: 6 })).toEqual(
+      pages(1, 2, 3, 4, 5, 6),
+    );
+  });
+
+  it("treats a non-finite page count as empty", () => {
+    expect(pageCountOf(Number.NaN)).toBe(0);
+    expect(pageCountOf(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(pageWindow({ page: 1, pageCount: Number.NaN })).toEqual([]);
+    expect(
+      pageWindow({ page: 1, pageCount: Number.POSITIVE_INFINITY }),
+    ).toEqual([]);
   });
 });

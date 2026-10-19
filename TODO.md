@@ -340,6 +340,15 @@ retired once both branches are one
       while hovered leaves the group on unmount. 4 native cases (List 60),
       both-direction proof (all four fail before the wiring); docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] Pagination reports only real pages — plan 611: measured four ways to
+      hand `onPageChange` a page that does not exist: a caller `disabled={false}`
+      re-enabled Previous on page 1 (`0`) or Next on the last page (`11`), and
+      fractional `page`/`pageCount` desynced the window from `current` (no
+      current item, then `0.5`; a `6` beyond a 5-page list). `pageCountOf` and
+      `currentPageOf` normalise once for the root and the window, and each edge
+      control ORs the caller's `disabled` and guards its handler. 4 pure + 4
+      native cases (unit 449, Pagination 17), both-direction proof; docs,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

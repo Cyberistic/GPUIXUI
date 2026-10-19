@@ -27,7 +27,12 @@ import {
   type PartsContract,
 } from "./internal/parts.js";
 import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
-import { pageWindow, type PageItem } from "./pagination/logic.js";
+import {
+  currentPageOf,
+  pageCountOf,
+  pageWindow,
+  type PageItem,
+} from "./pagination/logic.js";
 
 /** The rules a pagination part follows; throws outside a {@link Pagination}. */
 interface PaginationContextValue {
@@ -72,8 +77,8 @@ export interface PaginationProps extends Omit<Props, "children"> {
  * inside it; the control renders nothing when there are no pages.
  */
 export const Pagination = ({
-  page,
-  pageCount,
+  page: rawPage,
+  pageCount: rawPageCount,
   onPageChange,
   siblingCount = 1,
   showEdges = true,
@@ -82,13 +87,14 @@ export const Pagination = ({
   ...rest
 }: PaginationProps) => {
   const theme = useTheme();
-  const current = Math.min(Math.max(page, 1), pageCount);
+  const pageCount = pageCountOf(rawPageCount);
+  const current = currentPageOf(rawPage, pageCount);
   const window = useMemo(
     () => pageWindow({ page: current, pageCount, siblingCount, showEdges }),
     [current, pageCount, siblingCount, showEdges],
   );
 
-  if (pageCount <= 0) return null;
+  if (pageCount === 0) return null;
 
   assertParts(paginationRoot, children);
 
@@ -117,12 +123,16 @@ export const Pagination = ({
 };
 
 /** {@link PaginationPrevious} props. */
-export type PaginationPreviousProps = Props;
+export interface PaginationPreviousProps extends Props {
+  /** Disables the control in addition to the first-page rule. */
+  readonly disabled?: boolean;
+}
 
 /** The previous-page control; it leaves the tab order on the first page. */
 export const PaginationPrevious = ({
   style,
   onClick,
+  disabled,
   ...rest
 }: PaginationPreviousProps) => {
   const theme = useTheme();
@@ -133,11 +143,11 @@ export const PaginationPrevious = ({
       variant="ghost"
       size="sm"
       aria-label="Previous page"
-      disabled={current <= 1}
       {...rest}
+      disabled={disabled === true || current <= 1}
       onClick={(event) => {
         onClick?.(event);
-        onPageChange(current - 1);
+        if (current > 1) onPageChange(current - 1);
       }}
       style={mergeStyles(
         {
@@ -158,12 +168,16 @@ export const PaginationPrevious = ({
 };
 
 /** {@link PaginationNext} props. */
-export type PaginationNextProps = Props;
+export interface PaginationNextProps extends Props {
+  /** Disables the control in addition to the last-page rule. */
+  readonly disabled?: boolean;
+}
 
 /** The next-page control; it leaves the tab order on the last page. */
 export const PaginationNext = ({
   style,
   onClick,
+  disabled,
   ...rest
 }: PaginationNextProps) => {
   const theme = useTheme();
@@ -174,11 +188,11 @@ export const PaginationNext = ({
       variant="ghost"
       size="sm"
       aria-label="Next page"
-      disabled={current >= pageCount}
       {...rest}
+      disabled={disabled === true || current >= pageCount}
       onClick={(event) => {
         onClick?.(event);
-        onPageChange(current + 1);
+        if (current < pageCount) onPageChange(current + 1);
       }}
       style={mergeStyles(
         {

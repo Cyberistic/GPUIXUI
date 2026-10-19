@@ -8,17 +8,26 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Num from "effect/Number";
 
 /** A rendered entry in the page list. */
 export type PageItem =
   | { readonly kind: "page"; readonly page: number }
   | { readonly kind: "ellipsis"; readonly side: "start" | "end" };
 
+/** A whole page count: non-negative, and a non-finite input is zero. */
+export const pageCountOf = (raw: number): number =>
+  Number.isFinite(raw) ? Math.max(0, Math.trunc(raw)) : 0;
+
+/** The current page: whole, at least 1, at most the whole count. */
+export const currentPageOf = (raw: number, pageCount: number): number =>
+  Num.clamp({ minimum: 1, maximum: pageCount })(Math.trunc(raw));
+
 /** Input to {@link pageWindow}. */
 export interface PageWindowInput {
-  /** The current page, 1-based. Clamped into range. */
+  /** The current page, 1-based. Truncated and clamped into range. */
   readonly page: number;
-  /** How many pages exist. Zero or fewer yields an empty list. */
+  /** How many pages exist, truncated. Zero, fewer or non-finite yields an empty list. */
   readonly pageCount: number;
   /** Pages shown either side of the current one. Default 1. */
   readonly siblingCount?: number;
@@ -34,15 +43,12 @@ const ellipsis = (side: "start" | "end"): PageItem => ({
   side,
 });
 
-const clamp = (value: number, low: number, high: number): number =>
-  Math.min(Math.max(value, low), high);
-
 const pages = (from: number, to: number): ReadonlyArray<PageItem> =>
   Arr.map(Arr.range(from, Math.max(from, to)), page);
 
 /**
  * The entries to render, ascending, with no repeated page and always including
- * the current page. A list that fits (`siblingCount + 5` or fewer pages) is
+ * the current page. A list that fits (`2 * siblingCount + 5` or fewer pages) is
  * rendered in full.
  */
 export const pageWindow = ({
@@ -51,10 +57,10 @@ export const pageWindow = ({
   siblingCount = 1,
   showEdges = true,
 }: PageWindowInput): ReadonlyArray<PageItem> => {
-  const pageCount = Math.max(0, Math.trunc(rawPageCount));
+  const pageCount = pageCountOf(rawPageCount);
   if (pageCount === 0) return [];
 
-  const current = clamp(Math.trunc(rawPage), 1, pageCount);
+  const current = currentPageOf(rawPage, pageCount);
   const siblings = Math.max(0, Math.trunc(siblingCount));
   const left = Math.max(current - siblings, 1);
   const right = Math.min(current + siblings, pageCount);
