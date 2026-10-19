@@ -352,5 +352,8 @@ suffix change removed only the mid-word match.
 **Suites.** `nubx vitest run` in `apps/docs`: 106 files / 773 tests passed
 (baseline 765). `nub run --filter docs check-types`, `nub run --filter docs
 smoke:build` (`98 pages`, `121 links`, `3 brand assets`, `1284 anchors`,
-`search checked`, exit `0`), `nub run check`, `nub run lint` and `nub run test`
-all passed on 2026-10-19.
+`search checked`, exit `0`), `smoke:responsive` (`98 pages` at 390 px, exit `0`)
+and `smoke:a11y --only /docs/contributing` (`1 page × 2 schemes`, 0 violations)
+also passed, because the new table is the kind of wide content plan 502 and the
+axe sweep guard. `nub run check`, `nub run lint` and `nub run test` are green on
+2026-10-19.
