@@ -184,8 +184,10 @@ No package, token or preview file changes.
 2. Remove the `terms.length < 2` floor: `search("input")` moves off
    `/docs/components/text-input` (or `promotedNameRank(entry, "primary")`
    returns a rank), so the plain-word test fails.
-3. Remove the `TOKEN_MATCH_RANK` (return `0` for a variant): the existing
-   `command palette` page-title test and the new unit ordering assertion fail.
+3. Return `0` for a variant instead of `TOKEN_MATCH_RANK`: three unit
+   assertions fail and `search("virtual-list")` returns `/docs/roadmap`, because
+   `Virtualized lists` would then tie the capability scenario at rank `0` and win
+   on title length. The exact rank is load-bearing.
 4. Restore the rule: everything passes.
 
 ## 7. Result
