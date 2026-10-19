@@ -352,10 +352,14 @@ describe("the native find-highlight contract", () => {
       ),
       readme: readFileSync(new URL("../README.md", import.meta.url), "utf8"),
     };
-    Object.entries(sources).forEach(([name, text]) => {
-      expect(text, name).toContain("inline-mark");
-      expect(text, name).toContain("radius.sm");
-    });
+    expect(sources.catalogue).toContain(
+      "theme's inline-mark radius, `radius.sm`",
+    );
+    expect(sources.catalogue).toContain(
+      "`nativeHighlight` returns it as `radius`",
+    );
+    expect(sources.design).toContain("inline-mark step, `radius.sm`");
+    expect(sources.readme).toContain("inline-mark corner (`radius.sm`)");
   });
 
   it("runs the example", () => {

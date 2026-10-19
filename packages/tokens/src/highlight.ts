@@ -148,7 +148,7 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
       color,
       Math.min(1, ownAlpha(color) + nativeHighlightStep),
     ),
-    radius: 2,
+    radius: theme.radius.sm,
   };
 }
 
