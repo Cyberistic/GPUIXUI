@@ -82,8 +82,8 @@ describe("status text through a text selection", () => {
     };
 
     const defaultWorst = tightest("default");
-    expect(defaultWorst[0]).toBe("Light · Windows warningText on selected");
-    expect(Number(defaultWorst[1].toFixed(3))).toBe(4.858);
+    expect(defaultWorst[0]).toBe("Light · Linux infoText on active");
+    expect(Number(defaultWorst[1].toFixed(3))).toBe(4.891);
 
     const highWorst = tightest("high");
     expect(highWorst[0]).toBe("High contrast light warningText on active");

@@ -58,7 +58,7 @@ export const xpPlatformRecipe = {
       // ink wash, under the 7:1 body floor. Each takes one designed step in its
       // own family (plan 574).
       infoText: "#173A88",
-      successText: "#0E5135",
+      successText: "#0A3A26",
       warningText: "#4B3100",
       destructiveText: "#7E1D21",
       accent: "#C6DAFA",

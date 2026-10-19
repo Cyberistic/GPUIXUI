@@ -798,7 +798,11 @@ on 2.5% and its hover on 5% — so a `border` or label that clears every
 plain-surface pair cannot disappear into the wash. `nativeInlineCode` holds the
 other composition on a fill: `codeText` (`primaryText`) on the opaque `codeWash`
 (`accent`) quad is body copy, so it takes the body floor; four sets measured
-6.506–6.960:1 and their ink takes one designed step. The word-level 28% diff
+6.506–6.960:1 and their ink takes one designed step. A changed diff line is its
+own surface: `nativeTextOverFades` includes the row's gutter, number, marker and
+3px bar on the 5.5% add/delete tint, and `nativeSyntaxTints` holds every syntax
+role on both tints on every document tone; five light pairs measured
+6.950–6.990:1 there and their inks take one designed step. The word-level 28% diff
 wash and the runtime's fixed neutral hairlines are documented omissions. The light platform
 styles name their own status
 text steps where the inherited ink missed the body floor through the wash or a

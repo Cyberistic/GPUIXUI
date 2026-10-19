@@ -105,13 +105,14 @@ export interface NativeTextOverFade {
  * The two-fade compositions a native document paints, on every
  * {@link nativeTextSurfaces} tone.
  *
- * A changed diff line's `text` is 92% over 5.5% of the add/delete role. A
- * blockquote paints its body role whole over 5% of the accent ink. The
- * runtime's 28% word-level diff wash is deliberately absent: it paints a
- * changed token's own syntax colour over a wash of the add/delete family, which
- * measures **4.389:1** for `destructiveText` on its own wash in `Dark · Linux`
- * and cannot clear a text floor while staying visible; `docs/tokens.md` states
- * the omission.
+ * A changed diff line's `text` is 92% over 5.5% of the add/delete role, and its
+ * gutter, number/marker and accent bar sit on that same tint. A blockquote
+ * paints its body role whole over 5% of the accent ink. The runtime's 28%
+ * word-level diff wash is deliberately absent: it paints a changed token's own
+ * syntax colour over a wash of the add/delete family, which measures
+ * **4.389:1** for `destructiveText` on its own wash in `Dark · Linux` and
+ * cannot clear a text floor while staying visible; `docs/tokens.md` states the
+ * omission.
  */
 export const nativeTextOverFades: readonly NativeTextOverFade[] = [
   {
@@ -129,12 +130,78 @@ export const nativeTextOverFades: readonly NativeTextOverFade[] = [
     pairClass: "body",
   },
   {
+    field: "textFaint",
+    opacity: 0.8,
+    wash: "diffAdd",
+    washOpacity: 0.055,
+    pairClass: "surface",
+  },
+  {
+    field: "textFaint",
+    opacity: 0.8,
+    wash: "diffDel",
+    washOpacity: 0.055,
+    pairClass: "surface",
+  },
+  {
+    field: "diffAdd",
+    opacity: 0.9,
+    wash: "diffAdd",
+    washOpacity: 0.055,
+    pairClass: "secondary",
+  },
+  {
+    field: "diffDel",
+    opacity: 0.9,
+    wash: "diffDel",
+    washOpacity: 0.055,
+    pairClass: "secondary",
+  },
+  {
+    field: "diffAdd",
+    opacity: 0.55,
+    wash: "diffAdd",
+    washOpacity: 0.055,
+    pairClass: "surface",
+  },
+  {
+    field: "diffDel",
+    opacity: 0.55,
+    wash: "diffDel",
+    washOpacity: 0.055,
+    pairClass: "surface",
+  },
+  {
     field: "textMuted",
     opacity: 1,
     wash: "accent",
     washOpacity: 0.05,
     pairClass: "body",
   },
+];
+
+/**
+ * A syntax role painted on one of the runtime's row tints. The tint is a role
+ * at a fixed fraction, so the palette is measured on it rather than on the
+ * document tone alone.
+ */
+export interface NativeSyntaxTint {
+  /** The `NativeTextTheme` field whose role is the row tint. */
+  readonly wash: keyof typeof nativeTextRoles;
+  /** The fraction of the role painted, `0…1`. */
+  readonly opacity: number;
+}
+
+/**
+ * The two row tints a native diff paints under every line of a changed hunk —
+ * `diffAdd` (`successText`) at 5.5% and `diffDel` (`destructiveText`) at 5.5%.
+ * The runtime paints the gutter, marker and body over them, and a syntax run at
+ * full alpha. Five shipped sets measured a syntax capture below the body floor
+ * on these tints before their inks took one designed step.
+ */
+export const nativeSyntaxTints: readonly NativeSyntaxTint[] = [
+  { wash: "diffAdd", opacity: 0.055 },
+  { wash: "diffDel", opacity: 0.055 },
 ];
 
 /**
@@ -219,7 +286,8 @@ export interface NativeTextFailure {
  * not own; none of those compositions is a token pair, so
  * {@link themeContrastFailures} cannot see them. This is the ninth check: it
  * holds {@link nativeTextFades}, {@link nativeTextOverFades},
- * {@link nativeInlineCode}, {@link nativeTextWashes} and every syntax role
+ * {@link nativeSyntaxTints}, {@link nativeInlineCode},
+ * {@link nativeTextWashes} and every syntax role
  * through {@link nativeInk} on all four {@link nativeTextSurfaces} tones, at the
  * floors {@link contrastFloors} owns.
  *
@@ -232,6 +300,11 @@ export interface NativeTextFailure {
  * `border: "#303030"` theme on `Dark · macOS` clears every plain-surface pair
  * and measures **1.002:1** on the code header's 2% wash; on `Dark`, a
  * `border: "#222222"` measures **1.036:1** on the block's own 3.5% body wash.
+ * A changed diff line is the same story one surface over: its gutter, marker,
+ * accent bar and syntax runs sit on a 5.5% tint of the add/delete status role,
+ * which {@link nativeSyntaxTints} and the extended {@link nativeTextOverFades}
+ * measure. Five shipped pairs measured 6.950–6.990:1 there while every other
+ * check returned `[]`; their inks took one designed step.
  *
  * Inline code is a text-on-fill pair, not a fade: `codeText` (`primaryText`) is
  * painted on the opaque `codeWash` (`accent`) quad. Four shipped sets measured
@@ -305,6 +378,32 @@ export function themeNativeTextFailures(
           ];
     });
   });
+  const syntaxTintFailures = nativeSyntaxTints.flatMap((tint) => {
+    const washRole = nativeTextRoles[tint.wash];
+    return [...new Set(Object.values(nativeSyntaxRoles))].flatMap((role) =>
+      nativeTextSurfaces.flatMap((surface) => {
+        const tinted = compositeOver(
+          alpha(theme.colors[washRole], tint.opacity),
+          theme.colors[surface],
+        );
+        const ratio = contrastRatio(theme.colors[role], tinted);
+        return ratio >= floors.body
+          ? []
+          : [
+              {
+                role,
+                surface,
+                opacity: 1,
+                wash: washRole,
+                washOpacity: tint.opacity,
+                pairClass: "body" as const,
+                floor: floors.body,
+                ratio,
+              },
+            ];
+      }),
+    );
+  });
   const inlineRole = nativeTextRoles[nativeInlineCode.text];
   const inlineWash = nativeTextRoles[nativeInlineCode.wash];
   const inlineRatio = contrastRatio(
@@ -371,6 +470,7 @@ export function themeNativeTextFailures(
   return [
     ...fadeFailures,
     ...overFadeFailures,
+    ...syntaxTintFailures,
     ...inlineFailures,
     ...washFailures,
     ...inkFailures,

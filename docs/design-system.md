@@ -847,7 +847,12 @@ four `Surface` tones a document may paint on; the syntax palette is held to the
 body floor both opaque (`nativeSyntaxPairs`) and through the 3.5% ink wash the
 code block paints over each, and the word-level 28% diff wash is documented as
 an omission because a changed token's own colour sits on a wash of its own
-family. The runtime's two fixed neutral hairlines — a diff file header's 4% top
+family. A changed diff line is its own surface: its gutter, number, marker, 3px
+bar and syntax runs sit on a 5.5% tint of the add/delete status role, so
+`nativeSyntaxTints` and the row entries of `nativeTextOverFades` hold both on
+every tone; five light pairs missed the body floor there and took one designed
+step in their own family. The runtime's two fixed neutral hairlines — a diff
+file header's 4% top
 edge and a markdown table's 10% rule — are the other omissions: they are ink,
 not a theme role, so no edit can move them. The runtime's own chrome is held
 too: a code block's body frame (the

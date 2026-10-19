@@ -59,7 +59,7 @@ export const aeroPlatformRecipe = {
       // through the active match, under the 4.5:1 secondary floor (plan 582).
       infoText: "#173A88",
       warningText: "#4B3100",
-      successText: "#0E5135",
+      successText: "#0A3A26",
       destructiveText: "#7E1D21",
       accent: "#D8EAFB",
       accentForeground: "#0B478A",

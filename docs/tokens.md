@@ -113,6 +113,7 @@ missing here is not public.
 | `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
 | `NativeInlineCode` | The inline-code pair: the text field painted on its opaque wash, and the floor it must clear. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
+| `NativeSyntaxTint` | A syntax role painted on one of the native diff's row tints, with the tint's field and fraction. |
 | `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
 | `NativeTextFailure` | One native document fade, two-fade composition, inline-code pair, chrome wash or ink wash a theme misses, with its field, role, surface and ratios. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales, plus the two runtime-only members a brand may set: the gutter floor and the diff accent bar. |
@@ -1398,7 +1399,7 @@ XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
 `selected`, and every high-contrast light tone at 6.12–6.72:1 under the 7:1
 floor while the dark sets already passed; the six light status roles move one
 half-step between the ramp steps they used, so the tightest shipped pair is
-**4.858:1** (Windows light `warningText` on `selected`) and the AAA tightest
+**4.891:1** (Linux light `infoText` on `active`) and the AAA tightest
 **7.370:1** (identity light high `warningText` on `active`). An accent-toned
 link is the last text role the washed contract covers (`selectionLinkPairs`):
 `primaryText` is
@@ -1603,8 +1604,8 @@ The captures are held to the **body** floor on every tone a document may paint
 on — `nativeTextSurfaces` is `background`, `card`, `popover` and `muted` —
 through `nativeSyntaxPairs`, because code is body copy, not a status label.
 `foreground` is not in the list: the body pairs already hold it on all four.
-Every shipped set clears the opaque floor; the tightest is `warningText` at
-**7.599:1** (`Light · macOS`).
+Every shipped set clears the opaque floor; the tightest is `primaryText` at
+**7.706:1** (`Light`).
 
 The runtime also paints through fades a theme cannot change. A diff line is 92%
 of `text`, its gutter number 80% and its unchanged marker 50% of `textFaint`;
@@ -1619,7 +1620,7 @@ tints and gutters on **perceivability**. The gutter's two fades are
 perceivability pairs rather than text pairs because the runtime dims chrome:
 they measure 3.595:1 at 80% and 2.082:1 at 50% on Aero light's quiet panel,
 below the secondary floor by design. The ink wash is held for every syntax role
-on the same four tones; the tightest is `warningText` at **7.008:1**
+on the same four tones; the tightest is `successText` at **7.110:1**
 (`Light · macOS`). Inline code is the one native-text composition on an opaque
 fill: the runtime paints `codeText` (`primaryText`) on a `codeWash` (`accent`)
 quad behind the run. The accent row fill already measures a link at the
@@ -1630,6 +1631,21 @@ pair to the body floor. Four sets were under it — `Light · Windows XP`
 designed step in its own family, macOS light takes one more so the tightest is
 not a three-decimal pass, and the tightest shipped pair is **7.102:1**
 (`Light · Windows XP`).
+
+A changed diff line is its own surface. The runtime tints the whole row with
+5.5% of `diffAdd` (`successText`) or `diffDel` (`destructiveText`) and paints
+every child on it — the gutter, the number, the marker, the 3px bar and the
+syntax runs at full alpha. `nativeTextOverFades` includes the row's chrome and
+`nativeSyntaxTints` holds every syntax role on both tints on every
+`nativeTextSurfaces` tone at the body floor. Five shipped pairs were under it
+while every other check returned `[]`: `Light · macOS` `warningText` 6.950:1 on
+the success tint and 6.963:1 on the destructive tint, `Light · Windows` 6.990:1
+and 6.958:1, and `Light · Windows XP` `successText` 6.989:1 on the destructive
+tint. macOS and Windows name `warningText` `#4B3100`; XP and Aero name
+`successText` `#0A3A26`, one designed step in the family each already used. The
+tightest tinted pair is **7.008:1** (`Light`, `primaryText` on the
+`destructiveText` tint); the identity ink stays because it also carries the
+brand link and the light ring, and the pair passes.
 
 The runtime's own chrome sits on lighter ink washes the theme does not own.
 A code block's language header is a **2%** wash under `textMuted`, and the
@@ -1663,10 +1679,11 @@ wash. The runtime also draws two neutral hairlines of its own — a diff file
 header's **4%** top edge and a markdown table's **10%** rule — which are fixed
 black-or-white ink, not a theme role, so no theme edit can move them and they
 stay outside the contract. The light platform
-styles own the steps their canvases need: macOS, Windows, Windows XP and Aero
-name `infoText` `#173A88`; XP adds `successText` `#0E5135`, `warningText`
-`#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `successText`
-`#0E5135`, `destructiveText` `#7E1D21` and `warningText` `#4B3100`.
+styles own the steps their canvases need: macOS and Windows name `warningText`
+`#4B3100` and `infoText` `#173A88`; XP adds `successText` `#0A3A26`,
+`warningText` `#4B3100` and `destructiveText` `#7E1D21`, and Aero adds
+`successText` `#0A3A26`, `destructiveText` `#7E1D21` and `warningText`
+`#4B3100`; XP and Aero also name `infoText` `#173A88`.
 
 The metrics come from the theme's own scales: `codeTextSize`/`codeLineHeight`
 from `codeBlock`, `mdTextSize`/`mdLineHeight` from `body`, the heading sizes from
@@ -3034,7 +3051,7 @@ status label in a selectable row paints and the label is dragged over with the
 copy around it; XP light `successText` measured 3.671:1 on `active` and every
 high-contrast light tone 6.12–6.72:1 under 7:1, so the six light status roles
 move one half-step between the ramp steps they used. The tightest pair is
-**4.858:1** (Windows light `warningText` on `selected`) and **7.370:1** at AAA
+**4.891:1** (Linux light `infoText` on `active`) and **7.370:1** at AAA
 (identity light high `warningText` on `active`); the plain `contrastPairs` count
 stays **338**.
 

@@ -70,6 +70,9 @@ export const windowsPlatformStyle = {
       // with no margin — so the document's type-name captures take one blue step
       // (plan 574).
       infoText: "#173A88",
+      // The warning ink is one step from the inherited amber-800 so a syntax
+      // token on a diff row tint keeps the body floor (plan 591).
+      warningText: "#4B3100",
       accent: "#DCEBF8",
       accentForeground: "#004A8F",
       accentHover: "#CFE3F5",

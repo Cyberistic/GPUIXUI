@@ -58,7 +58,7 @@ describe("status text on the state washes", () => {
     platforms.forEach((platform) => {
       const theme = getPlatformTheme(platform, "light");
       expect(theme.colors.warningText, platform).toBe(
-        lightTheme.colors.warningText,
+        platform === "linux" ? lightTheme.colors.warningText : "#4B3100",
       );
       expect(
         contrastRatio(theme.colors.warningText, theme.colors.active),

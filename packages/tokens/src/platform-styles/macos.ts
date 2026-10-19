@@ -75,6 +75,9 @@ export const macosPlatformStyle = {
       // floor, so the document's type-name captures take one blue step (plan
       // 574).
       infoText: "#173A88",
+      // The warning ink is one step from the inherited amber-800 so a syntax
+      // token on a diff row tint keeps the body floor (plan 591).
+      warningText: "#4B3100",
       accent: "#D9EAFD",
       accentForeground: "#004A9E",
       accentHover: "#CBE2FC",

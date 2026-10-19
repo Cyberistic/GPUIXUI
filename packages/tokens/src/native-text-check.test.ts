@@ -142,6 +142,12 @@ describe("native text check", () => {
     ).toEqual([
       "text@0.92>diffAdd@0.055",
       "text@0.92>diffDel@0.055",
+      "textFaint@0.8>diffAdd@0.055",
+      "textFaint@0.8>diffDel@0.055",
+      "diffAdd@0.9>diffAdd@0.055",
+      "diffDel@0.9>diffDel@0.055",
+      "diffAdd@0.55>diffAdd@0.055",
+      "diffDel@0.55>diffDel@0.055",
       "textMuted@1>accent@0.05",
     ]);
   });
@@ -395,10 +401,12 @@ describe("native text check", () => {
       "themeNativeTextFailures",
       "nativeTextFades",
       "nativeTextOverFades",
+      "nativeSyntaxTints",
       "nativeInlineCode",
       "nativeTextWashes",
       "NativeTextFade",
       "NativeTextOverFade",
+      "NativeSyntaxTint",
       "NativeInlineCode",
       "NativeTextWash",
       "NativeTextFailure",

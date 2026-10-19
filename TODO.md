@@ -2010,6 +2010,13 @@ measured **1.036:1** inside the block while `themeFailures` returned `[]`;
 shipped set already clears the 1.05:1 floor (1.130:1 at the tightest,
 `Dark · Linux`) so no colour moves, and the reference, design system, README and
 ledger name it (plan 589)
+`[x]` Hold the native diff row tint — the runtime paints a changed diff line
+on a 5.5% tint of its status role and every child (gutter, marker, accent bar,
+syntax runs) sits on it, but the contract measured those paints on the plain
+tone only, so five shipped pairs missed the body floor while every check returned
+`[]`; `nativeSyntaxTints` and six extended `nativeTextOverFades` entries hold the
+row, four light inks take one designed step, and the tightest tinted pair is
+**7.008:1** (plan 591)
 `[x]` Hold inline code on its accent wash — a markdown document paints
 `codeText` (`primaryText`) on an opaque `codeWash` (`accent`) quad, but the only
 pair for that combination was the accent row fill's secondary floor, so four

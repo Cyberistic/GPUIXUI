@@ -335,13 +335,16 @@ describe("native text theme", () => {
       readonly [string, Theme, keyof ThemeColors, string]
     > = [
       ["macOS", macos, "infoText", "#173A88"],
+      ["macOS", macos, "warningText", "#4B3100"],
       ["Windows", windows, "infoText", "#173A88"],
+      ["Windows", windows, "warningText", "#4B3100"],
       ["XP", xp, "infoText", "#173A88"],
       ["XP", xp, "warningText", "#4B3100"],
-      ["XP", xp, "successText", "#0E5135"],
+      ["XP", xp, "successText", "#0A3A26"],
       ["XP", xp, "destructiveText", "#7E1D21"],
       ["Aero", aero, "infoText", "#173A88"],
       ["Aero", aero, "warningText", "#4B3100"],
+      ["Aero", aero, "successText", "#0A3A26"],
     ];
     steps.forEach(([label, theme, role, value]) => {
       expect(theme.colors[role], `${label} ${role}`).toBe(value);

@@ -84,10 +84,20 @@ describe("the find highlight on the painted code surface", () => {
     expect(ratios["destructiveText/background"]).toBeCloseTo(4.496, 3);
     expect(ratios["destructiveText/muted"]).toBeCloseTo(4.479, 3);
 
-    // The defect is the one the painted surface adds; nothing else is wrong.
+    // The defect is the one the painted surface adds; nothing else in the
+    // original contract is wrong. Plan 591's tint check also reports the
+    // planted pre-fix `successText` on its own diff-row tint, so only the
+    // highlight count is asserted here.
     const all = themeFailures(preFixAero);
-    expect(all).toHaveLength(4);
-    expect(all.every((failure) => failure.kind === "highlight")).toBe(true);
+    expect(all.filter((failure) => failure.kind === "highlight")).toHaveLength(
+      4,
+    );
+    expect(
+      all.every(
+        (failure) =>
+          failure.kind === "highlight" || failure.kind === "nativeText",
+      ),
+    ).toBe(true);
   });
 
   it("ships the XP status inks in Aero light", () => {
