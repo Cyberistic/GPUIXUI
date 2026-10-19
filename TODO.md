@@ -472,6 +472,15 @@ retired once both branches are one
       (Notification centre 19), the down case failing with the reveal removed
       and the up case with its `above` branch removed; docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the plan index synced (owner: components)
+    - [x] Tabs: the disabled-tab handover reads the natively focused tab — plan
+      646. Measured: a tab focused through the renderer (a `Tab` entry or a
+      programmatic `focusElement`, neither of which runs React's `onFocus`) kept
+      native focus when the app disabled it, because the plan-511 handover keyed
+      only on the remembered id; the origin is now the renderer's focused row,
+      with the remembered id as fallback. 3 existing native cases fail at `HEAD`
+      and pass after (Tabs 29 of 31); the removed-host and `onBlur` cases stay
+      red with the plan-540 focus-signal failures. Docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the plan index synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1107,10 +1116,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 611/612/619): all
       three exit 0; the unit suite is 454 tests in 45 files. The native
-      behaviour suite is **807 passed / 35 failed of 842** — every failure is
+      behaviour suite is **810 passed / 32 failed of 842** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19,
-      after plan 644).
+      after plan 646).
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)

@@ -317,12 +317,23 @@ export const Tabs = ({
   );
 
   /**
-   * A tab that vanishes or turns disabled takes the user's focus with it. Hand
-   * focus to the tab stop without changing the selected tab, and never steal it
-   * from another control the consumer focused in the same update (plan 511).
+   * A tab that vanishes or turns disabled takes the user's focus with it. The
+   * origin is the **natively focused** row: a `Tab` entry and a programmatic
+   * move focus the host without running React's `onFocus` (plans 345/536/578),
+   * so the renderer is asked first; the last recorded tab is the fallback for a
+   * focus no handler can see. Hand focus to the tab stop without changing the
+   * selected tab, and never steal it from another control the consumer focused
+   * in the same update (plans 511/646).
    */
   useLayoutEffect(() => {
-    const remembered = focusedTab.current;
+    const nativeRow = Option.flatMap(
+      Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+      (id) => Arr.findFirst(rows, (row) => row.id === id),
+    );
+    const remembered = Option.orElse(
+      Option.map(nativeRow, (row) => row.id),
+      () => focusedTab.current,
+    );
     if (Option.isNone(remembered)) return;
 
     const target = Arr.findFirst(rows, (row) => row.id === remembered.value);

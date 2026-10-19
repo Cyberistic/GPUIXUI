@@ -803,10 +803,13 @@ describe("Tabs", () => {
   });
 
   /**
-   * A tab that changes (plan 511). The bug these guard, measured: a focused tab
-   * that turned disabled kept native focus and the focus ring while the tab stop
-   * moved off it. The handover must not change the selection or steal focus the
-   * consumer claimed in the same update.
+   * A tab that changes (plans 511/646). The bug these guard, measured: a focused
+   * tab that turned disabled kept native focus and the focus ring while the tab
+   * stop moved off it. `focusTab` calls the renderer directly, exactly like a
+   * `Tab` entry or a programmatic move, which never runs React's `onFocus` on
+   * this binding — so the handover must read the renderer's focused host, not
+   * only the id a focus event remembered. It must not change the selection or
+   * steal focus the consumer claimed in the same update.
    */
   it("takes focus and the ring off a tab that becomes disabled", () => {
     const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
