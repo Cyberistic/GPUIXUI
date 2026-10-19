@@ -82,7 +82,9 @@ without forking the component.
 - The root is a single `role="img"` node whose accessible name is `name`, so the
   picture and the fallback are announced identically — a screen reader never
   reads "AL" as a word.
-- The image also carries `alt={name}`.
+- The picture is decorative (`role="presentation"`, `alt=""`) because the avatar
+  already names it. Without that, the runtime exposes a second image node and the
+  person is announced twice.
 - The initials stay mounted behind the picture. That is the fallback mechanism,
   not a second visible label: a loaded image covers the disc, a failed one does
   not.
@@ -111,11 +113,12 @@ status roles, and the dot's rim `colors.card` (the surface it sits on) at
 
 ## Verification
 
-`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (10 tests) plus
+`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (11 tests) plus
 `src/avatar/logic.test.ts` (8 tests) for the initials rules. The suite covers the
 initials and picture paths, the picture layered over the initials so a failed
-load stays readable, the accessible name, a status as its description (authored
-descriptions winning), dot colours, sizes and the caller's style.
+load stays readable, the accessible name, a picture that stays decorative so the
+person is announced once, a status as its description (authored descriptions
+winning), dot colours, sizes and the caller's style.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

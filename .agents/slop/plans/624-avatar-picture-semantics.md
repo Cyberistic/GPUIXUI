@@ -5,7 +5,7 @@
 | Phase | C/F (Tier 2 hardening) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `111`, `117`, `391`, `392`, `571` |
-| Status | planned |
+| Status | done — 1 native case (Avatar 11), both-direction proof (two image nodes at `HEAD`, one with `role="presentation"`); unit 454; the recorded plan-540 failures are unchanged |
 | Blocker | none — the assertion reads the accessibility tree, not bounds or focus events, so the plan-540 binding defects stay out of scope |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -150,7 +150,7 @@ assertion fails. With the fix: one node.
 
 ### 5.3 Regression
 
-- `nub run test:behaviour -- -t "Avatar"` — 11 cases pass; the suite still
+- `nub run test:behaviour -t "Avatar"` — 11 cases pass; the suite still
   carries the recorded plan-540 failures in other files.
 - `nub run --filter @gpuixui/components test` — 454 unit tests pass (the
   inventory check parses the new docs count).
@@ -162,9 +162,9 @@ assertion fails. With the fix: one node.
 Run from `workspaces/components/packages/components`:
 
 ```sh
-nub run test:behaviour -- -t "announces the person once"
+nub run test:behaviour -t "announces the person once"
 # at HEAD: 1 failed (two image nodes); after the fix: 1 passed
-nub run test:behaviour -- -t "Avatar"
+nub run test:behaviour -t "Avatar"
 # 11 passed (plus the suite's recorded plan-540 failures in other files)
 cd ../..
 nub run --filter @gpuixui/components test
@@ -177,7 +177,8 @@ nub run test
 ```
 
 `nub run test:behaviour` runs every behaviour file; `-t` is a name filter, not
-an include. Use the package's vitest through `nub`; a bare `node`/vitest fails
+an include. Pass it **without** `--`: with `--` vitest receives a literal `-t`
+argument and runs the whole suite (measured). Use the package's vitest through `nub`; a bare `node`/vitest fails
 with `ERR_UNSUPPORTED_ESM_URL_SCHEME`.
 
 ## 7. Docs, inventory and TODO

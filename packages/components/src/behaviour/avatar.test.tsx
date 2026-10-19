@@ -5,7 +5,8 @@
  * initials; a `src` that never reaches an image; a picture that replaces the
  * initials instead of covering them, leaving a failed load blank; a presence dot
  * painted from a constant, missing entirely, or clipped away by the avatar's own
- * disc; the four sizes collapsing to one diameter; and a lost accessible name.
+ * disc; the four sizes collapsing to one diameter; a lost accessible name; and a
+ * named picture that made the runtime expose two image nodes for one person.
  */
 
 import * as Arr from "effect/Array";
@@ -93,6 +94,21 @@ describe("Avatar", () => {
     );
     const images = nodesWithRole(avatar.renderer, "image");
 
+    expect(images).toHaveLength(1);
+    expect(images.map((node) => node.name)).toEqual(["Ada Lovelace"]);
+
+    avatar.unmount();
+  });
+
+  it("announces the person once when a picture is present", () => {
+    const avatar = renderComponent(
+      <Avatar testId="avatar" name="Ada Lovelace" src="/photos/ada.png" />,
+    );
+
+    // The picture is still painted ...
+    expect(avatar.renderer.findByType("img")).toHaveLength(1);
+    // ... but it is decorative: only the avatar itself is an image node.
+    const images = nodesWithRole(avatar.renderer, "image");
     expect(images).toHaveLength(1);
     expect(images.map((node) => node.name)).toEqual(["Ada Lovelace"]);
 

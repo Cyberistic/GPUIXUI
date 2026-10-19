@@ -124,7 +124,10 @@ export const Avatar = ({
         {src === undefined ? null : (
           <img
             src={src}
-            alt={name}
+            // The avatar itself is the accessible image (role="img" above).
+            // A named <img> here would announce the same person twice.
+            role="presentation"
+            alt=""
             objectFit="cover"
             testId={testId === undefined ? undefined : `${testId}-image`}
             style={{

@@ -397,6 +397,14 @@ retired once both branches are one
       update a registered row in place; 2 accordion + 1 list native cases
       (Accordion 25, List 61), all three failing at `HEAD`; docs, `PLAN.md`,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] The avatar's picture is decorative — plan 624. Measured: an avatar with
+      `src` exposed **two** image nodes both named `"Ada Lovelace"`, because the
+      `<img alt={name}>` inside the `role="img"` root was a second named image.
+      The picture is now `role="presentation"` with an empty `alt`, so the photo
+      still paints over the initials while the accessibility tree carries one
+      image; 1 native case (Avatar 11), both-direction proof (removing the role
+      restores the second node); docs, `COMPONENTS.md` and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
