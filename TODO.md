@@ -80,11 +80,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `fastForwardMotion(EXIT_MS)` + `settle`, and a real 250 ms timer removes
       only its own card. The 33/41 px insets and 378 px content width are
       **identical** to headless, so the 0.10.0 box needs no live correction.
-      **Three mutation proofs** observed and reverted: removing the viewport's
+      **Four mutation proofs** observed and reverted: removing the viewport's
       `pointerEvents: "none"` fails the strip check (`got "under=0"`); painting
-      the overlap surface after the viewport fails the dismissal
-      (`count=3 … behind=1`); a clock jump + `settle` before the frozen read
-      fails with `expected a value, got none`. **Two measured null results:**
+      the overlap surface after the viewport fails the covered-card check
+      (`got "… behind=1 …"`); a clock jump + `settle` before the frozen read
+      fails with `expected a value, got none`; moving the viewport's right edge
+      by 8 px fails with `expected 33 ± 1, got 41`. **Two measured null
+      results:**
       removing the card's own `pointerEvents: "auto"` changes nothing (it is
       not load-bearing), and a clock jump without a following `settle` still
       reports the card (the removal read needs the commit). Focused ids run:
