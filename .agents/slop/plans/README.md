@@ -2913,6 +2913,20 @@ bar and the runtime's per-digit and max-content estimates) stay defaults and the
 catalogue says why. `native-text.example.ts` ships a larger code role and
 `native-text.test.ts` holds both directions.
 
+Plan `573` closes the last paint the native text bridge feeds without measuring.
+The runtime seeds a `<code>`, `<diff>` or `<markdown>` find bar's washes from the
+text theme's `accent` at 30%/65%, and `nativeTextTheme` maps that field to
+`primaryText` — an ink, not a wash: body text measured 6.80:1 through the match
+default and 2.81:1 through the active one in identity dark, under the 7:1 body
+floor, while every check returned `[]`. `nativeHighlight(theme)` returns the
+`selection` role plus one `nativeHighlightStep` (0.1) for the active match,
+`nativeHighlightPairs` publishes the matchable roles on the four surfaces `bg`
+may name, and `themeHighlightFailures` is the eighth check `themeFailures`
+composes. A highlight cannot keep a syntax token at body strength and stay
+visible, so the pairs are held at the secondary floor (5.34:1 match, 4.61:1
+active) with body text above the body floor; the reference, README, design
+system and ledger state the same derived facts, and no colour moves.
+
 ## How to use a plan
 
 1. Read it fully before starting. Do not skim the STOP conditions.
