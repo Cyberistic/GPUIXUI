@@ -37,7 +37,9 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * identity scrim (plan 526). The hint clears the secondary floor on the row
  * washes a field inside a row paints (plan 527). The link is a step deeper in
  * light and a step lighter in dark so it keeps the secondary floor through the
- * selection wash (plan 528).
+ * selection wash (plan 528). The light information ink is one blue step darker
+ * so a native document's type names keep the body floor on the canvas through
+ * the runtime's 3.5% ink wash (plan 574).
  */
 export const macosPlatformStyle = {
   types: { label: "macOS", sans: systemUiFont, mono: "Menlo" },
@@ -68,6 +70,11 @@ export const macosPlatformStyle = {
       primaryHover: "#0063CC",
       primaryActive: "#004C99",
       primaryText: "#004A9A",
+      // The native code surface: the inherited blue-700 ink measured 6.96:1 on
+      // macOS' canvas through the runtime's 3.5% ink wash, under the 7:1 body
+      // floor, so the document's type-name captures take one blue step (plan
+      // 574).
+      infoText: "#173A88",
       accent: "#D9EAFD",
       accentForeground: "#004A9E",
       accentHover: "#CBE2FC",

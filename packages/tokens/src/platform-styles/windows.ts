@@ -31,7 +31,10 @@ import { systemUiFont, type PlatformStyle } from "../platform-types.js";
  * keep that platform's tint (plan 374); both Windows recipes share this dark
  * set, so they inherit the fix. The hint clears the secondary floor on the row
  * washes a field inside a row paints (plan 527). The light link is a step darker
- * so it keeps the secondary floor through the selection wash (plan 528).
+ * so it keeps the secondary floor through the selection wash (plan 528). The
+ * light information ink is one blue step darker so a native document's type
+ * names keep the body floor on the canvas through the runtime's 3.5% ink wash
+ * (plan 574).
  */
 export const windowsPlatformStyle = {
   types: { label: "Windows", sans: systemUiFont, mono: "Consolas" },
@@ -62,6 +65,11 @@ export const windowsPlatformStyle = {
       primaryHover: "#005BA1",
       primaryActive: "#004E8C",
       primaryText: "#004F8A",
+      // The native code surface: the inherited blue-700 ink measured 7.000:1 on
+      // the canvas through the runtime's 3.5% ink wash — a three-decimal pass
+      // with no margin — so the document's type-name captures take one blue step
+      // (plan 574).
+      infoText: "#173A88",
       accent: "#DCEBF8",
       accentForeground: "#004A8F",
       accentHover: "#CFE3F5",

@@ -28,6 +28,7 @@ import {
   nativeHighlight,
   nativeHighlightPairs,
   nativeHighlightStep,
+  nativeTextSurfaces,
   nativeTextTheme,
   themeHighlightFailures,
   type ThemeColors,
@@ -39,7 +40,7 @@ import {
 } from "./native-highlight.example.js";
 import { shippedThemes } from "./shipped-themes.js";
 
-const surfaces = ["background", "card", "popover", "muted"] as const;
+const surfaces = nativeTextSurfaces;
 
 const ownAlpha = (color: string): number => {
   const match = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})$/.exec(color);

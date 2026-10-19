@@ -5,7 +5,7 @@ import {
   contrastRatio,
   type ContrastPair,
 } from "./contrast.js";
-import { nativeSyntaxRoles } from "./native-text.js";
+import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 
 /**
@@ -56,15 +56,6 @@ const ownAlpha = (color: string): number => {
   return byte === undefined ? 1 : Number.parseInt(byte, 16) / 255;
 };
 
-/** The surfaces a native document can paint on: `card`, plus the three `Surface`
- * tones a canvas document may override `bg` with. */
-const nativeHighlightSurfaces = [
-  "background",
-  "card",
-  "popover",
-  "muted",
-] as const;
-
 /**
  * The text roles a find can match in a native document — the body and secondary
  * tiers plus every syntax capture — on each surface `bg` may name.
@@ -83,7 +74,7 @@ export const nativeHighlightPairs: readonly ContrastPair[] = [
     ...Object.values(nativeSyntaxRoles),
   ] as const),
 ].flatMap((role) =>
-  nativeHighlightSurfaces.map(
+  nativeTextSurfaces.map(
     (background): ContrastPair => [role, background, "secondary"],
   ),
 );

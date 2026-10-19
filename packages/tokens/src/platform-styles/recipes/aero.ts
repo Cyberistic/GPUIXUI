@@ -12,8 +12,10 @@ import { windowsPlatformStyle } from "../windows.js";
  * surfaces, not translucency. Windows 7 shipped no dark mode: the dark half
  * carries the Windows dark palette and is documented as an interpretation. The
  * link is a step darker so it keeps the secondary floor through the selection
- * wash (plan 528). The values are held to `themeContrastFailures` in both modes
- * by `platform-recipes.test.ts`.
+ * wash (plan 528). The information and warning inks take one designed step
+ * darker so a native document's syntax captures keep the body floor on the quiet
+ * panel through the runtime's 3.5% ink wash (plan 574). The values are held to
+ * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
  */
 export const aeroPlatformRecipe = {
   types: { label: "Windows 7", sans: systemUiFont, mono: "Consolas" },
@@ -47,6 +49,12 @@ export const aeroPlatformRecipe = {
       primaryHover: "#0F55A3",
       primaryActive: "#0B478A",
       primaryText: "#0C4A8C",
+      // The native code surface: the inherited light status inks measured
+      // 6.95–6.998:1 on the quiet panel through the runtime's 3.5% ink wash,
+      // under the 7:1 body floor. Both take one designed step in their own
+      // family (plan 574).
+      infoText: "#173A88",
+      warningText: "#4B3100",
       accent: "#D8EAFB",
       accentForeground: "#0B478A",
       accentHover: "#CFE5FA",

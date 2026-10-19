@@ -1385,9 +1385,10 @@ XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
 `selected`, and every high-contrast light tone at 6.12–6.72:1 under the 7:1
 floor while the dark sets already passed; the six light status roles move one
 half-step between the ramp steps they used, so the tightest shipped pair is
-**4.584:1** (XP light `infoText` on `selected`) and the AAA tightest **7.370:1**
-(identity light high `warningText` on `active`). An accent-toned link is the last
-text role the washed contract covers (`selectionLinkPairs`): `primaryText` is
+**4.827:1** (Aero light `successText` on `selected`) and the AAA tightest
+**7.370:1** (identity light high `warningText` on `active`). An accent-toned
+link is the last text role the washed contract covers (`selectionLinkPairs`):
+`primaryText` is
 text a reader selects with the copy around it, and calling it a deliberate
 omission hid twelve failing shipped sets — the AAA light link measured
 **5.376:1** through the wash on `destructiveSoft` under its 7:1 floor, macOS dark
@@ -1585,17 +1586,24 @@ and radius scales:
 and `constructor` are `infoText`; `macroName`, `tag` and `invalid` are
 `destructiveText`; `property`, `variable` and `parameter` are `foreground`.
 
-The captures are held to the **body** floor on the code block's `card` plane
-(`nativeSyntaxPairs`), because code is body copy, not a status label. Every
-shipped set clears it — the tightest is `primaryText` at **7.83:1**. The runtime
-fades some values at fractions a theme cannot change: a diff line at 92%, an
-add/delete marker and its numbers at 90%, the 3px accent bar at 55%, the row wash
-at 5.5%, a list marker at 85%, the blockquote rail at 60% and its wash at 5%, and
-the code block's 3.5% ink wash. Those are not tokens, so `native-text.test.ts`
-holds the chosen roles through each composite on every shipped set, and holds
-the syntax palette to the body floor on the painted ink wash (7.06:1 at the
-tightest). The opaque pairs are the binding public floor; the ink composite is
-the suite's stricter code-surface guard.
+The captures are held to the **body** floor on every tone a document may paint
+on — `nativeTextSurfaces` is `background`, `card`, `popover` and `muted` —
+through `nativeSyntaxPairs`, because code is body copy, not a status label.
+`foreground` is not in the list: the body pairs already hold it on all four.
+Every shipped set clears the opaque floor; the tightest is `primaryText` at
+**7.562:1** (`Light · Windows XP`). The runtime fades some values at fractions a
+theme cannot change: a diff line at 92%, an add/delete marker and its numbers at
+90%, the 3px accent bar at 55%, the row wash at 5.5%, a list marker at 85%, the
+blockquote rail at 60% and its wash at 5%, and the code block's 3.5% ink wash.
+Those are not tokens, so `native-text.test.ts` holds the chosen roles through
+each composite on every shipped set, and holds the syntax palette to the body
+floor on the painted ink wash over every surface; the tightest is `warningText`
+at **7.008:1** (`Light · macOS`). The opaque pairs are the binding public floor;
+the ink composite is the suite's stricter code-surface guard. The light platform
+styles own the steps their canvases need: macOS, Windows, Windows XP and Aero
+name `infoText` `#173A88`; XP adds `successText` `#0E5135`, `warningText`
+`#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `warningText`
+`#4B3100`.
 
 The metrics come from the theme's own scales: `codeTextSize`/`codeLineHeight`
 from `codeBlock`, `mdTextSize`/`mdLineHeight` from `body`, the heading sizes from
@@ -1616,8 +1624,10 @@ the table's max-content share, which only raise or lower a column around the
 floors above. A brand that needs them sets them on the returned object.
 
 `bg` is the raised `card` plane a code block, diff or document is painted on. A
-document painted directly on the canvas overrides only that field; every role is
-measured on all four `Surface` tones, so the override stays inside the contract:
+document painted directly on the canvas overrides only that field; the opaque
+roles are measured on all four `Surface` tones (`nativeTextSurfaces`), and the
+ink composite is held on the same four, so the override stays inside the
+contract:
 
 ```tsx
 import { getTheme, nativeTextTheme, type Theme } from "@gpuixui/tokens";
@@ -1656,10 +1666,10 @@ const theme = getTheme("dark");
 The active wash is at least **1.08:1** from the match and **1.28:1** from the
 surface it paints on. No visible wash keeps a syntax token at body strength:
 the neutral `hover` wash is **1.06:1** at its weakest and still leaves syntax at
-**6.30:1**. So `nativeHighlightPairs` holds the body and secondary tiers and
+**6.74:1**. So `nativeHighlightPairs` holds the body and secondary tiers and
 every syntax capture to the **secondary** floor on all four `Surface` tones
-`bg` may name; the tightest shipped pairs are **5.34:1** for the match and
-**4.61:1** for the active match, while body text stays at **9.65:1** and
+`bg` may name; the tightest shipped pairs are **5.49:1** for the match and
+**4.71:1** for the active match, while body text stays at **9.65:1** and
 **8.03:1**. `themeHighlightFailures` is that check, composed into
 `themeFailures`; [`native-highlight.test.ts`](./src/native-highlight.test.ts)
 derives every figure above.
@@ -2926,9 +2936,9 @@ status label in a selectable row paints and the label is dragged over with the
 copy around it; XP light `successText` measured 3.671:1 on `active` and every
 high-contrast light tone 6.12–6.72:1 under 7:1, so the six light status roles
 move one half-step between the ramp steps they used. The tightest pair is
-**4.584:1** (XP light `infoText` on `selected`) and **7.370:1** at AAA (identity
-light high `warningText` on `active`); the plain `contrastPairs` count stays
-**338**.
+**4.827:1** (Aero light `successText` on `selected`) and **7.370:1** at AAA
+(identity light high `warningText` on `active`); the plain `contrastPairs` count
+stays **338**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the

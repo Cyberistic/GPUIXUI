@@ -15,8 +15,11 @@ import { windowsPlatformStyle } from "../windows.js";
  * beige and the progress mark is XP's own Luna green, because the inherited
  * identity green cannot keep a segment at the mark floor on a rail that clears
  * the pressed wash (plan 503). The link is a step darker so it keeps the
- * secondary floor through the selection wash (plan 528). The values are held to
- * `themeContrastFailures` in both modes by `platform-recipes.test.ts`.
+ * secondary floor through the selection wash (plan 528). The four status inks
+ * take one designed step darker so a native document's syntax captures keep the
+ * body floor on the beige canvas, opaque and through the runtime's 3.5% ink
+ * wash (plan 574). The values are held to `themeContrastFailures` in both modes
+ * by `platform-recipes.test.ts`.
  */
 export const xpPlatformRecipe = {
   types: { label: "Windows XP", sans: systemUiFont, mono: "Consolas" },
@@ -50,6 +53,14 @@ export const xpPlatformRecipe = {
       primaryHover: "#0046BD",
       primaryActive: "#003A9C",
       primaryText: "#003FA8",
+      // The native code surface: the inherited light status inks measured
+      // 6.41–6.95:1 on the beige canvas, opaque and through the runtime's 3.5%
+      // ink wash, under the 7:1 body floor. Each takes one designed step in its
+      // own family (plan 574).
+      infoText: "#173A88",
+      successText: "#0E5135",
+      warningText: "#4B3100",
+      destructiveText: "#7E1D21",
       accent: "#C6DAFA",
       accentForeground: "#003C74",
       accentHover: "#BDD4F9",

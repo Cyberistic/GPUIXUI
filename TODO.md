@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 233/301
+`[x]` `[████████░░]` 234/301
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1921,6 +1921,18 @@ returns the `selection` role and one `nativeHighlightStep` stronger for the
 active match, `nativeHighlightPairs` holds every matchable role to the secondary
 floor on the four surfaces `bg` may name, and `themeHighlightFailures` is the
 eighth check composed into `themeFailures` (plan 573)
+`[x]` Hold the native syntax palette on every document surface — the reference
+said every role a native document returns was measured on all four `Surface`
+tones, but `nativeSyntaxPairs` measured the captures on `card` only; on Windows
+XP light the inherited `infoText` and `warningText` measured **6.903:1** and
+**6.951:1** on the beige canvas and the runtime's 3.5% ink wash put six more
+pairs under the body floor across XP and Aero while every check returned `[]`.
+`nativeTextSurfaces` owns the four tones, `nativeSyntaxPairs` publishes 24 pairs
+(up from six), the suite holds them opaque and painted, and eight light platform
+text roles take one designed step (macOS/Windows/XP/Aero `infoText`, XP
+`successText`/`warningText`/`destructiveText`, Aero `warningText`), so the
+tightest opaque pair is **7.562:1** and the tightest inked **7.008:1**
+(plan 574)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

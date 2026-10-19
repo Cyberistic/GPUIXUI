@@ -782,11 +782,13 @@ import { nativeTextTheme } from "@gpuixui/tokens";
 ```
 
 `nativeTextRoles` and `nativeSyntaxRoles` publish the mapping, and
-`nativeSyntaxPairs` holds code to the body floor on its `card` plane. The
-runtime's fixed fade fractions and 3.5% code-block ink wash are measured by
-`native-text.test.ts` on every shipped set; the chrome metrics the scale does not
-name stay at the runtime's defaults. A runnable example lives in
-[`src/native-text.example.ts`](./src/native-text.example.ts).
+`nativeSyntaxPairs` holds code to the body floor on every `Surface` tone a
+document may paint on (`nativeTextSurfaces`). The runtime's fixed fade fractions
+and 3.5% code-block ink wash are measured by `native-text.test.ts` on every
+shipped set and every surface; the light platform styles name their own status
+text steps where the inherited ink missed the body floor through the wash. The
+chrome metrics the scale does not name stay at the runtime's defaults. A runnable
+example lives in [`src/native-text.example.ts`](./src/native-text.example.ts).
 
 A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime
 seeds its default washes from the text theme's `accent`, and that field is

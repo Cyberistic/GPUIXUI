@@ -5,7 +5,20 @@
 528 (recipe text steps), 569/572 (`nativeTextTheme` and its metrics),
 573 (`nativeTextSurfaces`' sibling, the find-highlight contract).
 
-**Status:** planned. Execute on `agent/tokens-theme`.
+**Status:** done. Executed on `agent/tokens-theme`.
+
+**Implementation note.** The plan's eight values shipped as written; the suite
+derived two figures the plan did not name. Darkening XP `infoText` moved the
+`selectionStatusPairs` minimum from **4.584:1** (XP light `infoText` on
+`selected`) to **4.827:1** (Aero light `successText` on `selected`), so
+`docs.test.ts`, `selection-status.test.ts`, `docs/tokens.md` and the ledger were
+updated together. The improved light status inks also lifted the find-highlight
+minima the reference quotes — match 5.34 → **5.49:1**, active 4.61 → **4.71:1**,
+and the neutral hover comparison 6.30 → **6.74:1** — so
+`native-highlight.test.ts` keeps passing on the same derived sentences. The
+`contrast.test.ts` brand case grows 15 → 18 plain failures because the code plane
+now has four body pairs; its assertion no longer restricts `body` to `card`.
+`7.5617` rounds to **7.562**, which is the figure the page and ledger quote.
 
 ---
 
@@ -101,7 +114,7 @@ were tuned on the identity canvas; the recipe canvases were never asked.
    the 3.5% fraction stays test-local, as the runtime constant is not a token.
 5. **Make the two quoted figures derive.** The page currently quotes
    `7.83:1` (opaque) and `7.06:1` (ink) as hand-computed minima. After this plan
-   they are **7.561:1** — Windows XP light `primaryText` on `background` — and
+   they are **7.562:1** — Windows XP light `primaryText` on `background` — and
    **7.008:1** — macOS light `warningText` on `background` through the ink wash.
    The native suite derives both minima, the role and the set, and asserts the
    exact sentences, so a palette edit cannot leave the page quoting an old
@@ -252,7 +265,7 @@ Changes:
      `themeFailures`.
    - **quotes the derived tightest figures** — compute the opaque minimum (role,
      surface, set, ratio) and the ink minimum; assert
-     ``the tightest is `primaryText` at **7.561:1**`` and
+     ``the tightest is `primaryText` at **7.562:1**`` and
      ``7.008:1 at the tightest`` in the page. Derive the role, set and surface,
      not only the number; a `docs.test.ts`-style whitespace collapse makes the
      match robust.
@@ -280,7 +293,7 @@ on the four `Surface` tones a document may name”, not “6 … on the code pla
      may paint on — `nativeTextSurfaces` — through `nativeSyntaxPairs`;
    - `foreground` is omitted because the body pairs already hold it on all four;
    - every shipped set clears the opaque floor; the tightest is `primaryText`
-     at **7.561:1** on Windows XP's canvas;
+     at **7.562:1** on Windows XP's canvas;
    - the runtime's 3.5% ink wash is the stricter code surface; the suite holds
      the same palette through it on every surface, tightest **7.008:1** (macOS
      light `warningText` on its canvas);

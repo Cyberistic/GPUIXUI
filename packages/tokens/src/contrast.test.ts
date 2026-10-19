@@ -487,8 +487,9 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    // 14 status/selection surfaces plus the code plane's body pair on `card`.
-    expect(plain).toHaveLength(15);
+    // 14 status/selection surfaces plus the code plane's body pairs on the
+    // four `Surface` tones a native document may name.
+    expect(plain).toHaveLength(18);
     expect(selected).toHaveLength(13);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -518,7 +519,7 @@ describe("themeContrastFailures", () => {
         background === "track"
           ? pairClass === "mark" && floor === 3
           : pairClass === "body"
-            ? background === "card" && floor === 7
+            ? floor === 7
             : pairClass === "secondary" && floor === 4.5,
       ),
     ).toBe(true);

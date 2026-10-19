@@ -24,6 +24,7 @@ import {
   contrastPairClasses,
   contrastPairs,
   dialogSurfacePairs,
+  nativeSyntaxPairs,
   overlayWashPairs,
   selectionLinkPairs,
   selectionPairs,
@@ -88,6 +89,7 @@ describe("COMPONENTS.md design-system rows", () => {
     const contrast = row("Theme contrast check");
     [
       `${contrastPairs.length} contrast pairs`,
+      `${nativeSyntaxPairs.length} native syntax pairs`,
       `${selectionPairs.length} selection pairs`,
       `${selectionStatusPairs.length} status-selection text pairs`,
       `${selectionLinkPairs.length} link-selection text pairs`,

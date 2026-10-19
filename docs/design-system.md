@@ -828,11 +828,12 @@ resolved against those roles. The runtime's chrome metrics without a token — t
 code gutter's floor, the diff accent bar and the runtime's own per-digit and
 max-content estimates — remain at its defaults. The runtime fades
 some values at fixed fractions a theme cannot change, so the suite holds the
-chosen roles through every composite on every shipped set, and the syntax
-palette is held to the body floor on both the `card` plane
-(`nativeSyntaxPairs`) and the 3.5% ink wash the code block paints over it. A
-document painted directly on the canvas overrides only `bg`; every role is
-measured on all four `Surface` tones.
+chosen roles through every composite on every shipped set; the syntax palette is
+held to the body floor on all four `Surface` tones a document may paint on
+(`nativeTextSurfaces`, `nativeSyntaxPairs`) and through the 3.5% ink wash the
+code block paints over each. A document painted directly on the canvas overrides
+only `bg`. The light platform styles name their own status text steps where the
+inherited ink missed the body floor through the wash.
 
 ## 11. Extension
 

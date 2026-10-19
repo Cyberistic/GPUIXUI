@@ -13,9 +13,15 @@
  * marker at 90%, the accent bar at 55%, the row wash at 5.5%, a list marker at
  * 85%, the quote rail at 60% and its wash at 5%, and the code block's ink wash
  * at 3.5%). Those fractions are not tokens, so this suite holds the chosen
- * roles through each composition on every shipped set, and holds the syntax
- * palette to the body floor on the painted ink wash — a stricter surface than
- * the opaque `card` pair the public checker owns.
+ * roles through each composition on every shipped set.
+ *
+ * Plan 574: the syntax palette was held on `card` only while `nativeTextTheme`
+ * said every role was measured on all four `Surface` tones `bg` may name. On
+ * Windows XP (Luna) light the inherited `infoText` and `warningText` measured
+ * **6.903:1** and **6.951:1** on the beige canvas, and the runtime's 3.5% ink
+ * wash put six more pairs under the 7:1 body floor across XP and Aero, while
+ * every check returned `[]`. The suite now holds the palette on all four tones,
+ * opaque and painted, and the platform styles own the steps their canvases need.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -26,14 +32,19 @@ import {
   contrastPairs,
   contrastRatio,
   extendTheme,
+  getPlatformRecipeTheme,
+  getPlatformTheme,
   getTheme,
   lightTheme,
   nativeFieldTheme,
+  nativeSyntaxPairs,
   nativeSyntaxRoles,
   nativeTextRoles,
+  nativeTextSurfaces,
   nativeTextTheme,
   relativeLuminance,
   themeContrastFailures,
+  themeFailures,
   type ContrastPair,
   type Theme,
   type ThemeColors,
@@ -122,22 +133,23 @@ const runtimeFades = {
 } as const;
 
 /** The ink the runtime paints over `bg` for a code block: `ink()` in `render.rs`. */
-const inkWash = (theme: Theme): string => {
+const inkWash = (theme: Theme, surface: keyof ThemeColors = "card"): string => {
   const ink =
-    relativeLuminance(theme.colors.card) < 0.5 ? "#FFFFFF" : "#000000";
+    relativeLuminance(theme.colors[surface]) < 0.5 ? "#FFFFFF" : "#000000";
   return compositeOver(
     alpha(ink, runtimeFades.codeBlockInkWashOpacity),
-    theme.colors.card,
+    theme.colors[surface],
   );
 };
 
 /** The syntax roles that miss the body floor on the painted code surface. */
 const inkFailures = (
   theme: Theme,
+  surface: keyof ThemeColors = "card",
 ): ReadonlyArray<readonly [keyof ThemeColors, number]> => {
   const floor = contrastFloors[theme.contrast].body;
   return syntaxRoles.flatMap((role) => {
-    const ratio = contrastRatio(theme.colors[role], inkWash(theme));
+    const ratio = contrastRatio(theme.colors[role], inkWash(theme, surface));
     return ratio >= floor ? [] : [[role, ratio] as const];
   });
 };
@@ -268,10 +280,121 @@ describe("native text theme", () => {
     expect(larger.diffGutterWidth).toBe(72);
   });
 
-  it("holds the syntax palette to the body floor on the painted code surface", () => {
+  it("holds the syntax palette to the body floor on every painted document surface", () => {
     shippedThemes.forEach(({ theme }) => {
-      expect(inkFailures(theme), theme.name).toEqual([]);
+      nativeTextSurfaces.forEach((surface) => {
+        expect(
+          inkFailures(theme, surface),
+          `${theme.name} on ${surface}`,
+        ).toEqual([]);
+      });
     });
+  });
+
+  it("publishes the syntax palette on every document surface", () => {
+    const expected = [...new Set(Object.values(nativeSyntaxRoles))]
+      .filter((role) => role !== "foreground")
+      .flatMap((role) =>
+        nativeTextSurfaces.map(
+          (background) => [role, background, "body"] as const,
+        ),
+      );
+    expect(nativeSyntaxPairs).toHaveLength(expected.length);
+    expected.forEach((pair) => expect(nativeSyntaxPairs).toContainEqual(pair));
+  });
+
+  it("holds the opaque palette on every document surface", () => {
+    shippedThemes.forEach(({ theme }) => {
+      const floor = contrastFloors[theme.contrast].body;
+      nativeSyntaxPairs.forEach(([foreground, background]) => {
+        expect(
+          contrastRatio(theme.colors[foreground], theme.colors[background]),
+          `${theme.name}: ${foreground} on ${background}`,
+        ).toBeGreaterThanOrEqual(floor);
+      });
+    });
+  });
+
+  it("reports a syntax role erased on a non-card surface", () => {
+    const planted = extendTheme(lightTheme, {
+      colors: { infoText: lightTheme.colors.background },
+    });
+    expect(
+      themeContrastFailures(planted).some(
+        (failure) =>
+          failure.foreground === "infoText" &&
+          failure.background === "background" &&
+          failure.pairClass === "body",
+      ),
+    ).toBe(true);
+  });
+
+  it("names the platform steps the canvas and ink wash required", () => {
+    const identity = getTheme("light");
+    const macos = getPlatformTheme("darwin", "light");
+    const windows = getPlatformTheme("win32", "light");
+    const xp = getPlatformRecipeTheme("xp", "light");
+    const aero = getPlatformRecipeTheme("aero", "light");
+    const steps: ReadonlyArray<
+      readonly [string, Theme, keyof ThemeColors, string]
+    > = [
+      ["macOS", macos, "infoText", "#173A88"],
+      ["Windows", windows, "infoText", "#173A88"],
+      ["XP", xp, "infoText", "#173A88"],
+      ["XP", xp, "warningText", "#4B3100"],
+      ["XP", xp, "successText", "#0E5135"],
+      ["XP", xp, "destructiveText", "#7E1D21"],
+      ["Aero", aero, "infoText", "#173A88"],
+      ["Aero", aero, "warningText", "#4B3100"],
+    ];
+    steps.forEach(([label, theme, role, value]) => {
+      expect(theme.colors[role], `${label} ${role}`).toBe(value);
+      expect(theme.colors[role], `${label} ${role} is not inherited`).not.toBe(
+        identity.colors[role],
+      );
+    });
+    [macos, windows, xp, aero].forEach((theme) =>
+      expect(themeFailures(theme), theme.name).toEqual([]),
+    );
+  });
+
+  it("quotes the derived tightest syntax figures", () => {
+    const docs = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replaceAll(/\s+/g, " ");
+
+    const opaque = shippedThemes
+      .flatMap(({ theme }) =>
+        nativeSyntaxPairs.map(([foreground, background]) => ({
+          theme: theme.name,
+          foreground,
+          ratio: contrastRatio(
+            theme.colors[foreground],
+            theme.colors[background],
+          ),
+        })),
+      )
+      .reduce((a, b) => (b.ratio < a.ratio ? b : a));
+
+    const inked = shippedThemes
+      .flatMap(({ theme }) =>
+        nativeTextSurfaces.flatMap((surface) =>
+          syntaxRoles.map((role) => ({
+            theme: theme.name,
+            role,
+            ratio: contrastRatio(theme.colors[role], inkWash(theme, surface)),
+          })),
+        ),
+      )
+      .reduce((a, b) => (b.ratio < a.ratio ? b : a));
+
+    expect(docs).toContain(
+      `the tightest is \`${opaque.foreground}\` at **${opaque.ratio.toFixed(3)}:1** (\`${opaque.theme}\`)`,
+    );
+    expect(docs).toContain(
+      `the tightest is \`${inked.role}\` at **${inked.ratio.toFixed(3)}:1** (\`${inked.theme}\`)`,
+    );
   });
 
   it("reports a code role that is only secondary-strength", () => {
@@ -299,10 +422,14 @@ describe("native text theme", () => {
     expect(
       themeContrastFailures(planted).some(
         (failure) =>
-          failure.foreground === "infoText" && failure.pairClass === "body",
+          failure.foreground === "infoText" &&
+          failure.background === "card" &&
+          failure.pairClass === "body",
       ),
     ).toBe(false);
-    const failure = inkFailures(planted).find(([role]) => role === "infoText");
+    const failure = inkFailures(planted, "card").find(
+      ([role]) => role === "infoText",
+    );
     expect(failure?.[1]).toBeCloseTo(6.384, 3);
   });
 
@@ -408,6 +535,7 @@ describe("native text theme", () => {
     [
       "nativeTextTheme",
       "nativeTextRoles",
+      "nativeTextSurfaces",
       "nativeSyntaxRoles",
       "nativeSyntaxPairs",
       "appearance",

@@ -1589,8 +1589,8 @@ describe("docs/tokens.md quoted tightest figures", () => {
 
     const [defaultLabel, defaultRatio] = tightest("default");
     expect([defaultLabel, Number(defaultRatio.toFixed(3))]).toEqual([
-      "XP light infoText on selected",
-      4.584,
+      "Aero light successText on selected",
+      4.827,
     ]);
     const [highLabel, highRatio] = tightest("high");
     expect([highLabel, Number(highRatio.toFixed(3))]).toEqual([
@@ -1599,7 +1599,7 @@ describe("docs/tokens.md quoted tightest figures", () => {
     ]);
 
     expect(markdownProse).toContain(
-      "**4.584:1** (XP light `infoText` on `selected`)",
+      "**4.827:1** (Aero light `successText` on `selected`)",
     );
     expect(markdownProse).toContain(
       "**7.370:1** at AAA (identity light high `warningText` on `active`)",

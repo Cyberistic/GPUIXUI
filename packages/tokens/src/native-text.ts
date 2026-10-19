@@ -185,6 +185,20 @@ export interface NativeTextTheme {
 }
 
 /**
+ * The four `Surface` tones a native text document may paint on. `bg` is `card`
+ * by default; a document painted directly on the canvas overrides it with
+ * `background`, and a document in a command palette or sidebar uses `popover`
+ * or `muted`. The syntax pairs and the suite's runtime ink-wash guard measure
+ * the same list.
+ */
+export const nativeTextSurfaces = [
+  "background",
+  "card",
+  "popover",
+  "muted",
+] as const satisfies ReadonlyArray<keyof ThemeColors>;
+
+/**
  * The semantic role each native text colour paints. A capture class is a use of
  * a role, not a new role: the palette stays inside the measured semantic set,
  * so a copied theme retints code, diffs and markdown with every other surface.
@@ -330,8 +344,13 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  *
  * `bg` is the raised `card` surface a code block, diff or document is painted
  * on. A document painted directly on the canvas overrides it:
- * `{ ...nativeTextTheme(theme), bg: theme.colors.background }` — every role the
- * prop returns is measured on all four `Surface` tones.
+ * `{ ...nativeTextTheme(theme), bg: theme.colors.background }`. The four tones
+ * {@link nativeTextSurfaces} names are the whole set a document may paint on:
+ * the opaque syntax palette is held to the body floor on every one
+ * (`nativeSyntaxPairs`), and the suite holds the same palette through the
+ * runtime's fixed 3.5% code-block ink wash on every one too. `foreground` is
+ * omitted from the syntax pairs because the body pairs already hold it on all
+ * four.
  *
  * A find bar does not read the `accent` field. The runtime seeds its default
  * `highlight` wash from that accent at 30% and 65%, and the ink is not readable
