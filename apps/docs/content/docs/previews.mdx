@@ -1,0 +1,96 @@
+---
+title: Previews
+description: How every preview is labelled, and what each label proves.
+---
+
+This site is a browser application documenting a library that renders through
+GPUix. That difference is the reason every preview carries a label: a preview
+is never allowed to look more native than it is. The labels are exact strings
+rendered by the components, and the table below is generated from the same
+registry selection the component pages use.
+
+<PreviewTiers />
+
+## The live surface
+
+Tier **L** is a real GPUix surface: the library's own component code, tokens and
+layout, run by GPUix's published WebAssembly renderer on this tab's GPU backend.
+It is the only tier a reader can interact with without leaving the page.
+
+It is **not** the desktop binary. The desktop window, the native binding and the
+Metal/DirectX/Vulkan backend are what the playground and the native suites run.
+A live surface never replaces that native evidence; when a component has a
+capture or a suite, it is rendered beneath the live scene.
+
+The surface loads on request because the renderer is a large download. It runs
+in an isolated document, and its canvas is outside the browser's accessibility
+tree, so the page's annotated source, keyboard notes and limitation list remain
+the accessible description. The scene follows the docs' light/dark mode and
+platform toggle, so it is painted by the same resolved theme as the page; the
+controls are documented under [Theming](/docs/theming).
+[Accessibility](/docs/accessibility) records what the runtime declares and what
+it lacks.
+
+A scene may mount in the state it documents (an open menu or dialog), or the
+smoke may drive a real gesture — a click, a key, typing, a commit, a wheel. The
+smoke proves the scene's text is absent before the gesture and present after it.
+The full list of scenes and gestures is in the
+[preview strategy](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/preview-strategy.md).
+
+## Native evidence
+
+Tier **N** is a runnable screen in the desktop playground. No per-component
+playground screen ships yet, so no component record selects it today; the
+strategy records that gap rather than filling it with a browser imitation.
+
+Tier **S** is a still frame captured from the GPUix runtime. A caption is built
+only from the sidecar the capture script wrote — platform, GPUix version and
+commit. A screenshot the registry lists without a sidecar is not rendered at
+all, because a caption taken from a file name would be invented provenance. A
+still proves the resting layout, never an interaction; an interaction artefact
+gets its own **Recorded in GPUix** caption and a before/after or recording.
+
+Tier **V** is native coverage: an automated suite drives the component in the
+real renderer. It names the suite file and the exact command, and it is
+coverage — not a capture, and not a pass. The component's status badge is the
+only place that says how far verification got.
+[Native smoke suite](/docs/native-testing) explains the harness and its exit
+contract.
+
+## Approximations
+
+Tier **A** is a browser drawing of a component's documented layout. It is used
+only for a static rest state — typography, spacing, a layout — and its banner is
+unconditional. An interaction is never shown as an approximation, because a
+browser cannot prove native behaviour it does not run. The banner and the
+component that renders it live in
+`apps/docs/src/components/preview/approximation-banner.tsx`.
+
+## When nothing is proven
+
+Tier **X** is source plus a limitation notice: the runtime cannot do the thing,
+the suite does not exist, or a capture has no sidecar. The page says so instead
+of showing a placeholder. The
+[GPUix capabilities](/docs/capabilities) page carries the measured support
+matrix and the evidence behind each verdict.
+
+## What this site does not claim
+
+- That a browser approximation runs GPUix. It does not, and it says so.
+- That the live surface is the native desktop window. It is GPUix's WebAssembly
+  renderer in this tab, with the same component code and layout.
+- That an unverified component works. It is shown as unavailable.
+- That native coverage is a capture. Tier V names the suite and the command, and
+  says that no image is published.
+- That a still proves an interaction. A screenshot is a resting frame.
+- That a live scene exists for every component. A record without one falls
+  through to its native tier.
+
+## The full rules
+
+The maintainer specification — the tier table, the capture provenance rules,
+the scene requirements and the measured limits — is
+[`docs/preview-strategy.md`](https://github.com/Cyberistic/GPUIXUI/blob/master/docs/preview-strategy.md).
+The [components index](/docs/components) shows each record's status and GPUix
+support, and the [capability matrix](/docs/capabilities) records what the
+pinned runtime actually does.

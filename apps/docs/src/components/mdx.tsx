@@ -16,6 +16,7 @@ import { IconCatalogue } from "./icon-catalogue";
 import { PageTemplateSections } from "./page-template";
 import { PartIndex } from "./part-index";
 import { PlatformPreviews } from "./preview/platform-previews";
+import { PreviewTiers } from "./preview/preview-tiers";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
 import { ThemeCaptures } from "./preview/theme-captures";
 import { RelatedComponents } from "./related-components";
@@ -48,6 +49,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ComponentPreview,
     IllustrativeApproximation,
     PlatformPreviews,
+    PreviewTiers,
     PreviewUnavailable,
     TokenColors,
     TypeScale,

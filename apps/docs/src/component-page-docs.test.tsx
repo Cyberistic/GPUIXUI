@@ -63,6 +63,9 @@ const pageGuards = (): ReadonlyArray<string> =>
     .filter((file) => /\.test\.tsx?$/.test(file))
     // This suite matches its own query string, not a component page.
     .filter((file) => file !== "component-page-docs.test.tsx")
+    // The preview guide reads the components index's link, not a component
+    // page's content (plan 571).
+    .filter((file) => file !== "components/preview/preview-tiers.test.tsx")
     .filter((file) =>
       readFileSync(join(sourceDirectory, file), "utf8").includes(
         "content/docs/components",

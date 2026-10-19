@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–568)
+## Docs site workstream (plans 410–499, plus 500–571)
 
-`[x]` `[██████████]` 137/137
+`[x]` `[██████████]` 138/138
+
+`[x]` **The preview strategy has a reader-facing page (plan 571)** — `/docs/previews`
+      lists the six honest tiers, reuses the exact labels the live surface and
+      approximation render, and derives the 44 live / 22 native-coverage split
+      from `selectPreview` instead of remembering it. It sits after Capabilities,
+      links the maintainer specification, and the component index now links the
+      on-site page instead of the raw GitHub file. 7 new tests; `preview labels`
+      reaches the page from search; 97-page crawl and axe in both schemes green.
 
 `[x]` **The component index exposes the live surface (plan 570)** — 44 of 66
       records declare a `liveScene`, but the index showed only status and GPUix
