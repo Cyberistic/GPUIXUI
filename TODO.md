@@ -469,9 +469,15 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–581)
+## Docs site workstream (plans 410–499, plus 500–583)
 
-`[~]` `[██████████]` 148/151
+`[~]` `[██████████]` 148/152
+
+`[~]` **Reader vocabulary and page subjects, third pass (plan 583)** —
+      `cmdk`, `autosuggest`, `gauge`, `pill`, `callout`, `busy` and `sheet`
+      reach their components; Theming names the macOS/Linux/Windows platform
+      styles and Workspace names resizable splits and inspector panels; Layouts
+      records the RTL limitation so `rtl` has an answer.
 
 `[x]` **A live scene's instruction is searchable (plan 582)** — the gesture
       sentences are rendered React from `preview/scenes.ts`, so `wheel up`
