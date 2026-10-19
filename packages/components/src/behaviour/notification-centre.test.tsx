@@ -112,6 +112,14 @@ const Centre = ({
 const background = (root: ComponentTestRoot, testId: string): unknown =>
   root.renderer.findByTestId(testId)?.style.backgroundColor;
 
+/** The feed's vertical scroll offset, `0` when it has not rendered. */
+const offsetOf = (root: ComponentTestRoot): number => {
+  const feed = root.renderer.findByTestId("feed");
+  return feed === undefined
+    ? 0
+    : (root.renderer.getScrollOffset(feed.id)?.[1] ?? 0);
+};
+
 /** Send a key to the panel's handler through the runtime, not a React call. */
 const press = (root: ComponentTestRoot, keystroke: string): void => {
   const panel = root.renderer.findByTestId("panel");
@@ -314,6 +322,46 @@ describe("NotificationCentre", () => {
 
     expect(onRead).toHaveBeenCalledTimes(1);
     expect(onRead).toHaveBeenCalledWith("review");
+
+    root.unmount();
+  });
+
+  it("keeps the reader's row when a notification is prepended while scrolled", () => {
+    const items: ReadonlyArray<NotificationItem> = Array.from(
+      { length: 12 },
+      (_, index) => ({
+        id: `n${index}`,
+        title: `Notification ${index}`,
+        group: "Today",
+      }),
+    );
+    const root = renderComponent(<Centre notifications={items} defaultOpen />);
+    const feed = requireBounds(root, "feed");
+
+    root.renderer.nativeSimulateScrollWheel(
+      feed.x + feed.width / 2,
+      feed.y + feed.height / 2,
+      0,
+      -200,
+    );
+    const before = requireBounds(root, "feed-n5").y;
+    const beforeOffset = offsetOf(root);
+
+    root.rerender(
+      <Centre
+        notifications={Arr.prepend(items, {
+          id: "new",
+          title: "New event",
+          group: "Today",
+        })}
+        defaultOpen
+      />,
+    );
+
+    expect(
+      Math.abs(requireBounds(root, "feed-n5").y - before),
+    ).toBeLessThanOrEqual(1);
+    expect(offsetOf(root)).toBeLessThan(beforeOffset);
 
     root.unmount();
   });

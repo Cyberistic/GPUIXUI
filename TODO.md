@@ -705,7 +705,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
     keeps the panel open, opening marks nothing read, the empty state is a real
     `EmptyState`, Escape closes and returns focus while an outside press closes
     without stealing it, and arrows move the active row over notifications only.
-    12 native tests + 5 pure model tests, four mutation proofs; example, docs
+    13 native tests + 5 pure model tests, five mutation proofs, including the scrolled prepend; example, docs
     page, `COMPONENTS.md`, the §8 parts table and the inventory synced. v1
     renders every row in a plain viewport (the `<virtual-list>` host needs
     app-side windowing) and uses a labelled text trigger until `@gpuixui/icons`

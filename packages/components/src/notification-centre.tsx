@@ -595,11 +595,93 @@ export const NotificationCentreList = ({
   emptyDescription,
   style,
   testId,
+  ref,
   ...rest
 }: NotificationCentreListProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
+  const viewport = useRef<PublicInstance | null>(null);
+  const setViewport = useMergedRef<PublicInstance | null>(viewport, ref);
   const { rows, notifications, active, empty, rowRefs, setActive, read } =
     useNotificationCentre();
+
+  /**
+   * The reader's anchor, so a prepend above the viewport does not move the row
+   * they are reading. The scroll container keeps its pixel offset, so the
+   * inserted rows push the content down; this measures the surviving anchor's
+   * shift and restores the offset. `expected` corrects for a scroll between
+   * commits, because the bounds are viewport-relative.
+   */
+  const anchor = useRef<
+    | {
+        readonly items: ReadonlyArray<NotificationItem>;
+        readonly id: string;
+        readonly top: number;
+        readonly offset: number;
+      }
+    | undefined
+  >(undefined);
+  useLayoutEffect(() => {
+    const viewportId = viewport.current?.id;
+    if (viewportId === undefined) return;
+    const bounds = (id: string): Option.Option<number> =>
+      Option.flatMap(Option.fromNullishOr(rowRefs.current.get(id)), (element) =>
+        Option.map(
+          Option.fromNullishOr(renderer?.getElementBounds?.(element.id)),
+          (box) => box.y,
+        ),
+      );
+    const offset = Option.getOrElse(
+      Option.fromNullishOr(renderer?.getScrollOffset?.(viewportId)?.[1]),
+      () => 0,
+    );
+    const previous = anchor.current;
+
+    const correction =
+      previous !== undefined && notifications !== previous.items && offset < 0
+        ? Option.flatMap(
+            Option.all({
+              top: bounds(previous.id),
+              next: Option.fromNullishOr(notifications[0]),
+            }),
+            ({ top, next }) => {
+              const fit = top - (previous.top + (offset - previous.offset));
+              return fit > 0 ? Option.some({ fit, next, top }) : Option.none();
+            },
+          )
+        : Option.none<{
+            readonly fit: number;
+            readonly next: NotificationItem;
+            readonly top: number;
+          }>();
+
+    if (Option.isSome(correction)) {
+      const { fit, next, top } = correction.value;
+      renderer?.scrollTo?.(viewportId, 0, offset - fit);
+      anchor.current = {
+        items: notifications,
+        id: next.id,
+        top: Option.getOrElse(bounds(next.id), () => top) - fit,
+        offset: offset - fit,
+      };
+      return;
+    }
+
+    const first = notifications[0];
+    if (first === undefined) {
+      anchor.current = undefined;
+      return;
+    }
+    anchor.current = Option.match(bounds(first.id), {
+      onNone: () => anchor.current,
+      onSome: (top) => ({
+        items: notifications,
+        id: first.id,
+        top,
+        offset,
+      }),
+    });
+  });
 
   if (notifications.length === 0) {
     return (
@@ -615,6 +697,7 @@ export const NotificationCentreList = ({
   return (
     <div
       {...rest}
+      ref={setViewport}
       testId={testId}
       style={mergeStyles(
         {

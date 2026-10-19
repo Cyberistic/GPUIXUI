@@ -135,7 +135,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
   and requires the app to window its own children (0.10.0 ships no wrapper), so
   v1 uses a plain scrolling viewport. For a typical inbox (tens to low hundreds
   of rows) that is the honest choice; a later plan can add windowing without
-  changing the API.
+  changing the API. The scroll container keeps its pixel offset, so the list
+  re-anchors a prepend itself: a notified arrival above a scrolled viewport
+  leaves the row the reader was on in place (measured shift 0, not the old
+  44 px).
 - **No bell icon in v1.** `@gpuixui/icons` has no `bell`, so the trigger is a
   text button with the badge. Pass a custom child when the icon set gains one;
   no icon was copied into this package.
@@ -151,11 +154,12 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (12 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (13 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
 the panel staying open and the dot clearing on the next data update, mark-all
 and clear, Escape and an outside press, arrow movement skipping headings with
-Enter reading the reached row, and the light theme's roles. The pure grouping
+Enter reading the reached row, a prepend that leaves the reader's row where it
+was, and the light theme's roles. The pure grouping
 and count rules live in `src/notification-centre/model.test.ts` (5 tests).

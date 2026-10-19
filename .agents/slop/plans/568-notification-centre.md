@@ -5,7 +5,7 @@
 | Phase | E (specialised component) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `111`, `112`, `114`, `117`, `200`, `201`, `391`, `516`, `522`, playground `381` (measured contract) |
-| Status | done — 12 native + 5 pure tests, four mutation proofs; docs, example, `COMPONENTS.md` and the inventory synced |
+| Status | done — 13 native + 5 pure tests, five mutation proofs; docs, example, `COMPONENTS.md` and the inventory synced |
 | Blocker | none |
 
 This plan is self-contained. A weaker executor must be able to run it without
@@ -255,7 +255,8 @@ Change:
 | 9 | `Escape` closes (`onOpenChange(false)`, `aria-expanded` false) | a panel that ignores Escape |
 | 10 | a press on the body closes the panel | a missing outside dismissal |
 | 11 | `ArrowDown` moves the active row's accent fill from item 1 to item 2; `Enter` calls `onRead` for item 2 | arrows over headers / Enter on the old row |
-| 12 | light theme: the badge, panel and a row paint the light theme's roles | a dark-only surface |
+| 12 | a prepend while scrolled leaves the reader's row within 1 px and moves the offset | a yanked reader |
+| 13 | light theme: the badge, panel and a row paint the light theme's roles | a dark-only surface |
 
 Run each of the following mutations, record the exact failure, and revert:
 
@@ -301,8 +302,8 @@ red suite total and move on; do not weaken the assertion to pass.
 
 - `notification-centre.tsx` exports the eight parts; the module is in
   `package.json` and `src/index.ts`.
-- The pure model has five cases; the native suite has twelve cases and passes on
-  this host.
+- The pure model has five cases; the native suite has thirteen cases and passes
+  on this host.
 - The example is registered and renders in the all-example native suite.
 - The docs page has the canonical verification line, an `## API` section naming
   every part and a `## Limitations` section.
@@ -318,7 +319,7 @@ red suite total and move on; do not weaken the assertion to pass.
 - `src/notification-centre/model.ts` + `model.test.ts`: 5 cases pass.
 - `src/notification-centre.tsx`: 8 parts; explicit export in `package.json` and
   `src/index.ts`; the export/manifest checks pass.
-- `src/behaviour/notification-centre.test.tsx`: 12 cases pass in the real
+- `src/behaviour/notification-centre.test.tsx`: 13 cases pass in the real
   renderer; the all-example suite mounts `examples/notification-centre.example.tsx`.
 - Unit suite: 42 files, 426 tests, exit `0` (the inventory checks the docs
   verification line, the `COMPONENTS.md` row and the §8 parts page).
@@ -330,9 +331,11 @@ red suite total and move on; do not weaken the assertion to pass.
   - the dot ignores `read` → three cases fail ("does not mark anything read on
     open", "marks unread rows, not read ones", "reads a row once...");
   - removing the dismiss layer → "closes on Escape" and "closes on an outside
-    press" both fail (the panel stays open).
+    press" both fail (the panel stays open);
+  - removing the measured re-anchor → the prepend case fails with a 44 px shift
+    (`expected 44 to be less than or equal to 1`).
 - Behaviour suite total after this change: 55 pre-existing plan-540 binding
-  failures in 19 files; the new suite is green. `nub run check`, `nub run lint`
+  failures in 19 files; the new suite is green (764 total). `nub run check`, `nub run lint`
   and `nub run test` exit `0`.
 
 ### 10.1 Limits confirmed
