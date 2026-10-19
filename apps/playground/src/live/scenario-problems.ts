@@ -5,8 +5,9 @@
  * The bugs it guards: a duplicate id makes `--only` run one of two scenarios
  * while a report counts both; an id without `live-` lets a window claim pass
  * for an offscreen one; a capability with no headless scenario claims live
- * evidence for a family the offline suite never mounted; and a core capability
- * with no live scenario would let the native-evidence rule become a memory.
+ * evidence for a family the offline suite never mounted; and a capability the
+ * headless suite mounts with no live twin would let the native-evidence rule
+ * become a memory.
  *
  * Pure and renderer-free, so the rule is testable on any host.
  */
@@ -21,11 +22,11 @@ export interface RegisteredScenario {
 }
 
 /**
- * A core capability proven live by a scenario filed under another family.
+ * A capability proven live by a scenario filed under another family.
  *
  * The twin can be the honest owner of a narrower capability while it exercises
- * the core one: the typography twin paints text, and the modal view is what
- * both focus and overlay mount. Naming the id keeps the claim checkable.
+ * the other: the typography twin paints text, and the modal view is what both
+ * focus and overlay mount. Naming the id keeps the claim checkable.
  */
 export interface LiveAlias {
   readonly capability: Smoke.Capability;
@@ -33,24 +34,25 @@ export interface LiveAlias {
 }
 
 /**
- * A core capability the live renderer cannot observe.
+ * A capability the live renderer cannot observe.
  *
- * The reason is measured, not assumed: `GpuixRenderer` exposes no accessibility
- * dump, so only the offscreen `TestRenderer` can read one (plan `197`).
+ * Both reasons are measured, not assumed: `GpuixRenderer` exposes no
+ * accessibility dump and no file-drop verb, so only the offscreen
+ * `TestRenderer` can read an a11y tree or simulate a Finder drop.
  */
 export interface HeadlessOnlyCapability {
   readonly capability: Smoke.Capability;
   readonly reason: string;
 }
 
-/** Live ids that prove a core capability without carrying its name. */
+/** Live ids that prove a capability without carrying its name. */
 export const LIVE_ALIASES: ReadonlyArray<LiveAlias> = [
   { capability: "text", id: "live-typography" },
   { capability: "modal", id: "live-focus" },
   { capability: "modal", id: "live-overlay" },
 ];
 
-/** Core capabilities with no live evidence, and why. */
+/** Capabilities with no live evidence, and why. */
 export const HEADLESS_ONLY_CAPABILITIES: ReadonlyArray<HeadlessOnlyCapability> =
   [
     {
@@ -58,12 +60,17 @@ export const HEADLESS_ONLY_CAPABILITIES: ReadonlyArray<HeadlessOnlyCapability> =
       reason:
         "GpuixRenderer has no accessibility dump; only TestRenderer.getA11yTree does (plan 197)",
     },
+    {
+      capability: "upload",
+      reason:
+        "the automation protocol has no file-drop verb; only TestRenderer.nativeSimulateFileDrop can drive onFileDrop (plan 388)",
+    },
   ];
 
-/** Every core capability the live registry does not prove. */
-export const coreCoverageProblems = (
+/** Every capability in `required` the live registry does not prove. */
+export const capabilityCoverageProblems = (
   list: ReadonlyArray<RegisteredScenario>,
-  core: ReadonlyArray<Smoke.Capability>,
+  required: ReadonlyArray<Smoke.Capability>,
 ): ReadonlyArray<string> => {
   const ids = Arr.map(list, (scenario) => scenario.id);
   const capabilities = Arr.map(list, (scenario) => scenario.capability);
@@ -83,14 +90,12 @@ export const coreCoverageProblems = (
       (alias) => `live alias "${alias.id}" is not registered`,
     ),
     Arr.filter(
-      core,
+      required,
       (capability) =>
         !Arr.contains(capabilities, capability) &&
         !Arr.contains(aliased, capability) &&
         !Arr.contains(exempt, capability),
-    ).map(
-      (capability) => `no live scenario covers core capability "${capability}"`,
-    ),
+    ).map((capability) => `no live scenario covers "${capability}"`),
   ]);
 };
 
@@ -98,7 +103,6 @@ export const coreCoverageProblems = (
 export const liveScenarioProblems = (
   list: ReadonlyArray<RegisteredScenario>,
   headless: ReadonlyArray<RegisteredScenario>,
-  core: ReadonlyArray<Smoke.Capability>,
 ): ReadonlyArray<string> => {
   const ids = Arr.map(list, (scenario) => scenario.id);
   const headlessCapabilities = Arr.map(
@@ -121,6 +125,6 @@ export const liveScenarioProblems = (
       (scenario) =>
         `no headless scenario covers "${scenario.capability}" (live "${scenario.id}")`,
     ),
-    coreCoverageProblems(list, core),
+    capabilityCoverageProblems(list, headlessCapabilities),
   ]);
 };

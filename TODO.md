@@ -66,22 +66,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 109/109 plans-and-harness
 
-`[x]` Guard the **native-evidence invariant** per plan `653`: a core capability
-      must have live evidence, and the live registry previously only required
-      the converse (a live capability needs a headless twin). `coreCoverageProblems`
-      adds three checks — a core capability with no live scenario, an alias id
-      that is not registered, and a headless-only entry with no reason — with
-      two named aliases (`text` → `live-typography`; `modal` →
-      `live-focus`/`live-overlay`) and one measured exemption (`a11y`:
-      `GpuixRenderer` has no a11y dump, plan `197`). Live-registry tests `4 → 8`
-      (playground `432 → 436`); the registry is unchanged at **93** live /
-      **105** headless. Three mutation proofs observed and reverted: deleting
-      the `a11y` exemption failed the real case with `no live scenario covers
-      core capability "a11y"`; a typo'd alias failed with `live alias
-      "live-typo" is not registered`; returning `[]` failed three synthetic
-      cases. The `text` and `modal` capability rows now cite their live twins.
-      Focused command: `nub run --filter playground test`; then `nub run check`,
-      `nub run lint` and `nub run test`.
+`[x]` Guard the **native-evidence invariant** per plan `653`: every capability
+      the headless registry mounts must have live evidence, and the live
+      registry previously only required the converse (a live capability needs a
+      headless twin). `capabilityCoverageProblems` adds three checks — a
+      capability with no live scenario, an alias id that is not registered, and
+      a headless-only entry with no reason — with two named aliases (`text` →
+      `live-typography`; `modal` → `live-focus`/`live-overlay`) and two measured
+      exemptions (`a11y`: `GpuixRenderer` has no a11y dump, plan `197`;
+      `upload`: the automation protocol has no file-drop verb, plan `388`).
+      All **65** headless capabilities are now proven live or named. Live-registry
+      tests `4 → 8` (playground `432 → 436`); the registry is unchanged at
+      **93** live / **105** headless. Three mutation proofs observed and
+      reverted: emptying the exemptions failed the real case with `no live
+      scenario covers "upload"` and `"a11y"`; a typo'd alias failed with
+      `live alias "live-typo" is not registered`; returning `[]` failed the
+      three synthetic cases. The `text` and `modal` capability rows now cite
+      their live twins. Focused command: `nub run --filter playground test`;
+      then `nub run check`, `nub run lint` and `nub run test`.
 
 `[x]` **The final merge/release gate ran on the current head** per plan `639`:
       the last recorded gate predated `live-tier2-navigation`'s six new checks

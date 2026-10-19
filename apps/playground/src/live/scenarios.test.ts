@@ -2,38 +2,37 @@
  * Guards the live registry's integrity.
  *
  * Bug: the live list is hand-maintained, so a duplicate id, an id that does not
- * mark itself as live, a live capability with no headless twin, or a core
- * capability with no live evidence would make a report claim coverage the suite
- * did not exercise. `scenarioProblems` guards the headless registry; no other
- * test reads the live one.
+ * mark itself as live, a live capability with no headless twin, or a capability
+ * the headless suite mounts with no live twin would make a report claim
+ * coverage the suite did not exercise. `scenarioProblems` guards the headless
+ * registry; no other test reads the live one.
  *
  * Observed two directions: appending one real entry to `liveScenarios` fails
  * the first test with "live scenario ids are not unique", and returning `[]`
- * from `liveScenarioProblems` fails the three synthetic cases. Removing
- * `live-typography` fails the real case with the alias and `text` problems;
- * removing the `a11y` exemption fails it with `no live scenario covers core
- * capability "a11y"`.
+ * from `liveScenarioProblems` fails the three synthetic cases. Removing the
+ * `a11y` exemption fails the real case with `no live scenario covers "a11y"`;
+ * a typo'd alias fails with `live alias "live-typo" is not registered`.
  */
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import { liveScenarios } from "./scenarios.js";
 import {
-  coreCoverageProblems,
+  capabilityCoverageProblems,
   liveScenarioProblems,
   type RegisteredScenario,
 } from "./scenario-problems.js";
-import { CORE_CAPABILITIES, scenarios } from "../scenarios/index.js";
+import { scenarios } from "../scenarios/index.js";
 
 const entry = (
   id: string,
   capability: RegisteredScenario["capability"],
 ): RegisteredScenario => ({ id, capability });
 
+const capabilities = Arr.map(scenarios, (scenario) => scenario.capability);
+
 describe("liveScenarioProblems", () => {
   it("accepts the real live registry against the headless one", () => {
-    expect(
-      liveScenarioProblems(liveScenarios, scenarios, CORE_CAPABILITIES),
-    ).toEqual([]);
+    expect(liveScenarioProblems(liveScenarios, scenarios)).toEqual([]);
     expect(Arr.length(liveScenarios)).toBeGreaterThan(0);
   });
 
@@ -42,18 +41,13 @@ describe("liveScenarioProblems", () => {
       liveScenarioProblems(
         Arr.appendAll(liveScenarios, Arr.take(liveScenarios, 1)),
         scenarios,
-        CORE_CAPABILITIES,
       ),
     ).toContain("live scenario ids are not unique");
   });
 
   it("flags an id that does not mark the live suite", () => {
     expect(
-      liveScenarioProblems(
-        [entry("theme-switch", "layout")],
-        scenarios,
-        CORE_CAPABILITIES,
-      ),
+      liveScenarioProblems([entry("theme-switch", "layout")], scenarios),
     ).toContain('live scenario "theme-switch" is not named live-');
   });
 
@@ -63,23 +57,19 @@ describe("liveScenarioProblems", () => {
       (scenario) => scenario.capability !== "focus",
     );
     expect(
-      liveScenarioProblems(
-        [entry("live-x", "focus")],
-        headless,
-        CORE_CAPABILITIES,
-      ),
+      liveScenarioProblems([entry("live-x", "focus")], headless),
     ).toContain('no headless scenario covers "focus" (live "live-x")');
   });
 });
 
-describe("coreCoverageProblems", () => {
-  it("flags a core capability whose live twin was removed", () => {
+describe("capabilityCoverageProblems", () => {
+  it("flags a capability whose live twin was removed", () => {
     const withoutCombobox = Arr.filter(
       liveScenarios,
       (scenario) => scenario.id !== "live-combobox",
     );
-    expect(coreCoverageProblems(withoutCombobox, CORE_CAPABILITIES)).toContain(
-      'no live scenario covers core capability "combobox"',
+    expect(capabilityCoverageProblems(withoutCombobox, capabilities)).toContain(
+      'no live scenario covers "combobox"',
     );
   });
 
@@ -89,17 +79,23 @@ describe("coreCoverageProblems", () => {
       (scenario) => scenario.id !== "live-typography",
     );
     expect(
-      coreCoverageProblems(withoutTypography, CORE_CAPABILITIES),
+      capabilityCoverageProblems(withoutTypography, capabilities),
     ).toContain('live alias "live-typography" is not registered');
   });
 
-  it("accepts the reasoned headless-only core capability", () => {
-    expect(coreCoverageProblems(liveScenarios, ["a11y"])).toEqual([]);
+  it("accepts the reasoned headless-only capabilities", () => {
+    expect(
+      capabilityCoverageProblems(liveScenarios, ["a11y", "upload"]),
+    ).toEqual([]);
   });
 
-  it("flags a capability with no live scenario and no exemption", () => {
-    expect(coreCoverageProblems(liveScenarios, ["upload"])).toEqual([
-      'no live scenario covers core capability "upload"',
-    ]);
+  it("flags a capability with no live twin and no exemption", () => {
+    const withoutCrop = Arr.filter(
+      liveScenarios,
+      (scenario) => scenario.id !== "live-crop-area",
+    );
+    expect(capabilityCoverageProblems(withoutCrop, capabilities)).toContain(
+      'no live scenario covers "crop"',
+    );
   });
 });
