@@ -90,8 +90,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       Live registry `89 → 90`; headless unchanged at **104/104** (`text-entry`
       stays 56 checks). The view gained one readout token, `wideLen`, so the
       live twin reads the **committed** value. Focused ids run:
-      `live-text-entry` (×3), `text-entry`; then the full headless registry and
-      `nub run check`/`lint`/`test`.
+      `live-text-entry` (×3), `text-entry`; then the full headless registry
+      (**104/104**), the full live merge gate (**90/90**, 2330 checks, 59
+      capabilities, 881 s) and `nub run check`/`lint`/`test` (playground 424).
 
 `[x]` Prove the **toast viewport's layering and focus contract in a real window**
       per plan `623`: `toast` was one of the last capabilities with only
@@ -121,6 +122,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       **104/104** (**3672** checks, 64 capabilities) and `nub run check`,
       `nub run lint`, `nub run test` green (playground 424 tests). Live registry
       `88 → 89`. **The full live suite was not run** (merge/release gate).
+
+`[x]` Fix the **live-toast fixture budget** the first full gate exposed
+      (plan `623` §10): the gate after plan `624` failed exactly one check —
+      `dismissing removes exactly the clicked card: expected "count=2", got
+      "count=1 … dismissed=Toast 3"` — because the probe's long-lived cards had
+      `durationMs: 5000` and a toast's timer is real JS time even while the
+      GPUI motion clock is paused (plan `337`). Under full-suite load the first
+      card expired before the dismissal step, so the queue held two cards and
+      dismissing one left `count=1`. The fixture is now `LONG_MS = 60_000`
+      (the deliberately short `SHORT_MS = 250` card still proves the timer
+      path). **Two-direction proof:** with `LONG_MS = 5000` and a temporary 6 s
+      sleep before the dismissal the check fails `exit 1` (`got "count=0 …"`);
+      with `60_000` and the same delay it passes all 38 checks; the sleep was
+      removed, and `live-toast` is green twice focused with `toast-lifecycle`
+      green at 56 checks. No assertion was weakened.
 
 `[x]` Prove the **cost model's retention half in a real window** per plan `620`:
       `live-scale` reuses plan `302`'s `scale-cost` view and adds
@@ -1288,9 +1304,15 @@ focused id is `live-frames`.
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
       owner/supervisor performs the final merge. **Addendum (plan `623`):**
-      `live-toast` is registered after that gate (89 live scenarios); it was
-      verified twice focused, so the next full live run covers it and the
-      recorded 88/88 total predates it.
+      `live-toast` and (plan `624`) `live-text-entry` are registered after that
+      gate, so the recorded 88/88 predated them. **Final gate re-run on this
+      head (2026-10-19):** headless **104/104** (`3672` checks, 64
+      capabilities) and live **90/90** (`2330` checks, 59 capabilities, 881 s),
+      both exit `0`; `nub run check`, `nub run lint` and `nub run test` pass
+      (playground 424, testing 61, components 308, primitives 282, tokens 196,
+      tw 103, icons 19, docs 7). The gate's first run exposed a real-time
+      fixture budget in `live-toast` — its 5 s cards expired under load — fixed
+      to 60 s with a two-direction proof (plan `623` §10).
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

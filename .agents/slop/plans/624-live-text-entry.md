@@ -288,6 +288,9 @@ if any of these occur:
   message; one null result (removing `width: 160` passes) is explained in §6.
 - Harness fact: one 40-key `keystrokes` call paints but does not commit a
   controlled value; one key per call does.
+- Full merge/release gate at this head: headless **104/104** (`3672` checks, 64
+  capabilities) and live **90/90** (`2330` checks, 59 capabilities, 881 s), both
+  exit `0`; `nub run check`/`lint`/`test` green (playground 424 tests).
 
 ## 9. Acceptance
 

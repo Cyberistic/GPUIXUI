@@ -453,3 +453,37 @@ timer path asserts only timer-observable facts, never the frozen frame
 **Focused ids run:** `live-toast` (twice), `toast-lifecycle`; then the full
 headless suite and `nub run check` / `lint` / `test` as the end-of-task check.
 The **full live suite was not run** (merge/release gate).
+
+## 10. Full-gate addendum (2026-10-19): the fixture's real-time budget
+
+The first full live gate after this plan (`90/90`, plan `624`'s branch) failed
+**one** check that never failed focused:
+
+```
+live-toast  FAIL  dismissing removes exactly the clicked card
+  expected a string containing "count=2", got "count=1 … dismissed=Toast 3 …"
+```
+
+Cause: the probe's cards are created with `durationMs: LONG_MS = 5000`, and a
+toast's timer is **real JS time** even while the GPUI motion clock is paused
+(plan `337`). Under full-suite load the scenario's first card expired before the
+dismissal step, so the queue held two cards, not three, and dismissing one left
+`count=1`. It is a fixture budget, not a component defect: the headless
+`toast-lifecycle` is slower to reach the same step in a full run too, but the
+five-second window happened to hold there.
+
+Fix: `LONG_MS = 60_000` in `apps/playground/src/scenarios/toast.tsx`, with the
+reason on the constant. The long-lived probe cards now outlast any loaded run;
+the deliberately short card (`SHORT_MS = 250`) still proves the timer path.
+
+**Two-direction proof.**
+
+| Step | Result |
+| ---- | ------ |
+| `LONG_MS = 5000` + a temporary `Effect.sleep(6 s)` before the dismissal | `exit 1`, `expected … "count=2", got "count=0 …"` |
+| `LONG_MS = 60_000` + the same 6 s delay | `exit 0`, 38 checks |
+| Delay removed, `LONG_MS = 60_000` | `live-toast` green twice focused (2.2 s), `toast-lifecycle` green at 56 checks |
+
+The sleep was removed; no check was weakened. The full gate was then re-run at
+this head: **90/90** (`2330` checks, 59 capabilities, 881 s), exit `0`.
+

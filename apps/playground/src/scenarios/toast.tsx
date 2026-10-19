@@ -45,8 +45,15 @@ export const CARD_HEIGHT = 56;
 export const GAP = 8;
 export const INSET = 24;
 export const EXIT_MS = 120;
-const LONG_MS = 5000;
 const SHORT_MS = 250;
+/**
+ * The long-lived probe cards must outlast a loaded full-suite run.
+ *
+ * The motion clock can be paused, but a toast's `setTimeout` is real JS time
+ * (plan `337`), so a 5 s fixture expired before `live-toast`'s dismissal under
+ * full-suite load and the check counted one card too few (plan `623` §9).
+ */
+const LONG_MS = 60_000;
 
 /** A card. The motion wrapper is separate because `MotionDivProps` has no `testId`. */
 const ToastCard = ({

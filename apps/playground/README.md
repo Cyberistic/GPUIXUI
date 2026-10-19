@@ -1957,10 +1957,10 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The last full merge/release gate ran **88/88** (`exit 0`, 2220 checks, 58
-capabilities, 921.7 s, `.artifacts/live-report.json`, 2026-10-19), including the
-three scenarios this branch added last: `live-data-grid` (plans `606`/`607`),
-`live-selection-signal` (plan `615`) and `live-scale` (plan `620`). The full live suite is a merge/release
+The last full merge/release gate ran **90/90** (`exit 0`, 2330 checks, 59
+capabilities, 881 s, `.artifacts/live-report.json`, 2026-10-19), including every
+scenario this branch added, through `live-text-entry` (plan `624`) and the
+`live-toast` fixture fix (plan `623` §10). The full live suite is a merge/release
 gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
