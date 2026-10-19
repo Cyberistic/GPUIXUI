@@ -169,7 +169,6 @@ their pass after.
   - `groupDisabled > reads a group as disabled …` — `expected false to be true`.
 - **Green run (new code), 2026-10-19:** the two files are **56/56**; the scoped
   runtime files (`toggle-group`, `checkbox-group`, `state-style`) are **28/28**,
-  proving no behaviour change. Package gates: offline 60 files / **848** tests,
-  `nub run check`, `nub run lint` and `nub run test` green; the full runtime
-  suite was 57 files / 799 tests before this state-only change and the affected
-  scoped files pass after it.
+  proving no behaviour change, and the full runtime suite on the final tree is
+  **57 files / 799 tests, all passing**. Package gates: offline 60 files /
+  **848** tests, `nub run check`, `nub run lint` and `nub run test` green.
