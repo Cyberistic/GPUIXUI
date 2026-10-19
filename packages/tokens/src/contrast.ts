@@ -1112,16 +1112,17 @@ export const contrastFloors: Readonly<
  * then secondary text, then the two roles below it, an unavailable label and a
  * field's hint. A tier that is only *at least* as readable as the one above it
  * is not a tier; the reader uses the difference to tell a caption from body copy
- * and a disabled label from an enabled one. The last pair is a **state** rather
- * than a hierarchy: the unavailable label of a filled status-panel action must
- * stay a perceivable step below the enabled `softActionForeground` on the fill
- * they share.
+ * and a disabled label from an enabled one.
  *
- * `selectedForeground` is not a body
- * role: it is the secondary-strength tint an inherited label keeps inside a
- * selected row, whose title is painted with `foreground`. The step is the same
- * 1.05:1 the filled families and the wash ladder publish, applied to roles a
- * reader compares side by side.
+ * The last two pairs are **states** rather than body tiers: a selected row's
+ * inherited label (`selectedForeground`) stays one step below its title
+ * (`foreground`) on the four fills both roles are documented on — `hover`,
+ * `active`, `accent` and `selected` — and a status-panel action's unavailable
+ * label stays below the enabled one. `selectedForeground` is never compared on
+ * the plain surfaces, because it is not a body tier there: it is the
+ * secondary-strength tint an inherited label keeps inside a selected row. The
+ * step is the same 1.05:1 the filled families and the wash ladder publish,
+ * applied to roles a reader compares side by side.
  */
 export const textTiers = [
   ["mutedForeground", "foreground"],
@@ -1131,6 +1132,7 @@ export const textTiers = [
   ["disabledForeground", "mutedForeground"],
   ["placeholder", "mutedForeground"],
   ["disabledForeground", "softActionForeground"],
+  ["selectedForeground", "foreground"],
 ] as const satisfies ReadonlyArray<
   readonly [keyof ThemeColors, keyof ThemeColors]
 >;

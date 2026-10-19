@@ -330,7 +330,9 @@ the body role each surface paints — `foreground` on the canvas and the row was
 below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
 the surfaces both are documented on. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
-selected row, whose title is `foreground`. `themeDirectionFailures` is the
+selected row, documented only on the four row fills. It is a state tier there:
+the label stays one 1.05:1 step below the row title `foreground` on the
+`hover`/`active`/`accent`/`selected` fills, and every shipped set clears the step. `themeDirectionFailures` is the
 ninth: `stateLadders` names the four filled families, the panel action, the
 generic wash, the selected step and the selectable row's press, and each step
 must move away from the canvas — darker in light, lighter in dark — so a light

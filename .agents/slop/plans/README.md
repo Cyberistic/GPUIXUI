@@ -294,6 +294,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [620](./620-fixed-surface-chrome.md) | The fixed surfaces hold their own chrome | F | 353, 358, 384, 531, 556, 598, 601, 604, 619 | done |
 | [621](./621-time-segment-two-digits.md) | The time segment holds two digits | F | 358, 384, 552, 556, 620 | done |
 | [622](./622-row-press-direction.md) | The selectable row's press direction | F | 502, 619, 621 | done |
+| [623](./623-selected-label-tier.md) | The selected row's label is a tier below its title | F | 312, 316, 381, 500 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3183,6 +3184,22 @@ its own ladder (`accent` → `active`), the new suite derives the ladder from th
 published pair so the two cannot drift, and every shipped set already steps the
 expected way, so no colour moves. The example is executed and linked from the
 catalogue.
+
+Plan `623` closes the last relationship in the text hierarchy. A selected row
+paints its title in `foreground` and its inherited label in
+`selectedForeground`; each has its own floor pairs, but `textTiers` named no
+pair for the relationship, so a theme could raise the label to the title's
+strength (or above it) while `themeContrastFailures` and `themeFailures` both
+returned `[]`. The planted identity dark theme with
+`selectedForeground: "#FFFFFF"` measures **10.23:1** on `selected` against the
+title's **9.03:1**, and still passed every check. The pair joins `textTiers` as
+a **state** tier — `selectedForeground` below `foreground` — compared on the
+four fills both roles are documented on (`hover`, `active`, `accent`,
+`selected`). Every shipped set already clears the 1.05:1 step, so no colour
+moves; the tightest is **1.106:1** (`Dark · Windows` on `hover`), which the
+catalogue now derives and the page states. The old rationale in three documents
+— that adding the pair “would demand a step the design does not have and report
+every shipped set” — was false and is replaced.
 
 ## How to use a plan
 

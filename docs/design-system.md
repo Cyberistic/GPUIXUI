@@ -738,11 +738,13 @@ enabled; so does one that sets `popoverForeground` to `mutedForeground`, which
 renders every menu label at secondary strength. This is the check that reports
 both, and every shipped set clears it — secondary text sits 1.274:1 below
 `foreground`, `cardForeground`, `popoverForeground` and `inputForeground`; the
-unavailable label 1.168:1 and the hint 1.157:1 below secondary text; and the
-disabled label of a status-panel action 1.542:1 below the enabled one.
-`selectedForeground` is deliberately not a body tier: it is the
-secondary-strength tint an inherited label keeps inside a selected row, whose
-title is `foreground`.
+unavailable label 1.168:1 and the hint 1.157:1 below secondary text; the
+disabled label of a status-panel action 1.542:1 below the enabled one; and a
+selected row's inherited label 1.106:1 below its title on the four fills it
+keeps. `selectedForeground` is deliberately not a body tier: it is the
+secondary-strength tint an inherited label carries inside a selected row, and it
+is documented only on those four fills. The relationship is still a hierarchy,
+so the check holds it.
 
 A role painted through an alpha needs the composited pair, not only the opaque
 one. The loading skeleton's dim frame is `skeleton` at `skeletonPulseOpacity`

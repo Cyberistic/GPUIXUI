@@ -2624,10 +2624,12 @@ same surface**, where both roles already have a documented pair. `textTiers` is
 the ordered list: `mutedForeground` below `foreground`, `mutedForeground` below
 `cardForeground`, `mutedForeground` below `popoverForeground`, `mutedForeground`
 below `inputForeground`, `disabledForeground` below `mutedForeground`,
-`placeholder` below `mutedForeground`, and — a **state** rather than a
-hierarchy tier — `disabledForeground` below `softActionForeground`, so the
+`placeholder` below `mutedForeground`, and — the last two are **states** rather
+than body tiers — `disabledForeground` below `softActionForeground`, so the
 unavailable label of a filled status-panel action stays visibly dimmer than the
-enabled one. A `TextTierFailure` carries the two ratios
+enabled one, and `selectedForeground` below `foreground`, so a selected row's
+inherited label stays a step below the title painted over the same fill. A
+`TextTierFailure` carries the two ratios
 and the step:
 
 ```ts
@@ -2648,8 +2650,10 @@ nine surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover`, `input` and the four row washes), twelve for the
 inactive label below secondary text (every surface `inactivePairs` measures
 except the `disabled` fill, which carries no secondary text), nine for a hint and
-a caption, and five for the disabled panel-action label below the enabled one
-(`softAction` and the four soft fills). Every shipped set clears the step; the
+a caption, five for the disabled panel-action label below the enabled one
+(`softAction` and the four soft fills), and four for the selected row's label
+below its title (the `hover`/`active`/`accent`/`selected` fills both roles are
+documented on). Every shipped set clears the step; the
 tightest are **1.274:1**
 (`mutedForeground` vs `foreground`, high-contrast light on `warningSoft`),
 **1.274:1** (`mutedForeground` vs `cardForeground`, high-contrast light on
@@ -2658,16 +2662,19 @@ light on `popover`), **1.274:1** (`mutedForeground` vs `inputForeground`,
 high-contrast light on `muted`), **1.168:1** (`disabledForeground` vs
 `mutedForeground`, high-contrast dark on `active`), **1.157:1**
 (`placeholder` vs `mutedForeground`, high-contrast dark on every surface the two
-share) and **1.542:1** (`disabledForeground` vs `softActionForeground`,
-high-contrast dark on `successSoft`). Every shipped set
+share), **1.542:1** (`disabledForeground` vs `softActionForeground`,
+high-contrast dark on `successSoft`) and **1.106:1** (`selectedForeground` vs
+`foreground`, `Dark · Windows` on `hover`). Every shipped set
 still clears the step; the check exists for the theme a consumer edits. A theme
 that sets `disabledForeground` to
 `foreground` still passes every floor, and is reported only here.
 
 `selectedForeground` is deliberately not a body tier: it is the
 secondary-strength tint an inherited label keeps inside a selected row, whose
-title is painted with `foreground`. Adding it would demand a step the design does
-not have and report every shipped set.
+title is painted with `foreground`, and it is documented only on the four row
+fills. It **is** a state tier there: the label stays one step below the title
+painted on the same fill, and every shipped set already clears the step — the
+design does have it.
 
 #### Interaction direction
 
@@ -3772,7 +3779,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **28** entries across
+state — `documentedFigures` and `documentedTierFigures`, **29** entries across
 this page, the design system, the README, the ledger and the ring's JSDoc — and
 `packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
 the checker's own measurement and asserts both the figure and the set (and
@@ -3788,7 +3795,7 @@ that one fill*, which is what `docs.test.ts` measured before plan `536`
 (plan `536`). Plan `537` extends the same table to the text hierarchy: a tier's
 figure is a ratio of ratios, so `tierSurfaces`, `deriveTierFigure` and
 `tierMinimum` measure it on the surfaces both roles are painted on — the rule
-`themeTextTierFailures` uses — and the seven minima above are pinned with the set
+`themeTextTierFailures` uses — and the eight minima above are pinned with the set
 and surface each sentence names. It found two: the panel action's 1.542:1 step is
 high-contrast dark rather than identity dark (1.877:1), and the design system
 still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to

@@ -162,8 +162,9 @@ describe("tier figures the documents state in the present tense", () => {
       "popoverForeground",
       "inputForeground",
     ];
-    const bodyTiers = textTiers.filter(([, brighter]) =>
-      bodyRoles.includes(brighter),
+    const bodyTiers = textTiers.filter(
+      ([dimmer, brighter]) =>
+        dimmer === "mutedForeground" && bodyRoles.includes(brighter),
     );
     expect(bodyTiers.map(([, brighter]) => brighter)).toEqual([...bodyRoles]);
 
@@ -184,7 +185,8 @@ describe("tier figures the documents state in the present tense", () => {
     const sentence =
       `every shipped set clears it — secondary text sits ${[...bodyMinima][0]}:1 below ${bodyList}; ` +
       `the unavailable label ${minimum("disabledForeground", "mutedForeground")}:1 and the hint ${minimum("placeholder", "mutedForeground")}:1 below secondary text; ` +
-      `and the disabled label of a status-panel action ${minimum("disabledForeground", "softActionForeground")}:1 below the enabled one.`;
+      `the disabled label of a status-panel action ${minimum("disabledForeground", "softActionForeground")}:1 below the enabled one; ` +
+      `and a selected row's inherited label ${minimum("selectedForeground", "foreground")}:1 below its title on the four fills it keeps.`;
 
     expect(
       documents["docs/design-system.md"].replaceAll(/\s+/g, " "),

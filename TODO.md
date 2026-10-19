@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 265/338
+`[x]` `[████████░░]` 266/339
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2251,6 +2251,12 @@ pressed **darker** than its hover returned `[]` from every check while the
 1.094:1 step passed; the row press is now its own ladder (`accent` → `active`),
 derived in the suite from the published pair so the two cannot drift, and every
 shipped set already steps the expected way (plan 622)
+`[x]` Hold the selected row's inherited label a perceivable step below its
+title — a theme could raise `selectedForeground` to (or above) `foreground` on
+the four row fills while `themeContrastFailures` and the hierarchy check both
+returned `[]`; `textTiers` gains the state pair, every shipped set already
+clears the step (1.106:1 at the tightest, `Dark · Windows` on `hover`) and no
+colour moves (plan 623)
 
 ## Phase C — Tier 1–2 components
 

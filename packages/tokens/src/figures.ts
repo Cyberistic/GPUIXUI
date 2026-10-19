@@ -713,6 +713,24 @@ const panelActionTierFigure: TierFigure = {
 };
 
 /**
+ * The selected row's inherited label below the title painted on the same fill.
+ * Plan 623 added the pair: both roles already cleared their own floors, so only
+ * the hierarchy can report a label raised to (or above) the title's strength.
+ * The minimum is `Dark · Windows` on the `hover` fill.
+ */
+const selectedLabelTierFigure: TierFigure = {
+  document: "docs/tokens.md",
+  name: "the selected row's label below its title",
+  tier: ["selectedForeground", "foreground"],
+  claim: "tightest",
+  provenance: platformTheme("win32", "dark", "default"),
+  surface: "hover",
+  decimals: 3,
+  sentence:
+    "**{figure}:1** (`selectedForeground` vs `foreground`, `Dark · Windows` on `hover`)",
+};
+
+/**
  * Every tier figure the catalogue states, in the order the paragraph lists
  * them. A tier in `textTiers` without an entry fails the suite, so the page
  * cannot silently drop one.
@@ -725,4 +743,5 @@ export const documentedTierFigures: ReadonlyArray<TierFigure> = [
   inactiveTierFigure,
   hintTierFigure,
   panelActionTierFigure,
+  selectedLabelTierFigure,
 ];
