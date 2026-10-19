@@ -123,8 +123,17 @@ export interface SelectProps extends TriggerHandlers {
    * heading is not selectable, and option values stay unique across groups.
    */
   readonly options: ReadonlyArray<SelectEntry>;
-  /** Controlled selection. Omit to let the select hold its own. */
+  /**
+   * Controlled selection. Omit to let the select hold its own.
+   *
+   * `""` is an ordinary value: `value=""` selects an option valued `""`
+   * ("Any"/"All"/"None"), not "no selection" (plan 501).
+   */
   readonly value?: string;
+  /**
+   * Initial selection when uncontrolled. Omit — together with `value` — for no
+   * selection, which paints the `placeholder`.
+   */
   readonly defaultValue?: string;
   readonly onValueChange?: (value: string) => void;
   /** Controlled open state. Omit to let the select hold its own. */
@@ -447,7 +456,13 @@ const ScrollWhenHighlighted = ({
   return null;
 };
 
-/** The element tree `Select` renders. Pure in its arguments. */
+/**
+ * The element tree `Select` renders. Pure in its arguments.
+ *
+ * `state` is the runtime's controlled `value` boundary: `undefined` is the
+ * absence and `""` is an ordinary option value ("Any"/"All"/"None"), so it must
+ * not double as a sentinel (plan 501).
+ */
 export const renderSelect = (
   {
     options,
@@ -474,7 +489,7 @@ export const renderSelect = (
     "aria-description": description,
   }: SelectProps,
   theme: PrimitiveTheme,
-  state: ValueState<string>,
+  state: ValueState<string | undefined>,
   open: boolean,
   focus: FocusState,
   handlers: SelectHandlers,
@@ -496,11 +511,13 @@ export const renderSelect = (
     onKeyUp,
   };
   const flat = selectOptions(options);
-  const selected = state.current === "" ? undefined : state.current;
+  const selected = state.current;
   const selectedLabel = Option.getOrElse(
-    Option.map(
-      Arr.findFirst(flat, (option) => option.value === selected),
-      (option) => option.label,
+    Option.flatMap(Option.fromNullishOr(selected), (value) =>
+      Option.map(
+        Arr.findFirst(flat, (option) => option.value === value),
+        (option) => option.label,
+      ),
     ),
     () => undefined,
   );
@@ -657,10 +674,14 @@ export const Select = (props: SelectProps): ReactElement => {
       openState.set(false);
   }, [props.disabled, openState.value.current]);
   const open = selectOpen(openState.value.current, props.disabled === true);
-  const state = useControlState(
+  const state = useControlState<string | undefined>(
     props.value,
-    props.defaultValue ?? "",
-    props.onValueChange,
+    props.defaultValue,
+    (next) => {
+      // The runtime reports a string (an option's value). A future "clear" path
+      // would be a separate interaction, not an invented `""` report.
+      if (next !== undefined) props.onValueChange?.(next);
+    },
   );
   /**
    * The renderer scrolls a highlighted row into its nearest scroll container.

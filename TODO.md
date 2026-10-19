@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 142/142
+`[x]` `[████████████]` 143/143
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1396,6 +1396,18 @@ retired once both branches are one
       trigger (documented on both pages). 2 element + 4 scoped runtime cases, both
       directions proven, plus the `scrollTrigger` composed example (plan `399b`;
       offline 722 → 724).
+
+`[x]` `packages/primitives`: **a `Select` option valued `""` could never be shown**
+      — the wrapper rewrote `""` to `undefined`, so an option whose value is the
+      empty string ("Any"/"All"/"None") was neither painted nor announced:
+      measured, `defaultValue=""` with an option valued `""` made the trigger
+      announce the placeholder, although the headless 0.10.0 `Select` selects an
+      `""` item fine. The selection state is now `string | undefined` — absence
+      is the missing prop, `""` is a value — so the option is shown and chosen
+      (reporting `""` once from no selection, nothing when unchanged) while no
+      `value`/`defaultValue` still shows the placeholder. 2 element + 2 scoped
+      runtime cases, both directions measured (plan `501`; offline 728 → 730,
+      scoped live 4/4).
 
 `[x]` `packages/primitives`: **a selection row's visible description reached no
       assistive technology** — `CheckboxGroup` and `RadioGroup` painted

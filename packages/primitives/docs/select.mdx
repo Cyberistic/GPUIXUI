@@ -103,8 +103,8 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
 | `options` | `ReadonlyArray<SelectOption \| SelectOptionGroup>` | — (required) | choices in paint order (`{ value, label, disabled? }`), optionally under a heading |
-| `value` | `string` | — | controlled selection |
-| `defaultValue` | `string` | — | initial selection when uncontrolled |
+| `value` | `string` | — | controlled selection; `""` is a real value (see below) |
+| `defaultValue` | `string` | — | initial selection when uncontrolled; omit it (with `value`) for no selection |
 | `onValueChange` | `(value: string) => void` | none | committed value |
 | `open` | `boolean` | — | controlled open state; the list changes only when the parent changes it |
 | `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
@@ -133,6 +133,35 @@ interface SelectOptionGroup {
   options: ReadonlyArray<SelectOption>;
 }
 ```
+
+## Values and absence
+
+A selection is a **string**, and `""` is an ordinary one. A "show all" filter is
+`{ value: "", label: "Any" }`:
+
+```tsx
+<Select
+  label="Status"
+  defaultValue=""
+  options={[
+    { value: "", label: "Any" },
+    { value: "active", label: "Active" },
+    { value: "archived", label: "Archived" },
+  ]}
+  onValueChange={setStatus}
+/>
+```
+
+Absence is the **missing prop**, not the empty string (plan `501`). Supplying
+neither `value` nor `defaultValue` leaves the select unselected and paints the
+placeholder; `value=""`/`defaultValue=""` selects the option valued `""` and
+announces its label. Choosing the current value again reports nothing, the same
+no-op rule the other controls follow.
+
+A caller that needs a placeholder **and** an "any" choice has one option: use a
+non-empty sentinel (`value="any"`) for the choice, or start with no selection and
+let the placeholder carry the "not chosen yet" state. The wrapper does not
+invent a second absence value.
 
 ## Option groups
 
@@ -181,7 +210,8 @@ mappings (`role_from_aria`):
 - The trigger is a **`combobox`** named by `label`, with `aria-expanded`
   following the real open state and `aria-valuetext` carrying the chosen label
   (or the placeholder). AccessKit reports it as `ComboBox`, `expanded`,
-  `value`.
+  `value`. An option valued `""` announces its label like any other; the empty
+  string is never mistaken for "no choice" (plan `501`).
 - The list is a **`listbox`** named by the same `label`.
 - Each item is an **`option`** with its own label and `aria-selected` on the
   chosen one. AccessKit reports `ListBox`, `ListBoxOption`, `selected`.
@@ -360,7 +390,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   label: clicking an enabled option's text reports it, closes the list and
   returns native focus to the trigger; clicking a disabled option's text
   reports nothing and leaves the list open. The option rows are located as
-  `${testId}-option-${value}` (plan 390).
+  `${testId}-option-${value}` (plan 390). It also proves the empty-string value:
+  `defaultValue=""` announces the empty-valued option's label at rest, choosing
+  it again reports nothing, and with no `defaultValue` the trigger announces the
+  placeholder until the empty-valued option is chosen, then reports `""` and
+  paints that label (plan 501).
 
 - `src/components/Select.test.tsx` — trigger chrome, **the decorative chevron
   (down at rest, up while open, muted when disabled, unnamed)**, **the focus
@@ -372,7 +406,9 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   non-shrinking row, and a grouped tree: one named `group`, its caption heading,
   the flat `items` order, and the selected label across a group (plan `075`);
   and the option locators `${testId}-option-${value}`, grouped options
-  included, with none invented when `testId` is absent (plan `390`).
+  included, with none invented when `testId` is absent (plan `390`); and the
+  empty-string selection passing through as `""` while no selection stays
+  `undefined` (plan `501`).
 - `src/core/select.test.ts` — the entry model: a flat list reads as itself, a
   group flattens in paint order without its heading, an empty group contributes
   nothing, disabled flags survive the flatten, and a disabled select is closed

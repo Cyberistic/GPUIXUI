@@ -12,6 +12,10 @@
  *    trigger rather than being stranded in an unmounted layer.
  * 2. A disabled option must refuse the same gesture and leave the list open,
  *    because a click that silently closes a menu would look like a selection.
+ * 3. An option whose value is the empty string ("Any"/"All"/"None") must be
+ *    shown and chosen like any other. The wrapper used `""` as its absence
+ *    sentinel, so such an option was never painted or announced although the
+ *    headless runtime selects it (plan `501`).
  *
  * The observations are values, focus and painted text only — no absolute
  * geometry — so they stay valid on a host whose artifact has degraded bounds
@@ -25,7 +29,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import { Input } from "../src/components/Input.js";
 import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
-import type { Runtime } from "../src/testing/index.js";
+import { a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 interface Scene {
@@ -100,4 +104,74 @@ it("does not select a disabled option's label and keeps the list open", async ()
 
   expect(values).toStrictEqual([]);
   expect(runtime.allText()).toContain("Beta");
+});
+
+/** What the trigger announces: its selected option's label, or the placeholder. */
+const announcedValue = (runtime: Runtime): string =>
+  Option.getOrElse(
+    a11yValueOf(runtime.a11y(), { role: "ComboBox", label: "Filter" }),
+    () => "<none>",
+  );
+
+/**
+ * A select with an empty-valued option, at a given initial selection.
+ *
+ * `defaultValue` is passed only when the case needs it: omitting it is the
+ * "no selection" state, and the point of the two cases below is that `""` and
+ * absence now behave differently (plan `501`).
+ */
+const emptyValueSelect = async (
+  defaultValue?: string,
+): Promise<{ readonly runtime: Runtime; readonly values: Array<string> }> => {
+  const runtime = await openWindow();
+  const values: string[] = [];
+  runtime.render(
+    <Surface>
+      <Select
+        testId="e"
+        label="Filter"
+        placeholder="Pick"
+        {...(defaultValue === undefined ? {} : { defaultValue })}
+        options={[
+          { value: "", label: "Any" },
+          { value: "a", label: "Alpha" },
+        ]}
+        onValueChange={(value) => values.push(value)}
+      />
+    </Surface>,
+  );
+  return { runtime, values };
+};
+
+it("shows an option whose value is the empty string", async () => {
+  // Measured before the fix: the trigger announced the placeholder ("Pick"),
+  // because the wrapper rewrote `""` to `undefined` (plan 501).
+  const { runtime, values } = await emptyValueSelect("");
+  expect(announcedValue(runtime)).toBe("Any");
+
+  runtime.click("e-trigger");
+  runtime.flush();
+  expect(Option.isSome(runtime.element("e-option-"))).toBe(true);
+  runtime.click("e-option-");
+  runtime.flush();
+
+  // It is already the value: choosing it again changes nothing, so nothing is
+  // reported (the no-op rule the rest of the package follows).
+  expect(values).toStrictEqual([]);
+  expect(announcedValue(runtime)).toBe("Any");
+});
+
+it("keeps the placeholder until an empty-string option is chosen", async () => {
+  // The other direction: absence must stay absent, so the fix cannot make `""`
+  // always selected.
+  const { runtime, values } = await emptyValueSelect();
+  expect(announcedValue(runtime)).toBe("Pick");
+
+  runtime.click("e-trigger");
+  runtime.flush();
+  runtime.click("e-option-");
+  runtime.flush();
+
+  expect(values).toStrictEqual([""]);
+  expect(announcedValue(runtime)).toBe("Any");
 });

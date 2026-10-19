@@ -44,8 +44,12 @@ import { clickEvent, keyEvent } from "./testing/event.js";
 
 const rest = { selected: false, highlighted: false, disabled: false };
 
-const valueState = (value: string): ValueState<string> =>
-  initValueState(Option.some(value), "");
+const valueState = (value: string): ValueState<string | undefined> =>
+  initValueState(Option.some(value), undefined);
+
+/** The state a select is in when neither `value` nor `defaultValue` is supplied. */
+const noSelection = (): ValueState<string | undefined> =>
+  initValueState(Option.none(), undefined);
 
 const handlers: SelectHandlers = {
   onOpenChange: () => {},
@@ -166,7 +170,7 @@ describe("Select", () => {
       renderSelect(
         { options: [], label: "Fruit", testId: "sel", disabled },
         testTheme,
-        valueState(""),
+        noSelection(),
         false,
         noFocus,
         handlers,
@@ -231,7 +235,7 @@ describe("Select", () => {
     const element = renderSelect(
       { options: [], label: "Fruit" },
       testTheme,
-      valueState(""),
+      noSelection(),
       true,
       noFocus,
       handlers,
@@ -246,7 +250,7 @@ describe("Select", () => {
     const element = renderSelect(
       { options: [], label: "Fruit", testId: "sel" },
       testTheme,
-      valueState(""),
+      noSelection(),
       false,
       noFocus,
       handlers,
@@ -314,7 +318,7 @@ describe("Select", () => {
     const element = renderSelect(
       { options: [{ value: "alpha", label: "Alpha" }], disabled: true },
       testTheme,
-      valueState(""),
+      noSelection(),
       false,
       noFocus,
       handlers,
@@ -333,7 +337,7 @@ describe("Select", () => {
         placeholder: "Pick one",
       },
       testTheme,
-      valueState(""),
+      noSelection(),
       false,
       noFocus,
       handlers,
@@ -413,7 +417,7 @@ describe("Select", () => {
     const element = renderSelect(
       { options: [{ value: "alpha", label: "   " }], label: "   " },
       testTheme,
-      valueState(""),
+      noSelection(),
       true,
       noFocus,
       handlers,
@@ -513,6 +517,35 @@ describe("Select", () => {
     expect(expectSome(elementProp(childAt(list, 1), "testId"))).toBe(
       "region-option-us",
     );
+  });
+
+  it("passes an empty-string selection through instead of erasing it", () => {
+    // The bug guarded (plan 501): the wrapper rewrote `""` to `undefined`, so an
+    // option valued `""` — "Any", "All", "None" — could never be shown, even
+    // though the headless runtime selects an `""` item.
+    const element = renderSelect(
+      { options: [{ value: "", label: "Any" }], label: "Filter" },
+      testTheme,
+      valueState(""),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(expectSome(elementProp(element, "value"))).toBe("");
+  });
+
+  it("passes no selection as undefined", () => {
+    // The other half: absence must stay absent, so a select with an empty-valued
+    // option still shows its placeholder until a choice is made.
+    const element = renderSelect(
+      { options: [{ value: "", label: "Any" }], label: "Filter" },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(elementProp(element, "value")).toStrictEqual(Option.none());
   });
 });
 
