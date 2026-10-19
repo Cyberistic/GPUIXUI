@@ -272,6 +272,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [588](./588-native-chrome-washes.md) | The native document's chrome washes | F | 569, 572–574, 583, 585 | done |
 | [589](./589-native-code-block-edge.md) | The native code block's own edge on its body ink wash | F | 574, 583, 585, 588 | done |
 | [590](./590-inline-code-accent-wash.md) | Inline code text on its accent wash | F | 082, 314, 528, 569, 574, 589 | done |
+| [591](./591-native-diff-row-tint.md) | The native diff row tint | F | 332, 574, 582, 583, 588–590 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3012,6 +3013,18 @@ apply, and a copyable example proves the override compiles. The same paragraphs
 no longer list the per-digit width or the table's max-content floor among the
 runtime defaults — plan `572` derives them from `codeBlock`/`body`. No colour,
 pair, floor or metric value moves.
+
+Plan `591` closes the last surface the native-document contract never painted.
+The runtime paints a changed diff line on a **5.5% tint** of its status role, and
+every child — gutter, number, marker, 3px bar and the syntax runs at full alpha —
+sits on it, but the fades were measured on the plain tone only. Five light pairs
+measured 6.950–6.990:1 there under the 7:1 body floor while `themeFailures`
+returned `[]`. `nativeSyntaxTints` owns the two tints, six `nativeTextOverFades`
+entries own the changed row's chrome, and macOS/Windows `warningText` plus
+XP/Aero `successText` take one designed step. The tightest tinted pair is
+7.008:1 (`Light`, `primaryText` on the `destructiveText` tint); the identity
+brand ink is deliberately unchanged. No role is added and the plain contract's
+count does not move.
 
 ## How to use a plan
 
