@@ -97,13 +97,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 118/118 plans-and-harness
 
-`[~]` **The chart recipe's colour contract in a real window** per plan `697`:
+`[x]` **The chart recipe's colour contract in a real window** per plan `697`:
       the sourced `<svg>` tint, the image's two opaque fills and both gradients
-      were `paintedStyle`/screenshot-only since plans `180`/`593`. One captured
-      live frame is sampled for two solid masks (`primary`/`success`), the two
+      were `paintedStyle`/screenshot-only since plans `180`/`593`. The view
+      gained two `40 × 40` solid sourced masks; `live-chart` now captures one
+      frame and samples it for both masks (`#A7A9FF`, `#3BC97F` exact), the two
       fill literals (`#E5484D`, `#30A46C`), the radial centre (`#FFD166`) and
-      the linear gradient's top/bottom. `live-chart` 40 → 68 checks predicted;
-      `chart-svg` unchanged at 52. Six mutation proofs planned. Plan `697`.
+      the linear gradient's top/bottom (blue → background). **`live-chart` 40 →
+      71 checks** (68 predicted), `chart-svg` unchanged at **52**. Six
+      mutation proofs observed and reverted, all `exit 1`: `destructive` on the
+      second tint, the two tint expectations swapped, the `#30a46c` rect
+      deleted, the linear stops made constant, the radial rect deleted, and the
+      radial widened; the widened-rect run failed on the earlier radial-centre
+      sample, so a sixth variant that widens it leftward with an opaque stop —
+      isolating the left-edge check — failed `the radial gradient does not
+      cover the left edge` on its own. Ledgers corrected too (`COMPONENTS.md`
+      Charts + Image preview, README chart table, pixel section and `<img>`
+      sources). `nub run check`/`lint`/`test` green (playground 442, testing 68,
+      components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7);
+      headless **106/106** (`3824` checks). No full live gate ran (merge gate);
+      the registry total should become `2545 + 31 = 2576` for 95 ids. Plan
+      `697`.
 
 `[x]` **Run the promotion gate on the head that includes plan `690`'s
       image-source pixels** per plan `691`: verification only on the

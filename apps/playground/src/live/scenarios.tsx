@@ -115,13 +115,15 @@ import {
 } from "../scenarios/pixels.js";
 import {
   captureLive,
+  expectColour,
   expectPixel,
   pixelAtId,
+  pixelAtPoint,
   readAsync,
   TOLERANCE,
 } from "../scenarios/frames.js";
 import { palettePixels } from "../scenarios/palette-pixels.js";
-import type { PaletteId } from "../palettes.js";
+import { palettes, type PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -8705,7 +8707,93 @@ const liveChart: LiveScenario = {
         false,
       );
 
-      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveChart.id}.png`);
+      // Colour, not only geometry: the frame the runtime wrote is sampled
+      // (plan `697`). `chart-tint-*` are solid masks, so their centres are the
+      // element `color` exactly; the image box is sampled at SVG coordinates.
+      yield* settle;
+      const frame = yield* captureLive(
+        ctx.host,
+        `${LIVE_ARTIFACTS}/${liveChart.id}.png`,
+      );
+      const reader = readAsync(ctx.host);
+      const window = yield* reader.windowSize();
+
+      const tint = (token: string) =>
+        ctx.expectSome(`${token} parses`, Pixels.hexToRgba(token));
+
+      yield* expectPixel(
+        ctx,
+        "a sourced svg is painted in its own colour",
+        reader,
+        frame,
+        "chart-tint-0",
+        yield* tint(palettes.dark.colors.primary),
+      );
+      yield* expectPixel(
+        ctx,
+        "a second sourced svg is tinted independently",
+        reader,
+        frame,
+        "chart-tint-1",
+        yield* tint(palettes.dark.colors.success),
+      );
+
+      const sample = (label: string, dx: number, dy: number) =>
+        pixelAtPoint(ctx, frame, window, image.x + dx, image.y + dy, label);
+
+      const expectFill = (label: string, dx: number, dy: number, hex: string) =>
+        Effect.gen(function* () {
+          const colour = yield* sample(label, dx, dy);
+          yield* expectColour(ctx, label, colour, yield* tint(hex));
+        });
+
+      const expectDominant = (
+        label: string,
+        dx: number,
+        dy: number,
+        predicate: (colour: Pixels.Rgba) => boolean,
+      ) =>
+        Effect.gen(function* () {
+          const colour = yield* sample(label, dx, dy);
+          yield* ctx.expectEqual(label, predicate(colour), true);
+        });
+
+      yield* expectFill(
+        "the image keeps its first opaque fill",
+        48,
+        84,
+        "#e5484d",
+      );
+      yield* expectFill(
+        "the image keeps a second opaque fill",
+        120,
+        70,
+        "#30a46c",
+      );
+      yield* expectFill(
+        "the radial gradient's centre is its stop colour",
+        270,
+        60,
+        "#ffd166",
+      );
+      yield* expectDominant(
+        "the linear gradient starts blue",
+        8,
+        4,
+        (colour) => colour.b - colour.r > 60,
+      );
+      yield* expectDominant(
+        "the linear gradient has faded at the bottom",
+        8,
+        116,
+        (colour) => colour.b - colour.r < 25,
+      );
+      yield* expectDominant(
+        "the radial gradient does not cover the left edge",
+        160,
+        60,
+        (colour) => colour.r - colour.b < 20,
+      );
     }),
 };
 

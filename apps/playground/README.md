@@ -358,7 +358,7 @@ the same view in the window and drives it through the paused live motion clock:
 The recipe is therefore real in a window, not just offscreen: a component can
 keep its body mounted, measure it while clipped, animate it and keep its state.
 
-## The chart recipe in a real window (plan `593`)
+## The chart recipe in a real window (plans `593`, `697`)
 
 `chart-svg` decides the Tier 3 chart recipe; `live-chart` confirms the parts a
 window can answer:
@@ -371,11 +371,15 @@ window can answer:
 | vectors | both `<svg>` layers paint the same `480 × 160` box |
 | SVG children | the authored `chart-svg-child` answers its text but is **absent** from `paintedText()` |
 | full colour | the SVG data-URL `<img>` keeps its declared `480 × 120` box |
+| SVG tint | two solid sourced masks paint `#A7A9FF` and `#3BC97F` exactly |
+| image colour | fills `#E5484D` and `#30A46C` exact; radial centre `#FFD166`; the linear gradient is blue at the top and background-dark at the bottom |
 
-The last row refines plan `577`: a **raster** data URL loses 1 px per axis in
-the live tracker, but an **SVG** source keeps its declared box. A chart
-component can therefore size its colour layer exactly; only its pixels are
-screenshot evidence.
+The last two rows come from the captured frame (`live-chart`, plan `697`): the
+frame is decoded and sampled, so the mask tint, both fills and both gradients
+are assertions, not screenshot evidence. The `480 × 120` row refines plan `577`:
+a **raster** data URL loses 1 px per axis in the live tracker, but an **SVG**
+source keeps its declared box. A chart component can therefore size its colour
+layer exactly *and* know the colours it paints.
 
 ## The QR recipe in a real window (plan `599`)
 
@@ -568,30 +572,33 @@ non-null box is paint evidence, not merely layout.
 | `<diff>` | 640 wide with a painted height; file header, hunk header, added and removed lines all reach the paint log |
 | `<canvas>` | **retained as type `canvas`, paints nothing**: no bounds, child kept in the tree but dropped from the paint log |
 
-Two limits, stated rather than hidden: there is no pixel readback, so a corrupt
-PNG with a valid MIME is indistinguishable from a decoded one, and an empty
-`<svg>` has the same type and box as a painted icon — the screenshot artifact is
-the only visual evidence, never an assertion. Charts and the colour picker
-cannot use `<canvas>`; `<svg>` and `<img>` + `setImagePixels` are the honest
-alternatives.
+Two limits of *these* checks, stated rather than hidden: they read bounds and
+the paint log, so a corrupt PNG with a valid MIME is indistinguishable from a
+decoded one and an empty `<svg>` has the same type and box as a painted icon.
+Pixel readback settles colour separately (`pixel-colour`, `live-content`,
+`live-chart`); Charts and the colour picker cannot use `<canvas>` — `<svg>` and
+`<img>` + `setImagePixels` are the honest alternatives.
 
 ### `<img>` sources (plan `586`)
 
-The image element has four source kinds, and only two are assertable. All four
-are mounted by `native-surfaces` (`live-content` adds the http(s) case):
+The image element has four source kinds; all four are now assertable, and the
+two that paint only in a real window are settled by live frame pixels. Every
+kind is mounted by `native-surfaces` (`live-content` adds the http(s) case):
 
 | Source | Asserted | Evidence |
 | ------ | -------- | -------- |
 | data URL (`src={ONE_PIXEL_PNG}`) | box `64 × 64`, no load-failure fallback | `getPaintedText` + bounds |
 | bytes (`ref.setImage(png)`) | state readout `ok`, box `48 × 48`, **no** `img: no src` | `getPaintedText` + bounds |
 | bytes, undecodable (`setImage`) | the runtime **throws** `unrecognized image format`; the node keeps `img: no src` and the `46 × 46` fallback box | the view records the caught throw |
-| file path (`src={absolutePath}`) | box only; the real window paints the bitmap | **screenshot only** |
-| http(s), refused (`https://127.0.0.1:1/…`) | box only; the real window paints `img: load failed` | **screenshot only** |
+| file path (`src={absolutePath}`) | box only headless; the real window paints the bitmap | **live frame sample** (plan `690`): the path box paints the fixture's red |
+| http(s), refused (`https://127.0.0.1:1/…`) | box only headless; the real window paints `img: load failed` | **live frame sample** (plan `690`): the box paints no fixture red |
 
-The path/URL limit is measured, not assumed: `gpui::img(path|uri)` renders its
+The loader limit is measured, not assumed: `gpui::img(path|uri)` renders its
 fallback through a plain GPUI element, which is **not** a retained text node and
 never reaches `getPaintedText()`; there is no load/error event; and the
-offscreen loader does not settle, so headless paints nothing. A consumer that
+offscreen loader does not settle, so headless paints nothing. `live-content`
+therefore samples the path and refused-URL boxes from the captured frame
+(plan `690`) — colour is evidence, the load/error signal is not. A consumer that
 needs an error state must read the bytes itself (`FileSystem`) and validate them
 before `setImage`, or stat the path before rendering. The PNG fixture lives at
 `apps/playground/fixtures/one-pixel.png`; the bytes are decoded from the same
@@ -1459,12 +1466,14 @@ colour — multi-series means one layer per series.
 | one SVG per series | two absolutely stacked layers paint the same `480 × 160` box; each reports **its own** `color` tint |
 | SVG text | `svg-internal-label` is visible in the screenshot but **absent from `getPaintedText`** and the a11y tree — labels must be siblings |
 | SVG children | React children are retained (`chart-svg-child` reads back) but dropped from the paint, like `<canvas>` |
-| full colour | an `<img>` with a percent-encoded `data:image/svg+xml` URL paints `480 × 120` with no fallback; the screenshot keeps a linear **and** a radial gradient plus two fills |
+| full colour | an `<img>` with a percent-encoded `data:image/svg+xml` URL paints `480 × 120` with no fallback; a linear **and** a radial gradient plus two fills are now sampled from the live frame (plan `697`) |
 
 The recipe: bars from `div`s (fully assertable), one `<svg>` layer per line or
 area series in an absolute slot, labels as `<text>`, and `<img>` + SVG for any
-full-colour artwork. The limit is unchanged: no pixel readback, so exact colour
-inside the image and the gradient stops are screenshot evidence.
+full-colour artwork. Plan `697` moved the colour half from the screenshot into
+the checks: the mask tints, the image's two fills and both gradients are frame
+samples (see *The chart recipe in a real window*); SVG-internal glyphs and
+anti-aliased edges remain unasserted.
 
 ## Markdown surfaces (plan `181`)
 
@@ -2057,10 +2066,12 @@ ignoring the scale fails `green paints green: expected #00ff00ff, got
 #ff0000ff`; breaking the `Sub` unfilter fails the package test; and removing the
 capture fails with the named `ENOENT` reason instead of a crash.
 
-This settles **colour**, not pixels of everything: anti-aliased edges,
-gradients, glyph rendering and the image path/URL loader are still out of
-scope (plan `586`'s screenshot limitation stands). Bitmap **data URLs and
-bytes** can now be checked by colour; a path/URL still cannot.
+This settles **colour**, not pixels of everything: anti-aliased edges, glyph
+rendering and scannability are still out of scope. Bitmap **data URLs, bytes and
+a file path** are checked by colour (plan `690`), and so is the chart's SVG
+artwork — its two opaque fills and both gradients — plus the sourced-SVG mask
+tints (plan `697`, in `live-chart`). A refused http(s) URL is proven by the
+absence of the fixture's colour: the loader still emits no load/error event.
 
 ## Evidence on this host
 

@@ -14,8 +14,10 @@
  *
  * The recipe the probe proves: bars from `div`s, one `<svg>` layer per line
  * series, labels as `<text>` siblings, and `<img>` + SVG for full-colour
- * artwork. Pixel colour and gradients remain screenshot evidence; every asserted
- * value here comes from bounds, the style report, painted text or AccessKit.
+ * artwork. Every value asserted here comes from bounds, the style report,
+ * painted text or AccessKit; the colour half of the recipe is asserted on a
+ * real window's frame (`live-chart`, plan `697`), not on a screenshot. Glyph
+ * rendering and anti-aliased edges remain unasserted.
  *
  * Measured facts: plan `180` §8.
  */
@@ -39,6 +41,10 @@ const LINE_WIDTH = 480;
 const LINE_HEIGHT = 160;
 const IMAGE_WIDTH = 480;
 const IMAGE_HEIGHT = 120;
+const TINT_SIZE = 40;
+const TINT_GAP = 12;
+/** One fully opaque mask: the alpha is what a sourced `<svg>` is tinted by. */
+const TINT_MASK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${TINT_SIZE}" height="${TINT_SIZE}" viewBox="0 0 ${TINT_SIZE} ${TINT_SIZE}"><rect width="${TINT_SIZE}" height="${TINT_SIZE}" fill="#000"/></svg>`;
 
 type SeriesColour = "primary" | "success" | "destructive";
 
@@ -184,6 +190,36 @@ const ChartProbe = () => {
         alt="Revenue chart"
         style={{ width: IMAGE_WIDTH, height: IMAGE_HEIGHT }}
       />
+
+      <div
+        testId="chart-tint-row"
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          gap: TINT_GAP,
+          width: TINT_SIZE * 2 + TINT_GAP,
+          height: TINT_SIZE,
+        }}
+      >
+        <svg
+          testId="chart-tint-0"
+          source={TINT_MASK_SVG}
+          style={{
+            width: TINT_SIZE,
+            height: TINT_SIZE,
+            color: theme.colors.primary,
+          }}
+        />
+        <svg
+          testId="chart-tint-1"
+          source={TINT_MASK_SVG}
+          style={{
+            width: TINT_SIZE,
+            height: TINT_SIZE,
+            color: theme.colors.success,
+          }}
+        />
+      </div>
     </div>
   );
 };

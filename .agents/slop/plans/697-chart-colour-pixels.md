@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (native evidence) |
 | Owner | playground |
 | Depends on | `180` (the chart recipe), `593` (the live chart twin), `674` (the PNG decoder and frame sampler), `690` (the image-source pixel precedent), `691` (the last gate) |
@@ -433,4 +433,63 @@ screenshot diff. The PNG remains the run artifact.
 
 ## 7. Results
 
-Filled on landing.
+Landed 2026-10-19 on `agent/playground`, darwin-x64 with the release-tag
+binding. The plan commit is `53d846dd`; the implementation head is the commit
+carrying this section.
+
+**Controls** (before the change): `live-chart` **1/1, 40 checks**; `chart-svg`
+**1/1, 52 checks**. Both matched the plan.
+
+**The change.** Two `40 × 40` solid sourced masks (`chart-tint-0`,
+`chart-tint-1`) were added to the probe view, and `liveChart.steps` replaced its
+bare `ctx.host.screenshot(...)` with `captureLive` + samples: the two masks
+through `expectPixel`, the image's two fills and the radial centre through
+`expectColour`, and the linear top/bottom plus the radial left edge through
+dominance predicates. `palettes` and `expectColour`/`pixelAtPoint` joined the
+existing imports.
+
+**Measured count.** `live-chart` **40 → 71 checks** (the plan predicted 68; the
+run is the authority). The delta is 31: two `expectPixel` at 5 checks each
+(parse + bounds + pixel + colour), three fills at 4, and three dominance checks
+at 3. Green on the first run, `exit 0`, with one
+`.artifacts/live/live-chart.png` (170,811 bytes). The headless control stayed
+**52** checks — the two new nodes changed no headless check, which is what the
+plan requires.
+
+**Gates.** `nub run check`/`lint`/`test` all `exit 0` with playground **442**,
+testing **68**, components **308**, primitives **282**, tokens **196**, tw
+**103**, icons **19**, docs **7**. End-of-task headless registry: **106/106**,
+**3824 checks**, 65 capabilities, `exit 0`.
+
+**Mutation proofs** (each rebuilt, ran `--only live-chart`, observed `exit 1`,
+then reverted; 71 green again afterwards):
+
+| # | Mutation | Observed |
+| - | -------- | -------- |
+| M1 | `chart-tint-1`'s `color` → `destructive` | `the second sourced svg is tinted independently: expected #3bc97fff, got #ff6b6bff` |
+| M2 | swap the two tint expectations | `a sourced svg is painted in its own colour: expected #3bc97fff, got #a7a9ffff` |
+| M3 | delete the `#30a46c` rect | `the image keeps a second opaque fill: expected #30a46cff, got #2b4079ff` |
+| M4 | second linear stop `stop-opacity="1"` | `the linear gradient has faded at the bottom: expected true, got false` |
+| M5 | delete the radial `<rect … url(#glow)>` | `the radial gradient's centre is its stop colour: expected #ffd166ff, got #30488cff` |
+| M6 | widen the radial rect to the whole image | `the radial gradient's centre is its stop colour: expected #ffd166ff, got #e5c06bff` |
+
+M6 is caught, but by the **earlier** radial-centre sample rather than the named
+left-edge check: widening the rect moves the gradient's centre, so the centre
+sample stops being the stop colour first. A sixth variant isolated the
+left-edge check honestly — the radial rect widened only to `x = 150`, `w = 190`
+with an opaque final stop (so the centre stays exact and the linear top/bottom
+stay intact) — and failed `the radial gradient does not cover the left edge:
+expected true, got false`, `exit 1`. The left-edge check therefore can fail.
+
+**Ledger corrections.** Beyond §3.3–§3.6, three stale claims in the plan's blast
+radius were fixed because this plan falsifies them directly: the `chart-svg`
+narrative in `COMPONENTS.md` ("no pixel readback, so exact colour and gradient
+stops are screenshot evidence"), the plan-180 README section's closing "the
+limit is unchanged", and the native-content README limit that said a
+screenshot is "the only visual evidence, never an assertion". The plan-`690`
+truth fixes (§3.3 Image preview row, §3.4.3 `<img>` sources) were still
+outstanding and are now landed too.
+
+**Not run.** The full live registry is the merge gate; the expected total is
+`2545 + 31 = 2576` checks for 95 ids.
+
