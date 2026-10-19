@@ -60,6 +60,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 101/101 plans-and-harness
 
+`[x]` Prove the **content surfaces in a real window** per plan `577`: `content`
+      was the last core capability with no live twin. `live-content` (28 checks)
+      reuses the `native-surfaces` view — the sourced icon's `48 × 48` box, the
+      `img: no src` / `img: load failed` fallbacks, a valid data URL and a
+      ref-uploaded 2 × 2 bitmap, the 640 px diff with four painted patch lines,
+      and `<canvas>` with no bounds and its child out of the paint (the
+      retained child still answers `text`). `live-markdown` (19) reuses the
+      `markdown-surface` view — GFM blocks as live text, a real drag selection
+      across the boundary, a real coordinate link click with prose firing
+      nothing, and React children out of the paint. **2/2**, exit `0`, two
+      consecutive runs; live registry `69 → 71`; the headless controls are
+      unchanged (`native-surfaces` 40, `markdown-surface` 21). Five mutation
+      proofs recorded (canvas→div, swap the valid/invalid data URLs, no-op the
+      link handler, render the markdown child as a div, shrink the svg), each
+      observed failing and reverted. **Measured:** an `<img>` keeps the
+      tracker's 1 px-per-axis loss live (`96 × 64` → `94 × 62`). Focused ids
+      run: `live-content`, `live-markdown`, `native-surfaces`,
+      `markdown-surface`.
+
 `[x]` Prove the **tabbed panes in a real window** per plan `575` and prove the
       nested-scroller wheel guard in both harnesses. The guard had only been
       toggled, never exercised, because the inner's recorded box goes stale after

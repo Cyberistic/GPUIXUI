@@ -22,6 +22,8 @@ import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { contextMenuScenario } from "../scenarios/context-menu.js";
+import { markdownScenario } from "../scenarios/markdown.js";
+import { nativeSurfacesScenario } from "../scenarios/surfaces.js";
 import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
@@ -197,6 +199,12 @@ const boxOf = (ctx: LiveContext, testId: string) =>
       Option.fromNullishOr(bounds),
     );
   });
+
+/** How many painted strings contain `needle`. */
+const paintedCount = (ctx: LiveContext, needle: string) =>
+  Effect.map(ctx.host.paintedText(), (lines) =>
+    Arr.length(Arr.filter(lines, (entry) => Str.includes(needle)(entry))),
+  );
 
 /** Waits up to three seconds for `testId`'s painted text to contain `needle`. */
 const waitForText = (ctx: LiveContext, testId: string, needle: string) =>
@@ -5802,6 +5810,241 @@ const liveTruncation: LiveScenario = {
     }),
 };
 
+const liveContent: LiveScenario = {
+  id: "live-content",
+  title: "Live content surfaces: svg, img, diff and the canvas trap",
+  capability: "content",
+  view: nativeSurfacesScenario.view,
+  ready: "surface-svg",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const svg = yield* boxOf(ctx, "surface-svg");
+      yield* ctx.expectNear(
+        "the live icon keeps its declared width",
+        svg.width,
+        48,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live icon keeps its declared height",
+        svg.height,
+        48,
+        1,
+      );
+
+      // 1. A missing source paints the runtime's own fallback.
+      const empty = yield* boxOf(ctx, "surface-img-empty");
+      // An <img> loses 1 px per axis in the 0.10.0 tracker (plan 529 §6.3),
+      // live as well as offscreen.
+      yield* ctx.expectNear("the live no-src box width", empty.width, 94, 0.5);
+      yield* ctx.expectNear(
+        "the live no-src box height",
+        empty.height,
+        62,
+        0.5,
+      );
+      yield* ctx.expectEqual(
+        "a missing src paints its own fallback",
+        yield* paintedCount(ctx, "img: no src"),
+        1,
+      );
+
+      // 2. An undecodable data URL paints the load-failure fallback.
+      yield* boxOf(ctx, "surface-img-invalid");
+      yield* ctx.expectEqual(
+        "an undecodable data URL paints the load-failure fallback",
+        yield* paintedCount(ctx, "img: load failed"),
+        1,
+      );
+
+      // 3. A valid data URL and a ref-uploaded bitmap lay out, adding no fallback.
+      const data = yield* boxOf(ctx, "surface-img-data");
+      yield* ctx.expectNear("the live data-URL box width", data.width, 64, 1);
+      yield* ctx.expectNear("the live data-URL box height", data.height, 64, 1);
+      yield* ctx.expectEqual(
+        "a valid data URL adds no fallback",
+        yield* paintedCount(ctx, "img: load failed"),
+        1,
+      );
+
+      const live = yield* boxOf(ctx, "surface-img-live");
+      yield* ctx.expectNear(
+        "the live ref-uploaded box width",
+        live.width,
+        32,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live ref-uploaded box height",
+        live.height,
+        32,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "pixels uploaded through the ref add no fallback",
+        yield* paintedCount(ctx, "img: load failed"),
+        1,
+      );
+
+      // 4. The diff paints its width and every patch line.
+      const diff = yield* boxOf(ctx, "surface-diff");
+      yield* ctx.expectNear(
+        "the live diff keeps its declared width",
+        diff.width,
+        640,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live diff has a painted height",
+        diff.height > 0,
+        true,
+      );
+      const painted = Arr.join(yield* ctx.host.paintedText(), "\n");
+      yield* ctx.expectContains(
+        "the live diff paints its file header",
+        painted,
+        "example.ts",
+      );
+      yield* ctx.expectContains(
+        "the live diff paints its hunk header",
+        painted,
+        "@@ -1,2 +1,2 @@",
+      );
+      yield* ctx.expectContains(
+        "the live diff paints an added line",
+        painted,
+        "const added = 1",
+      );
+      yield* ctx.expectContains(
+        "the live diff paints a removed line",
+        painted,
+        "const removed = 1",
+      );
+
+      // 5. The canvas trap: retained, unpainted, and its child stays out of the paint.
+      yield* ctx.expectEqual(
+        "canvas paints nothing, so it has no bounds",
+        Option.isNone(
+          Option.fromNullishOr(yield* ctx.host.bounds("surface-canvas")),
+        ),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "canvas drops its child from the paint log",
+        yield* paintedCount(ctx, "canvas-child"),
+        0,
+      );
+      yield* ctx.expectContains(
+        "canvas keeps its child in the retained tree",
+        yield* textOf(ctx, "surface-canvas"),
+        "canvas-child",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveContent.id}.png`);
+    }),
+};
+
+const liveMarkdown: LiveScenario = {
+  id: "live-markdown",
+  title: "Live markdown: blocks paint, links click, text selects",
+  capability: "content",
+  view: markdownScenario.view,
+  ready: "md-doc",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const doc = yield* boxOf(ctx, "md-doc");
+      yield* ctx.expectNear(
+        "the live document fills its container width",
+        doc.width,
+        560 - 16,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "the live document has a painted height",
+        doc.height > 0,
+        true,
+      );
+
+      const painted = Arr.join(yield* ctx.host.paintedText(), "\n");
+      yield* ctx.expectContains(
+        "a live heading paints",
+        painted,
+        "Release notes",
+      );
+      yield* ctx.expectContains(
+        "a live list item paints",
+        painted,
+        "first item",
+      );
+      yield* ctx.expectContains(
+        "a live table header paints",
+        painted,
+        "Metric",
+      );
+      yield* ctx.expectContains("a live table cell paints", painted, "500");
+      yield* ctx.expectContains(
+        "a live fenced code line paints",
+        painted,
+        "const total = rows * 2;",
+      );
+
+      // 1. A real drag across the document selects its text.
+      const selected = yield* ctx.host.selectText("md-before", "md-after");
+      const selection = yield* ctx.expectSome(
+        "a live drag across the document selects text",
+        Option.fromNullishOr(selected),
+      );
+      yield* ctx.expectContains(
+        "the live selection crosses the markdown boundary",
+        selection,
+        "Release notes",
+      );
+      yield* ctx.expectContains(
+        "the live selection reaches the fenced code",
+        selection,
+        "const total",
+      );
+      yield* ctx.host.clearSelection();
+
+      // 2. A real coordinate click on the link fires onLinkClick.
+      yield* ctx.host.click("md-link-doc");
+      yield* waitForText(ctx, "md-link", "url=https://example.test/docs");
+      yield* ctx.expectEqual(
+        "a live coordinate click on the link fires onLinkClick",
+        yield* textOf(ctx, "md-link"),
+        "url=https://example.test/docs",
+      );
+
+      // 3. Prose without a link fires no second event.
+      yield* ctx.host.click("md-doc");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "live prose without a link fires no link event",
+        yield* textOf(ctx, "md-link"),
+        "url=https://example.test/docs",
+      );
+
+      // 4. React children are retained but paint nothing.
+      yield* ctx.expectContains(
+        "the live markdown source still paints its own content",
+        Arr.join(yield* ctx.host.paintedText(), "\n"),
+        "Child",
+      );
+      yield* ctx.expectEqual(
+        "live React children are dropped from the paint",
+        yield* paintedCount(ctx, "md-child-text"),
+        0,
+      );
+      yield* ctx.expectContains(
+        "live React children stay in the retained tree",
+        yield* textOf(ctx, "md-child"),
+        "md-child-text",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveMarkdown.id}.png`);
+    }),
+};
+
 /** Waits for `needle`, then asserts it is in the layers readout. */
 const expectLayer = (ctx: LiveContext, needle: string, label: string) =>
   Effect.gen(function* () {
@@ -8948,6 +9191,8 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveStates,
   liveTruncation,
   liveLayers,
+  liveContent,
+  liveMarkdown,
   columnConfig,
   cropArea,
   appChrome,

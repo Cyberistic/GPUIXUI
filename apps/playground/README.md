@@ -1330,7 +1330,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 68 scenarios. `smoke:live` opens
+live registry lists 71 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1372,6 +1372,8 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` without hover, a release returns `100`, and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
+| `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
+| `live-markdown` | the markdown surface in a window: the GFM blocks paint as text, a real drag across the boundary selects the heading and the fenced code, a real coordinate click on the link fires `onLinkClick` while prose fires nothing, and React children stay out of the paint — 19 checks (plan `577`). The article role stays headless (no live a11y dump, plan `197`) |
 | `live-tier2-foundation` | the catalogue's foundation view in a window: the Card stack and 32 px avatar paint, the alert dismiss and empty-state action run, a click selects a List row and `Down`/`Enter` move and select while skipping the disabled row — 18 checks. A live key must follow the click's React commit (`settle`), or it moves from the previous active row |
 | `live-tier2-navigation` | the catalogue's navigation view: a click swaps the Tabs panel, a later click selects Settings, Accordion single mode replaces/composes a section and Enter closes it, Collapsible opens and Enter closes, Breadcrumb clicks and Pagination page/Next/Prev run — 15 checks. Whether a click runs React's `onFocus` is window-state dependent (plan `390`), so the old click-then-arrow limit is no longer asserted; the Tabs fix remains a robustness task |
 | `live-tier2-choice` | Popover opens below its trigger and Escape restores focus, a live editor types/submits/clears, a Combobox ranks and selects, the DatePicker month grid picks a day and clears, and both TimePicker segments compose one value — 13 checks |
@@ -1382,6 +1384,24 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-command-palette` | the shipped command surface in a window: `cmd-k` opens it with **nothing focused**, the veil is the window (1100 × 720), typing filters while the window handler sees each letter, arrows move the row and keep focus in the input, Enter commits through `onSubmit`, Escape/veil/row clicks dismiss with their reason, and a click-opened palette returns focus to its trigger — 80 checks |
 | `live-reorder` | the reorder probe in a window: a paced `drag` from row 0 by `+80` px lands the row at **index 2** (boundary 3), the moved row paints two rows below `bravo`, the drop is not an activation, a real click on a handle focuses it and activates without reordering, the keyboard lift/up/drop moves the row to index 1 and keeps native focus, and a keyboard cancel leaves the order and removes the indicator — 19 checks |
 | `live-tree` | the virtualized tree in a window: a real click expands `dir-0` to 48 rows and keeps it selected, a child indents 16 px inside a virtual row, the painted window is smaller than the flattened tree, a second click collapses it, a real `-800` wheel moves the anchor and unpaints the rows above, `scrollToItem(25)` anchors `[25, 0, 260]` and paints `dir-3/file-24`, a click and `Down`/`Up` move native focus and the selection, and `Right` expands/walks while `Left` returns to the parent and collapses — 44 checks (plan `559`). The list anchor reports the **flex-resolved** 260 px viewport, not the declared 280 |
+
+### The content surfaces in a real window (plan `577`)
+
+`content` was the last core capability whose only evidence was the offscreen
+`TestRenderer`. `live-content` and `live-markdown` reuse the plan-161/181 views
+unchanged and close that gap (28 + 19 checks).
+
+| Fact | Measured in the window |
+| ---- | ---------------------- |
+| `<svg>` | a sourced icon reports its declared `48 × 48` painted box |
+| `<img>` fallbacks | `img: no src` and `img: load failed` each paint exactly once; a valid data URL and a ref-uploaded 2 × 2 bitmap add none |
+| `<img>` box | the tracker's 1 px-per-axis loss applies live too: a declared `96 × 64` reports `94 × 62` |
+| `<diff>` | painted at its declared 640 px with all four patch lines in the paint log |
+| `<canvas>` | retained, `bounds` is `null`, its child is absent from the paint — and the automation `text` verb still returns the retained child's string |
+| `<markdown>` | GFM blocks are live painted text; a real drag across the boundary selects the document; a real coordinate click fires `onLinkClick`; prose fires nothing; React children stay out of the paint |
+
+The article role, the style report and colour remain headless for the measured
+reason above (`197`). Five mutation proofs are recorded in plan `577` §8.
 
 Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
 under `.artifacts/live/` (gitignored).
