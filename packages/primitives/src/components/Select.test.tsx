@@ -26,6 +26,7 @@ import {
   selectHeadingStyle,
   selectItemStyle,
   selectListHeight,
+  selectListOverhang,
   selectTriggerStyle,
   type SelectHandlers,
 } from "./Select.js";
@@ -280,6 +281,15 @@ describe("Select", () => {
     // labels. A percentage was the old bug — it resolved against the layer.
     expect(selectContentStyle(testTheme).minWidth).toBeUndefined();
     expect(selectContentStyle(testTheme, 240).minWidth).toBe(240);
+  });
+
+  it("reserves the list's own padding as the trigger overhang", () => {
+    // The runtime anchors a layer's content box, so the surface's padding falls
+    // back over the trigger; the reserved number must follow the style that
+    // paints it (plan `597`).
+    expect(selectListOverhang(testTheme)).toBe(
+      Number(selectContentStyle(testTheme).padding),
+    );
   });
 
   it("estimates the painted list height from the styles it mirrors", () => {
