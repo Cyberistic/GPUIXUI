@@ -30,7 +30,7 @@ import {
 import { shippedThemes } from "./shipped-themes.js";
 import { platformTableCells } from "./platform-table.js";
 import { statusTones } from "./styles.js";
-import { themeChecks } from "./theme-check.js";
+import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
@@ -44,6 +44,44 @@ const sentenceList = (values: ReadonlyArray<string>): string =>
   values.length < 2
     ? values.join("")
     : `${values.slice(0, -1).join(", ")} and ${values.slice(-1).join("")}`;
+
+/** The failure type each check returns, keyed by the kind that tags it. */
+const failureTypes = {
+  color: "ColorFailure",
+  opacity: "OpacityFailure",
+  typeface: "TypefaceFailure",
+  contrast: "ContrastFailure",
+  highlight: "HighlightFailure",
+  nativeText: "NativeTextFailure",
+  hierarchy: "TextTierFailure",
+  direction: "DirectionFailure",
+  metric: "MetricFailure",
+} as const satisfies Record<ThemeFailureKind, string>;
+
+/** The individual check function each kind belongs to. */
+const checkFunctions = {
+  color: "themeColorFailures",
+  opacity: "themeOpacityFailures",
+  typeface: "themeTypefaceFailures",
+  contrast: "themeContrastFailures",
+  highlight: "themeHighlightFailures",
+  nativeText: "themeNativeTextFailures",
+  hierarchy: "themeTextTierFailures",
+  direction: "themeDirectionFailures",
+  metric: "themeMetricFailures",
+} as const satisfies Record<ThemeFailureKind, string>;
+
+const ordinals = [
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+] as const;
 
 describe("packages/tokens/README.md", () => {
   it("presents an install path that exists today", () => {
@@ -81,6 +119,37 @@ describe("packages/tokens/README.md", () => {
     const count = countWords[themeChecks.length];
     expect(readme).toContain(`That is one of ${count} checks`);
     expect(readme).toContain(`composes all ${count}`);
+  });
+
+  it("states the diagnostic order from the index", () => {
+    expect(readme).toContain(
+      `The order is diagnostic — ${sentenceList(
+        themeChecks.map((kind) => `\`${kind}\``),
+      )} — and \`themeChecks\` is that order as a list`,
+    );
+  });
+
+  it("states the payload type of every check", () => {
+    const types = themeChecks.map((kind) => `\`${failureTypes[kind]}\``);
+    expect(readme).toContain(
+      `The payload is the same ${types.slice(0, -1).join(", ")} or ${types.at(-1)} the individual check returns`,
+    );
+  });
+
+  it("states each check's ordinal from the index", () => {
+    const claims = [
+      ...readme.matchAll(/`(theme[A-Za-z]+Failures)` is the ([a-z]+) check/g),
+    ];
+    expect(claims.length).toBeGreaterThan(0);
+    claims.forEach(([, fn, word]) => {
+      const kind = themeChecks.find(
+        (candidate) => checkFunctions[candidate] === fn,
+      );
+      expect(kind, fn).toBeDefined();
+      expect(word, fn).toBe(
+        kind === undefined ? undefined : ordinals[themeChecks.indexOf(kind)],
+      );
+    });
   });
 
   it("names the one check the composition suites run", () => {

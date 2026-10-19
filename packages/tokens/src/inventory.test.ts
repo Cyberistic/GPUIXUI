@@ -37,6 +37,7 @@ import { motionLevels, motionPhases } from "./motion.js";
 import { metricGroups } from "./metrics.js";
 import { translucentRoles } from "./opacity.js";
 import { platformNames, platformTypes } from "./platforms.js";
+import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { typefaceRules } from "./typeface.js";
 import { textRoles } from "./typography.js";
 
@@ -63,6 +64,19 @@ const floorRow = (contrast: keyof typeof contrastFloors): string => {
     .join(" / ")
     .concat(` ${contrast}`);
 };
+
+/** The individual check function each kind belongs to. */
+const checkFunctions = {
+  color: "themeColorFailures",
+  opacity: "themeOpacityFailures",
+  typeface: "themeTypefaceFailures",
+  contrast: "themeContrastFailures",
+  highlight: "themeHighlightFailures",
+  nativeText: "themeNativeTextFailures",
+  hierarchy: "themeTextTierFailures",
+  direction: "themeDirectionFailures",
+  metric: "themeMetricFailures",
+} as const satisfies Record<ThemeFailureKind, string>;
 
 describe("COMPONENTS.md design-system rows", () => {
   it("states the role and type-role counts the package ships", () => {
@@ -209,5 +223,16 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(total).toContain("`themeChecks`");
     expect(total).toContain("`ThemeFailureKind`");
     expect(ledger).not.toMatch(/\ball (?:three|four) checks\b/);
+  });
+
+  it("states the checks and the diagnostic order from the index", () => {
+    const total = row("Total theme check");
+    themeChecks.forEach((kind) => {
+      expect(total, kind).toContain(`\`${checkFunctions[kind]}\``);
+    });
+    const order = themeChecks.map((kind) => `\`${kind}\``).join(", then ");
+    expect(total).toContain(
+      `in diagnostic order — ${order} — tagging each entry with its \`kind\``,
+    );
   });
 });

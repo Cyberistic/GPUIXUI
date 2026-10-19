@@ -956,10 +956,8 @@ treated as omitted in every group, so a partial config spread cannot erase a
 role, a metric or a shadow level. Nothing mutates the base, so a theme can be
 created once at startup and shared.
 
-Verify an edited theme with `themeFailures(theme)`: it composes the colour
-format, role opacity, typeface, contrast, text hierarchy, interaction direction
-and numeric
-metric checks, checks contrast at the level the theme declares, and tags every
+Verify an edited theme with `themeFailures(theme)`: it composes every check in
+`themeChecks`, checks contrast at the level the theme declares, and tags every
 entry with the `kind` that found it. An empty array is the library's guarantee,
 and a non-empty one names every pair, tier, role, ladder or metric that needs
 fixing. The direction half is `themeDirectionFailures`: a pointer ladder must
@@ -968,8 +966,8 @@ step away from the canvas — darker in light, lighter in dark — so a light
 clears the 1.05:1 step, the on-colour floor and the surface floor. Each part is
 available on its own — `themeColorFailures`, `themeOpacityFailures`,
 `themeTypefaceFailures`,
-`themeContrastFailures`, `themeHighlightFailures`, `themeTextTierFailures`,
-`themeDirectionFailures` and `themeMetricFailures` — but
+`themeContrastFailures`, `themeHighlightFailures`, `themeNativeTextFailures`,
+`themeTextTierFailures`, `themeDirectionFailures` and `themeMetricFailures` — but
 a consumer that runs only one has not run the guarantee: a zero focus-ring spread,
 an unparseable `shadow` tint or a translucent one the paint discards passes the
 contrast check alone. `themeChecks`

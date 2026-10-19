@@ -314,21 +314,21 @@ themeFailures(brandTheme); // [] when every colour, family, pair, tier, ladder a
 ```
 
 The order is diagnostic — `color`, `opacity`, `typeface`, `contrast`,
-`hierarchy`, `direction`, then
+`highlight`, `nativeText`, `hierarchy`, `direction` and
 `metric` — and `themeChecks` is that order as a list, so a report or a settings
 screen iterates the index instead of retyping the kinds. The payload is the same
 `ColorFailure`, `OpacityFailure`, `TypefaceFailure`, `ContrastFailure`,
-`TextTierFailure`, `DirectionFailure` or
-`MetricFailure` the individual check returns. `themeTextTierFailures` is the
-fifth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below the
-body role each surface paints — `foreground` on the canvas and the row washes,
+`HighlightFailure`, `NativeTextFailure`, `TextTierFailure`, `DirectionFailure`
+or `MetricFailure` the individual check returns. `themeTextTierFailures` is the
+seventh check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below
+the body role each surface paints — `foreground` on the canvas and the row washes,
 `cardForeground` on a card, `popoverForeground` on a menu, dialog or toast and
 `inputForeground` in a field — and for `disabledForeground` and `placeholder`
 below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
 the surfaces both are documented on. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
 selected row, whose title is `foreground`. `themeDirectionFailures` is the
-sixth: `stateLadders` names the four filled families, the panel action, the
+eighth: `stateLadders` names the four filled families, the panel action, the
 generic wash and the selected step, and each step must move away from the
 canvas — darker in light, lighter in dark — so a light `primaryHover` that is
 lighter than its `primary` is reported even though the 1.05:1 step floor passes.

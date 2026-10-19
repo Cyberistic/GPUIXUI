@@ -251,6 +251,32 @@ const readmeSource = readFileSync(
   "utf8",
 );
 
+/** The words the guarantee sentence and the design system use for each check. */
+const checkWords = {
+  color: "colour format",
+  opacity: "role opacity",
+  typeface: "typeface form",
+  contrast: "contrast",
+  highlight: "find highlight",
+  nativeText: "native text fades",
+  hierarchy: "text hierarchy",
+  direction: "interaction direction",
+  metric: "numeric metrics",
+} as const satisfies Record<ThemeFailureKind, string>;
+
+/** The individual check function each kind belongs to. */
+const checkFunctions = {
+  color: "themeColorFailures",
+  opacity: "themeOpacityFailures",
+  typeface: "themeTypefaceFailures",
+  contrast: "themeContrastFailures",
+  highlight: "themeHighlightFailures",
+  nativeText: "themeNativeTextFailures",
+  hierarchy: "themeTextTierFailures",
+  direction: "themeDirectionFailures",
+  metric: "themeMetricFailures",
+} as const satisfies Record<ThemeFailureKind, string>;
+
 /** The table row that starts with `label`, or a failure naming it. */
 const tableRow = (label: string): string => {
   const line = designSystemSource
@@ -2068,17 +2094,6 @@ describe("docs/tokens.md typeface contract", () => {
   });
 
   it("states the size of the guarantee in both documents", () => {
-    const checkNames = {
-      color: "colour format",
-      opacity: "role opacity",
-      typeface: "typeface form",
-      contrast: "contrast",
-      highlight: "find highlight",
-      nativeText: "native text fades",
-      hierarchy: "text hierarchy",
-      direction: "interaction direction",
-      metric: "numeric metrics",
-    } as const satisfies Record<ThemeFailureKind, string>;
     const countWords = [
       "zero",
       "one",
@@ -2091,7 +2106,7 @@ describe("docs/tokens.md typeface contract", () => {
       "eight",
       "nine",
     ] as const;
-    const names = themeChecks.map((kind) => checkNames[kind]);
+    const names = themeChecks.map((kind) => checkWords[kind]);
     const sentence = `${names.slice(0, -1).join(", ")} and ${names.slice(-1).join("")}`;
 
     expect(markdownProse).toContain(
@@ -2099,6 +2114,14 @@ describe("docs/tokens.md typeface contract", () => {
     );
     expect(designSystem).toContain("Each part is available on its own");
     expect(designSystem).toContain("`themeTypefaceFailures`");
+  });
+
+  it("states the composed checks and their parts from the index", () => {
+    expect(designSystem).toContain("it composes every check in `themeChecks`");
+    const parts = themeChecks.map((kind) => `\`${checkFunctions[kind]}\``);
+    expect(designSystem).toContain(
+      `Each part is available on its own — ${parts.slice(0, -1).join(", ")} and ${parts.at(-1)} — but a consumer that runs only one has not run the guarantee`,
+    );
   });
 
   it("does not describe a subset as the guarantee", () => {
@@ -2131,6 +2154,19 @@ describe("contract prose counts", () => {
       expect(prose).not.toMatch(checkCount);
       expect(prose).not.toMatch(allChecks);
     });
+  });
+
+  it("states the diagnostic order from the index", () => {
+    const section =
+      /The order is diagnostic:(.*?)`themeChecks` is that order as a list/.exec(
+        markdownProse,
+      )?.[1] ?? "";
+    const isKind = (value: string): value is ThemeFailureKind =>
+      themeChecks.some((kind) => kind === value);
+    const kinds = [...section.matchAll(/`([A-Za-z]+)`/g)].flatMap(([, kind]) =>
+      kind !== undefined && isKind(kind) ? [kind] : [],
+    );
+    expect(kinds).toEqual([...themeChecks]);
   });
 
   it("never retypes the number of shipped sets", () => {

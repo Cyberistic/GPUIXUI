@@ -81,8 +81,9 @@ No token, colour, pair, floor, metric, runtime helper or component changes.
    composed list are both derived.
 5. **No new public value.** `themeChecks` and `ThemeFailureKind` already own
    the domain; a `themeCheckFunctions` export would be a documentation lookup
-   that no runtime caller needs. The maps live in the two test files because
-   they describe prose, not the package's API.
+   that no runtime caller needs. The kind-to-word and kind-to-function maps live
+   in the documentation tests that read each document because they describe
+   prose, not the package's API.
 6. **No executed example.** This unit changes documentation truth only; there
    is no new runtime surface to demonstrate. `src/theme-check.example.ts` is
    already the runnable example for the composition this plan holds to its
