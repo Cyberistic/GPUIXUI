@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release verification) |
 | Owner | playground |
 | Depends on | `517` (focused live runs), `529` (the release-tag binding), `639` (the live-registry guard), `653` (capability coverage), `656` (the capture-capable live runner), `659` (the previous full gate), `674` (the pixel evidence and `live-pixel-colour`) |
@@ -328,6 +328,37 @@ capture or the scale is broken.
 - The plan is marked `landed` with the exact head and commands.
 - The commit is pushed to `origin/agent/playground`; `master` is untouched.
 
-## 8. Results
+## 8. Results (2026-10-19, darwin-x64, release-tag binding)
 
-Filled after the run.
+The gate ran at `d206df18` — the merge commit that brought `origin/master`'s
+one docs-only commit (`2b4eb0d9`, `apps/docs/src/start.ts`) onto the branch,
+which was then 345 commits ahead of and 0 behind `origin/master`. The only
+content difference from the plan-674 code head is that docs file, so the
+measured totals describe the same app and package code the promotion merge
+sees.
+
+**Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
+`0`, **3824 checks**, 65 capabilities, **134.5 s** (`durationMs` 134485).
+`--list` printed 106 ids. Host:
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+`.artifacts/smoke-report.json` was rewritten by this run.
+
+**Live** — `nub apps/playground/dist/live/run.js --all` is **95/95**, exit
+`0`, **2491 checks**, 61 capabilities, **1018.7 s** (`durationMs` 1018682).
+`--list` printed 95 ids and `live-pixel-colour` was among them. Host:
+`gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+The check total is exactly the plan-`659` 2469 plus the 22 that
+`live-pixel-colour` reports, which proves the new scenario executed in the full
+registry. `.artifacts/live-report.json` was rewritten; a plain `--all` wrote
+**no** `provenance.json` (no `--capture`).
+
+**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+Test counts: playground **439**, testing **68**, components **308**,
+primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7** —
+unchanged from plan `674` (this plan changes prose plus the upstream docs-only
+merge).
+
+**No source change.** No scenario, view, host verb, component, registry entry
+or test was edited; the run is the release evidence for the promotion merge.
+The owner/supervisor still performs the fast-forward; this workstream never
+pushes to `master`.

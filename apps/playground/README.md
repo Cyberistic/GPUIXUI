@@ -2061,8 +2061,9 @@ bytes** can now be checked by colour; a path/URL still cannot.
 ## Evidence on this host
 
 The suite is **106/106 green** here (`exit 0`, 3824 checks, 65 capabilities,
-150.4 s, 2026-10-19; plan `674` added `pixel-colour`'s 22 checks and plan
-`658` added 37 checks to `primitives-display`):
+134.5 s, 2026-10-19; plan `675`'s gate, after the docs-only `origin/master`
+merge; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37
+checks to `primitives-display`):
 
 ```
 106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2082,18 +2083,19 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **94/94** (`exit 0`, **2469** checks, 61
-capabilities, **1021.6 s**, `.artifacts/live-report.json`, 2026-10-19) on the
-code head `d9346a9d` (plan `659`), including every scenario this branch added
-through `live-theme-platform` (plan `654`, the platform type styles in a
-window), `live-shell` through plan `656`'s capture-capable runner, and plan
-`658`'s Tier 1 additions — `live-primitives-display` is 34 checks, and the
-total is plan `657`'s 2447 plus those 22. A plain `--all` wrote no frame and no
+The last full merge/release gate ran **95/95** (`exit 0`, **2491** checks, 61
+capabilities, **1018.7 s**, `.artifacts/live-report.json`, 2026-10-19) on merged
+head `d206df18` (plan `675`, after the one docs-only `origin/master` commit),
+including every scenario this branch added through `live-theme-platform` (plan
+`654`, the platform type styles in a window), `live-shell` through plan `656`'s
+capture-capable runner, plan `658`'s Tier 1 additions — `live-primitives-display`
+is 34 checks — and plan `674`'s `live-pixel-colour` (22 checks). The total is
+plan `659`'s 2469 plus those 22. A plain `--all` wrote no frame and no
 `provenance.json`; plan `656` holds the focused capture evidence. This gate
-supersedes plan `657`'s 94/94 on `034d78df`, plan `655`'s 94/94 run on
-`651e2419` and plan `648`'s 93/93 run, and is the gate for the promotion merge;
-the owner/supervisor performs that merge. The full live suite is a
-merge/release gate rather than a per-task check.
+supersedes plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
+plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
+gate for the promotion merge; the owner/supervisor performs that merge. The
+full live suite is a merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2285,19 +2287,17 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **94/94** on
-  2026-10-19 (**2469** checks, 61 capabilities, 1021.6 s, exit `0`, the merge
-  gate; plan `659` on code head `d9346a9d`, including plan `658`'s Tier 1
-  checks, `live-theme-platform` and `live-shell`) — the plan `532` terminal
-  twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
-  plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
-  `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan
-  `559`'s `live-tree`, plan `565`'s two tab-strip twins, the plan `570`–`581`
-  live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
-  drag, and the shipped Tier 2 scroller/command paths) and the twins through
-  plans `591`–`643` are all included. The registry has since gained
-  `live-pixel-colour` (plan `674`, 22 checks, run focused at 5.6–10.6 s), so the
-  next full gate covers **95** live ids. The suite covers —
+  The **real-window** suite (`smoke:live`) ran in full at **95/95** on
+  2026-10-19 (**2491** checks, 61 capabilities, 1018.7 s, exit `0`, the merge
+  gate; plan `675` on merged head `d206df18`, including `live-pixel-colour` and
+  plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
+  `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
+  pointer twins, plan `554`'s select/combobox/tooltip twins, plan `556`'s
+  `live-grid`, plan `557`'s `live-states`/`live-truncation`, plan `558`'s
+  `live-layers`, plan `559`'s `live-tree`, plan `565`'s two tab-strip twins,
+  the plan `570`–`581` live twins (Tier 1 controls, `live-log`, workspace
+  panes, content surfaces, drag, and the shipped Tier 2 scroller/command paths)
+  and the twins through plans `591`–`674` are all included. The suite covers —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
