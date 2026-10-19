@@ -1224,10 +1224,10 @@ focused id is `live-frames`.
       Tabs indicator) was merged again on 2026-10-19; its one formatting
       violation in `apps/docs/src/components/docs/demos.tsx` is fixed in commit
       `751bb2aa`, so the branch contains every commit of `origin/master` and the
-      promotion is a fast-forward. Merge/release gate **re-run on the plan-615
-      code (2026-10-19):** headless **104/104** (`3672` checks, 64
-      capabilities) and live **87/87** (`2203` checks, 57 capabilities,
-      932.5 s), both exit `0`; `nub run check`, `nub run lint` and
+      promotion is a fast-forward. Merge/release gate **re-run on the plan-620
+      code (2026-10-19, `ca045161`):** headless **104/104** (`3672` checks, 64
+      capabilities) and live **88/88** (`2220` checks, 58 capabilities,
+      921.7 s), both exit `0`; `nub run check`, `nub run lint` and
       `nub run test` pass at that head. Artifacts:
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
