@@ -80,7 +80,7 @@ Implementation shape (do not add a public state field or another callback):
 | File | Change |
 | ---- | ------ |
 | `packages/primitives/src/components/Slider.tsx` | Add `onValueCommit` to `SliderProps` and `RangeSliderProps` with TSDoc stating pointer-release vs keyboard and the no-op rule. Add `onCommit` to both handler interfaces and call it from the keyboard branch. Track the gesture in a ref in both components and commit on `onPointerUp` / the released-button move branch. |
-| `packages/primitives/runtime/value.runtime.test.tsx` | Add the six runtime cases in §6 and record plan `646` in the file header. |
+| `packages/primitives/runtime/value.runtime.test.tsx` | Add the seven runtime cases in §6 and record plan `646` in the file header. |
 | `packages/primitives/docs/slider.mdx` | API row for `onValueCommit`; a short "Change and commit" paragraph in `## Values`; state the keyboard half in `## Keyboard`. |
 | `packages/primitives/docs/range-slider.mdx` | The same three additions for the pair. |
 | `packages/primitives/examples/value.example.tsx` | The quality slider commits into a `savedQuality` state shown in the card, so the example demonstrates the prop (the example is already mounted by the examples suite). |
