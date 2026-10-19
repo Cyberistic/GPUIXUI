@@ -317,8 +317,14 @@ six persistent page surfaces a raised card, menu, popover or preview card floats
 over — the canvas, a card, the quiet `muted` panel, the `input` fill a flipped
 popover opens over, the `selected` fill a context menu opens over and a floating
 surface — and every defined level
-is measured composited over them, so the tightest shipped pair is **1.061:1** (identity
-dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**. At high
+is measured composited over them. A menu or popover (`md`) also opens across the
+resting content fills `elevationContentSurfaces` names — the four filled
+actions, the three solid status chips, the raised panel action and the four soft
+status panels — because a dropdown opens across the button beside its trigger;
+the `sm` and `lg` walks stay on the page surfaces. The tightest shipped pair is
+**1.058:1** (AAA dark, `md` on `info`); over the page surfaces alone it is
+**1.061:1** (identity dark, `sm` on `background`) and the AAA dark page pair is
+**1.207:1**. At high
 contrast a platform style contributes a level's geometry and the AAA set keeps
 the opacity its tint was designed with; a dark-mode platform's 40–80% over the
 light tint would paint a near-white halo.
@@ -588,7 +594,7 @@ order the ledger's floor table uses — against the floor for the class:
 | decorative dividers (`border`) on `background`/`card`/`popover`/`muted`, the `input` fill a field sits on, the `secondary`/`secondaryHover`/`secondaryActive`/`hover`/`active`/`accent`/`accentHover`/`accentActive` fills a bordered control paints, the `selected` fill an outline action sits on in a selected row, the `disabled` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | 1.05:1 | 3:1 |
 | modal scrim (`overlay` composited over `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the three solid status chips `info`/`success`/`warning`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`) | 1.05:1 | 1.05:1 |
 | dialog face (`popover` over the composited `overlay` on `background`/`card`/`muted`/`input`/`selected`/`popover`, the four resting filled actions `primary`/`secondary`/`accent`/`destructive`, the three solid status chips `info`/`success`/`warning`, the raised action a status panel carries (`softAction`) and the four soft status panels `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft` — every surface `overlaySurfaces` names, `dialogSurfacePairs`) | 1.05:1 | 1.05:1 |
-| elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`input`/`selected`/`popover`, the surfaces `elevationSurfaces` names) | 1.05:1 | 1.05:1 |
+| elevation shadow (each defined level of `sm`/`md`/`lg` — the reserved `overlay` is empty — painted on `background`/`card`/`muted`/`input`/`selected`/`popover`, the surfaces `elevationSurfaces` names, and — for `md` — the resting content fills `primary`/`secondary`/`accent`/`destructive`/`info`/`success`/`warning`/`softAction`/`infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft`, the surfaces `elevationContentSurfaces` names) | 1.05:1 | 1.05:1 |
 
 Find highlighting is the one painted wash held below the text tier it covers. A
 find wash is transient chrome over code, and no perceivable wash keeps every
@@ -609,7 +615,8 @@ The test runs for every shipped colour set — platform variants included, each 
 its own canvas — and is part of the normal test suite. The elevation shadow is
 measured composited, like the scrim: each defined level's painted shadow over the
 six persistent page surfaces a raised card, menu, popover or preview card floats
-over, because a shadow that paints its own
+over, and a floating `md` menu's shadow also over the twelve resting content
+fills `elevationContentSurfaces` names, because a shadow that paints its own
 surface is not a raised surface. The AAA dark set measured **1.000:1** at every
 level until plan `505` gave it a light tint. The modal scrim is
 measured composited rather than as a value: `overlay` over the eighteen surfaces

@@ -267,6 +267,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | done |
 | [582](./582-native-highlight-code-surface.md) | The find highlight on the painted code surface | F | 569, 573, 574, 581 | done |
 | [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | done |
+| [584](./584-elevation-on-content.md) | The floating element's shadow on the content it opens over | F | 375, 508, 509, 526 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2984,6 +2985,18 @@ returned `[]`. `nativeTextFades` and `nativeTextOverFades` own the fractions,
 `themeNativeTextFailures` is the ninth check on all four `nativeTextSurfaces`,
 and the word-level 28% diff wash is documented as a deliberate omission with its
 measured 4.389:1. No colour, pair, floor or metric moves.
+
+Plan `584` closes the elevation contract's last content surface. Plans 509 and
+375 made the scrim total over the resting actions, status chips and soft status
+panels a window shows, but the `md` shadow a menu or popover casts was still
+measured only on the six page layout surfaces — yet a dropdown opens across the
+button beside its trigger, a context menu over a Badge and a combobox list over
+an Alert. `elevationContentSurfaces` publishes the twelve resting content fills,
+the `md` walk measures the page surfaces and those fills (a `sm` card is placed
+in the layout and a `lg` dialog sits on the scrim), and the tightest shipped
+pair is 1.058:1 (AAA dark, `md` on `info`) while the page-surface walk keeps its
+1.061:1 and the AAA dark page pair its 1.207:1. Every shipped theme already
+passes, so no colour, role, floor or `contrastPairs` count moves.
 
 ## How to use a plan
 

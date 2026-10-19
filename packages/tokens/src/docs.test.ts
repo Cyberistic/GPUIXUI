@@ -119,6 +119,7 @@ import {
   contrastRatio,
   controlFillRoles,
   dialogSurfacePairs,
+  elevationContentSurfaces,
   elevationSurfaces,
   inactivePairs,
   inactiveSurfaces,
@@ -749,6 +750,12 @@ const documentedShadow = (shadow: BoxShadow | undefined): string =>
 /** One painted elevation level: set name, level, surface and ratio. */
 type ElevationRatio = readonly [string, string, string, number];
 
+/** The surfaces a level's shadow is painted over, as the contract measures it. */
+const elevationSurfaceList = (
+  level: string,
+): ReadonlyArray<keyof ThemeColors> =>
+  level === "md" ? overlaySurfaces : elevationSurfaces;
+
 /** Every elevation level painted on every surface of every shipped set. */
 const elevationRatios: ReadonlyArray<ElevationRatio> = shippedThemes.flatMap(
   ({ theme }) =>
@@ -759,7 +766,7 @@ const elevationRatios: ReadonlyArray<ElevationRatio> = shippedThemes.flatMap(
         if (shadow === undefined) {
           return [];
         }
-        return elevationSurfaces.map(
+        return elevationSurfaceList(level).map(
           (surface): ElevationRatio => [
             theme.name,
             level,
@@ -772,6 +779,12 @@ const elevationRatios: ReadonlyArray<ElevationRatio> = shippedThemes.flatMap(
         );
       }),
 );
+
+const pageSurfaceNames = new Set<string>(elevationSurfaces);
+
+/** The same pairs restricted to the six page surfaces, for the page figure. */
+const pageElevationRatios: ReadonlyArray<ElevationRatio> =
+  elevationRatios.filter(([, , surface]) => pageSurfaceNames.has(surface));
 
 /** The weakest of a set of measured pairs, or an invariant failure. */
 const weakestElevation = (
@@ -845,20 +858,31 @@ describe("docs/tokens.md numeric tables", () => {
     expect(markdown).toContain("`elevationShadows`");
   });
 
-  it("quotes the tightest elevation pair and the AAA dark figure", () => {
+  it("quotes the tightest elevation pairs", () => {
     const shipped = weakestElevation(elevationRatios);
     expect([shipped[0], shipped[1], shipped[2], shipped[3].toFixed(3)]).toEqual(
-      ["Dark", "sm", "background", "1.061"],
+      ["High contrast dark", "md", "info", "1.058"],
     );
     expect(markdownProse).toContain(
-      `**${shipped[3].toFixed(3)}:1** (identity dark, \`${shipped[1]}\` on \`${shipped[2]}\`)`,
+      `**${shipped[3].toFixed(3)}:1** (AAA dark, \`${shipped[1]}\` on \`${shipped[2]}\`)`,
     );
 
-    const aaaDark = weakestElevation(
-      elevationRatios.filter((entry) => entry[0] === "High contrast dark"),
+    const page = weakestElevation(pageElevationRatios);
+    expect([page[0], page[1], page[2], page[3].toFixed(3)]).toEqual([
+      "Dark",
+      "sm",
+      "background",
+      "1.061",
+    ]);
+    expect(markdownProse).toContain(
+      `**${page[3].toFixed(3)}:1** (identity dark, \`${page[1]}\` on \`${page[2]}\`)`,
     );
-    expect(aaaDark[3].toFixed(3)).toBe("1.207");
-    expect(markdownProse).toContain(`**${aaaDark[3].toFixed(3)}:1**`);
+
+    const aaaPage = weakestElevation(
+      pageElevationRatios.filter((entry) => entry[0] === "High contrast dark"),
+    );
+    expect(aaaPage[3].toFixed(3)).toBe("1.207");
+    expect(markdownProse).toContain(`**${aaaPage[3].toFixed(3)}:1**`);
   });
 
   it("governs a defined elevation level, overlay included", () => {
@@ -2540,6 +2564,9 @@ describe("docs/design-system.md", () => {
     const elevationSurfaceNames = elevationSurfaces
       .map((surface) => `\`${surface}\``)
       .join("/");
+    const elevationContentNames = elevationContentSurfaces
+      .map((surface) => `\`${surface}\``)
+      .join("/");
     const rows = [
       `| body text on \`background\`/\`card\`/\`muted\`/\`popover\`/\`input\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills an Alert's description paints; typed text on \`input\` and on the \`background\`/\`card\`/\`popover\`/\`muted\` surfaces a transparent field sits on | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
       `| a menu row's label (\`popoverForeground\` on \`hover\`/\`active\`, and on \`selected\` for a selected \`Select\` option) | ${contrastFloors.default.body}:1 | ${contrastFloors.high.body}:1 |`,
@@ -2571,7 +2598,7 @@ describe("docs/design-system.md", () => {
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the four soft status fills, and through the composited \`selection\` wash on the same thirteen surfaces) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
       `| loading skeleton (\`skeleton\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, and its dim pulse frame at \`skeletonPulseOpacity\` on the same eight surfaces (\`skeletonPulsePairs\`) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| decorative dividers (\`border\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`input\` fill a field sits on, the \`secondary\`/\`secondaryHover\`/\`secondaryActive\`/\`hover\`/\`active\`/\`accent\`/\`accentHover\`/\`accentActive\` fills a bordered control paints, the \`selected\` fill an outline action sits on in a selected row, the \`disabled\` fill a disabled control keeps its edge on and the four soft status fills a status panel divides | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
-      `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on ${elevationSurfaceNames}, the surfaces \`elevationSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
+      `| elevation shadow (each defined level of \`sm\`/\`md\`/\`lg\` — the reserved \`overlay\` is empty — painted on ${elevationSurfaceNames}, the surfaces \`elevationSurfaces\` names, and — for \`md\` — the resting content fills ${elevationContentNames}, the surfaces \`elevationContentSurfaces\` names) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
     ];
     rows.forEach((row) => {
       expect(designSystem.includes(row), row).toBe(true);
@@ -2724,7 +2751,8 @@ describe("docs/design-system.md", () => {
   it("names every surface in the elevation shadow's floor row", () => {
     const row = tableRow("elevation shadow (");
     expect(row).toContain("`elevationSurfaces`");
-    elevationSurfaces.forEach((surface) => {
+    expect(row).toContain("`elevationContentSurfaces`");
+    [...elevationSurfaces, ...elevationContentSurfaces].forEach((surface) => {
       expect(row, surface).toContain(`\`${surface}\``);
     });
     expect(row).toContain(

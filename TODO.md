@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 237/314
+`[x]` `[████████░░]` 238/315
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1958,6 +1958,15 @@ but only `card` and only shipped themes were guarded; two valid edits
 measured **6.405:1** through the ink and **6.335:1** in a quote while
 `themeFailures` returned `[]`; `themeNativeTextFailures` is the ninth check and
 `nativeTextFades`/`nativeTextOverFades` own the fractions (plan 583)
+`[x]` Hold a floating menu's shadow on the content it opens over — the `md`
+shadow was measured only on the six page surfaces, but a dropdown opens across
+the button beside its trigger and a context menu over a Badge, so an edited
+theme whose `shadow` met `primary`, `info` or a soft status fill returned `[]`
+while the only depth cue disappeared; `elevationContentSurfaces` publishes the
+twelve resting content fills, the `md` walk measures the page surfaces and those
+fills (`sm` cards and `lg` dialogs stay on the page), every shipped set passes
+(1.058:1 at the tightest, AAA dark `md` on `info`) and no colour or
+`contrastPairs` count moves (plan 584)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

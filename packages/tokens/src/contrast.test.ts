@@ -169,6 +169,14 @@
  * so the two compositions cannot be omitted again; every shipped set clears
  * 1.05:1 (1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour
  * moves.
+ *
+ * Plan 584 gives the `md` walk the resting content fills a floating menu opens
+ * over: `elevationContentSurfaces` is the same twelve fills the scrim covers,
+ * because a dropdown opens across the button beside its trigger and a context
+ * menu over a Badge. `sm` (a card placed in the layout) and `lg` (a dialog on
+ * the scrim, measured through `dialogSurfacePairs`) stay on the page surfaces.
+ * The tightest shipped pair is **1.058:1** (AAA dark, `md` on `info`), so no
+ * colour moves.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -183,6 +191,7 @@ import {
   contrastRatio,
   controlBoundarySoftPairs,
   dialogSurfacePairs,
+  elevationContentSurfaces,
   elevationSurfaces,
   extendTheme,
   getTheme,
@@ -914,6 +923,20 @@ describe("the elevation shadow", () => {
       "selected",
       "popover",
     ]);
+    expect(elevationContentSurfaces).toEqual([
+      "primary",
+      "secondary",
+      "accent",
+      "destructive",
+      "info",
+      "success",
+      "warning",
+      "softAction",
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
+      "destructiveSoft",
+    ]);
   });
 
   it("reports a black tint on the AAA dark canvas", () => {
@@ -963,7 +986,14 @@ describe("the elevation shadow", () => {
           opacity,
           ratio,
         ]),
-    ).toEqual(elevationSurfaces.map((surface) => ["md", surface, 0, 1]));
+    ).toEqual(
+      [...elevationSurfaces, ...elevationContentSurfaces].map((surface) => [
+        "md",
+        surface,
+        0,
+        1,
+      ]),
+    );
   });
 
   it("skips the reserved empty overlay level", () => {

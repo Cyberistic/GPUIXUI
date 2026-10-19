@@ -1134,9 +1134,14 @@ the quiet `muted` panel, the `input` fill a flipped popover opens over, the
 `selected` fill a context menu or preview card opens over and a floating
 surface — and every defined level is measured
 composited at its own alpha over them (`elevationLevels` is the ordered index,
-the reserved `overlay` included): the tightest shipped pair is **1.061:1**
-(identity dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**
-(`sm` on `background`).
+the reserved `overlay` included). A menu or popover (`md`) also opens across the
+resting content fills `elevationContentSurfaces` names — the four filled
+actions, the three solid status chips, the raised panel action and the four soft
+status panels — so its shadow is measured there too; a `sm` card is placed in
+the layout and a `lg` dialog sits on the scrim, which the face paragraph
+measures instead. The tightest shipped pair is **1.058:1** (AAA dark, `md` on
+`info`); over the page surfaces alone it is **1.061:1** (identity dark, `sm` on
+`background`) and the AAA dark page pair is **1.207:1**.
 
 At high contrast a platform style contributes a level's geometry while the base
 theme's alpha stays with its tint. An alpha is designed against a tint, so a
@@ -2068,16 +2073,21 @@ walks every defined level of `elevationLevels`, composites
 persistent page surfaces a raised card, menu, popover or preview card floats
 over, because a selected row stays chosen under its context menu and a field
 keeps its fill under a popover flipped above it — and holds the result to the
-same 1.05:1 `surface` floor.
-A dialog is the exception: its shadow lands on the scrim, which the face
-paragraph above measures instead.
+same 1.05:1 `surface` floor. A menu or popover (`md`) also opens across the
+resting content fills `elevationContentSurfaces` names — `primary`,
+`secondary`, `accent`, `destructive`, `info`, `success`, `warning`,
+`softAction` and the four soft status panels — because a dropdown opens across
+the button beside its trigger and a context menu over a Badge; the `sm` and
+`lg` walks stay on the page surfaces. A dialog is the exception: its shadow
+lands on the scrim, which the face paragraph above measures instead.
 The reserved empty `overlay` paints nothing and is skipped; a defined one is
 measured like any other. A failure names `wash: "shadow"`, the level's `opacity`
 and its `level`. The audit found the AAA dark set's black tint measured
 **1.000:1** on its pure black canvas at every level while every other shipped
 set cleared the floor — the same defect the scrim had — so that set now paints
-with light (plan `505`). The tightest shipped pair is **1.061:1** (identity
-dark, `sm` on `background`) and the AAA dark tightest is **1.207:1**.
+with light (plan `505`). The tightest shipped pair is **1.058:1** (AAA dark,
+`md` on `info`); over the page surfaces alone it is **1.061:1** (identity dark,
+`sm` on `background`) and the AAA dark page pair is **1.207:1**.
 
 The inactive state has its own floor. `disabledForeground` is measured on the
 thirteen surfaces an unavailable label paints — the `disabled` fill
@@ -2588,8 +2598,9 @@ component source reads `theme.colors` and `theme.elevation`, never a fixed set. 
 consumer theme may share an untouched set or replace it through `extendTheme`.
 An elevation level is geometry plus an alpha, so a replaced level composes with
 the theme's `colors.shadow` tint like a shipped one. `elevationLevels` is the
-ordered level index and `elevationSurfaces` the surfaces the contrast check
-paints each level over.
+ordered level index, `elevationSurfaces` the six page surfaces the contrast
+check paints each level over and `elevationContentSurfaces` the twelve resting
+content fills it also paints a floating `md` shadow over.
 
 #### Every shipped theme
 
@@ -3093,6 +3104,17 @@ over. `elevationSurfaces` now derives from the six page layout surfaces, taking
 the walk from twelve to eighteen painted pairs; every shipped set clears 1.05:1
 (1.109:1 at the tightest, macOS dark `sm` on `input`), so no colour moves and
 `contrastPairs` stays **394**.
+Plan `584` closes the elevation walk's last content surface. Plan `509` measured
+the six page surfaces, and plan `375` had already made the scrim total over the
+resting actions, status chips and soft status panels a window shows — because a
+dialog opens over an action as easily as over the canvas. A menu does too: a
+dropdown opens across the button beside its trigger and a context menu over a
+Badge. `elevationContentSurfaces` publishes the twelve resting content fills,
+the `md` walk measures the page surfaces and those fills (a `sm` card is placed
+in the layout and a `lg` dialog sits on the scrim), and an edited theme whose
+`shadow` meets a content fill is now reported instead of returning `[]`. Every
+shipped set passes (1.058:1 at the tightest, AAA dark `md` on `info`), so no
+colour moves and `contrastPairs` stays **405**.
 Plan `510` holds the unavailable label through the text-selection wash.
 `selectionColor` inherits into a disabled control's text, but `inactivePairs`
 measured the label only at rest, so the previous light `#6E7787` measured

@@ -32,9 +32,9 @@ import { extendTheme, getTheme } from "./theme.js";
 const invertedLight = () =>
   extendTheme(getTheme("light"), {
     colors: {
-      primary: "#1E1060",
-      primaryHover: "#2A1A7A",
-      primaryActive: "#372394",
+      primary: "#3A2A9A",
+      primaryHover: "#4A38AE",
+      primaryActive: "#5A46C2",
     },
   });
 
@@ -58,8 +58,8 @@ describe("interaction ladder direction", () => {
   it("reports a light family whose steps move lighter", () => {
     const inverted = invertedLight();
 
-    // The step floor and every on-colour pair still pass: 1.176:1 and 1.199:1
-    // between the fills, and white on them stays above 11:1.
+    // The step floor and every on-colour pair still pass: 1.248:1 and 1.252:1
+    // between the fills, and white on them stays above 6.8:1.
     expect(themeContrastFailures(inverted)).toEqual([]);
     expect(
       themeDirectionFailures(inverted).map(

@@ -202,9 +202,9 @@ describe("one total theme check", () => {
   it("catches a direction-only defect the contrast check alone passes", () => {
     const inverted = extendTheme(getTheme("light"), {
       colors: {
-        primary: "#1E1060",
-        primaryHover: "#2A1A7A",
-        primaryActive: "#372394",
+        primary: "#3A2A9A",
+        primaryHover: "#4A38AE",
+        primaryActive: "#5A46C2",
       },
     });
 

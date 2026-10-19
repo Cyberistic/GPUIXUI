@@ -1706,11 +1706,24 @@ export const dialogSurfacePairs: readonly ContrastPair[] = overlaySurfaces.map(
  * A dialog is the exception: its `lg` shadow lands on the modal scrim, which
  * cannot separate it in the default dark sets (pure black over the identity
  * dark scrim reaches only 1.0421:1), so the dialog's face is measured through
- * the scrim instead (`dialogSurfacePairs`). The pointer-state washes are
- * excluded for the same reason the scrim excludes them, and the reserved empty
- * `overlay` paints no shadow.
+ * the scrim instead (`dialogSurfacePairs`). A menu or popover (`md`) also opens
+ * across the resting content fills beside its trigger, so that level is
+ * measured on {@link elevationContentSurfaces} as well; `sm` and `lg` are not.
+ * The pointer-state washes are excluded for the same reason the scrim excludes
+ * them, and the reserved empty `overlay` paints no shadow.
  */
 export const elevationSurfaces = layoutSurfaces;
+
+/**
+ * The resting content fills a floating `md` element opens over. A menu,
+ * popover or combobox list is anchored to a control but paints across whatever
+ * is beside it, so its shadow lands on the actions, status chips and soft
+ * status panels a window shows exactly as the modal scrim does
+ * (`overlaySurfaces`). The list is measured for `md` only: a `sm` card is
+ * placed in the layout rather than floating over an action, and a `lg` dialog's
+ * face and shadow sit on the scrim, which `dialogSurfacePairs` measures.
+ */
+export const elevationContentSurfaces = contentFillSurfaces;
 
 /**
  * The scrim composited over the surfaces it covers. The pointer washes
@@ -1797,8 +1810,10 @@ const fadedVisibilityFailures = (
 
 /**
  * An elevation level's painted shadow, composited over each surface it can sit
- * on. A level is geometry plus an alpha over the `shadow` tint, so the ratio is
- * the one the runtime paints; a level that composites to its own surface is an
+ * on: the page surfaces for every level, and the resting content fills as well
+ * for `md`, whose menus and popovers open across an action or a status panel. A
+ * level is geometry plus an alpha over the `shadow` tint, so the ratio is the
+ * one the runtime paints; a level that composites to its own surface is an
  * invisible shadow. The reserved empty `overlay` paints nothing and is skipped.
  */
 const elevationFailures = (
@@ -1811,7 +1826,8 @@ const elevationFailures = (
     if (shape === undefined || shadow === undefined) {
       return [];
     }
-    return elevationSurfaces.flatMap((background) => {
+    const surfaces = level === "md" ? overlaySurfaces : elevationSurfaces;
+    return surfaces.flatMap((background) => {
       const painted = compositeOver(shadow.color, theme.colors[background]);
       const ratio = contrastRatio(painted, theme.colors[background]);
       const floor = floors.surface;

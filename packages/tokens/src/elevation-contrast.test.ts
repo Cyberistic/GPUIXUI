@@ -41,6 +41,7 @@ import {
   getPlatformTheme,
   getTheme,
   platformStyles,
+  elevationContentSurfaces,
   elevationSurfaces,
 } from "./index.js";
 import { elevationLevels } from "./elevation.js";
@@ -67,6 +68,50 @@ describe("the elevation contract", () => {
     );
 
     expect(failures).toEqual([]);
+  });
+
+  it("keeps a menu's shadow above the floor on the content it opens over", () => {
+    const failures = shippedThemes.flatMap(({ theme }) => {
+      const shadow = elevationShadow(theme, "md");
+      if (shadow === undefined) {
+        return [];
+      }
+      return elevationContentSurfaces.flatMap((surface) =>
+        contrastRatio(
+          compositeOver(shadow.color, theme.colors[surface]),
+          theme.colors[surface],
+        ) >= contrastFloors[theme.contrast].surface
+          ? []
+          : [`${theme.name} md on ${surface}`],
+      );
+    });
+
+    expect(failures).toEqual([]);
+  });
+
+  it("reports a menu shadow that erases itself on a content fill", () => {
+    const base = getTheme("light");
+    const [md] = base.elevation.md;
+    if (md === undefined) {
+      throw new Error("the shipped light theme has no md level");
+    }
+    const edited = extendTheme(base, {
+      colors: { shadow: base.colors.info },
+    });
+    const failures = themeContrastFailures(edited).filter(
+      ({ foreground, background }) =>
+        foreground === "shadow" && background === "info",
+    );
+
+    expect(
+      failures.map(({ level, opacity, ratio, wash, pairClass }) => [
+        level,
+        opacity,
+        ratio,
+        wash,
+        pairClass,
+      ]),
+    ).toEqual([["md", md.alpha, 1, "shadow", "surface"]]);
   });
 
   it("paints the AAA dark set with light and its own alphas", () => {
@@ -127,7 +172,14 @@ describe("the elevation contract", () => {
           opacity,
           ratio,
         ]),
-    ).toEqual(elevationSurfaces.map((surface) => ["md", surface, 0, 1]));
+    ).toEqual(
+      [...elevationSurfaces, ...elevationContentSurfaces].map((surface) => [
+        "md",
+        surface,
+        0,
+        1,
+      ]),
+    );
   });
 
   it("reports a shadow that erases the persistent surfaces it opens over", () => {
