@@ -66,6 +66,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[x]` Reset the **data-grid anchor in the row-set update** per plan `607`:
+      the first full live gate on the plan-`606` head failed exactly one check
+      (`the live sort resets the anchor: expected 0, got 45`) while three
+      focused runs passed. The probe reset the list in a `useEffect`, so the
+      paint carrying `sort=desc` still windowed rows 45–53 of the new order and
+      the scenario read that paint under load. One `restart()` now runs from
+      the sort click, the filter `onChange` and `clear`, so the row set and
+      `anchor=0` are one update (the `data-toolbar` shape). Focused
+      `data-grid-virtual` (59 checks) and `live-data-grid` (83, three runs)
+      green; full headless **103/103** (**3653** checks, 64 capabilities) and
+      full live **86/86** (**2172** checks, 57 capabilities, 932.7 s), both
+      exit `0`. Ids run: `data-grid-virtual`, `live-data-grid` (×3), then the
+      whole headless and live registries.
+
 `[x]` Prove the **virtualized, panned data grid in a real window** per plan
       `606`: `data-grid-virtual` was the last Tier 3 composition with no live
       twin (`live-grid` drives plain rows; `live-data-grid-columns` asserts a
@@ -1157,12 +1171,15 @@ focused id is `live-frames`.
       single-value `--only`), `scripts/swarm-supervisor.sh` takes master's
       scoped-verification text, `TODO.md` and both READMEs take the union of the
       two truths, and the plan-number collision on `525` is fixed by renumbering
-      the input-payload plan to **`533`**. The branch now contains every commit
-      of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      **re-run on the plan-605 code (commit `4f5aaa7c`, 2026-10-19):** headless
-      **103/103** (`3653` checks, 64 capabilities) and live **85/85** (`2090`
-      checks, 56 capabilities, 916.2 s), both exit `0`; `nub run check`,
-      `nub run lint` and `nub run test` pass at that head. Artifacts:
+      the input-payload plan to **`533`**. `origin/master` (`b8fbf153`, the docs
+      Tabs indicator) was merged again on 2026-10-19; its one formatting
+      violation in `apps/docs/src/components/docs/demos.tsx` is fixed in commit
+      `751bb2aa`, so the branch contains every commit of `origin/master` and the
+      promotion is a fast-forward. Merge/release gate **re-run on the plan-607
+      code (commit `da651b97`, 2026-10-19):** headless **103/103** (`3653`
+      checks, 64 capabilities) and live **86/86** (`2172` checks, 57
+      capabilities, 932.7 s), both exit `0`; `nub run check`, `nub run lint` and
+      `nub run test` pass at that head. Artifacts:
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
       owner/supervisor performs the final merge.

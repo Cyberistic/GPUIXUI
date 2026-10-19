@@ -220,7 +220,7 @@ the components, tokens and primitives workstreams, so the tabbed-panes live twin
 takes `575`; `576` was claimed by another workstream, so this workstream's
 content-surface twin takes `577`; `578`/`579` were claimed first, so this
 workstream's drag live twins take `580`; the image-source contract measured `586`, and the document search/replace live twin takes `587`; `588`–`590` were claimed by the tokens and components workstreams first, so this workstream's layout/typography live twins take `591`, and the collapsible-height live twin takes `592`, the chart live twin takes `593`, and the panel/floating live twins take `594`; `595`–`598` were claimed by other workstreams before this workstream needed a number, so the last rendering twin (QR) takes `599`, and the live blur-entry regression the gate exposed takes `600`; the element scroll route's live twin takes `601`, and the virtualized data
-grid's live twin takes `606`.
+grid's live twin takes `606`, and the gate's anchor-reset fix takes `607`.
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |

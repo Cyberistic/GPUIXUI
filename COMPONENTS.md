@@ -94,12 +94,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**, 64 capabilities). The live suite **last ran in full at 85/85**
-(`live-report.json`, **2090 checks**, 56 capabilities, 916.2 s, exit `0`) on
+The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**, 64 capabilities). The live suite **last ran in full at 86/86**
+(`live-report.json`, **2172 checks**, 57 capabilities, 932.7 s, exit `0`) on
 2026-10-19, the merge/release gate on the final branch; it covered every live
-scenario registered at that point, including the twins added after the previous
-gate — `live-panel-nested`/`live-floating` (plan `594`), `live-qr` (plan `599`)
-and `live-scroll-into-view` (plan `601`). Both `host` lines carry the pins. The
+scenario registered at that point, including `live-data-grid` (plan `606`, whose
+one gate failure is the plan-`607` anchor-reset fix). Both `host` lines carry the
+pins. The
 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin and a
 borderless size — is what every geometry check now asserts.
 
@@ -151,7 +151,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**75/75 green** (1697 checks) on the release-tag binding, and the **full
+**86/86 green** (2172 checks) on the release-tag binding, and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too

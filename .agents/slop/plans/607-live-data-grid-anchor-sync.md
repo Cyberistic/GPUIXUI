@@ -91,3 +91,17 @@ old shape is expected to pass — do not claim otherwise.
 - The full live registry green on this head, and the gate numbers written into
   `TODO.md` and `COMPONENTS.md`.
 - The plan index, `PLAN.md` and the TODO row record the measured cause.
+
+## 7. Measured
+
+- Focused: `data-grid-virtual` **59 checks** (view only), `live-data-grid`
+  **83 checks**, three consecutive green runs (7.6 s, 7.9 s, 9.5 s); exit `0`.
+- Merge gate at `da651b97`: headless **103/103** (**3653** checks, 64
+  capabilities, 101.1 s) and live **86/86** (**2172** checks, 57 capabilities,
+  932.7 s), both exit `0`. Both `host` lines carry the release-tag pins.
+- `nub run check`, `nub run lint` and `nub run test` pass (playground 417
+  tests; the rest of the workspace unchanged).
+- Direction two: the same check failed at the plan-`606` head with
+  `expected 0, got 45`; that gate run is the recorded counter-example. A
+  focused run of the old shape is **not** a reliable reproduction (three passed)
+  and is not claimed as one.
