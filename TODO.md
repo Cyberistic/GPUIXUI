@@ -564,6 +564,14 @@ retired once both branches are one
       paints while disabled; 3 native cases (Search input 18), all failing on the
       old source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
+    - [x] A malformed stepper step names no step — plan 661; measured 2026-10-19:
+      `value={1.5}` marked step one complete and every later step upcoming, and
+      `value={NaN}` marked every row upcoming, so the stepper painted no current
+      row at all. The root normalises its 1-based step once through `wholeStep`
+      (a fractional value truncates, a non-finite one starts at the first step);
+      2 pure + 2 native cases (unit 470, Stepper 12), all failing on the old
+      source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
