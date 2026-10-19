@@ -65,6 +65,12 @@ export interface FieldProps extends TriggerHandlers {
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
   /**
+   * A host click. A `Tooltip` trigger's dismissal writes here: 0.10.0's
+   * `<input>`/`<textarea>` receive **no** `onMouseDown` or `onMouseEnter`, so
+   * click is the only pointer edge a text field can forward (plan `605`).
+   */
+  readonly onClick?: (event: EventPayload) => void;
+  /**
    * Extra description announced after the name. A slot (a `Tooltip`) writes the
    * tip here. A text host receives no `onMouseEnter` in 0.10.0, so a field's
    * tooltip opens on keyboard focus only (plan `345`).
@@ -134,6 +140,7 @@ export const fieldHostProps = (
     if (props.disabled !== true) onValueChange(event.value ?? "");
   },
   onSubmit: props.disabled === true ? undefined : props.onSubmit,
+  onClick: props.onClick,
   onFocus: composeHandler(focus.onFocus, props.onFocus),
   onBlur: composeHandler(focus.onBlur, props.onBlur),
   onKeyDown: props.onKeyDown,

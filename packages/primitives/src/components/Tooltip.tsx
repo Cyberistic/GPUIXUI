@@ -186,11 +186,25 @@ export interface TooltipHandlers {
    */
   readonly onOpenChange?: (open: boolean) => void;
   /**
-   * The trigger was clicked or Escape was pressed on it.
+   * Pointer entry and exit, so a dismissed hover tip can reopen.
+   *
+   * A dismissal lasts while the pointer is over the trigger. The runtime closes
+   * a hover tip 80 ms after leave, so the hover gate clears on that close (or
+   * immediately when the runtime was already closed); entering only clears the
+   * leave flag, because a one-gesture click can deliver the entry **after** the
+   * press (measured, plan `605`).
+   */
+  readonly onEnter?: () => void;
+  readonly onLeave?: () => void;
+  /**
+   * The trigger was pressed or Escape was pressed on it.
    *
    * The wrapper keeps a focus-opened tip open while the trigger still holds
    * focus, so an explicit dismissal has to be remembered until focus leaves
-   * (plan `596`).
+   * (plan `596`). A press reaches the slot as **`onMouseDown`** on a `div` host
+   * and as **`onClick`** on a native text host, which receives no mouse-down
+   * (measured). `onClick` on a button-shaped control is its public activation
+   * callback, not part of `TriggerHandlers` (plan `605`).
    */
   readonly onDismiss?: () => void;
   /** The tip itself, so the wrapper can measure its box for `center`. */
@@ -258,6 +272,12 @@ export const renderTooltip = (
         asChild
         ref={handlers.triggerRef}
         aria-description={description}
+        onMouseEnter={handlers.onEnter}
+        onMouseLeave={handlers.onLeave}
+        // The runtime closes on mousedown; remember the dismissal there so the
+        // focused tip stays shut. A native text host receives no mouse-down, so
+        // it dismisses through `onClick` instead (measured, plan `605`).
+        onMouseDown={handlers.onDismiss}
         onClick={handlers.onDismiss}
         onKeyDown={(event) => {
           if (event.key === "escape") handlers.onDismiss?.();
@@ -311,27 +331,49 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const sample = useNativeFocus();
   const triggerFocused = isTrackedFocus(sample?.focused, trigger.current?.id);
   const [focusOpen, setFocusOpen] = useState(false);
-  const dismissed = useRef(false);
+  /**
+   * An explicit dismissal, remembered separately for the two open sources.
+   *
+   * A focus-opened tip is not in `openState` (the runtime never reported the
+   * open), so a dismissed ref would write nothing React can render and the tip
+   * stayed painted until an unrelated update (measured, plan `605`). They are
+   * separate because the pointer and the keyboard leave at different times: a
+   * click dismisses both, while moving the pointer away may reopen the hover
+   * tip without clearing the keyboard's dismissal.
+   */
+  const [focusDismissed, setFocusDismissed] = useState(false);
+  const [hoverDismissed, setHoverDismissed] = useState(false);
+  /** Whether a real leave has happened since the pointer arrived. */
+  const pointerOutside = useRef(false);
   /**
    * Focus-open is the tracker's job on a runtime that dispatches no `onFocus`.
    *
    * The headless tooltip opens from that missing event; every single-root
    * primitive forwards the slot's `ref`, so the wrapper knows which host the
    * tracker names. A caller-controlled `open` wins: the tracker must not
-   * override a value the caller owns (plan 347). `onDismiss` records a click or
+   * override a value the caller owns (plan 347). `onDismiss` records a press or
    * Escape, because the trigger keeps focus after either and would otherwise
-   * reopen on the next render; focus loss clears it (plan `596`).
+   * reopen on the next render; focus loss clears it (plans `596`, `605`).
    */
   useEffect(() => {
     if (triggerFocused) setFocusOpen(true);
     else {
       setFocusOpen(false);
-      dismissed.current = false;
+      setFocusDismissed(false);
     }
   }, [triggerFocused]);
-  const focusedOpen =
-    openState.value.mode !== "controlled" && focusOpen && !dismissed.current;
-  const open = openState.value.current || focusedOpen;
+  /**
+   * A controlled parent owns the value. Otherwise the runtime's open is gated
+   * by a dismissal: the hover open and the dismiss can land in the same
+   * dispatch, where the runtime's own close is computed from the previous
+   * frame, so the wrapper must not trust that close alone (measured, plan
+   * `605`).
+   */
+  const open =
+    openState.value.mode === "controlled"
+      ? openState.value.current
+      : (openState.value.current && !hoverDismissed) ||
+        (focusOpen && !focusDismissed);
   /**
    * The window size is **observed**, not sampled once per render.
    *
@@ -487,9 +529,27 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
     contentRef: tip,
     placement,
     maxWidth: cap > 0 ? cap : undefined,
-    onOpenChange: openState.set,
+    onOpenChange: (next) => {
+      openState.set(next);
+      // Only a close that follows a real leave re-opens the pointer path: the
+      // runtime's own close in the dismissing gesture must not clear the gate,
+      // or a one-gesture click (press, then the pointer enters) reopened it
+      // (measured, plan `605`).
+      if (!next && pointerOutside.current) setHoverDismissed(false);
+    },
+    onEnter: () => {
+      pointerOutside.current = false;
+    },
+    onLeave: () => {
+      pointerOutside.current = true;
+      // A focus-opened tip never reached the runtime's open, so no close event
+      // will follow this leave; clear the hover gate now. The focus gate is
+      // separate and stays until focus actually leaves.
+      if (!openState.value.current) setHoverDismissed(false);
+    },
     onDismiss: () => {
-      dismissed.current = true;
+      setFocusDismissed(true);
+      setHoverDismissed(true);
     },
   });
 };

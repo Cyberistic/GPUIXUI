@@ -37,8 +37,11 @@ const notes = "Description";
 
 Shared props: `value`, `defaultValue`, `onValueChange`, `placeholder`, `readOnly`,
 `disabled`, `autoFocus`, `invalid`, `size`, `fullWidth`, `label`,
-`aria-description`, `style`, `testId`. `size` has no effect in the shadcn slice
-(one recipe size) and `fullWidth` is implied by the recipe's `w-full`.
+`aria-description`, `onClick`, `style`, `testId`. `size` has no effect in the
+shadcn slice (one recipe size) and `fullWidth` is implied by the recipe's
+`w-full`. `onClick` is the host click — the pointer edge a `Tooltip` trigger
+dismisses through, because the native `<textarea>` receives no mouse-down (plan
+`605`).
 `aria-description` is trimmed and a blank value is absent (plan `586`).
 `autoFocus` takes focus on every mount, including a field added after a loading
 state (plan `584`).

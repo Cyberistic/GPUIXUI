@@ -36,6 +36,7 @@ const email = "Contact email";
 | `defaultValue` | `string` | `""` | initial text when uncontrolled; it is also the draft a controlled field falls back to if `value` is removed |
 | `onValueChange` | `(value: string) => void` | none | called after each edit that changed the value |
 | `onSubmit` | `(event) => void` | none | Enter; the raw runtime event |
+| `onClick` | `(event) => void` | none | the host click; a `Tooltip` trigger's dismissal writes here (the native input receives no mouse-down) |
 | `placeholder` | `string` | none | empty-state text |
 | `readOnly` | `boolean` | `false` | accepts focus and selection, refuses edits |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, de-emphasised; no edit, submit or ring |

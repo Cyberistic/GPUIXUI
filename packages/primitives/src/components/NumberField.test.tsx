@@ -311,10 +311,11 @@ describe("NumberField", () => {
     // The host is the inner input: the wrapper div is chrome and is not focusable.
     const onMouseEnter = vi.fn();
     const onKeyDown = vi.fn();
+    const onClick = vi.fn();
     const onValue = vi.fn();
     const { input } = partsOf(
       render(
-        { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+        { onMouseEnter, onKeyDown, onClick, "aria-description": "A hint" },
         12,
         "12",
         idle,
@@ -326,6 +327,10 @@ describe("NumberField", () => {
     expectSome(hostHandler(input, "onKeyDown"))(keyEvent("up"));
     expect(onValue).toHaveBeenCalledWith(13);
     expect(onKeyDown).toHaveBeenCalledTimes(1);
+    // The native input delivers only `click`, so it is the field's pointer edge
+    // for a `Tooltip` dismissal (plan `605`).
+    expectSome(hostHandler(input, "onClick"))(clickEvent);
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(expectSome(hostProp(input, "aria-description"))).toBe("A hint");
   });
 });

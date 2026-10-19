@@ -99,6 +99,12 @@ export interface NumberFieldProps extends TriggerHandlers {
   readonly "aria-description"?: string;
   readonly placeholder?: string;
   readonly autoFocus?: boolean;
+  /**
+   * A host click. A `Tooltip` trigger's dismissal writes here: 0.10.0's
+   * `<input>` receives **no** `onMouseDown` or `onMouseEnter`, so click is the
+   * only pointer edge this field can forward (plan `605`).
+   */
+  readonly onClick?: (event: EventPayload) => void;
   /** Overrides the display text; the value still parses with `core/number.ts`. */
   readonly formatValue?: (value: number) => string;
   /** An object, or a callback over this field's public state. */
@@ -233,6 +239,7 @@ export const renderNumberField = (
           handlers.onCommit();
           props.onSubmit?.(event);
         }}
+        onClick={props.onClick}
         onFocus={composeHandler(focus.onFocus, props.onFocus)}
         onBlur={(event: EventPayload) => {
           focus.onBlur();

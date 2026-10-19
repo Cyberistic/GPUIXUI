@@ -1576,6 +1576,21 @@ retired once both branches are one
       the subscription, drop the effect dependency, remove `Select`'s observer
       (plan `604`).
 
+`[x]` `packages/primitives`: **a focus-opened `Tooltip` survived a click** —
+      measured (2026-10-19): a `Checkbox` focused with `Tab` kept its tip
+      painted after `click("target")`, because the wrapper remembered a
+      dismissal only in a **ref** (no render) and only through the slot's
+      `onClick` (the button family's activation callback, which every other
+      control drops); the runtime's own press close was computed from the
+      previous frame. The wrapper now gates both open sources with state and
+      forwards the dismissal on the edge each host delivers — `onMouseDown` on a
+      `div`, `onClick` on the native text hosts (measured: an `<input>` receives
+      only `click`, never enter/down/up). `Input`, `TextArea` and `NumberField`
+      gain a host `onClick`; 12 runtime cases, and making the dismissal a no-op
+      fails all eleven focus cases while dropping the field wiring fails exactly
+      the three fields (plan `605`; offline 59 files / 820 tests, full runtime
+      55 files / 778 tests).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

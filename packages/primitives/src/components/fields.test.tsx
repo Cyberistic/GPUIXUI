@@ -268,8 +268,9 @@ describe("TextArea", () => {
     // tooltip around an Input never opened and its text never reached AT.
     const onMouseEnter = vi.fn();
     const onKeyDown = vi.fn();
+    const onClick = vi.fn();
     const field = renderInput(
-      { onMouseEnter, onKeyDown, "aria-description": "A hint" },
+      { onMouseEnter, onKeyDown, onClick, "aria-description": "A hint" },
       testTheme,
       draft(""),
       idle,
@@ -279,13 +280,18 @@ describe("TextArea", () => {
     expect(onMouseEnter).toHaveBeenCalledTimes(1);
     expectSome(hostHandler(field, "onKeyDown"))(keyEvent("escape"));
     expect(onKeyDown).toHaveBeenCalledTimes(1);
+    // A native input receives only `click` (no enter/mousedown), so this is the
+    // one pointer edge a field can forward to a Tooltip (plan `605`).
+    expectSome(hostHandler(field, "onClick"))(clickEvent);
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(expectSome(hostProp(field, "aria-description"))).toBe("A hint");
   });
 
   it("forwards a slot's handlers and description to a TextArea", () => {
     const onMouseEnter = vi.fn();
+    const onClick = vi.fn();
     const area = renderTextArea(
-      { onMouseEnter, "aria-description": "A hint" },
+      { onMouseEnter, onClick, "aria-description": "A hint" },
       testTheme,
       draft(""),
       idle,
@@ -293,6 +299,8 @@ describe("TextArea", () => {
     );
     expectSome(hostHandler(area, "onMouseEnter"))(clickEvent);
     expect(onMouseEnter).toHaveBeenCalledTimes(1);
+    expectSome(hostHandler(area, "onClick"))(clickEvent);
+    expect(onClick).toHaveBeenCalledTimes(1);
     expect(expectSome(hostProp(area, "aria-description"))).toBe("A hint");
   });
 });

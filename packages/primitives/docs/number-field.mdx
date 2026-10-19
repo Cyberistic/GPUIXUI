@@ -81,6 +81,7 @@ remains a display rule — it never rounds the value a caller receives.
 | `defaultValue` | `number` | none | start value; the field shows empty without one, and a non-finite default reads as the floor |
 | `onValueChange` | `(value: number) => void` | — | the clamped number, after a valid edit or step |
 | `onSubmit` | `(event) => void` | — | Enter: the draft is committed and reformatted first |
+| `onClick` | `(event) => void` | — | the host click; a `Tooltip` trigger's dismissal writes here (the native input receives no mouse-down) |
 | `min` / `max` | `number` | none | bound the value; absent or non-finite means unbounded, an inverted pair is swapped |
 | `step` | `number` | `1` | arrow step; a non-finite or non-positive step is `1` |
 | `precision` | `number` | `0` | decimals shown on commit; a non-finite precision is `0` |

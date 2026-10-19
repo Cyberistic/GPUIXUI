@@ -182,7 +182,15 @@ report. A long tip whose re-wrapped height no longer fits above now flips below.
 ## Keyboard
 
 Owned by GPUix: the tip opens when its trigger takes keyboard focus, and Escape
-dismisses it. A click dismisses it.
+dismisses it. A click or pointer press dismisses it.
+
+The wrapper, not the runtime alone, remembers a dismissal: a tip opened by the
+focus tracker is not in the runtime's own open state, and the runtime's close on
+the same press is computed from the previous frame (measured, plan `605`). Every
+single-root trigger therefore forwards the press edge it actually receives —
+`onMouseDown` on a `div` host, `onClick` on the native `<input>`/`<textarea>`
+hosts, which receive no mouse-down event. The dismissal lasts until focus leaves
+or, for a hovered tip, until the pointer leaves and returns.
 
 ## Accessibility
 
@@ -317,6 +325,11 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
   a narrower window, a re-wrapped long tip flips below when it no longer fits
   above, and a `Select` list proves the same signal (plan `604`; the failing
   directions are recorded in that plan's §8).
+- `runtime/tooltip-dismiss.runtime.test.tsx` — a focus-opened tip is dismissed
+  by a real click on every single-root trigger (`Button`, `IconButton`, `Toggle`,
+  `Checkbox`, `Switch`, `Input`, `TextArea`, `NumberField`, `Select`, `Slider`,
+  `InfoTip`), and a hovered tip dismisses and reopens on a fresh entry (plan
+  `605`; the pre-fix code left the tip painted on all eleven focus cases).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)
