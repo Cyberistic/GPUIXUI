@@ -21,6 +21,7 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  until,
 } from "../internal/interaction.js";
 import {
   renderComponent,
@@ -282,6 +283,84 @@ describe("SearchInput", () => {
 
     expect(focusedTestId(search)).toEqual(Option.some("search"));
     expect(states.at(-1)).toBe(true);
+
+    search.unmount();
+  });
+
+  /**
+   * Focus visibility (plan 522, recorded by plan 649 §8). The bug this guards:
+   * the clear control was a tab stop that took native focus and painted no
+   * ring, so a keyboard user could not see that the next Space would clear the
+   * query. The binding delivers no React focus event for the move (plan 540),
+   * so the ring follows a sampled `getFocusedElementId()` (plan 659).
+   */
+  it("paints the focus ring on the clear control", async () => {
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40 }}>
+        <SearchInput testId="search" autoFocus defaultValue="abc" />
+      </div>,
+    );
+    expect(search.renderer.findByTestId("search-clear")).toBeDefined();
+
+    search.renderer.focusNext(); // input -> clear, with no React focus event
+
+    await until(
+      () =>
+        search.renderer.findByTestId("search-clear")?.style.boxShadow !==
+        undefined,
+    );
+
+    expect(focusedTestId(search)).toEqual(Option.some("search-clear"));
+    expect(
+      search.renderer.findByTestId("search-clear")?.style.boxShadow,
+    ).toBeDefined();
+    // Only the control that owns focus rings; the field surface does not.
+    expect(
+      search.renderer
+        .findByType("div")
+        .filter((div) => div.style?.boxShadow !== undefined)
+        .map((div) => div.testId),
+    ).toEqual(["search-clear"]);
+
+    search.unmount();
+  });
+
+  /**
+   * The bug this guards (plans 536/540): a native focus change delivers no
+   * React blur, so the field surface kept its ring after focus left it. The
+   * sampler clears both rings and restores the field's when focus returns.
+   */
+  it("moves the focus ring with the natively focused host", async () => {
+    const search = renderComponent(
+      <div style={{ width: 360, padding: 40, gap: 8 }}>
+        <SearchInput testId="search" autoFocus defaultValue="abc" />
+        <SearchInput testId="other" />
+      </div>,
+    );
+    // `findByTestId("search")` is the inner input; the ring is painted by the
+    // anonymous field surface, the only div that carries a `boxShadow`.
+    const ringed = (): ReadonlyArray<string | undefined> =>
+      search.renderer
+        .findByType("div")
+        .filter((div) => div.style?.boxShadow !== undefined)
+        .map((div) => div.testId);
+
+    expect(ringed()).toEqual([undefined]);
+
+    search.renderer.focusNext(); // input -> clear
+    search.renderer.focusNext(); // clear -> the other field's input
+
+    await until(() => ringed().length === 0);
+
+    expect(ringed()).toEqual([]);
+
+    search.renderer.focusElement(
+      search.renderer.findByTestId("search")?.id ?? -1,
+    );
+
+    await until(() => ringed().length === 1);
+
+    expect(ringed()).toEqual([undefined]);
 
     search.unmount();
   });

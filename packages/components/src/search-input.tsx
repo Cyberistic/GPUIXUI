@@ -9,6 +9,11 @@
  *
  * There is no debounce: the component reports keystrokes as they happen, and a
  * consumer that queries on each one debounces its own effect.
+ *
+ * The focus ring follows the natively focused host — the input, the clear
+ * control, or neither. The binding delivers no React `focus`/`blur` for that
+ * move (plans 536/540), so the field samples `getFocusedElementId()` while
+ * there is text to clear (plan 659).
  */
 
 import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
@@ -19,7 +24,7 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
@@ -60,6 +65,9 @@ export interface SearchInputState {
   readonly focused: boolean;
 }
 
+/** How often the field asks the renderer which host holds focus, ms. */
+const FOCUS_SAMPLE_MS = 50;
+
 /** A search field with a leading search icon and a conditional clear control. */
 export const SearchInput = ({
   value: valueProp,
@@ -84,11 +92,35 @@ export const SearchInput = ({
     onChange: onValueChange,
   });
   const [focused, setFocused] = useState(autoFocus && !disabled);
+  const [clearFocused, setClearFocused] = useState(false);
   const input = useRef<PublicInstance | null>(null);
+  const clearControl = useRef<PublicInstance | null>(null);
   const attach = useCallback((next: PublicInstance | null) => {
     input.current = next;
   }, []);
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
+
+  const hasText = value !== "" && !disabled;
+
+  useEffect(() => {
+    if (!hasText || disabled || renderer == null) {
+      setClearFocused(false);
+      return;
+    }
+    const read = (): void => {
+      const focusedId = renderer.getFocusedElementId?.() ?? null;
+      const clearId = clearControl.current?.id ?? null;
+      const inputId = input.current?.id ?? null;
+      const onClear = clearId !== null && focusedId === clearId;
+      setClearFocused(onClear);
+      // No React blur is delivered for a native focus change, so the sample is
+      // the only signal that the field lost focus (plans 536/540).
+      setFocused(focusedId !== null && (focusedId === inputId || onClear));
+    };
+    read();
+    const timer = setInterval(read, FOCUS_SAMPLE_MS);
+    return () => clearInterval(timer);
+  }, [disabled, hasText, renderer]);
 
   const clear = (): void => {
     if (disabled || value === "") return;
@@ -115,7 +147,7 @@ export const SearchInput = ({
           borderColor: theme.colors.border,
           borderRadius: theme.radius.md,
           opacity: disabled ? 0.5 : 1,
-          ...(focused ? focusRing(theme) : {}),
+          ...(focused && !clearFocused ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),
       )}
@@ -164,6 +196,7 @@ export const SearchInput = ({
           role="button"
           aria-label="Clear search"
           testId="search-clear"
+          ref={clearControl}
           tabIndex={disabled ? -1 : 0}
           onClick={clear}
           {...activationHandlers(clear)}
@@ -177,6 +210,7 @@ export const SearchInput = ({
             borderRadius: theme.radius.sm,
             color: theme.colors.mutedForeground,
             cursor: "pointer",
+            ...(clearFocused ? focusRing(theme) : {}),
             hover: {
               backgroundColor: theme.colors.accent,
               color: theme.colors.accentForeground,

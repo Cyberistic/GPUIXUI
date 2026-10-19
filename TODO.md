@@ -544,16 +544,17 @@ retired once both branches are one
       the same recorded binding failures), the fractional case failing on the
       old source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
-    - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
-      it is its own tab stop (`tabIndex 0`) and takes native focus
-      (`getFocusedElementId() = search-clear`), but has no `focused` state or
-      `focusRing`, and the input's surface ring has already gone with its blur;
-      `TimePickerClear` (plan 522) has both. **Blocked**: no native harness path
-      (`focusElement`, `focusNext`, mouse-down, click) delivers a React `focus`
-      event on this binding (plan 540), so a test for the ring is red before and
-      after the fix; land it with a binding that delivers focus events or a live
-      `playground` scenario. The fix is a `focused` state + `focusRing(theme)`
-      (plan 649 §8 records the measurement) (owner: components)
+    - [x] The search field's clear control paints a focus ring — plan 659;
+      measured 2026-10-19: it was its own tab stop (`tabIndex 0`) and took native
+      focus, but had no `focused` state or `focusRing`, and the field's surface
+      ring stayed on after focus left the input because no React `blur` is
+      delivered. While there is text to clear the field now samples
+      `getFocusedElementId()` every 50 ms (the plan-613 precedent): the surface
+      rings only while the input holds focus, the clear control rings while it
+      does, and both clear when focus leaves; 2 native cases (Search input 15),
+      three mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the
+      inventory synced. The shared-focus-tracker interlock on `primitives`
+      remains the long-term home for the sample (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1002,7 +1003,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | Plan 347 §8.2 found TagInput's chip removal control has no `testId`, so the live harness could only assert the chip's presence | playground → components | **resolved** — the control is named `<chip testId>-remove` (plan 381) |
 | Plan 302 §2 measured that `<virtual-list>` retains 3 host nodes per row and `<code>` reparses only when its document key changes | playground → components (COMPONENTS.md) | **resolved** — folded into the Tier 3 rows |
 | An avatar diameter scale (20/26/32/40) so `DIAMETER` in `avatar.tsx` can be deleted | tokens-theme | pending |
-| Export a shared native-focus tracker (`NativeFocusProvider` / `useNativeFocusId`) so `InlineEdit`'s plan-613 sampler and other components reuse one per-app interval instead of a local 50 ms sample | primitives | pending — plan 613 keeps the local watcher scoped to an open edit meanwhile |
+| Export a shared native-focus tracker (`NativeFocusProvider` / `useNativeFocusId`) so `InlineEdit`'s plan-613 sampler, `SearchInput`'s plan-659 sampler and other components reuse one per-app interval instead of a local one | primitives | pending — plans 613 and 659 keep their samplers scoped to the open edit / the field with text meanwhile |
 | `@gpuixui/primitives` exports in plan 110 §7 | primitives | **package landed** (19 Tier 1 components + `Button`/`Input`/`Spinner`). The components' `internal/button.tsx`, the `FieldInput` host input and the `…` busy glyph stay until primitives' `ThemeProvider` and `@gpuixui/tokens/react` are one provider — two contexts would make every consumer wrap both. Owner of the unification: cross-package decision, not components |
 | A `primaryHover` / `destructiveHover` role pair so filled buttons stop using a half-alpha fill for hover | tokens-theme | pending |
 | Playground mounts the Tier 2 examples and runs a dialog/menu/toast smoke | playground | pending — the registry is complete and every entry is render-proven in this package (plan 330); mounting still belongs to `apps/playground` |

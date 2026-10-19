@@ -84,13 +84,18 @@ The container paints `colors.background`, a `borderWidth.thin` border in
 `colors.border`, `radius.md`, `spacing.md` horizontal padding and
 `controlHeight(theme, "md")`. The clear control is 18×18 with `radius.sm` and a
 `colors.accent` hover. Focus draws the zero-blur `colors.ring` ring, because
-0.10.0 has no `outline`.
+0.10.0 has no `outline`. The ring follows the natively focused host: the field
+surface while the input holds focus, the clear control while it holds focus, and
+neither once focus leaves the field. The field samples the renderer's focused
+host every 50 ms, because the binding delivers no React `focus`/`blur` for a
+native focus change (plans 536/540, plan 659).
 
 ## Style by state
 
 `SearchInput.style` takes a `StyleDesc` or a function of `SearchInputState`
 (`{ disabled, focused }`); the style is applied to the field surface, not the
-inner `<input>`.
+inner `<input>`. `focused` is true while either the input or the clear control
+holds focus, because both belong to the field.
 
 ```tsx
 <SearchInput style={(state) => ({ opacity: state.disabled ? 0.5 : 1 })} />
@@ -115,16 +120,23 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+  (plans 390/603/605). This field's own ring is the exception: while there is
+  text to clear it samples the natively focused host, so the input, the clear
+  control and neither are painted truthfully (plan 659). The sampler does not
+  exist for an empty field, whose ring still depends on `autoFocus` and React
+  focus events.
 
 ## Verification
 
-`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (15 tests):
 real keystrokes reaching `onValueChange`, the clear control appearing only with
-text and never on a disabled field, a disabled field ignoring Escape and Enter, clearing and returning focus, clearing from the keyboard on Space
+text and never on a disabled field, a disabled field ignoring Escape and Enter,
+clearing and returning focus, clearing from the keyboard on Space
 release, Enter submitting, Escape clearing once, the clear keeping its dialog
-open while an empty field's Escape closes it, the controlled contract, and a
-caller `ref` composed with the internal one.
+open while an empty field's Escape closes it, the controlled contract, a
+caller `ref` composed with the internal one, the clear control painting the
+focus ring when it takes native focus, and the ring following focus out of and
+back into the field.
 
 The field merges its own focus ref with the caller's, so `ref` receives the same
 `<input>` instance that clearing focuses.
