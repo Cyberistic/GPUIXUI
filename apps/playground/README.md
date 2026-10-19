@@ -274,6 +274,26 @@ a real wheel reaches the clamp. Every assertion compares a box with its own
 container, so the scroll offset never enters a number. The window reproduces
 every offscreen value exactly — no font or device-scale correction was needed.
 
+## The collapsible height recipe in a real window (plan `592`)
+
+`collapsible-height` is the recipe `@gpuixui/components`' Collapsible and
+Accordion still need, and it was `TestRenderer`-only. `live-collapsible` mounts
+the same view in the window and drives it through the paused live motion clock:
+
+| Fact | Measured live |
+| ---- | ------------- |
+| first-layout measurement | the body is mounted and laid out while clipped; the readout says `mounted=140` |
+| the collapsed row | the next row starts above the clipped content |
+| the clip | a press aimed at `collapse-button` counts nothing (`presses=0`) |
+| the tween | the 80 ms frame moves the next row `56 px` of the 140 px tween, and `complete=0` |
+| the end state | the row moved `140 ± 1`, `complete=1` |
+| interaction | the open control runs (`presses=1`) and typing reaches `draft=ab` |
+| retention | collapsing reaches `0`, `complete=2`, the body still answers `alpha`, and `draft=ab` survives |
+| the keyboard | Enter re-opens to 140 px, `complete=3`, `draft=ab` |
+
+The recipe is therefore real in a window, not just offscreen: a component can
+keep its body mounted, measure it while clipped, animate it and keep its state.
+
 ## The shipped Tier 1 components (plan `168`)
 
 The scenarios above prove runtime mechanisms; these three mount

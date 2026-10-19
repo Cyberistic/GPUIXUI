@@ -30,6 +30,7 @@ import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
 import { inputScenario } from "../scenarios/input.js";
+import { collapsibleHeightScenario } from "../scenarios/collapsible.js";
 import { layoutScenario } from "../scenarios/layout.js";
 import { layoutGridScenario } from "../scenarios/layout-grid.js";
 import { typographyScenario } from "../scenarios/typography.js";
@@ -1164,6 +1165,160 @@ const motion: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${motion.id}.png`);
+    }),
+};
+
+const liveCollapsible: LiveScenario = {
+  id: "live-collapsible",
+  title: "Live collapsible: measured height, the clip and a retained draft",
+  capability: "motion",
+  view: collapsibleHeightScenario.view,
+  ready: "collapse-trigger",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const readout = () => textOf(ctx, "collapse-readout");
+      yield* ctx.host.pauseMotion();
+
+      // 1. The body is mounted and measured at first layout while clipped.
+      const content = yield* boxOf(ctx, "collapse-content");
+      yield* ctx.expectEqual(
+        "the collapsed live body keeps its content laid out",
+        content.height > 0,
+        true,
+      );
+      const header = yield* boxOf(ctx, "collapse-trigger");
+      const baseline = (yield* boxOf(ctx, "collapse-after")).y;
+      yield* ctx.expectEqual(
+        "the collapsed live section leaves the next row above its content",
+        baseline > header.y + header.height,
+        true,
+      );
+      const mounted = yield* readout();
+      yield* ctx.expectContains(
+        "the live first-layout measurement is the painted height",
+        mounted,
+        "mounted=140",
+      );
+
+      // 2. A press aimed at the clipped control reaches nothing.
+      yield* ctx.host.click("collapse-button");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live clip refuses a press in the overflowing content",
+        yield* readout(),
+        "presses=0",
+      );
+
+      // 3. The height tween is exact under the paused live clock.
+      yield* ctx.host.click("collapse-trigger");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live trigger opened the section",
+        yield* readout(),
+        "open=1",
+      );
+      yield* ctx.expectContains(
+        "no live completion fires before the clock moves",
+        yield* readout(),
+        "complete=0",
+      );
+      yield* ctx.host.fastForwardMotion(80);
+      yield* settle;
+      const mid = yield* boxOf(ctx, "collapse-after");
+      yield* ctx.expectNear(
+        "the live height tween is mid-flight at 80 ms",
+        mid.y - baseline,
+        content.height * 0.4,
+        4,
+      );
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      const opened = yield* boxOf(ctx, "collapse-after");
+      yield* ctx.expectNear(
+        "the live section opened to the measured height",
+        opened.y - baseline,
+        content.height,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the live height tween completed once",
+        yield* readout(),
+        "complete=1",
+      );
+
+      // 4. The open body is interactive and holds a draft.
+      yield* ctx.host.click("collapse-button");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live opened content is interactive",
+        yield* readout(),
+        "presses=1",
+      );
+      yield* ctx.host.click("collapse-input");
+      yield* settle;
+      yield* ctx.host.key("a");
+      yield* settle;
+      yield* ctx.host.key("b");
+      yield* settle;
+      yield* ctx.expectContains(
+        "typing reaches the live draft",
+        yield* readout(),
+        "draft=ab",
+      );
+
+      // 5. Collapsing keeps the body mounted and the draft intact.
+      yield* ctx.host.click("collapse-trigger");
+      yield* settle;
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      const closed = yield* boxOf(ctx, "collapse-after");
+      yield* ctx.expectNear(
+        "the live section collapsed to zero",
+        closed.y - baseline,
+        0,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the live collapse tween completed",
+        yield* readout(),
+        "complete=2",
+      );
+      yield* ctx.expectContains(
+        "the live draft survived the collapse",
+        yield* readout(),
+        "draft=ab",
+      );
+      yield* ctx.expectContains(
+        "the live body stayed mounted while closed",
+        yield* textOf(ctx, "collapse-content"),
+        "alpha",
+      );
+
+      // 6. Enter re-opens to the same measured height.
+      yield* ctx.host.keyDown("collapse-trigger", "enter");
+      yield* ctx.host.keyUp("collapse-trigger", "enter");
+      yield* settle;
+      yield* ctx.host.fastForwardMotion(200);
+      yield* settle;
+      const reopened = yield* boxOf(ctx, "collapse-after");
+      yield* ctx.expectNear(
+        "live Enter re-opened to the same measured height",
+        reopened.y - baseline,
+        content.height,
+        1,
+      );
+      yield* ctx.expectContains(
+        "the live second open completed",
+        yield* readout(),
+        "complete=3",
+      );
+      yield* ctx.expectContains(
+        "the live draft survived the second open",
+        yield* readout(),
+        "draft=ab",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveCollapsible.id}.png`);
     }),
 };
 
@@ -10447,6 +10602,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveLayoutFlex,
   liveLayoutGrid,
   liveTypography,
+  liveCollapsible,
   menuBar,
   multiPaneEditor,
   dataToolbar,
