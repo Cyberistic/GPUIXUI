@@ -71,7 +71,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 116/116 plans-and-harness
+`[x]` `[██████████]` 117/117 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes plan `676`'s palette
+      frame pixels** per plan `677`: verification only at `86057653` (no merge
+      was needed — 0 behind `origin/master`) — headless **106/106** (`3824`
+      checks, 65 capabilities, 95.9 s) and live **95/95** (**2521** checks, 61
+      capabilities, **1106.8 s**), both exit `0`. `live-theme` reports **39
+      checks** inside the full registry (112.8 s), so the total is plan `675`'s
+      2491 − 9 + 39, and a plain `--all` wrote no `provenance.json`.
+      `nub run check`/`lint`/`test` green (playground 442, testing 68,
+      components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
+      No source change. Exact ids: the whole headless registry and the whole
+      live registry (`--all`).
 
 `[x]` **Prove the palette switch in the frame** per plan `676`: `live-theme`
       used to assert only the readout and the swatch box, so a window that never

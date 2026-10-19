@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release verification) |
 | Owner | playground |
 | Depends on | `517` (focused live runs), `529` (the release-tag binding), `639` (the live-registry guard), `653` (capability coverage), `656` (the capture-capable live runner), `675` (the previous full gate), `676` (the palette-switch frame evidence) |
@@ -301,6 +301,45 @@ those checks executed inside the full registry.
 - The plan is marked `landed` with the exact head and commands.
 - The commit is pushed to `origin/agent/playground`; `master` is untouched.
 
-## 8. Results
+## 8. Results (2026-10-19, darwin-x64, release-tag binding)
 
-_Filled in by the executor after the run._
+The gate ran at `86057653` (the plan-676 code head) plus this plan's commit
+`ff88c49a`; `origin/master` was still `2b4eb0d9` and the branch was 0 behind,
+so no merge was needed.
+
+**Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
+`0`, **3824 checks**, 65 capabilities, **95.9 s** (`durationMs` 95912).
+`--list` printed 106 ids. Host:
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+`.artifacts/smoke-report.json` was rewritten by this run (mtime 17:31).
+
+**Live** — `nub apps/playground/dist/live/run.js --all` is **95/95**, exit
+`0`, **2521 checks**, 61 capabilities, **1106.8 s** (`durationMs` 1106799).
+`--list` printed 95 ids and `live-theme` was among them; it reports **39
+checks** (112.8 s), so the palette's frame pixels ran inside the full
+sequence. Host:
+`gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+The check total is exactly plan `675`'s 2491 minus `live-theme`'s old 9 plus
+its new 39 (`2491 − 9 + 39 = 2521`). `.artifacts/live-report.json` was
+rewritten (mtime 17:50); a plain `--all` wrote **no** `provenance.json` (no
+`--capture`).
+
+**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+Test counts: playground **442**, testing **68**, components **308**,
+primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7** —
+unchanged from plan `674`/`676` (this plan changes prose only).
+
+**No source change.** No scenario, view, host verb, component, registry entry
+or test was edited. The owner/supervisor still performs the promotion merge;
+this workstream never pushes to `master`.
+
+**Exact commands and ids run:**
+
+```sh
+nub run --filter playground build
+nub apps/playground/dist/smoke/run.js --list          # 106
+nub apps/playground/dist/live/run.js --list           # 95, live-theme present
+nub apps/playground/dist/smoke/run.js                 # the whole headless registry
+nub apps/playground/dist/live/run.js --all            # the whole live registry
+nub run check && nub run lint && nub run test
+```
