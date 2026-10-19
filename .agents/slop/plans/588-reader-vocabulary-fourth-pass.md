@@ -50,13 +50,17 @@ shadowing:
 
 - `apps/docs/src/lib/search.test.ts` — one integration block in the established
   style with the seven measured queries and their destination pages.
+- `apps/docs/scripts/smoke-build.ts` — four production checks (`alertdialog`,
+  `scrollbar`, `a11y`, `webview`), so the released index is covered as well as
+  the unit fixture.
 - `component-aliases.test.ts` already proves key validity, uniqueness,
   no-shadowing and index presence; the new terms cannot skip those rules.
 
 ## 3. Commands and expected results
 
 ```sh
-nub exec --filter docs vitest run src/lib/search.test.ts src/lib/component-aliases.test.ts
+cd apps/docs
+nub exec vitest run src/lib/search.test.ts src/lib/component-aliases.test.ts
 # Expected before the change: the new search cases fail by query.
 # Expected after: green.
 
@@ -92,9 +96,34 @@ allowed), so a text chunk does not pass.
 - A query cannot reach its page without a ranker change: stop; this pass is
   vocabulary only.
 
-## 6. Measured runs
+## 6. Measured runs (2026-10-19)
 
-(Filled by the executor.)
+Production index (`/api/search?query=…`, first result), measured before the
+change and re-measured after the build:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `alertdialog` | nothing | `/docs/components/confirm-dialog` |
+| `alert dialog` | Alerts | `/docs/components/confirm-dialog` |
+| `scrollbar` | Scroll area text chunk | `/docs/components/scroll-area` |
+| `scrollbars` | Theming colour table | `/docs/components/scroll-area` |
+| `a11y` | Contributing check table | `/docs/accessibility` |
+| `wcag` | Contributing check table | `/docs/accessibility` |
+| `webview` | nothing | `/docs` |
+
+Forced defects, each applied alone, run, and reverted:
+
+1. Removed the `confirm-dialog` alias → **1 test failed** (`alertdialog` and
+   `alert dialog` rows).
+2. Removed `scrollbar`/`scrollbars` from `scroll-area` → **1 test failed**
+   (both scroll rows).
+3. Reverted the Accessibility summary → **1 test failed** (`a11y`/`wcag`).
+4. Reverted the Introduction summary → **1 test failed** (`webview`).
+
+Final: `nub run --filter docs test` — **104 files / 749 tests**; `check-types`
+green; `smoke:build` **98 pages / 1 281 anchors**, exit `0`, the four new
+production queries pass; `nub run check`, `nub run lint` and `nub run test`
+green at the repo root.
 
 ## 7. Acceptance
 

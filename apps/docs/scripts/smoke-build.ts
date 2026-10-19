@@ -736,6 +736,30 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the shared host props section's own heading",
     },
     {
+      query: "alertdialog",
+      expected: "/docs/components/confirm-dialog",
+      first: true,
+      what: "an ARIA name recovered by the fourth alias pass",
+    },
+    {
+      query: "scrollbar",
+      expected: "/docs/components/scroll-area",
+      first: true,
+      what: "a reader's word for the scroll container",
+    },
+    {
+      query: "a11y",
+      expected: "/docs/accessibility",
+      first: true,
+      what: "a page summary word recovered by the fourth pass",
+    },
+    {
+      query: "webview",
+      expected: "/docs",
+      first: true,
+      what: "the Introduction's one-word negative",
+    },
+    {
       query: "textbox",
       expected: "/docs/components/text-input",
       first: true,

@@ -543,6 +543,37 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 588: the fourth measured sweep. `alertdialog` returned nothing and
+   * `alert dialog` returned Alerts, `scrollbar` returned a text chunk and
+   * `scrollbars` the Theming table, `a11y`/`wcag` returned Contributing's
+   * command table, and `webview` returned nothing. The ARIA name belongs to
+   * Confirmation dialogs, the scrollbar to Scrollable containers, the
+   * conformance words to Accessibility and the one-word negative to the
+   * Introduction. No ranker rule is added.
+   */
+  it("finds the fourth set of reader words and page subjects (plan 588)", async () => {
+    const expected = [
+      ["alertdialog", "/docs/components/confirm-dialog"],
+      ["alert dialog", "/docs/components/confirm-dialog"],
+      ["scrollbar", "/docs/components/scroll-area"],
+      ["scrollbars", "/docs/components/scroll-area"],
+      ["a11y", "/docs/accessibility"],
+      ["wcag", "/docs/accessibility"],
+      ["webview", "/docs"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("finds the installation prerequisites and native platform support (plan 584)", async () => {
     const expected = [
       ["prerequisites", "/docs/installation"],

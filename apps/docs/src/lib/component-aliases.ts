@@ -50,6 +50,7 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["dialog", ["modal", "modal window"]],
+  ["confirm-dialog", ["alert dialog", "alertdialog"]],
   ["command-menu", ["cmdk"]],
   [
     "navigation-menu",
@@ -95,7 +96,10 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["stepper", ["wizard", "multi step", "multi-step", "multi step form"]],
   ["badge", ["pill"]],
   ["alert", ["banner", "callout", "callouts"]],
-  ["scroll-area", ["scrollview", "scroll view", "scroll pane"]],
+  [
+    "scroll-area",
+    ["scrollview", "scroll view", "scroll pane", "scrollbar", "scrollbars"],
+  ],
   ["popover", ["popup"]],
   ["select", ["select box", "dropdown list", "multi select", "multi-select"]],
 ]);

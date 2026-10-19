@@ -471,13 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–587)
 
-`[~]` `[██████████]` 153/156
+`[~]` `[██████████]` 154/157
 
-`[ ]` **Reader vocabulary, fourth pass (plan 588)** — seven measured queries
-      still miss their page: `alertdialog` returns nothing, `alert dialog`
-      returns Alerts, `scrollbar`/`scrollbars` return a text chunk and Theming,
-      `a11y`/`wcag` return Contributing, and `webview` returns nothing. Two
-      aliases and two page-summary words fix them; no ranker change.
+`[x]` **Reader vocabulary, fourth pass (plan 588)** — seven measured queries
+      missed their page: `alertdialog` returned nothing, `alert dialog`
+      returned Alerts, `scrollbar`/`scrollbars` returned a text chunk and
+      Theming, `a11y`/`wcag` returned Contributing, and `webview` returned
+      nothing. Two aliases (Confirmation dialogs, Scrollable containers) and
+      two page-summary words (Accessibility, Introduction) fix them with no
+      ranker change; one integration suite and four production queries, seven
+      reverted proofs in plan 588 §6.
 
 `[x]` **The shared host props have one documented home (plan 587)** — every part
       inherits the runtime's `HostProps`, so `testId`, `onKeyDown` and
