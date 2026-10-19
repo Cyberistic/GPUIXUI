@@ -7,9 +7,11 @@ import {
   DEFAULT_SEARCH_LIMIT,
   MAX_SEARCH_LIMIT,
   mergeResults,
+  pageDescriptionHits,
   parseSearchLimit,
   search,
   withoutTypeTableRows,
+  type PageMetadata,
 } from "./search";
 
 /**
@@ -33,6 +35,13 @@ import {
  * Popover page was sixth; a page whose own title matched the query
  * (`Command palette`, `Theming`) got no rank at all. The tests below fail when
  * token matching or the page-title rank is removed.
+ *
+ * Plan 568 closes the subject case: a page's authored **description** was never
+ * a signal, so `table` returned ten chunks of the Component pages guide, `panel`
+ * returned four Tabs sections and `aria` returned the Values API instead of the
+ * Accessibility page. The description rank sits one tier below a title and
+ * matches whole words only; these tests fail when it is dropped, when a title
+ * stops outranking it, or when a fragment inside a word starts matching.
  */
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
@@ -281,6 +290,25 @@ describe("search", { timeout: 120_000 }, () => {
     );
   });
 
+  it("reaches a page whose own summary names the subject", async () => {
+    const expected = [
+      ["table", "/docs/data-display"],
+      ["tables", "/docs/data-display"],
+      ["panel", "/docs/workspace"],
+      ["aria", "/docs/accessibility"],
+      ["screen reader", "/docs/accessibility"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const results = await search(query, 5);
+        return results[0]?.url === url
+          ? null
+          : `${query} -> ${results[0]?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });
@@ -389,6 +417,156 @@ describe("mergeResults", () => {
       "toast",
     );
     expect(merged).toHaveLength(1);
+  });
+});
+
+/** The two real summaries plan 568 measured, plus one that matches nothing. */
+const summaries = new Map<string, PageMetadata>([
+  [
+    "/docs/data-display",
+    {
+      title: "Data display",
+      description: "Tables, selection, and virtualised data presentation.",
+    },
+  ],
+  [
+    "/docs/component-pages",
+    {
+      title: "Component pages",
+      description:
+        "The record, sections and guards behind every component page.",
+    },
+  ],
+  [
+    "/docs/architecture",
+    {
+      title: "Architecture",
+      description: "How the packages fit together.",
+    },
+  ],
+]);
+
+describe("page descriptions (plan 568)", () => {
+  it("ranks a summary that names the query ahead of prose", () => {
+    const merged = mergeResults(
+      [
+        titledPage("/docs/api", "API"),
+        titledPage("/docs/data-display", "Data display"),
+      ],
+      [],
+      "table",
+      summaries,
+    );
+    expect(merged[0]?.url).toBe("/docs/data-display");
+  });
+
+  it("keeps a whole page title ahead of another page's summary", () => {
+    const merged = mergeResults(
+      [
+        titledPage("/docs/guides/tables", "Tables"),
+        titledPage("/docs/data-display", "Data display"),
+      ],
+      [],
+      "tables",
+      summaries,
+    );
+    expect(merged[0]?.url).toBe("/docs/guides/tables");
+  });
+
+  it("keeps a component title ahead of a page summary", () => {
+    const merged = mergeResults(
+      [titledPage("/docs/data-display", "Data display")],
+      [titledPage("/docs/components/button", "Buttons")],
+      "button",
+      new Map([
+        [
+          "/docs/data-display",
+          { title: "Data display", description: "Tables and buttons." },
+        ],
+      ]),
+    );
+    expect(merged[0]?.url).toBe("/docs/components/button");
+  });
+
+  it("does not match a fragment inside a word", () => {
+    const merged = mergeResults(
+      [
+        titledPage("/docs/architecture", "Architecture"),
+        titledPage("/docs/surface-notes", "Surface notes"),
+      ],
+      [],
+      "lab",
+      new Map([
+        [
+          "/docs/surface-notes",
+          {
+            title: "Surface notes",
+            description: "Collaboration surfaces.",
+          },
+        ],
+      ]),
+    );
+    expect(merged[0]?.url).toBe("/docs/architecture");
+  });
+
+  it("matches every word of a phrase in the summary", () => {
+    const merged = mergeResults(
+      [
+        titledPage("/docs/architecture", "Architecture"),
+        titledPage("/docs/accessibility", "Accessibility"),
+      ],
+      [],
+      "screen reader",
+      new Map([
+        [
+          "/docs/accessibility",
+          {
+            title: "Accessibility",
+            description:
+              "The ARIA attributes, what assistive technology and screen readers receive.",
+          },
+        ],
+      ]),
+    );
+    expect(merged[0]?.url).toBe("/docs/accessibility");
+  });
+
+  it("does not rank a component page by its summary", () => {
+    const merged = mergeResults(
+      [
+        titledPage("/docs/data-display", "Data display"),
+        titledPage(
+          "/docs/components/keycap",
+          "Keyboard shortcuts / keycap display",
+        ),
+      ],
+      [],
+      "table",
+      new Map([
+        [
+          "/docs/components/keycap",
+          {
+            title: "Keyboard shortcuts / keycap display",
+            description: "A categorised shortcut table with keycaps.",
+          },
+        ],
+      ]),
+    );
+    expect(merged[0]?.url).toBe("/docs/data-display");
+  });
+
+  it("synthesizes one page hit for a summary that names the query", () => {
+    const hits = pageDescriptionHits("table", summaries);
+    expect(hits).toHaveLength(1);
+    expect(hits[0]).toMatchObject({
+      url: "/docs/data-display",
+      type: "page",
+      content: "Data display",
+    });
+  });
+
+  it("synthesizes nothing when no summary names the query", () => {
+    expect(pageDescriptionHits("zzzznosuchtermzzzz", summaries)).toEqual([]);
   });
 });
 

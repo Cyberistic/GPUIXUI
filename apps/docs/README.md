@@ -474,6 +474,19 @@ below an exact name, and a **single** word is never promoted: `input`, `label`,
 `search`, `copy` and `list` keep their own pages. `src/lib/generated-search.test.ts`
 guards the rule and the four generated indexes prove it end to end.
 
+A hand-authored page's own **description** is a search signal (plan 568).
+`mergeResults` scores a page without a component record by its frontmatter
+summary — exact, whole word, word prefix, then every word of a phrase — one tier
+below its title (`DESCRIPTION_MATCH_RANK`). That is what makes `table` reach
+Data display, `panel` reach Workspace and `aria` reach Accessibility instead of
+the page that merely mentions the word; a component page is excluded because
+its title, symbols and aliases already identity it, and its summary is prose.
+`pageDescriptionHits` synthesizes a page hit when the index answered only with
+headings, and `src/lib/search.test.ts` guards the five measured queries
+(`table`, `tables`, `panel`, `aria`, `screen reader`) plus the word-boundary and
+component-summary rules. `smoke:build` asserts `table` and `aria` against the
+production index.
+
 Reader vocabulary is one guarded table (plan 566):
 `src/lib/component-aliases.ts` maps a record slug to the terms a reader types
 when the title cannot match — `textbox` → Text inputs, `one time password` →

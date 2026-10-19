@@ -728,6 +728,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "reader vocabulary that expands an abbreviation",
     },
+    {
+      query: "table",
+      expected: "/docs/data-display",
+      first: true,
+      what: "a page's authored description when the page index returned prose",
+    },
+    {
+      query: "aria",
+      expected: "/docs/accessibility",
+      first: true,
+      what: "the summary that names the ARIA surface",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

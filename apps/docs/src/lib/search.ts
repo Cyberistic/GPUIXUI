@@ -67,6 +67,32 @@ export const componentSearchIndex = (component: ComponentMetaInput): Index => ({
 const pageSearch = createFromSource(source);
 
 /**
+ * A page's authored metadata; the two fields the ranker reads.
+ *
+ * `description` is optional because Fumadocs' `PageData` declares it so — the
+ * app is a browser bundle where `effect` may not appear (`architecture.test.ts`),
+ * so the boundary shape is kept rather than converted to `Option`.
+ */
+export interface PageMetadata {
+  readonly title: string;
+  readonly description: string | undefined;
+}
+
+/**
+ * Every authored page, keyed by URL, read once at module load (plan 568). The
+ * Fumadocs page index knows the body, not the frontmatter summary, so this is
+ * the only place the description is available to ranking.
+ */
+const pageMetadata = new Map<string, PageMetadata>(
+  source
+    .getPages()
+    .map((page) => [
+      page.url,
+      { title: page.data.title, description: page.data.description },
+    ]),
+);
+
+/**
  * The generated value index is rendered React, not MDX prose, so the page index
  * never sees its rows — the same reason the component registry has its own
  * index (plans 419, 490). One document keeps every helper, hook, record and
@@ -107,6 +133,16 @@ const registrySearch = createSearchAPI("simple", {
 /** A component URL (page or filtered index) back to the record that owns it. */
 const componentByUrl = new Map(
   components.map((component) => [componentSearchUrl(component), component]),
+);
+
+/**
+ * The pages whose summary can be their search identity: every authored page
+ * without a component record (plan 568). A component already has a title,
+ * symbols and aliases, so its summary never ranks and never needs a synthetic
+ * hit.
+ */
+const summaryPages = new Map(
+  [...pageMetadata].filter(([url]) => !componentByUrl.has(url)),
 );
 
 /**
@@ -218,6 +254,60 @@ const pageTitleHits = (query: string): ReadonlyArray<SortedResult> =>
         ],
   );
 
+/**
+ * The rank a page's authored description earns (plan 568): `0` the whole
+ * description, `1` a whole word, `2` a word prefix, `3` every word of a phrase.
+ * Unlike a title, a description is a sentence, so a **fragment** inside a word
+ * (`lab` in `collaboration`) never matches.
+ */
+const descriptionMatchRank = (
+  description: string,
+  query: string,
+): number | undefined => {
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) return undefined;
+  if (description.trim().toLowerCase() === needle) return 0;
+
+  const words = description
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 0);
+  if (words.includes(needle)) return 1;
+  if (words.some((word) => word.startsWith(needle))) return 2;
+
+  const terms = queryTerms(query);
+  return terms.length > 1 &&
+    terms.every((term) => words.some((word) => word.startsWith(term)))
+    ? 3
+    : undefined;
+};
+
+/** A summary names the page's subject one tier below its own title. */
+export const DESCRIPTION_MATCH_RANK = 4;
+
+/**
+ * A page whose summary names the query is a candidate even when the page index
+ * answered it with headings only or omitted it, the same rule `pageTitleHits`
+ * applies to titles (plans 561, 568).
+ */
+export const pageDescriptionHits = (
+  query: string,
+  pages: ReadonlyMap<string, PageMetadata>,
+): ReadonlyArray<SortedResult> =>
+  [...pages].flatMap(([url, page]) =>
+    page.description === undefined ||
+    descriptionMatchRank(page.description, query) === undefined
+      ? []
+      : [
+          {
+            id: `page-description:${url}`,
+            url,
+            type: "page" as const,
+            content: page.title,
+          },
+        ],
+  );
+
 interface Candidate {
   readonly result: SortedResult;
   readonly index: number;
@@ -253,10 +343,15 @@ export const withoutTypeTableRows = (
  * Everything else keeps plan 419's order: page results first, registry hits in
  * the tail. A URL can be both a component record and a generated
  * document (the Icons page owns its name catalogue), so a candidate takes the
- * best of the two ranks. Ties break on the shorter title (`Buttons` before
- * `Button groups`) and then on the index's own order. One entry survives per
- * page URL, so a delivered component is not listed once as a page and again as
- * a registry record.
+ * best of the two ranks. A page's authored **description** names its subject one
+ * tier below its title (plan 568), so `table` reaches Data display's summary
+ * instead of a guide that mentions tables in passing. Ties break on the shorter
+ * title (`Buttons` before `Button groups`) and then on the index's own order.
+ * One entry survives per page URL, so a delivered component is not listed once
+ * as a page and again as a registry record.
+ *
+ * `pages` defaults to empty so the fixture tests never depend on the content
+ * tree; `search()` passes the real metadata map.
  *
  * Native `sort`/`Set` are deliberate: `effect` must not reach the docs bundle
  * (`architecture.test.ts`, plan 410 §2).
@@ -265,17 +360,33 @@ export const mergeResults = (
   pageResults: ReadonlyArray<SortedResult>,
   registryResults: ReadonlyArray<SortedResult>,
   query: string,
+  pages: ReadonlyMap<string, PageMetadata> = new Map(),
 ): ReadonlyArray<SortedResult> => {
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
       const generated = generatedByUrl.get(result.url);
+      const page = result.type === "page" ? pages.get(result.url) : undefined;
       const pageTitleRank =
         result.type === "page" ? nameRank([result.content], query) : undefined;
+      /**
+       * Only a page that has no component record is scored by its summary
+       * (plan 568). A component already has a title, exported symbols and
+       * aliases; its summary is prose, and an incidental mention there
+       * (`A categorised shortcut table…`) must not outrank the page that owns
+       * the subject.
+       */
+      const descriptionRank =
+        page?.description === undefined || component !== undefined
+          ? undefined
+          : descriptionMatchRank(page.description, query);
       const ranks = [
         component === undefined ? undefined : componentRank(component, query),
         promotedNameRank(generated, query),
         pageTitleRank,
+        descriptionRank === undefined
+          ? undefined
+          : descriptionRank + DESCRIPTION_MATCH_RANK,
       ].filter((rank): rank is number => rank !== undefined);
       return {
         result,
@@ -286,6 +397,7 @@ export const mergeResults = (
         titleLength:
           component?.title.length ??
           generated?.index.title.length ??
+          page?.title.length ??
           (pageTitleRank === undefined ? 0 : result.content.length),
       };
     })
@@ -324,8 +436,13 @@ export const search = async (
   ]);
   return mergeResults(
     withoutTypeTableRows(pageResults),
-    [...pageTitleHits(query), ...registryResults],
+    [
+      ...pageTitleHits(query),
+      ...pageDescriptionHits(query, summaryPages),
+      ...registryResults,
+    ],
     query,
+    pageMetadata,
   ).slice(0, limit);
 };
 

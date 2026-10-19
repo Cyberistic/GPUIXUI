@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–567)
+## Docs site workstream (plans 410–499, plus 500–568)
 
-`[x]` `[██████████]` 134/134
+`[x]` `[██████████]` 135/135
+
+`[x]` **Search reads a page's authored summary (plan 568)** — `table` returned
+      ten chunks of the Component pages guide, `panel` four Tabs sections and
+      `aria` the Values API, because a hand-authored page's frontmatter
+      description was never a search signal; a page without a component record
+      now ranks by its summary one tier below its title (`table` → Data display,
+      `panel` → Workspace, `aria`/`screen reader` → Accessibility), a component
+      summary never ranks, and the production crawl asserts two of them.
 
 `[x]` **Color picker and Inline edit get live scenes (plan 567)** — both pages
       documented a selection and an edit state with only a tier-A illustration;
