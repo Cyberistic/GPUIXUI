@@ -1444,10 +1444,13 @@ describe("List", () => {
   });
 
   /**
-   * Dynamic rows (plan 510). The bug these guard, measured: removing the active
-   * row left every remaining row `tabIndex -1` with focus `null`, so the list
-   * lost its only tab stop; disabling it left the tab stop — and the focus ring
-   * — on the row that could no longer be activated. Focus relocation must also
+   * Dynamic rows (plans 510/647). The bug these guard, measured: removing the
+   * active row left every remaining row `tabIndex -1` with focus `null`, so the
+   * list lost its only tab stop; disabling it left the tab stop — and the focus
+   * ring — on the row that could no longer be activated. `focusElement` is the
+   * runtime's own move, exactly like a `Tab` entry, and never runs React's
+   * `onFocus` on this binding — so the handover must read the renderer's focused
+   * host, not only the id a focus event remembered. Focus relocation must also
    * never steal focus a consumer claimed in the same update.
    */
   it("keeps a tab stop when the active row is removed", () => {

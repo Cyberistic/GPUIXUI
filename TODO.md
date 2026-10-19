@@ -481,6 +481,15 @@ retired once both branches are one
       and pass after (Tabs 29 of 31); the removed-host and `onBlur` cases stay
       red with the plan-540 focus-signal failures. Docs, `COMPONENTS.md`,
       `PLAN.md` D30 and the plan index synced (owner: components)
+    - [x] List: the disabled-row handover reads the natively focused row — plan
+      647, the List half of 646. Measured: a row focused through the renderer
+      kept native focus when the app disabled it, because the plan-510 handover
+      keyed only on `focusedRow.current`; the origin is now the renderer's
+      focused row, with the remembered row as fallback. 1 existing native case
+      fails at `HEAD` and passes after (List 59 of 61); the two removed-host
+      cases stay red with the plan-540 focus-signal failures. Docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1116,10 +1125,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 611/612/619): all
       three exit 0; the unit suite is 454 tests in 45 files. The native
-      behaviour suite is **810 passed / 32 failed of 842** — every failure is
+      behaviour suite is **811 passed / 31 failed of 842** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19,
-      after plan 646).
+      after plan 647).
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)

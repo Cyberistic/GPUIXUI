@@ -217,9 +217,13 @@ that is gone:
 
 - Removing the row that owns the tab stop hands the stop to the selected row,
   else the first enabled row. Focus follows it when the list itself held the
-  user's focus.
+  user's focus, read from the renderer at handover time — a `Tab` entry and a
+  programmatic move focus the row without running React's `onFocus`.
 - Disabling that row does the same, so the stop never lands on a row that cannot
-  be activated, and the disabled row stops painting the focus ring.
+  be activated, and the disabled row stops painting the focus ring. The row's
+  host still reports its focus, so the handover recognises it; a row **removed
+  in the same update** has no host left to report, so the stop moves but focus
+  is left to the app (a missing focus signal, not a kept one — plan 647).
 - A row that changes `disabled` or `textValue` is updated in place, so its
   authored position never drifts: arrows, `Home`/`End`, `Shift` ranges and
   type-ahead keep the declaration order.
@@ -334,6 +338,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   row's tint while the pointer is over it.
 - Focus tracking follows the rows the list focused. A focusable control inside a
   row's `trailing` slot is not tracked if the row disappears (see Dynamic rows).
+- A focused row **removed in the same update** cannot be recognised after the
+  commit: 0.10.0 dispatches no `focus`/`blur`, and the host is gone before any
+  handler can read it. The tab stop moves; focus is left to the app (plan 647).
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
@@ -363,9 +370,11 @@ ranges, `Cmd`/`Ctrl`+A selecting every enabled row, and a disabled row never
 entering a selection. A row that is disabled and enabled again keeps its authored
 position, so the next arrow key reaches its neighbour. A focus move repaints exactly the two rows that changed,
 counted through the public `style` function. Dynamic rows: a removed or newly
-disabled row never keeps the tab stop, focus follows the stop when the list held
-it, a consumer's own focus in the same update is never stolen, and an emptied
-list that refills does not grab focus. A control in a row's `leading`/`trailing`
+disabled row never keeps the tab stop; a disabled row hands focus to the stop
+through the renderer's focused host, a row removed in the same update has no host
+left to read and leaves focus to the app, a consumer's own focus in the same
+update is never stolen, and an emptied list that refills does not grab focus. A
+control in a row's `leading`/`trailing`
 slot keeps its own `Enter` (the row does not also activate) and a field there
 keeps native focus while typing. A keyboard origin the React tree never saw — a
 row reached with `Tab` — is still the row `Space`, `Enter`, an arrow and

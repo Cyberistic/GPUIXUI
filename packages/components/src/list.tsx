@@ -671,12 +671,23 @@ export const List = (props: ListProps) => {
 
   /**
    * A row that vanishes or turns disabled takes the user's focus with it: the
-   * native element is gone, and a disabled row cannot run its action. Hand focus
-   * to the row that now owns the tab stop, but never steal it from another
-   * control the consumer focused in the same update (plan 510).
+   * native element is gone, and a disabled row cannot run its action. The origin
+   * is the **natively focused** row: a `Tab` entry and a programmatic move focus
+   * the host without running React's `onFocus` (plans 345/536/578), so the
+   * renderer is asked first; the last focused row is the fallback for a focus no
+   * handler can see. Hand focus to the row that now owns the tab stop, but never
+   * steal it from another control the consumer focused in the same update
+   * (plans 510/647).
    */
   useLayoutEffect(() => {
-    const remembered = focusedRow.current;
+    const nativeRow = Option.flatMap(
+      Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+      (id) => Arr.findFirst(rows, (row) => row.nativeId === id),
+    );
+    const remembered = Option.orElse(
+      Option.map(nativeRow, (row) => row.nativeId),
+      () => focusedRow.current,
+    );
     if (Option.isNone(remembered)) return;
 
     const target = Arr.findFirst(
