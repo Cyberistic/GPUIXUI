@@ -32,7 +32,7 @@ import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 | open | focus lands on **Cancel**, not on the destructive action |
 | `Enter` untouched | cancels: `onOpenChange(false)`, `onConfirm` not called |
 | Confirm clicked | `onConfirm()` exactly once; the dialog stays open |
-| `loading` | both actions disabled, `…` shown, Escape and outside press ignored |
+| `loading` | both actions disabled and described, `…` shown, Escape and outside press ignored |
 | close | the caller sets `open` to `false` after its work succeeds |
 
 The `loading` state keeps the dialog open on purpose: point it at a promise the
@@ -63,6 +63,10 @@ description are unchanged: the wording, not the colour, carries the consequence.
 - The dialog's accessible name is `title`; the description is announced to
   assistive technology through `aria-description`, since `0.10.0` has no
   `aria-describedby`.
+- While `loading`, the confirm action is described **In progress** (joined with
+  **Disabled**). `@gpuix/native@0.10.0` has no `aria-busy`, so the supported
+  description channel carries the state; the `…` glyph is skipped by the name,
+  which stays `confirmLabel`.
 - No `aria-modal`/`aria-labelledby` in `@gpuix/native@0.10.0` — the same
   limitation as **Dialog**, with the evidence on that page.
 - The busy indicator is a `…` text glyph: `@gpuixui/primitives` now ships a
@@ -98,11 +102,11 @@ description are unchanged: the wording, not the colour, carries the consequence.
 
 ## Verification
 
-`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (6 tests):
+`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (7 tests):
 Cancel-focused-on-open, Enter cancelling without confirming, confirm reporting
-once and leaving the dialog open, both actions and Escape inert while loading, the
-description announced on the dialog, and the danger tone reading the destructive
-roles.
+once and leaving the dialog open, both actions and Escape inert while loading,
+the busy state announced on the confirm action, the description announced on the
+dialog, and the danger tone reading the destructive roles.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

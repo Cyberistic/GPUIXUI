@@ -10,6 +10,9 @@
  * - **Confirm does not close the dialog.** The caller owns the async work and
  *   closes through `open` when it succeeds, so a failed save can stay open with
  *   the error visible instead of vanishing mid-flight.
+ * - **The busy state is announced.** While `loading`, the confirm action is
+ *   described `In progress` (joined with `Disabled`); 0.10.0 has no `aria-busy`
+ *   and a glyph's own label never reaches its parent's name.
  */
 
 import { Match } from "effect";
@@ -98,6 +101,7 @@ export const ConfirmDialog = ({
           </Button>
           <Button
             testId="confirm-accept"
+            aria-description={loading ? "In progress" : undefined}
             variant={Match.value(tone).pipe(
               Match.when("danger", () => "danger" as const),
               Match.orElse(() => "primary" as const),
@@ -106,10 +110,7 @@ export const ConfirmDialog = ({
             onClick={onConfirm}
           >
             {loading ? (
-              <text
-                aria-label="In progress"
-                style={{ ...textStyle(theme, "label"), color: "inherit" }}
-              >
+              <text style={{ ...textStyle(theme, "label"), color: "inherit" }}>
                 …
               </text>
             ) : null}

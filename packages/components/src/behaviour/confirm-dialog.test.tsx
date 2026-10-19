@@ -19,7 +19,7 @@ import {
   focusedTestId,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
-import { nodesWithRole } from "../internal/a11y.js";
+import { nodesNamed, nodesWithRole } from "../internal/a11y.js";
 
 /** A caller that owns the open state, exactly as the API requires. */
 const Harness = ({
@@ -99,6 +99,28 @@ describe("ConfirmDialog", () => {
     expect(confirm.renderer.findByTestId("confirm-accept")).toBeDefined();
 
     confirm.unmount();
+  });
+
+  it("announces the confirm action as in progress while loading", () => {
+    const loading = renderComponent(<Harness onConfirm={vi.fn()} loading />);
+
+    const busy = nodesNamed(loading.renderer, "Confirm")[0];
+    // The bug this guards: the busy state lived only in the `…` glyph's own
+    // `aria-label`, which 0.10.0 never folds into its parent button's name, so
+    // a loading confirm announced "Confirm / Disabled" and not that work was
+    // running. The name still belongs to the visible label, not the glyph.
+    expect(busy?.name).toBe("Confirm");
+    expect(busy?.description).toEqual(Option.some("In progress. Disabled"));
+
+    loading.unmount();
+
+    // The busy description is a state, not a permanent part of the action.
+    const idle = renderComponent(<Harness onConfirm={vi.fn()} />);
+    expect(nodesNamed(idle.renderer, "Confirm")[0]?.description).toEqual(
+      Option.none(),
+    );
+
+    idle.unmount();
   });
 
   it("announces the confirmation's description", () => {

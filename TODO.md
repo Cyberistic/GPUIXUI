@@ -527,6 +527,13 @@ retired once both branches are one
       1 native case (unit 464, Message scroller 13), the native case failing on
       the old wiring; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] A loading confirmation announces that it is in progress — plan 655.
+      Measured: the `…` glyph's own `aria-label` never reaches its parent
+      `div role="button"`, so a loading confirm announced "Confirm / Disabled".
+      The action now carries `aria-description="In progress"`, joined with
+      `Disabled` by the shared description helper; 1 native case (Confirmation
+      dialog 7), both-direction proof; docs, `COMPONENTS.md`, `PLAN.md` D30 and
+      the inventory synced (owner: components)
     - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
       it is its own tab stop (`tabIndex 0`) and takes native focus
       (`getFocusedElementId() = search-clear`), but has no `focused` state or
