@@ -15,8 +15,9 @@
  * cursor and tracker merge, so a thumb the user had left kept a second ring.
  * Every focus owner now uses `useRovingFocus` or `useFocus`.
  *
- * Each case waits for the tracker's sample (`settleFocus`), because the clear
- * is a sample-driven effect and the tracker polls every 50 ms.
+ * Each case waits for the tracker's sample through `awaitFrame`: the ring (or
+ * its absence) is the paint that proves the sample arrived, and a fixed sleep
+ * could assert before that render (plans `592`, `691`).
  *
  * The table at the bottom is the **focus-lifetime matrix** (plan `603`): every
  * focusable Tier 1 control, not only the ones that had the bug, proves a ring
@@ -48,7 +49,7 @@ import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
 import { isFocusRing, isWithin } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const OPTIONS = [
   { value: "a", label: "Alpha" },
@@ -86,10 +87,20 @@ const mount = async (node: ReactNode): Promise<Runtime> => {
   return runtime;
 };
 
-/** Move focus inside, leave the composite, and wait for the tracker's sample. */
+/**
+ * Move focus outside the composite and wait for the tracker's sample.
+ *
+ * The ring is the paint that proves the sample arrived: when the outside
+ * button is the only ringed element, the tracker named it, and every composite
+ * cleared its stale cursor in the same render (plans `601`, `603`, `691`). A
+ * fixed sleep could assert before that render.
+ */
 const leave = async (runtime: Runtime): Promise<void> => {
   runtime.click("before");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "before") && ringCount(runtime) === 1,
+    "focus leaves the composite for the outside button",
+  );
 };
 
 const before = <Button testId="before">Before</Button>;
@@ -107,7 +118,10 @@ it("clears a multiple ToggleGroup's ring when focus leaves", async () => {
     </Stack>,
   );
   runtime.keyDown("tg", "right");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "tg-b"),
+    "the ToggleGroup paints the focused item's ring",
+  );
   expect(ringWithin(runtime, "tg-b")).toBe(true);
   await leave(runtime);
   expect(focused(runtime)).toBe("before");
@@ -123,7 +137,10 @@ it("clears a RadioGroup's ring when focus leaves", async () => {
     </Stack>,
   );
   runtime.keyDown("rg", "down");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "rg-b"),
+    "the RadioGroup paints the focused option's ring",
+  );
   expect(focused(runtime)).toBe("rg-b");
   expect(ringWithin(runtime, "rg-b")).toBe(true);
   await leave(runtime);
@@ -139,7 +156,10 @@ it("clears a Rating's ring when focus leaves", async () => {
     </Stack>,
   );
   runtime.keyDown("rating", "right");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "rating-star-3"),
+    "the Rating paints the focused star's ring",
+  );
   expect(focused(runtime)).toBe("rating-star-3");
   expect(ringWithin(runtime, "rating-star-3")).toBe(true);
   await leave(runtime);
@@ -155,7 +175,10 @@ it("clears a RangeSlider thumb's ring when focus leaves", async () => {
     </Stack>,
   );
   runtime.click("rs");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "rs-thumb-end"),
+    "the RangeSlider paints the pressed thumb's ring",
+  );
   expect(ringWithin(runtime, "rs-thumb-end")).toBe(true);
   await leave(runtime);
   expect(ringWithin(runtime, "rs-thumb-end")).toBe(false);
@@ -170,7 +193,10 @@ it("keeps a CheckboxGroup row plain after focus leaves", async () => {
     </Stack>,
   );
   runtime.click("cg-c");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "cg-c"),
+    "the CheckboxGroup paints the pressed row's ring",
+  );
   expect(ringWithin(runtime, "cg-c")).toBe(true);
   await leave(runtime);
   expect(ringWithin(runtime, "cg-c")).toBe(false);
@@ -193,7 +219,10 @@ it("restarts a deferred radio walk from the tab stop, not the abandoned item", a
     </Stack>,
   );
   runtime.keyDown("rg", "down");
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "rg-b"),
+    "the deferred RadioGroup paints the moved cursor",
+  );
   expect(focused(runtime)).toBe("rg-b");
   await leave(runtime);
   runtime.focusNext();
@@ -215,7 +244,10 @@ it("clears a seeded autoFocus ring when focus leaves", async () => {
       </Stack>
     </Surface>,
   );
-  await settleFocus();
+  await awaitFrame(
+    () => ringWithin(runtime, "c"),
+    "the autoFocus field paints its seeded ring",
+  );
   expect(ringWithin(runtime, "c")).toBe(true);
   await leave(runtime);
   expect(ringWithin(runtime, "c")).toBe(false);
@@ -377,7 +409,10 @@ it.each(Arr.map(LIFETIME, (testCase) => [testCase.name, testCase] as const))(
       </Stack>,
     );
     testCase.focus(runtime);
-    await settleFocus();
+    await awaitFrame(
+      () => ringWithin(runtime, "c"),
+      `${testCase.name} paints a ring while focused`,
+    );
     expect(ringWithin(runtime, "c")).toBe(true);
     await leave(runtime);
     expect(ringWithin(runtime, "c")).toBe(false);

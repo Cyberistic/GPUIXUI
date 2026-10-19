@@ -15,11 +15,16 @@ import { Button } from "../src/components/Button.js";
 import { InfoTip } from "../src/components/InfoTip.js";
 import { Stack } from "../src/components/Stack.js";
 import { FLOATING_FOLLOW_MS, FLOATING_MARGIN } from "../src/core/floating.js";
-import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
+import {
+  a11yNode,
+  isFocusRing,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
 import {
   Surface,
+  awaitFrame,
   openWindow,
-  settleFocus,
   sleep,
   testTheme,
 } from "./fixture.js";
@@ -70,7 +75,10 @@ it("reaches an InfoTip by keyboard, with its name and description", async () => 
   expect(trigger.aria?.description).toBe(CONTENT);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => runtime.allText().includes(CONTENT),
+    "the keyboard-opened tip paints its content",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("trigger");
   expect(runtime.allText()).toContain(CONTENT);
   expect(
@@ -100,11 +108,17 @@ it("closes the keyboard-opened tip when focus leaves", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => runtime.allText().includes(CONTENT),
+    "the tip opens when the trigger takes focus",
+  );
   expect(runtime.allText()).toContain(CONTENT);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !runtime.allText().includes(CONTENT),
+    "the tip closes when focus leaves",
+  );
   expect(runtime.allText()).not.toContain(CONTENT);
 });
 
@@ -147,7 +161,11 @@ it("paints a focus ring on the trigger", async () => {
   );
   expect(before).toStrictEqual(Option.none());
   runtime.focusNext();
-  await settleFocus();
+  const ringed = () =>
+    Option.exists(runtime.element("trigger"), (element) =>
+      isFocusRing(element.style.boxShadow),
+    );
+  await awaitFrame(ringed, "the trigger paints its focus ring");
   const after = Option.flatMap(runtime.element("trigger"), (element) =>
     Option.fromNullishOr(element.style.boxShadow),
   );

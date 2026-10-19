@@ -42,7 +42,7 @@ import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
 import { isFocusRing, isWithin } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
+import { Surface, awaitFrame, openWindow, testTheme } from "./fixture.js";
 
 /** The shadow `focusRing` becomes after the runtime's `inset` normalisation. */
 const RING = { ...focusRing(testTheme).boxShadow, inset: false };
@@ -182,7 +182,13 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase] as const))(
     runtime.render(<Surface>{testCase.node()}</Surface>);
     runtime.focusNext();
     runtime.flush();
-    await settleFocus();
+    // A fixed sleep races the 50 ms tracker and React's paint (plan `691`):
+    // wait for the ring itself, so a late sample passes and a missing one
+    // still fails by this name.
+    await awaitFrame(
+      () => ringsOf(runtime).length === 1,
+      `${testCase.name} paints one focus ring`,
+    );
     const root = Option.getOrElse(runtime.element("c"), () =>
       expect.fail("the control painted no root element"),
     );
@@ -222,17 +228,22 @@ it("paints the ring inside a button that an attached group clips", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  const insetRings = () =>
+    Arr.filter(
+      runtime.all(),
+      (element) =>
+        element.style.position === "absolute" &&
+        element.style.borderColor === BUTTON_RING.color,
+    );
+  await awaitFrame(
+    () => insetRings().length === 1,
+    "the clipped button paints its inset ring",
+  );
   const root = Option.getOrElse(runtime.element("c"), () =>
     expect.fail("the control painted no root element"),
   );
   expect(root.style.boxShadow).toBeUndefined();
-  const rings = Arr.filter(
-    runtime.all(),
-    (element) =>
-      element.style.position === "absolute" &&
-      element.style.borderColor === BUTTON_RING.color,
-  );
+  const rings = insetRings();
   expect(rings).toHaveLength(1);
   const ring = Option.getOrElse(Arr.head(rings), () =>
     expect.fail("the clipped control painted no ring"),

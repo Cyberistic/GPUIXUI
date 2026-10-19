@@ -2124,6 +2124,21 @@ retired once both branches are one
       and by file when either wrapper loses its `useFloatingFollow` call. Plan
       `649`; offline 62 files, InfoTip 8/8.
 
+`[x]` `packages/primitives`: **the runtime suite's focus wait was a fixed sleep
+      that lost the race under load** — `settleFocus()` slept 120 ms (two 50 ms
+      tracker intervals), while the sample and its React paint land after that.
+      Measured 2026-10-19: two of three full `test:runtime` runs failed 2–3
+      ring cases (`focus-ring > Input`/`TextArea` with zero rings, `info-tip`
+      with no shadow) while every file passed scoped, and a renderer reporting
+      the focused id 300 ms late painted no ring at 120 ms and painted it
+      later. `runtime/fixture.tsx` gains `awaitFrame`, which polls the painted
+      frame for the condition a case asserts (2 s bound, naming what never
+      appeared); the focus-ring, InfoTip and focus-loss suites wait on their
+      real paint instead of the clock, and `runtime/focus-wait` proves both
+      directions (a late ring passes, a never-arriving one times out). Plan
+      `691`; offline 62 files / 868 tests, full runtime 59 files / 823 tests
+      green twice.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

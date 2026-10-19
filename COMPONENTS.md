@@ -39,7 +39,7 @@ runtime-internal focus behaviour: the headless `Tooltip`'s open-on-focus still
 depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build: the focus
-rings are green after plan `590`, and the whole runtime suite — **58 files** —
+rings are green after plan `590`, and the whole runtime suite — **59 files** —
 passes after plan `597` corrected the published box model (a
 plain `div` reports from its content origin, a `Button` from its border box;
 `paintBounds` is the opt-in correction), plan `598` corrected a scroller's
@@ -263,11 +263,15 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19
-(**58 files, all passing on the store's release-tag build**; two
+(**59 files, all passing on the store's release-tag build**; two
 consecutive runs are identical by name). Plan `597` corrected the published box
 model, plan `598` a scroller's own report, plan `599` `Select`'s off-by-one
 scroll reveal, plan `606` the focus reveal a scroll region owes its controls,
 and plan `636` the nested chain that reveal must follow; before them the same suite reported 37 failures at plan `596`.
+Plan `691` replaced the suite's fixed 120 ms focus sleep with a bounded
+frame wait (`awaitFrame`), because the sample and its React paint could land
+after the sleep under load; the focus-ring, InfoTip and focus-loss suites now
+wait on the paint they assert.
 The native-focus tracker restored the 19 focus-matrix cases and the disabled
 ring cases (both files are green in a fresh process); plan `591` restored the
 lifetime of a seeded focus state and the `NumberField` blur commit, plan `592`

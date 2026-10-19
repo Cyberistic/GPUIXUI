@@ -93,5 +93,36 @@ export const sleep = (milliseconds: number): Promise<void> =>
  */
 export const FOCUS_SETTLE_MS = 2 * NATIVE_FOCUS_POLL_MS + 20;
 
-/** Wait long enough for the tracker to see a focus change and repaint. */
+/**
+ * Wait long enough for the tracker to see a focus change and repaint.
+ *
+ * A floor, not a synchronization primitive: the tracker polls every 50 ms and
+ * React paints a render after that, so under load this can elapse before the
+ * frame the caller is about to read. A test that asserts a **paint** must use
+ * `awaitFrame` with its own condition (plan `691`).
+ */
 export const settleFocus = (): Promise<void> => sleep(FOCUS_SETTLE_MS);
+
+/**
+ * Wait until the last painted frame satisfies `condition`, or fail with `what`.
+ *
+ * The tracker's paint is a sample plus a render, so a fixed sleep races it
+ * (measured: a renderer reporting focus 300 ms late paints no ring at 120 ms,
+ * and two of three full runs failed 2–3 ring cases while the files passed
+ * scoped — plan `691`). Polling the frame lets a late paint pass while a paint
+ * that never happens still fails, by the phrase the caller named.
+ */
+export const awaitFrame = async (
+  condition: () => boolean,
+  what: string,
+  timeoutMs = 2000,
+): Promise<void> => {
+  const poll = async (remaining: number): Promise<void> => {
+    if (condition()) return;
+    if (remaining <= 0)
+      throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`);
+    await sleep(10);
+    return poll(remaining - 1);
+  };
+  return poll(Math.max(1, Math.ceil(timeoutMs / 10)));
+};

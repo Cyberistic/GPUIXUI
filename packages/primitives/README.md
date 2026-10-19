@@ -257,13 +257,14 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **58 test files**. The latest run's
+runtime-proven too. The runtime suite is **59 test files**. The latest run's
 totals live in `TODO.md`'s live-suite row and plan `597`, not here: a prose
 count cannot be held true by a test.
 The store artifact is the **release-tag** build (plan `529`;
 `strings` reports `focusVisible=0`), and it delivers **no focus events** (plan
 `583`); the native-focus tracker restores the rings (plan `590`), so the
-matrix passes after `settleFocus`. Because no blur arrives, a roving
+matrix passes after the paint it asserts is awaited (`awaitFrame`, plan `691` —
+a fixed sleep lost the race). Because no blur arrives, a roving
 composite's event-tracked cursor is cleared by a sample that names none of its
 items (`useRovingFocus`), so a ring and an arrow walk cannot outlive focus
 (plan `601`); `RangeSlider`'s thumbs use the same hook rather than a private
