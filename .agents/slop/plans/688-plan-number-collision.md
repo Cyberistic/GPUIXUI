@@ -89,25 +89,27 @@ uniqueness check, recorded as a repo-tooling task below.
 | Purpose | Command | Expected |
 | ------- | ------- | -------- |
 | Rename | `git mv .agents/slop/plans/433-platform-theme-recipes.md .agents/slop/plans/687-platform-theme-recipes.md` | exit 0 |
-| No stale references | `rg -n "433-platform\|plan 433\|Plan 433" .agents/slop/plans TODO.md` | no output (only this plan's own description may match if written as `433`) |
+| No stale references | `grep -rn --exclude=688-plan-number-collision.md -e "433-platform" -e "plan 433" -e "Plan 433" .agents/slop/plans TODO.md` | no output (exit 1). Against `HEAD~1` the same command finds eight lines, so it can fail |
 | Number is free | `find /Users/cyberistic/GPUIXUI/workspaces -path "*/.agents/slop/plans/687-*"` | only our renamed file |
 | Types/lint/fmt/tests guard | `nub run check` | exit 0 |
 | Package suite | `nub run --filter @gpuixui/tokens test` | 192 files, 6737 tests pass |
 | Worktree state | `git status --short` | only the intended files, plus the known `references` symlink |
 
-The `rg` pattern must not match plan `433`'s own historical line in this plan;
-write that sentence as *"the recipe plan formerly numbered `433`"* if needed.
+The exclusion keeps this plan's own historical description out of the check;
+everything else must be clean. `grep` is used rather than `rg` because ripgrep
+is not installed on this host.
 
 ## Test plan
 
 There is no executable code change, so a new unit test would assert nothing about
 the library. The meaningful checks are the ones above:
 
-- **Can it fail?** Point the `rg` check at the pre-change tree: it finds five
-  references and two files numbered `433`. After the change it finds none.
-  State the pre-change count in the commit message.
+- **Can it fail?** Point the `grep` check at the pre-change tree: it finds eight
+  lines (five in plan `311`, one in the recipe plan's own title, one in the
+  index and one in `TODO.md`). After the change it finds none. That both
+  directions were run is recorded in the commit message.
 - **Index truth:** the reference-adoption table and the tokens table each carry
-  one row for `687`/`688`; `rg` for a duplicated row number returns one row.
+  one row for `687`/`688`; a `grep` for a duplicated row number returns one row.
 - **Gates:** `nub run check` and the tokens suite must pass unchanged; the plan
   files are not read by the suite, so a failure means the branch was already red
   and must be reported, not papered over.
