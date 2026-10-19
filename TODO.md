@@ -405,6 +405,13 @@ retired once both branches are one
       image; 1 native case (Avatar 11), both-direction proof (removing the role
       restores the second node); docs, `COMPONENTS.md` and the inventory synced
       (owner: components)
+    - [x] Readable marks — plan 625: measured that the menu's 2px highlight bar,
+      its check glyph and its radio dot painted the `accent` wash on `popover`
+      (about 1.1:1, under the 3:1 mark floor), and the timeline's upcoming dot
+      painted `muted` on the canvas (1.06:1 light, 1.23:1 dark). They now paint
+      `popoverForeground` and `mutedForeground`; 1 new + 2 strengthened native
+      cases (Dropdown menu 53), both-direction proof; docs, `COMPONENTS.md`
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
