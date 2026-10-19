@@ -1263,14 +1263,14 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plan 677):
       all three exit 0; the unit suite is 476 tests in 46 files. The full native
-      behaviour suite was last run at **820 passed / 31 failed of 851** after
-      plan 657 — every failure a recorded plan-540 binding defect (focus/blur
-      delivery, box measurement), not a component regression. Plans 660–662 ran
-      their targeted files (Search input 18/18, Stepper 12/12, the TagInput
-      fractional-cap case; its focus-ring case remains the recorded plan-540
-      failure) and add six cases. Plan 672 ran Combobox 54/54 and Search input
-      18/18 after the shared focus sample; the full suite was not re-run here, so
-      re-run it before release — every later merge can change the count.
+      behaviour suite was re-run after plan 677 on 2026-10-19: **836 passed /
+      31 failed of 867** — every failure is one of the recorded plan-540 binding
+      defects (the 24 focus/blur cases, the box-convention position cases and the
+      command-menu scroll case), and the Toast suite is 20/20. The count before
+      plan 677 was 820/31 of 851 after plan 657; plans 660–672 added the Search
+      input, Stepper, TagInput and Combobox cases (their targeted files green)
+      and plan 677 added two store cases, which is the 867-test total. Re-run it
+      before release — every later merge can change the count.
 
 ## Swarm-owned blockers (fix these)
 

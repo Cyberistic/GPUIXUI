@@ -285,3 +285,7 @@ Both-direction proof:
 - Gates: `nub run --filter @gpuixui/components test` 476/476 (46 files),
   `nub run test` exit `0` (all workspaces), `nub run check` exit `0`,
   `nub run lint` exit `0`.
+- Full native behaviour suite re-run after this change: 836 passed / 31 failed
+  of 867; the 31 are the recorded plan-540 binding failures (24 focus/blur, the
+  box-convention positions and the command-menu scroll). Toast is 20/20, so the
+  change caused no native regression.
