@@ -81,11 +81,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       centre rating click → `rating=0`; removed Tooltip hover → no paint;
       removed OTP `focusCell` → `code=6 complete=0`), plus a measured null
       result: six digits in one call also pass, so the per-step settle is
-      realism, not a race guard. Two **test-quality fixes** fell out: the
+      realism, not a race guard. Three **test-quality fixes** fell out: the
       headless `primitives-fields` now proves the refusal with a `locked`
-      counter (the old `name=atlas` check passed with the field enabled) and
+      counter (the old `name=atlas` check passed with the field enabled),
       `primitives-display` clicks a quarter of the track (the old 0–100 range
-      passed without a click); both observed failing and passing. Measured:
+      passed without a click), and `primitives-choice` clicks the second radio
+      row (the old first-row click asserted the value it already had); all
+      three observed failing and passing. Measured:
       two keys in one batch can coalesce, and the Select's popup paints before
       its focus commit. Focused ids run: the four `live-primitives-*` and the
       five headless `primitives-*`.

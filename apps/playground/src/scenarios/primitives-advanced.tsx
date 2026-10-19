@@ -113,11 +113,11 @@ export const primitivesChoiceScenario: PlaygroundScenario = {
       // No item carries a testId (the package renders one per option), so the
       // click is aimed inside the first row's circle. The assertion is the
       // selection, not the pixel.
-      ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 6);
+      ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 2);
       yield* ctx.expectContains(
-        "a click selects an option",
+        "a click selects the second option",
         read(ctx, "choice-readout"),
-        "cadence=daily",
+        "cadence=weekly",
       );
 
       ctx.host.keyDown("choice-radio", "down");
@@ -125,29 +125,29 @@ export const primitivesChoiceScenario: PlaygroundScenario = {
       yield* ctx.expectContains(
         "Down moves the selection",
         read(ctx, "choice-readout"),
-        "cadence=weekly",
+        "cadence=never",
       );
-      const weeklyTree = yield* treeOf(ctx);
-      const weekly = yield* node(ctx, weeklyTree, "RadioButton", "Weekly");
+      const movedTree = yield* treeOf(ctx);
+      const moved = yield* node(ctx, movedTree, "RadioButton", "Never");
       yield* ctx.expectEqual(
         "the new option announces checked",
-        text(weekly.value),
+        text(moved.value),
         "checked",
       );
 
       ctx.host.keyDown("choice-radio", "up");
       ctx.host.keyUp("choice-radio", "up");
       yield* ctx.expectContains(
-        "Up wraps back to the first option",
-        read(ctx, "choice-readout"),
-        "cadence=daily",
-      );
-
-      ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 2);
-      yield* ctx.expectContains(
-        "a click on the second row agrees with the key path",
+        "Up moves it back",
         read(ctx, "choice-readout"),
         "cadence=weekly",
+      );
+
+      ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 6);
+      yield* ctx.expectContains(
+        "a click on the first row agrees with the key path",
+        read(ctx, "choice-readout"),
+        "cadence=daily",
       );
 
       const stars = yield* ctx.expectSome(

@@ -36,6 +36,8 @@ gestures. Style, colour and the a11y dump stay with the headless scenarios.
 | File | Change |
 | ---- | ------ |
 | `apps/playground/src/live/scenarios.tsx` | import `primitivesFieldsScenario`/`primitivesDisplayScenario` and `primitivesChoiceScenario`/`primitivesEntryScenario`; add `live-primitives-fields`, `live-primitives-display`, `live-primitives-choice`, `live-primitives-entry` (`capability: "components"`); register all four |
+| `apps/playground/src/scenarios/primitives.tsx` | the disabled-field edit counter (`locked`) and a quarter-track Slider click — two headless checks that could not fail before |
+| `apps/playground/src/scenarios/primitives-advanced.tsx` | the radio click starts on the second row — the first-row click asserted the value it already had |
 | `apps/playground/README.md` | a "the same five in a real window" subsection under the Tier 1 section (what each twin proves), and the live id count |
 | `COMPONENTS.md` | the Button/Toggle/Input/Checkbox/Switch/Select/Slider/Progress/Meter/Skeleton/Tooltip/Radio/Rating/Number/OTP rows cite the live twins |
 | `TODO.md` | the task ticked with the measured counts; progress/registry notes updated |
@@ -275,10 +277,18 @@ Null result, recorded: sending the six OTP digits in **one** `key("1 2 3 4 5 6")
 call also completes the code, so the per-step settle is realism, not a race
 guard. The paced form is kept.
 
-Two headless checks were strengthened because the mutations exposed them as
-unable to fail: `primitives-fields` now proves the refusal with `locked=0` **and**
-`name=atlas`, and `primitives-display` clicks a quarter of the track instead of
-asserting `0…100` after a centre click that returned the initial value.
+Three headless checks were strengthened because the mutations exposed them as
+unable to fail:
+
+- `primitives-fields` proves the refusal with `locked=0` **and** `name=atlas`
+  (the old `name=atlas` assertion passed with the field enabled);
+- `primitives-display` clicks a quarter of the track instead of asserting
+  `0…100` after a centre click that returned the initial value;
+- `primitives-choice` clicks the **second** radio row (the old first-row click
+  asserted `cadence=daily`, which was already the value); Down now expects
+  `never` and Up returns to `weekly`. Mutation: moving that click back to the
+  first row fails with `a click selects the second option: expected
+  "cadence=weekly", got "cadence=daily rating=0"`, exit `1`.
 
 Focused ids run: the four `live-primitives-*` and the five headless
 `primitives-*`.
