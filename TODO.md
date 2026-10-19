@@ -2002,6 +2002,16 @@ retired once both branches are one
       offline 843/843, full runtime 57 files / 798 green on the release-tag
       build.
 
+`[x]` `packages/primitives`: **an unlabelled `ScrollArea` was still a hover
+      trigger** — measured (2026-10-19): `renderScrollArea` spread the slot's
+      passive handlers unconditionally, so a `Tooltip` around an unlabelled area
+      painted its tip on hover — a hover-only, unnamed control with no
+      accessibility node, although `scroll-area.mdx` and the Tooltip trigger
+      table both say only a **labelled** area is a trigger. The spread and the
+      cloned `aria-description` are now gated on `named` (the rule the
+      role/name/tab stop already used); a labelled area still opens on hover and
+      `Tab`. 1 element + 1 runtime case, both directions proven (plan `638`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

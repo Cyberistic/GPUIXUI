@@ -61,7 +61,32 @@ const filled = () => (
   </Surface>
 );
 
+/** The same shape without a label: inert, so it must not become a trigger. */
+const unlabelled = () => (
+  <Surface>
+    <Tooltip content={TIP} side="bottom" testId="tip">
+      <ScrollArea testId="target" style={{ height: 120 }}>
+        <Box tone="card" style={{ width: 300, height: 60 }} />
+      </ScrollArea>
+    </Tooltip>
+  </Surface>
+);
+
 const tipPainted = (text: ReadonlyArray<string>): boolean => text.includes(TIP);
+
+it("does not make an unlabelled area a hover trigger", async () => {
+  // The bug guarded (plan 638): only a labelled area is a trigger, and both the
+  // ScrollArea and Tooltip pages say so. The passive spread was unconditional,
+  // so hovering this inert container painted a tip it could never open from the
+  // keyboard and that reached no accessibility node.
+  const runtime = await openWindow();
+  runtime.render(unlabelled());
+  runtime.hover("target");
+  expect(tipPainted(runtime.allText())).toBe(false);
+  expect(Option.isNone(a11yNode(runtime.a11y(), { role: "Region" }))).toBe(
+    true,
+  );
+});
 
 it("opens a Tooltip on hover over the region itself", async () => {
   // The region is 120 tall and its painted content only 60, so the centre is

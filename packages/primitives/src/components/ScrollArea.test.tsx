@@ -124,6 +124,30 @@ describe("ScrollArea", () => {
     );
   });
 
+  it("drops the slot contract when the area is unlabelled", () => {
+    // The bug guarded (plan 638): the passive spread was unconditional, so an
+    // unlabelled area — no role, no name, no tab stop — still took the hover
+    // handlers a `Tooltip` clones onto it and painted a hover-only tip. The
+    // role/name/tab stop are gated on `named`; the slot contract must be too.
+    const onMouseEnter = vi.fn();
+    const onMouseLeave = vi.fn();
+    const onMouseDown = vi.fn();
+    const area = renderScrollArea(
+      {
+        axis: "vertical",
+        "aria-description": "Scroll for newer entries",
+        onMouseEnter,
+        onMouseLeave,
+        onMouseDown,
+      },
+      testTheme,
+    );
+    expect(hostProp(area, "aria-description")).toStrictEqual(Option.none());
+    expect(hostHandler(area, "onMouseEnter")).toStrictEqual(Option.none());
+    expect(hostHandler(area, "onMouseLeave")).toStrictEqual(Option.none());
+    expect(hostHandler(area, "onMouseDown")).toStrictEqual(Option.none());
+  });
+
   it("composes the region's own focus and key handlers with the slot's", () => {
     // Forwarding must not replace the scroll rule: the region's own handler
     // runs first, then the slot's (the Button/Slider order).

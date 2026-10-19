@@ -145,14 +145,18 @@ export const renderScrollArea = (
   const name = Option.getOrUndefined(usableLabel(label));
   const named = name !== undefined;
   const ring = handlers.focused === true && named ? focusRing(theme) : {};
+  // Only a named area is a trigger (plan `638`): the slot's passive handlers and
+  // description belong to the focusable region, and an inert container that
+  // paints a hover-only tip would reach no accessibility node.
+  const slot = named ? passiveTriggerHandlers(props) : {};
   return (
     <div
-      {...passiveTriggerHandlers(props)}
+      {...slot}
       testId={testId}
       ref={handlers.ref}
       role={named ? "region" : undefined}
       aria-label={name}
-      aria-description={ariaName(props["aria-description"])}
+      aria-description={named ? ariaName(props["aria-description"]) : undefined}
       tabIndex={named ? 0 : undefined}
       onFocus={composeHandler(handlers.onFocus, props.onFocus)}
       onBlur={composeHandler(handlers.onBlur, props.onBlur)}

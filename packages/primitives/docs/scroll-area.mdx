@@ -175,7 +175,9 @@ tracker reports: `Tab` opens the tip, Escape or a click dismisses it while the
 region keeps focus, and the region still scrolls by keyboard (plan `610`).
 
 An **unlabelled** area has no role and no tab stop, so it is not a trigger
-either — label it first.
+either — label it first. Wrapping one in a `Tooltip` paints nothing: the area
+drops the slot's hover handlers and description with the rest of the trigger
+contract (plan `638`).
 
 ## Accessibility
 
