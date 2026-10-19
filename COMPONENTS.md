@@ -40,13 +40,15 @@ depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build: the focus
 rings are green after plan `590`, and the whole runtime suite — **53 files /
-743 tests** — passes after plan `597` corrected the published box model (a
+762 tests** — passes after plan `597` corrected the published box model (a
 plain `div` reports from its content origin, a `Button` from its border box;
 `paintBounds` is the opt-in correction), plan `598` corrected a scroller's
 own report (it slides by the scroll offset, so `paintBounds` is its visible
 box), and plan `599` replaced `Select`'s off-by-one `scrollIntoView` reveal with
 a measured `scrollTo`. Plan `602` closed the last focus-lifetime gap on this
-build (`RangeSlider`'s thumb ring). The remaining reporting limit is recorded in
+build (`RangeSlider`'s thumb ring), and plan `603` holds every focusable Tier 1
+control to `ring while focused / none after leaving` in one table. The remaining
+reporting limit is recorded in
 `docs/gpuix-capabilities.md` §4. The rows stay `wip` for the
 provenance reason above, not for a red suite. Reproduce it with:
 

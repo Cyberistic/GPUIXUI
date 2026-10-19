@@ -263,7 +263,9 @@ matrix passes after `settleFocus`. Because no blur arrives, a roving
 composite's event-tracked cursor is cleared by a sample that names none of its
 items (`useRovingFocus`), so a ring and an arrow walk cannot outlive focus
 (plan `601`); `RangeSlider`'s thumbs use the same hook rather than a private
-copy (plan `602`). Its `getElementBounds` reports a hybrid box
+copy (plan `602`), and `runtime/focus-loss.runtime.test.tsx` holds every
+focusable control to a ring while focused and none after leaving (plan `603`).
+Its `getElementBounds` reports a hybrid box
 — a plain `div` from its content origin, a `Button` from its border box — so
 the suites read `paintBounds` for the hosts that report the former, and the
 adapter's calibration case pins the model against a real hit-test (plan `597`).

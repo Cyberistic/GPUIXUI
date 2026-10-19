@@ -1550,6 +1550,19 @@ retired once both branches are one
       (plan `602`; offline 59 files / 820 tests, full runtime 53 files / 743
       tests green on the release-tag build).
 
+`[x]` `packages/primitives`: **the focus-lifetime class had no cross-control
+      guard** — three shipped defects were one class (a ring painted from state
+      only `onBlur` clears, on a build that sends none: plans `591`, `601`,
+      `602`), but the guard covered only the four composites that had it, so a
+      new hand-rolled state would ship green. `runtime/focus-loss.runtime.test.tsx`
+      now holds all 18 focusable Tier 1 controls to `ring while focused / none
+      after leaving`, each focused by a real gesture (Tab, or the press/key that
+      writes an event cursor), plus a seeded-`autoFocus` case for `useFocus`'s
+      clear. Removing `useRovingFocus`'s clear fails exactly the four composite
+      rows (and the five existing cases); removing `useFocus`'s clear fails the
+      seeded case. 25/25 in the file (plan `603`; offline 59 files / 820 tests,
+      full runtime 53 files / 762 tests green on the release-tag build).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

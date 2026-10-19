@@ -17,18 +17,34 @@
  *
  * Each case waits for the tracker's sample (`settleFocus`), because the clear
  * is a sample-driven effect and the tracker polls every 50 ms.
+ *
+ * The table at the bottom is the **focus-lifetime matrix** (plan `603`): every
+ * focusable Tier 1 control, not only the ones that had the bug, proves a ring
+ * while it holds focus and none after focus leaves.
  */
 
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
+import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
+import { IconButton } from "../src/components/IconButton.js";
+import { InfoTip } from "../src/components/InfoTip.js";
+import { Input } from "../src/components/Input.js";
+import { NumberField } from "../src/components/NumberField.js";
+import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
-import { RangeSlider } from "../src/components/Slider.js";
+import { ScrollArea } from "../src/components/ScrollArea.js";
+import { Select } from "../src/components/Select.js";
+import { RangeSlider, Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
+import { Switch } from "../src/components/Switch.js";
+import { Text } from "../src/components/Text.js";
+import { TextArea } from "../src/components/TextArea.js";
+import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
 import { isFocusRing, isWithin } from "../src/testing/index.js";
@@ -185,3 +201,186 @@ it("restarts a deferred radio walk from the tab stop, not the abandoned item", a
   runtime.keyDown("rg", "down");
   expect(focused(runtime)).toBe("rg-b");
 });
+
+it("clears a seeded autoFocus ring when focus leaves", async () => {
+  // Plan `591`: the runtime grants `autoFocus` on mount without dispatching
+  // `onFocus`, so the field's event state starts `true`. Only the tracker's
+  // sample can clear it on the release build (plan `603`, direction 1).
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        {before}
+        <Input testId="c" label="Name" autoFocus />
+      </Stack>
+    </Surface>,
+  );
+  await settleFocus();
+  expect(ringWithin(runtime, "c")).toBe(true);
+  await leave(runtime);
+  expect(ringWithin(runtime, "c")).toBe(false);
+  expect(ringCount(runtime)).toBe(1);
+});
+
+/** One row of the focus-lifetime matrix (plan `603`). */
+interface LifetimeCase {
+  readonly name: string;
+  readonly node: () => ReactElement;
+  /** A real gesture that focuses the control — Tab, or the control's own press. */
+  readonly focus: (runtime: Runtime) => void;
+}
+
+/** Tab twice: the first stop is the outside button, the second the control. */
+const tabIn = (runtime: Runtime): void => {
+  runtime.focusNext();
+  runtime.focusNext();
+};
+
+/**
+ * Every focusable Tier 1 control, in its smallest honest shape — the same set
+ * as `runtime/focus-ring.runtime.test.tsx` (plans `084`, `375`).
+ *
+ * A press is used where the control focuses a part programmatically on press
+ * (`Rating`, `ToggleGroup`, `RadioGroup`, `RangeSlider`): that is the gesture
+ * that writes an event cursor, so the row reproduces the class plan `602`
+ * fixed. The rest take focus with Tab, as a keyboard user would.
+ */
+const LIFETIME: ReadonlyArray<LifetimeCase> = [
+  {
+    name: "Button",
+    node: () => <Button testId="c">Save</Button>,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "IconButton",
+    node: () => <IconButton testId="c" icon="x" label="Close" />,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "Toggle",
+    node: () => <Toggle testId="c">Bold</Toggle>,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "Checkbox",
+    node: () => <Checkbox testId="c" label="Accept" />,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "Switch",
+    node: () => <Switch testId="c" label="On" />,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "Input",
+    node: () => <Input testId="c" label="Name" />,
+    focus: tabIn,
+  },
+  {
+    name: "TextArea",
+    node: () => <TextArea testId="c" label="Notes" />,
+    focus: tabIn,
+  },
+  {
+    name: "NumberField",
+    node: () => <NumberField testId="c" label="Count" />,
+    focus: tabIn,
+  },
+  {
+    name: "OTPField",
+    node: () => <OTPField testId="c" label="Code" />,
+    focus: tabIn,
+  },
+  {
+    name: "Select",
+    node: () => (
+      <Select
+        testId="c"
+        label="Fruit"
+        options={[{ value: "a", label: "Apple" }]}
+      />
+    ),
+    focus: tabIn,
+  },
+  {
+    name: "Rating",
+    node: () => <Rating testId="c" label="Score" />,
+    focus: (r) => r.keyDown("c", "right"),
+  },
+  {
+    name: "ToggleGroup",
+    node: () => (
+      <ToggleGroup
+        testId="c"
+        label="Align"
+        type="single"
+        options={[{ value: "l", label: "Left" }]}
+      />
+    ),
+    focus: (r) => r.click("c-l"),
+  },
+  {
+    name: "RadioGroup",
+    node: () => (
+      <RadioGroup
+        testId="c"
+        label="Size"
+        options={[{ value: "s", label: "Small" }]}
+      />
+    ),
+    focus: (r) => r.keyDown("c", "down"),
+  },
+  {
+    name: "CheckboxGroup",
+    node: () => (
+      <CheckboxGroup
+        testId="c"
+        label="Topics"
+        options={[{ value: "a", label: "Alpha" }]}
+      />
+    ),
+    focus: (r) => r.click("c-a"),
+  },
+  {
+    name: "Slider",
+    node: () => <Slider testId="c" label="Volume" />,
+    focus: tabIn,
+  },
+  {
+    name: "RangeSlider",
+    node: () => <RangeSlider testId="c" label="Band" />,
+    focus: (r) => r.click("c"),
+  },
+  {
+    name: "InfoTip",
+    node: () => <InfoTip content="A hint" label="More" testId="c" />,
+    focus: tabIn,
+  },
+  {
+    name: "ScrollArea",
+    node: () => (
+      <ScrollArea label="Log" testId="c" axis="vertical" style={{ height: 60 }}>
+        <Text>Line</Text>
+      </ScrollArea>
+    ),
+    focus: tabIn,
+  },
+];
+
+it.each(Arr.map(LIFETIME, (testCase) => [testCase.name, testCase] as const))(
+  "%s paints a ring while focused and none after focus leaves",
+  async (_name, testCase) => {
+    const runtime = await mount(
+      <Stack direction="row">
+        {before}
+        {testCase.node()}
+      </Stack>,
+    );
+    testCase.focus(runtime);
+    await settleFocus();
+    expect(ringWithin(runtime, "c")).toBe(true);
+    await leave(runtime);
+    expect(ringWithin(runtime, "c")).toBe(false);
+    expect(ringCount(runtime)).toBe(1);
+  },
+);
