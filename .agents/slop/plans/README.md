@@ -306,6 +306,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [637](./637-panel-action-figures.md) | The panel action's rationale figures have one owner | F | 394, 397, 399, 503, 619 | done |
 | [638](./638-field-adornment-glyph-fit.md) | The field's adornment holds the glyph it paints | F | 353, 358, 386, 517, 620, 624, 634 | done |
 | [641](./641-fit-bound-usability.md) | A fit bound that is no bound | F | 358, 521, 522, 532 | done |
+| [642](./642-elevation-shape-count.md) | A level the runtime half-paints | F | 018, 085, 369, 566, 641 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3347,6 +3348,17 @@ could be zero or negative, so a broken line or row also reported the correct
 icon or avatar as an `at-most` failure. All three now read the bound through
 `usableBound`; a usable bound still catches a real overflow, every shipped set
 passes unchanged and no value moves.
+
+Plan `642` closes the one count the elevation rules never held. The metric
+contract validated every shape a level carried and required `sm`/`md`/`lg` to
+hold at least one, but never capped the count, while the native runtime paints
+one shadow per element and `elevationShadow` reads the first entry. A copied
+theme with `elevation: { md: [a, b] }` returned `[]` from every check and
+silently painted only `a`; the shipped-only guard in `elevation.test.ts` never
+saw a consumer's level. Every level, the defined `overlay` included, is now
+held to `at-most 1` shape, a single-shape theme and every shipped set pass
+unchanged, and `elevationShadows` remains the web list. No colour, pair, floor,
+figure or shipped metric moves.
 
 ## How to use a plan
 
