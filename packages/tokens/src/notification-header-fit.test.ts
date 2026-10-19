@@ -128,6 +128,7 @@ describe("notification inbox holds its header", () => {
       borderWidth: { thin: 4, strong: 4 },
       dimensions: {
         keycapSize: 24,
+        toastToneBarWidth: 4,
         calendarCellSize: 28,
         notificationPanelMaxHeight: 343,
       },

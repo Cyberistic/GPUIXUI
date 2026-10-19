@@ -694,7 +694,9 @@ spacing step, radius, type size or dimension the renderer casts to a 32-bit
 float, ship a zero or negative surface dimension or a negative border width —
 both walked from the theme's own group, so a member a copied style adds is held
 too, and a zero `thin` is a borderless design — ship a non-finite motion timing or a cubic-bezier easing the runtime
-cannot interpolate, leave the largest avatar a rounded square, or a presence dot
+cannot interpolate, ship a fixed mark below the theme's own hairline
+(`toastToneBarWidth`, `notificationUnreadDotSize`, `carouselIndicatorSize` and
+`avatarPresenceDotSize`, beside the timeline marker that reads its rail), leave the largest avatar a rounded square, or a presence dot
 larger than half the smallest avatar the theme carries — `full` and the dot read
 the theme's own largest and smallest avatar, not the shipped `lg`/`xs` — shrink a
 higher elevation level's feather below the level under it, or hand

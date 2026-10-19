@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 278/352
+`[x]` `[████████░░]` 279/353
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2342,6 +2342,13 @@ contract validated every shape in a level and required one, but never capped the
 count, so a copied theme with two shapes returned `[]` from every check while
 `elevationShadow` painted only the first; every level now holds at most one
 shape, every shipped set passes unchanged and no value moves (plan 642)
+`[x]` Hold every fixed mark to a stroke that paints — the Toast's tone bar, the
+inbox's unread dot, a carousel indicator and an avatar's presence dot were only
+`positive`, so `toastToneBarWidth: 0.1` returned `[]` from every check while
+painting a sub-hairline smear; each is now at least the theme's own hairline
+(`borderWidth.thin`), the rule the timeline marker already applies to its rail,
+a zero or non-finite mark keeps its single `positive` diagnostic, and every
+shipped set passes unchanged (plan 643)
 
 ## Phase C — Tier 1–2 components
 

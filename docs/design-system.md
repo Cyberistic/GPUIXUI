@@ -255,7 +255,11 @@ smallest avatar the theme carries. A notification inbox is 320px wide and 380px
 tall at most, its scrolling list holds 280px, and its unread marker is 6px — the
 panel contains its header and the list, and the list holds one row. A timeline's event dot is
 8px in a 16px column — at least the rail's width and no wider than the column
-that centres it. A date trigger is 220px
+that centres it. The other fixed marks — the Toast's tone bar, the inbox's
+unread dot, a carousel indicator and an avatar's presence dot — are at least the
+theme's own hairline (`borderWidth.thin`): a mark thinner than the smallest
+stroke a border may paint does not read, while a borderless theme keeps its
+positive mark. A date trigger is 220px
 wide and holds its insets, gap, `sm` disclosure icon and one `label` glyph; its
 calendar grid is seven 34px cells (238px) before the popover's padding, so it is
 content-sized, not an `overlayWidth` surface. A dialog's and a drawer's smallest

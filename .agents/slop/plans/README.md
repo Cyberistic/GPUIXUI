@@ -307,6 +307,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [638](./638-field-adornment-glyph-fit.md) | The field's adornment holds the glyph it paints | F | 353, 358, 386, 517, 620, 624, 634 | done |
 | [641](./641-fit-bound-usability.md) | A fit bound that is no bound | F | 358, 521, 522, 532 | done |
 | [642](./642-elevation-shape-count.md) | A level the runtime half-paints | F | 018, 085, 369, 566, 641 | done |
+| [643](./643-mark-stroke-floor.md) | A mark thinner than the hairline | F | 332, 353, 556, 598, 601, 604, 636 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3359,6 +3360,15 @@ saw a consumer's level. Every level, the defined `overlay` included, is now
 held to `at-most 1` shape, a single-shape theme and every shipped set pass
 unchanged, and `elevationShadows` remains the web list. No colour, pair, floor,
 figure or shipped metric moves.
+
+Plan `643` closes the last family of fixed marks without a stroke floor. The
+timeline marker already read the rail it marks, but the Toast's tone bar, the
+inbox's unread dot, a carousel indicator and an avatar's presence dot were only
+`positive`, so `toastToneBarWidth: 0.1` returned `[]` from every check while
+painting a sub-hairline smear. Each now holds at least the theme's own hairline
+(`borderWidth.thin`), a zero or non-finite mark keeps its single `positive`
+diagnostic, a borderless theme invents no bound, and every shipped set passes
+unchanged. No colour, pair, floor, figure or other metric moves.
 
 ## How to use a plan
 

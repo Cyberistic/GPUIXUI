@@ -82,11 +82,11 @@ const dimensionFailures = (theme: Theme): ReadonlyArray<MetricFailure> =>
   themeMetricFailures(theme).filter(({ group }) => group === "dimensions");
 
 /**
- * A 12px border trips the control, keycap, calendar and timeline rules, so a
- * case that isolates a fixed surface starts from a coherent theme rather than
- * from the shipped density. The border is deliberately thicker than the slack
- * between each bound and its chrome, which is what makes the missing term
- * observable at all.
+ * A 12px border trips the control, keycap, calendar, timeline and fixed-mark
+ * rules, so a case that isolates a fixed surface starts from a coherent theme
+ * rather than from the shipped density. The border is deliberately thicker than
+ * the slack between each bound and its chrome, which is what makes the missing
+ * term observable at all.
  */
 const bordered = (overrides: Partial<Dimensions> = {}): Theme =>
   extendTheme(getTheme("light"), {
@@ -95,13 +95,19 @@ const bordered = (overrides: Partial<Dimensions> = {}): Theme =>
       controlHeight: { sm: 48, md: 52, lg: 56 },
       rowHeight: 56,
     },
+    // A 12px hairline is the stroke every fixed mark must reach (plan 643).
+    avatarSize: { xs: 24, sm: 26, md: 32, lg: 40 },
     dimensions: {
       keycapSize: 40,
       calendarCellSize: 48,
       timelineMarkerSize: 12,
-      // The 12px border, 48px `sm` control and the dismiss control put the
-      // Toast's own bound at 150, so the fixture's card must rise above it.
-      toastWidth: 160,
+      toastToneBarWidth: 12,
+      notificationUnreadDotSize: 12,
+      carouselIndicatorSize: 12,
+      avatarPresenceDotSize: 12,
+      // The 12px border, bar, 48px `sm` control and dismiss control put the
+      // Toast's own bound at 162, so the fixture's card must rise above it.
+      toastWidth: 200,
       // The 12px border and 48px `sm` control put the inbox's own bound at 388,
       // so the fixture's panel must rise above the shipped 380.
       notificationPanelMaxHeight: 400,
@@ -261,7 +267,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "toastWidth",
         rule: "at-least",
         actual: 80,
-        bound: 153,
+        bound: toastBound(theme),
       },
     ]);
   });
@@ -288,7 +294,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "notificationPanelWidth",
         rule: "at-least",
         actual: 50,
-        bound: 74,
+        bound: panelWidthBound(theme),
       },
     ]);
   });
@@ -311,6 +317,7 @@ describe("fixed surfaces fit their own border", () => {
       borderWidth: { thin: 4, strong: 4 },
       dimensions: {
         keycapSize: 24,
+        toastToneBarWidth: 4,
         dialogWidthSm: 88,
         dialogWidthMd: 200,
         dialogWidthLg: 300,

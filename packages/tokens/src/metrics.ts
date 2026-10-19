@@ -481,6 +481,20 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
 };
 
 /**
+ * The fixed marks a theme owns, beside the timeline marker that already reads
+ * the rail it marks: the Toast's tone bar, the inbox's unread dot, a carousel
+ * indicator and an avatar's presence dot. A mark below the theme's own hairline
+ * is thinner than the smallest stroke a border may paint; the carousel's active
+ * mark and the timeline marker have their own bounds.
+ */
+const fixedMarks = [
+  "toastToneBarWidth",
+  "notificationUnreadDotSize",
+  "carouselIndicatorSize",
+  "avatarPresenceDotSize",
+] as const satisfies ReadonlyArray<keyof typeof dimensions>;
+
+/**
  * Every numeric rule a theme misses.
  *
  * The six size ladders — density's two, `spacing`, `radius`, `iconSize` and
@@ -533,7 +547,11 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   day cell fits the smallest control, a time segment holds two body digits
  *   (`HH`/`MM`), at a 0.65em tabular advance rounded up to a pixel, and an
  *   avatar's presence dot is at most half the smallest avatar the theme carries.
- *   The menu's minimum width, the Toast card and the notification inbox follow
+ *   A fixed mark — the Toast's tone bar, the inbox's unread dot, a carousel
+ *   indicator or an avatar's presence dot — is at least the theme's own hairline
+ *   (`borderWidth.thin`), because a mark thinner than the smallest stroke a
+ *   border may paint does not read; the timeline marker already reads the rail
+ *   it marks. The menu's minimum width, the Toast card and the notification inbox follow
  *   the same content-box rule: each holds its row or card chrome plus its own two
  *   borders, the Toast card counting its `toastToneBarWidth` tone bar and the
  *   square `sm` dismiss control it always paints after one `spacing.lg` gap
@@ -809,6 +827,19 @@ export function themeMetricFailures(
     // member in the order the theme holds it.
     ...scaleSteps(dimensions).flatMap(([member, value]) =>
       positive("dimensions", member, value),
+    ),
+    // A fixed mark the theme owns is a stroke the runtime paints. The timeline
+    // marker already reads the rail it marks (plan 604); the Toast's tone bar,
+    // the inbox's unread dot, a carousel indicator and an avatar's presence dot
+    // are the same kind of mark and were only positive, so a tenth of a pixel
+    // passed every check. A mark below the theme's own hairline is thinner than
+    // the smallest stroke a border may paint. `usableBound` leaves a zero,
+    // negative or non-finite value to the `positive` rule, so one bad mark keeps
+    // one diagnostic (plans 641 and 643).
+    ...fixedMarks.flatMap((member) =>
+      usableBound(dimensions[member])
+        ? atLeast("dimensions", member, dimensions[member], borderWidth.thin)
+        : [],
     ),
     // The overlay scrolls a list of rows, so its maximum height must fit one
     // complete row; a viewport shorter than a row clips every option.

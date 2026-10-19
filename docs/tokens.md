@@ -1067,7 +1067,7 @@ every density.
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
 | `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, its `toastToneBarWidth` tone bar, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
-| `dimensions.toastToneBarWidth` | 3 | the tone bar the Toast paints down its leading edge; charged inside `toastWidth` |
+| `dimensions.toastToneBarWidth` | 3 | the tone bar the Toast paints down its leading edge; charged inside `toastWidth` and at least `borderWidth.thin` |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
@@ -1078,7 +1078,7 @@ every density.
 | `dimensions.drawerHeightMd` | 320 | default bottom drawer height |
 | `dimensions.drawerHeightLg` | 420 | tallest bottom drawer |
 | `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
-| `dimensions.carouselIndicatorSize` | 8 | inactive carousel indicator |
+| `dimensions.carouselIndicatorSize` | 8 | inactive carousel indicator; at least `borderWidth.thin` |
 | `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
 | `dimensions.timelineMarkerSize` | 8 | event dot on a timeline rail; at least the rail's width (`borderWidth.thin`) |
 | `dimensions.timelineMarkerColumnWidth` | 16 | column the dot and its connector sit in; at least the marker |
@@ -1087,11 +1087,11 @@ every density.
 | `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow and each holds the `sm` chrome and two borders |
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least 1.3 `body` ems (two tabular digits), rounded up to a pixel |
-| `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
+| `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at least `borderWidth.thin` and at most half the smallest avatar the theme carries |
 | `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title inside its two borders |
 | `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum plus its header (its padding, one `sm` action and its own rule) and the panel's two borders |
 | `dimensions.notificationListMaxHeight` | 280 | notification list scroll height; held to one `density.rowHeight` |
-| `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row |
+| `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row; at least `borderWidth.thin` |
 
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
@@ -1144,7 +1144,12 @@ elongate but never shrink below its idle dot,
 and a message viewport holds at least one row. A timeline's marker is the same
 kind of fixed mark: its dot is at least the `borderWidth.thin` connector it
 sits on and no wider than the column that centres it, so a brand can size the
-rail's mark without painting it outside the rail. A calendar day is a control, so
+rail's mark without painting it outside the rail. The other fixed marks the
+theme owns — the Toast's tone bar, the inbox's unread dot, a carousel indicator
+and an avatar's presence dot — read the same hairline: each is at least
+`borderWidth.thin`, because a mark below the smallest stroke a border may paint
+does not read, while a zero or negative value keeps the `positive` rule's single
+diagnostic (plan `643`). A calendar day is a control, so
 its cell fits the theme's own small control; a time segment holds two body
 digits (`HH`/`MM`), so it is at least 1.3 `body` ems wide — two tabular digits at
 a 0.65em advance, rounded up to a whole pixel, and a theme that names a face with
@@ -2441,7 +2446,12 @@ typography.body.fontSize + fieldAdornmentSize`, its padding, the leading `md`
 icon, the gap, one query glyph, the same gap and the trailing
 `fieldAdornmentSize` action — and the larger of the two bounds
 is the rule, so lowering `chipMinWidth` cannot free a field that can no longer
-show its own query (plan `624`). At the shipped metrics the query row needs
+show its own query (plan `624`). A fixed mark the theme owns — the Toast's tone
+bar, the inbox's unread dot, a carousel indicator or an avatar's presence dot —
+is at least the theme's own hairline (`borderWidth.thin`), the rule the timeline
+marker already applies to its rail, because a mark below the smallest stroke a
+border may paint does not read; a zero or non-finite mark keeps the `positive`
+rule's one diagnostic (plan `643`). At the shipped metrics the query row needs
 78px, the chip 102px, and the shipped 200px field clears the larger; an
 overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
 viewport shorter than a row clips every option; a cubic-bezier easing must be
