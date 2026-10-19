@@ -34,6 +34,19 @@ export const isHorizontalSide = (side: LayerSide): side is HorizontalSide =>
 export const FLOATING_MARGIN = 8;
 
 /**
+ * How often an open floating layer samples its trigger's box.
+ *
+ * GPUix 0.10.0 has no `onLayout` and no trigger-resize event. The runtime
+ * re-anchors a layer when its trigger moves, but the side and cap are the
+ * wrapper's decision, so a layer left open across a layout change keeps the
+ * decision for the old box (measured: a trigger moved from `y 712` to `y 12`
+ * left the tip at `13…37`, over the trigger; plan `645`). Sampling on this
+ * cadence is the only signal the runtime provides. A closed layer must not
+ * sample at all (the same rule as the window observer, plan `609`).
+ */
+export const FLOATING_FOLLOW_MS = 100;
+
+/**
  * Which of two sides keeps the layer off its trigger.
  *
  * The preferred side wins when the layer fits there, or when it fits nowhere

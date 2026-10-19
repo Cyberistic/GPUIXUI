@@ -338,6 +338,14 @@ still clamps without flipping, which is why the decision has to be ours
 no placement to correct — and reads the current size when it opens, so opening
 after a resize still places the first frame correctly (plan `609`).
 
+**The trigger's own box is followed too.** GPUix has no `onLayout`, and the
+runtime re-anchors the list without re-deciding the side the wrapper chose. The
+wrapper samples the trigger on the same 100 ms cadence while the list is open,
+so a layout change refreshes the side, the cap and `minWidth`. Measured
+(plan `645`): a trigger moved from `y 712` to `y 13` while its list was open left
+the list at `y 13..79` over the trigger at `y 13..47`; it now opens below. The
+sampler sleeps while the list is closed.
+
 ## Style by state
 
 `style` takes an object or a callback over `SelectState` — the runtime's own
@@ -384,12 +392,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **Options are data.** No rich option content and no compound escape hatch in
   the public API; use `RadioGroup` for those. A group is a heading and a run of
   options, not a custom row.
-- **The window is observed while the list is open; a trigger's own width is
-  measured.** `useWindowSize` follows a resize while the list is open, so the
-  side, the cap and the trigger's measured width update; it sleeps while
-  closed, and opening reads the current size (plan `609`). A trigger whose width
-  changes without a resize or a prop change (a sibling reflowing, say) keeps the
-  old `minWidth` until the list reopens.
+- **The window and the trigger are both observed while the list is open.** A
+  resize re-decides the side and the cap; a trigger that moves or resizes in a
+  layout change refreshes the side, the cap and `minWidth` on the same 100 ms
+  cadence (plan `645`). Both samplers sleep while the list is closed; opening
+  reads the current geometry, so the first frame is placed correctly.
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
   room, the list is capped to the roomier one and scrolls. An explicit

@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 154/154
+`[x]` `[████████████]` 155/155
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2072,6 +2072,17 @@ retired once both branches are one
       measured (the old wiring failed `x 5/7/9 ≥ 12`); full runtime 58 files /
       809 tests green, offline 860. Docs and inventory record the rule (plan
       `644`).
+
+`[x]` `packages/primitives`: **a floating layer kept the side chosen for its
+      trigger's old box** — measured (2026-10-19): a `Tooltip` and a `Select`
+      whose trigger moved from `y 712` to `y 12` while open painted over it
+      (`13…37` and `13…79`). GPUix has no `onLayout`; the wrapper only followed
+      the window (plan `604`). A shared `useFloatingFollow` samples the trigger
+      every 100 ms while open and sleeps while closed; both wrappers refresh
+      their side, cap and alignment from the new box. 3 cases in
+      `runtime/floating-resize.runtime.test.tsx`, both directions proven
+      (offline 60 files / 860 tests, full runtime 58 files / 812 tests; plan
+      `645`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

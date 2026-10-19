@@ -27,6 +27,7 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import type { Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
+import { FLOATING_FOLLOW_MS } from "../core/floating.js";
 import {
   initValueState,
   setValue,
@@ -466,6 +467,29 @@ export const useControlState = <Value>(
       if (applied.notify) onValueChange?.(next);
     },
   };
+};
+
+/**
+ * Follow a floating trigger's box while its layer is open.
+ *
+ * GPUix re-anchors an open layer when its trigger moves, but the wrapper's side
+ * and cap are decisions about the **old** box, and 0.10.0 has no `onLayout` to
+ * invalidate them (plan `645`). The latest `measure` callback is kept in a ref so
+ * a caller may pass an inline closure; the interval runs only while `active`,
+ * and a closed layer has no placement to correct (the window observer's rule,
+ * plan `609`).
+ */
+export const useFloatingFollow = (
+  active: boolean,
+  measure: () => void,
+): void => {
+  const latest = useRef(measure);
+  latest.current = measure;
+  useEffect(() => {
+    if (!active) return;
+    const id = setInterval(() => latest.current(), FLOATING_FOLLOW_MS);
+    return () => clearInterval(id);
+  }, [active]);
 };
 
 /**

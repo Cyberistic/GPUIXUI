@@ -32,6 +32,7 @@ export {
   availableWidth,
   decideHorizontalSide,
   decideVerticalSide,
+  FLOATING_FOLLOW_MS,
   FLOATING_MARGIN,
   isHorizontalSide,
   resolveAlign,

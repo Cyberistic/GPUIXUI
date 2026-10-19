@@ -105,6 +105,7 @@ import {
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
+  useFloatingFollow,
   useFocus,
   type FocusState,
   type StateStyle,
@@ -693,6 +694,14 @@ interface TriggerBox {
   readonly bottom: number;
 }
 
+/** Whether a follow tick found the same box, so the state can stay put. */
+const sameTriggerBox = (a: TriggerBox, b: TriggerBox): boolean =>
+  a.width === b.width &&
+  a.left === b.left &&
+  a.right === b.right &&
+  a.top === b.top &&
+  a.bottom === b.bottom;
+
 /** A list of options in a popover. */
 export const Select = (props: SelectProps): ReactElement => {
   const theme = useTheme();
@@ -807,42 +816,42 @@ export const Select = (props: SelectProps): ReactElement => {
     },
     [renderer, theme],
   );
-  useLayoutEffect(() => {
+  const measure = useCallback(() => {
     const id = trigger.current;
     if (id === null) return;
     const bounds = renderer?.getElementBounds?.(id);
     if (bounds === null || bounds === undefined || bounds.width <= 0) return;
     const painted = paintedBox(bounds, triggerChrome);
-    setTriggerBox({
+    const nextBox: TriggerBox = {
       width: painted.width,
       left: painted.x,
       right: painted.x + painted.width,
       top: painted.y,
       bottom: painted.y + painted.height,
-    });
+    };
+    // A follow tick must not re-render an unchanged trigger (plan `645`).
+    setTriggerBox((current) =>
+      current !== undefined && sameTriggerBox(current, nextBox)
+        ? current
+        : nextBox,
+    );
     const contentId = open ? content.current : null;
     const contentBounds =
       contentId === null ? undefined : renderer?.getElementBounds?.(contentId);
-    setListWidth(
+    const nextWidth =
       contentBounds === null ||
-        contentBounds === undefined ||
-        contentBounds.width <= 0
+      contentBounds === undefined ||
+      contentBounds.width <= 0
         ? undefined
-        : paintedBox(contentBounds, contentChrome).width,
-    );
-  }, [
-    renderer,
-    open,
-    props.size,
-    props.fullWidth,
-    props.invalid,
-    props.disabled,
-    props.triggerStyle,
-    triggerChrome,
-    contentChrome,
-    viewport.height,
-    viewport.width,
-  ]);
+        : paintedBox(contentBounds, contentChrome).width;
+    setListWidth((current) => (current === nextWidth ? current : nextWidth));
+  }, [renderer, open, triggerChrome, contentChrome]);
+  useLayoutEffect(() => {
+    measure();
+  }, [measure, viewport.height, viewport.width]);
+  // The window observer above covers a resize; this follows the trigger itself
+  // across a layout change, which 0.10.0 cannot report (plans `604`, `645`).
+  useFloatingFollow(open, measure);
   const counts = selectRowCounts(props.options);
   const request = Option.map(
     Option.fromNullishOr(triggerBox),

@@ -20,6 +20,12 @@
  * 100 ms observer for its whole mounted life — measured, a closed select asked
  * `getWindowSize` 4 times in 450 ms with nothing to place. The last case holds
  * the control to the same rule: no interval while closed, sampling while open.
+ *
+ * **Plan `645`:** the window is not the only placement input. A trigger that
+ * moves while its layer is open keeps the side chosen for the old box: measured,
+ * a `Tooltip` and a `Select` whose trigger moved from `y 712` to `y 12` painted
+ * at `13…37`/`13…79`, over a trigger at `12…36`/`13…47`. Both wrappers now
+ * sample the trigger on the same 100 ms cadence while open, and sleep closed.
  */
 
 import { expect, it } from "vitest";
@@ -27,7 +33,7 @@ import * as Option from "effect/Option";
 import { Box } from "../src/components/Box.js";
 import { Select } from "../src/components/Select.js";
 import { Tooltip } from "../src/components/Tooltip.js";
-import { FLOATING_MARGIN } from "../src/core/index.js";
+import { FLOATING_FOLLOW_MS, FLOATING_MARGIN } from "../src/core/index.js";
 import type { Bounds, Runtime } from "../src/testing/index.js";
 import { Surface, WINDOW, openWindow, settleFocus, sleep } from "./fixture.js";
 
@@ -56,6 +62,14 @@ const settleWindow = async (runtime: Runtime): Promise<void> => {
   // A re-wrapped tip is measured in a layout effect, whose `setBox` schedules
   // the render that uses the new height (the side decision).
   await sleep(50);
+  runtime.flush();
+};
+
+/** Let one follow tick measure, re-place and repaint (plan `645`). */
+const settleFollow = async (runtime: Runtime): Promise<void> => {
+  await sleep(FLOATING_FOLLOW_MS + 80);
+  runtime.flush();
+  await sleep(30);
   runtime.flush();
 };
 
@@ -203,5 +217,100 @@ it("a closed Select does not sample the window", async () => {
   await sleep(20);
   const reclosedAt = calls;
   await sleep(WINDOW_SETTLE_MS + 100);
+  expect(calls - reclosedAt).toBe(0);
+});
+
+it("follows a Tooltip trigger that moves while the tip is open", async () => {
+  const runtime = await openWindow();
+  const view = (offset: number) => (
+    <Surface>
+      {belowSpacer(offset)}
+      <Tooltip content="A hint" side="top" testId="tip">
+        <div testId="target" tabIndex={0} style={{ width: 120, height: 24 }} />
+      </Tooltip>
+    </Surface>
+  );
+  runtime.render(view(700));
+  runtime.hover("target");
+  const firstTarget = boundsOf(runtime, "target");
+  const firstTip = boundsOf(runtime, "tip");
+  expect(firstTip.y + firstTip.height).toBeLessThanOrEqual(firstTarget.y + 1);
+
+  // A layout change moves the trigger to the top edge, where a top-side tip has
+  // no room. The runtime re-anchors the layer; the wrapper must re-decide the
+  // side or the tip covers its own trigger (measured before the fix: 13…37 over
+  // a trigger at 12…36).
+  runtime.render(view(0));
+  await settleFollow(runtime);
+  const target = boundsOf(runtime, "target");
+  const tip = boundsOf(runtime, "tip");
+  expect(tip.y).toBeGreaterThanOrEqual(target.y + target.height - 1);
+});
+
+it("follows a Select trigger that moves while the list is open", async () => {
+  const runtime = await openWindow();
+  const view = (offset: number) => (
+    <Surface>
+      {belowSpacer(offset)}
+      <Select
+        testId="sel"
+        label="Fruit"
+        options={[
+          { value: "apple", label: "Apple" },
+          { value: "pear", label: "Pear" },
+        ]}
+      />
+    </Surface>
+  );
+  runtime.render(view(700));
+  runtime.click("sel-trigger");
+  runtime.flush();
+  const firstTarget = boundsOf(runtime, "sel-trigger");
+  const firstList = boundsOf(runtime, "sel-content");
+  expect(firstList.y + firstList.height).toBeLessThanOrEqual(firstTarget.y + 1);
+
+  runtime.render(view(0));
+  await settleFollow(runtime);
+  const target = boundsOf(runtime, "sel-trigger");
+  const list = boundsOf(runtime, "sel-content");
+  // A list is never painted over its own trigger; at the top edge it opens below.
+  expect(list.y).toBeGreaterThanOrEqual(target.y + target.height - 1);
+});
+
+it("samples a trigger only while its layer is open", async () => {
+  const runtime = await openWindow();
+  const read = runtime.renderer.getElementBounds.bind(runtime.renderer);
+  let calls = 0;
+  runtime.renderer.getElementBounds = (id) => {
+    calls += 1;
+    return read(id);
+  };
+  runtime.render(
+    <Surface>
+      <Tooltip content="A hint" testId="tip">
+        <div testId="target" tabIndex={0} style={{ width: 120, height: 24 }} />
+      </Tooltip>
+    </Surface>,
+  );
+  // The closed wrapper still measures its root once, so a controlled tip can
+  // open from code with a real trigger box (plan 347).
+  expect(calls).toBeGreaterThan(0);
+  const closedAt = calls;
+  await sleep(2 * FLOATING_FOLLOW_MS + 100);
+  expect(calls - closedAt).toBe(0);
+
+  runtime.hover("target");
+  await sleep(FLOATING_FOLLOW_MS + 80);
+  runtime.flush();
+  const openAt = calls;
+  expect(openAt - closedAt).toBeGreaterThan(0);
+
+  runtime.keyDown("target", "escape");
+  runtime.flush();
+  // The close itself may schedule one last measurement; take the baseline once
+  // it has settled, then require a silent follow interval.
+  await sleep(2 * FLOATING_FOLLOW_MS + 100);
+  const reclosedAt = calls;
+  await sleep(2 * FLOATING_FOLLOW_MS + 100);
   expect(calls - reclosedAt).toBe(0);
 });

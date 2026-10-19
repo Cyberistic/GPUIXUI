@@ -160,6 +160,15 @@ the width cap all follow. Measured (plan `604`): before the subscription, a
 host reported a 250-high window, and a 1 258 px 60-word tip ignored a 300 px
 report. A long tip whose re-wrapped height no longer fits above now flips below.
 
+**The trigger's own box is followed too.** GPUix has no `onLayout`, and the
+runtime re-anchors an open layer without re-deciding the side the wrapper chose.
+The wrapper therefore samples the trigger on the same 100 ms cadence while the
+tip is open, so a layout change (a sidebar collapsing, a sibling reflowing) is
+a placement input like a window resize. Measured (plan `645`): a trigger moved
+from `y 712` to `y 12` while a top-side tip was open left the tip at `y 13..37`
+over a trigger at `y 12..36`; it now flips below. The sampler sleeps while the
+tip is closed.
+
 ## API
 
 | Prop | Type | Default | Consequence |

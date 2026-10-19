@@ -34,6 +34,7 @@
  */
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -64,7 +65,12 @@ import {
 import { paintedBox } from "../core/bounds.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { ariaName, mergeStyle, useControlState } from "./internal.js";
+import {
+  ariaName,
+  mergeStyle,
+  useControlState,
+  useFloatingFollow,
+} from "./internal.js";
 import { isTrackedFocus, useNativeFocus } from "./native-focus.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -316,6 +322,18 @@ interface TooltipBox {
   readonly tipLeft?: number;
 }
 
+/** Whether a measurement would change anything, so a follow tick can stay quiet. */
+const sameTooltipBox = (a: TooltipBox, b: TooltipBox): boolean =>
+  a.left === b.left &&
+  a.right === b.right &&
+  a.top === b.top &&
+  a.bottom === b.bottom &&
+  a.width === b.width &&
+  a.height === b.height &&
+  a.tipWidth === b.tipWidth &&
+  a.tipHeight === b.tipHeight &&
+  a.tipLeft === b.tipLeft;
+
 /** A short label shown when its trigger is hovered or focused. */
 export const Tooltip = (props: TooltipProps): ReactElement => {
   const theme = useTheme();
@@ -389,7 +407,7 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
    */
   const viewport = useWindowSize({ intervalMs: open ? 100 : false });
   const [box, setBox] = useState<TooltipBox | undefined>(undefined);
-  useLayoutEffect(() => {
+  const measure = useCallback(() => {
     // The trigger is measured while the tip is closed too: a controlled tip can
     // open with no pointer or focus event, and its side must come from the
     // trigger's real box (plan 347).
@@ -416,7 +434,7 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
       rawTip === null || rawTip === undefined
         ? undefined
         : paintedBox(rawTip, tooltipStyle(theme));
-    setBox({
+    const next: TooltipBox = {
       left: bounds.x,
       right: bounds.x + bounds.width,
       top: bounds.y,
@@ -432,18 +450,18 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
           ? undefined
           : tipBounds.height,
       tipLeft: tipBounds?.x,
-    });
-  }, [
-    renderer,
-    open,
-    props.content,
-    props.style,
-    theme,
-    // A resize re-wraps the tip when its width cap changes, so its height must
-    // be measured again before the side decision uses it (plan `604`).
-    viewport.height,
-    viewport.width,
-  ]);
+    };
+    // A follow tick must not re-render an unchanged layer (plan `645`).
+    setBox((current) =>
+      current !== undefined && sameTooltipBox(current, next) ? current : next,
+    );
+  }, [renderer, open, props.content, props.style, theme]);
+  useLayoutEffect(() => {
+    measure();
+  }, [measure, viewport.height, viewport.width]);
+  // A resize re-wraps the tip when its width cap changes, and a layout change
+  // moves the trigger; both must reach the side decision (plans `604`, `645`).
+  useFloatingFollow(open, measure);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",
     onSome: (measured) => {
