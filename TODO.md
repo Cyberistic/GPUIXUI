@@ -80,7 +80,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       observed and reverted; registry `83 → 84`; re-verified focused
       `--only live-qr` green after the closing ledger edit.
 
-`[~]` Harden the **live InlineEdit blur entry** per plan `600`: the plan-`599`
+`[x]` Harden the **live InlineEdit blur entry** per plan `600`: the plan-`599`
       merge gate's only failure (`a click away commits the open live draft`,
       `name=live commits=1`) came from a coordinate click 200 px into a
       **content-sized** display; when it missed, no editor opened and the Escape

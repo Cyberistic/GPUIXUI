@@ -97,9 +97,10 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**). The live suite **last ran in full at 75/75**
 (`live-report.json`, **1697 checks**, exit `0`) on 2026-10-19, the merge/release
 gate on the final branch; it covered every live scenario registered at that
-point. Every live twin added since — through plan `594`'s `live-panel-nested`
-and `live-floating` — is green in a **focused** run, so the registry now lists
-**83** scenarios and the next merge gate must run all of them; do not read the
+point. Every live twin added since — `live-panel-nested`/`live-floating`
+(plan `594`) and `live-qr` (plan `599`) — is green in a **focused** run, so the
+registry now lists
+**84** scenarios and the next merge gate must run all of them; do not read the
 `75/75` total as covering them. Both `host` lines carry the pins. The 0.10.0 box
 contract (plan `529` §6.3) — bounds report a content origin and a borderless
 size — is what every geometry check now asserts.

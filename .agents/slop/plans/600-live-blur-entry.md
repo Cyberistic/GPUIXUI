@@ -129,3 +129,21 @@ checks); the gate is **84/84**, exit `0`.
 - Three green focused runs and a green full gate are recorded in §8.
 - `COMPONENTS.md`'s live-suite paragraph, the README, `PLAN.md` and `TODO.md`
   carry the gate total.
+
+## 8. Measured record
+
+**Result:** `live-tier2-editing` is **31 checks** (three focus asserts replace
+two `boxOf` existence checks), green in three consecutive focused runs after
+the reverts, exit `0`. The headless control `tier2-editing` stays green with
+its 48 checks. `nub run check`, `nub run lint` and `nub run test` pass (all
+workspace suites; playground 417 tests).
+
+| # | Mutation | Observed |
+| - | -------- | -------- |
+| M1 | the blur block's entry click targets `ws-elsewhere` | "the blur target edit owns native focus": expected `"ws-name"`, got `"ws-elsewhere"` (exit `1`) |
+| M2 | `key("end")` removed | **null result** — green: a freshly focused input already places the caret at the end, so `z` still appends. The key stays as an explicit statement of the append |
+| M3 | the click away removed | "the click away moves native focus": expected `"ws-elsewhere"`, got `"ws-name"` (exit `1`) |
+
+The gate failure that started this — `a click away commits the open live draft:
+expected "name=livez commits=2", got "name=live commits=1"` — is the state M1
+reproduces (an entry that never opened an editor).

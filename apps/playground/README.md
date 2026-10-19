@@ -1429,7 +1429,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 83 scenarios. `smoke:live` opens
+live registry lists 84 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -2089,9 +2089,9 @@ narrower. Each deviation is deliberate and measured:
   `559`'s `live-tree`, plan `565`'s two tab-strip twins and the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
   drag, and the shipped Tier 2 scroller/command paths) are all included.
-  The registry is **83** after the focused twins since that gate (plans
-  `591`–`594`); the full suite is a **merge/release gate** and the next run must
-  cover all 83 —
+  The registry is **84** after the focused twins since that gate (plans
+  `591`–`594` and `599`); the full suite is a **merge/release gate** and the next
+  run must cover all 84 —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
