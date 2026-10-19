@@ -244,3 +244,51 @@ STOP and report (do not improvise, do not weaken a check) if:
 - Four mutation proofs recorded and reverted; no `--all` run while iterating.
 - `nub run check`, `nub run lint`, `nub run test` green.
 - Commit(s) on `agent/playground`, pushed to `origin/agent/playground`.
+
+## 9. Measured outcome (landed 2026-10-19)
+
+Focused ids run: `tier2-scroller`, `tier2-command`, `live-tier2-scroller`,
+`live-tier2-command` (4/4, exit `0`, three consecutive headless runs and two
+consecutive live runs).
+
+| Id | Checks | Notes |
+| -- | ------ | ----- |
+| `tier2-scroller` | 43 | shipped parts, token theme, offscreen |
+| `tier2-command` | 35 | shipped parts, token theme, offscreen |
+| `live-tier2-scroller` | 22 | real 1100×720 window, real wheel |
+| `live-tier2-command` | 14 | real window, real typing and keys |
+
+Full headless **103/103** (`3632` checks, 64 capabilities), exit `0`. Live
+registry `73 → 75`; no full live run (merge gate).
+
+**The plan's STOP condition 2 fired.** The shipped `MessageScroller` does not
+re-pin when the reader wheels back to the end. Measured in `tier2-scroller`:
+the offset reaches the bottom (`-1003`) with `pinned=false` and the affordance
+still painted. Cause: `MessageScrollerViewport.handleScroll` computes the
+distance from `renderer.getElementBounds(viewport.id)`, and 0.10.0 reports a
+scroller's own box shifted by its own scroll offset (plan `529` §6.3), so the
+distance never falls below the 24 px threshold. The check now asserts the
+measured behaviour (and will fail when the component is fixed); the defect is
+recorded cross-team in `TODO.md`, and the `COMPONENTS.md` row carries the
+limitation. A second defect was found in `CommandMenu`: closing leaves no focus
+owner because `CommandMenuInput`'s `autoFocus` is captured before the dialog
+records the opener (headless and live agree). `Home`/`End` are consumed by the
+native editor, so the palette's first/last branches never run (the `cmd-a`
+rule, plan `533`); both are asserted as measured and recorded cross-team.
+
+**Geometry note for future probes.** The "tail visible" check cannot compare the
+row against the scroller's reported box once it has scrolled. It uses the
+non-scrolling `MessageScroller` root plus the declared 240 px height. The same
+rule is already recorded for live scrollers (plan `556`); this plan re-measured
+it offscreen for a plain `overflowY: "scroll"` container.
+
+**Mutation proofs (each observed exit `1`, then reverted):**
+
+| # | Lever | Observed failure |
+| - | ----- | ---------------- |
+| M1 | a layout effect that scrolls to the end after an unpinned append | `an unpinned append does not yank the reader: expected -769 ± 1, got -923` |
+| M2 | viewport `height: 240 → 2400` (history shorter than the box) | `the last row starts visible: expected true, got false` |
+| M3 | `perform` no longer sets the consumer's `ran` state | `Enter ran the matching action: expected "ran=Save", got "ran=none"` |
+| M4 | `CommandMenuEmpty` not rendered | `an unmatched query paints the empty state: expected "No commands", got "none"` |
+| M5 | the live real-wheel step removed | `the live wheel moved toward older rows: expected true, got false` |
+

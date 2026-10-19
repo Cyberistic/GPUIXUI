@@ -60,14 +60,44 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 101/101 plans-and-harness
 
-`[~]` Close the **last two shipped Tier 2 consumer paths** per plan `581`:
-      `MessageScroller` and `CommandMenu` are the only shipped components with
-      no `tier2-*` scenario (the `message-scroller`/`live-scroller` probes mount
-      a local implementation, and so does `command-palette`), and the
-      message-scroller docs claim the playground mounts its example.
-      Deliverables: `tier2-scroller`, `tier2-command`, `live-tier2-scroller`,
-      `live-tier2-command`; focused runs, mutation proofs, `COMPONENTS.md`
-      evidence and the `tier2` capability row updated.
+`[x]` `[██████████]` 103/103 plans-and-harness
+
+`[x]` Close the **last two shipped Tier 2 consumer paths** per plan `581`:
+      `tier2-scroller` (43 checks) and `tier2-command` (35) mount the shipped
+      `MessageScroller` and `CommandMenu` through the published root and the
+      token theme; `live-tier2-scroller` (22) and `live-tier2-command` (14)
+      repeat them in the real 1100×720 window. Focused runs `4/4`, exit `0`;
+      full headless **103/103** (`3632` checks, 64 capabilities), exit `0`;
+      live registry `73 → 75`. Five mutation proofs observed and reverted:
+      a compensating scroll on an unpinned append fails the no-yank check
+      (`-923` vs `-769`), a viewport taller than the history fails the tail
+      check, a no-op `perform` fails `ran=Save`, removing `CommandMenuEmpty`
+      fails the empty-state check, and removing the live wheel fails the
+      live offset check. Two component defects found and recorded
+      cross-team below, and asserted as the measured behaviour.
+
+`[ ]` **Cross-team (defect):** `@gpuixui/components` **MessageScroller** never
+      re-pins when the reader wheels back to the end. `tier2-scroller` (plan
+      `581`) measured the offset reaching the bottom (`-1003`) with
+      `pinned=false` and the affordance still painted. Cause: the viewport's
+      `handleScroll` computes `tailBounds.y - (viewportBounds.y + height)`, and
+      0.10.0 reports a scroller's own box shifted by its own scroll offset
+      (plan `529` §6.3), so the distance never falls below the threshold once
+      scrolled. Fix: capture the viewport's rest box before the first
+      `scrollToEnd` and reuse it, or derive the distance from a non-scrolling
+      ancestor (`ref` on the root). Update `tier2-scroller`'s two
+      measured-defect checks to the fixed behaviour. Owner: `components`.
+
+`[ ]` **Cross-team (defect):** `@gpuixui/components` **CommandMenu** closing
+      leaves **no** focus owner instead of returning focus to the opener —
+      `tier2-command` and `live-tier2-command` both measured `focused=none`
+      (plan `581`). Cause: `CommandMenuInput`'s `autoFocus` takes native focus
+      in the same commit, before `useModalFocus` records the previous owner, so
+      the saved id is the input being destroyed. Fix: drop `autoFocus` (the
+      dialog's `initialFocus` already focuses the input) or capture the opener
+      before the content mounts; also note that `Home`/`End` never reach the
+      palette (the native editor consumes them, like `cmd-a` in plan `533`),
+      so the `isFirst`/`isLast` branches are dead on 0.10.0. Owner: `components`.
 
 `[x]` Prove the **drag family in a real window** per plan `580`: `drag-targets`
       and `drag-autoscroll` were the last interaction family with headless-only
