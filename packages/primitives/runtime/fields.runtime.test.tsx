@@ -18,6 +18,7 @@ import { useState, type ReactElement } from "react";
 import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { fieldRecipeRing } from "../src/core/recipes.js";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
@@ -36,7 +37,12 @@ import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Tooltip, tooltipHeight } from "../src/components/Tooltip.js";
 import { FLOATING_MARGIN } from "../src/core/floating.js";
-import { a11yNode, type Bounds, type Runtime } from "../src/testing/index.js";
+import {
+  a11yNode,
+  isFocusRing,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
 import { SURFACE, Surface, WINDOW, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -139,10 +145,34 @@ it("takes a value supplied after mount", async () => {
 
 /** Whether a painted element carries the focus ring. */
 const ringed = (runtime: Runtime, testId: string): boolean =>
-  Option.exists(
-    runtime.element(testId),
-    (element) => element.style.boxShadow !== undefined,
+  Option.exists(runtime.element(testId), (element) =>
+    isFocusRing(element.style.boxShadow),
   );
+
+it("paints the recipe's elevation on a resting field, not a ring", async () => {
+  // Plan 585: `INPUT_BASE` carries `shadow-xs`, so a resting field paints the
+  // recipe's elevation. That is why a test may not read "a shadow" as focus.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Input testId="field" label="Name" />
+    </Surface>,
+  );
+  const shadow = Option.getOrElse(
+    Option.flatMap(
+      shadowOf(runtime, "field"),
+      Schema.decodeUnknownOption(
+        Schema.Struct({
+          spreadRadius: Schema.Number,
+          blurRadius: Schema.Number,
+        }),
+      ),
+    ),
+    () => expect.fail("the field painted no shadow"),
+  );
+  expect(shadow.spreadRadius).toBe(0);
+  expect(shadow.blurRadius).toBeGreaterThan(0);
+});
 
 it("paints an autoFocus Input's ring on mount, and clears it when focus leaves", async () => {
   // The bug guarded: `autoFocus` takes native focus without dispatching

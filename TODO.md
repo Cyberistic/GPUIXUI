@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 145/145
+`[x]` `[████████████]` 146/146
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -925,6 +925,14 @@ retired once both branches are one
       `${testId}-input`, the app's first field takes focus after its skeleton,
       and a 7-case matrix proves the contract both ways (offline 52 files,
       scoped live 7/7, app live 6/7 — the known plan `529` reachability case).
+`[x]` `packages/primitives`: **a resting field paints elevation, and the tests
+      called any shadow a focus ring** — the `@gpuixui/tw` Base UI slice began
+      resolving `INPUT_BASE`'s `shadow-xs`, so the field family draws
+      `elevation.sm` at rest; four offline assertions and five runtime helpers
+      still read "a boxShadow exists" as "focused". One `isFocusRing` predicate
+      (positive spread, the shape every ring has) separates the two, the five
+      field pages and the inventory record the paint, and a native case proves
+      the resting elevation (plan `585`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site
       workstream). **Audited 2026-10-19:** the docs site has 68 component pages
       and the package's parts table has 31 parts; **six have no page** —

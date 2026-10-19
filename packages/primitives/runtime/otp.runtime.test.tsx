@@ -21,7 +21,7 @@ import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
 import { OTPField } from "../src/components/OTPField.js";
 import { Stack } from "../src/components/Stack.js";
-import { a11yNode, type Runtime } from "../src/testing/index.js";
+import { a11yNode, isFocusRing, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The reported values, in order. */
@@ -126,9 +126,8 @@ it("paints the first cell's ring from mount when autoFocus is set", async () => 
     </Stack>,
   );
   const ringed = (id: string): boolean =>
-    Option.exists(
-      runtime.element(id),
-      (element) => element.style.boxShadow !== undefined,
+    Option.exists(runtime.element(id), (element) =>
+      isFocusRing(element.style.boxShadow),
     );
   expect(focusedId(runtime)).toBe("otp-cell-1");
   expect(ringed("otp-cell-1")).toBe(true);

@@ -10,3 +10,4 @@
  * smoke-report host in `@gpuixui/testing` (playground workstream, plan `100`).
  */
 export * from "./runtime.js";
+export * from "./shadow.js";

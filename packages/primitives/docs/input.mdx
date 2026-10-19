@@ -95,6 +95,10 @@ follow density**, and neither does the rest of the field family (`TextArea`,
 `Select`'s trigger, `NumberField`, `OTPField` — plan `372`); the presets still
 move the other controls, and `size` no longer moves a field.
 
+The recipe's `shadow-xs` also paints a resting elevation (`elevation.sm`, plan
+`585`). GPUix paints one shadow per element, so the focus ring replaces it while
+the field is focused; an invalid or disabled field keeps the elevation.
+
 
 ## Style by state
 

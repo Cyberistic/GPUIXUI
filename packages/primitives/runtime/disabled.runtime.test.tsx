@@ -37,7 +37,7 @@ import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import type { Runtime } from "../src/testing/index.js";
+import { isFocusRing, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 interface ActivationCase {
@@ -376,9 +376,8 @@ const RINGS: ReadonlyArray<RingCase> = [
 /** Every element of the last frame that paints a focus ring. */
 const ringCount = (runtime: Runtime): number =>
   Arr.length(
-    Arr.filter(
-      runtime.all(),
-      (element) => element.style.boxShadow !== undefined,
+    Arr.filter(runtime.all(), (element) =>
+      isFocusRing(element.style.boxShadow),
     ),
   );
 

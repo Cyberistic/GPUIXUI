@@ -152,7 +152,8 @@ recipe's focus ring on the **wrapper** and its invalid/disabled buckets. The
 theme supplies the paint (`colors.input`, `colors.border`,
 `colors.inputForeground`), the stepper column keeps `paddingRight: 0` so it owns
 the right edge, and its icons are `colors.mutedForeground`. A field does not
-follow `density` and `size` no longer moves it.
+follow `density` and `size` no longer moves it. The recipe's `shadow-xs` paints
+the resting elevation, which the focus ring replaces (plan `585`).
 
 
 ## Style by state

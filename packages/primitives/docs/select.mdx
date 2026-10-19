@@ -260,9 +260,11 @@ trigger (the field recipe: **36 high, 12 horizontal, 4 vertical, 6 radius,
 trigger's measured width**.
 
 The trigger is a field, so it hugs its value unless `fullWidth` asks for the
-recipe's `w-full`; `size` no longer moves it. The option rows are not inputs and
-keep their own metric (`density.controlHeight.sm`, 28) until `select.tsx`'s item
-string joins `@gpuixui/tw` — a recorded follow-up, not a second field recipe.
+recipe's `w-full`; `size` no longer moves it. Like every field it carries the
+recipe's `shadow-xs` elevation at rest, which the focus ring replaces (plan
+`585`). The option rows are not inputs and keep their own metric
+(`density.controlHeight.sm`, 28) until `select.tsx`'s item string joins
+`@gpuixui/tw` — a recorded follow-up, not a second field recipe.
 
 The width is a number, not a percentage: `minWidth: "100%"` resolves against the
 anchored layer, so it painted a 57 px list under a 900 px field (measured, plan

@@ -12,6 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { alpha } from "@gpuixui/tokens";
 import {
   BUTTON_BASE,
@@ -78,6 +79,25 @@ describe("the Input recipe", () => {
     expect(style.active?.borderColor).toBe(testTheme.colors.ring);
   });
 
+  it("paints the recipe's shadow-xs at rest, and the ring instead when focused", () => {
+    // The bug guarded (plan 585): `INPUT_BASE` carries `shadow-xs`, which the
+    // tw Base UI slice started resolving. A resting field paints elevation;
+    // only a positive-spread shadow is a ring.
+    const elevation = Option.getOrElse(
+      Option.fromNullishOr(compilerInput.style.boxShadow),
+      () => expect.fail("the recipe declared no resting shadow"),
+    );
+    expect(elevation.spreadRadius).toBe(0);
+    expect(fieldRecipeStyle(resting, testTheme).boxShadow).toStrictEqual(
+      elevation,
+    );
+
+    const focused = fieldRecipeStyle({ ...resting, focused: true }, testTheme);
+    expect(focused.boxShadow).toStrictEqual(compilerInput.focus.boxShadow);
+    expect(focused.boxShadow?.spreadRadius).toBe(3);
+    expect(focused.boxShadow).not.toStrictEqual(elevation);
+  });
+
   it("takes focus, invalid and disabled from the returned buckets", () => {
     const focused = fieldRecipeStyle({ ...resting, focused: true }, testTheme);
     expect(focused.borderColor).toBe(compilerInput.focus.borderColor);
@@ -87,7 +107,8 @@ describe("the Input recipe", () => {
 
     const invalid = fieldRecipeStyle({ ...resting, invalid: true }, testTheme);
     expect(invalid.borderColor).toBe(testTheme.colors.destructive);
-    expect(invalid.boxShadow).toStrictEqual(compilerInput.invalid.boxShadow);
+    expect(invalid.boxShadow).toStrictEqual(compilerInput.style.boxShadow);
+    expect(compilerInput.invalid.boxShadow).toBeUndefined();
 
     const disabled = fieldRecipeStyle(
       { ...resting, disabled: true },
@@ -96,6 +117,7 @@ describe("the Input recipe", () => {
     expect(disabled.opacity).toBe(0.5);
     expect(disabled.pointerEvents).toBe("none");
     expect(disabled.cursor).toBe("not-allowed");
+    expect(disabled.boxShadow).toStrictEqual(compilerInput.style.boxShadow);
   });
 
   it("keeps the error cue when an invalid field is focused", () => {
@@ -158,7 +180,7 @@ describe("the square field (an OTP cell)", () => {
     );
     expect(disabled.opacity).toBe(0.5);
     expect(disabled.pointerEvents).toBe("none");
-    expect(disabled.boxShadow).toBeUndefined();
+    expect(disabled.boxShadow).toStrictEqual(compilerInput.style.boxShadow);
   });
 });
 

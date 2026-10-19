@@ -19,6 +19,7 @@ import { Stack } from "../src/components/Stack.js";
 import {
   a11yNode,
   a11yValueOf,
+  isFocusRing,
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
@@ -87,9 +88,8 @@ it("edits through the runtime's text pipeline and reports the number", async () 
 
 /** The ring the field's chrome carries while it holds focus. */
 const ringed = (runtime: Runtime): boolean =>
-  Option.exists(
-    runtime.element("nf"),
-    (element) => element.style.boxShadow !== undefined,
+  Option.exists(runtime.element("nf"), (element) =>
+    isFocusRing(element.style.boxShadow),
   );
 
 it("paints the chrome ring from mount when autoFocus is set", async () => {
@@ -353,9 +353,7 @@ it("paints the ring on the field's chrome when the input has focus", async () =>
   const field = Option.getOrElse(runtime.element("nf"), () =>
     expect.fail("the runtime retained no field"),
   );
-  expect(Option.isSome(Option.fromNullishOr(field.style["boxShadow"]))).toBe(
-    true,
-  );
+  expect(isFocusRing(field.style["boxShadow"])).toBe(true);
 });
 
 it("refuses edits, keys and steps while disabled", async () => {

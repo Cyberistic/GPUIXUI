@@ -12,6 +12,7 @@
 import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { fieldRecipeStyle } from "../core/recipes.js";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -125,17 +126,29 @@ describe("OTPField", () => {
   });
 
   it("rings only the cell the caret is in", () => {
+    // The bug guarded (plan 585): every cell carries the field recipe's
+    // `shadow-xs` elevation, so "a shadow exists" is true for all of them; the
+    // ring is the positive-spread shadow, and only the caret's cell has one.
+    const spreadOf = (cell: ReactElement): number =>
+      Option.getOrElse(
+        Option.flatMap(hostStyleRecord(cell), (style) =>
+          Option.flatMap(
+            Option.fromNullishOr(style["boxShadow"]),
+            Schema.decodeUnknownOption(
+              Schema.Struct({ spreadRadius: Schema.Number }),
+            ),
+          ),
+        ),
+        () => expect.fail("the cell painted no shadow"),
+      ).spreadRadius;
+
     const focused: OTPFieldFocus = {
       ...idle,
       focusedIndex: Option.some(1),
     };
     const element = render({ length: 3 }, "12", focused);
-    expect(
-      Option.getOrUndefined(hostStyleRecord(cell(element, 0)))?.["boxShadow"],
-    ).toBeUndefined();
-    expect(
-      Option.getOrUndefined(hostStyleRecord(cell(element, 1)))?.["boxShadow"],
-    ).toBeDefined();
+    expect(spreadOf(cell(element, 0))).toBe(0);
+    expect(spreadOf(cell(element, 1))).toBe(3);
   });
 
   it("is one tab stop, on the first empty cell while unfocused", () => {

@@ -40,7 +40,7 @@ import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
-import { isWithin } from "../src/testing/index.js";
+import { isFocusRing, isWithin } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** The shadow `focusRing` becomes after the runtime's `inset` normalisation. */
@@ -164,9 +164,9 @@ const CASES: ReadonlyArray<FocusCase> = [
   },
 ];
 
-/** Every element of the last frame that paints a shadow. */
+/** Every element of the last frame that paints a focus ring. */
 const ringsOf = (runtime: Runtime): ReadonlyArray<TestElement> =>
-  Arr.filter(runtime.all(), (element) => element.style.boxShadow !== undefined);
+  Arr.filter(runtime.all(), (element) => isFocusRing(element.style.boxShadow));
 
 it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase] as const))(
   "%s paints exactly one focus ring, inside the control",

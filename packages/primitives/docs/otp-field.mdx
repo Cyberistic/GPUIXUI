@@ -118,7 +118,8 @@ digit centres, plus the recipe's focus/invalid/disabled buckets — the ring lan
 on the focused cell only. The theme supplies the paint (`colors.input`,
 `colors.border`, `colors.inputForeground`) and the destructive role when
 `invalid`; the row gap is the `sm` spacing step. A cell does not follow
-`density`, and `size` no longer moves it.
+`density`, and `size` no longer moves it. Every cell carries the recipe's
+`shadow-xs` elevation at rest; the focused cell's ring replaces it (plan `585`).
 
 ## Style by state
 

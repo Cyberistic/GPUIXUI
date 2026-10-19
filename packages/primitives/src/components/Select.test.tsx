@@ -141,7 +141,9 @@ describe("Select", () => {
   it("rings the trigger with the field recipe while it holds focus or its list is open", () => {
     // The bug guarded (plan 083): the trigger took native focus and painted no
     // ring, so a keyboard user could not see which control they were on. Since
-    // plan 372 it is a field, so it paints the same recipe ring as `Input`.
+    // plan 372 it is a field, so it paints the same recipe chrome as `Input`;
+    // since plan 585 that includes the recipe's `shadow-xs` at rest, so the
+    // assertion is about the ring (positive spread), not about any shadow.
     const paint = selectTriggerStyle({}, testTheme);
     const resting = {
       open: false,
@@ -149,20 +151,25 @@ describe("Select", () => {
       placeholder: false,
       focused: false,
     };
+    const fieldResting = fieldRecipeStyle(
+      { focused: false, invalid: false, disabled: false },
+      testTheme,
+    );
     const ring = fieldRecipeStyle(
       { focused: true, invalid: false, disabled: false },
       testTheme,
     );
+    expect(paint(resting).boxShadow).toStrictEqual(fieldResting.boxShadow);
+    expect(paint(resting).boxShadow?.spreadRadius).toBe(0);
     expect(paint({ ...resting, focused: true }).boxShadow).toStrictEqual(
       ring.boxShadow,
     );
     expect(paint({ ...resting, open: true }).boxShadow).toStrictEqual(
       ring.boxShadow,
     );
-    expect(paint(resting).boxShadow).toBeUndefined();
     expect(
       paint({ ...resting, disabled: true, focused: true }).boxShadow,
-    ).toBeUndefined();
+    ).toStrictEqual(fieldResting.boxShadow);
   });
 
   it("paints a decorative trailing chevron in the trigger", () => {
