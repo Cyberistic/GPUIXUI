@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 230/296
+`[x]` `[████████░░]` 231/299
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1890,6 +1890,25 @@ the bounds now derive from the theme's own values (by value, not order), an
 unordered scale yields no bound so one broken ladder keeps one diagnostic, six
 cases cover the four extensions and the shipped pass, and no shipped value,
 pair, floor, metric, platform style, recipe or theme moves (plan 568)
+
+`[x]` Ship the native text theme — `nativeTextTheme(theme)` returns the
+`theme` prop `<code>`, `<diff>` and `<markdown>` read: `appearance` from the
+mode (the runtime's built-in default is a dark Comet theme, so a light app that
+omits the prop paints every document dark), four text tiers from the body,
+secondary, hint and secondary roles, `accent`/caret/code ink from `primaryText`,
+inline code on the `accent` wash, diff add/delete from the status **text**
+roles, a 24-capture syntax palette mapped to text roles (never a solid fill),
+and the layout from `codeBlock`/`body`/`h1`–`h3`/spacing/radius; the runtime's
+fixed fade fractions and 3.5% ink wash are held on every shipped set, the
+syntax palette joins the public checker at the body floor on `card`
+(`nativeSyntaxPairs`), and `bg` is the one field a canvas document overrides
+(plan 569)
+`[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
+`<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
+source={text} />` with no prop, so an assistant message is painted with the
+runtime's built-in dark theme in the light identity, every light platform
+variant and both AAA light sets; a document on the canvas overrides `bg` with
+`theme.colors.background` (owner: `components`; plan 569)
 
 ## Phase C — Tier 1–2 components
 

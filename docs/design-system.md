@@ -803,6 +803,21 @@ design system cannot compensate for a missing role.
 | `virtual-list` has no hover/active style | wrap it and style the wrapper |
 | shadows are structured objects | elevation tokens are geometry plus an alpha over the `shadow` tint, not CSS strings |
 | invalid colour strings are ignored per property | a role outside the six- or eight-digit hex form the helpers parse is reported by `themeColorFailures`; the runtime would paint it while the token maths cannot. The channel is the other half: `themeOpacityFailures` reports a veil without an alpha byte and an opaque role with a partial one |
+| native `<code>`, `<diff>` and `<markdown>` default to a dark Comet theme | pass `nativeTextTheme(theme)`; its `appearance` selects the light or dark base, and its colours, syntax palette and metrics come from the semantic roles and scales |
+
+The native text bridge is one call: `nativeTextTheme(theme)` maps `text`,
+`textMuted`, `textFaint` and `textDim` to the body, secondary, hint and secondary
+roles; `accent` and the caret to `primaryText` (the ink, not the fill); inline
+code to `primaryText` on the `accent` wash; diff add/delete to the status **text**
+roles; and every syntax capture to a text role, never a solid fill. The layout
+comes from `codeBlock`, `body`, `h1`–`h3`, spacing and the small/large radii; the
+runtime's chrome metrics without a token remain at its defaults. The runtime fades
+some values at fixed fractions a theme cannot change, so the suite holds the
+chosen roles through every composite on every shipped set, and the syntax
+palette is held to the body floor on both the `card` plane
+(`nativeSyntaxPairs`) and the 3.5% ink wash the code block paints over it. A
+document painted directly on the canvas overrides only `bg`; every role is
+measured on all four `Surface` tones.
 
 ## 11. Extension
 

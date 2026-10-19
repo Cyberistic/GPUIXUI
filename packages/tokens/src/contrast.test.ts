@@ -191,6 +191,7 @@ import {
   inactiveSoftPairs,
   invalidRingPairs,
   markPairs,
+  nativeSyntaxPairs,
   overlayWashPairs,
   ringSoftPairs,
   ringTrackPairs,
@@ -281,6 +282,7 @@ const publishedPairLists: Readonly<
   inactiveSoftPairs,
   invalidRingPairs,
   markPairs,
+  nativeSyntaxPairs,
   overlayWashPairs,
   ringSoftPairs,
   ringTrackPairs,
@@ -483,7 +485,8 @@ describe("themeContrastFailures", () => {
     const plain = failures.filter(({ wash }) => wash === undefined);
     const selected = failures.filter(({ wash }) => wash === "selection");
 
-    expect(plain).toHaveLength(14);
+    // 14 status/selection surfaces plus the code plane's body pair on `card`.
+    expect(plain).toHaveLength(15);
     expect(selected).toHaveLength(13);
     expect(
       failures.every(({ foreground }) => foreground === "mutedForeground"),
@@ -512,7 +515,9 @@ describe("themeContrastFailures", () => {
       failures.every(({ background, pairClass, floor }) =>
         background === "track"
           ? pairClass === "mark" && floor === 3
-          : pairClass === "secondary" && floor === 4.5,
+          : pairClass === "body"
+            ? background === "card" && floor === 7
+            : pairClass === "secondary" && floor === 4.5,
       ),
     ).toBe(true);
     expect(failures.every(({ ratio }) => ratio < 4.5)).toBe(true);

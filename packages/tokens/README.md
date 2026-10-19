@@ -766,6 +766,28 @@ The native scrollbar cannot be tinted in GPUix 0.10.0 — `scrollbarColor` and
 `scrollbarWidth` are unreleased on `main` — so `theme.colors.scrollbar` is
 reserved for the release that exposes them.
 
+### Native text documents
+
+`<code>`, `<diff>` and `<markdown>` take a `theme` prop too, and their built-in
+default is a dark Comet theme. `nativeTextTheme(theme)` returns that prop from
+the semantic roles, with `appearance` selecting the runtime's light or dark base,
+the syntax palette mapped to text roles (never a solid fill), and the layout
+taken from the type, spacing and radius scales. Pass it to every native text
+document; a document painted directly on the canvas overrides only `bg`:
+
+```tsx
+import { nativeTextTheme } from "@gpuixui/tokens";
+
+<markdown source={text} theme={nativeTextTheme(theme)} />;
+```
+
+`nativeTextRoles` and `nativeSyntaxRoles` publish the mapping, and
+`nativeSyntaxPairs` holds code to the body floor on its `card` plane. The
+runtime's fixed fade fractions and 3.5% code-block ink wash are measured by
+`native-text.test.ts` on every shipped set; the chrome metrics the scale does not
+name stay at the runtime's defaults. A runnable example lives in
+[`src/native-text.example.ts`](./src/native-text.example.ts).
+
 ## Platform styles
 
 The variants in `platformNames` are full token themes, not docs-only CSS:

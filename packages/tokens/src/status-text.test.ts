@@ -92,7 +92,7 @@ describe("status text on the state washes", () => {
       colors: { warningText: "#8E5B00" },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ wash }) => wash === undefined,
+      ({ wash, pairClass }) => wash === undefined && pairClass === "secondary",
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
@@ -109,6 +109,16 @@ describe("status text on the state washes", () => {
     ).toBe(true);
     expect(
       failures.every(({ ratio }) => ratio < contrastFloors.default.secondary),
+    ).toBe(true);
+    // The code plane holds the same role at body strength, which the regression
+    // also misses: code is body copy, not a status label.
+    expect(
+      themeContrastFailures(regressed).some(
+        ({ foreground, background, pairClass }) =>
+          foreground === "warningText" &&
+          background === "card" &&
+          pairClass === "body",
+      ),
     ).toBe(true);
   });
 

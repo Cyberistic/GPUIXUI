@@ -15,6 +15,7 @@ import {
   type ElevationLevel,
 } from "./elevation.js";
 import { skeletonPulseOpacity } from "./motion.js";
+import { nativeSyntaxRoles } from "./native-text.js";
 import {
   filledControlFamilies,
   statusTones,
@@ -749,6 +750,21 @@ const bodyTextSurfaces = [
 const bodyTextPairs: readonly ContrastPair[] = bodyTextSurfaces.map(
   (background): ContrastPair => ["foreground", background, "body"],
 );
+
+/**
+ * The native code surface. Every syntax capture is a use of a text role painted
+ * on the code block's `card` plane, and code is body copy, so each capture role
+ * is held to the body floor there — the floor its role carries as a status label
+ * (4.5:1) is not enough for code. `foreground` already has that pair, so it is
+ * omitted; the captures are deduplicated by role. The runtime's fixed 3.5% ink
+ * wash over the card is held by `native-text.test.ts`, because it is a composite
+ * of a black or white tint rather than a role.
+ */
+export const nativeSyntaxPairs: readonly ContrastPair[] = [
+  ...new Set(Object.values(nativeSyntaxRoles)),
+]
+  .filter((role) => role !== "foreground")
+  .map((role): ContrastPair => [role, "card", "body"]);
 
 /**
  * The four soft status fills a default body text role is painted on. An Alert's
@@ -1869,6 +1885,12 @@ const elevationFailures = (
  *   sit on. A level that composites to the surface beneath it has no shadow;
  *   the reserved empty `overlay` is skipped, and a failure names the level and
  *   the fraction.
+ * - the native code surface — a `<code>`, `<diff>` or `<markdown>` painted with
+ *   `nativeTextTheme` — whose syntax captures are text roles on the code block's
+ *   `card` plane, held to the body floor (`nativeSyntaxPairs`) because code is
+ *   body copy, not a status label. The runtime's fixed 3.5% ink wash over that
+ *   plane and its fixed fade fractions are held on every shipped set by
+ *   `native-text.test.ts`; the opaque pairs here are the binding floor.
  *
  * A missed pair is returned with both roles, the class whose floor it missed,
  * the floor and the measured ratio; a pair through a wash also names the wash,
@@ -1892,25 +1914,26 @@ export function themeContrastFailures(
   contrast: ThemeContrast = theme.contrast,
 ): ReadonlyArray<ContrastFailure> {
   const floors = contrastFloors[contrast];
-  const pairFailures: ReadonlyArray<ContrastFailure> = contrastPairs.flatMap(
-    ([foreground, background, pairClass]) => {
-      const ratio = contrastRatio(
-        theme.colors[foreground],
-        theme.colors[background],
-      );
-      return ratio >= floors[pairClass]
-        ? []
-        : [
-            {
-              foreground,
-              background,
-              pairClass,
-              floor: floors[pairClass],
-              ratio,
-            },
-          ];
-    },
-  );
+  const pairFailures: ReadonlyArray<ContrastFailure> = [
+    ...contrastPairs,
+    ...nativeSyntaxPairs,
+  ].flatMap(([foreground, background, pairClass]) => {
+    const ratio = contrastRatio(
+      theme.colors[foreground],
+      theme.colors[background],
+    );
+    return ratio >= floors[pairClass]
+      ? []
+      : [
+          {
+            foreground,
+            background,
+            pairClass,
+            floor: floors[pairClass],
+            ratio,
+          },
+        ];
+  });
   return [
     ...pairFailures,
     ...textOverWashFailures(selectionPairs, "selection", theme, floors),

@@ -109,6 +109,9 @@ missing here is not public.
 | `MotionPhase` | An easing phase from `motionPhases`: `"standard"`, `"enter"`, `"exit"` or `"linear"`. |
 | `MotionTransition` | Transition properties in the runtime's seconds. |
 | `NativeFieldTheme` | The runtime `theme` prop a native text field reads: `{ caret }`. |
+| `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
+| `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales. |
+| `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
 | `OpacityFailure` | A colour role whose alpha channel is not the form it is painted in, with the form it needed. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
@@ -1536,6 +1539,84 @@ import { nativeFieldTheme } from "@gpuixui/tokens";
   theme={nativeFieldTheme(theme)}
 />;
 ```
+
+### Native text documents
+
+`<code>`, `<diff>` and `<markdown>` take the same kind of `theme` prop, but a
+much larger one: the pinned runtime's `GpuixTheme` carries an appearance, nine
+colours, the two families, a 24-capture syntax palette and every layout metric
+the native text engine paints. Its defaults are a **dark** Comet theme, and the
+light base is only selected by `appearance: "light"`. A light app that omits the
+prop therefore paints code, diffs and markdown dark — which is what
+`components/message.tsx` does today with `<markdown source={text} />` while every
+theme check returns `[]`.
+
+`nativeTextTheme(theme)` returns that prop from a resolved theme. Every colour is
+a semantic role, every syntax capture is a **text** role (a solid status fill
+would be a fill painted as a glyph), and the layout comes from the type, spacing
+and radius scales:
+
+| Native field | Role |
+| ------------ | ---- |
+| `appearance` | `theme.mode` |
+| `bg` | `card` |
+| `border` | `border` |
+| `text` | `foreground` |
+| `textMuted` | `mutedForeground` |
+| `textFaint` | `placeholder` |
+| `textDim` | `mutedForeground` |
+| `accent` | `primaryText` |
+| `caret` | `primaryText` |
+| `codeText` | `primaryText` |
+| `codeWash` | `accent` |
+| `diffAdd` | `successText` |
+| `diffDel` | `destructiveText` |
+| `diffHunkBg` | `hover` |
+| `fontSans` | `typography.sans` |
+| `fontMono` | `typography.mono` |
+
+`nativeTextRoles` owns that table. `nativeSyntaxRoles` owns the capture palette:
+`comment`, `operator` and `punctuation` are `mutedForeground`; `keyword`,
+`function`, `functionBuiltin` and `label` are `primaryText`; `string` is
+`successText`; `stringSpecial`, `escape`, `number`, `boolean`, `constant`,
+`variableSpecial` and `attribute` are `warningText`; `typeName`, `typeBuiltin`
+and `constructor` are `infoText`; `macroName`, `tag` and `invalid` are
+`destructiveText`; `property`, `variable` and `parameter` are `foreground`.
+
+The captures are held to the **body** floor on the code block's `card` plane
+(`nativeSyntaxPairs`), because code is body copy, not a status label. Every
+shipped set clears it — the tightest is `primaryText` at **7.83:1**. The runtime
+fades some values at fractions a theme cannot change: a diff line at 92%, an
+add/delete marker and its numbers at 90%, the 3px accent bar at 55%, the row wash
+at 5.5%, a list marker at 85%, the blockquote rail at 60% and its wash at 5%, and
+the code block's 3.5% ink wash. Those are not tokens, so `native-text.test.ts`
+holds the chosen roles through each composite on every shipped set, and holds
+the syntax palette to the body floor on the painted ink wash (7.06:1 at the
+tightest). The opaque pairs are the binding public floor; the ink composite is
+the suite's stricter code-surface guard.
+
+The metrics come from the theme's own scales: `codeTextSize`/`codeLineHeight`
+from `codeBlock`, `mdTextSize`/`mdLineHeight` from `body`, the heading sizes from
+`h1`/`h2`/`h3`/`body`, the insets from spacing, and the inline-code and code-card
+radii from `radius.sm`/`radius.lg`. The remaining runtime fields — gutter widths,
+table column minima and the diff's own header constants — have no token in this
+scale yet and stay at the runtime's defaults; a brand that needs them sets them
+on the returned object.
+
+`bg` is the raised `card` plane a code block, diff or document is painted on. A
+document painted directly on the canvas overrides only that field; every role is
+measured on all four `Surface` tones, so the override stays inside the contract:
+
+```tsx
+import { getTheme, nativeTextTheme, type Theme } from "@gpuixui/tokens";
+
+const theme: Theme = getTheme("dark");
+const markdownTheme = nativeTextTheme(theme);
+const canvasTheme = { ...markdownTheme, bg: theme.colors.background };
+```
+
+A runnable example lives in
+[`src/native-text.example.ts`](./src/native-text.example.ts).
 
 ### Scrollbars
 

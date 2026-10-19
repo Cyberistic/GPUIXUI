@@ -4,6 +4,7 @@ export * from "./direction.js";
 export * from "./elevation.js";
 export * from "./metrics.js";
 export * from "./motion.js";
+export * from "./native-text.js";
 export * from "./opacity.js";
 export * from "./platform-recipes.js";
 export * from "./platforms.js";

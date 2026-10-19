@@ -111,8 +111,10 @@ describe("brand-toned text", () => {
       colors: { primaryText: "#0A84FF" },
     });
     const failures = themeContrastFailures(regressed).filter(
-      ({ foreground, wash }) =>
-        foreground === "primaryText" && wash === undefined,
+      ({ foreground, wash, pairClass }) =>
+        foreground === "primaryText" &&
+        wash === undefined &&
+        pairClass === "secondary",
     );
 
     expect(failures.map(({ background }) => background).toSorted()).toEqual([
@@ -131,6 +133,15 @@ describe("brand-toned text", () => {
     expect(
       failures.every(
         ({ pairClass, floor }) => pairClass === "secondary" && floor === 4.5,
+      ),
+    ).toBe(true);
+    // The code plane is body copy: the same role is also held to 7:1 there.
+    expect(
+      themeContrastFailures(regressed).some(
+        ({ foreground, background, pairClass }) =>
+          foreground === "primaryText" &&
+          background === "card" &&
+          pairClass === "body",
       ),
     ).toBe(true);
   });
