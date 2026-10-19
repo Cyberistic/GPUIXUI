@@ -101,7 +101,9 @@ describe("fixed-surface insets", () => {
       base.dimensions.fieldAdornmentSize;
     const theme = extendTheme(base, {
       dimensions: {
-        chipMinWidth: 10,
+        // Above the chip's own chrome bound (plan 667) and low enough that the
+        // query row, not the chip, sets the field bound below.
+        chipMinWidth: 44,
         fieldMinWidth: oldQueryBound,
       },
     });

@@ -1090,7 +1090,7 @@ every density.
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action; holds its padding, the `md` leading icon, the query, the `fieldAdornmentSize` action, their two gaps and the field's two borders, or a token-input chip |
 | `dimensions.fieldAdornmentSize` | 16 | trailing clear control (or other adornment) inside a field; holds one `caption` line, the glyph its clear control paints; the leading query icon is `iconSize.md` |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its `spacing.md` insets, `spacing.md` gap, the `sm` disclosure icon and one `label` glyph inside its two borders |
-| `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
+| `dimensions.chipMinWidth` | 80 | minimum width of a token-input chip; its content box holds two `spacing.sm` insets, one `caption` glyph, the `spacing.xs` gap and the `fieldAdornmentSize` remove control |
 | `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, its `toastToneBarWidth` tone bar, tone icon, two `lg` gaps, the square `sm` dismiss control and one `bodyStrong` title inside its two borders |
 | `dimensions.toastToneBarWidth` | 3 | the tone bar the Toast paints down its leading edge; charged inside `toastWidth` and at least `borderWidth.thin` |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card; leaves a content box inside its `spacing.lg` padding and its two borders |
@@ -2514,13 +2514,18 @@ typography.body.fontSize + fieldAdornmentSize`, its padding, the leading `md`
 icon, the gap, one query glyph, the same gap and the trailing
 `fieldAdornmentSize` action — and the larger of the two bounds
 is the rule, so lowering `chipMinWidth` cannot free a field that can no longer
-show its own query (plan `624`). A fixed mark the theme owns — the Toast's tone
+show its own query (plan `624`). The chip's own minimum is the outer width
+`TagInputChip` paints, so it holds the chrome inside it — two `spacing.sm`
+insets, one `caption` glyph, the `spacing.xs` gap and the `fieldAdornmentSize`
+remove control — because a value that only fits the field's content box can
+still clip the chip's label and control (plan `667`). A fixed mark the theme owns — the Toast's tone
 bar, the inbox's unread dot, a carousel indicator or an avatar's presence dot —
 is at least the theme's own hairline (`borderWidth.thin`), the rule the timeline
 marker already applies to its rail, because a mark below the smallest stroke a
 border may paint does not read; a zero or non-finite mark keeps the `positive`
 rule's one diagnostic (plan `643`). At the shipped metrics the query row needs
-80px, the chip 102px, and the shipped 200px field clears the larger; an
+80px, the chip 102px, and the shipped 200px field clears the larger, while the
+chip's own 44px bound passes at 1.82 times; an
 overlay's `overlayMaxHeight` must fit one `density.rowHeight`, because a list
 viewport shorter than a row clips every option; a cubic-bezier easing must be
 four finite control points with both x values inside `0…1`, because the runtime

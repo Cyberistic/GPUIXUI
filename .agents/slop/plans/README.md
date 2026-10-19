@@ -321,7 +321,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | done |
 | [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | done |
 | [666](./666-scrim-explanation-chips.md) | The scrim explanation names the three chips it counts | F | 099, 375, 508, 610, 617 | done |
-| [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | in progress |
+| [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3506,6 +3506,19 @@ missing group "the three resting fills" — a phrase that names nothing. The
 paragraph now enumerates all twenty-one surfaces, says which chips its rationale
 sentence means, and a guard derives both the count and the member list from
 `overlaySurfaces`. No colour, pair, floor, metric or shipped theme moves.
+
+Plan `667` closes the half plan `384` deferred. `dimensions.chipMinWidth` was
+only positive, so a theme with `{ chipMinWidth: 10, fieldMinWidth: 100 }`
+returned `[]` from every check while the chip's content box
+(`10 − 2 × spacing.sm`) was negative: `TagInputChip` paints the minimum as an
+outer `minWidth` and spends it on two `spacing.sm` insets, a `caption` label, the
+`spacing.xs` gap and a 16px remove control. Plan 384 declined the bound because
+it read the value as a content width and said the chip's padding had no token;
+the padding is `spacing.sm`. The chip now holds its own chrome from the theme's
+spacing, caption size and `fieldAdornmentSize` (44px at the identity against the
+shipped 80px, 1.82×), the field rule from plans 384/624/634 is untouched, and
+`chip-chrome-fit.test.ts` states the erased-chip regression. No colour, pair,
+floor, metric or shipped theme value moves.
 
 ## How to use a plan
 

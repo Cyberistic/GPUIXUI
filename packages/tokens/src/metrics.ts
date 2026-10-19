@@ -541,7 +541,10 @@ const fixedMarks = [
  *   same minimum holds the query row the token documents: the field's
  *   `spacing.md` padding, a leading `md` icon, the gap, one
  *   `body` query glyph, the same gap, the trailing `fieldAdornmentSize` action
- *   and the field's two borders; a date
+ *   and the field's two borders; the chip's own minimum is the outer width the
+ *   component paints (`minWidth`), so it holds its two `spacing.sm` insets, one
+ *   `caption` glyph, the `spacing.xs` gap and the `fieldAdornmentSize` remove
+ *   control, while the field bound is the other half of the same composition; a date
  *   trigger holds its own insets, its gap, one `label` glyph and the `sm`
  *   disclosure icon it paints, the overlay scroll height fits one row, because a list
  *   viewport shorter than a row clips every option, the message viewport holds
@@ -940,6 +943,21 @@ export function themeMetricFailures(
         ["drawerHeightLg", dimensions.drawerHeightLg],
       ],
       "increasing",
+    ),
+    // A chip's own minimum is an outer width — `TagInputChip` paints it as
+    // `minWidth` — so its content box is the minimum less its two `spacing.sm`
+    // insets. That box holds the caption label, the `spacing.xs` gap and the
+    // `fieldAdornmentSize` remove control. Plan 384 declined this half because
+    // the chip's padding was said to have no token; it is `spacing.sm`, so a
+    // 10px chip passed every check with a negative content box (plan 667).
+    ...atLeast(
+      "dimensions",
+      "chipMinWidth",
+      dimensions.chipMinWidth,
+      2 * spacing.sm +
+        spacing.xs +
+        typography.caption.fontSize +
+        dimensions.fieldAdornmentSize,
     ),
     // The field's content box holds one of the two compositions its minimum
     // width exists for: a token-input chip, or the query row `docs/tokens.md`

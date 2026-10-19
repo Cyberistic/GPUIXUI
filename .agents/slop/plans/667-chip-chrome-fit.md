@@ -64,6 +64,7 @@ Out of scope: changing any shipped value, the `fieldMinWidth` rule (plan 384 /
 | `packages/tokens/src/metrics.ts` | one `atLeast` rule for `chipMinWidth`, and the `dimensions` JSDoc bullet names it. |
 | `packages/tokens/src/scale.ts` | the `chipMinWidth` JSDoc calls it the outer width and names the chrome. |
 | `packages/tokens/src/chip-chrome-fit.test.ts` | new regression suite (header comment states the bug). |
+| `packages/tokens/src/fixed-surface-insets.test.ts` | its field-negative fixture plants `chipMinWidth: 10`; raise it to 44 so the case still isolates the field bound. |
 | `docs/tokens.md` | the dimension row's wording and the metric prose sentence. |
 | `COMPONENTS.md` | the **Design tokens** and **Theme metric check** rows name the chip bound. |
 
@@ -285,12 +286,12 @@ nub run test
 
 ## Acceptance
 
-- [ ] `themeMetricFailures` reports a `chipMinWidth` below its own chrome, and
+- [x] `themeMetricFailures` reports a `chipMinWidth` below its own chrome, and
       the total check carries it as `kind: "metric"`.
-- [ ] The bound reads `spacing.sm`, `spacing.xs`, `typography.caption.fontSize`
+- [x] The bound reads `spacing.sm`, `spacing.xs`, `typography.caption.fontSize`
       and `dimensions.fieldAdornmentSize` from the theme, not literals.
-- [ ] The chip is documented as an outer width in `scale.ts` and
+- [x] The chip is documented as an outer width in `scale.ts` and
       `docs/tokens.md`; the 44px bound and 1.82× ratio are stated.
-- [ ] No shipped colour, pair, floor, metric or theme value moves.
-- [ ] `nub run check`, `nub run lint` and `nub run test` are green.
-- [ ] Plan indexed in `.agents/slop/plans/README.md`; `TODO.md` row ticked.
+- [x] No shipped colour, pair, floor, metric or theme value moves.
+- [x] `nub run check`, `nub run lint` and `nub run test` are green.
+- [x] Plan indexed in `.agents/slop/plans/README.md`; `TODO.md` row ticked.

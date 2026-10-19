@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 293/366
+`[x]` `[████████░░]` 294/367
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -1145,7 +1145,7 @@ the two helpers, and no token, colour, pair or floor moves (plan 376)
 leave the page quoting a ratio the package no longer produces while every pair
 passed; both are now derived from the 24 shipped sets and no value moves
 (plan 377)
-`[ ]` Hold the token-input chip to the chrome inside it — `dimensions.chipMinWidth`
+`[x]` Hold the token-input chip to the chrome inside it — `dimensions.chipMinWidth`
 was only positive, so a chip of 10 passed every check while its content box
 (`10 − 2 × spacing.sm`) was negative and could hold neither its caption label
 nor its remove control; plan 384 declined the half on the false rationale that

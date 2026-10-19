@@ -123,7 +123,12 @@ export interface Dimensions {
   readonly fieldAdornmentSize: number;
   /** 220px — fixed width of a date trigger field. */
   readonly dateFieldWidth: number;
-  /** 80px — the minimum content width of a token-input chip. */
+  /**
+   * 80px — the minimum width of a token-input chip. An outer width, the value
+   * `TagInputChip` paints as `minWidth`: its content box holds two `spacing.sm`
+   * insets, a caption glyph, the `spacing.xs` gap and the
+   * `fieldAdornmentSize` remove control.
+   */
   readonly chipMinWidth: number;
   /** 380px — the fixed width of a toast card. */
   readonly toastWidth: number;
