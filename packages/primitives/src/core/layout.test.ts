@@ -136,6 +136,19 @@ describe("boxStyle", () => {
     );
   });
 
+  it("removes both automatic content floors when it may shrink", () => {
+    // The bug guarded (plan 607): `shrink` set only `flexShrink`, and a flex
+    // item's automatic minimum size caps that shrink at its content's size.
+    // Measured, a 300 px child in a 200 px row stayed 300 whether `shrink` was
+    // on or off, and a 300-high child in a 100-high column stayed 300.
+    const plain = boxStyle({ tone: "card" }, testTheme);
+    expect(plain.minWidth).toBeUndefined();
+    expect(plain.minHeight).toBeUndefined();
+    const shrinking = boxStyle({ tone: "card", shrink: true }, testTheme);
+    expect(shrinking.minWidth).toBe(0);
+    expect(shrinking.minHeight).toBe(0);
+  });
+
   it("inherits the surface chrome it extends", () => {
     const style = boxStyle(
       { tone: "card", padding: "lg", radius: "md", border: true },

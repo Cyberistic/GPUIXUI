@@ -79,7 +79,7 @@ two stops). See `docs/gpuix-capabilities.md` §3.
 | `border` | `boolean` | `false` | one thin border on the `border` role |
 | `elevation` | `sm \| md \| lg \| overlay` | none | the theme's first shadow at that level |
 | `grow` | `boolean` | `false` | takes leftover space on the parent's main axis |
-| `shrink` | `boolean` | `false` | may shrink below its content |
+| `shrink` | `boolean` | `false` | may shrink below its content on both axes |
 | `fullWidth` / `fullHeight` | `boolean` | `false` | `100%` on that axis |
 | `style` | `StyleDesc` | — | merged **last**, so it wins property by property |
 | `children` | `ReactNode` | — | content |
@@ -87,6 +87,24 @@ two stops). See `docs/gpuix-capabilities.md` §3.
 
 `shrink` is deliberately `false` by default: chrome must not squash, which is the
 opposite of the browser's flex default and the right one for application layout.
+
+A shrinking box removes **both** automatic content floors — `minWidth: 0` and
+`minHeight: 0` — because `shrink` does not name an axis. `flexShrink` alone is
+not enough: the runtime, like CSS, keeps a flex item at its content's minimum
+size, so a 300 px child stayed 300 in a 200 px row and a 300-high child stayed
+300 in a 100-high column (measured, plan `607`). With the floors removed the box
+gives the space up and its content overflows or reflows by its own rules. A
+caller who wants a floor back can set `minWidth`/`minHeight` through `style`,
+which merges last.
+
+```tsx
+<Stack direction="row" style={{ width: 240 }}>
+  <Box tone="card" shrink style={{ overflow: "hidden" }}>
+    <Text role="body">Property name</Text>
+  </Box>
+  <Box tone="muted" style={{ width: 96 }} />
+</Stack>;
+```
 
 ## Keyboard
 
@@ -119,9 +137,15 @@ elevation from the theme's shadow list, of which GPUix paints the first entry.
 ## Verification
 
 - `src/components/presentational.test.tsx` — tone resolution, padding, radius,
-  border and "the caller's style wins".
+  border, "the caller's style wins", and both content floors a shrinking box
+  removes.
+- `src/core/layout.test.ts` — the resolver's numbers: `shrink` is
+  `flexShrink: 1` plus `minWidth: 0`/`minHeight: 0`, and a plain box carries
+  neither floor.
 - `runtime/layout.runtime.test.tsx` — padding and tone survive layout in real
-  GPUix; density moves height and leaves colour alone.
+  GPUix; density moves height and leaves colour alone; a shrinking box paints
+  200 in a 200 px row and 100 in a 100-high column while a plain box keeps its
+  300 px child's size (plan `607`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

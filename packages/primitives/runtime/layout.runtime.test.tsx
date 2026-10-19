@@ -104,6 +104,61 @@ it("stacks a column Stack's children by the theme's gap", async () => {
   expect(b.y - a.y).toBe(20 + testTheme.spacing.sm);
 });
 
+it("lets a shrinking Box give up width below its child's size", async () => {
+  // The bug guarded (plan 607): `shrink` set only `flexShrink`, which the
+  // runtime's automatic content floor caps at the child's width. Measured, a
+  // 300 px child in a 200 px row painted 300 whether `shrink` was on or off.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row" style={{ width: 200 }}>
+        <Box tone="none" testId="shrink" shrink>
+          <Box tone="none" style={{ width: 300 }} />
+        </Box>
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+  expect(boundsOf(runtime, "shrink").width).toBe(200);
+  runtime.render(
+    <Surface>
+      <Stack direction="row" style={{ width: 200 }}>
+        <Box tone="none" testId="plain">
+          <Box tone="none" style={{ width: 300 }} />
+        </Box>
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+  expect(boundsOf(runtime, "plain").width).toBe(300);
+});
+
+it("lets a shrinking Box give up height below its child's size", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 100 }}>
+        <Box tone="none" testId="shrink" shrink>
+          <Box tone="none" style={{ height: 300 }} />
+        </Box>
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+  expect(boundsOf(runtime, "shrink").height).toBe(100);
+  runtime.render(
+    <Surface>
+      <Stack direction="column" style={{ height: 100 }}>
+        <Box tone="none" testId="plain">
+          <Box tone="none" style={{ height: 300 }} />
+        </Box>
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+  expect(boundsOf(runtime, "plain").height).toBe(300);
+});
+
 it("lays a Grid's children into equal columns and wraps to a new row", async () => {
   const runtime = await openWindow();
   runtime.render(

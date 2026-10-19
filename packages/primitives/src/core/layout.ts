@@ -163,6 +163,14 @@ export const boxStyle = (spec: BoxSpec, theme: PrimitiveTheme): StyleDesc => {
     ...surfaceStyle(spec, theme),
     flexShrink: spec.shrink === true ? 1 : 0,
   };
+  if (spec.shrink === true) {
+    // A flex item's automatic minimum size is its content's floor, so
+    // `flexShrink` alone cannot take a box below its child's width or height
+    // (the same floor plan `383` removed from a text run). `shrink` says the
+    // box may give up space on either axis, so both floors are removed.
+    style.minWidth = 0;
+    style.minHeight = 0;
+  }
   if (spec.grow === true) style.flexGrow = 1;
   if (spec.fullWidth === true) style.width = "100%";
   if (spec.fullHeight === true) style.height = "100%";

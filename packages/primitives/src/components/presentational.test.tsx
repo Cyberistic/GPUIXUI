@@ -67,6 +67,18 @@ describe("layout containers", () => {
     expect(styleProp(bare, "backgroundColor")).toStrictEqual(Option.none());
   });
 
+  it("removes the content floor from a box that may shrink", () => {
+    // The bug guarded (plan 607): `shrink` reached the tree as `flexShrink: 1`
+    // only, while the runtime's automatic minimum size still capped the box at
+    // its content's size.
+    const plain = renderBox({ tone: "none" }, testTheme);
+    expect(styleProp(plain, "minWidth")).toStrictEqual(Option.none());
+    expect(styleProp(plain, "minHeight")).toStrictEqual(Option.none());
+    const shrinking = renderBox({ tone: "none", shrink: true }, testTheme);
+    expect(styleProp(shrinking, "minWidth")).toStrictEqual(Option.some(0));
+    expect(styleProp(shrinking, "minHeight")).toStrictEqual(Option.some(0));
+  });
+
   it("keeps a two-stop gradient the caller passes through style", () => {
     // The bug guarded (plan 342): the docs claimed the runtime is solid-only,
     // but `background` takes a two-stop gradient and `style` is merged last.

@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 149/149
+`[x]` `[████████████]` 150/150
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1619,6 +1619,17 @@ retired once both branches are one
       focus owners, two mount-focused, horizontal, report, two guards), six
       failing directions measured; offline 59 files / 831 tests, full runtime
       57 files / 791 (plan `606`).
+
+`[x]` `packages/primitives`: **`Box.shrink` could not shrink below its
+      content** — measured (2026-10-19, pinned release build): a 300 px child in
+      a 200 px row painted 300 with `shrink` on or off, and a 300-high child in
+      a 100-high column painted 300, because `boxStyle` set only `flexShrink`
+      while the runtime's automatic content floor (the one plans `383`/`587`
+      measured on text) capped it at the child's size. The box now removes both
+      floors (`minWidth: 0`/`minHeight: 0`) when `shrink` is on; the same mounts
+      paint 200/100 while a plain box keeps 300, and a caller's own floor still
+      merges last. 1 core + 1 element-tree + 2 runtime cases, both runtime
+      directions proven (plan `607`).
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
