@@ -231,6 +231,13 @@ retired once both branches are one
       measured 233 against a viewport ending at 200). 1 native case (Message
       scroller 11), both-direction proof; docs, `COMPONENTS.md` and the inventory
       synced
+    - [x] A notification-centre header action owns its keys — plan 576; measured:
+      `Enter` on `NotificationCentreMarkAll` ran the action **and** read the
+      active row, and an arrow key stole focus from the header button into the
+      list. Key ownership is now decided from the focused element, because
+      `EventPayload.elementId` names the handler's own element; 3 native cases
+      (Notification centre 16), the first two failing without the gate; docs,
+      `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

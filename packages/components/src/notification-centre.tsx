@@ -11,7 +11,9 @@
  * Dismissal is the package's shared stack: Escape closes the topmost overlay and
  * returns focus to the trigger; an outside press closes without taking focus
  * back, because the press already moved it. The panel is **not** modal, so Tab
- * leaves it (no trap).
+ * leaves it (no trap). A header action owns its own keys: the panel moves the
+ * reading cursor only while the surface or a row holds focus, because a key that
+ * bubbles from a control belongs to that control.
  *
  * v1 renders every row. The published `<virtual-list>` host takes `itemCount`
  * and the app must window its own children (`@gpuix/react@0.10.0` ships no
@@ -380,6 +382,7 @@ export const NotificationCentreContent = ({
     setOpen,
     label: rootLabel,
     trigger,
+    rowRefs,
     moveActive,
     readActive,
   } = useNotificationCentre();
@@ -410,11 +413,29 @@ export const NotificationCentreContent = ({
     });
   }, [open, renderer, trigger]);
 
+  /**
+   * Whether the panel itself or one of its rows holds focus. A key that bubbles
+   * from a header action belongs to that control; `EventPayload.elementId` names
+   * the handler's element, not the focused one, so the renderer is asked.
+   */
+  const ownsRowKeys = (): boolean => {
+    const focused = renderer?.getFocusedElementId?.();
+    if (focused === undefined || focused === null) return false;
+    return (
+      focused === surface.current?.id ||
+      Arr.some(
+        Arr.fromIterable(rowRefs.current.values()),
+        (row) => row.id === focused,
+      )
+    );
+  };
+
   const handleKeyDown = (event: EventPayload): void => {
     if (isDismiss(event)) {
       dismissTopLayer(event);
       return;
     }
+    if (!ownsRowKeys()) return;
     if (isDown(event)) {
       moveActive(1);
       return;

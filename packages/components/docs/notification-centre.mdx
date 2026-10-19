@@ -80,9 +80,11 @@ heading, so a filtered list never renames a section.
 
 The panel is focused when it opens. `ArrowDown` / `ArrowUp` move the active row
 over notifications only — headings are skipped and the ends clamp. `Enter`
-requests a read for the active row. `Escape` closes the panel and returns focus
-to the trigger. The panel is **non-modal**, so `Tab` leaves it rather than
-trapping focus.
+requests a read for the active row. Arrow keys and `Enter` belong to the panel
+surface and its rows: while a header action holds focus, `Enter` runs that action
+and the arrows leave the reading cursor where it is. `Escape` closes the panel
+and returns focus to the trigger. The panel is **non-modal**, so `Tab` leaves it
+rather than trapping focus.
 
 ## API
 
@@ -154,12 +156,14 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (13 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (16 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
 the panel staying open and the dot clearing on the next data update, mark-all
 and clear, Escape and an outside press, arrow movement skipping headings with
-Enter reading the reached row, a prepend that leaves the reader's row where it
-was, and the light theme's roles. The pure grouping
+Enter reading the reached row, a header action that runs without reading a row,
+a header action that keeps the reading cursor and focus in place, arrows and
+Enter still reaching the row that holds focus, a prepend that leaves the reader's
+row where it was, and the light theme's roles. The pure grouping
 and count rules live in `src/notification-centre/model.test.ts` (5 tests).

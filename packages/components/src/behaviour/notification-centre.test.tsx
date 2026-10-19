@@ -326,6 +326,69 @@ describe("NotificationCentre", () => {
     root.unmount();
   });
 
+  it("runs a header action without reading the active row", () => {
+    const onRead = vi.fn();
+    const onMarkAllRead = vi.fn();
+    const root = renderComponent(
+      <Centre
+        notifications={seed}
+        onRead={onRead}
+        onMarkAllRead={onMarkAllRead}
+        defaultOpen
+      />,
+    );
+    const action = root.renderer.findByTestId("mark-all");
+    if (action === undefined) throw new Error("behaviour: no header action");
+
+    root.renderer.nativeSimulateKeystrokes(action.id, "enter");
+
+    expect(onMarkAllRead).toHaveBeenCalledTimes(1);
+    expect(onRead).not.toHaveBeenCalled();
+    expect(isShown(root, "panel")).toBe(true);
+
+    root.unmount();
+  });
+
+  it("leaves the reading cursor alone while a header action holds focus", () => {
+    const root = renderComponent(
+      <Centre
+        notifications={seed}
+        onMarkAllRead={() => undefined}
+        defaultOpen
+      />,
+    );
+    const action = root.renderer.findByTestId("mark-all");
+    if (action === undefined) throw new Error("behaviour: no header action");
+
+    root.renderer.nativeSimulateKeystrokes(action.id, "down");
+
+    expect(root.renderer.getFocusedElementId?.()).toBe(action.id);
+    expect(background(root, "feed-deploy")).toBe(darkTheme.colors.accent);
+    expect(background(root, "feed-review")).toBeUndefined();
+
+    root.unmount();
+  });
+
+  it("keeps arrow and Enter working while a row holds focus", () => {
+    const onRead = vi.fn();
+    const root = renderComponent(
+      <Centre notifications={seed} onRead={onRead} defaultOpen />,
+    );
+    const panel = root.renderer.findByTestId("panel");
+    const review = root.renderer.findByTestId("feed-review");
+    if (panel === undefined || review === undefined)
+      throw new Error("behaviour: the panel or row is missing");
+
+    root.renderer.nativeSimulateKeystrokes(panel.id, "down");
+    expect(root.renderer.getFocusedElementId?.()).toBe(review.id);
+
+    root.renderer.simulateKeystrokes("enter");
+    expect(onRead).toHaveBeenCalledTimes(1);
+    expect(onRead).toHaveBeenCalledWith("review");
+
+    root.unmount();
+  });
+
   it("keeps the reader's row when a notification is prepended while scrolled", () => {
     const items: ReadonlyArray<NotificationItem> = Array.from(
       { length: 12 },
