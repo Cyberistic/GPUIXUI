@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 289/363
+`[x]` `[████████░░]` 290/363
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2428,6 +2428,15 @@ soft status fills a documented Alert field sits on, `selectionPressPairs` gains
 typed text on `selectedActive`, and the identity light hint (**4.439:1** on
 `destructiveSoft`) and the AAA light hint (6.993:1) move a half-step;
 `contrastPairs` grows 451 → 460 and every shipped set passes (plan 659)
+`[x]` Hold the pressed selected row's prose to its published pairs — plan 651
+put `selectedForeground` on `selectedActive` and plan 659 added typed text, so
+the pair carries six text roles and the inherited label is measured on five
+fills, but the catalogue said "five text roles" and "all four fills it keeps"
+in three places (the row-text paragraph named only three washes beside
+`selected`) and the design system's `selected` row omitted the pressed fill;
+both documents now name every fill, and two guards derive the count and the
+list from `selectionPairs`, `selectionPressPairs` and `contrastPairs`; no
+colour, pair, floor or metric moves (plan 663)
 
 ## Phase C — Tier 1–2 components
 

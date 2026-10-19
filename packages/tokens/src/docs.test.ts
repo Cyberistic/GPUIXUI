@@ -134,6 +134,8 @@ import {
   overlaySurfaces,
   relativeLuminance,
   selectionInactivePairs,
+  selectionPairs,
+  selectionPressPairs,
   selectionSurfaces,
   selectionFillRoles,
   softBorderSurfacePairs,
@@ -371,6 +373,14 @@ const countWords = [
 
 const countWord = (count: number): string => countWords[count] ?? String(count);
 
+/** The fills a selected row's inherited label is measured on, from a pair list. */
+const labelFills = (
+  pairs: ReadonlyArray<readonly [string, string, string]>,
+): ReadonlyArray<string> =>
+  pairs
+    .filter(([foreground]) => foreground === "selectedForeground")
+    .map(([, background]) => background);
+
 describe("docs/tokens.md contract counts", () => {
   it("states the surface counts of the nested pair lists", () => {
     const prose = markdown.replace(/\s+/g, " ");
@@ -466,6 +476,50 @@ describe("docs/tokens.md contract counts", () => {
     const prose = markdown.replace(/\s+/g, " ");
     expect(prose).toContain(
       "The suite derives its inventory from the package's exports, so a list added later cannot ship without the check.",
+    );
+  });
+
+  it("states the pressed row's text-role count from the published pair", () => {
+    const textRoles = selectionPressPairs
+      .filter(
+        ([, , pairClass]) => pairClass === "body" || pairClass === "secondary",
+      )
+      .map(([foreground]) => foreground);
+
+    expect(textRoles.length).toBeGreaterThan(0);
+    expect(markdownProse).toContain(
+      `\`selectionPressPairs\` holds the ${countWord(textRoles.length)} text roles`,
+    );
+    expect(markdownProse).not.toContain(
+      "`selectionPressPairs` holds the five text roles",
+    );
+  });
+});
+
+describe("docs selected-row label fills", () => {
+  it("names every fill the inherited label is measured on", () => {
+    const resting = labelFills(selectionPairs);
+    const pressed = labelFills(selectionPressPairs);
+    const all = contrastPairs
+      .filter(([foreground]) => foreground === "selectedForeground")
+      .map(([, background]) => background);
+
+    expect(pressed).toEqual(["selectedActive"]);
+    expect(all).toHaveLength(resting.length + pressed.length);
+    [...resting, ...pressed].forEach((fill) => expect(all).toContain(fill));
+
+    expect(markdownProse).toContain(
+      `on all ${countWord(resting.length)} resting fills it keeps`,
+    );
+    expect(markdownProse).not.toContain("on all four fills it keeps");
+
+    const selectedRow = tableRow("selected |");
+    const clause = selectedRow.slice(
+      selectedRow.indexOf("the label is held on"),
+      selectedRow.indexOf("; a chosen row"),
+    );
+    [...resting, ...pressed].forEach((fill) =>
+      expect(clause, fill).toContain(`\`${fill}\``),
     );
   });
 });
@@ -1290,7 +1344,7 @@ describe("docs/tokens.md quoted figures", () => {
       "`selectionPairs` holds each surface's body and secondary text pairs",
       "`selectionPairs` holds the body role each surface uses",
       "a menu row's `popoverForeground` on the three washes it paints",
-      "a selected row's inherited `selectedForeground` on all four fills it keeps",
+      `a selected row's inherited \`selectedForeground\` on all ${countWord(labelFills(selectionPairs).length)} resting fills it keeps`,
       "`selectionWashPairs` holds the wash itself",
       "`selectionSoftPairs` measures all four text roles a status panel carries",
       "`selectionSoftWashPairs` the wash's own perceivability",

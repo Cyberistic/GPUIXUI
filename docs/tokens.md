@@ -1571,8 +1571,8 @@ fills, and a selected row keeps its inherited `selectedForeground` on `hover`,
 both through the wash beside the `foreground` the list-row title uses. The audit
 found high-contrast light's inherited label at **6.693:1** on the pressed row's
 wash, under 7:1, while every check returned `[]`; the value moves one iris step
-(`#2E2370` → `#1C1547`) and the four fills measure **8.533:1** at the tightest,
-no other colour moving.
+(`#2E2370` → `#1C1547`) and the four resting fills measure **8.533:1** at the
+tightest, no other colour moving.
 Secondary text is held to the secondary floor through the same wash on all nine
 surfaces (`mutedForeground`), because a row description, a card caption or a
 message timestamp is selected with the body copy around it. The soft surfaces
@@ -1622,7 +1622,8 @@ alpha window left. `selectionSurfaces` is the list of plain surfaces,
 second text role
 (`cardForeground` beside `foreground`), a menu row's `popoverForeground` on the
 three washes it paints and a selected row's title (`foreground`) beside its
-inherited label on all four fills it keeps, and `selectionWashPairs` holds the wash itself to the
+inherited label on all four resting fills it keeps, plus the pressed
+`selectedActive`, and `selectionWashPairs` holds the wash itself to the
 1.05:1 perceivability floor on each surface, so a highlight that is technically
 readable but invisible fails the check too.
 
@@ -2254,7 +2255,8 @@ at the secondary floor — reported with `wash: "selection"`. `selectionPairs` i
 the text list; it names both of a card's text roles, the default `foreground` and
 `cardForeground`, a menu row's `popoverForeground` on the three washes it paints,
 and both of a selected row's, the title `foreground` and the inherited
-`selectedForeground` on all four fills it keeps. The four status labels join it through
+`selectedForeground` on all four resting fills it keeps, plus the pressed
+`selectedActive`. The four status labels join it through
 `selectionStatusPairs`,
 because `xText` is the role a status label, icon or dot paints on the four washes
 a row uses, and a selectable row's label is dragged over with the copy around
@@ -3288,8 +3290,9 @@ The other row text roles have their own pairs. A menu row paints
 `popoverForeground` on `hover`/`active`, a selected `Select` option paints it on
 `selected` — the shipped `selectItemStyle` keeps the menu foreground when the row
 fills — and a selected row under the pointer keeps its inherited
-`selectedForeground` on `accent`, `hover` and `active`; all three take the
-secondary floor, matching `selectedForeground` on `selected`. The `accent` fill
+`selectedForeground` on `accent`, `hover`, `active` and the pressed
+`selectedActive`; all four take the secondary floor, matching
+`selectedForeground` on `selected`. The `accent` fill
 is the one a selectable `ListItem` paints on hover, so it is a composition the
 list API invites, not a spare surface. The tightest shipped values are
 `foreground` on `selected` at **8.44:1** (Linux dark),
@@ -3425,7 +3428,7 @@ pressed. That press previews the canvas the click returns it to when it
 deselects the row, so it is the one pointer state that moves toward the canvas;
 `selectedActive` is a 24% veil of the canvas colour over `selected`, shipped as
 an editable opaque literal in every palette. `selectionPressStepPairs` publishes
-the step, `selectionPressPairs` holds the five text roles, the disabled label
+the step, `selectionPressPairs` holds the six text roles, the disabled label
 and the three chrome roles a pressed row paints, the four status labels come
 from `statusTextSurfaces`, and `stateLadders` carries the ladder with
 `direction: "toward"`. Before plan `651` the design system claimed the chosen row
@@ -3807,7 +3810,8 @@ visible.
 Text selection is measured in both directions: `selectionPairs` holds the body
 role each surface uses and `mutedForeground` on all nine `selectionSurfaces` to
 their floors, a menu row's `popoverForeground` on the three washes it paints, and
-a selected row's inherited `selectedForeground` on all four fills it keeps, and
+a selected row's inherited `selectedForeground` on all four resting fills it
+keeps, plus the pressed `selectedActive`, and
 `selectionWashPairs` holds the wash itself to the 1.05:1
 perceivability floor on each plain surface and on the `disabled` fill an
 unavailable label keeps, because a highlight can be readable and still be

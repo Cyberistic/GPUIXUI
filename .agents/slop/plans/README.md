@@ -317,6 +317,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [656](./656-copyable-theme-declarations.md) | Every copyable block declares the theme it paints with | F | 355, 356, 655 | done |
 | [658](./658-recipe-edit-family.md) | The documented recipe edit must own its whole family | F | 310, 311, 318, 327, 330, 331, 355, 389 | done |
 | [659](./659-field-content-surfaces.md) | The field's own content inside a status panel and a pressed selected row | F | 092, 306, 307, 315, 317, 319, 391, 527, 649, 651 | done |
+| [663](./663-selected-label-fills.md) | The pressed selected row's label and text-role count in the prose | F | 316, 506, 623, 651, 659 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3459,6 +3460,17 @@ and the two shipped hints move one half-step (`#5C6574` → `#5A6372`,
 clears the new pairs (4.575:1 for the hint, 10.455:1 for typed text in a panel
 and 11.432:1 on the pressed row at the tightest), and `soft-field.test.ts` states
 both bugs and reconstructs the pre-fix values to prove the guard can fail.
+
+Plan `663` follows plan `659`'s own edit into the prose. `selectionPressPairs`
+grew a typed-text role and already held `selectedForeground` on the pressed
+`selectedActive` from plan `651`, so the list carries **six** text roles and the
+inherited label is measured on **five** fills. The catalogue said five roles in
+the pressed-row paragraph and "all four fills it keeps" in three label sentences
+(the row-text paragraph named only three washes besides `selected`), and the
+design system's `selected` interaction row omitted the pressed fill. Two derived
+guards now read the count and the fill list from `selectionPressPairs`,
+`selectionPairs` and `contrastPairs`, so a seventh role or a sixth fill moves the
+words with it. No colour, pair, floor, metric or shipped theme moves.
 
 ## How to use a plan
 
