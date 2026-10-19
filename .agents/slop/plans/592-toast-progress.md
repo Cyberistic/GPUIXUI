@@ -199,6 +199,9 @@ Add cases (use `TestClock`; no real waits):
 4. **Removing a toast removes its timing.** Dismiss and assert `timings` is `[]`.
 5. **A non-dismissing toast publishes no timing.** Push `Duration.infinity`;
    `timings` is `[]`.
+6. **The timing stream emits the current value, then each update.** Subscribe to
+   `timingChanges`, push on the first empty emission and assert the second
+   emission carries the 2 s total.
 
 Keep the existing tests unchanged. They prove the dismissal itself still uses the
 same deadline.
@@ -226,11 +229,18 @@ In `ToastCard`:
 - Render `null` when the timing is `None` or `totalMs <= 0`; otherwise render a
   2px track at the bottom of the card:
   - `position: "absolute"`, `left: 0`, `bottom: 0`, `height: 2`, `width: "100%"`.
-  - Inside it, a fill with `width: `${progressPercent(timing)}%``,
-    `height: "100%"`, `backgroundColor: palette.fg`, `pointerEvents: "none"`.
+  - Inside it, a fill with a **pixel** width,
+    `Math.round((progressPercent(timing) / 100) * CARD_WIDTH)`, `height: 2`,
+    `backgroundColor: palette.fg`, `pointerEvents: "none"`.
   - `testId={`toast-${toast.id}-progress`}` on the fill.
   - The card gets `position: "relative"` so the bar anchors to the card; the
     existing `overflow: "hidden"` clips it to the radius.
+
+  **Measured during implementation:** a fill whose authored width was a
+  percentage string did not appear in the native test tree (`findByTestId`
+  returned `undefined`); the same node with a pixel width was found. The fill is
+  therefore a share of the card's fixed `CARD_WIDTH` (380), which is also what
+  the test asserts. This is a layout-reporting fact, not a visual one.
 - Keep the left tone bar and every existing card rule.
 
 The progress bar must not get a `role`, `tabIndex`, `aria-*` or pointer handler.
@@ -243,10 +253,10 @@ Add two native cases:
 1. **A short toast paints a shrinking bar that holds while the pointer is on the
    card.** Render the harness with `duration={Duration.millis(900)}`, push, wait
    `settle()`. Read `toast-1-progress`'s `style.width`, wait 300 ms, read again and
-   assert the second percentage is lower. Hover the card, capture the width, wait
+   assert the second pixel width is lower. Hover the card, capture the width, wait
    300 ms and assert the width is unchanged. Leave the card and wait for the exit
    via `finishExit`, then assert the card is gone.
-   Parse the width with a small helper; the value is a `"NN%"` string.
+   The helper asserts the width is a number (the measured pixel rule above).
 2. **A toast that never auto-dismisses has no bar.** Push `persistent` through a
    new button in the harness (or a dedicated `Harness` prop), settle, and assert
    `findByTestId("toast-1-progress")` is `undefined`.
@@ -352,7 +362,7 @@ Stop and report, do not improvise, if:
 - `Stream.mapEffect` or `SubscriptionRef.changes` is unavailable in the pinned
   Effect 4.0.5 — check the installed declaration first.
 - The native test cannot read the bar's authored `style.width` (it is missing or
-  not a string); do not replace it with a bounds assertion, because plan 540 says
+  not a number); do not replace it with a bounds assertion, because plan 540 says
   those boxes are not well-defined.
 - The full behaviour suite gains any failure beyond the known 35.
 - The `ToastTiming` type cannot be added without making a public export whose
@@ -365,8 +375,8 @@ Stop and report, do not improvise, if:
 - A zero/infinite toast paints no bar.
 - `store.timings` reports total, remaining and paused at every transition under
   `TestClock`.
-- Pure helpers are tested (6 cases), store tests (5 cases) and native tests
-  (2 cases) pass.
+- Pure helpers are tested (6 cases), store tests (6 cases, including the stream)
+  and native tests (2 cases) pass.
 - `COMPONENTS.md`, `docs/toast.mdx`, `toastMeta`, `TODO.md`, `PLAN.md` and the
   plan index agree with the implementation; no "No progress indicator" claim
   remains.

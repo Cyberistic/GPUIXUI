@@ -19,4 +19,5 @@ export type { ToastApi, ToastProviderProps } from "./toast/provider.js";
 export { ToastViewport, toastMeta } from "./toast/viewport.js";
 export type { ToastPosition, ToastViewportProps } from "./toast/viewport.js";
 export type { ToastDraft, ToastStoreOptions } from "./toast/store.js";
+export type { ToastTiming } from "./toast/timing.js";
 export { Toast, ToastInput, ToastTone } from "./toast/model.js";

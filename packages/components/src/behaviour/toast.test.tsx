@@ -10,7 +10,8 @@
  * could render with no handler (a dead button), run twice, leave its toast
  * behind, or let the toast expire while its action held keyboard focus. The
  * viewport could also ignore the corner it is given and always paint
- * bottom-right.
+ * bottom-right. A progress bar could keep shrinking through a hover hold, or
+ * claim a total for a toast that never auto-dismisses.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -95,6 +96,14 @@ const Controls = ({
       >
         Push warning
       </Button>
+      <Button
+        testId="push-persistent"
+        onClick={() =>
+          toast.push({ title: "Sticky", duration: Duration.infinity })
+        }
+      >
+        Push persistent
+      </Button>
       <Button testId="dismiss-all" onClick={toast.dismissAll}>
         Dismiss all
       </Button>
@@ -146,6 +155,15 @@ const toastY = (root: ComponentTestRoot, testId: string): number =>
   Option.getOrElse(boundsOf(root, testId), () => {
     throw new Error(`behaviour: no toast "${testId}"`);
   }).y;
+
+/** The progress fill's authored width, in pixels. */
+const progressWidth = (root: ComponentTestRoot): number => {
+  const width = root.renderer.findByTestId("toast-1-progress")?.style.width;
+  if (typeof width !== "number") {
+    throw new Error("behaviour: no toast progress bar");
+  }
+  return width;
+};
 
 describe("Toast", () => {
   it("exposes a pushed toast's message as the status region", async () => {
@@ -340,6 +358,48 @@ describe("Toast", () => {
     finishExit(page);
 
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("paints a shrinking bar that holds while the pointer rests on the card", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(2)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
+
+    const start = progressWidth(page);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await settle();
+    const later = progressWidth(page);
+    expect(later).toBeLessThan(start);
+
+    hoverCentreOf(page, "toast-1");
+    await settle();
+    const held = progressWidth(page);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await settle();
+    expect(progressWidth(page)).toBe(held);
+
+    hoverCentreOf(page, "elsewhere");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await settle();
+    expect(progressWidth(page)).toBeLessThan(held);
+
+    page.unmount();
+  });
+
+  it("draws no progress bar for a toast that never auto-dismisses", async () => {
+    const page = renderComponent(<Harness />);
+
+    clickCentreOf(page, "push-persistent");
+    await settle();
+
+    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    expect(page.renderer.findByTestId("toast-1-progress")).toBeUndefined();
 
     page.unmount();
   });

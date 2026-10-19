@@ -14,7 +14,7 @@ import { toastMotion } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
 import { motionProps } from "../internal/motion.js";
 import {
@@ -27,6 +27,12 @@ import {
 } from "../internal/theme.js";
 import type { Toast, ToastTone } from "./model.js";
 import { useToast } from "./provider.js";
+import {
+  PROGRESS_TICK_MS,
+  progressPercent,
+  tickTiming,
+  type ToastTiming,
+} from "./timing.js";
 
 /** The status tone behind a toast's bar and icon. */
 const asTone = (value: ToastTone): Tone =>
@@ -37,6 +43,9 @@ const asTone = (value: ToastTone): Tone =>
     Match.when("danger", () => "danger" as const),
     Match.exhaustive,
   );
+
+/** The card's fixed width; the progress fill is a share of this track. */
+const CARD_WIDTH = 380;
 
 /** The mark each tone shows. */
 const toneIcon = (value: ToastTone): IconName =>
@@ -51,9 +60,25 @@ const toneIcon = (value: ToastTone): IconName =>
 /** One card. Its left bar and icon carry the tone; the surface is neutral. */
 const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
-  const { dismiss, pause, resume, actionFor } = useToast();
+  const { dismiss, pause, resume, actionFor, timingFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
   const held = useRef({ hover: false, focus: 0, paused: false });
+  const published = Option.match(timingFor(toast.id), {
+    onNone: () => undefined,
+    onSome: (timing) => timing,
+  });
+  const [shown, setShown] = useState<Option.Option<ToastTiming>>(
+    Option.fromNullishOr(published),
+  );
+
+  useEffect(() => {
+    setShown(Option.fromNullishOr(published));
+    if (published === undefined || published.paused) return;
+    const interval = setInterval(() => {
+      setShown((current) => Option.map(current, tickTiming));
+    }, PROGRESS_TICK_MS);
+    return () => clearInterval(interval);
+  }, [published]);
 
   /** Pause while either reason holds; resume only when the last one leaves. */
   const syncHold = (): void => {
@@ -97,10 +122,11 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "row",
         alignItems: "flex-start",
-        width: 380,
+        width: CARD_WIDTH,
         backgroundColor: theme.colors.popover,
         color: theme.colors.popoverForeground,
         borderWidth: theme.borderWidth.thin,
@@ -190,6 +216,35 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
           <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
         </IconButton>
       </div>
+      {Option.match(shown, {
+        onNone: () => null,
+        onSome: (timing) =>
+          timing.totalMs <= 0 ? null : (
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                bottom: 0,
+                width: "100%",
+                height: 2,
+                backgroundColor: theme.colors.muted,
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                testId={`toast-${toast.id}-progress`}
+                style={{
+                  width: Math.round(
+                    (progressPercent(timing) / 100) * CARD_WIDTH,
+                  ),
+                  height: 2,
+                  backgroundColor: palette.fg,
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+          ),
+      })}
     </div>
   );
 };
@@ -270,7 +325,7 @@ export const ToastViewport = ({
               ? "flex-start"
               : "flex-end",
           gap: theme.spacing.md,
-          maxWidth: 380,
+          maxWidth: CARD_WIDTH,
           pointerEvents: "none",
         },
         style,
@@ -296,7 +351,6 @@ export const toastMeta = {
   gpuixSupport: "yes",
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
-    "no progress indicator for the remaining auto-dismiss time",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
   ],
   docs: "docs/toast.mdx",

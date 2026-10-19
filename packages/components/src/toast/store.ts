@@ -9,7 +9,7 @@
  * toast other than the one it was scheduled for, and tests stay deterministic.
  */
 
-import { Effect, pipe } from "effect";
+import { Effect, Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -18,18 +18,51 @@ import * as FiberMap from "effect/FiberMap";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Ref from "effect/Ref";
+import * as Order from "effect/Order";
 import type * as Scope from "effect/Scope";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
 import { Toast, ToastInput } from "./model.js";
+import { clampRemaining, type ToastTiming } from "./timing.js";
 
 /** The queue and its id counter, in one value so every update is atomic. */
 interface State {
   readonly seq: number;
   readonly toasts: ReadonlyArray<Toast>;
 }
+
+/** A live auto-dismiss timer: counting down, or held with a remainder. */
+type Timer =
+  | {
+      readonly _tag: "running";
+      readonly totalMs: number;
+      readonly deadline: number;
+    }
+  | {
+      readonly _tag: "paused";
+      readonly totalMs: number;
+      readonly remainingMs: number;
+    };
+
+/** Project one clock row to the public timing shape at `now`. */
+const timingOf = (id: string, timer: Timer, now: number): ToastTiming =>
+  Match.value(timer).pipe(
+    Match.tagsExhaustive({
+      running: (running) => ({
+        id,
+        totalMs: running.totalMs,
+        remainingMs: clampRemaining(running.totalMs, running.deadline - now),
+        paused: false,
+      }),
+      paused: (held) => ({
+        id,
+        totalMs: held.totalMs,
+        remainingMs: clampRemaining(held.totalMs, held.remainingMs),
+        paused: true,
+      }),
+    }),
+  );
 
 /** A toast a caller may push, as plain data. */
 export type ToastDraft = typeof ToastInput.Encoded;
@@ -40,6 +73,10 @@ export interface ToastStoreService {
   readonly toasts: Effect.Effect<ReadonlyArray<Toast>>;
   /** The queue, re-emitted on every change (current value first). */
   readonly changes: Stream.Stream<ReadonlyArray<Toast>>;
+  /** The current timer state of every auto-dismissing toast. */
+  readonly timings: Effect.Effect<ReadonlyArray<ToastTiming>>;
+  /** `timings`, re-emitted whenever a timer starts, pauses, resumes or ends. */
+  readonly timingChanges: Stream.Stream<ReadonlyArray<ToastTiming>>;
   /** Decode a draft, append it, and schedule its auto-dismiss. */
   readonly push: (
     draft: ToastDraft,
@@ -92,10 +129,8 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
 
   const state = yield* SubscriptionRef.make<State>({ seq: 0, toasts: [] });
   const timers = yield* FiberMap.make<string>();
-  /** Deadlines of the running timers, in epoch millis. */
-  const deadlines = yield* Ref.make(HashMap.empty<string, number>());
-  /** Remaining millis of the paused timers. Absent means "not paused". */
-  const paused = yield* Ref.make(HashMap.empty<string, number>());
+  /** The observable timer state; the FiberMap only owns the live sleeps. */
+  const clocks = yield* SubscriptionRef.make(HashMap.empty<string, Timer>());
 
   /** Drop `id` from the queue. Touches no timer, so a timer may call it. */
   const drop = Effect.fnUntraced(function* (id: string) {
@@ -105,17 +140,44 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     }));
   });
 
-  /** Cancel `id`'s timer and forget its deadline and remaining time. */
+  /** Cancel `id`'s timer and forget its published clock. */
   const forget = Effect.fnUntraced(function* (id: string) {
     yield* FiberMap.remove(timers, id);
-    yield* Ref.update(deadlines, HashMap.remove(id));
-    yield* Ref.update(paused, HashMap.remove(id));
+    yield* SubscriptionRef.update(clocks, HashMap.remove(id));
   });
 
-  /** Sleep `millis`, then drop; record the deadline while it runs. */
-  const schedule = Effect.fnUntraced(function* (id: string, millis: number) {
+  /** Remove only the running row a finished timer owns, never a newer hold. */
+  const forgetRunning = (id: string, deadline: number) =>
+    SubscriptionRef.update(clocks, (current) =>
+      pipe(
+        HashMap.get(current, id),
+        Option.match({
+          onNone: () => current,
+          onSome: (timer) =>
+            Match.value(timer).pipe(
+              Match.tagsExhaustive({
+                running: (running) =>
+                  running.deadline === deadline
+                    ? HashMap.remove(current, id)
+                    : current,
+                paused: () => current,
+              }),
+            ),
+        }),
+      ),
+    );
+
+  /** Sleep `millis`, then drop; publish the deadline under its full total. */
+  const schedule = Effect.fnUntraced(function* (
+    id: string,
+    millis: number,
+    totalMs: number = millis,
+  ) {
     const now = yield* Clock.currentTimeMillis;
-    yield* Ref.update(deadlines, HashMap.set(id, now + millis));
+    const deadline = now + millis;
+    yield* SubscriptionRef.update(clocks, (current) =>
+      HashMap.set(current, id, { _tag: "running", totalMs, deadline } as const),
+    );
     yield* FiberMap.run(
       timers,
       id,
@@ -123,8 +185,21 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
         // `drop` first, so the queue is already correct if the timer is
         // interrupted between the sleep and this cleanup.
         Effect.andThen(drop(id)),
-        Effect.ensuring(Ref.update(deadlines, HashMap.remove(id))),
+        Effect.ensuring(forgetRunning(id, deadline)),
       ),
+    );
+  });
+
+  /** Read the clock rows at one instant, with ids in queue order. */
+  const readTimings = Effect.fnUntraced(function* (
+    current: HashMap.HashMap<string, Timer>,
+  ) {
+    const now = yield* Clock.currentTimeMillis;
+    return Arr.sort(
+      Arr.map(HashMap.toEntries(current), ([id, timer]) =>
+        timingOf(id, timer, now),
+      ),
+      Order.mapInput(Order.Number, (timing: ToastTiming) => Number(timing.id)),
     );
   });
 
@@ -139,51 +214,66 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
       toasts: [],
     }));
     yield* FiberMap.clear(timers);
-    yield* Ref.set(deadlines, HashMap.empty());
-    yield* Ref.set(paused, HashMap.empty());
+    yield* SubscriptionRef.set(clocks, HashMap.empty());
   })();
 
   const pause = Effect.fn("ToastStore.pause")(function* (id: string) {
     const now = yield* Clock.currentTimeMillis;
-    const remaining = yield* Ref.modify(deadlines, (current) =>
+    const held = yield* SubscriptionRef.modify(clocks, (current) =>
       pipe(
         HashMap.get(current, id),
         Option.match({
-          onNone: () => [Option.none<number>(), current] as const,
-          onSome: (deadline) =>
-            [
-              Option.some(Math.max(0, deadline - now)),
-              HashMap.remove(current, id),
-            ] as const,
+          onNone: () => [false, current] as const,
+          onSome: (timer) =>
+            Match.value(timer).pipe(
+              Match.tagsExhaustive({
+                running: (running) =>
+                  [
+                    true,
+                    HashMap.set(current, id, {
+                      _tag: "paused",
+                      totalMs: running.totalMs,
+                      remainingMs: clampRemaining(
+                        running.totalMs,
+                        running.deadline - now,
+                      ),
+                    } as const),
+                  ] as const,
+                paused: () => [false, current] as const,
+              }),
+            ),
         }),
       ),
     );
 
-    yield* Option.match(remaining, {
-      onNone: () => Effect.void,
-      onSome: (millis) =>
-        Effect.gen(function* () {
-          yield* FiberMap.remove(timers, id);
-          yield* Ref.update(paused, HashMap.set(id, millis));
-        }),
-    });
+    if (held) yield* FiberMap.remove(timers, id);
   });
 
   const resume = Effect.fn("ToastStore.resume")(function* (id: string) {
-    const remaining = yield* Ref.modify(paused, (current) =>
+    const held = yield* SubscriptionRef.modify(clocks, (current) =>
       pipe(
         HashMap.get(current, id),
         Option.match({
-          onNone: () => [Option.none<number>(), current] as const,
-          onSome: (millis) =>
-            [Option.some(millis), HashMap.remove(current, id)] as const,
+          onNone: () =>
+            [Option.none<Timer & { _tag: "paused" }>(), current] as const,
+          onSome: (timer) =>
+            Match.value(timer).pipe(
+              Match.tagsExhaustive({
+                running: () =>
+                  [Option.none<Timer & { _tag: "paused" }>(), current] as const,
+                paused: (paused) => [Option.some(paused), current] as const,
+              }),
+            ),
         }),
       ),
     );
 
-    yield* Option.match(remaining, {
+    yield* Option.match(held, {
       onNone: () => Effect.void,
-      onSome: (millis) => (millis <= 0 ? drop(id) : schedule(id, millis)),
+      onSome: (paused) =>
+        paused.remainingMs <= 0
+          ? Effect.andThen(drop(id), forget(id))
+          : schedule(id, paused.remainingMs, paused.totalMs),
     });
   });
 
@@ -231,6 +321,11 @@ export const makeToastStore = Effect.fn("ToastStore.make")(function* (
     changes: pipe(
       SubscriptionRef.changes(state),
       Stream.map((current) => current.toasts),
+    ),
+    timings: pipe(SubscriptionRef.get(clocks), Effect.flatMap(readTimings)),
+    timingChanges: Stream.mapEffect(
+      SubscriptionRef.changes(clocks),
+      readTimings,
     ),
     push,
     dismiss,

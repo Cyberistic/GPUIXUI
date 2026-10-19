@@ -187,6 +187,105 @@ describe("ToastStore", () => {
     ),
   );
 
+  it.effect("emits the current timing, then each clock update", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+
+        const seen = yield* store.timingChanges.pipe(
+          Stream.tap((timings) =>
+            Arr.length(timings) === 0
+              ? store.push({ title: "Saved", duration: Duration.seconds(2) })
+              : Effect.void,
+          ),
+          Stream.take(2),
+          Stream.runCollect,
+        );
+
+        expect(
+          Arr.map(Arr.fromIterable(seen), (timings) =>
+            Arr.map(timings, (timing) => timing.remainingMs),
+          ),
+        ).toEqual([[], [2000]]);
+      }),
+    ),
+  );
+
+  it.effect("publishes the starting total and full remaining time", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Saved", duration: Duration.seconds(2) });
+
+        expect(yield* store.timings).toEqual([
+          { id: "1", totalMs: 2000, remainingMs: 2000, paused: false },
+        ]);
+      }),
+    ),
+  );
+
+  it.effect("reports the remaining time from the clock", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Saved", duration: Duration.seconds(2) });
+
+        yield* TestClock.adjust(Duration.seconds(1));
+
+        expect(yield* store.timings).toEqual([
+          { id: "1", totalMs: 2000, remainingMs: 1000, paused: false },
+        ]);
+      }),
+    ),
+  );
+
+  it.effect("pauses the published remainder and resumes it", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Saved", duration: Duration.seconds(2) });
+        yield* TestClock.adjust(Duration.seconds(1));
+
+        yield* store.pause("1");
+        yield* TestClock.adjust(Duration.minutes(1));
+        expect(yield* store.timings).toEqual([
+          { id: "1", totalMs: 2000, remainingMs: 1000, paused: true },
+        ]);
+
+        yield* store.resume("1");
+        yield* TestClock.adjust(Duration.millis(900));
+        expect(yield* store.timings).toEqual([
+          { id: "1", totalMs: 2000, remainingMs: 100, paused: false },
+        ]);
+        expect(ids(yield* store.toasts)).toEqual(["1"]);
+      }),
+    ),
+  );
+
+  it.effect("removes a toast's timing when it is dismissed", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push({ title: "Saved", duration: Duration.seconds(2) });
+
+        yield* store.dismiss("1");
+
+        expect(yield* store.timings).toEqual([]);
+      }),
+    ),
+  );
+
+  it.effect("publishes no timing for a toast that never auto-dismisses", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+
+        expect(yield* store.timings).toEqual([]);
+      }),
+    ),
+  );
+
   it.effect("never lets a cancelled timer dismiss a later toast", () =>
     withStore(
       Effect.gen(function* () {

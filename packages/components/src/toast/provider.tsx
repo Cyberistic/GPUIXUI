@@ -32,6 +32,7 @@ import {
   type ToastStoreOptions,
 } from "./store.js";
 import { createRuntimeLifecycle } from "./lifecycle.js";
+import type { ToastTiming } from "./timing.js";
 
 /** The UI half of a toast action; the label travels in `ToastDraft.action`. */
 export interface ToastPushOptions {
@@ -53,6 +54,8 @@ export interface ToastApi {
   readonly resume: (id: string) => void;
   /** The handler for a queued action. Absence means the caller supplied none. */
   readonly actionFor: (id: string) => Option.Option<() => void>;
+  /** The live auto-dismiss timing, absent for a card that never expires. */
+  readonly timingFor: (id: string) => Option.Option<ToastTiming>;
 }
 
 const ToastContext = createContext<ToastApi | undefined>(undefined);
@@ -88,6 +91,9 @@ export const ToastProvider = ({
   const [actions, setActions] = useState<HashMap.HashMap<string, () => void>>(
     HashMap.empty,
   );
+  const [timings, setTimings] = useState<HashMap.HashMap<string, ToastTiming>>(
+    HashMap.empty,
+  );
   const [lifecycle] = useState(() =>
     createRuntimeLifecycle(() => {
       void runtime.dispose();
@@ -104,6 +110,25 @@ export const ToastProvider = ({
       Effect.flatMap(ToastStore, (store) =>
         Stream.runForEach(store.changes, (next) =>
           Effect.sync(() => setToasts(next)),
+        ),
+      ),
+    );
+    return () => {
+      runtime.runFork(Fiber.interrupt(fiber));
+    };
+  }, [runtime]);
+
+  useEffect(() => {
+    const fiber = runtime.runFork(
+      Effect.flatMap(ToastStore, (store) =>
+        Stream.runForEach(store.timingChanges, (next) =>
+          Effect.sync(() =>
+            setTimings(
+              HashMap.fromIterable(
+                Arr.map(next, (timing) => [timing.id, timing] as const),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -174,6 +199,11 @@ export const ToastProvider = ({
     [actions],
   );
 
+  const timingFor = useCallback(
+    (id: string): Option.Option<ToastTiming> => HashMap.get(timings, id),
+    [timings],
+  );
+
   const api = useMemo<ToastApi>(
     () => ({
       toasts,
@@ -183,8 +213,9 @@ export const ToastProvider = ({
       pause,
       resume,
       actionFor,
+      timingFor,
     }),
-    [actionFor, dismiss, dismissAll, pause, push, resume, toasts],
+    [actionFor, dismiss, dismissAll, pause, push, resume, timings, toasts],
   );
 
   return <ToastContext.Provider value={api}>{children}</ToastContext.Provider>;

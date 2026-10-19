@@ -52,6 +52,7 @@ pointer events back on, so a toast never blocks the page underneath.
 | hovering a card | pauses its clock; leaving resumes with the **remaining** time |
 | focusing a card's controls | pauses its clock; moving focus away resumes with the **remaining** time |
 | an action | one labelled control; pressing it runs the handler once and dismisses the toast |
+| progress | a positive finite `duration` paints a 2px bar across the card bottom; it shrinks every 100 ms, freezes during a pause and resumes with the same remainder |
 | placement | `position` picks `top-left`, `top-right`, `bottom-left` or `bottom-right` (default); the oldest toast is topmost and the stack hugs the named horizontal side in every corner |
 
 A dismissed toast's timer is cancelled with it, so a stale timer can never remove
@@ -63,6 +64,12 @@ affordance (a button, a hover target, a focus ring). The viewport holds a card's
 clock while the pointer is on it **or** focus is inside it, and resumes only when
 both have left; the pause keeps the remaining time, so the two reasons compose
 without restarting the countdown.
+
+The same hold freezes the progress bar: the store publishes the running deadline
+or the paused remainder as `ToastTiming`, and the card ticks that value locally
+every 100 ms. The visual tick is not the dismissal clock — the store still drops
+the toast at the exact deadline. A zero or infinite duration has no timer, so it
+draws no progress bar.
 
 Tones are `info` (default), `success`, `warning` and `danger`; each paints the
 3px left bar and a matching `@gpuixui/icons` mark (`info`, `success`, `warning`,
@@ -106,12 +113,13 @@ There is no per-toast React state to keep in sync.
 
 `ToastDraft` is `{ title: string; description?: string; action?: { label:
 string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration }`.
+`ToastTiming` is `{ id, totalMs, remainingMs, paused }`.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
 | `ToastProvider` | provider (no host element) | `max?: number` (default `3`), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
 | `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `position?: "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` (default `"bottom-right"`), `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
-| `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id) }` |
+| `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id), timingFor(id) }`; `timingFor` is `Option<ToastTiming>` and is absent for a toast with no timer |
 
 ## Motion
 
@@ -138,8 +146,9 @@ from its two pinned edges.
 - **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a named
   status region is the supported announcement, and the runtime exposes no
   live-region concept beyond it.
-- **No progress indicator** for the remaining time; the store knows the deadline
-  but the card does not animate it.
+- The progress bar is presentational: it has no role, no tab stop and no pointer
+  events, so the card remains the single named status region. It ticks at 100 ms
+  for a smooth-enough visual; the dismissal itself is exact.
 - Hovering a card pauses its clock, and so does keyboard focus on either of its
   controls; the clock resumes with the remaining time once both the pointer and
   focus have left. A consumer that needs a custom hold can call
@@ -155,14 +164,18 @@ from its two pinned edges.
 
 - `src/toast/store.test.ts` — queue, ids, `max`, dismiss, `dismissAll`,
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
-  rejected input, pause/resume with the remaining time, and action decoding
-  (present, absent, empty label).
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (18 tests): push
+  rejected input, pause/resume with the remaining time, the published
+  `ToastTiming` (start, elapsed, paused, removed, absent for an infinite timer),
+  the timing stream and action decoding (present, absent, empty label).
+- `src/toast/timing.test.ts` — six pure cases for the percentage, clamping, the
+  zero-total guard, one running tick, a paused tick and the final zero.
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (20 tests): push
 and the card's status name, stacking order, dismissing one card, `dismissAll`,
 the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
 hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
-pointer leaving, the action running once and dismissing, no control for an
+pointer leaving, the shrinking progress bar and its hover hold, no bar for a
+persistent toast, the action running once and dismissing, no control for an
 unhandled label, no control without an action, the action holding focus, the
 500 ms enter recipe, the card remaining through its exit before it leaves, and
 the viewport pinning the default and each named corner's two edges.
