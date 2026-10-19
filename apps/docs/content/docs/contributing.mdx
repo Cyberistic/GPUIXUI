@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: How to work on GPUIXUI, and the gates a change must pass.
+description: How to work on GPUIXUI on GitHub, where to report bugs or open issues and pull requests, and the gates a change must pass.
 ---
 
 GPUIXUI is a TypeScript-first monorepo. Every command runs through **nub** on
@@ -11,6 +11,15 @@ Node 24.18.0.
 Each workstream works in its own `git worktree` under `workspaces/` on branch
 `agent/<workstream>`. One writer per tree. The shared checkout's `main` is the
 integration branch.
+
+## Issues and pull requests
+
+The source lives at
+[github.com/Cyberistic/GPUIXUI](https://github.com/Cyberistic/GPUIXUI). Report a
+bug or ask for a change as a GitHub issue, and send a fix as a pull request.
+Every pull request carries the checks in [Gates](#gates); a component change
+also carries the docs page and inventory record described under
+[Components](#components).
 
 ## Gates
 

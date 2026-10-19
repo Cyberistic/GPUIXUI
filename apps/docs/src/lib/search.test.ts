@@ -574,6 +574,63 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 590: the fifth measured sweep. `quickstart` and `overview` returned
+   * nothing, `hello world` returned Accessibility, `props table` returned the
+   * Component pages guide's guard table, `appearance` returned a Range slider
+   * section, `system theme` returned Switch, and `github`/`bugs`/`issues` had
+   * no destination because the Contributing page never named the repository.
+   * Each query is a page subject its owning summary should name; no ranker
+   * rule is added.
+   */
+  it("finds the fifth set of reader words and page subjects (plan 590)", async () => {
+    const expected = [
+      ["quickstart", "/docs/getting-started"],
+      ["hello world", "/docs/getting-started"],
+      ["overview", "/docs"],
+      ["props table", "/docs/api-reference"],
+      ["appearance", "/docs/dark-mode"],
+      ["system appearance", "/docs/dark-mode"],
+      ["github", "/docs/contributing"],
+      ["bugs", "/docs/contributing"],
+      ["issues", "/docs/contributing"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The new summary words must not steal a subject an earlier pass assigned:
+   * `theme` stays on Theming, `table` on Data display, `aria` on Accessibility
+   * and `webview` on the Introduction.
+   */
+  it("keeps the subjects the earlier passes assigned (plan 590)", async () => {
+    const expected = [
+      ["theme", "/docs/theming"],
+      ["table", "/docs/data-display"],
+      ["aria", "/docs/accessibility"],
+      ["webview", "/docs"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("finds the installation prerequisites and native platform support (plan 584)", async () => {
     const expected = [
       ["prerequisites", "/docs/installation"],

@@ -903,6 +903,30 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a promoted roadmap alias",
     },
+    {
+      query: "quickstart",
+      expected: "/docs/getting-started",
+      first: true,
+      what: "the Getting started summary's quickstart word",
+    },
+    {
+      query: "props table",
+      expected: "/docs/api-reference",
+      first: true,
+      what: "the generated props tables named by the API reference summary",
+    },
+    {
+      query: "appearance",
+      expected: "/docs/dark-mode",
+      first: true,
+      what: "the OS appearance the Dark mode summary owns",
+    },
+    {
+      query: "github",
+      expected: "/docs/contributing",
+      first: true,
+      what: "the repository destination the Contributing summary names",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

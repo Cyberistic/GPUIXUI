@@ -469,9 +469,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–589)
+## Docs site workstream (plans 410–499, plus 500–590)
 
-`[~]` `[██████████]` 155/158
+`[~]` `[██████████]` 156/158
+
+`[x]` **Reader vocabulary, fifth pass (plan 590)** — `quickstart` and
+      `overview` returned nothing, `hello world` returned Accessibility,
+      `props table` the component-pages guide, `appearance` a Range slider
+      section, and `github`/`bugs`/`issues` had no destination. Five authored
+      summaries name the words, Contributing gains a real
+      `## Issues and pull requests` section with the repository URL, and two
+      query tables prove the recoveries without stealing `theme`, `table`,
+      `aria` or `webview`. Four production queries; 105 files / 757 docs
+      tests, 98-page `smoke:build`, root gates green; forced defects in
+      plan 590 §7.
 
 `[x]` **Overlay layering is a documented convention (plan 589)** — the component
       API page had no layering story, so `z-index` returned the Values API,

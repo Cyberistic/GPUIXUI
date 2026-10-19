@@ -80,4 +80,9 @@ describe("Contributing page checks", () => {
   it("tells the reader what an unverifiable smoke means", () => {
     expect(page).toContain("could not verify");
   });
+
+  it("says where an issue, bug or pull request goes (plan 590)", () => {
+    expect(page).toContain("## Issues and pull requests");
+    expect(page).toContain("https://github.com/Cyberistic/GPUIXUI");
+  });
 });
