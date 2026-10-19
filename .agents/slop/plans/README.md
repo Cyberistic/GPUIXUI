@@ -274,6 +274,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [590](./590-inline-code-accent-wash.md) | Inline code text on its accent wash | F | 082, 314, 528, 569, 574, 589 | done |
 | [591](./591-native-diff-row-tint.md) | The native diff row tint | F | 332, 574, 582, 583, 588–590 | done |
 | [592](./592-native-diff-chrome-type.md) | The native diff chrome must fit the type the runtime paints | F | 569, 572, 585, 588, 591 | done |
+| [595](./595-field-control-fill.md) | The interactive fill a control paints inside a field | F | 309, 353, 357, 394, 503, 527 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3036,6 +3037,19 @@ followed the theme's roles. A compact theme that returns `[]` from
 **8 / 8 / 8 / 8** and a **0px** marker. `nativeTextChrome` publishes the fixed
 sizes, `nativeTextLineRatio` the line ratio, and `nativeTextTheme` floors the
 boxes at the lines and the marker at one code em; no shipped metric moves.
+
+Plan `595` closes a contrast composition the fill-on-surface contract omitted.
+A field is a surface that hosts controls: the NumberField steppers paint the
+`hover` and `active` washes inside a field whose chrome is the `input` fill, and
+an adornment action or a chip sits there too. `stateFillSurfaces` named only the
+canvas, card, popover and quiet panel, so a copied theme with `input = hover`
+returned `[]` from all nine checks while the stepper's wash measured **1.000:1**
+(hover on the card was still 1.133:1). The field fill joins the list, the
+fifteen fills are held on five surfaces (60 → 75 in `stateFillSurfacePairs`, 405
+→ 420 in the contract), every shipped set already clears 1.05:1 there
+(**1.1176:1** at the tightest, `accent` on `input` in Dark · Windows) so no
+colour moves, and the reference, design system, README and ledger name the
+composition.
 
 ## How to use a plan
 
