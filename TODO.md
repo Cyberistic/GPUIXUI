@@ -1224,6 +1224,14 @@ landed after the final period). Do not start a second playground session while
 this tree has one: the supervisor's `agent_alive` still cannot see an
 interactive session, so this needs the plan `022` §5 fix in `scripts/`.
 
+**B3 recurred again 2026-10-19 ~07:34 in this worktree.** A new rotating
+`swarm:playground` turn (PID `35710`) started while the interactive session was
+live and edited the plan `603`/`605` measured records at 07:35, seconds after the
+interactive session committed a renumber of the same file. The additions were
+consistent with the gate and were kept in `979de6e0`; no work was lost. The
+supervisor still cannot see an interactive session, so this remains a
+`scripts/swarm-supervisor.sh` fix, not a workstream one.
+
 ## Phase B — working foundation
 
 `[x]` `[██████████]` 10/10
