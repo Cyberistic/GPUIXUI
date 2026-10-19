@@ -118,7 +118,10 @@ the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
 **Registered live scenarios are 95**, and the full gate covers all of them. The
 live registry is guarded by `liveScenarioProblems` (plan `639`); the count is
-unchanged by plans `676` and `677`.
+unchanged by plans `676`, `677` and `690`. Plan `690` added **24** checks to
+`live-content` (44 → 68), so the **next** full gate's expected check total is
+**2545** (`2521 + 24`); the 2521 above describes the plan-677 gate on the
+pre-change head.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
 `live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s

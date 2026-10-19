@@ -334,9 +334,8 @@ the frame the runtime wrote, which is the same standard as plan `674`'s
 
 ## 7. Results (2026-10-19, darwin-x64, release-tag binding)
 
-The plan was committed at `c6d155f7`; the implementation head is that commit
-plus the change described here (the exact commit is the one carrying this
-section). `origin/master` was not merged; no path outside
+The plan was committed at `c6d155f7`; the implementation is commit `60ccd2e6`.
+`origin/master` was not merged; no path outside
 `apps/playground`/`COMPONENTS.md`/`TODO.md` changed.
 
 **Control** — `nub apps/playground/dist/live/run.js --only live-content` on the
@@ -378,6 +377,11 @@ primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7**.
 behavioural edit is the `live-content` scenario, plus one comment and the
 ledgers/manifest rows. The offscreen loader still never settles, so the
 path/http(s) assertion is **live-only**, as recorded in `COMPONENTS.md`.
+
+**No full live gate in this plan.** The last full gate is plan `677`'s
+**95/95 · 2521** on the pre-change head. This scenario adds **24** checks, so
+the next full live gate's expected total is **2545**; the focused runs above,
+not a remembered total, are this plan's evidence.
 
 **Exact commands and ids run:**
 

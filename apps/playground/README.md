@@ -2102,7 +2102,10 @@ supersedes plan `675`'s 2491 on `d206df18`, plan `659`'s 94/94 on `d9346a9d`,
 plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
-full live suite is a merge/release gate rather than a per-task check.
+full live suite is a merge/release gate rather than a per-task check. Plan `690`
+later added **24** checks to `live-content` (44 → 68), so the next full gate's
+expected total is **2545**; this paragraph and the 2521 above describe the
+plan-677 gate on the pre-change head.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 

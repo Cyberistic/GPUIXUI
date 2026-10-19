@@ -95,7 +95,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       list: the match fails). The offscreen loader still never settles, so the
       path/http(s) proof is live-only; `native-surfaces` is unchanged. Focused
       ids run: `live-content` (×2 plus three mutation runs), `native-surfaces`.
-      `nub run check`/`lint`/`test` green.
+      `nub run check`/`lint`/`test` green. No full live gate ran (merge gate);
+      the next expected full live total is plan `677`'s **2521 + 24 = 2545**.
 
 `[x]` **Run the promotion gate on the head that includes plan `676`'s palette
       frame pixels** per plan `677`: verification only at `86057653` (no merge
