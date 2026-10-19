@@ -434,10 +434,10 @@ does the same for a status label and an indicator dot on a plain surface.
 
 A status panel carries actions — a dismiss control, a "Try again" button — and
 they are the one composition the canvas washes cannot serve. In each mode the
-four soft fills sit in a narrow luminance band (light `0.742–0.765`, dark
+four soft fills sit in a narrow luminance band (light `0.657–0.765`, dark
 `0.012–0.039`), so a neutral wash tuned for the canvas has almost the tint's own
 value there: of the 288 shipped `hover`/`active`/`secondary`-on-`xSoft` pairs,
-**80** are under the 1.05:1 floor, the worst Windows light `active` on
+**84** are under the 1.05:1 floor, the worst Windows light `active` on
 `destructiveSoft` at **1.0042:1** (`#E0E0E0` on `#FFD6D6`). A press that
 composites to its own panel is not a state, and `themeContrastFailures` returned
 `[]` because no pair measured it.
@@ -3306,14 +3306,15 @@ label measures **6.677:1** on it, under the 7:1 body floor.
 The action a soft status panel carries is the last composition a canvas role
 could not serve. `hover`, `active` and `secondary` are tuned against
 `background`, `card`, `popover` and the quiet `muted` panel, and the four soft
-fills sit in the same luminance band as those washes in each mode: **80 of the
+fills sit in the same luminance band as those washes in each mode: **84 of the
 288** shipped fill-on-tint pairs measured under 1.05:1, the worst Windows light
 `active` on `destructiveSoft` at **1.0042:1** (`#E0E0E0` on `#FFD6D6`), and the
-identity light press was 1.0492:1. Plan `394` ships `softAction`,
-`softActionHover`, `softActionActive` and `softActionForeground` as the raised
-family an Alert or Badge action paints. `softActionPairs` holds each fill
-to the surface floor on the four soft fills, `softActionStepPairs` holds the
-hover and press to the 1.05:1 `step` floor, and `softActionLabelPairs` holds
+identity light `active` on `destructiveSoft` was 1.0492:1. Plan `394` ships
+`softAction`, `softActionHover`, `softActionActive` and `softActionForeground`
+as the raised family an Alert or Badge action paints. `softActionPairs` holds
+each fill to the surface floor on the four soft fills, `softActionStepPairs`
+holds the hover and press to the 1.05:1 `step` floor, and `softActionLabelPairs`
+holds
 `softActionForeground` on the three fills (the secondary floor) and on the four
 soft fills a ghost action's label rests on (the body floor) — taking it from 339
 to **360**. Every shipped set clears every pair, so no existing colour moves.

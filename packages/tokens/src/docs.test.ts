@@ -101,6 +101,13 @@
  * it. The check count is now spoken only in the sentence derived from
  * `themeChecks`, no shipped-set total is retyped, and the cases below prove both
  * patterns reject a planted stale phrase.
+ * Plan 637 guards the panel action's rationale figures. The count moved from 80
+ * to 84 when later palette plans landed, the quoted light band omitted the AAA
+ * light tints, and no test read any of the prose, so two catalogue sections and
+ * the `softActionPairs` JSDoc still said 80. Every `N of the M shipped` and
+ * `N are under the 1.05:1 floor` in the five surfaces that tell the story must
+ * equal the derived pair, each surface must still quote one, and the two bands
+ * and the two named ratios are matched as exact sentences.
  */
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -125,6 +132,7 @@ import {
   inactiveSurfaces,
   markPairs,
   overlaySurfaces,
+  relativeLuminance,
   selectionInactivePairs,
   selectionSurfaces,
   selectionFillRoles,
@@ -3443,6 +3451,107 @@ describe("the shareable theme choice's documents", () => {
     expect(source).toContain("deliberately not minimal");
     expect(source).not.toContain(
       "An axis is written only when omitting it would resolve",
+    );
+  });
+});
+
+describe("the panel action's rationale figures", () => {
+  const softSurfaces = softActionPairs
+    .filter(([fill]) => fill === "softAction")
+    .map(([, background]) => background);
+  const neutralOnSoft = shippedThemes.flatMap(({ theme }) =>
+    (["hover", "active", "secondary"] as const).flatMap((fill) =>
+      softSurfaces.map((background) => ({
+        theme,
+        fill,
+        background,
+        ratio: contrastRatio(theme.colors[fill], theme.colors[background]),
+      })),
+    ),
+  );
+  const failing = neutralOnSoft.filter(
+    ({ theme, ratio }) => ratio < contrastFloors[theme.contrast].surface,
+  );
+  const worst = failing.toSorted((a, b) => a.ratio - b.ratio)[0];
+  const identityPress = failing.find(
+    ({ theme, fill, background }) =>
+      theme.name === themes.light.name &&
+      fill === "active" &&
+      background === "destructiveSoft",
+  );
+  const band = (mode: "light" | "dark") => {
+    const values = shippedThemes
+      .filter(({ theme }) => theme.mode === mode)
+      .flatMap(({ theme }) =>
+        softSurfaces.map((role) => relativeLuminance(theme.colors[role])),
+      );
+    return [Math.min(...values), Math.max(...values)] as const;
+  };
+  const sources = [
+    ["docs/tokens.md", markdownProse],
+    ["docs/design-system.md", designSystem],
+    ["packages/tokens/README.md", readmeSource],
+    [
+      "packages/tokens/src/contrast.ts",
+      readFileSync(new URL("./contrast.ts", import.meta.url), "utf8"),
+    ],
+    [
+      "packages/tokens/src/styles.ts",
+      readFileSync(new URL("./styles.ts", import.meta.url), "utf8"),
+    ],
+  ] as const;
+
+  it("quotes the derived count and total in every surface that states it", () => {
+    expect(failing).toHaveLength(84);
+    expect(neutralOnSoft).toHaveLength(288);
+
+    sources.forEach(([name, source]) => {
+      const plain = source.replace(/\*\*/g, "").replace(/\s+/g, " ");
+      // Scope to the sentences that tell the fill-on-tint story: the same page
+      // quotes other `N of the M` figures (the 15% veil's 60 of 360), which are
+      // held by their own cases.
+      const rationale = plain
+        .split(/(?<=\.)\s+/)
+        .filter((sentence) => /fill-on-tint|on-`xSoft`|on-tint/.test(sentence));
+      const ofThe = rationale.flatMap((sentence) => [
+        ...sentence.matchAll(/(\d+) of the (\d+) shipped/g),
+      ]);
+      const under = rationale.flatMap((sentence) => [
+        ...sentence.matchAll(/(\d+) are under the 1\.05:1 floor/g),
+      ]);
+
+      expect(ofThe.length + under.length, name).toBeGreaterThan(0);
+      ofThe.forEach(([, count, total]) => {
+        expect(Number(count), name).toBe(failing.length);
+        expect(Number(total), name).toBe(neutralOnSoft.length);
+      });
+      under.forEach(([, count]) => {
+        expect(Number(count), name).toBe(failing.length);
+      });
+    });
+  });
+
+  it("quotes the derived luminance band", () => {
+    const [lightMin, lightMax] = band("light").map((value) => value.toFixed(3));
+    const [darkMin, darkMax] = band("dark").map((value) => value.toFixed(3));
+
+    [markdownProse, designSystem].forEach((source) => {
+      expect(source).toContain(`light \`${lightMin}–${lightMax}\``);
+      expect(source).toContain(`dark \`${darkMin}–${darkMax}\``);
+    });
+  });
+
+  it("quotes the worst pair and the identity pair they name", () => {
+    const worstFigure = `${worst?.ratio.toFixed(4)}:1`;
+    const identityFigure = `${identityPress?.ratio.toFixed(4)}:1`;
+
+    [markdownProse, designSystem].forEach((source) => {
+      expect(source).toContain(
+        `Windows light \`active\` on \`destructiveSoft\` at **${worstFigure}**`,
+      );
+    });
+    expect(markdownProse).toContain(
+      `the identity light \`active\` on \`destructiveSoft\` was ${identityFigure}`,
     );
   });
 });

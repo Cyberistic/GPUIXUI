@@ -15,6 +15,13 @@
  * set (1.0000:1) — so the floating-card case measures the failure the documents
  * must not recommend, and the canvas case proves the neutral family the Toast
  * action actually paints clears the same floors.
+ *
+ * Plan 637 guards the figures the rationale quotes. The count moved from 80 to
+ * 84 when later palette plans landed, the light band was measured on the
+ * default palettes only, and no test read the prose — so two catalogue
+ * sections and the `softActionPairs` JSDoc still said 80 while the shipped
+ * count was 84. This suite states the shipped count, total, both bands and the
+ * two named pairs; `docs.test.ts` holds the five surfaces that quote them.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -24,6 +31,7 @@ import {
   filledControl,
   getTheme,
   highContrastThemes,
+  relativeLuminance,
   softAction,
   softActionLabelPairs,
   softActionPairs,
@@ -39,6 +47,28 @@ const softSurfaces = softActionPairs
   .map(([, background]) => background);
 const neutralFills = ["hover", "active", "secondary"] as const;
 const family = ["softAction", "softActionHover", "softActionActive"] as const;
+
+/** Every shipped neutral fill on every soft status fill it can be painted on. */
+const neutralOnSoft = shippedThemes.flatMap(({ theme }) =>
+  neutralFills.flatMap((fill) =>
+    softSurfaces.map((background) => ({
+      theme,
+      fill,
+      background,
+      ratio: contrastRatio(theme.colors[fill], theme.colors[background]),
+    })),
+  ),
+);
+
+/** The luminance band the four soft fills occupy in a mode, across all sets. */
+const softFillBand = (mode: "light" | "dark") => {
+  const values = shippedThemes
+    .filter(({ theme }) => theme.mode === mode)
+    .flatMap(({ theme }) =>
+      softSurfaces.map((role) => relativeLuminance(theme.colors[role])),
+    );
+  return [Math.min(...values), Math.max(...values)] as const;
+};
 
 describe("the action inside a soft status panel", () => {
   it("clears every panel-action pair in every shipped set", () => {
@@ -57,16 +87,7 @@ describe("the action inside a soft status panel", () => {
   });
 
   it("states the rejected neutral composition and its worst pair", () => {
-    const measured = shippedThemes.flatMap(({ theme }) =>
-      neutralFills.flatMap((fill) =>
-        softSurfaces.map((background) => ({
-          theme,
-          fill,
-          background,
-          ratio: contrastRatio(theme.colors[fill], theme.colors[background]),
-        })),
-      ),
-    );
+    const measured = neutralOnSoft;
     const failing = measured.filter(
       ({ theme, ratio }) => ratio < contrastFloors[theme.contrast].surface,
     );
@@ -81,6 +102,41 @@ describe("the action inside a soft status panel", () => {
     expect(worst?.fill).toBe("active");
     expect(worst?.background).toBe("destructiveSoft");
     expect(worst?.ratio).toBeLessThan(contrastFloors.default.surface);
+  });
+
+  it("states the shipped figures the rationale quotes", () => {
+    const failing = neutralOnSoft.filter(
+      ({ theme, ratio }) => ratio < contrastFloors[theme.contrast].surface,
+    );
+    const worst = failing.toSorted((a, b) => a.ratio - b.ratio)[0];
+    const identityLight = failing
+      .filter(({ theme }) => theme.name === themes.light.name)
+      .toSorted((a, b) => a.ratio - b.ratio)[0];
+    const identityPress = failing.find(
+      ({ theme, fill, background }) =>
+        theme.name === themes.light.name &&
+        fill === "active" &&
+        background === "destructiveSoft",
+    );
+
+    expect(neutralOnSoft).toHaveLength(288);
+    expect(failing).toHaveLength(84);
+    expect(worst?.theme.name).toBe("Light · Windows");
+    expect(worst?.fill).toBe("active");
+    expect(worst?.background).toBe("destructiveSoft");
+    expect(worst?.ratio).toBeCloseTo(1.0042, 4);
+    expect(identityLight?.fill).toBe("active");
+    expect(identityLight?.background).toBe("infoSoft");
+    expect(identityLight?.ratio).toBeCloseTo(1.0202, 4);
+    expect(identityPress?.ratio).toBeCloseTo(1.0492, 4);
+    expect(softFillBand("light").map((value) => value.toFixed(3))).toEqual([
+      "0.657",
+      "0.765",
+    ]);
+    expect(softFillBand("dark").map((value) => value.toFixed(3))).toEqual([
+      "0.012",
+      "0.039",
+    ]);
   });
 
   it("reports an edited theme that erases the panel action", () => {

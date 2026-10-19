@@ -498,7 +498,7 @@ consumer paints `secondaryHover`/`secondaryActive` and the extra pairs are
 simply no longer exercised.
 
 A status panel's action is the one place no canvas family can go. The four soft
-status fills sit in a narrow luminance band in each mode — light `0.742–0.765`,
+status fills sit in a narrow luminance band in each mode — light `0.657–0.765`,
 dark `0.012–0.039` — and `hover`, `active` and `secondary` are designed to be
 perceivable against `background`, `card`, `popover` and the quiet panel, whose
 values are in the same band: **84 of the 288** shipped fill-on-tint pairs measure

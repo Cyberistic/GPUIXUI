@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 274/347
+`[x]` `[████████░░]` 275/349
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2314,6 +2314,15 @@ was the last fixed mark in the dimensions group with no token;
 `toastToneBarWidth` (3) now ships beside `toastWidth`, the bound charges it,
 every shipped set passes (380 against 111) and no colour, pair, floor or other
 metric moves (plan 636)
+`[x]` Give the panel action's rationale one owner — the `softAction` story
+quoted "80 of the 288" in two catalogue sections and the `softActionPairs`
+JSDoc while the shipped count is **84**, its light band `0.742–0.765` omitted
+the AAA light set (`destructiveSoft` is `0.657`) and "the identity light press"
+named a ratio that is not its tightest (`active` on `infoSoft`, **1.0202:1**),
+and no test read any of it; the count, total, both bands and the two named
+ratios are derived in `soft-action.test.ts`, the five quoting surfaces are held
+by `docs.test.ts`, three 80s and the band are corrected and no colour, pair,
+floor or metric moves (plan 637)
 
 ## Phase C — Tier 1–2 components
 

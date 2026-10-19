@@ -833,7 +833,7 @@ export const toastTonePairs: readonly ContrastPair[] = statusTones.flatMap(
  * raised fill an action inside a tone-tinted Alert or Badge paints, and a ghost
  * action paints its hover and press on the panel itself. Neither the canvas
  * washes (`hover`, `active`) nor the neutral fill (`secondary`) is perceivable on
- * a soft status fill — the four tints sit in a narrow luminance band and 80 of
+ * a soft status fill — the four tints sit in a narrow luminance band and 84 of
  * the 288 shipped fill-on-tint pairs measured under 1.05:1 — so each fill is held
  * to the surface floor on the four fills, the family is a perceivable ladder, and
  * the one foreground is held on all three fills and on the panel a ghost
