@@ -90,3 +90,26 @@ export const viewportBox = (
   width: box.width,
   height: box.height,
 });
+
+/**
+ * The pixels to scroll so `item` is inside `viewport`; zero when it already is.
+ *
+ * The renderer's `scrollIntoView` cannot answer this: measured on the pinned
+ * release build, it scrolls to the child **before** the target, so a highlighted
+ * Select row lands 2 px below the list's bottom (plan `599`). The component
+ * measures both painted boxes and moves the list by this delta through
+ * `renderer.scrollTo`, which the runtime clamps to the content.
+ *
+ * Positive means "scroll down" (the item is below); negative means "scroll up".
+ * A row taller than the viewport keeps its bottom visible, because no offset can
+ * contain it.
+ */
+export const scrollIntoViewDelta = (
+  item: BoxBounds,
+  viewport: BoxBounds,
+): number => {
+  const below = item.y + item.height - (viewport.y + viewport.height);
+  if (below > 0) return below;
+  const above = item.y - viewport.y;
+  return above < 0 ? above : 0;
+};

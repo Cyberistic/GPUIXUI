@@ -202,7 +202,7 @@ a value, and must report it through the accessibility tree (plan `574`).
 | percentage sizing inside a floating layer | `minWidth: "100%"` resolves against the layer, not the trigger | `Select` measures its trigger's painted width and passes a numeric `minWidth` to the list (plan 062) |
 | a layer that clamps instead of flipping | `fit="snap"` clamps a layer inside the window **without flipping it**, so a bottom-side layer can cover its trigger, and a top-side one can cover it at the top edge | `Select` measures its trigger, estimates the list height from its own styles, and opens on the side that fits; `Tooltip` measures its root and does the same. Any requested `side` — horizontal or vertical — is a preference: it opens on the other side when the layer cannot fit, or on the roomier one, from the trigger's measured box and the layer's own size (plans 066, 067, 335, 336) |
 | no list height cap | the layer grows past the window and the options past the edge are unreachable | `Select` caps a long list to the free space on its side and scrolls it; rows keep their height, so the list scrolls instead of squashing (plan 068). The cap covers all four sides: beside the trigger the free space runs from the layer's top edge to the window's bottom margin (plan 098) |
-| a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives | `Select` scrolls the newly highlighted option into view through the renderer's `scrollIntoView`, so the arrows keep the active option visible (plan 069) |
+| a highlighted option outside a capped layer | the layer scrolls only with the wheel, and the item's `highlighted` state is the only signal the runtime gives; `scrollIntoView` also scrolls to the child **before** the target (measured: the active row's top landed on the list's bottom edge) | `Select` measures the newly highlighted row against the list's painted box and moves the list by the overflow through `renderer.scrollTo`, so the arrows keep the active option inside the list (plans 069, 599) |
 | `aria-invalid` | absent | a failed validation is paint only; `invalid` marks the empty selection or field border and the app pairs it with an error `Text` |
 | a clamp that belongs to one element | the runtime keeps one shaped text layout per string, font and width for the whole window; `lineClamp` is applied to that layout but is **not** in the key, so the first copy of a string decides the clamp for every identical copy at that width (measured: a clamped copy followed by a plain one painted `36 / 36` px; the reverse painted `108 / 108` px) | `Text.clamp` is the element's own `maxHeight` (`clamp ×` the role's line height) plus `overflow: hidden`, which no cache can share. The trade is a hard cut with no ellipsis; `truncate` keeps the one-line ellipsis because the wrap mode *is* in the key (plan `082`) |
 
@@ -232,7 +232,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**58 test files**, all passing, including a package-wide guard that a caller's
+**59 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -263,9 +263,12 @@ matrix passes after `settleFocus`. Its `getElementBounds` reports a hybrid box
 — a plain `div` from its content origin, a `Button` from its border box — so
 the suites read `paintBounds` for the hosts that report the former, and the
 adapter's calibration case pins the model against a real hit-test (plan `597`).
-A child inside a scrolled container still reports its **unscrolled** position,
-which is recorded as a limitation on the affected Select cases rather than
-asserted. No
+A **scroll container's own** report slides by its scroll offset while its
+children report painted positions (measured: a 552-high region at `y 91`
+reports `y -18` at offset `-109`, and its child moved `716 → 607`), so
+`paintBounds` subtracts that offset once and is the container's **visible** box
+(plan `598`). The `Select` and app suites use it to assert a row is inside a
+scrolled list or region (plan `599`). No
 assertion has been re-baselined on this build, and the remaining limitation is
 documented on every focusable page (plan
 [`583-release-runtime-focus.md`](../../.agents/slop/plans/583-release-runtime-focus.md)).

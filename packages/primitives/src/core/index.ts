@@ -10,7 +10,7 @@
 
 export { alpha } from "@gpuixui/tokens";
 
-export { paintedBox } from "./bounds.js";
+export { paintedBox, scrollIntoViewDelta } from "./bounds.js";
 export type { BoxBounds } from "./bounds.js";
 
 export {

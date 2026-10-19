@@ -193,10 +193,13 @@ will really paint.
 
 Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
 highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
-key. It **does** follow the highlight: the option the arrows (or the pointer)
-newly highlight is scrolled into view through the renderer, so a capped list
-moves with the keyboard instead of leaving the active option beyond the fold
-(plan `069`). Opening on a selected option scrolls that row into view too.
+key. It **does** follow the highlight: the newly highlighted row is measured
+against the list's painted box and the list moves by the overflow. It cannot use
+the renderer's `scrollIntoView`, which scrolls one child short — measured, it
+left the active row 2 px below the list and the previous row flush with its
+bottom (plan `599`). A capped list therefore moves with the keyboard instead of
+leaving the active option beyond the fold, and opening on a selected option
+scrolls that row into view too.
 
 The trigger is one tab stop. It paints the focus ring whenever it holds focus
 **or** its list is open: the open list owns native focus, so without the second
@@ -467,11 +470,14 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   fed the cap), a `side="top"` list at the top edge opens below (the failing
   direction painted `y 2..12`), and a `side="bottom"` list with room still opens
   below. **Keyboard
-  (069):** 40 Down presses in a 60-option list scroll it to offset `-455` and
-  leave the highlighted "Option 39" inside the list (without the wrapper's
-  `scrollIntoView` the offset stays `0`); opening on "Option 49" scrolls to
-  offset `-755` with the selected row inside the list; a three-option list is
-  not a scroller and does not move. **Groups (075):** a two-group list paints
+  (069/599):** 40 Down presses in a 60-option list scroll it to offset `-459`
+  and leave the highlighted "Option 39" fully inside the list's painted box
+  (`764…792`); opening on "Option 49" scrolls to `-759` with the selected row at
+  the same place. The renderer's own `scrollIntoView` is off by one child (it
+  left the active row at `794…822`, 2 px past the list's `792` bottom), which is
+  why the wrapper measures the overflow and scrolls itself; 25 Up presses then
+  return the list to a row above the fold. A three-option list is not a scroller
+  and does not move. **Groups (075):** a two-group list paints
   both headings and all three options, exposes a named `Group`, measures its
   heading row at the estimate's caption height, and paints the exact estimated
   height; Enter/Down/Enter commits the first grouped option (the heading is

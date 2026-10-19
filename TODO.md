@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 148/148
+`[x]` `[████████████]` 149/149
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1802,6 +1802,23 @@ retired once both branches are one
       while a real label keeps its verbatim paint; 5 offline + 4 scoped runtime
       cases, both directions proven (plan `589`; offline 56 files / 796 tests,
       scoped live 4/4).
+
+`[x]` `packages/primitives`: **`Select`'s keyboard highlight was never scrolled
+      into view** — measured (2026-10-19, pinned release build): the renderer's
+      `scrollIntoView(row N)` scrolls to the child **before** the target, so the
+      newly highlighted row's top landed on the list's bottom edge
+      (`794…822` for a list ending at `792`) and the previous row was flush with
+      it. The three scroll cases could not catch it: they asserted
+      `getScrollOffset !== null`, which is true at `[0,0]`. `core/bounds.ts`
+      gains `scrollIntoViewDelta`; `Select` measures the row and the list's
+      visible box and moves the list with `scrollTo`, so 40 Downs leave
+      "Option 39" at `764…792` (offset `-459`) and opening on "Option 49"
+      lands the same (`-759`). The three cases now assert containment and a new
+      case proves the Up direction; reverting the callback fails 3 by name
+      (`822 > 792`, `822 > 792`, `818 > 788`), and inverting the delta fails 3
+      offline plus the Up case. Docs, README, capability table and the Select
+      inventory row corrected (plan `599`; offline 58 → 59 files / 820 tests,
+      full runtime 52 files / 735 tests green on two consecutive runs).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -76,7 +76,11 @@ import {
   type SelectOptionGroup,
 } from "../core/select.js";
 import { controlLabelStyle, surfaceStyle } from "../core/style.js";
-import { paintedBox } from "../core/bounds.js";
+import {
+  paintedBox,
+  scrollIntoViewDelta,
+  viewportBox,
+} from "../core/bounds.js";
 import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
 import { hasText } from "../core/text.js";
 import type { ValueState } from "../core/state.js";
@@ -455,12 +459,11 @@ export interface SelectHandlers {
 }
 
 /**
- * Scrolls a newly highlighted option into view; renders nothing.
+ * Reports a newly highlighted option; renders nothing.
  *
  * Mounted only while its item is highlighted, so the effect fires once per
- * highlight change and not on unrelated re-renders. `scrollIntoView` is the
- * renderer's own API: it walks to the nearest scroll container, so a list that
- * fits is left alone.
+ * highlight change and not on unrelated re-renders. The wrapper measures the
+ * row and the list and moves the list itself (plan `599`).
  */
 const ScrollWhenHighlighted = ({
   value,
@@ -753,21 +756,48 @@ export const Select = (props: SelectProps): ReactElement => {
     },
   );
   /**
-   * The renderer scrolls a highlighted row into its nearest scroll container.
+   * Moves the list so the highlighted row is inside it.
    *
-   * Stable across renders so a highlighted row is not scrolled again on an
-   * unrelated re-render, which would fight a user's wheel scroll. Keyed by the
-   * option's value, not its position: a heading between options makes the two
-   * differ.
+   * The renderer's own `scrollIntoView` scrolls to the child **before** the
+   * target: measured, `scrollIntoView(row 26)` left row 26's top at the list's
+   * bottom edge and row 25 flush with it, so the keyboard highlight was never
+   * visible while arrowing down (plan `599`). Both painted boxes are measured
+   * instead and the list moves by the row's overflow, which the renderer clamps
+   * to the content (plan `337`). Keyed by the option's value, not its position:
+   * a heading between options makes the two differ.
    */
   const scrollToOption = useCallback(
     (value: string) => {
-      Option.match(Option.fromNullishOr(items.current.get(value)), {
-        onNone: () => {},
-        onSome: (id) => renderer?.scrollIntoView?.(id),
-      });
+      const listId = content.current;
+      const rowId = items.current.get(value);
+      if (listId === null || rowId === undefined || renderer === null) return;
+      const offset = renderer.getScrollOffset?.(listId);
+      const listBox = renderer.getElementBounds?.(listId);
+      const rowBox = renderer.getElementBounds?.(rowId);
+      if (
+        offset === null ||
+        offset === undefined ||
+        listBox === null ||
+        listBox === undefined ||
+        rowBox === null ||
+        rowBox === undefined
+      )
+        return;
+      const [offsetX, offsetY] = offset;
+      if (offsetX === undefined || offsetY === undefined) return;
+      // Only the content surface's insets matter here; its width/height caps do
+      // not. The page and the resolver stay one source because this is the same
+      // style the list paints with.
+      const visible = viewportBox(
+        paintedBox(listBox, selectContentStyle(theme)),
+        { x: offsetX, y: offsetY },
+      );
+      // A row has no vertical padding or border (`selectItemStyle`), so its
+      // report is already its painted box on that axis.
+      const delta = scrollIntoViewDelta(rowBox, visible);
+      if (delta !== 0) renderer.scrollTo?.(listId, offsetX, offsetY - delta);
     },
-    [renderer],
+    [renderer, theme],
   );
   useLayoutEffect(() => {
     const id = trigger.current;

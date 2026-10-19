@@ -15,7 +15,6 @@
 
 import { expect, it } from "vitest";
 import { useState, type ReactElement } from "react";
-import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -1019,27 +1018,6 @@ const selectTriggerOf = (runtime: Runtime, testId: string) =>
  * group) may sit between the option's text and the list, so the tree distance
  * is not a contract (plan `368`).
  */
-/** Every ancestor of an element, nearest first, bounded so a cycle cannot hang. */
-const ancestors = (
-  runtime: Runtime,
-  id: number,
-  depth = 8,
-): ReadonlyArray<TestElement> => {
-  const walk = (
-    current: number,
-    remaining: number,
-  ): ReadonlyArray<TestElement> => {
-    if (remaining === 0) return [];
-    const node = Option.getOrUndefined(
-      Option.fromNullishOr(runtime.renderer.getElement(current)),
-    );
-    if (node === undefined) return [];
-    if (node.parentId === null) return [node];
-    return [node, ...walk(node.parentId, remaining - 1)];
-  };
-  return walk(id, depth);
-};
-
 const selectListId = (runtime: Runtime): number =>
   Option.getOrElse(
     Option.map(
@@ -1057,6 +1035,30 @@ const selectListBoundsOf = (runtime: Runtime): Bounds =>
   Option.getOrElse(runtime.paintBoundsOfId(selectListId(runtime)), () =>
     expect.fail("the listbox painted no box"),
   );
+
+/** Assert an option row lies entirely inside the open list's visible box. */
+const expectInsideList = (runtime: Runtime, testId: string): void => {
+  const list = selectListBoundsOf(runtime);
+  const row = Option.getOrElse(runtime.paintBounds(testId), () =>
+    expect.fail(`the option ${testId} painted no box`),
+  );
+  expect(row.y).toBeGreaterThanOrEqual(list.y);
+  expect(row.y + row.height).toBeLessThanOrEqual(list.y + list.height);
+};
+
+/** The painted box of the row wearing the highlight wash. */
+const highlightedRowBounds = (runtime: Runtime): Bounds => {
+  const row = Option.getOrElse(
+    Arr.findFirst(
+      runtime.all(),
+      (element) => element.style["backgroundColor"] === testTheme.colors.hover,
+    ),
+    () => expect.fail("no highlighted option row"),
+  );
+  return Option.getOrElse(runtime.paintBoundsOfId(row.id), () =>
+    expect.fail("the highlighted row painted no box"),
+  );
+};
 
 it("opens the Select's list at least as wide as its trigger", async () => {
   const runtime = await openWindow();
@@ -1279,27 +1281,61 @@ it("scrolls a capped Select list to follow the keyboard highlight", async () => 
   expect(
     Option.getOrElse(Option.fromNullishOr(after?.[1]), () => 0),
   ).toBeLessThan(Option.getOrElse(Option.fromNullishOr(before?.[1]), () => 0));
-  // ...to the highlighted row, which is now inside the list. The row is an
-  // ancestor of the painted text, not necessarily its parent: the label is one
-  // shrinkable item inside the row (plan `368`).
-  const highlighted = Option.getOrElse(
-    Arr.findFirst(runtime.all(), (element) => element.text === "Option 39"),
-    () => expect.fail("no Option 39 row"),
+  // ...to the highlighted row, which is now fully inside the list (plan `599`).
+  // The row is an ancestor of the painted text, not necessarily its parent: the
+  // label is one shrinkable item inside the row (plan `368`).
+  expectInsideList(runtime, "sel-option-option-39");
+});
+
+it("scrolls a capped Select list back up to a row above the fold", async () => {
+  // The bug guarded (plan `599`): the delta has a sign. A down-only rule would
+  // leave a row above the viewport unreachable by arrow keys. The old
+  // `scrollIntoView` call happens to pass this direction (it scrolls one child
+  // short, which on the way up leaves the target visible), so this case exists
+  // to pin our own rule, not the renderer's defect.
+  const runtime = await openWindow();
+  const options = Array.from({ length: 60 }, (_, index) => ({
+    value: `option-${index}`,
+    label: `Option ${index}`,
+  }));
+  runtime.render(
+    <Surface>
+      <Select testId="sel" label="Many" placeholder="Pick" options={options} />
+    </Surface>,
   );
-  const row = Option.getOrElse(
-    Arr.findFirst(
-      ancestors(runtime, highlighted.id),
-      (node) => node.style["backgroundColor"] === testTheme.colors.hover,
-    ),
-    () => expect.fail("the highlighted row paints no hover background"),
+  const trigger = selectTriggerOf(runtime, "sel");
+  runtime.clickElement(trigger);
+  runtime.flush();
+  const listId = selectListId(runtime);
+  const focusedId = Option.getOrElse(
+    Option.map(runtime.focusedElement(), (element) => element.id),
+    () => expect.fail("the open list holds no focus"),
   );
-  expect(row.id).toBeDefined();
-  expect(runtime.renderer.getScrollOffset(listId)).not.toBeNull();
-  // A row inside a scrolled list reports its **unscrolled** content position on
-  // the pinned build (measured: the highlighted row ends at 816.5 while the
-  // capped list ends at 792), so "inside the visible list" cannot be read from
-  // `getElementBounds`; the offset assertion above is the observable proof that
-  // the list followed the highlight (plan `597` §7).
+  Arr.forEach(Arr.range(1, 40), () => {
+    runtime.renderer.nativeSimulateKeyDown(focusedId, "down");
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  const before = Option.getOrElse(
+    Option.fromNullishOr(runtime.renderer.getScrollOffset(listId)?.[1]),
+    () => 0,
+  );
+  Arr.forEach(Arr.range(1, 25), () => {
+    runtime.renderer.nativeSimulateKeyDown(focusedId, "up");
+    runtime.renderer.dispatchNativeEvents();
+    runtime.flush();
+  });
+  const after = Option.getOrElse(
+    Option.fromNullishOr(runtime.renderer.getScrollOffset(listId)?.[1]),
+    () => 0,
+  );
+  expect(after).toBeGreaterThan(before);
+  const list = selectListBoundsOf(runtime);
+  const highlighted = highlightedRowBounds(runtime);
+  expect(highlighted.y).toBeGreaterThanOrEqual(list.y);
+  expect(highlighted.y + highlighted.height).toBeLessThanOrEqual(
+    list.y + list.height,
+  );
 });
 
 it("opens a capped Select list scrolled to its selected option", async () => {
@@ -1344,9 +1380,9 @@ it("opens a capped Select list scrolled to its selected option", async () => {
       () => 0,
     ),
   ).toBeLessThan(0);
-  // The selected row's own box is reported at its unscrolled position on the
-  // pinned build (measured: 822 while the list ends at 63), so the assertion is
-  // the offset, not a containment check (plan `597` §7).
+  // The selected row is inside the list's painted box, not merely the reason
+  // the list scrolled (plan `599`).
+  expectInsideList(runtime, "sel-option-option-49");
 });
 
 it("leaves a Select list that fits the window alone", async () => {
@@ -1545,11 +1581,9 @@ it("caps a long Select list beside its trigger", async () => {
     () => expect.fail("the last option vanished"),
   );
   expect(last.text).toBe("Option 30");
-  // The row's box inside the scroller is unscrolled on the pinned build
-  // (measured: 812.5 while the capped list ends at 788), so reachability is
-  // proven by the highlight reaching the last row and the list having an
-  // offset, not by a containment comparison (plan `597` §7).
-  expect(runtime.renderer.getScrollOffset(listId)).not.toBeNull();
+  // Reachability is containment: the wrapped-to row is inside the capped
+  // left-side list (plan `599`).
+  expectInsideList(runtime, "sel-option-value-30");
 });
 
 it("opens a left-side Tooltip on the right when the left edge has no room", async () => {

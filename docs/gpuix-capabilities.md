@@ -94,7 +94,7 @@ headless components below.
 `@gpuix/native`'s renderer publishes: `focusElement`, `focusNext`,
 `focusPrevious`, `focusNextWithin`, `focusPreviousWithin`,
 `getFocusedElementId`, `blur`, `getElementBounds`, `scrollTo`, `scrollToItem`,
-`scrollIntoView`, `getScrollOffset`, `getListScrollTop`, `setImage`,
+`scrollIntoView` (off by one child — see §4), `getScrollOffset`, `getListScrollTop`, `setImage`,
 `setImagePixels`, `getSelectedText`, `getPaintedHighlights`, `getWindowSize`,
 `getWindowInsets`, `setWindowTitle`, `promptForPaths`, `activateWindow`,
 `minimizeWindow`, `zoomWindow`, `toggleFullscreen`, and the debug frame overlay.
@@ -255,9 +255,17 @@ the scroll offset (measured: a 552-high region at `y 91` reports `y -18` at
 offset `-109`) while its painted viewport stays put, and its children report
 painted positions (the same row moved `716 → 607`). `paintBounds` subtracts the
 scroller's own offset, so a reachability check can compare two painted boxes
-(plan `598`). A child can still be reported outside a scrolled layer on this
-build (measured: a list capped to 63 px reports a row at 822), so where that
-happens assert the scroll offset instead.
+(plan `598`); the `Select` and app suites do exactly that (plan `599`). The
+earlier caveat that a child "could still be reported outside a scrolled layer"
+came from comparing a painted child with an uncorrected list box and is retired.
+
+One renderer verb cannot answer a reveal: **`scrollIntoView` scrolls to the
+child before the target.** Measured on the pinned build in a capped `Select`
+list (visible `y 48 … 792`, rows `28 + 2` gap), `scrollIntoView(row 26)` set the
+offset to `-39`, leaving row 26 at `794 … 822` and row 25 flush with the list's
+bottom at `764 … 792`; `scrollIntoView(row 49)` on a selected list did the same
+at `-729`. Measure the row and the list and call `scrollTo` with the overflow
+instead (`Select`, plan `599`).
 
 ### Text and input
 
