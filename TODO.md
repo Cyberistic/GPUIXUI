@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 147/147
+`[x]` `[████████████]` 148/148
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1609,6 +1609,14 @@ retired once both branches are one
       floor), both pages state the rule and show the working shape, and the
       runtime matrix proves both directions. `minWidth: "max-content"` is a
       runtime error and is not offered. Offline 786 → 788; plan `587`.
+`[x]` `packages/primitives`: **the README's suite counts were stale** — measured
+      2026-10-19: it claimed 53 offline files / 753 tests and 46 runtime files /
+      700 tests, while the tree had 54 / 788 and 49 / 717. The README now carries
+      only the file counts (55 offline, 49 runtime) and points at this file's
+      live-suite row and plan `583` for run totals, because a prose test count
+      cannot be held true by a test. `src/docs-counts.test.ts` fails by value
+      when either file count drifts or a numeric test count returns; three
+      failure directions measured (plan `588`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

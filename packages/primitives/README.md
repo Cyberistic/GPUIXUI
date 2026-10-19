@@ -231,10 +231,10 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-19: **53 files, 753 tests,
-all passing**, including a package-wide guard that a caller's `style` wins last
-on every part (plan `097`), the axis-aware floating alignment rule
-(plan `098`), a guard that every documented `theme.…` path and
+`src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
+**55 test files**, all passing, including a package-wide guard that a caller's
+`style` wins last on every part (plan `097`), the axis-aware floating alignment
+rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
 that every public component is rendered by at least one example (plan `374`),
 and one that fails by file name when a runtime suite has no header or is named
@@ -253,9 +253,9 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. Measured 2026-10-19 on this host: **46 files, 700 tests, 589
-passing / 111 failing**; plan `584` adds `runtime/auto-focus.runtime.test.tsx`
-(7 passing cases, scoped run), so the next full run is 47 files / 707 tests.
+runtime-proven too. The runtime suite is **49 test files**. The latest run's
+totals live in `TODO.md`'s live-suite row and plan `583`, not here: a prose
+count cannot be held true by a test.
 The failures are measured runtime facts, not an
 artifact guess: the store artifact is the **release-tag** build (plan `529`;
 `strings` reports `focusVisible=0`), it delivers **no focus events** (plan
