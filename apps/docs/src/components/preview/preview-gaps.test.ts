@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   LIVE_SCENES,
   SCENE_GESTURE,
+  SCENE_LABEL,
   isLiveScene,
 } from "../../../preview/scenes";
 import { components } from "../../component-meta/registry";
@@ -181,7 +182,14 @@ describe("the strategy names the code's scenes", () => {
     Order.String,
   );
   const expectedGestures = Arr.sort(
-    Arr.map(gestures, ({ title }) => title),
+    [
+      ...Arr.map(gestures, ({ title }) => title),
+      ...Arr.filterMap(SCENE_LABEL, ({ scene, title }) =>
+        SCENE_GESTURE[scene] !== undefined
+          ? Result.succeed(title)
+          : Result.failVoid,
+      ),
+    ],
     Order.String,
   );
 

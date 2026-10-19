@@ -1,4 +1,5 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { components } from "@/component-meta/registry";
@@ -20,10 +21,24 @@ import { NO_LIVE_SCENE, STATEFUL_NO_LIVE_SCENE } from "./gaps";
  * — so the guard reads the real source file, like `content-references.test.ts`.
  */
 
-const viewSource = readFileSync(
-  fileURLToPath(new URL("../../../preview/scene-views.tsx", import.meta.url)),
-  "utf8",
+const sceneViewsPath = fileURLToPath(
+  new URL("../../../preview/scene-views.tsx", import.meta.url),
 );
+const patternsDirectory = fileURLToPath(
+  new URL("../../../preview/patterns/", import.meta.url),
+);
+
+/**
+ * A composed page keeps its scene in `preview/patterns/` so the page can include
+ * a readable source file. The contract reads the compositions as well as
+ * `scene-views.tsx`, so a composed scene is held to the same expectation.
+ */
+const viewSource = [
+  readFileSync(sceneViewsPath, "utf8"),
+  ...readdirSync(patternsDirectory)
+    .filter((file) => file.endsWith(".tsx"))
+    .map((file) => readFileSync(join(patternsDirectory, file), "utf8")),
+].join("\n");
 
 const mainSource = readFileSync(
   fileURLToPath(new URL("../../../preview/main.tsx", import.meta.url)),
@@ -166,6 +181,9 @@ describe("gesture scenes", () => {
     [
       ["date-picker", ["date-day-2026-10-21"]],
       ["time-picker", ["scene-time-hours"]],
+      // The confirmation-flow pattern's action is `ConfirmDialog`'s own footer
+      // button; the composed page supplies the dialog, not the button.
+      ["confirmation-flow", ["confirm-accept"]],
     ],
   );
 

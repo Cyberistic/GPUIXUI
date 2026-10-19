@@ -181,6 +181,7 @@ import {
 } from "@gpuixui/components/time-picker";
 import { Duration } from "effect";
 import { useEffect, useState, type ReactElement } from "react";
+import { ConfirmationFlow } from "./patterns/confirmation-flow";
 import type { LiveScene } from "./scenes";
 
 const ButtonScene = (): ReactElement => (
@@ -1355,6 +1356,7 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     carousel: CarouselScene,
     "message-scroller": MessageScrollerScene,
     showcase: ShowcaseScene,
+    "confirmation-flow": ConfirmationFlow,
   };
 
 /** The surface chrome every scene sits in: the theme's own background. */

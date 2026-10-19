@@ -1,0 +1,73 @@
+---
+title: Confirmation flow
+description: A destructive action guarded by a typed confirmation and reported by a toast.
+---
+
+A pattern is a composition with a job: here, the check an application runs
+before it deletes something it cannot restore. It is built from public packages
+only — `ConfirmDialog`, `Input`, `Button` and the toast system — and it runs on
+**GPUix's published WebAssembly renderer**, the same real surface every live
+scene uses. It is not the native desktop binary; the component pages carry that
+evidence.
+
+## The task
+
+Delete a workspace. The action is irreversible once the trash is emptied, so
+the dialog asks the reader to type the workspace's name before the destructive
+button commits. A near-miss keeps the dialog open with an inline error; a match
+closes it and a toast reports what happened.
+
+## Composition
+
+The rest state is the real `ConfirmDialog`, opened by the composed component
+rather than by a prop on a demo box:
+
+<LiveSurface scene="confirmation-flow" title="Confirmation flow" />
+
+The flow composes:
+
+- `ConfirmDialog` for the modal, its Cancel-first focus and its danger tone;
+- `Input` for the typed name, controlled by the composition;
+- `Button` inside the dialog's footer, painted by `ConfirmDialog` itself;
+- `ToastProvider` and `ToastViewport` for the success message;
+- `Text`, `Stack` and the active theme for the layout — no colour, space or
+  type literal is written in the scene.
+
+The composition lives in `preview/patterns/confirmation-flow.tsx`, not in the
+component demos: a pattern page shows one workflow, not the parts separately.
+
+## State
+
+The composed component owns three pieces of local state: whether the dialog is
+open, the typed name, and the inline error. `ConfirmDialog` owns the focus
+contract — Cancel takes initial focus, Escape cancels, and confirming **never**
+closes the dialog; the caller closes it after the work succeeds. That is why a
+mismatch can keep the same surface open with the error visible.
+
+The toast store owns the message after the close. The scene pushes it with
+`Duration.infinity`, so the smoke never races a dismissal.
+
+## What is verified
+
+| Check | What it proves |
+| ----- | -------------- |
+| `nub run --filter docs smoke:preview` | drives the real gesture: types `atlas`, clicks the confirm action, and asserts "Workspace deleted" is absent before and present after; the page loads the iframe with the docs' mode and platform |
+| `packages/components` behaviour suites | `ConfirmDialog`'s Cancel-first focus, caller-owned close and loading lock; the toast queue, timers and viewport |
+| `packages/primitives` runtime suites | `Input`'s controlled edit path and `Button`'s activation |
+| `nub run --filter docs test` | the pure confirmation rule, the scene contract and this page's required sections |
+
+Limits, stated rather than implied: the surface is the WebAssembly renderer,
+not a desktop window; the delete is simulated (nothing is persisted); and the
+copy is English-only.
+
+## Source
+
+<include lang="tsx" meta='title="apps/docs/preview/patterns/confirmation-flow.tsx"'>
+  ../../../preview/patterns/confirmation-flow.tsx
+</include>
+
+## Related
+
+- [Confirmation dialog](/docs/components/confirm-dialog) · [Dialog](/docs/components/dialog)
+- [Text input](/docs/components/text-input) · [Button](/docs/components/button)
+- [Toast](/docs/components/toast)

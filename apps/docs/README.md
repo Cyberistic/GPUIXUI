@@ -133,9 +133,10 @@ renderer (the browser's GPU backend) and exports one document per scene:
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for every record that declares a
-  `liveScene` (42 today), plus the Showcase page's composed screen (plan 560);
-  `docs/preview-strategy.md` owns the tier table and
-  names them all. 20 of those document state only a gesture produces — an open
+  `liveScene` (42 today), plus the Showcase page and the confirmation-flow
+  pattern's composed screens (plans 560 and 521); `docs/preview-strategy.md`
+  owns the tier table and names them all. 21 of those document state only a
+  gesture produces — an open
   overlay, an opened list, a checked control, a value a key reaches or text a
   reader types — so
   `preview/scenes.ts` declares the gesture that produces it
@@ -798,14 +799,16 @@ until you do.
 
 ## Pattern pages
 
-A pattern page documents a **real composition**, not a component. The first is
-`content/docs/patterns/settings-form.mdx`, built from
-`examples/basic-app/src/App.tsx`. Its contract (`src/pattern-pages.test.ts`) is:
-six sections (`The task`, `Composition`, `State`, `What is verified`, `Source`,
-`Related`), at least one real `<include>` that resolves inside the repository,
-no placeholder prose, and any `nub run --filter <package> <script>` claim must
-name a script the example package really defines. A pattern with no runnable
-source does not get a page.
+A pattern page documents a **real composition**, not a component.
+`content/docs/patterns/settings-form.mdx` shows the `examples/basic-app` screen,
+and `content/docs/patterns/confirmation-flow.mdx` shows a destructive workflow
+that runs as a live scene (`preview/patterns/confirmation-flow.tsx`, plan 521).
+The contract (`src/pattern-pages.test.ts`) is: six sections (`The task`,
+`Composition`, `State`, `What is verified`, `Source`, `Related`), at least one
+real `<include>` that resolves inside the repository, no placeholder prose, and
+any `nub run --filter <package> <script>` claim must name a script the example
+or docs package really defines. A pattern with no runnable source does not get
+a page.
 
 ## Previews
 

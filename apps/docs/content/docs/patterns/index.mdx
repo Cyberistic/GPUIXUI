@@ -17,15 +17,22 @@ skeleton, a tooltip and a light/dark switch, all composed from the public
 primitives. It is type-checked and its source is the real application file; it
 has not been launched natively.
 
+## Confirmation flow
+
+The second pattern is the check before an irreversible action
+([`/docs/patterns/confirmation-flow`](/docs/patterns/confirmation-flow)): a
+`ConfirmDialog` that requires the workspace's name before its destructive
+button commits, an inline error when the name does not match, and a success
+toast when it does. It runs as a live scene on GPUix's published WebAssembly
+renderer, and the release smoke types the name and confirms so the success
+state is proved rather than illustrated.
+
 ## Still to come
 
-The confirmation flow and the command palette have every component they need —
-`ConfirmDialog`, `CommandMenu`, `Dialog`, the form parts and the toast system
-are implemented and native-tested. They wait on one **runnable composed example**
-(`ConfirmDialog` + a form + `Toast`; `CommandMenu` + `Dialog`), because a pattern
-page is never assembled from separate component demos.
-
-An inspector workspace waits on `packages/docking`, which does not exist yet.
+The command palette has every component it needs — `CommandMenu`, `Dialog` and
+the search input are implemented and native-tested — but it still waits on its
+own runnable composition. The inspector workspace waits on `packages/docking`,
+which does not exist yet.
 
 A pattern is never assembled from browser imitations and presented as working
 native behaviour.

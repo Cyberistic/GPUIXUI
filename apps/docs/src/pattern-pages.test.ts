@@ -88,6 +88,18 @@ const exampleScripts = new Map(
   }),
 );
 
+/**
+ * A docs-owned pattern is proved by a docs script — the live-surface smoke is
+ * the only thing that drives its composition. The app's manifest joins the
+ * table, so the page may name `nub run --filter docs <script>` and the guard
+ * still rejects a script no package defines.
+ */
+const docsManifest = readManifest(join(repoRoot, "apps/docs/package.json"));
+exampleScripts.set(
+  docsManifest.name,
+  new Set(Object.keys(docsManifest.scripts)),
+);
+
 const index = readFileSync(join(patternsDirectory, "index.mdx"), "utf8");
 
 describe("pattern pages", () => {

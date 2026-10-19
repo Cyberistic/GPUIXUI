@@ -113,6 +113,7 @@ const sceneFiles = [
   "src/component-meta/entries.ts",
   "preview/scenes.ts",
   "preview/scene-views.tsx",
+  "preview/patterns/confirmation-flow.tsx",
   "preview/main.tsx",
   "preview/renderer-ready.ts",
   "src/components/preview/scene-contract.test.ts",

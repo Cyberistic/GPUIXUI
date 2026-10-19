@@ -50,6 +50,7 @@ export const LIVE_SCENES = [
   "carousel",
   "message-scroller",
   "showcase",
+  "confirmation-flow",
 ] as const;
 
 export type LiveScene = (typeof LIVE_SCENES)[number];
@@ -107,6 +108,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   carousel: "Release notes slide 2 of 2",
   "message-scroller": "Jump to latest",
   showcase: "Three people can edit this workspace.",
+  "confirmation-flow": "Workspace deleted",
 };
 
 /**
@@ -117,7 +119,21 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
  */
 export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
   showcase: "/docs/showcase",
+  "confirmation-flow": "/docs/patterns/confirmation-flow",
 };
+
+/**
+ * The reader-facing name of a composition scene. A component scene borrows its
+ * registry title; a composed page has no record, so the strategy's tier and
+ * gesture tables read the name here instead of guessing one from the key.
+ */
+export const SCENE_LABEL: ReadonlyArray<{
+  readonly scene: LiveScene;
+  readonly title: string;
+}> = [
+  { scene: "showcase", title: "Showcase" },
+  { scene: "confirmation-flow", title: "Confirmation flow" },
+];
 
 /**
  * The gesture a scene needs before its documented state exists (plan 486).
@@ -187,6 +203,10 @@ export const SCENE_GESTURE: Readonly<
   "message-scroller": [
     { kind: "wheel", testId: "scene-message-viewport", deltaY: 600 },
   ],
+  "confirmation-flow": [
+    { kind: "fill", testId: "scene-confirm-name", text: "atlas" },
+    { kind: "click", testId: "confirm-accept" },
+  ],
 };
 
 /**
@@ -214,6 +234,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "time-picker": "Click the hour field, then press Up.",
   carousel: "Press the next control to see the second slide.",
   "message-scroller": "Wheel up in the log to leave the tail.",
+  "confirmation-flow": "Type the workspace name, then confirm.",
 };
 
 /**
