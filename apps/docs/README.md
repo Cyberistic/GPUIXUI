@@ -464,6 +464,16 @@ palette`, `Theming`), and a title hit the page index omitted is synthesized from
 heading on component pages and never `/docs/theming`. A whole-phrase page match
 still outranks a one-word component match.
 
+A promoted name also matches the way prose writes it (plan 564). A roadmap
+target (`File trees`, `Code editor integration`), a camelCase token
+(`primaryForeground`), a hyphenated icon (`chevrons-up-down`) and a scenario id
+(`modal-focus-trap`) are promoted for any query of **two or more words** where
+every word prefixes part of the name — so `file tree`, `primary foreground`,
+`chevrons up down` and `modal focus` reach their pages. The partial match ranks
+below an exact name, and a **single** word is never promoted: `input`, `label`,
+`search`, `copy` and `list` keep their own pages. `src/lib/generated-search.test.ts`
+guards the rule and the four generated indexes prove it end to end.
+
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
 navigates and focuses the destination page, an unknown query shows the empty

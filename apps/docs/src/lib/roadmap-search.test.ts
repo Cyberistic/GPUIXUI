@@ -40,6 +40,21 @@ describe("roadmap search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/roadmap");
   });
 
+  it("finds the roadmap from the singular or a prefix of a target", async () => {
+    const queries = [
+      "file tree",
+      "log viewer",
+      "code editor",
+      "split panes",
+      "property editor",
+      "inspector panel",
+    ];
+    const first = await Promise.all(
+      queries.map(async (query) => (await search(query, 5))[0]?.url),
+    );
+    expect(first).toEqual(queries.map(() => "/docs/roadmap"));
+  });
+
   it("returns a single-word target in the results without promoting it", async () => {
     const results = await search("Toolbars", 5);
     expect(results.some((result) => result.url === "/docs/roadmap")).toBe(true);

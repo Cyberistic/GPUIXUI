@@ -471,7 +471,19 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–562)
 
-`[x]` `[██████████]` 130/130
+`[x]` `[██████████]` 131/131
+
+`[x]` **Search finds a promoted name the way prose writes it (plan 564)** —
+      promoted names matched only their exact spelling, so `file tree` returned
+      the License page, `log viewer` the Dialog page, `code editor` a Text
+      variant, `split panes` the Component API and `primary foreground` a
+      Timeline state; one shared rank now promotes a multiword query whose words
+      prefix a generated name (`file tree` → Roadmap, `primary foreground` →
+      the colour table, `chevrons up down` → Icons, `modal focus` →
+      Capabilities) while a single plain word is never promoted. Ten measured
+      before/after queries, 8 unit tests + 4 integration cases, both forced
+      defects measured and reverted; 79 files / 557 docs tests, `check` and
+      `lint` green.
 
 `[x]` **Search is proved where readers use it (plan 563)** — the gate only
       pressed ⌘K at 640 px, so the phone click path and the Components page's

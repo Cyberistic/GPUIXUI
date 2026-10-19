@@ -60,6 +60,15 @@ describe("capability search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/capabilities");
   });
 
+  it("finds the matrix from a scenario id written as words", async () => {
+    const [focus, placement] = await Promise.all([
+      search("modal focus", 5),
+      search("floating placement", 5),
+    ]);
+    expect(focus[0]?.url).toBe("/docs/capabilities");
+    expect(placement[0]?.url).toBe("/docs/capabilities");
+  });
+
   it("finds the matrix from a theme scenario", async () => {
     const results = await search("theme-color-roles", 5);
     expect(results[0]?.url).toBe("/docs/capabilities");

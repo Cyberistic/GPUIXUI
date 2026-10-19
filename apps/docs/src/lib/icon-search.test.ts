@@ -47,6 +47,15 @@ describe("icon search", { timeout: 120_000 }, () => {
     ]);
   });
 
+  it("takes a hyphens-as-spaces icon name to the Icons page first", async () => {
+    const [chevrons, star] = await Promise.all([
+      search("chevrons up down", 5),
+      search("star filled", 5),
+    ]);
+    expect(chevrons[0]?.url).toBe("/docs/components/icon");
+    expect(star[0]?.url).toBe("/docs/components/icon");
+  });
+
   it("keeps the page that owns a plain word", async () => {
     expect((await search("input"))[0]?.url).toBe("/docs/components/text-input");
     expect((await search("label"))[0]?.url).toBe("/docs/components/label");

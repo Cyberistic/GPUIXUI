@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { search } from "./search";
-import { exactNameRank } from "./generated-search";
+import { promotedNameRank } from "./generated-search";
 import { tokenSearchEntries } from "./token-search";
 
 /**
@@ -137,6 +137,15 @@ describe("token search", { timeout: 120_000 }, () => {
     expect(label[0]?.url).toBe("/docs/components/label");
   });
 
+  it("finds a camelCase role written as separate words", async () => {
+    const [primary, destructive] = await Promise.all([
+      search("primary foreground", 5),
+      search("destructive soft", 5),
+    ]);
+    expect(primary[0]?.url).toBe(colourUrl);
+    expect(destructive[0]?.url).toBe(colourUrl);
+  });
+
   it("does not invent a token that no table lists", async () => {
     expect(await search("destructiveSoftProbe")).toEqual([]);
   });
@@ -147,8 +156,8 @@ describe("the promotion rule", () => {
     const entry = tokenSearchEntries.find(
       (candidate) => candidate.index.url === colourUrl,
     );
-    expect(exactNameRank(entry, "inputForeground")).toBe(0);
-    expect(exactNameRank(entry, "input")).toBeUndefined();
+    expect(promotedNameRank(entry, "inputForeground")).toBe(0);
+    expect(promotedNameRank(entry, "input")).toBeUndefined();
   });
 });
 

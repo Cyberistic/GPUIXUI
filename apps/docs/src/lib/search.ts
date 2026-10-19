@@ -9,7 +9,11 @@ import type { ComponentMetaInput } from "@/component-meta/schema";
 import { componentSymbols } from "@/component-meta/symbols";
 import { valueExports } from "./api-values.generated";
 import { capabilitySearchEntry } from "./capability-search";
-import { exactNameRank, type GeneratedSearchEntry } from "./generated-search";
+import {
+  promotedNameRank,
+  TOKEN_MATCH_RANK,
+  type GeneratedSearchEntry,
+} from "./generated-search";
 import { iconSearchEntry } from "./icon-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import { source } from "./source";
@@ -117,9 +121,6 @@ const matchRank = (name: string, query: string): number | undefined => {
   return normalized.includes(needle) ? 3 : undefined;
 };
 
-/** A token-only match must never outrank a whole-query match (plan 561). */
-const TOKEN_RANK_OFFSET = 4;
-
 /** Words that can name something; a single character is noise. */
 const queryTerms = (query: string): ReadonlyArray<string> =>
   query
@@ -133,7 +134,7 @@ const queryTerms = (query: string): ReadonlyArray<string> =>
  *
  * A whole-query match keeps plan 431's ranks (`0–3`). When the query is a
  * phrase, each word is tried against every name and its rank is offset by
- * `TOKEN_RANK_OFFSET`, so `popover placement` still reaches `Popovers` while
+ * `TOKEN_MATCH_RANK`, so `popover placement` still reaches `Popovers` while
  * `command palette` prefers the page whose own title matches the whole phrase.
  */
 const nameRank = (
@@ -153,7 +154,7 @@ const nameRank = (
 
   const tokens = queryTerms(query).flatMap((term) => {
     const rank = best(term);
-    return rank === undefined ? [] : [rank + TOKEN_RANK_OFFSET];
+    return rank === undefined ? [] : [rank + TOKEN_MATCH_RANK];
   });
   return tokens.length === 0 ? undefined : Math.min(...tokens);
 };
@@ -246,7 +247,7 @@ export const mergeResults = (
         result.type === "page" ? nameRank([result.content], query) : undefined;
       const ranks = [
         component === undefined ? undefined : componentRank(component, query),
-        exactNameRank(generated, query),
+        promotedNameRank(generated, query),
         pageTitleRank,
       ].filter((rank): rank is number => rank !== undefined);
       return {
