@@ -653,6 +653,15 @@ retired once both branches are one
       Button + 1 Navigation menu native case (Button 14 → 15, Navigation menu
       22 → 23), both failing without the guard; docs, `COMPONENTS.md`, the
       plan index and the inventory count synced (owner: components)
+    - [x] A keyboard clear leaves the recorder clickable — plan 693; measured on
+      2026-10-19: both clear paths armed the pointer guard, and only a bubbled
+      click consumed it, so a keyboard-cleared `HotkeyRecorder` needed two
+      clicks to start recording again. `clear` now takes the pointer gesture
+      explicitly: a pointer clear still suppresses its own click, a keyboard
+      clear leaves the recorder ready. 1 new native case (Hotkey recorder 15 →
+      16), failing without the fix, plus the pointer path's next-click
+      assertion; docs, `COMPONENTS.md`, the plan index, `PLAN.md` D30 and the
+      inventory count synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

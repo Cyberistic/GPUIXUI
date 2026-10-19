@@ -94,6 +94,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   while being recorded. Prefer non-system chords in your UI.
 - **Clearing is a control, not `Backspace`.** The test renderer emits no key
   event for Backspace/Delete, so that gesture is not promised.
+- A pointer clear consumes its own bubbled click, so it never starts a
+  recording; a keyboard clear claims its key and leaves the recorder ready, and
+  the next click starts a recording.
 - No conflict detection against already-bound chords.
 - The recorder stores a string; registering the chord with the runtime is the
   application's job.
@@ -104,12 +107,13 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (15 tests):
+`src/behaviour/hotkey-recorder.test.tsx` runs in the real GPUix renderer (16 tests):
 the display, click-to-record, a real captured chord, Escape, a recording Escape
-that leaves its dialog open, the clear control by pointer and keyboard, the
-clear control's focus ring, Space starting on release, a captured Space not
-reopening the recorder, cancellation on `Tab` and on an outside press, disabled,
-and both themes.
+that leaves its dialog open, the clear control by pointer and keyboard (and that
+the next click after a keyboard clear starts a recording), the clear control's
+focus ring, Space starting on release, a captured Space not reopening the
+recorder, cancellation on `Tab` and on an outside press, disabled, and both
+themes.
 
 `src/hotkey/logic.test.ts` (8 pure tests) covers platform `mod`, a secondary
 modifier, modifier-only presses, Enter/Space normalisation, case, order and a

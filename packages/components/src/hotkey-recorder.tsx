@@ -100,8 +100,13 @@ export const HotkeyRecorder = ({
     setRecording(true);
   };
 
-  const clear = (): void => {
-    skipStart.current = true;
+  /**
+   * Drop the binding. `skip` marks the clear control's own click, which bubbles
+   * to the root and must not start a recording; a keyboard clear claims its key
+   * instead, so it leaves the flag alone (plan 693).
+   */
+  const clear = (skip: boolean): void => {
+    skipStart.current = skip;
     onChange(null);
   };
 
@@ -233,10 +238,10 @@ export const HotkeyRecorder = ({
           aria-label="Clear shortcut"
           testId={testId === undefined ? undefined : `${testId}-clear`}
           tabIndex={0}
-          onClick={clear}
+          onClick={() => clear(true)}
           {...activationHandlers((event) => {
             claimEvent(event);
-            clear();
+            clear(false);
           })}
           onFocus={() => setClearFocused(true)}
           onBlur={() => setClearFocused(false)}

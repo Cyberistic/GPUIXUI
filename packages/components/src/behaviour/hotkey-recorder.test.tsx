@@ -146,6 +146,10 @@ describe("HotkeyRecorder", () => {
     expect(recorder.renderer.getAllText()).toContain("Click to record");
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
 
+    // The clear's own click is consumed once; the next click is a new gesture.
+    clickCentreOf(recorder, "recorder");
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
+
     recorder.unmount();
   });
 
@@ -198,6 +202,28 @@ describe("HotkeyRecorder", () => {
     expect(onChange).toHaveBeenCalledWith(null);
     expect(recorder.renderer.getAllText()).toContain("Click to record");
     expect(recorder.renderer.getAllText()).not.toContain("Press keys…");
+
+    recorder.unmount();
+  });
+
+  it("starts recording on the next click after a keyboard clear", () => {
+    // The clear control's key-up claims the event, so it must not leave the
+    // pointer guard armed: the next click is a new gesture (plan 693).
+    const onChange = vi.fn();
+    const recorder = renderComponent(
+      <Harness initial="ctrl+k" onChange={onChange} />,
+    );
+    const clear = recorder.renderer.findByTestId("recorder-clear");
+    expect(clear).toBeDefined();
+    if (clear === undefined) return;
+
+    recorder.renderer.nativeSimulateKeyDown(clear.id, "space");
+    recorder.renderer.nativeSimulateKeyUp(clear.id, "space");
+    expect(onChange).toHaveBeenCalledWith(null);
+    expect(recorder.renderer.getAllText()).toContain("Click to record");
+
+    clickCentreOf(recorder, "recorder");
+    expect(recorder.renderer.getAllText()).toContain("Press keys…");
 
     recorder.unmount();
   });
