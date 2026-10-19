@@ -603,6 +603,9 @@ retired once both branches are one
       scroll offset (measured: region `y 91 → -18` for an offset of `-109`) while
       the row lands at `607..643`, exactly the region's pre-scroll bottom. Do not
       re-baseline the assertion; re-run on plan `529`'s published-tag build.
+      **Resolved by plan `598`:** the scroller's *visible* box is `paintBounds`
+      (`reported − offset`), so the case now asserts the row is below the fold
+      before the wheel and inside it after — **7/7 on the release-tag build**.
 `[x]` `packages/primitives`: **`Progress`'s indeterminate fill ignored `tone`,
       and a determinate bar ran the step timer forever** — measured: with
       `tone="success"` the segment painted the brand role (`#000007`, not
@@ -924,7 +927,8 @@ retired once both branches are one
       take focus on a later mount. `NumberField`'s inner host gains
       `${testId}-input`, the app's first field takes focus after its skeleton,
       and a 7-case matrix proves the contract both ways (offline 52 files,
-      scoped live 7/7, app live 6/7 — the known plan `529` reachability case).
+      scoped live 7/7, app live 7/7 after plan `598` fixed the scroller's
+      reported box).
 `[x]` `packages/primitives`: **a resting field paints elevation, and the tests
       called any shadow a focus ring** — the `@gpuixui/tw` Base UI slice began
       resolving `INPUT_BASE`'s `shadow-xs`, so the field family draws
@@ -1375,8 +1379,21 @@ retired once both branches are one
       `Slider`/`RangeSlider` (track → rail-exact pointer mapping) use them, and
       the suites that measure those hosts opt in. Three scrolled-child
       assertions are reclassified with a measured reason (a child inside a
-      scroller reports its unscrolled position). Plan `597`; runtime
+      scroller reports its painted position; a scroller's own report slides with
+      its offset, corrected by plan `598`). Plan `597`; runtime
       730→732 tests, 37→0 failures; offline 813/813.
+`[x]` `packages/primitives` + `examples/basic-app`: **a scroller's own report
+      slides with its scroll offset** — measured (2026-10-19): a 552-high
+      `ScrollArea` at `y 91` reports `y -18` at offset `-109` while its painted
+      viewport stays `91…643`, and its children report painted positions
+      (`716 → 607`). That broke the app's consent-row reachability case
+      (`643 ≤ 534`) and made `runtime.wheel` aim outside the window on the
+      second gesture (`-100` stayed `-100`). `core/bounds.ts` `viewportBox` +
+      `paintedBoundsOf` now subtract a scroller's own offset, so `paintBounds` is
+      its visible box; the app case asserts below-the-fold **before** the wheel
+      and inside **after**, and is 7/7. 3 core + 2 runtime cases, both directions
+      proven; offline 58 files / 816 tests, runtime 52 files / 734 tests green
+      (plan `598`).
 `[x]` `packages/primitives`: (historical record, resolved by plan `597`) the
       full live suite was not green —
       the scoped files pass (text-overflow 3/3, separator 12/12, spacer 4/4), but
@@ -1483,14 +1500,12 @@ retired once both branches are one
       cross-team hit-test decision; no focus, tooltip, timer or order flake
       remains.
 
-`[!]` `packages/primitives`: **the published box model** — every remaining live
-      failure (37, 8 files) is a 2 px geometry delta on bordered elements: the
-      release build reports the content box where the tests assume the border
-      box (and an inset focus overlay is +3). Plan `597` records the probes,
-      rejects re-baselining to the smaller numbers, and proposes relative
-      geometry for placement plus a calibrated `paintBounds` for the absolute
-      size. **Blocked on the cross-team hit-test decision**; do not edit the
-      assertions before it.
+`[x]` `packages/primitives`: **the published box model** — closed by plan `597`
+      (a plain `div` reports from its content origin while a pointer hits its
+      border box; `paintBounds` is the opt-in correction) and plan `598` (a
+      scroller's own report also slides by its scroll offset, so `paintBounds` is
+      now its visible box; the last app reachability case passes 7/7). The full
+      runtime suite is 52 files / 734 tests green on the release-tag build.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

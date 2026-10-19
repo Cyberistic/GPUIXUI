@@ -250,10 +250,14 @@ known to report the content origin — floating surfaces, raw `div` triggers,
 field roots, the slider track — and keep `bounds` for a `Button` and anything
 whose report is already the border box (plan `597`, `packages/primitives`).
 
-A child inside a scrolled container reports its **unscrolled** content
-position on this build (measured: a list capped to 63 px reports a row at 822),
-so visibility inside a scroller cannot be asserted through `getElementBounds`;
-assert the scroll offset instead.
+A **scroller's own** box is reported from its content origin, so it slides by
+the scroll offset (measured: a 552-high region at `y 91` reports `y -18` at
+offset `-109`) while its painted viewport stays put, and its children report
+painted positions (the same row moved `716 → 607`). `paintBounds` subtracts the
+scroller's own offset, so a reachability check can compare two painted boxes
+(plan `598`). A child can still be reported outside a scrolled layer on this
+build (measured: a list capped to 63 px reports a row at 822), so where that
+happens assert the scroll offset instead.
 
 ### Text and input
 

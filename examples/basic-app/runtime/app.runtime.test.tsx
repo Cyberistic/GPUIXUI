@@ -77,9 +77,17 @@ const boundsOf = (runtime: Runtime, label: string) => {
   );
 };
 
-const boundsOfTestId = (runtime: Runtime, testId: string) =>
-  Option.getOrElse(runtime.bounds(testId), () =>
-    expect.fail(`the app painted no box for #${testId}`),
+/**
+ * The scroll region's **visible** box.
+ *
+ * A scroller's own report is its content origin, slid by the scroll offset
+ * (measured: `y 91 → -18` for an offset of `-109`), while its children report
+ * painted positions. `paintBounds` subtracts the offset, so both boxes are in
+ * the same space (plan `598`).
+ */
+const viewportOf = (runtime: Runtime) =>
+  Option.getOrElse(runtime.paintBounds(SETTINGS), () =>
+    expect.fail(`the app painted no box for #${SETTINGS}`),
   );
 
 const text = (runtime: Runtime): ReadonlyArray<string> => runtime.allText();
@@ -136,13 +144,19 @@ it("paints the consent copy the user has to agree to", async () => {
 it("reaches the consent row, refuses Save, then saves once accepted", async () => {
   const runtime = await openApp();
 
+  // The row starts below the fold, so it must be revealed by the region's own
+  // scroll before it can be clicked. A row that cannot be revealed is a bug,
+  // not a layout detail. Both boxes are painted-space: a child reports its
+  // painted position, and `paintBounds` puts the scroller in the same space
+  // (plan `598`).
+  const hidden = boundsOf(runtime, "I accept the terms");
+  const fold = viewportOf(runtime);
+  expect(hidden.y).toBeGreaterThanOrEqual(fold.y + fold.height);
+
   click(runtime, "Save changes");
   runtime.flush();
   expect(text(runtime)).not.toContain("Saving your changes…");
 
-  // The form is taller than its region: the row starts below the fold, so the
-  // user (and this test) must scroll. A row that cannot be revealed is a bug,
-  // not a layout detail.
   runtime.wheel(SETTINGS, 0, -400);
   runtime.flush();
   expect(
@@ -150,7 +164,8 @@ it("reaches the consent row, refuses Save, then saves once accepted", async () =
   ).toBeLessThan(0);
 
   const row = boundsOf(runtime, "I accept the terms");
-  const region = boundsOfTestId(runtime, SETTINGS);
+  const region = viewportOf(runtime);
+  expect(row.y).toBeGreaterThanOrEqual(region.y);
   expect(row.y + row.height).toBeLessThanOrEqual(region.y + region.height);
 
   expect(announced(runtime, "I accept the terms")).toBe("unchecked");

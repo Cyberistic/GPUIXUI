@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { paintedBox } from "../core/bounds.js";
+import { paintedBox, viewportBox } from "../core/bounds.js";
 
 describe("paintedBox", () => {
   it("adds the border back and removes the padding twice from the origin", () => {
@@ -48,5 +48,34 @@ describe("paintedBox", () => {
         { paddingLeft: Number.NaN, borderWidth: Number.POSITIVE_INFINITY },
       ),
     ).toStrictEqual({ x: 10, y: 10, width: 50, height: 20 });
+  });
+});
+
+describe("viewportBox", () => {
+  it("is the identity for a scroller that has not moved", () => {
+    const reported = { x: 12, y: 91, width: 928, height: 552 };
+    expect(viewportBox(reported, { x: 0, y: 0 })).toStrictEqual(reported);
+  });
+
+  it("moves a downward scroll's report back up by its offset", () => {
+    // Measured on the pinned release build (plan 598): the same scroller reports
+    // from its content origin, so a −109 scroll slides the whole report.
+    expect(
+      viewportBox(
+        { x: 16, y: -18, width: 928, height: 552 },
+        { x: 0, y: -109 },
+      ),
+    ).toStrictEqual({ x: 16, y: 91, width: 928, height: 552 });
+  });
+
+  it("handles both axes and leaves the reported box untouched", () => {
+    const reported = { x: 104, y: 36, width: 300, height: 120 };
+    expect(viewportBox(reported, { x: 100, y: -24 })).toStrictEqual({
+      x: 4,
+      y: 60,
+      width: 300,
+      height: 120,
+    });
+    expect(reported).toStrictEqual({ x: 104, y: 36, width: 300, height: 120 });
   });
 });

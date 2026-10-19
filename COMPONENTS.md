@@ -39,11 +39,13 @@ runtime-internal focus behaviour: the headless `Tooltip`'s open-on-focus still
 depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build: the focus
-rings are green after plan `590`, and the whole runtime suite — **51 files /
-732 tests** — passes after plan `597` corrected the published box model (a
+rings are green after plan `590`, and the whole runtime suite — **52 files /
+734 tests** — passes after plan `597` corrected the published box model (a
 plain `div` reports from its content origin, a `Button` from its border box;
-`paintBounds` is the opt-in correction, and the scrolled-child reporting limit
-is recorded in `docs/gpuix-capabilities.md` §4). The rows stay `wip` for the
+`paintBounds` is the opt-in correction) and plan `598` corrected a scroller's
+own report (it slides by the scroll offset, so `paintBounds` is its visible
+box). The remaining reporting limit is recorded in
+`docs/gpuix-capabilities.md` §4. The rows stay `wip` for the
 provenance reason above, not for a red suite. Reproduce it with:
 
 ```sh

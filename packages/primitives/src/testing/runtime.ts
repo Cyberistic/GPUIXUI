@@ -36,7 +36,7 @@ import type {
   TestRenderer,
 } from "@gpuix/react/testing";
 import type { ReactNode } from "react";
-import { paintedBox } from "../core/bounds.js";
+import { paintedBox, viewportBox } from "../core/bounds.js";
 
 /**
  * An element's painted box, in window pixels.
@@ -98,10 +98,15 @@ export interface Runtime {
    *
    * Opt-in: the runtime reports a plain `div` from its content origin and a
    * `Button` from its border box, so a call site uses this only where the
-   * element is known to report the content origin (plan `597`).
+   * element is known to report the content origin (plan `597`). A scroll
+   * container is also corrected by its own offset, so here it is the **visible**
+   * box (plan `598`).
    */
   readonly paintBounds: (testId: string) => Option.Option<Bounds>;
-  /** An element's painted box, or the nearest ancestor's, by element id. */
+  /**
+   * An element's painted box by id — a scroller's visible box, per
+   * `paintBounds`.
+   */
   readonly paintBoundsOfId: (id: number) => Option.Option<Bounds>;
   /** Own text plus every descendant's, concatenated like DOM `textContent`. */
   readonly text: (testId: string) => Option.Option<string>;
@@ -222,6 +227,14 @@ const boundsOf = (renderer: TestRenderer, id: number): Option.Option<Bounds> =>
  * border box, so the authored style alone cannot say which shape a given host
  * took. Call this only where the element is known to report the content origin
  * — the floating surfaces and raw `div` triggers in these suites (plan `597`).
+ *
+ * A scroll container is the one host whose **own** report also slides by its
+ * scroll offset (measured: a 552-high region at `y 91` reports `y -18` at offset
+ * `-109`) while its children report painted positions, so its offset is
+ * subtracted here. That makes `paintBounds` a scroller's visible box and gives
+ * `centerOf` an aim point that stays inside the window after a scroll — the
+ * second wheel on a scroller used to dispatch at a negative `y` and report
+ * nothing (plan `598`).
  */
 const paintedBoundsOf = (
   renderer: TestRenderer,
@@ -233,8 +246,15 @@ const paintedBoundsOf = (
       reported: Option.fromNullishOr(renderer.getElementBounds(id)),
     }),
     {
-      onSome: ({ element, reported }) =>
-        Option.some(paintedBox(reported, element.style)),
+      onSome: ({ element, reported }) => {
+        const painted = paintedBox(reported, element.style);
+        return Option.some(
+          Option.match(Option.fromNullishOr(renderer.getScrollOffset?.(id)), {
+            onNone: () => painted,
+            onSome: ([x, y]) => viewportBox(painted, { x, y }),
+          }),
+        );
+      },
       onNone: () =>
         Option.flatMap(
           Option.fromNullishOr(renderer.getElement(id)?.parentId ?? null),

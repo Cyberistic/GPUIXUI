@@ -71,3 +71,22 @@ export const paintedBox = (reported: BoxBounds, style: object): BoxBounds => {
     height: reported.height + top.border + bottom.border,
   };
 };
+
+/**
+ * A scroll container's visible box, from its reported box and scroll offset.
+ *
+ * The runtime reports a scroller from its **content origin**, so the report
+ * slides by the offset as content moves (measured on the pinned release build:
+ * a 552-high region at `y 91` reports `y -18` at offset `-109`) while its
+ * painted viewport stays put. Its children already report painted positions, so
+ * the subtraction applies to the scroller's own box only (plan `598`).
+ */
+export const viewportBox = (
+  box: BoxBounds,
+  offset: { readonly x: number; readonly y: number },
+): BoxBounds => ({
+  x: box.x - offset.x,
+  y: box.y - offset.y,
+  width: box.width,
+  height: box.height,
+});
