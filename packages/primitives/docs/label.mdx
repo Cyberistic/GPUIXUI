@@ -25,7 +25,8 @@ const name = "Workspace name";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `required` | `boolean` | `false` | appends a destructive `*`; **visual only** |
+| `required` | `boolean` | `false` | appends a destructive `*`, announced as an image named by `requiredLabel` |
+| `requiredLabel` | `string` | `"required"` | the marker's accessible name; a blank value falls back to the default |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
 | `description` | `string` | none | a caption line under the name; a blank one paints nothing |
 | `style` | `StateStyle<LabelState>` | — | merged last; an object or a state callback |
@@ -46,15 +47,24 @@ Not focusable. A label that responds to a click is a button.
 - The control's own `label` prop is its accessible name; there is **no
   `aria-labelledby`**, so the two are separate nodes. A test asserts both exist
   (`fields.runtime.test.tsx`).
-- `required` is a mark, not `aria-required`; validation must also be expressed in
-  words and in the control's `invalid` state.
+- `required` is a mark, not `aria-required`; 0.10.0 has no `aria-required`, and
+  the runtime has no `aria-labelledby` to bind the mark to the control. The
+  marker itself **is** announced — as an image named `required`, read after the
+  name — but the field's own node carries no required flag. Validation must also
+  be expressed in words and in the control's `invalid` state.
+- `requiredLabel` localises that spoken name (e.g. `"obligatoire"`); a blank
+  value falls back to `"required"` rather than publishing an unnamed image.
+- The marker is a separate node: in reading order it follows the name, but
+  tabbing straight to the control announces only the control's own `label`.
 - `invalid` is colour plus the field's border; it is not announced by itself.
 
 ## Theming
 
 The name uses the `label` role and the `foreground` (or `destructive`) role; the
 description uses `caption` + `mutedForeground`. The required star is
-`destructive`. No literal size or colour.
+`destructive`, and its **meaning** comes from `requiredLabel`: the star paints as
+text but reaches assistive technology as an image with that name (plan `581`). No
+literal size or colour.
 
 ## Style by state
 
@@ -81,6 +91,9 @@ property; returning `{}` keeps the default look. The state type is exported.
   both the visible label and the control's name are needed. `labelledBy` keeps
   the *control* side to one object, not the pair.
 - `required` does not validate anything. Validate with `Schema` at the boundary.
+- The required marker is not associated with the control (no `aria-labelledby`);
+  it is announced in reading order as an image named by `requiredLabel`, but a
+  screen-reader user who tabs directly to the control does not hear it.
 - A long name wraps inside the label's own row (the label is full width), so a
   form column does not grow sideways (plan `368`).
 - A blank `description` is not a description: it paints no caption line, so a
@@ -95,8 +108,13 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 - `src/components/fields.test.tsx` — name, description, required and invalid
   resolve as specified, and a blank description paints no caption (plan `577`).
+- `src/components/presentational.test.tsx` — a named `Text` is an image, a blank
+  name is absent, and the marker's name defaults/trims/falls back (plan `581`).
 - `runtime/fields.runtime.test.tsx` — the visible `Label` and the control's
   `TextInput` name are both present in the accessibility dump.
+- `runtime/label-required.runtime.test.tsx` — a required marker is an `Image`
+  named `required` (or `requiredLabel`) and no bare `*` node exists; a label
+  without `required` publishes no image (plan `581`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

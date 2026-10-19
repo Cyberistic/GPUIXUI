@@ -80,7 +80,7 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="Shown in the workspace switcher.">
+          <Label required description="Shown in the workspace switcher.">
             Project name
           </Label>
           <Input

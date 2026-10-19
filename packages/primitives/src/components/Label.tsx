@@ -10,7 +10,12 @@
 
 import type { ReactElement, ReactNode } from "react";
 import { shrinkLayoutStyle } from "../core/style.js";
-import { hasText, resolvePartStyle, type StateStyle } from "./internal.js";
+import {
+  ariaNameOr,
+  hasText,
+  resolvePartStyle,
+  type StateStyle,
+} from "./internal.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 
@@ -20,8 +25,13 @@ export interface LabelState {
 }
 
 export interface LabelProps {
-  /** Marks the field required. Purely visual; validate with Schema. */
+  /** Marks the field required with a destructive `*` (see `requiredLabel`). */
   readonly required?: boolean;
+  /**
+   * The required marker's accessible name. Defaults to `"required"`; a blank
+   * value falls back to it, because the marker is not decoration.
+   */
+  readonly requiredLabel?: string;
   /** Renders the label in the destructive role, for a field that failed. */
   readonly invalid?: boolean;
   /** A second line of help under the name. */
@@ -49,6 +59,7 @@ export const labelledBy = (name: string): { readonly label: string } => ({
 /** The element tree `Label` renders for a field's visible name. */
 export const renderLabel = ({
   required,
+  requiredLabel,
   invalid,
   description,
   style,
@@ -72,7 +83,11 @@ export const renderLabel = ({
         {children}
       </Text>
       {required === true ? (
-        <Text role="label" tone="destructive">
+        <Text
+          role="label"
+          tone="destructive"
+          label={ariaNameOr(requiredLabel, "required")}
+        >
           *
         </Text>
       ) : null}

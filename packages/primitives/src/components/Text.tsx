@@ -15,7 +15,7 @@ import {
   type TextTone,
 } from "../core/style.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
-import { mergeStyle } from "./internal.js";
+import { ariaName, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TextProps {
@@ -26,6 +26,12 @@ export interface TextProps {
   readonly align?: "start" | "center" | "end";
   /** Underline or strike through the run. Omit for no decoration. */
   readonly decoration?: TextDecoration;
+  /**
+   * Accessible name for a **mark**, not prose — a required asterisk, a status
+   * glyph. A named run is exposed as an image with this name (the same shape
+   * as `Icon`'s `label`); omit it for text, and a blank name is absent.
+   */
+  readonly label?: string;
   /** One line, clipped with an ellipsis. */
   readonly truncate?: boolean;
   /** Clip after this many lines. */
@@ -54,10 +60,21 @@ const HEADING_LEVELS: Partial<Record<TextRole, number>> = {
  *
  * `display` is deliberately not a heading: it is a visual scale, and the
  * outline level is the page's decision (`h1`).
+ *
+ * A **named** run is a mark, not prose: the name wins over the role's own
+ * semantics and the run becomes an `Image` (the shape `Icon` uses for a
+ * meaningful glyph, plan `581`). A blank name is absent, so the role decides.
  */
 export const textSemantics = (
   role: TextRole,
-): { readonly role?: string; readonly "aria-level"?: number } => {
+  label?: string,
+): {
+  readonly role?: string;
+  readonly "aria-level"?: number;
+  readonly "aria-label"?: string;
+} => {
+  const named = ariaName(label);
+  if (named !== undefined) return { role: "img", "aria-label": named };
   const level = HEADING_LEVELS[role];
   if (level !== undefined) return { role: "heading", "aria-level": level };
   return role === "code" || role === "codeBlock" ? { role: "code" } : {};
@@ -70,6 +87,7 @@ export const renderText = (
     tone = "default",
     align,
     decoration,
+    label,
     truncate,
     clamp,
     selectable,
@@ -83,7 +101,7 @@ export const renderText = (
   return (
     <text
       testId={testId}
-      {...textSemantics(role)}
+      {...textSemantics(role, label)}
       style={mergeStyle(textStyle(spec, theme), style)}
     >
       {children}

@@ -455,6 +455,67 @@ describe("type", () => {
     ).toStrictEqual(Option.some("A hint."));
   });
 
+  it("names a mark without changing its prose neighbours", () => {
+    // Plan 581: a run that carries meaning but is not prose — a required
+    // asterisk — becomes an image named by `label`. The runtime maps
+    // `role="img"` + `aria-label` on a `<text>` to an `Image` (measured), so
+    // the mark is announced as words rather than as an asterisk.
+    const mark = renderText(
+      { role: "label", tone: "destructive", label: "  required  " },
+      testTheme,
+    );
+    expect(expectSome(hostProp(mark, "role"))).toBe("img");
+    expect(expectSome(hostProp(mark, "aria-label"))).toBe("required");
+    // A blank name is absent, not an empty image: the role decides again.
+    const plain = renderText({ label: "   " }, testTheme);
+    expect(hostProp(plain, "role")).toStrictEqual(Option.none());
+    expect(hostProp(plain, "aria-label")).toStrictEqual(Option.none());
+  });
+
+  it("names the required marker, with a documented fallback", () => {
+    // The bug guarded (plan 581): the marker was a plain `Text`, so the
+    // runtime published it as a `Label` whose value was `"*"`. The page called
+    // it "visual only"; assistive technology heard an unexplained asterisk.
+    const markerOf = (props: Parameters<typeof renderLabel>[0]): ReactElement =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            expectSome(Arr.get(elementChildren(renderLabel(props)), 0)),
+          ),
+          1,
+        ),
+      );
+    const defaulted = markerOf({ required: true, children: "Email" });
+    expect(elementProp(defaulted, "role")).toStrictEqual(Option.some("label"));
+    const custom = markerOf({
+      required: true,
+      requiredLabel: "  obligatoire  ",
+      children: "Email",
+    });
+    expect(expectSome(elementProp(custom, "label"))).toBe("obligatoire");
+    const blank = markerOf({
+      required: true,
+      requiredLabel: "   ",
+      children: "Email",
+    });
+    expect(expectSome(elementProp(blank, "label"))).toBe("required");
+    const markerLabel = Schema.decodeUnknownSync(Schema.String)(
+      expectSome(elementProp(defaulted, "label")),
+    );
+    expect(markerLabel).toBe("required");
+    // The marker is the `Text` primitive with a name, so the named-mark rule
+    // above decides its host semantics.
+    expect(textSemantics("label", markerLabel)).toStrictEqual({
+      role: "img",
+      "aria-label": "required",
+    });
+    // No `required`, no marker — the name row has one child.
+    const row = expectSome(
+      Arr.get(elementChildren(renderLabel({ children: "Email" })), 0),
+    );
+    expect(elementChildren(row)).toHaveLength(1);
+  });
+
   it("hands a control its name, because GPUix has no aria-labelledby", () => {
     // The helper is only useful if a control can consume it: every control
     // takes `label` and writes the host's `aria-label` itself.

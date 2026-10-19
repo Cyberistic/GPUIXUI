@@ -173,7 +173,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 144/144
+`[x]` `[████████████]` 145/145
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -891,6 +891,17 @@ retired once both branches are one
       from `availableWidth` on the resolved side (the same subtraction the side
       decision uses), so left, right and above/below each measure their own
       room. 1 core + 1 runtime case, both directions proven (plan `379`).
+`[x]` `packages/primitives`: **a required marker was an unexplained asterisk** —
+      measured (2026-10-19): `<Label required>` published a third accessibility
+      node, `Label: "*"`, after the name and description, while `docs/label.mdx`
+      called the marker "visual only"; 0.10.0 has no `aria-required`, so the
+      marker is the only channel that can say the field is required. The marker
+      is now an `Image` named by the new `Label.requiredLabel` (default
+      `"required"`; a blank value falls back), built on a new `Text.label` mark
+      seam (a named run is an image; a blank name leaves the role's semantics).
+      The docs state what is and is not announced; the form example shows a
+      required field. 6 element-tree + 3 scoped runtime cases, both directions
+      proven (plan `581`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site
       workstream). **Audited 2026-10-19:** the docs site has 68 component pages
       and the package's parts table has 31 parts; **six have no page** —

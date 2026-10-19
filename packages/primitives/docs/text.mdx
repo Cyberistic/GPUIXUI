@@ -69,6 +69,7 @@ a font size.
 | `tone` | `TextTone` | `"default"` | colour role |
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment; `"end"` is sent to the runtime as its `right` (plan `365`) |
 | `decoration` | `"underline" \| "line-through"` | none | the runtime's `textDecoration`; paint only, never a semantic emphasis (plan `377`) |
+| `label` | `string` | none | names a **mark** (e.g. a required `*`) as an image; omit it for prose, and a blank name is absent |
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | a pointer drag takes the text (measured, plan `385`); off keeps chrome inert |
@@ -107,6 +108,7 @@ plan `059`):
 | ------ | --------------- | --------- |
 | `h1`, `h2`, `h3` | `role="heading"`, `aria-level={1,2,3}` | `Heading` with that level and the text as its value |
 | `code`, `codeBlock` | `role="code"` | `Code` |
+| any role, with `label` | `role="img"`, `aria-label={label}` | `Image` with that name (a mark, not prose — plan `581`) |
 | `display`, `body`, `bodyStrong`, `label`, `caption` | none | `Label` (the runtime default) |
 
 `display` is deliberately not a heading: it is a visual scale, and the page's
@@ -115,6 +117,13 @@ reader therefore hears a real document outline when the roles are used honestly,
 and a flat list of labels otherwise. A `decoration` is paint only: it is not
 announced, so a struck-out value still needs words ("was", "no longer
 available") when the removal is information the reader needs.
+
+A **mark** is the exception to "text is prose": a run whose visible glyph
+carries meaning — `Label`'s required `*`, a status dot — takes `label`, and the
+runtime exposes it as an `Image` named by that string. Measured (plan `581`):
+`<text role="img" aria-label="required">*</text>` reports `Image: "required"`,
+while the same run without a name reports `Label: "*"`. The name wins over the
+role's own semantics, so use it for marks only; a blank name is absent.
 
 ## Theming
 
@@ -145,6 +154,9 @@ hard-coded pixel value.
   container the runtime maps to a paragraph.
 - No rich text: one run, one role. Composition is several `Text` nodes in a
   `Stack`.
+- `label` is for marks, not prose: a named run is an `Image`, so a heading or
+  paragraph with a name loses its heading/paragraph semantics. Leave prose
+  unnamed; its text is already the node's value.
 - **No italic.** `StyleDesc` has no `fontStyle`; the runtime offers family and
   weight only, so emphasis is a different face or a heavier role, not a slant.
 - `decoration` is one value per run: no decoration colour, thickness, style or
@@ -165,7 +177,7 @@ hard-coded pixel value.
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
   selectable; every role removes the content floor and a caller's `minWidth`
   wins (plan `383`); decoration resolves, and a caller's `style` wins (plan
-  `377`).
+  `377`); a named run is an image and a blank name is absent (plan `581`).
 - `runtime/text-selection.runtime.test.tsx` — a real drag selects a
   `selectable` run and selects nothing from a non-selectable one (plan `385`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,
