@@ -61,6 +61,7 @@ import { scrollScenario } from "../scenarios/scroll.js";
 import { scrollIntoViewScenario } from "../scenarios/scroll-into-view.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
+import { selectionSignalScenario } from "../scenarios/selection-signal.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
 import { variableRowsScenario } from "../scenarios/variable-rows.js";
 import { pointerEntryScenario } from "../scenarios/pointer-entry.js";
@@ -163,6 +164,12 @@ const textOf = (ctx: LiveContext, testId: string) =>
       Option.fromNullishOr(text),
     );
   });
+
+/** The change count the selection view reports. */
+const countOf = (ctx: LiveContext) =>
+  Effect.map(textOf(ctx, "sig-changes"), (text) =>
+    Number(Str.replace("changes=", "")(text)),
+  );
 
 /** The offset `testId` reports, or a failure naming the missing id. */
 const offsetOf = (ctx: LiveContext, testId: string) =>
@@ -1341,6 +1348,145 @@ const selection: LiveScenario = {
       yield* ctx.expectEqual("a click does not select", clicked, "");
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${selection.id}.png`);
+    }),
+};
+
+const selectionSignal: LiveScenario = {
+  id: "live-selection-signal",
+  title: "Live selection signal: the event, the text and a copy action",
+  capability: "selection",
+  view: selectionSignalScenario.view,
+  ready: "sig-line-1",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const dragged = yield* select(ctx, "sig-line-1", "sig-line-3");
+      yield* ctx.expectContains(
+        "the live drag selects the first line",
+        dragged,
+        "sig one",
+      );
+      yield* ctx.expectContains(
+        "the live drag selects the last line",
+        dragged,
+        "sig three",
+      );
+
+      yield* settle;
+      const first = yield* countOf(ctx);
+      yield* ctx.expectEqual(
+        "the live drag reported a change",
+        first >= 1,
+        true,
+      );
+      const echo = yield* textOf(ctx, "sig-echo");
+      yield* ctx.expectContains(
+        "the live event delivered the selected text",
+        echo,
+        "sig one",
+      );
+      yield* ctx.expectEqual(
+        "the live event and the renderer agree",
+        Option.getOrElse(
+          Option.fromNullishOr(Str.replaceAll("\n", " ")(echo)),
+          () => "",
+        ),
+        Option.getOrElse(
+          Option.fromNullishOr(
+            Str.replaceAll(
+              "\n",
+              " ",
+            )(selectionText(yield* ctx.host.selectedText())),
+          ),
+          () => "",
+        ),
+      );
+
+      yield* select(ctx, "sig-line-2", "sig-line-2");
+      yield* settle;
+      const second = yield* countOf(ctx);
+      yield* ctx.expectEqual(
+        "a second live drag reports another change",
+        second > first,
+        true,
+      );
+      const secondEcho = yield* textOf(ctx, "sig-echo");
+      yield* ctx.expectContains(
+        "a second live drag replaces the selected text",
+        secondEcho,
+        "sig two",
+      );
+      yield* ctx.expectEqual(
+        "the earlier live text is gone",
+        Str.includes("sig one")(secondEcho),
+        false,
+      );
+
+      yield* ctx.host.clearSelection();
+      yield* settle;
+      const cleared = yield* countOf(ctx);
+      yield* ctx.expectEqual(
+        "a live clear is notified",
+        cleared > second,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live cleared selection is empty",
+        yield* textOf(ctx, "sig-echo"),
+        "<none>",
+      );
+
+      yield* select(ctx, "sig-line-1", "sig-line-3");
+      yield* settle;
+      const restored = yield* countOf(ctx);
+      yield* ctx.expectEqual(
+        "a new live drag reports another change",
+        restored > cleared,
+        true,
+      );
+
+      yield* ctx.host.click("sig-copy");
+      yield* settle;
+      const copied = yield* countOf(ctx);
+      yield* ctx.expectContains(
+        "the live pointer-down captures the selection",
+        yield* textOf(ctx, "sig-log"),
+        "D(t)",
+      );
+      yield* ctx.expectContains(
+        "the live copy action uses the event's text",
+        yield* textOf(ctx, "sig-copied"),
+        "sig one",
+      );
+      yield* ctx.expectEqual(
+        "the live click clears the native selection",
+        yield* textOf(ctx, "sig-echo"),
+        "<none>",
+      );
+      yield* ctx.expectEqual(
+        "a live click on the affordance does not select",
+        selectionText(yield* ctx.host.selectedText()),
+        "",
+      );
+      yield* ctx.expectEqual(
+        "the live click's clear is notified",
+        copied > restored,
+        true,
+      );
+
+      yield* ctx.host.click("sig-copy");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a live copy with no selection keeps the previous text",
+        yield* textOf(ctx, "sig-copied"),
+        "sig one",
+      );
+      yield* ctx.expectContains(
+        "the second live copy captured nothing",
+        yield* textOf(ctx, "sig-log"),
+        "D(-) C(-)",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${selectionSignal.id}.png`);
     }),
 };
 
@@ -11877,4 +12023,5 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTree,
   media,
   terminal,
+  selectionSignal,
 ];

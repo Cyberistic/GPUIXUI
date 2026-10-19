@@ -114,6 +114,7 @@ import { tier2FormsScenario } from "./tier2-forms.js";
 import { tier2ScrollerScenario } from "./tier2-scroller.js";
 import { tier2CommandScenario } from "./tier2-command.js";
 import { declaredStylesScenario, textTruncationScenario } from "./styles.js";
+import { selectionSignalScenario } from "./selection-signal.js";
 
 /** The capabilities Phase B must prove in the real runtime. */
 export const CORE_CAPABILITIES = [
@@ -291,6 +292,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   tier2FlowScenario,
   declaredStylesScenario,
   textTruncationScenario,
+  selectionSignalScenario,
 ];
 
 const isCapability = Schema.is(Smoke.Capability);

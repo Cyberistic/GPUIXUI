@@ -43,6 +43,8 @@ import {
 import type { PlaygroundScenario } from "../types.js";
 import { withWindowKeyProvider } from "../window-key.js";
 import type { WindowKeyHandler } from "../window-key.js";
+import { withSelectionProvider } from "../selection.js";
+import type { SelectionEvent } from "../selection.js";
 import { palettes } from "../palettes.js";
 import { scenarios } from "../scenarios/index.js";
 import {
@@ -366,6 +368,7 @@ const mount =
     },
     path: Path.Path,
     registerWindowKey: (handler: Option.Option<WindowKeyHandler>) => void,
+    registerSelection: (handler: Option.Option<SelectionEvent>) => void,
   ) =>
   (scenario: { readonly id: string }): Effect.Effect<void> => {
     const render = Effect.sync(() =>
@@ -384,7 +387,10 @@ const mount =
               createElement(
                 ThemeProvider,
                 { theme: palettes.dark },
-                withWindowKeyProvider(registerWindowKey, view()),
+                withSelectionProvider(
+                  registerSelection,
+                  withWindowKeyProvider(registerWindowKey, view()),
+                ),
               ),
             ),
           ),
@@ -470,11 +476,28 @@ export const program = (
       windowKey.current = handler;
     };
 
+    // The window selection handler, the same app seam as the window key: a
+    // component cannot reach the root options, so the runner forwards the
+    // native signal to whatever the mounted view registered.
+    const selection: { current: Option.Option<SelectionEvent> } = {
+      current: Option.none(),
+    };
+    const registerSelection = (
+      handler: Option.Option<SelectionEvent>,
+    ): void => {
+      selection.current = handler;
+    };
+
     const root = testing.createTestRoot({
       width: 1280,
       height: 800,
       onKeyDown: (event: EventPayload) =>
         Option.match(windowKey.current, {
+          onNone: () => {},
+          onSome: (handler) => handler(event),
+        }),
+      onSelectionChange: (event: EventPayload) =>
+        Option.match(selection.current, {
           onNone: () => {},
           onSome: (handler) => handler(event),
         }),
@@ -487,7 +510,14 @@ export const program = (
       host,
       selected,
       { host: hostLabelOf(), startedAt },
-      mount(flags.screenshots, screenshotDir, root, path, registerWindowKey),
+      mount(
+        flags.screenshots,
+        screenshotDir,
+        root,
+        path,
+        registerWindowKey,
+        registerSelection,
+      ),
     );
 
     yield* fileSystem.writeFileString(

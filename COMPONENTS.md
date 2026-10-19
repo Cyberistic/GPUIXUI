@@ -62,7 +62,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | drag | `drag-targets`, `drag-autoscroll`, `live-drag-targets`, `live-drag-autoscroll` | verified |
 | reorder | `list-reorder`, `live-reorder` | verified |
 | tree-reorder | `tree-reorder`, `live-tree-reorder` | verified |
-| selection | `text-selection`, `live-selection` | verified |
+| selection | `text-selection`, `live-selection`, `selection-signal`, `live-selection-signal` | verified |
 | menu | `context-menu-pointer`, `live-context-menu` | verified |
 | components | `primitives-actions`, `primitives-fields`, `primitives-display`, `primitives-choice`, `primitives-entry` | verified |
 | search | `search-highlights`, `live-highlights`, `live-search-replace` | verified |
@@ -94,11 +94,11 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**, 64 capabilities). The live suite **last ran in full at 86/86**
-(`live-report.json`, **2172 checks**, 57 capabilities, 932.7 s, exit `0`) on
+The suite is **104/104 green here** (exit `0`, `.artifacts/smoke-report.json`, **3672 checks**, 64 capabilities). The live suite **last ran in full at 87/87**
+(`live-report.json`, **2203 checks**, 57 capabilities, 913.3 s, exit `0`) on
 2026-10-19, the merge/release gate on the final branch; it covered every live
-scenario registered at that point, including `live-data-grid` (plan `606`, whose
-one gate failure is the plan-`607` anchor-reset fix). Both `host` lines carry the
+scenario registered at that point, including `live-selection-signal` (plan
+`615`, the window's selection-change event). Both `host` lines carry the
 pins. The
 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin and a
 borderless size — is what every geometry check now asserts.
@@ -151,7 +151,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**86/86 green** (2172 checks) on the release-tag binding, and the **full
+**87/87 green** (2203 checks) on the release-tag binding, and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too
@@ -463,7 +463,14 @@ start of a selection. `clearSelection` and a plain click both leave it empty.
 **`live-selection` (plan `191`)** repeats the core of that contract with a real
 pointer in a real window: a drag across three text nodes selects them, the
 `userSelect: "none"` anchor and exclusion hold, and `clearSelection`/a click
-empty it.
+empty it. **`selection-signal`/`live-selection-signal` (plan `615`)** add the
+**event**: the published `onSelectionChange` arrives through the app-owned
+`useSelectionChange` seam with `value` = the joined selected text (absent when
+empty), a clear notifies, and one drag delivers several events (1–3 headless,
+~8 live), so a view treats it as "the selection changed, here is the text".
+A click on a copy affordance **clears the selection**: headless the clear lands
+before `onClick` (`D S(-) C`), live after it (`D C S(-)`), so the portable recipe
+snapshots the last event text at pointer-down and copies that snapshot.
 
 `context-menu-pointer` is the runtime verdict for the right click behind Context
 menus. A right click arrives as `onAuxClick` with `isRightClick: true`, window

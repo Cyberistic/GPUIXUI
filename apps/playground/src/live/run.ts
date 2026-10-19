@@ -30,6 +30,7 @@ import { createElement, Fragment } from "react";
 import { hostLabel, provenanceIssue } from "../binding.js";
 import { palettes } from "../palettes.js";
 import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
+import { withSelectionProvider, type SelectionEvent } from "../selection.js";
 import {
   formatMissing,
   idsOf,
@@ -131,6 +132,17 @@ export const program = (
       windowKey.current = handler;
     };
 
+    // The window selection handler, forwarded exactly as the headless runner
+    // forwards it: the app owns the root option, the mounted view registers.
+    const selection: { current: Option.Option<SelectionEvent> } = {
+      current: Option.none(),
+    };
+    const registerSelection = (
+      handler: Option.Option<SelectionEvent>,
+    ): void => {
+      selection.current = handler;
+    };
+
     const modules = yield* Effect.tryPromise({
       try: async () => {
         const [gpuix, automation] = await Promise.all([
@@ -166,6 +178,11 @@ export const program = (
             onNone: () => {},
             onSome: (handler) => handler(event),
           }),
+        onSelectionChange: (event: EventPayload) =>
+          Option.match(selection.current, {
+            onNone: () => {},
+            onSome: (handler) => handler(event),
+          }),
       }),
     );
 
@@ -197,7 +214,10 @@ export const program = (
                   createElement(
                     ThemeProvider,
                     { theme: palettes.dark },
-                    withWindowKeyProvider(registerWindowKey, live.view()),
+                    withSelectionProvider(
+                      registerSelection,
+                      withWindowKeyProvider(registerWindowKey, live.view()),
+                    ),
                   ),
                 ),
               ),

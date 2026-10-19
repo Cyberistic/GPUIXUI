@@ -64,7 +64,32 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 103/103 plans-and-harness
+`[x]` `[██████████]` 104/104 plans-and-harness
+
+`[x]` Probe the **window selection-change signal** per plan `615`:
+      `onSelectionChange` was the last published window-level handler with no
+      evidence. `selection-signal` (**19 checks**) and `live-selection-signal`
+      (**31**) register it through a `useSelectionChange` seam (the
+      `useWindowKey` shape — a component cannot reach the root options) and
+      drive one copy affordance entirely from the event. Measured: `value` is
+      the joined selected text and is **absent** for an empty selection; a
+      clear (`clearSelection` and a click) **notifies**; one drag delivers
+      **several** events (1–3 headless, ~8 live), so a view treats it as "the
+      selection changed, here is the text", never a gesture count. **The
+      load-bearing trap:** a click on the affordance clears the selection —
+      headless the clear lands **before** `onClick` (`D S(-) C`), live **after**
+      it (`D C S(-)`), so reading state in the handler copies nothing headless
+      and only happens to work live. The recipe is a pointer-down snapshot of
+      the last event text (D88). Three mutation proofs: removing the headless
+      seam (`the drag reported a change` fails), `String(event.value)` (the
+      mapper unit test fails with `undefined`), and reading `selected` in the
+      copy handler (fails headless, passes live — the measured difference); a
+      fourth removes the live `onSelectionChange` (`the live drag reported a
+      change` fails). Focused ids run: `selection-signal`,
+      `live-selection-signal`; then the whole headless registry
+      **104/104** (**3672** checks, 64 capabilities) and the whole live registry
+      **87/87** (**2203** checks, 57 capabilities, 913.3 s), both exit `0`.
+      Also verified: `nub run check`, `nub run lint`, `nub run test`.
 
 `[x]` Reset the **data-grid anchor in the row-set update** per plan `607`:
       the first full live gate on the plan-`606` head failed exactly one check
@@ -1177,10 +1202,10 @@ focused id is `live-frames`.
       Tabs indicator) was merged again on 2026-10-19; its one formatting
       violation in `apps/docs/src/components/docs/demos.tsx` is fixed in commit
       `751bb2aa`, so the branch contains every commit of `origin/master` and the
-      promotion is a fast-forward. Merge/release gate **re-run on the plan-607
-      code (commit `da651b97`, 2026-10-19):** headless **103/103** (`3653`
-      checks, 64 capabilities) and live **86/86** (`2172` checks, 57
-      capabilities, 932.7 s), both exit `0`; `nub run check`, `nub run lint` and
+      promotion is a fast-forward. Merge/release gate **re-run on the plan-615
+      code (2026-10-19):** headless **104/104** (`3672` checks, 64
+      capabilities) and live **87/87** (`2203` checks, 57 capabilities,
+      913.3 s), both exit `0`; `nub run check`, `nub run lint` and
       `nub run test` pass at that head. Artifacts:
       `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an

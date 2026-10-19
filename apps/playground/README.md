@@ -89,7 +89,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (103/103 green); -> 2 on a host with no binding
+# -> 0 here (104/104 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -572,6 +572,26 @@ nothing. The surprising half is the anchor rule: a selection that **crosses**
 so a gutter or toolbar must never start a drag. One harness note: ending a drag
 2 px inside the right edge truncates the last glyph, so `selectText` ends at the
 edge.
+
+## The selection-change signal (plan `615`)
+
+`selection-signal` proves the published `onSelectionChange` reaches a view, and
+what a copy affordance may rely on. The runner owns the root option (a component
+cannot reach it) and forwards it through `useSelectionChange`, the same shape as
+`useWindowKey`:
+
+| Question | Measured |
+| -------- | -------- |
+| payload | `value` is the joined selected text; it is **absent** when the selection is empty |
+| a clear | `clearSelection()` and a click that clears a selection both notify with no `value` |
+| one drag | **several** events — 1–3 headless, ~8 live (one per pointer move that changed the range) |
+| a click on the affordance | **clears the selection**: headless the clear lands before `onClick` (`D S(-) C`), live after it (`D C S(-)`) |
+
+So a copy action snapshots the last event text at pointer-down and copies the
+snapshot; reading component state in `onClick` copies nothing headless. The
+`live-selection-signal` twin repeats the whole path in a real window, and the
+headless removal of the seam fails the first check (`the drag reported a
+change`).
 
 ## Native context menus (plan `164`)
 
@@ -1875,10 +1895,10 @@ given.
 
 ## Evidence on this host
 
-The suite is **103/103 green** here (`exit 0`, 3653 checks, 2026-10-19):
+The suite is **104/104 green** here (`exit 0`, 3672 checks, 2026-10-19):
 
 ```
-103/103 scenarios passed · capabilities: layout=verified root=verified text=verified
+104/104 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -1895,11 +1915,11 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The last full merge/release gate ran **85/85** (`exit 0`, 2090 checks, 56
-capabilities, 916.2 s, `.artifacts/live-report.json`, 2026-10-19). Plan `606`
-added `live-data-grid` after that gate; it is verified focused
-(`--only live-data-grid`, 83 checks, two consecutive green runs), so the
-registry is now **86** and the next full run is a merge/release gate.
+The last full merge/release gate ran **87/87** (`exit 0`, 2203 checks, 57
+capabilities, 913.3 s, `.artifacts/live-report.json`, 2026-10-19), including the
+two scenarios this branch added last: `live-data-grid` (plans `606`/`607`) and
+`live-selection-signal` (plan `615`). The full live suite is a merge/release
+gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2081,7 +2101,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (103/103, 3653 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (104/104, 3672 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
