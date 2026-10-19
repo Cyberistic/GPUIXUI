@@ -442,7 +442,9 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  *
  * @example
  * ```tsx
- * import { nativeTextTheme } from "@gpuixui/tokens";
+ * import { getTheme, nativeTextTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("dark");
  *
  * <markdown source={text} theme={nativeTextTheme(theme)} />;
  * ```

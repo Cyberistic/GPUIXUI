@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 285/359
+`[x]` `[████████░░]` 286/360
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2406,6 +2406,15 @@ text and chrome a pressed row paints, `statusTextSurfaces` adds the fill, and
 `selectedActive` joins the interactive-fill, skeleton and track surfaces, the
 solid chip fill and the soft chip edge; every shipped set passes as-is, the
 contract grows 422 → 451 and no existing value moves (plan 651)
+`[x]` Make every copyable block declare the theme it paints with — plan 655
+promised a source example "declares `getTheme`" but the guard only checked
+imports, so twenty-two blocks that begin with a package import (two source
+`@example`s, fourteen catalogue snippets and six README snippets) passed a bare
+`theme` to a helper or read `theme.colors` and threw `ReferenceError` when
+copied. A new case holds every package-importing block to a local binding, a
+typed parameter or a destructured callback, the seven blocks the first probe
+missed are recorded, and every block now resolves its own theme; no token
+value, pair, floor, metric or check moves (plan 656)
 
 ## Phase C — Tier 1–2 components
 

@@ -16,11 +16,19 @@
  * block now imports the package, and the case below fails if one stops doing
  * so.
  *
- * This is not a compiler: a snippet is a contextual fragment, so `theme`,
- * `children` and `brandTheme` have no module scope. It checks the four facts a
- * fragment can still get wrong about this package — that its imports exist,
- * that the colour roles and scale members it names exist, and that a public
- * function, component or type it uses is imported by the same block.
+ * Plan 656 closes the other half of plan 655's promise. A block that imports the
+ * package presents itself as a module, but twenty-two still painted with an
+ * undeclared `theme`; the public-name case cannot see a local variable. A
+ * copyable block now has to bind `theme` or receive it as a parameter. A docs
+ * block with no package import stays a contextual continuation, and a JSX
+ * `theme={…}` prop is not the variable.
+ *
+ * This is not a compiler: a snippet is a contextual fragment, so `children` and
+ * `brandTheme` have no module scope. It checks the four facts a fragment can
+ * still get wrong about this package — that its imports exist, that its theme
+ * is declared once the block imports the package, that the colour roles and
+ * scale members it names exist, and that a public function, component or type
+ * it uses is imported by the same block.
  *
  * `node:fs` is deliberate, as in `public-types.test.ts` and `examples.test.ts`:
  * this is a synchronous policy check over the tree's own documents, not runtime
@@ -222,6 +230,37 @@ const usesWithoutImport = (code: string, name: string): boolean => {
   );
 };
 
+/**
+ * A block's use of the ambient `theme` after comments, imports and a JSX
+ * `theme={…}` prop are removed. A prop named `theme` is not the variable.
+ */
+const themeUsage = (code: string): string =>
+  code
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "")
+    .replace(/^import[\s\S]*?;$/gm, "")
+    .replace(/\btheme\s*=/g, "");
+
+/**
+ * A block that brings its own theme: a local binding, a destructured callback
+ * parameter (`shippedThemes.flatMap(({ theme }) => …)`), or a typed function
+ * parameter.
+ */
+const declaresTheme = (code: string): boolean =>
+  /(?:const|let|var)\s+theme\b/.test(code) ||
+  /(?:const|let|var)\s*\{[^}]*\btheme\b[^}]*\}\s*=/.test(code) ||
+  /\btheme\s*:\s*Theme\b/.test(code) ||
+  /\bfunction\b[^(]*\([^)]*\btheme\b/.test(code) ||
+  /\(\s*\{[^}]*\btheme\b[^}]*\}\s*\)/.test(code);
+
+/**
+ * The `theme` identifier used as a value: a member access (`theme.colors`) or
+ * an argument (`statusTone(theme, …)`, `focusRing(theme)`). The word "theme" in
+ * a JSX label is not a variable.
+ */
+const usesUndeclaredTheme = (code: string): boolean =>
+  /(?<![\w$.])theme\s*[.,)]/.test(themeUsage(code)) && !declaresTheme(code);
+
 describe("documented snippets", () => {
   it("has snippets to check", () => {
     expect(snippets.length).toBeGreaterThan(40);
@@ -302,6 +341,39 @@ describe("documented snippets", () => {
           ).toBe(false);
         });
       });
+  });
+
+  it("declares the theme a copyable block paints with", () => {
+    // Plan 655 made every source block import the package but left the ambient
+    // `theme` to prose: twenty-two blocks presented themselves as modules and
+    // threw `ReferenceError` when copied. A block with no import stays a
+    // contextual continuation; a block with one brings the theme it paints with.
+    const missing = snippets
+      .filter(({ code }) => [...code.matchAll(importPattern)].length > 0)
+      .filter(({ code }) => usesUndeclaredTheme(code))
+      .map(({ label, index }) => `${label} #${index}`);
+    expect(missing).toEqual([]);
+  });
+
+  it("reports a block that paints with an undeclared theme", () => {
+    expect(
+      usesUndeclaredTheme(
+        `import { statusTone } from "@gpuixui/tokens";\nstatusTone(theme, "info");`,
+      ),
+    ).toBe(true);
+    expect(
+      usesUndeclaredTheme(
+        `import { getTheme, statusTone } from "@gpuixui/tokens";\nconst theme = getTheme("light");\nstatusTone(theme, "info");`,
+      ),
+    ).toBe(false);
+    expect(
+      usesUndeclaredTheme(
+        `const ringStyle = (theme: Theme) => focusRing(theme);`,
+      ),
+    ).toBe(false);
+    expect(
+      usesUndeclaredTheme(`<ThemeProvider theme={getTheme("dark")} />`),
+    ).toBe(false);
   });
 });
 

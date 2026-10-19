@@ -404,8 +404,9 @@ it with the rest of the palette.
 designed edge, the plain-surface text role and the solid fill with its on-colour:
 
 ```ts
-import { statusTone } from "@gpuixui/tokens";
+import { getTheme, statusTone } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.foreground; // theme.colors.infoSoftForeground
@@ -626,7 +627,9 @@ to the same order.
 mono family for `code` and `codeBlock`:
 
 ```tsx
-import { textStyle } from "@gpuixui/tokens";
+import { getTheme, textStyle } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <text style={{ ...textStyle(theme, "body"), color: theme.colors.foreground }}>
   Save changes
@@ -990,7 +993,9 @@ and spacing are unaffected.
 | `spacious` | 32 / 36 / 40 | 10 / 12 / 14 | 36 |
 
 ```ts
-import { controlHeight, controlPaddingX } from "@gpuixui/tokens";
+import { controlHeight, controlPaddingX, getTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 controlHeight(theme, "md");
 controlPaddingX(theme, "md");
@@ -1247,9 +1252,10 @@ The table shows the resolved shadow. The tint itself is one role, so retinting
 every level is one value:
 
 ```ts
-import { extendTheme } from "@gpuixui/tokens";
+import { extendTheme, getTheme } from "@gpuixui/tokens";
 
 // Every elevation level now paints with a black tint, at its own alpha.
+const theme = getTheme("light");
 const brand = extendTheme(theme, { colors: { shadow: "#000000" } });
 ```
 
@@ -1258,7 +1264,9 @@ level carries at most one entry. A consumer reads the one the runtime paints
 with `elevationShadow`, and the whole list with `elevationShadows`:
 
 ```tsx
-import { elevationShadow, elevationShadows } from "@gpuixui/tokens";
+import { elevationShadow, elevationShadows, getTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <div style={{ boxShadow: elevationShadow(theme, "md") }} />;
 
@@ -1319,7 +1327,9 @@ the timings must be finite as well as ordered, because the runtime rejects a
 non-finite duration.
 
 ```tsx
-import { motionTransition } from "@gpuixui/tokens";
+import { getTheme, motionTransition } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 // { duration: 0.32, ease: "easeOut" } — seconds, the unit the runtime takes.
 const transition = motionTransition(theme, "slow", "enter");
@@ -1458,8 +1468,9 @@ returns the theme's two extreme tones, `background` next to the content and
 `foreground` outside it, at `borderWidth.strong`:
 
 ```tsx
-import { contrastRing } from "@gpuixui/tokens";
+import { contrastRing, getTheme } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const ring = contrastRing(theme);
 // {
 //   inner: theme.colors.background,
@@ -1482,8 +1493,9 @@ Paint the inner tone as the border and the outer as a zero-blur shadow spread by
 the same width:
 
 ```tsx
-import { contrastRing } from "@gpuixui/tokens";
+import { contrastRing, getTheme } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const ring = contrastRing(theme);
 const ringed = {
   borderColor: ring.inner,
@@ -1514,7 +1526,9 @@ properties, so text the library paints itself is themeable. `selectionStyle(them
 maps the `selection` role to the property:
 
 ```tsx
-import { selectionStyle } from "@gpuixui/tokens";
+import { getTheme, selectionStyle } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <div style={selectionStyle(theme)}>{children}</div>;
 ```
@@ -1596,8 +1610,9 @@ inherited label on all four fills it keeps, and `selectionWashPairs` holds the w
 readable but invisible fails the check too.
 
 ```tsx
-import { selectionStyle } from "@gpuixui/tokens";
+import { getTheme, selectionStyle } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const chrome = { userSelect: "none" } as const;
 
 <div style={selectionStyle(theme)}>
@@ -1646,7 +1661,9 @@ the copyable version.
 versions:
 
 ```tsx
-import { selectionStyle } from "@gpuixui/tokens";
+import { getTheme, selectionStyle } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <div
   style={{
@@ -1711,7 +1728,9 @@ A runnable example lives in
 [`src/native-field.example.ts`](../packages/tokens/src/native-field.example.ts).
 
 ```tsx
-import { nativeFieldTheme } from "@gpuixui/tokens";
+import { getTheme, nativeFieldTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <input
   style={{ color: theme.colors.inputForeground }}
@@ -2979,8 +2998,9 @@ Rules:
    shape](../packages/tokens/src/disabled-state.example.ts) is in the examples.
 
 ```ts
-import { disabledControl } from "@gpuixui/tokens";
+import { disabledControl, getTheme } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const style = disabledControl(theme);
 // { opacity: 1, backgroundColor: disabled,
 //   color: disabledForeground, borderColor: border }
@@ -3579,8 +3599,9 @@ at 80%. The 50% case is past repair in the palette: even a black fill tinted at
 designed step, and the package makes it one call:
 
 ```ts
-import { filledControl } from "@gpuixui/tokens";
+import { filledControl, getTheme } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const states = filledControl(theme, "primary");
 // states.background / .hover / .active are the designed fills;
 // states.foreground is the one label colour readable on all three.

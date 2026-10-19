@@ -120,8 +120,9 @@ Timings are milliseconds in the tokens and seconds in the runtime's transition.
 reads `theme.motion.step` directly for `setInterval`.
 
 ```tsx
-import { motionTransition } from "@gpuixui/tokens";
+import { getTheme, motionTransition } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const transition = motionTransition(theme, "normal", "enter"); // 0.2s, easeOut
 <div style={{ height }} motion={{ animate: { height }, transition }} />;
 ```
@@ -734,8 +735,9 @@ soft surface, its readable foreground, its designed edge and the text role;
 unknown until `isStatusTone` narrows it.
 
 ```ts
-import { alpha, statusTone } from "@gpuixui/tokens";
+import { getTheme, statusTone } from "@gpuixui/tokens";
 
+const theme = getTheme("light");
 const tone = statusTone(theme, "info");
 tone.background; // theme.colors.infoSoft
 tone.border; // theme.colors.infoSoftBorder
@@ -750,7 +752,10 @@ GPUix 0.10.0 has no `outline*` properties and no `focusVisible` state, so a focu
 ring is a shadow: zero offset, zero blur, spread by `borderWidth.strong`.
 
 ```tsx
-import { focusRing } from "@gpuixui/tokens";
+import { focusRing, getTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
+const focused = true;
 
 <div style={focused ? focusRing(theme) : undefined} />;
 ```
@@ -825,7 +830,9 @@ copyable style in [`src/status-tone.example.ts`](./src/status-tone.example.ts)
 applies the same veil.
 
 ```tsx
-import { selectionStyle } from "@gpuixui/tokens";
+import { getTheme, selectionStyle } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <div style={selectionStyle(theme)}>{children}</div>;
 ```
@@ -844,7 +851,9 @@ taken from the type, spacing and radius scales. Pass it to every native text
 document; a document painted directly on the canvas overrides only `bg`:
 
 ```tsx
-import { nativeTextTheme } from "@gpuixui/tokens";
+import { getTheme, nativeTextTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <markdown source={text} theme={nativeTextTheme(theme)} />;
 ```
@@ -895,7 +904,9 @@ above the match, so a near-opaque `selection` that paints both washes the same
 colour is reported.
 
 ```tsx
-import { nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";
+import { getTheme, nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";
+
+const theme = getTheme("light");
 
 <markdown
   source={text}

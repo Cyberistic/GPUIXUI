@@ -444,7 +444,9 @@ export interface NativeFieldTheme {
  *
  * @example
  * ```tsx
- * import { nativeFieldTheme } from "@gpuixui/tokens";
+ * import { getTheme, nativeFieldTheme } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
  *
  * <input
  *   style={{ color: theme.colors.inputForeground }}
