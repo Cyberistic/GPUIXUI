@@ -95,7 +95,7 @@ export interface StatusToneStyle {
   /**
    * The solid fill and its one readable foreground — the third tonality the
    * status families publish, beside the soft surface and the plain-surface text.
-   * The fill is measured on the eight surfaces a status chip sits on
+   * The fill is measured on the nine surfaces a status chip sits on
    * (`statusFillPairs`) and the foreground on the fill; a status *dot* is
    * `text`, not this, because the light `warning` fill is 1.78:1 on the canvas,
    * under the 3:1 a mark needs.
@@ -115,7 +115,7 @@ export interface StatusToneStyle {
  * foreground, for inline status labels, icons and indicator dots; `solid` is
  * the fill-and-on-colour pair a solid chip paints.
  *
- * A solid chip is a fill on the eight surfaces a chip sits on; a dot or label is
+ * A solid chip is a fill on the nine surfaces a chip sits on; a dot or label is
  * `text`, never the solid fill — the light `warning` fill is 1.78:1 on the
  * canvas, under the 3:1 a mark needs.
  *

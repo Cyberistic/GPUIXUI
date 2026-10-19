@@ -7,6 +7,7 @@
  * 1.00–1.04:1 as well a warning Badge in a pressed row had no visible boundary
  * at all.
  */
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import {
@@ -98,5 +99,33 @@ describe("soft status edge on the surfaces a chip sits on", () => {
     });
 
     expect(themeContrastFailures(designed)).toEqual([]);
+  });
+
+  it("states the nine surfaces the pair list holds", () => {
+    const surfaces = [
+      ...new Set(softBorderSurfacePairs.map(([, background]) => background)),
+    ];
+    expect(surfaces).toHaveLength(9);
+    expect(surfaces.toSorted()).toEqual([...chipSurfaces].toSorted());
+
+    // Plan 651 added the pressed row to the list; the source and the README
+    // kept the pre-651 count of eight and the README kept the eight-name list.
+    const oneLine = (file: string): string =>
+      readFileSync(new URL(file, import.meta.url), "utf8")
+        .replace(/\n\s*\* ?/g, " ")
+        .replace(/\s+/g, " ");
+    const styles = oneLine("./styles.ts");
+    expect(styles).toContain(
+      "The fill is measured on the nine surfaces a status chip sits on",
+    );
+    expect(styles).toContain(
+      "A solid chip is a fill on the nine surfaces a chip sits on",
+    );
+    expect(oneLine("./contrast.ts")).toContain(
+      "on the nine surfaces a chip sits on",
+    );
+    expect(oneLine("../README.md")).toContain(
+      "on the nine surfaces a chip sits on — the canvas, card and popover, the `muted` panel and the `hover`/`active`/`accent`/`selected`/`selectedActive` washes",
+    );
   });
 });

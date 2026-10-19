@@ -1007,7 +1007,7 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * status surfaces and the loading skeleton a canvas, a quiet panel or a row wash
  * must distinguish, the
  * designed edge around each soft status surface, measured on its own fill and
- * on the eight surfaces a chip sits on, the solid status fill on those same
+ * on the nine surfaces a chip sits on, the solid status fill on those same
  * surfaces (`statusFillPairs`) — a solid role is a fill, while a status dot is
  * `xText` — the plain divider on those
  * soft fills, the decorative dividers

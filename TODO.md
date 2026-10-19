@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 304/380
+`[x]` `[████████░░]` 305/381
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -115,6 +115,15 @@ said. The sentence now names both lists, and `native-field-caret.test.ts`
 derives the eight non-mark pairs and the one mark pair and holds them to its
 nine-surface list, so the sentence cannot credit one pair with nine again; no
 colour, pair, floor, metric or shipped theme moves (plan 682)
+`[x]` Count the chip surfaces plan 651 grew — `chipSurfaces` holds nine with the
+pressed `selectedActive`, and the two reference documents say nine, but three
+source JSDoc sentences and the package README still said eight and enumerated the
+four washes without the pressed fill, so a reader counted a complete-looking list
+that was missing the row the plan added. All four current-state sentences say
+nine, the README names `selectedActive`, and `soft-edge-surfaces.test.ts` derives
+the nine from `softBorderSurfacePairs` and holds the prose to it; the two
+historical “eight” mentions in `COMPONENTS.md` describe plans 308 and 399 and
+stay. No colour, pair, floor, metric or shipped theme moves (plan 683)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

@@ -333,6 +333,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [679](./679-invalid-focus-ring.md) | The invalid focus ring is a state with no resolver | F | 017, 340, 609, 671 | done |
 | [681](./681-check-ordinals.md) | The check ordinals the JSDoc retyped | F | 056, 602, 617 | done |
 | [682](./682-caret-surface-owner.md) | The caret sentence publishes one pair as nine | F | 557, 681 | done |
+| [683](./683-chip-surface-count.md) | The chip surface count plan 651 left at eight | F | 308, 399, 651, 682 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
