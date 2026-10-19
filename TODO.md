@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–568)
 
-`[x]` `[██████████]` 135/135
+`[~]` `[█████████░]` 135/136
+
+`[ ]` **Search: a promoted name the lexical index cannot retrieve** — measured
+      after plan 568: `focusRing` reaches Tokens API, but `focus ring` returns
+      Number field sections, because the generated document never comes back
+      from `registrySearch` and `promotedNameRank` only ranks candidates that
+      did. Synthesize a page candidate from each generated entry whose promoted
+      name matches (the rule `pageTitleHits` already uses), prove `focus ring`,
+      `elevation shadow` and `semantic roles` against the production index, and
+      keep `input`/`label` on their component pages. Owner: docs-site.
 
 `[x]` **Search reads a page's authored summary (plan 568)** — `table` returned
       ten chunks of the Component pages guide, `panel` four Tabs sections and
