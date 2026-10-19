@@ -30,6 +30,9 @@ import { nestedLayerScenario } from "../scenarios/layers.js";
 import { dockingScenario } from "../scenarios/docking.js";
 import { floatScenario } from "../scenarios/float.js";
 import { inputScenario } from "../scenarios/input.js";
+import { layoutScenario } from "../scenarios/layout.js";
+import { layoutGridScenario } from "../scenarios/layout-grid.js";
+import { typographyScenario } from "../scenarios/typography.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
@@ -7077,6 +7080,441 @@ const appChrome: LiveScenario = {
     }),
 };
 
+const liveLayoutFlex: LiveScenario = {
+  id: "live-layout-flex",
+  title: "Live flex layout: widths, gaps and absolute positioning",
+  capability: "layout",
+  view: layoutScenario.view,
+  ready: "layout-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const root = yield* boxOf(ctx, "layout-root");
+      const a = yield* boxOf(ctx, "layout-a");
+      const b = yield* boxOf(ctx, "layout-b");
+      const absolute = yield* boxOf(ctx, "layout-abs");
+      yield* ctx.expectNear(
+        "the live root keeps its width",
+        root.width,
+        640,
+        1,
+      );
+      yield* ctx.expectNear("the live box keeps its width", a.width, 200, 1);
+      yield* ctx.expectNear(
+        "the live second box keeps its width",
+        b.width,
+        320,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live gap between the boxes",
+        b.x - (a.x + a.width),
+        8,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live absolute box keeps its left inset",
+        absolute.x - root.x,
+        24,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live absolute box keeps its top inset",
+        absolute.y - root.y,
+        16,
+        1,
+      );
+      yield* ctx.expectNear("the live boxes share a row", a.y, b.y, 1);
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveLayoutFlex.id}.png`);
+    }),
+};
+
+/**
+ * The headless grid view is 992 px tall — taller than the window — so the live
+ * twin mounts it in one scroller and reads it in two batches. Every assertion
+ * compares a box with its own container, so the scroll offset never enters one.
+ */
+const liveLayoutGridView = (): ReactNode => (
+  <div
+    testId="live-layout-viewport"
+    style={{
+      height: WINDOW.height - 80,
+      overflowY: "scroll",
+      paddingBottom: 40,
+    }}
+  >
+    {layoutGridScenario.view()}
+  </div>
+);
+
+const liveLayoutGrid: LiveScenario = {
+  id: "live-layout-grid",
+  title: "Live grid: tracks, rows, column minima, overflow and wrapping",
+  capability: "grid-layout",
+  view: liveLayoutGridView,
+  ready: "grid-equal",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const gapAfter = (
+        first: { readonly x: number; readonly width: number },
+        second: { readonly x: number; readonly width: number },
+      ) => second.x - (first.x + first.width);
+      const endOf = (box: { readonly x: number; readonly width: number }) =>
+        box.x + box.width;
+
+      // Batch 1, at rest: the first four wrapped rows.
+      const equal = yield* boxOf(ctx, "grid-equal");
+      const equal1 = yield* boxOf(ctx, "grid-equal-1");
+      const equal2 = yield* boxOf(ctx, "grid-equal-2");
+      const equal3 = yield* boxOf(ctx, "grid-equal-3");
+      yield* ctx.expectNear(
+        "the live grid keeps its width",
+        equal.width,
+        300,
+        1,
+      );
+      yield* ctx.expectNear("live first track width", equal1.width, 93.33, 1);
+      yield* ctx.expectNear("live second track width", equal2.width, 93.33, 1);
+      yield* ctx.expectNear("live third track width", equal3.width, 93.33, 1);
+      yield* ctx.expectNear(
+        "the live gap after track 1",
+        gapAfter(equal1, equal2),
+        10,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live gap after track 2",
+        gapAfter(equal2, equal3),
+        10,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live third track ends at the grid edge",
+        endOf(equal3) - equal.x,
+        300,
+        1,
+      );
+
+      const rows = yield* boxOf(ctx, "grid-rows");
+      const row1 = yield* boxOf(ctx, "grid-rows-1");
+      const row2 = yield* boxOf(ctx, "grid-rows-2");
+      const row3 = yield* boxOf(ctx, "grid-rows-3");
+      yield* ctx.expectNear("live row cell width", row1.width, 145, 1);
+      yield* ctx.expectNear("live row cell height", row1.height, 95, 1);
+      yield* ctx.expectNear(
+        "live column 2 starts after the gap",
+        row2.x - rows.x,
+        155,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live row 2 starts after the gap",
+        row3.y - rows.y,
+        105,
+        1,
+      );
+      yield* ctx.expectNear("live row 2 cell height", row3.height, 95, 1);
+
+      const auto = yield* boxOf(ctx, "grid-auto");
+      const auto1 = yield* boxOf(ctx, "grid-auto-1");
+      const auto3 = yield* boxOf(ctx, "grid-auto-3");
+      yield* ctx.expectNear("live auto grid height", auto.height, 90, 1);
+      yield* ctx.expectNear(
+        "the live tall child keeps its height",
+        auto1.height,
+        60,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live second auto row starts below the first",
+        auto3.y - auto.y,
+        70,
+        1,
+      );
+
+      const rowCount = yield* boxOf(ctx, "grid-row-count");
+      const rowCount1 = yield* boxOf(ctx, "grid-row-count-1");
+      const rowCount3 = yield* boxOf(ctx, "grid-row-count-3");
+      yield* ctx.expectNear(
+        "a live declared child height wins over the track",
+        rowCount1.height,
+        10,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live third explicit row starts at 36.5",
+        rowCount3.y - rowCount.y,
+        36.5,
+        1,
+      );
+
+      const default1 = yield* boxOf(ctx, "grid-default-1");
+      const zero1 = yield* boxOf(ctx, "grid-zero-1");
+      const min = yield* boxOf(ctx, "grid-min");
+      const min1 = yield* boxOf(ctx, "grid-min-1");
+      const min2 = yield* boxOf(ctx, "grid-min-2");
+      const max = yield* boxOf(ctx, "grid-max");
+      const max1 = yield* boxOf(ctx, "grid-max-1");
+      const max2 = yield* boxOf(ctx, "grid-max-2");
+      yield* ctx.expectNear(
+        "the live default first track",
+        default1.width,
+        145,
+        1,
+      );
+      yield* ctx.expectNear("the live zero first track", zero1.width, 145, 1);
+      yield* ctx.expectNear(
+        "the live min-content first track is narrow",
+        min1.width,
+        104,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the live min-content grid is filled",
+        endOf(min2) - min.x,
+        300,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the live max-content first track is its text",
+        max1.width,
+        38,
+        2,
+      );
+      yield* ctx.expectNear(
+        "the live max-content remainder stays unused",
+        endOf(max2) - max.x,
+        234,
+        4,
+      );
+
+      // Batch 2: the lower rows, after the pan reaches the clamp.
+      yield* ctx.host.wheel("live-layout-viewport", 0, -400);
+      yield* settle;
+      const offset = yield* offsetOf(ctx, "live-layout-viewport");
+      yield* ctx.expectEqual(
+        "the live grid viewport pans past the first batch",
+        offset.y <= -300,
+        true,
+      );
+
+      const center = yield* boxOf(ctx, "grid-center");
+      const center1 = yield* boxOf(ctx, "grid-center-1");
+      const center2 = yield* boxOf(ctx, "grid-center-2");
+      yield* ctx.expectNear(
+        "the live centre offset",
+        center1.x - center.x,
+        115,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live centre second cell",
+        center2.x - center.x,
+        155,
+        1,
+      );
+
+      const nest = yield* boxOf(ctx, "grid-nest");
+      const nestInner = yield* boxOf(ctx, "grid-nest-inner");
+      const nestInner1 = yield* boxOf(ctx, "grid-nest-inner-1");
+      yield* ctx.expectNear(
+        "the live inner grid starts after the gap",
+        nestInner.x - nest.x,
+        155,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live inner track width",
+        nestInner1.width,
+        70.5,
+        1,
+      );
+
+      const overflow = yield* boxOf(ctx, "grid-overflow");
+      const overflow1 = yield* boxOf(ctx, "grid-overflow-1");
+      const overflow2 = yield* boxOf(ctx, "grid-overflow-2");
+      yield* ctx.expectNear(
+        "the live oversized child keeps its width",
+        overflow1.width,
+        500,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live neighbour keeps its track",
+        overflow2.x - overflow.x,
+        155,
+        1,
+      );
+
+      const grow = yield* boxOf(ctx, "grid-grow");
+      const grow1 = yield* boxOf(ctx, "grid-grow-1");
+      yield* ctx.expectNear(
+        "the live grid grows to the row",
+        grow.width,
+        300,
+        1,
+      );
+      yield* ctx.expectNear("the live grown track width", grow1.width, 145, 1);
+
+      const stretch = yield* boxOf(ctx, "wrap-stretch");
+      const stretch3 = yield* boxOf(ctx, "wrap-stretch-3");
+      const start = yield* boxOf(ctx, "wrap-start");
+      const start3 = yield* boxOf(ctx, "wrap-start-3");
+      const autoWrap = yield* boxOf(ctx, "wrap-auto");
+      const autoWrap3 = yield* boxOf(ctx, "wrap-auto-3");
+      yield* ctx.expectNear(
+        "the live fixed wrapping container keeps its height",
+        stretch.height,
+        200,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live default wrapping spreads the second line",
+        stretch3.y - stretch.y,
+        104,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live alignContent start keeps one gap",
+        start3.y - start.y,
+        38,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live auto-height wrapping row is exact",
+        autoWrap.height,
+        68,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live auto-height second line stays on the gap",
+        autoWrap3.y - autoWrap.y,
+        38,
+        1,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveLayoutGrid.id}.png`);
+    }),
+};
+
+const liveTypography: LiveScenario = {
+  id: "live-typography",
+  title: "Live typography: line height, weight and horizontal alignment",
+  capability: "typography",
+  view: typographyScenario.view,
+  ready: "type-root",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const root = yield* boxOf(ctx, "type-root");
+      const line1 = yield* boxOf(ctx, "type-line-1");
+      const line2 = yield* boxOf(ctx, "type-line-2");
+      yield* ctx.expectNear(
+        "a live one-line run uses the declared height",
+        line1.height,
+        30,
+        1,
+      );
+      yield* ctx.expectNear(
+        "a live two-line run stacks the declared height",
+        line2.height,
+        60,
+        1,
+      );
+
+      const small = yield* boxOf(ctx, "type-default-12");
+      const normal = yield* boxOf(ctx, "type-default-16");
+      const big = yield* boxOf(ctx, "type-default-24");
+      yield* ctx.expectNear(
+        "a live 12 px run is 19.5 tall",
+        small.height,
+        19.5,
+        2,
+      );
+      yield* ctx.expectNear(
+        "a live 16 px run is 26 tall",
+        normal.height,
+        26,
+        2,
+      );
+      yield* ctx.expectNear("a live 24 px run is 39 tall", big.height, 39, 2);
+      yield* ctx.expectEqual(
+        "the live default line box grows with the size",
+        big.height > normal.height && normal.height > small.height,
+        true,
+      );
+
+      const highlights = yield* ctx.host.highlights();
+      const washed = (text: string) =>
+        Arr.filter(highlights, (match) => match.text === text);
+      const rectOf = (text: string, index: number) =>
+        Effect.gen(function* () {
+          const match = yield* ctx.expectSome(
+            `live wash ${index} of "${text}" is painted`,
+            Arr.get(washed(text), index),
+          );
+          return yield* ctx.expectSome(
+            `live wash ${index} of "${text}" has a rect`,
+            Arr.head(match.rects),
+          );
+        });
+
+      const regular = yield* rectOf("hello weight", 0);
+      const bold = yield* rectOf("hello weight", 1);
+      yield* ctx.expectEqual(
+        "the live bold run is wider than the regular one",
+        bold.width > regular.width + 2,
+        true,
+      );
+
+      const selfCenter = yield* boxOf(ctx, "type-self-center");
+      const selfEnd = yield* boxOf(ctx, "type-self-end");
+      const justify = yield* boxOf(ctx, "type-justify");
+      yield* ctx.expectNear(
+        "live alignSelf centre halves the free space",
+        selfCenter.x - root.x + selfCenter.width / 2,
+        100,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live alignSelf flex-end reaches the right edge",
+        selfEnd.x - root.x + selfEnd.width,
+        200,
+        1,
+      );
+      yield* ctx.expectNear(
+        "a live explicit width and justify centre",
+        justify.x - root.x,
+        70,
+        1,
+      );
+
+      // textAlign is accepted but ignored: all three runs keep the same glyph x.
+      const left = yield* rectOf("hello", 0);
+      const center = yield* rectOf("hello", 1);
+      const right = yield* rectOf("hello", 2);
+      yield* ctx.expectNear(
+        "live textAlign left starts at the block edge",
+        left.x - root.x,
+        0,
+        1,
+      );
+      yield* ctx.expectNear(
+        "live textAlign centre does not move the glyphs",
+        center.x,
+        left.x,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "live textAlign right does not move the glyphs",
+        right.x,
+        left.x,
+        0.5,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTypography.id}.png`);
+    }),
+};
+
 const dataToolbar: LiveScenario = {
   id: "live-data-toolbar",
   title: "Live data toolbar: search, filter, sort, columns and archive",
@@ -10006,6 +10444,9 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   columnConfig,
   cropArea,
   appChrome,
+  liveLayoutFlex,
+  liveLayoutGrid,
+  liveTypography,
   menuBar,
   multiPaneEditor,
   dataToolbar,

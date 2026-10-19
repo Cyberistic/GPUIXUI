@@ -256,6 +256,24 @@ provider (`ThemeProvider`, `useWindowKey`'s provider) adds no host element and
 does not change the count, so wrapping two roots in a provider does **not** fix
 them — wrap them in a `div`.
 
+## Layout and typography in a real window (plan `591`)
+
+The three geometry contracts every component rests on were the last
+layout-family evidence that was `TestRenderer`-only. Their live twins mount the
+same views in the 1100×720 window and read `bounds()` and `highlights()`:
+
+| Live id | Proves in a window |
+| ------- | ------------------ |
+| `live-layout-flex` | `640/200/320` widths, the `8` px gap, absolute insets `24/16`, and one shared row |
+| `live-layout-grid` | `93.33` tracks with `10` px gaps, `145×95` explicit cells, all four `gridColumnMin` modes, nested/overflow/`flexGrow`, and the wrapping-line stretch (`104` vs `38`) |
+| `live-typography` | `30/60` line heights, the `19.5/26/39` default line boxes, the bold run's extra width, `alignSelf` at `100/200`, `justifyContent` at `70`, and **`textAlign` still a no-op** |
+
+The grid view is 992 px tall, so `live-layout-grid` mounts it in one scroller
+and reads it in two batches: the first four wrapped rows at rest, the rest after
+a real wheel reaches the clamp. Every assertion compares a box with its own
+container, so the scroll offset never enters a number. The window reproduces
+every offscreen value exactly — no font or device-scale correction was needed.
+
 ## The shipped Tier 1 components (plan `168`)
 
 The scenarios above prove runtime mechanisms; these three mount

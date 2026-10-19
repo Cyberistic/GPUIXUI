@@ -59,6 +59,7 @@ const TypographyProbe = () => {
   const line: StyleDesc = { fontSize: 14, lineHeight: 30, ...ink };
   return (
     <div
+      testId="type-root"
       style={{
         display: "flex",
         flexDirection: "column",

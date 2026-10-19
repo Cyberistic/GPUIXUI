@@ -62,6 +62,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 103/103 plans-and-harness
 
+`[x]` Prove the **layout and typography contracts in a real window** per plan
+      `591`: `layout-flex`, `layout-grid` and `typography-layout` were the last
+      layout-family scenarios with only `TestRenderer` evidence. The twins
+      `live-layout-flex` (11 checks), `live-layout-grid` (77) and
+      `live-typography` (32) reuse the same views and reproduce every offscreen
+      number exactly: `640/200/320` widths and the `8` px gap; `93.33` tracks
+      with `10` px gaps, `145×95` cells and all four `gridColumnMin` modes;
+      `30/60` line heights, the `19.5/26/39` default line boxes, a bold run
+      > 2 px wider, `alignSelf` `100/200`, `justifyContent` `70`, and
+      **`textAlign` still a no-op**. The grid view is **992 px** tall, so the
+      twin mounts it in a `WINDOW.height − 80` scroller and reads rows 1–4 at
+      rest, rows 5–8 after a real `-400` wheel reaches the `-392` clamp; every
+      assertion is container-relative. **3/3** focused, exit `0`, three green
+      runs, live registry `76 → 79`; four mutation proofs observed and reverted
+      (flex gap `8 → 12`, grid gap `10 → 12`, lineHeight `30 → 24`, reverse
+      `flex-end` `200 → 180`). The headless views are unchanged except one
+      `type-root` testId. Focused ids run:
+      `live-layout-flex,live-layout-grid,live-typography` and the headless
+      `layout-flex,layout-grid,typography-layout`; `check`/`lint`/`test` green,
+      full headless **103/103** (`3653` checks, 64 capabilities).
+
 `[x]` **Re-run the merge/release gate on the final branch** (2026-10-19): the
       code head `3213388c` (after plan `581`) ran the whole registry —
       headless **103/103** (`3632` checks, 64 capabilities) and live **75/75**
