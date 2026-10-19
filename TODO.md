@@ -81,8 +81,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        (`ecbda2cf`, `scripts/swarm-model.sh` only) as `76edbe63`, re-ran the
        full headless suite and edited the same ledgers while this session's own
        live gate was running; it was then stopped. Both sessions' runs are real
-       and agree on every count: headless 106/106 · 3824 · 65 (two runs,
-       156.1 s and 115.5 s; the artifact on disk is the latter) and live
+       and agree on every count: headless 106/106 · 3824 · 65 (two runs; the
+       surviving artifact records 115.5 s) and live
        95/95 · **2545** · 61 · 1094.3 s (this
        session's run at 18:40). The surviving session verified the artifacts,
        corrected the plan to record both headless runs, re-ran `check`, `lint`
@@ -97,8 +97,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       image-source pixels** per plan `691`: verification only on the
       `836b4d63` code head (a concurrent session merged `origin/master`'s
       `scripts/swarm-model.sh` change as `76edbe63`; 0 behind) — headless
-      **106/106** (`3824` checks, 65 capabilities; concurrent runs 156.1 s and
-      115.5 s) and live **95/95** (**2545** checks, 61 capabilities, 1094.3 s),
+      **106/106** (`3824` checks, 65 capabilities, 115.5 s) and live **95/95** (**2545** checks, 61 capabilities, 1094.3 s),
       both exit `0`, so plan `690`'s 24 new `live-content` checks ran inside
       the full sequence (`2521 + 24`; `live-content` reports 68). A plain
       `--all` wrote no `provenance.json`, both `host` lines carry the

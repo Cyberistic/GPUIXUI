@@ -322,11 +322,10 @@ The gate ran on the plan-690 code head `836b4d63` plus this plan's commit
 affect any suite input.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities. This session's run took **156.1 s**; a
-concurrent B3 session then rewrote the shared artifact with its own full run
-at **115.5 s** (298,394 bytes, 18:39). Both runs report the identical
-106/106 · 3824 · 65 and the same host, and the ledger cites the artifact that
-survives on disk. `--list` printed 106 ids.
+`0`, **3824 checks**, 65 capabilities, **115.5 s** (the report on disk:
+298,394 bytes, 18:39). A concurrent B3 headless run reported the identical
+counts and host, but its report was overwritten; only the surviving artifact's
+duration is cited. `--list` printed 106 ids.
 Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 

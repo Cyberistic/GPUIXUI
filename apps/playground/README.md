@@ -2065,7 +2065,7 @@ bytes** can now be checked by colour; a path/URL still cannot.
 ## Evidence on this host
 
 The suite is **106/106 green** here (`exit 0`, 3824 checks, 65 capabilities,
-concurrent full runs 156.1 s and 115.5 s, 2026-10-19; plan `691`'s gate;
+concurrent full runs agree on every count, **115.5 s** for the surviving run, 2026-10-19; plan `691`'s gate;
 plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37
 checks to `primitives-display`):
 
