@@ -179,7 +179,9 @@ is not proving anything and must be strengthened before the task is done.
 | `nub run --filter playground build` | exit `0` |
 | `nub apps/playground/dist/live/run.js --only live-tab-overflow,live-tab-focus` | **2/2**, exit `0`; 35 + 18 = **53 checks**; both screenshots written |
 | `nub apps/playground/dist/smoke/run.js --only tab-strip-overflow,tab-strip-focus` | 2/2, exit `0` — the headless contract is unchanged |
-| `nub run --filter playground check-types` / `nub run check` / `lint` / `test` | exit `0` |
+| `nub apps/playground/dist/smoke/run.js` | **101/101** (3536 checks), exit `0` |
+| `nub apps/playground/dist/live/run.js --all` | **63/63** (1428 checks, 48 capabilities, 717 s), exit `0` |
+| `nub run --filter playground check-types` / `nub run check` / `lint` / `test` | exit `0`; playground 417 tests, `@gpuixui/testing` 61 |
 
 Measured in the window:
 

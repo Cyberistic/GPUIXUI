@@ -99,6 +99,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       tabindex `() => 0` → `expected "roving-after", got "roving-1"`; M3
       `overflowX: "hidden"` → `tab-strip reports an offset: none`). Focused ids
       run: `live-tab-overflow`, `live-tab-focus`; `check`/`lint`/`test` green.
+      Merge gate at `e405a99e`: live **63/63** (**1428** checks, 48 capabilities,
+      717 s) and headless **101/101** (**3536** checks), both exit `0`.
 
 `[ ]` **Cross-team:** the docs' component pages still need **per-component
       screens** — the capture mechanism is now publishable, but the registry
@@ -778,9 +780,9 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      **re-run on the final branch 2026-10-19 at `0f95783` (after plan `564`):**
-      headless **101/101** (`3536` checks, 64 capabilities) and live **61/61**
-      (`1375` checks, 48 capabilities, 692 s), both exit `0`; `nub run check`,
+      **re-run on the final branch 2026-10-19 at `e405a99e` (after plan `565`):**
+      headless **101/101** (`3536` checks, 64 capabilities) and live **63/63**
+      (`1428` checks, 48 capabilities, 717 s), both exit `0`; `nub run check`,
       `nub run lint` and `nub run test` pass (playground 417 tests; components
       308; primitives 282; tokens 196; testing 61; tw 103; icons 19; docs 7).
       The workstream's own instruction is *never push to master*, so an
