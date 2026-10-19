@@ -515,6 +515,11 @@ describe("type", () => {
       );
     const defaulted = markerOf({ required: true, children: "Email" });
     expect(elementProp(defaulted, "role")).toStrictEqual(Option.some("label"));
+    // Plan 647: the marker is a run the row must not squeeze. `Text` removes
+    // the content floor by default (plan 383), so the star kept the same
+    // `minWidth: 0` as the wrapping name and painted 0.5 px in a 12 px column;
+    // `shrink={false}` gives it the runtime's automatic content floor.
+    expect(elementProp(defaulted, "shrink")).toStrictEqual(Option.some(false));
     const custom = markerOf({
       required: true,
       requiredLabel: "  obligatoire  ",

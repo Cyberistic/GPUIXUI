@@ -96,6 +96,10 @@ property; returning `{}` keeps the default look. The state type is exported.
   screen-reader user who tabs directly to the control does not hear it.
 - A long name wraps inside the label's own row (the label is full width), so a
   form column does not grow sideways (plan `368`).
+- The required marker keeps its own width while the name wraps. A narrow column
+  used to squeeze the star — measured, 2.5 px in a 60 px column and 0.5 px in a
+  12 px one, from 6 px at full width — because the name's shrink floor also
+  applied to the marker. The star now opts out of shrinking (plan `647`).
 - A blank `description` is not a description: it paints no caption line, so a
   computed missing hint cannot leave a blank row under the name (plan `577`).
 
@@ -114,7 +118,8 @@ property; returning `{}` keeps the default look. The state type is exported.
   `TextInput` name are both present in the accessibility dump.
 - `runtime/label-required.runtime.test.tsx` — a required marker is an `Image`
   named `required` (or `requiredLabel`) and no bare `*` node exists; a label
-  without `required` publishes no image (plan `581`).
+  without `required` publishes no image (plan `581`); the marker keeps its
+  painted width in a narrow column while the name wraps (plan `647`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

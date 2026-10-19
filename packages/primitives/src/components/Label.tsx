@@ -87,6 +87,7 @@ export const renderLabel = ({
           role="label"
           tone="destructive"
           label={ariaNameOr(requiredLabel, "required")}
+          shrink={false}
         >
           *
         </Text>

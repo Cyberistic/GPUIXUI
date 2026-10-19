@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 155/155
+`[x]` `[████████████]` 156/156
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1677,6 +1677,15 @@ retired once both branches are one
       the region still scrolls by keyboard. 1 new runtime case; removing the
       getter or returning a wrong id both fail it (plan `610`; runtime 796 →
       797, offline unchanged).
+`[x]` `packages/primitives`: **the required marker was squeezed by the name's
+      shrink floor** — plan `383` gave every `Text` run `minWidth: 0` so a long
+      name wraps, and the required `*` inherited it. Measured in fixed-width
+      columns: the marker painted 6 px at 240 px, 2.5 px at 60 px and 0.5 px at
+      12 px, while the star is the only visual required signal (0.10.0 has no
+      `aria-required`). The marker now opts out with `shrink={false}`
+      (`minWidth: "auto"`) and keeps its width while the name wraps; 1 offline
+      assertion + 1 runtime case, the runtime failing at `expected 2.5 to be 6`
+      without the fix (plan `647`; offline 860, scoped live 4/4).
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
