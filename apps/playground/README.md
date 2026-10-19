@@ -1330,7 +1330,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 71 scenarios. `smoke:live` opens
+live registry lists 73 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1347,6 +1347,8 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-input` | a click focuses the field, `h i` reaches `onChange` (`value=hi`), and `Enter` reaches `onSubmit` (`submits=1`) |
 | `live-input-payload` | two real clicks 80 ms apart are **two** clicks, each `clickCount=1`; the live editor receives `é` and `日` (`keyChar` carries each), `cmd-a` is consumed before React and the next space replaces the value, and a live wheel is `40/true/moved` — 12 checks (plan `533`) |
 | `live-pointer-entry` | where a live click puts the caret and what a real press-move-release selects: a click at `x + 25` lands inside `abcdef` (index 1–5), a right-edge click appends, a left-edge click prepends, a drag selects all six and typing replaces them, a plain click clears the selection, `shift`-click extends it, a `<textarea>` takes a newline and autosizes to 64 px, and Up returns to the previous line — 22 checks (plans `535`, `536`) |
+| `live-drag-targets` | a real press keeps the held move and the `up` on the pressed box while the target under the pointer receives neither, the gesture ends in a click on the source, a hover settles during the gesture, and a click/hover work immediately afterwards — 20 checks (plan `580`). Live hover delivery is re-render dependent, so its order is printed, not asserted |
+| `live-drag-autoscroll` | a held bottom-edge move scrolls the list one 24 px row (the painted row moves, not just the readout), three moves reach `-72`, a top-edge move returns to `-48`, the drop index follows the offset, the release keeps the `up` and the ending click, and the plain list does **not** auto-scroll — 29 checks (plan `580`) |
 | `live-scroll` | `scroll-container` starts at offset `0`, a `-200` wheel scrolls it down, and `onScroll` reports `delta=-200` |
 | `live-tab-overflow` | a horizontal tab strip in a window: a real `deltaX` wheel pans `-240`, a vertical wheel is inert, the clipped last tab keeps painted bounds, the component reveal lands it at the trailing edge (4 px past — the strip's padding), the revealed neighbour click/focus works, the exact `scrollTo` reaches `-400`, and Home/End move selection, native focus and the reveal together — 35 checks (plan `565`) |
 | `live-panel` | a paced divider drag grows the split `320 → 400`, `onResize` reports it, and pane A's measured width agrees within 2 px |
@@ -1403,8 +1405,26 @@ unchanged and close that gap (28 + 19 checks).
 The article role, the style report and colour remain headless for the measured
 reason above (`197`). Five mutation proofs are recorded in plan `577` §8.
 
-Artifacts: `.artifacts/live-report.json` and one real-window PNG per scenario
-under `.artifacts/live/` (gitignored).
+### The drag family in a real window (plan `580`)
+
+`drag-targets` and `drag-autoscroll` were the last interaction family whose only
+evidence was the offscreen `TestRenderer`. `live-drag-targets` (20 checks) and
+`live-drag-autoscroll` (29) reuse the plan-162/172 views through the plan-536
+press/move/release verbs.
+
+| Fact | Measured in the window |
+| ---- | ---------------------- |
+| capture | every held move and the `up` stay on the pressed box; the box under the pointer gets neither |
+| the end of a drag | the live gesture **does** end in a click on the source |
+| hover | settles in the window, but its position relative to the `up` varies: with the source's move handler recording state it settled after the release, and with that handler removed the window delivered `B:enter>A:leave` during the held move. The live probe asserts membership, never order; the headless "frozen" claim stays headless |
+| the edge loop | one held move inside the 24 px band scrolls exactly one row: the **painted row** moves 24 px (`-24 → -72`, then `-48` at the top edge), so the check cannot pass on component state alone |
+| the drop index | follows the live offset and moves back with it |
+| the plain list | still does **not** auto-scroll a held drag live — its row does not move after a 600 ms edge hold |
+| `pressedButton` | a null result: dropping it from the live `movePointer` changed nothing, so pointer capture does not depend on the per-move field (unlike the native editor's selection, plan `536`) |
+
+Mutation proofs M1, M3, M4, M5 and M6 are recorded in plan `580` §5/§8; M2 is the
+null result above. Artifacts: `.artifacts/live-report.json` and one PNG per
+scenario under `.artifacts/live/`.
 
 Two rules the runner needs, both measured:
 

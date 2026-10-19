@@ -60,6 +60,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 101/101 plans-and-harness
 
+`[x]` Prove the **drag family in a real window** per plan `580`: `drag-targets`
+      and `drag-autoscroll` were the last interaction family with headless-only
+      evidence. `live-drag-targets` (20 checks) and `live-drag-autoscroll` (29)
+      reuse the plan-162/172 views through the plan-536 press/move/release
+      verbs — every held move and the `up` stay on the pressed box, the target
+      gets neither, the live gesture ends in a click on the source, three held
+      bottom-edge moves scroll exactly three 24 px rows (asserted on the
+      **painted row**; the readout alone passed with `scrollTo` removed), a
+      top-edge move returns one, the drop index follows, and the plain list does
+      **not** auto-scroll. **Measured:** hover settles but its order relative to
+      the `up` varies with the source's state-recording move handler (after with
+      it, during the hold without it), so the live probe asserts membership and
+      the headless freeze stays headless; dropping `pressedButton: 0` is a null
+      result for capture (unlike the editor's selection, plan `536`). **2/2**
+      exit `0`, three consecutive runs, live registry `71 → 73`; six mutation
+      proofs observed and reverted (M2 the null result, M6 how the hover
+      variance was found). `nub run check`, `lint`, `test` green (playground
+      417); full headless **101/101 (3554 checks, 64 capabilities)**, exit `0`.
+      Focused ids run: `live-drag-targets,live-drag-autoscroll` (three times),
+      plus each alone for the mutations. §8 records the numbers.
+
 `[x]` Prove the **content surfaces in a real window** per plan `577`: `content`
       was the last core capability with no live twin. `live-content` (28 checks)
       reuses the `native-surfaces` view — the sourced icon's `48 × 48` box, the

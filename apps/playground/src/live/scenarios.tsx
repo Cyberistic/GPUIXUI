@@ -22,6 +22,8 @@ import * as Str from "effect/String";
 import type { Smoke } from "@gpuixui/testing";
 import { App } from "../app.js";
 import { contextMenuScenario } from "../scenarios/context-menu.js";
+import { dragAutoscrollScenario } from "../scenarios/drag-autoscroll.js";
+import { dragTargetsScenario } from "../scenarios/drag-targets.js";
 import { markdownScenario } from "../scenarios/markdown.js";
 import { nativeSurfacesScenario } from "../scenarios/surfaces.js";
 import { nestedLayerScenario } from "../scenarios/layers.js";
@@ -199,6 +201,16 @@ const boxOf = (ctx: LiveContext, testId: string) =>
       Option.fromNullishOr(bounds),
     );
   });
+
+/** The centre of a painted box. */
+const centreOf = (bounds: Smoke.Bounds) => ({
+  x: bounds.x + bounds.width / 2,
+  y: bounds.y + bounds.height / 2,
+});
+
+/** The first index of `needle` in `text`, or `-1`. */
+const indexOf = (text: string, needle: string): number =>
+  Option.getOrElse(Str.indexOf(needle)(text), () => -1);
 
 /** How many painted strings contain `needle`. */
 const paintedCount = (ctx: LiveContext, needle: string) =>
@@ -9135,6 +9147,241 @@ const liveFrames: LiveScenario = {
     }),
 };
 
+const liveDragTargets: LiveScenario = {
+  id: "live-drag-targets",
+  title: "Live drag targets: capture, hover edges and the ending click",
+  capability: "drag",
+  view: dragTargetsScenario.view,
+  ready: "drag-a",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const source = yield* boxOf(ctx, "drag-a");
+      const target = yield* boxOf(ctx, "drag-b");
+      yield* ctx.expectNear(
+        "the live source box paints at its borderless size",
+        source.width,
+        98,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live target box paints at its borderless size",
+        target.width,
+        98,
+        1,
+      );
+
+      const from = centreOf(source);
+      const to = centreOf(target);
+      yield* ctx.host.pressWindow(from.x, from.y);
+      yield* settle;
+      yield* ctx.host.movePointer(to.x, to.y);
+      yield* settle;
+
+      const held = yield* textOf(ctx, "drag-log");
+      yield* ctx.expectContains("the press reached the source", held, "A:down");
+      yield* ctx.expectContains(
+        "the source keeps the held move",
+        held,
+        "A:move",
+      );
+      yield* ctx.expectEqual(
+        "the target receives no move during capture",
+        Str.includes("B:move")(held),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the pointer entered the source before the drag",
+        indexOf(held, "A:enter") >= 0 &&
+          indexOf(held, "A:enter") < indexOf(held, "A:move"),
+        true,
+      );
+
+      yield* ctx.host.releasePointer(to.x, to.y);
+      yield* settle;
+      const released = yield* textOf(ctx, "drag-log");
+      yield* ctx.expectContains(
+        "a live drag ends on the captured source",
+        released,
+        "A:up",
+      );
+      yield* ctx.expectEqual(
+        "the element under the pointer receives no up",
+        Str.includes("B:up")(released),
+        false,
+      );
+      yield* ctx.expectContains(
+        "the live gesture ends in a click on the source",
+        released,
+        "A:click",
+      );
+      yield* ctx.expectContains(
+        "the target's hover settles during the gesture",
+        released,
+        "B:enter",
+      );
+      yield* ctx.expectContains(
+        "the source's leave settles during the gesture",
+        released,
+        "A:leave",
+      );
+
+      yield* ctx.host.click("drag-b");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the target still receives clicks after the gesture",
+        yield* textOf(ctx, "drag-log"),
+        "B:click",
+      );
+
+      yield* ctx.host.hover("drag-a");
+      yield* settle;
+      const tail = yield* textOf(ctx, "drag-log");
+      yield* ctx.expectContains(
+        "hover works after the gesture",
+        tail,
+        "A:enter",
+      );
+      yield* ctx.expectEqual(
+        "the hover move still reaches the element",
+        Str.endsWith("A:move")(tail),
+        true,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveDragTargets.id}.png`);
+    }),
+};
+
+const liveDragAutoscroll: LiveScenario = {
+  id: "live-drag-autoscroll",
+  title: "Live drag: held edge scroll, capture and the derived drop index",
+  capability: "drag",
+  view: dragAutoscrollScenario.view,
+  ready: "drag-source",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const reorder = yield* boxOf(ctx, "drag-reorder");
+      const plain = yield* boxOf(ctx, "drag-plain");
+      yield* ctx.expectNear(
+        "the live reorder viewport excludes its border",
+        reorder.height,
+        178,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live reorder list keeps its declared width",
+        reorder.width,
+        218,
+        1,
+      );
+
+      const source = centreOf(yield* boxOf(ctx, "drag-source"));
+      const x = reorder.x + reorder.width / 2;
+      const bottom = reorder.y + reorder.height - 6;
+      const top = reorder.y + 6;
+      // The readout is component state; a painted row is the runtime's scroll.
+      const rowBefore = yield* boxOf(ctx, "drag-row-6");
+
+      yield* ctx.host.pressWindow(source.x, source.y);
+      yield* settle;
+      yield* ctx.host.movePointer(x, bottom);
+      yield* settle;
+      const rowAfter = yield* boxOf(ctx, "drag-row-6");
+      yield* ctx.expectNear(
+        "the runtime scrolls the painted rows",
+        rowAfter.y,
+        rowBefore.y - 24,
+        1,
+      );
+      yield* ctx.expectEqual(
+        "a held bottom-edge move scrolls one row",
+        yield* textOf(ctx, "drag-reorder-offset"),
+        "offset=-24",
+      );
+
+      yield* ctx.host.movePointer(x, bottom);
+      yield* settle;
+      yield* ctx.host.movePointer(x, bottom);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "three held moves scroll three rows",
+        yield* textOf(ctx, "drag-reorder-offset"),
+        "offset=-72",
+      );
+      const dropNearBottom = Number(
+        Str.replace("index=", "")(yield* textOf(ctx, "drag-drop-index")),
+      );
+      yield* ctx.expectEqual(
+        "the drop index follows the scrolled content",
+        dropNearBottom > 0,
+        true,
+      );
+
+      yield* ctx.host.movePointer(x, top);
+      yield* settle;
+      yield* ctx.expectEqual(
+        "a held top-edge move scrolls one row back",
+        yield* textOf(ctx, "drag-reorder-offset"),
+        "offset=-48",
+      );
+      const dropNearTop = Number(
+        Str.replace("index=", "")(yield* textOf(ctx, "drag-drop-index")),
+      );
+      yield* ctx.expectEqual(
+        "the drop index moves toward the top with the scroll",
+        dropNearTop < dropNearBottom,
+        true,
+      );
+
+      yield* ctx.host.releasePointer(x, top);
+      yield* settle;
+      const log = yield* textOf(ctx, "drag-log");
+      yield* ctx.expectContains("the source received the down", log, "down");
+      yield* ctx.expectContains("the source received the up", log, "up");
+      yield* ctx.expectContains(
+        "the live gesture ends in a click on the source",
+        log,
+        "click",
+      );
+      yield* ctx.expectEqual(
+        "the source received every held move",
+        Arr.length(Arr.filter(Str.split(">")(log), Str.startsWith("move:"))) >=
+          4,
+        true,
+      );
+
+      const plainRowBefore = yield* boxOf(ctx, "drag-plain-row-1");
+      const plainSource = centreOf(yield* boxOf(ctx, "drag-plain-source"));
+      yield* ctx.host.pressWindow(plainSource.x, plainSource.y);
+      yield* settle;
+      yield* ctx.host.movePointer(
+        plain.x + plain.width / 2,
+        plain.y + plain.height - 6,
+      );
+      yield* Effect.sleep("600 millis");
+      const plainLog = yield* textOf(ctx, "drag-plain-log");
+      yield* ctx.expectContains(
+        "the plain gesture is live (its source receives the move)",
+        plainLog,
+        "move",
+      );
+      const plainRowAfter = yield* boxOf(ctx, "drag-plain-row-1");
+      yield* ctx.expectNear(
+        "the runtime does not auto-scroll a live held drag",
+        plainRowAfter.y,
+        plainRowBefore.y,
+        1,
+      );
+      yield* ctx.host.releasePointer(
+        plain.x + plain.width / 2,
+        plain.y + plain.height - 6,
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveDragAutoscroll.id}.png`,
+      );
+    }),
+};
+
 /** The live suite, in run order. */
 export const liveScenarios: ReadonlyArray<LiveScenario> = [
   shell,
@@ -9145,6 +9392,8 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   input,
   inputPayload,
   pointerEntry,
+  liveDragTargets,
+  liveDragAutoscroll,
   scroll,
   tabOverflow,
   panel,
