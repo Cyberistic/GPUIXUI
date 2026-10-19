@@ -2491,7 +2491,10 @@ value and the `bound` it missed. A `MetricRule` is one of `positive`,
 `at-most` or `within`. A value the `finite` rule rejects is not compared by a
 ladder or a bound, so a bad number is not blamed on its neighbour; a `NaN` is
 the finite rule's one diagnostic, while a `-Infinity` also fails a sign rule,
-because it is non-finite and negative — independent defects.
+because it is non-finite and negative — independent defects. A bound that is
+itself zero or negative is that metric's own sign diagnostic, so a fit does not
+blame the value inside it: an inline icon is judged only by a usable caption or
+label line, and an inline avatar only by a usable dense row (plan `641`).
 
 #### Colour format
 

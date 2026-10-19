@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 276/350
+`[x]` `[████████░░]` 277/351
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2331,6 +2331,12 @@ control, while the four shipped clear/remove controls inside a field
 and the 16px adornment returned `[]` from every check while the glyph overflowed
 its box. The `dimensions` rule now reads the theme's own `caption.lineHeight`,
 every shipped set passes at equality (16) and no shipped value moves (plan 638)
+`[x]` Stop a broken line or row from blaming the mark that fits inside it — the
+three `atMost` fits (`iconSize.xs` against `caption.lineHeight`, `iconSize.sm`
+against `label.lineHeight`, `avatarSize.xs` against `density.rowHeight`)
+compared a zero or negative bound and reported the correct icon or avatar as
+well as the broken metric; all three now read their bound through
+`usableBound`, every shipped set passes unchanged and no value moves (plan 641)
 
 ## Phase C — Tier 1–2 components
 

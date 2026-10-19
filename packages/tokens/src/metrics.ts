@@ -215,7 +215,10 @@ const atMost = (
  * Whether a dependent fit rule has a bound worth comparing. A zero, negative or
  * non-finite bound is already its own rule's diagnostic — a zero
  * `avatarSize.xs`, `controlHeight.sm` or `body.fontSize` — so comparing against
- * it would report one cause twice, blaming the metric that fits inside it.
+ * it would report one cause twice, blaming the metric that fits inside it. The
+ * same guard applies to a fit whose bound is a line or a row: an inline icon
+ * above a caption or label line, and an inline avatar above a dense row, are
+ * reported only when the line or row is itself a usable size.
  */
 const usableBound = (bound: number): boolean =>
   Number.isFinite(bound) && bound > 0;
@@ -751,9 +754,15 @@ export function themeMetricFailures(
     // An inline icon is painted inside the line box of the text it sits with
     // (`scale.ts`: `xs` is inline with a caption, `sm` with a label). A glyph
     // taller than the line raises the row it is centred in, so the two inline
-    // sizes are bounded by the theme's own leading — not by a house literal.
-    ...atMost("iconSize", "xs", iconSize.xs, typography.caption.lineHeight),
-    ...atMost("iconSize", "sm", iconSize.sm, typography.label.lineHeight),
+    // sizes are bounded by the theme's own leading — not by a house literal. A
+    // leading that is not a usable line is its own rule's diagnostic, so the
+    // fit waits for one instead of blaming the icon.
+    ...(usableBound(typography.caption.lineHeight)
+      ? atMost("iconSize", "xs", iconSize.xs, typography.caption.lineHeight)
+      : []),
+    ...(usableBound(typography.label.lineHeight)
+      ? atMost("iconSize", "sm", iconSize.sm, typography.label.lineHeight)
+      : []),
     ...finiteGroup("avatarSize", avatarSize),
     ...ladder(
       "avatarSize",
@@ -763,8 +772,11 @@ export function themeMetricFailures(
     ),
     // The `xs` tier is the inline avatar (`scale.ts`): a dense `ListItem` fixes
     // its height at `density.rowHeight` and documents its leading slot for an
-    // avatar, so a mark taller than the row cannot fit the row it leads.
-    ...atMost("avatarSize", "xs", avatarSize.xs, density.rowHeight),
+    // avatar, so a mark taller than the row cannot fit the row it leads. A row
+    // that is not a usable height is its own rule's diagnostic.
+    ...(usableBound(density.rowHeight)
+      ? atMost("avatarSize", "xs", avatarSize.xs, density.rowHeight)
+      : []),
     ...finiteGroup("radius", radius),
     ...zero("radius", "none", radius.none),
     ...ladder(
