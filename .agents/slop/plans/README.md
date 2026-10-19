@@ -299,6 +299,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [625](./625-dialog-drawer-shell-chrome.md) | The dialog and drawer shells hold their close control | F | 353, 358, 556, 598, 620, 624 | done |
 | [627](./627-surface-border-fit.md) | The fixed surfaces fit their own border | F | 353, 358, 384, 598, 620, 625 | done |
 | [629](./629-notification-inbox-header.md) | The notification inbox holds its header | F | 353, 358, 598, 620, 625, 627 | done |
+| [631](./631-toast-dismiss-control.md) | The Toast card holds its dismiss control | F | 353, 358, 620, 627, 629 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3258,6 +3259,18 @@ documented list viewport unreachable. One term now reads the header from the
 theme's own spacing, density and border metrics; the shipped 380 clears the
 335px bound at 1.13×, so no value moves, and the suite proves the old
 list-and-borders bound fails.
+
+Plan `631` closes the last always-painted control inside a fixed surface that
+plan `627`'s audit left out. The Toast card bound counted its padding, tone
+icon, one gap and one title glyph, but `toast/viewport.tsx` also paints an
+unconditional `IconButton label="Dismiss" size="sm"` after a second
+`spacing.lg` gap, and `IconButton` is a square `controlHeight.sm`. A theme with
+`toastWidth: 100` returned `[]` from all ten checks while the card needed 108
+inside its `overflow: hidden`; a coherent theme with a lifted `sm` control hit
+the same gap at 128. The bound now counts the gap and the square control; the
+shipped 380 clears 108 at 3.52×, so no colour, pair, floor, metric or shipped
+theme value moves. This supersedes the Toast's 68px bound and 5.59× figure
+quoted in plan `627`'s summary; its other six bounds are unchanged.
 
 ## How to use a plan
 
