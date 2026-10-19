@@ -2051,14 +2051,14 @@ retired once both branches are one
       `onBlurCommit` (host blur) paths, one runtime case fails with `1.50x`
       before the fix, and the docs/ledger record it (plan `642`).
 
-`[ ]` `packages/primitives`: **the capability table still says a `ScrollArea`
-      stays hover-only.** `docs/gpuix-capabilities.md` line 140's workaround
-      ends "a `ScrollArea` keeps its imperative `ref` and stays hover-only",
-      but plan `610` made the handle expose the viewport `id`, so a wrapped
-      labelled region opens its tip on `Tab` (and `COMPONENTS.md` and the
-      ScrollArea row already say so). Correct the sentence and extend the
-      capability guard so the two documents cannot disagree again. Evidence:
-      plan `610` §7; owner: primitives.
+`[x]` `packages/primitives`: **the capability table still said a `ScrollArea`
+      stays hover-only.** `docs/gpuix-capabilities.md` line 140's workaround ended
+      "a `ScrollArea` keeps its imperative `ref` and stays hover-only", but plan
+      `610` made the handle expose the viewport `id`, so a wrapped labelled
+      region opens its tip on `Tab`. The row now states the focus-open path and
+      the two real limits (hover hit-testing, unlabelled areas), and
+      `capabilities.test.ts` ties it to `COMPONENTS.md`'s ScrollArea row in both
+      directions (plan `643`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

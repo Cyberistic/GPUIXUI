@@ -173,4 +173,33 @@ describe("GPUix capability reference", () => {
     expect(Str.includes("supports solid roles only")(box)).toBe(false);
     expect(Str.includes("linear-gradient")(box)).toBe(true);
   });
+
+  it("agrees with the inventory about a ScrollArea tooltip trigger", async () => {
+    // The bug guarded (plan 643): this row's workaround still ended
+    // "a ScrollArea … stays hover-only" after plan 610 gave the handle its
+    // viewport id, while COMPONENTS.md already recorded Tab opening the tip.
+    const doc = await Effect.runPromise(readCapabilities());
+    const events = Arr.join(
+      rowFor(doc, "Pointer, keyboard, focus and scroll events"),
+      " ",
+    );
+    expect(events).toContain("viewport `id`");
+    expect(events).not.toContain("stays hover-only");
+
+    const inventory = await Effect.runPromise(root("COMPONENTS.md"));
+    const scrollRow = pipe(
+      Str.split("\n")(inventory),
+      // Two rows begin "Scrollable containers": the capability table's host
+      // element row and the Tier 1 inventory row. The inventory row is the one
+      // that links the component page.
+      Arr.findFirst(
+        (line) =>
+          Str.startsWith("| Scrollable containers |")(line) &&
+          Str.includes("scroll-area.mdx")(line),
+      ),
+      Option.getOrElse(() => ""),
+    );
+    expect(scrollRow).toContain("Keyboard (610)");
+    expect(scrollRow).toContain("opens on `Tab`");
+  });
 });
