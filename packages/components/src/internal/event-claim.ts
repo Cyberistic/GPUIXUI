@@ -10,9 +10,11 @@
  * The claim covers keys and pointer events: the dismiss stack uses it for
  * Escape and for outside presses, the menus for the keys they act on.
  *
- * The claim is cleared in a microtask, after the synchronous event propagation
- * has finished, so a later event — even one with the same key at the same
- * coordinates — is a new event.
+ * The claim lives **one task**, not one microtask: a live window delivers the
+ * enclosing surface's handler for one propagation across a microtask (measured,
+ * playground plan `558`), so a microtask reset let one Escape close two nested
+ * layers. A later event — even one with the same key at the same coordinates —
+ * is a new task and gets its own claim.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -62,10 +64,13 @@ const sameClaim = (left: EventClaim, right: EventClaim): boolean =>
 
 /** Mark `event` as handled by the surface it happened in. */
 export const claimEvent = (event: EventPayload): void => {
-  claim = Option.some(claimOf(event));
-  queueMicrotask(() => {
-    claim = Option.none();
-  });
+  const claimed: EventClaim = claimOf(event);
+  claim = Option.some(claimed);
+  // Clear only this claim: a newer event may already own the slot. The task
+  // boundary is what a live window's propagation needs (plan 558).
+  setTimeout(() => {
+    claim = Option.filter(claim, (current) => current !== claimed);
+  }, 0);
 };
 
 /** Whether an enclosing surface must leave the same key event alone. */
@@ -75,7 +80,7 @@ export const isEventClaimed = (event: EventPayload): boolean =>
     onSome: (current) => {
       if (!sameClaim(current, claimOf(event))) return false;
       // Consume: the enclosing surface is the claim's one reader. A later key
-      // with the same name is a new event even if the microtask has not run.
+      // with the same name is a new event even if the task has not ended.
       claim = Option.none();
       return true;
     },

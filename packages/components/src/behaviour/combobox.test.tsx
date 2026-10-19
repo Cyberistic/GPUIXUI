@@ -562,6 +562,9 @@ describe("Combobox", () => {
     expect(nested.renderer.findByTestId("combobox-content")).toBeUndefined();
     expect(nested.renderer.findByTestId("dialog")).toBeDefined();
 
+    // A real second press is a new task; the event claim lives one task (plan
+    // 587), so two presses in one tick would be the same gesture.
+    await wait(0);
     nested.renderer.nativeSimulateClick(12, 12);
     await settle();
 

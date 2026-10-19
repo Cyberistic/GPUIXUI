@@ -270,6 +270,17 @@ retired once both branches are one
       Notification centre by pressing its trigger. The layer now reads the press
       position and claims it without closing; 6 native cases, both-direction proof;
       docs, `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] The event claim lives one task — plan 587; playground plan 558 measured
+      a live window closing **both** a submenu and its dialog on one Escape: the
+      nested handler and its parent's arrive across a microtask, and the claim was
+      cleared in one. `claimEvent` now schedules a task-scoped cleanup that clears
+      only its own claim, and the behaviour teardown crosses a task so a claim
+      cannot leak between tests. 5 claim + 1 dismiss-stack unit cases, both
+      direction proven (unit 432); the native suite stays at 747/35 of 782
+      because the `TestRenderer` delivers copies synchronously, and the seven
+      tests that only passed on the short claim are named in the plan; docs,
+      `docs/component-api.md`, `COMPONENTS.md` and the inventory synced (owner:
+      components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

@@ -6,10 +6,15 @@
  * payload copy, so identity cannot consume an event), an outside press closing
  * an overlay that is not topmost, and a closed overlay leaving its handler on
  * the stack to be dismissed later.
+ *
+ * The claim lives one task, not one microtask: a live window delivers a nested
+ * layer's handler and its parent's across a microtask (playground plan 558), so
+ * the microtask reset closed both layers on one Escape. Both orderings are
+ * pinned below.
  */
 
 import type { EventPayload } from "@gpuix/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   dismissLayerCount,
   dismissTopLayer,
@@ -22,6 +27,9 @@ const escape = (): EventPayload => ({
   eventType: "keyDown",
   key: "escape",
 });
+
+/** The claim is module state; each test starts as a new task. */
+afterEach(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
 
 describe("dismiss layer stack", () => {
   it("reports no consumer when nothing is open", () => {
@@ -42,6 +50,27 @@ describe("dismiss layer stack", () => {
     removeInner();
     removeOuter();
     expect(dismissLayerCount()).toBe(0);
+  });
+
+  it("keeps one Escape to one layer across a microtask, as a live window does", async () => {
+    const outer = vi.fn();
+    const inner = vi.fn();
+    const removeOuter = pushDismissLayer(outer);
+    const removeInner = pushDismissLayer(inner);
+
+    const first = escape();
+    const copy: EventPayload = { ...first };
+
+    expect(dismissTopLayer(first)).toBe(true);
+    // Plan 558 measured a live window delivering the enclosing handler across a
+    // microtask. The old microtask reset cleared the claim before that copy.
+    await Promise.resolve();
+    expect(dismissTopLayer(copy)).toBe(false);
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+
+    removeInner();
+    removeOuter();
   });
 
   it("consumes one keystroke even when the runtime copies the payload", () => {
@@ -86,8 +115,8 @@ describe("dismiss layer stack", () => {
 
     dismissTopLayer(escape());
     removeInner();
-    // A real second Escape is a new task; the claim resets in a microtask.
-    await Promise.resolve();
+    // A real second Escape is a new task; the claim lives one task (plan 558).
+    await new Promise((resolve) => setTimeout(resolve, 0));
     dismissTopLayer(escape());
 
     expect(outer).toHaveBeenCalledTimes(1);

@@ -131,7 +131,10 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   and the `TagInput` chip control — activates Space on release, so a user can
   move focus away before letting go. A nested button-shaped control claims the
   key it handled (`internal/event-claim.ts`) so its enclosing control does not
-  act on the same keystroke. Composite rows and cells (`List`, menu rows, grid
+  act on the same keystroke. A claim lives **one task**, not one microtask:
+  a live window delivers the enclosing surface's handler for one propagation
+  across a microtask (measured, plan `587`), so a shorter claim let one Escape
+  close two nested layers. Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.
 - **No default suppression.** `@gpuix/react@0.10.0`'s `EventPayload` has no

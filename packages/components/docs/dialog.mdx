@@ -77,7 +77,9 @@ Open dialogs share one dismiss stack (`src/internal/dismiss-layer.ts`): Escape a
 outside presses are consumed by the **topmost** overlay only, so a popover inside a
 dialog closes the popover first. One event cannot close two layers. The runtime
 hands each handler its own payload copy, so consumption is keyed on the event's
-fields (the same claim the menus use), never on object identity.
+fields (the same claim the menus use), never on object identity. A claim lives one
+task rather than one microtask, because a live window delivers a nested layer's
+handler and its parent's across a microtask (plan 587).
 
 ## Keyboard
 
