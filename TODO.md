@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–574)
+## Docs site workstream (plans 410–499, plus 500–575)
 
-`[x]` `[██████████]` 141/141
+`[~]` `[██████████]` 141/142
+
+`[~]` **A query-driven project browser is the fourth pattern (plan 575)** — the
+      patterns section composes a settings form, a confirmation flow and a
+      command palette, but no page proves the ordinary "type, filter, open"
+      task even though `SearchInput`, `List`, `EmptyState` and `Card` ship. A
+      real composition filters six projects by name or description, shows the
+      no-match state, and opens the match on the wasm renderer with a two-phase
+      gesture (fill, then click); the derived scene totals move with it.
 
 `[x]` **A page summary names every subject it owns (plan 574)** — `spacing`,
       `radius`, `density` and `elevation` returned the Tokens API or Box,
