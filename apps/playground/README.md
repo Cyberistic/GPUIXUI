@@ -2088,7 +2088,7 @@ media=verified window=verified frames=verified
 ```
 
 The last full merge/release gate ran **95/95** (`exit 0`, **2521** checks, 61
-capabilities, **1120.7 s**, `.artifacts/live-report.json`, 2026-10-19) on head
+capabilities; concurrent full runs 1106.8–1136.2 s; `.artifacts/live-report.json`, 2026-10-19) on head
 `86057653` (plan `677`),
 including every scenario this branch added through `live-theme-platform` (plan
 `654`, the platform type styles in a window), `live-shell` through plan `656`'s
@@ -2295,7 +2295,7 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **95/95** on
-  2026-10-19 (**2521** checks, 61 capabilities, 1120.7 s, exit `0`, the merge
+  2026-10-19 (**2521** checks, 61 capabilities; 1106.8–1136.2 s across concurrent runs; exit `0`, the merge
   gate; plan `677` on head `86057653`, including `live-theme`'s 39 pixel checks,
   `live-pixel-colour` and
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
