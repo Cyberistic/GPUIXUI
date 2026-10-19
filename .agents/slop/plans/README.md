@@ -301,6 +301,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [629](./629-notification-inbox-header.md) | The notification inbox holds its header | F | 353, 358, 598, 620, 625, 627 | done |
 | [631](./631-toast-dismiss-control.md) | The Toast card holds its dismiss control | F | 353, 358, 620, 627, 629 | done |
 | [632](./632-date-disclosure-icon.md) | The date field's disclosure glyph is the icon tier it paints | F | 353, 358, 384, 556, 601, 627, 631 | done |
+| [634](./634-field-query-leading-icon.md) | The field's query row charges the icon it paints | F | 353, 358, 384, 624, 632 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3285,6 +3286,22 @@ corrected `53` at `4.15×`, so no colour, pair, floor, metric or shipped theme
 value moves. The suite states the 53, the 52px plant, the lifted 55 and the
 total-check entry, and the catalogue, design system and JSDoc name the `sm`
 disclosure icon.
+
+Plan `634` closes the sibling undercount plan `632`'s audit claimed did not
+exist. `fieldMinWidth`'s query-row bound — the second bound plan `624` added
+beside the token-input chip — charged **both** glyphs of the row as
+`fieldAdornmentSize`, but `SearchInput` paints its leading magnifier as
+`<Icon size="md" />`, which `packages/icons` resolves through `iconSize.md`;
+only the trailing clear control is the adornment the token names. At the
+shipped identity the two tiers are both 16, so the 78px bound hid the gap. A
+copied theme that lifted `iconSize.md` to 20 returned `[]` from every check
+while the query row needed 82; the field would clip or shove its own leading
+glyph. The bound now reads `iconSize.md` for the lead and `fieldAdornmentSize`
+for the action, the shipped bound stays 78, every shipped set passes (200
+against the larger 102px chip bound), and no colour, pair, floor, metric or
+shipped theme value moves. The suite states the tier equality, plants the 81px
+field, accepts the corrected 82 and carries the failure through the total
+check; the catalogue and JSDoc name the `md` icon.
 
 ## How to use a plan
 
