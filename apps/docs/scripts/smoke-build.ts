@@ -740,6 +740,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the summary that names the ARIA surface",
     },
+    {
+      query: "focus ring",
+      expected: "/docs/tokens-api",
+      first: true,
+      what: "a promoted helper name the lexical index cannot retrieve",
+    },
+    {
+      query: "elevation shadow",
+      expected: "/docs/tokens-api",
+      first: true,
+      what: "a synthesized page candidate beside the same-URL table chunk",
+    },
+    {
+      query: "semantic roles",
+      expected: "/docs/theming#semantic-roles",
+      first: true,
+      what: "a generated token table that already answered",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

@@ -5,6 +5,7 @@ import {
   componentSearchIndex,
   componentSearchUrl,
   DEFAULT_SEARCH_LIMIT,
+  generatedNameHits,
   MAX_SEARCH_LIMIT,
   mergeResults,
   pageDescriptionHits,
@@ -13,6 +14,7 @@ import {
   withoutTypeTableRows,
   type PageMetadata,
 } from "./search";
+import type { GeneratedSearchEntry } from "./generated-search";
 
 /**
  * Guards plans 419 and 431: the component registry is searchable from any page,
@@ -42,6 +44,14 @@ import {
  * Accessibility page. The description rank sits one tier below a title and
  * matches whole words only; these tests fail when it is dropped, when a title
  * stops outranking it, or when a fragment inside a word starts matching.
+ *
+ * Plan 569 closes the retrieval case: a generated document promotes its name,
+ * but the lexical index never returns it when the reader writes that name as
+ * words (`focus ring` returned Number field sections, `elevation shadow` a table
+ * chunk). `generatedNameHits` synthesizes the document as a page candidate, so
+ * the promotion can rank it; the same-URL text chunk stays behind the page.
+ * These tests fail when the synthesis is removed, when a body chunk is promoted
+ * over its page, or when a plain word starts promoting a generated document.
  */
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
@@ -313,6 +323,33 @@ describe("search", { timeout: 120_000 }, () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });
 
+  it("reaches a generated document named in prose (plan 569)", async () => {
+    const expected = [
+      ["focusRing", "/docs/tokens-api#functions"],
+      ["focus ring", "/docs/tokens-api#functions"],
+      ["elevation shadow", "/docs/tokens-api#functions"],
+      ["semantic roles", "/docs/theming#semantic-roles"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("keeps a plain word on its component page (plan 569)", async () => {
+    const [input, label] = await Promise.all([
+      search("input", 5),
+      search("label", 5),
+    ]);
+    expect(input[0]?.url).toBe("/docs/components/text-input");
+    expect(label[0]?.url).toBe("/docs/components/label");
+  });
+
   it("caps the merged response at the limit", async () => {
     const results = await search("select", 3);
     expect(results).toHaveLength(3);
@@ -567,6 +604,64 @@ describe("page descriptions (plan 568)", () => {
 
   it("synthesizes nothing when no summary names the query", () => {
     expect(pageDescriptionHits("zzzznosuchtermzzzz", summaries)).toEqual([]);
+  });
+});
+
+const generatedFixture = (
+  names: ReadonlyArray<string>,
+): GeneratedSearchEntry => ({
+  names,
+  index: {
+    title: "Fixture",
+    description: "A fixture document.",
+    content: names.join("\n"),
+    url: "/docs/fixture",
+    breadcrumbs: [],
+  },
+});
+
+describe("generated name candidates (plan 569)", () => {
+  it("synthesizes a page hit for a promoted name written as words", () => {
+    const hits = generatedNameHits("focus ring", [
+      generatedFixture(["focusRing"]),
+    ]);
+    expect(hits).toEqual([
+      {
+        id: "generated-name:/docs/fixture",
+        url: "/docs/fixture",
+        type: "page",
+        content: "Fixture",
+      },
+    ]);
+  });
+
+  it("synthesizes nothing for a single plain word", () => {
+    expect(
+      generatedNameHits("input", [generatedFixture(["inputForeground"])]),
+    ).toEqual([]);
+  });
+
+  it("leaves prose behind a synthesized page", () => {
+    const merged = mergeResults(
+      [textResult("chunk", "/docs/tokens-api#functions")],
+      generatedNameHits("elevation shadow"),
+      "elevation shadow",
+    );
+    expect(merged[0]).toMatchObject({
+      type: "page",
+      url: "/docs/tokens-api#functions",
+    });
+  });
+
+  it("lists a generated page once when the index returned it too", () => {
+    const synthesized = generatedNameHits("focus ring");
+    expect(synthesized).toHaveLength(1);
+    const merged = mergeResults(
+      [],
+      [...synthesized, pageResult("/docs/tokens-api#functions")],
+      "focus ring",
+    );
+    expect(merged).toHaveLength(1);
   });
 });
 

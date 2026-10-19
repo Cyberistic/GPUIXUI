@@ -5,7 +5,10 @@ import {
   platformTypes,
   typography,
 } from "@gpuixui/tokens";
-import type { GeneratedSearchEntry } from "./generated-search";
+import {
+  isDistinctiveName,
+  type GeneratedSearchEntry,
+} from "./generated-search";
 import {
   elevationLevels,
   platformNames,
@@ -21,12 +24,10 @@ import {
  * 419 and 490 applied to the component registry and the Values API: a reader
  * who types a role or a scale token reaches the table that documents it.
  *
- * Only distinctive names are promoted (`names`): camelCase or dotted. A plain
- * word such as `input`, `label` or `body` is indexed but never outranks the
- * component page that owns it.
+ * Only distinctive names are promoted (`names`): camelCase, dotted or
+ * hyphenated. A plain word such as `input`, `label` or `body` is indexed but
+ * never outranks the component page that owns it.
  */
-const isDistinctive = (name: string): boolean =>
-  /[A-Z]/.test(name) || name.includes(".");
 
 const colourContent = colorRoles
   .map(
@@ -72,7 +73,7 @@ const platformContent = platformNames
 
 export const tokenSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   {
-    names: colorRoles.filter(isDistinctive),
+    names: colorRoles.filter(isDistinctiveName),
     index: {
       title: "Colour roles",
       description: "Every semantic colour role, in both themes.",
@@ -83,7 +84,7 @@ export const tokenSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
     },
   },
   {
-    names: textRoles.filter(isDistinctive),
+    names: textRoles.filter(isDistinctiveName),
     index: {
       title: "Type scale",
       description: "Every typographic role and the family it resolves to.",

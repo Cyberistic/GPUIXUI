@@ -20,6 +20,14 @@ export interface GeneratedSearchEntry {
  */
 export const TOKEN_MATCH_RANK = 4;
 
+/**
+ * A camelCase, dotted or hyphenated name is distinctive enough to promote. A
+ * plain word (`input`, `label`, `theme`) is indexed but never promoted, so the
+ * page that owns the word keeps the first result (plans 504, 505, 569).
+ */
+export const isDistinctiveName = (name: string): boolean =>
+  /[A-Z]/.test(name) || /[.-]/.test(name);
+
 /** Words split on camelCase, acronym boundaries and punctuation, lowercased. */
 const words = (value: string): ReadonlyArray<string> =>
   value

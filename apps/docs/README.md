@@ -487,6 +487,19 @@ headings, and `src/lib/search.test.ts` guards the five measured queries
 component-summary rules. `smoke:build` asserts `table` and `aria` against the
 production index.
 
+A promoted name is a candidate even when the lexical index misses it (plan 569).
+The Fumadocs index tokenises `focusRing` as one word, so `focus ring` returned
+Number field prose and `elevation shadow` only a table chunk. `generatedNameHits`
+synthesizes one page result per generated document whose promoted name matches —
+the rule `pageTitleHits` uses for titles — and `mergeResults` promotes only the
+page, not a text chunk at the same URL. The Tokens API function table has its own
+entry, derived from the real `@gpuixui/tokens` helper exports in
+`src/lib/tokens-api-search.ts`, so `focus ring` and `elevation shadow` reach
+`/docs/tokens-api#functions`. Only distinctive names are promoted: `alpha` is
+indexed but not promoted, and `input`/`label` keep their component pages.
+`smoke:build` asserts both helper queries and the existing `semantic roles`
+answer.
+
 Reader vocabulary is one guarded table (plan 566):
 `src/lib/component-aliases.ts` maps a record slug to the terms a reader types
 when the title cannot match — `textbox` → Text inputs, `one time password` →

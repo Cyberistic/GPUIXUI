@@ -471,16 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–568)
 
-`[~]` `[█████████░]` 135/136
+`[x]` `[██████████]` 136/136
 
-`[ ]` **Search: a promoted name the lexical index cannot retrieve** — measured
-      after plan 568: `focusRing` reaches Tokens API, but `focus ring` returns
-      Number field sections, because the generated document never comes back
-      from `registrySearch` and `promotedNameRank` only ranks candidates that
-      did. Synthesize a page candidate from each generated entry whose promoted
-      name matches (the rule `pageTitleHits` already uses), prove `focus ring`,
-      `elevation shadow` and `semantic roles` against the production index, and
-      keep `input`/`label` on their component pages. Owner: docs-site.
+`[x]` **Search: a promoted name the lexical index cannot retrieve (plan 569)** —
+      measured after plan 568: `focusRing` reached the Tokens API table, but
+      `focus ring` returned Number field sections because the generated document
+      never came back from `registrySearch` and `promotedNameRank` only ranked
+      candidates that did. `generatedNameHits` now synthesizes a page candidate
+      from each generated entry whose promoted name matches (the rule
+      `pageTitleHits` uses), and `mergeResults` promotes only the page, not a
+      text chunk at the same URL. The Tokens API function table has its own
+      entry derived from the real `@gpuixui/tokens` helper exports, so
+      `focus ring`, `elevation shadow` and `focusRing` reach
+      `/docs/tokens-api#functions`; `semantic roles` stays on the colour table
+      and `input`/`label` keep their component pages. Five forced defects,
+      86 files / 613 tests, `smoke:build` 96 pages with the three new queries.
 
 `[x]` **Search reads a page's authored summary (plan 568)** — `table` returned
       ten chunks of the Component pages guide, `panel` four Tabs sections and

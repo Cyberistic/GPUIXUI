@@ -20,6 +20,7 @@ import { iconSearchEntry } from "./icon-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import { source } from "./source";
 import { tokenSearchEntries } from "./token-search";
+import { tokensApiSearchEntry } from "./tokens-api-search";
 
 export const DEFAULT_SEARCH_LIMIT = 10;
 export const MAX_SEARCH_LIMIT = 50;
@@ -113,6 +114,7 @@ export const valueSearchIndex: Index = {
 const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
   accessibilitySearchEntry,
   ...tokenSearchEntries,
+  tokensApiSearchEntry,
   capabilitySearchEntry,
   iconSearchEntry,
   roadmapSearchEntry,
@@ -308,6 +310,30 @@ export const pageDescriptionHits = (
         ],
   );
 
+/**
+ * A generated document whose promoted name matches is a candidate even when the
+ * lexical index never returned it (plan 569): the index tokenises `focusRing`
+ * as one word, so `focus ring` never retrieves the table that names it. The
+ * synthesis applies the rule `pageTitleHits` uses for titles; the rank itself
+ * still comes from `promotedNameRank` in `mergeResults`.
+ */
+export const generatedNameHits = (
+  query: string,
+  entries: ReadonlyArray<GeneratedSearchEntry> = generatedEntries,
+): ReadonlyArray<SortedResult> =>
+  entries.flatMap((entry) =>
+    promotedNameRank(entry, query) === undefined
+      ? []
+      : [
+          {
+            id: `generated-name:${entry.index.url}`,
+            url: entry.index.url,
+            type: "page" as const,
+            content: entry.index.title,
+          },
+        ],
+  );
+
 interface Candidate {
   readonly result: SortedResult;
   readonly index: number;
@@ -365,7 +391,12 @@ export const mergeResults = (
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
-      const generated = generatedByUrl.get(result.url);
+      /**
+       * Only the document itself earns its promoted name; a text chunk inside
+       * the same URL (the Tokens API function table) is prose (plan 569).
+       */
+      const generated =
+        result.type === "page" ? generatedByUrl.get(result.url) : undefined;
       const page = result.type === "page" ? pages.get(result.url) : undefined;
       const pageTitleRank =
         result.type === "page" ? nameRank([result.content], query) : undefined;
@@ -439,6 +470,7 @@ export const search = async (
     [
       ...pageTitleHits(query),
       ...pageDescriptionHits(query, summaryPages),
+      ...generatedNameHits(query),
       ...registryResults,
     ],
     query,
