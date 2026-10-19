@@ -345,6 +345,21 @@ export interface FocusRing {
 }
 
 /**
+ * The runtime's single-shadow ring at the theme's focus thickness. Both focus
+ * rings share it, so they cannot disagree about the geometry the runtime
+ * paints.
+ */
+const ringShadow = (theme: Theme, color: string): FocusRing => ({
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 0,
+    spreadRadius: theme.borderWidth.strong,
+    color,
+  },
+});
+
+/**
  * The keyboard-focus ring.
  *
  * The published runtime has no `outline*` properties and no `focusVisible`
@@ -352,7 +367,8 @@ export interface FocusRing {
  * zero-blur shadow spread by the theme's `borderWidth.strong`. It draws outside
  * the border box and takes no layout space, which is what an outline would do.
  * Apply it while the control is focused: there is no way to tell a Tab from a
- * click.
+ * click. A control that failed validation paints {@link invalidFocusRing}
+ * instead.
  *
  * @example
  * ```tsx
@@ -365,15 +381,33 @@ export interface FocusRing {
  * ```
  */
 export function focusRing(theme: Theme): FocusRing {
-  return {
-    boxShadow: {
-      offsetX: 0,
-      offsetY: 0,
-      blurRadius: 0,
-      spreadRadius: theme.borderWidth.strong,
-      color: theme.colors.ring,
-    },
-  };
+  return ringShadow(theme, theme.colors.ring);
+}
+
+/**
+ * The focus ring of a control that failed validation.
+ *
+ * GPUix can draw only one ring — `boxShadow` is one shadow and there is no
+ * `outline*` — so an invalid field cannot show the normal ring and the error
+ * ring at once: the error colour becomes the focus indicator. This is the same
+ * geometry as {@link focusRing}, recoloured with `destructive`, which
+ * `invalidRingPairs` holds to the boundary floor on every surface a control sits
+ * on — the pressed `selectedActive` row and the four soft status fills
+ * included. Applying it to an invalid slider is wrong: a slider recolours its
+ * fill and thumb border, not its ring.
+ *
+ * @example
+ * ```tsx
+ * import { getTheme, invalidFocusRing } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ * const invalid = invalidFocusRing(theme);
+ *
+ * <input style={invalid} />;
+ * ```
+ */
+export function invalidFocusRing(theme: Theme): FocusRing {
+  return ringShadow(theme, theme.colors.destructive);
 }
 
 /** The inherited text-selection style. */

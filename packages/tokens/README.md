@@ -770,8 +770,12 @@ const focused = true;
 ```
 
 Apply it while the control is focused. A mouse press shows the ring too, because
-the runtime has no `:focus-visible` equivalent. A runnable example lives in
-[`src/focus-ring.example.ts`](./src/focus-ring.example.ts).
+the runtime has no `:focus-visible` equivalent. A failed field paints
+`invalidFocusRing(theme)` — the same geometry recoloured with `destructive`,
+the field's only focus indicator. A runnable example lives in
+[`src/focus-ring.example.ts`](./src/focus-ring.example.ts), and a failed
+field's edge and ring in
+[`src/invalid-focus-ring.example.ts`](./src/invalid-focus-ring.example.ts).
 
 A control that clips its shadow, or paints the indicator inside a filled cell,
 uses a border instead. `ring` is designed for the surface behind a control and

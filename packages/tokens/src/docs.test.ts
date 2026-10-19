@@ -3775,3 +3775,34 @@ describe("the panel action's rationale figures", () => {
     );
   });
 });
+
+describe("the invalid focus ring's resolver", () => {
+  it("is named wherever the focus contract is documented", () => {
+    expect(markdown).toContain("`invalidFocusRing(theme)`");
+    expect(designSystem).toContain("`invalidFocusRing(theme)`");
+    expect(readmeSource.replace(/\s+/g, " ")).toContain(
+      "`invalidFocusRing(theme)`",
+    );
+  });
+
+  it("links the executed failed-field example", () => {
+    expect(markdown).toContain(
+      "[`src/invalid-focus-ring.example.ts`](../packages/tokens/src/invalid-focus-ring.example.ts)",
+    );
+    expect(readmeSource).toContain(
+      "[`src/invalid-focus-ring.example.ts`](./src/invalid-focus-ring.example.ts)",
+    );
+  });
+
+  it("keeps the shared geometry and the error role", () => {
+    const theme = Tokens.getTheme("light");
+    const valid = Tokens.focusRing(theme).boxShadow;
+    const invalid = Tokens.invalidFocusRing(theme).boxShadow;
+
+    expect(invalid.color).toBe(theme.colors.destructive);
+    expect(invalid.offsetX).toBe(valid.offsetX);
+    expect(invalid.offsetY).toBe(valid.offsetY);
+    expect(invalid.blurRadius).toBe(valid.blurRadius);
+    expect(invalid.spreadRadius).toBe(valid.spreadRadius);
+  });
+});

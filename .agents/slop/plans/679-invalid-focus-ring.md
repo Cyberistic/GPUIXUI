@@ -1,12 +1,28 @@
 # Plan 679 — The invalid focus ring is a state with no resolver
 
-> **Status:** in progress 2026-10-19. Owner: `tokens-theme`. Paths touched:
+> **Status:** done 2026-10-19. Owner: `tokens-theme`. Paths touched:
 > `packages/tokens/src/styles.ts`,
 > `packages/tokens/src/invalid-focus-ring.example.ts` (new),
 > `packages/tokens/src/invalid-focus-ring.test.ts` (new),
 > `packages/tokens/src/docs.test.ts`, `docs/tokens.md`,
 > `docs/design-system.md`, `packages/tokens/README.md`, `COMPONENTS.md`,
 > `TODO.md`, `.agents/slop/plans/README.md`.
+
+## Execution record (2026-10-19)
+
+- `invalidFocusRing(theme)` ships in `src/styles.ts`, sharing a private
+  `ringShadow(theme, color)` with `focusRing`.
+- The new suite is 5/5 green; the package is **190 files / 6,716 tests** green.
+- `nub run check` (tests-can-fail, lint, format, type-check), `nub run lint` and
+  `nub run test` are green.
+- Both directions were proved by changing only the new function to
+  `return focusRing(theme);`: 4 cases in `invalid-focus-ring.test.ts` failed
+  (geometry, the all-sets difference, the copied theme's role, the example),
+  and restoring the implementation returned 5/5. The docs guards stayed green
+  in both directions because they hold the documents, not the implementation.
+- `scripts/verify-two-directions.sh` still targets `jj` (repo TODO), so the
+  manual revert above is the recorded evidence rather than a claim the script
+  ran.
 
 ## Why
 

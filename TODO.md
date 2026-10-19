@@ -91,7 +91,7 @@ bar with `xSoftForeground` on `popover`, which the contract measured only on its
 own soft fill, so an edited theme could erase a toast's tone while the checker
 returned `[]`; every shipped set passes (11.98:1 at the tightest), so no colour
 moves and the contract grows 333 → 337 (plan 348)
-`[~]` Give the invalid focus ring a resolver — `invalidRingPairs` publishes the
+`[x]` Give the invalid focus ring a resolver — `invalidRingPairs` publishes the
 `destructive` ring an error field shows and the runtime can draw only one ring,
 but every other measured state had a one-call helper while this one had none, so
 a consumer had to spread `focusRing` and replace its colour (`primitives`

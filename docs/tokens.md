@@ -28,6 +28,7 @@ import {
   highContrastDarkTheme,
   highContrastLightTheme,
   highContrastThemes,
+  invalidFocusRing,
   isDensityName,
   isHexColor,
   isStatusTone,
@@ -1469,7 +1470,10 @@ changes an element's size or position, because a shadow is painted outside the
 border box and takes no space in layout.
 
 An invalid control recolours that ring with `destructive` (the runtime can draw
-only one), so the error colour becomes the focus indicator. `invalidRingPairs`
+only one), so the error colour becomes the focus indicator. `invalidFocusRing(theme)`
+returns that ring: the same zero-offset, zero-blur geometry at
+`borderWidth.strong`, painted from the error role, so a consumer does not have
+to spread `focusRing` and replace its colour. `invalidRingPairs`
 holds it to the boundary floor on the surfaces a control sits on, which are not
 the field's own fill, the pressed `selectedActive` a focused field inside a
 chosen row keeps included; `destructive` on `background` is shared with the
@@ -1494,7 +1498,9 @@ that already has a border applies `borderColor` alone.
 
 A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts) and
-[`src/inset-focus-ring.example.ts`](../packages/tokens/src/inset-focus-ring.example.ts).
+[`src/inset-focus-ring.example.ts`](../packages/tokens/src/inset-focus-ring.example.ts);
+a failed field's edge and error ring are
+[`src/invalid-focus-ring.example.ts`](../packages/tokens/src/invalid-focus-ring.example.ts).
 
 ### A ring over arbitrary content
 
@@ -3041,7 +3047,9 @@ Rules:
    dividers.
 5. Focus is `focusRing(theme)`: a zero-offset, zero-blur `boxShadow` spread by
    `borderWidth.strong`. The runtime has no `outline*` and no `focusVisible`, so
-   the outer ring never changes layout. A control that clips the shadow, or
+   the outer ring never changes layout. A failed field paints
+   `invalidFocusRing(theme)` — the same geometry, recoloured with the error
+   role. A control that clips the shadow, or
    paints the indicator inside a filled cell, uses `insetFocusRing(theme,
    family)` — the family's on-colour at the same thickness. See [Focus](#focus).
 6. A filled control reads its resting, hover and pressed fills from

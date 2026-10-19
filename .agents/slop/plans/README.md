@@ -330,7 +330,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [673](./673-state-ladder-index.md) | The interaction ladders' ordered index | F | 502, 622, 651, 668, 672 | done |
 | [674](./674-disabled-press-surfaces.md) | The disabled label and the divider on the pressed selected row | F | 306, 335, 510, 650, 651, 671 | done |
 | [678](./678-default-platform-mono.md) | The Default platform variant must carry the identity's mono | B/F | 051, 063, 070, 535 | done |
-| [679](./679-invalid-focus-ring.md) | The invalid focus ring is a state with no resolver | F | 017, 340, 609, 671 | in progress |
+| [679](./679-invalid-focus-ring.md) | The invalid focus ring is a state with no resolver | F | 017, 340, 609, 671 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
