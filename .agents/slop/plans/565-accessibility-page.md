@@ -2,7 +2,7 @@
 
 **Workstream:** docs-site · **Phase:** F (information architecture and truth) ·
 **Depends on:** 410, 411, 412, 429, 443, 448, 454, 461, 479, 482, 491, 512,
-516 · **Status:** in progress
+516 · **Status:** done
 
 `MISSION.md` requires every component page to carry accessibility
 considerations and limitations, and every page does. What the site lacks is the
@@ -94,7 +94,9 @@ today, and `aria-checked` reaches only the Checkbox page's prose.
 | `apps/docs/src/components/aria-support-table.tsx` | new — supported and absent tables from `accessibility.ts` |
 | `apps/docs/src/components/accessibility-index.tsx` | new — delivered limitations grouped by tier from the registry |
 | `apps/docs/src/components/accessibility-index.test.tsx` | new — every delivered limited record, its exact strings, its link |
-| `apps/docs/src/accessibility-page.test.ts` | new — section order, the two generated blocks, the version and the links |
+| `apps/docs/src/accessibility-page.test.ts` | new — section order, the two generated blocks, the evidence limits, the links and the sidebar order |
+| `apps/docs/src/components/mdx.tsx` | register `AriaSupportTable` and `AccessibilityIndex` |
+| `apps/docs/src/mdx-components.test.ts` | new — every capitalised MDX tag a page uses is in the map the route provides (the regression guard for the measured failure below) |
 | `apps/docs/content/docs/accessibility.mdx` | new — the page |
 | `apps/docs/content/docs/meta.json` | add `accessibility` directly after `component-api` |
 | `apps/docs/content/docs/component-api.mdx` | replace the hand-written ARIA table with a link to the new page (keep the heading) |
@@ -217,20 +219,28 @@ is not verified.`
 | `accessibility.test.ts` — substitute | a row ships an empty meaning or substitute |
 | `accessibility.test.ts` — real run | the shipped module drifts from the installed declarations |
 | `accessibility-index.test.tsx` | a delivered limited record is dropped, duplicated or linked to the wrong anchor; a limitation string is retyped |
-| `accessibility-page.test.ts` | a section is renamed or removed; `<AriaSupportTable />` / `<AccessibilityIndex />` is lost; the page names a runtime version the package does not pin; the Component API link is lost |
+| `accessibility-page.test.ts` | a section is renamed or removed; `<AriaSupportTable />` / `<AccessibilityIndex />` is lost; the evidence-limit paragraphs or a cross-link are lost |
 | `accessibility-search.test.ts` | an attribute is not indexed; an attribute is not promoted; the limitation content is dropped |
 | `content.test.ts` | the page is on disk but absent from the sidebar |
-| `smoke:build` | the built page 404s, a fragment link misses, or `/api/search?query=aria-valuenow` no longer answers `/docs/accessibility` |
+| `mdx-components.test.ts` | a page uses a block `getMDXComponents()` does not provide (measured: the first build of this page) |
+| `smoke:build` | the built page 404s, loses its `<main>`/`<h1>`, a fragment link misses, or `/api/search?query=aria-valuenow` no longer answers `/docs/accessibility` |
 | `smoke:a11y` | the new tables or links violate WCAG 2.1 A/AA |
 
-Two-direction proofs to record in the plan after the run:
+Two-direction proofs measured on 2026-10-19 and reverted:
 
-1. `aria-checked` added to `supportedAria` → `accessibility.test.ts` fails by
-   name; reverted.
-2. `aria-valuenow` removed from the generated document → the search test and
-   the built query fail; reverted.
-3. One limitation string changed in `AccessibilityIndex` → the component test
-   fails with the expected string; reverted.
+1. `aria-label` renamed to `aria-checked` in `supportedAria` →
+   `accessibility.test.ts` failed with
+   `"aria-checked is listed as supported but HostProps does not declare it"` and
+   `"aria-checked is classified as both supported and absent"`; the required
+   suite reported `2 failed | 579 passed`. Reverted; the suite is green.
+2. `aria-valuenow` filtered out of the generated document →
+   `accessibility-search.test.ts` failed `indexes every supported and missing
+   attribute` (`[ 'aria-valuenow' ]`), `promotes an attribute to the
+   accessibility page`, and the integration test in `search.test.ts` failed by
+   name: `3 failed | 578 passed`. Reverted; green.
+3. `AccessibilityIndex` rendered every limitation but the last →
+   `accessibility-index.test.tsx` failed `prints the exact limitation strings
+   the page's status block shows`: `1 failed | 580 passed`. Reverted; green.
 
 ## 7. STOP conditions
 
@@ -259,3 +269,24 @@ Two-direction proofs to record in the plan after the run:
 - `nub run --filter docs test`, `check-types`, `build`, `smoke:build`,
   `smoke:a11y -- --only /docs/accessibility`, `nub run check` and
   `nub run lint` pass; the two-direction proofs above are recorded.
+
+## 9. Measured result (2026-10-19)
+
+- **Unit suite:** 84 files / 584 tests pass (was 79 / 557).
+- **Type-check and build:** `check-types` exits `0`; `build` exits `0`.
+- **Built crawl:** `smoke:build --no-build` reports `sitemap 96 pages`,
+  `pages 96 checked`, `anchors 1259 checked`, `search checked`, `ok` (was 95
+  pages).
+- **Accessibility sweep:** `smoke:a11y --only /docs/accessibility` reports
+  `1 pages × 2 schemes, 0 violations`.
+- **Measured defect the crawl caught first:** the initial page used
+  `<AriaSupportTable />` and `<AccessibilityIndex />` before they were
+  registered in `src/components/mdx.tsx`. The head emitted, the sitemap listed
+  96 pages, and the page body was empty — `smoke:build` failed with
+  `expected one <h1>, found 0`, `expected one <main>, found 0` and
+  `#nd-page has no element with that id`. Registering the two components fixed
+  it. Removing `AriaSupportTable` from the map again makes
+  `mdx-components.test.ts` fail with `[ 'AriaSupportTable' ]`, which is the
+  regression guard; it is registered and the suite is green.
+- **Two-direction proofs:** §6 records the three forced defects and the exact
+  failing assertions.

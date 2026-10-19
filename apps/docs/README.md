@@ -492,6 +492,24 @@ and 481). The built-site smoke check queries a component name, a limitation and
 a part name, so a production index that stopped seeing those fields fails the
 release gate.
 
+## Accessibility
+
+`/docs/accessibility` is the cross-cutting answer a consumer needs before
+adopting the library: the `aria-*` surface the pinned `@gpuix/native` accepts,
+the library's substitute for every attribute it lacks, and every delivered
+component's recorded limitations.
+
+The supported and absent sets live in `src/lib/accessibility.ts` and are
+rendered by `<AriaSupportTable />`; `src/lib/accessibility.test.ts` parses
+`interface HostProps` from the installed declarations, so a dependency change
+fails the suite instead of leaving the page stale. `<AccessibilityIndex />`
+renders the registry's `limitations`, grouped by tier, and
+`accessibility-index.test.tsx` compares the markup with the registry in both
+directions. Both tables are rendered React, so the Fumadocs page index cannot
+see them (D32): `src/lib/accessibility-search.ts` gives them their own document,
+`smoke:build` asserts `aria-valuenow` reaches the page, and `smoke:a11y` covers
+it in both schemes.
+
 ## Capabilities
 
 `/docs/capabilities` renders the measured GPUix matrix (plan 448) from

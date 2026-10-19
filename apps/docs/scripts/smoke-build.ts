@@ -710,6 +710,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "an icon name from the generated catalogue",
     },
+    {
+      query: "aria-valuenow",
+      expected: "/docs/accessibility",
+      first: true,
+      what: "a missing ARIA attribute from the generated accessibility index",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

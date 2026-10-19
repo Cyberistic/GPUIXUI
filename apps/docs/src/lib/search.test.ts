@@ -209,6 +209,16 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/api-values");
   });
 
+  it("finds an ARIA attribute on the generated accessibility page", async () => {
+    const results = await search("aria-valuenow", 5);
+    expect(results[0]?.url).toBe("/docs/accessibility");
+    expect(await search("checkbox", 5)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ url: "/docs/components/checkbox" }),
+      ]),
+    );
+  });
+
   it("does not invent a part that no record declares", async () => {
     expect(await search("DialogTitleProbe")).toEqual([]);
   });

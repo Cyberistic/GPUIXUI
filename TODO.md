@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–562)
+## Docs site workstream (plans 410–499, plus 500–565)
 
-`[x]` `[██████████]` 131/131
+`[x]` `[██████████]` 132/132
+
+`[x]` **The accessibility page derives its claims from the runtime (plan 565)** —
+      `/docs/accessibility` states the supported and absent `aria-*` sets, the
+      substitute for every gap, every delivered component's recorded
+      limitations, and the limits of the evidence; `accessibility.test.ts`
+      parses the installed `@gpuix/native` declarations in both directions,
+      `<AccessibilityIndex />` is compared with the registry, a generated
+      document keeps `aria-valuenow` searchable, and the built crawl and axe
+      sweep pass.
 
 `[x]` **Search finds a promoted name the way prose writes it (plan 564)** —
       promoted names matched only their exact spelling, so `file tree` returned

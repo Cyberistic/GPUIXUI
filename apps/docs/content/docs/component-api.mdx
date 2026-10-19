@@ -125,18 +125,13 @@ it adds on top:
 
 ## Accessibility
 
-Only the props GPUix actually accepts are used:
-
-| Supported | Not available in 0.10.0 |
-| --------- | ----------------------- |
-| `role`, `aria-label`, `aria-description`, `aria-id` | `aria-labelledby`, `aria-describedby`, `aria-controls` |
-| `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level` | `aria-checked`, `aria-current`, `aria-valuenow`, `aria-modal` |
-| `tabIndex`, `autoFocus`, and the renderer's focus traversal | a visible-focus flag — a mouse press can paint the ring |
-
-A component that needs a missing attribute uses the strongest supported
-alternative (a required `label`, `aria-selected` or `aria-valuetext`) and records
-the gap in **Accessibility and limitations** on its page. The measured support
-matrix, with the evidence for each row, is on
+Only the props GPUix actually accepts are used. The complete supported and
+absent sets — with the substitute the library ships for every gap — are
+generated from the installed runtime's declarations on
+[Accessibility](/docs/accessibility). A component that needs a missing attribute
+uses the strongest supported alternative (a required `label`, `aria-selected`
+or `aria-valuetext`) and records the gap in **Accessibility and limitations** on
+its page. The measured support matrix, with the evidence for each row, is on
 [GPUix capabilities](/docs/capabilities).
 
 ## State ownership

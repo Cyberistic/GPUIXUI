@@ -1,0 +1,115 @@
+---
+title: Accessibility
+description: What assistive technology receives from the pinned GPUix runtime, what the library substitutes, and what is not verified.
+---
+
+GPUix is not the DOM. Components render host elements into GPUI, and assistive
+technology reads an AccessKit tree instead of HTML. That tree is real, but its
+ARIA surface is smaller than the web's. This page states that surface, what the
+library does when an attribute is missing, and which components record a gap.
+
+## What assistive technology sees
+
+A node enters the tree only when it has a `role`; `role="presentation"` removes
+it. The pinned `@gpuix/native` accepts the attributes and host props below, and
+no other `aria-*` attribute. The table is generated from
+`src/lib/accessibility.ts`, and a test parses the installed declarations, so a
+dependency change cannot leave a stale claim here.
+
+<AriaSupportTable />
+
+[Component API](/docs/component-api#accessibility) explains how the supported
+set is used, and [GPUix capabilities](/docs/capabilities) records the measured
+verdicts behind the runtime itself.
+
+## Missing attributes have substitutes
+
+Three rules, in order:
+
+1. **Use the supported attribute.** A control's name is `aria-label`; a tab,
+   option or row uses `aria-selected`; a slider, meter or bar reports through
+   `aria-valuetext`.
+2. **Use the strongest supported alternative.** `Checkbox` and `Switch` carry
+   `checked`, `unchecked` or `mixed` on `aria-valuetext` because there is no
+   `aria-checked`. `Dialog` requires a `label` and traps Tab because there is no
+   `aria-modal`. `CommandMenu` moves native focus to the highlighted row because
+   there is no `aria-activedescendant`.
+3. **Record what remains.** A gap with no substitute is written on the
+   component's page under **Accessibility and limitations** — never faked with
+   an attribute the runtime drops.
+
+`Label` is the visible text beside a field; it does not label the control. The
+control owns its name through the required `label` prop, because
+`aria-labelledby` does not exist. This is a library-wide rule, not a per-page
+choice.
+
+## Keyboard
+
+The shared contract is on [Component API](/docs/component-api#keyboard): Enter
+activates on key down, Space on key up, one roving tab stop per composite,
+arrows wrap and skip disabled parts, Home and End land on the nearest enabled
+end, and Escape closes an overlay and returns focus. Each component page lists
+the keys it adds.
+
+`@gpuix/native` has no `preventDefault` and no `defaultPrevented`, so a Space
+press inside a scroll container can also scroll. No component pretends
+otherwise.
+
+## Recorded limitations
+
+The registry records each delivered component's known gaps. The same strings
+appear in the status block above each component page; the rows below link to
+the section that explains them.
+
+<AccessibilityIndex />
+
+## What is verified
+
+- **Native suites** drive each delivered component in the real GPUix renderer
+  and assert AccessKit roles, names and value text where the behaviour depends
+  on them. [Native testing](/docs/native-testing) describes the harness, the
+  exit contract and the scenarios.
+- **The docs site** runs axe-core over every page in light and dark, a keyboard
+  gate for the skip link and focus ring, and browser gates for theme, platform,
+  responsive layout and search. [Contributing](/docs/contributing) lists the
+  commands and what each proves.
+- **The page template** requires every component page to keep an
+  **Accessibility and limitations** section;
+  [Component pages](/docs/component-pages) documents the contract.
+
+## What is not verified
+
+- **No manual screen-reader session is recorded.** The native assertions read
+  the AccessKit tree; they do not prove how VoiceOver, Narrator or Orca
+  announces a node, and no such run is claimed here.
+- **The live surface on this site is a canvas.** The WebAssembly renderer draws
+  into a canvas element, which browser accessibility APIs do not expose. The
+  source and the accessibility section on the page are the readable
+  description; the native suites remain the interaction evidence.
+- **Focus is not distinguishable by input.** The runtime has no
+  `focusVisible`, so a pointer press paints the same ring as Tab.
+- **No live-region attributes.** `role="status"` on toasts and `role="alert"` on
+  alerts are set, but `aria-live` and `aria-atomic` do not exist, and a later
+  insertion's announcement is not verified. Put important outcomes in text as
+  well.
+
+## Building accessibly
+
+- Give every icon-only control a `label`; the component cannot infer a name.
+- Keep a visible `Label` beside every field and pass the same text as `label`.
+- Do not rely on colour alone: pair it with an icon, text or `aria-selected`.
+- Keep the important outcome in visible text, not only in a toast.
+- Keep a logical tab order with `tabIndex`, and restore focus yourself when a
+  surface unmounts outside the components that own a dismiss stack.
+- Test with the assistive technology on your target platform. The library
+  targets macOS, Linux and Windows; a browser test cannot stand in for the
+  desktop AT.
+
+## Related
+
+- [Component API](/docs/component-api) — parts, controlled state and the shared
+  keyboard module.
+- [GPUix capabilities](/docs/capabilities) — every measured runtime verdict.
+- [Native testing](/docs/native-testing) — what the real renderer proves.
+- [Components](/docs/components) — the searchable inventory.
+- [Contributing](/docs/contributing) — the gates named above.

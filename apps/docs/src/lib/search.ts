@@ -7,6 +7,7 @@ import {
 import { components } from "@/component-meta/registry";
 import type { ComponentMetaInput } from "@/component-meta/schema";
 import { componentSymbols } from "@/component-meta/symbols";
+import { accessibilitySearchEntry } from "./accessibility-search";
 import { valueExports } from "./api-values.generated";
 import { capabilitySearchEntry } from "./capability-search";
 import {
@@ -81,6 +82,7 @@ export const valueSearchIndex: Index = {
 };
 
 const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
+  accessibilitySearchEntry,
   ...tokenSearchEntries,
   capabilitySearchEntry,
   iconSearchEntry,
