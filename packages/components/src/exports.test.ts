@@ -20,11 +20,18 @@
  * Plan 380 added the last check: the JSX-runtime shim that makes the package
  * loadable from source (`src/internal/jsx-runtime.ts`) carries a copy of the
  * installed declaration's intrinsic map, and that copy must not drift.
+ *
+ * Plan 676 adds the load itself: every specifier the export map publishes is
+ * imported through the package name, because a target that exists can still
+ * throw at import time (a broken top-level import, a missing conditional
+ * export, a circular initialisation).
  */
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { Effect } from "effect";
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
@@ -77,6 +84,28 @@ const documentedSpecifiers = (): ReadonlyArray<string> => {
     ),
   );
 };
+
+/** Every specifier the export map publishes, through the package name. */
+const publishedSpecifiers = (): ReadonlyArray<string> =>
+  sorted(
+    Arr.map(Object.keys(exportsMap()), (key) =>
+      key === "."
+        ? "@gpuixui/components"
+        : `@gpuixui/components/${key.slice(2)}`,
+    ),
+  );
+
+/** `None` when `specifier` loads, `Some` with the reason when it does not. */
+const loadFailure = (specifier: string): Effect.Effect<Option.Option<string>> =>
+  Effect.tryPromise({
+    try: () => import(specifier),
+    catch: (cause) => `${specifier}: ${String(cause)}`,
+  }).pipe(
+    Effect.match({
+      onFailure: (message) => Option.some(message),
+      onSuccess: () => Option.none<string>(),
+    }),
+  );
 
 /** The public modules: the `src/*.tsx` files that are not tests. */
 const publicModules = (): ReadonlyArray<string> =>
@@ -133,6 +162,20 @@ describe("package exports", () => {
     });
 
     expect(sorted(problems)).toEqual([]);
+  });
+
+  it("loads every published entry point", async () => {
+    // The test harness is the runtime boundary (EF-21).
+    const failures = await Effect.runPromise(
+      Effect.map(
+        Effect.forEach(publishedSpecifiers(), loadFailure, {
+          concurrency: "unbounded",
+        }),
+        Arr.getSomes,
+      ),
+    );
+
+    expect(failures).toEqual([]);
   });
 
   it("points every export at a file that exists", () => {

@@ -1243,9 +1243,13 @@ the docs-site workstream; the `packages/components` half is plan 337)
 
 ## Phase G — release readiness
 
-`[~]` `[███░░░░░░░]` 1/3
+`[~]` `[████░░░░░░]` 2/4
 
-`[ ]` Clean-environment install and public-export checks
+`[ ]` Clean-environment install (fresh checkout, native binding and network)
+`[x]` Public-export checks — plan 676: every specifier in the export map loads
+      through the package name (45 entries), not merely resolves on disk; the
+      check reports Node's own module error when one is not exported. 8 checks
+      in `src/exports.test.ts`, unit 474
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 660/661):
