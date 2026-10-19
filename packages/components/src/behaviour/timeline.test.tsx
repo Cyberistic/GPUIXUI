@@ -7,9 +7,10 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { darkTheme, lightTheme } from "../internal/theme.js";
-import { nodesWithRole } from "../internal/a11y.js";
+import { nodesNamed, nodesWithRole } from "../internal/a11y.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -66,6 +67,15 @@ const railChildCount = (root: ComponentTestRoot, testId: string): number => {
   return root.renderer.getElement(railId)?.children.length ?? 0;
 };
 
+/** The first description among the nodes named `name`, or `None`. */
+const descriptionOf = (
+  root: ComponentTestRoot,
+  name: string,
+): Option.Option<string> =>
+  Option.firstSomeOf(
+    Arr.map(nodesNamed(root.renderer, name), (node) => node.description),
+  );
+
 describe("Timeline", () => {
   it("renders events in declaration order with timestamp, title and description", () => {
     const history = renderComponent(<History />);
@@ -102,6 +112,37 @@ describe("Timeline", () => {
         Option.contains(node.selected, true),
       ),
     ).toEqual([false, true, false]);
+
+    history.unmount();
+  });
+
+  it("announces complete, current and upcoming on the events", () => {
+    const history = renderComponent(<History />);
+
+    const rows = nodesWithRole(history.renderer, "listitem");
+    expect(rows.map((row) => Option.getOrUndefined(row.description))).toEqual([
+      "Complete",
+      "Current",
+      "Upcoming",
+    ]);
+
+    history.unmount();
+  });
+
+  it("keeps a caller's description and appends the status", () => {
+    const history = renderComponent(
+      <Timeline label="Deploy history">
+        <TimelineItem
+          title="Deploy"
+          status="upcoming"
+          aria-description="Runs after approval"
+        />
+      </Timeline>,
+    );
+
+    expect(descriptionOf(history, "Deploy")).toEqual(
+      Option.some("Runs after approval. Upcoming"),
+    );
 
     history.unmount();
   });

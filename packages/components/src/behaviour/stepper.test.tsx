@@ -8,9 +8,10 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { darkTheme, lightTheme } from "../internal/theme.js";
-import { nodesWithRole } from "../internal/a11y.js";
+import { nodesNamed, nodesWithRole } from "../internal/a11y.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -39,6 +40,15 @@ const marker = (root: ComponentTestRoot, step: number) => {
   if (text?.parentId == null) return undefined;
   return root.renderer.getElement(text.parentId);
 };
+
+/** The first description among the nodes named `name`, or `None`. */
+const descriptionOf = (
+  root: ComponentTestRoot,
+  name: string,
+): Option.Option<string> =>
+  Option.firstSomeOf(
+    Arr.map(nodesNamed(root.renderer, name), (node) => node.description),
+  );
 
 describe("Stepper", () => {
   it("renders every step in declaration order with its label and description", () => {
@@ -90,6 +100,41 @@ describe("Stepper", () => {
       true,
       false,
     ]);
+
+    stepper.unmount();
+  });
+
+  it("announces complete, current and upcoming on the rows", () => {
+    const stepper = renderComponent(<Checkout value={2} />);
+
+    const rows = nodesWithRole(stepper.renderer, "listitem");
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => Option.getOrUndefined(row.description))).toEqual([
+      "Complete",
+      "Current",
+      "Upcoming",
+    ]);
+
+    stepper.unmount();
+  });
+
+  it("keeps a caller's description and appends the status", () => {
+    const stepper = renderComponent(
+      <Stepper value={2} label="Checkout">
+        <StepperStep
+          value={1}
+          label="Account"
+          description="Email and password"
+          aria-description="Use your work email"
+        />
+        <StepperStep value={2} label="Billing" />
+      </Stepper>,
+    );
+
+    expect(descriptionOf(stepper, "Account")).toEqual(
+      Option.some("Use your work email. Complete"),
+    );
+    expect(descriptionOf(stepper, "Billing")).toEqual(Option.some("Current"));
 
     stepper.unmount();
   });

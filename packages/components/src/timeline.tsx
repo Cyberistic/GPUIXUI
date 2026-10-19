@@ -24,6 +24,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { statusDescription } from "./internal/state-description.js";
 import { textStyle, useTheme, type Theme } from "./internal/theme.js";
 
 /** Where an event sits in the history. */
@@ -114,13 +115,15 @@ export interface TimelineItemState {
   readonly last: boolean;
 }
 
-/** One event: timestamp, dot, connector, title and optional description. */
+/** One event: timestamp, dot, connector, title and optional description. The
+ *  row announces its status ("Complete", "Current" or "Upcoming"). */
 export const TimelineItem = ({
   title,
   description,
   timestamp,
   status = "complete",
   style,
+  "aria-description": authoredDescription,
   ...rest
 }: TimelineItemProps) => {
   const theme = useTheme();
@@ -132,6 +135,7 @@ export const TimelineItem = ({
       aria-label={title}
       aria-selected={status === "current"}
       {...rest}
+      {...statusDescription(status, authoredDescription)}
       style={mergeStyles(
         {
           display: "flex",

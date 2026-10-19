@@ -92,9 +92,12 @@ change — see [Theming](/docs/theming).
 - The root is a named `list` when `label` is given; every event is a `listitem`
   named by its `title`, so the timestamp and description are not repeated in the
   accessible name.
-- The current event carries `aria-selected` (no `aria-current` in 0.10.0).
-- The dot is decorative; status reaches assistive technology only through that
-  selected flag, not through a "complete/upcoming" announcement.
+- Every event announces its state through `aria-description`: **Complete**,
+  **Current** or **Upcoming**. A description you author on the item is kept and
+  the status is appended after it (`Runs after approval. Upcoming`).
+- The current event also carries `aria-selected` (no `aria-current` in 0.10.0).
+- The dot is decorative; the three states reach assistive technology through the
+  description, so colour is never the only signal.
 
 ## Limitations
 
@@ -103,13 +106,15 @@ change — see [Theming](/docs/theming).
   fragment is one child, so every event in it would be treated as last; pass
   items directly.
 - No connector styles beyond the single `border`-coloured line.
-- No `aria-current`, so only the current event is announced, via `aria-selected`.
+- No `aria-current`; the current event carries `aria-selected` instead, and all
+  three states are described through `aria-description`.
 - No grouping or collapsing of old events in v1.
 
 ## Verification
 
-`src/behaviour/timeline.test.tsx` runs in the real GPUix renderer (6 tests):
+`src/behaviour/timeline.test.tsx` runs in the real GPUix renderer (8 tests):
 declaration order, list/listitem roles, exactly one selected current event, the
+three status descriptions, a caller description joined with the status, the
 three dot fills, a connector after every event but the last, and a style callback
 receiving `{ status, last }` in both themes.
 

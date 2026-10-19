@@ -412,6 +412,14 @@ retired once both branches are one
       `popoverForeground` and `mutedForeground`; 1 new + 2 strengthened native
       cases (Dropdown menu 53), both-direction proof; docs, `COMPONENTS.md`
       (owner: components)
+    - [x] A status list announces its rows — plan 626: `StepperStep` and
+      `TimelineItem` exposed only the current row (`aria-selected`); complete
+      and upcoming were colour-only, so assistive technology heard three
+      identical list items. Both now append `Complete`/`Current`/`Upcoming`
+      through the shared `statusDescription` joiner, keeping a caller's own
+      description first; 4 new native cases (Stepper 10, Timeline 8), the four
+      failing on the old source; docs, `docs/component-api.md`, `COMPONENTS.md`
+      and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

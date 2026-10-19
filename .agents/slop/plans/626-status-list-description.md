@@ -148,7 +148,7 @@ it("announces complete, current and upcoming on the rows", () => {
 
 it("keeps a caller's description and appends the status", () => {
   const stepper = renderComponent(
-    <Stepper value={1} label="Checkout">
+    <Stepper value={2} label="Checkout">
       <StepperStep
         value={1}
         label="Account"
@@ -159,23 +159,22 @@ it("keeps a caller's description and appends the status", () => {
     </Stepper>,
   );
 
-  expect(
-    Option.getOrUndefined(
-      nodesNamed(stepper.renderer, "Account")[0]?.description,
-    ),
-  ).toBe("Use your work email. Complete");
-  expect(
-    Option.getOrUndefined(
-      nodesNamed(stepper.renderer, "Billing")[0]?.description,
-    ),
-  ).toBe("Upcoming");
+  expect(descriptionOf(stepper, "Account")).toEqual(
+    Option.some("Use your work email. Complete"),
+  );
+  expect(descriptionOf(stepper, "Billing")).toEqual(
+    Option.some("Current"),
+  );
 
   stepper.unmount();
 });
 ```
 
-The first case fails on the old source with `[None, None, None]`; the second
-fails with `"Use your work email"` (the status is missing).
+`descriptionOf` takes the first description across the nodes with that name,
+because the dump carries both the row and its text node; the disabled-description
+suite uses the same rule. The first case fails on the old source with
+`[None, None, None]`; the second fails with `"Use your work email"` (the status
+is missing).
 
 ### 3.2 `packages/components/src/behaviour/timeline.test.tsx`
 
@@ -204,17 +203,16 @@ it("keeps a caller's description and appends the status", () => {
     </Timeline>,
   );
 
-  expect(
-    Option.getOrUndefined(
-      nodesNamed(history.renderer, "Deploy")[0]?.description,
-    ),
-  ).toBe("Runs after approval. Upcoming");
+  expect(descriptionOf(history, "Deploy")).toEqual(
+    Option.some("Runs after approval. Upcoming"),
+  );
 
   history.unmount();
 });
 ```
 
-Import `nodesNamed` beside `nodesWithRole`.
+Import `nodesNamed` beside `nodesWithRole` and use the same `descriptionOf`
+helper as above (first description across the matching nodes).
 
 The first case fails on the old source with `[None, None, None]`; the second fails
 with the authored text only.
@@ -237,24 +235,32 @@ Run from `workspaces/components`, in this order:
 
 1. Add the four tests only, then:
    `cd packages/components && nub run test:behaviour src/behaviour/stepper.test.tsx src/behaviour/timeline.test.tsx`
-   - **Expected before the source change:** 4 failed / 10 passed, the four new
-     cases failing on `None` or the authored-only description. Record the exact
-     output in this plan. If they pass, STOP: the tests are not guarding the
-     change.
+   - **Measured before the source change:** 4 failed / 14 passed of 18. The two
+     status cases reported `[undefined, undefined, undefined]` and the two
+     caller-description cases reported `undefined`; the other 14 cases passed.
+     If they pass, STOP: the tests are not guarding the change.
 2. Apply §2, then rerun the same command.
-   - **Expected after:** 14 passed / 0 failed. Any failure on a bounds or focus
-     signal is the recorded plan-540 defect; record it instead of weakening the
-     assertion.
+   - **Measured after:** 18 passed / 0 failed. No bounds or focus case is in
+     these two suites, so the plan-540 defects are not involved. The first pass
+     also measured a test-harness fact: `nodesNamed(name)[0]` can be the text
+     node rather than the row, so the final helper takes the first non-empty
+     description across the matches — the rule the disabled-description suite
+     already uses.
 3. `cd packages/components && nub run test`
-   - **Expected:** 45 files, 454 tests, all pass (`inventory.test.ts` re-reads the
+   - **Measured:** 45 files, 454 tests, all pass (`inventory.test.ts` re-reads the
      docs counts).
 4. `cd packages/components && nub run check-types`
-   - **Expected:** exit 0, no output.
+   - **Measured:** exit 0, no output.
 5. `nub run check` from the worktree root
-   - **Expected:** exit 0. If `fmt` fails, run `nub run fmt:fix` once and rerun;
-     record that the first run failed formatting.
+   - **Measured:** the first run stopped at `fmt` with
+     `packages/components/src/behaviour/stepper.test.tsx` unformatted; after
+     `nub run fmt:fix` the rerun passed `check:tests`, `lint`, `fmt` and every
+     package's `check-types`.
 6. `nub run lint`
-   - **Expected:** exit 0.
+   - **Measured:** exit 0.
+7. `cd packages/components && nub run test:behaviour src/behaviour/disabled-description.test.tsx`
+   - **Measured:** 12 passed / 0 failed, proving the extracted joiner did not
+     change the disabled description contract.
 
 ## 5. Docs and ledger
 

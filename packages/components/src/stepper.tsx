@@ -27,6 +27,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { statusDescription } from "./internal/state-description.js";
 import {
   controlHeight,
   textStyle,
@@ -146,12 +147,14 @@ export interface StepperStepState {
   readonly status: StepperStatus;
 }
 
-/** One numbered step: marker, name and optional description. */
+/** One numbered step: marker, name and optional description. The row announces
+ *  its derived status ("Complete", "Current" or "Upcoming"). */
 export const StepperStep = ({
   value,
   label,
   description,
   style,
+  "aria-description": authoredDescription,
   ...rest
 }: StepperStepProps) => {
   const theme = useTheme();
@@ -166,6 +169,7 @@ export const StepperStep = ({
       aria-label={label}
       aria-selected={status === "current"}
       {...rest}
+      {...statusDescription(status, authoredDescription)}
       style={mergeStyles(
         {
           display: "flex",

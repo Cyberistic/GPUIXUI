@@ -89,23 +89,29 @@ A custom theme changes the whole indicator with no code change — see
 
 - The root is a named list when `label` is given; every step is a `listitem`
   named by its `label`.
-- `@gpuix/native@0.10.0` has no `aria-current`, so the current step carries
+- Every step announces its status through `aria-description`: **Complete**,
+  **Current** or **Upcoming**. A description you author on the step is kept and
+  the status is appended after it (`Use your work email. Complete`).
+- `@gpuix/native@0.10.0` has no `aria-current`, so the current step also carries
   `aria-selected` — the same substitution Pagination uses.
 - The number marker is visual; the step's accessible name does not include it, so
-  a screen reader hears "Billing", not "2 Billing".
+  a screen reader hears "Billing", not "2 Billing". Its status follows as the
+  description.
 
 ## Limitations
 
 - Display-only: there is no step click, disabled policy or `onValueChange`.
 - No connector line between steps; the runtime has no pseudo-elements and the
   contract fixes two parts.
-- No `aria-current` in 0.10.0.
+- No `aria-current` in 0.10.0; current is `aria-selected` and all three states are
+  described through `aria-description`.
 
 ## Verification
 
-`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer (8 tests): step
+`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer (10 tests): step
 order with labels and descriptions, derived statuses in both themes, the selected
-current step, label colours per status, both orientations, list naming, a consumer
+current step, the three status descriptions, a caller description joined with
+the status, label colours per status, both orientations, list naming, a consumer
 `style` winning, and `style` callbacks receiving the status.
 
 ```sh

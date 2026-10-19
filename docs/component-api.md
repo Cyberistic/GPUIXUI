@@ -183,6 +183,13 @@ a description, not a disabled role: assistive technology hears that the control
 is unavailable while the host still exposes it as an ordinary control (plan
 `516`).
 
+**A derived status is described, not only painted.** A non-interactive row that
+derives a state from its position announces it through the same supported
+channel: `StepperStep` and `TimelineItem` append `Complete`, `Current` or
+`Upcoming` to the caller's description (plan `626`). `aria-selected` still marks
+the current row because 0.10.0 has no `aria-current`; colour is never the only
+carrier of a status.
+
 **A focus cue needs a focus signal.** A part seeds its `focused` state from
 `autoFocus` and follows React `focus`/`blur` afterwards. The headless
 `TestRenderer` delivers neither for `focusElement`, `focusNext` or a pointer
