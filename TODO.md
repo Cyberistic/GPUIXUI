@@ -73,12 +73,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 111/111 plans-and-harness
 
-`[~]` Re-run the **promotion gate on the head that includes the live capture
+`[x]` Re-run the **promotion gate on the head that includes the live capture
       CLI** per plan `657`: plan `656` changed the live runner's shared
       `program`/`mount` path after the last full gate (`655` on `651e2419`), and
-      only `live-shell` had exercised it. Headless and live registries run in
-      full; the exact ids are both whole registries (`--all`). Owner performs
-      the merge.
+      only `live-shell` had exercised it. Both full registries ran on `034d78df`:
+      headless **105/105** (**3765** checks, 65 capabilities, 136.3 s) and live
+      **94/94** (**2447** checks, 61 capabilities, **921.6 s**), both exit `0`;
+      `live-shell` passed through the capture-capable runner and a plain
+      `--all` wrote **no** frame and **no** `provenance.json`. `nub run check`,
+      `nub run lint` and `nub run test` pass (playground **439**, testing 61,
+      components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
+      Exact ids: the whole headless registry and the whole live registry
+      (`--all`). This supersedes plan `655`'s 94/94 on `651e2419` and is the
+      gate for the promotion merge; the owner/supervisor performs the merge.
 
 `[x]` Give the **live runner** the capture contract the docs publish per plan
       `656`: `--capture <dir>` writes one frame per selected scenario after the
@@ -1541,6 +1548,13 @@ focused id is `live-frames`.
       independent full run on the same head passed **94/94** (**2447** checks,
       61 capabilities, 989.9 s) and headless **105/105** (3765 checks), both exit
       `0`; the playground README and `COMPONENTS.md` now cite that run.
+      **Addendum (plan `657`):** plan `656` then changed the live runner's
+      shared `program`/`mount` path (capture/commit), so the whole registry ran
+      again on `034d78df`: live **94/94** (**2447** checks, 61 capabilities,
+      **921.6 s**), headless **105/105** (**3765** checks, 65 capabilities),
+      both exit `0`, `live-shell` included through the capture-capable runner
+      and a plain `--all` writing no frame or sidecar. This is now the gate for
+      the promotion merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

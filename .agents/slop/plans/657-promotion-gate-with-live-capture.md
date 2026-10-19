@@ -178,3 +178,34 @@ summary.
 
 Executed 2026-10-19 on head `034d78df` (the plan-`656` docs commit; the code
 commit is `004dce6b`, and the head contains every commit of `origin/master`).
+
+- **Preflight:** `nub run --filter playground test` → **439** tests in 37 files,
+  exit `0` (plan `656`'s three capture/CLI cases present); `nub run --filter
+  playground build` → exit `0`; `--list` → **105** headless and **94** live ids.
+  Both registry guards pass as part of the suite.
+- **Headless:** `105/105`, **3765** checks, 65 capabilities, **136.3 s**, exit
+  `0` (`.artifacts/smoke-report.json`; host `gpuix TestRenderer darwin-x64
+  @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`).
+- **Live:** `94/94`, **2447** checks, 61 capabilities, **921.6 s**, exit `0`
+  (`.artifacts/live-report.json`; host `gpuix live window darwin-x64
+  @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`).
+  `live-shell` passed through the capture-capable `program`/`mount` path. A
+  plain `--all` wrote **no** `provenance.json` anywhere under
+  `apps/playground/.artifacts` (the ad-hoc per-scenario frames in
+  `.artifacts/live/` are unchanged, as plan `656` scoped them).
+- **Same checks as before the runner change:** the live total is **2447**
+  checks, identical to plan `655`'s 94/94 run on `651e2419`; only the wall-clock
+  duration differs (921.6 s vs 989.9 s). The capture branch is therefore inert
+  when `--capture` is absent, which is the claim plan `656` §2 rule 5 made.
+- **Gates:** `nub run check`, `nub run lint` and `nub run test` green
+  (playground **439**, testing 61, components 308, primitives 282, tokens 196,
+  tw 103, icons 19, docs 7).
+- **Ledgers:** `TODO.md` (new ticked gate row + the promotion addendum),
+  `COMPONENTS.md` (both totals, the 93 → **94** registered-live correction and
+  the real-window paragraph) and `apps/playground/README.md` (both gate
+  paragraphs) now cite this run.
+- **Left for the owner/supervisor:** the fast-forward merge of
+  `agent/playground` into `main`. The workstream never pushes to `master`.
+
+No source, scenario or host verb changed; the only writes are the plan and the
+ledger rows listed in §2.

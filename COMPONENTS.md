@@ -97,7 +97,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3765 checks**, 65 capabilities). The live suite **last ran in full at 94/94**
-(`live-report.json`, **2447 checks**, 61 capabilities, 989.9 s, exit `0`) on
+(`live-report.json`, **2447 checks**, 61 capabilities, 921.6 s, exit `0`) on
 2026-10-19, the merge/release gate on the final branch; it covered every live
 scenario registered at that point, including `live-scale` (plan `620`, the
 retained-tree cost model in a window), `live-selection-signal` (plan `615`,
@@ -106,11 +106,12 @@ layering and focus contract), `live-text-entry` (plan `624`, the native
 editor contract), `live-roving-focus` (plan `637`), `live-theme` (plan `643`,
 the palette switch in a window), `live-diff` (plan `648`, the diff
 interaction contract) and `live-theme-platform` (plan `654`, the platform type
-styles in a window). Both `host` lines carry
-the pins. The
+styles in a window), all through plan `656`'s capture-capable live runner
+(`live-shell` included; a plain `--all` wrote no frame or sidecar). Both `host`
+lines carry the pins. The
 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin and a
 borderless size — is what every geometry check now asserts. **Registered live
-scenarios are 93**, and the gate covers all of them; the live registry is guarded
+scenarios are 94**, and the gate covers all of them; the live registry is guarded
 by `liveScenarioProblems` (plan `639`).
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
@@ -161,8 +162,9 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**94/94 green** (2447 checks, 61 capabilities, 989.9 s) on the release-tag
-binding, and the **full
+**94/94 green** (2447 checks, 61 capabilities, 921.6 s) on the release-tag
+binding through plan `656`'s capture-capable live runner (plan `657`'s gate;
+a plain `--all` wrote no frame or `provenance.json`), and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `scale`, `reorder` and `tree-reorder` are confirmed there too
