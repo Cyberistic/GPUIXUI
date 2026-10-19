@@ -1453,6 +1453,11 @@ retired once both branches are one
       (~30) and the headless tooltip's open-on-focus (11), plus their overlap
       in `fields`/`examples`; no focus, timer or order flake remains. Plan
       `593`'s blank-formatter case also passes.
+      **Re-run 2026-10-19 after plan `595`:** 50 files, **724 tests, 677 passed
+      / 47 failed**, 9 failing files. `InfoTip` now opens on keyboard focus and
+      closes when focus leaves (7/7), so the only tooltip-open cases left are an
+      arbitrary `Tooltip` around a component (8 + 1 in `examples`), which cannot
+      know its trigger's host id; the rest are the published box model.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1686,6 +1691,15 @@ retired once both branches are one
       before. The test adapter exposes `unmount`; the fixture closes every
       window after its test. Two full runs are now identical — 675 passed / 48
       failed / 723 tests, 10 failing files, no order flake (plan `594`).
+
+`[x]` `packages/primitives`: **`InfoTip` was hover-only on the release runtime** —
+      the page promised `Tab` opens the tip, but 0.10.0 dispatches no `onFocus`
+      and the headless tooltip opens from it. `InfoTip` owns its trigger's focus
+      state (the ring already uses it), so it now drives the wrapper's controlled
+      `open` as `hoverOpen || focus.focused` and closes when focus leaves; the
+      generic `Tooltip` limitation remains for arbitrary triggers and is now
+      stated on its page. InfoTip 7/7; full 677/724 (47 failures, 9 files), both
+      directions proven (plan `595`).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

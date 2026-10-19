@@ -10,7 +10,9 @@
 import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { focusRing } from "@gpuixui/tokens";
+import { Button } from "../src/components/Button.js";
 import { InfoTip } from "../src/components/InfoTip.js";
+import { Stack } from "../src/components/Stack.js";
 import { FLOATING_MARGIN } from "../src/core/floating.js";
 import { a11yNode, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
@@ -60,6 +62,8 @@ it("reaches an InfoTip by keyboard, with its name and description", async () => 
   );
   expect(trigger.aria?.description).toBe(CONTENT);
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("trigger");
   expect(runtime.allText()).toContain(CONTENT);
   expect(
@@ -67,6 +71,34 @@ it("reaches an InfoTip by keyboard, with its name and description", async () => 
       a11yNode(runtime.a11y(), { role: "Tooltip", label: CONTENT }),
     ),
   ).toBe(true);
+});
+
+it("closes the keyboard-opened tip when focus leaves", async () => {
+  // The other half of plan 595: the tip is driven by `hoverOpen || focused`,
+  // so it must close when the tracker reports the trigger lost focus, not
+  // linger like a stale seeded state.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <InfoTip
+          content={CONTENT}
+          label="Revenue definition"
+          testId="trigger"
+          tipTestId="tip"
+        />
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(runtime.allText()).toContain(CONTENT);
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(runtime.allText()).not.toContain(CONTENT);
 });
 
 it("renders no tip and no description for blank content", async () => {
