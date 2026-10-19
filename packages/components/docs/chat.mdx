@@ -105,15 +105,19 @@ authoritative, and `onValueChange` fires in both modes.
 
 ## Theming
 
-The composer paints `background`, `border` and `foreground`; Send is the
-`primary` button variant, Stop `secondary`; the error row is the `danger` tone
-surface. The transcript reads whatever `Message` and `MessageScroller` paint.
-A custom theme changes all of it with no code change.
+The composer paints `background`, `border` and `foreground`, and the token
+`focusRing` while it holds focus; Send is the `primary` button variant, Stop
+`secondary`; the error row is the `danger` tone surface. The transcript reads
+whatever `Message` and `MessageScroller` paint. A custom theme changes all of it
+with no code change.
 
 ## Accessibility
 
 - The conversation and the transcript are named `group`s.
 - The field is a real `<textarea>` with an `aria-label`.
+- The field paints the token focus ring while it holds native focus, seeded from
+  `autoFocus` because the runtime focuses after React's effects and delivers no
+  React focus event for it (plans 388, 536).
 - Stop and Send are real focusable controls with visible labels.
 - The failure is `role="alert"`.
 - 0.10.0 has no `aria-live`, no `aria-labelledby`, and no way to describe the
@@ -134,10 +138,12 @@ A custom theme changes all of it with no code change.
 ## Verification
 
 `src/chat/logic.test.ts` covers every transition and identity row.
-`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (10 tests): it
+`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (12 tests): it
 types and sends, proves Shift+Enter does not submit, stops a stream, refuses a
 second submit, retries after an error, stops on Escape, stops without closing an
-enclosing dialog, attaches, follows an appended row and renders the empty slot.
+enclosing dialog, attaches, follows an appended row, renders the empty slot, and
+paints the focus ring while the composer holds focus (and none while it does
+not).
 
 ## Credit
 

@@ -11,7 +11,6 @@ export const themeMatrixCoverage: ReadonlyArray<string> = [
   "src/behaviour/avatar.test.tsx",
   "src/behaviour/breadcrumb.test.tsx",
   "src/behaviour/carousel.test.tsx",
-  "src/behaviour/chat.test.tsx",
   "src/behaviour/collapsible.test.tsx",
   "src/behaviour/command-menu.test.tsx",
   "src/behaviour/confirm-dialog.test.tsx",

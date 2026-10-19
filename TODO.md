@@ -296,6 +296,13 @@ retired once both branches are one
       zero/infinite duration; 6 timing + 5 store + 1 stream + 2 native cases
       (Toast 20), two mutation proofs; docs, `COMPONENTS.md` and the inventory
       synced (owner: components)
+    - [x] The chat composer paints the focus ring — plan 595: measured that an
+      `autoFocus` `<textarea>` was the focused element yet painted no
+      `boxShadow`, the one focusable part plan 522 never reached. It now seeds
+      `focused` from `autoFocus`, composes the caller's `onFocus`/`onBlur` and
+      paints the token ring only while focused; 2 native cases (Chat 12), a
+      no-ring pin, both-direction proof; docs, `COMPONENTS.md` and the inventory
+      synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

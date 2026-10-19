@@ -6,8 +6,9 @@
  * the text it sends. `ChatMessages` composes `MessageScroller` so streaming rows
  * follow only while the reader is pinned — the pin rule is not reimplemented
  * here. `ChatComposer` is a real `<textarea>`: Enter sends, Shift+Enter stays a
- * newline, Escape stops while work is in flight, and Stop replaces Send while a
- * request is running. The stopping Escape is claimed, so a chat inside a dialog
+ * newline, Escape stops while work is in flight, Stop replaces Send while a
+ * request is running, and the field paints the token focus ring while it holds
+ * focus. The stopping Escape is claimed, so a chat inside a dialog
  * does not close the dialog too (plan 514).
  *
  * 0.10.0 has no attachments picker on an input, so `onAttach` is the caller's
@@ -17,7 +18,13 @@
 
 import type { EventPayload, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Children, createContext, useContext, type ReactNode } from "react";
+import {
+  Children,
+  createContext,
+  useContext,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   ChatStatus,
   beginSubmit,
@@ -37,7 +44,12 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { textStyle, toneSurface, useTheme } from "./internal/theme.js";
+import {
+  focusRing,
+  textStyle,
+  toneSurface,
+  useTheme,
+} from "./internal/theme.js";
 import {
   MessageScroller,
   MessageScrollerItem,
@@ -210,6 +222,9 @@ export const ChatComposer = ({
   value,
   defaultValue = "",
   onValueChange,
+  autoFocus = false,
+  onFocus,
+  onBlur,
   style,
   onKeyDown,
   ...rest
@@ -221,6 +236,9 @@ export const ChatComposer = ({
     defaultValue,
     onChange: onValueChange,
   });
+  // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
+  // runs on mount; seed the state or the ring never lights (plans 388, 536).
+  const [focused, setFocused] = useState(autoFocus);
 
   const send = (): void => {
     const text = draft.trim();
@@ -272,6 +290,7 @@ export const ChatComposer = ({
           value={draft}
           minRows={1}
           maxRows={6}
+          autoFocus={autoFocus}
           onChange={(event) => setDraft(event.value ?? "")}
           onSubmit={(event: EventPayload) => {
             // Shift+Enter is a newline; the runtime reports it through the same
@@ -286,6 +305,14 @@ export const ChatComposer = ({
             }
             onKeyDown?.(event);
           }}
+          onFocus={(event) => {
+            setFocused(true);
+            onFocus?.(event);
+          }}
+          onBlur={(event) => {
+            setFocused(false);
+            onBlur?.(event);
+          }}
           style={mergeStyles(
             {
               ...textStyle(theme, "body"),
@@ -299,6 +326,7 @@ export const ChatComposer = ({
               borderRadius: theme.radius.md,
               backgroundColor: theme.colors.background,
               color: theme.colors.foreground,
+              ...(focused ? focusRing(theme) : {}),
             },
             style,
           )}

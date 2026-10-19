@@ -7,22 +7,31 @@
  * no visible message or no way to retry; an Attach control rendered without a
  * handler; a transcript that does not follow an appended row; an empty state the
  * caller cannot place; and an Escape that stopped the request and closed the
- * dialog around the conversation (plan 514).
+ * dialog around the conversation (plan 514); and a composer that took native
+ * focus without painting the focus ring, while an unfocused one must stay
+ * ringless (plan 595).
  */
 
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import * as Option from "effect/Option";
 import { Button } from "../internal/button.js";
 import type { ChatStatus as Status } from "../chat/logic.js";
 import { Chat, ChatComposer, ChatEmpty, ChatMessages } from "../chat.js";
 import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Message, MessageContent } from "../message.js";
 import { nodesWithRole } from "../internal/a11y.js";
-import { clickCentreOf, finishMotion } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  finishMotion,
+  focusedTestId,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
+  type TestTheme,
 } from "../internal/test-root.js";
+import { darkTheme, focusRing, lightTheme } from "../internal/theme.js";
 
 const idle: Status = { _tag: "idle" };
 const submitting: Status = { _tag: "submitting" };
@@ -341,6 +350,45 @@ describe("Chat", () => {
     expect(chat.renderer.getAllText()).toEqual(
       expect.arrayContaining(["No messages yet", "Ask about the workspace."]),
     );
+
+    chat.unmount();
+  });
+
+  it("paints the focus ring on the focused composer in both themes", () => {
+    // Before plan 595 an `autoFocus` composer was the focused element yet
+    // painted no `boxShadow`: GPUix has no outline, so the field had no cue.
+    const assertTheme = (theme: TestTheme): void => {
+      const palette = theme === "dark" ? darkTheme : lightTheme;
+      const chat = renderComponent(
+        <Chat label="Assistant" status={idle} onSubmit={() => undefined}>
+          <ChatComposer label="Message" testId="composer" autoFocus />
+        </Chat>,
+        theme,
+      );
+
+      expect(focusedTestId(chat)).toEqual(Option.some("composer"));
+      expect(chat.renderer.findByTestId("composer")?.style.boxShadow).toEqual(
+        focusRing(palette).boxShadow,
+      );
+
+      chat.unmount();
+    };
+
+    assertTheme("dark");
+    assertTheme("light");
+  });
+
+  it("paints no ring on a composer that does not hold focus", () => {
+    const chat = renderComponent(
+      <Chat label="Assistant" status={idle} onSubmit={() => undefined}>
+        <ChatComposer label="Message" testId="composer" />
+      </Chat>,
+      "light",
+    );
+
+    expect(
+      chat.renderer.findByTestId("composer")?.style.boxShadow,
+    ).toBeUndefined();
 
     chat.unmount();
   });
