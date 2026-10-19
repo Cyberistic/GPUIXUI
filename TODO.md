@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 256/328
+`[x]` `[████████░░]` 258/330
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
