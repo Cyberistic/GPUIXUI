@@ -124,6 +124,9 @@ transform, so no scale is faked.
   stop is the one measured on open. Content that removes or adds tab stops while
   open cannot trap the user — the visited stops bound the cycle — but a stop
   removed mid-cycle can cost one extra Tab before the panel closes.
+- The animated panel wrapper carries `<testId>-surface`, while the panel keeps
+  `<testId>`. The wrapper is the border box and the reported content size is its
+  padding box, so the two differ by the border width (plan 540, plan 597).
 
 ## Verification
 

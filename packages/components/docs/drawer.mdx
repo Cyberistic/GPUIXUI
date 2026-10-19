@@ -118,6 +118,9 @@ with no code change — see [Theming](/docs/theming).
   Dialog. A drawer mounted inside a scrolled container is still painted at the
   window origin, not inside that container.
 - Sizes are layout constants, not tokens.
+- The animated edge-surface wrapper carries `<testId>-surface`
+  (`drawer-content-surface` by default), while the dialog keeps `testId`
+  (plan 597).
 - The close control uses the `x` icon from `@gpuixui/icons`.
 
 ## Verification

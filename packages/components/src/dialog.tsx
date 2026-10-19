@@ -20,7 +20,7 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
-import { AnimatePresence, motion, useGpuix, useWindowSize } from "@gpuix/react";
+import { AnimatePresence, useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { dialogMotion } from "@gpuixui/tw";
@@ -33,7 +33,7 @@ import {
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
-import { motionProps } from "./internal/motion.js";
+import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   handleModalKeyDown,
   useModalFocus,
@@ -244,7 +244,7 @@ const DialogSurface = ({
   };
 
   return (
-    <motion.div
+    <MotionSurface
       {...motionProps(dialogMotion(theme))}
       style={{ pointerEvents: open ? undefined : "none" }}
     >
@@ -310,7 +310,7 @@ const DialogSurface = ({
           </div>
         </div>
       </anchored>
-    </motion.div>
+    </MotionSurface>
   );
 };
 

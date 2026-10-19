@@ -27,12 +27,7 @@
  */
 
 import type { PublicInstance } from "@gpuix/react";
-import {
-  AnimatePresence,
-  motion,
-  useGpuix,
-  type NativeRenderer,
-} from "@gpuix/react";
+import { AnimatePresence, useGpuix, type NativeRenderer } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import {
   FloatingLayer,
@@ -54,7 +49,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isTab } from "./internal/key.js";
-import { motionProps } from "./internal/motion.js";
+import { MotionSurface, motionProps } from "./internal/motion.js";
 import {
   assertParts,
   type PartChildren,
@@ -381,8 +376,10 @@ const PopoverSurface = ({
 
   // The anchored host is the position measured against the popover root, so the
   // motion wrapper must live *inside* it: wrapping the host moves the anchor.
+  const surfaceTestId =
+    rest.testId === undefined ? undefined : `${rest.testId}-surface`;
   const motionSurface = (
-    <motion.div {...surfaceMotion}>
+    <MotionSurface testId={surfaceTestId} {...surfaceMotion}>
       <div
         {...rest}
         ref={setSurface}
@@ -421,7 +418,7 @@ const PopoverSurface = ({
       >
         {children}
       </div>
-    </motion.div>
+    </MotionSurface>
   );
 
   return (

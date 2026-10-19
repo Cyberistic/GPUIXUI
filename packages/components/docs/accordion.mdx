@@ -141,6 +141,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   control. The check compares the focused box's centre with the body's bounds;
   0.10.0 reports no parent chain and no focus-within event, so a control
   scrolled out of the visible body is not recognised.
+- The tween box is addressable: the animated wrapper carries
+  `<testId>-surface`, while the content keeps `<testId>` (plan 597).
 
 ## Verification
 

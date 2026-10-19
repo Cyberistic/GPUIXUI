@@ -120,6 +120,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   of the visible body is not recognised.
 - No `aria-controls` in 0.10.0 (`HostProps`), so the trigger→body relationship
   is positional.
+- The tween box is addressable: the animated wrapper carries
+  `<testId>-surface`, while the content keeps `<testId>`. They are different
+  boxes because the natural height is measured while the wrapper is clipped
+  (plan 597).
 
 ## Verification
 

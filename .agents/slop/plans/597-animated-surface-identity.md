@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | wip |
+| Status | done |
 | Phase | F (consistency, composability, native proof) |
 | Owner | components workstream (`packages/components`) |
 | Depends on | `110`, `372`, `386`, `525`, `526`, `592` (playground) |
@@ -217,21 +217,43 @@ nub run test                                            # exit 0
 ```
 
 `nub run --filter @gpuixui/components test:behaviour` (full) stays at
-**752 passing / 35 failing of 787** — the plan-540 binding failures are
-pre-existing and out of scope. The new suite adds 6: expect **758 / 35 of 793**
-(counts as of `HEAD` `a553d2d9`; re-read the actual totals rather than trusting
-this line if a merge moved them).
+**758 passing / 35 failing of 793** — the plan-540 binding failures are
+pre-existing and out of scope. The new suite adds 6 (measured 2026-10-19;
+re-read the actual totals rather than trusting this line if a merge moved them).
 
 ## 9. Acceptance
 
-- [ ] `MotionSurface` exists, is typed without a cast, and is used by all six
+- [x] `MotionSurface` exists, is typed without a cast, and is used by all six
       animated surfaces.
-- [ ] The derived ids in §3.2 resolve, and no id exists without a caller
+- [x] The derived ids in §3.2 resolve, and no id exists without a caller
       `testId`.
-- [ ] The six new cases pass; each mutation proof was observed failing and
+- [x] The six new cases pass; each mutation proof was observed failing and
       reverted.
-- [ ] The five component suites keep their existing counts; the 35 plan-540
+- [x] The five component suites keep their existing counts; the 35 plan-540
       failures are unchanged.
-- [ ] `docs/component-api.md`, the five component pages, `COMPONENTS.md`,
+- [x] `docs/component-api.md`, the five component pages, `COMPONENTS.md`,
       `TODO.md`, the plan index and `PLAN.md` are synced.
-- [ ] `check`, `lint` and `test` are green.
+- [x] `check`, `lint` and `test` are green.
+
+## 10. Measured record (2026-10-19)
+
+- New suite: `src/behaviour/motion-surface.test.tsx`, **6/6 green**
+  (`Collapsible` closed tween box 0 → content height; `Accordion` same; Popover
+  wrapper vs panel differ by the 1 px border on each axis, measured 86/84;
+  Drawer surface present through the 300 ms exit then gone; Toast exit ghost
+  addressable until its 500 ms motion completes; no `testId` authors no surface
+  id).
+- Mutation proofs, each observed failing and reverted:
+  - M1 `Reveal` without the derived id → "no element with testId
+    collapse-content-surface" (Collapsible case).
+  - M2 the derived id on the inner content div instead of the wrapper → the
+    closed-height assertion fails.
+  - M3 Toast wrapper without the id → the exit-ghost case fails (`expected false
+    to be true`).
+  - M4 Popover wrapper without the id → "no element with testId panel-surface".
+  - M5 Drawer wrapper without the id → the edge-surface case fails.
+- Full behaviour suite: **758 passed / 35 failed of 793** (53 files). The 35
+  failures are the same plan-540 position/focus cases as before this change.
+- Unit suite: **444/444**, 44 files — the inventory's per-component counts are
+  untouched because the new suite is shared, not a component suite.
+

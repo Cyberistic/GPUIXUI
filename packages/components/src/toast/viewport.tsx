@@ -7,7 +7,7 @@
  */
 
 import type { Props } from "@gpuix/react";
-import { AnimatePresence, motion } from "@gpuix/react";
+import { AnimatePresence } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { toastMotion } from "@gpuixui/tw";
@@ -16,7 +16,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button, IconButton } from "../internal/button.js";
-import { motionProps } from "../internal/motion.js";
+import { MotionSurface, motionProps } from "../internal/motion.js";
 import {
   elevationShadow,
   textStyle,
@@ -334,9 +334,13 @@ export const ToastViewport = ({
       {children}
       <AnimatePresence initial={false}>
         {Arr.map(toasts, (toast) => (
-          <motion.div key={toast.id} {...cardMotion}>
+          <MotionSurface
+            key={toast.id}
+            testId={`toast-${toast.id}-surface`}
+            {...cardMotion}
+          >
             <ToastCard toast={toast} />
-          </motion.div>
+          </MotionSurface>
         ))}
       </AnimatePresence>
     </div>

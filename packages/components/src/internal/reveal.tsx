@@ -11,8 +11,9 @@
  *   content is visible and the last value is kept in state.
  *
  * `motion.div` has no `testId`, `role` or `aria-*` in 0.10.0, so the caller's
- * props belong to the inner plain div and a suite reads the body through a
- * following sibling.
+ * props belong to the inner plain div; the animated box carries the derived
+ * `<testId>-surface` id through the typed wrapper (plan 597), so a suite can
+ * measure the tween itself while the content box stays the natural height.
  *
  * Hiding a body does not move focus out of it, and 0.10.0 reports no
  * focus-within signal, so a close that starts with focus inside the body would
@@ -23,7 +24,6 @@
  */
 
 import {
-  motion,
   useGpuix,
   type NativeRenderer,
   type Props,
@@ -32,6 +32,7 @@ import {
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { MotionSurface } from "./motion.js";
 import { useMergedRef } from "./ref.js";
 
 // TODO: take this from `@gpuixui/tokens`' motion scale once plan 019 lands.
@@ -137,9 +138,12 @@ export const Reveal = ({
 
   const height = Option.getOrElse(measured, () => 0);
   const hidden = !open && Option.isSome(measured) && settled;
+  const surfaceTestId =
+    rest.testId === undefined ? undefined : `${rest.testId}-surface`;
 
   return (
-    <motion.div
+    <MotionSurface
+      testId={surfaceTestId}
       initial={false}
       animate={{ height: open ? height : 0 }}
       transition={{ duration: animate ? REVEAL_SECONDS : 0, ease: "linear" }}
@@ -158,6 +162,6 @@ export const Reveal = ({
       >
         {children}
       </div>
-    </motion.div>
+    </MotionSurface>
   );
 };

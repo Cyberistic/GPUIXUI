@@ -155,6 +155,9 @@ from its two pinned edges.
   `pause`/`resume` from `useToast()`.
 - No portal: the viewport is an absolutely positioned element in its parent, so
   put it at the app root.
+- The animated card wrapper carries `toast-<id>-surface`, while the card itself
+  is `toast-<id>`; the wrapper is how a native suite addresses the exit ghost
+  (plan 597).
 - Disposal is deferred one microtask (`toast/lifecycle.ts`) so a React
   StrictMode mount/unmount/remount does not dispose the runtime the remount
   keeps using. The native test renderer does not reproduce StrictMode's double

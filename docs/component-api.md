@@ -115,6 +115,24 @@ Which parts have a state, and which do not, is a measured line:
   `focused` initialises that state from `autoFocus` (plan `388`); the two roving
   parts (`TabsTrigger`, `ListItem`) also move their root's highlight.
 
+## 3a. Animated surfaces
+
+An animated box is the same host surface as any other part, and it is addressed
+the same way. `@gpuix/react@0.10.0`'s published `MotionDivProps` omits `testId`,
+`role` and the `aria-*` props even though its `MotionDiv` forwards every prop to
+the native `div`, so this package renders through `internal/motion.tsx`'s
+`MotionSurface` (`MotionProps & Props`), never a raw `motion.div` (plan `597`).
+
+- Where the animated box *is* the part's box, its `testId` is
+  **`<part testId>-surface`** — `CollapsibleContent`, `AccordionContent`,
+  `PopoverContent` and `DrawerContent`; a `Toast` card's is
+  **`toast-<id>-surface`**. The part keeps its own id: the content box (whose
+  natural height is measured while clipped) and the tween box are different
+  boxes.
+- A part with no `testId` authors no `-surface` id.
+- A full-window fade (Dialog) has no derived id: its box is the window, and
+  `dialog-backdrop` already identifies it.
+
 ## 4. Keyboard
 
 Keyboard behaviour is the shared contract in

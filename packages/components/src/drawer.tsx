@@ -15,7 +15,7 @@
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
-import { AnimatePresence, motion, useGpuix, useWindowSize } from "@gpuix/react";
+import { AnimatePresence, useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import { dialogMotion, motionFromClasses } from "@gpuixui/tw";
@@ -32,7 +32,7 @@ import {
   useModalFocus,
   useModalState,
 } from "./internal/modal.js";
-import { motionProps } from "./internal/motion.js";
+import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   assertParts,
   type PartChildren,
@@ -272,7 +272,7 @@ const DrawerSurface = ({
       occlude
       style={{ position: "absolute" }}
     >
-      <motion.div {...motionProps(dialogMotion(theme))}>
+      <MotionSurface {...motionProps(dialogMotion(theme))}>
         <div
           testId="drawer-backdrop"
           style={{
@@ -286,7 +286,7 @@ const DrawerSurface = ({
             pointerEvents: open ? "auto" : "none",
           }}
         >
-          <motion.div {...surfaceMotion}>
+          <MotionSurface testId={`${testId}-surface`} {...surfaceMotion}>
             <div
               role="dialog"
               aria-label={label}
@@ -322,9 +322,9 @@ const DrawerSurface = ({
                 </IconButton>
               ) : null}
             </div>
-          </motion.div>
+          </MotionSurface>
         </div>
-      </motion.div>
+      </MotionSurface>
     </anchored>
   );
 };

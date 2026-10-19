@@ -303,14 +303,15 @@ retired once both branches are one
       paints the token ring only while focused; 2 native cases (Chat 12), a
       no-ring pin, both-direction proof; docs, `COMPONENTS.md` and the inventory
       synced (owner: components)
-    - [ ] Animated surfaces are addressable — plan 597: `motion.div`'s published
+    - [x] Animated surfaces are addressable — plan 597: `motion.div`'s published
       type omits `testId`/`role`/`aria-*` (though the runtime forwards them), so
       Collapsible/Accordion bodies, the Popover and Drawer panels and the Toast
       exit ghost had no id and the playground measured a neighbouring row
       instead. A typed `MotionSurface` restores the host surface and the tween
       boxes carry `<part testId>-surface` / `toast-<id>-surface`; 6 native
-      cases, five mutation proofs; docs, `COMPONENTS.md` and the inventory
-      synced (owner: components)
+      cases (behaviour 758/35 of 793, the same 35 plan-540 failures), five
+      mutation proofs; docs, `COMPONENTS.md` and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
