@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 245/320
+`[x]` `[████████░░]` 246/320
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -2044,6 +2044,14 @@ stepper's wash measured **1.000:1** (the same wash on the card was still
 405 → 420 in the contract), every shipped set already clears 1.05:1 on it
 (1.1176:1 at the tightest, Dark · Windows `accent`) and no colour moves
 (plan 595)
+
+`[x]` Hold each control to the icon tier that matches its size — `IconButton`
+paints `iconSize[size]` in `controlHeight[size]` and a slider's thumb is that
+tall in the same track, but only `controlHeight.sm` was measured against the
+default `iconSize.md`, so `iconSize.lg: 48` returned `[]` from all nine checks
+while a large glyph overflowed its control; every size is now held to its own
+content box, every shipped pair keeps at least 8px and no value moves
+(plan 596).
 
 ## Phase C — Tier 1–2 components
 

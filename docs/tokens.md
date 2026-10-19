@@ -2239,7 +2239,12 @@ reader cannot distinguish from body text is not emphasis; the smallest control
 must fit one `label` line and one `body` line — a field paints body type, not
 the label role — plus the default `iconSize.md` and a field adornment, each plus
 its two borders — the borders are painted inside the height, so a glyph equal to
-the outer metric overflows the content box; a row must fit one `body`
+the outer metric overflows the content box; each control size's matching icon
+tier must fit its own content box as well, because `IconButton` paints
+`iconSize[size]` inside `controlHeight[size]` and a slider's thumb is
+`iconSize[size]` tall in that track, so a 48px large glyph in a 36px large control
+returned `[]` from `themeFailures` while it overflowed (every shipped pair keeps
+at least 8px, so no value moves); a row must fit one `body`
 line and the default `md` control it holds; `radius.none` must be square; `radius.full`
 must round the largest corner step the theme carries and half of the taller of the
 largest control and the largest avatar — each read from the theme's own scale, so

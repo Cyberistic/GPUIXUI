@@ -748,7 +748,8 @@ The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink the smallest control below one label line or one body line plus its
-borders, raise an inline icon above the caption or label line it sits in, raise
+borders, paint a control size's matching icon tier larger than that control's
+content box, raise an inline icon above the caption or label line it sits in, raise
 an inline avatar above the dense row it leads, clip a
 row
 below the default `md` control it holds, round a "square" corner, leave the

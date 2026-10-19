@@ -275,6 +275,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [591](./591-native-diff-row-tint.md) | The native diff row tint | F | 332, 574, 582, 583, 588–590 | done |
 | [592](./592-native-diff-chrome-type.md) | The native diff chrome must fit the type the runtime paints | F | 569, 572, 585, 588, 591 | done |
 | [595](./595-field-control-fill.md) | The interactive fill a control paints inside a field | F | 309, 353, 357, 394, 503, 527 | done |
+| [596](./596-control-glyph-fit.md) | The matching icon must fit its control | F | 358, 372, 384, 517, 521, 552 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3050,6 +3051,18 @@ fifteen fills are held on five surfaces (60 → 75 in `stateFillSurfacePairs`, 4
 (**1.1176:1** at the tightest, `accent` on `input` in Dark · Windows) so no
 colour moves, and the reference, design system, README and ledger name the
 composition.
+
+Plan `596` closes the numeric contract's other half for a control's glyph. A
+control paints the icon tier that matches its size — `IconButton` maps
+`sm`/`md`/`lg` to the same `iconSize` tier, and a slider's thumb is
+`iconSize[size]` tall inside a `controlHeight[size]` track — but the contract
+held only the default `iconSize.md` against the **smallest** control (plan 384).
+A theme that raised only the large tier, `iconSize: { lg: 48, xl: 48 }`,
+returned `[]` from all nine checks while a 48px glyph painted in a 36px large
+control (a 34px content box); a large slider thumb outgrew the same track. Every
+control size is now held to its matching tier plus its two borders, the plan-384
+rule keeps its single diagnostic, and every shipped pair keeps at least 8px of
+content (compact), so no token value moves.
 
 ## How to use a plan
 

@@ -663,7 +663,9 @@ weight, name a font weight outside the `1…1000` range the text system can
 select or a non-finite one, shrink the smallest control below one label line or
 one body line,
 fit an icon, a field adornment or a chip into a content box shorter or narrower
-than they are, raise an inline icon above the caption or label line it sits in,
+than they are — including each control size's matching icon tier against its own
+`controlHeight`, which is how a large `IconButton` and a slider's thumb are
+measured, raise an inline icon above the caption or label line it sits in,
 raise an inline avatar above the dense row it leads,
 flush a control's horizontal padding to zero or tighter than the theme's own
 hairline (`spacing["2xs"]`), invert a size ladder — the size ladders are read

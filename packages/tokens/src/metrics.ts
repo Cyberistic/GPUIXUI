@@ -685,6 +685,19 @@ export function themeMetricFailures(
       density.controlHeight.sm,
       iconSize.md + 2 * borderWidth.thin,
     ),
+    // A control paints the icon tier that matches its size: `IconButton` maps
+    // `sm`/`md`/`lg` to the same `iconSize` tier, and a slider's thumb is
+    // `iconSize[size]` tall inside a `controlHeight[size]` track. The default
+    // glyph against the smallest control is the rule above; this is each size's
+    // own box. The control's two borders are painted inside its height.
+    ...controlSizes.flatMap((size) =>
+      atLeast(
+        "density",
+        `controlHeight.${size}`,
+        density.controlHeight[size],
+        iconSize[size] + 2 * borderWidth.thin,
+      ),
+    ),
     ...atLeast(
       "density",
       "controlHeight.sm",
