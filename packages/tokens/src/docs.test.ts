@@ -1120,6 +1120,41 @@ describe("docs/tokens.md numeric tables", () => {
   });
 });
 
+describe("docs/tokens.md metric members", () => {
+  /**
+   * The index each metric group derives from. `textRoles` owns the type roles;
+   * the rest are the scale indexes plan 668 introduced. `dimensions` is the
+   * default object, not an index, and `Object.keys` on it is the cast 668
+   * removed.
+   */
+  const indexes = [
+    "textRoles",
+    "spacingSteps",
+    "radiusSteps",
+    "borderWidthSteps",
+    "iconSizeSteps",
+    "avatarSizeSteps",
+    "dimensionNames",
+    "controlSizes",
+    "elevationLevels",
+    "motionLevels",
+    "motionPhases",
+  ] as const;
+
+  it("names the ordered index every metric group derives from", () => {
+    const start = markdownProse.indexOf("`metricMembers` is the ordered index");
+    expect(start).toBeGreaterThan(-1);
+    const end = markdownProse.indexOf("`metricRules` is", start);
+    expect(end).toBeGreaterThan(start);
+    const paragraph = markdownProse.slice(start, end);
+
+    indexes.forEach((index) =>
+      expect(paragraph, index).toContain(`\`${index}\``),
+    );
+    expect(paragraph).not.toContain("default object");
+  });
+});
+
 describe("docs/tokens.md palette table", () => {
   it("lists every ramp and step at its real value", () => {
     Object.entries(palette).forEach(([ramp, steps]) => {

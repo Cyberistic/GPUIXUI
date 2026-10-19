@@ -323,6 +323,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [666](./666-scrim-explanation-chips.md) | The scrim explanation names the three chips it counts | F | 099, 375, 508, 610, 617 | done |
 | [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | done |
 | [668](./668-scale-indexes.md) | The numeric scales' ordered indexes | F | 056, 058, 324, 358, 519, 531, 552, 066 | done |
+| [669](./669-metric-member-index-owner.md) | The metric-member index's documented owner | F | 324, 531, 668 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3520,6 +3521,14 @@ spacing, caption size and `fieldAdornmentSize` (44px at the identity against the
 shipped 80px, 1.82×), the field rule from plans 384/624/634 is untouched, and
 `chip-chrome-fit.test.ts` states the erased-chip regression. No colour, pair,
 floor, metric or shipped theme value moves.
+
+Plan `669` holds the ownership sentence plan `668` left behind. `metricMembers`
+now derives from the ten scale indexes and `textRoles`, but §*Numeric metrics*
+still said "each group's default object" and named `dimensions` — the object,
+not `dimensionNames` — so a reader building a diagnostics table would write the
+`Object.keys` cast `668` removed. The paragraph names every index and a
+`docs.test.ts` case rejects the old phrasing and any dropped name. No source or
+token value changes.
 
 ## How to use a plan
 

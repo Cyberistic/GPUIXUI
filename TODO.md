@@ -1162,6 +1162,12 @@ scale and documented in the docs-site section; `metricMembers` derives from them
 `scale-indexes.example.ts` builds every table with no cast, and
 `scale-indexes.test.ts` fails when a scale gains a member without its index
 (plan 668)
+`[x]` Hold the metric-member index's documented owner — plan 668 moved
+`metricMembers` onto the typed scale indexes, but §*Numeric metrics* still said
+"each group's default object" and named `dimensions` (the object) rather than
+`dimensionNames`, so a reader building a diagnostics table would write the
+`Object.keys` cast 668 removed; the paragraph now names all eleven indexes and a
+`docs.test.ts` case fails if one is dropped or the old phrase returns (plan 669)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

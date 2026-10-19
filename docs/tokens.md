@@ -2566,11 +2566,13 @@ and recipe passes, so the check moves no value; it guards the next edit.
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.
 `metricMembers` is the ordered index of every numeric member inside those groups
-— the numeric sibling of `colorRoles` — derived from each group's default object
-and ordered indexes (`dimensions`, `controlSizes`, `elevationLevels`,
-`motionLevels`, `motionPhases`), so a diagnostics table iterates the walked
-domain. It names the shipped domain: a theme may carry a wider scale, and the
-size ladders walk the theme's own members. An elevation entry names the field
+— the numeric sibling of `colorRoles` — derived from each group's ordered index:
+`textRoles` for the type roles, and `spacingSteps`, `radiusSteps`,
+`borderWidthSteps`, `iconSizeSteps`, `avatarSizeSteps`, `dimensionNames`,
+`controlSizes`, `elevationLevels`, `motionLevels` and `motionPhases` for the
+rest, so a diagnostics table iterates the walked domain without retyping or
+casting a key. It names the shipped domain: a theme may carry a wider scale, and
+the size ladders walk the theme's own members. An elevation entry names the field
 once per level (`md.offsetX`) because
 every entry in the level is read, while a failure names the one it measured
 (`md[0].offsetX`).
