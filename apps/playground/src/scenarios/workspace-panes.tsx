@@ -452,11 +452,13 @@ export const workspacePanesScenario: PlaygroundScenario = {
         scrollY("ws-log-inner"),
         -240,
       );
-      // The published bounds tracker records a child's box only when that child
-      // paints, so after an ancestor scroll the inner still reports the box it
-      // had while scrolled away (y=-8 with the outer at 0). A pointer wheel is
-      // therefore aimed at the wrong point; main's on_painted tracker fixes it
-      // (plan 529 §6.3). This pins the defect instead of hiding it.
+      // The chain is proven above; this block pins the headless tracker defect:
+      // a child's box is recorded only when that child paints, so after an
+      // ancestor scroll the inner still reports the box it had while scrolled
+      // away (y=-8 with the outer at 0). A pointer wheel is therefore aimed at
+      // the wrong point, which is why the guard below is exercised over a
+      // visible inner row, not over the container. main's on_painted tracker
+      // fixes it (plan 529 §6.3).
       ctx.host.paint();
       const innerBox = Option.fromNullishOr(ctx.host.bounds("ws-log-inner"));
       const outerBox = Option.fromNullishOr(ctx.host.bounds("ws-log-outer"));
@@ -468,15 +470,22 @@ export const workspacePanesScenario: PlaygroundScenario = {
         true,
       );
 
-      // The guard cannot be exercised by a pointer after an ancestor scroll: the
-      // published tracker keeps the inner's pre-scroll window box, so the wheel
-      // lands elsewhere. The rest of the guard contract is component state, and
-      // its measured limit is recorded in COMPONENTS.md (plan 529 §6.3).
       ctx.host.click("ws-log-guard");
       yield* ctx.expectContains(
         "the wheel guard is on",
         readout(ctx, "ws-readout"),
         "guard=on",
+      );
+      ctx.host.wheel("ws-inner-row-14", 0, -120);
+      yield* ctx.expectEqual(
+        "the guarded inner scroller takes the wheel",
+        scrollY("ws-log-inner"),
+        -360,
+      );
+      yield* ctx.expectEqual(
+        "the guard stops the wheel at the inner scroller",
+        scrollY("ws-log-outer"),
+        0,
       );
 
       ctx.host.scrollToItem("ws-tree", 30);

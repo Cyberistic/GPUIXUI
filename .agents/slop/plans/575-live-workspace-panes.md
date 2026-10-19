@@ -68,32 +68,24 @@ component change: the view is app-owned chrome.
 
 `workspace-panes.tsx` currently starts the scroll section with a guard-off
 wheel, which leaves the inner's recorded box stale and makes the guard
-untestable. Replace the block from `const scrollY = ...` through the old
-`ws-log-guard` click with this order (keep `scrollY` and the later resize
-steps):
+untestable. The shipped order is: **chain first at a fresh origin, return the
+outer, then aim the guard at a painted inner row**. Do not try to toggle the
+guard and re-wheel the container — a second container wheel after the container
+has scrolled is not aimed at the paint (measured, §8). Replace the block from
+`const scrollY = ...` through the old `ws-log-guard` click with this order (keep
+`scrollY` and the later resize steps):
 
-1. `ctx.host.click("ws-log-guard")`; expect the readout contains `guard=on`.
-2. `ctx.host.wheel("ws-log-inner", 0, -120)`.
-   - `the guarded inner scroller takes the wheel` — `scrollY("ws-log-inner")`
-     is `-120`.
-   - `the guard stops the wheel at the inner scroller` —
-     `scrollY("ws-log-outer")` is `0`.
-3. `ctx.host.click("ws-log-guard")`; expect `guard=off`.
-4. `ctx.host.wheel("ws-log-inner", 0, -120)`.
-   - `an unguarded nested scroller chains to its ancestor` —
-     `scrollY("ws-log-outer")` is `-240`.
-   - `the chained wheel also moves the inner` — `scrollY("ws-log-inner")` is
-     `-240`. **Measure this first**; if the runtime delivers the wheel to the
-     ancestor only, record the measured value and do not assert the inner.
-5. Keep the existing return wheel (`ws-log-row-10`, `0, 240`) and its two
-   assertions (`outer 0`, `inner -240`).
-6. Keep the stale-bounds block and the comment, but reword it: the guard is now
-   proven above; this block pins the *headless tracker* defect only.
-7. Keep `scrollToItem("ws-tree", 30)` and the two resize checks unchanged.
+1. `ctx.host.wheel("ws-log-inner", 0, -240)`; expect `inner -240`, `outer -240`
+   (the unguarded chain).
+2. `ctx.host.wheel("ws-log-row-10", 0, 240)`; expect `outer 0`, `inner -240`.
+3. Keep the existing stale-bounds block and its comment.
+4. `ctx.host.click("ws-log-guard")`; expect `guard=on`.
+5. `ctx.host.wheel("ws-inner-row-14", 0, -120)` (a row visible at the inner's
+   `-240` offset).
+   - `the guarded inner scroller takes the wheel` — inner is `-360`.
+   - `the guard stops the wheel at the inner scroller` — outer is `0`.
 
-Expected new headless total: the old count plus three checks (guard readout is
-existing; new: inner `-120`, outer `0`, chaining is existing, inner `-240` if
-asserted). Record the measured count.
+Expected new headless total: 27 checks (was 25). Record the measured count.
 
 If step 2 does **not** keep the outer at `0`, stop: render the guard's effect
 on the outer anyway (`pointerEvents` on the inner) instead of claiming it, and
@@ -117,19 +109,17 @@ Steps, each followed by `settle` (and a bounded `waitFor*` where noted):
    "hidden leaves the paint but stays mounted".
 3. **A real row click inside the virtual list.** click `ws-tree-row-2`,
    `waitForText(ctx, "ws-tree-pick", "pick=2")`, assert it exactly.
-4. **Guard on, then a real wheel.** click `ws-log-guard`;
-   `waitForText(ctx, "ws-readout", "guard=on")`; `wheel("ws-log-inner", 0, -120)`;
-   `waitFor` the inner offset via `offsetOf` is `-120` (poll with a 3 s retry
-   like `waitForAnchor`); `offsetOf(ctx, "ws-log-outer").y` is `0`.
-   - `the live guard keeps the wheel in the nested scroller` — inner `-120`.
+4. **A real wheel chains at a fresh origin.** `wheel("ws-log-inner", 0, -240)`;
+   `waitForOffset` the inner to `-240` and the outer to `-240`.
+   - `the live nested scroller takes the wheel` — inner `-240`.
+   - `the unguarded live nested scroller chains` — outer `-240`.
+5. **Return the outer scroller.** `wheel("ws-log-row-10", 0, 240)`; poll the
+   outer offset to `0`; assert the inner keeps `-240`.
+6. **The guard keeps a real wheel in the inner scroller.** `click("ws-log-guard")`;
+   wait `guard=on`; `wheel("ws-inner-row-14", 0, -120)` (a row visible at the
+   inner's `-240` offset).
+   - `the guarded live inner scroller takes the wheel` — inner `-360`.
    - `the live guard stops the ancestor wheel` — outer `0`.
-5. **Guard off, then the chain.** click `ws-log-guard`; wait `guard=off`;
-   `wheel("ws-log-inner", 0, -120)`; poll the outer offset until `-240`.
-   - `a real live wheel chains without the guard` — outer `y === -240`.
-   - Record the inner offset (may be `-240` or `-120`; see §3.1 step 4).
-6. **Return the outer scroller.** `wheel("ws-log-row-10", 0, 240)`; poll the
-   outer offset to `0`; assert the inner keeps its offset (the measured value
-   from step 5).
 7. **The hidden pane keeps its state.** `click("ws-tab-editor")`;
    `waitForText(ctx, "ws-readout", "active=editor")`; assert
    `paintedText()` no longer contains `tree row `; `textOf("ws-editor-marker")`
@@ -257,23 +247,54 @@ If a mutation does not fail, the check proves nothing: strengthen or delete it.
 - The live registry count comes from `--list` (expected 69), not from a full
   live run.
 
-## 8. Result (fill in after implementation)
+## 8. Result (measured 2026-10-19)
 
 | Command | Result |
 | ------- | ------ |
-| `nub run --filter playground build` | |
-| `nub apps/playground/dist/smoke/run.js --only workspace-panes` | |
-| `nub apps/playground/dist/live/run.js --only live-workspace-panes` | |
-| `nub apps/playground/dist/live/run.js --list \| wc -l` | |
-| `nub apps/playground/dist/smoke/run.js` | |
-| `nub run check` / `lint` / `test` | |
+| `nub run --filter playground build` | exit `0` |
+| `nub apps/playground/dist/smoke/run.js --only workspace-panes` | **1/1**, exit `0`; **27** checks (was 25) |
+| `nub apps/playground/dist/live/run.js --only live-workspace-panes` | **1/1**, exit `0`; **39** checks; three consecutive runs; one screenshot |
+| `nub apps/playground/dist/live/run.js --list \| wc -l` | **69** (was 68) |
+| `nub apps/playground/dist/smoke/run.js` | **101/101** (**3554** checks, 64 capabilities), exit `0` |
+| `nub run check` / `lint` / `test` | exit `0`; playground 417 tests, `@gpuix/testing` 61, primitives 282 |
 
-Measured offsets (fill in):
+The full live suite was **not** run: it is the merge/release gate and this change
+is additive. The registry count comes from `--list`.
 
-| Moment | `ws-log-inner` | `ws-log-outer` |
-| ------ | -------------- | -------------- |
-| guard on, wheel `-120` | | |
-| guard off, wheel `-120` | | |
-| wheel `ws-log-row-10` `+240` | | |
+**A measured route correction.** The plan's first attempt exercised the guard
+on the inner *container* before any scroll and then toggled it off. The guard-on
+wheel worked (`inner -120`, `outer 0`), but the following guard-off wheel
+delivered **nothing** (`inner -120`, `outer 0`): a second container wheel after
+the container had scrolled is not aimed at the paint. The working order is the
+one shipped: prove chaining first (the container wheel at a fresh origin), return
+the outer to `0` over a visible outer row, then aim the guard-on wheel at a
+**painted inner row** (`ws-inner-row-14`). That is also why the live twin wheels
+the row, not the container, for the guard.
 
-Mutation proofs, each observed and reverted: M1 … M5 …
+Measured offsets (`ws-log-inner` / `ws-log-outer`):
+
+| Moment | inner | outer |
+| ------ | ----- | ----- |
+| guard off, wheel container `-240` | `-240` | `-240` (chains) |
+| wheel `ws-log-row-10` `+240` | `-240` | `0` |
+| guard on, wheel `ws-inner-row-14` `-120` | `-360` | `0` (stays) |
+
+Mutation proofs, each observed and reverted:
+
+- **M1** — forced the inner's `pointerEvents` to `"none"`: headless
+  `the guard stops the wheel at the inner scroller: expected 0, got -120`;
+  live `the live guard stops the ancestor wheel: expected 0, got -120` (both
+  exit `1`).
+- **M2** — forced `pointerEvents: "auto"`: headless
+  `an unguarded nested scroller chains to its ancestor: expected -240, got 0`;
+  live `the unguarded live nested scroller chains: expected -240, got 0` (both
+  exit `1`).
+- **M3** — mounted the editor pane conditionally instead of hiding it: headless
+  `the inactive editor pane stays mounted: expected true, got false`; live
+  errored with `AutomationError: Locator did not match any element` for
+  `ws-editor-marker` (both exit `1`).
+- **M4** — made the live drag a no-op (`0` px): live
+  `the live drag resized the workspace: expected "active=tree top=300 guard=on", got "active=tree top=240 guard=on"`, exit `1`.
+- **M5** — removed the tree slot's `visibility` toggle: headless
+  `the hidden tree pane leaves the paint: expected 0, got 2`; live
+  `the hidden live tree leaves the paint: expected 0, got 4` (both exit `1`).

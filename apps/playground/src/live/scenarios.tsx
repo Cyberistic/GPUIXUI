@@ -55,6 +55,7 @@ import { tableSelectSortScenario } from "../scenarios/table.js";
 import { messageScrollerScenario } from "../scenarios/message-scroller.js";
 import { logViewerScenario } from "../scenarios/log-viewer.js";
 import { workspaceRestoreScenario } from "../scenarios/workspace-restore.js";
+import { workspacePanesScenario } from "../scenarios/workspace-panes.js";
 import { replaceScenario } from "../scenarios/replace.js";
 import { tier2DialogScenario } from "../scenarios/tier2-dialog.js";
 import { tier2FoundationScenario } from "../scenarios/tier2-foundation.js";
@@ -266,6 +267,27 @@ const waitForAnchor = (ctx: LiveContext, testId: string, expected: string) =>
   ctx.host.listScrollTop(testId).pipe(
     Effect.flatMap((anchor) =>
       anchor !== null && `${anchor[0]},${anchor[1]}` === expected
+        ? Effect.void
+        : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** Waits up to three seconds for `testId`'s scroll offset on `axis` to reach `expected`. */
+const waitForOffset = (
+  ctx: LiveContext,
+  testId: string,
+  axis: "x" | "y",
+  expected: number,
+) =>
+  ctx.host.scrollOffset(testId).pipe(
+    Effect.flatMap((offset) =>
+      offset !== null && offset[axis] === expected
         ? Effect.void
         : Effect.fail("not yet"),
     ),
@@ -4699,6 +4721,225 @@ const restore: LiveScenario = {
     }),
 };
 
+const workspacePanes: LiveScenario = {
+  id: "live-workspace-panes",
+  title: "Live tabbed panes: hidden state, the wheel guard and a resize",
+  capability: "workspace",
+  view: workspacePanesScenario.view,
+  ready: "ws-readout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const treeRows = () =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.length(
+            Arr.filter(lines, (line) => Str.startsWith("tree row ")(line)),
+          ),
+        );
+      const anchorIndex = (label: string) =>
+        Effect.gen(function* () {
+          const value = yield* ctx.expectSome(
+            label,
+            Option.fromNullishOr(yield* ctx.host.listScrollTop("ws-tree")),
+          );
+          return value[0];
+        });
+      const yOf = (testId: string) =>
+        Effect.map(offsetOf(ctx, testId), (offset) => offset.y);
+
+      // 1. The window mounts the shared probe at its defaults.
+      yield* waitForText(ctx, "ws-readout", "active=tree top=240 guard=off");
+      yield* ctx.expectEqual(
+        "the live workspace opens on the tree tab",
+        yield* textOf(ctx, "ws-readout"),
+        "active=tree top=240 guard=off",
+      );
+
+      // 2. A hidden pane leaves the paint but keeps its React subtree.
+      yield* ctx.expectEqual(
+        "the live tree paints its virtual rows",
+        (yield* treeRows()) > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the hidden live editor does not paint",
+        Option.isSome(
+          Arr.findFirst(
+            yield* ctx.host.paintedText(),
+            Str.includes("Editor pane"),
+          ),
+        ),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "the hidden live editor stays mounted",
+        yield* textOf(ctx, "ws-editor-marker"),
+        "Editor pane",
+      );
+
+      // 3. A real click inside a virtual row records the pick.
+      yield* ctx.host.click("ws-tree-row-2");
+      yield* settle;
+      yield* waitForText(ctx, "ws-tree-pick", "pick=2");
+      yield* ctx.expectEqual(
+        "a live virtual row click records its pick",
+        yield* textOf(ctx, "ws-tree-pick"),
+        "pick=2",
+      );
+
+      // 4. A real wheel over the nested scroller chains to its ancestor.
+      yield* ctx.host.wheel("ws-log-inner", 0, -240);
+      yield* waitForOffset(ctx, "ws-log-inner", "y", -240);
+      yield* waitForOffset(ctx, "ws-log-outer", "y", -240);
+      yield* ctx.expectEqual(
+        "the live nested scroller takes the wheel",
+        yield* yOf("ws-log-inner"),
+        -240,
+      );
+      yield* ctx.expectEqual(
+        "the unguarded live nested scroller chains",
+        yield* yOf("ws-log-outer"),
+        -240,
+      );
+
+      // 5. A wheel over a visible outer row returns the outer scroller.
+      yield* ctx.host.wheel("ws-log-row-10", 0, 240);
+      yield* waitForOffset(ctx, "ws-log-outer", "y", 0);
+      yield* ctx.expectEqual(
+        "a live wheel on an outer row returns the outer scroller",
+        yield* yOf("ws-log-outer"),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "the inner keeps its live offset while the outer moves",
+        yield* yOf("ws-log-inner"),
+        -240,
+      );
+
+      // 6. The guard keeps a real wheel inside the inner scroller. The wheel
+      // is aimed at a painted inner row: after the ancestor scroll the
+      // headless tracker's container box is stale (plan 177 §8).
+      yield* ctx.host.click("ws-log-guard");
+      yield* settle;
+      yield* waitForText(ctx, "ws-readout", "guard=on");
+      yield* ctx.host.wheel("ws-inner-row-14", 0, -120);
+      yield* waitForOffset(ctx, "ws-log-inner", "y", -360);
+      yield* ctx.expectEqual(
+        "the guarded live inner scroller takes the wheel",
+        yield* yOf("ws-log-inner"),
+        -360,
+      );
+      yield* ctx.expectEqual(
+        "the live guard stops the ancestor wheel",
+        yield* yOf("ws-log-outer"),
+        0,
+      );
+
+      // 7. A tab switch hides the tree and shows the editor.
+      yield* ctx.host.click("ws-tab-editor");
+      yield* settle;
+      yield* waitForText(ctx, "ws-readout", "active=editor");
+      yield* ctx.expectEqual(
+        "the live tab switch activates the editor",
+        yield* textOf(ctx, "ws-readout"),
+        "active=editor top=240 guard=on",
+      );
+      yield* ctx.expectEqual(
+        "the hidden live tree leaves the paint",
+        yield* treeRows(),
+        0,
+      );
+      yield* ctx.host.click("ws-editor");
+      yield* settle;
+      yield* ctx.host.key("n");
+      yield* settle;
+      yield* ctx.host.key("o");
+      yield* settle;
+      yield* ctx.host.key("t");
+      yield* waitForText(ctx, "ws-draft", "draft=not");
+      yield* ctx.expectEqual(
+        "the live editor keeps a local draft",
+        yield* textOf(ctx, "ws-draft"),
+        "draft=not",
+      );
+
+      // 8. Switching back restores the paint and the hidden pane's state.
+      yield* ctx.host.click("ws-tab-tree");
+      yield* settle;
+      yield* waitForText(ctx, "ws-readout", "active=tree");
+      yield* ctx.expectEqual(
+        "the live tree repaints on its tab",
+        (yield* treeRows()) > 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a hidden live pane keeps its pick",
+        yield* textOf(ctx, "ws-tree-pick"),
+        "pick=2",
+      );
+      yield* ctx.expectEqual(
+        "the live tree opens at its first row",
+        yield* anchorIndex("the live tree reports an anchor"),
+        0,
+      );
+
+      yield* ctx.host.scrollToItem("ws-tree", 20);
+      yield* settle;
+      yield* waitForAnchor(ctx, "ws-tree", "20,0");
+      yield* ctx.expectEqual(
+        "scrollToItem anchors the live tree",
+        yield* anchorIndex("the anchored live tree reports an anchor"),
+        20,
+      );
+
+      // 9. The hidden pane is not in the native tab order.
+      yield* ctx.host.click("ws-tab-editor");
+      yield* settle;
+      yield* ctx.host.focusNext();
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the hidden live tree leaves the tab order",
+        yield* focusedOf(ctx),
+        "ws-editor",
+      );
+      yield* ctx.host.click("ws-tab-tree");
+      yield* settle;
+      yield* ctx.host.focusNext();
+      yield* settle;
+      yield* ctx.host.focusNext();
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the visible live pane's control is the next stop",
+        yield* focusedOf(ctx),
+        "ws-tree-action",
+      );
+
+      // 10. A paced live drag re-windows the list and keeps its anchor.
+      yield* ctx.host.scrollToItem("ws-tree", 30);
+      yield* settle;
+      yield* waitForAnchor(ctx, "ws-tree", "30,0");
+      const paintedBefore = yield* treeRows();
+      yield* ctx.host.drag("workspace-divider", 0, 60);
+      yield* waitForText(ctx, "ws-readout", "top=300");
+      yield* ctx.expectEqual(
+        "the live drag resized the workspace",
+        yield* textOf(ctx, "ws-readout"),
+        "active=tree top=300 guard=on",
+      );
+      yield* ctx.expectEqual(
+        "a taller live pane paints more rows",
+        (yield* treeRows()) > paintedBefore,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live list anchor survives the resize",
+        yield* anchorIndex("the resized live tree reports an anchor"),
+        30,
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${workspacePanes.id}.png`);
+    }),
+};
+
 const tableSort: LiveScenario = {
   id: "live-table-sort",
   title: "Live table sort: a reorder, a row click and a surviving selection",
@@ -8688,6 +8929,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   scroller,
   log,
   restore,
+  workspacePanes,
   tier2Dialog,
   tier2Menu,
   tier2Toast,

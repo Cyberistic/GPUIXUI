@@ -58,14 +58,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 100/100 plans-and-harness
+`[x]` `[██████████]` 101/101 plans-and-harness
 
-`[~]` Prove the **tabbed panes in a real window** per plan `575` and prove the
-      nested-scroller wheel guard in both harnesses: the guard was toggled but
-      never exercised (the pointer could not reach the inner scroller after an
-      ancestor scroll). Exercise it **first** (guard on, wheel the inner, the
-      outer must stay), then chain with it off, and add `live-workspace-panes`
-      for hidden-pane state, tab order and a paced live resize.
+`[x]` Prove the **tabbed panes in a real window** per plan `575` and prove the
+      nested-scroller wheel guard in both harnesses. The guard had only been
+      toggled, never exercised, because the inner's recorded box goes stale after
+      an ancestor scroll; the probe now wheels a **painted inner row** with the
+      guard on (inner `-240 → -360`, outer `0`) after the chain was proven off
+      (`outer -240`). `live-workspace-panes` (39 checks) repeats hidden-pane
+      retention, the guard, the tab order and a paced `+60` resize (more rows,
+      anchor `30`) in the real 1100×720 window. Headless `workspace-panes` 27
+      checks, headless stays **101/101**; live registry `68 → 69`. Five mutation
+      proofs (guard forced off → `outer -120`; guard forced on → `outer 0`;
+      conditional editor mount → missing marker/draft; no-op drag → `top=240`;
+      always-visible slot → hidden rows still paint), each observed and reverted.
+      Focused ids run: `workspace-panes`, `live-workspace-panes`; `check`, `lint`
+      and `test` green.
 
 `[x]` Prove the **log viewer in a real window** per plan `571`: the Tier 4
       log-viewer follow contract was headless-only and its no-snap-back claim
