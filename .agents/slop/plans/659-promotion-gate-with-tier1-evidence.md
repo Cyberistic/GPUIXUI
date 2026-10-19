@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release verification) |
 | Owner | playground |
 | Depends on | `517` (focused live runs), `529` (the release-tag binding), `639` (the live-registry guard), `653` (capability coverage), `656` (the capture-capable live runner), `657` (the previous full gate), `658` (the added Tier 1 live checks) |
@@ -280,6 +280,33 @@ component behaviour is mutated (M1/M2 in plan `658` §8).
 - The plan is marked `landed` with the exact head and commands.
 - The commit is pushed to `origin/agent/playground`; `master` is untouched.
 
-## 8. Results (to be filled by the executor)
+## 8. Results (2026-10-19, darwin-x64, release-tag binding)
 
-Pending.
+The gate ran at `69392032` — the plan commit on top of the code head
+`d9346a9d` (plan `658`). The only difference is this plan file and its index
+row, so the measured totals describe the same code the promotion merge sees.
+
+**Headless** — `nub apps/playground/dist/smoke/run.js` is **105/105**, exit
+`0`, **3802 checks**, 65 capabilities, **128.6 s** (`durationMs` 128637).
+`--list` printed 105 ids. Host:
+`gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+`.artifacts/smoke-report.json` was rewritten by this run.
+
+**Live** — `nub apps/playground/dist/live/run.js --all` is **94/94**, exit
+`0`, **2469 checks**, 61 capabilities, **1040.8 s** (`durationMs` 1040752).
+`--list` printed 94 ids. Host:
+`gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
+The check total is exactly the plan-`657` 2447 plus the 22 plan `658` added to
+`live-primitives-display`, which proves the new checks executed in the full
+registry. `.artifacts/live-report.json` was rewritten; a plain `--all` wrote
+**no** `provenance.json` (no `--capture`).
+
+**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+Test counts: playground **439**, components **308**, primitives **282**,
+tokens **196**, tw **103**, testing **61**, icons **19**, docs **7** — unchanged
+from plan `658` (this plan changes prose only).
+
+**No source change.** No scenario, view, host verb, component, registry entry
+or test was edited; the run is the release evidence for the promotion merge.
+The owner/supervisor still performs the fast-forward; this workstream never
+pushes to `master`.

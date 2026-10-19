@@ -96,12 +96,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3802 checks**, 65 capabilities; plan `658` added 37 of them to `primitives-display`). The live suite **last ran in full at 94/94**
-(`live-report.json`, **2447 checks**, 61 capabilities, 921.6 s, exit `0`) on
-2026-10-19, the merge/release gate on the final branch. **Plan `658` then added
-22 checks to `live-primitives-display`** (12 → 34), so the next promotion gate
-re-measures the live total; no new full live run is claimed here. The recorded
-gate covered every live scenario registered at that point, including `live-scale` (plan `620`, the
+The suite is **105/105 green here** (exit `0`, `.artifacts/smoke-report.json`, **3802 checks**, 65 capabilities, 128.6 s; plan `658` added 37 of them to `primitives-display`). The live suite **last ran in full at 94/94**
+(`live-report.json`, **2469 checks**, 61 capabilities, **1040.8 s**, exit `0`)
+on 2026-10-19, the merge/release gate on the final branch (plan `659`, code
+head `d9346a9d`). That total is plan `657`'s 2447 plus the **22 checks plan
+`658` added to `live-primitives-display`** (12 → 34), so the added Tier 1
+window evidence is included rather than merely registered. The gate covered every live scenario registered at that point, including `live-scale` (plan `620`, the
 retained-tree cost model in a window), `live-selection-signal` (plan `615`,
 the window's selection-change event), `live-toast` (plan `623`, the viewport's
 layering and focus contract), `live-text-entry` (plan `624`, the native
@@ -164,9 +164,9 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**94/94 green** (2447 checks, 61 capabilities, 921.6 s) on the release-tag
-binding through plan `656`'s capture-capable live runner (plan `657`'s gate;
-a plain `--all` wrote no frame or `provenance.json`), and the **full
+**94/94 green** (2469 checks, 61 capabilities, 1040.8 s) on the release-tag
+binding through plan `656`'s capture-capable live runner (plan `659`'s gate on
+code head `d9346a9d`; a plain `--all` wrote no frame or `provenance.json`), and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `scale`, `reorder` and `tree-reorder` are confirmed there too

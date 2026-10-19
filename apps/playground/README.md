@@ -2045,23 +2045,18 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **94/94** (`exit 0`, 2447 checks, 61
-capabilities, 921.6 s, `.artifacts/live-report.json`, 2026-10-19) on the head
-that includes plan `656`'s live capture CLI (`034d78df`), including every
-scenario this branch added through `live-theme-platform` (plan `654`, the
-platform type styles in a window) and `live-shell` through the changed
-`program`/`mount` path. A plain `--all` wrote no frame and no
+The last full merge/release gate ran **94/94** (`exit 0`, **2469** checks, 61
+capabilities, **1040.8 s**, `.artifacts/live-report.json`, 2026-10-19) on the
+code head `d9346a9d` (plan `659`), including every scenario this branch added
+through `live-theme-platform` (plan `654`, the platform type styles in a
+window), `live-shell` through plan `656`'s capture-capable runner, and plan
+`658`'s Tier 1 additions — `live-primitives-display` is 34 checks, and the
+total is plan `657`'s 2447 plus those 22. A plain `--all` wrote no frame and no
 `provenance.json`; plan `656` holds the focused capture evidence. This gate
-(plan `657`) supersedes plan `655`'s 94/94 run on `651e2419` and plan `648`'s
-93/93 run, and is the gate for the promotion merge; the owner/supervisor
-performs that merge. The full live suite is a merge/release gate rather than a
-per-task check.
-
-**Addendum (plan `658`):** `live-primitives-display` gained 22 checks
-(12 → 34) after this gate — the RangeSlider pointer/key pair, the ButtonGroup
-gaps, the Spinner and indeterminate-Progress boxes. The recorded 94/94 predates
-them, so the next promotion gate re-measures the full live total; no new total
-is claimed here. The focused twin is green three times (34/34, exit `0`).
+supersedes plan `657`'s 94/94 on `034d78df`, plan `655`'s 94/94 run on
+`651e2419` and plan `648`'s 93/93 run, and is the gate for the promotion merge;
+the owner/supervisor performs that merge. The full live suite is a
+merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2254,9 +2249,9 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **94/94** on
-  2026-10-19 (2447 checks, 61 capabilities, 921.6 s, exit `0`, the merge gate;
-  plan `657` on the head that includes plan `656`'s live capture CLI, with
-  `live-theme-platform` and `live-shell` included) — the plan `532` terminal
+  2026-10-19 (**2469** checks, 61 capabilities, 1040.8 s, exit `0`, the merge
+  gate; plan `659` on code head `d9346a9d`, including plan `658`'s Tier 1
+  checks, `live-theme-platform` and `live-shell`) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan

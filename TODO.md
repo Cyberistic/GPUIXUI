@@ -71,7 +71,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 112/112 plans-and-harness
+`[x]` `[██████████]` 113/113 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes plan `658`'s Tier 1
+      window evidence** per plan `659`: verification only, at `69392032` (the
+      docs-only plan commit on code head `d9346a9d`) — headless **105/105**
+      (**3802** checks, 65 capabilities, 128.6 s) and live **94/94** (**2469**
+      checks, 61 capabilities, **1040.8 s**), both exit `0`. The live total is
+      plan `657`'s 2447 plus plan `658`'s 22 added checks, so the new Tier 1
+      checks ran in the full registry; a plain `--all` wrote no frame or
+      `provenance.json`. `nub run check`, `nub run lint` and `nub run test`
+      green (playground 439, components 308, primitives 282, tokens 196,
+      tw 103, testing 61, icons 19, docs 7). No source change. Exact ids: the
+      whole headless registry and the whole live registry (`--all`).
 
 `[x]` Complete the **last Tier 1 window evidence** per plan `658`: `RangeSlider`,
       `ButtonGroup`, `Spinner` and the indeterminate `Progress` were the only
@@ -1577,9 +1589,12 @@ focused id is `live-frames`.
       and a plain `--all` writing no frame or sidecar. This is now the gate for
       the promotion merge.
       **Addendum (plan `658`):** `live-primitives-display`
-      then gained 22 checks (12 → 34) for the RangeSlider, ButtonGroup and
-      loading-indicator evidence, so the next merge gate must cover the current
-      head; the recorded 94/94 live total predates them and is not re-claimed.
+      gained 22 checks (12 → 34) for the RangeSlider, ButtonGroup and
+      loading-indicator evidence. **Superseded by plan `659`:** the gate re-ran
+      on code head `d9346a9d` — live **94/94** (**2469** checks, 61
+      capabilities, 1040.8 s) and headless **105/105** (3802 checks), both exit
+      `0`, so the 22 new checks are included in the current promotion gate. The
+      owner/supervisor still performs the fast-forward.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
