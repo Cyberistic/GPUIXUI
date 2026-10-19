@@ -64,9 +64,32 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 101/101 plans-and-harness
-
 `[x]` `[██████████]` 103/103 plans-and-harness
+
+`[x]` Prove the **virtualized, panned data grid in a real window** per plan
+      `606`: `data-grid-virtual` was the last Tier 3 composition with no live
+      twin (`live-grid` drives plain rows; `live-data-grid-columns` asserts a
+      resize over this view but not the composition). `live-data-grid`
+      (**83 checks**, two consecutive focused runs, exit `0`) mounts plan
+      `338`'s view in the real 1100×720 window: a vertical wheel virtualizes
+      the `<virtual-list>` body (anchor `10`, header and pan unchanged), a
+      header `deltaX` wheel pans header and body together (`-90`, then `-400`
+      at the far edge) with the frozen column still, a panned body cell selects
+      its row and takes native focus, the frozen row follows
+      `getListScrollTop`, a filter from anchor 45 narrows `60 → 11` and resets
+      to 0, and a sort from 45 resets and flips (`Item 059` / `Item 000`).
+      **Two measured rules:** a `deltaX` wheel over a body **cell** pans the
+      scroller live (`-400 → -310`) while the offscreen runtime swallows the
+      same verb (plan `338`) — a harness difference, so the headless suite
+      keeps using the affordance; and a live wheel sent in the same protocol
+      step as its pointer move can land at the old position, so every wheel is
+      preceded by `hover` + `settle` (the difference between two green runs and
+      four failures). M1 (no anchor reset), M2 (frozen column off by one) and
+      M3 (no `overflowX`) fail as predicted; M4 (`ROW_HEIGHT 28 → 30`) first
+      **passed**, so the twin gained a row-height and row-pitch check and now
+      fails at `expected 28 ± 1, got 30`. Live registry `85 → 86`; headless
+      unchanged at `103/103`, control `data-grid-virtual` green (59 checks).
+      Focused ids run: `data-grid-virtual`, `live-data-grid`.
 
 `[x]` Prove the **QR rendering recipe in a real window** per plan `599`:
       `qr-code` (plan `518`) was the last capability with only `TestRenderer`

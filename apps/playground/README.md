@@ -1429,7 +1429,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 85 scenarios. `smoke:live` opens
+live registry lists 86 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1473,6 +1473,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-workspace-panes` | the shared tabbed-panes view in a window: the hidden editor pane paints nothing but stays mounted, the tree keeps its pick, draft and anchor, a real wheel chains the inner scroller to its ancestor (`-240`) until `pointerEvents: "auto"` guards it (inner `-240 → -360`, outer stays `0`), the hidden pane leaves the native tab order, and a paced `+60` drag paints more virtual rows with the anchor still `30` — 39 checks (plan `575`) |
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
 | `live-grid` | the pinned, windowed grid in a window: a real wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan reaches `-360` and the last viewport at `-1700` with header/body alignment, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal — 53 checks (plan `556`). Every child of a live scroller reports a moved box whatever its `position`, so `sticky` stays a headless claim; a scroller's own box moves with its scroll and must be cached first |
+| `live-data-grid` | the virtualized data grid in a window: a real wheel virtualizes the `<virtual-list>` body (header stays, pan stays `0`), a header `deltaX` wheel pans the header and body together (`-90`, then `-400` at the far edge) with the frozen column still, a panned body cell selects its row and takes native focus, the frozen row follows `getListScrollTop`, and a filter/sort from anchor `45` resets to `0` (`count=11`, first `1`; descending first `59`) — 83 checks (plan `606`). **Measured harness difference:** a `deltaX` wheel over a body **cell** pans the scroller live (`-400 → -310`), while the offscreen `TestRenderer` swallows the same verb (plan `338`), so the headless suite keeps using the affordance. A wheel needs the pointer over its target first (`hover` + settle), or the window can deliver it at the previous pointer position |
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` without hover, a release returns `100`, and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -1894,9 +1895,11 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The live window suite is **85/85 green** here (`exit 0`, 2090 checks, 56
-capabilities, 916.2 s, `.artifacts/live-report.json`, 2026-10-19) — the
-merge/release gate on the final branch.
+The last full merge/release gate ran **85/85** (`exit 0`, 2090 checks, 56
+capabilities, 916.2 s, `.artifacts/live-report.json`, 2026-10-19). Plan `606`
+added `live-data-grid` after that gate; it is verified focused
+(`--only live-data-grid`, 83 checks, two consecutive green runs), so the
+registry is now **86** and the next full run is a merge/release gate.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2094,9 +2097,9 @@ narrower. Each deviation is deliberate and measured:
   `559`'s `live-tree`, plan `565`'s two tab-strip twins and the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
   drag, and the shipped Tier 2 scroller/command paths) are all included.
-  The registry is **85** after the focused twins since that gate (plans
-  `591`–`594`, `599` and `601`); the full suite is a **merge/release gate** and the next
-  run must cover all 85 —
+  The registry is **86** after the focused twins since that gate (plans
+  `591`–`594`, `599`, `601` and `606`); the full suite is a **merge/release gate**
+  and the next run must cover all 86 —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

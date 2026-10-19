@@ -88,6 +88,7 @@ import { tier2FlowScenario } from "../scenarios/tier2-flow.js";
 import { tier2ScrollerScenario } from "../scenarios/tier2-scroller.js";
 import { tier2CommandScenario } from "../scenarios/tier2-command.js";
 import { propertyPanelScenario } from "../scenarios/property-panel.js";
+import { dataGridScenario } from "../scenarios/data-grid.js";
 import { dataGridColumnsScenario } from "../scenarios/data-grid-columns.js";
 import { gridScenario } from "../scenarios/grid.js";
 import {
@@ -256,6 +257,22 @@ const waitForTextNot = (ctx: LiveContext, testId: string, value: string) =>
   ctx.host.text(testId).pipe(
     Effect.flatMap((text) =>
       text !== null && text !== value ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** Waits up to three seconds for `testId`'s painted text to drop `needle`. */
+const waitForTextLacking = (ctx: LiveContext, testId: string, needle: string) =>
+  ctx.host.text(testId).pipe(
+    Effect.flatMap((text) =>
+      text !== null && !Str.includes(needle)(text)
+        ? Effect.void
+        : Effect.fail("not yet"),
     ),
     Effect.retry(
       Schedule.spaced("50 millis").pipe(
@@ -6469,6 +6486,344 @@ const grid: LiveScenario = {
     }),
 };
 
+/** A `dg-state` field, so the twin reads the readout a human does. */
+const dataGridField = (ctx: LiveContext, key: string) =>
+  Effect.gen(function* () {
+    const state = yield* textOf(ctx, "dg-state");
+    return Option.getOrElse(
+      Option.map(
+        Arr.findFirst(Str.split(state, " "), Str.startsWith(`${key}=`)),
+        Str.replace(`${key}=`, ""),
+      ),
+      () => "none",
+    );
+  });
+
+/** A `dg-state` numeric field, or `-1` so a comparison names the absence. */
+const dataGridNumber = (ctx: LiveContext, key: string) =>
+  Effect.map(dataGridField(ctx, key), (value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : -1;
+  });
+
+/** The frozen column's row sits on the body row the readout names first. */
+const frozenFollows = (ctx: LiveContext) =>
+  Effect.gen(function* () {
+    const id = yield* dataGridNumber(ctx, "first");
+    const frozen = yield* boxOf(ctx, `dg-frozen-row-${id}`);
+    const body = yield* boxOf(ctx, `dg-row-${id}`);
+    yield* ctx.expectNear(
+      `the frozen row for live row ${id} aligns with its body row`,
+      frozen.y,
+      body.y,
+      1,
+    );
+  });
+
+/**
+ * The virtualized, panned data grid in a real window (plan `606`).
+ *
+ * `live-grid` drives plain rows and `live-data-grid-columns` asserts a resize;
+ * this twin asserts the composition itself: a vertical wheel virtualizes the
+ * `<virtual-list>` body, a header `deltaX` wheel pans the header and body
+ * together, the frozen column follows the list anchor, a panned cell is a hit
+ * target, and a sort/filter from a deep anchor returns to the top.
+ */
+const liveDataGrid: LiveScenario = {
+  id: "live-data-grid",
+  title:
+    "Live data grid: virtual rows, a pan, a frozen column, sort and filter",
+  capability: "data-grid",
+  view: dataGridScenario.view,
+  ready: "dg-grid",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      // 1. The frozen column is outside the pan; row 0 shares its line.
+      const grid = yield* boxOf(ctx, "dg-grid");
+      yield* ctx.expectNear(
+        "the live grid keeps its declared height",
+        grid.height,
+        328,
+        1,
+      );
+      const frozenHead = yield* boxOf(ctx, "dg-frozen-head");
+      const pan = yield* boxOf(ctx, "dg-pan");
+      yield* ctx.expectNear(
+        "the live pan starts after the frozen column",
+        pan.x,
+        grid.x + 150,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live pan is the viewport width",
+        pan.width,
+        500,
+        1,
+      );
+      const row0 = yield* boxOf(ctx, "dg-frozen-row-0");
+      const body0 = yield* boxOf(ctx, "dg-row-0");
+      yield* ctx.expectNear(
+        "live row 0 aligns with the frozen column",
+        row0.y,
+        body0.y,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the live body row keeps its declared height",
+        body0.height,
+        28,
+        1,
+      );
+      const body1 = yield* boxOf(ctx, "dg-row-1");
+      yield* ctx.expectNear(
+        "live body rows advance by their height",
+        body1.y - body0.y,
+        28,
+        1,
+      );
+
+      // 2. A vertical wheel virtualizes the body, not the header or the pan.
+      const headBefore = yield* boxOf(ctx, "dg-headrow");
+      yield* ctx.host.hover("dg-pan");
+      yield* settle;
+      yield* ctx.host.wheel("dg-pan", 0, -280);
+      yield* settle;
+      yield* waitForTextLacking(ctx, "dg-state", "anchor=0");
+      const virtualized = yield* dataGridNumber(ctx, "anchor");
+      yield* ctx.expectEqual(
+        `the live wheel virtualizes the list (anchor=${virtualized})`,
+        virtualized > 0,
+        true,
+      );
+      yield* expectPainted(ctx, "dg-row-0", false);
+      const headAfter = yield* boxOf(ctx, "dg-headrow");
+      yield* ctx.expectNear(
+        "a live vertical wheel leaves the header in place",
+        headAfter.y,
+        headBefore.y,
+        1,
+      );
+      yield* ctx.expectNear(
+        "a live vertical wheel does not pan",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        0,
+        1,
+      );
+      yield* frozenFollows(ctx);
+
+      // 3. A real header deltaX wheel pans the header and the body together.
+      yield* ctx.host.click("dg-pan-home");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "x=0");
+      yield* ctx.host.hover("dg-head-2");
+      yield* settle;
+      yield* ctx.host.wheel("dg-head-2", -90, 0);
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "x=-");
+      yield* ctx.expectNear(
+        "a live header wheel pans the body",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        -90,
+        8,
+      );
+      const firstPanned = yield* dataGridNumber(ctx, "first");
+      const head3 = yield* boxOf(ctx, "dg-head-3");
+      const body3 = yield* boxOf(ctx, `dg-cell-${firstPanned}-3`);
+      yield* ctx.expectNear(
+        "the live header cell aligns with its body cell",
+        head3.x,
+        body3.x,
+        1,
+      );
+      const frozenAfterPan = yield* boxOf(ctx, "dg-frozen-head");
+      yield* ctx.expectNear(
+        "the live frozen column does not pan",
+        frozenAfterPan.x,
+        frozenHead.x,
+        1,
+      );
+
+      // 4. The far edge keeps the alignment.
+      yield* ctx.host.click("dg-pan-end");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "x=-400");
+      yield* ctx.expectNear(
+        "the live pan reaches the far edge",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        -400,
+        2,
+      );
+      const firstAtEdge = yield* dataGridNumber(ctx, "first");
+      const head8 = yield* boxOf(ctx, "dg-head-8");
+      const body8 = yield* boxOf(ctx, `dg-cell-${firstAtEdge}-8`);
+      yield* ctx.expectNear(
+        "the live far header cell aligns with its body cell",
+        head8.x,
+        body8.x,
+        1,
+      );
+
+      // 5. A panned virtual cell hit-tests and takes native focus.
+      const cell9 = `dg-cell-${firstAtEdge}-9`;
+      yield* ctx.host.click(cell9);
+      yield* settle;
+      yield* waitForFocus(ctx, cell9);
+      yield* ctx.expectEqual(
+        "a live panned cell selects its row",
+        yield* dataGridNumber(ctx, "sel"),
+        firstAtEdge,
+      );
+      yield* ctx.expectEqual(
+        "a live panned cell takes native focus",
+        yield* focusedOf(ctx),
+        cell9,
+      );
+      yield* ctx.expectNear(
+        "clicking a live cell does not pan",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        -400,
+        1,
+      );
+
+      // 6. A vertical wheel while panned keeps the pan and realigns the frozen
+      //    column with the new first row.
+      const anchorBefore = yield* dataGridNumber(ctx, "anchor");
+      yield* ctx.host.hover("dg-pan");
+      yield* settle;
+      yield* ctx.host.wheel("dg-pan", 0, -280);
+      yield* settle;
+      yield* waitForTextLacking(ctx, "dg-state", `anchor=${anchorBefore}`);
+      yield* frozenFollows(ctx);
+      yield* ctx.expectNear(
+        "a live vertical wheel keeps the horizontal pan",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        -400,
+        1,
+      );
+
+      // 7. A horizontal wheel over a body **cell** pans the scroller live,
+      //    while the offscreen TestRenderer swallows the same verb (plan 338).
+      //    That is a harness difference; the live twin asserts what a reader's
+      //    pointer does, and the pan affordance still works in both.
+      const panBeforeBodyWheel = yield* Effect.map(
+        offsetOf(ctx, "dg-pan"),
+        (offset) => offset.x,
+      );
+      const firstNow = yield* dataGridNumber(ctx, "first");
+      yield* ctx.host.hover(`dg-cell-${firstNow}-6`);
+      yield* settle;
+      yield* ctx.host.wheel(`dg-cell-${firstNow}-6`, 90, 0);
+      yield* settle;
+      yield* ctx.expectNear(
+        "a live deltaX wheel over a body cell pans the scroller",
+        yield* Effect.map(offsetOf(ctx, "dg-pan"), (offset) => offset.x),
+        panBeforeBodyWheel + 90,
+        8,
+      );
+
+      // 8. An app-owned jump and the runtime anchor agree.
+      yield* ctx.host.click("dg-jump");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "anchor=45");
+      yield* ctx.expectEqual(
+        "the live jump names row 45",
+        yield* dataGridNumber(ctx, "first"),
+        45,
+      );
+      const anchored = yield* ctx.expectSome(
+        "the live list reports its anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("dg-list")),
+      );
+      yield* ctx.expectEqual(
+        "the runtime anchor is the live jump index",
+        anchored[0],
+        45,
+      );
+      yield* frozenFollows(ctx);
+
+      // 9. A filter from a deep anchor resets to the top.
+      yield* ctx.host.click("dg-filter");
+      yield* settle;
+      yield* waitForFocus(ctx, "dg-filter");
+      yield* ctx.host.key("0");
+      yield* settle;
+      yield* ctx.host.key("1");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "count=11");
+      yield* ctx.expectEqual(
+        "the live filter resets the anchor",
+        yield* dataGridNumber(ctx, "anchor"),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "the live filtered set starts at row 1",
+        yield* dataGridNumber(ctx, "first"),
+        1,
+      );
+      yield* expectPainted(ctx, "dg-row-18", true);
+      const filteredPaint = (yield* ctx.host.paintedText()).join(" ");
+      yield* ctx.expectContains(
+        "the live painted text holds the filtered rows",
+        filteredPaint,
+        "Item 01",
+      );
+      yield* ctx.expectEqual(
+        "a live filtered-out row is not painted",
+        Str.includes("Item 059")(filteredPaint),
+        false,
+      );
+      yield* frozenFollows(ctx);
+
+      // 10. Clearing restores the full set at the top.
+      yield* ctx.host.click("dg-clear");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "count=60");
+      yield* ctx.expectEqual(
+        "clearing keeps the live anchor at the top",
+        yield* dataGridNumber(ctx, "anchor"),
+        0,
+      );
+
+      // 11. A sort from a deep anchor resets and flips the order.
+      yield* ctx.host.click("dg-jump");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "anchor=45");
+      yield* ctx.host.click("dg-sort");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "sort=desc");
+      yield* ctx.expectEqual(
+        "the live sort resets the anchor",
+        yield* dataGridNumber(ctx, "anchor"),
+        0,
+      );
+      yield* ctx.expectEqual(
+        "the live descending order starts at the last row",
+        yield* dataGridNumber(ctx, "first"),
+        59,
+      );
+      yield* ctx.expectContains(
+        "the live painted text holds the descending top row",
+        (yield* ctx.host.paintedText()).join(" "),
+        "Item 059",
+      );
+      yield* ctx.host.click("dg-sort");
+      yield* settle;
+      yield* waitForText(ctx, "dg-state", "sort=asc");
+      yield* ctx.expectEqual(
+        "the live ascending order starts at the first row",
+        yield* dataGridNumber(ctx, "first"),
+        0,
+      );
+      yield* ctx.expectContains(
+        "the live painted text holds the ascending top row",
+        (yield* ctx.host.paintedText()).join(" "),
+        "Item 000",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveDataGrid.id}.png`);
+    }),
+};
+
 /** Hovers `testId` and asserts the width the declaration applies. */
 const hoverWidth = (
   ctx: LiveContext,
@@ -11494,6 +11849,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   searchReplace,
   inspector,
   dataGridColumns,
+  liveDataGrid,
   grid,
   liveStates,
   liveTruncation,
