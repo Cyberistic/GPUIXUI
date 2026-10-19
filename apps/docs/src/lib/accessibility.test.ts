@@ -1,6 +1,3 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   accessibilityViolations,
@@ -8,6 +5,7 @@ import {
   missingAria,
   supportedAria,
 } from "./accessibility";
+import { installedNativeDeclarations } from "./native-declarations.testing";
 
 /**
  * The bug guarded: `/docs/accessibility` tells a reader which ARIA attributes
@@ -18,24 +16,14 @@ import {
  * parses `interface HostProps` from the installed declarations, so the module
  * is the only authored copy and the package is the source.
  *
- * `node:fs` is test-only and deliberate: `apps/docs` has no Effect runtime, its
- * bundle must not import `effect` (`architecture.test.ts`), and every content
- * guard here reads repository files the same way (`typography-truth.test.ts`,
- * `component-truth.test.ts`). The Effect FileSystem service has no place in a
- * Vitest content check that never reaches the browser.
+ * `node:fs` is test-only and deliberate; the shared reader lives in
+ * `native-declarations.testing.ts` because `apps/docs` has no Effect runtime,
+ * its bundle must not import `effect` (`architecture.test.ts`), and every
+ * content guard here reads repository files the same way
+ * (`typography-truth.test.ts`, `component-truth.test.ts`). The Effect
+ * FileSystem service has no place in a Vitest content check that never reaches
+ * the browser.
  */
-const resolve = createRequire(import.meta.url).resolve;
-const nativeRoot = dirname(resolve("@gpuix/native"));
-
-/** Every declaration file the installed native package ships. */
-const declarations = (root: string): ReadonlyArray<string> =>
-  readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === "node_modules") return [];
-    const path = join(root, entry.name);
-    if (entry.isDirectory()) return declarations(path);
-    return entry.name.endsWith(".d.ts") ? [readFileSync(path, "utf8")] : [];
-  });
-
 const fixture = `export interface BaseProps { testId?: string }
 export interface HostProps extends BaseProps {
   role?: string;
@@ -138,7 +126,7 @@ describe("the ARIA surface is the installed runtime's", () => {
   it("agrees with the installed package in both directions", () => {
     expect(
       accessibilityViolations({
-        declarations: declarations(nativeRoot).join("\n"),
+        declarations: installedNativeDeclarations().join("\n"),
         supported: supportedAria,
         missing: missingAria,
       }),

@@ -724,6 +724,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "a missing ARIA attribute from the generated accessibility index",
     },
     {
+      query: "testId",
+      expected: "/docs/component-api",
+      first: true,
+      what: "a shared host prop from the generated host-prop index",
+    },
+    {
+      query: "shared host props",
+      expected: "/docs/component-api",
+      first: true,
+      what: "the shared host props section's own heading",
+    },
+    {
       query: "textbox",
       expected: "/docs/components/text-input",
       first: true,

@@ -26,6 +26,7 @@ const sections = [
   "Parts",
   "Controlled and uncontrolled",
   "State-aware styles",
+  "Shared host props",
   "Keyboard",
   "Accessibility",
   "State ownership",
@@ -66,6 +67,14 @@ describe("component API page", () => {
 
   it("renders the parts index generated from the registry", () => {
     expect(page.match(/<PartIndex \/>/g) ?? []).toHaveLength(1);
+  });
+
+  it("renders the shared host props once, and points accessibility at its own table", () => {
+    expect(page.match(/<HostPropsTable \/>/g) ?? []).toHaveLength(1);
+    expect(page).toContain("`testId` is the stable locator");
+    expect(page).toContain(
+      "(/docs/accessibility#what-assistive-technology-sees)",
+    );
   });
 
   it("names the controlled props, the state type and the children type", () => {

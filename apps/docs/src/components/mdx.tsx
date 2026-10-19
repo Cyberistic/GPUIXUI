@@ -9,6 +9,7 @@ import { ComponentIndex } from "./component-index";
 import { ComponentDependencies } from "./component-dependencies";
 import { ComponentState } from "./component-state";
 import { ContrastColors } from "./contrast-colors";
+import { HostPropsTable } from "./host-props-table";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
 import { LiveSurface } from "./preview/live-surface";
@@ -40,6 +41,7 @@ export function getMDXComponents(components?: MDXComponents) {
     ApiIndex,
     AriaSupportTable,
     AccessibilityIndex,
+    HostPropsTable,
     PartIndex,
     PageTemplateSections,
     ComponentState,

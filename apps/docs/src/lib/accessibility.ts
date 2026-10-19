@@ -193,8 +193,12 @@ export const missingAria: ReadonlyArray<MissingAttribute> = [
   },
 ];
 
-/** The `HostProps` interface body, or `""` when the declaration is absent. */
-const hostPropsBody = (declarations: string): string => {
+/**
+ * The `HostProps` interface body, or `""` when the declaration is absent.
+ * Exported for the shared-prop catalogue (plan 587), which reads the same
+ * installed declaration rather than declaring a second source of names.
+ */
+export const hostPropsBody = (declarations: string): string => {
   const start = declarations.indexOf("interface HostProps");
   if (start < 0) return "";
   const open = declarations.indexOf("{", start);

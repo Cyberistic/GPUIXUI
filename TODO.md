@@ -469,18 +469,21 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–586)
+## Docs site workstream (plans 410–499, plus 500–587)
 
-`[~]` `[██████████]` 152/155
+`[~]` `[██████████]` 153/156
 
-`[ ]` **The shared host props have one documented home (plan 587)** — every part
+`[x]` **The shared host props have one documented home (plan 587)** — every part
       inherits the runtime's `HostProps`, so `testId`, `onKeyDown` and
-      `onMouseDownOutside` appear in every generated props table but are
+      `onMouseDownOutside` appeared in every generated props table but were
       explained nowhere and never found by ⌘K (measured: `testId` returned Meter,
-      `onKeyDown` returned Cards). Add `## Shared host props` to Component API
-      with a table derived from the installed `HostProps`, a both-direction
-      guard, and a generated search entry that leaves `aria-*`/`role`/`tabIndex`/
-      `autoFocus` to Accessibility.
+      `onKeyDown` returned Cards). `## Shared host props` on Component API now
+      renders one row per non-accessibility `HostProps` name from a table derived
+      from the installed declarations, guarded in both directions; a generated
+      search entry makes `testId`, `onMouseDownOutside` and `on key down` reach
+      the section first while `style` keeps Theming and `aria-*` keep
+      Accessibility. 17 new tests, 104 files / 748 docs tests, 98-page
+      `smoke:build`, results in plan 587 §6.
 
 `[x]` **Theming documents and indexes the high-contrast palettes (plan 586)** —
       the page named `highContrastLightTheme`/`highContrastDarkTheme` and showed

@@ -1,6 +1,6 @@
 ---
 title: Component API
-description: The conventions every component follows — parts, controlled state, state-aware styles, keyboard and accessibility.
+description: The conventions every component follows — parts, controlled state, state-aware styles, shared host props, keyboard and accessibility.
 ---
 
 Most GPUIXUI components are **compounds**: one exported component and one props
@@ -102,6 +102,24 @@ The state vocabulary is fixed — `active`, `checked`, `closed`, `disabled`,
 part's type is named after the part: `TabsTriggerState`,
 `AccordionTriggerState`, `ComboboxItemState`. Every token a style reads comes
 from the active theme; see [Theming](/docs/theming).
+
+## Shared host props
+
+Every part is a host element, so its props type extends `Props` from
+`@gpuix/react`: the runtime's host props plus React's `key`, `children` and
+`ref`. Each component page's generated table repeats those inherited rows; they
+are defined once here. `testId` is the stable locator the native suites drive,
+and the `style` row is the same merge contract described above.
+
+The accessibility surface — `aria-*`, `role`, `tabIndex` and `autoFocus` —
+belongs to the runtime's tree and has its own table on
+[Accessibility](/docs/accessibility#what-assistive-technology-sees).
+
+<HostPropsTable />
+
+Rows come from the installed `@gpuix/native` declarations, and the docs suite
+fails when the package gains, renames or drops a host prop this table has not
+classified.
 
 ## Keyboard
 

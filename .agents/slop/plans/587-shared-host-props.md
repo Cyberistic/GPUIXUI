@@ -247,11 +247,54 @@ nub apps/docs/scripts/smoke-build.ts --no-build   # after a build
 | page guard | the section, the block and the description cannot disappear | delete the section → `component-api-page.test.ts` fails |
 | `smoke:build` | the production index, not only the fixture, answers | remove the entry → the crawl fails by query |
 
-## 6. Measured runs
+## 6. Measured runs (2026-10-19)
 
-(Filled by the executor after the implementation. Record the before/after table
-above, the focused run, the full suite, `check-types`, `check`, `lint`, `test`
-and `smoke:build` with page/anchor counts.)
+Production index (`/api/search?query=…`, first result), before → after:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `testId` | Meter | `/docs/component-api#shared-host-props` |
+| `on key down` | Cards | `/docs/component-api#shared-host-props` |
+| `onMouseDownOutside` | Cards | `/docs/component-api#shared-host-props` |
+| `host props` | Box limitations prose | `/docs/component-api` |
+| `shared host props` | API reference prose | `/docs/component-api` |
+| `style` | Theming | Theming (unchanged — not promoted) |
+| `aria-label` | Accessibility | Accessibility (unchanged — not promoted) |
+| `highlight` / `motion` | mention-input prose / Cards | unchanged (plain words, not promoted) |
+| `tabindex` / `autofocus` | component prose | unchanged (the accessibility entry keeps its no-promotion rule) |
+
+Test failures before the implementation (new tests run against the plan-586
+code):
+
+1. `src/lib/host-props.test.ts` and `src/lib/host-props-search.test.ts` did not
+   load — the modules did not exist.
+2. `src/components/host-props-table.test.tsx` did not load — the component did
+   not exist.
+3. `component-api-page.test.ts` expected the new section, so its ordered list
+   failed.
+
+Forced defects, each applied alone, run, and reverted:
+
+1. Removed `hostPropsSearchEntry` from `generatedEntries` → **1 test failed**
+   (`is the first result for a shared prop`), proving the production entry is
+   load-bearing.
+2. Deleted `## Shared host props` and the block from `component-api.mdx` →
+   **3 tests failed** (the section order, the block assertion and the page
+   mount).
+3. Removed the `isDistinctiveName` filter → **1 test failed**
+   (`leaves plain words and accessibility-owned props out of the promotion`),
+   proving `style`/`aria-*` cannot silently steal their pages.
+
+The guard fixtures prove the other directions: a prop added to the installed
+`HostProps` without a row, a documented prop the package removed, a duplicate
+row, a blank summary, and an accessibility-owned name documented twice all fail
+by name.
+
+Final: `nub run --filter docs test` — **104 files / 748 tests**;
+`check-types` green; `smoke:build` **98 pages / 1 281 anchors**, exit `0`, the
+two new production queries pass; `smoke:a11y --only /docs/component-api` **0
+violations in both schemes**; `nub run check`, `nub run lint` and `nub run test`
+green at the repo root (docs 104/748, total suite green).
 
 ## 7. STOP conditions
 
