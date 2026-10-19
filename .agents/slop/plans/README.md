@@ -292,6 +292,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [618](./618-applied-default-elevation.md) | A default request takes the requested palette's elevation opacity | F | 301, 373, 505, 541, 545, 551 | done |
 | [619](./619-selection-row-press.md) | The selectable row's press step | F | 327, 357, 381, 502, 595 | done |
 | [620](./620-fixed-surface-chrome.md) | The fixed surfaces hold their own chrome | F | 353, 358, 384, 531, 556, 598, 601, 604, 619 | done |
+| [621](./621-time-segment-two-digits.md) | The time segment holds two digits | F | 358, 384, 552, 556, 620 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3156,6 +3157,17 @@ notification panel `2·lg + unreadDot + sm + bodyStrong`, and the overlay
 `2·md + md + md + label`. Every shipped set clears them (380/320/180 against
 66/50/53 at the shipped identity), so no value moves; the guards protect the
 `components` migrations `TODO.md` already schedules.
+
+Plan `621` closes the last fixed text surface whose content does not wrap.
+`timeSegmentWidth` was held to **one `body` em**, but `TimePickerSegment` paints
+the padded two-digit `HH`/`MM` value; a copied theme with a 24px body and a 24px
+segment passed every check while the segment could not show its own value. The
+bound is now two tabular digits at a 0.65em advance, rounded up to a paintable
+pixel — `Math.ceil(2 * 0.65 * body.fontSize)`, 19px at the shipped 14px body, so
+the shipped 26px segment still passes (1.37×) and no token moves. The rule names
+its font assumption: a theme that chooses a face with wider digits must widen
+the segment. The new suite proves the pre-fix pass both directions, and the old
+one-em case in `fixed-surface-metrics.test.ts` moves with the rule.
 
 ## How to use a plan
 
