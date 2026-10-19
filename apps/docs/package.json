@@ -21,6 +21,7 @@
     "smoke:platform": "nub scripts/smoke-platform.ts",
     "smoke:search": "nub scripts/smoke-search.ts",
     "smoke:theme": "nub scripts/smoke-theme.ts",
+    "smoke:theme-editor": "nub scripts/smoke-theme-editor.ts",
     "smoke:a11y": "nub scripts/smoke-a11y.ts",
     "smoke:responsive": "nub scripts/smoke-responsive.ts",
     "smoke:console": "nub scripts/smoke-console.ts",

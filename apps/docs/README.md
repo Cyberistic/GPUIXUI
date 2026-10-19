@@ -53,6 +53,7 @@ nub run --filter docs smoke:preview # drive the live GPUix surface in headless C
 nub run --filter docs smoke:keyboard # skip link, focus ring and Enter in a real browser
 nub run --filter docs smoke:platform # the toggle: click, URL, storage, arrows
 nub run --filter docs smoke:theme   # the theme switch: class, storage, previews
+nub run --filter docs smoke:theme-editor # the editor: repaint, share URL, reset
 nub run --filter docs smoke:responsive # 390 px: no sideways scroll and no clipped column
 nub run --filter docs smoke:a11y   # axe over every page in both schemes
 nub run --filter docs build:preview # only rebuild the live surface (public/gpuix-preview)

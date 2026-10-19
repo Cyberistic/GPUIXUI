@@ -136,18 +136,27 @@ export function usePreviewTheme(): Theme {
   return platformTheme(themes[mode], platform);
 }
 
-/** The token surface every preview paints on; it reads no doc-site colour. */
+/**
+ * The token surface every preview paints on; it reads no doc-site colour.
+ *
+ * `locked` marks the theme editor's surfaces: they follow the editor's base
+ * theme, not the docs chrome, so the site-wide preview gates (which require
+ * every `data-preview-surface` to paint the docs mode) must not read them.
+ */
 export function PreviewSurface({
   theme,
+  locked = false,
   children,
 }: {
   readonly theme?: Theme;
+  readonly locked?: boolean;
   readonly children: React.ReactNode;
 }) {
   const active = usePreviewTheme();
   return (
     <div
-      data-preview-surface=""
+      data-preview-surface={locked ? undefined : ""}
+      data-theme-editor-surface={locked ? "" : undefined}
       style={{
         ...previewVars(theme ?? active),
         background: "var(--preview-color-background)",

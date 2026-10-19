@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–594)
 
-`[x]` `[██████████]` 161/161
+`[x]` `[██████████]` 162/162
+
+`[x]` **The theme editor (plan 595)** — `/docs/theme-editor` edits 16 semantic
+      roles and a density preset through the library's own `extendTheme`,
+      previews them on `PreviewSurface`, shares the edit in `?theme=`, and
+      copies a real module. `smoke:theme-editor` proves repaint, share,
+      restore and reset in Chrome; the a11y gate caught the source block's
+      scroll region and the build gate caught a skipped heading level. 108
+      files / 790 docs tests, 99-page build, 99×2 axe and 390 px smokes green.
 
 `[x]` **The docs site documents its own output (plan 594)** — the five discovery
       routes (`sitemap.xml`, `robots.txt`, `llms.txt`, `llms-full.txt`,

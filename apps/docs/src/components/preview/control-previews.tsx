@@ -53,9 +53,9 @@ function Field({
   );
 }
 
-export function TextInputPreview({ theme }: PreviewProps) {
+export function TextInputPreview({ theme, locked }: PreviewProps) {
   return (
-    <PreviewSurface theme={theme}>
+    <PreviewSurface theme={theme} locked={locked}>
       <div style={{ ...column, maxWidth: "22rem" }}>
         <Field
           label="Workspace name"

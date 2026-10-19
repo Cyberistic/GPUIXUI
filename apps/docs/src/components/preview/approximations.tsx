@@ -148,9 +148,9 @@ function Button({
   );
 }
 
-export function ButtonPreview({ theme }: PreviewProps) {
+export function ButtonPreview({ theme, locked }: PreviewProps) {
   return (
-    <PreviewSurface theme={theme}>
+    <PreviewSurface theme={theme} locked={locked}>
       <div style={column}>
         <div style={row}>
           <Button variant="primary">Save changes</Button>

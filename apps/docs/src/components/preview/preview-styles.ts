@@ -13,6 +13,8 @@ import type { Theme } from "@gpuixui/tokens";
 export interface PreviewProps {
   /** A resolved theme, for tests and the Theming showcase. */
   readonly theme?: Theme;
+  /** Follow `theme` rather than the docs chrome (the theme editor). */
+  readonly locked?: boolean;
 }
 
 export const labelType: CSSProperties = {

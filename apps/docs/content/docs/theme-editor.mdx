@@ -1,0 +1,65 @@
+---
+title: Theme editor
+description: Edit the brand colours and density of a GPUIXUI theme through its semantic roles, preview them on the library's own token surface, share the result in the URL, and copy a real extendTheme module.
+---
+
+Every primitive reads semantic roles such as `background`, `primary` and `ring`
+from a plain `Theme` object. This editor changes the roles a brand usually
+changes, resolves them through the library's own `extendTheme`, and paints the
+same token surface the component pages use.
+
+The preview is a **labelled browser approximation** of the native window, not a
+GPUix capture. The values and the copied module are real; how GPUix resolves
+fonts and paints a window is covered on [Theming](/docs/theming).
+
+<ThemeEditor />
+
+## What is editable
+
+The sixteen roles below are the ones a rebrand usually touches: the canvas and
+its text, the raised card and popover surfaces, the primary and secondary
+actions, quiet text, accent, destructive, borders, the input fill and the focus
+ring. Density is one of the package's three presets.
+
+Every other group in a theme — typography, spacing, radius, elevation, border
+widths and icon sizes — is one `extendTheme` key away and is documented with its
+real values on [Theming](/docs/theming). The [Tokens API](/docs/tokens-api) lists
+the complete `Theme` and `ThemeConfig` shapes.
+
+An edit is shareable: the state lives in `?theme=` as the base theme, the
+density and only the roles you changed. A malformed value falls back to the
+default rather than rendering a half-applied theme, and **Reset to defaults**
+removes the parameter.
+
+## Using the copied module
+
+The generated source is a normal `@gpuixui/tokens` module; nothing on this page
+is required at runtime. Pass the resolved theme to both providers, tokens
+outside primitives:
+
+```tsx
+import { ThemeProvider as TokensThemeProvider } from "@gpuixui/tokens/react";
+import { ThemeProvider } from "@gpuixui/primitives";
+import { brandTheme } from "./theme";
+
+<TokensThemeProvider theme={brandTheme}>
+  <ThemeProvider theme={brandTheme}>
+    {/* primitives and components */}
+  </ThemeProvider>
+</TokensThemeProvider>;
+```
+
+[Getting started](/docs/getting-started) has the complete first app, and
+[Dark mode](/docs/dark-mode) shows the same provider pair when the application
+switches between a light and a dark theme.
+
+## Limits
+
+- The URL is the only persistence. This page does not write to storage, so a
+  copied link is the way to keep an edit.
+- Typography is not editable here. A browser cannot resolve GPUix's
+  `.SystemUIFont` sentinel, so a font field on this page would preview a face
+  the native window may not use.
+- The editor proves that an edited `Theme` is still the library's theme. It is
+  not evidence that the native window paints it; the captures and the
+  playground run do that on [Theming](/docs/theming).

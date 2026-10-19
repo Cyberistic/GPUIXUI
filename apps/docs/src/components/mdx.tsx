@@ -23,6 +23,7 @@ import { PlatformPreviews } from "./preview/platform-previews";
 import { PreviewTiers } from "./preview/preview-tiers";
 import { PreviewUnavailable } from "./preview/preview-unavailable";
 import { ThemeCaptures } from "./preview/theme-captures";
+import { ThemeEditor } from "./theme-editor";
 import { RelatedComponents } from "./related-components";
 import { ShowcaseComponents } from "./showcase";
 import { RoadmapTable } from "./roadmap-table";
@@ -68,6 +69,7 @@ export function getMDXComponents(components?: MDXComponents) {
     PlatformValues,
     PlatformStyles,
     ThemeCaptures,
+    ThemeEditor,
     IconCatalogue,
     ...components,
   } satisfies MDXComponents;

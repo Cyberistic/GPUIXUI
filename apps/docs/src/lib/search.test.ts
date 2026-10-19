@@ -403,6 +403,15 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/examples");
   });
 
+  it("finds the theme editor by name and by its brand-colour subject", async () => {
+    expect((await search("theme editor", 5))[0]?.url).toBe(
+      "/docs/theme-editor",
+    );
+    expect(
+      (await search("brand colours", 5)).map((result) => result.url),
+    ).toContain("/docs/theme-editor");
+  });
+
   it("lists a synthesized title hit once when the page index returned it too", async () => {
     const results = await search("toast dismiss");
     expect(
