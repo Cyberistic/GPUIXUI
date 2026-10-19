@@ -158,6 +158,10 @@ describe("the native diff chrome fits the type the runtime paints", () => {
       new URL("../README.md", import.meta.url),
       "utf8",
     );
+    const designSystem = readFileSync(
+      new URL("../../../docs/design-system.md", import.meta.url),
+      "utf8",
+    );
 
     expect(markdown).toContain("`nativeTextChrome`");
     expect(markdown).toContain("`nativeTextLineRatio`");
@@ -167,5 +171,7 @@ describe("the native diff chrome fits the type the runtime paints", () => {
     expect(markdown).toContain("19 / 18 / 18 / 18");
     expect(readme).toContain("`nativeTextChrome`");
     expect(readme).toContain("one code em");
+    expect(designSystem).toContain("`nativeTextChrome`");
+    expect(designSystem).toContain("19 / 18 / 18 / 18");
   });
 });
