@@ -3,11 +3,11 @@ title: Avatar
 description: A person or entity, as a picture with an initials fallback.
 ---
 
-`Avatar` identifies a person, team or service. Given `src` it shows the picture;
-without one it shows deterministic initials derived from `name`, so nothing about
-the layout depends on the name and a person without a photo is never blank. When
-`src` is set the picture is what paints — the runtime reports no image-load
-failure, so a missing file leaves the disc empty (see **Limitations**).
+`Avatar` identifies a person, team or service. Given `src` it paints the picture
+over deterministic initials derived from `name`; without one the initials are all
+you see. The initials stay in the tree underneath the picture, so a source that
+never loads still leaves a readable avatar — and nothing about the layout depends
+on the name.
 
 ## Usage
 
@@ -19,6 +19,9 @@ import { Avatar } from "@gpuixui/components/avatar";
 // No picture: the initials are derived from the name.
 <Avatar name="Jean-Luc Picard" />;
 ```
+
+The first avatar paints `ada.png` over the initials `AL`; if that file never
+loads, the initials remain underneath. The second has no picture at all.
 
 ## Initials
 
@@ -80,6 +83,9 @@ without forking the component.
   picture and the fallback are announced identically — a screen reader never
   reads "AL" as a word.
 - The image also carries `alt={name}`.
+- The initials stay mounted behind the picture. That is the fallback mechanism,
+  not a second visible label: a loaded image covers the disc, a failed one does
+  not.
 - A `status` is described through `aria-description` — the one description
   0.10.0 supports — so the dot is announced while the name stays the person's.
   The caller's own `aria-description` wins. The example still prints the status
@@ -94,10 +100,10 @@ status roles, and the dot's rim `colors.card` (the surface it sits on) at
 
 ## Limitations
 
-- **No image loading or error state.** If `src` points at a missing file, the
-  runtime paints nothing inside the disc until the image arrives; the initials are
-  not restored, because the runtime reports no image-load failure to React. Pass
-  the picture only when you can rely on it, or omit `src` and use initials.
+- **No loading state.** The runtime reports no image load or error, so the
+  initials stay painted behind the picture and a failed source degrades to them.
+  There is no spinner, no fade-in and no error callback; pass the picture only
+  when you can rely on it, or omit `src` and show the initials deliberately.
 - The four diameters are component constants, not tokens: `@gpuixui/tokens` ships
   no avatar scale (`TODO.md` → Interlocks).
 - The docs site cannot render this component live — it is a GPUix host tree, not
@@ -105,10 +111,11 @@ status roles, and the dot's rim `colors.card` (the surface it sits on) at
 
 ## Verification
 
-`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (9 tests) plus
+`src/behaviour/avatar.test.tsx` runs in the real GPUix renderer (10 tests) plus
 `src/avatar/logic.test.ts` (8 tests) for the initials rules. The suite covers the
-initials and picture paths, the accessible name, a status as its description
-(authored descriptions winning), dot colours, sizes and the caller's style.
+initials and picture paths, the picture layered over the initials so a failed
+load stays readable, the accessible name, a status as its description (authored
+descriptions winning), dot colours, sizes and the caller's style.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

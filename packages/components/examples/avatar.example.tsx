@@ -3,7 +3,8 @@
  *
  * Composition, not a gallery: the row shows how an avatar, a name and a status
  * badge read together, and the facepile shows the small sizes overlapping the
- * way a comment thread does.
+ * way a comment thread does. Ada carries a picture: the initials stay painted
+ * underneath it, so the same avatar degrades to "AL" if the source ever fails.
  */
 
 import * as Arr from "effect/Array";
@@ -18,13 +19,18 @@ import {
 } from "../src/card.js";
 import { textStyle, useTheme } from "../src/internal/theme.js";
 
-/** One member: the initials fallback, a role badge and a presence state. */
+/** A data-URL portrait, so the picture path needs no file on disk. */
+const portrait =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Crect width='8' height='8' fill='%236b7cff'/%3E%3C/svg%3E";
+
+/** One member: a picture or the initials fallback, a role badge and presence. */
 const members: ReadonlyArray<{
   readonly name: string;
   readonly role: string;
   readonly status: AvatarStatus;
+  readonly src?: string;
 }> = [
-  { name: "Ada Lovelace", role: "Owner", status: "online" },
+  { name: "Ada Lovelace", role: "Owner", status: "online", src: portrait },
   { name: "Jean-Luc Picard", role: "Reviewer", status: "away" },
   { name: "Grace Hopper", role: "Engineer", status: "busy" },
   { name: "李 小龙", role: "Designer", status: "offline" },
@@ -58,7 +64,12 @@ export const AvatarExample = () => {
               gap: theme.spacing.lg,
             }}
           >
-            <Avatar name={member.name} size="md" status={member.status} />
+            <Avatar
+              name={member.name}
+              src={member.src}
+              size="md"
+              status={member.status}
+            />
             <div
               style={{
                 display: "flex",

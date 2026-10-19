@@ -2,9 +2,10 @@
  * Avatar behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a fallback that renders nothing instead of the
- * initials; a `src` that never reaches an image; a presence dot painted from a
- * constant, missing entirely, or clipped away by the avatar's own disc; the four
- * sizes collapsing to one diameter; and a lost accessible name.
+ * initials; a `src` that never reaches an image; a picture that replaces the
+ * initials instead of covering them, leaving a failed load blank; a presence dot
+ * painted from a constant, missing entirely, or clipped away by the avatar's own
+ * disc; the four sizes collapsing to one diameter; and a lost accessible name.
  */
 
 import * as Arr from "effect/Array";
@@ -12,7 +13,7 @@ import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
 import { Avatar, type AvatarSize, type AvatarStatus } from "../avatar.js";
 import { nodesWithRole } from "../internal/a11y.js";
-import { sizeOf } from "../internal/interaction.js";
+import { requireBounds, sizeOf } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -62,7 +63,26 @@ describe("Avatar", () => {
     const images = avatar.renderer.findByType("img");
     expect(images).toHaveLength(1);
     expect(images[0]?.customProps?.src).toBe("/photos/ada.png");
-    expect(avatar.renderer.getAllText()).toEqual([]);
+    // The fallback stays in the tree: the picture covers it, it does not replace it.
+    expect(avatar.renderer.getAllText()).toEqual(["AL"]);
+
+    avatar.unmount();
+  });
+
+  it("layers the picture over the initials so a failed load still shows them", () => {
+    const avatar = renderComponent(
+      <Avatar testId="avatar" name="Ada Lovelace" src="/photos/missing.png" />,
+    );
+
+    expect(avatar.renderer.getAllText()).toEqual(["AL"]);
+    expect(avatar.renderer.findByTestId("avatar-image")?.customProps?.src).toBe(
+      "/photos/missing.png",
+    );
+    // An inset picture covers exactly the disc, so a successful load hides the
+    // initials while a failed one leaves them alone.
+    expect(requireBounds(avatar, "avatar-image")).toEqual(
+      requireBounds(avatar, "avatar"),
+    );
 
     avatar.unmount();
   });

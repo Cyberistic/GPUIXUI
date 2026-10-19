@@ -217,6 +217,13 @@ retired once both branches are one
       and a disabled selected tab still keeps its panel. 3 native cases
       (Tabs 31), both-direction proof plus a disabled-gate mutation; docs,
       `COMPONENTS.md` and the inventory synced
+    - [x] The avatar keeps its initials behind the picture — plan 571; a `src`
+      replaced the initials in the tree, so a file that never loads left the disc
+      blank although `ImgProps` has no load/error event. The initials now always
+      render and the picture is an inset absolute layer over them (absolute
+      resolves against the positioned disc, measured). 1 changed + 1 new native
+      case (Avatar 10), both fail on the old conditional; example, docs,
+      `COMPONENTS.md` and the inventory synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

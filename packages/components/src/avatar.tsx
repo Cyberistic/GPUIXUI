@@ -2,9 +2,9 @@
  * Avatar: a person or entity, as a picture with an initials fallback.
  *
  * The fallback is deterministic (see `avatar/logic.ts`), so an avatar is never
- * blank and never shifts when an image is missing. The component owns no state:
- * there is no image-loading or image-error state in this version, and the
- * initials are what a consumer sees until the image paints.
+ * blank: the initials are always painted and the picture is layered over them.
+ * The component owns no state — there is no image-loading state in this version,
+ * and a picture that never arrives simply leaves the initials visible.
  */
 
 import type { Props } from "@gpuix/react";
@@ -23,7 +23,7 @@ export type AvatarStatus = "online" | "away" | "busy" | "offline";
 export interface AvatarProps extends Props {
   /** The accessible name, and the source of the initials fallback. */
   readonly name: string;
-  /** Image path, data URL or `http(s)` URL. Without it the initials show. */
+  /** Image path, data URL or `http(s)` URL, layered over the initials. */
   readonly src?: string;
   /** Default `"md"`. */
   readonly size?: AvatarSize;
@@ -56,13 +56,14 @@ const statusFill = (theme: Theme, status: AvatarStatus): string =>
     Match.exhaustive,
   );
 
-/** A circular identity mark: `name`'s picture, or its initials, plus presence. */
+/** A circular identity mark: `name`'s picture over its initials, plus presence. */
 export const Avatar = ({
   name,
   src,
   size = "md",
   status,
   style,
+  testId,
   ...rest
 }: AvatarProps) => {
   const theme = useTheme();
@@ -76,6 +77,7 @@ export const Avatar = ({
       role="img"
       aria-label={name}
       {...rest}
+      testId={testId}
       {...(description === undefined
         ? {}
         : { "aria-description": description })}
@@ -97,6 +99,7 @@ export const Avatar = ({
     >
       <div
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
@@ -108,22 +111,29 @@ export const Avatar = ({
           backgroundColor: theme.colors.muted,
         }}
       >
-        {src === undefined ? (
-          <text
-            style={{
-              ...textStyle(theme, "label"),
-              fontSize: Math.round(diameter * 0.4),
-              color: theme.colors.foreground,
-            }}
-          >
-            {initials(name)}
-          </text>
-        ) : (
+        <text
+          testId={testId === undefined ? undefined : `${testId}-initials`}
+          style={{
+            ...textStyle(theme, "label"),
+            fontSize: Math.round(diameter * 0.4),
+            color: theme.colors.foreground,
+          }}
+        >
+          {initials(name)}
+        </text>
+        {src === undefined ? null : (
           <img
             src={src}
             alt={name}
             objectFit="cover"
-            style={{ width: "100%", height: "100%" }}
+            testId={testId === undefined ? undefined : `${testId}-image`}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+            }}
           />
         )}
       </div>
@@ -153,7 +163,7 @@ export const avatarMeta = {
   status: "done",
   gpuixSupport: "yes",
   limitations: [
-    "no image loading or error state: with src set the picture is what paints, and a missing file leaves the disc empty because the runtime reports no load failure",
+    "no loading or error state — the initials stay painted behind the picture, so a failed load degrades to them (there is no error callback)",
   ],
   docs: "docs/avatar.mdx",
   example: "examples/avatar.example.tsx",
