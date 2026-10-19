@@ -94,15 +94,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**). The live suite **last ran in full at 75/75**
-(`live-report.json`, **1697 checks**, exit `0`) on 2026-10-19, the merge/release
-gate on the final branch; it covered every live scenario registered at that
-point. Every live twin added since — `live-panel-nested`/`live-floating`
-(plan `594`), `live-qr` (plan `599`) and `live-scroll-into-view` (plan `601`) —
-is green in a **focused** run, so the
-registry now lists
-**85** scenarios and the next merge gate must run all of them; do not read the
-`75/75` total as covering them. Both `host` lines carry the pins. The 0.10.0 box
+The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3653 checks**, 64 capabilities). The live suite **last ran in full at 85/85**
+(`live-report.json`, **2090 checks**, 56 capabilities, 916.2 s, exit `0`) on
+2026-10-19, the merge/release gate on the final branch; it covered every live
+scenario registered at that point, including the twins added after the previous
+gate — `live-panel-nested`/`live-floating` (plan `594`), `live-qr` (plan `599`)
+and `live-scroll-into-view` (plan `601`). Both `host` lines carry the pins. The 0.10.0 box
 contract (plan `529` §6.3) — bounds report a content origin and a borderless
 size — is what every geometry check now asserts.
 

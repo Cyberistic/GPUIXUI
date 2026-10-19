@@ -1894,6 +1894,10 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
+The live window suite is **85/85 green** here (`exit 0`, 2090 checks, 56
+capabilities, 916.2 s, `.artifacts/live-report.json`, 2026-10-19) — the
+merge/release gate on the final branch.
+
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
 | Capability | Measured on 0.10.0 here |

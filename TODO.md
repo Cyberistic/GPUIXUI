@@ -92,12 +92,17 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       removed click away) fail at the new focus assertions, and M2 (`end`
       removed) is a null result because a fresh input already sits at the end.
 
-`[~]` Assert **both live blur states** per plan `605`: the next gate moved
+`[x]` Assert **both live blur states** per plan `605`: the next gate moved
       native focus away but did not deliver React's `onBlur`, so the editor kept
       its draft and `commits` stayed `1`. `live-tier2-editing` now branches on the
       display: `livez` asserts the commit, `""` asserts the open editor, refocuses
       it and commits the retained draft with Enter. Focused runs take the commit
-      branch (**32 checks**, three green); the gate exercises the open branch.
+      branch (**32 checks**, three green); the full gate is **85/85**, exit `0`.
+      The same gate exposed a missing wait in `live-query-builder` (a select item
+      clicked before its popup painted); the four later opens now wait for their
+      content text, focused **41 checks** green. Focused ids run:
+      `live-key-routing`, `live-query-builder`, `live-tier2-editing`,
+      `focus-traversal`, `tier2-editing`.
 
 `[x]` Prove the **element scroll route in a real window** per plan `601`:
       `scroll-into-view` was the last scroll primitive with only `TestRenderer`
@@ -1131,11 +1136,11 @@ focused id is `live-frames`.
       two truths, and the plan-number collision on `525` is fixed by renumbering
       the input-payload plan to **`533`**. The branch now contains every commit
       of `origin/master`, so the promotion is a fast-forward. Merge/release gate
-      **re-run on the final code head `3213388c` (2026-10-19, after plan `581`):**
-      headless **103/103** (`3632` checks, 64 capabilities) and live **75/75**
-      (`1697` checks, 51 capabilities, 783.8 s), both exit `0`; `nub run check`,
-      `nub run lint` and `nub run test` pass (playground 417 tests; components
-      308; primitives 282; tokens 196; tw 103; testing 61; icons 19; docs 7).
+      **re-run on the plan-605 code (commit `4f5aaa7c`, 2026-10-19):** headless
+      **103/103** (`3653` checks, 64 capabilities) and live **85/85** (`2090`
+      checks, 56 capabilities, 916.2 s), both exit `0`; `nub run check`,
+      `nub run lint` and `nub run test` pass at that head. Artifacts:
+      `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
       The workstream's own instruction is *never push to master*, so an
       owner/supervisor performs the final merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)

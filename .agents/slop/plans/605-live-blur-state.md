@@ -152,8 +152,8 @@ nub apps/playground/dist/live/run.js --all                          # merge gate
 | Measurement | Value |
 | ----------- | ----- |
 | focused state (commit branch) | `ws-name` paints `livez`; `commits=2`; focus stays on `ws-elsewhere`; **32 checks**, three green runs |
-| full-gate state (missed branch) | the runner does not print which branch was taken; the gate was green |
-| full gate | **85/85**, exit `0`, every capability verified |
+| full-gate state (missed branch) | taken: `a missed blur leaves the editor open` and `the retained draft commits once the editor is focused again` both pass; the scenario reports **33 checks** in that state |
+| full gate | **85/85**, `2090` checks, exit `0`, every capability verified |
 | focused `live-query-builder` after §9 | 1/1, 41 checks, exit `0` |
 
 **Two-direction evidence:** the commit branch is green in three focused runs;

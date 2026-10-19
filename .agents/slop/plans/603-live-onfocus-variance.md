@@ -91,7 +91,7 @@ nub apps/playground/dist/live/run.js --all                      # merge gate
 ```
 
 Expected: live `1/1`, exit `0`, **20 checks**, three times; headless stays
-**103/103** (`3653` checks); the gate is **84/84**, exit `0`.
+**103/103** (`3653` checks); the gate is **85/85** (`2090` checks), exit `0`.
 
 ## 7. Acceptance
 
@@ -107,8 +107,9 @@ Expected: live `1/1`, exit `0`, **20 checks**, three times; headless stays
 | the failing gate reading | `inner=1 middle=1 outer=1 innerFocus=1 outerFocus=0 window=1 chords=0` |
 | a focused run of the same code, asserting `innerFocus=1` (M1) | **fails**: `innerFocus=0` — the two states are real on the same branch |
 | live checks after the fix | `live-key-routing` **20** (the row's `22` was stale; the real prior count was 21) |
-| focused runs | three green |
-| full gate | fill after the gate |
+| focused runs | three green (`live-key-routing`, 20 checks; a fourth `--json` run confirmed the count) |
+| full gate | **85/85**, `2090` checks, exit `0`, every capability verified (the gate's first attempt failed only `live-query-builder` on a missing select item; the bounded content waits landed in plan `605`'s commit) |
+| control | headless `focus-traversal` green; full headless **103/103** |
 
 **Mutation proofs, each observed and reverted:**
 
