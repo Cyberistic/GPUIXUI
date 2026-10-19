@@ -765,6 +765,69 @@ describe("search", { timeout: 120_000 }, () => {
   });
 
   /**
+   * Plan 593: the eighth measured sweep. A component's summary is not a search
+   * signal (plan 568), so Icons' "glyph" and Scrollable containers' "overflow"
+   * never ranked; the alias table is their home. `descriptionMatchRank`
+   * compared summary words literally, so `resize` missed `resizable` and
+   * `selected` missed `selectable`; a stem tier gives an inflected word the
+   * same rank as the word itself. License and the Roadmap did not name their
+   * own subjects in the summary, and the Roadmap's `Drag and drop` target had
+   * no one-word alias. Each row fails when its word, alias or tier is removed.
+   */
+  it("finds the eighth set of reader words and page subjects (plan 593)", async () => {
+    const expected = [
+      ["svg", "/docs/components/icon"],
+      ["glyph", "/docs/components/icon"],
+      ["overflow", "/docs/components/scroll-area"],
+      ["mit", "/docs/license"],
+      ["planned", "/docs/roadmap"],
+      ["tier", "/docs/roadmap"],
+      ["resize", "/docs/workspace"],
+      ["drop", "/docs/roadmap"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * The eighth pass may not steal a subject an earlier pass assigned. The stem
+   * tier is the only ranker change, so these are the destinations it could
+   * plausibly move.
+   */
+  it("keeps the words the earlier passes assigned (plan 593)", async () => {
+    const expected = [
+      ["sort", "/docs/data-display"],
+      ["filter", "/docs/data-display"],
+      ["npm", "/docs/installation"],
+      ["worktree", "/docs/contributing"],
+      ["table", "/docs/data-display"],
+      ["panel", "/docs/workspace"],
+      ["input", "/docs/components/text-input"],
+      ["label", "/docs/components/label"],
+      ["spacing", "/docs/theming"],
+      ["screen reader", "/docs/accessibility"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return first?.type === "page" && destination === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
    * Plan 591: a component's URL slug is the name in its canonical link. Eight
    * of 66 slugs reached a pattern page or Date pickers because the registry
    * document and the name list never contained the slug (`button-group`,

@@ -70,6 +70,7 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ["kbd", "keybinding", "keybindings", "key binding", "key bindings"],
   ],
   ["color-picker", ["colour picker", "colourpicker", "swatch", "swatches"]],
+  ["icon", ["svg", "glyph", "glyphs"]],
   ["preview-card", ["hover card", "hovercard"]],
   ["collapsible", ["collapse", "collapsed section"]],
   [
@@ -98,7 +99,14 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["alert", ["banner", "callout", "callouts"]],
   [
     "scroll-area",
-    ["scrollview", "scroll view", "scroll pane", "scrollbar", "scrollbars"],
+    [
+      "scrollview",
+      "scroll view",
+      "scroll pane",
+      "scrollbar",
+      "scrollbars",
+      "overflow",
+    ],
   ],
   ["popover", ["popup"]],
   ["select", ["select box", "dropdown list", "multi select", "multi-select"]],

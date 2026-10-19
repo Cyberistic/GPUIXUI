@@ -963,6 +963,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the worktrees the Contributing summary names",
     },
+    {
+      query: "svg",
+      expected: "/docs/components/icon",
+      first: true,
+      what: "a reader's word for the icon set, which only the alias table names",
+    },
+    {
+      query: "planned",
+      expected: "/docs/roadmap",
+      first: true,
+      what: "the target status the Roadmap summary names",
+    },
+    {
+      query: "resize",
+      expected: "/docs/workspace",
+      first: true,
+      what: "an inflected summary word (`resizable`)",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

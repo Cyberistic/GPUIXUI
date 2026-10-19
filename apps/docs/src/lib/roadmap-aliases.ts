@@ -12,7 +12,7 @@ export const roadmapAliases: ReadonlyMap<string, readonly string[]> = new Map<
 >([
   ["Diff viewer", ["diff"]],
   ["Code editor integration", ["editor"]],
-  ["Drag and drop", ["drag"]],
+  ["Drag and drop", ["drag", "drop"]],
   ["Rich-text editing", ["markdown", "rich text"]],
   ["Toolbars", ["toolbar"]],
 ]);

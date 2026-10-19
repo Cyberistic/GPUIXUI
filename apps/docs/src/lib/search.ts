@@ -163,10 +163,13 @@ const summaryPages = new Map(
 );
 
 /**
- * The English inflections a page title uses where the plain spelling differs:
- * `capabilities`/`capability`, `Theming`/`theme`, `running`/`run`. Stems are
- * compared only in `matchRank`, after the exact and prefix tiers, so an exact
- * name still wins and a fragment inside a word is still rank `3` (plan 585).
+ * The English inflections a page title or summary uses where the plain spelling
+ * differs: `capabilities`/`capability`, `Theming`/`theme`, `running`/`run`,
+ * `resize`/`resizable`. Stems are compared only in `matchRank` and in
+ * `descriptionMatchRank`'s whole-word tier, after the exact and prefix tiers,
+ * so an exact name still wins and a fragment inside a word is still rank `3`
+ * (plans 585, 593). The `derived.length >= 3` guard stops `used` → `us` from
+ * creating a two-letter stem.
  */
 const stem = (word: string): string => {
   if (word.length < 4) return word;
@@ -175,7 +178,8 @@ const stem = (word: string): string => {
     .replace(/(?:s|x|z|ch|sh)es$/, "")
     .replace(/(?<!s|u|i)s$/, "");
   const gerund = plural.replace(/ing$/, "").replace(/([a-z])\1$/, "$1");
-  const base = gerund.length < 3 ? plural : gerund;
+  const derived = gerund.replace(/(?:able|ible|ed)$/, "");
+  const base = derived.length >= 3 ? derived : gerund;
   return base.length > 3 ? base.replace(/e$/, "") : base;
 };
 
@@ -343,7 +347,9 @@ const pageTitleHits = (query: string): ReadonlyArray<SortedResult> =>
  * The rank a page's authored description earns (plan 568): `0` the whole
  * description, `1` a whole word, `2` a word prefix, `3` every word of a phrase.
  * Unlike a title, a description is a sentence, so a **fragment** inside a word
- * (`lab` in `collaboration`) never matches.
+ * (`lab` in `collaboration`) never matches. A whole word is compared by stem
+ * too (plan 593), so `resize` matches the summary's `resizable`; the prefix and
+ * phrase tiers keep the literal spelling.
  */
 const descriptionMatchRank = (
   description: string,
@@ -358,6 +364,8 @@ const descriptionMatchRank = (
     .split(/[^a-z0-9]+/)
     .filter((word) => word.length > 0);
   if (words.includes(needle)) return 1;
+  const needleStem = stem(needle);
+  if (words.some((word) => stem(word) === needleStem)) return 1;
   if (words.some((word) => word.startsWith(needle))) return 2;
 
   const terms = queryTerms(query);

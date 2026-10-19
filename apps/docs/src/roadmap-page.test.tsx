@@ -30,7 +30,7 @@ describe("the roadmap page", () => {
   it("keeps its frontmatter and renders the generated table", () => {
     expect(page).toContain("title: Roadmap");
     expect(page).toContain(
-      "description: Every component target in the inventory",
+      "description: Every Tier 3–5 component target in the inventory — planned, delivered or blocked",
     );
     expect(page).toContain("<RoadmapTable />");
   });

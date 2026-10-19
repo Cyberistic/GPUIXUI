@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–591)
 
-`[~]` `[██████████]` 158/160
+`[~]` `[██████████]` 159/160
+
+`[x]` **Reader vocabulary, eighth pass (plan 593)** — an inflected summary word
+      now matches (`resize` → Workspace), `svg`/`glyph` reach Icons,
+      `overflow` reaches Scrollable containers, `mit` reaches License,
+      `planned`/`tier`/`drop` reach the Roadmap. A shared `-able`/`-ed` stem
+      tier, two component aliases, two authored summaries and one roadmap
+      alias; eight measured queries and ten regressions; 105 files / 764 docs
+      tests, 98-page crawl, root gates green; both forced-defect runs recorded
+      in plan 593 §6.
 
 `[x]` **Reader vocabulary, seventh pass (plan 592)** — a measured sweep found
       `sorting`, `npm`, `pnpm`, `yarn` returning nothing, `sort`, `sortable`,
