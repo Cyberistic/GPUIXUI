@@ -491,6 +491,9 @@ across the four tints. The `components` migration — the documented
 neutral washes are not a supported action surface inside a status panel, and
 § [Limitations](#limitations-and-future-work) states the measurement.
 
+A runnable example of the panel's text roles is
+[`src/status-panel.example.ts`](../packages/tokens/src/status-panel.example.ts).
+
 ## High contrast
 
 Each mode has a high-contrast variant for accessibility. It is an ordinary
@@ -617,6 +620,9 @@ without retyping them.
 `fontWeights` is the ascending set the shipped scale uses — `400`, `500` and
 `600` — and the weights a bundled font has to provide; it is derived from the
 roles, not a second list. A brand may still name any weight in `1…1000`.
+
+The manifest a bundler loads is
+[`src/font-weights.example.ts`](../packages/tokens/src/font-weights.example.ts).
 
 The scale is two exported ladders: `proseLadder` (`display` → `caption`) and
 `codeLadder` (`code` → `codeBlock`). `bodyStrong` shares `body`'s size and is a
@@ -1372,8 +1378,9 @@ const still = extendTheme(base, {
 });
 ```
 
-A runnable example lives in
-[`src/motion.example.ts`](../packages/tokens/src/motion.example.ts).
+Runnable examples live in
+[`src/motion.example.ts`](../packages/tokens/src/motion.example.ts) and
+[`src/motion-levels.example.ts`](../packages/tokens/src/motion-levels.example.ts).
 
 ## Layering
 
@@ -1426,6 +1433,10 @@ The smallest tier is the inline avatar: `avatarSize.xs` sits in a dense row,
 which `ListItem` fixes at `density.rowHeight`, so the metric contract bounds it
 by that row. The other three tiers are a facepile mark, the default and a
 profile header; they are not row marks.
+
+Runnable examples of the two bounds are
+[`src/inline-icon.example.ts`](../packages/tokens/src/inline-icon.example.ts) and
+[`src/inline-avatar.example.ts`](../packages/tokens/src/inline-avatar.example.ts).
 
 ## Focus
 
@@ -1643,6 +1654,8 @@ const chrome = { userSelect: "none" } as const;
 
 A runnable example lives in
 [`src/selection.example.ts`](../packages/tokens/src/selection.example.ts).
+The press a selected row derives from the same wash is
+[`src/selection-press.example.ts`](../packages/tokens/src/selection-press.example.ts).
 
 Content painted on an **opaque filled surface** — a filled action such as
 `softAction`, or a solid status chip — uses `selectionOnFill` instead of
@@ -2006,8 +2019,9 @@ returns `[]` from the contrast check, and the step arm is the only one that
 sees the collapsed match. A text failure keeps its `pairClass: "secondary"` and
 the wash, surface, role and ratio it always had.
 
-A runnable example lives in
-[`src/native-text.example.ts`](../packages/tokens/src/native-text.example.ts).
+Runnable examples live in
+[`src/native-text.example.ts`](../packages/tokens/src/native-text.example.ts) and
+[`src/native-highlight.example.ts`](../packages/tokens/src/native-highlight.example.ts).
 
 ### Scrollbars
 
@@ -2138,6 +2152,9 @@ const theme = resolveThemeChoice({
 The object's shape is still the application's `Schema` boundary; the unions and
 the precedence are the package's. The executed example is
 [`src/theme-choice.example.ts`](../packages/tokens/src/theme-choice.example.ts).
+
+The guards a stored row relies on are exercised in
+[`src/persisted-choices.example.ts`](../packages/tokens/src/persisted-choices.example.ts).
 
 A choice that travels in a URL is the same row, and the package owns that
 transport too. `themeChoiceFromParams(source)` reads the five keys with the same
@@ -2275,6 +2292,9 @@ because plan `510` measures the unavailable label through this wash on the fill
 it keeps — a highlight that matches that fill would erase the selection while
 every text pair still passed. Every shipped set already clears the floor, so no
 colour moves.
+
+A runnable example of the wash that matches the disabled fill is
+[`src/disabled-wash.example.ts`](../packages/tokens/src/disabled-wash.example.ts).
 
 Every exported pair list is held to content uniqueness: a repeated
 `[foreground, background, class]` would make the checker report one composition
@@ -2562,6 +2582,9 @@ because `elevationShadow` will paint it; the feather ladder reads
 `elevationLevels` itself, so a level added to the index joins it without a second
 edit. Every shipped theme, platform variant
 and recipe passes, so the check moves no value; it guards the next edit.
+
+A runnable example of a flush control inset is
+[`src/control-padding.example.ts`](../packages/tokens/src/control-padding.example.ts).
 
 `metricGroups` is the ordered index of the ten governed groups, so a
 documentation table or a settings row iterates it instead of retyping the names.
@@ -3093,6 +3116,9 @@ const rows = spacingSteps.map((step) => ({ step, value: spacing[step] }));
 `typefaceRoles` and `metricGroups` index the remaining groups. A scale member
 that is not in its index fails `scale-indexes.test.ts`, so a value table cannot
 silently omit it.
+
+A runnable table builder is
+[`src/scale-indexes.example.ts`](../packages/tokens/src/scale-indexes.example.ts).
 
 `textRoles` does the same for type: it lists the ten typographic roles in
 documentation order and excludes the `sans` and `mono` families, so a type table
@@ -3674,6 +3700,9 @@ compositing an alpha fill. `filled-control.test.ts` proves both directions on
 every shipped set: the designed trio clears the on-colour floor on all three
 steps, and the alpha composition fails it.
 
+A runnable example of the three paints is
+[`src/filled-control.example.ts`](../packages/tokens/src/filled-control.example.ts).
+
 The accent family completes the matrix (plan `327`). A toggle that is on paints
 `accent` with `accentForeground`; before `accentHover` and `accentActive`
 existed, the only way to show a pointer state was
@@ -3683,6 +3712,9 @@ dark mode, could not be tuned in a copied platform style and had no pair the
 contract could check. The family now steps through its own designed values, and
 an outlined toggle keeps its `border` edge on both, so the edge's divider
 contract covers `accent`, `accentHover` and `accentActive` as well.
+
+A runnable example of the three paints is
+[`src/accent-states.example.ts`](../packages/tokens/src/accent-states.example.ts).
 
 An interactive fill is a surface too. `stateFillSurfacePairs` holds the fifteen
 fills a control or row paints as its own shape — the `hover` and `active` washes,

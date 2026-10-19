@@ -324,6 +324,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [667](./667-chip-chrome-fit.md) | The chip holds the chrome inside it | F | 353, 384, 624, 636, 638 | done |
 | [668](./668-scale-indexes.md) | The numeric scales' ordered indexes | F | 056, 058, 324, 358, 519, 531, 552, 066 | done |
 | [669](./669-metric-member-index-owner.md) | The metric-member index's documented owner | F | 324, 531, 668 | done |
+| [670](./670-example-links.md) | Every executed example is linked from a consumer document | F | 350, 355, 356, 616, 668 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3529,6 +3530,14 @@ not `dimensionNames` — so a reader building a diagnostics table would write th
 `Object.keys` cast `668` removed. The paragraph names every index and a
 `docs.test.ts` case rejects the old phrasing and any dropped name. No source or
 token value changes.
+
+Plan `670` closes the half of plan `350`'s convention that was never guarded.
+`350` fixed `primary-text.example.ts` for having "no test importing it and no
+document linking it", but its `examples.test.ts` case enforced only the import,
+so thirteen examples were linked from neither the catalogue, the design system
+nor the README. Each now sits in the section it explains, and two cases hold the
+link set to `readdirSync(src)` in both directions: every example is linked, and
+every example link names a file that exists. No source or token value changes.
 
 ## How to use a plan
 

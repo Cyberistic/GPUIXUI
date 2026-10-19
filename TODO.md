@@ -1168,6 +1168,15 @@ scale and documented in the docs-site section; `metricMembers` derives from them
 `dimensionNames`, so a reader building a diagnostics table would write the
 `Object.keys` cast 668 removed; the paragraph now names all eleven indexes and a
 `docs.test.ts` case fails if one is dropped or the old phrase returns (plan 669)
+`[x]` Link every executed example from a consumer document — plan 350 fixed
+`primary-text.example.ts` for having "no test importing it and no document
+linking it", but its guard enforced only the import, so thirteen examples
+(`accent-states`, `control-padding`, `disabled-wash`, `filled-control`,
+`font-weights`, `inline-avatar`, `inline-icon`, `motion-levels`,
+`native-highlight`, `persisted-choices`, `scale-indexes`, `selection-press`,
+`status-panel`) were linked from neither the catalogue, the design system nor the
+README; each now sits in the section it belongs to, and `examples.test.ts` fails
+on an unlinked example or a link with no file (plan 670)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures
