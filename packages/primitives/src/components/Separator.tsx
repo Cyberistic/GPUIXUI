@@ -16,7 +16,7 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import { ruleStyle, type RuleSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle } from "./internal.js";
+import { hasText, mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -34,7 +34,7 @@ export const renderSeparator = (
   theme: PrimitiveTheme,
 ): ReactElement => {
   const rule = ruleStyle({ orientation, inset }, theme);
-  if (label === undefined || orientation === "vertical") {
+  if (orientation === "vertical" || !hasText(label)) {
     return <div testId={testId} style={mergeStyle(rule, style)} />;
   }
   return (

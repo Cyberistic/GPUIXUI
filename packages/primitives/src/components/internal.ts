@@ -173,6 +173,18 @@ export const ariaNameOr = (
   );
 
 /**
+ * Whether a string says something: non-blank after trimming.
+ *
+ * The caption rule for a visible description or a separator's label. A caller
+ * often computes one (`description={row.help}`), and a conditional that only
+ * tests `undefined` paints an empty caption line — or, on a `Separator`, splits
+ * the rule around a hole (plan `577`). It uses the same trimmed test as
+ * `ariaName`, so the paint and the accessibility tree agree.
+ */
+export const hasText = (value: string | undefined): boolean =>
+  Option.isSome(usableLabel(value));
+
+/**
  * A control's name: an explicit label that says something, else its text
  * children.
  *

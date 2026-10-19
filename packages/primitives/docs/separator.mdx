@@ -43,7 +43,7 @@ import { Button, Separator, Stack } from "@gpuixui/primitives";
 | ---- | ---- | ------- | ----------- |
 | `orientation` | `"horizontal" \| "vertical"` | — (required) | which way the rule runs |
 | `inset` | spacing step | none | margin at both ends, from `spacing` |
-| `label` | `string` | none | a centred caption; ignored for vertical rules |
+| `label` | `string` | none | a centred caption; ignored for vertical rules, and a blank one paints the plain rule |
 | `style` | `StyleDesc` | — | merged last, onto the **control** (for a labelled separator, the row that holds the caption and rules) |
 | `testId` | `string` | — | stable locator |
 
@@ -93,7 +93,8 @@ literal colour or thickness appears in the component.
 ## Verification
 
 - `src/components/presentational.test.tsx` — horizontal/vertical thickness,
-  inset, the labelled composition and the cross-axis stretch (plan `381`).
+  inset, the labelled composition, the cross-axis stretch (plan `381`), and a
+  blank label painting the plain rule (plan `577`).
 - `runtime/layout.runtime.test.tsx` — one border step across the surface.
 - `runtime/separator.runtime.test.tsx` — the rule fills a column under
   `start`/`center`/`end` and a row under `start`/`center`/`end`/`baseline`; the

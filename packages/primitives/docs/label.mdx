@@ -27,7 +27,7 @@ const name = "Workspace name";
 | ---- | ---- | ------- | ----------- |
 | `required` | `boolean` | `false` | appends a destructive `*`; **visual only** |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
-| `description` | `string` | none | a caption line under the name |
+| `description` | `string` | none | a caption line under the name; a blank one paints nothing |
 | `style` | `StateStyle<LabelState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
@@ -83,6 +83,8 @@ property; returning `{}` keeps the default look. The state type is exported.
 - `required` does not validate anything. Validate with `Schema` at the boundary.
 - A long name wraps inside the label's own row (the label is full width), so a
   form column does not grow sideways (plan `368`).
+- A blank `description` is not a description: it paints no caption line, so a
+  computed missing hint cannot leave a blank row under the name (plan `577`).
 
 ## Verification
 
@@ -92,7 +94,7 @@ property; returning `{}` keeps the default look. The state type is exported.
   a select's open state reaching the paint (plan 080).
 
 - `src/components/fields.test.tsx` — name, description, required and invalid
-  resolve as specified.
+  resolve as specified, and a blank description paints no caption (plan `577`).
 - `runtime/fields.runtime.test.tsx` — the visible `Label` and the control's
   `TextInput` name are both present in the accessibility dump.
 

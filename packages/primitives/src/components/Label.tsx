@@ -10,7 +10,7 @@
 
 import type { ReactElement, ReactNode } from "react";
 import { shrinkLayoutStyle } from "../core/style.js";
-import { resolvePartStyle, type StateStyle } from "./internal.js";
+import { hasText, resolvePartStyle, type StateStyle } from "./internal.js";
 import { Stack } from "./Stack.js";
 import { Text } from "./Text.js";
 
@@ -77,11 +77,11 @@ export const renderLabel = ({
         </Text>
       ) : null}
     </Stack>
-    {description === undefined ? null : (
+    {hasText(description) ? (
       <Text role="caption" tone="muted">
         {description}
       </Text>
-    )}
+    ) : null}
   </Stack>
 );
 

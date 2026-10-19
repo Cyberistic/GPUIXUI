@@ -113,7 +113,8 @@ order. A press that changes nothing does not call `onValueChange`.
   keys and paints no focus ring (plan 332).
 - `option.description` is the row's `aria-description`, so the visible hint is
   announced with the name. GPUix has no `aria-describedby`, but it exposes the
-  string form; a blank description is absent (plan 500).
+  string form; a blank description is absent — neither announced nor painted
+  (plans 500, `577`).
 
 ## Theming
 
@@ -213,7 +214,8 @@ the row that owns the hit area, the tab stop and the accessible name:
   tab stops, the error border and the focus ring at the render seam; the row's
   hover/active wash, absent on a disabled row, and the caller's `rowStyle`
   winning last (plan 355); an option description becomes the row's
-  `aria-description`, and a blank one stays absent (plan 500).
+  `aria-description`, a blank one stays absent from the tree and paints no
+  caption (plans 500, `577`).
 - `runtime/checkbox-group.runtime.test.tsx` — a hit-tested press anywhere on the
   row toggles it, the parent's `mixed → checked → unchecked` cycle, a disabled
   value surviving both directions, Space-up/Enter-down/held keys, Tab skipping a

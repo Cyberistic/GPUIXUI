@@ -42,6 +42,7 @@ import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
+  hasText,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -285,11 +286,11 @@ export const renderRadioGroup = (
             >
               {option.label}
             </Text>
-            {option.description === undefined ? null : (
+            {hasText(option.description) ? (
               <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
                 {option.description}
               </Text>
-            )}
+            ) : null}
           </div>
         );
       })}

@@ -159,6 +159,25 @@ describe("layout containers", () => {
     ).toStrictEqual(Option.some("stretch"));
   });
 
+  it("keeps a rule whole when its caption says nothing", () => {
+    // The bug guarded (plan 577): the labelled branch was chosen whenever
+    // `label` was present, so `<Separator label="   ">` painted two rules with
+    // a `sm` gap around an empty caption — a hole in the divider. A blank
+    // caption is not a caption, like every other blank string in the package
+    // (plans 026, 396, 500).
+    const blank = renderSeparator(
+      { orientation: "horizontal", label: "   " },
+      testTheme,
+    );
+    expect(stringIn(blank, "display")).toStrictEqual(Option.none());
+    expect(elementChildren(blank)).toStrictEqual([]);
+    const labelled = renderSeparator(
+      { orientation: "horizontal", label: "Advanced" },
+      testTheme,
+    );
+    expect(expectSome(stringIn(labelled, "display"))).toBe("flex");
+  });
+
   it("put a labelled separator's caller style on the control, not its rules", () => {
     // The bug guarded (plan 364): `style` was merged into the shared rule object
     // and spread onto both halves, so a container property landed twice while
@@ -414,6 +433,26 @@ describe("type", () => {
         "userSelect",
       ),
     ).toStrictEqual(Option.some("none"));
+  });
+
+  it("paints no description line when the description says nothing", () => {
+    // The bug guarded (plan 577): `description === undefined` was the only
+    // gate, so a computed blank description still painted a caption `Text` —
+    // one empty line of the caption role under every label (and under every
+    // group option). A blank description is absent, as its own docstring says.
+    const blank = renderLabel({ description: "   ", children: "Email" });
+    expect(elementChildren(blank)).toHaveLength(1);
+    const described = renderLabel({
+      description: "A hint.",
+      children: "Email",
+    });
+    expect(elementChildren(described)).toHaveLength(2);
+    expect(
+      elementProp(
+        expectSome(Arr.get(elementChildren(described), 1)),
+        "children",
+      ),
+    ).toStrictEqual(Option.some("A hint."));
   });
 
   it("hands a control its name, because GPUix has no aria-labelledby", () => {

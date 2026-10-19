@@ -1479,6 +1479,18 @@ retired once both branches are one
       five circles; both fail in the old direction (offline 728, scoped live
       4/4; plan `028`).
 
+`[x]` `packages/primitives`: **a blank caption painted an empty line anyway** —
+      four surfaces gated a visible caption on `undefined`: `Label.description`,
+      `CheckboxGroup`/`RadioGroup` option descriptions and `Separator.label`. A
+      computed blank string therefore painted a `caption`-role element: 18 px of
+      empty space under a label or checkbox row (16 px line + the `2xs` gap), a
+      stray `sm` gap in a radio row, and — worst — `<Separator label="   ">`
+      split the rule into two halves around a 12 px hole. One `hasText`
+      predicate now gates all four, using the trimmed rule `ariaName` already
+      applied, so the paint and the accessibility tree agree; the text of a real
+      caption is unchanged. 4 element-tree cases, all four failing against the
+      old gate and passing after (offline 734 → 738; plan `577`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: the `SUMMARIES` override table in

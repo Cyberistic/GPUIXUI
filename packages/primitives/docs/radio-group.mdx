@@ -46,7 +46,8 @@ import { RadioGroup } from "@gpuixui/primitives";
 
 `RadioOption` is `{ value, label, description?, disabled? }`. `description` is a
 caption beside the name **and** the option's `aria-description`, so the visible
-hint is also announced. A blank description is absent.
+hint is also announced. A blank description is absent — neither announced nor
+painted (plans 500, `577`).
 
 A selection is a **string**, and `""` is an ordinary value: a "None"/"No
 preference" choice is `{ value: "", label: "None" }` and behaves like any other
@@ -185,7 +186,8 @@ the option row:
   every enabled row declares the wash, a disabled option declares none, the
   caller's `optionStyle` wins last (plan 355), a horizontal group's rows
   carry the content-floor removal that lets them shrink (plan 380), an
-  option description becomes the row's `aria-description` (plan 500), and an
+  option description becomes the row's `aria-description` (plan 500), a blank
+  description paints no caption (plan `577`), and an
   option valued `""` is checked only when it is the selection while an absent
   selection leaves it unchecked and does not take the tab stop (plan 502).
 - `runtime/option-description.runtime.test.tsx` — both groups' descriptions in

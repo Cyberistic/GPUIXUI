@@ -45,6 +45,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { selectionValueText } from "./Checkbox.js";
 import {
   ariaName,
+  hasText,
   resolvePartStyle,
   useControlState,
   type StateStyle,
@@ -229,11 +230,11 @@ const renderRow = (
         >
           {label}
         </Text>
-        {description === undefined ? null : (
+        {hasText(description) ? (
           <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
             {description}
           </Text>
-        )}
+        ) : null}
       </div>
     </div>
   );

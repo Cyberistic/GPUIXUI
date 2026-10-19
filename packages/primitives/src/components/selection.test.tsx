@@ -318,6 +318,40 @@ describe("RadioGroup", () => {
     expect(hostProp(option, "aria-description")).toStrictEqual(Option.none());
   });
 
+  it("paints no description line when an option's description says nothing", () => {
+    // The bug guarded (plan 577): the ARIA side treated a blank description
+    // as absent (plan 500), but the row still painted a caption `Text`, so a
+    // computed missing hint left an empty caption line under the label.
+    const blank = renderRadioGroup(
+      {
+        options: [{ value: "alpha", label: "Alpha", description: "   " }],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(
+      elementChildren(expectSome(Arr.head(elementChildren(blank)))),
+    ).toHaveLength(2);
+    const described = renderRadioGroup(
+      {
+        options: [
+          { value: "alpha", label: "Alpha", description: "Every Monday." },
+        ],
+      },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn()),
+    );
+    expect(
+      elementChildren(expectSome(Arr.head(elementChildren(described)))),
+    ).toHaveLength(3);
+  });
+
   it("moves focus to the option an arrow lands on", () => {
     // The bug guarded: arrows moved the selection and the tab stop while native
     // focus stayed on the old radio, so the platform's "selection follows
@@ -633,6 +667,19 @@ describe("CheckboxGroup", () => {
     expect(hostProp(row(element, 0), "aria-description")).toStrictEqual(
       Option.none(),
     );
+  });
+
+  it("paints no description line when an option's description says nothing", () => {
+    // The bug guarded (plan 577): the row published no description for a blank
+    // one (plan 500), but still painted the caption element — an empty second
+    // line in the label column.
+    const column = (element: ReturnType<typeof render>) =>
+      expectSome(Arr.get(elementChildren(row(element, 0)), 1));
+    expect(elementChildren(column(render()))).toHaveLength(2);
+    const blank = render({
+      options: [{ value: "email", label: "Email", description: "   " }],
+    });
+    expect(elementChildren(column(blank))).toHaveLength(1);
   });
 
   it("renders the select-all parent with the state derived from the options", () => {
