@@ -786,8 +786,8 @@ import { nativeTextTheme } from "@gpuixui/tokens";
 document may paint on (`nativeTextSurfaces`). The runtime's fixed fade fractions
 and 3.5% code-block ink wash are measured by `native-text.test.ts` on every
 shipped set and every surface; the light platform styles name their own status
-text steps where the inherited ink missed the body floor through the wash. The
-chrome metrics the scale does not name stay at the runtime's defaults. A runnable
+text steps where the inherited ink missed the body floor through the wash or a
+find highlight. The chrome metrics the scale does not name stay at the runtime's defaults. A runnable
 example lives in [`src/native-text.example.ts`](./src/native-text.example.ts).
 
 A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime
@@ -795,7 +795,8 @@ seeds its default washes from the text theme's `accent`, and that field is
 `primaryText` — an ink: body text measured 2.81:1 through the active default in
 identity dark. `nativeHighlight` returns the `selection` role and one
 `nativeHighlightStep` stronger for the active match; `nativeHighlightPairs`
-holds every matchable role to the secondary floor, and `themeHighlightFailures`
+holds every matchable role to the secondary floor on the document tone and again
+on the code block's painted 3.5% ink surface, and `themeHighlightFailures`
 composes the check into `themeFailures` — including the active match's `step`
 above the match, so a near-opaque `selection` that paints both washes the same
 colour is reported.

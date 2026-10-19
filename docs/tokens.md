@@ -881,7 +881,10 @@ mode. The dark accent is the Windows dark step, not a rebuilt Luna or Aero one.
 **Aero's glass is an approximation.** GPUix 0.10.0 has no backdrop blur, inset
 shadow, radial/conic gradient or clip-path, so Aero's layers are solid tinted
 surfaces, and XP's bevel is a light/dark border pair rather than an inset
-shadow. The recipes stop where the runtime does.
+shadow. The recipes stop where the runtime does. Aero also names the XP steps
+for `successText` and `destructiveText` (`#0E5135`, `#7E1D21`) so a find match
+inside a code block keeps the secondary floor through the active wash on the
+painted code surface (plan `582`).
 
 ### The deprecated `platformTheme` bridge
 
@@ -1385,7 +1388,7 @@ XP light `successText` at 3.671:1 on `active`, Aero light at 3.721:1 on
 `selected`, and every high-contrast light tone at 6.12–6.72:1 under the 7:1
 floor while the dark sets already passed; the six light status roles move one
 half-step between the ramp steps they used, so the tightest shipped pair is
-**4.827:1** (Aero light `successText` on `selected`) and the AAA tightest
+**4.858:1** (Windows light `warningText` on `selected`) and the AAA tightest
 **7.370:1** (identity light high `warningText` on `active`). An accent-toned
 link is the last text role the washed contract covers (`selectionLinkPairs`):
 `primaryText` is
@@ -1602,8 +1605,8 @@ at **7.008:1** (`Light · macOS`). The opaque pairs are the binding public floor
 the ink composite is the suite's stricter code-surface guard. The light platform
 styles own the steps their canvases need: macOS, Windows, Windows XP and Aero
 name `infoText` `#173A88`; XP adds `successText` `#0E5135`, `warningText`
-`#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `warningText`
-`#4B3100`.
+`#4B3100` and `destructiveText` `#7E1D21`, and Aero adds `successText`
+`#0E5135`, `destructiveText` `#7E1D21` and `warningText` `#4B3100`.
 
 The metrics come from the theme's own scales: `codeTextSize`/`codeLineHeight`
 from `codeBlock`, `mdTextSize`/`mdLineHeight` from `body`, the heading sizes from
@@ -1664,15 +1667,25 @@ const theme = getTheme("dark");
 ```
 
 The active wash is at least **1.08:1** from the match and **1.28:1** from the
-surface it paints on. No visible wash keeps a syntax token at body strength:
+tone it paints on. No visible wash keeps a syntax token at body strength:
 the neutral `hover` wash is **1.06:1** at its weakest and still leaves syntax at
 **6.74:1**. So `nativeHighlightPairs` holds the body and secondary tiers and
 every syntax capture to the **secondary** floor on all four `Surface` tones
-`bg` may name; the tightest shipped pairs are **5.49:1** for the match and
-**4.71:1** for the active match, while body text stays at **9.65:1** and
-**8.03:1**. `themeHighlightFailures` is that check, composed into
+`bg` may name; the tightest shipped pairs are **5.59:1** for the match and
+**4.80:1** for the active match, while body text stays at **9.65:1** and
+**8.03:1**. The runtime paints a code block on that tone under a fixed 3.5% ink
+wash (plan `574`), so the check measures every pair again on the painted
+surface: the tightest painted pairs are **5.21:1** and **4.51:1**, body text
+**8.93:1** and **7.31:1**, and the step **1.06:1** from the match and
+**1.25:1** from the tone. Aero light's inherited `successText` and
+`destructiveText` measured **4.445:1** on the canvas and **4.429:1** on the
+quiet panel through the active match there, under 4.5:1, while every check
+returned `[]`; both take the XP step, so every shipped set passes and no other
+value moves. `themeHighlightFailures` is that check, composed into
 `themeFailures`; [`native-highlight.test.ts`](./src/native-highlight.test.ts)
-derives every figure above.
+derives every figure above, and
+[`native-highlight-code-surface.test.ts`](./src/native-highlight-code-surface.test.ts)
+holds the painted surface.
 
 The same check holds the step itself. An active match that is not one
 `contrastFloors[level].step` above the match on the surface it paints on is
@@ -2950,15 +2963,15 @@ status label in a selectable row paints and the label is dragged over with the
 copy around it; XP light `successText` measured 3.671:1 on `active` and every
 high-contrast light tone 6.12–6.72:1 under 7:1, so the six light status roles
 move one half-step between the ramp steps they used. The tightest pair is
-**4.827:1** (Aero light `successText` on `selected`) and **7.370:1** at AAA
+**4.858:1** (Windows light `warningText` on `selected`) and **7.370:1** at AAA
 (identity light high `warningText` on `active`); the plain `contrastPairs` count
 stays **338**.
 
 A status label or indicator dot in a sidebar is measured on the `muted` quiet
 panel — the surface plans `300` and `309` made first class — as well as on the
 four row washes plan `083` covered, so a warning dot in a settings sidebar has a
-pair. The tightest shipped value is `successText` on `muted` at **7.68:1**
-(Aero light), above the 4.5:1 secondary floor.
+pair. The tightest shipped value is `successText` on `muted` at **8.03:1**
+(Windows light), above the 4.5:1 secondary floor.
 
 The filled-control states are designed roles, not alpha composites. Before plan
 `097` a consumer painted `alpha(primary, 0.9)` for hover and `alpha(primary, 0.8)`

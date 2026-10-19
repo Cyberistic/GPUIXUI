@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 235/301
+`[x]` `[████████░░]` 236/302
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1939,6 +1939,17 @@ same colour while every text pair and `themeFailures` returned `[]`; the check
 now reports a `pairClass: "step"` failure on the four surfaces `bg` may name,
 the union is documented in the type index, and every shipped set already clears
 the floor (plan 581)
+`[x]` Hold the find highlight on the code block's painted surface — the runtime
+paints `<code>`, `<diff>` and `<markdown>` on `bg` under a fixed 3.5% ink wash
+(plan 574), but `themeHighlightFailures` composited the wash over the plain tone,
+so a match inside fenced code sat behind two washes the check never measured; on
+Aero light the inherited `successText`/`destructiveText` measured **4.429–4.496:1**
+through the active match on the canvas and quiet panel, under the 4.5:1
+secondary floor, while every check returned `[]`. `nativeInk(theme, surface)`
+owns the runtime's fraction and ink choice, the check measures both washes over
+it, Aero light names the XP steps (`#0E5135`, `#7E1D21`), and every shipped set
+passes (opaque minima 5.59/4.80, painted 5.21/4.51; no pair count, floor or
+check kind moves) (plan 582)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

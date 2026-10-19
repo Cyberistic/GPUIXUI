@@ -597,10 +597,13 @@ weakest and still leaves syntax under the body floor. `nativeHighlight(theme)`
 is the prop a find bar passes: the `selection` role, plus one
 `nativeHighlightStep` stronger for the active match. `themeHighlightFailures`
 holds every matchable role to the **secondary** floor on `background`, `card`,
-`popover` and `muted` while body text keeps the body floor. The runtime's own
-default seeds the wash from `nativeTextTheme`'s `accent`, which is an ink, not a
-wash; the catalogue's [Find highlighting](tokens.md#find-highlighting) section
-states the measured evidence.
+`popover` and `muted` while body text keeps the body floor. The runtime paints a
+code block on that tone under a fixed 3.5% ink wash, so the check measures every
+pair again through the painted surface — a find inside fenced code sits behind
+both washes. The runtime's own default seeds the wash from
+`nativeTextTheme`'s `accent`, which is an ink, not a wash; the catalogue's
+[Find highlighting](tokens.md#find-highlighting) section states the measured
+evidence.
 
 The test runs for every shipped colour set — platform variants included, each on
 its own canvas — and is part of the normal test suite. The elevation shadow is
@@ -831,9 +834,10 @@ some values at fixed fractions a theme cannot change, so the suite holds the
 chosen roles through every composite on every shipped set; the syntax palette is
 held to the body floor on all four `Surface` tones a document may paint on
 (`nativeTextSurfaces`, `nativeSyntaxPairs`) and through the 3.5% ink wash the
-code block paints over each. A find bar's active match is held one `step` above
-the match, so an edited near-opaque `selection` that paints both washes the same
-colour is reported. A document painted directly on the canvas overrides
+code block paints over each. The find highlight is held on that tone and on the
+same painted surface, and its active match one `step` above the match, so an
+edited near-opaque `selection` that paints both washes the same colour is
+reported. A document painted directly on the canvas overrides
 only `bg`. The light platform styles name their own status text steps where the
 inherited ink missed the body floor through the wash.
 
