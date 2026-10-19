@@ -114,6 +114,7 @@ missing here is not public.
 | `NativeInlineCode` | The inline-code pair: the text field painted on its opaque wash, and the floor it must clear. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeSyntaxTint` | A syntax role painted on one of the native diff's row tints, with the tint's field and fraction. |
+| `NativeTextChrome` | The three fixed font sizes the runtime paints its own diff chrome at: the meta line, the chrome line and the file path. |
 | `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
 | `NativeTextFailure` | One native document fade, two-fade composition, inline-code pair, chrome wash or ink wash a theme misses, with its field, role, surface and ratios. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales, plus the two runtime-only members a brand may set: the gutter floor and the diff accent bar. |
@@ -1706,6 +1707,18 @@ sets it on the returned object, and the type accepts it without a cast. The
 per-digit width and the table's max-content floor are supplied, not left to the
 runtime: `codeGutterDigitWidth`, `diffGutterWidth`, `mdTableMinColumnWidth` and
 `mdTableMinColumnContent` are the floors above, resolved from the roles.
+
+The runtime's diff chrome is **fixed type**, not theme type: a meta line at
+**10.5px**, the gutter numbers, hunk header, notice and file-header counts at
+**11px**, and the file path at **12px**, each on GPUI's default golden-ratio
+line box. `nativeTextChrome` publishes the three sizes and
+`nativeTextLineRatio` the ratio; the four derived diff boxes are floored at
+those line boxes — **19 / 18 / 18 / 18** — and the marker column at one code em,
+because a compact theme otherwise clips them. A probe with
+`caption`/`label`/`codeBlock` at 8px and the whole spacing scale at `0` returns
+`[]` from `themeFailures` and resolved **8 / 8 / 8 / 8** and a **0px** marker
+before the floor. No shipped box moves: the shipped minimums are 18 / 34 / 24 /
+20 and a 24px marker.
 
 `bg` is the raised `card` plane a code block, diff or document is painted on. A
 document painted directly on the canvas overrides only that field; the opaque

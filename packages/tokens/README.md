@@ -808,7 +808,13 @@ styles name their own status
 text steps where the inherited ink missed the body floor through the wash or a
 find highlight. `NativeTextMetrics` carries the runtime's two token-less chrome
 metrics (`codeGutterMinWidth`, `diffAccentBarWidth`) as optional members, unset
-by the bridge, so a brand can set either without a cast. A runnable
+by the bridge, so a brand can set either without a cast. The diff's own chrome
+is fixed type, not theme type: a meta line at 10.5px, the gutter, hunk header,
+notice and file counts at 11px and the file path at 12px. `nativeTextChrome` and
+`nativeTextLineRatio` publish them, and the four derived boxes are floored at
+those line boxes (19 / 18 / 18 / 18) and the marker at one code em; a compact
+theme that passes every check resolved 8px boxes and a 0px marker before the
+floor. A runnable
 example lives in [`src/native-text.example.ts`](./src/native-text.example.ts).
 
 A find bar passes `nativeHighlight(theme)` as its `highlight` prop. The runtime

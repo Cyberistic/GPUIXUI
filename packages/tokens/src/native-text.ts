@@ -87,13 +87,23 @@ export interface NativeTextMetrics {
   readonly codeGutterMinWidth?: number;
   /** Diff text size; the `codeBlock` role. */
   readonly diffTextSize: number;
-  /** Diff line height; the `codeBlock` role. */
+  /**
+   * Diff line height; the `codeBlock` role, floored at the runtime's 11px
+   * gutter line box so a compact theme cannot clip a line number.
+   */
   readonly diffLineHeight: number;
-  /** Diff file header height; a `label` line plus two `spacing.md` insets. */
+  /**
+   * Diff file header height; a `label` line plus two `spacing.md` insets,
+   * floored at the runtime's fixed 12px file-path line.
+   */
   readonly diffFileHeaderHeight: number;
-  /** Diff hunk header height; a `caption` line plus two `spacing.xs` insets. */
+  /**
+   * Diff hunk header height; a `caption` line plus two `spacing.xs` insets,
+   * floored at the runtime's fixed 11px header line.
+   */
   readonly diffHunkHeaderHeight: number;
-  /** Diff notice height; a `caption` line plus two hairline insets. */
+  /** Diff notice height; a `caption` line plus two hairline insets, floored at
+   * the runtime's fixed 11px notice line. */
   readonly diffNoticeHeight: number;
   /** Padding below the diff body; `spacing.md`. */
   readonly diffBodyBottomPad: number;
@@ -103,7 +113,7 @@ export interface NativeTextMetrics {
    * per-digit advance from a constant, so this is a floor, not the whole width.
    */
   readonly diffGutterWidth: number;
-  /** Width of the `+`/`−` column; `spacing["2xl"]`. */
+  /** Width of the `+`/`−` column; `spacing["2xl"]`, floored at one code em. */
   readonly diffMarkerWidth: number;
   /**
    * Width of the diff's add/delete accent bar. GPUix 0.10.0 defaults to 3px. The
@@ -212,6 +222,32 @@ export const nativeTextSurfaces = [
 ] as const satisfies ReadonlyArray<keyof ThemeColors>;
 
 /**
+ * The font sizes the pinned runtime paints its own diff chrome at, in pixels.
+ * The theme cannot change them, so the derived boxes in {@link NativeTextMetrics}
+ * must hold at least their line boxes. Evidence: `custom_elements/diff.rs` lines
+ * 527 (notice), 548 (hunk header), 673 (file path), 684 (file counts), 731 (meta
+ * line) and 776 (gutter numbers).
+ */
+export const nativeTextChrome = {
+  /** The diff meta line. */
+  metaText: 10.5,
+  /** The gutter numbers, a hunk header, a notice and the file-header counts. */
+  chromeText: 11,
+  /** The diff file path. */
+  filePathText: 12,
+} as const;
+
+/** The shape of {@link nativeTextChrome}. */
+export type NativeTextChrome = typeof nativeTextChrome;
+
+/**
+ * The line-box ratio GPUI gives text with no explicit line height — its default
+ * `phi()`, the golden ratio. `line_height_in_pixels` rounds the product to whole
+ * pixels, so 10.5px becomes 17, 11px becomes 18 and 12px becomes 19.
+ */
+export const nativeTextLineRatio = 1.618034;
+
+/**
  * The semantic role each native text colour paints. A capture class is a use of
  * a role, not a new role: the palette stays inside the measured semantic set,
  * so a copied theme retints code, diffs and markdown with every other surface.
@@ -313,6 +349,10 @@ const syntaxOf = (theme: Theme): NativeSyntaxTheme => {
 const scaledMetric = (size: number, shippedAt: number, base: number): number =>
   Math.ceil((size * shippedAt) / base);
 
+/** The rounded line box GPUI gives a fixed chrome size. */
+const chromeLine = (size: number): number =>
+  Math.round(size * nativeTextLineRatio);
+
 const metricsOf = (theme: Theme): NativeTextMetrics => {
   const { body, caption, codeBlock, h1, h2, h3, label } = theme.typography;
   return {
@@ -321,13 +361,25 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
     codeGutterDigitWidth: scaledMetric(codeBlock.fontSize, 7, 12.5),
     codeGutterPaddingRight: theme.spacing.lg,
     diffTextSize: codeBlock.fontSize,
-    diffLineHeight: codeBlock.lineHeight,
-    diffFileHeaderHeight: label.lineHeight + 2 * theme.spacing.md,
-    diffHunkHeaderHeight: caption.lineHeight + 2 * theme.spacing.xs,
-    diffNoticeHeight: caption.lineHeight + 2 * theme.spacing["2xs"],
+    diffLineHeight: Math.max(
+      codeBlock.lineHeight,
+      chromeLine(nativeTextChrome.chromeText),
+    ),
+    diffFileHeaderHeight: Math.max(
+      label.lineHeight + 2 * theme.spacing.md,
+      chromeLine(nativeTextChrome.filePathText),
+    ),
+    diffHunkHeaderHeight: Math.max(
+      caption.lineHeight + 2 * theme.spacing.xs,
+      chromeLine(nativeTextChrome.chromeText),
+    ),
+    diffNoticeHeight: Math.max(
+      caption.lineHeight + 2 * theme.spacing["2xs"],
+      chromeLine(nativeTextChrome.chromeText),
+    ),
     diffBodyBottomPad: theme.spacing.md,
     diffGutterWidth: scaledMetric(codeBlock.fontSize, 36, 12),
-    diffMarkerWidth: theme.spacing["2xl"],
+    diffMarkerWidth: Math.max(theme.spacing["2xl"], codeBlock.fontSize),
     diffRowPaddingX: theme.spacing.xl,
     mdTextSize: body.fontSize,
     mdLineHeight: body.lineHeight,
@@ -380,6 +432,13 @@ const metricsOf = (theme: Theme): NativeTextMetrics => {
  * diff wash is deliberately out of the contract — it paints a changed token's
  * own syntax colour over a wash of the add/delete family, which cannot clear a
  * text floor while staying visible; `docs/tokens.md` states the omission.
+ *
+ * The diff's own chrome is fixed type: a meta line at 10.5px, the gutter, hunk
+ * header, notice and file counts at 11px, and the file path at 12px, each on
+ * GPUI's golden-ratio line box ({@link nativeTextChrome},
+ * {@link nativeTextLineRatio}). The four derived boxes are floored at those
+ * lines and the marker column at one code em, so a compact theme changes the
+ * body and the padding but never clips a number, a path or a marker.
  *
  * @example
  * ```tsx

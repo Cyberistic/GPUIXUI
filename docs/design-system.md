@@ -839,8 +839,14 @@ and the code/diff gutters and table floors are the runtime's shipped proportions
 resolved against those roles. The runtime's two chrome metrics without a token —
 the code gutter's 28px floor (`codeGutterMinWidth`) and the 3px diff accent bar
 (`diffAccentBarWidth`) — stay at their defaults and are optional members of
-`NativeTextMetrics`, so a brand can set either on the returned object. The
-runtime fades
+`NativeTextMetrics`, so a brand can set either on the returned object. The diff's
+own chrome is fixed type the theme cannot change: a meta line at 10.5px, the
+gutter, hunk header, notice and file counts at 11px and the file path at 12px,
+each on GPUI's golden-ratio line box. `nativeTextChrome` and
+`nativeTextLineRatio` publish them, and the four derived boxes are floored at
+those lines (19 / 18 / 18 / 18) and the marker column at one code em, because a
+compact theme that passes every check otherwise resolved 8px boxes and a 0px
+marker. The runtime fades
 some values at fixed fractions a theme cannot change, so
 `themeNativeTextFailures` holds the chosen roles through every composite on all
 four `Surface` tones a document may paint on; the syntax palette is held to the
