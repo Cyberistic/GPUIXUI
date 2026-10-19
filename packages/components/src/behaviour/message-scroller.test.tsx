@@ -9,6 +9,13 @@
  * floating in its bottom-right corner. The scroll position is read from the
  * renderer, not inferred from the component's own state, so a wrong pin decision
  * fails here.
+ *
+ * Visible box (plan 582): on this binding a scroll container reports its own
+ * position in scrolled content space (viewport `y: -1080` at offset `-1080`)
+ * while its rows are in window space. The helpers therefore wheel and measure
+ * at the unscrolled **scroller root**, and the component measures its pin there
+ * too; using the container's own box left nine cases red and made a scroll back
+ * to the end impossible to detect.
  */
 
 import * as Option from "effect/Option";
@@ -71,9 +78,13 @@ const offsetOf = (root: ComponentTestRoot): number =>
     () => 0,
   );
 
-/** Wheel over the viewport. Positive scrolls up (toward older rows). */
+/** Wheel over the viewport. Positive scrolls up (toward older rows).
+ *
+ * The scroller **root** is the reliable box: on this binding the scroll
+ * container reports its own position in scrolled content space (plan 582), so a
+ * wheel at the viewport's centre would land off-screen. */
 const wheel = (root: ComponentTestRoot, deltaY: number): void => {
-  const { x, y, width, height } = requireBounds(root, "viewport");
+  const { x, y, width, height } = requireBounds(root, "scroller");
   root.renderer.nativeSimulateScrollWheel(
     x + width / 2,
     y + height / 2,
@@ -82,11 +93,11 @@ const wheel = (root: ComponentTestRoot, deltaY: number): void => {
   );
 };
 
-/** Whether the last row sits inside the viewport, i.e. the end is visible. */
+/** Whether the last row sits inside the visible scroller, i.e. the end is. */
 const endIsVisible = (root: ComponentTestRoot, last: number): boolean => {
-  const viewport = requireBounds(root, "viewport");
+  const visible = requireBounds(root, "scroller");
   const row = requireBounds(root, `row-${last}`);
-  return row.y + row.height <= viewport.y + viewport.height + 1;
+  return row.y + row.height <= visible.y + visible.height + 1;
 };
 
 const text = (root: ComponentTestRoot): ReadonlyArray<string> =>
@@ -180,6 +191,22 @@ describe("MessageScroller", () => {
     wheel(root, -2000);
 
     expect(endIsVisible(root, 40)).toBe(true);
+    expect(root.renderer.findByTestId("jump")).toBeUndefined();
+
+    root.unmount();
+  });
+
+  it("keeps the pin when a scroll returns exactly to the end", () => {
+    const root = renderComponent(<Transcript count={40} />);
+
+    wheel(root, 120);
+    expect(root.renderer.findByTestId("jump")).toBeDefined();
+
+    // Back to the end in one move. The old viewport-box rule read the tail as
+    // 1000+ px below the visible bottom (the container's box is content-space)
+    // and could never re-pin (plan 582).
+    wheel(root, -120);
+    expect(endIsVisible(root, 39)).toBe(true);
     expect(root.renderer.findByTestId("jump")).toBeUndefined();
 
     root.unmount();

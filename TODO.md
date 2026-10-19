@@ -254,13 +254,14 @@ retired once both branches are one
       List failures flip to pass, and the three row-removal cases stay red
       pending plan 540's focus-event fix; docs, `COMPONENTS.md` and the
       inventory synced (owner: components)
-    - [ ] The message scroller measures its pin in the scroller's visible box —
+    - [x] The message scroller measures its pin in the scroller's visible box —
       plan 582; measured: a scroll container's own bounds are reported in
       scrolled content space (viewport `y: -1080` at offset `-1080`) while its
       rows are in window space, so nine cases were read as plan-540 failures: the
       suite wheeled at off-screen coordinates and a scroll back to the end could
-      never re-pin. Measure the unscrolled root's box, wheel at the root, and add
-      a re-pin case (owner: components)
+      never re-pin. The pin and the suite now use the unscrolled root's box, and
+      a new re-pin case fails with the old rule (12 tests, behaviour 741/35);
+      docs, `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -717,6 +718,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | The shared store's `@gpuix/native` binding was **rebuilt in place by another worktree while suites were running** (2026-10-18 21:47 and 22:00, `workspaces/gpuix-zindex`; md5 `c0e554b…`). The new build changes bounds/anchoring — the combobox trigger measures `{x:549,width:738}` instead of `{x:540,width:740}` — so "centres a requested popup on its trigger" is off by 4 px and "paints the focus ring on the search field" keeps the ring after focus moves. **Both fail at `HEAD` with that binding and passed on the 21:47 build**, so no component change is at fault; every native verdict taken across the swap is suspect until one build is pinned | gpuix-zindex / playground | **wider than first measured** — plan 540 proved `getElementBounds` mixes **three** conventions inside one build (block/`flex-start`: content-box origin; centred flex: border-box origin; padding-box size in all three) and that a release-tag build (`9fcd628`, zed `81c99f81`, md5 `e7a3c64…`) reproduces it, so no harness normalisation is sound. The 59 red cases are classified: 34 position, 24 focus/blur (no `onFocus`/`onBlur` for a native focus change), 1 scroll. Fix required: one box convention for every element (border box) plus focus events; then the suite's 34 position cases pass unchanged. Artifact + build log kept in `workspaces/components/.agents/slop/scratch/gpuix-release/` |
 | The native renderer keeps **one** child at the root: a two-`div` fragment renders only the second (measured while writing plan 510's test fixture, both children identical in every other respect) | playground / `docs/gpuix-capabilities.md` (plan 203) | pending — behaviour fixtures wrap sibling roots in a container; no production example is affected |
+| A **scroll container's own `getElementBounds`** is reported in scrolled content space (measured: `viewport { y: -1080, height: 200 }` at offset `-1080`, while its rows are in window space: row 39 at `y: 168`). `MessageScroller` measures its pin against the unscrolled root instead (plan 582); a binding fix should make a scrolled element's own box the visible box | binding-gaps | pending — plan 582 records the component-side adaptation and its two-way proof |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
 | `LICENSES/`: record GPUI Kit = Apache-2.0 (+ CC BY 4.0 for its docs prose, Lucide ISC for icons, no NOTICE file); shadcn/ui is referenced as design inspiration only, not copied source. The Message Scroller behaviour port (MIT) needs its own `provenance.md` row (plan 206 credits it on the docs page) | licensing | pending |
 | `LICENSES/`: credit shadcn/ui AI Elements `chat` + `message` (MIT) for plan 207's behaviour port; both docs pages already credit it in prose | licensing | pending |

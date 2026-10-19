@@ -3,12 +3,17 @@
  * them alone when they are not.
  *
  * The pin decision is measured from a 1px tail sentinel's laid-out position
- * relative to the viewport, not from an absolute scroll height: GPUix reports a
- * scroll offset (`getScrollOffset`) but no content height, while offscreen
- * `getElementBounds` still returns the sentinel's true position (measured
- * 2026-10-18, plan 206). That keeps the rule correct for a future
- * `<virtual-list>` swap, where a distance-from-end measure is the only thing
- * that survives row virtualization.
+ * relative to the scroller root, not from an absolute scroll height: GPUix
+ * reports a scroll offset (`getScrollOffset`) but no content height, while
+ * offscreen `getElementBounds` still returns the sentinel's true position
+ * (measured 2026-10-18, plan 206). It is measured against the **root**, not the
+ * scroll container: on this binding the container's own box is reported in
+ * scrolled content space (viewport `y: -1080` at offset `-1080`) while its rows
+ * are in window space, so a scroll back to the end could never re-pin (plan 582).
+ * The root is unscrolled, and the parts contract makes it the viewport's visible
+ * box. That also keeps the rule correct for a future `<virtual-list>` swap,
+ * where a distance-from-end measure is the only thing that survives row
+ * virtualization.
  *
  * The viewport is a plain scroll container in v1: `<virtual-list>` takes an
  * item count rather than compound children, so it cannot host `Item` parts
@@ -40,6 +45,7 @@ import {
   useState,
   type ReactNode,
   type Ref,
+  type RefObject,
 } from "react";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
@@ -66,6 +72,8 @@ interface MessageScrollerContextValue {
   readonly observe: (distanceFromEnd: number) => void;
   readonly addItems: (count: number) => void;
   readonly jumpToLatest: () => void;
+  /** The unscrolled root: its box is the viewport's visible box. */
+  readonly rootRef: RefObject<PublicInstance | null>;
 }
 
 const MessageScrollerContext = createContext<
@@ -108,6 +116,7 @@ export const MessageScroller = ({
   onPinnedChange,
   children,
   style,
+  ref,
   ...rest
 }: MessageScrollerProps) => {
   const theme = useTheme();
@@ -118,6 +127,8 @@ export const MessageScroller = ({
   });
   const [unread, setUnread] = useState(0);
   const threshold = thresholdProp ?? theme.spacing["2xl"];
+  const rootRef = useRef<PublicInstance | null>(null);
+  const setRoot = useMergedRef(rootRef, ref);
   assertParts(messageScrollerRoot, children);
 
   const observe = useCallback(
@@ -147,8 +158,16 @@ export const MessageScroller = ({
   }, [pinned, unread, setPinned]);
 
   const context = useMemo<MessageScrollerContextValue>(
-    () => ({ pinned, unread, threshold, observe, addItems: add, jumpToLatest }),
-    [pinned, unread, threshold, observe, add, jumpToLatest],
+    () => ({
+      pinned,
+      unread,
+      threshold,
+      observe,
+      addItems: add,
+      jumpToLatest,
+      rootRef,
+    }),
+    [pinned, unread, threshold, observe, add, jumpToLatest, rootRef],
   );
 
   return (
@@ -157,6 +176,7 @@ export const MessageScroller = ({
         {...rest}
         role="group"
         aria-label={label}
+        ref={setRoot}
         style={mergeStyles(
           {
             position: "relative",
@@ -227,20 +247,18 @@ export const MessageScrollerViewport = ({
   });
 
   const handleScroll = (event: EventPayload): void => {
-    const viewport = viewportRef.current;
+    const root = scroller.rootRef.current;
     const tail = tailRef.current;
-    if (renderer !== null && viewport !== null && tail !== null) {
-      const viewportBounds = renderer.getElementBounds?.(viewport.id);
+    if (renderer !== null && root !== null && tail !== null) {
+      const rootBounds = renderer.getElementBounds?.(root.id);
       const tailBounds = renderer.getElementBounds?.(tail.id);
       if (
-        viewportBounds !== undefined &&
-        viewportBounds !== null &&
+        rootBounds !== undefined &&
+        rootBounds !== null &&
         tailBounds !== undefined &&
         tailBounds !== null
       ) {
-        scroller.observe(
-          tailBounds.y - (viewportBounds.y + viewportBounds.height),
-        );
+        scroller.observe(tailBounds.y - (rootBounds.y + rootBounds.height));
       }
     }
     onScroll?.(event);

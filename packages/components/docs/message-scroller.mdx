@@ -53,7 +53,11 @@ token.
 | `pinned` controlled | the caller's value wins; every accepted change reports through `onPinnedChange` |
 
 A scroll within the threshold (default 24px, the theme's `spacing["2xl"]`) still
-counts as "at the end", so a wheel nudge does not switch following off.
+counts as "at the end", so a wheel nudge does not switch following off. The pin
+is measured against the **scroller root's visible box**: GPUix 0.10.0 reports a
+scroll container's own box in scrolled content space (measured: `y: -1080` at
+offset `-1080`) while its rows are in window space, so the root is the reliable
+frame (plan 582).
 
 ## API
 
@@ -62,7 +66,7 @@ merges `style` last.
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `MessageScroller` | `role="group"` named by `label` | `label` (required), `threshold?`, `pinned?`, `defaultPinned?` (true), `onPinnedChange?`, children |
+| `MessageScroller` | `role="group"` named by `label` | `label` (required), `threshold?`, `pinned?`, `defaultPinned?` (true), `onPinnedChange?`, `ref?`, children |
 | `MessageScrollerViewport` | the `overflow: "scroll"` container and its tail sentinel | `style`, `onScroll?`, `ref?`, children |
 | `MessageScrollerItem` | one row, no surface of its own | `style`, children |
 | `MessageScrollerJumpToLatest` | a small secondary button; renders nothing while pinned | `label?` (`"Jump to latest"`), `style` |
@@ -99,14 +103,18 @@ change — see [Theming](/docs/theming).
 - **No resize observer.** A row that grows while the scroller does not re-render
   (internal child state) is not followed; a stream that lives in the app's state
   re-renders the scroller and is followed.
+- **The root is the visible box.** The pin is measured against the scroller
+  root, so padding on that root counts toward the threshold; give the root no
+  padding if the 24px threshold must be exact.
 - **No `aria-live`** and no "new messages" announcement.
 
 ## Verification
 
-`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (11 tests):
-it wheels the viewport, appends rows, grows the tail, clicks the affordance and
-measures that the affordance floats inside the transcript's corner, then reads
-the real `getScrollOffset`/bounds.
+`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (12 tests):
+it wheels the scroller root, appends rows, grows the tail, clicks the affordance
+and measures that the affordance floats inside the transcript's corner, then
+reads the real `getScrollOffset`/bounds. One case returns exactly to the end to
+prove the pin can be re-read after scrolling up.
 `src/message-scroller/logic.test.ts` covers the pin/unread fold without a
 window.
 

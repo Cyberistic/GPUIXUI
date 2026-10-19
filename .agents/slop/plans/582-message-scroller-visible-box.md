@@ -5,7 +5,7 @@
 | Phase | F (Tier 2 hardening) |
 | Owner | `components` (`packages/components`) |
 | Depends on | 110, 112, 117, 206, 326, 327, 540, 572 |
-| Status | **planned** |
+| Status | **landed** — the pin now measures the unscrolled root's visible box; the nine red `MessageScroller` cases pass and a new re-pin case guards the measurement. Full native suite 741 passing / 35 pre-existing plan-540 failures |
 | Claimed number | first free after `581` (checked every worktree; recorded in `PLAN.md` D30) |
 
 ## 0. Why this plan exists
@@ -82,8 +82,8 @@ The viewport cannot see the root's element id today. Add a ref to the context.
   ```
 
   Destructure `ref` from the props (it is part of `Props`) and put
-  `ref={setRoot}` on the root `div`. This also closes a plan-128 gap: the root
-  did not compose a caller `ref` at all.
+  `ref={setRoot}` on the root `div`; merging is required because an explicit
+  `ref` after `{...rest}` would otherwise replace the caller's.
 - Include `rootRef` in the context value and its dependency array (the ref
   identity is stable, so the memo still only changes with the state).
 - The viewport destructures `rootRef` from `useMessageScroller()`.
@@ -197,9 +197,9 @@ Full native suite (end of task; not a merge gate for this plan):
 nub run test:behaviour
 ```
 
-Expected after the fix: **742 passing / 35 failed** of 777. The 35 are the
+Expected after the fix: **741 passing / 35 failed** of 776. The 35 are the
 remaining plan-540 binding failures (position/focus, catalogued in plan 540 §8);
-the nine `MessageScroller` rows disappear and the new case is the tenth pass.
+the nine `MessageScroller` rows disappear; the new case makes the suite 12.
 Paste both counts into the commit body.
 
 Gates:
@@ -244,13 +244,32 @@ hand.
   re-pin measurement.
 - The pin decision uses the unscrolled root's visible box; the scroll container's
   own reported box is no longer read for the pin.
-- A caller `ref` on `MessageScroller` is composed, not dropped.
+- A caller `ref` on `MessageScroller` still reaches the root (composed with the
+  internal measurement ref).
 - Docs, `COMPONENTS.md`, the inventory, the plan index, `TODO.md` and `PLAN.md`
   agree; the docs page and the row state 12 native tests.
 - `nub run check`, `nub run lint`, the unit suite and the scoped behaviour suite
-  are green; the full native suite is `742 passing / 35 known failures`.
+  are green; the full native suite is `741 passing / 35 known failures` of 776.
 - One commit: `fix(components): measure the message scroller's pin in its visible box (plan 582)`.
 
 ## 7. Results
 
-Fill this in when the plan lands.
+- Measured before the change: the viewport reported `{ y: -1080, height: 200 }`
+  at offset `-1080` while row 39 was at `y: 168`; the root was
+  `{ y: 0, height: 200 }`. A wheel at the viewport's centre landed at `y: -980`
+  and scrolled nothing.
+- `src/message-scroller.tsx`: the context carries the root `RefObject`; the root
+  composes the caller's `ref`; `handleScroll` compares the tail with
+  `root.y + root.height`. The pure rules and the affordance are unchanged.
+- `src/behaviour/message-scroller.test.tsx`: `wheel` and `endIsVisible` use the
+  scroller root; one new case wheels up and back to the end; the file header
+  records the measured box convention.
+- Scoped suite: **12 passed (12)**.
+- Both-direction proof (by hand): reverting only the root measurement fails
+  "re-pins when the reader wheels back to the end" and the new case (2 failed,
+  10 passed); restoring it but wheeling at the viewport fails seven cases. Files
+  restored, 12/12 again.
+- Full suite: **741 passing / 35 failed** of 776 (was 731/44 of 775 — the nine
+  renamed plan-540 failures are this defect, and the new case is the tenth pass
+  in this file).
+- Unit suite unchanged; `nub run check` and `nub run lint` exit `0`.
