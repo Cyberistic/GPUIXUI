@@ -269,7 +269,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [583](./583-native-text-fades.md) | The native document's fades and ink wash in the public contract | F | 071, 399, 569, 572–574, 581–582 | done |
 | [584](./584-elevation-on-content.md) | The floating element's shadow on the content it opens over | F | 375, 508, 509, 526 | done |
 | [585](./585-native-text-runtime-metrics.md) | The two native-text metrics a brand is told it can set | F | 569, 572, 583 | done |
-| [588](./588-native-chrome-washes.md) | The native document's chrome washes | F | 569, 572–574, 583, 585 | in progress |
+| [588](./588-native-chrome-washes.md) | The native document's chrome washes | F | 569, 572–574, 583, 585 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

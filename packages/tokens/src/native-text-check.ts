@@ -110,6 +110,48 @@ export const nativeTextOverFades: readonly NativeTextOverFade[] = [
   },
 ];
 
+/**
+ * A text-theme field the runtime paints on one of its fixed neutral ink washes.
+ *
+ * Unlike a {@link NativeTextFade}, the role is painted whole; the ink is behind
+ * it. The four washes are the code block's language header (2%), its separator
+ * (the theme's `border` on that same wash), a diff file header (2.5%) and the
+ * header's hover (5%, also the show-more row). None is a token the theme owns,
+ * so a theme that clears the plain-surface pairs can still lose its chrome.
+ */
+export interface NativeTextWash {
+  /** The `NativeTextTheme` field whose role is painted. */
+  readonly field: keyof typeof nativeTextRoles;
+  /** The fraction of black or white the runtime washes the document tone with. */
+  readonly ink: number;
+  /** The floor the painted pair must clear. */
+  readonly pairClass: ContrastPairClass;
+}
+
+/**
+ * The chrome the runtime paints on its own ink washes, each measured on every
+ * {@link nativeTextSurfaces} tone.
+ *
+ * A code block's language header is a 2% ink wash under `textMuted`, and the
+ * separator below it is the theme's `border` on that same wash. A diff file
+ * header is a 2.5% wash under its path (`textMuted`) and its two counts
+ * (`diffAdd`/`diffDel`), and the hover wash — shared by the show-more row — is
+ * 5%. The fades in {@link nativeTextFades} name the code body and the per-role
+ * fades, not these four. On `Dark · macOS` the accepted `border: "#303030"`
+ * theme measures **1.002:1** on the code header's 2% wash while every other
+ * check returns `[]`.
+ */
+export const nativeTextWashes: readonly NativeTextWash[] = [
+  { field: "border", ink: 0.02, pairClass: "divider" },
+  { field: "textMuted", ink: 0.02, pairClass: "secondary" },
+  { field: "textMuted", ink: 0.025, pairClass: "secondary" },
+  { field: "diffAdd", ink: 0.025, pairClass: "secondary" },
+  { field: "diffDel", ink: 0.025, pairClass: "secondary" },
+  { field: "textMuted", ink: 0.05, pairClass: "secondary" },
+  { field: "diffAdd", ink: 0.05, pairClass: "secondary" },
+  { field: "diffDel", ink: 0.05, pairClass: "secondary" },
+];
+
 /** One native document paint that misses its floor. */
 export interface NativeTextFailure {
   /**
@@ -127,7 +169,7 @@ export interface NativeTextFailure {
   readonly wash?: keyof ThemeColors;
   /** The fraction of the wash, when one is painted. */
   readonly washOpacity?: number;
-  /** The ink wash the code block painted over the tone; its fraction. */
+  /** The ink wash the document painted over the tone; its fraction. */
   readonly ink?: number;
   /** The floor the paint missed. */
   readonly pairClass: ContrastPairClass;
@@ -141,18 +183,23 @@ export interface NativeTextFailure {
  * Every native document paint that misses its floor in a theme.
  *
  * The runtime fades a document's text, markers, tints, rails and gutter at fixed
- * fractions, and paints a code block on a black-or-white ink wash; none of them
- * is a token, so {@link themeContrastFailures} cannot see them. This is the
- * ninth check: it holds {@link nativeTextFades}, {@link nativeTextOverFades} and
- * every syntax role through {@link nativeInk} on all four
- * {@link nativeTextSurfaces} tones, at the floors {@link contrastFloors} owns.
+ * fractions, paints a code block on a black-or-white ink wash, and washes its
+ * own chrome — a code header, a diff file header, their hover — with a lighter
+ * ink the theme does not own; none of them is a token, so
+ * {@link themeContrastFailures} cannot see them. This is the ninth check: it
+ * holds {@link nativeTextFades}, {@link nativeTextOverFades},
+ * {@link nativeTextWashes} and every syntax role through {@link nativeInk} on
+ * all four {@link nativeTextSurfaces} tones, at the floors
+ * {@link contrastFloors} owns.
  *
  * The check is what makes the extension guarantee whole for a native document: a
  * role lifted until its opaque pair just passes is still under the floor once
  * the runtime fades or washes it. A copied theme with `successText: "#bebebe"`
  * on identity dark returns `[]` from the other checks while a string token
  * measures **6.405:1** through the ink wash, and a `mutedForeground` of
- * `"#bebebe"` paints a blockquote at **6.335:1**, both under the body floor.
+ * `"#bebebe"` paints a blockquote at **6.335:1**, both under the body floor. A
+ * `border: "#303030"` theme on `Dark · macOS` clears every plain-surface pair
+ * and measures **1.002:1** on the code header's 2% wash.
  *
  * @example
  * ```ts
@@ -220,6 +267,29 @@ export function themeNativeTextFailures(
           ];
     });
   });
+  const washFailures = nativeTextWashes.flatMap((wash) => {
+    const role = nativeTextRoles[wash.field];
+    return nativeTextSurfaces.flatMap((surface) => {
+      const ratio = contrastRatio(
+        theme.colors[role],
+        nativeInk(theme, surface, wash.ink),
+      );
+      return ratio >= floors[wash.pairClass]
+        ? []
+        : [
+            {
+              field: wash.field,
+              role,
+              surface,
+              opacity: 1,
+              ink: wash.ink,
+              pairClass: wash.pairClass,
+              floor: floors[wash.pairClass],
+              ratio,
+            },
+          ];
+    });
+  });
   const inkFailures = [...new Set(Object.values(nativeSyntaxRoles))].flatMap(
     (role) =>
       nativeTextSurfaces.flatMap((surface) => {
@@ -240,5 +310,10 @@ export function themeNativeTextFailures(
             ];
       }),
   );
-  return [...fadeFailures, ...overFadeFailures, ...inkFailures];
+  return [
+    ...fadeFailures,
+    ...overFadeFailures,
+    ...washFailures,
+    ...inkFailures,
+  ];
 }

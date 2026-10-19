@@ -113,10 +113,11 @@ missing here is not public.
 | `NativeHighlight` | The `highlight` prop a native find bar paints: the match and active-match washes. |
 | `NativeSyntaxTheme` | The 24 syntax capture colours a native code, diff or markdown surface paints. |
 | `NativeTextFade` | One `NativeTextTheme` field the runtime fades, with its fraction and floor class. |
-| `NativeTextFailure` | One native document fade, two-fade composition or ink wash a theme misses, with its field, role, surface and ratios. |
+| `NativeTextFailure` | One native document fade, two-fade composition, chrome wash or ink wash a theme misses, with its field, role, surface and ratios. |
 | `NativeTextMetrics` | The native text layout numbers derived from the theme's type, spacing and radius scales, plus the two runtime-only members a brand may set: the gutter floor and the diff accent bar. |
 | `NativeTextOverFade` | Text painted over a second faded role, with both fractions. |
 | `NativeTextTheme` | The complete runtime `theme` prop for a native `<code>`, `<diff>` or `<markdown>`. |
+| `NativeTextWash` | One `NativeTextTheme` field the runtime paints on one of its fixed neutral ink washes, with the fraction and floor class. |
 | `OpacityFailure` | A colour role whose alpha channel is not the form it is painted in, with the form it needed. |
 | `PlatformName` | `"darwin"`, `"linux"`, `"win32"` or `"default"`. |
 | `PlatformRecipeName` | `"xp"` or `"aero"`, a recipe beside the platform axis. |
@@ -1619,6 +1620,19 @@ they measure 3.595:1 at 80% and 2.082:1 at 50% on Aero light's quiet panel,
 below the secondary floor by design. The ink wash is held for every syntax role
 on the same four tones; the tightest is `warningText` at **7.008:1**
 (`Light · macOS`).
+
+The runtime's own chrome sits on lighter ink washes the theme does not own.
+A code block's language header is a **2%** wash under `textMuted`, and the
+separator below it is the theme's `border` on that same wash; a diff file header
+is **2.5%** under its path (`textMuted`) and its two counts
+(`diffAdd`/`diffDel`), and the header's hover — shared by the show-more row — is
+**5%** under the same three roles. `nativeTextWashes` owns those four fractions
+and `themeNativeTextFailures` holds the code header's text and separator at
+secondary and divider, and the diff header's three roles at secondary, on every
+`nativeTextSurfaces` tone. A theme whose `border` clears 1.05:1 on every plain
+surface can still lose the code separator: on `Dark · macOS`,
+`border: "#303030"` measures **1.002:1** on the header's 2% wash while every
+other check returns `[]`.
 
 A role chosen for its opaque floor still has to clear the faded one. On
 `Dark · Linux`, `successText: "#bebebe"` passes every other check while a string

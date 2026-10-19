@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 239/317
+`[x]` `[████████░░]` 240/318
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1990,6 +1990,17 @@ source={text} />` with no prop, so an assistant message is painted with the
 runtime's built-in dark theme in the light identity, every light platform
 variant and both AAA light sets; a document on the canvas overrides `bg` with
 `theme.colors.background` (owner: `components`; plan 569)
+`[x]` Hold the native document's chrome washes — plan 583 named the runtime's
+3.5% code-body ink and its per-role fades but not the ink it paints inside its
+own chrome: a code block's language header (2% under `textMuted`, with the
+theme's `border` on the same wash) and a diff file header (2.5% under
+`textMuted`/`diffAdd`/`diffDel`, and 5% under the pointer, shared by the
+show-more row). A `border` that cleared every plain-surface divider pair still
+measured **1.002:1** on `Dark · macOS`'s code header while `themeFailures`
+returned `[]`; `nativeTextWashes` publishes the four fractions, the check holds
+them on all four `nativeTextSurfaces`, every shipped set passes (so no colour
+moves) and the type index, reference, design system, README and ledger name it
+(plan 588)
 
 ## Phase C — Tier 1–2 components
 

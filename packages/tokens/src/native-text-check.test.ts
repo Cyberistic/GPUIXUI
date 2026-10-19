@@ -7,17 +7,26 @@
  * wash — and only `native-text.test.ts` held them, only on the shipped themes
  * and only on `card`.
  *
- * Two edits that pass every other check prove the gap. On `Dark · Linux`,
- * `successText: "#bebebe"` measures **6.405:1** for a string token through the
- * ink wash and `mutedForeground: "#bebebe"` measures **6.335:1** for a
- * blockquote's body over the accent wash, both under the 7:1 body floor, while
- * `themeFailures` returned `[]`. `themeNativeTextFailures` is the ninth check;
- * it measures the fades, the two-fade compositions and the ink wash on every
- * tone `nativeTextSurfaces` names.
+ * Plan 588 adds the chrome the same runtime washes with its own neutral ink: a
+ * code block's language header (2% under `textMuted`, with the theme's `border`
+ * on the same wash), a diff file header (2.5% under `textMuted`/`diffAdd`/
+ * `diffDel`) and the header hover (5%, also the show-more row). A `border` that
+ * clears every plain-surface pair can still vanish there: on `Dark · macOS`,
+ * `border: "#303030"` measures **1.002:1** on the code header while every other
+ * check returns `[]`.
+ *
+ * Two edits that pass every other check prove the earlier gap. On `Dark ·
+ * Linux`, `successText: "#bebebe"` measures **6.405:1** for a string token
+ * through the ink wash and `mutedForeground: "#bebebe"` measures **6.335:1**
+ * for a blockquote's body over the accent wash, both under the 7:1 body floor,
+ * while `themeFailures` returned `[]`. `themeNativeTextFailures` is the ninth
+ * check; it measures the fades, the two-fade compositions, the chrome washes
+ * and the ink wash on every tone `nativeTextSurfaces` names.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  contrastRatio,
   extendTheme,
   getPlatformTheme,
   getTheme,
@@ -26,12 +35,13 @@ import {
   nativeTextOverFades,
   nativeTextRoles,
   nativeTextSurfaces,
+  nativeTextWashes,
   themeChecks,
   themeFailures,
   themeNativeTextFailures,
   type Theme,
 } from "./index.js";
-import { nativeInkOpacity } from "./native-ink.js";
+import { nativeInk, nativeInkOpacity } from "./native-ink.js";
 import { shippedThemes } from "./shipped-themes.js";
 
 const light = getTheme("light");
@@ -201,6 +211,78 @@ describe("native text check", () => {
     );
   });
 
+  it("publishes every chrome wash", () => {
+    expect(
+      nativeTextWashes.map(
+        (wash) => `${wash.field}@${wash.ink} ${wash.pairClass}`,
+      ),
+    ).toEqual([
+      "border@0.02 divider",
+      "textMuted@0.02 secondary",
+      "textMuted@0.025 secondary",
+      "diffAdd@0.025 secondary",
+      "diffDel@0.025 secondary",
+      "textMuted@0.05 secondary",
+      "diffAdd@0.05 secondary",
+      "diffDel@0.05 secondary",
+    ]);
+  });
+
+  it("reports a code header separator the plain pairs accept", () => {
+    const planted = extendTheme(getPlatformTheme("darwin", "dark"), {
+      colors: { border: "#303030" },
+    });
+    expect(
+      themeFailures(planted).filter((failure) => failure.kind !== "nativeText"),
+    ).toEqual([]);
+
+    const failure = themeNativeTextFailures(planted).find(
+      (candidate) => candidate.field === "border" && candidate.ink === 0.02,
+    );
+    expect(failure?.role).toBe("border");
+    expect(failure?.surface).toBe("card");
+    expect(failure?.pairClass).toBe("divider");
+    expect(failure?.opacity).toBe(1);
+    expect(failure?.ratio).toBeCloseTo(1.002, 2);
+  });
+
+  it("can fail every published chrome wash on its own surface", () => {
+    nativeTextWashes.forEach((wash) => {
+      const role = nativeTextRoles[wash.field];
+      const planted = extendTheme(light, {
+        colors: { [role]: nativeInk(light, "card", wash.ink) },
+      });
+      const matched = themeNativeTextFailures(planted).some(
+        (failure) =>
+          failure.field === wash.field &&
+          failure.ink === wash.ink &&
+          failure.pairClass === wash.pairClass &&
+          failure.surface === "card",
+      );
+      expect(
+        matched,
+        `${wash.field} on ${wash.ink} ink (${wash.pairClass})`,
+      ).toBe(true);
+    });
+  });
+
+  it("pins the code-header figure the reference quotes", () => {
+    const planted = extendTheme(getPlatformTheme("darwin", "dark"), {
+      colors: { border: "#303030" },
+    });
+    const ratio = contrastRatio(
+      planted.colors.border,
+      nativeInk(planted, "card", 0.02),
+    );
+    const docs = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    );
+    expect(docs).toContain(`**${ratio.toFixed(3)}:1**`);
+    expect(docs).toContain('`border: "#303030"`');
+    expect(docs).toContain("`Dark · macOS`");
+  });
+
   it("names every value in the reference", () => {
     const docs = readFileSync(
       new URL("../../../docs/tokens.md", import.meta.url),
@@ -210,8 +292,10 @@ describe("native text check", () => {
       "themeNativeTextFailures",
       "nativeTextFades",
       "nativeTextOverFades",
+      "nativeTextWashes",
       "NativeTextFade",
       "NativeTextOverFade",
+      "NativeTextWash",
       "NativeTextFailure",
     ].forEach((name) =>
       expect(

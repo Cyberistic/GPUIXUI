@@ -226,3 +226,13 @@ Stop and report if:
 - Every shipped set still returns `[]` from `themeFailures`.
 - `nub run check`, `nub run lint`, `nub run test` pass.
 - No colour, pair, floor, metric, platform style or recipe value moves.
+
+## Outcome
+
+Landed on `agent/tokens-theme`. `nativeTextWashes` publishes the eight
+field/fraction/floor entries; `nativeInk` takes an optional fraction with the
+3.5% body wash as its default; `themeNativeTextFailures` holds the four chrome
+compositions on all four tones. The suite grows by four cases (5,799 tests), the
+two regression cases fail with the wash arm removed, and every shipped set still
+returns `[]` from `themeFailures`. `nub run check` and `nub run test` pass; no
+colour, pair, floor, metric, platform style or recipe moves.
