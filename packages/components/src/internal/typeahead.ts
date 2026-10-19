@@ -111,11 +111,13 @@ export const matchPrefix = <Item extends TypeaheadItem>(
 /**
  * Type-ahead for a list-like collection. The returned handler takes the
  * character from `typedChar`; a miss clears the buffer so the next letter starts
- * a new search.
+ * a new search. The origin is a getter, read when the character arrives: the
+ * focused row may be known only to the renderer, because a native focus change
+ * never runs React's `onFocus`.
  */
 export const useTypeahead = <Item extends TypeaheadItem>(
   items: ReadonlyArray<Item>,
-  from: Option.Option<number>,
+  from: () => Option.Option<number>,
   onMatch: (item: Item) => void,
 ): ((char: string) => void) => {
   // A ref, not state: nothing renders the buffer, and re-rendering on every
@@ -124,7 +126,7 @@ export const useTypeahead = <Item extends TypeaheadItem>(
   return useCallback(
     (char: string) => {
       const next = press(buffer.current, char, monotonicNanos());
-      Option.match(matchPrefix(items, from, next.text), {
+      Option.match(matchPrefix(items, from(), next.text), {
         onNone: () => {
           // The latest letter matched nothing: start a new search rather than
           // poisoning every later keystroke with an unmatched prefix.

@@ -31,6 +31,12 @@
  * Paint cost (plan 339): a roving-focus move used to re-render every row. The
  * list repaints only the row that lost the ring and the row that gained it;
  * the style-function count pins that contract.
+ *
+ * Native focus origin (plan 578): a native focus change never runs React's
+ * `onFocus`, so a list entered with `Tab` had no active row — `Space`/`Enter`
+ * reported nothing, the first arrow jumped to the first row, a first
+ * `Shift+Arrow` started its range there and type-ahead started from the first
+ * match. The keyboard origin is now the renderer's focused id.
  */
 
 import * as Arr from "effect/Array";
@@ -368,6 +374,38 @@ describe("List", () => {
     list.unmount();
   });
 
+  it("moves from the natively focused row, not the first one", () => {
+    // `focusElement` never runs React's `onFocus`, so `active` is still empty
+    // when the key arrives; the renderer names the row (plan 578).
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-d" value="d" textValue="Delta">
+          <ListItemTitle>Delta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-c")?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-d"));
+
+    list.renderer.simulateKeystrokes("up");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+
+    list.unmount();
+  });
+
   it("repaints only the rows whose state changed when focus moves", () => {
     // Plan 339: before the row subscriptions, one arrow move re-rendered every
     // row — a 1,000-row list spent ~1–2 s per key press. A row re-renders when
@@ -683,6 +721,34 @@ describe("List", () => {
     list.unmount();
   });
 
+  it("selects the natively focused row with Space", () => {
+    // The list is entered by native focus only; `active` is empty, so the old
+    // code had nothing to select (plan 578).
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-c")?.id ?? -1);
+    list.renderer.simulateKeystrokes("space");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["c"]);
+
+    list.unmount();
+  });
+
+  it("extends the range from the natively focused row", () => {
+    // With no anchor yet, the range starts at the row the user is on — not at
+    // the first enabled row (plan 578).
+    const onValueChange = vi.fn();
+    const list = renderComponent(multiCatalog(onValueChange));
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-c")?.id ?? -1);
+    list.renderer.simulateKeystrokes("shift-down");
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["c", "d"]);
+
+    list.unmount();
+  });
+
   it("extends the selection with Shift+Arrow and moves real focus", () => {
     const onValueChange = vi.fn();
     const list = renderComponent(multiCatalog(onValueChange));
@@ -824,6 +890,21 @@ describe("List", () => {
 
     list.renderer.simulateKeystrokes("d");
     expect(focusedTestId(list)).toEqual(Option.some("row-delta"));
+
+    list.unmount();
+  });
+
+  it("types from the natively focused row", () => {
+    // Starting on the first `d` row, the old origin stayed on it instead of
+    // advancing to the next match (plan 578).
+    const list = renderComponent(searchable());
+
+    list.renderer.focusElement(
+      list.renderer.findByTestId("row-delta")?.id ?? -1,
+    );
+    list.renderer.simulateKeystrokes("d");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-draft"));
 
     list.unmount();
   });

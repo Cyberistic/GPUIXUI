@@ -244,6 +244,16 @@ retired once both branches are one
       every character. The list now acts only while a registered row holds
       focus; 2 native cases (List 52), both failing without the gate; docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] The natively focused list row is the roving origin — plan 578;
+      measured: `Space` on the focused row reported nothing, the first arrow
+      jumped to the first row, a first `Shift+Arrow` started its range there and
+      type-ahead started from the first match, because a native focus change
+      never runs React's `onFocus`. The origin now comes from
+      `getFocusedElementId()` at key time (the rule Tabs adopted in plan 367);
+      four new native cases (List 56), all failing without it, eleven recorded
+      List failures flip to pass, and the three row-removal cases stay red
+      pending plan 540's focus-event fix; docs, `COMPONENTS.md` and the
+      inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

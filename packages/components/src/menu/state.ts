@@ -145,11 +145,12 @@ export const useMenuState = (
     [activeId, focusRow, rows],
   );
 
-  const typeahead = useTypeahead(
-    rows,
-    resolveActiveIndex({ activeId }, rows),
-    (row) => focusRow(row.id),
+  const activeIndex = useCallback(
+    () => resolveActiveIndex({ activeId }, rows),
+    [activeId, rows],
   );
+
+  const typeahead = useTypeahead(rows, activeIndex, (row) => focusRow(row.id));
 
   const activate = useCallback(
     (id: number) => {

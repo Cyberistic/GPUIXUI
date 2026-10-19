@@ -17,6 +17,10 @@
  *   `trailing` slot keeps its own keys;
  * - `@gpuix/native@0.10.0` has no `focusVisible`, so the active row's ring shows
  *   for a click as well as for the keyboard.
+ *
+ * The roving origin is read from the renderer when a key arrives, because a
+ * native focus change never runs React's `onFocus`; React state only paints
+ * (plan 367's rule, applied here in plan 578).
  */
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
@@ -343,6 +347,28 @@ export const List = (props: ListProps) => {
    */
   const focusedRow = useRef<Option.Option<number>>(Option.none());
 
+  /**
+   * The row a key acts on or moves from: the natively focused registered row,
+   * then the roving state. A native focus change never runs React's `onFocus`
+   * (0.10.0), so `Tab` into the list leaves `active` empty; the renderer still
+   * names the row, the same rule Tabs adopted in plan 367.
+   */
+  const origin = useCallback((): Option.Option<Row> => {
+    const focused = renderer?.getFocusedElementId?.();
+    const native =
+      focused === undefined || focused === null
+        ? Option.none<Row>()
+        : Arr.findFirst(
+            rows,
+            (row) => row.nativeId === focused && !row.disabled,
+          );
+    return Option.orElse(native, () =>
+      Option.flatMap(liveActive, (value) =>
+        Arr.findFirst(rows, (row) => row.value === value),
+      ),
+    );
+  }, [liveActive, renderer, rows]);
+
   const commit = useCallback(
     (next: ReadonlyArray<string>) => {
       if (sameValues(next, selected)) return;
@@ -401,13 +427,15 @@ export const List = (props: ListProps) => {
   );
 
   /**
-   * Move focus one enabled row. A plain move re-anchors; a Shift move in
-   * multiple mode selects the range from the anchor to the row it reached.
+   * Move focus one enabled row from the row that holds focus. A plain move
+   * re-anchors; a Shift move in multiple mode selects the range from the anchor
+   * — or, when there is none yet, from the row the move started on.
    */
   const moveBy = useCallback(
     (delta: 1 | -1, extend: boolean) => {
+      const from = Option.map(origin(), (row) => row.value);
       pipe(
-        rowAt(rows, nextEnabled(items(rows), indexOf(rows, liveActive), delta)),
+        rowAt(rows, nextEnabled(items(rows), indexOf(rows, from), delta)),
         Option.match({
           onNone: () => undefined,
           onSome: (row) => {
@@ -419,7 +447,9 @@ export const List = (props: ListProps) => {
             commit(
               range(
                 rows,
-                Option.getOrElse(anchor, () => row.value),
+                Option.getOrElse(anchor, () =>
+                  Option.getOrElse(from, () => row.value),
+                ),
                 row.value,
               ),
             );
@@ -427,7 +457,7 @@ export const List = (props: ListProps) => {
         }),
       );
     },
-    [anchor, commit, focusRow, liveActive, multiple, rows],
+    [anchor, commit, focusRow, multiple, origin, rows],
   );
 
   const jumpTo = useCallback(
@@ -528,24 +558,24 @@ export const List = (props: ListProps) => {
 
   const selectActive = useCallback(() => {
     pipe(
-      liveActive,
+      Option.map(origin(), (row) => row.value),
       Option.match({
         onNone: () => undefined,
-        onSome: (target) => select(target),
+        onSome: select,
       }),
     );
-  }, [liveActive, select]);
+  }, [origin, select]);
 
-  /** Run the active row's action; a disabled or missing row does nothing. */
+  /** Run the focused row's action; a missing row does nothing. */
   const activateActive = useCallback(() => {
     pipe(
-      Option.flatMap(liveActive, enabledRow),
+      Option.map(origin(), (row) => row.value),
       Option.match({
         onNone: () => undefined,
-        onSome: (row) => onActivate?.(row.value),
+        onSome: (value) => onActivate?.(value),
       }),
     );
-  }, [liveActive, enabledRow, onActivate]);
+  }, [onActivate, origin]);
 
   /** Cmd/Ctrl+A: select every enabled row and anchor at the first of them. */
   const selectEveryRow = useCallback(() => {
@@ -561,7 +591,17 @@ export const List = (props: ListProps) => {
     commit(next);
   }, [commit, multiple, rows]);
 
-  const typeahead = useTypeahead(rows, indexOf(rows, liveActive), (row) => {
+  /** Where a typed prefix searches from: the row the user is on. */
+  const typeaheadOrigin = useCallback(
+    () =>
+      indexOf(
+        rows,
+        Option.map(origin(), (row) => row.value),
+      ),
+    [origin, rows],
+  );
+
+  const typeahead = useTypeahead(rows, typeaheadOrigin, (row) => {
     focusRow(row);
     // A typed jump re-anchors, exactly like an arrow move, so a following
     // Shift+click extends from the row the user reached.
@@ -582,6 +622,12 @@ export const List = (props: ListProps) => {
   const handleKeyDown = (event: EventPayload): void => {
     if (!focusable) return;
     if (!ownsRowKeys()) return;
+    // Paint the row the user is on before the key moves it: a native focus
+    // change never ran React's `onFocus`, so `active` may still be empty.
+    Option.match(origin(), {
+      onNone: () => undefined,
+      onSome: (row) => setActiveIfChanged(row.value),
+    });
     const extend = multiple && event.modifiers?.shift === true;
     pipe(
       typedChar(event),
