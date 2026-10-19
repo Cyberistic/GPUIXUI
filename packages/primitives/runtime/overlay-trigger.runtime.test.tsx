@@ -22,12 +22,13 @@ import { Input } from "../src/components/Input.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { Select } from "../src/components/Select.js";
 import { Slider } from "../src/components/Slider.js";
+import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode } from "../src/testing/index.js";
-import { openWindow, Surface } from "./fixture.js";
+import { openWindow, settleFocus, Surface } from "./fixture.js";
 
 const TIP = "A hint";
 
@@ -64,6 +65,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a Button", async () =>
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -166,6 +169,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a Checkbox", async () 
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -193,6 +198,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a Switch", async () =>
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -231,6 +238,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a Slider", async () =>
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -266,6 +275,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a Select", async () =>
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target-trigger");
   expect(tipPainted(runtime.allText())).toBe(true);
   // The slot must not have taken the trigger's own click: the list still opens.
@@ -290,6 +301,8 @@ it("opens a Tooltip on keyboard focus when its trigger is an Input", async () =>
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.type("a");
@@ -306,6 +319,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a TextArea", async () 
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -325,6 +340,8 @@ it("opens a Tooltip on keyboard focus when its trigger is a NumberField", async 
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(
     Option.exists(
       runtime.focusedElement(),
@@ -371,4 +388,117 @@ it("carries the tip as the description of the controls it wraps", async () => {
   expect(Option.getOrUndefined(description("Slider", "Volume"))).toBe(TIP);
   expect(Option.getOrUndefined(description("TextInput", "Email"))).toBe(TIP);
   expect(Option.getOrUndefined(description("ComboBox", "Region"))).toBe(TIP);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is a Toggle", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Toggle testId="target" label="Bold">
+          Bold
+        </Toggle>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("opens a Tooltip on keyboard focus when its trigger is an IconButton", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <IconButton testId="target" icon="x" label="Close" />
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("closes a focus-opened tip on Escape while the trigger keeps focus", async () => {
+  // The dismissal half of plan 596: the trigger still holds focus after
+  // Escape, so the tracker would reopen the tip on the next render without the
+  // remembered dismissal.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Button testId="target" label="Delete">
+          Delete
+        </Button>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(tipPainted(runtime.allText())).toBe(true);
+  runtime.keyDown("target", "escape");
+  runtime.flush();
+  await settleFocus();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(false);
+});
+
+it("closes a focus-opened tip on click while the trigger keeps focus", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip content={TIP} side="bottom" testId="tip">
+        <Button testId="target" label="Delete">
+          Delete
+        </Button>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(tipPainted(runtime.allText())).toBe(true);
+  runtime.click("target");
+  runtime.flush();
+  await settleFocus();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("target");
+  expect(tipPainted(runtime.allText())).toBe(false);
+});
+
+it("re-opens a focus-opened tip after focus leaves and returns", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Stack direction="row">
+        <Tooltip content={TIP} side="bottom" testId="tip">
+          <Button testId="target" label="Delete">
+            Delete
+          </Button>
+        </Tooltip>
+        <Button testId="after">After</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(tipPainted(runtime.allText())).toBe(true);
+  runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
+  expect(tipPainted(runtime.allText())).toBe(false);
+  const target = Option.getOrElse(runtime.element("target"), () =>
+    expect.fail("the trigger painted no host"),
+  );
+  runtime.renderer.focusElement(target.id);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  await settleFocus();
+  expect(tipPainted(runtime.allText())).toBe(true);
 });

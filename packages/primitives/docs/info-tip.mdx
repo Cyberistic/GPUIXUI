@@ -57,11 +57,10 @@ it does not act.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
   paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). **The tip opens on keyboard focus too:** unlike an
-  arbitrary `Tooltip` trigger, `InfoTip` owns its trigger's focus state and
-  drives the wrapper's controlled `open` as `hoverOpen || focused`, so the
-  tracker restores `Tab`-to-open on this build (plan `595`). Role, name, tab
-  order, keyboard operation and activation are unaffected.
+  late (plan `590`). **The tip opens on keyboard focus too:** `Tooltip` learns
+  its trigger's host through the slot's `ref` (plan `596`), so the tracker drives
+  the same open path as the pointer; `InfoTip` carries no open state of its own.
+  Role, name, tab order, keyboard operation and activation are unaffected.
 The trigger is `role="img"` with `aria-label={label}` and `tabIndex={0}`; the
 free-text `content` becomes its `aria-description`, so the explanation is
 announced on focus even while the tip is closed. The open tip is a named

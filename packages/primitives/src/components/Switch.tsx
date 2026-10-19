@@ -23,6 +23,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   composeHandler,
+  composeRef,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -106,7 +107,7 @@ export const renderSwitch = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
-      ref={focus.ref}
+      ref={composeRef(props.ref, focus.ref)}
       role="switch"
       aria-label={ariaName(props.label)}
       aria-description={ariaName(props["aria-description"])}

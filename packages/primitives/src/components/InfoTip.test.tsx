@@ -68,30 +68,6 @@ describe("InfoTip", () => {
     );
   });
 
-  it("takes the open state as data", () => {
-    // The seam plan 595 adds: the component owns `hoverOpen || focused` and the
-    // renderer must pass it through as the controlled open value. Omitted means
-    // uncontrolled, which is the element-tree default.
-    const tree = (open: boolean) =>
-      renderInfoTip(
-        { content: "Net of refunds.", label: "Revenue definition" },
-        testTheme,
-        undefined,
-        { open, onOpenChange: () => {} },
-      );
-    expect(elementProp(tree(false), "open")).toStrictEqual(Option.some(false));
-    expect(elementProp(tree(true), "open")).toStrictEqual(Option.some(true));
-    expect(
-      elementProp(
-        renderInfoTip(
-          { content: "Net of refunds.", label: "Revenue definition" },
-          testTheme,
-        ),
-        "open",
-      ),
-    ).toStrictEqual(Option.none());
-  });
-
   it("keeps the icon decorative so the trigger is one node", () => {
     const icon = expectSome(
       Option.fromNullishOr(elementChildren(triggerOf())[0]),

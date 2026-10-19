@@ -16,6 +16,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   composeHandler,
+  composeRef,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -119,7 +120,7 @@ export const fieldHostProps = (
   onValueChange: (value: string) => void,
 ) => ({
   ...passiveTriggerHandlers(props),
-  ref: focus.ref,
+  ref: composeRef(props.ref, focus.ref),
   value: state.current,
   placeholder: props.placeholder,
   readOnly: props.readOnly === true || props.disabled === true,

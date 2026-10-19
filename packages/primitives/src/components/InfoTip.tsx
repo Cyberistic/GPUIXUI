@@ -13,7 +13,7 @@
  * type refuses the misleading case.
  */
 
-import { useState, type ReactElement } from "react";
+import { type ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
@@ -55,26 +55,13 @@ export const infoTipTriggerStyle = (theme: PrimitiveTheme): StyleDesc => ({
   borderRadius: theme.radius.sm,
 });
 
-/** The open state the component owns; the pure renderer takes it as data. */
-export interface InfoTipHandlers {
-  readonly open?: boolean;
-  readonly onOpenChange?: (open: boolean) => void;
-}
-
 /** The element tree `InfoTip` renders. Pure in its arguments. */
 export const renderInfoTip = (
   { content, label, icon = "info", side, testId, tipTestId }: InfoTipProps,
   theme: PrimitiveTheme,
   focus: FocusState = { focused: false, onFocus: () => {}, onBlur: () => {} },
-  handlers: InfoTipHandlers = {},
 ): ReactElement => (
-  <Tooltip
-    content={content}
-    side={side}
-    testId={tipTestId}
-    open={handlers.open}
-    onOpenChange={handlers.onOpenChange}
-  >
+  <Tooltip content={content} side={side} testId={tipTestId}>
     <div
       role="img"
       aria-label={ariaNameOr(label, "More information")}
@@ -98,22 +85,5 @@ export const renderInfoTip = (
 );
 
 /** An info icon whose tooltip explains a nearby term. */
-export const InfoTip = (props: InfoTipProps): ReactElement => {
-  const theme = useTheme();
-  const focus = useFocus();
-  const [hoverOpen, setHoverOpen] = useState(false);
-  /**
-   * The tip is open while the pointer hovers **or** the trigger holds focus.
-   *
-   * Published 0.10.0 sends no `onFocus`, and the headless tooltip's open is
-   * driven by that event; `InfoTip` owns its trigger's focus state (the ring
-   * already uses it), so it drives the now-controlled open state from the same
-   * tracker sample. Arbitrary `Tooltip` triggers cannot do this — they do not
-   * expose their host id — so that limitation stays documented (plans `583`,
-   * `595`).
-   */
-  return renderInfoTip(props, theme, focus, {
-    open: hoverOpen || focus.focused,
-    onOpenChange: setHoverOpen,
-  });
-};
+export const InfoTip = (props: InfoTipProps): ReactElement =>
+  renderInfoTip(props, useTheme(), useFocus());

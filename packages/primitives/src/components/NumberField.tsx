@@ -54,6 +54,7 @@ import type { FieldState } from "./Input.js";
 import {
   ariaName,
   composeHandler,
+  composeRef,
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -198,7 +199,7 @@ export const renderNumberField = (
     <div testId={props.testId} style={chrome}>
       <input
         {...passiveTriggerHandlers(props)}
-        ref={handlers.registerInput}
+        ref={composeRef(props.ref, handlers.registerInput)}
         testId={
           props.testId === undefined ? undefined : `${props.testId}-input`
         }

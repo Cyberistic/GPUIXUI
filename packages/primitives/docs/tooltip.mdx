@@ -183,11 +183,13 @@ dismisses it. A click dismisses it.
   ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The trigger's
   ring still paints: `ThemeProvider`'s native-focus tracker samples
   `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
-  late (plan `590`). The **tip's own open-on-focus is a different matter**: the
-  headless tooltip opens from the missing `onFocus`, so a `Tooltip` around an
-  arbitrary trigger is hover-only on this build. `InfoTip` is the exception: it
-  owns its trigger's focus state and drives the wrapper's controlled `open`, so
-  Tab opens it (plan `595`). Role, name, tab order, keyboard operation and
+  late (plan `590`). **The tip opens on keyboard focus too:** the wrapper learns
+  its trigger's host id through the slot's `ref` (each single-root primitive
+  forwards it, plan `596`) and compares it with the tracker's sample, so Tab
+  opens the tip even though the runtime sends no `onFocus`. A click or Escape
+  dismisses it while the trigger keeps focus; leaving and returning reopens it.
+  `ScrollArea` keeps its public `ref` for the scroll handle, so its wrapped tip
+  stays hover-only on this build. Role, name, tab order, keyboard operation and
   activation are otherwise unaffected.
 - **A string tip is the trigger's description.** GPUix 0.10.0 has no
   `aria-describedby`, but it exposes `aria-description`; the wrapper writes the

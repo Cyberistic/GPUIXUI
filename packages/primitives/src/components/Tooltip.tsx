@@ -34,6 +34,7 @@
  */
 
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -63,6 +64,7 @@ import {
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import { ariaName, mergeStyle, useControlState } from "./internal.js";
+import { isTrackedFocus, useNativeFocus } from "./native-focus.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface TooltipProps {
@@ -171,11 +173,25 @@ export interface TooltipHandlers {
   /** The root div, so the wrapper can measure the trigger's box. */
   readonly ref?: Ref<PublicInstance>;
   /**
+   * The trigger host, so the wrapper can compare it with the focus tracker's
+   * sample. `TooltipTrigger asChild` merges it into the child's `ref`, which a
+   * primitive forwards under the slot contract (plan `596`).
+   */
+  readonly triggerRef?: Ref<PublicInstance>;
+  /**
    * The runtime's open request. The wrapper routes it through its controlled
    * rule, so the value that places the tip is the value the caller sees
    * (plan 347).
    */
   readonly onOpenChange?: (open: boolean) => void;
+  /**
+   * The trigger was clicked or Escape was pressed on it.
+   *
+   * The wrapper keeps a focus-opened tip open while the trigger still holds
+   * focus, so an explicit dismissal has to be remembered until focus leaves
+   * (plan `596`).
+   */
+  readonly onDismiss?: () => void;
   /** The tip itself, so the wrapper can measure its box for `center`. */
   readonly contentRef?: Ref<PublicInstance>;
   /**
@@ -237,7 +253,15 @@ export const renderTooltip = (
       ref={handlers.ref}
       onOpenChange={handlers.onOpenChange}
     >
-      <TooltipTrigger asChild aria-description={description}>
+      <TooltipTrigger
+        asChild
+        ref={handlers.triggerRef}
+        aria-description={description}
+        onClick={handlers.onDismiss}
+        onKeyDown={(event) => {
+          if (event.key === "escape") handlers.onDismiss?.();
+        }}
+      >
         {children}
       </TooltipTrigger>
       <TooltipContent
@@ -277,12 +301,36 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const { renderer } = useGpuix();
   const root = useRef<PublicInstance | null>(null);
   const tip = useRef<PublicInstance | null>(null);
+  const trigger = useRef<PublicInstance | null>(null);
   const openState = useControlState(
     props.open,
     props.defaultOpen ?? false,
     props.onOpenChange,
   );
-  const open = openState.value.current;
+  const sample = useNativeFocus();
+  const triggerFocused = isTrackedFocus(sample?.focused, trigger.current?.id);
+  const [focusOpen, setFocusOpen] = useState(false);
+  const dismissed = useRef(false);
+  /**
+   * Focus-open is the tracker's job on a runtime that dispatches no `onFocus`.
+   *
+   * The headless tooltip opens from that missing event; every single-root
+   * primitive forwards the slot's `ref`, so the wrapper knows which host the
+   * tracker names. A caller-controlled `open` wins: the tracker must not
+   * override a value the caller owns (plan 347). `onDismiss` records a click or
+   * Escape, because the trigger keeps focus after either and would otherwise
+   * reopen on the next render; focus loss clears it (plan `596`).
+   */
+  useEffect(() => {
+    if (triggerFocused) setFocusOpen(true);
+    else {
+      setFocusOpen(false);
+      dismissed.current = false;
+    }
+  }, [triggerFocused]);
+  const focusedOpen =
+    openState.value.mode !== "controlled" && focusOpen && !dismissed.current;
+  const open = openState.value.current || focusedOpen;
   const [box, setBox] = useState<TooltipBox | undefined>(undefined);
   useLayoutEffect(() => {
     // The trigger is measured while the tip is closed too: a controlled tip can
@@ -402,9 +450,13 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   });
   return renderTooltip({ ...props, side, open }, theme, {
     ref: root,
+    triggerRef: trigger,
     contentRef: tip,
     placement,
     maxWidth: cap > 0 ? cap : undefined,
     onOpenChange: openState.set,
+    onDismiss: () => {
+      dismissed.current = true;
+    },
   });
 };

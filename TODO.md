@@ -1458,6 +1458,14 @@ retired once both branches are one
       closes when focus leaves (7/7), so the only tooltip-open cases left are an
       arbitrary `Tooltip` around a component (8 + 1 in `examples`), which cannot
       know its trigger's host id; the rest are the published box model.
+      **Re-run 2026-10-19 after plan `596`:** 50 files, **729 tests, 690 passed
+      / 39 failed**, 8 failing files. `ref` joined the slot contract; every
+      single-root trigger (Button, IconButton, Toggle, Checkbox, Switch, Input,
+      TextArea, NumberField, Select, Slider) now opens its tooltip on `Tab`,
+      dismissal and reopen included — `overlay-trigger` 23/23. The remaining 39
+      are the published box model and the `ScrollArea` tooltip hover limit
+      (its public ref is the scroll handle); no focus, timer or order flake
+      remains.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1700,6 +1708,17 @@ retired once both branches are one
       generic `Tooltip` limitation remains for arbitrary triggers and is now
       stated on its page. InfoTip 7/7; full 677/724 (47 failures, 9 files), both
       directions proven (plan `595`).
+
+`[x]` `packages/primitives`: **a `Tooltip` around a component is hover-only** —
+      the slot contract (`TriggerHandlers`) carried the event handlers but not
+      `ref`, so the wrapper never learned its trigger's host id and could not
+      compare it with the focus tracker's sample; only `InfoTip` (which owns its
+      trigger) opened on `Tab`. `ref` joins the contract, every single-root
+      trigger forwards it composed with its own, and `Tooltip` derives focus-open
+      from the tracked id with an explicit-dismiss rule. `InfoTip` returns to the
+      generic path. `ScrollArea` keeps its imperative ref and is the documented
+      exception. `overlay-trigger` 23/23; full 690/729 (39 failures, 8 files);
+      both directions measured (plan `596`).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

@@ -45,6 +45,7 @@ import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
   ariaName,
   composeHandler,
+  composeRef,
   controlName,
   mergeStyle,
   passiveTriggerHandlers,
@@ -179,7 +180,7 @@ export const renderButton = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
-      ref={focus.ref}
+      ref={composeRef(props.ref, focus.ref)}
       role="button"
       aria-label={Option.getOrUndefined(
         controlName(props.label, props.children),

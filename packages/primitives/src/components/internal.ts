@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type Ref,
 } from "react";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
@@ -51,6 +52,7 @@ export const mergeStyle = (
  */
 export type TriggerHandlers = Pick<
   Props,
+  | "ref"
   | "onMouseEnter"
   | "onMouseLeave"
   | "onMouseMove"
@@ -66,6 +68,26 @@ export type TriggerHandlers = Pick<
 >;
 
 /**
+ * Assign a host instance to every ref, for a control that owns its own ref.
+ *
+ * `TooltipTrigger asChild` merges the slot's ref into the child's `ref` prop; a
+ * component boundary only forwards it if it is declared and passed to the host.
+ * The host may already be held by the component (a ring, a text host, a slider
+ * track), so this composes rather than replaces (plans `341`, `596`).
+ */
+export const composeRef =
+  <Instance>(
+    ...refs: ReadonlyArray<Ref<Instance> | undefined>
+  ): Ref<Instance> =>
+  (instance) => {
+    Arr.forEach(refs, (ref) => {
+      if (ref === undefined || ref === null) return;
+      if (typeof ref === "function") ref(instance);
+      else ref.current = instance;
+    });
+  };
+
+/**
  * The handlers a trigger forwards unchanged.
  *
  * Focus, blur and the key events stay out: the component owns them and composes
@@ -73,7 +95,7 @@ export type TriggerHandlers = Pick<
  * contract cannot be skipped by a slot.
  */
 export const passiveTriggerHandlers = (
-  props: TriggerHandlers,
+  props: Omit<TriggerHandlers, "ref">,
 ): TriggerHandlers => ({
   onMouseEnter: props.onMouseEnter,
   onMouseLeave: props.onMouseLeave,

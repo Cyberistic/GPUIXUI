@@ -74,7 +74,7 @@ export interface ScrollAreaHandle {
 }
 
 export interface ScrollAreaProps
-  extends ScrollSpec, Omit<TriggerHandlers, "onScroll"> {
+  extends ScrollSpec, Omit<TriggerHandlers, "onScroll" | "ref"> {
   /**
    * The imperative handle: `scrollTo`/`element`. A method call reports its own
    * position, which a raw `renderer.scrollTo` cannot.

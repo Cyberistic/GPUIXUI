@@ -135,9 +135,14 @@ import { ScrollArea, Tooltip } from "@gpuixui/primitives";
 pointer hit-tests and does not bubble it to an ancestor — the rule that also
 makes a text-host tooltip keyboard-only. The tip opens on hover only while the
 pointer is over the region itself: an area the content does not cover, a
-scrollbar gutter, or content that opts out with `pointerEvents: "none"`. A
-content-filled region is a keyboard trigger; its description still reaches
-assistive technology.
+scrollbar gutter, or content that opts out with `pointerEvents: "none"`.
+
+**Keyboard open has one limit too.** The area's public `ref` is the imperative
+scroll handle, so the only ref a tooltip could use is already taken; on a runtime
+that dispatches no focus events (the pinned 0.10.0 build, plan `583`) a wrapped
+area's tip stays hover-only. Its `aria-description` still reaches assistive
+technology, and the region itself scrolls by keyboard. Use `InfoTip` or a
+`Button` trigger when the tip must open on `Tab`.
 
 An **unlabelled** area has no role and no tab stop, so it is not a trigger
 either — label it first.

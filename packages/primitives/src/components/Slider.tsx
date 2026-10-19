@@ -56,6 +56,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   composeHandler,
+  composeRef,
   resolvePartStyle,
   trackedFocusIndex,
   useControlState,
@@ -188,7 +189,7 @@ export const renderSlider = (
   };
   return (
     <div
-      ref={handlers.registerTrack}
+      ref={composeRef(props.ref, handlers.registerTrack)}
       role="slider"
       aria-label={ariaName(props.label)}
       aria-description={ariaName(props["aria-description"])}

@@ -93,6 +93,7 @@ import {
 import {
   ariaName,
   composeHandler,
+  composeRef,
   optionText,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -476,6 +477,7 @@ export const renderSelect = (
     style,
     triggerStyle,
     testId,
+    ref,
     onMouseEnter,
     onMouseLeave,
     onMouseMove,
@@ -581,7 +583,7 @@ export const renderSelect = (
     >
       <SelectTrigger
         {...passiveTriggerHandlers(slot)}
-        ref={handlers.registerTrigger}
+        ref={composeRef(ref, handlers.registerTrigger)}
         role="combobox"
         aria-label={ariaName(label)}
         aria-description={ariaName(description)}
