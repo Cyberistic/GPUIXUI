@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as Option from "effect/Option";
 import { formatMissing, idsOf, parseArgs, selectLive } from "./cli.js";
 
 const scenarios = [{ id: "live-a" }, { id: "live-b" }, { id: "live-c" }];
@@ -66,6 +67,30 @@ describe("live CLI", () => {
     const list = parseArgs(["--list"]);
     expect(all.flags.all).toBe(true);
     expect(list.flags.list).toBe(true);
+  });
+
+  it("parses the capture directory and the commit override", () => {
+    const parsed = parseArgs([
+      "--only",
+      "live-shell",
+      "--capture",
+      "out",
+      "--commit",
+      "abc123",
+    ]);
+    expect(parsed.unknown).toEqual([]);
+    expect(parsed.flags.capture).toEqual(Option.some("out"));
+    expect(parsed.flags.commit).toEqual(Option.some("abc123"));
+    expect(parseArgs(["--only", "live-shell"]).flags.capture).toEqual(
+      Option.none(),
+    );
+  });
+
+  it("requires a value after --capture and --commit", () => {
+    expect(parseArgs(["--capture"]).unknown).toContain(
+      "--capture needs a directory",
+    );
+    expect(parseArgs(["--commit"]).unknown).toContain("--commit needs a sha");
   });
 
   it("names the bad id and every valid id in the error", () => {

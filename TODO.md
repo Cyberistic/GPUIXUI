@@ -71,7 +71,29 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 110/110 plans-and-harness
+`[x]` `[██████████]` 111/111 plans-and-harness
+
+`[x]` Give the **live runner** the capture contract the docs publish per plan
+      `656`: `--capture <dir>` writes one frame per selected scenario after the
+      view is mounted and its `ready` gate settled (the opening state, before
+      the steps), and only a green run writes the same five-field
+      `provenance.json` — with `command` naming `dist/live/run.js`. Stale
+      `*.png`/sidecar are cleared first; `--commit <sha>` overrides
+      `git rev-parse --short HEAD`, and an unreadable commit exits `2` **before
+      a window** (`GIT_DIR=/nonexistent` observed: `capture: cannot read the
+      git commit…`, exit `2`). `captureCommand` gained a `"smoke" | "live"`
+      runner whose default is the old string, so the headless contract is
+      byte-identical. **Measured:** focused `--only live-shell --capture
+      /tmp/gpuixui-live-capture` is **1/1**, exit `0`, one
+      `2200 × 1440` PNG (the window's 2× scale) plus a decodable sidecar
+      (`commit=78493e7a` on the git-read run); a stale PNG is gone and an
+      unrelated file survives; a plain `--only live-shell` leaves the capture
+      directory unchanged; a bad id and a valueless `--capture` still exit `2`
+      before the binding. Playground tests **436 → 439** (two CLI cases, one
+      `captureCommand` case); `nub run check`, `nub run lint` and `nub run test`
+      green. Focused ids run: `live-shell` (capture ×3, plain ×1) and the
+      headless control `layout-flex --capture` (1/1, sidecar names the smoke
+      runner).
 
 `[x]` Re-run the **promotion gate on the head that includes
       `live-theme-platform`** per plan `655`: the last recorded gate before this

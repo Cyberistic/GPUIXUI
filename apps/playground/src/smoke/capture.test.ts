@@ -85,6 +85,12 @@ describe("captureCommand", () => {
       "nub apps/playground/dist/smoke/run.js --capture out",
     );
   });
+
+  it("names the live runner when the live CLI captured the frames", () => {
+    expect(captureCommand("out", ["live-shell"], "live")).toBe(
+      "nub apps/playground/dist/live/run.js --capture out --only live-shell",
+    );
+  });
 });
 
 describe("commitOf", () => {

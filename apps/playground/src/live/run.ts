@@ -19,18 +19,31 @@ import {
   Option,
   Path,
 } from "effect";
+import { ChildProcessSpawner } from "effect/process";
 import * as Arr from "effect/Array";
 import * as Schema from "effect/Schema";
 import type * as PlatformError from "effect/PlatformError";
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
+import {
+  NodeChildProcessSpawner,
+  NodeFileSystem,
+  NodePath,
+} from "@effect/platform-node";
 import { Report, Smoke } from "@gpuixui/testing";
 import { ThemeProvider } from "@gpuixui/tokens/react";
 import type { EventPayload } from "@gpuix/native";
 import { createElement, Fragment } from "react";
-import { hostLabel, provenanceIssue } from "../binding.js";
+import { bindingPin, hostLabel, provenanceIssue } from "../binding.js";
 import { palettes } from "../palettes.js";
 import { withWindowKeyProvider, type WindowKeyHandler } from "../window-key.js";
 import { withSelectionProvider, type SelectionEvent } from "../selection.js";
+import {
+  captureCommand,
+  captureFile,
+  captureProvenance,
+  clearCapture,
+  readCommit,
+  writeProvenance,
+} from "../smoke/capture.js";
 import {
   formatMissing,
   idsOf,
@@ -107,10 +120,11 @@ export const program = (
 ): Effect.Effect<
   ExitCode,
   NoWindowError | PlatformError.PlatformError,
-  FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > =>
   Effect.gen(function* () {
     const fileSystem = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
     const issue = yield* provenanceIssue(process.platform, process.arch);
     if (Option.isSome(issue)) {
       yield* Console.error(issue.value);
@@ -118,6 +132,25 @@ export const program = (
         "rebuild the binding from the 0.10.0 tag (plan 529 §3) — the live suite cannot claim verified 0.10.0 on a newer source",
       );
       return EXIT.failed;
+    }
+    // A caption may only name a commit the run actually had. Read it before the
+    // window opens, so an unrecordable run costs no window (plan 564's rule).
+    const commit = Option.isSome(flags.capture)
+      ? yield* Option.match(flags.commit, {
+          onSome: (sha) => Effect.succeed(Option.some(sha)),
+          onNone: () =>
+            Effect.flatMap(ChildProcessSpawner.ChildProcessSpawner, readCommit),
+        })
+      : Option.none<string>();
+    if (Option.isSome(flags.capture) && Option.isNone(commit)) {
+      yield* Console.error(
+        "capture: cannot read the git commit; pass --commit <sha> (no image is publishable without it)",
+      );
+      return EXIT.unverified;
+    }
+    if (Option.isSome(flags.capture)) {
+      yield* fileSystem.makeDirectory(flags.capture.value, { recursive: true });
+      yield* clearCapture(flags.capture.value);
     }
     // The app-level window key handler, exactly as `src/smoke/run.ts` wires it:
     // GPUix delivers window keys only through `render({ onKeyDown })`, so the
@@ -227,6 +260,13 @@ export const program = (
               onNone: () => Effect.void,
               onSome: (ready) => host.waitFor(ready),
             });
+            // The frame belongs to the mounted view's opening state, the same
+            // moment the headless capture takes (plan 564): before the steps.
+            yield* Option.match(flags.capture, {
+              onNone: () => Effect.void,
+              onSome: (directory) =>
+                host.screenshot(captureFile(path, directory, live.id)),
+            });
           }),
       });
 
@@ -240,6 +280,26 @@ export const program = (
     yield* fileSystem.writeFileString(REPORT_PATH, Report.reportJson(report));
     yield* Console.log(Report.formatReport(report));
     if (flags.json) yield* Console.log(Report.reportJson(report));
+    if (Option.isSome(flags.capture) && Option.isSome(commit)) {
+      const directory = flags.capture.value;
+      const provenance = captureProvenance(report, {
+        platform: `${process.platform}-${process.arch}`,
+        gpuixVersion: bindingPin.version,
+        commit: commit.value,
+        command: captureCommand(
+          directory,
+          Arr.map(selected, (scenario) => scenario.id),
+          "live",
+        ),
+      });
+      yield* Option.match(provenance, {
+        onNone: () =>
+          Console.error(
+            "capture: no provenance written (the run did not pass)",
+          ),
+        onSome: (present) => writeProvenance(directory, present),
+      });
+    }
     loop.stop();
     return Report.exitCode(report);
   });
@@ -316,6 +376,7 @@ const main = (): Effect.Effect<void> =>
     );
 
     const code = yield* program(parsed.flags, selection.selected).pipe(
+      Effect.provide(NodeChildProcessSpawner.layer),
       Effect.provide(NodeFileSystem.layer),
       Effect.provide(NodePath.layer),
       Effect.matchEffect({

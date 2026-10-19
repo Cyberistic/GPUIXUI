@@ -155,6 +155,32 @@ nub apps/playground/dist/smoke/run.js --capture /tmp/gpuixui-theming \
 
 The full contract, including the two-direction proofs, is plan `564`.
 
+### The same contract on the live runner (plan `656`)
+
+A live frame is a **real 1100 × 720 window**; a headless frame is the offscreen
+`TestRenderer`. Both are GPUix-native, and both may be published only with a
+sidecar. The live CLI takes the same two flags:
+
+```sh
+nub apps/playground/dist/live/run.js --capture /tmp/gpuixui-live \
+  --only live-shell --commit "$(git rev-parse --short HEAD)"
+```
+
+- One `<scenario-id>.png` per selected scenario, captured after the view is
+  mounted and its `ready` gate has settled — the opening state, before the
+  scenario's steps.
+- The five-field `provenance.json` is written only for a green run, and its
+  `command` names `dist/live/run.js` (never the headless runner).
+- A stale `*.png` and `provenance.json` are cleared first; other files in the
+  directory are left alone.
+- With no `--commit` the runner reads `git rev-parse --short HEAD`; when that
+  fails it exits `2` **before opening a window**, because a guessed commit is
+  not provenance.
+- Without `--capture` the live run is unchanged: no frame and no sidecar.
+
+The live scenarios that take their own `.artifacts/live/<id>.png` screenshots
+are unchanged; `--capture` is the separate, selectable, documented pipeline.
+
 ## The binding on this host
 
 The library targets `@gpuix/react@0.10.0` + `@gpuix/native@0.10.0`. GPUix

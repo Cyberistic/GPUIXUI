@@ -38,15 +38,24 @@ export interface CaptureFacts {
 export const captureJson = (provenance: CaptureProvenance): string =>
   Schema.encodeSync(Schema.fromJsonString(CaptureProvenance))(provenance);
 
+/** The runner a caption names; both CLIs write the same sidecar. */
+export type CaptureRunner = "smoke" | "live";
+
+const captureScripts: Readonly<Record<CaptureRunner, string>> = {
+  smoke: "dist/smoke/run.js",
+  live: "dist/live/run.js",
+};
+
 /** The reproducible command recorded in the caption, never raw argv. */
 export const captureCommand = (
   directory: string,
   only: ReadonlyArray<string>,
+  runner: CaptureRunner = "smoke",
 ): string =>
   Arr.join(
     Arr.appendAll(
       [
-        "nub apps/playground/dist/smoke/run.js",
+        `nub apps/playground/${captureScripts[runner]}`,
         `--capture ${Str.replace(/\/+$/, "")(directory)}`,
       ],
       Arr.match(only, {

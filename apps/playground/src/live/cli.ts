@@ -33,6 +33,10 @@ export interface LiveFlags {
   readonly list: boolean;
   /** Print the JSON report after a run. */
   readonly json: boolean;
+  /** Capture one frame per selected scenario plus `provenance.json`. */
+  readonly capture: Option.Option<string>;
+  /** The commit recorded in the caption (default: `git rev-parse --short HEAD`). */
+  readonly commit: Option.Option<string>;
 }
 
 /** The flags plus any token the parser did not recognise. */
@@ -49,6 +53,8 @@ const EMPTY: LiveFlags = {
   all: false,
   list: false,
   json: false,
+  capture: Option.none(),
+  commit: Option.none(),
 };
 
 /**
@@ -76,6 +82,34 @@ export const parseArgs = (argv: ReadonlyArray<string>): ParsedLiveArgs => {
           ),
           Match.when("--json", () =>
             step(tail, { ...flags, json: true }, unknown),
+          ),
+          Match.when("--capture", () =>
+            Option.match(Arr.head(tail), {
+              onNone: () =>
+                step(
+                  tail,
+                  flags,
+                  Arr.append(unknown, "--capture needs a directory"),
+                ),
+              onSome: (dir) =>
+                step(
+                  Arr.drop(tail, 1),
+                  { ...flags, capture: Option.some(dir) },
+                  unknown,
+                ),
+            }),
+          ),
+          Match.when("--commit", () =>
+            Option.match(Arr.head(tail), {
+              onNone: () =>
+                step(tail, flags, Arr.append(unknown, "--commit needs a sha")),
+              onSome: (sha) =>
+                step(
+                  Arr.drop(tail, 1),
+                  { ...flags, commit: Option.some(sha) },
+                  unknown,
+                ),
+            }),
           ),
           Match.when("--only", () =>
             Option.match(Arr.head(tail), {
@@ -128,6 +162,8 @@ export const usage: string = Arr.join(
     "  --all             run the full live suite (opens a window, ~9 minutes)",
     "  --list            print the scenario ids and exit",
     "  --json            print the JSON report after the run",
+    "  --capture <dir>   capture one frame per selected scenario plus provenance.json",
+    "  --commit <sha>    the commit to record (default: git rev-parse --short HEAD)",
     "exit 2: the live suite produced no evidence",
   ],
   "\n",
