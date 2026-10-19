@@ -70,6 +70,10 @@ merges `style` last.
 Declare items directly inside the viewport: each **direct child** counts as one
 row for the unread count, and other elements are allowed but count as rows too.
 
+The affordance floats over the transcript's bottom-right corner; it takes no row
+of its own and never covers the whole viewport. A caller `style` on it still
+wins.
+
 ## Theming
 
 The viewport paints the `background`/`foreground` roles; the item has no surface;
@@ -92,9 +96,6 @@ change — see [Theming](/docs/theming).
   and an `estimatedItemHeight` rather than compound children, so it cannot host
   `MessageScrollerItem` without changing the public API. The pin decision is
   already measured from the tail, which is what a virtualized version needs.
-- **The affordance sits beneath the viewport**, not floating in its corner:
-  `position: "absolute"` resolves against the mount parent in 0.10.0, so a
-  corner overlay would be a window-level layer.
 - **No resize observer.** A row that grows while the scroller does not re-render
   (internal child state) is not followed; a stream that lives in the app's state
   re-renders the scroller and is followed.
@@ -102,9 +103,10 @@ change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (10 tests):
-it wheels the viewport, appends rows, grows the tail and clicks the affordance,
-then reads the real `getScrollOffset`/bounds.
+`src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (11 tests):
+it wheels the viewport, appends rows, grows the tail, clicks the affordance and
+measures that the affordance floats inside the transcript's corner, then reads
+the real `getScrollOffset`/bounds.
 `src/message-scroller/logic.test.ts` covers the pin/unread fold without a
 window.
 

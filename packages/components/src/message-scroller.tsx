@@ -15,10 +15,10 @@
  * without changing the public API. The limitation is recorded in
  * `COMPONENTS.md` and the docs page.
  *
- * `JumpToLatest` is rendered beneath the viewport rather than floating over it:
- * `position: "absolute"` resolves against the mount parent in 0.10.0 (measured
- * in plan 112), so an overlay would be a window-level layer, not a corner
- * affordance.
+ * `JumpToLatest` floats in the scroller's bottom-right corner: the root is a
+ * positioned box, so an absolute child resolves against it rather than the mount
+ * parent (the unpositioned case measured in plan 112; the positioned case
+ * measured while fixing the Avatar, plan 571).
  */
 
 import type {
@@ -159,6 +159,7 @@ export const MessageScroller = ({
         aria-label={label}
         style={mergeStyles(
           {
+            position: "relative",
             display: "flex",
             flexDirection: "column",
             gap: theme.spacing.sm,
@@ -319,6 +320,7 @@ export const MessageScrollerJumpToLatest = ({
   onClick,
   ...rest
 }: MessageScrollerJumpToLatestProps) => {
+  const theme = useTheme();
   const scroller = useMessageScroller();
   if (scroller.pinned) return null;
 
@@ -336,7 +338,14 @@ export const MessageScrollerJumpToLatest = ({
         scroller.jumpToLatest();
         onClick?.(event);
       }}
-      style={mergeStyles({ alignSelf: "flex-end" }, style)}
+      style={mergeStyles(
+        {
+          position: "absolute",
+          right: theme.spacing.lg,
+          bottom: theme.spacing.lg,
+        },
+        style,
+      )}
     >
       {text}
     </Button>
@@ -372,7 +381,6 @@ export const messageScrollerMeta = {
   gpuixSupport: "partial",
   limitations: [
     "the viewport renders every row: <virtual-list> takes itemCount rather than compound children, so long histories are not virtualized in v1",
-    "the jump affordance sits beneath the viewport, not floating over its corner, because position: absolute resolves against the mount parent in 0.10.0",
     "a row that grows without the scroller re-rendering (internal child state) is not observed; there is no resize observer",
     "no aria-live role in 0.10.0, so new rows are not announced",
   ],

@@ -4,9 +4,11 @@
  * The bugs these guard: a new row that yanks a reader who scrolled up; an
  * unread count that increments while pinned; a "jump to latest" that does not
  * reach the end or leaves the count behind; a short history that offers a
- * pointless control; and a streamed row that grows without keeping its bottom
- * visible. The scroll position is read from the renderer, not inferred from the
- * component's own state, so a wrong pin decision fails here.
+ * pointless control; a streamed row that grows without keeping its bottom
+ * visible; and an affordance that takes a row beneath the transcript instead of
+ * floating in its bottom-right corner. The scroll position is read from the
+ * renderer, not inferred from the component's own state, so a wrong pin decision
+ * fails here.
  */
 
 import * as Option from "effect/Option";
@@ -216,6 +218,32 @@ describe("MessageScroller", () => {
     wheel(root, 120);
 
     expect(onPinnedChange).toHaveBeenCalledWith(false);
+
+    root.unmount();
+  });
+
+  it("floats the jump affordance inside the transcript's bottom-right corner", () => {
+    const root = renderComponent(
+      <MessageScroller label="Conversation" pinned={false}>
+        <MessageScrollerViewport testId="viewport" style={{ height: 200 }}>
+          <MessageScrollerItem>
+            <text>First</text>
+          </MessageScrollerItem>
+        </MessageScrollerViewport>
+        <MessageScrollerJumpToLatest testId="jump" />
+      </MessageScroller>,
+    );
+
+    const viewport = requireBounds(root, "viewport");
+    const jump = requireBounds(root, "jump");
+
+    // The affordance overlaps the transcript instead of taking a row beneath it.
+    expect(jump.y).toBeGreaterThanOrEqual(viewport.y);
+    expect(jump.y + jump.height).toBeLessThanOrEqual(
+      viewport.y + viewport.height,
+    );
+    // Anchored to the right side.
+    expect(jump.x).toBeGreaterThan(viewport.x + viewport.width / 2);
 
     root.unmount();
   });

@@ -224,6 +224,13 @@ retired once both branches are one
       resolves against the positioned disc, measured). 1 changed + 1 new native
       case (Avatar 10), both fail on the old conditional; example, docs,
       `COMPONENTS.md` and the inventory synced
+    - [x] The message scroller's jump affordance floats in its corner — plan 572;
+      it took a flex row beneath the viewport because plan 112 measured only the
+      unpositioned absolute case. The root is now the positioning context and
+      the button overlays the transcript's bottom-right (the old layout's bottom
+      measured 233 against a viewport ending at 200). 1 native case (Message
+      scroller 11), both-direction proof; docs, `COMPONENTS.md` and the inventory
+      synced
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
