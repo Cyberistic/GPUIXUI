@@ -1462,10 +1462,19 @@ retired once both branches are one
       / 37 failed**, 8 failing files. `ref` joined the slot contract; every
       single-root trigger (Button, IconButton, Toggle, Checkbox, Switch, Input,
       TextArea, NumberField, Select, Slider) now opens its tooltip on `Tab`,
-      dismissal and reopen included — `overlay-trigger` 23/23. The remaining 37
-      are the published box model and the `ScrollArea` tooltip hover limit
-      (its public ref is the scroll handle); no focus, timer or order flake
+      dismissal and reopen included — `overlay-trigger` 23/23. All 37 remaining
+      failures are the published box model (plan `597`), which is blocked on the
+      cross-team hit-test decision; no focus, tooltip, timer or order flake
       remains.
+
+`[!]` `packages/primitives`: **the published box model** — every remaining live
+      failure (37, 8 files) is a 2 px geometry delta on bordered elements: the
+      release build reports the content box where the tests assume the border
+      box (and an inset focus overlay is +3). Plan `597` records the probes,
+      rejects re-baselining to the smaller numbers, and proposes relative
+      geometry for placement plus a calibrated `paintBounds` for the absolute
+      size. **Blocked on the cross-team hit-test decision**; do not edit the
+      assertions before it.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

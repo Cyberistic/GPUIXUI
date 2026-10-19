@@ -205,9 +205,8 @@ Measured on this host, release-tag build, 2026-10-19.
 - `nub run --filter @gpuixui/primitives test` → **57 files / 808 tests**;
   `check-types`, `check` and `lint` green.
 
-**The remaining 37** are the published box model (plan `529` §6.5) and the one
-`ScrollArea` tooltip-hover case, which is the runtime hit-test limit, not the
-open state.
+**The remaining 37** are the published box model (plan `597`); the `ScrollArea`
+tooltip hover limit is documented but has no failing case.
 
 **Both directions (all restored unless stated):**
 

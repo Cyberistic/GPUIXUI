@@ -251,8 +251,8 @@ tracker-dependent suites wait for the sample, plan `594` closed every test
 window so the leaked tracker intervals no longer make the result
 order-dependent, plan `595` made `InfoTip` open from the tracker, and plan `596`
 put the trigger's host ref into the slot contract so every single-root tooltip
-opens on keyboard focus. The remaining failures are the 2 px published box model
-(plan `529` §6.5) and the `ScrollArea` tooltip hover hit-test limit. Earlier
+opens on keyboard focus. The remaining 37 failures are the 2 px published box
+model (plan `529` §6.5, decision recorded in plan `597`). Earlier
 measurements: 677 passed / 47 failed at plan `595`; 675/48 at plan `594`;
 669/53 at plan `592`; 656/66 at plan `591`; 721 tests at plan `590` — 647 passed
 / 74 failed; 700 tests in
