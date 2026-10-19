@@ -264,6 +264,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [572](./572-native-text-metric-scale.md) | The native text metrics that hold type | F | 367, 569 | done |
 | [573](./573-native-find-highlight.md) | The find-highlight wash the native text theme feeds | F | 069, 081, 087, 337, 569 | done |
 | [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | done |
+| [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -2941,6 +2942,16 @@ under-floor pairs on XP and Aero. Eight platform text roles take one designed
 family step darker — local to macOS, Windows, XP and Aero light — so every
 shipped set clears the body floor both opaque and painted, and the reference's
 two hand-computed native figures (7.83/7.06) become derived.
+
+Plan `581` publishes the last hand-held promise of the native find bar. Plan
+`573` said the active match is one `nativeHighlightStep` above the match, but
+the check compared highlighted text only: an edited `selection` at 98.8% alpha
+paints both washes as the same colour (**1.000:1**) while every text pair and
+`themeFailures` return `[]`. `themeHighlightFailures` gains a `step` arm — the
+same 1.05:1 floor plan 342 published for the filled families and plan 381 for
+the selected row — discriminated by `pairClass`, so `themeFailures` reports a
+collapsed active match without a ninth check kind. No shipped value, pair,
+floor or count moves.
 
 ## How to use a plan
 
