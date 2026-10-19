@@ -1328,8 +1328,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       native suite is 844 passed / 31 failed of 875 (the same plan-540 binding
       defects). Plan 691 re-ran `check`, `lint`, `test` and the full native
       suite on 2026-10-19: all three gates exit 0, unit 477 in 46 files, native
-      849 passed / 31 failed of 880 (the same plan-540 defects). Re-run it
-      before release — every later merge can change the count.
+      849 passed / 31 failed of 880 (the same plan-540 defects). Plans 693/694
+      re-ran the same gates on 2026-10-19: all three exit 0, unit 479 in 46
+      files, native **851 passed / 31 failed of 882** — the same plan-540
+      binding defects and no new failure. Re-run it before release — every later
+      merge can change the count.
 
 ## Swarm-owned blockers (fix these)
 
