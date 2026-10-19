@@ -1975,7 +1975,7 @@ frames=verified
 ```
 
 The last full merge/release gate ran **92/92** (`exit 0`, 2378 checks, 60
-capabilities, 928.1 s, `.artifacts/live-report.json`, 2026-10-19), including
+capabilities, 965.0 s, `.artifacts/live-report.json`, 2026-10-19), including
 every scenario this branch added through `live-theme` (plan `643`) and
 `live-roving-focus` (plan `637`), and the `live-toast` fixture fix (plan `623`
 §10). It supersedes plan `639`'s 91/91 run and is the gate for the promotion
@@ -2171,7 +2171,7 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **92/92** on
-  2026-10-19 (2378 checks, 60 capabilities, 928.1 s, exit `0`, the merge gate;
+  2026-10-19 (2378 checks, 60 capabilities, 965.0 s, exit `0`, the merge gate;
   plan `643`, superseding plan `639`'s 91/91) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan

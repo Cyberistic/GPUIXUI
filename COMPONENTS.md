@@ -96,7 +96,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | frames | `frame-stats`, `live-frames` | verified |
 
 The suite is **104/104 green here** (exit `0`, `.artifacts/smoke-report.json`, **3695 checks**, 64 capabilities). The live suite **last ran in full at 92/92**
-(`live-report.json`, **2378 checks**, 60 capabilities, 928.1 s, exit `0`) on
+(`live-report.json`, **2378 checks**, 60 capabilities, 965.0 s, exit `0`) on
 2026-10-19, the merge/release gate on the final branch; it covered every live
 scenario registered at that point, including `live-scale` (plan `620`, the
 retained-tree cost model in a window), `live-selection-signal` (plan `615`,
@@ -157,7 +157,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**92/92 green** (2378 checks, 60 capabilities, 928.1 s) on the release-tag
+**92/92 green** (2378 checks, 60 capabilities, 965.0 s) on the release-tag
 binding, and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `floating`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,

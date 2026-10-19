@@ -204,12 +204,12 @@ does not prove the colour values; `theme-color-roles`' `paintedStyle` does.
 
 **Headless gate.** `104/104`, exit `0`, **3695 checks**, 64 capabilities.
 
-**Live gate.** `--all` → **92/92**, exit `0`, **2378 checks**, 60 capabilities,
-**928.1 s**, including `live-theme` (4.1 s). This supersedes plan `639`'s
-91/91 run.
+**Live gate.** `--all` ran **twice green** on this head: **92/92**, exit `0`,
+**2378 checks**, 60 capabilities (928.1 s, then 965.0 s after an `oxfmt`
+comment-placement fix in `theme.tsx` and a rebuild); the final
+`.artifacts/live-report.json` is the second run, with `live-theme` at 3.3 s. This
+supersedes plan `639`'s 91/91 run and is the gate for the promotion merge.
 
 **Quality gates.** `nub run check`, `nub run lint` and `nub run test` exit `0`;
 playground **428** tests, testing 61, components 308, primitives 282, tokens
-196, tw 103, icons 19, docs 7. The full gate ran before an `oxfmt`
-comment-placement fix in `theme.tsx` (whitespace only); the focused live run
-was repeated green after that fix and a rebuild.
+196, tw 103, icons 19, docs 7.
