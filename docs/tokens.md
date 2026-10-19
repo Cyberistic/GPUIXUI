@@ -1088,7 +1088,7 @@ every density.
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least 1.3 `body` ems (two tabular digits), rounded up to a pixel |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
 | `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title inside its two borders |
-| `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum plus its two borders |
+| `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum plus its header (its padding, one `sm` action and its own rule) and the panel's two borders |
 | `dimensions.notificationListMaxHeight` | 280 | notification list scroll height; held to one `density.rowHeight` |
 | `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row |
 
@@ -1142,9 +1142,13 @@ a 0.65em advance, rounded up to a whole pixel, and a theme that names a face wit
 wider digits must widen it; and an avatar's presence dot is at most half the
 smallest avatar the theme carries, because it sits on that avatar's corner.
 
-A notification inbox clips its contents, so its panel maximum contains its list
-maximum plus its two borders, and the list is held to one `density.rowHeight`
-like every other scroll viewport; the unread marker is a mark a brand can size.
+A notification inbox clips its contents, so its panel maximum contains its
+header — `spacing.lg` padding on both sides, one `sm` action and the header's own
+`borderWidth.thin` rule — and its list maximum, plus the panel's two borders. At
+the shipped metrics the header is 53px and the panel needs 335px, which the
+shipped 380 clears at `1.13×`; the list is held to one `density.rowHeight` like
+every other scroll viewport, and the unread marker is a mark a brand can size
+(plan `629`).
 
 A date trigger is a fixed-width field, so `dateFieldWidth` holds it rather than
 an overlay width. A calendar grid is seven `calendarCellSize` cells wide —

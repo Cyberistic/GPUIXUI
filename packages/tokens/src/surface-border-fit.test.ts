@@ -15,7 +15,7 @@
  *
  * The seven bounds now include the surface's two borders. Every shipped set
  * clears them, so no value moves; the identity bounds are 55/68/52/90/90/98 and
- * the inbox's 282.
+ * the inbox's 335 (its header above the list, plan 629).
  */
 import { describe, expect, it } from "vitest";
 import { themeMetricFailures, type MetricFailure } from "./metrics.js";
@@ -50,9 +50,12 @@ const panelWidthBound = (theme: Theme): number =>
   theme.typography.bodyStrong.fontSize +
   2 * theme.borderWidth.thin;
 
-/** The inbox's height: the list it wraps plus its two borders. */
+/** The inbox's height: its header, the list and the panel's two borders. */
 const panelHeightBound = (theme: Theme): number =>
-  theme.dimensions.notificationListMaxHeight + 2 * theme.borderWidth.thin;
+  theme.dimensions.notificationListMaxHeight +
+  2 * theme.spacing.lg +
+  theme.density.controlHeight.sm +
+  3 * theme.borderWidth.thin;
 
 /** A dialog's and a drawer's width: their shell chrome plus two borders. */
 const shellWidthBound = (theme: Theme): number =>
@@ -91,6 +94,9 @@ const bordered = (overrides: Partial<Dimensions> = {}): Theme =>
       keycapSize: 40,
       calendarCellSize: 48,
       timelineMarkerSize: 12,
+      // The 12px border and 48px `sm` control put the inbox's own bound at 388,
+      // so the fixture's panel must rise above the shipped 380.
+      notificationPanelMaxHeight: 400,
       ...overrides,
     },
   });
@@ -166,7 +172,7 @@ describe("fixed surfaces fit their own border", () => {
     expect(tightestOverlay).toBeCloseTo(180 / 55, 4);
     expect(tightestToast).toBeCloseTo(380 / 68, 4);
     expect(tightestPanelWidth).toBeCloseTo(320 / 52, 4);
-    expect(tightestPanelHeight).toBeCloseTo(380 / 282, 4);
+    expect(tightestPanelHeight).toBeCloseTo(380 / 335, 4);
     expect(tightestShellWidth).toBeCloseTo(320 / 90, 4);
     expect(tightestShellHeight).toBeCloseTo(240 / 98, 4);
   });
@@ -175,7 +181,7 @@ describe("fixed surfaces fit their own border", () => {
     expect(overlayBound(base)).toBe(55);
     expect(toastBound(base)).toBe(68);
     expect(panelWidthBound(base)).toBe(52);
-    expect(panelHeightBound(base)).toBe(282);
+    expect(panelHeightBound(base)).toBe(335);
     expect(shellWidthBound(base)).toBe(90);
     expect(shellHeightBound(base)).toBe(98);
 
@@ -279,7 +285,7 @@ describe("fixed surfaces fit their own border", () => {
     ]);
   });
 
-  it("reports an inbox shorter than the list it wraps plus borders", () => {
+  it("reports an inbox shorter than its header and list plus borders", () => {
     const theme = bordered({ notificationPanelMaxHeight: 280 });
     expect(dimensionFailures(theme)).toEqual([
       {
@@ -287,7 +293,7 @@ describe("fixed surfaces fit their own border", () => {
         member: "notificationPanelMaxHeight",
         rule: "at-least",
         actual: 280,
-        bound: 304,
+        bound: 388,
       },
     ]);
   });

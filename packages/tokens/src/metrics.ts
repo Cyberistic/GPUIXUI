@@ -530,8 +530,10 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   avatar's presence dot is at most half the smallest avatar the theme carries.
  *   The menu's minimum width, the Toast card and the notification inbox follow
  *   the same content-box rule: each holds its row or card chrome plus its own two
- *   borders, and the inbox's maximum height contains the list it wraps plus those
- *   borders.
+ *   borders, and the inbox's maximum height contains the header above its list —
+ *   two `spacing.lg` insets, one `sm` action and the header's own rule — plus the
+ *   list and those two borders, because a panel capped at the list alone squeezes
+ *   the header the inbox always paints.
  * - **iconSize**, **avatarSize**: named ladders of positive sizes — a zero size
  *   paints no icon or identity mark; the default icon fits the smallest control,
  *   and an inline icon fits the line box it shares with text (`xs` a `caption`
@@ -996,13 +998,20 @@ export function themeMetricFailures(
       dimensions.notificationListMaxHeight,
       density.rowHeight,
     ),
-    // The inbox clips its contents, so its maximum height must contain the
-    // list it wraps plus its two borders rather than cutting rows off.
+    // The inbox clips its contents, so its maximum height holds the header it
+    // always paints — `spacing.lg` padding on both sides, a `sm` header action
+    // (the density rule already holds that at least one `label` line tall) and
+    // the header's own bottom rule — plus the list and the panel's two borders.
+    // A panel capped at the list and its borders alone squeezes the header or
+    // makes the documented list viewport unreachable (plan 629).
     ...atLeast(
       "dimensions",
       "notificationPanelMaxHeight",
       dimensions.notificationPanelMaxHeight,
-      dimensions.notificationListMaxHeight + 2 * borderWidth.thin,
+      dimensions.notificationListMaxHeight +
+        2 * spacing.lg +
+        density.controlHeight.sm +
+        3 * borderWidth.thin,
     ),
     // A Toast's fixed card holds its own chrome: the content row is `spacing.lg`
     // padding on both sides, the `md` tone icon, the `lg` gap beside it and one

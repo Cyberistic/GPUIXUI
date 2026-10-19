@@ -42,7 +42,9 @@ describe("notification inbox metrics", () => {
         actual: 240,
         bound:
           lightTheme.dimensions.notificationListMaxHeight +
-          2 * lightTheme.borderWidth.thin,
+          2 * lightTheme.spacing.lg +
+          lightTheme.density.controlHeight.sm +
+          3 * lightTheme.borderWidth.thin,
       },
     ]);
   });

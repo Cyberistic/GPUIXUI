@@ -2713,6 +2713,19 @@ describe("docs/design-system.md", () => {
     );
   });
 
+  it("states the notification inbox's header bound", () => {
+    const header =
+      2 * spacing.lg + defaultDensity.controlHeight.sm + borderWidth.thin;
+    const bound =
+      dimensions.notificationListMaxHeight +
+      2 * spacing.lg +
+      defaultDensity.controlHeight.sm +
+      3 * borderWidth.thin;
+    const headroom = (dimensions.notificationPanelMaxHeight / bound).toFixed(2);
+    const sentence = `At the shipped metrics the header is ${header}px and the panel needs ${bound}px, which the shipped ${dimensions.notificationPanelMaxHeight} clears at \`${headroom}×\``;
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the field's own query-row bound", () => {
     const chrome =
       2 * spacing.md +
@@ -2752,7 +2765,7 @@ describe("docs/design-system.md", () => {
   });
 
   it("states the notification inbox dimensions", () => {
-    const sentence = `A notification inbox is ${dimensions.notificationPanelWidth}px wide and ${dimensions.notificationPanelMaxHeight}px tall at most, its scrolling list holds ${dimensions.notificationListMaxHeight}px, and its unread marker is ${dimensions.notificationUnreadDotSize}px — the panel contains the list, and the list holds one row.`;
+    const sentence = `A notification inbox is ${dimensions.notificationPanelWidth}px wide and ${dimensions.notificationPanelMaxHeight}px tall at most, its scrolling list holds ${dimensions.notificationListMaxHeight}px, and its unread marker is ${dimensions.notificationUnreadDotSize}px — the panel contains its header and the list, and the list holds one row.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 

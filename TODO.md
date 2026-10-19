@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 269/342
+`[x]` `[████████░░]` 270/343
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2278,6 +2278,12 @@ compared the outer metric, so a theme with `borderWidth.thin: 12` and
 `themeFailures` returned `[]`; seven bounds now include `2 * borderWidth.thin`,
 every shipped set clears them (90/90/98/68/52/55 and 282) and no value moves
 (plan 627)
+`[x]` Hold the notification inbox's header inside its panel — the panel maximum
+was held only to the list plus its two borders, but the inbox always paints a
+header (two `spacing.lg` insets, a `sm` action, a bottom rule), so a theme with
+`notificationPanelMaxHeight: 300` and a 280px list returned `[]` while the
+header and list needed 335; the bound now counts the header, every shipped set
+clears it (380 against 335) and no value moves (plan 629)
 
 ## Phase C — Tier 1–2 components
 

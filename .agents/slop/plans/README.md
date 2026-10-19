@@ -298,6 +298,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [624](./624-field-query-and-action.md) | The field minimum holds the query and the action it documents | F | 353, 358, 384, 523, 620 | done |
 | [625](./625-dialog-drawer-shell-chrome.md) | The dialog and drawer shells hold their close control | F | 353, 358, 556, 598, 620, 624 | done |
 | [627](./627-surface-border-fit.md) | The fixed surfaces fit their own border | F | 353, 358, 384, 598, 620, 625 | done |
+| [629](./629-notification-inbox-header.md) | The notification inbox holds its header | F | 353, 358, 598, 620, 625, 627 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3244,6 +3245,19 @@ now include the surface's two borders: the shipped identities move from
 1.35×, so no token value moves. The suite states the shipped bounds, proves each
 surface can fail on its own, reads a theme's own border instead of the fixture's
 12, and carries one case through the total check.
+
+Plan `629` closes the header plan `627` left out of the inbox's height. The
+panel maximum was held to the list plus its two borders, but
+`NotificationCentreHeader` always paints above the list: `spacing.lg` padding on
+both sides, a `sm` action (or a shorter `label` title) and its own
+`borderWidth.thin` bottom rule. A coherent theme with
+`notificationPanelMaxHeight: 300` and the documented 280px list returned `[]`
+from all ten checks while the header and list need 335 inside the panel's
+borders, so the panel's `overflow: hidden` squeezed the header or made the
+documented list viewport unreachable. One term now reads the header from the
+theme's own spacing, density and border metrics; the shipped 380 clears the
+335px bound at 1.13×, so no value moves, and the suite proves the old
+list-and-borders bound fails.
 
 ## How to use a plan
 

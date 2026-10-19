@@ -250,7 +250,7 @@ and a carousel's active dot is 18px beside an idle 8px one. A dialog's surface i
 time segment is 26px, and an avatar's presence dot is 10px — at most half the
 smallest avatar the theme carries. A notification inbox is 320px wide and 380px
 tall at most, its scrolling list holds 280px, and its unread marker is 6px — the
-panel contains the list, and the list holds one row. A timeline's event dot is
+panel contains its header and the list, and the list holds one row. A timeline's event dot is
 8px in a 16px column — at least the rail's width and no wider than the column
 that centres it. A date trigger is 220px
 wide and holds its insets, gap, disclosure glyph and one `label` glyph; its
