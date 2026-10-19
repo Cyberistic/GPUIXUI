@@ -162,13 +162,13 @@ renderer (the browser's GPU backend) and exports one document per scene:
   with `liveScene: "<key>"`, `registry.test.ts` fails on a key no scene ships,
   and `scene-contract.test.ts` fails when a scene's expected text no longer
   occurs in its view. Live scenes ship for every record that declares a
-  `liveScene` (42 today), plus the Showcase page and the two composed pattern
+  `liveScene` (44 today), plus the Showcase page and the two composed pattern
   screens — the confirmation flow and the command palette (plans 560, 521 and
   522); `docs/preview-strategy.md`
-  owns the tier table and names them all. 22 of those document state only a
+  owns the tier table and names them all. 24 of those document state only a
   gesture produces — an open
-  overlay, an opened list, a checked control, a value a key reaches or text a
-  reader types — so
+  overlay, an opened list, a checked control, a value a key reaches, text a
+  reader types or a colour/rename a reader commits — so
   `preview/scenes.ts` declares the gesture that produces it
   (`SCENE_GESTURE`) and the sentence the reader sees
   (`SCENE_INTERACTION`); the smoke drives the gesture through the `App` the

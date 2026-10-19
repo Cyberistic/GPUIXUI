@@ -2049,6 +2049,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/color-picker.test.tsx",
       ),
       status: "done",
+      liveScene: "color-picker",
       dependencies: ["@gpuix/react/floating", "effect/Option"],
       related: ["badge"],
       limitations: [
@@ -2242,6 +2243,7 @@ const composition: ReadonlyArray<ComponentMetaInput> = [
         "src/behaviour/inline-edit.test.tsx",
       ),
       status: "done",
+      liveScene: "inline-edit",
       dependencies: ["@gpuix/react/floating"],
       related: ["text-input"],
       limitations: [

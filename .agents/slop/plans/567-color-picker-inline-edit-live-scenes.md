@@ -3,7 +3,7 @@
 **Workstream:** docs-site (`apps/docs`, `docs/preview-strategy.md`)
 **Phase:** F — integration and polish
 **Depends on:** 412, 455, 456, 486, 493, 497, 508, 515, 523, 560
-**Status:** planned
+**Status:** implemented
 
 ## 1. The gap
 
@@ -250,13 +250,41 @@ Stop and report, do not improvise, if:
 
 ## 8. Measured result
 
-Filled by the executor. Expected entries:
+Run on 2026-10-19 in `workspaces/docs-site` at this branch:
 
-- `nub run --filter docs test` — test files / tests passed.
-- `nub run --filter docs smoke:preview` — scene count, both new scenes, exit
-  code.
-- `nub run check` — green.
-- The three forced-defect outputs, each with its named failure.
+- `nub run --filter docs test` — `85 passed (85)`, `594 passed (594)`, exit
+  `0`.
+- `nub run --filter docs smoke:preview` — exit `0`; the two new scenes report
+  `scene color-picker opened by 1 step(s) — 640x520 canvas, 4 text nodes` and
+  `scene inline-edit opened by 3 step(s) — 640x520 canvas, 5 text nodes`, and
+  both pages load their live iframe
+  (`/docs/components/color-picker` and `/docs/components/inline-edit`,
+  606×358). The light/dark frame pair remains distinct (21 936 vs 21 564
+  bytes).
+- `nub run check` — exit `0` (`check:tests`, lint, format, all workspace
+  types).
+- **Forced defect A:** removing `liveScene: "color-picker"` failed five guards,
+  including `scene-contract.test.ts › interaction records › declare the live
+  scene that documents them` with `expected [ 'color-picker: null' ] to deeply
+  equal []`. Restored.
+- **Forced defect B:** removing the swatch step failed the smoke with
+  `FAIL live scene color-picker: expected "Accent set to red" in the GPUI tree
+  (["Press the red swatch to commit it.","Accent colour",…])`, exit `1`.
+  Restored.
+- **Forced defect C:** starting the scene at `#ef4444` failed the smoke with
+  `FAIL live scene color-picker: "Accent set to red" was painted before the
+  gesture; the scene opens itself`, exit `1`. Restored.
+
+## 8.1 Deviations
+
+- The scene pins `scene-color-swatch-0` as a **component-owned target** in
+  `scene-contract.test.ts`: `ColorPicker` derives the swatch ids from the root
+  `testId`, exactly like the time picker's segment ids. The guard's pinned map
+  gained the entry with that reason; no assertion was weakened.
+- `useState` remains in the two scene components. It is the local presentation
+  state of a preview composition, exactly as every existing scene, not shared
+  application state; Effect Atom is not a substitute for React-local input
+  state.
 
 ## 9. Acceptance
 

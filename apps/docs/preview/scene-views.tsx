@@ -149,6 +149,8 @@ import {
   DatePickerTrigger,
 } from "@gpuixui/components/date-picker";
 import { HotkeyRecorder } from "@gpuixui/components/hotkey-recorder";
+import { ColorPicker } from "@gpuixui/components/color-picker";
+import { InlineEdit } from "@gpuixui/components/inline-edit";
 import { SearchInput } from "@gpuixui/components/search-input";
 import {
   Carousel,
@@ -948,6 +950,47 @@ const TextAreaScene = (): ReactElement => {
   );
 };
 
+const ColorPickerScene = (): ReactElement => {
+  const [accent, setAccent] = useState("#3b82f6");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Accent colour</Text>
+      <Text role="caption" tone="muted">
+        The real ColorPicker. Press the red swatch to commit it.
+      </Text>
+      <ColorPicker
+        label="Accent colour"
+        testId="scene-color"
+        value={accent}
+        onValueChange={setAccent}
+        swatches={["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"]}
+      />
+      {accent === "#ef4444" ? <Text role="body">Accent set to red</Text> : null}
+    </Stack>
+  );
+};
+
+const InlineEditScene = (): ReactElement => {
+  const [name, setName] = useState("Atlas");
+  return (
+    <Stack direction="column" gap="lg">
+      <Text role="h3">Project name</Text>
+      <Text role="caption" tone="muted">
+        The real InlineEdit. Click the name, type a new one and press Enter.
+      </Text>
+      <InlineEdit
+        label="Project name"
+        testId="scene-inline-edit"
+        value={name}
+        onCommit={setName}
+      />
+      {name === "Atlas Prime" ? (
+        <Text role="body">Renamed Atlas Prime</Text>
+      ) : null}
+    </Stack>
+  );
+};
+
 const AccordionScene = (): ReactElement => (
   <Stack direction="column" gap="lg">
     <Text role="h3">Release settings</Text>
@@ -1344,6 +1387,8 @@ export const LIVE_SCENE_VIEWS: Readonly<Record<LiveScene, () => ReactElement>> =
     "search-input": SearchInputScene,
     "text-input": TextInputScene,
     "text-area": TextAreaScene,
+    "color-picker": ColorPickerScene,
+    "inline-edit": InlineEditScene,
     accordion: AccordionScene,
     "number-field": NumberFieldScene,
     "otp-field": OTPFieldScene,

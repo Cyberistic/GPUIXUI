@@ -71,6 +71,8 @@ const interactionScenes = new Map([
   ["search-input", "search-input"],
   ["text-input", "text-input"],
   ["text-area", "text-area"],
+  ["color-picker", "color-picker"],
+  ["inline-edit", "inline-edit"],
   ["message-scroller", "message-scroller"],
 ]);
 
@@ -181,6 +183,9 @@ describe("gesture scenes", () => {
     [
       ["date-picker", ["date-day-2026-10-21"]],
       ["time-picker", ["scene-time-hours"]],
+      // ColorPicker derives `<testId>-swatch-<index>` from the root test id the
+      // scene hands it, the same way the time picker derives its segments.
+      ["color-picker", ["scene-color-swatch-0"]],
       // The confirmation-flow pattern's action is `ConfirmDialog`'s own footer
       // button; the composed page supplies the dialog, not the button.
       ["confirmation-flow", ["confirm-accept"]],

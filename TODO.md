@@ -469,14 +469,16 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–566)
+## Docs site workstream (plans 410–499, plus 500–567)
 
-`[~]` `[█████████░]` 133/134
+`[x]` `[██████████]` 134/134
 
-`[~]` **Color picker and Inline edit get live scenes (plan 567)** — both pages
+`[x]` **Color picker and Inline edit get live scenes (plan 567)** — both pages
       documented a selection and an edit state with only a tier-A illustration;
       a real swatch press and a click → type → Enter commit now run on the wasm
-      renderer, and the scene, gesture and count guards move with them.
+      renderer, and the scene, gesture and count guards move with them. 47
+      scenes (44 record + 3 composed), 24 gestures; `smoke:preview` green and
+      three forced defects measured (§8).
 
 `[x]` **Reader vocabulary reaches the component it names (plan 566)** —
       `textbox`, `navbar`, `snackbar`, `kbd` and `searchbox` returned nothing,
