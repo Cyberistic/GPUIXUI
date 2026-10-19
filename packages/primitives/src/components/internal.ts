@@ -253,9 +253,12 @@ export const withDensity = (
  * The hook family owns focus detection, so it is also the only place a control
  * can learn it went off-screen. The callback lives in a context a labelled
  * `ScrollArea` provides; outside one there is no callback and no reveal
- * (plan `606`).
+ * (plan `606`). A nested area passes its own resolved `style` when it asks the
+ * enclosing area to reveal the region, because a plain `div` reports from its
+ * content origin (plan `597`); a control that reports its border box passes
+ * none (plan `636`).
  */
-export type ScrollReveal = (hostId: number) => void;
+export type ScrollReveal = (hostId: number, style?: object) => void;
 
 /** The nearest `ScrollArea`'s reveal callback, if there is one above. */
 export const ScrollRevealContext = createContext<ScrollReveal | undefined>(

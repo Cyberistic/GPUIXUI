@@ -50,6 +50,7 @@ import {
   ScrollRevealContext,
   usableLabel,
   useFocus,
+  useScrollReveal,
   type StateStyle,
   type TriggerHandlers,
 } from "./internal.js";
@@ -226,8 +227,8 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
    * one child short in a list (plans 599, 606), so measure both painted boxes
    * and move by the overflow on the axes this area scrolls. `scrollTo` clamps.
    */
-  const reveal = useCallback(
-    (hostId: number): void => {
+  const scrollIntoView = useCallback(
+    (hostId: number, style?: object): void => {
       const id = root.current?.id;
       if (id === undefined || hostId === id) return;
       const measured = Option.all({
@@ -241,7 +242,11 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
         paintedBox(measured.value.region, root.current?.props.style ?? {}),
         current,
       );
-      const move = scrollIntoViewOffsets(measured.value.item, visible);
+      const item =
+        style === undefined
+          ? measured.value.item
+          : paintedBox(measured.value.item, style);
+      const move = scrollIntoViewOffsets(item, visible);
       const axis = props.axis ?? "vertical";
       const x = axis === "horizontal" || axis === "both" ? move.x : 0;
       const y = axis === "vertical" || axis === "both" ? move.y : 0;
@@ -250,6 +255,25 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
       reportPosition();
     },
     [props.axis, renderer, reportPosition],
+  );
+
+  /**
+   * Reveal in this area, then in the area above (plan 636).
+   *
+   * A nested region is invisible to the outer area if only the nearest one
+   * moves, so the chain continues with this area's own host — the region a user
+   * sees, not the descendant already visible inside it — and with the style
+   * that makes its painted box exact.
+   */
+  const parentReveal = useScrollReveal();
+  const reveal = useCallback(
+    (hostId: number, style?: object): void => {
+      scrollIntoView(hostId, style);
+      const id = root.current?.id;
+      if (id === undefined) return;
+      parentReveal?.(id, root.current?.props.style ?? {});
+    },
+    [parentReveal, scrollIntoView],
   );
 
   const onKeyDown = (event: EventPayload): void => {

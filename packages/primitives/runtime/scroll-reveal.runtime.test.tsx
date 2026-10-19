@@ -1,11 +1,16 @@
 /**
- * A scroll region reveals the control that takes focus (plan `606`).
+ * A scroll region reveals the control that takes focus (plan `606`), and a
+ * nested region reveals through every area above it (plan `636`).
  *
  * The bug this file guards: measured on the pinned release build, a `Button`
  * painted at `y 412…448` took native focus while a 120-high `ScrollArea` painted
  * `y 12…132` and stayed at offset `0` — the keyboard user was on a control they
  * could not see. The runtime's own `scrollIntoView` did not move a plain
  * scroller, so the area measures both painted boxes and calls `scrollTo`.
+ *
+ * Plan `636` extends the same invariant through nesting: measured, a `Button`
+ * inside an inner `ScrollArea` at `y 412` left both areas at `{0, 0}`, because
+ * the context carried only the nearest area's callback.
  *
  * Every case opens a fresh window; the fixture unmounts it afterwards.
  */
@@ -350,4 +355,76 @@ it("does not move the region for a control outside it", async () => {
   runtime.flush();
 
   expect(offsetOf(runtime, "s")).toStrictEqual({ x: 0, y: 0 });
+});
+
+it("reveals a focused control through a nested region", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        label="Outer"
+        style={{ height: 120, width: 320 }}
+        testId="outer"
+      >
+        <Box tone="card" style={{ height: 400 }} />
+        <ScrollArea
+          label="Inner"
+          style={{ height: 100, width: 300 }}
+          testId="inner"
+        >
+          <Button testId="target">Target</Button>
+        </ScrollArea>
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.flush();
+  const outer = bounds(runtime, "outer");
+  expect(bounds(runtime, "target").y).toBeGreaterThan(outer.y + outer.height);
+
+  tabTo(runtime, "target");
+  await settleFocus();
+  runtime.flush();
+
+  expect(offsetOf(runtime, "outer").y).toBeLessThan(0);
+  expect(
+    contains(bounds(runtime, "outer"), itemBounds(runtime, "target")),
+  ).toBe(true);
+});
+
+it("reveals a padded nested region by its painted box", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <ScrollArea
+        label="Outer"
+        style={{ height: 120, width: 320 }}
+        testId="outer"
+      >
+        <Box tone="card" style={{ height: 400 }} />
+        <ScrollArea
+          label="Inner"
+          style={{ height: 100, width: 300, padding: 8 }}
+          testId="inner"
+        >
+          <Button testId="target">Target</Button>
+        </ScrollArea>
+        <Box tone="card" style={{ height: 400 }} />
+      </ScrollArea>
+    </Surface>,
+  );
+  runtime.flush();
+  runtime.wheel("outer", 0, -600);
+  runtime.flush();
+  expect(offsetOf(runtime, "outer").y).toBeLessThan(-300);
+
+  focusElement(runtime, "target");
+  await settleFocus();
+  runtime.flush();
+
+  // The inner area's report starts at its content origin (plan 597), so passing
+  // its style is what keeps its top padding inside the outer viewport when the
+  // outer has to scroll back up to it.
+  expect(contains(bounds(runtime, "outer"), bounds(runtime, "inner"))).toBe(
+    true,
+  );
 });

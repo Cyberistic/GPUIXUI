@@ -129,7 +129,16 @@ performs this way reports through `onScrollPositionChange`, so a caller sees it.
 Every control that owns its focus state participates: the shared `useFocus` and
 `useRovingFocus` hooks (buttons, fields, the roving groups, sliders) and the two
 hand-rolled groups (`CheckboxGroup`, `OTPField`). A control outside the area has
-no reveal; with nested areas the nearest one moves.
+no reveal.
+
+**Nested areas reveal through the chain.** An area that reveals a descendant
+then asks the area above it to reveal the region itself, so a control inside an
+inner region cannot stay below an outer region's fold. The inner region's
+resolved style travels with that request, so a padded region is placed by the
+box it paints rather than by its report's content origin (plan `636`). Measured:
+a `Button` at `y 412` inside a 100-high inner area left both areas at
+`{0, 0}` before the chain existed; now the outer area moves as well, and a
+padded inner area stays wholly inside it.
 
 **One limit.** A focused host that reports no bounds — an element that paints no
 surface of its own — cannot be measured, so the region does not move.

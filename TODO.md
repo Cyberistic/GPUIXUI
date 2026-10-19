@@ -1631,6 +1631,18 @@ retired once both branches are one
       merges last. 1 core + 1 element-tree + 2 runtime cases, both runtime
       directions proven (plan `607`).
 
+`[x]` `packages/primitives`: **a nested `ScrollArea` did not reveal through its
+      parent** — plan `606` gave an area a reveal, but the context carried only
+      the nearest area's callback, so measured (2026-10-19), a `Button` inside a
+      100-high inner area at `y 412` left both areas at `{0, 0}` in a 120-high
+      outer viewport: focus was on an invisible control, and the page stated
+      "with nested areas the nearest one moves" as the contract. An area now
+      asks the enclosing area to reveal its own region after revealing the
+      descendant, carrying its resolved style so a padded region is measured by
+      its painted box (a plain `div` reports from its content origin, plan
+      `597`); 2 runtime cases, both directions proven — removing the chain fails
+      both, removing the style fails the padded one by 8 px (plan `636`).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
