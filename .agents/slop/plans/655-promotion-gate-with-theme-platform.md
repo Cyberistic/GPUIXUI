@@ -148,15 +148,43 @@ summary.
 
 ## 7. Acceptance
 
-- [ ] Steps 1–4 pass; the registry counts are `105` and `94`.
-- [ ] Headless full run: `105/105`, exit `0`, every capability `verified`.
-- [ ] Live full run: `94/94`, exit `0`, including `live-theme-platform`.
-- [ ] `nub run check`, `nub run lint`, `nub run test` pass; per-package counts
+- [x] Steps 1–4 pass; the registry counts are `105` and `94`.
+- [x] Headless full run: `105/105`, exit `0`, every capability `verified`.
+- [x] Live full run: `94/94`, exit `0`, including `live-theme-platform`.
+- [x] `nub run check`, `nub run lint`, `nub run test` pass; per-package counts
       recorded.
-- [ ] The ledgers name this gate's numbers, not the 93/93 run.
-- [ ] Committed on `agent/playground` and pushed to `origin`.
-- [ ] The promotion row stays `[~]` (owner merges); never push to `master`.
+- [x] The ledgers name this gate's numbers, not the 93/93 run.
+- [x] Committed on `agent/playground` and pushed to `origin`.
+- [x] The promotion row stays `[~]` (owner merges); never push to `master`.
 
 ## 8. Landed
 
-To be filled after step 6 and the gate commands.
+Executed 2026-10-19 on head `651e2419` (the plan-`654` commit, which contains
+every commit of `origin/master`).
+
+- **Preflight:** `nub run --filter playground test` → **436** tests in 37 files,
+  exit `0`; `nub run --filter playground build` → exit `0`; `--list` → **105**
+  headless and **94** live ids. Both registry guards pass as part of the suite.
+- **Headless:** `105/105`, **3765** checks, 65 capabilities, exit `0`
+  (`.artifacts/smoke-report.json`, 116.1 s; host
+  `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed
+  81c99f81, runtime shaders)`).
+- **Live:** `94/94`, **2447** checks, 61 capabilities, **989.9 s**, exit `0`
+  (`.artifacts/live-report.json`; `live-theme-platform` included and
+  `theme=verified`; host `gpuix live window darwin-x64 @gpuix/native 0.10.0
+  (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`).
+- **Corroboration:** plan `654`'s own full run on the same head also passed
+  `94/94` (**2447** checks, 984.3 s). The check count is identical; only the
+  wall-clock duration differs, as expected between runs. No anomaly.
+- **Gates:** `nub run check`, `nub run lint` and `nub run test` green
+  (playground **436**, testing 61, components 308, primitives 282, tokens 196,
+  tw 103, icons 19, docs 7).
+- **Ledgers:** `TODO.md` (new row + promotion addendum), `COMPONENTS.md` (both
+  totals and the live-scenario list), `apps/playground/README.md` (both gate
+  paragraphs) and the plan index now cite this run; no ledger still calls the
+  93/93 gate current.
+- **Left for the owner/supervisor:** the fast-forward merge of
+  `agent/playground` into `main`. The workstream never pushes to `master`.
+
+No source, scenario or host verb changed; the only writes are the plan and the
+ledger rows listed in §2.

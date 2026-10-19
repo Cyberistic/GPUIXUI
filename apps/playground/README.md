@@ -2017,17 +2017,14 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **93/93** (`exit 0`, 2402 checks, 61
-capabilities, 1062.5 s, `.artifacts/live-report.json`, 2026-10-19), including
-every scenario this branch added through `live-theme` (plan `643`),
-`live-roving-focus` (plan `637`), the `live-toast` fixture fix (plan `623` §10)
-and `live-diff` (plan `648`, the diff interaction contract). It supersedes plan
-`643`'s 92/92 run and is the gate for the promotion
-merge; the owner/supervisor performs that merge. The full live suite is a
-merge/release gate rather than a per-task check. **After that gate** the registry
-gained `live-theme-platform` (plan `654`, 45 checks, three focused green runs),
-and the whole registry then ran at **94/94** (**2447** checks, 61 capabilities,
-984.3 s), exit `0`. That is the current gate for the promotion merge.
+The last full merge/release gate ran **94/94** (`exit 0`, 2447 checks, 61
+capabilities, 989.9 s, `.artifacts/live-report.json`, 2026-10-19), including
+every scenario this branch added through `live-theme-platform` (plan `654`,
+the platform type styles in a window). Plan `654` recorded its own full run on
+the same head at 94/94 (2447 checks, 984.3 s); plan `655`'s independent run
+corroborated it. It supersedes plan `648`'s 93/93 run and is the gate for the
+promotion merge; the owner/supervisor performs that merge. The full live suite
+is a merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2219,9 +2216,10 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **93/93** on
-  2026-10-19 (2402 checks, 61 capabilities, 1062.5 s, exit `0`, the merge gate;
-  plan `643`'s 92/92 superseded here by plan `648`'s `live-diff`) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **94/94** on
+  2026-10-19 (2447 checks, 61 capabilities, 989.9 s, exit `0`, the merge gate;
+  plan `655` corroborating plan `654`'s run on the same head, with
+  `live-theme-platform` included) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan

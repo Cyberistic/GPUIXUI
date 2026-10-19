@@ -66,6 +66,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 110/110 plans-and-harness
 
+`[x]` Re-run the **promotion gate on the head that includes
+      `live-theme-platform`** per plan `655`: the last recorded gate before this
+      run was plan `649`'s 93/93, and two commits had landed since (plan `653`'s
+      coverage guard, plan `654`'s live twin). The whole registry ran again —
+      live **94/94** (**2447** checks, 61 capabilities, **989.9 s**) and
+      headless **105/105** (**3765** checks, 65 capabilities), both exit `0` on
+      the release-tag binding. The independent run corroborates plan `654`'s
+      94/94 (2447 checks, 984.3 s) exactly, including `live-theme-platform`; the
+      `apps/playground/README.md` and `COMPONENTS.md` paragraphs that still cited
+      the 93/93 run now cite this one. `nub run check`, `nub run lint` and
+      `nub run test` pass (playground **436**, testing 61, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). Exact ids: the whole
+      headless registry and the whole live registry (`--all`). No source change.
+
 `[x]` Prove the **platform type styles in a real window** per plan `654`: the
       design system's platform variants were the last theming contract with
       headless-only evidence (`theme-platform` reads families through
@@ -1486,7 +1500,10 @@ focused id is `live-frames`.
       promotion's scenario code. **Addendum (plan `654`):** the registry gained
       `live-theme-platform` (45 checks), and the whole registry ran again at
       **94/94** (**2447** checks, 61 capabilities, 984.3 s), exit `0`; this is
-      the current gate for the promotion.
+      the current gate for the promotion. **Addendum (plan `655`):** an
+      independent full run on the same head passed **94/94** (**2447** checks,
+      61 capabilities, 989.9 s) and headless **105/105** (3765 checks), both exit
+      `0`; the playground README and `COMPONENTS.md` now cite that run.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
