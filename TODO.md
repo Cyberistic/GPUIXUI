@@ -471,7 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–578)
 
-`[~]` `[██████████]` 146/147
+`[~]` `[██████████]` 147/148
+
+`[x]` **Reader vocabulary, second pass (plan 579)** — a second measured sweep of
+      the real search index found 26 component terms and 2 page terms that still
+      missed: `typeahead`, `passcode`, `wizard`, `pin code`, `segmented control`,
+      `hover card`, `menubar`, `scrollview`, `swatch`, `dropdown list`,
+      `side panel`, `datagrid` and `sidebar` returned nothing or another page.
+      The existing guarded alias table gained those terms, the Data display and
+      Workspace summaries name `datagrids` and `sidebars`, and `aliasRank` now
+      matches a whole alias (exact or query prefix) instead of a generic word
+      inside a multiword one — adding `side panel` had made `panel` reach Drawer
+      and stole Workspace's subject. 67 focused tests, 666 docs tests, 98-page
+      build and five two-direction proofs recorded in plan 579 §6. `data grid`
+      deliberately stays on Stack because `Grid` is a real exported layout
+      primitive; the tabular meaning uses `datagrid`.
 
 `[x]` **Previews lists every shipped scene on-site (plan 578)** — `/docs/previews`
       promised "the full list of scenes and gestures" and delivered two raw GitHub

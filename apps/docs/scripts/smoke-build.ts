@@ -729,6 +729,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "reader vocabulary that expands an abbreviation",
     },
     {
+      query: "typeahead",
+      expected: "/docs/components/combobox",
+      first: true,
+      what: "reader vocabulary recovered by the second alias pass",
+    },
+    {
+      query: "datagrid",
+      expected: "/docs/data-display",
+      first: true,
+      what: "an alternate name authored in a page summary",
+    },
+    {
       query: "table",
       expected: "/docs/data-display",
       first: true,

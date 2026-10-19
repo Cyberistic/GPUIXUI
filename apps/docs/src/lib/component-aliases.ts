@@ -10,6 +10,10 @@
  * record, no term is shared, and no term shadows another record's title or
  * exported symbol — an alias that names a different component misroutes the
  * query instead of answering it.
+ *
+ * Plan 579 measured the next set (`typeahead`, `passcode`, `wizard`,
+ * `segmented control`, `hover card`, …): a term is added only when the record's
+ * own fields cannot match it and a whole-query match is unambiguous.
  */
 export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -18,7 +22,17 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["text-input", ["textbox", "text box", "text field"]],
   ["checkbox", ["check box", "tick box"]],
   ["radio-group", ["radio button", "radio buttons"]],
-  ["combobox", ["combo box"]],
+  [
+    "combobox",
+    [
+      "combo box",
+      "typeahead",
+      "autocomplete",
+      "auto complete",
+      "auto-complete",
+      "suggestions",
+    ],
+  ],
   [
     "otp-field",
     [
@@ -26,19 +40,53 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "one-time password",
       "one time code",
       "one-time code",
+      "pin code",
+      "passcode",
+      "verification code",
     ],
   ],
   ["dialog", ["modal", "modal window"]],
-  ["navigation-menu", ["navbar", "nav bar"]],
+  [
+    "navigation-menu",
+    ["navbar", "nav bar", "menubar", "menu bar", "hamburger", "hamburger menu"],
+  ],
   ["search-input", ["searchbox", "search box", "search bar", "search field"]],
   ["number-field", ["number input", "numeric input"]],
   ["tag-input", ["chips", "chips input", "tags input"]],
   ["hotkey-input", ["shortcut recorder"]],
-  ["drawer", ["side sheet"]],
+  ["drawer", ["side sheet", "side panel", "sidepanel"]],
   ["fieldset", ["field group"]],
   ["toast", ["snackbar"]],
   ["keycap", ["kbd"]],
-  ["color-picker", ["colour picker", "colourpicker"]],
+  ["color-picker", ["colour picker", "colourpicker", "swatch", "swatches"]],
+  ["preview-card", ["hover card", "hovercard"]],
+  ["collapsible", ["collapse", "collapsed section"]],
+  [
+    "stack",
+    [
+      "vstack",
+      "hstack",
+      "v stack",
+      "h stack",
+      "vertical stack",
+      "horizontal stack",
+      "flex",
+      "flexbox",
+    ],
+  ],
+  [
+    "button",
+    ["icon button", "icon-only button", "fab", "floating action button"],
+  ],
+  [
+    "button-group",
+    ["segmented control", "segmented", "toggle group", "toggle-group"],
+  ],
+  ["stepper", ["wizard", "multi step", "multi-step", "multi step form"]],
+  ["alert", ["banner"]],
+  ["scroll-area", ["scrollview", "scroll view", "scroll pane"]],
+  ["popover", ["popup"]],
+  ["select", ["select box", "dropdown list", "multi select", "multi-select"]],
 ]);
 
 /** The aliases for a record, or an empty list when it has none. */

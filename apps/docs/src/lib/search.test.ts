@@ -215,6 +215,52 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  /**
+   * Plan 579: the second measured sweep. The first table covered the terms
+   * plan 566 reported; `typeahead`, `passcode`, `wizard`, `datagrid` and
+   * `sidebar` still returned nothing or a different page. These cases fail by
+   * query when a term is dropped.
+   */
+  it("finds a component by the second set of reader words (plan 579)", async () => {
+    const expected = [
+      ["pin code", "otp-field"],
+      ["passcode", "otp-field"],
+      ["verification code", "otp-field"],
+      ["typeahead", "combobox"],
+      ["autocomplete", "combobox"],
+      ["auto complete", "combobox"],
+      ["hover card", "preview-card"],
+      ["hovercard", "preview-card"],
+      ["menubar", "navigation-menu"],
+      ["menu bar", "navigation-menu"],
+      ["collapse", "collapsible"],
+      ["vstack", "stack"],
+      ["hstack", "stack"],
+      ["icon button", "button"],
+      ["fab", "button"],
+      ["segmented control", "button-group"],
+      ["segmented", "button-group"],
+      ["toggle group", "button-group"],
+      ["wizard", "stepper"],
+      ["side panel", "drawer"],
+      ["sidepanel", "drawer"],
+      ["banner", "alert"],
+      ["scrollview", "scroll-area"],
+      ["popup", "popover"],
+      ["dropdown list", "select"],
+      ["swatch", "color-picker"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, slug]) => {
+        const results = await search(query, 5);
+        return results[0]?.url === `/docs/components/${slug}`
+          ? null
+          : `${query} -> ${results[0]?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("keeps a plain word on the page that titles it", async () => {
     const expected = [
       ["box", "box"],
@@ -361,6 +407,28 @@ describe("search", { timeout: 120_000 }, () => {
         return first?.type === "page" && first.url.split("#")[0] === url
           ? null
           : `${query} -> ${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * Plan 579: an alternate name is authored metadata, not a ranker rule. The
+   * first summary pass (plan 574) named the subjects' primary words; `datagrid`,
+   * `data grid` and `sidebar` still reached Stack or nothing. The page owns the
+   * subject, so its summary owns the word.
+   */
+  it("reaches a page by the alternate name its summary names (plan 579)", async () => {
+    const expected = [
+      ["datagrid", "/docs/data-display"],
+      ["sidebar", "/docs/workspace"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
       }),
     );
     expect(misses.filter((miss) => miss !== null)).toEqual([]);

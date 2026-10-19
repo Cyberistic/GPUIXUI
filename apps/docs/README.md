@@ -522,6 +522,18 @@ row. `component-aliases.test.ts` rejects a shared term or one that shadows
 another component's title, and `smoke:build` queries two recovered terms
 against the production index.
 
+The table got a second measured pass (plan 579). `typeahead`, `passcode`,
+`wizard`, `pin code`, `segmented control`, `hover card`, `menubar` and
+`scrollview` returned nothing or another component; the same table now answers
+them, with no new mechanism. The page summaries took the same pass: Data
+display's summary names `datagrids`, and Workspace's names `sidebars`, so the two
+alternate names reach the pages that own the subject. `data grid` deliberately
+stays on the Stack page: `Grid` is a real exported layout primitive and plan
+564's token rule promotes it, so the tabular meaning gets its own word
+(`datagrid`).
+The `search.test.ts` plan-579 tables fail by query, and `smoke:build` checks
+`typeahead` and `datagrid` against the production index.
+
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
 navigates and focuses the destination page, an unknown query shows the empty

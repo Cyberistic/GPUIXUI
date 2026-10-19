@@ -214,12 +214,26 @@ const nameRank = (
  * capability row instead of the Dialogs page merely because one of its aliases
  * is `modal`.
  */
+/**
+ * An alias names the query, not the other way round (plan 579). The generic
+ * `matchRank` also matches a word inside a multiword name, so `panel` matched
+ * the alias `side panel` and stole the Workspace subject. An alias therefore
+ * matches only the whole name or a query prefix of it.
+ */
+const aliasMatchRank = (alias: string, query: string): number | undefined => {
+  const name = alias.trim().toLowerCase();
+  const needle = query.trim().toLowerCase();
+  if (needle.length === 0) return undefined;
+  if (name === needle) return 0;
+  return name.startsWith(needle) ? 1 : undefined;
+};
+
 const aliasRank = (
   component: ComponentMetaInput,
   query: string,
 ): number | undefined => {
   const ranks = aliasesFor(component.slug).flatMap((alias) => {
-    const rank = matchRank(alias, query);
+    const rank = aliasMatchRank(alias, query);
     return rank === undefined ? [] : [rank];
   });
   return ranks.length === 0 ? undefined : Math.min(...ranks);
