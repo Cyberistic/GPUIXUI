@@ -3159,6 +3159,22 @@ describe("docs/design-system.md", () => {
     );
   });
 
+  it("names every scrim surface in the contrast audit's explanation", () => {
+    const from = markdown.indexOf("The modal scrim is a surface wash too.");
+    const to = markdown.indexOf("an 80% black veil over black", from);
+    expect(from).toBeGreaterThanOrEqual(0);
+    expect(to).toBeGreaterThan(from);
+    const explanation = markdown.slice(from, to).replace(/\s+/g, " ");
+
+    expect(explanation).toContain(
+      `the ${countWord(overlaySurfaces.length)} surfaces \`overlaySurfaces\` names`,
+    );
+    overlaySurfaces.forEach((surface) => {
+      expect(explanation, surface).toContain(`\`${surface}\``);
+    });
+    expect(explanation).not.toContain("the three resting fills");
+  });
+
   it("states the mark floor beside the fill floor", () => {
     expect(designSystem).toContain(
       "A fill is not automatically a surface. A solid role painted as a bar, " +

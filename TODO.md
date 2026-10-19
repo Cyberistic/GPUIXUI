@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 292/365
+`[x]` `[████████░░]` 293/366
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2455,6 +2455,14 @@ guard reads every enumerating paragraph (dash, not a comma reference),
 normalises its wrap and derives both the count word and the members from
 `elevationContentSurfaces`; no colour, pair, floor, metric or shipped theme
 moves (plan 665)
+`[x]` Name the three status chips in the scrim explanation — the contrast audit
+paragraph enumerated 18 of the 21 surfaces `overlaySurfaces` names while its
+next sentence quoted "the tightest of the twenty-one pairs", and its rationale
+called the missing group "the three resting fills", a phrase that names
+nothing. It now enumerates all twenty-one, names `info`/`success`/`warning` in
+the rationale and derives both the count and the member list from
+`overlaySurfaces` in a new guard; no colour, pair, floor, metric or shipped
+theme moves (plan 666)
 
 ## Phase C — Tier 1–2 components
 

@@ -3845,19 +3845,21 @@ sets while every check returned `[]`; the three values moved and the tightest
 washed pair is **3.177:1** (plan `510`).
 
 The modal scrim is a surface wash too. `overlayWashPairs` composites `overlay`
-over `background`, `card`, `muted`, `input`, `selected`, `popover`, the
-resting filled actions (`primary`, `secondary`, `accent`, `destructive`), the
-raised action a status panel carries (`softAction`), the
-four soft status panels (`infoSoft`, `successSoft`, `warningSoft`,
-`destructiveSoft`), a disabled control (`disabled`), a loading row (`skeleton`)
-and a value groove (`track`), and holds the result to 1.05:1, because a scrim
+over the twenty-one surfaces `overlaySurfaces` names — `background`, `card`,
+`muted`, `input`, `selected`, `popover`, the resting filled actions
+(`primary`, `secondary`, `accent`, `destructive`), the three solid status chips
+a Badge paints (`info`, `success`, `warning`), the raised action a status panel
+carries (`softAction`), the four soft status panels (`infoSoft`, `successSoft`,
+`warningSoft`, `destructiveSoft`), a disabled control (`disabled`), a loading
+row (`skeleton`) and a value groove (`track`) — and holds the result to 1.05:1,
+because a scrim
 that paints its own surface is an invisible modal backdrop. The transient
 pointer washes and the filled families' hover and press steps are excluded — the
 pointer leaves the row to reach the dialog — but `selected` persists, `input` is
 part of the
 layout, the page's actions and the panel's action keep their resting fills, a
-status panel stays on screen and the three resting fills stay painted, so all of
-them are measured (plans `359`, `375`, `395` and `610`). The audit found
+status panel stays on screen and the three solid status chips stay painted, so
+all of them are measured (plans `359`, `375`, `395` and `610`). The audit found
 high-contrast dark's `#000000CC` measured **1.000:1** on the pure black canvas —
 an 80% black veil over black — while every other shipped set cleared the floor.
 The AAA dark theme now veils with light (`#FFFFFF26`): a dialog's separation
