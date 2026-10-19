@@ -413,3 +413,5 @@ Work that this workstream needs but does not own. Another agent owns each row.
 Both are specified in ; each fix starts with a plan under .
 
 - **Docs: platform toggle (macOS / Linux / Windows / Default)** — every component preview switches platform style; the styles are real editable token themes in packages/tokens, not docs-only CSS (see MISSION.md).
+
+- [ ] Tabs: a measured shared indicator on the **native** component (the docs demo now slides; the native side still styles the selected trigger per-trigger).
