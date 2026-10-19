@@ -1162,8 +1162,10 @@ focused id is `live-frames`.
 `[ ]` **packages/docking** (owner: docking): implement the contract plan `184` measured — a recursive layout tree, 48 px edge drop zones from the surface rectangle, right/bottom-secondary and left/top-primary splits, prune/collapse of emptied groups, `key={node.id}` on every split, `Region`/`TabList`/`TabPanel` semantics, and app-owned JSON restore. The playground's `docking-layout` is the acceptance evidence.
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
-`[ ]` **Promote the playground workstream to the integration branch** —
-      **prepared on this branch 2026-10-19:** `agent/playground` merged
+`[~]` **Promote the playground workstream to the integration branch** —
+      **prepared and pushed on this branch 2026-10-19** (`da651b97`, ledger
+      `0d083cef`): an owner/supervisor runs the fast-forward; the workstream
+      itself never pushes to master. **Preparation:** `agent/playground` merged
       `origin/master` (43 commits: the docs site and its Blocks/Theme Editor,
       `@gpuixui/tw`, the zIndex patch and the transform work). The six
       conflicts were resolved here: `apps/playground/src/smoke/run.ts` and its
