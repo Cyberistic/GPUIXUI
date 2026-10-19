@@ -48,7 +48,9 @@ import {
   ariaName,
   ariaNameOr,
   resolvePartStyle,
+  trackedFocusIndex,
   useControlState,
+  useNativeFocusId,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -232,6 +234,14 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
       ? Option.some(0)
       : Option.none(),
   );
+  /**
+   * The runtime's tracked id when it does not dispatch focus events (plan
+   * `590`). Event state wins while it is set; the tracked cell index is what
+   * paints the ring on the release build.
+   */
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(cellIds.current, trackedId);
+  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   const state = useControlState(
     props.value,
     normalizeOtp(props.defaultValue ?? "", limit),
@@ -258,7 +268,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
     focusCell(edit.focus);
   };
   const focus: OTPFieldFocus = {
-    focusedIndex,
+    focusedIndex: mergedFocus,
     onFocus: (index) => setFocusedIndex(Option.some(index)),
     onBlur: (index) =>
       setFocusedIndex((current) =>

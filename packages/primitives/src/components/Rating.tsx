@@ -32,7 +32,9 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   resolvePartStyle,
+  trackedFocusIndex,
   useControlState,
+  useNativeFocusId,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -245,6 +247,9 @@ export const Rating = (props: RatingProps): ReactElement => {
     Option.none(),
   );
   const [preview, setPreview] = useState<Option.Option<number>>(Option.none());
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
+  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
@@ -255,7 +260,7 @@ export const Rating = (props: RatingProps): ReactElement => {
     theme,
     state.value,
     {
-      focusedIndex,
+      focusedIndex: mergedFocus,
       onFocus: (index) => setFocusedIndex(Option.some(index)),
       onBlur: (index) =>
         setFocusedIndex((current) =>

@@ -45,7 +45,9 @@ import {
   hasText,
   optionText,
   resolvePartStyle,
+  trackedFocusIndex,
   useControlState,
+  useNativeFocusId,
   type StateStyle,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
@@ -315,13 +317,16 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
       if (next !== undefined) props.onValueChange?.(next);
     },
   );
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
+  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   return renderRadioGroup(
     props,
     theme,
     selected.value,
     initialActiveIndex(props.options, selected.value.current),
     {
-      focusedIndex,
+      focusedIndex: mergedFocus,
       onFocus: (index) => setFocusedIndex(Option.some(index)),
       onBlur: (index) =>
         setFocusedIndex((current) =>

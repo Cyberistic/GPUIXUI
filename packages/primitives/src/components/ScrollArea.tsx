@@ -156,7 +156,7 @@ export const ScrollArea = (props: ScrollAreaProps): ReactElement => {
   const { renderer } = useGpuix();
   const root = useRef<PublicInstance | null>(null);
   const lastPosition = useRef<ScrollPosition>({ x: 0, y: 0 });
-  const focus = useFocus();
+  const focus = useFocus(false, () => root.current?.id);
 
   /** The runtime's own offset, which is already clamped after a scroll. */
   const reportPosition = (): void => {

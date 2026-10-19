@@ -146,10 +146,11 @@ either — label it first.
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component
-  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
-  control paints no focus ring on a consumer install of 0.10.0; the ring paints
-  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
-  keyboard operation and activation are unaffected.
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
+  paints: `ThemeProvider`'s native-focus tracker samples
+  `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
+  late (plan `590`). Role, name, tab order, keyboard operation and activation
+  are unaffected.
 A labelled area is a named `region` and a focus stop, and paints the focus ring.
 That is the keyboard path for a region whose content is not itself focusable.
 An unlabelled area — including one whose label is blank — has no role and is not

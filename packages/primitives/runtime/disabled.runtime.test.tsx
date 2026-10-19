@@ -38,7 +38,7 @@ import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { isFocusRing, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, settleFocus } from "./fixture.js";
 
 interface ActivationCase {
   readonly name: string;
@@ -388,6 +388,7 @@ it.each(Arr.map(RINGS, (testCase) => [testCase.name, testCase] as const))(
     runtime.render(<Surface>{testCase.node(false)}</Surface>);
     runtime.focusNext();
     runtime.flush();
+    await settleFocus();
     expect(ringCount(runtime)).toBe(1);
     runtime.render(<Surface>{testCase.node(true)}</Surface>);
     runtime.flush();
@@ -410,6 +411,7 @@ it("keeps the ring off a disabled control that still holds focus", async () => {
   );
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   const focused = Option.getOrElse(runtime.focused(), () => "nothing");
   expect(focused).toBe("c-a");
   runtime.render(

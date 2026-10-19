@@ -51,7 +51,9 @@ import {
   mergeStyle,
   optionText,
   resolvePartStyle,
+  trackedFocusIndex,
   useControlState,
+  useNativeFocusId,
   type FocusState,
   type StateStyle,
 } from "./internal.js";
@@ -325,13 +327,16 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
     });
     markFocused(index);
   };
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(itemIds.current, trackedId);
+  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   return renderToggleGroup(
     props,
     theme,
     state.value,
     activeIndex,
     {
-      focusedIndex,
+      focusedIndex: mergedFocus,
       onFocus: markFocused,
       onBlur: (index) =>
         setFocusedIndex((current) =>

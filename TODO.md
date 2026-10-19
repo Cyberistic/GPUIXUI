@@ -1409,6 +1409,20 @@ retired once both branches are one
       / 112 failed**, the same 19 failing files — the new grid case passes and
       the content-sized grid case is fixed; no focus or geometry assertion was
       re-baselined.
+      **Re-run 2026-10-19 after plan `590`:** 50 files, 721 tests, **647 passed
+      / 74 failed**, 15 failing files. The native-focus tracker restored the 19
+      focus-matrix cases and the disabled ring cases on this release-tag build:
+      `focus-ring` is 19/19 and `disabled` is 46/46 in a fresh process, and both
+      leave the failing list. Three files that used to be on it
+      (`state-style`, `disabled`, `focus-ring`) are green; the remaining
+      families are the measured geometry class (fields 31, layouts 3,
+      number-field 5, controls 6, value 2, otp 2, examples 2, theme-axes 1,
+      roving-arrows 1, overflow 1, loading 1) plus the runtime-internal
+      focus-open behaviour of the headless tooltip (overlay-trigger 8,
+      info-tip 1). Activation's 8 and the host's window-accumulation
+      degradation (plan `379` §6) are unchanged — a full run can still fail a
+      couple of `focus-ring` cases after many windows, which is why the matrix
+      is run scoped for proof.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1587,6 +1601,17 @@ retired once both branches are one
       mutation directions (removed notice, reverted verdict, a new ring
       promise, the old artifact excuse). The polling tracker is designed and
       deferred with its cost recorded (plan `583` §7; offline 745 → 750).
+`[x]` `packages/primitives`: **the ring is restored on the release runtime** —
+      plan `583` deferred the only workaround (a poll of
+      `getFocusedElementId()`); plan `590` lands it. `ThemeProvider` mounts
+      `NativeFocusProvider`, which samples the focused host id every 50 ms and
+      publishes it; every focusable control compares it with the id of its
+      focus host, so all 19 focus-matrix cases and the disabled ring cases pass
+      on the release-tag build after `settleFocus`. The event path stays
+      primary. Cost: ≤20 renderer queries/s and ≤50 ms ring latency, recorded
+      in `COMPONENTS.md`; a runtime-internal focus behaviour (the headless
+      tooltip's open-on-focus) still cannot follow. Both directions proven
+      (provider removed → 19 failures; one control unwired → its case only).
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

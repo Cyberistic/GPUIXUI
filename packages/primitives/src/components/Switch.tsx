@@ -106,6 +106,7 @@ export const renderSwitch = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
+      ref={focus.ref}
       role="switch"
       aria-label={ariaName(props.label)}
       aria-description={ariaName(props["aria-description"])}

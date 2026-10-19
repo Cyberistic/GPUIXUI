@@ -31,15 +31,16 @@ GPUix's current source, not necessarily what a consumer installs. Plan `529`
 records the measured deltas.
 The artifact in the shared store is now the **release-tag** build (plan `529`;
 `strings` reports `focusVisible=0`). It delivers **no `onFocus`/`onBlur`**
-(measured, plan `583`), so the focus rings in the Tier 1 rows below are **not**
-evidence for a 0.10.0 consumer: on the release runtime a control paints no ring,
-while role, name, tab order, keys and activation still work. Every focusable
-page states that limitation, and `src/docs-focus-events.test.ts` guards the
-claim.
+(measured, plan `583`). Since plan `590`, `ThemeProvider` mounts a native-focus
+tracker that samples `getFocusedElementId()` every 50 ms, so the focus rings
+still paint on the release runtime (up to one tick late) and the focus matrix
+passes there after `settleFocus`. What the tracker cannot restore is a
+runtime-internal focus behaviour: the headless `Tooltip`'s open-on-focus still
+depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build (plan `583`):
-the 19 focus rings and the 2 px box-model deltas fail there, while the
-main-derived build passes. Reproduce it with:
+the focus rings are green after plan `590`; the 2 px box-model deltas still
+fail. Reproduce it with:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js
@@ -97,7 +98,7 @@ README/types document it, but no run has confirmed it here).
 | Theme extension | done | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. The gallery mounts through `ThemeProvider` and the switch re-renders the subtree natively. |
 | High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; `theme-color-roles` asserts all 47 roles in high contrast and that its colour set differs from dark and light. Docs in `docs/tokens.md`. **Runtime (055):** Tier 1 paints only the high-contrast palette in both modes, and a switch from high-contrast light to dark repaints the mounted tree. |
 | Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. The soft roles are covered by `theme-color-roles`. |
-| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the renderer, and `focus-traversal` asserts the events on the main-derived build. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. **Release-runtime caveat (583):** the published 0.10.0 build never dispatches `onFocus`/`onBlur`, so the ring cannot paint on a consumer install; every focusable page states it and `docs/gpuix-capabilities.md` §4 has the probe. |
+| Focus state | done | yes (a zero-blur spread `boxShadow`) | `focusRing(theme)` returns `{ boxShadow }` with zero offset, zero blur and `spreadRadius = borderWidth.strong`; `theme-type-and-shadow` asserts that ring reaches the renderer, and `focus-traversal` asserts the events on the main-derived build. GPUix 0.10.0 has no `outline*` and no `focusVisible`, so a mouse press shows the ring. Docs in `docs/tokens.md`. **Release-runtime caveat (583, 590):** the published 0.10.0 build never dispatches `onFocus`/`onBlur`; `ThemeProvider`'s native-focus tracker samples `getFocusedElementId()` every 50 ms (at most 20 queries/s, up to 50 ms latency), so the ring paints on a consumer install and the 19-case matrix passes there. A runtime-internal focus behaviour (the headless tooltip's open-on-focus) still cannot follow; `docs/gpuix-capabilities.md` §4 has the probe. |
 | Density, type and spacing scales | done | yes | Pure values with no runtime dependency; consumed by primitives/components as they land, and by the playground shell. **Runtime (055):** a control's painted height follows the active density preset, colours stay the theme's, and selection boxes remain icon-sized. **Conformance exception (370, 372):** the whole field family (`Input`, `TextArea`, `Select`'s trigger, `NumberField`, `OTPField`) reads shadcn's new-york-v4 field recipe through `@gpuixui/tw` (36 px, one size) and `Button` reads the button table (32/36/40), so those do not follow density; the presets and every other control do. The runtime density proof therefore uses `Toggle`. |
 | Platform type styles | done | yes (values in a `Theme`) | `platformTypes` + `currentPlatform` + `systemMonoFamily` + `platformTheme(base, platform)`; the docs platform toggle renders a real theme, not a docs-only style sheet. 12 guard tests; `theme-type-and-shadow` proves the resolved family and size reach the renderer. **Runtime (055):** a code role's `fontFamily` changes with `platformTheme`, and switching platform repaints the mounted tree. Native visual check of the sans sentinel is still pending the playground (B1). |
 | Native theme gallery | done | yes | `apps/playground` — palette switch in the shell, 47 labelled swatches, every type role, the focus ring and an elevation shadow; `theme-color-roles`, `theme-type-and-shadow` (plan `150`). |
@@ -191,11 +192,13 @@ carries an evidenced limitation. The capability evidence lives in
 **Why every row below is `wip`:** each one has code, a behaviour test, a mounted
 example, a docs page (in-package and on the docs site) and a measured runtime
 interaction — the `done` bar above. The status stays `wip` because the suite has
-now been run on the **release-tag** build (plan `583`) and two measured runtime
-facts fail there: the build delivers no focus events, so no ring paints, and its
-box model is 2 px smaller than the main-derived one (plan `529` §6.5). Flipping
-the rows to `done` before a consumer-installable build passes would turn those
-runtime gaps into a completion claim.
+now been run on the **release-tag** build (plan `583`) and one measured runtime
+fact still fails there: its box model is 2 px smaller than the main-derived one
+(plan `529` §6.5), so the absolute-geometry assertions are short. The focus
+rings are green there since plan `590` restored them through
+`getFocusedElementId()`. Flipping the rows to `done` before a
+consumer-installable build passes would turn the remaining geometry gap into a
+completion claim.
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
@@ -238,11 +241,15 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**700 tests
-in 46 files at plan `574` — 589 passed / 111 failed on the store's release-tag
-build: the missing focus events (plan `583`, 19/19 in `focus-ring`) and the 2 px
-published box model (plan `529` §6.5); the new late-value matrix passes 12/12,
-and the 657 in 41 files
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**after plan
+`590`: 50 files / 721 tests — 647 passed / 74 failed on the store's
+release-tag build**). The native-focus tracker restored the 19 focus-matrix
+cases and the disabled ring cases (both files are green in a fresh process);
+the remaining failures are the 2 px published box model (plan `529` §6.5), the
+runtime-internal tooltip open-on-focus, and the host's window-accumulation
+degradation in a full run (plan `379` §6). Earlier measurements: 700 tests in
+46 files at plan `574` — 589 passed / 111 failed; the new late-value matrix
+passes 12/12, and the 657 in 41 files
 below is plan `391`'s measurement; the leading 640 in 36
 files is plan `383`'s measurement of the then-current tree: the new
 text-overflow file passed 3/3; 637 in 35 files at plan `382` — the new spacer file passed 4/4, and the 633 below are
@@ -274,7 +281,11 @@ Slider, RangeSlider, InfoTip and ScrollArea — to one invariant: focusing it
 paints **exactly one** `focusRing`, of the exact value, inside the control. 18
 cases (the icon button joins in plan `375`); the matrix fails when a control paints none (plan 083's bug) or two. A
 separate case proves an attached `ButtonGroup`'s button carries the same ring
-inside its clip, as an inset overlay (plan `344`).
+inside its clip, as an inset overlay (plan `344`). Since plan `590` the matrix
+also runs on the release-tag build: the native-focus tracker publishes the
+focused host id, `settleFocus` waits one 50 ms sample, and all 19 cases pass
+there. Removing the provider fails all 19 by name; dropping one control's wiring
+fails that case only.
 
 **Tab-order matrix (089):** `runtime/tab-order.runtime.test.tsx` holds the
 sixteen controls that take a `disabled` prop to the other keyboard invariant:

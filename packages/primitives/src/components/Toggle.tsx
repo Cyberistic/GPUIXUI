@@ -117,6 +117,7 @@ export const renderToggle = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
+      ref={focus.ref}
       role="button"
       aria-label={Option.getOrUndefined(
         controlName(props.label, props.children),

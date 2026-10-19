@@ -17,7 +17,7 @@ import { Button } from "../src/components/Button.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
 import { Stack } from "../src/components/Stack.js";
 import { a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, testTheme, settleFocus } from "./fixture.js";
 
 const channels = [
   { value: "email", label: "Email", description: "A digest." },
@@ -176,6 +176,7 @@ it("paints the error border on the empty boxes and the ring on the focused one",
   );
   runtime.keyDown("cg-push", "enter");
   runtime.flush();
+  await settleFocus();
   expect(focused(runtime)).toBe("cg-push");
   expect(boxStyle(runtime, "cg-push").boxShadow).toBeDefined();
 });

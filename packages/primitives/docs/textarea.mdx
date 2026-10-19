@@ -62,10 +62,11 @@ mean.
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component
-  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
-  control paints no focus ring on a consumer install of 0.10.0; the ring paints
-  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
-  keyboard operation and activation are unaffected.
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
+  paints: `ThemeProvider`'s native-focus tracker samples
+  `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
+  late (plan `590`). Role, name, tab order, keyboard operation and activation
+  are unaffected.
 - The native element is announced as `MultilineTextInput` (measured: the
   accessibility dump prints `MultilineTextInput:"Notes"`), not the single-line
   `TextInput` that `Input` reports.

@@ -16,7 +16,7 @@ import { Rating } from "../src/components/Rating.js";
 import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, testTheme, settleFocus } from "./fixture.js";
 
 const byLabel = (runtime: Runtime, label: string) =>
   Option.getOrElse(
@@ -230,6 +230,7 @@ it("rings the star that holds focus", async () => {
   );
   runtime.clickElement(byLabel(runtime, "3 of 5"));
   runtime.flush();
+  await settleFocus();
   const ringed = (label: string): boolean =>
     Option.isSome(
       Option.fromNullishOr(byLabel(runtime, label).style["boxShadow"]),

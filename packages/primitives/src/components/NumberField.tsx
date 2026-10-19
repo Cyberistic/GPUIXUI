@@ -253,9 +253,12 @@ export const renderNumberField = (
 export const NumberField = (props: NumberFieldProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const focus = useFocus(props.autoFocus === true && props.disabled !== true);
-  const range = numberRange(props);
   const inputId = useRef<number | null>(null);
+  const focus = useFocus(
+    props.autoFocus === true && props.disabled !== true,
+    () => inputId.current ?? undefined,
+  );
+  const range = numberRange(props);
   const [draft, setDraft] = useState<Option.Option<NumberDraft>>(Option.none());
   const [touched, setTouched] = useState(
     props.value !== undefined || props.defaultValue !== undefined,

@@ -3,12 +3,15 @@
  *
  * The bug this guards (plan `583`): on the published 0.10.0 build native focus
  * moves and `getFocusedElementId()` tracks it, but no `onFocus`/`onBlur` is
- * delivered, so every focus ring — painted from that event — is absent for a
- * consumer. The capability table first called focus events "supported", the
+ * delivered. The capability table first called focus events "supported", the
  * README blamed a main-derived artifact, and no page told a reader. A doc that
  * overstates the runtime authorises a component that cannot work, so the
  * verdict, the notice on every focusable page and the README's provenance are
  * asserted here; reverting any of them fails by name.
+ *
+ * Plan `590` then restored the rings through a tracker, so a page must say both
+ * things: the events are still missing, and the ring paints through
+ * `getFocusedElementId()`.
  */
 
 import { Effect, FileSystem, Option, Path, pipe } from "effect";
@@ -126,6 +129,23 @@ describe("release-runtime focus events", () => {
     expect(Arr.getSomes(missing)).toStrictEqual([]);
   });
 
+  it("states the tracker that restores the ring on every focusable page", async () => {
+    const missing = await Effect.runPromise(
+      Effect.forEach(
+        FOCUSABLE_PAGES,
+        (name) =>
+          Effect.map(readPage(name), (page) =>
+            Str.includes("native-focus tracker")(page) &&
+            Str.includes("590")(page)
+              ? Option.none()
+              : Option.some(`${name}.mdx`),
+          ),
+        { concurrency: 1 },
+      ),
+    );
+    expect(Arr.getSomes(missing)).toStrictEqual([]);
+  });
+
   it("lets no page promise a focus ring without the notice", async () => {
     // Plan 583's regression direction: a new page (or a restored paragraph)
     // that says the ring paints would be false for a 0.10.0 consumer.
@@ -169,6 +189,8 @@ describe("release-runtime focus events", () => {
     expect(readme).toContain("583-release-runtime-focus.md");
     expect(readme).toContain("release-tag");
     expect(readme).toContain("focusVisible=0");
+    expect(readme).toContain("native-focus tracker");
+    expect(readme).toContain("590");
     expect(Str.includes("locally built `main`-derived binding")(readme)).toBe(
       false,
     );

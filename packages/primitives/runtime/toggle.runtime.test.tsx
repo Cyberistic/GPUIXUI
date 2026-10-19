@@ -14,7 +14,7 @@ import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, testTheme, settleFocus } from "./fixture.js";
 
 const announced = (runtime: Runtime, label: string): string =>
   Option.getOrElse(a11yValueOf(runtime.a11y(), { label }), () =>
@@ -116,8 +116,10 @@ it("rings the toggle while it holds focus and clears it when focus leaves", asyn
     );
   runtime.click("t");
   runtime.flush();
+  await settleFocus();
   expect(ringed()).toBe(true);
   runtime.click("b");
   runtime.flush();
+  await settleFocus();
   expect(ringed()).toBe(false);
 });

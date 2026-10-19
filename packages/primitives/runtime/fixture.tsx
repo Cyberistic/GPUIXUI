@@ -57,3 +57,15 @@ export const openWindow = (
 /** A real timer, for the one thing GPUI's clock cannot advance: a JS interval. */
 export const sleep = (milliseconds: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+/**
+ * Wait for the native-focus tracker's next sample.
+ *
+ * The tracker is a JS interval (`NativeFocusProvider`), not a GPUI timer, so
+ * `advance` cannot move it. One poll interval plus a margin is enough for React
+ * to re-render with the focused host id (plan `590`).
+ */
+export const FOCUS_SETTLE_MS = 70;
+
+/** Wait long enough for the tracker to see a focus change and repaint. */
+export const settleFocus = (): Promise<void> => sleep(FOCUS_SETTLE_MS);

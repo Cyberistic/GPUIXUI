@@ -180,10 +180,11 @@ dismisses it. A click dismisses it.
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component
-  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so the
-  trigger's focus ring does not paint on a consumer install of 0.10.0; it
-  paints on a runtime that dispatches focus (GPUix `main`). Role, name, tab
-  order, keyboard operation and activation are unaffected.
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The trigger's
+  ring still paints: `ThemeProvider`'s native-focus tracker samples
+  `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
+  late (plan `590`). Role, name, tab order, keyboard operation and activation
+  are unaffected.
 - **A string tip is the trigger's description.** GPUix 0.10.0 has no
   `aria-describedby`, but it exposes `aria-description`; the wrapper writes the
   string content there, so a screen reader announces the explanation when the

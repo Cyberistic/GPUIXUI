@@ -8,13 +8,20 @@
  * colour (plan 020 §1.2, plan 329).
  */
 
-import { Children, useEffect, useState, type ReactNode } from "react";
+import {
+  Children,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import type { Props, StyleDesc } from "@gpuix/react";
+import type { Props, PublicInstance, StyleDesc } from "@gpuix/react";
 import { resolveStyle, type StateStyle } from "@gpuix/react/floating";
 import {
   initValueState,
@@ -24,6 +31,7 @@ import {
 } from "../core/state.js";
 import { usableText } from "../core/text.js";
 import type { Density, PrimitiveTheme } from "../core/theme.js";
+import { isTrackedFocus, useNativeFocusId } from "./native-focus.js";
 
 /** The caller's style wins, property by property. */
 export const mergeStyle = (
@@ -109,6 +117,8 @@ export const resolvePartStyle = <State>(
   style: StateStyle<State> | undefined,
   state: State,
 ): StyleDesc => mergeStyle(base, resolveStyle(style, state));
+
+export { isTrackedFocus, useNativeFocusId } from "./native-focus.js";
 
 /**
  * The accessible name a text-only child list gives a control.
@@ -216,29 +226,75 @@ export const withDensity = (
  * Whether a control holds focus, and the handlers that track it.
  *
  * The runtime has no `focusVisible` state (plan 020 §1.2), so a focus ring has
- * to be drawn by the component; this is where it learns it should be. React-local
- * render state with no other reader, so a hook — not a shared Atom — is right.
+ * to be drawn by the component; this is where it learns it should be. The
+ * event state is local render state with no other reader, so a hook — not a
+ * shared Atom — is right; the `ref` is the second source plan `590` added.
+ */
+export interface FocusState {
+  readonly focused: boolean;
+  readonly onFocus: () => void;
+  readonly onBlur: () => void;
+  /**
+   * Attach to the element that takes native focus, so the provider's tracked
+   * id can be compared with it. Absent on an element-tree render.
+   */
+  readonly ref?: (instance: PublicInstance | null) => void;
+}
+
+/**
+ * Track native focus, so a control that owns its chrome can paint the ring.
+ *
+ * The event path is primary and immediate on a runtime that dispatches focus.
+ * On the pinned 0.10.0 release build no `onFocus`/`onBlur` is delivered, so the
+ * ring would never paint (plan `583`); `NativeFocusProvider` polls
+ * `getFocusedElementId()` and this hook also compares that id with the element
+ * the returned `ref` saw (plan `590`). `ownId` lets a control use an id it
+ * already keeps (a trigger, a track, a text host) instead of the internal ref.
  *
  * `initiallyFocused` exists for one runtime fact: `autoFocus` takes native focus
  * **without dispatching `onFocus`** (plan 041 §9), so a field that mounts
  * focused would otherwise paint no ring until the next focus change. A field
  * passes its `autoFocus` prop; `onBlur` still clears the state normally.
  */
-export interface FocusState {
-  readonly focused: boolean;
-  readonly onFocus: () => void;
-  readonly onBlur: () => void;
-}
-
-/** Track native focus, so a control that owns its chrome can paint the ring. */
-export const useFocus = (initiallyFocused = false): FocusState => {
-  const [focused, setFocused] = useState(initiallyFocused);
+export const useFocus = (
+  initiallyFocused = false,
+  ownId?: () => number | undefined,
+): FocusState => {
+  const [eventFocused, setEventFocused] = useState(initiallyFocused);
+  const own = useRef<number | null>(null);
+  const tracked = useNativeFocusId();
+  const ref = useCallback((instance: PublicInstance | null) => {
+    own.current = instance?.id ?? null;
+  }, []);
+  const hostId = ownId?.() ?? own.current ?? undefined;
   return {
-    focused,
-    onFocus: () => setFocused(true),
-    onBlur: () => setFocused(false),
+    focused: eventFocused || isTrackedFocus(tracked, hostId),
+    onFocus: () => setEventFocused(true),
+    onBlur: () => setEventFocused(false),
+    ref,
   };
 };
+
+/**
+ * The index of the element whose host id is the runtime's focused id.
+ *
+ * The roving composites keep their item ids in a ref map for
+ * `renderer.focusElement`. The tracked id turns that map back into the index
+ * the ring paints from, so a focus change the runtime never reports still moves
+ * the paint (plan `590`).
+ */
+export const trackedFocusIndex = (
+  ids: ReadonlyMap<number, number>,
+  tracked: Option.Option<number> | undefined,
+): Option.Option<number> =>
+  tracked === undefined
+    ? Option.none()
+    : Option.flatMap(tracked, (trackedId) =>
+        Option.map(
+          Arr.findFirst(Arr.fromIterable(ids), ([, id]) => id === trackedId),
+          ([index]) => index,
+        ),
+      );
 
 /** A control's controlled/uncontrolled value, and the setter that respects it. */
 export interface ControlState<Value> {

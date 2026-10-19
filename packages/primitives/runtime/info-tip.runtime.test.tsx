@@ -13,7 +13,7 @@ import { focusRing } from "@gpuixui/tokens";
 import { InfoTip } from "../src/components/InfoTip.js";
 import { FLOATING_MARGIN } from "../src/core/floating.js";
 import { a11yNode, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
 
 const CONTENT = "Booked revenue, net of refunds.";
 
@@ -108,14 +108,15 @@ it("paints a focus ring on the trigger", async () => {
   );
   expect(before).toStrictEqual(Option.none());
   runtime.focusNext();
+  await settleFocus();
   const after = Option.flatMap(runtime.element("trigger"), (element) =>
     Option.fromNullishOr(element.style.boxShadow),
   );
-  // The runtime reports the ring with an explicit `inset: false`, so the
-  // authored value is compared field for field plus that normalisation.
-  expect(Option.getOrUndefined(after)).toStrictEqual({
+  // `inset` is the renderer's normalisation, not part of the authored ring:
+  // the release build reports the five authored fields (plan `590`).
+  expect({ ...Option.getOrUndefined(after), inset: undefined }).toStrictEqual({
     ...focusRing(testTheme).boxShadow,
-    inset: false,
+    inset: undefined,
   });
 });
 

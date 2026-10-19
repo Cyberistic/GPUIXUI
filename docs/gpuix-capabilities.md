@@ -136,7 +136,7 @@ verdict, the evidence, and the honest workaround.
 | Animation interruption | **supported** | a target change resumes from the current visible value | — |
 | Reduced-motion detection | **unverified** | no documented API or type in 0.10.0 | expose an app-owned preference prop |
 | Custom paint (`<canvas>`) | **unverified** | the element is in `ElementType`, but the README marks custom drawing "planned" and no drawing API is published | `<svg>` for static shapes; `setImagePixels` for frames |
-| Pointer, keyboard, focus and scroll events | **partial** | `host.d.ts` · `HostProps` declares `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange`. **Focus events are not delivered:** measured on 0.10.0, native focus moves and `getFocusedElementId()` tracks it, but `onFocus`/`onBlur` never run (see [Focus events](#focus-events)) | drive focus from the renderer (`focusElement`, `focusNext`, `getFocusedElementId`); a focus **ring** cannot follow — document it per control and paint the ring on a runtime that dispatches the events |
+| Pointer, keyboard, focus and scroll events | **partial** | `host.d.ts` · `HostProps` declares `onClick`, `onAuxClick`, `onMouseDown/Up/Move/Enter/Leave`, `onMouseDownOutside`, `onKeyDown/Up`, `onFocus`, `onBlur`, `onScroll`, `onFileDrop`, `onChange`, `onSubmit`, `onVisibleRange`. **Focus events are not delivered:** measured on 0.10.0, native focus moves and `getFocusedElementId()` tracks it, but `onFocus`/`onBlur` never run (see [Focus events](#focus-events)) | drive focus from the renderer (`focusElement`, `focusNext`, `getFocusedElementId`); this package's `NativeFocusProvider` samples the id so focus **rings** still paint (plan `590`) — a runtime-internal focus behaviour, such as the headless tooltip's open-on-focus, still cannot follow |
 | Scroll offset and layout reporting (`onScrollChange`, `onLayout`) | **not supported** | no `onScrollChange` and no `onLayout` in the 0.10.0 `HostProps` (main-only; §6) | read `renderer.getScrollOffset(elementId)` — it is already the post-scroll, clamped offset inside the `onScroll` handler (measured, plan `337`); measure with `getElementBounds` |
 | `role` plus a subset of `aria-*` | **partial** | `host.d.ts` · `role`, `aria-label`, `aria-description`, `aria-id`, `aria-expanded`, `aria-selected`, `aria-valuetext`, `aria-level`. **No** `aria-checked`, `aria-valuenow`, `aria-valuemin`/`max`, `aria-disabled`, `aria-labelledby`, `aria-describedby`, `aria-invalid` | carry state in `aria-valuetext`/`aria-selected`; describe with `aria-description`; put a label inside one interactive element |
 | System appearance or high-contrast detection | **unverified** | `GpuixTheme.appearance` is set by the app; no OS preference API in 0.10.0 | the app owns the theme choice |
@@ -193,15 +193,21 @@ Only the **events** are missing. Consequences:
 
 - a component can **move** focus (`renderer.focusElement`, `focusNext`) and can
   **read** the focused id, but cannot be notified when focus arrives or leaves;
-- every Tier 1 focus ring is paint-while-focused, so it is absent on a 0.10.0
-  consumer install. The same 19-case focus matrix passes on the main-derived
-  binding, so this is a runtime defect, not a component one;
+- every Tier 1 focus ring is paint-while-focused, so without a workaround it is
+  absent on a 0.10.0 consumer install. The same 19-case focus matrix passes on
+  the main-derived binding, so this is a runtime defect, not a component one;
 - keyboard operation is unaffected: Tab order, key delivery, activation and the
   accessible name all work. The missing cue is the visible ring;
-- a polling tracker is the only workaround (read `getFocusedElementId` on a
-  timer). It costs a cross-thread query per tick and up to one tick of latency,
-  so the package documents the limitation instead; the design and the decision
-  are in plan `583` §7.
+- **the ring is restored by a tracker** (plan `590`):
+  `NativeFocusProvider` (mounted by `ThemeProvider`) samples
+  `getFocusedElementId()` every 50 ms and publishes the focused host id; each
+  control compares it with the id of the element that holds focus. The event
+  state stays the primary path and is immediate on a runtime that dispatches
+  events. Cost: at most 20 renderer queries per second per window and up to
+  50 ms of ring latency. It cannot restore a runtime-internal focus behaviour
+  (the headless `Tooltip`'s open-on-focus still depends on the missing events).
+  The measurement and the deferred design are in plan `583`; the tracker is
+  plan `590`.
 
 ### Animation and motion
 

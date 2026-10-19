@@ -67,6 +67,7 @@ export const renderInfoTip = (
       aria-label={ariaNameOr(label, "More information")}
       tabIndex={0}
       testId={testId}
+      ref={focus.ref}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
       style={mergeStyle(

@@ -189,7 +189,7 @@ a value, and must report it through the accessibility tree (plan `574`).
 
 | Capability | GPUix 0.10.0 | Here |
 | ---------- | ------------ | ---- |
-| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332). An **attached `ButtonGroup`** clips at its buttons' edge, so a button in one paints the same ring as an inset overlay on its own edge instead (plan 344). **The published 0.10.0 runtime delivers no `onFocus`/`onBlur`**, so the ring is absent on a consumer install of the pinned release; it paints on GPUix `main`. The probe and the decision are in [`docs/gpuix-capabilities.md`](../../docs/gpuix-capabilities.md#focus-events) and plan `583` |
+| `focusVisible` / `outline*` | absent | the component tracks focus and merges a zero-offset, zero-blur shadow ring (`controlFocusStyle`); a mouse press shows the ring too, and a **disabled** control paints none — native focus outlives a `disabled` prop change, so an inert control must not advertise the caret (plan 332). An **attached `ButtonGroup`** clips at its buttons' edge, so a button in one paints the same ring as an inset overlay on its own edge instead (plan 344). **The published 0.10.0 runtime delivers no `onFocus`/`onBlur`**, so `ThemeProvider` mounts a native-focus tracker that samples `getFocusedElementId()` every 50 ms and publishes the focused host id; the ring still paints, up to one tick late (plan `590`). The events themselves stay missing: a runtime-internal focus behaviour such as the headless tooltip's open-on-focus does not follow. The probe and the decision are in [`docs/gpuix-capabilities.md`](../../docs/gpuix-capabilities.md#focus-events), plans `583` and `590` |
 | `aria-checked` | absent | checkbox/radio/switch report state through `aria-valuetext` |
 | `aria-valuenow` | absent | `Progress` reports `aria-valuetext` (`"42%"`, or `"loading"`); `Slider`/`RangeSlider`/`Meter` report the value text only — the range is not announced |
 | pointer capture | present: GPUI captures the pressed element automatically | a slider drag keeps tracking after the pointer leaves the track and clamps at the ends; it begins on the primary button only (a right/middle click is refused), and click/keyboard remain the precise paths |
@@ -232,7 +232,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**56 test files**, all passing, including a package-wide guard that a caller's
+**57 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -260,10 +260,14 @@ The failures are measured runtime facts, not an
 artifact guess: the store artifact is the **release-tag** build (plan `529`;
 `strings` reports `focusVisible=0`), it delivers **no focus events** (plan
 `583`), and its `getElementBounds` reports the published box model (plan `529`
-§6.5). The focus-ring cases therefore paint no ring and the absolute-geometry
-cases are short by the box's padding/border. No assertion has been
-re-baselined on this build; the ring's limitation is documented on every
-focusable page (plan [`583-release-runtime-focus.md`](../../.agents/slop/plans/583-release-runtime-focus.md)). The contracts it covers include a theme switch on a mounted tree,
+§6.5). The focus rings are restored by the native-focus tracker (plan `590`),
+so the focus matrix passes on this build after `settleFocus`; the
+absolute-geometry cases are still short by the box's padding/border. No
+assertion has been re-baselined on this build, and the remaining limitation is
+documented on every focusable page (plan
+[`583-release-runtime-focus.md`](../../.agents/slop/plans/583-release-runtime-focus.md)).
+
+The contracts it covers include a theme switch on a mounted tree,
 using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override

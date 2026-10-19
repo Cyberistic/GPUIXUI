@@ -129,6 +129,7 @@ export const renderCheckbox = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
+      ref={focus.ref}
       role="checkbox"
       aria-label={ariaName(props.label)}
       aria-description={ariaName(props["aria-description"])}

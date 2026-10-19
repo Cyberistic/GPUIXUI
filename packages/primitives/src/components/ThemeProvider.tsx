@@ -8,7 +8,11 @@
  *
  * `@gpuixui/components` reads `@gpuixui/tokens/react`'s separate context, so an
  * app composing both packages mounts both providers with the same theme — see
- * "Composing with `@gpuixui/components`" in this package's README.
+ * "Composing with `@gpuixui/components`" in this package's README. The provider
+ * also mounts the native-focus tracker (`native-focus.tsx`): the pinned runtime
+ * moves focus without dispatching the events a ring is painted from (plan
+ * `583`), so every primitive under one provider samples the renderer instead
+ * (plan `590`).
  */
 
 import {
@@ -19,6 +23,7 @@ import {
 } from "react";
 import type { Density, PrimitiveTheme } from "../core/index.js";
 import { withDensity } from "./internal.js";
+import { NativeFocusProvider } from "./native-focus.js";
 
 const ThemeContext = createContext<PrimitiveTheme | null>(null);
 
@@ -58,7 +63,7 @@ export const ThemeProvider = ({
   children,
 }: ThemeProviderProps): ReactElement => (
   <ThemeContext.Provider value={withDensity(theme, density)}>
-    {children}
+    <NativeFocusProvider>{children}</NativeFocusProvider>
   </ThemeContext.Provider>
 );
 

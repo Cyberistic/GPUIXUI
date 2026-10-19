@@ -675,7 +675,7 @@ export const Select = (props: SelectProps): ReactElement => {
   const trigger = useRef<number | null>(null);
   const content = useRef<number | null>(null);
   const items = useRef<Map<string, number>>(new Map());
-  const focus = useFocus();
+  const focus = useFocus(false, () => trigger.current ?? undefined);
   const openState = useControlState(
     props.open,
     props.defaultOpen ?? false,

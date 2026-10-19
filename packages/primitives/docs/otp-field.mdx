@@ -94,10 +94,11 @@ and does not delete a second character.
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
   delivers no `onFocus`/`onBlur` to a component
-  ([measured](../../../docs/gpuix-capabilities.md#focus-events)), so this
-  control paints no focus ring on a consumer install of 0.10.0; the ring paints
-  on a runtime that dispatches focus (GPUix `main`). Role, name, tab order,
-  keyboard operation and activation are unaffected.
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
+  paints: `ThemeProvider`'s native-focus tracker samples
+  `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
+  late (plan `590`). Role, name, tab order, keyboard operation and activation
+  are unaffected.
 - The field is a named `Group` and each cell is a named `TextInput`
   ("Verification code digit 1" …). A screen reader can read every cell and the
   group's name.

@@ -18,8 +18,8 @@
  * do not move between checkboxes and are deliberately not handled.
  */
 
-import { useState, type ReactElement } from "react";
-import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { useRef, useState, type ReactElement } from "react";
+import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -48,8 +48,10 @@ import {
   hasText,
   optionText,
   resolvePartStyle,
+  trackedFocusIndex,
   usableLabel,
   useControlState,
+  useNativeFocusId,
   type StateStyle,
 } from "./internal.js";
 import { Text } from "./Text.js";
@@ -121,6 +123,10 @@ export interface CheckboxGroupFocus {
 export interface CheckboxGroupHandlers {
   readonly onToggle: (value: string) => void;
   readonly onToggleAll: () => void;
+  /** The row's host instance, so the native-focus tracker can identify it. */
+  readonly registerRow?: (
+    index: number,
+  ) => (instance: PublicInstance | null) => void;
 }
 
 interface RowSpec {
@@ -138,6 +144,8 @@ interface RowSpec {
   readonly focus: CheckboxGroupFocus;
   readonly index: number;
   readonly style?: StateStyle<CheckboxRowState>;
+  /** The row's host instance, for the native-focus tracker. */
+  readonly registerRow?: (instance: PublicInstance | null) => void;
 }
 
 const rowTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
@@ -163,6 +171,7 @@ const renderRow = (
     focus,
     index,
     style,
+    registerRow,
   }: RowSpec,
   theme: PrimitiveTheme,
   key: string,
@@ -196,6 +205,7 @@ const renderRow = (
   return (
     <div
       key={key}
+      ref={registerRow}
       role="checkbox"
       aria-label={ariaName(label)}
       aria-description={ariaName(description)}
@@ -294,6 +304,7 @@ export const renderCheckboxGroup = (
             focus,
             index: 0,
             style: props.rowStyle,
+            registerRow: handlers.registerRow?.(0),
           },
           theme,
           "-all",
@@ -323,6 +334,7 @@ export const renderCheckboxGroup = (
         focus,
         index,
         style: props.rowStyle,
+        registerRow: handlers.registerRow?.(index),
       },
       theme,
       option.value,
@@ -358,6 +370,7 @@ export const renderCheckboxGroup = (
 /** Several checkboxes that make up one selection. */
 export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
   const theme = useTheme();
+  const rowIds = useRef<Map<number, number>>(new Map());
   const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
     Option.none(),
   );
@@ -366,12 +379,15 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
     props.defaultValue ?? [],
     props.onValueChange,
   );
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(rowIds.current, trackedId);
+  const mergedFocus = Option.isSome(focusedIndex) ? focusedIndex : trackedIndex;
   return renderCheckboxGroup(
     props,
     theme,
     state.value,
     {
-      focusedIndex,
+      focusedIndex: mergedFocus,
       onFocus: (index) => setFocusedIndex(Option.some(index)),
       onBlur: (index) =>
         setFocusedIndex((current) =>
@@ -383,6 +399,10 @@ export const CheckboxGroup = (props: CheckboxGroupProps): ReactElement => {
         state.set(toggleGroupValue(state.value.current, value)),
       onToggleAll: () =>
         state.set(toggleGroupAll(state.value.current, props.options)),
+      registerRow: (index) => (instance) => {
+        if (instance === null) rowIds.current.delete(index);
+        else rowIds.current.set(index, instance.id);
+      },
     },
   );
 };

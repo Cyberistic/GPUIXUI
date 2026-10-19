@@ -57,8 +57,10 @@ import {
   ariaName,
   composeHandler,
   resolvePartStyle,
+  trackedFocusIndex,
   useControlState,
   useFocus,
+  useNativeFocusId,
   usableLabel,
   type FocusState,
   type StateStyle,
@@ -391,9 +393,9 @@ const pointerOf = (
 export const Slider = (props: SliderProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
-  const focus = useFocus();
-  const range = sliderRange(props);
   const trackId = useRef<number | null>(null);
+  const focus = useFocus(false, () => trackId.current ?? undefined);
+  const range = sliderRange(props);
   const dragging = useRef(false);
   const state = useControlState(
     props.value,
@@ -464,12 +466,23 @@ export const RangeSlider = (props: RangeSliderProps): ReactElement => {
   };
   const change = (end: "start" | "end", value: number): void =>
     state.set(spanAfterMove(state.value.current, end, value, range));
+  const trackedId = useNativeFocusId();
+  const trackedIndex = trackedFocusIndex(thumbIds.current, trackedId);
+  const mergedFocus: Option.Option<0 | 1> = Option.isSome(focusedIndex)
+    ? focusedIndex
+    : Option.flatMap(trackedIndex, (index) =>
+        index === 0
+          ? Option.some(0 as const)
+          : index === 1
+            ? Option.some(1 as const)
+            : Option.none(),
+      );
   return renderRangeSlider(
     props,
     theme,
     state.value,
     {
-      focusedIndex,
+      focusedIndex: mergedFocus,
       onFocus: (index) => setFocusedIndex(Option.some(index)),
       onBlur: (index) =>
         setFocusedIndex((current) =>

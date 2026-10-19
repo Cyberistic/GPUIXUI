@@ -8,12 +8,13 @@
  *
  * Focus is the one interaction state the runtime forces on us — there is no
  * `focusVisible` (plan 020 §1.2) — so the component tracks focus and merges
- * `core/style.ts`'s ring while it holds it. A mouse press therefore shows the
- * ring too; that limitation is recorded in `COMPONENTS.md`. Inside an attached
+ * `core/style.ts`'s ring while it holds it. `useFocus` keeps that state
+ * React-local (no other reader) and, since plan `590`, also compares the
+ * renderer's tracked host id so the ring paints on the release runtime that
+ * dispatches no focus events. A mouse press therefore shows the ring too; that
+ * limitation is recorded in `COMPONENTS.md`. Inside an attached
  * `ButtonGroup` the surface is clipped at the button's edge, so the ring is
- * painted by an inset overlay instead of the outer shadow (plan 344). The
- * `focused` flag is React-local render state with no other reader, so `useState`
- * is the right tool; an Atom would make one button's highlight global state.
+ * painted by an inset overlay instead of the outer shadow (plan 344).
  *
  * The button is also a valid **slot trigger**: `Tooltip`'s `asChild` clones
  * host props onto its child, and a component boundary would otherwise drop
@@ -28,9 +29,9 @@
  * button and over its neighbours (measured, plan `368`).
  */
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
-import type { EventPayload } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import { buttonRecipeRing, buttonRecipeStyle } from "../core/recipes.js";
 import {
@@ -48,6 +49,7 @@ import {
   mergeStyle,
   passiveTriggerHandlers,
   resolvePartStyle,
+  useFocus,
   type StateStyle,
   type TriggerHandlers,
 } from "./internal.js";
@@ -108,6 +110,8 @@ export interface ButtonFocus {
   readonly focused: boolean;
   readonly onFocus?: () => void;
   readonly onBlur?: () => void;
+  /** Attach to the button's root, so the native-focus tracker can identify it. */
+  readonly ref?: (instance: PublicInstance | null) => void;
 }
 
 const isBusy = (props: ButtonProps): boolean =>
@@ -175,6 +179,7 @@ export const renderButton = (
   return (
     <div
       {...passiveTriggerHandlers(props)}
+      ref={focus.ref}
       role="button"
       aria-label={Option.getOrUndefined(
         controlName(props.label, props.children),
@@ -208,7 +213,7 @@ export const renderButton = (
 /** An action that can be clicked or activated with Enter or Space. */
 export const Button = (props: ButtonProps): ReactElement => {
   const theme = useTheme();
-  const [focused, setFocused] = useState(false);
+  const focus = useFocus();
   const shape = useGroupShape();
   const group: GroupShape | undefined = Option.getOrUndefined(shape);
   return renderButton(
@@ -218,11 +223,7 @@ export const Button = (props: ButtonProps): ReactElement => {
         props.radius ?? Option.getOrUndefined(group?.radius ?? Option.none()),
     },
     theme,
-    {
-      focused,
-      onFocus: () => setFocused(true),
-      onBlur: () => setFocused(false),
-    },
+    focus,
     { clipped: group?.clipped === true, shrink: group?.shrink === true },
   );
 };

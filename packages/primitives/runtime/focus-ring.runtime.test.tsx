@@ -18,6 +18,7 @@ import { expect, it } from "vitest";
 import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import { focusRing } from "@gpuixui/tokens";
 import { buttonRecipeRing, fieldRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
@@ -41,7 +42,7 @@ import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
 import { isFocusRing, isWithin } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
 
 /** The shadow `focusRing` becomes after the runtime's `inset` normalisation. */
 const RING = { ...focusRing(testTheme).boxShadow, inset: false };
@@ -164,6 +165,12 @@ const CASES: ReadonlyArray<FocusCase> = [
   },
 ];
 
+/** The five authored fields plus the renderer's normalisation, as a record. */
+const shadowRecord = (shadow: unknown): Record<string, unknown> =>
+  Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown))(
+    shadow,
+  );
+
 /** Every element of the last frame that paints a focus ring. */
 const ringsOf = (runtime: Runtime): ReadonlyArray<TestElement> =>
   Arr.filter(runtime.all(), (element) => isFocusRing(element.style.boxShadow));
@@ -175,6 +182,7 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase] as const))(
     runtime.render(<Surface>{testCase.node()}</Surface>);
     runtime.focusNext();
     runtime.flush();
+    await settleFocus();
     const root = Option.getOrElse(runtime.element("c"), () =>
       expect.fail("the control painted no root element"),
     );
@@ -183,7 +191,16 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase] as const))(
     const ring = Option.getOrElse(Arr.head(rings), () =>
       expect.fail("the control painted no ring"),
     );
-    expect(ring.style.boxShadow).toStrictEqual(testCase.ring ?? RING);
+    // `inset` is the renderer's normalisation, not part of the authored shadow:
+    // the release build reports the five authored fields, the main-derived one
+    // adds `inset: false`. Compare the ring the package wrote (plan `590`).
+    expect({
+      ...shadowRecord(ring.style.boxShadow),
+      inset: undefined,
+    }).toStrictEqual({
+      ...shadowRecord(testCase.ring ?? RING),
+      inset: undefined,
+    });
     expect(isWithin(runtime, ring, root.id)).toBe(true);
   },
 );
@@ -205,6 +222,7 @@ it("paints the ring inside a button that an attached group clips", async () => {
   );
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   const root = Option.getOrElse(runtime.element("c"), () =>
     expect.fail("the control painted no root element"),
   );

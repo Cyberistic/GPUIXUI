@@ -119,6 +119,7 @@ export const fieldHostProps = (
   onValueChange: (value: string) => void,
 ) => ({
   ...passiveTriggerHandlers(props),
+  ref: focus.ref,
   value: state.current,
   placeholder: props.placeholder,
   readOnly: props.readOnly === true || props.disabled === true,
