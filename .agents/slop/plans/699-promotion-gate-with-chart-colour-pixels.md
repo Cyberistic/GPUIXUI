@@ -362,3 +362,10 @@ Totals were read back from the artifacts with the §4.5 commands, not from the
 console summary. The ledgers (`COMPONENTS.md`, `apps/playground/README.md`,
 `TODO.md`, the plan index) now cite this run; the stale plan-691 (2545) sentence
 is history only.
+
+**Post-gate merge.** After the gate commit, `origin/master` advanced by one
+docs-only commit (`f611e31f`, plan `437` plus its index row). Every incoming
+path is outside this workstream, so §5 permits the merge; it merged cleanly as
+`f7b5f428` (only the plan-index row needed auto-merging) and changed no code, so
+the measured totals stand for the code head `21d02b2a` and `check`/`lint`/`fmt`
+were re-run green afterwards.

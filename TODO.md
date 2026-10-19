@@ -111,7 +111,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `live-report.json`. `nub run check`/`lint`/`test` green (playground 442,
       testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
       docs 7). No source change. Exact ids: the whole headless registry and the
-      whole live registry (`--all`).
+      whole live registry (`--all`). `origin/master` then advanced by one
+      docs-only commit (`f611e31f`, plan `437`), which merged cleanly as
+      `f7b5f428` after the gate (paths outside this workstream, no code).
 
 `[x]` **The chart recipe's colour contract in a real window** per plan `697`:
       the sourced `<svg>` tint, the image's two opaque fills and both gradients
