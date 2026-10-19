@@ -28,6 +28,7 @@ import {
   LIVE_SCENES,
   SCENE_GESTURE,
   SCENE_PAGE,
+  SCENE_STEP_TEXT,
   SCENE_TEXT,
   type SceneStep,
 } from "../preview/scenes.ts";
@@ -337,11 +338,31 @@ const main = async (): Promise<number> => {
         return 1;
       }
       try {
-        for (const step of steps) {
+        for (const [index, step] of steps.entries()) {
+          const milestone = SCENE_STEP_TEXT[scene]?.[index + 1];
+          if (milestone !== undefined) {
+            const before = await paintedText(session);
+            if (before.includes(milestone)) {
+              console.error(
+                `FAIL live scene ${scene}: "${milestone}" was painted before step ${index + 1}; the step proves nothing`,
+              );
+              return 1;
+            }
+          }
           await runStep(session, step);
           // A popover measures and paints on the frame after the click that
           // opened it; the next step's locator needs those painted bounds.
           await sleep(250);
+          if (milestone !== undefined) {
+            const painted = await waitForPaintedText(session, milestone);
+            if (painted === null) {
+              const after = await paintedText(session);
+              console.error(
+                `FAIL live scene ${scene}: expected "${milestone}" after step ${index + 1} (${JSON.stringify(after)})`,
+              );
+              return 1;
+            }
+          }
         }
       } catch (error) {
         console.error(

@@ -252,7 +252,7 @@ first assertion, and a broken gesture fails the second.
 | Text areas | type into the field | the typed draft reaches the caller |
 | Color picker | press a swatch | the committed colour reaches the caller and repaints the preview |
 | Inline edit | click the display, type, press Enter | the display swaps for the real input and the committed rename reaches the caller |
-| Form | press the submit control with an empty email | the schema message appears in one alert and the caller is not called |
+| Form | press with an empty email, fill both fields, press again | the schema message paints, clears and the submitted state is reached |
 | Lists / list items | click a row by its label | the row paints selected and the caller sees the value |
 | Collapsible sections | click the trigger | the content is mounted only in the open state |
 | Pagination | press next three times | the current page and its window move |
@@ -266,6 +266,11 @@ Typing goes through the renderer's own keyboard/IME path (`Locator.fill`), which
 is the same path a reader's keyboard takes. A typed character arrives without a
 shift modifier, so a filled scene deliberately uses lower-case text; the radio
 group's target is a painted label, not typed text, so it keeps its case.
+
+A step may also carry an intermediate expectation (`SCENE_STEP_TEXT`): Form's
+first press must paint the schema message and its valid submit must paint
+`Account created`, so neither half of the lifecycle can regress behind the
+other.
 
 The reader sees the same instruction above the surface, and can perform it in the
 browser. One measured limit stays on the Tooltip page: the trigger must be a

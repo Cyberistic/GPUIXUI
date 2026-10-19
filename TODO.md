@@ -469,9 +469,20 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–572)
+## Docs site workstream (plans 410–499, plus 500–573)
 
-`[x]` `[██████████]` 139/139
+`[x]` `[██████████]` 140/140
+
+`[x]` **Form's valid submit runs on the live surface (plan 573)** — plan 572
+      proved the invalid press only, while the page told a reader to fill the
+      fields and press again. A per-step milestone (`SCENE_STEP_TEXT`) asserts
+      the schema message after the first press and `Account created` after the
+      valid submit; the smoke drives four steps, the contract guard pins the
+      milestone to a real step and keeps it out of the reader's instruction, and
+      `form-scene.test.ts` proves both expectations against the real schema.
+      Forced defects: a wrong final text failed the smoke by name after four
+      steps; a milestone on step 5 failed the guard. 88 files / 635 tests,
+      `check-types`, `smoke:preview`, root gates green.
 
 `[x]` **Form's submit lifecycle runs on the live surface (plan 572)** — the one
       delivered component whose primary documented behaviour is a press

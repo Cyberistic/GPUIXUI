@@ -7,6 +7,7 @@ import {
   LIVE_SCENES,
   SCENE_GESTURE,
   SCENE_INTERACTION,
+  SCENE_STEP_TEXT,
   SCENE_TEXT,
   SCENE_TEXT_IS_SCENE_PROSE,
 } from "../../../preview/scenes";
@@ -248,6 +249,38 @@ describe("gesture scenes", () => {
     expect(unused).toEqual([]);
   });
 
+  /**
+   * A multi-phase gesture names text an intermediate step paints (plan 573).
+   * The milestone is a promise to the smoke like `SCENE_TEXT`: an index outside
+   * the step list, a string the scene never renders or a copy in the reader's
+   * instruction would make the check pass for the wrong reason.
+   */
+  it("names milestone text the scene paints, at a real step", () => {
+    const problems = gestureScenes.flatMap((scene) => {
+      const steps = SCENE_GESTURE[scene] ?? [];
+      return Object.entries(SCENE_STEP_TEXT[scene] ?? {}).flatMap(
+        ([rawIndex, text]) => {
+          const index = Number(rawIndex);
+          const instruction = SCENE_INTERACTION[scene] ?? "";
+          if (!Number.isInteger(index) || index < 1 || index > steps.length) {
+            return [`${scene}: step ${rawIndex} is outside ${steps.length}`];
+          }
+          if (text.length === 0 || !viewSource.includes(text)) {
+            return [`${scene}: "${text}" is not painted by the scene`];
+          }
+          if (text === SCENE_TEXT[scene]) {
+            return [`${scene}: "${text}" repeats the final expectation`];
+          }
+          if (instruction.includes(text)) {
+            return [`${scene}: the instruction names "${text}"`];
+          }
+          return [];
+        },
+      );
+    });
+    expect(problems).toEqual([]);
+  });
+
   it("tells the reader what to do for exactly the scenes that need it", () => {
     const described = LIVE_SCENES.filter(
       (scene) => SCENE_INTERACTION[scene] !== undefined,
@@ -264,8 +297,11 @@ describe("gesture scenes", () => {
   it("never names the text the gesture is supposed to reveal", () => {
     const leaked = gestureScenes.filter((scene) => {
       const instruction = SCENE_INTERACTION[scene];
+      if (instruction === undefined) return false;
+      const milestones = Object.values(SCENE_STEP_TEXT[scene] ?? {});
       return (
-        instruction !== undefined && instruction.includes(SCENE_TEXT[scene])
+        instruction.includes(SCENE_TEXT[scene]) ||
+        milestones.some((text) => instruction.includes(text))
       );
     });
     expect(leaked).toEqual([]);

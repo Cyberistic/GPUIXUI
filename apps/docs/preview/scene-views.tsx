@@ -1003,7 +1003,7 @@ const FormScene = (): ReactElement => {
       <Text role="h3">Create account</Text>
       <Text role="caption" tone="muted">
         The real Form. Press Create account with an empty email to see the
-        schema's message.
+        schema's message, then fill both fields and press again.
       </Text>
       <Form
         schema={FormValues}

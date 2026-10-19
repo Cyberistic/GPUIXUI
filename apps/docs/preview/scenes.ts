@@ -103,7 +103,7 @@ export const SCENE_TEXT: Readonly<Record<LiveScene, string>> = {
   "text-area": "Draft saved",
   "color-picker": "Accent set to red",
   "inline-edit": "Renamed Atlas Prime",
-  form: FORM_MESSAGE,
+  form: "Account created",
   accordion: "Email me when a deployment finishes.",
   "number-field": "Quantity is 12",
   "otp-field": "Six digits entered",
@@ -131,6 +131,21 @@ export const SCENE_PAGE: Readonly<Partial<Record<LiveScene, string>>> = {
   showcase: "/docs/showcase",
   "confirmation-flow": "/docs/patterns/confirmation-flow",
   "command-palette": "/docs/patterns/command-palette",
+};
+
+/**
+ * Text a multi-phase gesture paints at an intermediate step (plan 573).
+ *
+ * `SCENE_TEXT` proves the scene's final state. A lifecycle with two documented
+ * outcomes needs the first one checked too, or a regression that swallowed the
+ * invalid branch would still pass the final-state assertion. The key is the
+ * **1-based** step that paints the text; the smoke asserts the text is absent
+ * before that step and present after it.
+ */
+export const SCENE_STEP_TEXT: Readonly<
+  Partial<Record<LiveScene, Readonly<Record<number, string>>>>
+> = {
+  form: { 1: FORM_MESSAGE },
 };
 
 /**
@@ -206,7 +221,12 @@ export const SCENE_GESTURE: Readonly<
     { kind: "fill", testId: "scene-inline-edit", text: "Atlas Prime" },
     { kind: "press", testId: "scene-inline-edit", keys: "enter" },
   ],
-  form: [{ kind: "click", testId: "scene-form-submit" }],
+  form: [
+    { kind: "click", testId: "scene-form-submit" },
+    { kind: "fill", testId: "scene-form-email", text: "ada@example.com" },
+    { kind: "fill", testId: "scene-form-name", text: "Ada Lovelace" },
+    { kind: "click", testId: "scene-form-submit" },
+  ],
   list: [{ kind: "click-text", text: "Weekly report", within: "scene-list" }],
   collapsible: [{ kind: "click", testId: "scene-collapsible-trigger" }],
   pagination: [
@@ -253,7 +273,7 @@ export const SCENE_INTERACTION: Readonly<Partial<Record<LiveScene, string>>> = {
   "text-area": "Type a note into the field.",
   "color-picker": "Press the red swatch to commit it.",
   "inline-edit": "Click the name, type a new one and press Enter.",
-  form: "Press Create account with an empty email to see the schema's message.",
+  form: "Press Create account with an empty email to see the schema message, then fill both fields and press again.",
   list: "Click the weekly report to open it.",
   collapsible: "Open the advanced section.",
   pagination: "Press next three times to reach page four.",
