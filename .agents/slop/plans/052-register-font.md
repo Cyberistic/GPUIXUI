@@ -36,6 +36,14 @@ This is the same published-vs-main divergence `COMPONENTS.md` records for `Dialo
 and `createPortal`. The plan's step 1 **STOP condition fires**: the pinned version
 cannot register a font, so a shim would present a capability that does not exist.
 
+**Re-check (2026-10-19), requested by `docs-site`.** Its TODOs reported that §1
+"still says the published 0.10.0 exposes `renderer.registerFont`". That sentence
+belongs to the first draft; the table above is the corrected state and was
+verified again on a resolved install: `@gpuix/native` is `0.10.0` and
+`grep -rn registerFont … --include="*.d.ts"` prints nothing. The plan is
+therefore blocked by the **pinned runtime version**, not by B1 (which is a
+second, independent blocker for the native check). No implementation starts.
+
 An implementation (structural `FontRegistrar`, idempotent registry, 7 unit tests,
 theme integration) was written against the clone's API and then **removed** from
 `packages/tokens`. The design is preserved in step 4 so the release that ships the
@@ -63,9 +71,10 @@ this host) is a second, independent blocker for the native check.
 The check that must be repeated before any implementation:
 
 ```sh
-grep -rn "registerFont" \
-  workspaces/playground/node_modules/.store/@gpuix+native@0.10.0/node_modules/@gpuix/native \
-  --include="*.d.ts"
+# Any worktree that has the runtime installed; the path is installation-dependent.
+native=$(dirname "$(find /Users/cyberistic/GPUIXUI \
+  -path "*@gpuix/native/package.json" -not -path "*/dist/*" | head -1)")
+grep -rn "registerFont" "$native" --include="*.d.ts"
 ```
 
 Expected today: no output. Expected when unblocked: the method appears on
@@ -148,7 +157,9 @@ resolves just like the platform table's mono families.
 
 | Purpose | Command | Expected |
 | ------- | ------- | -------- |
-| Prove the API is still absent | `grep -rn "registerFont" workspaces/playground/node_modules/.store/@gpuix+native@0.10.0/node_modules/@gpuix/native --include="*.d.ts"` | no output (blocked), the method on `GpuixRenderer` (unblocked) |
+| Find a resolved install | `find /Users/cyberistic/GPUIXUI -path "*@gpuix/native/package.json" -not -path "*/dist/*"` | at least one path (any worktree that installed the runtime) |
+| Prove the API is still absent | `grep -rn "registerFont" <the resolved @gpuix/native directory> --include="*.d.ts"` | no output (blocked), the method on `GpuixRenderer` (unblocked) |
+| Prove the pinned version | `grep '"version"' <…/package.json>` | `0.10.0` while blocked |
 | Install | `nub install` | exit 0 |
 | Types + lint + fmt | `nub run check` | exit 0 |
 | Tests | `nub run test` | all pass |

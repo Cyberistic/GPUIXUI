@@ -337,6 +337,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
 | [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
 | [686](./686-density-boundary-truth.md) | A stale density keeps the preset; the page says it empties the metrics | F | 068, 089, 380, 534, 685 | done |
+| [688](./688-plan-number-collision.md) | The plan-number collision at `433`, and the rule it exposes | F | 311, 052 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -900,7 +901,7 @@ mode, so they keep the Windows dark palette and carry the era's shape — the da
 accent is the Windows step — rather than inventing a palette. Plan 328 makes the
 recipe data carry that palette, which the first cut only described. Aero's glass is a two-surface
 approximation, because 0.10.0 has no backdrop blur, inset shadow or gradient.
-Recipe B of plan 433 (Omarchy's live system theme) stays out of this plan: its
+Recipe B of plan 687 (Omarchy's live system theme) stays out of this plan: its
 own STOP condition requires the on-disk palette contract to be verified on a
 real Linux host, which this workstream does not have.
 
@@ -1974,7 +1975,7 @@ colour, pair, floor, metric or shipped theme moves.
 | `205` | Implement the "not provided by GPUix" cluster | C/E | `200`, `201`, `203`, `030`, `110–117` | planned |
 | `206` | Port **shadcn/ui's Message Scroller** behaviour — pinned follow, no yank, jump-to-latest, streaming rows | C | `200`, `201`, `203` | planned |
 | `207` | Port **shadcn/ui's AI Elements `chat` + `message`** — conversation scaffold and message row (streaming, reasoning, tool calls, sources, retry) | C | `200`, `201`, `206` | planned |
-| `433` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | partial — A done (`311`); B blocked on a Linux host |
+| `687` | **Platform theme recipes** — reshape the Windows variant into XP (Luna) / 7 (Aero), and follow Omarchy's live system theme | E | `063`, `203`, `200` | partial — A done (`311`); B blocked on a Linux host; renumbered from `433` by `688` |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans

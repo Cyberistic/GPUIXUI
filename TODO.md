@@ -695,7 +695,7 @@ across dark/light/high-contrast dark and asserts the runtime's own
 `paintedStyle`, which is the native proof these rows cite
 `[x]` Ship Windows XP and Aero platform recipes as editable `PlatformStyle`
 values with a resolver and guard, held to the contrast contract in both modes
-(plan 311); Recipe B (Omarchy) remains blocked on host verification (plan 433)
+(plan 311); Recipe B (Omarchy) remains blocked on host verification (plan 687)
 `[ ]` Cross-team: the Fumadocs platform toggle (macOS / Linux / Windows /
 Default) switches every preview through `getPlatformTheme`, keeps the choice in
 shareable page state and remembers it across navigation; document it under
@@ -704,7 +704,7 @@ Theming as an illustrative browser approximation (owner: `docs-site`; plan 063)
 platform toggle through `getPlatformRecipeTheme` / `isPlatformRecipeName`,
 switchable and shareable in the page URL, and labels the honest limits — dark as
 an interpretation, Aero's glass as solid layers, XP's filled selection bar as an
-app composition (owner: `docs-site`; plans 311 and 433)
+app composition (owner: `docs-site`; plans 311 and 687)
 `[ ]` Cross-team: `playground` paints the XP and Aero recipes natively in the
 theme gallery, one view per recipe, so the copy-and-own path is verified in the
 runtime and not only by the token suite (owner: `playground`; plan 311)
@@ -2611,6 +2611,23 @@ nothing. It now enumerates all twenty-one, names `info`/`success`/`warning` in
 the rationale and derives both the count and the member list from
 `overlaySurfaces` in a new guard; no colour, pair, floor, metric or shipped
 theme moves (plan 666)
+`[x]` Resolve the plan-number collision at `433` — our Windows XP/Aero recipe
+plan and `docs-site`'s native-captures plan both claimed the number, and plan
+numbers are global across worktrees (PLAN.md D7); the recipe plan is now `687`
+(content unchanged, Recipe B still blocked), every reference in the index,
+plan `311` and this file follows, and `docs-site` keeps its `433`. The executed
+`685`/`686` collision with `components` is recorded rather than renamed because
+renaming history buys nothing (plan 688)
+`[x]` Answer `docs-site`'s plan `052` re-check — the re-checked §1 is correct:
+pinned `@gpuix/native@0.10.0` exposes no `registerFont` (verified again on a
+resolved install), so the plan stays blocked upstream rather than on B1, and
+its evidence command now discovers the package instead of naming one worktree
+(plan 688)
+`[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
+nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
+and the executed `685`/`686` beside components' `685`. Add a check that fails
+when two worktrees carry different plan files under one number, and take the
+next free number before writing a plan (found while landing plan 688)
 
 ## Phase C — Tier 1–2 components
 

@@ -1,5 +1,10 @@
-# Plan 433: Platform theme recipes — a reshaped Windows (XP / Aero) and a live Omarchy-following theme
+# Plan 687: Platform theme recipes — a reshaped Windows (XP / Aero) and a live Omarchy-following theme
 
+> **Renumbered from `433` (2026-10-19).** `docs-site` wrote
+> `433-theming-native-captures.md` against the same number, and plan numbers are
+> global across worktrees (PLAN.md D7). This plan takes `687`; the content below
+> is unchanged. See `688-plan-number-collision.md`.
+>
 > **Status (2026-10-18).** Recipe A is done: plan `311` shipped Windows XP
 > (Luna) and Windows 7 (Aero) as editable `PlatformStyle` values in
 > `packages/tokens`, held to the contrast contract in both modes. Recipe B

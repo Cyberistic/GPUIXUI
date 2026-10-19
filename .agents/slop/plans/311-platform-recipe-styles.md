@@ -9,7 +9,7 @@ still missing is proof that a shipped variant can be **reshaped into a different
 era of the same platform** — the strongest evidence that a variant is real
 tokens and not a skin.
 
-Plan 433 (the reference-adoption block) describes two recipes. This plan owns
+Plan 687 (the reference-adoption block, renumbered from 433 by plan 688) describes two recipes. This plan owns
 **Recipe A only**:
 
 - Windows XP (Luna) as an editable `PlatformStyle`;
@@ -19,7 +19,7 @@ Recipe B (follow Omarchy's live system theme) is **not** in this plan. Its own
 STOP condition requires the on-disk palette contract to be verified on a real
 Linux/Omarchy machine before any code is written; this workstream runs on macOS
 x86_64 and has no such host. The mapper must not be invented from guesses.
-Plan 433 keeps Recipe B open.
+Plan 687 keeps Recipe B open.
 
 ## Scope decisions
 
@@ -64,7 +64,7 @@ Change:
 - `COMPONENTS.md` — extend the `Platform style variants` row.
 - `TODO.md` — add and tick the task under the tokens block.
 - `.agents/slop/plans/README.md` — index this plan as done.
-- `.agents/slop/plans/433-platform-theme-recipes.md` — mark Recipe A as done
+- `.agents/slop/plans/687-platform-theme-recipes.md` — mark Recipe A as done
   here, Recipe B still blocked on host verification.
 
 ## `platform-recipes.ts` — exact API
@@ -287,13 +287,13 @@ check.
 
 `COMPONENTS.md`: the `Platform style variants` row gains one sentence — two
 editable recipes (XP/Aero) prove the copy-and-own path, tested in both modes;
-Recipe B (Omarchy) remains open on plan 433.
+Recipe B (Omarchy) remains open on plan 687.
 
 `TODO.md`: one line under the tokens block:
 
 `[x]` Ship Windows XP and Aero platform recipes as editable `PlatformStyle`
 values with a resolver and guard, held to the contrast contract in both modes
-(plan 311); Recipe B (Omarchy) remains blocked on host verification (plan 433).
+(plan 311); Recipe B (Omarchy) remains blocked on host verification (plan 687).
 
 ## STOP conditions
 
