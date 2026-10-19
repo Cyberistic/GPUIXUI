@@ -938,6 +938,50 @@ export function themeMetricFailures(
       dimensions.notificationPanelMaxHeight,
       dimensions.notificationListMaxHeight,
     ),
+    // A Toast's fixed card holds its own chrome: the content row is `spacing.lg`
+    // padding on both sides, the `md` tone icon, the `lg` gap beside it and one
+    // `bodyStrong` title glyph. The 3px tone bar is consumer chrome, not a
+    // metric, so the bound leaves it out; a card narrower than this clips the
+    // title it exists to show. A zero or non-finite width is the sign rule's
+    // diagnostic, so the fit waits for a usable value.
+    ...(usableBound(dimensions.toastWidth)
+      ? atLeast(
+          "dimensions",
+          "toastWidth",
+          dimensions.toastWidth,
+          2 * spacing.lg +
+            iconSize.md +
+            spacing.lg +
+            typography.bodyStrong.fontSize,
+        )
+      : []),
+    // A notification row is `spacing.lg` padding on both sides, the unread dot,
+    // the `sm` gap and one `bodyStrong` title glyph. The panel is anchored at
+    // `notificationPanelWidth`, so a narrower panel clips the title of every
+    // unread notification.
+    ...(usableBound(dimensions.notificationPanelWidth)
+      ? atLeast(
+          "dimensions",
+          "notificationPanelWidth",
+          dimensions.notificationPanelWidth,
+          2 * spacing.lg +
+            dimensions.notificationUnreadDotSize +
+            spacing.sm +
+            typography.bodyStrong.fontSize,
+        )
+      : []),
+    // The narrowest overlay row: `spacing.md` padding on both sides, one `md`
+    // leading icon (the `sm` trailing check and its gap are narrower), the
+    // `md` gap and one `label` glyph. The 2px highlight bar is paid for out of
+    // the row's left padding, so it does not widen the bound.
+    ...(usableBound(dimensions.overlayMinWidth)
+      ? atLeast(
+          "dimensions",
+          "overlayMinWidth",
+          dimensions.overlayMinWidth,
+          2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize,
+        )
+      : []),
     ...finiteGroup("elevation", elevation),
     ...elevationLevels.flatMap((level) => {
       const shapes = elevation[level];

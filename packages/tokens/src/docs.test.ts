@@ -2679,6 +2679,25 @@ describe("docs/design-system.md", () => {
     expect(designSystem.includes(sentence), sentence).toBe(true);
   });
 
+  it("states the fixed-surface chrome fits", () => {
+    const toastBound =
+      2 * spacing.lg +
+      iconSize.md +
+      spacing.lg +
+      typography.bodyStrong.fontSize;
+    const panelBound =
+      2 * spacing.lg +
+      dimensions.notificationUnreadDotSize +
+      spacing.sm +
+      typography.bodyStrong.fontSize;
+    const overlayBound =
+      2 * spacing.md + iconSize.md + spacing.md + typography.label.fontSize;
+    const headroom = (value: number, bound: number): string =>
+      (value / bound).toFixed(2);
+    const sentence = `The shipped \`${dimensions.toastWidth} / ${dimensions.notificationPanelWidth} / ${dimensions.overlayMinWidth}\` clear the three by \`${headroom(dimensions.toastWidth, toastBound)}× / ${headroom(dimensions.notificationPanelWidth, panelBound)}× / ${headroom(dimensions.overlayMinWidth, overlayBound)}×\``;
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the drawer, chat and carousel dimensions", () => {
     const sentence = `A drawer opens ${dimensions.drawerWidthSm}/${dimensions.drawerWidthMd}/${dimensions.drawerWidthLg}px wide, or ${dimensions.drawerHeightSm}/${dimensions.drawerHeightMd}/${dimensions.drawerHeightLg}px tall from the bottom; a message viewport never shrinks below ${dimensions.chatViewportMinHeight}px, and a carousel's active dot is ${dimensions.carouselIndicatorActiveWidth}px beside an idle ${dimensions.carouselIndicatorSize}px one.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);

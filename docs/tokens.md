@@ -1059,14 +1059,14 @@ every density.
 
 | Token | Pixels | Use |
 | ----- | ------ | --- |
-| `dimensions.overlayMinWidth` | 180 | narrowest menu surface |
+| `dimensions.overlayMinWidth` | 180 | narrowest menu surface; holds a row's padding, icon, gap and one `label` glyph |
 | `dimensions.overlayWidth` | 220 | default combobox and navigation-menu width |
 | `dimensions.overlayMaxHeight` | 320 | the height at which a long overlay list scrolls; held to one `density.rowHeight` |
 | `dimensions.fieldMinWidth` | 200 | narrowest field that shows a query and an action |
 | `dimensions.fieldAdornmentSize` | 16 | icon or clear control inside a field |
 | `dimensions.dateFieldWidth` | 220 | fixed date trigger width; holds its insets, gap, disclosure glyph and one `label` glyph |
 | `dimensions.chipMinWidth` | 80 | minimum content width of a token-input chip |
-| `dimensions.toastWidth` | 380 | fixed toast card width |
+| `dimensions.toastWidth` | 380 | fixed toast card width; holds its padding, tone icon, gap and one `bodyStrong` title |
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
@@ -1087,7 +1087,7 @@ every density.
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least one `body` em |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
-| `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width |
+| `dimensions.notificationPanelWidth` | 320 | anchored notification inbox width; holds a row's padding, unread dot, gap and one `bodyStrong` title |
 | `dimensions.notificationPanelMaxHeight` | 380 | inbox maximum height; at least the list maximum |
 | `dimensions.notificationListMaxHeight` | 280 | notification list scroll height; held to one `density.rowHeight` |
 | `dimensions.notificationUnreadDotSize` | 6 | unread marker on a notification row |
@@ -1095,6 +1095,20 @@ every density.
 A keycap is a fixed surface, not a spacing decision: its content box holds one
 `caption` line plus its two borders, and the metric contract reports a theme
 whose caption leading outgrows it.
+
+Three fixed surfaces hold the chrome painted inside them, not only a positive
+size. A toast card is `2 * spacing.lg + iconSize.md + spacing.lg +
+typography.bodyStrong.fontSize` at least — its padding, tone icon, the gap beside
+it and one title glyph, with the 3px tone bar left to consumer chrome. The
+notification inbox is `2 * spacing.lg + notificationUnreadDotSize + spacing.sm +
+typography.bodyStrong.fontSize`, the row's padding, unread dot, gap and title.
+The narrowest overlay holds `2 * spacing.md + iconSize.md + spacing.md +
+typography.label.fontSize`: a menu row's two insets, its leading icon, gap and one
+label glyph (the 2px highlight bar is paid for out of the left padding). Each
+bound reads the theme's own metrics, so widening a type role or a spacing step
+moves it. The shipped `380 / 320 / 180` clear the three by `5.76× / 6.40× /
+3.40×`, so the rules guard an edited theme rather than a shipped value, and no
+value moves (plan `620`).
 
 A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
 so a theme cannot make "large" narrower than "medium". A dialog's three surface

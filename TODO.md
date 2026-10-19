@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 262/334
+`[x]` `[████████░░]` 263/335
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -152,6 +152,14 @@ publishes `active`/`accent` under the `step` class, the two `active` values move
 one designed step (`#2A303B` → `#2E3543`, `#DDD7BE` → `#D8D2B7`), and every
 shipped set clears 1.05:1 (Windows 7 light 1.059:1 at the tightest);
 `contrastPairs` grows 420 → 421, no other value moves (plan 619)
+`[x]` Hold the fixed surfaces to their own chrome — `toastWidth`,
+`notificationPanelWidth` and `overlayMinWidth` were only positive (or only
+ordered against their sibling), so a theme could set a toast narrower than its
+padding, tone icon and title, or an overlay narrower than a menu row's insets,
+icon and label, while `themeMetricFailures` returned `[]`; three `at-least`
+rules now read the theme's own spacing, icon and type metrics, every shipped set
+clears them (380/320/180 against 66/50/53 at the shipped identity) and no value
+moves (plan 620)
 `[ ]` Cross-team: `components` moves the secondary Button off the mixed
 `secondary` → `hover` → `active` ladder — `internal/button.tsx` rests on
 `secondary` and hovers to `hover`, and the pair is under the 1.05:1 step floor in
