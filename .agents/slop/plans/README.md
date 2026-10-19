@@ -302,6 +302,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [631](./631-toast-dismiss-control.md) | The Toast card holds its dismiss control | F | 353, 358, 620, 627, 629 | done |
 | [632](./632-date-disclosure-icon.md) | The date field's disclosure glyph is the icon tier it paints | F | 353, 358, 384, 556, 601, 627, 631 | done |
 | [634](./634-field-query-leading-icon.md) | The field's query row charges the icon it paints | F | 353, 358, 384, 624, 632 | done |
+| [636](./636-toast-tone-bar-token.md) | The Toast's tone bar is a token the card holds | B | 353, 358, 620, 627, 631 | planned |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3302,6 +3303,18 @@ against the larger 102px chip bound), and no colour, pair, floor, metric or
 shipped theme value moves. The suite states the tier equality, plants the 81px
 field, accepts the corrected 82 and carries the failure through the total
 check; the catalogue and JSDoc name the `md` icon.
+
+Plan `636` closes the last fixed mark in the `dimensions` group with no token.
+Plan `631` left the Toast's 3px tone bar out of the card bound as "consumer
+chrome", but `ToastCard` paints the bar itself as a sibling of its content row
+inside the card's width, so the row gets `toastWidth` less its two borders and
+the bar; a copied theme at 110 returned `[]` from every check while the row
+needed 111 under `overflow: "hidden"`. The bar was also a hardcoded literal
+while the unread dot, carousel marks and timeline marker are dimensions. The
+plan ships `toastToneBarWidth` (3) beside `toastWidth`, charges it in the bound
+(108 → 111), states the ownership and a lifted-bar case, and keeps the shipped
+380 clearing at `3.42×`; no colour, pair, floor or other metric moves. The
+components migration joins the existing `theme.dimensions` cross-team row.
 
 ## How to use a plan
 
