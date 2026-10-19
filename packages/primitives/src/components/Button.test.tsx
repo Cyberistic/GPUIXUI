@@ -20,6 +20,7 @@ import { renderButton } from "./Button.js";
 import { keyEvent, clickEvent } from "./testing/event.js";
 import {
   elementChildren,
+  elementProp,
   expectSome,
   hostHandler,
   hostProp,
@@ -210,6 +211,30 @@ describe("Button", () => {
     expect(onClick).toHaveBeenCalledTimes(0);
     expect(expectSome(hostProp(loading, "tabIndex"))).toBe(0);
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
+  });
+
+  it("fits a square button's loading spinner inside the square", () => {
+    // The bug guarded (plan 644): the three 14 px dots plus their gaps made a
+    // 46 px row inside a 36 px icon button, so the spinner painted five pixels
+    // outside it on each side.
+    const spinnerSize = (
+      props: Parameters<typeof renderButton>[0],
+    ): unknown => {
+      const element = resting({ loading: true, ...props });
+      const spinner = expectSome(
+        Option.fromNullishOr(elementChildren(element)[0]),
+      );
+      return Option.getOrUndefined(elementProp(spinner, "size"));
+    };
+    expect(spinnerSize({ square: true, size: "sm" })).toBe(9);
+    expect(spinnerSize({ square: true })).toBe(10);
+    expect(spinnerSize({ square: true, size: "lg" })).toBe(12);
+    // The outline recipe's border is not content space.
+    expect(spinnerSize({ square: true, size: "lg", variant: "outline" })).toBe(
+      11,
+    );
+    // A text button is auto-width: its spinner keeps the text-sized step.
+    expect(spinnerSize({ children: "Save" })).toBe(testTheme.iconSize.sm);
   });
 
   it("takes a disabled button out of the tab order", () => {

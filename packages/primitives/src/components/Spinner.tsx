@@ -11,9 +11,11 @@ import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
 import {
+  SPINNER_DOTS,
   SPINNER_SEGMENTS,
   spinnerDotStyle,
   spinnerDots,
+  spinnerRowStyle,
   type SpinnerAccent,
 } from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
@@ -43,17 +45,9 @@ export const renderSpinner = (
       role="status"
       aria-label={ariaNameOr(label, "Loading")}
       testId={testId}
-      style={mergeStyle(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing["2xs"],
-        },
-        style,
-      )}
+      style={mergeStyle(spinnerRowStyle(theme), style)}
     >
-      {Arr.map(spinnerDots(step, 3), (point, index) => (
+      {Arr.map(spinnerDots(step, SPINNER_DOTS), (point, index) => (
         <div
           key={index}
           style={spinnerDotStyle({ size: dot, accent }, point, theme)}

@@ -24,6 +24,9 @@ export const PULSE_STEPS = 2;
 /** How many steps a spinner or an indeterminate bar visits before repeating. */
 export const SPINNER_SEGMENTS = 8;
 
+/** How many dots a spinner paints. */
+export const SPINNER_DOTS = 3;
+
 export interface SkeletonSpec {
   readonly width?: number | string;
   readonly height?: number | string;
@@ -130,6 +133,37 @@ export interface SpinnerDot {
   readonly active: boolean;
 }
 
+/** The row the dots sit in; one gap step between them. */
+export const spinnerRowStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  gap: theme.spacing["2xs"],
+});
+
+/**
+ * The largest dot side whose row fits `available` pixels.
+ *
+ * A square button is as wide as its indicator has room for, so a fixed dot
+ * size paints the three-dot row outside it (measured, plan `644`: 46 px of
+ * spinner inside a 36 px square). The row's own gap and count are the ones
+ * `Spinner` paints, so a restyle cannot make the fit disagree with the paint.
+ *
+ * A width that cannot be painted has no room: one pixel is the smallest dot
+ * the row can draw.
+ */
+export const spinnerDotSize = (
+  available: number,
+  theme: PrimitiveTheme,
+  count = SPINNER_DOTS,
+): number => {
+  const dots = Number.isFinite(count)
+    ? Math.max(1, Math.trunc(count))
+    : SPINNER_DOTS;
+  const row = usableLength(available, 0) - (dots - 1) * theme.spacing["2xs"];
+  return Math.max(1, Math.floor(row / dots));
+};
+
 /**
  * Which dot is lit at a given step, and how the rest fade.
  *
@@ -138,7 +172,7 @@ export interface SpinnerDot {
  */
 export const spinnerDots = (
   step: number,
-  count = 3,
+  count = SPINNER_DOTS,
   segments = SPINNER_SEGMENTS,
 ): ReadonlyArray<SpinnerDot> => {
   const active = ((step % count) + count) % count;

@@ -360,6 +360,48 @@ it("paints one spinner instead of an icon while loading, and refuses activation"
   expect(calls()).toBe(0);
 });
 
+it.each(["sm", "md", "lg"] as const)(
+  "fits a loading IconButton's spinner inside the %s square",
+  async (size) => {
+    // The bug guarded (plan 644): the three fixed 14 px dots made a 46 px row,
+    // so the spinner painted 5 px outside a 36 px square on each side.
+    const runtime = await openWindow();
+    runtime.render(
+      <Surface>
+        <Stack direction="row">
+          <IconButton
+            testId="ib"
+            icon="check"
+            label="Save"
+            size={size}
+            loading
+          />
+        </Stack>
+      </Surface>,
+    );
+    const button = boundsOf(runtime, "ib");
+    const status = Option.getOrElse(
+      Arr.findFirst(
+        runtime.all(),
+        (element) => element.customProps?.["role"] === "status",
+      ),
+      () => expect.fail("the loading button painted no status node"),
+    );
+    const spinner = Option.getOrElse(runtime.boundsOfId(status.id), () =>
+      expect.fail("the status node painted no box"),
+    );
+    expect(spinner.x).toBeGreaterThanOrEqual(button.x);
+    expect(spinner.x + spinner.width).toBeLessThanOrEqual(
+      button.x + button.width,
+    );
+    expect(spinner.y).toBeGreaterThanOrEqual(button.y);
+    expect(spinner.y + spinner.height).toBeLessThanOrEqual(
+      button.y + button.height,
+    );
+    expect(status.children).toHaveLength(3);
+  },
+);
+
 it("takes a disabled IconButton out of the tab order and refuses activation", async () => {
   const { runtime, calls } = await mountIconButton({ disabled: true });
   runtime.focusNext();

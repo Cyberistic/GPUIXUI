@@ -63,7 +63,7 @@ it leaves a text button at `h-8`/`h-9`/`h-10` (plan `370`; measured 375).
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square box and icon size |
 | `radius` | `RadiusStep` | `"md"` | corner radius |
 | `disabled` | `boolean` | `false` | leaves the tab order, refuses activation, fades to 50% |
-| `loading` | `boolean` | `false` | paints the spinner **instead of** the icon, announces `Loading`, refuses activation |
+| `loading` | `boolean` | `false` | paints a spinner **instead of** the icon, sized to the square (9/10/12 px dots at `sm`/`md`/`lg`), announces `Loading`, refuses activation |
 | `onActivate` / `onClick` | — | none | the shared `Button` activation path; `onClick` receives the click or the key event |
 | `style` | `StateStyle<ButtonState>` | — | merged last over the button's own rules |
 | `testId` | `string` | — | stable locator |
@@ -85,7 +85,9 @@ Escape, and the tip text arrives as the button's `aria-description`.
 
 `disabled` and `loading` refuse activation. `disabled` removes the tab stop;
 `loading` keeps it, so a keyboard user is not dropped mid-action. When both are
-set, `disabled` wins.
+set, `disabled` wins. The loading indicator is fitted to the square's content
+box — three 9/10/12 px dots at `sm`/`md`/`lg`, less a border — because the
+text-sized row was 46 px and painted outside a 36 px button (plan `644`).
 
 ## Accessibility
 

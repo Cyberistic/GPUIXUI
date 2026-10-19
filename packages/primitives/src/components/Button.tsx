@@ -33,6 +33,7 @@ import { type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
+import { spinnerDotSize } from "../core/loading.js";
 import { buttonRecipeRing, buttonRecipeStyle } from "../core/recipes.js";
 import {
   clippedFocusRingStyle,
@@ -173,6 +174,20 @@ export const renderButton = (
     },
     theme,
   );
+  /**
+   * A square button is only as wide as the indicator has room for: the
+   * three-dot spinner at the text size painted 5 px outside a 36 px square
+   * (measured, plan `644`). Fit the dots to the recipe's content box; a text
+   * button keeps the icon step its label is set against.
+   */
+  const border =
+    typeof recipe.borderWidth === "number" ? recipe.borderWidth : 0;
+  const contentWidth =
+    typeof recipe.height === "number" ? recipe.height - 2 * border : 0;
+  const spinnerDot =
+    props.square === true
+      ? spinnerDotSize(contentWidth, theme)
+      : theme.iconSize.sm;
   const chrome = mergeStyle(
     clipped ? mergeStyle(recipe, { position: "relative" }) : recipe,
     group.shrink === true ? shrinkLayoutStyle : undefined,
@@ -196,7 +211,7 @@ export const renderButton = (
       style={resolvePartStyle(chrome, props.style, state)}
     >
       {props.loading === true ? (
-        <Spinner size={theme.iconSize.sm} label="Loading" />
+        <Spinner size={spinnerDot} label="Loading" />
       ) : (
         props.leading
       )}

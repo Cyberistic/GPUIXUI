@@ -56,7 +56,10 @@ sm / md / lg.
 - `disabled` — refuses click and keys, and leaves the tab order.
 - `loading` — shows a spinner, announces `Loading`, refuses activation, and
   **stays focusable** — unless `disabled` is also set, which always removes the
-  tab stop.
+  tab stop. The spinner is content, so it is sized to the button: a text button
+  keeps the `sm` icon step, while a `square` button fits its three dots to the
+  square's content box (9/10/12 px at `sm`/`md`/`lg`) instead of painting a
+  46 px row outside a 36 px square (plan `644`).
 
 ## API
 
@@ -68,7 +71,7 @@ sm / md / lg.
 | `radius` | `RadiusStep` | `"md"` | corner radius; an attached `ButtonGroup` supplies `"none"` |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
-| `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `loading` | `boolean` | `false` | spinner (fitted to the content box in a square button), `Loading` description, blocks activation |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | called after `onClick` for a click or an activating key; not called while busy |

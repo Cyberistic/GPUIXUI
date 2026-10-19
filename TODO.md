@@ -2060,6 +2060,19 @@ retired once both branches are one
       `capabilities.test.ts` ties it to `COMPONENTS.md`'s ScrollArea row in both
       directions (plan `643`).
 
+`[x]` `packages/primitives`: **a square button's loading spinner painted
+      outside it** — measured (2026-10-19): a loading `IconButton md` painted a
+      46 px three-dot spinner (`status x 7…53`) inside a 36 px square button
+      (`x 12…48`), so the indicator overhung the control by 5 px on each side
+      while a text button's auto-width row was unaffected. A square button now
+      sizes each dot to the recipe's content box (`sm`/`md`/`lg` → 9/10/12;
+      an outline `lg` → 11 after its border), through one `spinnerDotSize` rule
+      built on the Spinner's own gap and dot count; text buttons keep
+      `iconSize.sm`. Core + element + 3 scoped runtime cases, both directions
+      measured (the old wiring failed `x 5/7/9 ≥ 12`); full runtime 58 files /
+      809 tests green, offline 860. Docs and inventory record the rule (plan
+      `644`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

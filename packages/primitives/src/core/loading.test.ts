@@ -8,7 +8,9 @@ import {
   PULSE_STEPS,
   pulseOpacity,
   skeletonStyle,
+  SPINNER_DOTS,
   SPINNER_SEGMENTS,
+  spinnerDotSize,
   spinnerDotStyle,
   spinnerDots,
 } from "./loading.js";
@@ -115,6 +117,31 @@ describe("skeletonStyle", () => {
     const circle = skeletonStyle({ circle: true }, testTheme);
     expect(circle.flexShrink).toBe(0);
     expect(circle.minHeight).toBe(circle.height);
+  });
+});
+
+describe("spinnerDotSize", () => {
+  it("fits a three-dot row inside the space a square button has", () => {
+    // The bug guarded (plan 644): the fixed 14 px dots made a 46 px row inside
+    // a 36 px square, five pixels outside the button on each side.
+    expect(spinnerDotSize(32, testTheme)).toBe(9);
+    expect(spinnerDotSize(36, testTheme)).toBe(10);
+    expect(spinnerDotSize(40, testTheme)).toBe(12);
+    // An outline button's border is not content space.
+    expect(spinnerDotSize(38, testTheme)).toBe(11);
+  });
+
+  it("never returns a dot the row cannot paint", () => {
+    // A width that is absent, unreadable or too narrow has no room: one pixel
+    // is the smallest row, never zero and never a negative side.
+    expect(spinnerDotSize(0, testTheme)).toBe(1);
+    expect(spinnerDotSize(-8, testTheme)).toBe(1);
+    expect(spinnerDotSize(Number.NaN, testTheme)).toBe(1);
+    // A nonsense dot count falls back to the three the Spinner paints.
+    expect(spinnerDotSize(36, testTheme, Number.NaN)).toBe(
+      spinnerDotSize(36, testTheme),
+    );
+    expect(SPINNER_DOTS).toBe(3);
   });
 });
 
