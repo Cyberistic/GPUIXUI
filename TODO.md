@@ -88,7 +88,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        session's working plan/ledger edits as `c05ac09f`; the surviving session
        reconciled the remaining ledgers, re-ran `check` and `test` green on the
        merged head, committed `28d94c33`, pushed, and stopped the duplicate
-       (PID 37192); the count is `1` again. Fix still in `scripts/`.
+       (PID 37192). The count read `1` at that moment; the supervisor spawned
+       another session (PID 42334) minutes later, so the `scripts/` fix is
+       still required.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
