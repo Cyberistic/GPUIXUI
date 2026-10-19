@@ -149,10 +149,12 @@ it("sizes a grid's columns to their content with columnMin", async () => {
     <Surface>
       <Grid columns={2} columnMin="max-content" style={{ width: 600 }}>
         <Box tone="none" testId="label">
-          <Text role="caption">Name</Text>
+          <Text role="caption" shrink={false}>
+            Name
+          </Text>
         </Box>
         <Box tone="none" testId="value">
-          <Text role="caption">
+          <Text role="caption" shrink={false}>
             A very long value that should be much wider
           </Text>
         </Box>
@@ -164,6 +166,31 @@ it("sizes a grid's columns to their content with columnMin", async () => {
   expect(label.width).toBeLessThan(value.width);
   expect(value.x).toBe(label.x + label.width);
   expect(label.width + value.width).toBeLessThan(600);
+});
+
+it("measures a grid cell's content only when the run may not shrink", async () => {
+  // The bug guarded (plan 587): plan 383 removed the text run's automatic
+  // content floor (`minWidth: 0`), and the published runtime sizes a
+  // `max-content` track from that floor — so a bare `Text` cell measured 0 and
+  // the documented inspector shape painted invisible columns. `shrink={false}`
+  // restores the floor the track reads; the default keeps the row rule.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Grid columns={2} columnMin="max-content" style={{ width: 600 }}>
+        <Box tone="none" testId="shrunk">
+          <Text role="caption">Name</Text>
+        </Box>
+        <Box tone="none" testId="measured">
+          <Text role="caption" shrink={false}>
+            Name
+          </Text>
+        </Box>
+      </Grid>
+    </Surface>,
+  );
+  expect(boundsOf(runtime, "shrunk").width).toBe(0);
+  expect(boundsOf(runtime, "measured").width).toBeGreaterThan(0);
 });
 
 it("sizes a grid's rows to their content with rowMin", async () => {

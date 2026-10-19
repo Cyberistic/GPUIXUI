@@ -73,6 +73,7 @@ a font size.
 | `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | a pointer drag takes the text (measured, plan `385`); off keeps chrome inert |
+| `shrink` | `boolean` | `true` | may shrink below its widest word (`minWidth: 0`); `false` restores the automatic floor a `Grid` `max-content` track measures (plan `587`) |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the string (or inline nodes) |
@@ -89,6 +90,14 @@ rather than painting past the row and pushing its sibling out (measured, plan
 `383`: a 439 px run in a 220 px row). A column already stretches its children, so
 nothing changes there; `truncate` gets the bounded width its ellipsis needs. A
 caller can raise the floor again with `style={{ minWidth: 120 }}`.
+
+That floor is also what the published runtime reads when it sizes a
+`Grid columnMin="max-content"` track: a `Text` cell therefore measures **0**
+wide unless the run opts out with `shrink={false}`, which restores the runtime's
+automatic content floor (`minWidth: "auto"`). Measured (plan `587`): the same
+two runs paint `33 / 235` px with `shrink={false}` and `0 / 0` without it. The
+default stays `true` because the bounded-row overflow is the common case; a
+content-sized grid cell is the exception and says so.
 
 ## Keyboard
 
@@ -130,7 +139,8 @@ role's own semantics, so use it for marks only; a blank name is absent.
 `textStyle` reads `typography[role]`, the mono/sans family and the tone's colour
 role. `userSelect` defaults to `"none"` so chrome does not accept a text
 selection by accident; turn it on for content. `minWidth: 0` is the containment
-rule above; it is a layout fact, not a colour or size token.
+rule above; `shrink={false}` sends the runtime's `"auto"` instead, and neither is
+a colour or size token.
 
 `clamp` is a **height cap, not the runtime's `lineClamp`**: `maxHeight` is
 `clamp × typography[role].lineHeight` and `overflow` is `"hidden"`. The runtime
@@ -157,6 +167,10 @@ hard-coded pixel value.
 - `label` is for marks, not prose: a named run is an `Image`, so a heading or
   paragraph with a name loses its heading/paragraph semantics. Leave prose
   unnamed; its text is already the node's value.
+- A run inside a `Grid columnMin="max-content"` cell must set
+  `shrink={false}`; the default floor (`minWidth: 0`) is what the track reads,
+  so the column collapses to zero (measured, plan `587`). This is the one place
+  the shrink rule is the wrong shape.
 - **No italic.** `StyleDesc` has no `fontStyle`; the runtime offers family and
   weight only, so emphasis is a different face or a heavier role, not a slant.
 - `decoration` is one value per run: no decoration colour, thickness, style or
@@ -173,11 +187,15 @@ hard-coded pixel value.
 
 - `src/core/variants.test.ts` — every role resolves from the theme.
 - `src/core/style.test.ts` — the clamp payload (`maxHeight`, `overflow`, no
-  `lineClamp`) and the values it refuses.
+  `lineClamp`), the values it refuses, and the shrink floor's two values
+  (`0` / `"auto"`, plan `587`).
 - `src/components/presentational.test.tsx` — tone, alignment, truncate, clamp and
   selectable; every role removes the content floor and a caller's `minWidth`
-  wins (plan `383`); decoration resolves, and a caller's `style` wins (plan
-  `377`); a named run is an image and a blank name is absent (plan `581`).
+  wins (plan `383`); `shrink={false}` restores `"auto"` (plan `587`);
+  decoration resolves, and a caller's `style` wins (plan `377`); a named run is
+  an image and a blank name is absent (plan `581`).
+- `runtime/layout.runtime.test.tsx` — a `max-content` grid cell measures 0 with
+  the default shrink and its content with `shrink={false}` (plan `587`).
 - `runtime/text-selection.runtime.test.tsx` — a real drag selects a
   `selectable` run and selects nothing from a non-selectable one (plan `385`).
 - `runtime/text.runtime.test.tsx` — the clamp's measured height at 1/2/3 lines,

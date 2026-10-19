@@ -382,6 +382,22 @@ describe("type", () => {
     ).toStrictEqual(Option.some(120));
   });
 
+  it("restores the automatic floor when it must be measured", () => {
+    // The bug guarded (plan 587): the shrink floor above is what a
+    // `Grid columnMin="max-content"` track reads as the cell's content, so a
+    // bare `Text` in that grid measured 0 wide. `shrink={false}` asks for the
+    // runtime's automatic floor; the default stays 0 for plan 383's row rule.
+    expect(
+      stringIn(renderText({ shrink: false }, testTheme), "minWidth"),
+    ).toStrictEqual(Option.some("auto"));
+    expect(stringIn(renderText({}, testTheme), "minWidth")).toStrictEqual(
+      Option.none(),
+    );
+    expect(numberIn(renderText({}, testTheme), "minWidth")).toStrictEqual(
+      Option.some(0),
+    );
+  });
+
   it("paints the decoration it is given, and a caller's style still wins", () => {
     // The gap guarded (plan 377): the runtime paints underline and
     // line-through, but `Text` had no prop for either.

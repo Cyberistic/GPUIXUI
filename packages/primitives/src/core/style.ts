@@ -293,6 +293,12 @@ export interface TextSpec {
   readonly clamp?: number;
   /** Selectable text: off by default for chrome, on for content. */
   readonly selectable?: boolean;
+  /**
+   * Whether the run may shrink below its widest word. Defaults to `true`, so a
+   * bounded row wraps it (plan `383`); `false` restores the runtime's automatic
+   * floor, which a content-sized grid track needs to measure it (plan `587`).
+   */
+  readonly shrink?: boolean;
 }
 
 /** The inline decorations the runtime paints; absence is the third state. */
@@ -330,8 +336,10 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     // A text run is a flex item, and its automatic content floor keeps it at
     // max-content width: a sentence in a bounded row painted 231 px past it and
     // pushed its sibling out (measured, plan `383`). Removing the floor lets the
-    // run wrap at the width it is given; a column is unaffected.
-    minWidth: 0,
+    // run wrap at the width it is given; a column is unaffected. A content-sized
+    // grid track measures that floor instead of the content, so a cell that must
+    // be measured opts out with `shrink: false` (measured, plan `587`).
+    minWidth: spec.shrink === false ? "auto" : 0,
   };
   // The runtime maps `center`, `right` and `left`/`start`; `end` was in its
   // style type but implemented nowhere, so our `end` went nowhere at all

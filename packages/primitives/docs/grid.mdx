@@ -26,12 +26,20 @@ A label/value inspector with a narrow label column:
 
 ```tsx
 <Grid columns={2} gap="sm" columnMin="max-content">
-  <Text role="caption" tone="muted">Owner</Text>
-  <Text role="body">Ada Lovelace</Text>
-  <Text role="caption" tone="muted">Status</Text>
-  <Text role="body">Active since 1843</Text>
+  <Text role="caption" tone="muted" shrink={false}>Owner</Text>
+  <Text role="body" shrink={false}>Ada Lovelace</Text>
+  <Text role="caption" tone="muted" shrink={false}>Status</Text>
+  <Text role="body" shrink={false}>Active since 1843</Text>
 </Grid>;
 ```
+
+`shrink={false}` is what makes the track measurable: a text run removes its
+automatic content floor by default (`minWidth: 0`, plan `383`), and the
+published runtime sizes a `max-content` track from that floor — so a bare
+`Text` cell measured **0** wide and the columns collapsed. With `shrink={false}`
+the run keeps its automatic floor and a short/long pair measures `33 / 235` px
+(measured, plan `587`). A cell with an explicit width (a `Box style={{ width:
+96 }}`) or an intrinsically sized control (`Button`) needs no opt-out.
 
 `max-content` fits each column to its widest cell, so the grid **hugs its
 content** instead of filling its parent (measured: `268` of an explicit `600`
@@ -75,6 +83,10 @@ site.
   arbitrary width (`120px`) or a `minmax()` range. Use `columnMin="max-content"`
   for a content-sized column, or a `Stack` row with a fixed-width `Box` when the
   width itself is the design.
+- A `max-content` track measures a cell's **minimum** width. A `Text` run drops
+  its automatic floor by default (plan `383`), so a text cell contributes 0
+  unless it sets `shrink={false}`; an explicit-width `Box` or an intrinsically
+  sized control needs no opt-out (measured, plan `587`).
 - `max-content` makes the grid hug its content; it does not also fill the
   parent. Add `grow` or a stretching cell when both are needed.
 - No auto-flow or spanning cells.
@@ -92,7 +104,8 @@ site.
   row with the theme's gap; with no minimum the two columns are equal, with
   `columnMin="max-content"` the label column is narrow and the grid hugs its
   content, and `rowMin="max-content"` fits a one-line row above a wrapped one
-  (plan `376`).
+  (plan `376`). A `Text` cell measures 0 unless it sets `shrink={false}`, which
+  restores `33 / 235`-style content sizing (plan `587`).
 - `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` column count leaves no
   non-finite number in the painted style (plan `371`).
 

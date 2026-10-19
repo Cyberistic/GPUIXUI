@@ -399,6 +399,17 @@ describe("textStyle", () => {
     );
   });
 
+  it("lifts the shrink floor only when a content-sized track needs it", () => {
+    // The bug guarded (plan 587): the published runtime sizes a
+    // `max-content` track from a child's minimum width, so the shrink floor
+    // plan 383 added made a `Text` cell measure 0. `shrink: false` restores the
+    // runtime's automatic floor without changing the default.
+    expect(text({ role: "body", tone: "default" }).minWidth).toBe(0);
+    expect(
+      text({ role: "body", tone: "default", shrink: false }).minWidth,
+    ).toBe("auto");
+  });
+
   it("refuses a clamp that would collapse the text", () => {
     Arr.forEach([0, -2, Number.NaN, Number.POSITIVE_INFINITY], (clamp) => {
       const style = text({ role: "body", tone: "default", clamp });

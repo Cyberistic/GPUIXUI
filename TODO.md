@@ -1387,7 +1387,12 @@ retired once both branches are one
       §6.5). Do **not** re-baseline the focus assertions — the ring is absent on
       this runtime by contract; the geometry assertions need the merged
       published-box decision before anyone edits them. The scoped relative
-      suites remain valid.
+      suites remain valid. **Corrected 2026-10-19 (plan `587`):** one geometry
+      failure was **ours**, not the box model — `Grid columnMin="max-content"`
+      collapsed every `Text` cell to 0 because of plan `383`'s shrink floor; the
+      fix and its both-directions proof are plan `587`, and the `Text.shrink`
+      opt-out is now the documented shape. The remaining geometry failures are
+      the box-model class.
       **Re-measured 2026-10-18 23:48 (artifact rebuilt 23:35):** 656 tests,
       **544 passed / 112 failed across 20 failing files** — the same
       focus/activation/trigger/geometry families (`fields` 30, `focus-ring` 19,
@@ -1400,6 +1405,10 @@ retired once both branches are one
       **Re-run 2026-10-19 after plan `574`:** 46 files, 700 tests, 589 passed /
       111 failed, the same 19 failing files; the new late-value matrix is 12/12
       and no assertion was re-baselined.
+      **Re-run 2026-10-19 after plan `587`:** 49 files, 717 tests, **605 passed
+      / 112 failed**, the same 19 failing files — the new grid case passes and
+      the content-sized grid case is fixed; no focus or geometry assertion was
+      re-baselined.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1590,6 +1599,16 @@ retired once both branches are one
       separator. 33 offline cases (including a file-level source guard) and a
       5-case scoped a11y-tree file; the old tree fails 23 offline and 4 runtime
       cases (offline 753 → 786; plan `586`).
+`[x]` `packages/primitives`: **`Grid`'s `max-content` track collapsed every
+      `Text` cell to zero** — plan `383`'s global `minWidth: 0` shrink floor is
+      exactly what the published runtime reads as a content-sized track's
+      measurement, so the `Grid` page's own label/value inspector painted
+      invisible columns (measured `0 / 0`; `minWidth: 1` paints `1`, and
+      `minWidth: "auto"` paints `33 / 235`). `Text` gains `shrink` (default
+      `true`, keeping the bounded-row wrap; `false` restores the automatic
+      floor), both pages state the rule and show the working shape, and the
+      runtime matrix proves both directions. `minWidth: "max-content"` is a
+      runtime error and is not offered. Offline 786 → 788; plan `587`.
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -38,6 +38,12 @@ export interface TextProps {
   readonly clamp?: number;
   /** Let the user select this text. Off for chrome, on for content. */
   readonly selectable?: boolean;
+  /**
+   * Whether the run may shrink below its widest word. Defaults to `true`, so a
+   * bounded row wraps it; set `false` in a `Grid columnMin="max-content"` cell
+   * so the track can measure the run's content (plan `587`).
+   */
+  readonly shrink?: boolean;
   readonly style?: StyleDesc;
   /** Stable locator for automation. */
   readonly testId?: string;
@@ -91,13 +97,23 @@ export const renderText = (
     truncate,
     clamp,
     selectable,
+    shrink,
     style,
     testId,
     children,
   }: TextProps,
   theme: PrimitiveTheme,
 ): ReactElement => {
-  const spec = { role, tone, align, decoration, truncate, clamp, selectable };
+  const spec = {
+    role,
+    tone,
+    align,
+    decoration,
+    truncate,
+    clamp,
+    selectable,
+    shrink,
+  };
   return (
     <text
       testId={testId}
