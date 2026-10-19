@@ -52,6 +52,7 @@ describe("a selected row's press", () => {
       "foreground",
       "selectedForeground",
       "mutedForeground",
+      "inputForeground",
       "placeholder",
       "primaryText",
       "disabledForeground",

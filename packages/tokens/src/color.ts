@@ -368,8 +368,10 @@ export const lightColors = {
   input: palette.neutral[0],
   inputForeground: palette.neutral[900],
   // The hint clears the secondary floor on the row washes a field inside a row
-  // paints, not only on the `input` fill and the plain surfaces (plan 527).
-  placeholder: "#5C6574",
+  // paints, not only on the `input` fill and the plain surfaces (plan 527), and
+  // on the four soft status fills a field inside a status panel paints (plan
+  // 659).
+  placeholder: "#5A6372",
   // The focus ring's one non-shadow surface is the value groove, so the ring
   // is the deep iris step: iris[500] measured 2.983:1 on `track` (plan 516),
   // and iris[600] equals the primary fill a clipped inset ring paints on.
@@ -581,8 +583,9 @@ export const highContrastLightColors = {
   input: "#FFFFFF",
   inputForeground: "#000000",
   // Darker than plan 317 left it so the AAA hint clears the 7:1 secondary floor
-  // on the row washes a field inside a row paints (plan 527).
-  placeholder: "#3D4047",
+  // on the row washes a field inside a row paints (plan 527) and on the four
+  // soft status fills a field inside a status panel paints (plan 659).
+  placeholder: "#3B3E45",
   ring: "#4C39B5",
   selection: "#7567F24D",
   selectionOnFill: "#00000026",

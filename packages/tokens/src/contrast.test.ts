@@ -226,6 +226,7 @@ import {
   softActionPairs,
   softActionStepPairs,
   softBorderSurfacePairs,
+  softFieldPairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
   statusFillPairs,
@@ -319,6 +320,7 @@ const publishedPairLists: Readonly<
   softActionPairs,
   softActionStepPairs,
   softBorderSurfacePairs,
+  softFieldPairs,
   softPanelTextPairs,
   stateFillSurfacePairs,
   stateStepPairs,
@@ -616,7 +618,7 @@ describe("themeContrastFailures", () => {
     const failures = themeContrastFailures(typo).filter(
       ({ foreground }) => foreground === "placeholder",
     );
-    expect(failures).toHaveLength(10);
+    expect(failures).toHaveLength(14);
     expect(new Set(failures.map(({ background }) => background))).toEqual(
       new Set([
         "input",
@@ -629,13 +631,17 @@ describe("themeContrastFailures", () => {
         "accent",
         "selected",
         "selectedActive",
+        "infoSoft",
+        "successSoft",
+        "warningSoft",
+        "destructiveSoft",
       ]),
     );
     failures.forEach(({ ratio }) => expect(Number.isNaN(ratio)).toBe(true));
   });
 
   it("covers every documented pair", () => {
-    expect(contrastPairs.length).toBe(451);
+    expect(contrastPairs.length).toBe(460);
     expect(statusFillPairs).toHaveLength(32);
     expect(
       statusFillPairs.map(([foreground, background]) => [

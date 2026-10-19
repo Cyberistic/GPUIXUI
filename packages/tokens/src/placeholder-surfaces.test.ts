@@ -18,6 +18,10 @@
  * content. Every one of the twelve default sets missed the secondary floor on at
  * least one wash — identity dark `#858F9F` measured **3.132:1** on `selected`
  * — while the checker returned `[]`.
+ *
+ * Plan 659 adds the four soft status fills a field inside a tone-tinted Alert
+ * paints: the identity light hint measured **4.439:1** on `destructiveSoft` and
+ * 4.4954:1 on `successSoft` while `themeFailures` returned `[]`.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -40,8 +44,12 @@ const placeholderPairs = contrastPairs.filter(
 );
 
 describe("the placeholder on every surface a field sits on", () => {
-  it("documents the input fill, the four Surface tones and the four row washes, once each", () => {
+  it("documents the four soft fills, the input fill, the four Surface tones and the four row washes, once each", () => {
     expect(placeholderPairs).toEqual([
+      ["placeholder", "infoSoft", "secondary"],
+      ["placeholder", "successSoft", "secondary"],
+      ["placeholder", "warningSoft", "secondary"],
+      ["placeholder", "destructiveSoft", "secondary"],
       ["placeholder", "input", "secondary"],
       ["placeholder", "background", "secondary"],
       ["placeholder", "card", "secondary"],

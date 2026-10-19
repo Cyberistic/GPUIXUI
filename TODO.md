@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 288/362
+`[x]` `[████████░░]` 289/363
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2422,6 +2422,12 @@ times (the label 3.999:1, the fill as a mark 2.233–2.882:1) while no suite ran
 the block; the page now moves the whole family, `recipe-edit.example.ts` is the
 executed owner, and `snippets.test.ts` builds the documented map and keeps the
 pre-fix edit as its can-fail fixture (plan 658)
+`[x]` Hold the field's own content inside a status panel and a pressed selected
+row — `softFieldPairs` measures `inputForeground` and `placeholder` on the four
+soft status fills a documented Alert field sits on, `selectionPressPairs` gains
+typed text on `selectedActive`, and the identity light hint (**4.439:1** on
+`destructiveSoft`) and the AAA light hint (6.993:1) move a half-step;
+`contrastPairs` grows 451 → 460 and every shipped set passes (plan 659)
 
 ## Phase C — Tier 1–2 components
 

@@ -18,6 +18,11 @@
  * retints one of those surfaces while keeping the identity's `inputForeground`
  * could erase typed text while `themeContrastFailures` returned `[]`. Every
  * shipped set passes, so no colour moves.
+ *
+ * Plan 651 added the pressed selected row and plan 659 completes it: an open
+ * in-place editor paints its typed text on `selectedActive`, and the soft status
+ * fills a field inside a tone-tinted Alert sits on were missing from both this
+ * list and the placeholder's.
  */
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
@@ -44,7 +49,7 @@ const surfacesOf = (background: string) =>
   typedTextPairs.filter(([, surface]) => surface === background);
 
 describe("typed text on the canvas field", () => {
-  it("documents the four Surface tones, the input fill and the row washes, once each", () => {
+  it("documents the four soft fills, the four Surface tones, the input fill and the row washes, once each", () => {
     [
       "background",
       "card",
@@ -54,13 +59,18 @@ describe("typed text on the canvas field", () => {
       "active",
       "accent",
       "selected",
+      "selectedActive",
+      "infoSoft",
+      "successSoft",
+      "warningSoft",
+      "destructiveSoft",
     ].forEach((surface) => {
       expect(surfacesOf(surface), surface).toEqual([
         ["inputForeground", surface, "body"],
       ]);
     });
     expect(surfacesOf("input")).toEqual([["inputForeground", "input", "body"]]);
-    expect(typedTextPairs).toHaveLength(9);
+    expect(typedTextPairs).toHaveLength(14);
   });
 
   it("keeps every shipped theme above its declared floor", () => {

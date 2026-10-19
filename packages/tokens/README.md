@@ -516,17 +516,22 @@ Alert's description paints, so an avatar's initials on
 the quiet panel, a date picker's month header on its floating surface, a selected
 row's title and an Alert's body are held to the body floor. Typed text (`inputForeground`) is
 checked on the `input` fill, on the four `Surface` tones a transparent field
-can sit on — `background`, `card`, `popover` and `muted` — and on the four row
-washes a field inside a row paints, so a search box or
-inline edit cannot lose its text whichever panel it sits on (plans 319 and 527). The
-placeholder (`placeholder`) is checked on the same nine surfaces, because a
+can sit on — `background`, `card`, `popover` and `muted` — on the four row
+washes a field inside a row paints and the pressed `selectedActive` fill, and on
+the four soft status fills a field inside a status panel paints, so a search box or
+inline edit cannot lose its text whichever panel it sits on (plans 319, 527 and 659). The
+placeholder (`placeholder`) is checked on the same fourteen surfaces, because a
 search box in a
-sidebar or a dialog is not tied to one fill and an in-place edit sits in the row
-it replaces; identity dark measured 4.03:1 on
+sidebar or a dialog is not tied to one fill, an in-place edit sits in the row
+it replaces and a validation block can carry the field it reports on; identity
+dark measured 4.03:1 on
 the quiet panel and the floating surface until plan 317 moved it one step, then
 **3.132:1** on the `selected` fill until plan 527 moved it again, and every one
 of the twelve default sets missed the row-wash floor (4.589:1 at the tightest
-after the move, Linux dark on `active`). A menu
+after the move, Linux dark on `active`); the identity light hint then measured
+**4.439:1** on `destructiveSoft` and the AAA light hint 6.993:1 there, so plan
+659 moved both a half-step and every shipped set clears all four soft fills at
+4.575:1 or better. A menu
 row's `popoverForeground` on
 `hover`/`active`, a selected `Select` option's on `selected` (plan 314), and a
 selected row's inherited `selectedForeground` on the `accent` wash a selectable

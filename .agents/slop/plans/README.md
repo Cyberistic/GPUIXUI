@@ -316,6 +316,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [655](./655-source-example-imports.md) | Every source `@example` is a copyable module | F | 355, 356 | done |
 | [656](./656-copyable-theme-declarations.md) | Every copyable block declares the theme it paints with | F | 355, 356, 655 | done |
 | [658](./658-recipe-edit-family.md) | The documented recipe edit must own its whole family | F | 310, 311, 318, 327, 330, 331, 355, 389 | done |
+| [659](./659-field-content-surfaces.md) | The field's own content inside a status panel and a pressed selected row | F | 092, 306, 307, 315, 317, 319, 391, 527, 649, 651 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3441,6 +3442,23 @@ Plan `655` closes the half of plan `356` that the source-snippet guard skipped. 
 Plan `656` closes the other half of plan `655`'s promise. The guard read exported names, so a bare `theme` was invisible: twenty-two blocks that begin with a package import (two source `@example`s, fourteen catalogue snippets and six README snippets) passed `theme` to a helper or read `theme.colors`, and a reader who copied one got `ReferenceError: theme is not defined`. The first probe found seven through `theme.` property access; a second pass for a bare argument found fifteen more. `usesUndeclaredTheme` now holds every package-importing block to a local binding, a typed parameter, or a destructured callback, and accepts a JSX `theme={…}` prop and the word "theme" in a label; the synthetic case proves both directions. Every block resolves its own theme (`nativeTextTheme`'s source example uses `getTheme("dark")`, the rest light), the README block drops its unused `alpha` import, and no token value, colour, pair, floor, metric or check moves.
 
 Plan `658` closes the last copyable block that taught a theme the package rejects. The recipe section told a reader to "copy it, edit a value" and its block changed only `primary`, so the copied Aero theme kept the Windows dark black foreground and the old hover/pressed family: `themeFailures` returned seven failures — the label at **3.999:1** on the new fill and the fill as a mark at 2.696:1 on a card, popover, the quiet panel and a field, 2.882:1 on the value groove and 2.233:1 on the hover wash. The page already warned against exactly that (plan `310`), but no suite ran the block: `snippets.test.ts` only held the brand maps, and no executed example owned a recipe edit. `recipe-edit.example.ts` now moves the whole Contoso primary family on the Aero dark base and is held to `themeFailures`; the snippet guard reads the documented nested map, requires it to equal the example's family, builds it, and reconstructs the pre-fix one-role edit to prove it fails. No token value, pair, floor, metric, count or shipped theme moves.
+
+Plan `659` closes the last content a field paints with no pair behind it. A
+tone-tinted Alert carries a field — the package's own `controlBoundarySoftPairs`
+records that composition, and plan `092` measured the field's edge there — but
+the two roles the field's content paints were measured only on the `input` fill,
+the four `Surface` tones and the four row washes. A probe of the shipped identity
+light theme found the hint at **4.439:1** on `destructiveSoft` and 4.4954:1 on
+`successSoft`, and the AAA light hint at 6.993:1 on `destructiveSoft` under its
+7:1 floor, while `themeFailures` returned `[]`. The pressed selected row plan
+`651` added carried the hint but not the typed text a transparent `InlineEdit`
+paints there. `softFieldPairs` publishes `inputForeground` and `placeholder` on
+the four soft fills, `selectionPressPairs` gains typed text on `selectedActive`,
+and the two shipped hints move one half-step (`#5C6574` → `#5A6372`,
+`#3D4047` → `#3B3E45`). The contract grows 451 → **460**; every shipped set
+clears the new pairs (4.575:1 for the hint, 10.455:1 for typed text in a panel
+and 11.432:1 on the pressed row at the tightest), and `soft-field.test.ts` states
+both bugs and reconstructs the pre-fix values to prove the guard can fail.
 
 ## How to use a plan
 

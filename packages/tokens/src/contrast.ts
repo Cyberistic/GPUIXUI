@@ -425,8 +425,9 @@ export const selectionPressStepPairs: readonly ContrastPair[] = [
 /**
  * The text and chrome a pressed selected row paints. `selectedActive` is a row
  * surface like `selected`: a title (`foreground`), the inherited label
- * (`selectedForeground`), metadata, a hint, a brand-toned link and a disabled
- * control sit on it; the four status labels are derived from
+ * (`selectedForeground`), metadata, typed text in an in-place editor, a hint, a
+ * brand-toned link and a disabled control sit on it; the four status labels are
+ * derived from
  * {@link statusTextSurfaces}, which names it too, and the row's control edge, focus ring,
  * divider and loading skeleton paint there too. The groove and the skeleton are
  * measured through {@link trackSurfacePairs} and {@link skeletonPulsePairs}, and
@@ -441,6 +442,7 @@ export const selectionPressPairs: readonly ContrastPair[] = [
   ["foreground", "selectedActive", "body"],
   ["selectedForeground", "selectedActive", "secondary"],
   ["mutedForeground", "selectedActive", "secondary"],
+  ["inputForeground", "selectedActive", "body"],
   ["placeholder", "selectedActive", "secondary"],
   ["primaryText", "selectedActive", "secondary"],
   ["disabledForeground", "selectedActive", "inactive"],
@@ -872,6 +874,29 @@ export const softPanelTextPairs: readonly ContrastPair[] =
   );
 
 /**
+ * The field's own content inside a tone-tinted status panel. An Alert carries a
+ * field — its `borderStrong` edge is measured on the four soft fills by
+ * {@link controlBoundarySoftPairs} (plan 092) — and the typed text and hint sit
+ * on the tone-tinted fill, not on the `input` fill a field usually paints. The
+ * body floor applies to typed text and the secondary floor to the hint, the
+ * same split `inputTextSurfacePairs` and `placeholderSurfacePairs` use.
+ *
+ * The identity light hint measured **4.439:1** on `destructiveSoft` and
+ * 4.4954:1 on `successSoft` — the fill an inline validation block and a
+ * destructive Alert provide — while `themeFailures` returned `[]`, because the
+ * four soft fills were in neither role's list. The hint moves one half-step to
+ * `#5A6372`, which clears all four at 4.5753:1, and the AAA light hint had the
+ * same gap one floor up (6.9929:1 on `destructiveSoft`) and moves to `#3B3E45`
+ * (7.2134:1) (plan 659).
+ */
+export const softFieldPairs: readonly ContrastPair[] = softSurfaceRoles.flatMap(
+  (background): ReadonlyArray<ContrastPair> => [
+    ["inputForeground", background, "body"],
+    ["placeholder", background, "secondary"],
+  ],
+);
+
+/**
  * The soft tone foreground a Toast paints on its floating card. The shipped
  * `toast/viewport.tsx` paints its tone glyph and its 3px bar with
  * `statusTone(...).foreground` (`xSoftForeground`) directly on the `popover`
@@ -960,7 +985,8 @@ const secondaryWashPairs: readonly ContrastPair[] = [
  * link paints and the row fills it sits on, default body text on the quiet panel,
  * the floating surface and the four soft status fills an Alert's description and
  * ghost dismiss control paint, a status panel's caption and link — `mutedForeground`
- * and `primaryText` on the same four fills (`softPanelTextPairs`) — a Toast's
+ * and `primaryText` on the same four fills (`softPanelTextPairs`) — the typed
+ * text and hint of a field inside that panel (`softFieldPairs`) — a Toast's
  * tone glyph and bar, which the shipped component paints with the soft
  * foreground on its floating `popover` card (`toastTonePairs`) — the focus ring
  * on every surface a focused control
@@ -1096,6 +1122,7 @@ export const contrastPairs: readonly ContrastPair[] = [
   ...rowTextPairs,
   ...softBodyPairs,
   ...softPanelTextPairs,
+  ...softFieldPairs,
   ...toastTonePairs,
   ["accentForeground", "accent", "secondary"],
   ["selectedForeground", "selected", "secondary"],

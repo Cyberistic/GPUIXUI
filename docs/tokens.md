@@ -270,8 +270,8 @@ A runnable example lives in
 | `border` | `#D6DAE1` | `#343B47` | dividers and decorative borders |
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
-| `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
-| `placeholder` | `#5C6574` | `#A8B0BD` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints and the `hover`/`active`/`accent`/`selected` washes a field inside a row paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
+| `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints |
+| `placeholder` | `#5A6372` | `#A8B0BD` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
 | `ring` | `#4C39B5` | `#A7A9FF` | focus ring; the value groove a focused slider's thumb sits on |
 | `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
@@ -571,8 +571,8 @@ carries, so it cannot claim another.
 | `border` | `#575E6B` | `#A0A0A0` | dividers and decorative borders |
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
-| `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill or the `background`/`card`/`popover`/`muted` surfaces a transparent field paints |
-| `placeholder` | `#3D4047` | `#D1D1D1` | placeholder text |
+| `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints |
+| `placeholder` | `#3B3E45` | `#D1D1D1` | placeholder text |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
@@ -2770,11 +2770,13 @@ themeTextTierFailures(flattened); // a failure per surface the tiers share
 The surfaces are derived from `contrastPairs`, not retyped: thirteen shared
 surfaces for secondary text below body copy, one `card` for `cardForeground`,
 four for `popoverForeground` (`popover` and the three row washes it shares), the
-nine surfaces typed text is documented on for `inputForeground` (`muted`,
-`background`, `card`, `popover`, `input` and the four row washes), fourteen for the
+fourteen surfaces typed text is documented on for `inputForeground` (`muted`,
+`background`, `card`, `popover`, `input`, the pressed `selectedActive` and the
+four row washes, plus the four soft status fills a field inside a status panel
+paints), fourteen for the
 inactive label below secondary text (every surface `inactivePairs` measures
-except the `disabled` fill, which carries no secondary text), ten for a hint and
-a caption, five for the disabled panel-action label below the enabled one
+except the `disabled` fill, which carries no secondary text), fourteen for a hint
+and a caption, five for the disabled panel-action label below the enabled one
 (`softAction` and the four soft fills), and four for the selected row's label
 below its title (the `hover`/`active`/`accent`/`selected` fills both roles are
 documented on). Every shipped set clears the step; the
@@ -3246,9 +3248,11 @@ Default body text is measured on `background`, `card`, the `muted` panel,
 the four soft status fills an Alert's description paints
 (`infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`); typed text is
 `inputForeground` on the `input` fill, on the four `Surface` tones a transparent
-field can sit on (`background`, `card`, `popover`, `muted`) and on the four row
-washes a field inside a row paints. The placeholder is held to the same
-secondary floor on that same nine-surface list; a disabled field is out of scope
+field can sit on (`background`, `card`, `popover`, `muted`), on the four row
+washes a field inside a row paints and the pressed `selectedActive` fill, and on
+the four soft status fills a field inside a status panel paints
+(`softFieldPairs`). The placeholder is held to the same
+secondary floor on that same fourteen-surface list; a disabled field is out of scope
 for these body pairs because the designed state reads `disabledForeground`, which
 `inactivePairs` measures — the shipped primitives still dim the field at 50%,
 which measures **3.273:1** on the macOS light `input` fill, under both the body
@@ -3261,7 +3265,16 @@ twelve default sets missed the 4.5:1 floor on at least one wash — macOS light
 `themeContrastFailures` returned `[]`. Plan `527` adds the four washes to both
 lists, moves the fourteen shipped hints (the twelve default sets and the two AAA
 palettes every high-contrast variant reads), and the tightest new pair is
-**4.589:1** (Light · Windows XP on `active`) with the AAA sets at 7.113:1 or better. The
+**4.589:1** (Light · Windows XP on `active`) with the AAA sets at 7.113:1 or better. Plan `659`
+closes the field's own content inside a tone-tinted status panel and the pressed
+selected row: the identity light hint measured **4.439:1** on `destructiveSoft`
+and 4.4954:1 on `successSoft`, and the AAA light hint 6.993:1 on
+`destructiveSoft` under its 7:1 floor, while every check returned `[]`, so the
+two hints move one half-step (`#5C6574` → `#5A6372`, `#3D4047` → `#3B3E45`).
+Every shipped set now clears all four soft fills (4.575:1 at the tightest,
+identity light), the typed text in a panel (10.455:1 at the tightest) and the
+typed text on a pressed selected row (11.432:1), and the `selectedActive` hint
+was already measured. The
 panel and the floating surface are not academic: an avatar's fallback initials
 sit on `muted`, and a date picker's month header sits on its `popover`. The row
 washes are not either: a selectable list row paints `accent` on hover and
@@ -3584,7 +3597,11 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **451** across plans `527`, `557`, `595`, `619`, `650` and `651`.
+396 to **460** across plans `527`, `557`, `595`, `619`, `650`, `651` and `659`.
+Plan `659` adds the field's typed text and hint inside a tone-tinted status
+panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
+row, and moves the identity and AAA light hints one half-step that already
+failed their soft-fill floors (`#5C6574` → `#5A6372`, `#3D4047` → `#3B3E45`).
 A Toast is a `popover` card, not a tinted panel: `softAction` equals that card in
 every light shipped set and measures **1.0000:1**, so a Toast action paints the
 canvas neutral family (`filledControl(theme, "secondary")`), which the contract
