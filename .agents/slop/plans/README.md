@@ -271,6 +271,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [585](./585-native-text-runtime-metrics.md) | The two native-text metrics a brand is told it can set | F | 569, 572, 583 | done |
 | [588](./588-native-chrome-washes.md) | The native document's chrome washes | F | 569, 572–574, 583, 585 | done |
 | [589](./589-native-code-block-edge.md) | The native code block's own edge on its body ink wash | F | 574, 583, 585, 588 | done |
+| [590](./590-inline-code-accent-wash.md) | Inline code text on its accent wash | F | 082, 314, 528, 569, 574, 589 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
