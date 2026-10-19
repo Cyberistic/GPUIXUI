@@ -235,7 +235,8 @@ Run from the worktree root
    nub run --filter @gpuixui/tokens test
    ```
 
-   Expected: green, one new file and five new tests over the 166-file baseline,
+   Expected: green, one new file and five new tests plus the parameterised
+   figure case over the 166-file baseline,
    no shipped theme, platform variant, recipe or executed example failing the
    new pair.
 
@@ -297,7 +298,8 @@ Stop and report instead of improvising when:
 - New suite, pre-fix (`git stash push -- packages/tokens/src/contrast.ts`):
   **3 failed / 2 passed**. Post-fix: **5 passed**.
 - `nub run --filter @gpuixui/tokens test`: **167 files / 6,091 tests** green
-  (one new file, five new tests over the 166-file / 6,086-test baseline).
+  (one new file with five tests, plus the parameterised figure case for the new
+  tier, over the 166-file / 6,085-test baseline).
 - `nub run check`: `check:tests`, lint, format and type-check green.
 - `nub run lint`: green.
 - `nub run test`: **167 files / 6,091 tests** green.
