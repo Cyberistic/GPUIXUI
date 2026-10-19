@@ -1,5 +1,5 @@
 /**
- * `@gpuixui/primitives` — the foundation GPUixUI's components are built on.
+ * `@gpuixui/primitives` — the foundation GPUIxUI's components are built on.
  *
  * Two layers:
  *

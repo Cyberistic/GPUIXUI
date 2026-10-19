@@ -65,7 +65,9 @@ Artifacts (gitignored, under `.artifacts/`):
 - `.artifacts/smoke-report.json` — the schema-encoded report (`Report.reportJson`);
 - `.artifacts/screenshots/<scenario-id>.png` — one frame per scenario with `--screenshots`.
 
-Flags: `--json`, `--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`.
+Flags: `--list` (print the scenario ids, exit `0`), `--json`,
+`--only <scenario-id>`, `--screenshots`, `--artifacts <dir>`. An unknown flag or
+scenario id prints the usage line and exits `2` before the binding loads.
 
 Nothing is written to `.artifacts/` on an unsupported host: exit `2` means there
 is no evidence, and a stale report must never be mistaken for a fresh one.
@@ -86,8 +88,10 @@ sh apps/playground/scripts/build-native-binding.sh
 ```
 
 It installs Rust 1.97.1 and the pinned zed tree under
-`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), builds the
-cdylib with `runtime_shaders`, and drops it at
+`.agents/slop/scratch/gpuix-build/` (agent state, gitignored), applies
+`apps/playground/patches/gpuix-zindex.patch` (the binding's `StyleDesc.zIndex`,
+which orders paint and hit testing among `absolute`/`fixed` siblings — plan
+`530`), builds the cdylib with `runtime_shaders`, and drops it at
 `node_modules/@gpuix/native/gpuix-native.darwin-x64.node`. The recipe, commands,
 STOP conditions and the measured per-capability facts are in
 `.agents/slop/plans/140-gpuix-native-darwin-x64-build.md`; the decision is

@@ -364,11 +364,25 @@ B1, so it is planned, not done.
 > and are merged into `main` as each workstream completes; this index is the
 > union.
 
+### Docs site (block `400–499`)
+
+| Plan | Title | Phase | Depends on | Status |
+| ---- | ----- | ----- | ---------- | ------ |
+| [436](./436-blocks-and-theme-editor.md) | **Blocks and the Theme Editor** — the two remaining shadcn surfaces (`/docs/blocks`, `/docs/themes`) | E | `524`, `063`, `200` | done — `/docs/blocks` index + login/settings recipes and the `/docs/themes` token editor, on `agent/blocks-theme-editor` |
+
+> The earlier phase-E docs plans (`433` platform recipes, `434` landing, `435a–c`
+> Pele / Editor / RTL) are listed in the reference-adoption table above; they
+> share this block but were numbered before the docs-site section existed.
+
 ### Cross-cutting styling conformance
 
 | Plan | Title | Phase | Depends on | Status |
 | ---- | ----- | ----- | ---------- | ------ |
 | [524](./524-shadcn-tailwind-conformance.md) | shadcn/Base UI conformance: Tailwind recipes → `StyleDesc`, with `cn` | infra | `020`, `200`, `201` | in progress |
+| [525](./525-gpui-transform.md) | GPUI transform/scale: audit the 0xErwin1 branch, merge surface, licence, and the fork-or-fallback decision | infra (renderer) | `020`, `524`, `140` | research complete — **needs port**; optional patch ported and green (`patches/gpui/`), but the fork is still not distributable; fallback recommended until gate 2. Build plumbing: `538` |
+| [537](./537-gpui-ce.md) | `gpui-ce`: capability delta, patch-vs-switch, and the integration verdict | infra (runtime) | `020`, `524`, `525` | research complete — **do not switch**; port binding-level patches, keep renderer features unsupported |
+| [530](./530-gpuix-zindex.md) | `zIndex` in the GPUix binding: paint order and hit order | infra (runtime) | `140`, `529`, `524` | done — patch applied to the source-built `darwin-x64` binding; 27 Rust tests and 397 playground tests pass; transform/scale/rotate stay out of scope |
+| [538](./538-transform-build-fork-source.md) | Transform build plumbing: fetch the GPUix Zed fork at the pin and apply the transform patch behind `GPUIX_TRANSFORM=1` | infra (renderer) | `525`, `530`, `140` | source integration done — fetch, patch apply and flag transitions proven without a build; transform-enabled build deliberately deferred |
 
 ## How to use a plan
 

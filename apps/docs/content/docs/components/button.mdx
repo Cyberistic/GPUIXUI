@@ -1,0 +1,128 @@
+---
+title: Button
+description: The primary action — clickable and keyboard-activatable, with busy and disabled states.
+---
+
+`Button` is the action primitive. `@gpuix/react` 0.10.0 publishes no `./button`
+subpath, so this component owns the keyboard contract itself instead of wrapping
+a headless one.
+
+<ComponentPreview name="button-variants" />
+
+## Installation
+
+<Install packageName="@gpuixui/primitives" importName="Button" />
+
+<ComponentSource
+  name="button"
+  file="packages/primitives/src/components/Button.tsx"
+/>
+
+## Usage
+
+```tsx
+import { Button } from "@gpuixui/primitives";
+
+<Button variant="primary" onActivate={save}>
+  Save changes
+</Button>;
+```
+
+`onActivate` runs for a click or an activating key. `onClick` is the raw pointer
+event and runs first, when a caller needs the event itself.
+
+## Variants
+
+`primary` is the default. One primary action per view is the rule; the
+component cannot enforce it, but the theme makes a second one obvious.
+
+| Variant | Rest |
+| ------- | ---- |
+| `primary` | `primary` fill, `primaryForeground` text |
+| `secondary` | `secondary` fill |
+| `outline` | border only |
+| `ghost` | no chrome at rest |
+| `destructive` | `destructive` fill, for deletes and revokes |
+| `link` | text in the primary role, underlined on hover |
+
+The variants come from `core/variants.ts`, the same table the library and this
+page read. A variant maps to colour roles, never to a colour.
+
+## Sizes
+
+Sizes take their height and horizontal padding from the theme's density, so a
+compact theme makes every control smaller without changing component code.
+
+<ComponentPreview name="button-sizes" />
+
+| Size | Height | Horizontal padding |
+| ---- | ------ | ------------------ |
+| `sm` | `density.controlHeight.sm` | `density.controlPaddingX.sm` |
+| `md` (default) | `density.controlHeight.md` | `density.controlPaddingX.md` |
+| `lg` | `density.controlHeight.lg` | `density.controlPaddingX.lg` |
+
+## States
+
+<ComponentPreview name="button-states" />
+
+- `square` — equal width and height, no horizontal padding: an icon-only action.
+  Pair it with `label`, because there is no visible text to name it.
+- `fullWidth` — stretches to the parent.
+- `disabled` — refuses click and keys, dims, and leaves the tab order.
+- `loading` — shows a spinner, announces `Loading`, refuses activation, and
+  **stays focusable** so a keyboard user is not dropped mid-action.
+- `leading` / `trailing` — an icon or element on either side of the label.
+
+## Composition
+
+Button is one control, not a compound part. A row of related actions uses
+`ButtonGroup`; an icon-only action uses `square` plus `label`. The visual table,
+not a wrapper, keeps variants consistent.
+
+## Keyboard
+
+| Key | Contract |
+| --- | -------- |
+| `Enter` | activates on key **down** |
+| `Space` | activates on key **up** |
+| held key | repeat events never activate |
+
+`disabled` and `loading` refuse both. A held key is ignored so an autorepeat
+cannot fire an action twice.
+
+## API reference
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `variant` | `"primary" \| "secondary" \| "outline" \| "ghost" \| "destructive" \| "link"` | `"primary"` | paint from the variant table |
+| `size` | `"sm" \| "md" \| "lg"` | `"md"` | height and padding from density |
+| `square` | `boolean` | `false` | icon-only geometry |
+| `fullWidth` | `boolean` | `false` | `width: 100%` |
+| `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
+| `loading` | `boolean` | `false` | spinner, `Loading` description, blocks activation |
+| `leading` / `trailing` | `ReactNode` | none | icon or element beside the label |
+| `label` | `string` | none | accessible name; required for an icon-only button |
+| `onActivate` | `() => void` | none | click or activating key; not called while busy |
+| `onClick` | `(event) => void` | none | raw click, called before `onActivate` |
+| `style` | `StyleDesc` | none | merged last |
+| `testId` | `string` | none | stable locator |
+| `children` | `ReactNode` | none | visible label |
+
+## Accessibility and limitations
+
+- Role `button`; the name comes from `label` or the visible text.
+- `loading` sets `aria-description="Loading"` — 0.10.0 has no `aria-busy`.
+- There is no `aria-disabled`: a disabled button leaves the tab order and drops
+  its handlers instead. That is the strongest truthful alternative, and assistive
+  technology sees a button that does nothing.
+- Focus is a shadow ring, because the runtime has no `focusVisible`. A mouse
+  press therefore shows the same ring as Tab.
+- There is no native button element: the runtime exposes a `div` with role and
+  handlers.
+
+## Related
+
+- **ButtonGroup** — related actions as one control.
+- **Toggle** — a momentary pressed state rather than an action.
+- **Tooltip** — explain an icon-only action.
+- **Progress** — the long-running form of "working", alongside `loading`.

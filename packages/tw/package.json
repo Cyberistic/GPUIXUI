@@ -13,6 +13,14 @@
     "./react": {
       "types": "./src/react.tsx",
       "default": "./src/react.tsx"
+    },
+    "./jsx-runtime": {
+      "types": "./src/jsx-runtime.ts",
+      "default": "./src/jsx-runtime.ts"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./src/jsx-dev-runtime.ts",
+      "default": "./src/jsx-dev-runtime.ts"
     }
   },
   "scripts": {

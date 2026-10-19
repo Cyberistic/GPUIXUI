@@ -13,7 +13,8 @@
     "**/.alchemy/**",
     "**/.source/**",
     "**/references/**",
-    "**/workspaces/**"
+    "**/workspaces/**",
+    "apps/docs/src/routeTree.gen.ts"
   ],
   "overrides": [
     {

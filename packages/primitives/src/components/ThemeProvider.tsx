@@ -26,7 +26,7 @@ const ThemeContext = createContext<PrimitiveTheme | null>(null);
 export class MissingThemeProviderError extends Error {
   constructor() {
     super(
-      "useTheme() found no <ThemeProvider>. GPUixUI primitives never fall back " +
+      "useTheme() found no <ThemeProvider>. GPUIxUI primitives never fall back " +
         "to a default palette; wrap the tree in <ThemeProvider theme={theme}>.",
     );
     this.name = "MissingThemeProviderError";

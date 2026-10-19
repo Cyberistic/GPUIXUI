@@ -1,6 +1,6 @@
 # `@gpuixui/primitives`
 
-The foundational render primitives and the Tier 1 component set for GPUixUI.
+The foundational render primitives and the Tier 1 component set for GPUIxUI.
 GPUix gives a program one box (`div`), one text node (`text`), a flat CSS-shaped
 `style` prop and native events; this package is the layer that turns that
 runtime into a **system**: one place where a semantic decision becomes a concrete

@@ -8,10 +8,23 @@
 export { cn } from "cn";
 export {
   classesToStyle,
+  createTw,
   mergeTwStyle,
-  type TwBucket,
+  unsupportedReason,
+  type TwCompiler,
   type TwResult,
 } from "./classes.js";
+export {
+  createTwRegistry,
+  defaultRegistry,
+  type TwBucket,
+  type TwRegistry,
+  type TwRegistryConfig,
+  type TwState,
+  type TwUtilityResolver,
+  type TwVariantResolver,
+} from "./registry.js";
+export { BASE_ALIASES } from "./aliases.js";
 export {
   dialogMotion,
   motionFromClasses,
@@ -20,6 +33,7 @@ export {
   type TwMotion,
 } from "./motion.js";
 export { resolveUtility, type Utility } from "./utilities.js";
+export { unsupportedClasses } from "./unsupported.js";
 export {
   BUTTON_BASE,
   BUTTON_SIZES,
