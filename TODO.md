@@ -1163,8 +1163,10 @@ hover style replaces the persistent selection; now that plan 381 separates the
 two roles (they were the same value in the identity, macOS light and three more
 sets), a selected row visibly falls back to the unselected hover wash while the
 pointer is over it. Do not paint the unselected hover wash over a selected row:
-keep `selected`, or step inside a selection family if one ships later (owner:
-`components`; plan 381).
+keep `selected` under hover and paint the designed `selectedActive` on press, a
+24% canvas veil that previews deselection one measured step toward the canvas
+(`selectionPressStepPairs`), instead of the unselected `active` wash (owner:
+`components`; plans 381 and 651).
 `[ ]` Cross-team: `components` gives a notification's open row a persistent state —
 `notification-centre.tsx` paints the open item with `accent` (the hover wash),
 replaces it with `hover`/`active` while the pointer is over the row, and rings it
