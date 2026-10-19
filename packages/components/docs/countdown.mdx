@@ -46,8 +46,12 @@ The runnable build is `examples/countdown.example.tsx`, registered in
 | `90_000_000` ms with `showDays` | `1d 01:00:00` |
 | `3_600_000` ms with `showDays` | `01:00:00` — no day prefix without a full day |
 | `0` or negative | `00:00` |
+| `NaN` or an infinity | `00:00` — the settled, expired state |
 
-Seconds are **floored**, not rounded: `59_999` ms is `00:59`. The format is fixed
+Seconds are **floored**, not rounded: `59_999` ms is `00:59`. A non-finite value
+has no duration to show, so it renders `00:00` in the expired role and reports
+`remainingMs: 0` to `style` — never `NaN` arithmetic in the clock text.
+The format is fixed
 and locale-free (the repo has no i18n layer); `showDays` treats a day as 24
 hours, not as a calendar day.
 
@@ -55,7 +59,7 @@ hours, not as a calendar day.
 
 | Prop | Type | Default | Notes |
 | ---- | ---- | ------- | ----- |
-| `remainingMs` | `number` | — | Required. Negative values render `00:00`. |
+| `remainingMs` | `number` | — | Required. Negative values render `00:00`; a non-finite value renders `00:00` and sets `expired`. |
 | `label` | `string` | — | The accessible name; the value stays the text. |
 | `showDays` | `boolean` | `false` | Adds the `Nd ` prefix once a full day remains. |
 | `style` | `StateStyle<CountdownState>` | — | `CountdownState` is `{ remainingMs, expired }`. |
@@ -87,12 +91,13 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/countdown.test.tsx` runs in the real GPUix renderer (5 tests):
-the rendered text, a re-render with a new value, the expired role, the
+`src/behaviour/countdown.test.tsx` runs in the real GPUix renderer (6 tests):
+the rendered text, a re-render with a new value, the expired role, a non-finite
+duration settling to an expired `00:00`, the
 accessible name and both themes.
 
-`src/countdown/logic.test.ts` (9 pure tests) covers splitting, flooring,
-clamping, the hour cap and the day prefix.
+`src/countdown/logic.test.ts` (11 pure tests) covers splitting, flooring,
+clamping, non-finite input, the hour cap and the day prefix.
 
 ```sh
 nub run --filter @gpuixui/components test

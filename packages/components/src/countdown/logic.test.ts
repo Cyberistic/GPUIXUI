@@ -3,7 +3,8 @@
  *
  * The bug these guard: a countdown that rounds a partial second up, a negative
  * remainder that renders "-1:59", capped hours after a day, and days appearing
- * when they were not asked for.
+ * when they were not asked for; and a non-finite remainder that painted
+ * `NaN:NaN` instead of the settled clock (plan 650).
  */
 
 import { describe, expect, it } from "vitest";
@@ -31,6 +32,17 @@ describe("breakdown", () => {
       seconds: 0,
     });
   });
+
+  it("splits a non-finite duration into zero units", () => {
+    // The bug this guards (plan 650): `Math.max(0, NaN)` is NaN, so every unit
+    // came back NaN and the clock painted `NaN:NaN`.
+    expect(breakdown(Number.NaN)).toEqual({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+  });
 });
 
 describe("formatCountdown", () => {
@@ -50,6 +62,16 @@ describe("formatCountdown", () => {
   it("renders 00:00 at and below zero", () => {
     expect(formatCountdown(0)).toBe("00:00");
     expect(formatCountdown(-1)).toBe("00:00");
+  });
+
+  it("reads a non-finite duration as the settled clock text", () => {
+    // The bug this guards (plan 650): the text was `NaN:NaN`, and
+    // `Infinityd Infinity:NaN:NaN` with days shown.
+    expect(formatCountdown(Number.NaN)).toBe("00:00");
+    expect(formatCountdown(Number.POSITIVE_INFINITY)).toBe("00:00");
+    expect(formatCountdown(Number.NEGATIVE_INFINITY, { showDays: true })).toBe(
+      "00:00",
+    );
   });
 
   it("floors a partial second instead of rounding", () => {

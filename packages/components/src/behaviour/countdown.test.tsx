@@ -2,8 +2,9 @@
  * Countdown behaviour, in the real GPUix renderer.
  *
  * The bugs these guard: a display that ignores a new remaining value, an expired
- * countdown that still reads as live, an unsigned label, and a style callback
- * that cannot see the expiry.
+ * countdown that still reads as live, an unsigned label, a style callback
+ * that cannot see the expiry, and a non-finite remainder that painted
+ * `NaN:NaN` in the live role (plan 650).
  */
 
 import { describe, expect, it } from "vitest";
@@ -32,6 +33,21 @@ describe("Countdown", () => {
 
   it("renders an expired countdown as 00:00 in the muted role", () => {
     const countdown = renderComponent(<Countdown remainingMs={-1} />);
+
+    const leaf = countdown.renderer.findByText("00:00");
+    const text =
+      leaf?.parentId == null
+        ? undefined
+        : countdown.renderer.getElement(leaf.parentId);
+    expect(text?.style.color).toBe(darkTheme.colors.mutedForeground);
+
+    countdown.unmount();
+  });
+
+  it("renders a non-finite duration as an expired 00:00", () => {
+    // The bug this guards (plan 650): the text read `NaN:NaN` and the raw
+    // `remainingMs <= 0` left it in the live foreground colour.
+    const countdown = renderComponent(<Countdown remainingMs={Number.NaN} />);
 
     const leaf = countdown.renderer.findByText("00:00");
     const text =

@@ -43,7 +43,10 @@ export const Countdown = ({
   ...rest
 }: CountdownProps) => {
   const theme = useTheme();
-  const expired = remainingMs <= 0;
+  // A non-finite duration has no remaining time: paint the settled `00:00`
+  // state the component promises for a negative value (plan 650).
+  const remaining = Number.isFinite(remainingMs) ? remainingMs : 0;
+  const expired = remaining <= 0;
 
   return (
     <text
@@ -56,10 +59,10 @@ export const Countdown = ({
             ? theme.colors.mutedForeground
             : theme.colors.foreground,
         },
-        resolveStyle(style, { remainingMs, expired }),
+        resolveStyle(style, { remainingMs: remaining, expired }),
       )}
     >
-      {formatCountdown(remainingMs, { showDays })}
+      {formatCountdown(remaining, { showDays })}
     </text>
   );
 };

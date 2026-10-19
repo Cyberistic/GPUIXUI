@@ -498,6 +498,15 @@ retired once both branches are one
       "no collapse"; 1 pure + 1 native case (Breadcrumb 13), both-direction proof
       (the pure case renders `a …` and the native case paints three entries at
       `HEAD`); docs, `COMPONENTS.md` and the inventory synced (owner: components)
+    - [x] Countdown: a non-finite remaining duration paints `NaN:NaN` — plan
+      650. Measured: `Math.max(0, NaN)` flowed through `breakdown` and
+      `formatCountdown`, the text read `NaN:NaN` (`Infinityd Infinity:NaN:NaN`
+      with days), and `remainingMs <= 0` kept it in the live colour with
+      `expired: false`. `wholeSeconds` maps a non-finite value to 0 and the
+      component normalises once for expiry, the text and the style state; 2 pure
+      + 1 native case (Countdown 6, unit 457), both-direction proof (the pure
+      cases read `NaN:NaN`/NaN units and the native tree painted no `00:00` at
+      `HEAD`); docs, `COMPONENTS.md` and the inventory synced (owner: components)
     - [ ] The search field's clear control paints no focus ring — measured 2026-10-19:
       it is its own tab stop (`tabIndex 0`) and takes native focus
       (`getFocusedElementId() = search-clear`), but has no `focused` state or
@@ -1141,12 +1150,12 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Clean-environment install and public-export checks
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plans 611/612/619/649):
-      all three exit 0; the unit suite is 455 tests in 45 files. The native
-      behaviour suite is **812 passed / 31 failed of 843** — every failure is
+      re-run from the components worktree on 2026-10-19 (plans 611/612/619/649/650):
+      all three exit 0; the unit suite is 457 tests in 45 files. The native
+      behaviour suite is **813 passed / 31 failed of 844** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
       measurement), not a component regression (run on this tree 2026-10-19,
-      after plan 649).
+      after plan 650).
       Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)

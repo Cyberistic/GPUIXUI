@@ -17,9 +17,15 @@ const SECONDS_PER_MINUTE = 60;
 const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
 const SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
 
-/** Whole seconds remaining, floored and never negative. */
+/**
+ * Whole seconds remaining, floored and never negative. A non-finite value has
+ * no duration to show, so it reads as zero — the same settled state a negative
+ * value takes, never `NaN` arithmetic in the clock text.
+ */
 const wholeSeconds = (remainingMs: number): number =>
-  Math.max(0, Math.floor(remainingMs / 1000));
+  Number.isFinite(remainingMs)
+    ? Math.max(0, Math.floor(remainingMs / 1000))
+    : 0;
 
 /** Split a remaining duration into days, hours, minutes and seconds. */
 export const breakdown = (remainingMs: number): CountdownParts => {
