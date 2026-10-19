@@ -107,6 +107,7 @@ import {
 import { columnConfigScenario } from "../scenarios/column-config.js";
 import { cropScenario } from "../scenarios/crop.js";
 import { mediaScenario } from "../scenarios/media.js";
+import { themeColorRolesView } from "../scenarios/theme.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
 import { commandPaletteScenario } from "../scenarios/command-palette.js";
@@ -11770,6 +11771,60 @@ const media: LiveScenario = {
 };
 
 /**
+ * The palette switch in a real window (plan `643`).
+ *
+ * `theme` was the last core capability with no live id. Colour can only be
+ * asserted through `paintedStyle`, which the live renderer does not expose
+ * (plan `197`), so the twin asserts the interaction and the retained layout: a
+ * real click moves the palette through `nextPalette`, the painted readout names
+ * it, and the swatch grid keeps its box. The token values stay
+ * `theme-color-roles`.
+ */
+const liveTheme: LiveScenario = {
+  id: "live-theme",
+  title: "Live theme: the palette switch repaints a window",
+  capability: "theme",
+  view: themeColorRolesView,
+  ready: "theme-readout",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const opens = yield* textOf(ctx, "theme-readout");
+      yield* ctx.expectContains(
+        "opens on the dark palette",
+        opens,
+        "palette=dark",
+      );
+      const before = yield* boxOf(ctx, "swatch-background");
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}-dark.png`);
+
+      yield* ctx.host.click("theme-next");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the switch moves to light",
+        yield* textOf(ctx, "theme-readout"),
+        "palette=light",
+      );
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}-light.png`);
+
+      yield* ctx.host.click("theme-next");
+      yield* settle;
+      yield* ctx.expectContains(
+        "a second switch reaches high contrast",
+        yield* textOf(ctx, "theme-readout"),
+        "palette=high",
+      );
+
+      const after = yield* boxOf(ctx, "swatch-background");
+      yield* ctx.expectEqual(
+        "the swatch keeps its box across the switch",
+        `${after.x},${after.y},${after.width},${after.height}`,
+        `${before.x},${before.y},${before.width},${before.height}`,
+      );
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTheme.id}.png`);
+    }),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -12898,6 +12953,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTree,
   liveRovingFocus,
   media,
+  liveTheme,
   terminal,
   selectionSignal,
 ];

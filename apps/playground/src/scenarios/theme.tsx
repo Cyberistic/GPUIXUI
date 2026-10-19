@@ -184,6 +184,9 @@ const ColorRolesProbe = () => {
   );
 };
 
+/** The colour-roles gallery, mounted by `theme-color-roles` and `live-theme`. */
+export const themeColorRolesView = (): ReactNode => <ColorRolesProbe />;
+
 /** The `palette=` readout, or `""` when the readout is missing. */
 const readout = (ctx: Smoke.SmokeContext): string =>
   Option.getOrElse(

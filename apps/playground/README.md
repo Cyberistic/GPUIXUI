@@ -202,6 +202,14 @@ and `Consolas` while the sans role stays GPUI's `.SystemUIFont`; the surface
 colour does not move, because the shipped variants are type styles, not a second
 palette. The expected families come from `platformTypes`.
 
+`live-theme` (plan `643`) repeats the colour-roles gallery in the real
+1100 × 720 window: a real click moves `theme-next` dark → light → high, the
+painted `theme-readout` names each palette, and the `swatch-background` box is
+identical before and after the switch. **Colour itself stays headless** — the
+live renderer exposes no style report (plan `197`), so the token values remain
+`theme-color-roles`' `paintedStyle` evidence; the twin proves the interaction
+and that the switched subtree keeps its layout.
+
 Two honest notes:
 
 - The ring check is a **style** proof. Focus delivery itself is
@@ -1966,12 +1974,13 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The last full merge/release gate ran **91/91** (`exit 0`, 2369 checks, 59
-capabilities, 942.6 s, `.artifacts/live-report.json`, 2026-10-19), including
-every scenario this branch added through `live-roving-focus` (plan `637`) and
-the `live-toast` fixture fix (plan `623` §10). It is the gate for the
-promotion merge; the owner/supervisor performs that merge. The full live suite
-is a merge/release gate rather than a per-task check.
+The last full merge/release gate ran **92/92** (`exit 0`, 2378 checks, 60
+capabilities, 928.1 s, `.artifacts/live-report.json`, 2026-10-19), including
+every scenario this branch added through `live-theme` (plan `643`) and
+`live-roving-focus` (plan `637`), and the `live-toast` fixture fix (plan `623`
+§10). It supersedes plan `639`'s 91/91 run and is the gate for the promotion
+merge; the owner/supervisor performs that merge. The full live suite is a
+merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2161,16 +2170,16 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **91/91** on
-  2026-10-19 (2369 checks, 59 capabilities, 942.6 s, exit `0`, the merge gate;
-  plan `639`) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **92/92** on
+  2026-10-19 (2378 checks, 60 capabilities, 928.1 s, exit `0`, the merge gate;
+  plan `643`, superseding plan `639`'s 91/91) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan
   `559`'s `live-tree`, plan `565`'s two tab-strip twins, the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
   drag, and the shipped Tier 2 scroller/command paths) and the twins through
-  plans `591`–`637` are all included. The suite covers —
+  plans `591`–`643` are all included. The suite covers —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
