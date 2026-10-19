@@ -283,6 +283,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [604](./604-timeline-marker-metrics.md) | The Timeline marker's fixed metrics | B/F | 353, 358, 530, 552, 554, 556, 568, 598, 601 | done |
 | [605](./605-disabled-control-helper.md) | The disabled state as one call | F | 306, 307, 510, 514, 520, 524, 539 | done |
 | [607](./607-highlight-radius.md) | The find wash's corner is the theme's | F | 573, 581, 582, 590 | done |
+| [609](./609-inset-focus-ring.md) | The focus indicator on a filled control | F | 017, 085, 097, 327, 338, 340, 394, 605 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
