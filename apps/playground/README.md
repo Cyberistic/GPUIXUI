@@ -405,7 +405,7 @@ theme is read with `useTheme()` and passed to the primitives' own
 | -------- | --------------- |
 | `primitives-actions` | `Button` activates on a click, on Enter **down** and on Space **up**; `disabled` and `loading` refuse all three; the loading button announces `Loading`; the focus ring `controlFocusStyle` merges into the runtime's own style report and disappears when focus moves; `Toggle` flips and announces `pressed` / `not pressed` |
 | `primitives-fields` | a controlled `Input` receives the native edit and `onSubmit`; a disabled `Input` refuses the edit and still exposes its value as a `TextInput`; `Checkbox` toggles by click and Space-up with `aria-valuetext`; `Switch` toggles and announces checked; `Select` paints its options, commits the next one with Down + Enter, and Escape closes without losing the value |
-| `primitives-display` | `Slider` steps by one with the arrow keys and announces its formatted value; `Progress` reports `42%` and `Meter` `68 GB`; `Skeleton` paints a 14 px box with a themed background; `Tooltip` opens on a native mouse enter |
+| `primitives-display` | `Slider` steps by one with the arrow keys and announces its formatted value; `RangeSlider` moves the nearest end on a press and the **pressed thumb** owns the next arrow key (the other end never moves), with `Group "Price"` and two named `Slider` nodes; `ButtonGroup` attached children sit 0 px apart and separated ones 6 px (the `spacing.sm` token); `Spinner` paints **34 × 10 px** (three 10 px dots, two 2 px gaps) and exposes `Status "Syncing"`; the indeterminate `Progress` is 6 px tall and announces `loading`; the determinate one reports `42%` and `Meter` `68 GB`; `Skeleton` paints a 14 px box with a themed background; `Tooltip` opens on a native mouse enter (53 checks, plan `658`) |
 | `primitives-choice` | `RadioGroup` selects on a click and with the arrows (Down selects and wraps, Up returns), and the item announces `checked`; `Rating` rates on the first star, Right/End raise, Right clamps at five, Delete clears and Left clamps at zero |
 | `primitives-entry` | `NumberField` steps with Up/Down, commits a typed `99` as the clamped `10`, and exposes the committed value; `OTPField` fills six digits with focus advancing, fires `onComplete` once, Backspace deletes exactly one character and Left moves native focus back a cell |
 
@@ -420,14 +420,15 @@ controls' contracts. Measured facts are in plan `168` §8 and plan `169` §8.
 
 Tier 1 is what every other component composes, so its pointer focus, keys, popup
 commit and focus advance are proven in the real 1100 × 720 window too. The four
-twins reuse the views above unchanged (72 checks). Style, colour and the
-accessibility dump stay headless: `GpuixRenderer` has no such report (plan
-`197`).
+twins reuse the views above; before plan `658` the group was 72 checks, and
+`live-primitives-display` alone is now 34 (the others are unchanged). Style,
+colour and the accessibility dump stay headless: `GpuixRenderer` has no such
+report (plan `197`).
 
 | Scenario | What it asserts in the window |
 | -------- | ----------------------------- |
 | `live-primitives-fields` | a real click focuses the Input, `a t l a s` reaches `onChange` and Enter `onSubmit`; the disabled field refuses the edit (`locked=0`) without leaking the key to another field; a click checks the Checkbox and Space-up unchecks it; a click flips the Switch; the Select paints its options, Down+Enter commits `us-east`, Escape closes and keeps it |
-| `live-primitives-display` | a click at a quarter of the Slider track sets a value below the middle, Right/Left step it by one; Progress, Meter and Skeleton paint (the skeleton is 14 px); a real pointer enter opens the Tooltip |
+| `live-primitives-display` | a click at a quarter of the Slider track sets a value below the middle, Right/Left step it by one; a real RangeSlider press moves one end and the following arrow moves **that** end only (the pressed thumb takes native focus); the ButtonGroup gaps stay 0/6 px; the Spinner is 34 × 10 px and the indeterminate bar 6 px; Progress, Meter and Skeleton paint; a real pointer enter opens the Tooltip (34 checks, plan `658`) |
 | `live-primitives-choice` | a real click selects a radio row and Down/Up move the selection; a real first-star click rates one, Right/End raise it, Right clamps at five, Delete clears and Left clamps at zero |
 | `live-primitives-entry` | a click focuses the NumberField, Up/Down step it and typed `99` commits as `10`; six OTP keystrokes advance focus to the last cell, Backspace deletes one, Left moves focus back and typing rewrites that cell |
 
@@ -2023,7 +2024,8 @@ given.
 
 ## Evidence on this host
 
-The suite is **105/105 green** here (`exit 0`, 3765 checks, 2026-10-19):
+The suite is **105/105 green** here (`exit 0`, 3802 checks, 2026-10-19; plan
+`658` added 37 checks to `primitives-display`):
 
 ```
 105/105 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2054,6 +2056,12 @@ platform type styles in a window) and `live-shell` through the changed
 93/93 run, and is the gate for the promotion merge; the owner/supervisor
 performs that merge. The full live suite is a merge/release gate rather than a
 per-task check.
+
+**Addendum (plan `658`):** `live-primitives-display` gained 22 checks
+(12 → 34) after this gate — the RangeSlider pointer/key pair, the ButtonGroup
+gaps, the Spinner and indeterminate-Progress boxes. The recorded 94/94 predates
+them, so the next promotion gate re-measures the full live total; no new total
+is claimed here. The focused twin is green three times (34/34, exit `0`).
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2237,7 +2245,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (105/105, 3765 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (105/105, 3802 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

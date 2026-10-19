@@ -71,7 +71,28 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 111/111 plans-and-harness
+`[x]` `[██████████]` 112/112 plans-and-harness
+
+`[x]` Complete the **last Tier 1 window evidence** per plan `658`: `RangeSlider`,
+      `ButtonGroup`, `Spinner` and the indeterminate `Progress` were the only
+      shipped Tier 1 controls with no live twin (`primitives-display` had no
+      RangeSlider/ButtonGroup/Spinner at all). `primitives-display` grew **16 →
+      53 checks** and `live-primitives-display` **12 → 34**, three consecutive
+      focused green runs. Measured: a real press at 10 % moves the range start to
+      `9` and `Right` moves **that** end to `10` with the end still `80`; a press
+      at 90 % moves the end to `89` and `Left` returns it to `88`; attached
+      Buttons are 0 px apart and separated ones 6 px (`spacing.sm`); the Spinner
+      is **34 × 10 px** (`Status "Syncing"`) and the indeterminate bar **6 px**
+      (`ProgressIndicator "Connecting"`, value `loading`). Four mutation proofs
+      observed and reverted (an 8 px spinner box, a removed `focusThumb` handoff,
+      an attached separated group, a determinate "Connecting"). **A measured null
+      result:** the frame counter cannot prove an indicator animated — the same
+      view painted **72 → 76 frames in 400 ms with no indicator mounted**, so the
+      live motion check was removed and the step advance stays headless
+      (`COMPONENTS.md`, D93). Full headless **105/105** (**3802** checks, 65
+      capabilities), exit `0`; `nub run check`/`lint`/`test` green. The full live
+      suite was not run (merge gate); focused ids `primitives-display`,
+      `live-primitives-display`.
 
 `[x]` Re-run the **promotion gate on the head that includes the live capture
       CLI** per plan `657`: plan `656` changed the live runner's shared
@@ -1555,6 +1576,10 @@ focused id is `live-frames`.
       both exit `0`, `live-shell` included through the capture-capable runner
       and a plain `--all` writing no frame or sidecar. This is now the gate for
       the promotion merge.
+      **Addendum (plan `658`):** `live-primitives-display`
+      then gained 22 checks (12 → 34) for the RangeSlider, ButtonGroup and
+      loading-indicator evidence, so the next merge gate must cover the current
+      head; the recorded 94/94 live total predates them and is not re-claimed.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

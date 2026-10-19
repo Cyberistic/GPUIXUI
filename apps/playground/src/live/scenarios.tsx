@@ -2562,10 +2562,14 @@ const livePrimitivesFields: LiveScenario = {
     }),
 };
 
+/** One `key=value` number of the display probe's range readout. */
+const displayRangeNumber = (line: string, key: string): number =>
+  Number.parseFloat(Option.getOrElse(fieldOf(line, key), () => "NaN"));
+
 const livePrimitivesDisplay: LiveScenario = {
   id: "live-primitives-display",
   title:
-    "Live Tier 1: the shipped Slider, Progress, Meter, Skeleton and Tooltip",
+    "Live Tier 1: the shipped Slider, RangeSlider, ButtonGroup, Progress, Meter, Skeleton and loading indicators",
   capability: "components",
   view: primitivesDisplayScenario.view,
   ready: "display-quality",
@@ -2617,6 +2621,116 @@ const livePrimitivesDisplay: LiveScenario = {
         "hovering the trigger opens the shipped Tooltip",
         Arr.join(yield* ctx.host.paintedText(), "\n"),
         "Booked revenue",
+      );
+
+      // ── RangeSlider: the press focuses the grabbed thumb ──────────────────
+      const rangeTrack = yield* boxOf(ctx, "display-range");
+      yield* ctx.host.clickWindow(
+        rangeTrack.x + rangeTrack.width * 0.1,
+        rangeTrack.y + rangeTrack.height / 2,
+      );
+      yield* settle;
+      yield* waitForTextNot(ctx, "display-range-value", "start=20 end=80");
+      const rangeAfterStartPress = yield* textOf(ctx, "display-range-value");
+      const startPressed = displayRangeNumber(rangeAfterStartPress, "start");
+      const endPressed = displayRangeNumber(rangeAfterStartPress, "end");
+      yield* ctx.expectEqual(
+        "a real press at the start end moves only the start",
+        startPressed < 20,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the start press leaves the end alone",
+        endPressed,
+        80,
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(
+        ctx,
+        "display-range-value",
+        `start=${startPressed + 1}`,
+      );
+      const rangeAfterRight = yield* textOf(ctx, "display-range-value");
+      yield* ctx.expectEqual(
+        "Right moves the pressed end, because the press focused its thumb",
+        displayRangeNumber(rangeAfterRight, "end"),
+        80,
+      );
+
+      yield* ctx.host.clickWindow(
+        rangeTrack.x + rangeTrack.width * 0.9,
+        rangeTrack.y + rangeTrack.height / 2,
+      );
+      yield* settle;
+      yield* waitForTextNot(ctx, "display-range-value", rangeAfterRight);
+      const rangeAfterEndPress = yield* textOf(ctx, "display-range-value");
+      const startHeld = displayRangeNumber(rangeAfterEndPress, "start");
+      const endMoved = displayRangeNumber(rangeAfterEndPress, "end");
+      yield* ctx.expectEqual(
+        "a real press at the end end moves only the end",
+        endMoved > 80,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the end press leaves the start alone",
+        startHeld,
+        startPressed + 1,
+      );
+
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* waitForText(ctx, "display-range-value", `end=${endMoved - 1}`);
+      const rangeAfterLeft = yield* textOf(ctx, "display-range-value");
+      yield* ctx.expectEqual(
+        "Left moves the newly pressed end",
+        displayRangeNumber(rangeAfterLeft, "start"),
+        startHeld,
+      );
+
+      // ── ButtonGroup: attached and separated gaps ──────────────────────────
+      const zoomOut = yield* boxOf(ctx, "display-zoom-out");
+      const zoomIn = yield* boxOf(ctx, "display-zoom-in");
+      yield* ctx.expectNear(
+        "attached children sit 0 px apart",
+        zoomIn.x - (zoomOut.x + zoomOut.width),
+        0,
+        1,
+      );
+      const alignLeft = yield* boxOf(ctx, "display-align-left");
+      const alignRight = yield* boxOf(ctx, "display-align-right");
+      yield* ctx.expectNear(
+        "separated children keep the theme's 6 px gap",
+        alignRight.x - (alignLeft.x + alignLeft.width),
+        6,
+        1,
+      );
+
+      // ── Loading indicators: paint and geometry ────────────────────────────
+      // The step advance itself is not assertable live: this view repaints
+      // sporadically without any indicator (measured in plan `658` §8), so a
+      // frame-count delta cannot attribute a paint to the interval. The step
+      // maths stays headless (`Spinner`/`Progress` runtime suites).
+      const spinner = yield* boxOf(ctx, "display-spinner");
+      yield* ctx.expectNear(
+        "the spinner is three 10 px dots tall",
+        spinner.height,
+        10,
+        1,
+      );
+      yield* ctx.expectNear(
+        "the spinner is three 10 px dots and two 2 px gaps wide",
+        spinner.width,
+        34,
+        1,
+      );
+      const connecting = yield* boxOf(ctx, "display-connecting");
+      yield* ctx.expectNear(
+        "the indeterminate bar is one md track tall",
+        connecting.height,
+        6,
+        1,
       );
 
       yield* ctx.host.screenshot(

@@ -15,13 +15,16 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   Button,
+  ButtonGroup,
   Checkbox,
   Input,
   Meter,
   Progress,
+  RangeSlider,
   Select,
   Skeleton,
   Slider,
+  Spinner,
   Switch,
   ThemeProvider as PrimitiveThemeProvider,
   Toggle,
@@ -29,7 +32,14 @@ import {
 } from "@gpuixui/primitives";
 import { useTheme } from "@gpuixui/tokens/react";
 import { Readout } from "../ui.js";
-import { focusedId, node, read, text, treeOf } from "./probes.js";
+import {
+  focusedId,
+  node,
+  read,
+  readoutNumber,
+  text,
+  treeOf,
+} from "./probes.js";
 import type { PlaygroundScenario } from "../types.js";
 
 const ActionsProbe = () => {
@@ -158,6 +168,7 @@ const FieldsProbe = () => {
 const DisplayProbe = () => {
   const theme = useTheme();
   const [quality, setQuality] = useState(50);
+  const [range, setRange] = useState<readonly [number, number]>([20, 80]);
 
   return (
     <div
@@ -194,9 +205,64 @@ const DisplayProbe = () => {
               <text style={{ color: theme.colors.foreground }}>Revenue</text>
             </div>
           </Tooltip>
+          <RangeSlider
+            testId="display-range"
+            label="Price"
+            value={range}
+            onChange={setRange}
+            formatValue={(value) => `${value}%`}
+          />
+          <ButtonGroup
+            testId="display-group-attached"
+            label="Zoom"
+            mode="attached"
+          >
+            <Button
+              testId="display-zoom-out"
+              label="Zoom out"
+              variant="secondary"
+            >
+              −
+            </Button>
+            <Button
+              testId="display-zoom-in"
+              label="Zoom in"
+              variant="secondary"
+            >
+              +
+            </Button>
+          </ButtonGroup>
+          <ButtonGroup
+            testId="display-group-separated"
+            label="Align"
+            mode="separated"
+          >
+            <Button
+              testId="display-align-left"
+              label="Align left"
+              variant="secondary"
+            >
+              Left
+            </Button>
+            <Button
+              testId="display-align-right"
+              label="Align right"
+              variant="secondary"
+            >
+              Right
+            </Button>
+          </ButtonGroup>
+          <Spinner
+            testId="display-spinner"
+            label="Syncing"
+            size={10}
+            style={{ alignSelf: "flex-start" }}
+          />
+          <Progress testId="display-connecting" label="Connecting" />
         </div>
       </PrimitiveThemeProvider>
       <Readout testId="display-quality-value">{String(quality)}</Readout>
+      <Readout testId="display-range-value">{`start=${range[0]} end=${range[1]}`}</Readout>
       <Readout testId="display-readout">{`quality=${quality}`}</Readout>
     </div>
   );
@@ -439,7 +505,8 @@ export const primitivesFieldsScenario: PlaygroundScenario = {
 
 export const primitivesDisplayScenario: PlaygroundScenario = {
   id: "primitives-display",
-  title: "Tier 1: Slider, Progress, Meter, Skeleton and Tooltip",
+  title:
+    "Tier 1: Slider, RangeSlider, ButtonGroup, Progress, Meter, Skeleton, Tooltip and loading indicators",
   capability: "components",
   view: () => <DisplayProbe />,
   steps: (ctx) =>
@@ -521,6 +588,184 @@ export const primitivesDisplayScenario: PlaygroundScenario = {
         "hovering the trigger opens the primitive tooltip",
         Arr.join(ctx.host.paintedText(), "\n"),
         "Booked revenue",
+      );
+
+      // ── RangeSlider: a press moves the nearest end and focuses its thumb ──
+      const rangeTrack = yield* ctx.expectSome(
+        "the range slider paints",
+        Option.fromNullishOr(ctx.host.bounds("display-range")),
+      );
+      ctx.host.clickWindow(
+        rangeTrack.x + rangeTrack.width * 0.1,
+        rangeTrack.y + rangeTrack.height / 2,
+      );
+      const startPressed = yield* ctx.expectSome(
+        "the range readout reports a start",
+        readoutNumber(ctx, "display-range-value", "start"),
+      );
+      const endPressed = yield* ctx.expectSome(
+        "the range readout reports an end",
+        readoutNumber(ctx, "display-range-value", "end"),
+      );
+      yield* ctx.expectEqual(
+        "a press at the start end moves only the start",
+        startPressed < 20,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the start press leaves the end alone",
+        endPressed,
+        80,
+      );
+
+      ctx.host.key("right");
+      const startStepped = yield* ctx.expectSome(
+        "the stepped start is readable",
+        readoutNumber(ctx, "display-range-value", "start"),
+      );
+      const endStepped = yield* ctx.expectSome(
+        "the untouched end is readable",
+        readoutNumber(ctx, "display-range-value", "end"),
+      );
+      yield* ctx.expectEqual(
+        "Right steps the pressed start by one",
+        startStepped,
+        startPressed + 1,
+      );
+      yield* ctx.expectEqual(
+        "Right does not move the unpressed end",
+        endStepped,
+        80,
+      );
+
+      ctx.host.clickWindow(
+        rangeTrack.x + rangeTrack.width * 0.9,
+        rangeTrack.y + rangeTrack.height / 2,
+      );
+      const startHeld = yield* ctx.expectSome(
+        "the held start is readable",
+        readoutNumber(ctx, "display-range-value", "start"),
+      );
+      const endMoved = yield* ctx.expectSome(
+        "the moved end is readable",
+        readoutNumber(ctx, "display-range-value", "end"),
+      );
+      yield* ctx.expectEqual(
+        "a press at the end end moves only the end",
+        endMoved > 80,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the end press leaves the start alone",
+        startHeld,
+        startStepped,
+      );
+
+      ctx.host.key("left");
+      const endSteppedBack = yield* ctx.expectSome(
+        "the stepped end is readable",
+        readoutNumber(ctx, "display-range-value", "end"),
+      );
+      const startAfterLeft = yield* ctx.expectSome(
+        "the start after Left is readable",
+        readoutNumber(ctx, "display-range-value", "start"),
+      );
+      yield* ctx.expectEqual(
+        "Left steps the pressed end by one",
+        endSteppedBack,
+        endMoved - 1,
+      );
+      yield* ctx.expectEqual(
+        "Left does not move the unpressed start",
+        startAfterLeft,
+        startStepped,
+      );
+
+      const rangeTree = yield* treeOf(ctx);
+      yield* node(ctx, rangeTree, "Group", "Price");
+      const rangeMinimum = yield* node(
+        ctx,
+        rangeTree,
+        "Slider",
+        "Price minimum",
+      );
+      yield* node(ctx, rangeTree, "Slider", "Price maximum");
+      yield* ctx.expectContains(
+        "the range announces its formatted start",
+        text(rangeMinimum.value),
+        "%",
+      );
+
+      // ── ButtonGroup: attached and separated gaps ──────────────────────────
+      const zoomOut = yield* ctx.expectSome(
+        "the first attached button paints",
+        Option.fromNullishOr(ctx.host.bounds("display-zoom-out")),
+      );
+      const zoomIn = yield* ctx.expectSome(
+        "the second attached button paints",
+        Option.fromNullishOr(ctx.host.bounds("display-zoom-in")),
+      );
+      yield* ctx.expectNear(
+        "attached children sit 0 px apart",
+        zoomIn.x - (zoomOut.x + zoomOut.width),
+        0,
+        0.5,
+      );
+      const alignLeft = yield* ctx.expectSome(
+        "the first separated button paints",
+        Option.fromNullishOr(ctx.host.bounds("display-align-left")),
+      );
+      const alignRight = yield* ctx.expectSome(
+        "the second separated button paints",
+        Option.fromNullishOr(ctx.host.bounds("display-align-right")),
+      );
+      yield* ctx.expectNear(
+        "separated children keep the theme's 6 px gap",
+        alignRight.x - (alignLeft.x + alignLeft.width),
+        6,
+        0.5,
+      );
+      yield* node(ctx, rangeTree, "Group", "Zoom");
+
+      // ── Loading indicators: layout and accessible names ───────────────────
+      const spinner = yield* ctx.expectSome(
+        "the spinner paints",
+        Option.fromNullishOr(ctx.host.bounds("display-spinner")),
+      );
+      yield* ctx.expectNear(
+        "the spinner is three 10 px dots tall",
+        spinner.height,
+        10,
+        0.5,
+      );
+      yield* ctx.expectNear(
+        "the spinner is three 10 px dots and two 2 px gaps wide",
+        spinner.width,
+        34,
+        0.5,
+      );
+      yield* node(ctx, rangeTree, "Status", "Syncing");
+
+      const connecting = yield* ctx.expectSome(
+        "the indeterminate bar paints",
+        Option.fromNullishOr(ctx.host.bounds("display-connecting")),
+      );
+      yield* ctx.expectNear(
+        "the indeterminate bar is one md track tall",
+        connecting.height,
+        6,
+        0.5,
+      );
+      const indeterminate = yield* node(
+        ctx,
+        rangeTree,
+        "ProgressIndicator",
+        "Connecting",
+      );
+      yield* ctx.expectEqual(
+        "an indeterminate bar announces loading",
+        text(indeterminate.value),
+        "loading",
       );
     }),
 };
