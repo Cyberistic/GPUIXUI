@@ -951,9 +951,11 @@ declaration and the elevation's opacity: `"high"` always builds the AAA set — 
 platform's colours are designed at the default floors and never repaint it, and
 the AAA tint keeps the opacity designed against it — while `"default"` builds the
 default palette when the style contributes colours, the roles it does not name
-coming from the identity at that level. A shape-only style changes no colour, so
-it keeps the base's level, and a base already at the requested level keeps its
-own colours, edits included. A forced default palette is whole, not half of one,
+coming from the identity at that level. An elevation level a style does not name
+comes from that same identity, so a requested level carries one shadow ladder,
+not the AAA alphas under the default palette's tint (plan `618`). A shape-only
+style changes no colour, so it keeps the base's level, and a base already at the
+requested level keeps its own colours, edits included. A forced default palette is whole, not half of one,
 and the theme's name always names the palette it carries and never appends the
 label it already ends with — re-applying that style changes nothing, while a
 different style appends its own label because the unnamed roles survive. A

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 260/332
+`[x]` `[████████░░]` 261/333
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2201,6 +2201,15 @@ historical audits in the contrast and metric rows still retyped `six`/`nine`
 checks against plan 567's rule; the row now names the test without a count, the
 one present-tense count is held to `themeChecks.length`, the four audits say
 "every check", and no token, pair, floor or metric moves (plan 617)
+`[x]` Make a default request own its elevation — `applyPlatformStyle`'s
+`"default"` branch merged a style's partial elevation over the **base**, so a
+copied style that named a colour but no level, applied to an AAA base asking for
+`"default"`, declared the default palette with its black `shadow` tint but kept
+the AAA alphas (0.10/0.14/0.18 instead of 0.40/0.65/0.80) and `themeFailures`
+reported 15 elevation pairs (worst 1.0175:1); the levels a style does not name
+now come from the requested palette, a named level still wins, a same-level
+base keeps its edits, and every shipped style already names `sm`/`md`/`lg`, so
+no shipped pixel moves (plan 618)
 
 ## Phase C — Tier 1–2 components
 

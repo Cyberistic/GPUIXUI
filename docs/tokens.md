@@ -732,9 +732,13 @@ when the style contributes colours, taking the roles it does not name from the
 default-level identity of the same mode, so the result is a whole palette rather
 than half of one (plan `373`). A role the style sets to `undefined` is unnamed
 too: it inherits from that palette, never from the AAA base the request is
-leaving (plan `551`). Omitting the argument, or naming the level the
-base already declares, keeps the base's palette: a consumer's edits and a style's
-unnamed roles survive, and the result keeps the base's name. The name always
+leaving (plan `551`). The elevation is the same decision: a level the style
+does not name comes from the palette the request resolved, so a copied style
+that names no shadow keeps a default request's elevation opacity instead of
+inheriting the AAA alphas the request is leaving (plan `618`). Omitting the
+argument, or naming the level the base already declares, keeps the base's
+palette: a consumer's edits and a style's unnamed roles survive, and the result
+keeps the base's name. The name always
 follows the palette — a rebased palette brings the identity's name, because the
 result is that identity at the requested level — and so does the elevation's
 opacity, because a dark platform's 0.4–0.8 over the AAA dark set's light tint
