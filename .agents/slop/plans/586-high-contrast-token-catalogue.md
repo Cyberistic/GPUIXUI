@@ -284,7 +284,8 @@ document.
 
 Final: `nub run --filter docs test` — **101 files / 731 tests**;
 `check-types` and `smoke:build` (98 pages, 1 279 anchors) green;
-`smoke:responsive` 98 pages and `smoke:a11y --only /docs/theming` (2 schemes)
+`smoke:responsive` 98 pages, `smoke:a11y` 98 pages × 2 schemes and
+`smoke:browser` (hydrated previews, both schemes and the three platform URLs)
 green; `nub run check`, `nub run lint` and `nub run test` green at the repo
 root.
 
