@@ -885,6 +885,15 @@ block as any other fence:
 not exist, names a region the file does not contain, is written self-closing, or
 if a component that is no longer `planned` has a page without its real source.
 
+A **fenced** example is text, so `<include>` guards cannot see its imports.
+`src/code-imports.test.ts` reads every `@gpuixui/*` import in a code fence,
+resolves the specifier through the package's real `exports` map, and checks each
+named import against the resolved module's exports and its `export *` chain
+(plan 577). It was written after Inline validation shipped
+`@gpuixui/components/validation/logic`: the package's `"./*"` export maps to
+`src/*.tsx`, the helper is `src/validation/logic.ts`, and the root entry does not
+re-export it, so a reader copying the example got a module-not-found error.
+
 ## API tables
 
 Prop tables are generated from the component's **real TypeScript** by

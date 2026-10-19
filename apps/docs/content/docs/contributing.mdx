@@ -58,7 +58,7 @@ every check your change can affect:
 
 | Command | What it proves | Exit codes |
 | ------- | -------------- | ---------- |
-| `nub run --filter docs test` | pages, registry, links, search, previews | `1` on a failure |
+| `nub run --filter docs test` | pages, registry, links, search, previews, copyable fence imports | `1` on a failure |
 | `nub run --filter docs check-types` | the app, the preview document and MDX types | `1` on a type error |
 | `nub run --filter docs build` | the production Worker bundle builds | `1` on a build error |
 | `nub run --filter docs smoke:build` | every sitemap page renders in the production output, its document head carries the description, social card, icon and light/dark theme colour, every internal link and brand asset resolves, every `#fragment` lands on a heading, search answers, an unknown slug is a 404, and no page's headings skip a level | `1` broken, `2` could not verify |

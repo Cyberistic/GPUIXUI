@@ -471,7 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–576)
 
-`[~]` `[█████████░]` 144/145
+`[~]` `[██████████]` 145/146
+
+`[x]` **Copyable imports resolve (plan 577)** — a fence is text, so nothing
+      type-checked the 219 `@gpuixui/*` named imports the pages tell a reader to
+      copy. Inline validation imported `validate` from
+      `@gpuixui/components/validation/logic`; the package's `"./*"` export maps
+      to `src/*.tsx`, the helper is `src/validation/logic.ts`, and the root entry
+      does not re-export it, so the import resolved nowhere. `code-imports.test.ts`
+      resolves every specifier through the package's real `exports` map and
+      checks every name against the module's exports and `export *` chain; the
+      page now shows only importable code and states the helper's shipped
+      status. The components export is a recorded cross-team task.
 
 `[x]` **The platform table is generated, not remembered (plan 576)** — Theming
       restated the platform difference as "type families and theme name", which
@@ -1122,6 +1133,8 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       cites the reference clone. Verify and correct the plan before
       implementing it. The docs page now states the pinned-release absence
       (plan 520). Owner: tokens-theme.
+
+`[ ]` **Components**: export `validate`/`validateAll` from the package entry (or add an explicit `./validation/logic` export), then correct `packages/components/docs/field.mdx`, which still shows `import { validate } from "@gpuixui/components/validation/logic"` — a specifier the package's `exports` map cannot resolve. The docs page now states the internal status and imports nothing from that module (plan 577). Owner: components.
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing

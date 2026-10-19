@@ -10,15 +10,16 @@ description: Field-level error and hint messaging.
 <ComponentPreview slug="inline-validation" />
 
 `Field` is the structure around one control: label, input and one message slot.
-`validation/logic.ts` turns a `Schema` into a user-facing message; the caller
-decides **when** to run it. There is no auto-validate per keystroke and no form
-library.
+The package's internal `src/validation/logic.ts` turns a `Schema` into a
+user-facing message; the caller decides **when** to run it. It is not exported
+from the package entry yet (a tracked package task), so the example below shows
+the `Field` contract rather than an import a consumer cannot resolve. There is
+no auto-validate per keystroke and no form library.
 
 ## Usage
 
 ```tsx
 import { Field, FieldInput } from "@gpuixui/components/field";
-import { validate } from "@gpuixui/components/validation/logic";
 
 <Field
   label="Workspace URL"
@@ -48,8 +49,10 @@ No size prop. Type, spacing and radius come from the theme.
 
 The field owns no value and no submit; the caller owns the value and when
 validation runs. `validate(schema)` returns the first message or `None`;
-`validateAll(schema)` returns every distinct message in issue order. Running the
-Effect is an application-boundary decision.
+`validateAll(schema)` returns every distinct message in issue order. Both live
+in `src/validation/logic.ts` and are not exported from the package entry yet, so
+call `Schema` at your boundary (or copy that module) until the export lands.
+Running the Effect is an application-boundary decision.
 
 ## Composition
 
