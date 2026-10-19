@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–560)
+## Docs site workstream (plans 410–499, plus 500–561)
 
-`[x]` `[██████████]` 127/127
+`[x]` `[██████████]` 128/128
+
+`[x]` **Search ranks a component named inside a phrase (plan 561)** — the
+      ranker compared the whole query with a name, so `popover placement`
+      returned Box variants, `button loading` returned Spinner and
+      `command palette` returned Roadmap; a page's own title is now scored too,
+      and a title hit the page index omitted is synthesized (`theming` had never
+      returned `/docs/theming`). Seven two-direction proofs in plan 561 §6;
+      77 files / 533 docs tests, `check`, `smoke:search` and `smoke:build` green.
 
 `[x]` **The docs tests see every page (plan 524)** — Vitest's filesystem module
       cache was keyed by `src/lib/source.ts`'s content, and that module is one

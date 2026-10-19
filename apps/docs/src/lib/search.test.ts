@@ -27,6 +27,12 @@ import {
  * the registry index is dropped, if a title match is not promoted, if the empty
  * guard is removed, if page results are not deduplicated, if the value index is
  * dropped, or if the response becomes unbounded.
+ *
+ * Plan 561 closes the phrase case: the ranker only compared the whole query with
+ * a name, so `popover placement` returned the Box page's variants and the
+ * Popover page was sixth; a page whose own title matched the query
+ * (`Command palette`, `Theming`) got no rank at all. The tests below fail when
+ * token matching or the page-title rank is removed.
  */
 const contentOf = (result: SortedResult): string =>
   "content" in result ? result.content : "";
@@ -137,6 +143,67 @@ describe("search", { timeout: 120_000 }, () => {
     expect(results[0]?.url).toBe("/docs/components/dialog");
   });
 
+  /**
+   * Plan 561: a reader types a phrase, not a title. The whole-query ranker
+   * missed every component named as one word of it, so body text decided.
+   */
+  it("reaches a component named inside a phrase", async () => {
+    const results = await search("popover placement");
+    expect(results[0]?.url).toBe("/docs/components/popover");
+  });
+
+  it("ranks the component named first even when prose matches the verb", async () => {
+    const results = await search("button loading");
+    expect(results[0]?.url).toBe("/docs/components/button");
+  });
+
+  it("keeps a whole page-title match ahead of a component token match", async () => {
+    const results = await search("command palette");
+    expect(results[0]?.url).toBe("/docs/patterns/command-palette");
+  });
+
+  it("ranks a component page the index returned only fragments for", async () => {
+    const results = await search("dialog focus");
+    expect(results[0]?.url).toBe("/docs/components/dialog");
+  });
+
+  it("ranks a component page ahead of a pattern that composes it", async () => {
+    const results = await search("input label", 5);
+    const urls = results.map((result) => result.url);
+    const componentIndex = urls.findIndex((url) =>
+      ["/docs/components/text-input", "/docs/components/label"].includes(url),
+    );
+    const patternIndex = urls.indexOf("/docs/patterns/settings-form");
+
+    expect(componentIndex).toBeGreaterThanOrEqual(0);
+    expect(patternIndex === -1 || componentIndex < patternIndex).toBe(true);
+  });
+
+  it("keeps a named component when the other word matches nothing", async () => {
+    const results = await search("popover zzzz");
+    expect(results[0]?.url).toBe("/docs/components/popover");
+  });
+
+  it("reaches a page the index answered only with its headings", async () => {
+    const results = await search("theming");
+    expect(results[0]?.url).toBe("/docs/theming");
+  });
+
+  it("reaches the page a plain word titles", async () => {
+    const results = await search("example");
+    expect(results[0]?.url).toBe("/docs/examples");
+  });
+
+  it("lists a synthesized title hit once when the page index returned it too", async () => {
+    const results = await search("toast dismiss");
+    expect(
+      results.filter(
+        (result) =>
+          result.type === "page" && result.url === "/docs/components/toast",
+      ),
+    ).toHaveLength(1);
+  });
+
   it("finds a helper on the generated values page", async () => {
     const results = await search("checkboxState", 5);
     expect(results[0]?.url).toBe("/docs/api-values");
@@ -164,6 +231,13 @@ const textResult = (id: string, url: string): SortedResult => ({
   url,
   type: "text",
   content: `text at ${url}`,
+});
+
+const titledPage = (url: string, title: string): SortedResult => ({
+  id: url,
+  url,
+  type: "page",
+  content: title,
 });
 
 describe("mergeResults", () => {
@@ -198,6 +272,33 @@ describe("mergeResults", () => {
       "Spinner",
     );
     expect(merged[0]?.url).toBe("/docs/components/spinner");
+  });
+
+  it("ranks a page-title token match ahead of prose", () => {
+    const merged = mergeResults(
+      [textResult("popover-1", "/docs/components/popover#theming")],
+      [titledPage("/docs/components/popover", "Popovers")],
+      "popover placement",
+    );
+    expect(merged[0]?.url).toBe("/docs/components/popover");
+  });
+
+  it("keeps a whole page-title match ahead of a token-only component match", () => {
+    const merged = mergeResults(
+      [titledPage("/docs/patterns/command-palette", "Command palette")],
+      [titledPage("/docs/components/command-menu", "Command menus")],
+      "command palette",
+    );
+    expect(merged[0]?.url).toBe("/docs/patterns/command-palette");
+  });
+
+  it("keeps a whole page-title match ahead of an exact token", () => {
+    const merged = mergeResults(
+      [titledPage("/docs/guides/buttons", "Buttons guide")],
+      [titledPage("/docs/components/button", "Buttons")],
+      "buttons guide",
+    );
+    expect(merged[0]?.url).toBe("/docs/guides/buttons");
   });
 
   it("leaves prose first when no component title matches", () => {

@@ -117,6 +117,47 @@ const matchRank = (name: string, query: string): number | undefined => {
   return normalized.includes(needle) ? 3 : undefined;
 };
 
+/** A token-only match must never outrank a whole-query match (plan 561). */
+const TOKEN_RANK_OFFSET = 4;
+
+/** Words that can name something; a single character is noise. */
+const queryTerms = (query: string): ReadonlyArray<string> =>
+  query
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((term) => term.length > 1);
+
+/**
+ * The best rank a name list earns for a query, in two tiers (plan 561).
+ *
+ * A whole-query match keeps plan 431's ranks (`0–3`). When the query is a
+ * phrase, each word is tried against every name and its rank is offset by
+ * `TOKEN_RANK_OFFSET`, so `popover placement` still reaches `Popovers` while
+ * `command palette` prefers the page whose own title matches the whole phrase.
+ */
+const nameRank = (
+  names: ReadonlyArray<string>,
+  query: string,
+): number | undefined => {
+  const best = (needle: string): number | undefined => {
+    const ranks = names.flatMap((name) => {
+      const rank = matchRank(name, needle);
+      return rank === undefined ? [] : [rank];
+    });
+    return ranks.length === 0 ? undefined : Math.min(...ranks);
+  };
+
+  const whole = best(query);
+  if (whole !== undefined) return whole;
+
+  const tokens = queryTerms(query).flatMap((term) => {
+    const rank = best(term);
+    return rank === undefined ? [] : [rank + TOKEN_RANK_OFFSET];
+  });
+  return tokens.length === 0 ? undefined : Math.min(...tokens);
+};
+
 /**
  * The best rank a record earns for a query. Its title and every exported name
  * its props types imply are names a reader can type: `Spinner` is what the
@@ -126,20 +167,35 @@ const matchRank = (name: string, query: string): number | undefined => {
 const componentRank = (
   component: ComponentMetaInput,
   query: string,
-): number | undefined => {
-  const ranks = [component.title, ...componentSymbols(component)].flatMap(
-    (name) => {
-      const rank = matchRank(name, query);
-      return rank === undefined ? [] : [rank];
-    },
+): number | undefined =>
+  nameRank([component.title, ...componentSymbols(component)], query);
+
+/**
+ * The same rule for hand-authored pages: the page index can answer a title
+ * query with body headings and omit the page itself (`theming` returned the 44th
+ * result, a heading, and no `/docs/theming`). A page whose own title names the
+ * query is a candidate by definition.
+ */
+const pageTitleHits = (query: string): ReadonlyArray<SortedResult> =>
+  source.getPages().flatMap((page) =>
+    nameRank([page.data.title], query) === undefined
+      ? []
+      : [
+          {
+            id: `page-title:${page.url}`,
+            url: page.url,
+            type: "page" as const,
+            content: page.data.title,
+          },
+        ],
   );
-  return ranks.length === 0 ? undefined : Math.min(...ranks);
-};
 
 interface Candidate {
   readonly result: SortedResult;
   readonly index: number;
   readonly rank: number;
+  /** `0` when the result's own title names the query; otherwise `1` (plan 561). */
+  readonly sourceRank: number;
   readonly titleLength: number;
 }
 
@@ -164,8 +220,10 @@ export const withoutTypeTableRows = (
  * its title or an exported name its props types imply (plan 500) — or an exact
  * promoted name from a generated document (`destructiveSoft`, `spacing.md`, a
  * scenario id, a hyphenated icon name; plans 504, 505 and 507) moves ahead of
- * prose; everything else keeps plan 419's order: page results first, registry
- * hits in the tail. A URL can be both a component record and a generated
+ * prose; a page whose own title names the query is scored the same way (plan
+ * 561), and a whole-query title match wins a tie against a generated row.
+ * Everything else keeps plan 419's order: page results first, registry hits in
+ * the tail. A URL can be both a component record and a generated
  * document (the Icons page owns its name catalogue), so a candidate takes the
  * best of the two ranks. Ties break on the shorter title (`Buttons` before
  * `Button groups`) and then on the index's own order. One entry survives per
@@ -184,22 +242,29 @@ export const mergeResults = (
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
       const generated = generatedByUrl.get(result.url);
+      const pageTitleRank =
+        result.type === "page" ? nameRank([result.content], query) : undefined;
       const ranks = [
         component === undefined ? undefined : componentRank(component, query),
         exactNameRank(generated, query),
+        pageTitleRank,
       ].filter((rank): rank is number => rank !== undefined);
       return {
         result,
         index,
         rank:
           ranks.length === 0 ? Number.POSITIVE_INFINITY : Math.min(...ranks),
+        sourceRank: pageTitleRank === undefined ? 1 : 0,
         titleLength:
-          component?.title.length ?? generated?.index.title.length ?? 0,
+          component?.title.length ??
+          generated?.index.title.length ??
+          (pageTitleRank === undefined ? 0 : result.content.length),
       };
     })
     .sort(
       (left, right) =>
         left.rank - right.rank ||
+        left.sourceRank - right.sourceRank ||
         left.titleLength - right.titleLength ||
         left.index - right.index,
     );
@@ -231,7 +296,7 @@ export const search = async (
   ]);
   return mergeResults(
     withoutTypeTableRows(pageResults),
-    registryResults,
+    [...pageTitleHits(query), ...registryResults],
     query,
   ).slice(0, limit);
 };

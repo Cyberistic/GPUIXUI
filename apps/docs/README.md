@@ -426,6 +426,15 @@ one page is listed once. `src/lib/search.test.ts`, `src/lib/token-search.test.ts
 the `Spinner` symbol, a token role and a scenario id against the production
 index.
 
+A query may be a **phrase** (plan 561). A whole-query name match keeps the ranks
+above; when there is none, each word is tried against every component name with
+a penalty, so `popover placement` reaches the Popover page instead of the Box
+page's variants. A page's **own title** is scored the same way (`Command
+palette`, `Theming`), and a title hit the page index omitted is synthesized from
+`source.getPages()`, because `theming` otherwise answered with the `## Theming`
+heading on component pages and never `/docs/theming`. A whole-phrase page match
+still outranks a one-word component match.
+
 The palette **UI** is driven end to end by `smoke:search` (plan 506): the real
 ⌘K shortcut opens and focuses it, typing lists the Installation page, Enter
 navigates and focuses the destination page, an unknown query shows the empty
