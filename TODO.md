@@ -1563,6 +1563,19 @@ retired once both branches are one
       seeded case. 25/25 in the file (plan `603`; offline 59 files / 820 tests,
       full runtime 53 files / 762 tests green on the release-tag build).
 
+`[x]` `packages/primitives`: **a resize left a `Tooltip` on the side chosen for
+      the old window** — `Select` already observed `useWindowSize`, but
+      `Tooltip` read the size in render and never re-rendered, so measured, a
+      `side="bottom"` tip stayed at `y 241` over a trigger at `y 212..236` after
+      the host reported a 250-high window, and a 1 258 px 60-word tip ignored a
+      300 px report. The wrapper now polls only while a tip is open and
+      re-measures the painted tip on a size change, so a long tip whose
+      re-wrapped height no longer fits above flips below; `select.mdx`'s false
+      "there is no resize observer in 0.10.0" claim is gone. 4 runtime cases
+      (a `Select` control included), three failing directions measured — revert
+      the subscription, drop the effect dependency, remove `Select`'s observer
+      (plan `604`).
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

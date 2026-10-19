@@ -44,7 +44,7 @@ import {
 } from "react";
 import * as Option from "effect/Option";
 import * as P from "effect/Predicate";
-import { readWindowSize, useGpuix } from "@gpuix/react";
+import { useGpuix, useWindowSize } from "@gpuix/react";
 import type { PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingAlign, FloatingSide } from "@gpuix/react/floating";
 import {
@@ -332,6 +332,20 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
   const focusedOpen =
     openState.value.mode !== "controlled" && focusOpen && !dismissed.current;
   const open = openState.value.current || focusedOpen;
+  /**
+   * The window size is **observed**, not sampled once per render.
+   *
+   * `<anchored fit="snap">` clamps a layer into the window without flipping it,
+   * so the side and the width cap this wrapper chooses are the only protection
+   * against a tip covering its trigger. A size read in render would leave a tip
+   * on the side chosen for the old window (measured, plan `604`): a
+   * `side="bottom"` tip stayed below a trigger that no longer had room, and a
+   * 1 258 px tip ignored a 300 px window. `Select` already follows this signal.
+   *
+   * The subscription is live only while a tip is open; a closed tip has no
+   * placement to correct. The runtime's observer dedupes equal sizes.
+   */
+  const viewport = useWindowSize({ intervalMs: open ? 100 : false });
   const [box, setBox] = useState<TooltipBox | undefined>(undefined);
   useLayoutEffect(() => {
     // The trigger is measured while the tip is closed too: a controlled tip can
@@ -377,8 +391,17 @@ export const Tooltip = (props: TooltipProps): ReactElement => {
           : tipBounds.height,
       tipLeft: tipBounds?.x,
     });
-  }, [renderer, open, props.content, props.style, theme]);
-  const viewport = readWindowSize(renderer);
+  }, [
+    renderer,
+    open,
+    props.content,
+    props.style,
+    theme,
+    // A resize re-wraps the tip when its width cap changes, so its height must
+    // be measured again before the side decision uses it (plan `604`).
+    viewport.height,
+    viewport.width,
+  ]);
   const side = Option.match(Option.fromNullishOr(box), {
     onNone: () => props.side ?? "top",
     onSome: (measured) => {

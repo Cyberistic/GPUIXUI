@@ -326,6 +326,12 @@ A **`top`/`bottom` side is the same preference on the vertical axis** (plan
 now opens above at its full height. A `side="top"` list at the top edge used to
 paint `y 2..12`, inside the margin; it now opens below.
 
+**A window resize re-places the list.** The wrapper observes the size the host
+reports (`useWindowSize`), so a resize re-decides the side, re-caps the list and
+re-measures the trigger while the list is open. The runtime's own `fit="snap"`
+still clamps without flipping, which is why the decision has to be ours
+(plan `604`).
+
 ## Style by state
 
 `style` takes an object or a callback over `SelectState` — the runtime's own
@@ -372,8 +378,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 - **Options are data.** No rich option content and no compound escape hatch in
   the public API; use `RadioGroup` for those. A group is a heading and a run of
   options, not a custom row.
-- **The width is measured, not live.** A resize while the list is closed is
-  picked up the next time it opens; there is no resize observer in 0.10.0.
+- **The window is observed; a trigger's own width is measured.** `useWindowSize`
+  follows a resize, so the side, the cap and the trigger's measured width update
+  while the list is open. A trigger whose width changes without a resize or a
+  prop change (a sibling reflowing, say) keeps the old `minWidth` until the list
+  reopens.
 - **The side uses an estimated list height.** It is exact for the styles this
   package paints, and a test pins the estimate to them; when neither side has
   room, the list is capped to the roomier one and scrolls. An explicit

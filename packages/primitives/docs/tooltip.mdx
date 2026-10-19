@@ -155,6 +155,14 @@ would clamp it — measured on a trigger at `x 12..72`, a `side="left"` tip pain
 `x 8..55`, over the trigger (plan `335`), and a `side="top"` tip painted
 `y 8..34` over a trigger at `y 12..36` (plan `336`).
 
+**A window resize re-places the tip.** The wrapper observes the size the host
+reports (`useWindowSize`, sampled every 100 ms only while a tip is open) and
+re-measures the painted tip when it changes, so the side, the wrapped height and
+the width cap all follow. Measured (plan `604`): before the subscription, a
+`side="bottom"` tip stayed at `y 241` over a trigger at `y 212..236` after the
+host reported a 250-high window, and a 1 258 px 60-word tip ignored a 300 px
+report. A long tip whose re-wrapped height no longer fits above now flips below.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -254,8 +262,9 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
 - **A `center` tip measures once per size.** The runtime has no layout callback,
   so the tip's box is known only after its first layout; the offset is applied
   in a layout effect before paint, so there is no visible jump. A content change
-  while the tip is open re-measures (plan `391`); a *trigger* that moves under
-  an open tip is still not re-placed.
+  while the tip is open re-measures (plan `391`), and a window resize re-places
+  the tip and re-caps it (plan `604`); a *trigger* that moves under an open tip
+  without a resize is still not re-placed.
 - **The flip estimates one line, then measures.** The side is first chosen from
   `tooltipHeight` (padding + one caption line + border) because the tip does not
   exist yet. Once it is painted, its measured height drives the decision, so a
@@ -303,6 +312,11 @@ trigger's edges, because a clamped layer's box would sit across the trigger.
   `right` side is no wider than that side's room (the failing direction painted
   1 262 px where 984/1 140 were offered), a short tip keeps its natural width,
   and two triggers 120 px apart get tips 120 px apart (plan `393`).
+- `runtime/floating-resize.runtime.test.tsx` — the size the host reports is
+  observed: a `bottom` tip flips above after a shrink, a long tip is re-capped to
+  a narrower window, a re-wrapped long tip flips below when it no longer fits
+  above, and a `Select` list proves the same signal (plan `604`; the failing
+  directions are recorded in that plan's §8).
 - `runtime/fields.runtime.test.tsx` — opens on hover and on keyboard focus,
   dismisses on click, keeps its content inside the anchoring frame, paints the
   popover role, paints the tip against the trigger in a column (`start`, `end`)

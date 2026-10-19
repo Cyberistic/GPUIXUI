@@ -91,6 +91,9 @@ The trigger reads `spacing["2xs"]`, `radius.sm`, `iconSize.sm` and
   window. A single unbreakable token can still paint past the cap, because
   `StyleDesc` has no word-break property. Keep `content` to a sentence or two
   anyway; a long explanation belongs in a popover.
+- **A window resize re-places the tip** and re-applies its cap (inherited from
+  `Tooltip`, plan `604`); a trigger that moves under an open tip without a
+  resize is still not re-placed.
 
 ## Verification
 
