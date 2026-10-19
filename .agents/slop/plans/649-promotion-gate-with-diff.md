@@ -155,3 +155,12 @@ plan and committed the ledger edits at the same time as the primary session
 (B3), so the plan was committed by the primary session's next `git add`. No work
 was lost and both runs agreed; the duplicate-writer note in `TODO.md` is the
 permanent place for it.
+
+**Independent corroboration.** The second session's own full run, completed
+after the ledger commit on the same code, also passed: headless `105/105`
+(**3765** checks, 65 capabilities) and live `93/93` (**2401** checks, 61
+capabilities, **1025.8 s**), both exit `0`. The two live totals differ by one
+check (`2402` vs `2401`); the cause was not investigated because both runs
+passed every scenario and the registry counts agree. The difference is recorded
+rather than smoothed over: the committed gate cites its own run's report, and
+this sentence cites the corroborating run's.
