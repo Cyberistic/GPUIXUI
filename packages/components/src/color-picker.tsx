@@ -13,7 +13,7 @@
  * reverts on the same signals.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -22,8 +22,9 @@ import {
 import * as Option from "effect/Option";
 import { useLayoutEffect, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
+import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
-import { isActivation, isTab } from "./internal/key.js";
+import { isTab } from "./internal/key.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
@@ -163,9 +164,7 @@ export const ColorPicker = ({
               }}
               onFocus={() => setFocusedSwatch(Option.some(index))}
               onBlur={() => setFocusedSwatch(Option.none())}
-              onKeyDown={(event: EventPayload) => {
-                if (!disabled && isActivation(event)) choose(swatch);
-              }}
+              {...activationHandlers(() => choose(swatch), { disabled })}
               style={{
                 width: controlHeight(theme, "sm"),
                 height: controlHeight(theme, "sm"),

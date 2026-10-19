@@ -47,7 +47,9 @@ The runnable build is `examples/color-picker.example.tsx`, registered in
   `aria-description="Invalid hex colour"`, and any of those exits reverts it to
   the committed value — `0.10.0` delivers no React `blur` for a native focus
   change, so the observable signals are `Enter`, `Tab` and an outside press.
-- A swatch press commits immediately.
+- A swatch press commits immediately. From the keyboard, a swatch activates on
+  `Enter` press and on Space **release**, so moving focus away before releasing
+  Space cancels the choice.
 - Default swatches are six theme colours (`primary`, `secondary`, `accent`,
   `muted`, `destructive`, `foreground`), so a custom theme changes them.
 
@@ -85,6 +87,9 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Every swatch is a `role="button"` named by its hex value, with `aria-selected`
   on the current one; selected swatches also carry the strong border, and a
   focused swatch paints the token ring (plan 522).
+- A focused swatch activates on `Enter` press and on Space release — the
+  button-shaped contract, so Space can be cancelled by moving focus before
+  release (plan 640).
 - The field is a real input named "<label> hex value"; an invalid draft is
   described through `aria-description` (`0.10.0` supports it).
 - Disabled puts the swatches **and** the HEX field out of the tab order
@@ -106,11 +111,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (11 tests):
-the parts, the theme swatches, a swatch press and selection, the swatch focus
-ring, a typed shorthand, an invalid draft, commit and revert on `Tab` and on an
-outside press, disabled, the disabled field's tab stop, and a style callback in
-both themes.
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (13 tests):
+the parts, the theme swatches, a swatch press and selection, a swatch activated
+by `Enter` and by Space release, the swatch focus ring, a typed shorthand, an
+invalid draft, commit and revert on `Tab` and on an outside press, disabled, the
+disabled field's tab stop, and a style callback in both themes.
 
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.

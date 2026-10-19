@@ -218,6 +218,51 @@ describe("ColorPicker", () => {
   });
 
   /**
+   * Activation contract (plan 640). The bug this guards, measured: a swatch ran
+   * `isActivation` from `onKeyDown`, so Space chose its colour on press and a
+   * user could not move focus away before releasing the key. Button-shaped
+   * controls activate Enter on key down and Space on key up (plans 332/334).
+   */
+  it("activates a swatch with Enter", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Harness onValueChange={onValueChange} />);
+    const swatch = picker.renderer.findByTestId("picker-swatch-0");
+    expect(swatch).toBeDefined();
+    if (swatch === undefined) return;
+
+    picker.renderer.focusElement(swatch.id);
+    picker.renderer.nativeSimulateKeyDown(swatch.id, "enter");
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(
+      darkTheme.colors.primary.toLowerCase(),
+    );
+
+    picker.unmount();
+  });
+
+  it("activates a swatch on Space release, not on press", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(<Harness onValueChange={onValueChange} />);
+    const swatch = picker.renderer.findByTestId("picker-swatch-1");
+    expect(swatch).toBeDefined();
+    if (swatch === undefined) return;
+
+    picker.renderer.focusElement(swatch.id);
+
+    picker.renderer.nativeSimulateKeyDown(swatch.id, "space");
+    expect(onValueChange).not.toHaveBeenCalled();
+
+    picker.renderer.nativeSimulateKeyUp(swatch.id, "space");
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith(
+      darkTheme.colors.secondary.toLowerCase(),
+    );
+
+    picker.unmount();
+  });
+
+  /**
    * Focus visibility (plan 522). The bug this guards, measured: a swatch takes
    * native focus and painted no ring, so a keyboard user could not see which
    * colour the next Enter would choose.
