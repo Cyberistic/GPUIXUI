@@ -66,7 +66,7 @@ no style and `GpuixRenderer` has no a11y method (plan `197`).
 
 | File | Change |
 | ---- | ------ |
-| `apps/playground/src/live/scenarios.tsx` | Import `toastScenario` from `../scenarios/toast.js`; add `const liveToast: LiveScenario` (`id: "live-toast"`, `capability: "toast"`, `view: toastScenario.view`, `ready: "toast-root"`); register it in `liveScenarios` after `liveTier2Command` (or next to the other Tier 2 twins). |
+| `apps/playground/src/live/scenarios.tsx` | Import `toastScenario` from `../scenarios/toast.js`; add `const liveToast: LiveScenario` (`id: "live-toast"`, `capability: "toast"`, `view: toastScenario.view`, `ready: "toast-root"`); register it in `liveScenarios` after `tier2Toast` (next to the other Tier 2 twins). |
 | `.agents/slop/plans/623-live-toast.md` | **This file.** |
 | `.agents/slop/plans/README.md` | Index this plan; note that `621`/`622` were claimed by the tokens workstream first, so this takes `623`. |
 | `apps/playground/README.md` | Extend the "real window" section with the toast layering evidence (pointer-transparent strip, card covers the page, focus not stolen). |
