@@ -76,7 +76,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | column-config | `column-config`, `live-column-config` | verified |
 | chrome | `app-chrome`, `live-app-chrome` | verified |
 | layers | `nested-layer-dismiss`, `live-layers` | verified |
-| scroller | `message-scroller` | verified |
+| scroller | `message-scroller`, `live-scroller`, `tier2-scroller`, `live-tier2-scroller` | verified |
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow`, `tier2-scroller`, `tier2-command` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles`, `live-states` | verified |
@@ -94,13 +94,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3632 checks**). The live suite last ran in full at **63/63**
-(`live-report.json`, **1428 checks**, exit `0`) in the 2026-10-19 merge gate,
-which included every focused addition through plan `565`'s tab-strip twins; the
-live registry is **75** after plans `570`, `571`, `575`, `577`, `580` and `581`,
-whose focused runs are green. Both `host` lines carry the
-pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content origin
-and a borderless size — is what every geometry check now asserts.
+The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, **3632 checks**). The live suite last ran in full at **75/75**
+(`live-report.json`, **1697 checks**, exit `0`) on 2026-10-19, the merge/release
+gate on the final branch: it includes every focused addition through plan
+`581`'s shipped Tier 2 consumer paths, so no live scenario is unrun. Both `host`
+lines carry the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a
+content origin and a borderless size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
 `getDebugFrameOverlayStats()` counts **paints**, not frame-loop ticks — an idle
@@ -150,9 +149,7 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**63/63 green** (1428 checks) on the release-tag binding; focused additions
-bring the registry to **69** (the Tier 1 twins, `live-log` and
-`live-workspace-panes`), and the **full
+**75/75 green** (1697 checks) on the release-tag binding, and the **full
 live suite is a merge/release gate** rather than a per-task check: `layout`, `root`, `window`, `frames`, `input`, `scroll`, `panel`, `motion`, `overlay`, `focus`,
 `selection`, `menu`, `menubar`, `docking`, `float`, `components`, `table`, `search`,
 `preview`, `scroller`, `workspace` (restore and tabbed panes), `table` (sort and selection) `tier2`, `columns`, `column-config`, `crop`, `media`, `chrome`, `replace`, `editor`, `data-toolbar`, `query`, `command`, `cell-editing`, `grid`, `reorder` and `tree-reorder` are confirmed there too

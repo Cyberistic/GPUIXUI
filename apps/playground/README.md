@@ -89,7 +89,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (101/101 green); -> 2 on a host with no binding
+# -> 0 here (103/103 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -230,10 +230,10 @@ it. `shell-filter` and `live-shell-filter` drive it.
 
 | Fact | Measured |
 | ---- | -------- |
-| filter | typing `crop` paints `1 of 101`, keeps `nav-crop-area` and drops `nav-window-layout` from the tree; `CROP` matches the same entry |
+| filter | typing `crop` paints `1 of 103`, keeps `nav-crop-area` and drops `nav-window-layout` from the tree; `CROP` matches the same entry |
 | stage | while the previous pick is hidden the stage follows the first match and **that row** paints `colors.accent` — the highlight is the derived current, not the stored `selected` |
 | clearing | `Escape` belongs to the sidebar container, so it clears from the focused filter **and** from a focused row (keys bubble, plan `345`); the full list returns and the pick the reader made is kept |
-| empty | `zzz` paints `0 of 101`, `No scenarios match` in the sidebar and `no scenarios` in the stage |
+| empty | `zzz` paints `0 of 103`, `No scenarios match` in the sidebar and `no scenarios` in the stage |
 | selection | filtering never rewrites `selected`: hide the pick, then clear, and the stage returns to the hidden pick (a filtered-out pick yields to the first match only while the filter is active) |
 
 ## The app root (plan `522`)
@@ -1329,8 +1329,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 73 scenarios. `smoke:live` opens
+The 103-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 75 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1748,10 +1748,10 @@ given.
 
 ## Evidence on this host
 
-The suite is **101/101 green** here (`exit 0`, 3552 checks, 2026-10-19):
+The suite is **103/103 green** here (`exit 0`, 3632 checks, 2026-10-19):
 
 ```
-101/101 scenarios passed · capabilities: layout=verified root=verified text=verified
+103/103 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -1776,7 +1776,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | pointer entry | a click places the native editor's caret at the nearest glyph (left edge prepends, middle lands inside, right edge appends); a press-move-release **selects** the run and typing replaces it; a plain click **clears** the selection; `shift`-click **extends** it; Enter inserts a newline in a textarea (32 → 64 autosize) and `Up` returns to the previous line |
 | typography | an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` widens the run; a `<text>` block fills its parent. **`textAlign` is a no-op** (`left`/`center`/`right` all leave the glyph run at the block edge) — `alignSelf` in a column flex or a narrower width in a `justifyContent` row is the working route |
 | grid layout | equal tracks split a width to the half pixel (`93.5/93/93.5` in 300 with 10 px gaps); explicit rows split a fixed height and stretch an unsized child, but a declared height wins; auto rows follow the tallest child; **default and `zero` `gridColumnMin` are equal**, `min-content` fills with unequal tracks, `max-content` leaves the remainder unused; nested grids resolve against their cell; an oversized child **overflows** its track; `justifyContent` centres content-sized tracks; a fixed-height wrapping row **stretches its line boxes** unless it sets `alignContent: "flex-start"` (measured 104 → 38) |
-| focus | **`onFocus`/`onBlur` fire** (0.5.1 never delivered them). `autoFocus` takes native focus without dispatching `onFocus`; a synthetic `"tab"` reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do. **Overflow:** a clipped tab is still a tab stop and focus does not reveal it (`tab-strip-focus`) |
+| focus | **`onBlur` fires; `onFocus` does not** on the release-tag binding (plans `529`, `583`). `autoFocus`, a click and a traversal all move native focus, reported by `getFocusedElementId()`; a `"tab"` keystroke reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do. **Overflow:** a clipped tab is still a tab stop and focus does not reveal it (`tab-strip-focus`) |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
@@ -1948,7 +1948,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (101/101, 3552 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (103/103, 3632 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1956,14 +1956,15 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **63/63** on
-  2026-10-19 (1428 checks, exit `0`, the merge gate) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **75/75** on
+  2026-10-19 (1697 checks, exit `0`, the merge gate) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan
-  `559`'s `live-tree` and plan `565`'s two tab-strip twins are all included.
-  The registry is **68** after plans `570` and `571`, whose focused runs are
-  green. The full suite is a **merge/release gate** —
+  `559`'s `live-tree`, plan `565`'s two tab-strip twins and the plan `570`–`581`
+  live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
+  drag, and the shipped Tier 2 scroller/command paths) are all included.
+  The registry is **75**. The full suite is a **merge/release gate** —
   layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

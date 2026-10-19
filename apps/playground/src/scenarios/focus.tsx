@@ -1,25 +1,28 @@
 /**
  * `focus-traversal` — focus, blur and native focus traversal.
  *
- * This is the capability the whole library depends on: without focus/blur
- * delivery there are no focus rings, no keyboard focus state and no dialog
- * focus management. ADR 0002 measured that GPUix 0.5.1 never delivers
- * `onFocus`; **0.10.0 does** — this scenario is the measurement.
+ * This is the capability the whole library depends on: without a focus source
+ * there are no focus rings, no keyboard focus state and no dialog focus
+ * management. ADR 0002 measured that GPUix 0.5.1 never delivers `onFocus`; the
+ * pinned release tag of 0.10.0 does **not** either (plan `529` §6.5) — this
+ * scenario is the measurement of what it does deliver.
  *
- * Measured on this host (plan `140` §4):
+ * Measured on this host (plans `140`, `529`):
  *
- * - `autoFocus` takes **native** focus but does not dispatch `onFocus`, so the
- *   runtime channel (`getFocusedElementId`) is the proof for it;
- * - a click and a native traversal (`window.focus_next`) both dispatch
- *   `onFocus`/`onBlur`, which is what a focus ring is painted from;
+ * - `autoFocus`, a click and a native traversal (`window.focus_next`) all move
+ *   **native** focus, which the runtime reports through
+ *   `getFocusedElementId()`; none of them dispatches React's `onFocus`;
+ * - a click does run the previously focused element's `onBlur`, so blur is the
+ *   one React focus event a component receives;
  * - a synthetic `"tab"` keystroke reaches the focused element's `onKeyDown` but
  *   does **not** itself traverse in the `TestRenderer`, so traversal is
  *   asserted through the runtime's `focusNext`/`focusPrevious`.
  *
- * The ring is painted from React state, not a `focusVisible` style: GPUix
- * 0.10.0 has no `:focus-visible` equivalent in `StyleDesc`, so a component
- * library must own this itself. Writing `focusVisible` in `style` would be
- * silently ignored.
+ * A focus ring therefore cannot be painted from `onFocus` on this runtime.
+ * The alternatives and the decision are recorded in the primitives package
+ * (plan `583`); this probe only pins the event contract, and also records that
+ * GPUix 0.10.0 has no `:focus-visible` equivalent in `StyleDesc`, so writing
+ * `focusVisible` in `style` would be silently ignored.
  */
 import { useState } from "react";
 import { Effect, pipe } from "effect";
