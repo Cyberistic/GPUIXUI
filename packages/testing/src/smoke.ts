@@ -690,6 +690,18 @@ export interface AsyncSmokeHost {
   readonly scrollOffset: (
     testId: string,
   ) => Effect.Effect<Offset | null, SmokeHostError>;
+  /**
+   * Scrolls the element `testId` into view through the renderer the runner
+   * owns.
+   *
+   * The element route, as opposed to {@link scrollToItem}'s list route: it
+   * takes an element id. Measured in a window (plan `601`): it reaches a row
+   * the list has already laid out; a far row is a no-op, so a jump uses
+   * {@link scrollToItem}.
+   */
+  readonly scrollIntoView: (
+    testId: string,
+  ) => Effect.Effect<void, SmokeHostError>;
   /** Every highlight wash the last frame painted, decoded at the adapter. */
   readonly highlights: () => Effect.Effect<
     ReadonlyArray<HighlightMatch>,

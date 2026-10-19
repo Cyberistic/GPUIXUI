@@ -89,6 +89,7 @@ export const createHost = (
     | "getPaintedHighlights"
     | "getListScrollTop"
     | "scrollToItem"
+    | "scrollIntoView"
     | "getWindowSize"
     | "zoomWindow"
     | "getDebugFrameOverlayStats"
@@ -338,6 +339,12 @@ export const createHost = (
               : { x: result.offset[0], y: result.offset[1] },
           ),
       ),
+    ),
+  scrollIntoView: (testId) =>
+    verb(`scrollIntoView ${testId}`, () =>
+      idOf(app, testId).then((elementId) => {
+        renderer.scrollIntoView(elementId);
+      }),
     ),
   highlights: () =>
     Effect.try({

@@ -58,6 +58,7 @@ import {
   tooltipScenario,
 } from "../scenarios/popups.js";
 import { scrollScenario } from "../scenarios/scroll.js";
+import { scrollIntoViewScenario } from "../scenarios/scroll-into-view.js";
 import { searchScenario } from "../scenarios/search.js";
 import { textSelectionScenario } from "../scenarios/text-selection.js";
 import { virtualizedTableScenario } from "../scenarios/virtual-table.js";
@@ -2675,6 +2676,197 @@ const table: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${table.id}.png`);
+    }),
+};
+
+/** The row height the `scroll-into-view` view declares. */
+const SIV_ROW_HEIGHT = 32;
+
+/** The `scroll-into-view` probe in a real window (plan `601`). */
+const liveScrollIntoView: LiveScenario = {
+  id: "live-scroll-into-view",
+  title: "Live scrollIntoView: the element route beside scrollToItem",
+  capability: "scroll",
+  view: scrollIntoViewScenario.view,
+  ready: "siv-row-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      /** Whether `row N`'s painted text is in the window (an exact line). */
+      const paintedRow = (row: number) =>
+        Effect.map(ctx.host.paintedText(), (lines) =>
+          Arr.some(lines, (line) => line === `row ${row}`),
+        );
+
+      yield* ctx.expectContains(
+        "the probe mounts at the first row",
+        yield* textOf(ctx, "siv-readout"),
+        "active=0",
+      );
+      yield* ctx.expectEqual(
+        "row 0 paints at rest",
+        yield* paintedRow(0),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the last row is off the paint at rest",
+        yield* paintedRow(199),
+        false,
+      );
+      const atRest = yield* offsetOf(ctx, "siv-list");
+      yield* ctx.expectNear("the list starts at the top", atRest.y, 0, 1);
+
+      // Focus alone: does a real window reveal a clipped virtual row?
+      yield* ctx.host.click("siv-row-0");
+      yield* settle;
+      yield* ctx.host.key("end");
+      yield* settle;
+      yield* waitForFocus(ctx, "siv-row-199");
+      yield* ctx.expectContains(
+        "End selects the last row",
+        yield* textOf(ctx, "siv-readout"),
+        "active=199",
+      );
+      yield* ctx.expectEqual(
+        "End focuses the last row",
+        yield* focusedOf(ctx),
+        "siv-row-199",
+      );
+      const atEnd = yield* offsetOf(ctx, "siv-list");
+      yield* ctx.expectEqual("End scrolled the list", atEnd.y < -500, true);
+      const endAnchor = yield* ctx.expectSome(
+        "the list reports a logical anchor after End",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("siv-list")),
+      );
+      yield* ctx.expectEqual(
+        "the logical anchor is near the last row",
+        endAnchor[0] + Math.floor(endAnchor[2] / SIV_ROW_HEIGHT) >= 199,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the raw offset saturates before the last row",
+        atEnd.y > -2000,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "End paints the last row",
+        yield* paintedRow(199),
+        true,
+      );
+
+      yield* ctx.host.key("home");
+      yield* settle;
+      const atHome = yield* offsetOf(ctx, "siv-list");
+      yield* ctx.expectNear("Home returned to the top", atHome.y, 0, 1);
+      yield* ctx.expectEqual(
+        "Home focuses the first row",
+        yield* focusedOf(ctx),
+        "siv-row-0",
+      );
+      yield* ctx.expectEqual(
+        "Home paints the first row",
+        yield* paintedRow(0),
+        true,
+      );
+      const homeAnchor = yield* ctx.expectSome(
+        "the list reports a logical anchor after Home",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("siv-list")),
+      );
+      yield* ctx.expectEqual(
+        "Home returns the anchor to the first row",
+        homeAnchor[0],
+        0,
+      );
+
+      // The list route.
+      yield* ctx.host.scrollToItem("siv-list", 120);
+      yield* settle;
+      const atItem = yield* offsetOf(ctx, "siv-list");
+      yield* ctx.expectEqual(
+        "scrollToItem scrolled the list",
+        atItem.y < 0,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "scrollToItem paints the indexed row",
+        yield* paintedRow(120),
+        true,
+      );
+      const itemAnchor = yield* ctx.expectSome(
+        "the list reports a logical anchor after scrollToItem",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("siv-list")),
+      );
+      yield* ctx.expectEqual(
+        "the logical anchor is at the indexed row",
+        Math.abs(itemAnchor[0] - 120) <= 5,
+        true,
+      );
+      yield* ctx.expectContains(
+        "scrollToItem does not change the selection",
+        yield* textOf(ctx, "siv-readout"),
+        "active=0",
+      );
+
+      // The element route, from a deep window back toward row 10.
+      yield* ctx.host.scrollIntoView("siv-row-10");
+      yield* settle;
+      const atRow = yield* offsetOf(ctx, "siv-list");
+      yield* ctx.expectEqual(
+        "scrollIntoView scrolled back toward the target",
+        atRow.y > atItem.y,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "scrollIntoView paints the target row",
+        yield* paintedRow(10),
+        true,
+      );
+      const rowAnchor = yield* ctx.expectSome(
+        "the list reports a logical anchor after scrollIntoView",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("siv-list")),
+      );
+      yield* ctx.expectEqual(
+        "the logical anchor is at the target row",
+        rowAnchor[0] <= 12,
+        true,
+      );
+
+      // Keyboard follow: the next moves stay visible.
+      yield* ctx.host.click("siv-row-10");
+      yield* settle;
+      yield* walkFocus(ctx, "down", 3);
+      yield* ctx.expectContains(
+        "three downs move the active row",
+        yield* textOf(ctx, "siv-readout"),
+        "active=13",
+      );
+      yield* ctx.expectEqual(
+        "the keyboard move focuses the new row",
+        yield* focusedOf(ctx),
+        "siv-row-13",
+      );
+      yield* ctx.expectEqual(
+        "the keyboard move keeps the row painted",
+        yield* paintedRow(13),
+        true,
+      );
+
+      // A scroll is not a focus change.
+      yield* ctx.host.scrollIntoView("siv-row-199");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "scrollIntoView paints the far row",
+        yield* paintedRow(199),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "scrolling does not move focus",
+        yield* focusedOf(ctx),
+        "siv-row-13",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${liveScrollIntoView.id}.png`,
+      );
     }),
 };
 
@@ -11241,6 +11433,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveCombobox,
   liveTooltip,
   table,
+  liveScrollIntoView,
   variableRows,
   tableSort,
   highlights,

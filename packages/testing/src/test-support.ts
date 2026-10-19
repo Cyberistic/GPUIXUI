@@ -112,6 +112,7 @@ export const nullAsyncHost: AsyncSmokeHost = {
   wheel: () => Effect.void,
   drag: () => Effect.void,
   scrollOffset: () => Effect.succeed(null),
+  scrollIntoView: () => Effect.void,
   highlights: () => Effect.succeed([]),
   scrollToItem: () => Effect.void,
   listScrollTop: () => Effect.succeed(null),

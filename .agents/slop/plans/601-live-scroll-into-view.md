@@ -198,4 +198,48 @@ The full live suite is the **merge/release gate**, not part of this task.
 
 ## 10. Measured record
 
-Filled by the executor.
+**Result:** `live-scroll-into-view` green **twice in a row** in a focused run,
+exit `0`, one screenshot at
+`apps/playground/.artifacts/live/live-scroll-into-view.png`. Live registry
+**`84 → 85`** (derived with `--list | wc -l`). The scenario records **39
+checks**. §5 was **not** needed: a real window reveals a focused clipped
+virtual row by itself, exactly as the offscreen renderer does.
+
+| Measurement | Value |
+| ----------- | ----- |
+| mount | `active=0`, `row 0` painted, `row 199` unpainted, offset `y = 0` |
+| `End` | `active=199`, focus `siv-row-199`, offset past `-500` and above `-2000`, anchor within the last row, `row 199` painted |
+| `Home` | `active=0`, focus `siv-row-0`, offset `0 ± 1`, `row 0` painted, anchor `0` |
+| `scrollToItem(120)` | offset `-1312`, `row 120` painted, anchor within 5 of `120`, selection unchanged |
+| `scrollIntoView(row 10)` | offset moved up from `-1312` to `-320`, `row 10` painted, anchor `<= 12` |
+| scroll vs focus | the element route leaves focus on `siv-row-0` |
+| keyboard follow | click row 10 + three `Down`s → `active=13`, focus `siv-row-13`, painted |
+| second `scrollIntoView(199)` | `row 199` painted, focus still `siv-row-13` |
+| live checks | **39** |
+| headless control | `scroll-into-view` green, **34** checks (unchanged) |
+
+**Measured limit (recorded, not asserted):** from the anchor at `120`,
+`scrollIntoView` moved the list for row `10` and row `20`, but was a **no-op**
+for row `50` and row `100` (`y` stayed `-1312` in both runs). The element route
+needs an element the list has already laid out; a far jump must use
+`scrollToItem`. This is why the live twin's element-route target is row `10`
+(the keyboard-follow case) and the plan's M2 used row `1`: a target the route
+can reach, so the check that fails is the target check, not an unrelated
+runtime limit. The record is in `COMPONENTS.md` (Virtualized lists row) and
+`PLAN.md` D83.
+
+**Mutation proofs, each observed and reverted:**
+
+| # | Mutation | Observed |
+| - | -------- | -------- |
+| M1 | the live host's `scrollIntoView` resolves the id but does not call the renderer | "scrollIntoView scrolled back toward the target": expected `true`, got `false` |
+| M2 | the element route targets `siv-row-1` instead of `siv-row-10` (a reachable row) | "scrollIntoView paints the target row": expected `true`, got `false` |
+| M3 | the host verb also calls `renderer.focusElement(elementId)` | "scrolling does not move focus": expected `"siv-row-13"`, got `"siv-row-199"` |
+
+M2's first attempt (row `100`/`50`) failed at the offset check because the
+runtime cannot reach an unlaid row — that run is what produced the measured
+limit above. M4 (the §5 reverse proof) does not apply.
+
+**Not claimed live:** the AccessKit `Option` roles and `aria-selected` (the live
+renderer has no a11y method — plan `197`).
+

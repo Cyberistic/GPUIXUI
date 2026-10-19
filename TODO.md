@@ -92,6 +92,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       removed click away) fail at the new focus assertions, and M2 (`end`
       removed) is a null result because a fresh input already sits at the end.
 
+`[x]` Prove the **element scroll route in a real window** per plan `601`:
+      `scroll-into-view` was the last scroll primitive with only `TestRenderer`
+      evidence, and `AsyncSmokeHost` had no `scrollIntoView` at all. The live
+      host now exposes it (`idOf` → `renderer.scrollIntoView`) and
+      `live-scroll-into-view` (39 checks) mounts plan `166`'s view in the real
+      `1100×720` window: `End` focuses and **reveals** row 199, `Home` returns
+      to `y = 0`, `scrollToItem(120)` (offset `-1312`) and
+      `scrollIntoView(row 10)` both paint their target and leave focus on
+      `siv-row-0`, three `Down`s paint and focus row 13, and a second
+      `scrollIntoView` paints row 199 without moving focus. **Measured limit:**
+      the element route only reaches a row the list has laid out — from the
+      anchor at 120, row 20 moved the list, while rows 50 and 100 were no-ops;
+      use `scrollToItem` for a far jump. **2/2** focused green after the
+      reverts, live registry `84 → 85`; three mutation proofs (a no-op verb,
+      the wrong target row, and a verb that also focuses) observed failing and
+      reverted. Headless control `scroll-into-view` green at 34 checks.
+      Focused ids run: `live-scroll-into-view`, `scroll-into-view`.
+
 `[x]` Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
       `180 → 228` and the nested split `300 → 360` without moving the other, the
