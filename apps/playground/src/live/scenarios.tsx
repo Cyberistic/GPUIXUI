@@ -116,6 +116,7 @@ import { treeReorderScenario } from "../scenarios/tree-reorder.js";
 import { tabOverflowScenario } from "../scenarios/tab-overflow.js";
 import { tabFocusScenario } from "../scenarios/tab-focus.js";
 import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
+import { scaleCostScenario } from "../scenarios/scale.js";
 import { terminalScenario } from "../scenarios/terminal.js";
 import { fieldOf } from "../scenarios/probes.js";
 import { KeyRoutingView } from "./key-routing.js";
@@ -2771,6 +2772,117 @@ const liveTooltip: LiveScenario = {
         yield* textOf(ctx, "tooltip-readout"),
         "open=false",
       );
+    }),
+};
+
+/** The rows the plan-302 scale fixture declares. */
+const SCALE_ROWS_LARGE = 2000;
+const SCALE_ROWS_SMALL = 100;
+/** The scale list's declared viewport height. */
+const SCALE_VIEWPORT = 300;
+/**
+ * The live tree's nodes per virtual row.
+ *
+ * The headless renderer counter reports three *host* nodes per row; the
+ * protocol tree is a different view, so this is measured rather than copied —
+ * it also reports **three** (2,000 rows = 6,019 nodes, 100 = 319; the delta is
+ * 5,700 and the tree adds a constant 7 chrome nodes) (plan `620`).
+ */
+const SCALE_NODES_PER_ROW = 3;
+
+const liveScale: LiveScenario = {
+  id: "live-scale",
+  title: "Live scale: the retained tree is not windowed",
+  capability: "scale",
+  view: scaleCostScenario.view,
+  ready: "sc-row-0",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const anchor = yield* ctx.expectSome(
+        "the live scale list reports an anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("sc-list")),
+      );
+      yield* ctx.expectEqual("the scale list starts on row 0", anchor[0], 0);
+      yield* ctx.expectEqual("the scale list starts at offset 0", anchor[1], 0);
+      yield* ctx.expectEqual(
+        "the scale list has its declared viewport",
+        anchor[2],
+        SCALE_VIEWPORT,
+      );
+
+      const atRest = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the first row paints",
+        Arr.contains(atRest, "row 0"),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a far row does not paint",
+        Arr.contains(atRest, "row 1900"),
+        false,
+      );
+
+      const large = yield* ctx.host.retainedNodes();
+      yield* ctx.expectEqual(
+        "the live tree retains a node per row",
+        large > SCALE_ROWS_LARGE,
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the live tree count is bounded",
+        large < 20_000,
+        true,
+      );
+
+      // Paint moves with the anchor; retention does not.
+      yield* ctx.host.scrollToItem("sc-list", 1000);
+      yield* settle;
+      const jumped = yield* ctx.expectSome(
+        "the live scale list reports a new anchor",
+        Option.fromNullishOr(yield* ctx.host.listScrollTop("sc-list")),
+      );
+      yield* ctx.expectEqual("the jump anchors row 1000", jumped[0], 1000);
+      const afterJumpText = yield* ctx.host.paintedText();
+      yield* ctx.expectEqual(
+        "the jumped row paints",
+        Arr.contains(afterJumpText, "row 1000"),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "the first row no longer paints",
+        Arr.contains(afterJumpText, "row 0"),
+        false,
+      );
+      const afterJump = yield* ctx.host.retainedNodes();
+      yield* ctx.expectEqual(
+        "a jump keeps the retained count",
+        afterJump,
+        large,
+      );
+
+      // A smaller model removes exactly its rows' nodes, and regrowing restores.
+      yield* ctx.host.scrollToItem("sc-list", 0);
+      yield* settle;
+      yield* ctx.host.click("sc-rows");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the live model shrinks",
+        yield* textOf(ctx, "sc-state"),
+        "rows=100",
+      );
+      const small = yield* ctx.host.retainedNodes();
+      yield* ctx.expectEqual(
+        "each removed virtual row removes its live nodes",
+        large - small,
+        SCALE_NODES_PER_ROW * (SCALE_ROWS_LARGE - SCALE_ROWS_SMALL),
+      );
+
+      yield* ctx.host.click("sc-rows");
+      yield* settle;
+      const regrown = yield* ctx.host.retainedNodes();
+      yield* ctx.expectEqual("regrowing leaves no residue", regrown, large);
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveScale.id}.png`);
     }),
 };
 
@@ -11969,6 +12081,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveCombobox,
   liveTooltip,
   table,
+  liveScale,
   liveScrollIntoView,
   variableRows,
   tableSort,

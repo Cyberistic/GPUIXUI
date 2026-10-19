@@ -22,6 +22,7 @@ import { AutomationError } from "@gpuix/native/automation";
 import type { App, Locator } from "@gpuix/native/automation";
 import { Smoke } from "@gpuixui/testing";
 import { testIdOf } from "./focus.js";
+import { countNodes } from "./tree.js";
 import { selectionDrag } from "./selection.js";
 
 /** How long a live scenario waits for an element a click should have mounted. */
@@ -136,6 +137,12 @@ export const createHost = (
       }),
       (size) =>
         new Smoke.WindowSize({ width: size.width, height: size.height }),
+    ),
+  retainedNodes: () =>
+    verb("retainedNodes", () =>
+      app
+        .call("getTree", {})
+        .then((result) => countNodes(Option.fromNullishOr(result.tree))),
     ),
   zoomWindow: () =>
     Effect.try({

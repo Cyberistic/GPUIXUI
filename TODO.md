@@ -66,6 +66,28 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 104/104 plans-and-harness
 
+`[x]` Prove the **cost model's retention half in a real window** per plan `620`:
+      `live-scale` reuses plan `302`'s `scale-cost` view and adds
+      `AsyncSmokeHost.retainedNodes()` over the automation tree (the same tree
+      the focus bridge walks). Measured in the `1100×720` window: 2,000 rows
+      retain **6,019** nodes and 100 retain **319** — the delta is exactly
+      `3 × 1,900 = 5,700`, the same **3 nodes per row** as the headless host
+      counter, plus a constant **7** chrome nodes; `scrollToItem(1000)` paints
+      row 1000 and unpaints row 0 at an **unchanged** count, and shrinking then
+      regrowing restores `6,019`. So paint is windowed and memory is not. The
+      syntax-cache half stays headless: the automation protocol has no cache
+      verb and `GpuixRenderer` exposes no counter. `live-scale` is **17 checks**,
+      green twice after the reverts; `scale-cost` control green at 36. Three
+      mutation proofs: painted-text-as-retention fails `the live tree retains a
+      node per row` (`expected true, got false`), a `+1` per-row constant fails
+      the delta (`expected 7600, got 5700`), and a root-only `countNodes` fails
+      the unit test (`expected 1 to be 5`). Playground tests gain **4**
+      (`tree.test.ts`); live registry `87 → 88`, headless unchanged `104`.
+      Focused ids run: `live-scale`, `scale-cost`; then the full headless
+      **104/104** (**3672** checks, 64 capabilities) and full live **88/88**
+      (**2220** checks, 58 capabilities, 921.7 s), both exit `0`. `nub run check`,
+      `nub run lint` and `nub run test` green (playground 424 tests).
+
 `[x]` Probe the **window selection-change signal** per plan `615`:
       `onSelectionChange` was the last published window-level handler with no
       evidence. `selection-signal` (**19 checks**) and `live-selection-signal`

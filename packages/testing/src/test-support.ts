@@ -86,6 +86,7 @@ export const nullAsyncHost: AsyncSmokeHost = {
   paintedText: () => Effect.succeed([]),
   bounds: () => Effect.succeed(null),
   windowSize: () => Effect.succeed(new WindowSize({ width: 0, height: 0 })),
+  retainedNodes: () => Effect.succeed(0),
   zoomWindow: () => Effect.void,
   frameStats: () => Effect.succeed(emptyFrameStats()),
   resetFrameStats: () => Effect.void,

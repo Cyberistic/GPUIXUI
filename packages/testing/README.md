@@ -122,7 +122,8 @@ returns the **same** `SmokeReport`, which is what lets a live run reuse
 `AsyncSmokeHost` is deliberately **smaller** than `SmokeHost`: bounds, text,
 painted text, input (click/click-at-coordinates/right-click/hover/keys/wheel/drag),
 `waitFor`, scroll offsets, focus, selection, highlights, list anchors, screenshots,
-the motion clock and the window (`windowSize`, and `zoomWindow` to change it). `clickWindow(x, y)` is the point form: the automation
+the motion clock, the retained-node count and the window (`windowSize`, and
+`zoomWindow` to change it). `clickWindow(x, y)` is the point form: the automation
 protocol resolves a locator to its centre, so a surface that owns no `testId`
 (a modal veil) or an element whose type changes under one `testId` (an inline
 editor) can only be pressed by coordinates (plan `347` §8.1).
@@ -133,7 +134,10 @@ created**, so it also answers what the renderer exposes directly:
 `getFocusedElementId` (mapped back to a `testId` through the automation tree —
 plan `190`), `getPaintedHighlights`, `scrollToItem` and `getListScrollTop`
 (plan `197`). Selection uses the protocol's `getSelectedText`/`clearSelection`
-plus a real paced drag (plan `191`).
+plus a real paced drag (plan `191`). `retainedNodes()` counts the automation
+tree the focus bridge already walks, root included: a virtual list keeps a node
+for every row while painting a window, so this is **retention**, not paint (plan
+`620`).
 
 Two observations stay with the synchronous `TestRenderer` suite because the live
 renderer has no method for them: the authored **style report** (the live

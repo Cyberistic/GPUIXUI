@@ -693,6 +693,27 @@ measurement pass), let the list reflow, and persist the anchor as before — no
 `estimatedItemHeight` tuning is needed for correctness, only for the scrollbar's
 rough scale. A component does **not** need to scroll by hand after an expansion.
 
+## The cost model in a real window (plan `620`)
+
+`scale-cost` measured what a virtual list **retains** in the `TestRenderer`;
+`live-scale` repeats the measurable half in a real window through
+`retainedNodes()`, which counts the automation tree (the same retained tree the
+focus bridge walks). The point is the difference between paint and memory:
+scrolling windows the paint, but every declared row keeps its nodes.
+
+| Question | Measured in the 1100 × 720 window |
+| -------- | --------------------------------- |
+| Nodes at 2,000 rows | **6,019** (100 rows: **319**) |
+| Nodes per row | **3** — the delta is exactly `3 × 1,900 = 5,700`, matching the headless host-node count |
+| Why the totals differ from `scale-cost` | the protocol tree adds a constant **7** chrome nodes around the list (`6,019 − 6,012`, `319 − 312`) |
+| `scrollToItem(1000)` | the anchor is `[1000, …]`, row 1000 paints, row 0 does not, and the node count is **unchanged** |
+| Shrinking the model to 100 rows | removes exactly 5,700 nodes; regrowing restores 6,019 |
+| The syntax-cache half | **stays headless**: the automation protocol has no cache verb and `GpuixRenderer` exposes no counter |
+
+So component code can rely on windowed paint, but not on windowed memory: a
+100,000-row table still retains hundreds of thousands of nodes. Virtualize the
+model at the app level when the row count can grow unbounded.
+
 ## Message scroller (plan `300`)
 
 `message-scroller` is the chat/stream contract plan `206` defines: follow new
@@ -1915,10 +1936,10 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The last full merge/release gate ran **87/87** (`exit 0`, 2203 checks, 57
-capabilities, 932.5 s, `.artifacts/live-report.json`, 2026-10-19), including the
-two scenarios this branch added last: `live-data-grid` (plans `606`/`607`) and
-`live-selection-signal` (plan `615`). The full live suite is a merge/release
+The last full merge/release gate ran **88/88** (`exit 0`, 2220 checks, 58
+capabilities, 921.7 s, `.artifacts/live-report.json`, 2026-10-19), including the
+three scenarios this branch added last: `live-data-grid` (plans `606`/`607`),
+`live-selection-signal` (plan `615`) and `live-scale` (plan `620`). The full live suite is a merge/release
 gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):

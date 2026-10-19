@@ -584,6 +584,14 @@ export interface AsyncSmokeHost {
   /** The window's paintable size, read from the renderer the runner owns. */
   readonly windowSize: () => Effect.Effect<WindowSize, SmokeHostError>;
   /**
+   * How many nodes the automation tree reports, root included.
+   *
+   * This is **retention**, not paint: a virtual list keeps a node for every row
+   * while painting only a window (plan `301` measured that a retained-but-
+   * unpainted node is still in the tree). A host without a tree answers `0`.
+   */
+  readonly retainedNodes: () => Effect.Effect<number, SmokeHostError>;
+  /**
    * Runs the platform zoom/maximize on the window the runner owns.
    *
    * A second call restores the previous size (measured on macOS: `1100x720 →
