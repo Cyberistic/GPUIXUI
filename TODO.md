@@ -471,15 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–575)
 
-`[~]` `[██████████]` 141/142
+`[x]` `[██████████]` 142/142
 
-`[~]` **A query-driven project browser is the fourth pattern (plan 575)** — the
-      patterns section composes a settings form, a confirmation flow and a
-      command palette, but no page proves the ordinary "type, filter, open"
+`[x]` **A query-driven project browser is the fourth pattern (plan 575)** — the
+      patterns section composed a settings form, a confirmation flow and a
+      command palette, but no page proved the ordinary "type, filter, open"
       task even though `SearchInput`, `List`, `EmptyState` and `Card` ship. A
       real composition filters six projects by name or description, shows the
-      no-match state, and opens the match on the wasm renderer with a two-phase
-      gesture (fill, then click); the derived scene totals move with it.
+      no-match state with a clear action, and opens the match on the wasm
+      renderer through a three-phase gesture. The rule is pure and tested
+      (two forced defects), the derived totals are 49 scenes / 45 record /
+      four composed / 26 gestures, and the built site is 98 pages; results in
+      plan 575 §8.
 
 `[x]` **A page summary names every subject it owns (plan 574)** — `spacing`,
       `radius`, `density` and `elevation` returned the Tokens API or Box,

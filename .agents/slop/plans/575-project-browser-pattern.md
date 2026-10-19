@@ -1,6 +1,6 @@
 # 575 — Project browser: a search-and-filter pattern on the live surface
 
-**Phase:** F · **Owner:** docs-site · **Status:** planned
+**Phase:** F · **Owner:** docs-site · **Status:** implemented
 **Depends on:** 410, 412, 427, 455, 456, 486, 493, 503, 517, 521, 522, 523, 573
 
 ## 1. Why this plan exists
@@ -135,27 +135,33 @@ Render:
    `List testId="scene-project-list" selectionMode="single"` with one
    `ListItem` per match, `textValue={name}`, `trailing` a `Badge`, and the
    description under the title.
-4. After activation, `Text testId="scene-project-status"` exactly
-   `Opened Atlas` (template literal from the opened name is fine, but the
-   literal must occur in the source for the contract guard).
+4. After activation, a detail block: the opened project's name in a `Text`,
+   plus a static `Text testId="scene-project-status"` reading
+   `Opened from the project list.` The static sentence is the smoke's
+   expectation, so the source contains the exact string the contract guard
+   looks for without a scene-only branch or a duplicated name table.
 
-The component must not paint `Opened Atlas` before a row is activated, and must
-not paint `1 of 6 projects` before the query is non-empty.
+The component must not paint `Opened from the project list.` before a row is
+activated. The no-match query is the gesture's first phase, so the empty state's
+`No projects match` is the milestone.
 
 ### 4.3 Scene tables — `preview/scenes.ts`
 
 | Export | Value |
 | ------ | ----- |
 | `LIVE_SCENES` | append `"project-browser"` |
-| `SCENE_TEXT` | `project-browser: "Opened Atlas"` |
+| `SCENE_TEXT` | `project-browser: "Opened from the project list."` |
 | `SCENE_PAGE` | `"project-browser": "/docs/patterns/project-browser"` |
 | `SCENE_LABEL` | `{ scene: "project-browser", title: "Project browser" }` |
-| `SCENE_GESTURE` | `[{ kind: "fill", testId: "scene-project-search", text: "atlas" }, { kind: "click-text", text: "Atlas", within: "scene-project-list" }]` |
-| `SCENE_INTERACTION` | `"Type a project name, then open the match."` |
-| `SCENE_STEP_TEXT` | `project-browser: { 1: "1 of 6 projects" }` |
+| `SCENE_GESTURE` | `[{ kind: "fill", testId: "scene-project-search", text: "zzz" }, { kind: "click", testId: "scene-project-clear" }, { kind: "click-text", text: "Atlas", within: "scene-project-list" }]` |
+| `SCENE_INTERACTION` | `"Type a query that matches nothing, clear it, then open a project."` |
+| `SCENE_STEP_TEXT` | `project-browser: { 1: "No projects match" }` |
 
-The instruction must not contain `Opened Atlas` or `1 of 6 projects`
-(`scene-contract.test.ts` enforces both).
+The three phases are deliberate: the no-match state proves the query reaches the
+filter, the clear action proves the empty state's way back, and the click proves
+a row opens. A filter that never narrows the list cannot paint the milestone; a
+broken clear cannot reach the row. The instruction must not contain either
+expectation (`scene-contract.test.ts` enforces both).
 
 ### 4.4 Page — `content/docs/patterns/project-browser.mdx`
 
@@ -217,8 +223,9 @@ with the registry).
 ### 6.1 The rule — `project-browser-logic.test.ts`
 
 Header names the bugs guarded: a case-sensitive match would make the typed
-lower-case gesture miss `Atlas`; a name-only haystack would miss a description
-search; an untrimmed query would hide everything after a trailing space.
+lower-case query miss a capitalised name; a name-only haystack would miss a
+description search; an untrimmed query would hide everything after a stray
+space.
 
 Cases:
 
@@ -256,7 +263,7 @@ nub run --filter docs test          # expect every file pass; the new logic file
 nub run --filter docs check-types   # expect exit 0
 nub run --filter docs build         # expect the production bundle, 98 routes
 nub run --filter docs smoke:build   # expect "pages 98 checked", exit 0
-nub run --filter docs smoke:preview # expect 49 scenes + 49 pages, scene project-browser opened by 2 steps, exit 0
+nub run --filter docs smoke:preview # expect 49 scenes + 49 pages, scene project-browser opened by 3 steps, exit 0
 nub run check                       # expect the test-quality, lint, format and type gates green
 nub run lint
 nub run test
@@ -284,23 +291,26 @@ output line for `project-browser` (canvas size, text nodes) in §8.
 - **STOP** if a change would be needed outside `apps/docs`, `docs/preview-strategy.md`,
   `.agents/slop/plans/` or `TODO.md`. Record it in `TODO.md` instead.
 
-## 8. Measured results (executor fills this in)
+## 8. Measured results (2026-10-19)
 
-- Logic suite: _(pending)_
-- Forced defect 1 (drop lower-casing): _(pending)_
-- Forced defect 2 (name-only filter): _(pending)_
-- `smoke:preview` `project-browser`: _(pending — canvas, text nodes, steps)_
-- `smoke:build`: _(pending — page count)_
-- Root gates: _(pending)_
+- **Logic suite:** `nub run --filter docs test -- src/components/preview/project-browser-logic.test.ts` — 6/6 pass. The full docs suite is **89 files / 643 tests**.
+- **Forced defect 1 (drop lower-casing):** 4 of 6 failed — the lower-case name test, the description test, the whitespace test and the order test. Reverted, then 6/6 green.
+- **Forced defect 2 (name-only haystack):** 2 failed — the description test and the two-row order test (`library` lives only in descriptions). Reverted, then 6/6 green.
+- **`smoke:preview`:** exit `0`; `smoke: scene project-browser opened by 3 step(s) — 640x520 canvas, 25 text nodes`; `/docs/patterns/project-browser loaded the live iframe — …scene=project-browser&platform=default&mode=dark (606x358)`. The initial state painted neither the empty-state milestone nor the opened detail, so both before-assertions held.
+- **`smoke:build`:** 98 pages, 121 links, 3 brand assets, 1 275 anchors, search and 404 green.
+- **`smoke:a11y --only /docs/patterns/project-browser`:** 1 page × 2 schemes, 0 violations.
+- **`smoke:console --only /docs/patterns/project-browser`:** 1 page, 0 errors.
+- **`smoke:responsive`:** 98 pages at 390 px, phone controls and mobile navigation checked.
+- **Root gates:** `nub run check`, `nub run lint`, `nub run test` green (tokens 197, testing 19, icons 19, playground 11, components 308, primitives 282, docs 643).
 
 ## 9. Acceptance criteria
 
 - `/docs/patterns/project-browser` is in the sidebar, the patterns index and
   search; every required section, both source includes and the six-part
   contract pass.
-- The live scene filters the six rows to `1 of 6 projects` after typing and
-  paints `Opened Atlas` only after the row is activated; the smoke proves both
-  halves.
+- The live scene paints `No projects match` only after a no-match query, clears
+  it through the empty state's control, and paints the opened project's detail
+  only after a row is activated; the smoke proves all three phases.
 - The four composed scenes, 49 total scenes, 26 gesture scenes and 45 record
   scenes are stated by the derived guards, not by memory.
 - `nub run --filter docs test`, `check-types`, `build`, `smoke:build`,
