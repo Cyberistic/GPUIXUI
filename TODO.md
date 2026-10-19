@@ -80,6 +80,20 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 118/118 plans-and-harness
 
+`[x]` **Run the promotion gate on the head that includes plan `690`'s
+      image-source pixels** per plan `691`: verification only at `836b4d63` +
+      the plan commit (0 behind `origin/master`, no merge needed) — headless
+      **106/106** (`3824` checks, 65 capabilities, 115.5 s) and live **95/95**
+      (**2545** checks, 61 capabilities, 1094.3 s), both exit `0`, so plan
+      `690`'s 24 new `live-content` checks ran inside the full sequence
+      (`2521 + 24`; `live-content` reports 68). A plain `--all` wrote no
+      `provenance.json`, both `host` lines carry the release-tag pins, and the
+      totals were read back from `.artifacts/smoke-report.json` /
+      `live-report.json`. `nub run check`/`lint`/`test` green (playground 442,
+      testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
+      docs 7). No source change. Exact ids: the whole headless registry and the
+      whole live registry (`--all`).
+
 `[x]` **Turn the image-source path/URL claim into frame pixels** per plan `690`:
       `live-content`'s path and refused-URL boxes were **screenshot-only**
       since plan `586` (no load/error event, no painted-text fallback), while
@@ -95,8 +109,9 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       list: the match fails). The offscreen loader still never settles, so the
       path/http(s) proof is live-only; `native-surfaces` is unchanged. Focused
       ids run: `live-content` (×2 plus three mutation runs), `native-surfaces`.
-      `nub run check`/`lint`/`test` green. No full live gate ran (merge gate);
-      the next expected full live total is plan `677`'s **2521 + 24 = 2545**.
+      `nub run check`/`lint`/`test` green. No full live gate ran in that task
+      (merge gate); plan `691` then measured the expected total, **2521 + 24 =
+      2545**, in the whole registry.
 
 `[x]` **Run the promotion gate on the head that includes plan `676`'s palette
       frame pixels** per plan `677`: verification only at `86057653` (no merge
@@ -1674,7 +1689,14 @@ focused id is `live-frames`.
       (**2491** checks, 61 capabilities, 1057.2 s) and headless **106/106**
       (3824 checks, 65 capabilities), both exit `0`, so the pixel evidence is in
       the current promotion gate. The owner/supervisor still performs the
-      fast-forward.
+      fast-forward. **Addendum (plan `691`, 2026-10-19):** plan `690` then added
+      24 checks to `live-content` (44 → 68), so the whole registries ran again
+      on the current head (`836b4d63` + the plan commit): live **95/95**
+      (**2545** checks, 61 capabilities, 1094.3 s) and headless **106/106**
+      (**3824** checks, 65 capabilities), both exit `0`, with no
+      `provenance.json`. `nub run check`/`lint`/`test` green (playground 442,
+      testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
+      docs 7). **This is the current gate for the promotion fast-forward.**
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

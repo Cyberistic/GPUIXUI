@@ -2087,25 +2087,25 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **95/95** (`exit 0`, **2521** checks, 61
-capabilities; concurrent full runs 1106.8–1136.2 s; `.artifacts/live-report.json`, 2026-10-19) on head
-`86057653` (plan `677`),
+The last full merge/release gate ran **95/95** (`exit 0`, **2545** checks, 61
+capabilities; **1094.3 s**; `.artifacts/live-report.json`, 2026-10-19) on head
+`836b4d63` (plan `691`),
 including every scenario this branch added through `live-theme-platform` (plan
 `654`, the platform type styles in a window), `live-shell` through plan `656`'s
 capture-capable runner, plan `658`'s Tier 1 additions — `live-primitives-display`
-is 34 checks — `live-theme`'s 39 frame-pixel checks (plan `676`) and plan
-`674`'s `live-pixel-colour` (22 checks). The total is
-plan `659`'s 2469 plus `live-pixel-colour`'s 22 plus `live-theme`'s +30. A plain
+is 34 checks — `live-theme`'s 39 frame-pixel checks (plan `676`), plan
+`674`'s `live-pixel-colour` (22 checks) and plan `690`'s `live-content` image
+pixels (44 → 68). The total is
+plan `659`'s 2469 plus `live-pixel-colour`'s 22 plus `live-theme`'s +30 plus
+`live-content`'s +24. A plain
 `--all` wrote no frame and no
 `provenance.json`; plan `656` holds the focused capture evidence. This gate
-supersedes plan `675`'s 2491 on `d206df18`, plan `659`'s 94/94 on `d9346a9d`,
+supersedes plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
+plan `659`'s 94/94 on `d9346a9d`,
 plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
-full live suite is a merge/release gate rather than a per-task check. Plan `690`
-later added **24** checks to `live-content` (44 → 68), so the next full gate's
-expected total is **2545**; this paragraph and the 2521 above describe the
-plan-677 gate on the pre-change head.
+full live suite is a merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2298,9 +2298,9 @@ narrower. Each deviation is deliberate and measured:
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
   The **real-window** suite (`smoke:live`) ran in full at **95/95** on
-  2026-10-19 (**2521** checks, 61 capabilities; 1106.8–1136.2 s across concurrent runs; exit `0`, the merge
-  gate; plan `677` on head `86057653`, including `live-theme`'s 39 pixel checks,
-  `live-pixel-colour` and
+  2026-10-19 (**2545** checks, 61 capabilities; 1094.3 s; exit `0`, the merge
+  gate; plan `691` on head `836b4d63`, including `live-theme`'s 39 pixel checks,
+  `live-pixel-colour`, `live-content`'s 68 image-source checks and
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
   pointer twins, plan `554`'s select/combobox/tooltip twins, plan `556`'s
