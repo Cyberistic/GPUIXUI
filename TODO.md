@@ -55,6 +55,12 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       the tree then went green (`nub run check`, 133 + 18 tests). The runner
       **still forks a new session per loop iteration**, so every workstream will
       re-acquire a duplicate until §5.1 lands in the shared `scripts/`.
+      **Update 2026-10-19 06:34:** the recurrence reached `workspaces/playground`
+      — a second live `swarm:playground` session (PID `94630`) committed
+      `b15f9dad` and `74427df5` over this session's uncommitted edits and swept
+      them into its commits. The result is consistent (the same plan and the same
+      fix), but the tree was written by two agents and neither noticed the other
+      until `git log` showed it. Still needs the supervisor fix.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
@@ -81,7 +87,10 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       checks were vacuous too. The scenario now asserts the swapped editor owns
       native focus after all three entries, presses `end` before the appended
       `z`, and asserts the click away reached `ws-elsewhere` before the commit
-      check; the coordinate clicks are gone.
+      check; the coordinate clicks are gone. `live-tier2-editing` is **31
+      checks**, green three times focused; M1 (a no-op entry) and M3 (the
+      removed click away) fail at the new focus assertions, and M2 (`end`
+      removed) is a null result because a fresh input already sits at the end.
 
 `[x]` Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
