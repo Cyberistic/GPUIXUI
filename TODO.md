@@ -71,7 +71,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 114/114 plans-and-harness
+`[x]` `[██████████]` 115/115 plans-and-harness
 
 `[x]` **Add pixel evidence to the native suite** per plan `674`: `packages/testing` gained a pure PNG decoder (`Pixels.decodePng`, all five filters, colour types 0/2/4/6, injected inflate) with 7 tests, and `pixel-colour` + `live-pixel-colour` decode a real captured frame and sample the centre of three literal boxes, the theme's `primary` and the canvas background. Measured on this host: device scale **2** (`2560 × 1600` offscreen, `2200 × 1440` live), literals `#FF0000FF`/`#00FF00FF`/`#0000FFFF`, `primary` `#A7A9FF`, background `#11141A`, all exact; **22 checks per host**. Full headless **106/106 (3824 checks, 65 capabilities)**, exit `0`; focused live `live-pixel-colour` green; four mutation proofs (swap the boxes, ignore the scale, break the `Sub` filter, remove the capture — each exits `1`, §8). `nub run check`/`lint`/`test` green (testing 68). Focused ids run: `pixel-colour`, `live-pixel-colour`.
 
