@@ -39,15 +39,16 @@ runtime-internal focus behaviour: the headless `Tooltip`'s open-on-focus still
 depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build: the focus
-rings are green after plan `590`, and the whole runtime suite — **53 files /
-762 tests** — passes after plan `597` corrected the published box model (a
+rings are green after plan `590`, and the whole runtime suite — **57 files /
+795 tests** — passes after plan `597` corrected the published box model (a
 plain `div` reports from its content origin, a `Button` from its border box;
 `paintBounds` is the opt-in correction), plan `598` corrected a scroller's
 own report (it slides by the scroll offset, so `paintBounds` is its visible
 box), and plan `599` replaced `Select`'s off-by-one `scrollIntoView` reveal with
 a measured `scrollTo`. Plan `602` closed the last focus-lifetime gap on this
 build (`RangeSlider`'s thumb ring), and plan `603` holds every focusable Tier 1
-control to `ring while focused / none after leaving` in one table. The remaining
+control to `ring while focused / none after leaving` in one table, and plan `636`
+carries that reveal through nested regions. The remaining
 reporting limit is recorded in
 `docs/gpuix-capabilities.md` §4. The rows stay `wip` for the
 provenance reason above, not for a red suite. Reproduce it with:
@@ -252,11 +253,11 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19
-(**57 files / 791 tests, all passing on the store's release-tag build**; two
+(**57 files / 795 tests, all passing on the store's release-tag build**; two
 consecutive runs are identical by name). Plan `597` corrected the published box
 model, plan `598` a scroller's own report, plan `599` `Select`'s off-by-one
-scroll reveal, and plan `606` the focus reveal a scroll region owes its
-controls; before them the same suite reported 37 failures at plan `596`.
+scroll reveal, plan `606` the focus reveal a scroll region owes its controls,
+and plan `636` the nested chain that reveal must follow; before them the same suite reported 37 failures at plan `596`.
 The native-focus tracker restored the 19 focus-matrix cases and the disabled
 ring cases (both files are green in a fresh process); plan `591` restored the
 lifetime of a seeded focus state and the `NumberField` blur commit, plan `592`
