@@ -168,3 +168,21 @@ The guard must fail for the reason it claims, not because a file moved:
    `type-tables.test.ts` fixture and confirm the malformed case fails.
 
 Record the two forced failures in this plan's status line and in `TODO.md`.
+
+## 6. Measured (2026-10-19, this worktree)
+
+- **Baseline audit** at `8c940733`: all 66 pages resolve; the three wrong
+  path/name pairs in §1 return `[]`, the right pairs return 31 and 43 rows.
+  The 147 declarations parse into 66 pages.
+- **Guard added:** `nub run --filter docs test` → 95 files / 676 tests, exit
+  `0`; `nub run check` → `check:tests`, lint, format and `check-types` green;
+  `nub run test` → every package green (docs 676).
+- **Forced failure 1** (toast path): `ToastViewportProps` pointed at
+  `toast/provider.tsx` → `toast.mdx → ToastViewportProps (…/toast/provider.tsx)
+  renders no rows: the file does not declare that type`; restored, 4/4.
+- **Forced failure 2** (unknown type): `DialogProps` renamed to `NoSuchProps`
+  → `dialog.mdx → NoSuchProps (…/dialog.tsx) renders no rows: the file does not
+  declare that type`; restored, 4/4.
+- **Parser failure**: removing `name` from the fixture tag is reported by
+  `malformedTypeTables` (the `type-tables.test.ts` case that asserts it).
+
