@@ -273,6 +273,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [589](./589-native-code-block-edge.md) | The native code block's own edge on its body ink wash | F | 574, 583, 585, 588 | done |
 | [590](./590-inline-code-accent-wash.md) | Inline code text on its accent wash | F | 082, 314, 528, 569, 574, 589 | done |
 | [591](./591-native-diff-row-tint.md) | The native diff row tint | F | 332, 574, 582, 583, 588–590 | done |
+| [592](./592-native-diff-chrome-type.md) | The native diff chrome must fit the type the runtime paints | F | 569, 572, 585, 588, 591 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3025,6 +3026,16 @@ XP/Aero `successText` take one designed step. The tightest tinted pair is
 7.008:1 (`Light`, `primaryText` on the `destructiveText` tint); the identity
 brand ink is deliberately unchanged. No role is added and the plain contract's
 count does not move.
+
+Plan `592` closes the last native-text box that did not hold its own paint. The
+runtime lays out a diff's meta line at 10.5px, its gutter, hunk header, notice
+and file-header counts at 11px and its file path at 12px, each on GPUI's default
+golden-ratio line box (17/18/19px), but the four heights and the marker column
+followed the theme's roles. A compact theme that returns `[]` from
+`themeFailures` — `caption`/`label`/`codeBlock` at 8/8, spacing at `0` — resolved
+**8 / 8 / 8 / 8** and a **0px** marker. `nativeTextChrome` publishes the fixed
+sizes, `nativeTextLineRatio` the line ratio, and `nativeTextTheme` floors the
+boxes at the lines and the marker at one code em; no shipped metric moves.
 
 ## How to use a plan
 
