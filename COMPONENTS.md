@@ -38,7 +38,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | text | `text-native` | verified |
 | input | `input-edit`, `text-entry`, `pointer-text-entry`, `input-payload`, `live-input-payload`, `live-pointer-entry` | verified |
 | focus | `focus-traversal`, `roving-focus`, `tab-strip-focus`, `live-focus` | verified |
-| overlay | `overlay-dialog` | verified |
+| overlay | `overlay-dialog`, `live-overlay` | verified |
 | modal | `modal-focus-trap` | verified |
 | floating | `floating-placement`, `live-floating` | verified |
 | select | `select-choose`, `live-select` | verified |
@@ -49,9 +49,9 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | virtual-list | `virtual-list-window`, `variable-rows`, `live-table`, `live-variable-rows` | verified |
 | table | `table-select-sort`, `table-column-resize`, `virtualized-table`, `live-table`, `live-table-sort` | verified |
 | tree | `tree-view`, `virtualized-tree`, `live-tree` | verified |
-| log | `log-viewer` | verified |
+| log | `log-viewer`, `live-log` | verified |
 | workspace | `workspace-tab-drag`, `workspace-restore`, `live-restore`, `workspace-panes`, `live-workspace-panes` | verified |
-| docking | `docking-layout` | verified |
+| docking | `docking-layout`, `live-docking` | verified |
 | float | `float-tab`, `live-float` | verified |
 | preview | `preview-card`, `live-preview` | verified |
 | command | `command-palette`, `live-command-palette` | verified |
