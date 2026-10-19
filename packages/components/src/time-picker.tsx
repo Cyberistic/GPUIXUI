@@ -479,6 +479,7 @@ export const timePickerMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "fixed 24-hour display: no AM/PM and no locale, because the repo has no i18n layer",
     "two labelled text segments instead of a spinbutton: 0.10.0 has no aria-valuenow",

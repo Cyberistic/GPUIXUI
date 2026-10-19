@@ -299,6 +299,29 @@ describe("inventory", () => {
     expect(problems).toEqual([]);
   });
 
+  it("states the focus-signal limitation on every focusable page", () => {
+    // A ring is guaranteed only where `autoFocus` seeds it: the headless
+    // renderer sends no focus/blur for a programmatic move, and a live
+    // window's delivery is window-state dependent (plans 536/540; playground
+    // 390/603/605). The contract is stated on every page whose parts can take
+    // focus, so a reader does not assume a ring the host may never draw.
+    const CLAIM = "Focus cues are seeded by `autoFocus`";
+    const problems = Arr.filterMap(
+      Arr.filter(inventory, (meta) => meta.focusable),
+      (meta) => {
+        const page = readFileSync(
+          fileURLToPath(new URL(meta.docs, packageRoot)),
+          "utf8",
+        );
+        return page.includes(CLAIM)
+          ? Result.failVoid
+          : Result.succeed(`${meta.name}: ${meta.docs} omits the focus claim`);
+      },
+    );
+
+    expect(problems).toEqual([]);
+  });
+
   it("proves every component in both themes", () => {
     // A suite proves both themes when it names `lightTheme`; the rest are the
     // shared matrix's responsibility, and `theme-coverage.ts` names exactly

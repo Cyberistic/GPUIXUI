@@ -183,6 +183,15 @@ a description, not a disabled role: assistive technology hears that the control
 is unavailable while the host still exposes it as an ordinary control (plan
 `516`).
 
+**A focus cue needs a focus signal.** A part seeds its `focused` state from
+`autoFocus` and follows React `focus`/`blur` afterwards. The headless
+`TestRenderer` delivers neither for `focusElement`, `focusNext` or a pointer
+focus change (plans 536, 540), and a live window's delivery is window-state
+dependent (playground plans 390, 603, 605). A ring is therefore guaranteed for
+`autoFocus`; after a programmatic or pointer focus move it appears only when the
+host sends the event. Components never fake it with a timer or a poll, and every
+component page whose parts can take focus states the limitation (plan 608).
+
 **A part that draws an interactive role names itself.** 0.10.0 reports no
 accessible name for a `div role="button"` (or tab, link, …) whose label is only a
 text child — measured for menu rows in plan `387` and for every example in plan

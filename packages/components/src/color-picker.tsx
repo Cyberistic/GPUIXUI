@@ -251,6 +251,7 @@ export const colorPickerMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no saturation/value square: 0.10.0 supports two-stop linear gradients only and no radial gradient",
     "swatches plus HEX entry only; no alpha, HSL/RGB fields or eyedropper",

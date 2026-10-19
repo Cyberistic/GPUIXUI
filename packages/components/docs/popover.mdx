@@ -128,6 +128,10 @@ transform, so no scale is faked.
   `<testId>`. The wrapper is the border box and the reported content size is its
   padding box, so the two differ by the border width (plan 540, plan 597).
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/popover.test.tsx` runs in the real GPUix renderer (20 tests):

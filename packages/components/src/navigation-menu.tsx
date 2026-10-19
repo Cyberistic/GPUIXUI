@@ -627,6 +627,7 @@ export const navigationMenuMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no anchor/href in 0.10.0: NavigationMenuLink is a button with onSelect",
     "hover opens after openDelay and closes after closeDelay once outside both surfaces; 0.10.0 has no pointer-type signal, so touch uses press",

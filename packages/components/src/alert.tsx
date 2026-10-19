@@ -255,6 +255,7 @@ export const alertMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "the dismiss control is this package's local button: primitives' Button reads a second theme context, so adoption waits on one provider",
   ],

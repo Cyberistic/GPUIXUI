@@ -404,6 +404,7 @@ export const contextMenuMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "right click is onAuxClick + isRightClick: 0.10.0 has no onContextMenu",
     "the menu is scoped to its trigger: a right click outside the trigger closes it but does not open another",

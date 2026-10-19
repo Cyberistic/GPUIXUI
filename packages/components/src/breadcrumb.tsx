@@ -404,6 +404,7 @@ export const breadcrumbMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no aria-current in 0.10.0; the item holding the current page is described by `currentLabel` and the page stays plain text",
     "maxItems reads direct children, so a custom wrapper element is counted as one entry",

@@ -309,6 +309,7 @@ export const previewCardMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "open/close delays are component timers; 0.10.0 has no pointer-type signal, so touch has no hover and uses press",
     "the card is not auto-focused on hover open (that would steal focus from typing); Tab reaches its links",

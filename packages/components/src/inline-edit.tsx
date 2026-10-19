@@ -290,6 +290,7 @@ export const inlineEditMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no contenteditable in 0.10.0: display and input are swapped explicitly",
     "Enter, Tab or a press outside commits; Escape cancels; a native blur that React does not deliver is covered by the outside-press path (measured live, plan 347 §8.2)",

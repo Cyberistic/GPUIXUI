@@ -196,6 +196,7 @@ export const searchInputMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "no debounce: the consumer debounces its own query",
     "Enter arrives as submit, Escape as keyDown (measured in 0.10.0)",

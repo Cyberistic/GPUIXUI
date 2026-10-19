@@ -1050,6 +1050,7 @@ export const listMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "no aria-multiselectable in 0.10.0, so the multiple mode is announced only per row",
     "type-ahead matches an explicit ListItem textValue, not rendered children",

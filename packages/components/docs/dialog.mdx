@@ -127,6 +127,10 @@ as unsupported: GPUI has no transform, so no scale is faked.
   the stack below it, so the first Escape closes the dialog first; opening the
   nested overlay through interaction puts it on top as expected.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## API
 
 | `Dialog` prop | Type | Default |

@@ -280,6 +280,7 @@ export const collapsibleMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "hidden by `visibility` while closed, so it leaves the tab order; a rewrap while closed is not re-measured until the next open",
     "no `aria-controls` in 0.10.0, so the trigger→body relationship is positional",

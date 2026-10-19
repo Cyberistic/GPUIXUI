@@ -106,6 +106,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/fieldset.test.tsx` runs in the real GPUix renderer (7 tests): the

@@ -496,6 +496,7 @@ export const commandMenuMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "ranking is per group, not global, so a group's heading never repeats; a custom filter opts out and keeps declaration order",
     "the input is the GPUix <input> host element: primitives' Input reads a second theme context, so adoption waits on one provider",

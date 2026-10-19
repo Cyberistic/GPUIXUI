@@ -349,6 +349,7 @@ export const tagInputMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "controlled only: the caller owns the tokens and renders chips from that list",
     "no aria-disabled in 0.10.0: disabled is a readOnly field plus dimming, and the group/field announce Disabled through aria-description",

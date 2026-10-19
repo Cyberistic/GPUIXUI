@@ -231,6 +231,7 @@ export const timelineMeta = {
   name: "Timeline",
   tier: 2,
   gpuixSupport: "partial",
+  focusable: false,
   status: "done",
   limitations: [
     "display-only: no click, selection or aria-current",

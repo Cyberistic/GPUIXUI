@@ -1038,6 +1038,7 @@ export const comboboxMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "GPUix's filter is order-preserving, so the adapter feeds it pre-ranked items and controls inputValue",
     "selection yields option values, never labels",

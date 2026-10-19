@@ -57,6 +57,9 @@ export interface ComponentMeta {
   readonly tier: 1 | 2 | 3 | 4 | 5;
   readonly status: "todo" | "wip" | "done" | "blocked" | "unsupported";
   readonly gpuixSupport: "yes" | "partial" | "no";
+  /** Whether a public part can take native focus, and therefore carries the
+   *  runtime's focus-signal limitation (plan 608). */
+  readonly focusable: boolean;
   /** Empty array when there is no limitation. Never omitted. */
   readonly limitations: ReadonlyArray<string>;
   /** `docs/<name>.mdx` */

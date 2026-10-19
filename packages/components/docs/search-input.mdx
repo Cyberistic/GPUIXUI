@@ -113,6 +113,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - No search history, no suggestions and no shortcut binding (`⌘F` belongs to the
   app).
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/search-input.test.tsx` runs in the real GPUix renderer (13 tests):

@@ -445,6 +445,7 @@ export const mentionInputMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "the query comes from the text, not the caret: mid-string editing is not supported (0.10.0 has no caret API)",
     "a space typed while the floating list is mounted is consumed by the runtime before the field sees it; Escape or a selection closes the list",

@@ -101,6 +101,7 @@ export const badgeMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: false,
   limitations: [],
   docs: "docs/badge.mdx",
   example: "examples/badge.example.tsx",

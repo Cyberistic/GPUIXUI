@@ -263,6 +263,7 @@ export const hotkeyRecorderMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "0.10.0 observes keys but cannot preventDefault, so a captured system chord still reaches the system",
     "clearing is a control, not Backspace: the test renderer emits no key event for Backspace/Delete",

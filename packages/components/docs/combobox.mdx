@@ -330,6 +330,10 @@ same shape for a row composed by hand.
   programmatic or pointer focus change, so "the ring leaves while the popup
   stays open" is a live-window check, not a renderer assertion (plan 536).
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (49 tests):

@@ -394,6 +394,7 @@ export const dropdownMenuMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     'the root surface flips once when snapping would cover its trigger, and align="center" is measured from the trigger; the snap margin wins near a window edge',
     'a submenu opens right when it fits and otherwise left of its row; a surface wider than both sides is still clamped by fit="snap"',

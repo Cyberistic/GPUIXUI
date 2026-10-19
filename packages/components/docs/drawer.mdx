@@ -123,6 +123,10 @@ with no code change — see [Theming](/docs/theming).
   (plan 597).
 - The close control uses the `x` icon from `@gpuixui/icons`.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (14 tests): open

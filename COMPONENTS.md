@@ -85,6 +85,15 @@ validation or status message. The rule lives in
 with no role (`ContextMenuTrigger`) has no node to describe and records that
 gap instead.
 
+**A focus ring needs a focus signal.** Components seed `focused` from
+`autoFocus` and follow React `focus`/`blur`; the headless renderer sends neither
+for a programmatic move (plans `536`/`540`) and a live window's delivery is
+window-state dependent (playground plans `390`/`603`/`605`), so a ring after a
+programmatic or pointer focus move appears only when the host sends the event.
+No component fakes it with a timer or poll. The claim is stated on all 36
+component pages whose parts can take focus, `ComponentMeta.focusable` marks
+them, and `inventory.test.ts` holds the pages to it (plan `608`).
+
 ### Not provided — needs real implementation
 
 Grouped by tier. The GPUix primitive each will be built on is in the row's Notes.

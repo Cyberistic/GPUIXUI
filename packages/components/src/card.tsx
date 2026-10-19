@@ -211,6 +211,7 @@ export const cardMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: false,
   limitations: [],
   docs: "docs/card.mdx",
   example: "examples/card.example.tsx",

@@ -932,6 +932,7 @@ export const datePickerMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "display labels default to English: pass `labels` from your own catalogue; there is no locale lookup, and the shape (Month YYYY / D Month YYYY) is fixed",
     "time is a separate TimePicker: this control owns one day only",

@@ -171,6 +171,10 @@ menu rows: `colors.hover` for the highlight with the 2px `colors.accent` bar.
 - The 320 px list scrolls with the highlight; a row that left the viewport is
   brought back on the next move (plan 530).
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (24 tests):

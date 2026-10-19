@@ -162,6 +162,7 @@ export const avatarMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: false,
   limitations: [
     "no loading or error state — the initials stay painted behind the picture, so a failed load degrades to them (there is no error callback)",
   ],

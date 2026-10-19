@@ -397,6 +397,7 @@ export const messageScrollerMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "the viewport renders every row: <virtual-list> takes itemCount rather than compound children, so long histories are not virtualized in v1",
     "a row that grows without the scroller re-rendering (internal child state) is not observed; there is no resize observer",

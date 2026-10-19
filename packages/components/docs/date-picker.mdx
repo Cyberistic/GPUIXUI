@@ -280,6 +280,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   default "today" — pass the `today` prop to make a test or a server boundary
   deterministic.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/date-picker/calendar.test.ts` (30 tests) covers leap February, a mid-week

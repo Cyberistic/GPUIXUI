@@ -154,6 +154,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
 - No per-notification actions menu, bulk selection or toast bridge in v1. The
   centre is durable; a toast is transient.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (17 tests):

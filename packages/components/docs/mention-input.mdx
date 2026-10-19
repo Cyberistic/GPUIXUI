@@ -116,6 +116,10 @@ never looks editable or focused (plan 527).
 - No `role="listbox"`/`option` in the dump, no `aria-activedescendant`.
 - Fixed `"Mentions"` label for the surface.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/mention-input.test.tsx` runs in the real GPUix renderer (17 tests):

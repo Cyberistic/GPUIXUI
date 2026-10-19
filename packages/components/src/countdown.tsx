@@ -70,6 +70,7 @@ export const countdownMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: false,
   limitations: [
     "display-only: the application ticks with Effect Clock and passes remainingMs; the component owns no timer",
     "fixed locale-free clock format; days are 24-hour units, not calendar days",

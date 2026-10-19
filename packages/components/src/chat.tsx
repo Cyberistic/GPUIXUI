@@ -401,6 +401,7 @@ export const chatMeta = {
   tier: 5,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "not virtualized in v1: every message row renders (MessageScroller limitation)",
     "no attachments picker: onAttach renders a control the caller wires",

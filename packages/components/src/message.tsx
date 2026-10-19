@@ -568,6 +568,7 @@ export const messageMeta = {
   tier: 5,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no aria-labelledby/aria-describedby in 0.10.0: the row is named by its variant",
     "sources and markdown links report a URL; the caller opens it because there is no href element",

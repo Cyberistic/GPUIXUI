@@ -290,6 +290,7 @@ export const fieldMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no aria-describedby in 0.10.0: the message is an aria-description, not an id reference",
     "the control is the GPUix <input> host element: primitives' Input reads a second theme context, so adoption waits on one provider",

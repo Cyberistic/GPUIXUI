@@ -164,6 +164,7 @@ export const formMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "owned-value: the caller passes the value and receives the decoded one; there is no runtime form element",
     "a render-prop child is the only way to reach submit, because the contract fixes Form as one part",

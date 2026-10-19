@@ -908,6 +908,7 @@ export const notificationCentreMeta = {
   tier: 5,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "every row renders: the published `<virtual-list>` host takes `itemCount` and requires app-side windowing, so v1 uses a plain scroll viewport (a later plan can add windowing without changing the API)",
     "no bell icon: `@gpuixui/icons` has no `bell`, so the trigger is a text button with the count badge; a caller may pass a custom child",

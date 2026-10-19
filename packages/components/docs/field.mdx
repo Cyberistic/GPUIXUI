@@ -127,6 +127,10 @@ press shows the ring too; that is the runtime's limit, not a heuristic of ours.
 - `Field` is not a form library: it owns no value, no submit, no cross-field
   rules and no async validation.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/field.test.tsx` runs in the real GPUix renderer (9 tests): label,

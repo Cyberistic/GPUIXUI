@@ -246,6 +246,7 @@ export const stepperMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: false,
   limitations: [
     "no aria-current in 0.10.0; the current step carries aria-selected",
     "display-only by design: there is no step click, disabled policy or onValueChange",

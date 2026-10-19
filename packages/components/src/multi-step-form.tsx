@@ -272,6 +272,7 @@ export const multiStepFormMeta = {
   tier: 5,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "owned-value and render-prop: the caller passes the draft, renders the current step's fields and receives the decoded value only on the last step's submit",
     "each step's validator is a projection schema over the whole draft, so the step schema and the full schema declare the same keys twice",

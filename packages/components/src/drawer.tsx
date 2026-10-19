@@ -438,6 +438,7 @@ export const drawerMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no swipe-to-dismiss: 0.10.0 has no drag host feature",
     "no zoom/transform: the exit is a fade plus a measured top/left slide",

@@ -99,6 +99,7 @@ export const emptyStateMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [],
   docs: "docs/empty-state.mdx",
   example: "examples/empty-state.example.tsx",

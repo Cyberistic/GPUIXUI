@@ -445,6 +445,7 @@ export const carouselMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "discrete stepping only: motion has no transform and scroll snap is unavailable",
     "no swipe gesture (no drag host feature) and no slide animation",

@@ -179,6 +179,10 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 - The docs site cannot render this component live — it is a GPUix host tree, not
   DOM. The code above is the real source.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/form.test.tsx` runs in the real GPUix renderer (13 tests): idle

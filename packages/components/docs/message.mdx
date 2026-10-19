@@ -123,6 +123,10 @@ all of it with no code change.
 - Tool-call rows are display-only; a consumer wires retry/cancel outside.
 - No `aria-live`; streamed text is not announced.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/message.test.tsx` runs in the real GPUix renderer (10 tests): it

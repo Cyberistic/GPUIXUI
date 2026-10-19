@@ -70,6 +70,10 @@ description are unchanged: the wording, not the colour, carries the consequence.
   flag and the close; that is deliberate, so a failed save is never hidden by a
   dialog that closed itself.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## API
 
 `ConfirmDialog` is one part; it takes:

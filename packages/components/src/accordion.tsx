@@ -604,6 +604,7 @@ export const accordionMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "the chevron swaps direction: 0.10.0's StyleDesc has no transform",
     "closed bodies stay mounted and are hidden by `visibility`; a rewrap while closed is not re-measured until the next open",

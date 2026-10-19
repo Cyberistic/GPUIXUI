@@ -128,6 +128,10 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 - No `aria-haspopup` in `0.10.0`.
 - No nested menus or columns inside a panel beyond whatever children you place.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (22 tests):

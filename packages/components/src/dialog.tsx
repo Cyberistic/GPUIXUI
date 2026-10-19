@@ -440,6 +440,7 @@ export const dialogMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "partial",
+  focusable: true,
   limitations: [
     "no aria-modal and no aria-labelledby in 0.10.0: the dialog is named with aria-label and its title is a heading",
     "the veil is an anchored element at window coordinates because the release ships no portal; a dialog mounted inside a scroll container stays painted at the window origin, not inside that container",

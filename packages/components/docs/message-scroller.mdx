@@ -108,6 +108,10 @@ change — see [Theming](/docs/theming).
   padding if the 24px threshold must be exact.
 - **No `aria-live`** and no "new messages" announcement.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/message-scroller.test.tsx` runs in the real GPUix renderer (12 tests):

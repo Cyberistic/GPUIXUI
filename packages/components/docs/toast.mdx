@@ -163,6 +163,10 @@ from its two pinned edges.
   keeps using. The native test renderer does not reproduce StrictMode's double
   effect invocation, so that rule is a pure suite rather than a component test.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 - `src/toast/store.test.ts` — queue, ids, `max`, dismiss, `dismissAll`,

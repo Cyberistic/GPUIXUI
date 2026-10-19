@@ -353,6 +353,7 @@ export const toastMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: true,
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",

@@ -104,6 +104,10 @@ glance. A custom theme changes it with no code change — see
 - The card closes on an outside press but does not restore focus (the press gave
   focus to whatever was pressed) — the same rule as Popover.
 
+- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
+  React `focus`/`blur`, so a ring may not paint when focus moves by code
+  (plans 390/603/605).
+
 ## Verification
 
 `src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (16 tests):

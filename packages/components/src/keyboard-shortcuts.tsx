@@ -290,6 +290,7 @@ export const keyboardShortcutsMeta = {
   tier: 2,
   status: "done",
   gpuixSupport: "yes",
+  focusable: false,
   limitations: [
     "display-only: a row documents a chord, it does not register a handler",
     "the accelerator grammar is ours; an unknown token displays verbatim rather than failing",
