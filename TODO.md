@@ -473,6 +473,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[~]` `[██████████]` 152/155
 
+`[ ]` **The shared host props have one documented home (plan 587)** — every part
+      inherits the runtime's `HostProps`, so `testId`, `onKeyDown` and
+      `onMouseDownOutside` appear in every generated props table but are
+      explained nowhere and never found by ⌘K (measured: `testId` returned Meter,
+      `onKeyDown` returned Cards). Add `## Shared host props` to Component API
+      with a table derived from the installed `HostProps`, a both-direction
+      guard, and a generated search entry that leaves `aria-*`/`role`/`tabIndex`/
+      `autoFocus` to Accessibility.
+
 `[x]` **Theming documents and indexes the high-contrast palettes (plan 586)** —
       the page named `highContrastLightTheme`/`highContrastDarkTheme` and showed
       none of their 47 values, so a reader who needs the accessible palette could
