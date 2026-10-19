@@ -1705,6 +1705,17 @@ selection, and a modified (`shift`) click extends it. The native editor owns
 pointer selection — a component must not reimplement it or swallow a modified
 click.
 
+**The editor half is live-proven too (`live-text-entry`, plan `624`):** the same
+view in the 1100 × 720 window reproduces every number above — `axbc` after two
+Lefts and an insert, `0axbc` after Home, `0axbc9` after End, Backspace back to
+`0axbc`, `shift-left` twice then `q` → `0axq`, `cmd-a` then `w` → `w`, an empty
+field after the last Backspace, `readOnly` keeping native focus and its painted
+`locked` run while refusing the edit, the placeholder painting only while empty,
+the secret painting in clear, a `158` px field still `158` px after 40
+characters, and a textarea at `64 → 116 → 168`, clamped at `168`. One harness
+fact: a single 40-key `keystrokes` call painted all 40 characters while the
+controlled value stayed empty, so the twin types one key per call.
+
 Two limits worth stating rather than hiding. **The accessibility `value` is the
 authored prop, not the live editor**: an uncontrolled field reports no value
 after typing, so a test observes `onChange` and `getPaintedText`. And there is

@@ -177,7 +177,7 @@ const TextEntryProbe = () => {
         ref={areaRef}
       />
       <Readout testId={READOUT}>
-        {`native=${native} events=${events} plain=${plain} lockedEdits=${lockedEdits} secretLen=${secret.length} note=${Str.replaceAll("\n", "|")(note)} areaH=${areaHeight}`}
+        {`native=${native} events=${events} plain=${plain} lockedEdits=${lockedEdits} secretLen=${secret.length} note=${Str.replaceAll("\n", "|")(note)} wideLen=${wide.length} areaH=${areaHeight}`}
       </Readout>
     </div>
   );

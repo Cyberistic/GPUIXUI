@@ -66,6 +66,33 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 104/104 plans-and-harness
 
+`[x]` Prove the **native text-entry contract in a real window** per plan `624`:
+      `live-text-entry` (**71 checks**, three consecutive focused runs, ~6.9 s)
+      reuses plan `188`'s `text-entry` view in the real 1100×720 window and reads
+      the probe's React readout, because the live tree carries no accessibility
+      `value` (plan `197`). Measured: `axbc` after two Lefts and an insert,
+      `0axbc` after Home, `0axbc9` after End, Backspace back to `0axbc`,
+      `shift-left` twice then `q` → `0axq`, `cmd-a` then `w` → `w`, an empty
+      field after the last Backspace, `readOnly` keeping native focus and its
+      painted `locked` run while refusing the edit (`lockedEdits=0`), the
+      placeholder painted only while empty, the secret painted in clear, a
+      `158` px field still `158` px after 40 characters, and a textarea at
+      `64 → 116 → 168` px, clamped at `168` for seven lines. **Two measured
+      harness facts:** one 40-key `keystrokes` call painted all 40 characters
+      while the controlled value stayed empty (the value was never committed),
+      so the twin types one key per call; and `paintedText()` returns whole
+      element lines, so the read-only check compares the field's run exactly
+      (the readout's `lockedEdits=0` token would make a `contains` check
+      vacuous). Five mutation proofs (remove `readOnly`, remove the placeholder,
+      fixed textarea height → `64 ± 1, got 62`, `maxRows={2}` → `116 ± 1,
+      got 64`, a content-growing width → `158 ± 1, got 318`) and one null result
+      (removing `width: 160` passes, because the check compares before/after).
+      Live registry `89 → 90`; headless unchanged at **104/104** (`text-entry`
+      stays 56 checks). The view gained one readout token, `wideLen`, so the
+      live twin reads the **committed** value. Focused ids run:
+      `live-text-entry` (×3), `text-entry`; then the full headless registry and
+      `nub run check`/`lint`/`test`.
+
 `[x]` Prove the **toast viewport's layering and focus contract in a real window**
       per plan `623`: `toast` was one of the last capabilities with only
       `TestRenderer` evidence for its hit-testing and stacking mechanism.

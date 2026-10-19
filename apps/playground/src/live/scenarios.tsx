@@ -123,6 +123,7 @@ import { listReorderScenario } from "../scenarios/reorder.js";
 import { treeReorderScenario } from "../scenarios/tree-reorder.js";
 import { tabOverflowScenario } from "../scenarios/tab-overflow.js";
 import { tabFocusScenario } from "../scenarios/tab-focus.js";
+import { textEntryScenario } from "../scenarios/text-entry.js";
 import { virtualizedTreeScenario } from "../scenarios/virtual-tree.js";
 import { scaleCostScenario } from "../scenarios/scale.js";
 import { terminalScenario } from "../scenarios/terminal.js";
@@ -760,6 +761,298 @@ const pointerEntry: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${pointerEntry.id}.png`);
+    }),
+};
+
+/** The placeholder authored by the `text-entry` view. */
+const TEXT_ENTRY_PLACEHOLDER = "enter name";
+
+/** One `key=value` token of the `text-entry` readout, or `""` when absent. */
+const entryField = (line: string, key: string): string =>
+  Option.getOrElse(fieldOf(line, key), () => "");
+
+/** Waits until the probe's measured textarea height satisfies `within`. */
+const waitForAreaHeight = (
+  ctx: LiveContext,
+  within: (height: number) => boolean,
+) =>
+  textOf(ctx, "entry-readout").pipe(
+    Effect.flatMap((line) => {
+      const height = Number.parseFloat(entryField(line, "areaH"));
+      return Number.isFinite(height) && within(height)
+        ? Effect.void
+        : Effect.fail("not yet");
+    }),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/**
+ * Waits until the readout's `key` token is exactly `expected`.
+ *
+ * A substring wait is wrong for a shrinking value: `native=0axbc` is a prefix
+ * of `native=0axbc9`, so a delete would appear to have landed before it did.
+ */
+const waitForEntryField = (ctx: LiveContext, key: string, expected: string) =>
+  textOf(ctx, "entry-readout").pipe(
+    Effect.flatMap((line) =>
+      entryField(line, key) === expected ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/**
+ * `live-text-entry` — the native editor contract in a real window.
+ *
+ * `live-input` proves a keystroke reaches `onChange`; this twin proves what the
+ * editor does inside the value: caret keys, a selection replaced by typing,
+ * deletion, `readOnly`, the placeholder's paint, a clipped fixed width and a
+ * `minRows`/`maxRows` autosize. The value is read from the probe's React
+ * readout because the live tree carries no accessibility `value` (plan `197`);
+ * focus comes from the renderer the runner owns (plan `190`).
+ */
+const liveTextEntry: LiveScenario = {
+  id: "live-text-entry",
+  title: "Live text entry: caret, selection, readOnly and autosize",
+  capability: "input",
+  view: textEntryScenario.view,
+  ready: "entry-native",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* boxOf(ctx, "entry-native");
+      yield* ctx.expectEqual(
+        "the live placeholder is painted while the field is empty",
+        Arr.some(
+          yield* ctx.host.paintedText(),
+          Str.includes(TEXT_ENTRY_PLACEHOLDER),
+        ),
+        true,
+      );
+
+      yield* ctx.host.click("entry-native");
+      yield* settle;
+      yield* ctx.host.key("a b c");
+      yield* waitForEntryField(ctx, "native", "abc");
+      const typed = yield* textOf(ctx, "entry-readout");
+      yield* ctx.expectEqual(
+        "typing reaches the live editor",
+        entryField(typed, "native"),
+        "abc",
+      );
+      yield* ctx.expectEqual(
+        "one live change per character",
+        entryField(typed, "events"),
+        "3",
+      );
+      yield* ctx.expectEqual(
+        "the live placeholder stops painting once text exists",
+        Arr.some(
+          yield* ctx.host.paintedText(),
+          Str.includes(TEXT_ENTRY_PLACEHOLDER),
+        ),
+        false,
+      );
+
+      yield* ctx.host.key("left left x");
+      yield* waitForEntryField(ctx, "native", "axbc");
+      yield* ctx.expectEqual(
+        "Left moves the live caret and typing inserts at it",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "axbc",
+      );
+
+      yield* ctx.host.key("home 0");
+      yield* waitForEntryField(ctx, "native", "0axbc");
+      yield* ctx.expectEqual(
+        "Home moves the live caret to the start",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "0axbc",
+      );
+
+      yield* ctx.host.key("end 9");
+      yield* waitForEntryField(ctx, "native", "0axbc9");
+      yield* ctx.expectEqual(
+        "End moves the live caret to the end",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "0axbc9",
+      );
+
+      yield* ctx.host.key("backspace");
+      yield* waitForEntryField(ctx, "native", "0axbc");
+      yield* ctx.expectEqual(
+        "Backspace deletes one live character",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "0axbc",
+      );
+
+      yield* ctx.host.key("shift-left shift-left q");
+      yield* waitForEntryField(ctx, "native", "0axq");
+      yield* ctx.expectEqual(
+        "typing replaces exactly the selected live run",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "0axq",
+      );
+
+      yield* ctx.host.key("cmd-a");
+      yield* settle;
+      yield* ctx.host.key("w");
+      yield* waitForEntryField(ctx, "native", "w");
+      yield* ctx.expectEqual(
+        "the live editor consumes select-all, and typing replaces the value",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "w",
+      );
+
+      yield* ctx.host.key("backspace");
+      yield* ctx.host.key("backspace");
+      yield* waitForEntryField(ctx, "native", "");
+      yield* ctx.expectEqual(
+        "Backspace on the last character leaves a working empty field",
+        entryField(yield* textOf(ctx, "entry-readout"), "native"),
+        "",
+      );
+
+      yield* ctx.host.click("entry-readonly");
+      yield* settle;
+      yield* ctx.host.key("n o");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "the live read-only field keeps native focus",
+        yield* focusedOf(ctx),
+        "entry-readonly",
+      );
+      yield* ctx.expectEqual(
+        "a live read-only field keeps its painted value",
+        Arr.contains(yield* ctx.host.paintedText(), "locked"),
+        true,
+      );
+      yield* ctx.expectEqual(
+        "a live read-only field refuses the typed edit",
+        Arr.some(yield* ctx.host.paintedText(), Str.includes("lockedno")),
+        false,
+      );
+      yield* ctx.expectEqual(
+        "readOnly reports no change live",
+        entryField(yield* textOf(ctx, "entry-readout"), "lockedEdits"),
+        "0",
+      );
+
+      yield* ctx.host.click("entry-secret");
+      yield* settle;
+      yield* ctx.host.key("s 3 c r 3 t 9");
+      yield* waitForEntryField(ctx, "secretLen", "7");
+      yield* ctx.expectEqual(
+        "the live editor holds the typed secret",
+        entryField(yield* textOf(ctx, "entry-readout"), "secretLen"),
+        "7",
+      );
+      yield* ctx.expectEqual(
+        "the live secret is painted in clear",
+        Arr.some(yield* ctx.host.paintedText(), Str.includes("s3cr3t9")),
+        true,
+      );
+
+      const wideBefore = yield* boxOf(ctx, "entry-wide");
+      yield* ctx.host.click("entry-wide");
+      yield* waitForFocus(ctx, "entry-wide");
+      // One key per call, each followed by a frame. A long batch can paint its
+      // text without committing the value in this window (measured), and a real
+      // user types one key at a time anyway.
+      yield* Effect.forEach(
+        Arr.range(1, 40),
+        () =>
+          Effect.gen(function* () {
+            yield* ctx.host.key("a");
+            yield* settle;
+          }),
+        { concurrency: 1, discard: true },
+      );
+      yield* waitForEntryField(ctx, "wideLen", "40");
+      const wideAfter = yield* boxOf(ctx, "entry-wide");
+      yield* ctx.expectEqual(
+        "a live fixed-width field keeps the long value",
+        entryField(yield* textOf(ctx, "entry-readout"), "wideLen"),
+        "40",
+      );
+      yield* ctx.expectNear(
+        "a live fixed-width field clips a long value instead of growing",
+        wideAfter.width,
+        wideBefore.width,
+        1,
+      );
+
+      yield* ctx.host.click("entry-area");
+      yield* settle;
+      yield* ctx.host.key("o n e");
+      yield* waitForAreaHeight(ctx, (height) => height >= 64);
+      yield* waitForEntryField(ctx, "note", "one");
+      yield* settle;
+      const minHeight = Number.parseFloat(
+        entryField(yield* textOf(ctx, "entry-readout"), "areaH"),
+      );
+      yield* ctx.expectNear(
+        "a live textarea starts at its minRows height",
+        minHeight,
+        64,
+        1,
+      );
+
+      yield* ctx.host.key("enter t w o enter t h r e e enter f o u r");
+      yield* waitForAreaHeight(ctx, (height) => height > minHeight);
+      yield* settle;
+      const fourLines = Number.parseFloat(
+        entryField(yield* textOf(ctx, "entry-readout"), "areaH"),
+      );
+      yield* ctx.expectNear(
+        "a live textarea grows with its content",
+        fourLines,
+        116,
+        1,
+      );
+
+      yield* ctx.host.key("enter f i v e enter s i x");
+      yield* waitForAreaHeight(ctx, (height) => height > fourLines);
+      yield* settle;
+      const sixLines = Number.parseFloat(
+        entryField(yield* textOf(ctx, "entry-readout"), "areaH"),
+      );
+      yield* ctx.expectNear(
+        "a live textarea keeps growing toward maxRows",
+        sixLines,
+        168,
+        1,
+      );
+
+      yield* ctx.host.key("enter s e v e n");
+      yield* waitForEntryField(
+        ctx,
+        "note",
+        "one|two|three|four|five|six|seven",
+      );
+      const sevenLines = Number.parseFloat(
+        entryField(yield* textOf(ctx, "entry-readout"), "areaH"),
+      );
+      yield* ctx.expectEqual(
+        "a live textarea stops growing at maxRows",
+        sevenLines,
+        sixLines,
+      );
+      yield* ctx.expectEqual(
+        "every entered line reaches the live editor",
+        entryField(yield* textOf(ctx, "entry-readout"), "note"),
+        "one|two|three|four|five|six|seven",
+      );
+
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveTextEntry.id}.png`);
     }),
 };
 
@@ -12283,6 +12576,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   input,
   inputPayload,
   pointerEntry,
+  liveTextEntry,
   liveDragTargets,
   liveDragAutoscroll,
   scroll,
