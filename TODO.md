@@ -58,7 +58,37 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 98/98 plans-and-harness
+`[x]` `[██████████]` 99/99 plans-and-harness
+
+`[x]` Prove the **shipped Tier 1 controls in a real window** per plan `570`:
+      the foundation every other component composes was headless-only. Four
+      live twins reuse the plan-168/169 views in the real 1100×720 window —
+      `live-primitives-fields` (22 checks: a real click focuses the Input and
+      `a t l a s` reaches `onChange`, Enter `onSubmit`; a disabled field refuses
+      the edit, `locked=0` with the other field unchanged; click-check /
+      Space-uncheck; a click flips the Switch; the Select paints, Down+Enter
+      commits `us-east`, Escape closes and keeps it), `live-primitives-display`
+      (12: a quarter-track click sets a value below the middle and Right/Left
+      step it; Progress/Meter/Skeleton paint at 14 px; a real enter opens the
+      Tooltip), `live-primitives-choice` (22: a pointer row select plus Down/Up;
+      first-star click, Right/End up, Right clamps, Delete clears, Left clamps)
+      and `live-primitives-entry` (16: click focus, Up/Down, typed `99` → `10`;
+      six OTP keystrokes advance focus, Backspace one, Left back, retype).
+      **4/4, exit `0`, 72 checks**, four screenshots; live registry
+      `63 → 67`, headless stays **101/101** (`3536 → 3538` checks, +2),
+      `check`/`lint`/`test` green (playground 417, testing 61). Five mutation
+      proofs (removed Input click → `name=`; enabled locked field → `locked=1`;
+      centre rating click → `rating=0`; removed Tooltip hover → no paint;
+      removed OTP `focusCell` → `code=6 complete=0`), plus a measured null
+      result: six digits in one call also pass, so the per-step settle is
+      realism, not a race guard. Two **test-quality fixes** fell out: the
+      headless `primitives-fields` now proves the refusal with a `locked`
+      counter (the old `name=atlas` check passed with the field enabled) and
+      `primitives-display` clicks a quarter of the track (the old 0–100 range
+      passed without a click); both observed failing and passing. Measured:
+      two keys in one batch can coalesce, and the Select's popup paints before
+      its focus commit. Focused ids run: the four `live-primitives-*` and the
+      five headless `primitives-*`.
 
 `[x]` Give the playground's native captures **provenance** per plan `564`:
       `--capture <dir>` writes one frame per selected scenario plus a

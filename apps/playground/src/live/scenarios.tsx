@@ -31,7 +31,15 @@ import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { previewScenario } from "../scenarios/preview.js";
-import { primitivesActionsScenario } from "../scenarios/primitives.js";
+import {
+  primitivesActionsScenario,
+  primitivesDisplayScenario,
+  primitivesFieldsScenario,
+} from "../scenarios/primitives.js";
+import {
+  primitivesChoiceScenario,
+  primitivesEntryScenario,
+} from "../scenarios/primitives-advanced.js";
 import {
   comboboxScenario,
   selectScenario,
@@ -209,6 +217,22 @@ const waitForTextNot = (ctx: LiveContext, testId: string, value: string) =>
   ctx.host.text(testId).pipe(
     Effect.flatMap((text) =>
       text !== null && text !== value ? Effect.void : Effect.fail("not yet"),
+    ),
+    Effect.retry(
+      Schedule.spaced("50 millis").pipe(
+        Schedule.upTo({ duration: "3 seconds" }),
+      ),
+    ),
+    Effect.orElseSucceed(() => undefined),
+  );
+
+/** Waits up to three seconds for the window to paint `needle`. */
+const waitForPainted = (ctx: LiveContext, needle: string) =>
+  ctx.host.paintedText().pipe(
+    Effect.flatMap((lines) =>
+      Option.isSome(Arr.findFirst(lines, Str.includes(needle)))
+        ? Effect.void
+        : Effect.fail("not yet"),
     ),
     Effect.retry(
       Schedule.spaced("50 millis").pipe(
@@ -1467,6 +1491,397 @@ const primitives: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${primitives.id}.png`);
+    }),
+};
+
+/**
+ * The shipped Tier 1 controls in a real window (plan `570`).
+ *
+ * Plans `168`/`169` proved these controls in the offscreen `TestRenderer`.
+ * Tier 1 is what every other component composes, so its pointer focus, key
+ * delivery, popup commit and focus advance deserve the same window evidence as
+ * Tier 2. The views are unchanged; only what a window can answer is asserted
+ * (style and the a11y dump stay headless, plan `197`).
+ */
+const livePrimitivesFields: LiveScenario = {
+  id: "live-primitives-fields",
+  title: "Live Tier 1: the shipped Input, Checkbox, Switch and Select",
+  capability: "components",
+  view: primitivesFieldsScenario.view,
+  ready: "field-name",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("field-name");
+      yield* settle;
+      yield* ctx.host.key("a t l a s");
+      yield* waitForText(ctx, "field-readout", "name=atlas");
+      yield* ctx.expectContains(
+        "a real click and real keys edit the shipped Input",
+        yield* textOf(ctx, "field-readout"),
+        "name=atlas",
+      );
+
+      yield* ctx.host.key("enter");
+      yield* waitForText(ctx, "field-readout", "submits=1");
+      yield* ctx.expectContains(
+        "Enter commits through onSubmit",
+        yield* textOf(ctx, "field-readout"),
+        "submits=1",
+      );
+
+      yield* ctx.host.click("field-locked");
+      yield* settle;
+      yield* ctx.host.key("x");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the disabled Input refuses the edit",
+        yield* textOf(ctx, "field-readout"),
+        "locked=0",
+      );
+      yield* ctx.expectContains(
+        "the refused keystroke reaches no other field",
+        yield* textOf(ctx, "field-readout"),
+        "name=atlas",
+      );
+
+      yield* ctx.host.click("field-check");
+      yield* waitForText(ctx, "field-readout", "checked=true");
+      yield* ctx.expectContains(
+        "a click checks the Checkbox",
+        yield* textOf(ctx, "field-readout"),
+        "checked=true",
+      );
+      yield* ctx.host.keyDown("field-check", "space");
+      yield* ctx.host.keyUp("field-check", "space");
+      yield* waitForText(ctx, "field-readout", "checked=false");
+      yield* ctx.expectContains(
+        "Space unchecks the Checkbox",
+        yield* textOf(ctx, "field-readout"),
+        "checked=false",
+      );
+
+      yield* ctx.host.click("field-switch");
+      yield* waitForText(ctx, "field-readout", "paused=true");
+      yield* ctx.expectContains(
+        "a click switches the Switch",
+        yield* textOf(ctx, "field-readout"),
+        "paused=true",
+      );
+
+      yield* ctx.host.click("field-region");
+      yield* waitForPainted(ctx, "Asia — South");
+      yield* settle;
+      yield* ctx.expectContains(
+        "the shipped Select paints its options",
+        Arr.join(yield* ctx.host.paintedText(), "\n"),
+        "Asia — South",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "field-readout", "region=us-east");
+      yield* ctx.expectContains(
+        "arrow then Enter commits the next option",
+        yield* textOf(ctx, "field-readout"),
+        "region=us-east",
+      );
+      yield* ctx.expectContains(
+        "the trigger paints the chosen label",
+        yield* textOf(ctx, "field-region"),
+        "United States — East",
+      );
+
+      yield* ctx.host.click("field-region");
+      yield* settle;
+      yield* ctx.host.key("escape");
+      yield* settle;
+      const dismissed = Arr.join(yield* ctx.host.paintedText(), "\n");
+      yield* ctx.expectEqual(
+        "Escape closes the list",
+        Str.includes("Asia — South")(dismissed),
+        false,
+      );
+      yield* ctx.expectContains(
+        "the dismissed list keeps the value",
+        yield* textOf(ctx, "field-readout"),
+        "region=us-east",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${livePrimitivesFields.id}.png`,
+      );
+    }),
+};
+
+const livePrimitivesDisplay: LiveScenario = {
+  id: "live-primitives-display",
+  title:
+    "Live Tier 1: the shipped Slider, Progress, Meter, Skeleton and Tooltip",
+  capability: "components",
+  view: primitivesDisplayScenario.view,
+  ready: "display-quality",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const track = yield* boxOf(ctx, "display-quality");
+      yield* ctx.host.clickWindow(
+        track.x + track.width / 4,
+        track.y + track.height / 2,
+      );
+      yield* settle;
+      const clicked = Number(yield* textOf(ctx, "display-quality-value"));
+      yield* ctx.expectEqual(
+        "a click at a quarter of the track sets a value below the middle",
+        clicked > 0 && clicked < 50,
+        true,
+      );
+
+      yield* ctx.host.key("right");
+      yield* settle;
+      yield* waitForText(ctx, "display-readout", `quality=${clicked + 1}`);
+      yield* ctx.expectContains(
+        "Right steps the slider up by one",
+        yield* textOf(ctx, "display-readout"),
+        `quality=${clicked + 1}`,
+      );
+      yield* ctx.host.key("left");
+      yield* settle;
+      yield* waitForText(ctx, "display-readout", `quality=${clicked}`);
+      yield* ctx.expectContains(
+        "Left steps it back",
+        yield* textOf(ctx, "display-readout"),
+        `quality=${clicked}`,
+      );
+
+      const skeleton = yield* boxOf(ctx, "display-skeleton");
+      yield* ctx.expectNear(
+        "the skeleton keeps its 14 px height",
+        skeleton.height,
+        14,
+        1,
+      );
+      yield* boxOf(ctx, "display-progress");
+      yield* boxOf(ctx, "display-meter");
+
+      yield* ctx.host.hover("display-trigger");
+      yield* waitForPainted(ctx, "Booked revenue");
+      yield* ctx.expectContains(
+        "hovering the trigger opens the shipped Tooltip",
+        Arr.join(yield* ctx.host.paintedText(), "\n"),
+        "Booked revenue",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${livePrimitivesDisplay.id}.png`,
+      );
+    }),
+};
+
+const livePrimitivesChoice: LiveScenario = {
+  id: "live-primitives-choice",
+  title: "Live Tier 1: the shipped RadioGroup and Rating",
+  capability: "components",
+  view: primitivesChoiceScenario.view,
+  ready: "choice-radio",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      const radio = yield* boxOf(ctx, "choice-radio");
+      yield* ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 2);
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "cadence=weekly");
+      yield* ctx.expectContains(
+        "a real click selects the second radio option",
+        yield* textOf(ctx, "choice-readout"),
+        "cadence=weekly",
+      );
+
+      yield* ctx.host.keyDown("choice-radio", "down");
+      yield* ctx.host.keyUp("choice-radio", "down");
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "cadence=never");
+      yield* ctx.expectContains(
+        "Down moves the selection",
+        yield* textOf(ctx, "choice-readout"),
+        "cadence=never",
+      );
+      yield* ctx.host.keyDown("choice-radio", "up");
+      yield* ctx.host.keyUp("choice-radio", "up");
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "cadence=weekly");
+      yield* ctx.expectContains(
+        "Up moves it back",
+        yield* textOf(ctx, "choice-readout"),
+        "cadence=weekly",
+      );
+
+      yield* ctx.host.clickWindow(radio.x + 8, radio.y + radio.height / 6);
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "cadence=daily");
+      yield* ctx.expectContains(
+        "a click on the first row selects it",
+        yield* textOf(ctx, "choice-readout"),
+        "cadence=daily",
+      );
+
+      const stars = yield* boxOf(ctx, "choice-rating");
+      yield* ctx.host.clickWindow(stars.x + 8, stars.y + stars.height / 2);
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "rating=1");
+      yield* ctx.expectContains(
+        "a click on the first star rates one",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=1",
+      );
+      yield* ctx.host.keyDown("choice-rating", "right");
+      yield* ctx.host.keyUp("choice-rating", "right");
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "rating=2");
+      yield* ctx.expectContains(
+        "Right raises the rating",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=2",
+      );
+      yield* ctx.host.keyDown("choice-rating", "end");
+      yield* ctx.host.keyUp("choice-rating", "end");
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "rating=5");
+      yield* ctx.expectContains(
+        "End jumps to the last star",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=5",
+      );
+      yield* ctx.host.keyDown("choice-rating", "right");
+      yield* ctx.host.keyUp("choice-rating", "right");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Right clamps at the last star",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=5",
+      );
+      yield* ctx.host.keyDown("choice-rating", "delete");
+      yield* ctx.host.keyUp("choice-rating", "delete");
+      yield* settle;
+      yield* waitForText(ctx, "choice-readout", "rating=0");
+      yield* ctx.expectContains(
+        "Delete clears the rating",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=0",
+      );
+      yield* ctx.host.keyDown("choice-rating", "left");
+      yield* ctx.host.keyUp("choice-rating", "left");
+      yield* settle;
+      yield* ctx.expectContains(
+        "Left clamps at zero",
+        yield* textOf(ctx, "choice-readout"),
+        "rating=0",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${livePrimitivesChoice.id}.png`,
+      );
+    }),
+};
+
+const livePrimitivesEntry: LiveScenario = {
+  id: "live-primitives-entry",
+  title: "Live Tier 1: the shipped NumberField and OTPField",
+  capability: "components",
+  view: primitivesEntryScenario.view,
+  ready: "entry-quantity",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* ctx.host.click("entry-quantity");
+      yield* settle;
+      yield* ctx.host.key("up");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "quantity=6");
+      yield* ctx.expectContains(
+        "Up steps the number field",
+        yield* textOf(ctx, "entry-readout"),
+        "quantity=6",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "quantity=4");
+      yield* ctx.expectContains(
+        "Down steps it twice",
+        yield* textOf(ctx, "entry-readout"),
+        "quantity=4",
+      );
+
+      yield* ctx.host.key("9 9");
+      yield* settle;
+      yield* ctx.host.key("enter");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "quantity=10");
+      yield* ctx.expectContains(
+        "a committed typed value clamps to the maximum",
+        yield* textOf(ctx, "entry-readout"),
+        "quantity=10",
+      );
+      yield* ctx.host.key("down");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "quantity=9");
+      yield* ctx.expectContains(
+        "the clamped value still steps",
+        yield* textOf(ctx, "entry-readout"),
+        "quantity=9",
+      );
+
+      yield* ctx.host.click("entry-code-cell-1");
+      yield* Effect.forEach(
+        ["1", "2", "3", "4", "5", "6"],
+        (digit) =>
+          Effect.gen(function* () {
+            yield* ctx.host.key(digit);
+            yield* settle;
+          }),
+        { concurrency: 1, discard: true },
+      );
+      yield* waitForText(ctx, "entry-readout", "code=123456 complete=1");
+      yield* ctx.expectContains(
+        "six real keystrokes complete the code",
+        yield* textOf(ctx, "entry-readout"),
+        "code=123456 complete=1",
+      );
+      yield* ctx.expectEqual(
+        "focus advanced to the last cell",
+        yield* focusedOf(ctx),
+        "entry-code-cell-6",
+      );
+
+      yield* ctx.host.keyDown("entry-code-cell-6", "backspace");
+      yield* ctx.host.keyUp("entry-code-cell-6", "backspace");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "code=12345");
+      yield* ctx.expectContains(
+        "Backspace deletes exactly one character",
+        yield* textOf(ctx, "entry-readout"),
+        "code=12345",
+      );
+
+      yield* ctx.host.keyDown("entry-code-cell-6", "left");
+      yield* ctx.host.keyUp("entry-code-cell-6", "left");
+      yield* settle;
+      yield* ctx.expectEqual(
+        "Left moves native focus back one cell",
+        yield* focusedOf(ctx),
+        "entry-code-cell-5",
+      );
+      yield* ctx.host.key("7");
+      yield* settle;
+      yield* waitForText(ctx, "entry-readout", "code=12347");
+      yield* ctx.expectContains(
+        "typing rewrites the focused cell",
+        yield* textOf(ctx, "entry-readout"),
+        "code=12347",
+      );
+
+      yield* ctx.host.screenshot(
+        `${LIVE_ARTIFACTS}/${livePrimitivesEntry.id}.png`,
+      );
     }),
 };
 
@@ -8110,6 +8525,10 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   docking,
   float,
   primitives,
+  livePrimitivesFields,
+  livePrimitivesDisplay,
+  livePrimitivesChoice,
+  livePrimitivesEntry,
   liveSelect,
   liveCombobox,
   liveTooltip,

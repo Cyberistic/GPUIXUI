@@ -280,6 +280,26 @@ delivered after the coordinate click did not reach the wrapper. Focus routing
 is proven by `roving-focus` and `modal-focus-trap`; these probes assert the
 controls' contracts. Measured facts are in plan `168` §8 and plan `169` §8.
 
+### The same controls in a real window (plan `570`)
+
+Tier 1 is what every other component composes, so its pointer focus, keys, popup
+commit and focus advance are proven in the real 1100 × 720 window too. The four
+twins reuse the views above unchanged (72 checks). Style, colour and the
+accessibility dump stay headless: `GpuixRenderer` has no such report (plan
+`197`).
+
+| Scenario | What it asserts in the window |
+| -------- | ----------------------------- |
+| `live-primitives-fields` | a real click focuses the Input, `a t l a s` reaches `onChange` and Enter `onSubmit`; the disabled field refuses the edit (`locked=0`) without leaking the key to another field; a click checks the Checkbox and Space-up unchecks it; a click flips the Switch; the Select paints its options, Down+Enter commits `us-east`, Escape closes and keeps it |
+| `live-primitives-display` | a click at a quarter of the Slider track sets a value below the middle, Right/Left step it by one; Progress, Meter and Skeleton paint (the skeleton is 14 px); a real pointer enter opens the Tooltip |
+| `live-primitives-choice` | a real click selects a radio row and Down/Up move the selection; a real first-star click rates one, Right/End raise it, Right clamps at five, Delete clears and Left clamps at zero |
+| `live-primitives-entry` | a click focuses the NumberField, Up/Down step it and typed `99` commits as `10`; six OTP keystrokes advance focus to the last cell, Backspace deletes one, Left moves focus back and typing rewrites that cell |
+
+A measured harness fact: two keys sent back to back can coalesce (two Downs
+stepped once), so the entry scenario settles per step; the Select's popup also
+paints before its focus commit lands, so the Down/Enter path settles between the
+paint and the key. Mutation proofs are in plan `570` §8.
+
 ## The modal contract (plan `155`)
 
 `modal-focus-trap` is the native evidence for the Tier 2 overlays: it drives the
@@ -1310,7 +1330,7 @@ as shipped.
 ## The live window run (plan `189`)
 
 The 101-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 63 scenarios. `smoke:live` opens
+live registry lists 67 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a

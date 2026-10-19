@@ -88,6 +88,7 @@ const FieldsProbe = () => {
   const theme = useTheme();
   const [name, setName] = useState("");
   const [submits, setSubmits] = useState(0);
+  const [lockedEdits, setLockedEdits] = useState(0);
   const [checked, setChecked] = useState(false);
   const [paused, setPaused] = useState(false);
   const [region, setRegion] = useState("eu-west");
@@ -111,6 +112,7 @@ const FieldsProbe = () => {
             label="Locked"
             value="locked"
             disabled
+            onChange={() => setLockedEdits((count) => count + 1)}
             fullWidth
           />
           <div style={{ display: "flex", flexDirection: "row", gap: 12 }}>
@@ -147,7 +149,7 @@ const FieldsProbe = () => {
         </div>
       </PrimitiveThemeProvider>
       <Readout testId="field-readout">
-        {`name=${name} submits=${submits} checked=${checked} paused=${paused} region=${region}`}
+        {`name=${name} locked=${lockedEdits} submits=${submits} checked=${checked} paused=${paused} region=${region}`}
       </Readout>
     </div>
   );
@@ -346,6 +348,11 @@ export const primitivesFieldsScenario: PlaygroundScenario = {
       yield* ctx.expectContains(
         "a disabled Input refuses the edit",
         read(ctx, "field-readout"),
+        "locked=0",
+      );
+      yield* ctx.expectContains(
+        "the refused keystroke reaches no other field",
+        read(ctx, "field-readout"),
         "name=atlas",
       );
       const lockedTree = yield* treeOf(ctx);
@@ -437,11 +444,18 @@ export const primitivesDisplayScenario: PlaygroundScenario = {
   view: () => <DisplayProbe />,
   steps: (ctx) =>
     Effect.gen(function* () {
-      ctx.host.click("display-quality");
+      const track = yield* ctx.expectSome(
+        "the slider paints",
+        Option.fromNullishOr(ctx.host.bounds("display-quality")),
+      );
+      ctx.host.clickWindow(
+        track.x + track.width / 4,
+        track.y + track.height / 2,
+      );
       const value = Number(read(ctx, "display-quality-value"));
       yield* ctx.expectEqual(
-        "the click set a value on the track",
-        value >= 0 && value <= 100,
+        "a click at a quarter of the track sets a value below the middle",
+        value > 0 && value < 50,
         true,
       );
       ctx.host.key("right");
