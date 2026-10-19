@@ -9,11 +9,8 @@ import {
   type ContrastPair,
 } from "./contrast.js";
 import type { PlatformRecipeName } from "./platform-recipes.js";
-import {
-  shippedThemes,
-  type PlatformVariant,
-  type ShippedTheme,
-} from "./shipped-themes.js";
+import type { PlatformVariant } from "./platform-types.js";
+import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import type { ThemeContrast, ThemeMode } from "./theme.js";
 
 /**

@@ -19,7 +19,8 @@ import {
   getPlatformRecipeTheme,
   type PlatformRecipeName,
 } from "./platform-recipes.js";
-import { platformNames, type PlatformName } from "./platforms.js";
+import { platformNames } from "./platforms.js";
+import type { PlatformVariant } from "./platform-types.js";
 import {
   getPlatformTheme,
   getTheme,
@@ -27,12 +28,6 @@ import {
   themeModes,
   type Theme,
 } from "./theme.js";
-
-/**
- * A platform name that carries its own style: every shipped platform except
- * `default`, which is the identity rather than a fourth look.
- */
-export type PlatformVariant = Exclude<PlatformName, "default">;
 
 /**
  * The styled platform variants, in {@link platformNames} order. Derived from the

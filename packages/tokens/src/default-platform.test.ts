@@ -18,9 +18,7 @@ const installedMono = {
   win32: "Consolas",
 } as const;
 
-type SimulatedPlatform = keyof typeof installedMono;
-
-const simulate = (platform: SimulatedPlatform): void => {
+const simulate = (platform: string): void => {
   Object.defineProperty(process, "platform", {
     value: platform,
     configurable: true,
@@ -63,3 +61,12 @@ describe.each(["linux", "win32"] as const)(
     });
   },
 );
+
+it("falls back to the identity on a platform the library does not know", async () => {
+  simulate("freebsd");
+  const { currentPlatform, platformMonos, systemMonoFamily } =
+    await import("./platform-types.js");
+
+  expect(currentPlatform).toBe("default");
+  expect(systemMonoFamily).toBe(platformMonos.darwin);
+});

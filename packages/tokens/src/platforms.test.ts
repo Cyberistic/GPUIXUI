@@ -37,6 +37,7 @@ import {
   type PlatformStyle,
 } from "./platforms.js";
 import { platformMonos } from "./platform-types.js";
+import { platformVariants } from "./shipped-themes.js";
 import {
   resolveDensePlatformTheme,
   resolvePlatformTheme,
@@ -70,7 +71,6 @@ import {
 } from "./contrast.js";
 import { typography } from "./typography.js";
 
-const variants = ["darwin", "linux", "win32"] as const;
 const modes = themeModes;
 
 describe("platformTypes", () => {
@@ -110,17 +110,25 @@ describe("platformTypes", () => {
   });
 
   it("gives each real platform its own monospace family", () => {
-    const monos = variants.map((platform) => platformTypes[platform].mono);
+    const monos = platformVariants.map(
+      (platform) => platformTypes[platform].mono,
+    );
     expect(new Set(monos).size).toBe(monos.length);
     expect(platformTypes.default.mono).toBe(systemMonoFamily);
   });
 
   it("names every real family from the one installed-mono registry", () => {
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       expect(platformTypes[platform].mono, platform).toBe(
         platformMonos[platform],
       );
     });
+  });
+
+  it("names one family for every styled platform, and no other", () => {
+    expect(Object.keys(platformMonos).toSorted()).toEqual(
+      [...platformVariants].toSorted(),
+    );
   });
 });
 
@@ -162,7 +170,7 @@ describe("platformStyles", () => {
   });
 
   it("gives every real variant shape and a colour set for both modes", () => {
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       const style = platformStyles[platform];
       expect(style.structure.radius, platform).not.toBeUndefined();
       expect(style.structure.density, platform).not.toBeUndefined();
@@ -248,7 +256,7 @@ describe("getPlatformTheme", () => {
 
   it("returns a new theme with the requested mode", () => {
     modes.forEach((mode) => {
-      variants.forEach((platform) => {
+      platformVariants.forEach((platform) => {
         const themed = getPlatformTheme(platform, mode);
         expect(themed, `${platform} ${mode}`).not.toBe(themes[mode]);
         expect(themed.mode, `${platform} ${mode}`).toBe(mode);
@@ -266,7 +274,7 @@ describe("getPlatformTheme", () => {
 
   it("is a real style, not a name change: the accent and shape move", () => {
     modes.forEach((mode) => {
-      variants.forEach((platform) => {
+      platformVariants.forEach((platform) => {
         const themed = getPlatformTheme(platform, mode);
         const base = themes[mode];
         expect(themed.colors.primary, `${platform} ${mode}`).not.toBe(
@@ -283,10 +291,10 @@ describe("getPlatformTheme", () => {
 
   it("gives the three real platforms distinct accents in each mode", () => {
     modes.forEach((mode) => {
-      const accents = variants.map(
+      const accents = platformVariants.map(
         (platform) => getPlatformTheme(platform, mode).colors.primary,
       );
-      expect(new Set(accents).size, mode).toBe(variants.length);
+      expect(new Set(accents).size, mode).toBe(platformVariants.length);
     });
   });
 
@@ -313,7 +321,7 @@ describe("getPlatformTheme", () => {
   });
 
   it("keeps every theme group and every colour role", () => {
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       modes.forEach((mode) => {
         const themed = getPlatformTheme(platform, mode);
         expect(Object.keys(themed).toSorted(), `${platform} ${mode}`).toEqual(
@@ -335,7 +343,7 @@ describe("getPlatformTheme", () => {
 
   it("never mutates the built-in theme it derives from", () => {
     const before = JSON.stringify(lightTheme);
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       modes.forEach((mode) => getPlatformTheme(platform, mode));
     });
     expect(JSON.stringify(lightTheme)).toBe(before);
@@ -361,7 +369,7 @@ describe("getPlatformTheme", () => {
 
 describe("high contrast platform variants", () => {
   it("keeps the high-contrast colour set, whatever the platform accent", () => {
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       expect(getPlatformTheme(platform, "light", "high").colors).toEqual(
         highContrastLightTheme.colors,
       );
@@ -541,14 +549,15 @@ interface PlatformColourSet {
   readonly floors: Floors;
 }
 
-const platformColourSets: ReadonlyArray<PlatformColourSet> = variants.flatMap(
-  (platform): ReadonlyArray<PlatformColourSet> =>
-    modes.map((mode) => ({
-      label: `${platform} ${mode}`,
-      colors: getPlatformTheme(platform, mode).colors,
-      floors: contrastFloors.default,
-    })),
-);
+const platformColourSets: ReadonlyArray<PlatformColourSet> =
+  platformVariants.flatMap(
+    (platform): ReadonlyArray<PlatformColourSet> =>
+      modes.map((mode) => ({
+        label: `${platform} ${mode}`,
+        colors: getPlatformTheme(platform, mode).colors,
+        floors: contrastFloors.default,
+      })),
+  );
 
 describe("platform variant contrast", () => {
   platformColourSets.forEach(({ label, colors, floors }) => {
@@ -563,7 +572,7 @@ describe("platform variant contrast", () => {
   });
 
   it("clears the documented contract on every variant", () => {
-    variants.forEach((platform) => {
+    platformVariants.forEach((platform) => {
       modes.forEach((mode) => {
         expect(
           themeContrastFailures(getPlatformTheme(platform, mode)),

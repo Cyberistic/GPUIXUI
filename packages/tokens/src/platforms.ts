@@ -35,6 +35,7 @@ export type {
   PlatformStyle,
   PlatformStyleStructure,
   PlatformType,
+  PlatformVariant,
 } from "./platform-types.js";
 
 /**

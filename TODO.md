@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 312/389
+`[x]` `[████████░░]` 313/390
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2632,11 +2632,22 @@ four soft status fills; `selectionInputPairs` adds the twelve washed pairs (the
 `input` fill stays in `selectionPairs`), a structural guard holds it to the
 at-rest domain, and the catalogue, design system, README and ledger name it
 (plan 689)
+`[x]` Give the platform registry one owner for its variant set — `knownPlatform`
+retyped `darwin`/`linux`/`win32`, so a fourth platform added to `platformNames`
+would silently resolve to the identity's fallback mono; `platformMonos` was not
+tied to the union, and the suite's "one installed-mono registry" case iterated
+its own local copy of the three names. `PlatformVariant` now lives beside
+`PlatformName`, `platformMonos` satisfies a `Record<PlatformVariant, string>`,
+`knownPlatform` derives from `platformNames`, the fallback derives from the
+registry, and the suites use `platformVariants` plus an unknown-platform case
+(plan 690)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
-and the executed `685`/`686` beside components' `685`. Add a check that fails
-when two worktrees carry different plan files under one number, and take the
-next free number before writing a plan (found while landing plan 688)
+and the executed `685`/`686` beside components' `685`; the executed `689` now
+collides too (our field-selection plan beside components' menu group name). Add
+a check that fails when two worktrees carry different plan files under one
+number, and take the next free number before writing a plan (found while
+landing plan 688; `689` found while landing plan 690)
 
 ## Phase C — Tier 1–2 components
 

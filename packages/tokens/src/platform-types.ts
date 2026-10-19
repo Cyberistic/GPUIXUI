@@ -34,6 +34,13 @@ export const platformNames = ["darwin", "linux", "win32", "default"] as const;
 export type PlatformName = (typeof platformNames)[number];
 
 /**
+ * A platform that carries its own style: every shipped platform except
+ * `default`, which is the identity rather than a fourth look. Derived from
+ * {@link PlatformName}, so a new platform joins the styled set by default.
+ */
+export type PlatformVariant = Exclude<PlatformName, "default">;
+
+/**
  * Narrow unknown input — a stored preference or a URL parameter — to a platform
  * the library ships, `default` included. A consumer never retypes the names.
  */
@@ -50,13 +57,23 @@ export const platformMonos = {
   darwin: "Menlo",
   linux: "DejaVu Sans Mono",
   win32: "Consolas",
-} as const;
+} as const satisfies Readonly<Record<PlatformVariant, string>>;
 
 /** The identity's fallback where the runtime reports no known platform. */
-const fallbackMono = "Menlo";
+const fallbackMono = platformMonos.darwin;
+
+/**
+ * Narrow a runtime platform string to a styled platform. A value the library
+ * does not ship — another OS, a browser, or the `default` sentinel — is not a
+ * variant.
+ */
+const isPlatformVariant = (value: string): value is PlatformVariant =>
+  platformNames.some(
+    (platform) => platform === value && platform !== "default",
+  );
 
 const knownPlatform = (name: string): PlatformName =>
-  name === "darwin" || name === "linux" || name === "win32" ? name : "default";
+  isPlatformVariant(name) ? name : "default";
 
 /**
  * The platform this code runs on, or `default` where the runtime exposes none
