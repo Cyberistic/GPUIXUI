@@ -142,7 +142,7 @@ exports, and the page currently imports nothing from that module.
 ## 3. Order of work
 
 1. Add the test **first** with the real-site check only. Run
-   `nub run --filter docs test -- code-imports` and record it failing on
+   `cd apps/docs && nub exec vitest run src/code-imports.test.ts` and record it failing on
    `components/inline-validation.mdx: cannot resolve
    @gpuixui/components/validation/logic`. This is the two-direction proof that
    the guard sees the shipped defect.
@@ -155,9 +155,9 @@ exports, and the page currently imports nothing from that module.
 ## 4. Commands and expected results
 
 ```sh
-nub run --filter docs test -- code-imports
+cd apps/docs && nub exec vitest run src/code-imports.test.ts
 # before 3: 1 failed — inline-validation.mdx: cannot resolve @gpuixui/components/validation/logic
-# after 3:  3 passed (or the file's full test count), exit 0
+# after 3:  6 passed, exit 0
 
 nub run --filter docs test
 # expect: 92 files / 660+ tests, exit 0 (baseline 91 / 652)
@@ -226,7 +226,7 @@ site-wide resolution check), the Inline validation page correction, the
 
 | Command | Result |
 | --- | --- |
-| `nub run --filter docs test -- code-imports` | before the page fix: `1 failed` — `components/inline-validation.mdx: cannot resolve @gpuixui/components/validation/logic`; after: 6 passed |
+| `cd apps/docs && nub exec vitest run src/code-imports.test.ts` | before the page fix: `1 failed` — `components/inline-validation.mdx: cannot resolve @gpuixui/components/validation/logic`; after: 6 passed |
 | `nub run --filter docs test` | 92 files / 658 tests (was 91 / 652) |
 | `nub run --filter docs check-types` | exit `0` |
 | `nub run --filter docs smoke:build` | 98 pages / 121 links / 1 275 anchors, exit `0` |
