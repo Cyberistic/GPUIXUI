@@ -293,6 +293,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [619](./619-selection-row-press.md) | The selectable row's press step | F | 327, 357, 381, 502, 595 | done |
 | [620](./620-fixed-surface-chrome.md) | The fixed surfaces hold their own chrome | F | 353, 358, 384, 531, 556, 598, 601, 604, 619 | done |
 | [621](./621-time-segment-two-digits.md) | The time segment holds two digits | F | 358, 384, 552, 556, 620 | done |
+| [622](./622-row-press-direction.md) | The selectable row's press direction | F | 502, 619, 621 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3169,6 +3170,19 @@ its font assumption: a theme that chooses a face with wider digits must widen
 the segment. The new suite proves the pre-fix pass and the post-fix failure in
 both directions, and the old one-em case in `fixed-surface-metrics.test.ts`
 moves with the rule.
+
+Plan `622` closes the last pointer ladder the direction check did not walk. Plan
+`619` published the selectable row's press **distance** — `active` one 1.05:1
+step from the `accent` hover a row paints under the pointer
+(`rowPressStepPairs`) — but `stateLadders` named only the filled families, the
+panel action, the generic wash and the selected step. A ratio is symmetric, so a
+copied dark theme can press a row **darker** than its hover, toward the canvas,
+while the step passes and `themeFailures` returns `[]`; the planted theme in the
+suite does exactly that at 1.094:1. `stateLadders` now carries the row press as
+its own ladder (`accent` → `active`), the new suite derives the ladder from the
+published pair so the two cannot drift, and every shipped set already steps the
+expected way, so no colour moves. The example is executed and linked from the
+catalogue.
 
 ## How to use a plan
 
