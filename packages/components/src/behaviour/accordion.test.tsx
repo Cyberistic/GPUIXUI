@@ -12,7 +12,9 @@
  * body also stayed in the tab order (plan 372 §2). The body now tweens to its
  * measured height, and these tests guard that tween. A close that began with
  * focus inside a body used to leave focus on the hidden control; it now returns
- * to that section's header (plan 386).
+ * to that section's header (plan 386). A section that turned disabled and back
+ * was unregistered and re-appended, so the next arrow key skipped its authored
+ * neighbour and the divider painted on the wrong section (plan 620).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -76,6 +78,28 @@ const Faq = ({
     {section("three", "Is it free?", true)}
   </Accordion>
 );
+
+/** Three sections whose middle one is disabled, with a control to toggle it. */
+const ToggleMiddle = () => {
+  const [disabled, setDisabled] = useState(true);
+  return (
+    <div testId="root">
+      <div
+        role="button"
+        tabIndex={0}
+        testId="toggle-middle"
+        onClick={() => setDisabled((value) => !value)}
+      >
+        toggle
+      </div>
+      <Accordion type="multiple">
+        {section("a", "A")}
+        {section("b", "B", disabled)}
+        {section("c", "C")}
+      </Accordion>
+    </div>
+  );
+};
 
 /** Two sections whose bodies have a focus target, all closed. */
 const Walkable = () => (
@@ -417,6 +441,40 @@ describe("Accordion", () => {
 
     faq.renderer.simulateKeystrokes("up");
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
+
+    faq.unmount();
+  });
+
+  it("keeps a re-enabled header in the authored position", () => {
+    // Guarded bug: a `disabled` toggle ran the registration cleanup and
+    // re-appended the header, so the registry order became a, c, b and the next
+    // arrow key skipped the authored neighbour.
+    const faq = renderComponent(<ToggleMiddle />);
+    clickCentreOf(faq, "toggle-middle");
+
+    faq.renderer.focusElement(faq.renderer.findByTestId("trigger-a")?.id ?? -1);
+    faq.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-b"));
+
+    faq.unmount();
+  });
+
+  it("keeps the divider on the last authored section", () => {
+    // Guarded bug: the re-appended middle section became the registry's last
+    // row, so it drew no divider while the real last section drew one.
+    const faq = renderComponent(<ToggleMiddle />);
+    clickCentreOf(faq, "toggle-middle");
+
+    expect(faq.renderer.findByTestId("item-a")?.style.borderBottomWidth).toBe(
+      1,
+    );
+    expect(faq.renderer.findByTestId("item-b")?.style.borderBottomWidth).toBe(
+      1,
+    );
+    expect(
+      faq.renderer.findByTestId("item-c")?.style.borderBottomWidth,
+    ).toBeUndefined();
 
     faq.unmount();
   });

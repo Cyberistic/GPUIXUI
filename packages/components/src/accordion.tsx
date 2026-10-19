@@ -71,6 +71,8 @@ interface AccordionContextValue {
   readonly lastValue: Option.Option<string>;
   /** Register a header row; returns the unregister function. */
   readonly registerTrigger: (row: ValueItem) => () => void;
+  /** Replace a registered header in place; never moves it. */
+  readonly updateTrigger: (row: ValueItem) => void;
   /** Move focus one enabled header from `value`. */
   readonly moveFrom: (value: string, delta: 1 | -1) => void;
   /** Focus the first or last enabled header. */
@@ -169,6 +171,11 @@ const AccordionFrame = ({
       );
   }, []);
 
+  /** Update in place: a re-register would move the header to the end. */
+  const updateTrigger = useCallback((row: ValueItem) => {
+    setRows((current) => upsertValue(current, row));
+  }, []);
+
   const focusRow = useCallback(
     (row: ValueItem) => {
       renderer?.focusElement?.(row.id);
@@ -208,10 +215,11 @@ const AccordionFrame = ({
       toggle: onToggle,
       lastValue: Option.map(Arr.last(rows), (row) => row.value),
       registerTrigger,
+      updateTrigger,
       moveFrom,
       jumpTo,
     }),
-    [jumpTo, moveFrom, onToggle, registerTrigger, rows, state],
+    [jumpTo, moveFrom, onToggle, registerTrigger, rows, state, updateTrigger],
   );
 
   assertParts(accordionRoot, children);
@@ -403,7 +411,7 @@ export const AccordionTrigger = ({
   ...rest
 }: AccordionTriggerProps) => {
   const theme = useTheme();
-  const { isOpen, toggle, registerTrigger, moveFrom, jumpTo } =
+  const { isOpen, toggle, registerTrigger, updateTrigger, moveFrom, jumpTo } =
     useAccordionContext();
   const { value, disabled, trigger } = useAccordionItemContext();
   const name = controlName(rest["aria-label"], children);
@@ -429,7 +437,14 @@ export const AccordionTrigger = ({
     // The native id only exists after commit, and it is what `moveFrom` focuses.
     if (instance === undefined) return;
     return registerTrigger({ id: instance.id, value, disabled });
-  }, [disabled, instance, registerTrigger, value]);
+  }, [instance, registerTrigger, value]);
+
+  useLayoutEffect(() => {
+    // Update in place: re-registering would move the header to the end of the
+    // registry, and its position is what the arrow keys and the divider read.
+    if (instance === undefined) return;
+    updateTrigger({ id: instance.id, value, disabled });
+  }, [disabled, instance, updateTrigger, value]);
 
   const flip = (): void => {
     if (!disabled) toggle(value);

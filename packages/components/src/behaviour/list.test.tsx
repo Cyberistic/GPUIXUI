@@ -37,6 +37,10 @@
  * reported nothing, the first arrow jumped to the first row, a first
  * `Shift+Arrow` started its range there and type-ahead started from the first
  * match. The keyboard origin is now the renderer's focused id.
+ *
+ * Registry position (plan 620): a `disabled` toggle or a `textValue` edit
+ * unregistered the row and re-appended it, so the next arrow key skipped its
+ * authored neighbour and type-ahead searched in a different order.
  */
 
 import * as Arr from "effect/Array";
@@ -75,6 +79,34 @@ const catalog = (
     </ListItem>
   </List>
 );
+
+/** Three rows whose middle one is disabled, with a control to toggle it. */
+const ToggleMiddleRow = () => {
+  const [disabled, setDisabled] = useState(true);
+  return (
+    <div testId="root">
+      <div
+        role="button"
+        tabIndex={0}
+        testId="toggle-middle"
+        onClick={() => setDisabled((value) => !value)}
+      >
+        toggle
+      </div>
+      <List testId="list" selectionMode="single">
+        <ListItem testId="row-a" value="a" textValue="Alpha">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" textValue="Beta" disabled={disabled}>
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-c" value="c" textValue="Gamma">
+          <ListItemTitle>Gamma</ListItemTitle>
+        </ListItem>
+      </List>
+    </div>
+  );
+};
 
 /** Every row that owns the list's tab stop: exactly one should. */
 const tabStop = (
@@ -371,6 +403,21 @@ describe("List", () => {
     list.renderer.simulateKeystrokes("up");
 
     expect(focusedTestId(list)).toEqual(Option.some("row-c"));
+
+    list.unmount();
+  });
+
+  it("keeps a re-enabled row in the authored position", () => {
+    // Guarded bug: a `disabled` toggle ran the registration cleanup and
+    // re-appended the row, so the registry order became a, c, b and the next
+    // arrow key skipped the authored neighbour.
+    const list = renderComponent(<ToggleMiddleRow />);
+    clickCentreOf(list, "toggle-middle");
+
+    list.renderer.focusElement(list.renderer.findByTestId("row-a")?.id ?? -1);
+    list.renderer.simulateKeystrokes("down");
+
+    expect(focusedTestId(list)).toEqual(Option.some("row-b"));
 
     list.unmount();
   });

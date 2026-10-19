@@ -108,6 +108,8 @@ interface ListContextValue {
   readonly noteFocus: (value: string) => void;
   /** Register a row; returns the unregister function. */
   readonly register: (row: Row) => () => void;
+  /** Replace a registered row in place; never moves it. */
+  readonly updateRow: (row: Row) => void;
 }
 
 const ListContext = createContext<ListContextValue | undefined>(undefined);
@@ -115,7 +117,7 @@ const ListContext = createContext<ListContextValue | undefined>(undefined);
 /** The stable half of the context: the actions a row calls. */
 type ListActions = Pick<
   ListContextValue,
-  "activate" | "noteFocus" | "register"
+  "activate" | "noteFocus" | "register" | "updateRow"
 >;
 
 /** The list a {@link ListItem} belongs to. Throws when there is none. */
@@ -379,15 +381,20 @@ export const List = (props: ListProps) => {
     [controlled, props, selected],
   );
 
+  const updateRow = useCallback(
+    (row: Row) => setRows((current) => upsert(current, row)),
+    [setRows],
+  );
+
   const register = useCallback(
     (row: Row) => {
-      setRows((current) => upsert(current, row));
+      updateRow(row);
       return () =>
         setRows((current) =>
           Arr.filter(current, (candidate) => candidate.value !== row.value),
         );
     },
-    [setRows],
+    [setRows, updateRow],
   );
 
   const setActiveIfChanged = useCallback((value: string) => {
@@ -724,15 +731,16 @@ export const List = (props: ListProps) => {
   // them must never change — a changing context re-renders every row, which is
   // exactly the cost this design removes. The ref is updated after commit and
   // before any event can call through it.
-  const handlers = useRef({ activate, noteFocus, register });
+  const handlers = useRef({ activate, noteFocus, register, updateRow });
   useLayoutEffect(() => {
-    handlers.current = { activate, noteFocus, register };
+    handlers.current = { activate, noteFocus, register, updateRow };
   });
   const actions = useMemo<ListActions>(
     () => ({
       activate: (value, event) => handlers.current.activate(value, event),
       noteFocus: (value) => handlers.current.noteFocus(value),
       register: (row) => handlers.current.register(row),
+      updateRow: (row) => handlers.current.updateRow(row),
     }),
     [],
   );
@@ -824,6 +832,7 @@ export const ListItem = ({
     activate,
     noteFocus,
     register,
+    updateRow,
   } = useListContext();
   const [selfHovered, setSelfHovered] = useState(false);
   const [memberHovers, setMemberHovers] = useState(0);
@@ -848,8 +857,9 @@ export const ListItem = ({
   const setElement = useMergedRef<PublicInstance | null>(attach, ref);
 
   useLayoutEffect(() => {
-    // Registration needs the native id, which only exists after the element is
-    // committed; `instance` is state, so this effect re-runs once it arrives.
+    // Registration owns the row's position; it needs the native id, which only
+    // exists after the element is committed (`instance` is state, so this
+    // re-runs once it arrives).
     if (instance === undefined) return;
     return register({
       value,
@@ -857,7 +867,19 @@ export const ListItem = ({
       nativeId: instance.id,
       label: textValue ?? "",
     });
-  }, [disabled, instance, register, textValue, value]);
+  }, [instance, register, value]);
+
+  useLayoutEffect(() => {
+    // Update in place: re-registering would move the row to the end of the
+    // registry, and its position is what the arrow keys and type-ahead read.
+    if (instance === undefined) return;
+    updateRow({
+      value,
+      disabled,
+      nativeId: instance.id,
+      label: textValue ?? "",
+    });
+  }, [disabled, instance, textValue, updateRow, value]);
 
   useEffect(() => {
     // `autoFocus` focuses natively after React's effects, so `onFocus` never
