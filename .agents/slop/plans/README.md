@@ -303,6 +303,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [632](./632-date-disclosure-icon.md) | The date field's disclosure glyph is the icon tier it paints | F | 353, 358, 384, 556, 601, 627, 631 | done |
 | [634](./634-field-query-leading-icon.md) | The field's query row charges the icon it paints | F | 353, 358, 384, 624, 632 | done |
 | [636](./636-toast-tone-bar-token.md) | The Toast's tone bar is a token the card holds | B | 353, 358, 620, 627, 631 | done |
+| [637](./637-panel-action-figures.md) | The panel action's rationale figures have one owner | F | 394, 397, 399, 503, 619 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3315,6 +3316,17 @@ plan ships `toastToneBarWidth` (3) beside `toastWidth`, charges it in the bound
 (108 → 111), states the ownership and a lifted-bar case, and keeps the shipped
 380 clearing at `3.42×`; no colour, pair, floor or other metric moves. The
 components migration joins the existing `theme.dimensions` cross-team row.
+
+Plan `637` closes the last prose figures the panel-action story quotes. The
+rationale said "80 of the 288" in two catalogue sections and the `softActionPairs`
+JSDoc while `soft-action.test.ts` measured **84**; its light luminance band
+`0.742–0.765` described the default palettes only and omitted the AAA light
+tints (`0.657`); and "the identity light press was 1.0492:1" named a pair that
+is not the identity's tightest (`active` on `infoSoft`, 1.0202:1). The count,
+total, both bands and both named ratios are now derived — in
+`soft-action.test.ts` as the shipped guarantee, and in `docs.test.ts` across the
+catalogue, the design system, the README and the two JSDoc blocks, so a palette
+edit has to take the prose with it. No colour, pair, floor or metric moves.
 
 ## How to use a plan
 
