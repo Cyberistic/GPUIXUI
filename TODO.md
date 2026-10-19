@@ -78,8 +78,8 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Run the promotion gate on the head that includes plan `674`'s pixel
       evidence** per plan `675`: merged `origin/master` (one docs-only commit,
       `2b4eb0d9`), then verification only — headless **106/106** (`3824`
-      checks, 65 capabilities, 134.5 s) and live **95/95** (`2491` checks, 61
-      capabilities, 1018.7 s), both exit `0`; the live total is plan `659`'s
+      checks, 65 capabilities, 152.8 s) and live **95/95** (`2491` checks, 61
+      capabilities, 1058.8 s), both exit `0`; the live total is plan `659`'s
       2469 plus `live-pixel-colour`'s 22, so the new scenario ran in the full
       registry, and a plain `--all` wrote no `provenance.json`. `nub run
       check`/`lint`/`test` green (playground 439, testing 68, components 308,
@@ -1613,7 +1613,7 @@ focused id is `live-frames`.
       2026-10-19):** the registry gained `live-pixel-colour` (22 checks).
       **Superseded by plan `675`:** merged `origin/master` (one docs-only
       commit) and re-ran both registries on `d206df18` — live **95/95**
-      (**2491** checks, 61 capabilities, 1018.7 s) and headless **106/106**
+      (**2491** checks, 61 capabilities, 1058.8 s) and headless **106/106**
       (3824 checks, 65 capabilities), both exit `0`, so the pixel evidence is in
       the current promotion gate. The owner/supervisor still performs the
       fast-forward.
@@ -1731,6 +1731,16 @@ twice concurrently in two windows and **agreed on every count** — headless
 105/105 (3802 checks, 65 capabilities) and live 94/94 (2469 checks, 61
 capabilities), both exit `0`; only wall-clock differed. The ledgers now cite the
 run whose artifacts are on disk, and plan `659` §8 records both. No work was
+lost; the guard remains the one-writer fix in `scripts/`.
+
+**B3 recurred again 2026-10-19 ~16:45–17:07.** Two live `swarm:playground`
+sessions ran plan `675` at once: the rotating turn committed `85fce93b` (the
+plan-675 gate record and all four ledgers) at 17:04 while the interactive
+session's own full live gate was still running. Both full registries were run
+twice concurrently in two windows and **agreed on every count** — headless
+106/106 (3824 checks, 65 capabilities) and live 95/95 (2491 checks, 61
+capabilities), both exit `0`; only wall-clock differed. The ledgers now cite the
+run whose artifacts are on disk, and plan `675` §8 records both. No work was
 lost; the guard remains the one-writer fix in `scripts/`.
 
 
