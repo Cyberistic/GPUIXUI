@@ -43,6 +43,14 @@ app-root probe (`root-single-child`, `root-wrapper`), which measures the one
 rule every scenario's mount sits on: the native root keeps only its **last**
 child.
 
+The **live registry** (`src/live/scenarios.tsx`) is a second, hand-maintained
+list of the window twins. `liveScenarioProblems` guards it against the headless
+registry: ids must be unique and `live-`-prefixed, and every live capability
+must also be mounted by a headless scenario. A duplicate id would make `--only`
+run one of two entries while a report counts both, and an unmatched capability
+would claim live evidence for a family the offline suite never mounted. The rule
+is pure (four tests in `src/live/scenarios.test.ts`), so it costs no window.
+
 ## Run it
 
 ```sh
@@ -1958,13 +1966,12 @@ cell-editing=verified upload=verified qr=verified media=verified window=verified
 frames=verified
 ```
 
-The last full merge/release gate ran **90/90** (`exit 0`, 2330 checks, 59
-capabilities, 881 s, `.artifacts/live-report.json`, 2026-10-19), including every
-scenario this branch added, through `live-text-entry` (plan `624`) and the
-`live-toast` fixture fix (plan `623` §10). The registry is now **91** after
-`live-roving-focus` (plan `637`), which is focused-green; the next full live
-run is the merge/release gate. The full live suite is a merge/release gate
-rather than a per-task check.
+The last full merge/release gate ran **91/91** (`exit 0`, 2369 checks, 59
+capabilities, 942.6 s, `.artifacts/live-report.json`, 2026-10-19), including
+every scenario this branch added through `live-roving-focus` (plan `637`) and
+the `live-toast` fixture fix (plan `623` §10). It is the gate for the
+promotion merge; the owner/supervisor performs that merge. The full live suite
+is a merge/release gate rather than a per-task check.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2154,17 +2161,16 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **75/75** on
-  2026-10-19 (1697 checks, exit `0`, the merge gate) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **91/91** on
+  2026-10-19 (2369 checks, 59 capabilities, 942.6 s, exit `0`, the merge gate;
+  plan `639`) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
   `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan
-  `559`'s `live-tree`, plan `565`'s two tab-strip twins and the plan `570`–`581`
+  `559`'s `live-tree`, plan `565`'s two tab-strip twins, the plan `570`–`581`
   live twins (Tier 1 controls, `live-log`, workspace panes, content surfaces,
-  drag, and the shipped Tier 2 scroller/command paths) are all included.
-  The registry is **86** after the focused twins since that gate (plans
-  `591`–`594`, `599`, `601` and `606`); the full suite is a **merge/release gate**
-  and the next run must cover all 86 —
+  drag, and the shipped Tier 2 scroller/command paths) and the twins through
+  plans `591`–`637` are all included. The suite covers —
   layout, **root**, input, scroll,
   panel, **floating**, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table

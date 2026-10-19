@@ -64,7 +64,23 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 105/105 plans-and-harness
+`[x]` `[██████████]` 106/106 plans-and-harness
+
+`[x]` **The final merge/release gate ran on the current head** per plan `639`:
+      the last recorded gate predated `live-tier2-navigation`'s six new checks
+      (plan `633`) and `live-roving-focus` (plan `637`), so no full live run had
+      included them. The plan first added `liveScenarioProblems` (unique,
+      `live-`-prefixed ids; every live capability also mounted headlessly) with
+      four tests and two observed reverse proofs: a duplicated registry entry
+      failed `live scenario ids are not unique`, and a `[]` guard failed the
+      three synthetic cases. **Gate:** headless **104/104** (**3695** checks,
+      64 capabilities) and live **91/91** (including `live-roving-focus` and the
+      plan-633/624 ids; **2369** checks, 59 capabilities, 942.6 s), both exit
+      `0` on the release-tag binding. `nub run check`, `nub run lint` and
+      `nub run test` pass (playground **428**, testing 61, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). The playground
+      README's stale live totals (75/75, registry 86) are corrected. The
+      owner/supervisor still performs the promotion merge.
 
 `[x]` Prove the **roving-focus contract in a real window** per plan `637`:
       plan `158`'s two load-bearing claims were `TestRenderer`-only — a
@@ -1358,7 +1374,10 @@ focused id is `live-frames`.
       head. **Addendum (plan `637`):** the registry gained `live-roving-focus`
       (28 checks) after that gate, so the live total is now **91** and the
       merge gate must include it; only `live-roving-focus` has been run on this
-      head (three focused runs, exit `0`).
+      head (three focused runs, exit `0`). **Final gate (plan `639`,
+      2026-10-19):** the whole registry ran at **91/91** (**2369** checks, 59
+      capabilities, 942.6 s) and headless at **104/104** (**3695** checks), both
+      exit `0`, so the promotion is ready for the owner/supervisor.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
