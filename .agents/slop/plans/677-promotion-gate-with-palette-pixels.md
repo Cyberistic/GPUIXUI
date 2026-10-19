@@ -308,26 +308,33 @@ The gate ran at `86057653` (the plan-676 code head) plus this plan's commit
 so no merge was needed.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities, **95.9 s** (`durationMs` 95912).
-`--list` printed 106 ids. Host:
+`0`, **3824 checks**, 65 capabilities, **110.6 s** (`durationMs` 110574; the
+concurrent first run measured 95.9 s). `--list` printed 106 ids. Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
-`.artifacts/smoke-report.json` was rewritten by this run (mtime 17:31).
+`.artifacts/smoke-report.json` was rewritten (mtime 17:34).
 
 **Live** — `nub apps/playground/dist/live/run.js --all` is **95/95**, exit
-`0`, **2521 checks**, 61 capabilities, **1106.8 s** (`durationMs` 1106799).
+`0`, **2521 checks**, 61 capabilities, **1136.2 s** (`durationMs` 1136182; the
+concurrent first run measured 1106.8 s).
 `--list` printed 95 ids and `live-theme` was among them; it reports **39
-checks** (112.8 s), so the palette's frame pixels ran inside the full
+checks** (73.2 s), so the palette's frame pixels ran inside the full
 sequence. Host:
 `gpuix live window darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 The check total is exactly plan `675`'s 2491 minus `live-theme`'s old 9 plus
 its new 39 (`2491 − 9 + 39 = 2521`). `.artifacts/live-report.json` was
-rewritten (mtime 17:50); a plain `--all` wrote **no** `provenance.json` (no
+rewritten (mtime 17:53); a plain `--all` wrote **no** `provenance.json` (no
 `--capture`).
 
 **Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
 Test counts: playground **442**, testing **68**, components **308**,
 primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7** —
 unchanged from plan `674`/`676` (this plan changes prose only).
+
+**Independent corroboration.** A second full run on the same head — the
+concurrent duplicate `swarm:playground` session recorded under B3 — agreed on
+every count (106/106 · 3824 · 65 headless; 95/95 · 2521 · 61 live;
+`live-theme` 39 checks), differing only in wall-clock. Two full windows
+reaching the same 2521 checks is stronger evidence than one run.
 
 **No source change.** No scenario, view, host verb, component, registry entry
 or test was edited. The owner/supervisor still performs the promotion merge;

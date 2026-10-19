@@ -68,6 +68,13 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       2447 checks; only wall-clock differs), so the tree is consistent; this
       session's follow-up commit `a38cd4f5` is the landed plan. The count has
       read `1` since. Fix still lives in `scripts/` (plan `022` §5).
+      **Update 2026-10-19 17:53:** recurred during the plan-`677` gate — a
+      second live session (PID `75091`, started 17:42) ran the same full gate
+      and committed `d5fdbb8f`. Both full runs agreed on every count
+      (headless 106/106 · 3824 · 65; live 95/95 · 2521 · 61; `live-theme` 39),
+      differing only in wall-clock, so the tree is consistent; a follow-up
+      commit reconciles the durations with the artifacts on disk. The count
+      read `1` before the duplicate appeared. Fix still in `scripts/`.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
@@ -76,14 +83,16 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` **Run the promotion gate on the head that includes plan `676`'s palette
       frame pixels** per plan `677`: verification only at `86057653` (no merge
       was needed — 0 behind `origin/master`) — headless **106/106** (`3824`
-      checks, 65 capabilities, 95.9 s) and live **95/95** (**2521** checks, 61
-      capabilities, **1106.8 s**), both exit `0`. `live-theme` reports **39
-      checks** inside the full registry (112.8 s), so the total is plan `675`'s
+      checks, 65 capabilities, 110.6 s) and live **95/95** (**2521** checks, 61
+      capabilities, **1136.2 s**), both exit `0`. `live-theme` reports **39
+      checks** inside the full registry (73.2 s), so the total is plan `675`'s
       2491 − 9 + 39, and a plain `--all` wrote no `provenance.json`.
       `nub run check`/`lint`/`test` green (playground 442, testing 68,
       components 308, primitives 282, tokens 196, tw 103, icons 19, docs 7).
       No source change. Exact ids: the whole headless registry and the whole
-      live registry (`--all`).
+      live registry (`--all`). A second concurrent run on the same head agreed
+      on every count (106/106 · 3824 · 65; 95/95 · 2521 · 61), differing only in
+      wall-clock — see the B3 note in Phase A.
 
 `[x]` **Prove the palette switch in the frame** per plan `676`: `live-theme`
       used to assert only the readout and the swatch box, so a window that never
