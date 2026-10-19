@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 254/327
+`[x]` `[████████░░]` 256/328
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -858,7 +858,9 @@ label dims with its own fill: a filled primary action's label measures
 card), a disabled field's typed text **3.273:1** on the macOS light `input`
 fill, and the `Select` item already paints the role; paint
 `disabledControl(theme)`, which returns the three properties (plans 306, 539 and
-605; owner: those workstreams)
+605; owner: those workstreams). The `TagInput` chip dims at `0.6`
+(`tag-input.tsx:286`) and `InlineEdit` at `0.5` (`inline-edit.tsx:242`), so both
+take the same designed pair.
 `[ ]` Cross-team: `primitives` and `components` read `xHover`/`xActive` for
 filled controls and delete the `filled()` alpha helper, `withAlpha` and
 `HOVER_ALPHA` — the six roles are measured and platform-specific now (plan 097;
@@ -1135,6 +1137,17 @@ sets), a selected row visibly falls back to the unselected hover wash while the
 pointer is over it. Do not paint the unselected hover wash over a selected row:
 keep `selected`, or step inside a selection family if one ships later (owner:
 `components`; plan 381).
+`[ ]` Cross-team: `components` gives a notification's open row a persistent state —
+`notification-centre.tsx` paints the open item with `accent` (the hover wash),
+replaces it with `hover`/`active` while the pointer is over the row, and rings it
+with `focusRing` whenever it is open rather than when it holds focus, so the row
+being read loses the only cue that it is open as soon as the pointer crosses it,
+an open row looks focused when it is not, and a selected row of the same component
+would use `selected` where this one uses a transient wash. Paint the open row with
+`selected` and `selectedForeground` (or keep `foreground` for its title), keep
+that fill through hover and press as the `List` row must, and paint the ring from
+the row's focus state; the unread dot's `primary` on `accent`/`hover`/`active` is
+already recorded (plan 585) (owner: `components`; found while auditing plan 611).
 `[x]` Resolve a persisted theme choice in one place — the package owned the
 mode, contrast, platform, recipe and density axes and a guard for each, but not
 their composition, so every settings screen retyped the precedence; a stored
@@ -2153,6 +2166,16 @@ theme's `background` beside the content and `foreground` outside it at
 `themeFailures` composes it as the tenth kind, `ring`; the executed one-element
 composition is a border plus a spread shadow, and no colour, pair, floor or
 metric moves (plan 611)
+`[x]` Audit the token contract after plans 609–611 — re-ran the ten checks over all
+24 shipped sets, walked every role, pair list, numeric group, native-text bridge
+and documented figure, and compared the contract against every composition the
+shipped `components`/`primitives` trees paint. No token-native gap remains: every
+role a consumer paints is measured on the surface it paints, the numeric rules
+cover the fixed surfaces, and the shipped sets pass the total check. The one new
+finding is consumer-side — the Notification centre's open row uses the transient
+`accent` wash, loses it under the pointer and rings itself while unfocused
+(recorded cross-team) — and the TagInput chip's `0.6` dim joins the existing
+disabled-dim row (2026-10-19 audit)
 
 ## Phase C — Tier 1–2 components
 
