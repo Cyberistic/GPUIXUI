@@ -1707,7 +1707,7 @@ given.
 
 ## Evidence on this host
 
-The suite is **101/101 green** here (`exit 0`, 3536 checks, 2026-10-18):
+The suite is **101/101 green** here (`exit 0`, 3552 checks, 2026-10-19):
 
 ```
 101/101 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -1907,7 +1907,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (101/101, 3536 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (101/101, 3552 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
@@ -1915,12 +1915,14 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **61/61** on
-  2026-10-19 (1375 checks, exit `0`, the merge gate) — the plan `532` terminal
+  The **real-window** suite (`smoke:live`) ran in full at **63/63** on
+  2026-10-19 (1428 checks, exit `0`, the merge gate) — the plan `532` terminal
   twin, the plan `534` variable-row twin, the plan `535`/`536` pointer twins,
   plan `554`'s select/combobox/tooltip twins, plan `556`'s `live-grid`, plan
-  `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers` and plan
-  `559`'s `live-tree` are all included. The registry is **61**. The full suite is a **merge/release gate** —
+  `557`'s `live-states`/`live-truncation`, plan `558`'s `live-layers`, plan
+  `559`'s `live-tree` and plan `565`'s two tab-strip twins are all included.
+  The registry is **68** after plans `570` and `571`, whose focused runs are
+  green. The full suite is a **merge/release gate** —
   layout, **root**, input, scroll,
   panel, **motion**, overlay, **focus**, **selection**, **context menus**,
   docking, the detachable-tab float, the shipped primitives, a virtual table
