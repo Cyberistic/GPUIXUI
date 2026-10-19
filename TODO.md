@@ -1241,15 +1241,15 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 660/661):
-      all three exit 0; the unit suite is 472 tests in 46 files. The full native
+      all three exit 0; the unit suite is 473 tests in 46 files. The full native
       behaviour suite was last run at **820 passed / 31 failed of 851** after
       plan 657 — every failure a recorded plan-540 binding defect (focus/blur
       delivery, box measurement), not a component regression. Plans 660–662 ran
       their targeted files (Search input 18/18, Stepper 12/12, the TagInput
       fractional-cap case; its focus-ring case remains the recorded plan-540
-      failure) and add six cases, so the next full run should collect 857; it
-      was not re-run here.
-      Re-run before release, since every later merge can change them
+      failure) and add six cases. Plan 672 ran Combobox 54/54 and Search input
+      18/18 after the shared focus sample; the full suite was not re-run here, so
+      re-run it before release — every later merge can change the count.
 
 ## Swarm-owned blockers (fix these)
 
