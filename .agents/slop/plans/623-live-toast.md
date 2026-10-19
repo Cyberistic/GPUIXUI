@@ -180,7 +180,8 @@ const liveToast: LiveScenario = {
     );
 
     // A painted card owns its box: the surface below it never sees the click.
-    yield* ctx.host.click("toast-2");
+    // Click the bottom card, whose box overlaps `toast-behind`.
+    yield* ctx.host.click("toast-3");
     yield* settle;
     yield* ctx.expectContains(
       "the page under a card never sees the click",
@@ -413,8 +414,9 @@ box contract needs no live correction.
 - The viewport's `pointerEvents: "none"` strip covers `toast-under` and the
   click still reaches it (`under=1`) — the page control under a painted strip
   is usable in a window.
-- A painted card owns its box: the dismiss click runs (`count=3 → 2`) and the
-  surface below never sees it (`behind=0`).
+- A painted card owns its box: clicking the **bottom** card (the one whose box
+  overlaps `toast-behind`) leaves `behind=0`, and dismissing it by its own
+  control runs (`count=3 → 2`) without reaching the surface below.
 
 **Focus is not stolen.** Submitting from `toast-field` pushes `toast-4`,
 `focused()` still answers `toast-field`, and `focusNext()` lands on a
@@ -432,7 +434,7 @@ timer path asserts only timer-observable facts, never the frozen frame
 | Mutation | Result |
 | -------- | ------ |
 | Viewport `pointerEvents: "none"` removed | `the viewport's empty strip does not block the page: expected a string containing "under=1", got "… under=0 …"` |
-| `toast-behind` rendered **after** the viewport | `dismissing removes exactly the clicked card: expected a string containing "count=2", got "count=3 … behind=1 …"` |
+| `toast-behind` rendered **after** the viewport | `the page under a card never sees the click: expected a string containing "behind=0", got "count=3 … behind=1 …"` |
 | A clock jump (plus `settle`) before the frozen read | `the dismissed card is still laid out while its exit is frozen: expected a value, got none` |
 | Viewport `right: INSET` → `INSET + 8` | `the card's content is inset from the right: expected 33 ± 1, got 41` |
 

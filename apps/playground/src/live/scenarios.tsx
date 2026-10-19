@@ -4381,7 +4381,8 @@ const liveToast: LiveScenario = {
       );
 
       // A painted card owns its box: the surface below it never sees the click.
-      yield* ctx.host.click("toast-2");
+      // Click the bottom card, whose box overlaps `toast-behind`.
+      yield* ctx.host.click("toast-3");
       yield* settle;
       yield* ctx.expectContains(
         "the page under a card never sees the click",
