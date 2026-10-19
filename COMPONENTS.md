@@ -96,7 +96,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities; concurrent full runs 95.9–118.9 s; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
+The suite is **106/106 green here** (exit `0`, `.artifacts/smoke-report.json`, **3824 checks**, 65 capabilities; concurrent full runs 115.5 s and 156.1 s; plan `674` added `pixel-colour`'s 22 checks and plan `658` added 37 to `primitives-display`). The live suite **last ran in full at 95/95**
 (`live-report.json`, **2545 checks**, 61 capabilities; **1094.3 s**, exit `0`)
 on 2026-10-19, the merge/release gate (plan `691`, head `836b4d63` at the gate).
 That total is plan `659`'s 2469 plus the **22 checks `live-pixel-colour`** added

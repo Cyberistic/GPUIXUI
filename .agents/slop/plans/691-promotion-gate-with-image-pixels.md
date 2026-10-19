@@ -314,12 +314,19 @@ proves those checks executed inside the full registry.
 
 ## 8. Results (2026-10-19, darwin-x64, release-tag binding)
 
-The gate ran at `836b4d63` (the plan-690 code head) plus this plan's commit
-`47068722`; `origin/master` was still unchanged and the branch was 0 behind,
-so no merge was needed.
+The gate ran on the plan-690 code head `836b4d63` plus this plan's commit
+`47068722`. During the gate, `origin/master` advanced with `ecbda2cf` (a
+`scripts/swarm-model.sh` model-rotation change), which was merged as
+`76edbe63`; the only incoming path is outside `apps/playground` and
+`packages/testing`, and the branch is 0 behind again, so the merge does not
+affect any suite input.
 
 **Headless** — `nub apps/playground/dist/smoke/run.js` is **106/106**, exit
-`0`, **3824 checks**, 65 capabilities, **115.5 s**. `--list` printed 106 ids.
+`0`, **3824 checks**, 65 capabilities. This session's run took **156.1 s**; a
+concurrent B3 session then rewrote the shared artifact with its own full run
+at **115.5 s** (298,394 bytes, 18:39). Both runs report the identical
+106/106 · 3824 · 65 and the same host, and the ledger cites the artifact that
+survives on disk. `--list` printed 106 ids.
 Host:
 `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`.
 
@@ -331,14 +338,25 @@ image-source pixel checks ran inside the full sequence. Host:
 The total is exactly plan `677`'s 2521 plus plan `690`'s 24 (`2521 + 24 =
 2545`). A plain `--all` wrote **no** `provenance.json` (no `--capture`).
 
-**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`.
+**Gates** — `nub run check`, `nub run lint` and `nub run test` all exit `0`
+on the merged head (the only incoming commit touches `scripts/swarm-model.sh`).
 Test counts: playground **442**, testing **68**, components **308**,
 primitives **282**, tokens **196**, tw **103**, icons **19**, docs **7** —
 unchanged from plan `690` (this plan changes prose only).
 
-**Artifacts** — `.artifacts/smoke-report.json` (298,394 bytes, 18:39) and
-`.artifacts/live-report.json` (202,776 bytes, 18:40) are the files this run
-wrote; the totals above were read back from them rather than from the console.
+**Artifacts** — `.artifacts/smoke-report.json` (298,394 bytes, 18:39,
+`durationMs 115523`) and `.artifacts/live-report.json` (202,776 bytes, 18:40,
+`durationMs 1094268`) are the files on disk; the totals above were read back
+from them rather than from the console.
+
+**Concurrent runs (B3).** A second `swarm:playground` session wrote this tree
+during the gate — it created the `76edbe63` merge, re-ran the headless suite
+and its own ledger wording, and its uncommitted B3 note records that it was
+stopped. Every number it produced agrees with this session's run (headless
+106/106 · 3824 · 65; live 95/95 · 2545 · 61 with `live-content` at 68), so the
+tree is consistent; the recurrence itself is the still-open `scripts/` guard
+(`TODO.md` → Process). Two independent headless runs and the live artifact
+agreeing is stronger evidence than one, and no work was lost.
 
 **No source change.** No scenario, view, host verb, component, registry entry
 or test was edited. The owner/supervisor still performs the promotion merge;

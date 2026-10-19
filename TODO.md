@@ -76,23 +76,38 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       commit reconciles the durations with the artifacts on disk. The count
       read `1` before the duplicate appeared. Fix still in `scripts/`.
 
+       **Update 2026-10-19 18:45:** recurred during the plan-`691` gate. A
+       second live `swarm:playground` session merged `origin/master`
+       (`ecbda2cf`, `scripts/swarm-model.sh` only) as `76edbe63`, re-ran the
+       full headless suite and edited the same ledgers while this session's own
+       live gate was running; it was then stopped. Both sessions' runs are real
+       and agree on every count: headless 106/106 · 3824 · 65 (two runs,
+       156.1 s and 115.5 s; the artifact on disk is the latter) and live
+       95/95 · **2545** · 61 · 1094.3 s (this
+       session's run at 18:40). The surviving session verified the artifacts,
+       corrected the plan to record both headless runs, re-ran `check`, `lint`
+       and `test` green on the merged head, and committed; the count is `1`
+       again. Fix still in `scripts/`.
+
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 118/118 plans-and-harness
 
 `[x]` **Run the promotion gate on the head that includes plan `690`'s
-      image-source pixels** per plan `691`: verification only at `836b4d63` +
-      the plan commit (0 behind `origin/master`, no merge needed) — headless
-      **106/106** (`3824` checks, 65 capabilities, 115.5 s) and live **95/95**
-      (**2545** checks, 61 capabilities, 1094.3 s), both exit `0`, so plan
-      `690`'s 24 new `live-content` checks ran inside the full sequence
-      (`2521 + 24`; `live-content` reports 68). A plain `--all` wrote no
-      `provenance.json`, both `host` lines carry the release-tag pins, and the
-      totals were read back from `.artifacts/smoke-report.json` /
-      `live-report.json`. `nub run check`/`lint`/`test` green (playground 442,
-      testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
-      docs 7). No source change. Exact ids: the whole headless registry and the
-      whole live registry (`--all`).
+      image-source pixels** per plan `691`: verification only on the
+      `836b4d63` code head (a concurrent session merged `origin/master`'s
+      `scripts/swarm-model.sh` change as `76edbe63`; 0 behind) — headless
+      **106/106** (`3824` checks, 65 capabilities; concurrent runs 156.1 s and
+      115.5 s) and live **95/95** (**2545** checks, 61 capabilities, 1094.3 s),
+      both exit `0`, so plan `690`'s 24 new `live-content` checks ran inside
+      the full sequence (`2521 + 24`; `live-content` reports 68). A plain
+      `--all` wrote no `provenance.json`, both `host` lines carry the
+      release-tag pins, and the totals were read back from
+      `.artifacts/smoke-report.json` / `live-report.json`. `nub run
+      check`/`lint`/`test` green (playground 442, testing 68, components 308,
+      primitives 282, tokens 196, tw 103, icons 19, docs 7). No source change.
+      Exact ids: the whole headless registry and the whole live registry
+      (`--all`).
 
 `[x]` **Turn the image-source path/URL claim into frame pixels** per plan `690`:
       `live-content`'s path and refused-URL boxes were **screenshot-only**
