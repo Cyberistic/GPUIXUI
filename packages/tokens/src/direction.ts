@@ -27,7 +27,9 @@ export interface StateLadder {
  * Every interaction ladder the library documents, in documentation order: the
  * four filled families (derived from {@link filledControlFamilies}), the action
  * a soft status panel carries, the generic wash a ghost or outline control
- * paints, and the selected step past the accent a row hovers with.
+ * paints, the selected step past the accent a row hovers with, and the
+ * selectable row's press past that same accent hover — the direction of
+ * `rowPressStepPairs`.
  */
 export const stateLadders: ReadonlyArray<StateLadder> = [
   ...filledControlFamilies.map(
@@ -42,6 +44,11 @@ export const stateLadders: ReadonlyArray<StateLadder> = [
   },
   { name: "wash", roles: ["hover", "active"] },
   { name: "selection", roles: ["accent", "selected"] },
+  // A selectable row hovers `accent` and presses `active`; the distance is
+  // published by `rowPressStepPairs`, and this ladder is its direction. It
+  // follows the accent hover, not the generic `hover` wash, so it is its own
+  // ladder.
+  { name: "rowPress", roles: ["accent", "active"] },
 ];
 
 /** A ladder step that moves toward the canvas instead of away from it. */
@@ -61,13 +68,15 @@ export interface DirectionFailure {
 }
 
 /**
- * Every ladder step that moves toward the canvas.
+ * Every ladder step that moves toward the canvas, the selectable row's press
+ * included — not only the filled families and the wash.
  *
  * A light theme steps darker and a dark theme lighter, the same direction
  * `filled-states.test.ts` asserts on the shipped values. An equal pair is not
- * reported here — `stateStepPairs`, `washStepPairs`, `selectionStepPairs` and
- * `softActionStepPairs` report a collapsed step — and a value the maths cannot
- * parse is reported because no direction can be established.
+ * reported here — `stateStepPairs`, `washStepPairs`, `selectionStepPairs`,
+ * `rowPressStepPairs` and `softActionStepPairs` report a collapsed step — and a
+ * value the maths cannot parse is reported because no direction can be
+ * established.
  *
  * @example
  * ```ts

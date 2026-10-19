@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import {
   relativeLuminance,
+  rowPressStepPairs,
   selectionStepPairs,
   shippedThemes,
   softActionStepPairs,
@@ -139,6 +140,7 @@ describe("interaction ladder direction", () => {
         ...softActionStepPairs,
         ...washStepPairs,
         ...selectionStepPairs,
+        ...rowPressStepPairs,
       ].map(([from, to]) => `${from}|${to}`),
     );
     const missing = stateLadders.flatMap(({ name, roles }) =>
