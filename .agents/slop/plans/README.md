@@ -305,6 +305,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [636](./636-toast-tone-bar-token.md) | The Toast's tone bar is a token the card holds | B | 353, 358, 620, 627, 631 | done |
 | [637](./637-panel-action-figures.md) | The panel action's rationale figures have one owner | F | 394, 397, 399, 503, 619 | done |
 | [638](./638-field-adornment-glyph-fit.md) | The field's adornment holds the glyph it paints | F | 353, 358, 386, 517, 620, 624, 634 | done |
+| [641](./641-fit-bound-usability.md) | A fit bound that is no bound | F | 358, 521, 522, 532 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3338,6 +3339,14 @@ inside that square, so the token has to hold a caption line the way
 adornment returned `[]` from every check while the glyph overflowed its box. One
 `at-least` rule reads the theme's own `caption.lineHeight`; every shipped set
 passes at equality (16), so no colour, pair, floor or metric moves.
+
+Plan `641` closes the sign half of the diagnostic rule plan `532` started on
+non-finite values. Three `atMost` fits — the inline icon against its caption or
+label line and the inline avatar against its dense row — compared a bound that
+could be zero or negative, so a broken line or row also reported the correct
+icon or avatar as an `at-most` failure. All three now read the bound through
+`usableBound`; a usable bound still catches a real overflow, every shipped set
+passes unchanged and no value moves.
 
 ## How to use a plan
 
