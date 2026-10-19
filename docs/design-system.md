@@ -252,7 +252,10 @@ panel contains the list, and the list holds one row. A timeline's event dot is
 that centres it. A date trigger is 220px
 wide and holds its insets, gap, disclosure glyph and one `label` glyph; its
 calendar grid is seven 34px cells (238px) before the popover's padding, so it is
-content-sized, not an `overlayWidth` surface.
+content-sized, not an `overlayWidth` surface. A dialog's and a drawer's smallest
+shell hold the close control and one `h3` title glyph, and a bottom drawer's
+smallest height one row — the title wraps, the control does not, so a shell
+below them clips the chrome it always paints.
 
 ## 7. Radii, borders and elevation
 
@@ -776,6 +779,7 @@ The floors are the colour half. `themeMetricFailures` is the numeric half: an
 edited theme cannot zero the focus ring (`borderWidth.strong` is the spread of
 the only focus indicator GPUix 0.10.0 can draw), clip a type role's leading,
 shrink a field minimum below the query and the action its token documents,
+clip a dialog or drawer below its close control,
 shrink the smallest control below one label line or one body line plus its
 borders, paint a control size's matching icon tier larger than that control's
 content box, raise an inline icon above the caption or label line it sits in, raise

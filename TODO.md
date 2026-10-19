@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 267/340
+`[x]` `[████████░░]` 268/341
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2264,6 +2264,13 @@ overlapped its query; the chip rule now takes the larger of the chip's content
 box and the field's own padding, leading glyph, gap, query glyph, gap and
 action, every shipped set still passes at the 102px chip bound and no value
 moves (plan 624)
+`[x]` Hold the dialog and drawer shells to their close control — plan 620 left
+the two ladders alone as reflow containers, but their padding and close control
+do not reflow, so a copied style with `dialogWidthSm: 40`, `drawerWidthSm: 40`
+and `drawerHeightSm: 50` returned `[]` while the shell painted a 28px control
+into a 40px surface; three `at-least` rules now read the theme's own spacing,
+control and type metrics, every shipped set clears them (360/320/240 against
+88/88/96) and no value moves (plan 625)
 
 ## Phase C — Tier 1–2 components
 

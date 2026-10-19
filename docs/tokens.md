@@ -1070,10 +1070,10 @@ every density.
 | `dimensions.previewCardMinWidth` | 240 | narrowest preview card |
 | `dimensions.previewCardMaxWidth` | 360 | widest preview card |
 | `dimensions.keycapSize` | 20 | fixed keycap a shortcut label sits in; held to one `caption` line plus its two borders |
-| `dimensions.drawerWidthSm` | 320 | narrowest drawer |
-| `dimensions.drawerWidthMd` | 400 | default drawer width |
-| `dimensions.drawerWidthLg` | 560 | widest drawer |
-| `dimensions.drawerHeightSm` | 240 | shortest bottom drawer |
+| `dimensions.drawerWidthSm` | 320 | narrowest drawer; holds its padding, the header's reserve for the close control and one `h3` title glyph |
+| `dimensions.drawerWidthMd` | 400 | default drawer width; holds the same chrome as `sm` through the ladder |
+| `dimensions.drawerWidthLg` | 560 | widest drawer; holds the same chrome as `sm` through the ladder |
+| `dimensions.drawerHeightSm` | 240 | shortest bottom drawer; holds the close zone, one `density.rowHeight` row and its bottom padding |
 | `dimensions.drawerHeightMd` | 320 | default bottom drawer height |
 | `dimensions.drawerHeightLg` | 420 | tallest bottom drawer |
 | `dimensions.chatViewportMinHeight` | 160 | shortest message viewport; held to one `density.rowHeight` |
@@ -1081,9 +1081,9 @@ every density.
 | `dimensions.carouselIndicatorActiveWidth` | 18 | active carousel indicator's width; at least the idle dot |
 | `dimensions.timelineMarkerSize` | 8 | event dot on a timeline rail; at least the rail's width (`borderWidth.thin`) |
 | `dimensions.timelineMarkerColumnWidth` | 16 | column the dot and its connector sit in; at least the marker |
-| `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width |
-| `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width |
-| `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow |
+| `dimensions.dialogWidthSm` | 360 | small dialog's maximum surface width; holds its padding, the header's reserve for the close control and one `h3` title glyph |
+| `dimensions.dialogWidthMd` | 480 | default dialog's maximum surface width; holds the same chrome as `sm` through the ladder |
+| `dimensions.dialogWidthLg` | 640 | large dialog's maximum surface width; the three sizes must grow and each holds the `sm` chrome |
 | `dimensions.calendarCellSize` | 34 | one calendar day cell; at least a `sm` control |
 | `dimensions.timeSegmentWidth` | 26 | hours or minutes segment of a time field; at least 1.3 `body` ems (two tabular digits), rounded up to a pixel |
 | `dimensions.avatarPresenceDotSize` | 10 | presence dot on an avatar; at most half the smallest avatar the theme carries |
@@ -1113,7 +1113,16 @@ value moves (plan `620`).
 A drawer's width and height are ladders: `sm` → `md` → `lg` grows in both axes,
 so a theme cannot make "large" narrower than "medium". A dialog's three surface
 widths are a third ladder for the same reason — `lg` may not be narrower than
-`md`. A carousel's active mark may elongate but never shrink below its idle dot,
+`md`. A dialog's and a drawer's smallest shell hold their own close control —
+`3 * spacing["2xl"] + typography.h3.fontSize`, the two paddings, the header's
+reserved step for the control and one title glyph — and a bottom drawer's
+smallest height holds `max(spacing["2xl"], spacing.lg + controlHeight.sm) +
+density.rowHeight + spacing["2xl"]`: the close zone, one row and the bottom
+padding. At the shipped metrics the widths need 88px and the height 96px, and
+the shipped `360 / 320 / 240` clear them at `4.09× / 3.64× / 2.50×`; a dialog's
+title still wraps, so this is the shell's non-reflow chrome, not a minimum
+content width (plan `625`). A carousel's active mark may elongate but never
+shrink below its idle dot,
 and a message viewport holds at least one row. A timeline's marker is the same
 kind of fixed mark: its dot is at least the `borderWidth.thin` connector it
 sits on and no wider than the column that centres it, so a brand can size the

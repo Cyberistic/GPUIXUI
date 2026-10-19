@@ -296,6 +296,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [622](./622-row-press-direction.md) | The selectable row's press direction | F | 502, 619, 621 | done |
 | [623](./623-selected-label-tier.md) | The selected row's label is a tier below its title | F | 312, 316, 381, 500 | done |
 | [624](./624-field-query-and-action.md) | The field minimum holds the query and the action it documents | F | 353, 358, 384, 523, 620 | done |
+| [625](./625-dialog-drawer-shell-chrome.md) | The dialog and drawer shells hold their close control | F | 353, 358, 556, 598, 620, 624 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3214,6 +3215,18 @@ diagnostic and plan 384's 102px bound is unchanged at the shipped metrics. The
 query row needs 78px, every shipped 200px field clears the larger bound at
 1.96×, and no token value moves. The suite proves both directions: the new
 cases fail on the pre-fix rule and pass after it.
+
+Plan `625` answers plan 620's own exclusion. Plan 620 held the fixed surfaces
+whose chrome never wraps and left the dialog and drawer ladders alone because a
+card and a dialog "are reflow containers, so one glyph is not the minimum" — true
+of the title, false of the padding and the always-painted `sm` close control.
+A copied style with `dialogWidthSm: 40`, `drawerWidthSm: 40` and
+`drawerHeightSm: 50` cleared every rule while the shell painted 24px of padding
+and a 28px control into a 40px surface. Three `at-least` rules now hold the
+widths to `3 * spacing["2xl"] + h3.fontSize` (88px) and the bottom-drawer height
+to the close zone, one row and the bottom padding (96px); the shipped
+360/320/240 clear them at 4.09×/3.64×/2.50×, so no value moves. The suite fails
+five cases on the pre-fix tree and passes all seven after it.
 
 ## How to use a plan
 

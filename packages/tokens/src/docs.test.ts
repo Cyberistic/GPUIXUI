@@ -2712,6 +2712,18 @@ describe("docs/design-system.md", () => {
     expect(markdownProse).toContain(sentence);
   });
 
+  it("states the dialog and drawer shell bounds", () => {
+    const width = 3 * spacing["2xl"] + typography.h3.fontSize;
+    const height =
+      Math.max(spacing["2xl"], spacing.lg + defaultDensity.controlHeight.sm) +
+      defaultDensity.rowHeight +
+      spacing["2xl"];
+    const headroom = (value: number, bound: number): string =>
+      (value / bound).toFixed(2);
+    const sentence = `At the shipped metrics the widths need ${width}px and the height ${height}px, and the shipped \`${dimensions.dialogWidthSm} / ${dimensions.drawerWidthSm} / ${dimensions.drawerHeightSm}\` clear them at \`${headroom(dimensions.dialogWidthSm, width)}× / ${headroom(dimensions.drawerWidthSm, width)}× / ${headroom(dimensions.drawerHeightSm, height)}×\``;
+    expect(markdownProse).toContain(sentence);
+  });
+
   it("states the drawer, chat and carousel dimensions", () => {
     const sentence = `A drawer opens ${dimensions.drawerWidthSm}/${dimensions.drawerWidthMd}/${dimensions.drawerWidthLg}px wide, or ${dimensions.drawerHeightSm}/${dimensions.drawerHeightMd}/${dimensions.drawerHeightLg}px tall from the bottom; a message viewport never shrinks below ${dimensions.chatViewportMinHeight}px, and a carousel's active dot is ${dimensions.carouselIndicatorActiveWidth}px beside an idle ${dimensions.carouselIndicatorSize}px one.`;
     expect(designSystem.includes(sentence), sentence).toBe(true);

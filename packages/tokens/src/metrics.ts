@@ -518,7 +518,11 @@ const featherLadder = (elevation: Elevation): ReadonlyArray<MetricFailure> => {
  *   plus its two borders,
  *   because `Keycap` paints caption text inside it, the drawer widths and
  *   heights each grow from `sm` to `lg`, a carousel's active mark is at least as
- *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a calendar
+ *   wide as its idle dot, the dialog widths grow from `sm` to `lg`, a dialog's
+ *   and a drawer's smallest shell holds its padding, the header's reserved step
+ *   for the close control and one `h3` title glyph, and a bottom drawer's
+ *   smallest height holds the close zone, one row and its bottom padding — the
+ *   shipped widths need 88 and the height 96 — a calendar
  *   day cell fits the smallest control, a time segment holds two body digits
  *   (`HH`/`MM`), at a 0.65em tabular advance rounded up to a pixel, and an
  *   avatar's presence dot is at most half the smallest avatar the theme carries.
@@ -847,6 +851,37 @@ export function themeMetricFailures(
           2 * spacing.md +
           typography.body.fontSize,
       ),
+    ),
+    // A dialog's shell holds its own close control: `spacing["2xl"]` padding on
+    // both sides, the same step reserved in the header for the control, and one
+    // `h3` title glyph. The title wraps; the padding and the control do not, so
+    // a narrower surface clips the chrome it always paints (plan 625).
+    ...atLeast(
+      "dimensions",
+      "dialogWidthSm",
+      dimensions.dialogWidthSm,
+      3 * spacing["2xl"] + typography.h3.fontSize,
+    ),
+    // A drawer's header is the dialog's: same padding, same reserved step, same
+    // `sm` close control and `h3` title. The width ladder carries the bound to
+    // `md` and `lg`.
+    ...atLeast(
+      "dimensions",
+      "drawerWidthSm",
+      dimensions.drawerWidthSm,
+      3 * spacing["2xl"] + typography.h3.fontSize,
+    ),
+    // A bottom drawer is a column: the close control's zone from the top edge
+    // (`spacing.lg` plus the control, which is wider than the padding), one
+    // `density.rowHeight` row and the bottom `spacing["2xl"]`. A shorter sheet
+    // is only its chrome (plan 625).
+    ...atLeast(
+      "dimensions",
+      "drawerHeightSm",
+      dimensions.drawerHeightSm,
+      Math.max(spacing["2xl"], spacing.lg + density.controlHeight.sm) +
+        density.rowHeight +
+        spacing["2xl"],
     ),
     // A date trigger paints its value and a disclosure glyph inside its own
     // insets and gap; a field narrower than that chrome clips one of them. A
