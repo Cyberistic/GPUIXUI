@@ -49,12 +49,12 @@ describe("the platform files' quoted figures", () => {
     const dark = getPlatformTheme("darwin", "dark");
     const macos = source("macos.ts");
 
-    const pressed = fixed(
-      contrastRatio(dark.colors.primary, dark.colors.active),
+    const ringOnPressed = fixed(
+      contrastRatio(dark.colors.ring, dark.colors.active),
       3,
     );
     expect(macos).toContain(
-      `because \`${dark.colors.primary}\` is ${pressed}:1 on the pressed-row wash, under the 3:1 boundary floor`,
+      `The dark focus ring is \`${dark.colors.ring}\`, the accent at its hovered weight; it measures ${ringOnPressed}:1 on the pressed-row wash, above the 3:1 boundary floor`,
     );
     expect(macos).toContain(
       `the fill's \`${light.colors.primary}\` measures ${fixed(

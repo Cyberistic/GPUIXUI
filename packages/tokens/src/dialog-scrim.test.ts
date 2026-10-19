@@ -161,7 +161,9 @@ describe("the dialog's face on the scrim", () => {
   it("records the scrim opacity that keeps the face outside the content band", () => {
     const macosDark = getPlatformTheme("darwin", "dark");
     const regressed = extendTheme(macosDark, {
-      colors: { overlay: "#000000A6" },
+      // The pre-698 accent, kept so the historical face ratio stays the one
+      // plan 526 recorded; plan 698 moved the dark accent lighter.
+      colors: { primary: "#0A84FF", overlay: "#000000A6" },
     });
     const tooLight = extendTheme(macosDark, {
       colors: { overlay: "#000000CC" },

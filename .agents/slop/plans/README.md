@@ -353,6 +353,7 @@ references without buying correctness.
 | [689](./689-field-text-selection.md) | A field's typed text through a text selection | F | 071, 087, 362, 506, 510, 527, 528, 659 | done |
 | [692](./692-platform-variant-owner.md) | The platform registry's retyped variant lists | F | 051, 063, 067, 387, 609, 678 | done |
 | [695](./695-blockquote-body-role.md) | The blockquote's painted body role | F | 569, 583, 588, 649 | done |
+| [698](./698-selected-option-check.md) | The selected option's check on its selected fill | F | 332, 341, 557, 651 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3636,6 +3637,18 @@ returned no accent-wash entry. `text@1>accent@0.05` joins the list beside the
 container fallback, which is kept because the pinned binary is not inspectable;
 every shipped set already passes, so no colour, pair count, floor or shipped
 metric moves.
+
+Plan `698` closes the selected option's check on the fill that carries the
+selection. `comboboxCheckPairs` measured the `primary` check on the `hover` wash
+a highlighted option paints (plan 341) but not on `selected`, where the chosen
+option sits at rest, or `selectedActive`, where it presses. The shipped macOS
+dark set painted `primary` on `selected` at **2.748:1**, under the 3:1 mark
+floor, while `themeFailures` returned `[]`. Both fills join the list (461 → 463
+pairs); the macOS dark accent moves one designed step (`#0A84FF` → `#2E93FF`,
+3.214:1 on `selected`) with its hover, press, ring and selection wash, and the
+documented brand example lightens its primary family (`#9579FF`, 3.146:1 on the
+inherited selection) and drops the scrim override its lighter fill no longer
+needs. No other colour, floor or metric moves.
 
 ## How to use a plan
 

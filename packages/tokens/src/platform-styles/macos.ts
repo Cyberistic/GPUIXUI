@@ -6,18 +6,18 @@ import {
 } from "../platform-types.js";
 
 /**
- * macOS: Apple's blue accent (`#0071E3` light, `#0A84FF` dark), grouped-canvas
- * greys, compact controls and softly blurred shadows. The dark focus ring steps
- * up to `#409CFF` — the accent at its hovered weight — because `#0A84FF` is
- * 2.836:1 on the pressed-row wash, under the 3:1 boundary floor. The dark
+ * macOS: Apple's blue accent (`#0071E3` light, `#2E93FF` dark), grouped-canvas
+ * greys, compact controls and softly blurred shadows. The dark focus ring is
+ * `#48A0FF`, the accent at its hovered weight; it measures 3.817:1 on the
+ * pressed-row wash, above the 3:1 boundary floor. The dark
  * secondary grey and pressed wash are set so row descriptions clear 4.5:1 on
  * both pointer washes (plan 079) and through the selection wash (plan 087).
  * `sans` stays GPUI's system sentinel; `mono` is
  * the family macOS installs. The dark divider is Apple's separator grey
  * (`#48484A`), so an outlined control's edge clears the floor on the washes it
  * paints (plan 080). The accent's readable text step is `#0055B3` light and
- * `#64B5FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
- * `#0A84FF` 3.82:1 on a dark card (plan 082). The light boundary is Apple's
+ * `#A4D4FF` dark: the fill's `#0071E3` measures 4.21:1 on the canvas and
+ * `#2E93FF` 4.47:1 on a dark card (plan 082). The light boundary is Apple's
  * secondary label grey (`#6E6E73`), so a checkbox in a row keeps its edge on
  * every wash (plan 084). Elevation levels apply their own alpha to the `shadow`
  * tint, so a copied style retints all three by editing one role (plan 085).
@@ -33,7 +33,13 @@ import {
  * style over another platform's theme cannot keep that platform's tint (plan
  * 374). The selected row is a step past the accent wash a selectable row hovers
  * with, and its readable text step moves with it — no deeper selection keeps
- * the old blue at 4.5:1 (plan 381). The accent's own foreground is that same
+ * the old blue at 4.5:1 (plan 381). The selected option's `primary` check
+ * clears the 3:1 mark floor on the `selected` fill at 3.214:1, so the lighter
+ * accent keeps the selection's designed press instead of repainting it (plan
+ * 698). The dark selection wash is 14%, the identity's step: the lighter
+ * accent's wash at 20% dropped the selected title under 7:1, and the 14% wash
+ * keeps it while the wash itself stays perceivable. The accent's own foreground
+ * is that same
  * readable step, so selecting the label on the pale accent fill keeps its floor
  * through the inverse veil (plan 382). The dark scrim is deeper than the
  * identity's (82%) so the floating face separates from every content fill a
@@ -115,17 +121,17 @@ export const macosPlatformStyle = {
       secondaryForeground: "#F5F5F7",
       secondaryHover: "#434345",
       secondaryActive: "#4C4C4E",
-      primary: "#0A84FF",
+      primary: "#2E93FF",
       primaryForeground: "#000000",
-      primaryHover: "#409CFF",
-      primaryActive: "#64B5FF",
+      primaryHover: "#48A0FF",
+      primaryActive: "#62ADFF",
       primaryText: "#A4D4FF",
       accent: "#1C3A57",
       accentForeground: "#A8D4FF",
       accentHover: "#284F73",
       accentActive: "#2D577E",
-      ring: "#409CFF",
-      selection: "#0A84FF33",
+      ring: "#48A0FF",
+      selection: "#2E93FF24",
       selected: "#1A4568",
       selectedActive: "#14344F",
       selectedForeground: "#CFE8FF",

@@ -55,6 +55,8 @@ describe("the mark contract", () => {
         (role) => `${role} on input`,
       ),
       "primary on hover",
+      "primary on selected",
+      "primary on selectedActive",
       "primaryText on input",
       ...(
         ["primary", "success", "destructive", "mutedForeground"] as const
@@ -118,6 +120,8 @@ describe("the mark contract", () => {
       "input",
       "muted",
       "popover",
+      "selected",
+      "selectedActive",
       "track",
     ]);
     expect(failures[0]).toMatchObject({
@@ -140,6 +144,8 @@ describe("the mark contract", () => {
       "input",
       "muted",
       "popover",
+      "selected",
+      "selectedActive",
       "track",
     ]);
   });

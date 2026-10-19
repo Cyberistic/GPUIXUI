@@ -133,7 +133,12 @@ describe("a brand-toned link through a text selection", () => {
       ],
       [
         "macOS dark",
-        getPlatformTheme("darwin", "dark"),
+        // The historical regression was measured on the fill plan 698 moved
+        // (`selected` `#1A4568` → `#1A3E5C`); pin the old fill so the pre-528
+        // figure stays the one the plan recorded.
+        extendTheme(getPlatformTheme("darwin", "dark"), {
+          colors: { selected: "#1A4568", selection: "#0A84FF33" },
+        }),
         "#64B5FF",
         6,
         "selected",

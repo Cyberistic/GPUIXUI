@@ -1483,22 +1483,20 @@ describe("docs/tokens.md quoted figures", () => {
   });
 
   it("pins the brand scrim's documented figures", () => {
-    const inherited = extendTheme(brandTheme, {
-      colors: { overlay: themes.dark.colors.overlay },
-    });
     const face = (theme: Theme): number =>
       contrastRatio(
         theme.colors.popover,
         compositeOver(theme.colors.overlay, theme.colors.primary),
       );
 
-    expect(face(inherited)).toBeCloseTo(1.038, 3);
-    expect(brandTheme.colors.overlay).toBe("#000000D9");
+    // The lighter brand fill keeps the identity scrim; no `overlay` override.
+    expect(brandTheme.colors.overlay).toBe(themes.dark.colors.overlay);
+    expect(face(brandTheme)).toBeCloseTo(1.157, 3);
     expect(face(brandTheme)).toBeGreaterThanOrEqual(
       contrastFloors.default.surface,
     );
     expect(markdownProse).toContain(
-      "the inherited 65% scrim left the floating face at 1.038:1 over this brand's own primary action, so the example ships 85% (`#000000D9`)",
+      "The lighter fill also keeps the identity scrim: a dialog's face measures **1.157:1** over the base 65% scrim and this brand's primary action, so the example takes the base scrim.",
     );
   });
 
@@ -3051,7 +3049,7 @@ describe("docs/design-system.md", () => {
       `| text selection on an opaque filled surface (\`primaryForeground\`/\`secondaryForeground\`/\`destructiveForeground\`/\`accentForeground\`/\`infoForeground\`/\`successForeground\`/\`warningForeground\`/\`softActionForeground\` over the composited \`selectionOnFill\` veil, on each fill's resting value) | ${contrastFloors.default.secondary}:1 | ${contrastFloors.high.secondary}:1 |`,
       `| text selection veil on an opaque filled surface (\`selectionOnFill\` over \`primary\`/\`secondary\`/\`destructive\`/\`accent\`/\`info\`/\`success\`/\`warning\`/\`softAction\`, on each fill's resting value) | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the pressed \`selectedActive\`, the four soft status fills and the \`track\` groove a focused slider's thumb sits on, the \`destructive\` ring an invalid control paints on every ring surface except the canvas and the \`track\` groove, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes, the pressed \`selectedActive\` and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
-      `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, \`primaryText\` on the \`input\` fill the native caret paints, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
+      `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, \`primaryText\` on the \`input\` fill the native caret paints, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on, plus the \`selected\` and \`selectedActive\` fills the chosen option marks) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the pressed \`selectedActive\`, and the \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,

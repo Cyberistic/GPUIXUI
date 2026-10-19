@@ -75,20 +75,20 @@ describe("native field caret", () => {
 
   it("records the fill the caret used to be, and why it could not stay", () => {
     const macOSDark = getPlatformTheme("darwin", "dark");
-    const selected = contrastRatio(
-      macOSDark.colors.primary,
-      macOSDark.colors.selected,
-    );
-    const active = contrastRatio(
-      macOSDark.colors.primary,
-      macOSDark.colors.active,
-    );
+    // The pre-698 fill, kept as the historical evidence: plan 698 moved the
+    // macOS dark accent so the selected-option check that paints `primary`
+    // clears 3:1 on the selected fill.
+    const oldPrimary = "#0A84FF";
+    const oldSelected = "#1A4568";
+    const selected = contrastRatio(oldPrimary, oldSelected);
+    const active = contrastRatio(oldPrimary, macOSDark.colors.active);
     expect(selected).toBeCloseTo(2.748, 3);
     expect(active).toBeCloseTo(2.836, 3);
     expect(selected).toBeLessThan(contrastFloors.default.mark);
     expect(active).toBeLessThan(contrastFloors.default.mark);
 
-    // The ink it is now clears both, so the fix is the role, not a palette edit.
+    // The ink the caret paints clears both on the current fill, so the caret
+    // remains the role fix; the fill move is the check's, not the caret's.
     const { caret } = nativeFieldTheme(macOSDark);
     expect(
       contrastRatio(caret, macOSDark.colors.selected),

@@ -161,14 +161,13 @@ export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
   colors: {
-    primary: "#7C5CFF",
+    primary: "#9579FF",
     primaryForeground: "#000000",
-    primaryHover: "#8F73FF",
-    primaryActive: "#A28CFF",
+    primaryHover: "#A78DFF",
+    primaryActive: "#B9A4FF",
     primaryText: "#C9BDFF",
     track: "#20202E",
     ring: "#9B8CFF",
-    overlay: "#000000D9",
   },
   radius: { md: 8 },
   density: "compact",
@@ -182,10 +181,13 @@ beside `accent`, and `selection` is the accent's translucent wash. A fill that i
 also painted as a value indicator names `track` too: the identity groove leaves
 this brand's fill under the 3:1 mark floor. An inherited state keeps the base hue
 running the interaction, and an inherited foreground can miss the on-colour
-floor. A dark brand whose accent is darker than the base's also deepens the
-modal scrim (`overlay`): the face is measured on the scrim over every surface a
-window shows, and the base's 65% scrim left this brand's floating face at
-1.038:1 over its own primary action, so the example ships 85%.
+floor. The fill also has to keep the selected option's `primary` check above the
+mark floor on the `selected` fill it marks; this family clears it at 3.146:1
+without repainting the selection, while a darker brand must move `selected`,
+`selectedActive` and the `accent` hover with its primary. The lighter fill keeps
+the base scrim — the face measures 1.157:1 over the identity 65% scrim and this
+brand's action — so the example does not override `overlay`; a brand whose fill
+is darker than the base accent deepens it.
 
 A complete, executed example lives in
 [`src/brand-theme.example.ts`](./src/brand-theme.example.ts) and is held to
@@ -954,7 +956,7 @@ The variants in `platformNames` are full token themes, not docs-only CSS:
 
 | Platform | `mono` | Radius `sm` / `md` / `lg` / `xl` | Density | Primary (light) | Primary (dark) |
 | -------- | ------ | -------------------------------- | ------- | --------------- | -------------- |
-| macOS (`darwin`) | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
+| macOS (`darwin`) | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#2E93FF` |
 | Linux (`linux`) | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
 | Windows (`win32`) | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
 | Default (`default`) | `Menlo` / `DejaVu Sans Mono` / `Consolas` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |

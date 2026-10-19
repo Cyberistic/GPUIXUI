@@ -274,7 +274,7 @@ describe("brand example", () => {
   it("extends the dark theme with a brand palette and compact density", () => {
     expect(brandTheme.mode).toBe("dark");
     expect(brandTheme.name).toBe("Acme");
-    expect(brandTheme.colors.primary).toBe("#7C5CFF");
+    expect(brandTheme.colors.primary).toBe("#9579FF");
     expect(brandTheme.colors.background).toBe(darkTheme.colors.background);
     expect(brandTheme.radius.md).toBe(8);
     expect(brandTheme.radius.lg).toBe(lightTheme.radius.lg);
@@ -290,6 +290,23 @@ describe("brand example", () => {
   it("holds the documented examples to the contrast contract", () => {
     expect(themeContrastFailures(brandTheme)).toEqual([]);
     expect(themeContrastFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("keeps the brand's selected-option check on the fill it marks", () => {
+    expect(
+      Number(
+        contrastRatio(
+          brandTheme.colors.primary,
+          brandTheme.colors.selected,
+        ).toFixed(3),
+      ),
+    ).toBe(3.146);
+    expect(
+      contrastRatio(
+        brandTheme.colors.primary,
+        brandTheme.colors.selectedActive,
+      ),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
   });
 
   it("quotes the shipped identity groove in its rationale", () => {

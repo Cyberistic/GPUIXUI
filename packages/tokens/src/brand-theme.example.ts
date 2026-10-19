@@ -8,34 +8,34 @@ import { createTheme, darkTheme } from "./index.js";
  * The primary family moves together: a brand that changes the fill also sets
  * its foreground, hover, pressed and text steps. Inheriting them would leave the
  * base theme's hue running the states, and the inherited dark foreground
- * measured 4.243:1 on this fill — under the floor the package teaches (plans
- * 082, 097 and 098).
+ * measured 4.243:1 on the original fill — under the floor the package teaches
+ * (plans 082, 097 and 098). The fill also has to keep the selected option's
+ * `primary` check above the mark floor on the `selected` fill it marks: this
+ * family clears it at 3.146:1 without repainting `selected`/`selectedActive`
+ * (plan 698). A darker brand must move the selection fills, and the `accent`
+ * hover that has to stay a step below them, with its primary.
  *
  * The groove moves with it too (plan 347). A progress segment paints `primary`
- * on `track`, so a brand that lightens its primary in dark mode needs a groove
- * dark enough to keep the mark at 3:1 and to clear the washes and status tints
- * the rail is painted on; the identity groove leaves this fill at 2.23:1.
- * `#20202E` is the brand's own neutral step.
+ * on `track`, so a brand whose fill is still darker than the identity accent
+ * needs a groove dark enough to keep the mark at 3:1; the identity groove
+ * leaves this fill at 2.97:1. `#20202E` is the brand's own neutral step.
  *
- * The scrim moves with the brand as well (plan 526). A dialog's face is measured
- * on the scrim over every surface a window shows, and this fill is darker than
- * the identity accent, so the inherited 65% scrim left the floating face at
- * 1.038:1 over the brand's own primary action. At 85% the face clears the floor
- * over every content fill. A brand with a lighter accent can keep the base
- * scrim; a darker one deepens it, like the macOS dark style does.
+ * The lighter fill needs no custom scrim: a dialog's face measures 1.157:1 over
+ * the identity 65% scrim and this brand's primary action, so the example takes
+ * the base scrim. A brand whose fill is darker than the base accent deepens it,
+ * the way the macOS dark style does (plan 526).
  */
 export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
   colors: {
-    primary: "#7C5CFF",
+    primary: "#9579FF",
     primaryForeground: "#000000",
-    primaryHover: "#8F73FF",
-    primaryActive: "#A28CFF",
+    primaryHover: "#A78DFF",
+    primaryActive: "#B9A4FF",
     primaryText: "#C9BDFF",
     ring: "#9B8CFF",
     track: "#20202E",
-    overlay: "#000000D9",
   },
   radius: { md: 8 },
   density: "compact",

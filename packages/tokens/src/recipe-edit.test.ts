@@ -48,6 +48,23 @@ const markSurfaces = [
   "input",
   "muted",
   "popover",
+  "selected",
+  "selectedActive",
+  "track",
+] as const;
+
+/**
+ * The six surfaces plan 658's audit recorded. Plan 698 added the selected
+ * option's check on `selected`/`selectedActive`; the reconstruction is measured
+ * on today's larger contract, so the historical seven are filtered to the
+ * surfaces that audit named.
+ */
+const recordedMarkSurfaces = [
+  "card",
+  "hover",
+  "input",
+  "muted",
+  "popover",
   "track",
 ] as const;
 
@@ -67,10 +84,12 @@ describe("documented recipe edit", () => {
 
     const marks = failures.filter(
       (failure) =>
-        failure.foreground === "primary" && failure.pairClass === "mark",
+        failure.foreground === "primary" &&
+        failure.pairClass === "mark" &&
+        recordedMarkSurfaces.some((surface) => surface === failure.background),
     );
     expect(marks.map((failure) => failure.background).toSorted()).toEqual([
-      ...markSurfaces,
+      ...recordedMarkSurfaces,
     ]);
     expect(marks.map(ratioOf).toSorted()).toEqual([
       "2.233",

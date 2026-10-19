@@ -457,7 +457,8 @@ export const selectionPressPairs: readonly ContrastPair[] = [
  * paint over the `muted` track; a slider thumb rings its own `input` fill with
  * the same role; a rating star and a combobox check are glyphs on the surface
  * they sit on — a selected option's check also sits on the `hover` wash the row
- * paints while highlighted; a timeline's current dot is a `primary` dot on the
+ * paints while highlighted, and on the `selected`/`selectedActive` fills the
+ * chosen option marks; a timeline's current dot is a `primary` dot on the
  * canvas, card, popover or quiet panel. A mark is the information, so a fill
  * that matches its surface is a failed state, not a subtle one.
  */
@@ -485,19 +486,27 @@ export const caretPairs: readonly ContrastPair[] = [
 ];
 
 /**
- * A selected combobox option's check glyph on the wash it highlights with.
- * `rowStyle` paints `hover` behind a highlighted option, so the check has to
- * stay a mark there, not only on the popover at rest.
+ * A selected option's check glyph on the fills it marks. `ComboboxItem` paints
+ * the check with `primary`; `rowStyle` paints `hover` behind a highlighted row,
+ * `selected` behind a chosen one, and `selectedActive` while the chosen row is
+ * pressed. Plan 341 measured only the highlighted surface, so a selected option
+ * at rest painted its check on `selected` with no pair behind it — the shipped
+ * macOS dark set measured **2.748:1** there, under the 3:1 mark floor, while
+ * every check returned `[]` (plan 698). The selected and pressed fills join the
+ * list; all three are published inside {@link markPairs}.
  */
 const comboboxCheckPairs: readonly ContrastPair[] = [
   ["primary", "hover", "mark"],
+  ["primary", "selected", "mark"],
+  ["primary", "selectedActive", "mark"],
 ];
 
 /**
  * Every mark on every surface it can sit on: the three solid roles on the four
  * plain surfaces, the slider thumb's ring on its own `input` fill, the combobox
- * check on the wash it highlights with, and the native field's caret ink
- * (`primaryText`, {@link caretPairs}) on the fill it edits.
+ * check on the wash a highlighted option paints and on the `selected` and
+ * `selectedActive` fills a chosen option marks, and the native field's caret
+ * ink (`primaryText`, {@link caretPairs}) on the fill it edits.
  */
 export const markPairs: readonly ContrastPair[] = [
   ...markRoles.flatMap((role) =>

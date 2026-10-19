@@ -655,7 +655,7 @@ built-in identity.
 
 | Platform | `sans` | `mono` | Radius `sm` / `md` / `lg` / `xl` | Density | Primary (light) | Primary (dark) |
 | -------- | ------ | ------ | -------------------------------- | ------- | --------------- | -------------- |
-| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#0A84FF` |
+| `darwin` (macOS) | `.SystemUIFont` | `Menlo` | 4 / 6 / 10 / 12 | `compact` | `#0071E3` | `#2E93FF` |
 | `linux` (Linux) | `.SystemUIFont` | `DejaVu Sans Mono` | 4 / 6 / 12 / 12 | `comfortable` | `#1C71D8` | `#78AEED` |
 | `win32` (Windows) | `.SystemUIFont` | `Consolas` | 2 / 4 / 8 / 8 | `comfortable` | `#0067C0` | `#4CC2FF` |
 | `default` (Default) | `.SystemUIFont` | `Menlo` / `DejaVu Sans Mono` / `Consolas` | 4 / 6 / 8 / 12 | `comfortable` | `#5F4BDB` | `#A7A9FF` |
@@ -2110,14 +2110,13 @@ export const brandTheme = createTheme({
   mode: "dark",
   name: "Acme",
   colors: {
-    primary: "#7C5CFF",
+    primary: "#9579FF",
     primaryForeground: "#000000",
-    primaryHover: "#8F73FF",
-    primaryActive: "#A28CFF",
+    primaryHover: "#A78DFF",
+    primaryActive: "#B9A4FF",
     primaryText: "#C9BDFF",
     track: "#20202E",
     ring: "#9B8CFF",
-    overlay: "#000000D9",
   },
   radius: { md: 8 },
   density: "compact",
@@ -2138,12 +2137,15 @@ smaller than body" rule. `themeFailures` reports it.
 A brand that changes `primary` sets the whole family — `primaryForeground`,
 `primaryHover`, `primaryActive` and `primaryText` — because an inherited state
 keeps the base hue running the interaction and can miss the on-colour floor: the
-dark example's inherited foreground measured 4.24:1 on its brand fill before
-this rule was written down. A dark brand whose accent is darker than the base's
-also deepens the modal scrim: a dialog's face is measured on the scrim over every
-surface a window shows, and the inherited 65% scrim left the floating face at
-1.038:1 over this brand's own primary action, so the example ships 85%
-(`#000000D9`). A lighter accent can keep the base scrim. A dark brand also moves
+dark example's inherited foreground measured 4.24:1 on its original brand fill
+before this rule was written down. The fill also has to keep the selected
+option's `primary` check above the mark floor on the `selected` fill it marks;
+this family clears it at **3.146:1** without repainting the selection, while a
+darker brand must move `selected`, `selectedActive` and the `accent` hover with
+its primary. The lighter fill also keeps the identity scrim: a dialog's face
+measures **1.157:1** over the base 65% scrim and this brand's primary action, so
+the example takes the base scrim. A brand whose fill is darker than the base
+accent deepens it instead. A dark brand also moves
 the value groove: `primary` is a progress segment painted on `track`, and the
 identity groove leaves this fill under the 3:1 mark floor, so the example names
 its own neutral step. The executed example in
@@ -3715,8 +3717,8 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair
 (**7.831:1** at the tightest, Linux dark), so no colour moves; taking it from
-396 to **461** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`
-and `671`.
+396 to **463** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
+`671` and `698`.
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already
@@ -3845,13 +3847,16 @@ and `accentActive` — and are recorded in `TODO.md` rather than blessed as pair
 A solid role painted as a **mark** is held to 3:1 (4.5:1 at AAA) instead: a
 progress segment and a slider fill sit on the `track` groove, a slider thumb rings
 its own `input` fill, and a rating star, combobox check or timeline dot sits on
-the panel it paints on — a selected combobox option's check also sits on the
-`hover` wash the row highlights with, so it is measured there too — `markRoles`
+the panel it paints on — a selected combobox option's check sits on the
+`hover` wash the row highlights with and on the `selected`/`selectedActive`
+fills the chosen option marks, so all three are measured — `markRoles`
 is the solid role list and `markPairs` the whole class. The native field's caret
 is a mark too, but it is the accent's ink rather than a fill: `primaryText` on
 the field's own `input` fill is `caretPairs`, published inside `markPairs`, while
 the four `Surface` tones and the four row washes an in-place editor paints are
-already `secondary` text pairs (plan `557`).
+already `secondary` text pairs (plan `557`). The selected option's row and check
+are the executed shape in
+[`src/checked-control.example.ts`](../packages/tokens/src/checked-control.example.ts).
 A fill's 1.05:1 is a wash's floor: it says a hover is visible, not that a 4px bar
 is. A status indicator is not a mark: the solid `warning` is **1.78:1** on the
 light canvas, so a status dot uses `xText`, which the status-text pairs already
