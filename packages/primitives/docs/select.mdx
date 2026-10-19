@@ -109,7 +109,7 @@ plan `346`). An uncontrolled select closes itself; a controlled parent receives
 | `open` | `boolean` | — | controlled open state; the list changes only when the parent changes it |
 | `defaultOpen` | `boolean` | `false` | initial open state when uncontrolled |
 | `onOpenChange` | `(open: boolean) => void` | none | the select asks to open or close; a disabled select asks to close |
-| `placeholder` | `string` | none | shown before a choice |
+| `placeholder` | `string` | none | shown before a choice; the announced value is trimmed, and a blank placeholder announces nothing |
 | `disabled` | `boolean` | `false` | refuses opening, closes an open list, and leaves the tab order |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
@@ -224,8 +224,12 @@ mappings (`role_from_aria`):
 - The trigger is a **`combobox`** named by `label`, with `aria-expanded`
   following the real open state and `aria-valuetext` carrying the chosen label
   (or the placeholder). AccessKit reports it as `ComboBox`, `expanded`,
-  `value`. An option valued `""` announces its label like any other; the empty
-  string is never mistaken for "no choice" (plan `501`).
+  `value`. The announced value follows the package's blank-string rule: it is
+  **trimmed**, and a blank placeholder publishes no value text at all, so a
+  computed missing translation cannot become a whitespace value on a focusable
+  combobox. The same option therefore announces the same name in the trigger
+  and in its row (plan `635`). An option valued `""` announces its label like any
+  other; the empty string is never mistaken for "no choice" (plan `501`).
 - The list is a **`listbox`** named by the same `label`.
 - Each item is an **`option`** with its own label and `aria-selected` on the
   chosen one. AccessKit reports `ListBox`, `ListBoxOption`, `selected`. A blank
@@ -423,6 +427,11 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   it again reports nothing, and with no `defaultValue` the trigger announces the
   placeholder until the empty-valued option is chosen, then reports `""` and
   paints that label (plan 501).
+- `runtime/select-value.runtime.test.tsx` — the combobox's announced value in
+  the accessibility tree: a padded placeholder is `"Pick one"` (not
+  `"  Pick one  "`), a blank one publishes no value, and a chosen option named
+  `"  Apple  "` announces `"Apple"` in the trigger and in its open row. Reverting
+  the resolver fails all three by name (plan `635`).
 - `runtime/floating-resize.runtime.test.tsx` — the control case for the window
   observer: a list under a trigger at `y 212..236` moves above it after the host
   reports a 250-high window. Reverting the wrapper to `readWindowSize` fails it

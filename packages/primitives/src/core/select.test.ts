@@ -14,6 +14,7 @@ import {
   selectOpen,
   selectOptions,
   selectRowCounts,
+  selectValueText,
   type SelectEntry,
 } from "./select.js";
 
@@ -91,5 +92,27 @@ describe("select open state", () => {
     expect(selectOpen(true, true)).toBe(false);
     expect(selectOpen(true, false)).toBe(true);
     expect(selectOpen(false, false)).toBe(false);
+  });
+});
+
+describe("select announced value", () => {
+  it("trims a real chosen label, like the option row's own name", () => {
+    // The bug guarded (plan 635): the trigger wrote `selectedLabel ??
+    // placeholder` raw, so a padded option label was announced with its
+    // padding while the same row's `aria-label` was trimmed.
+    expect(selectValueText("  Apple  ", "Pick one")).toBe("Apple");
+  });
+
+  it("trims a real placeholder", () => {
+    expect(selectValueText(undefined, "  Pick one  ")).toBe("Pick one");
+  });
+
+  it("treats a blank chosen label as no label, and falls back", () => {
+    expect(selectValueText("   ", "Pick one")).toBe("Pick one");
+  });
+
+  it("announces nothing when neither the label nor the placeholder says anything", () => {
+    expect(selectValueText("", "   ")).toBeUndefined();
+    expect(selectValueText(undefined, undefined)).toBeUndefined();
   });
 });

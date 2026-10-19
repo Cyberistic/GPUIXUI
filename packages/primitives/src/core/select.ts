@@ -8,7 +8,8 @@
  */
 
 import * as Arr from "effect/Array";
-import { hasText } from "./text.js";
+import * as Option from "effect/Option";
+import { hasText, usableText } from "./text.js";
 
 /** One selectable choice. */
 export interface SelectOption {
@@ -50,7 +51,25 @@ export interface SelectRowCounts {
 }
 
 /**
- * Whether the select paints its list.
+ * What the combobox announces as its value.
+ *
+ * GPUix has no `aria-valuenow`, so a select's chosen text rides on
+ * `aria-valuetext`. That text is an announcement, not paint: it follows the
+ * package's blank-string rule (`usableText`) — trimmed, and absent when it says
+ * nothing — so the trigger cannot announce padding the option row trims, or a
+ * computed blank placeholder as a whitespace value (plans `026`, `580`, `589`).
+ * The placeholder is the fallback for no selection (and for a stale value that
+ * is not in `options`, which GPUix also paints as the placeholder).
+ */
+export const selectValueText = (
+  selectedLabel: string | undefined,
+  placeholder: string | undefined,
+): string | undefined =>
+  Option.getOrUndefined(
+    Option.orElse(usableText(selectedLabel), () => usableText(placeholder)),
+  );
+
+/** Whether the select paints its list.
  *
  * A disabled select is closed even when its controlled `open` still says
  * otherwise: the runtime refuses every choice and dismissal path once disabled,

@@ -1576,6 +1576,19 @@ retired once both branches are one
       the subscription, drop the effect dependency, remove `Select`'s observer
       (plan `604`).
 
+`[x]` `packages/primitives`: **a `Select`'s announced value was not the text
+      its option was named with** — `aria-valuetext` wrote
+      `selectedLabel ?? placeholder` raw, so a padded placeholder or option
+      label was announced with its padding and a computed blank became a
+      whitespace value on a focusable combobox, while the same option row
+      announced a trimmed `aria-label` (measured: the trigger announced
+      `"  Apple  "` where its row announced `"Apple"`). One `selectValueText`
+      rule now trims the chosen text, falls back to the trimmed placeholder,
+      and omits the attribute when both say nothing; the paint keeps the
+      caller's padding. 4 core + 3 element-tree + 3 scoped AccessKit cases, all
+      six surface cases failing against the raw expression (plan `635`; offline
+      59 files / 827 tests, full runtime 56 files / 781 tests).
+
 `[x]` `packages/primitives`: **a focus-opened `Tooltip` survived a click** —
       measured (2026-10-19): a `Checkbox` focused with `Tab` kept its tip
       painted after `click("target")`, because the wrapper remembered a

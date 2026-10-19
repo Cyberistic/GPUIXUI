@@ -71,6 +71,7 @@ import {
   selectOpen,
   selectOptions,
   selectRowCounts,
+  selectValueText,
   type SelectEntry,
   type SelectOption,
   type SelectOptionGroup,
@@ -605,7 +606,7 @@ export const renderSelect = (
         aria-label={ariaName(label)}
         aria-description={ariaName(description)}
         aria-expanded={open}
-        aria-valuetext={selectedLabel ?? placeholder}
+        aria-valuetext={selectValueText(selectedLabel, placeholder)}
         disabled={disabled}
         testId={testId === undefined ? undefined : `${testId}-trigger`}
         onFocus={composeHandler(focus.onFocus, onFocus)}

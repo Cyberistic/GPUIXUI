@@ -348,6 +348,70 @@ describe("Select", () => {
     expect(expectSome(elementProp(element, "disabled"))).toBe(true);
   });
 
+  it("announces a placeholder without its padding, and keeps the painted text", () => {
+    // The bug guarded (plan 635): the trigger wrote the placeholder raw, so a
+    // padded translation was announced with its padding while every other
+    // announced string in the package is trimmed.
+    const element = renderSelect(
+      {
+        options: [{ value: "alpha", label: "Alpha" }],
+        label: "Fruit",
+        placeholder: "  Pick one  ",
+      },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    expect(expectSome(elementProp(trigger, "aria-valuetext"))).toBe("Pick one");
+    // The paint is the caller's: `SelectValue` still receives the raw string.
+    expect(expectSome(elementProp(childAt(trigger, 0), "placeholder"))).toBe(
+      "  Pick one  ",
+    );
+  });
+
+  it("announces no value text when the placeholder says nothing", () => {
+    const element = renderSelect(
+      {
+        options: [{ value: "alpha", label: "Alpha" }],
+        label: "Fruit",
+        placeholder: "   ",
+      },
+      testTheme,
+      noSelection(),
+      false,
+      noFocus,
+      handlers,
+    );
+    expect(
+      Option.isNone(elementProp(childAt(element, 0), "aria-valuetext")),
+    ).toBe(true);
+  });
+
+  it("announces a chosen option with the same trimmed name as its row", () => {
+    const element = renderSelect(
+      {
+        options: [{ value: "apple", label: "  Apple  " }],
+        label: "Fruit",
+        placeholder: "Pick one",
+      },
+      testTheme,
+      valueState("apple"),
+      false,
+      noFocus,
+      handlers,
+    );
+    const trigger = childAt(element, 0);
+    expect(expectSome(elementProp(trigger, "aria-valuetext"))).toBe("Apple");
+    // The flat `items` prop carries the paint verbatim; only the announcement
+    // is trimmed. The row's own name goes through `ariaName` in the open list.
+    expect(
+      Option.map(Arr.head(itemsOf(element)), (item) => item["label"]),
+    ).toStrictEqual(Option.some("  Apple  "));
+  });
+
   it("names the trigger as a combobox and reports its expanded state", () => {
     const closed = renderSelect(
       {
