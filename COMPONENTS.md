@@ -324,6 +324,15 @@ for a blank spinner (its default erased), no `"Code digit 1"` cell, and
 guards the tree the runtime builds; the per-component element-tree suites guard
 the props.
 
+**Blank descriptions (586):** the same rule had not reached the public
+`aria-description` prop a slot trigger adds — measured, ten surfaces published
+`description: "   "` verbatim and a busy `Button` composed `"Loading.    "`.
+Every forwarded description now goes through `ariaName` (trim or absent), and
+the busy button announces `"Loading"` or `"Loading. <tip>"`, never a dangling
+separator. `src/components/description.test.tsx` (33 cases, including a
+file-level source guard) and `runtime/description.runtime.test.tsx` (5 cases)
+hold the rule; 23 offline and 4 runtime cases fail without it.
+
 **Validation matrix (351):** `runtime/invalid.runtime.test.tsx` guards the state
 that produced two shipped defects — `RadioGroup` had no `invalid` at all (plan
 `061`) and `Rating` accepted it and painted nothing (plan `070`). Thirteen cases,

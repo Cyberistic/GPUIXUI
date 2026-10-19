@@ -42,6 +42,7 @@ import type { ControlSize, PrimitiveTheme, RadiusStep } from "../core/theme.js";
 import type { ButtonVariant } from "../core/variants.js";
 import { useGroupShape, type GroupShape } from "./group-shape.js";
 import {
+  ariaName,
   composeHandler,
   controlName,
   mergeStyle,
@@ -137,13 +138,13 @@ export const renderButton = (
     focused: focus.focused,
     loading: props.loading === true,
   };
-  const description = Option.match(
-    Option.fromNullishOr(props["aria-description"]),
-    {
-      onNone: () => (props.loading === true ? "Loading" : undefined),
-      onSome: (tip) => (props.loading === true ? `Loading. ${tip}` : tip),
-    },
-  );
+  const announced = ariaName(props["aria-description"]);
+  const description =
+    props.loading !== true
+      ? announced
+      : announced === undefined
+        ? "Loading"
+        : `Loading. ${announced}`;
   const onKey =
     (phase: "down" | "up", handler?: (event: EventPayload) => void) =>
     (event: EventPayload): void => {

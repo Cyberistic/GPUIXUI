@@ -131,7 +131,7 @@ export const renderCheckbox = (
       {...passiveTriggerHandlers(props)}
       role="checkbox"
       aria-label={ariaName(props.label)}
-      aria-description={props["aria-description"]}
+      aria-description={ariaName(props["aria-description"])}
       aria-valuetext={selectionValueText(current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

@@ -75,7 +75,7 @@ sm / md / lg.
 | `onClick` | `(event) => void` | none | the event that activated the button: the pointer click, or the Enter/Space key event. Runs before `onActivate` |
 | `onMouseEnter`, `onMouseLeave`, `onMouseMove`, `onMouseDown`, `onMouseUp`, `onMouseDownOutside`, `onAuxClick`, `onScroll` | host handlers | none | forwarded to the button element — the slot contract a `Tooltip` trigger uses |
 | `onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` | host handlers | none | composed with the button's own focus ring and activation rule, never replacing them |
-| `aria-description` | `string` | none | announced after the name; a `Tooltip` trigger's text arrives here, joined after `"Loading"` while busy |
+| `aria-description` | `string` | none | announced after the name; trimmed, and a blank value is absent; a `Tooltip` trigger's text arrives here, joined after `"Loading"` while busy |
 | `style` | `StateStyle<ButtonState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the visible label |

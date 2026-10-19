@@ -88,7 +88,7 @@ remains a display rule — it never rounds the value a caller receives.
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
-| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
+| `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `placeholder` | `string` | none | empty-field hint |
 | `autoFocus` | `boolean` | `false` | focus on every mount, including a field added after a loading state (plan `584`); the ring paints from mount |
 | `formatValue` | `(value: number) => string` | fixed decimals | display text; parsing stays decimal |

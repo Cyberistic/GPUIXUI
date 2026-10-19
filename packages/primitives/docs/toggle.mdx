@@ -42,7 +42,7 @@ different states.
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
-| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
+| `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<ToggleState>` | — | merged last; an object or a state callback |
 | `children` | `ReactNode` | — | the visible label |
 | `testId` | `string` | — | stable locator |

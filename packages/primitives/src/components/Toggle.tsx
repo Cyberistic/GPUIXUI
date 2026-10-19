@@ -29,6 +29,7 @@ import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import { toggleVariants, type ToggleVariant } from "../core/variants.js";
 import type { ValueState } from "../core/state.js";
 import {
+  ariaName,
   composeHandler,
   controlName,
   mergeStyle,
@@ -120,7 +121,7 @@ export const renderToggle = (
       aria-label={Option.getOrUndefined(
         controlName(props.label, props.children),
       )}
-      aria-description={props["aria-description"]}
+      aria-description={ariaName(props["aria-description"])}
       aria-valuetext={pressedValueText(state.current)}
       tabIndex={props.disabled === true ? undefined : 0}
       testId={props.testId}

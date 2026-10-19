@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 146/146
+`[x]` `[████████████]` 147/147
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1578,6 +1578,18 @@ retired once both branches are one
       mutation directions (removed notice, reverted verdict, a new ring
       promise, the old artifact excuse). The polling tracker is designed and
       deferred with its cost recorded (plan `583` §7; offline 745 → 750).
+
+`[x]` `packages/primitives`: **a blank `aria-description` was a published
+      description** — measured (2026-10-19): every control forwarded the raw
+      prop, so a computed blank translation became `description: "   "` on
+      Button, Toggle, Checkbox, Switch, Input, TextArea, NumberField, Select,
+      Slider and ScrollArea, and a busy `Button` composed `"Loading.    "`; the
+      package's own rule (plans 026/500/573) says blank text is absent. Every
+      forwarded description now goes through `ariaName` (trim or absent), and a
+      busy button announces `"Loading"` or `"Loading. <tip>"` with no dangling
+      separator. 33 offline cases (including a file-level source guard) and a
+      5-case scoped a11y-tree file; the old tree fails 23 offline and 4 runtime
+      cases (offline 753 → 786; plan `586`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

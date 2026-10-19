@@ -127,7 +127,7 @@ export const fieldHostProps = (
   theme: nativeTextTheme(theme),
   testId: props.testId,
   "aria-label": ariaName(props.label),
-  "aria-description": props["aria-description"],
+  "aria-description": ariaName(props["aria-description"]),
   onChange: (event: EventPayload) => {
     if (props.disabled !== true) onValueChange(event.value ?? "");
   },

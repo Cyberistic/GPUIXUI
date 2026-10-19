@@ -208,7 +208,7 @@ export const renderNumberField = (
         tabIndex={disabled ? -1 : undefined}
         theme={nativeTextTheme(theme)}
         aria-label={ariaName(props.label)}
-        aria-description={props["aria-description"]}
+        aria-description={ariaName(props["aria-description"])}
         style={numberInputStyle()}
         onChange={(event: EventPayload) => {
           if (disabled) return;

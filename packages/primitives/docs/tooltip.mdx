@@ -193,6 +193,10 @@ dismisses it. A click dismisses it.
   not publish `aria-description: "   "` or open an empty popover named with
   whitespace; the child renders without the trigger wrapper, the description and
   the layer. A non-string node is still content and still paints.
+- **A blank description is no description** (plan `586`). The rule is not
+  tooltip-specific: every control that takes the public `aria-description` prop
+  trims a real value and omits a blank one, because a computed empty translation
+  is the same defect whether the tip wrote it or the caller did.
 - **The open tip is its own node.** The content carries `role="tooltip"` and,
   for a string, an `aria-label` with the same text — measured in the runtime
   (plan `071`). Non-string content is painted and becomes a `tooltip` node, but

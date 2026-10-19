@@ -37,6 +37,7 @@ import { decideScroll, resolveScroll, scrollLine } from "../core/layout.js";
 import { scrollStyle, type ScrollSpec } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
 import {
+  ariaName,
   composeHandler,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -134,7 +135,7 @@ export const renderScrollArea = (
       ref={handlers.ref}
       role={named ? "region" : undefined}
       aria-label={name}
-      aria-description={props["aria-description"]}
+      aria-description={ariaName(props["aria-description"])}
       tabIndex={named ? 0 : undefined}
       onFocus={composeHandler(handlers.onFocus, props.onFocus)}
       onBlur={composeHandler(handlers.onBlur, props.onBlur)}

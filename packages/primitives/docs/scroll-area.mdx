@@ -42,7 +42,7 @@ adding one to every existing layout silently would be the worse default
 | `onScroll` | `(event: EventPayload) => void` | none | wheel/trackpad **deltas** (`deltaX`, `deltaY`, `precise`, `touchPhase`) |
 | `onScrollPositionChange` | `(position: ScrollPosition) => void` | none | the absolute offset, after a wheel or keyboard scroll, only when it changed |
 | `style` | `StateStyle<ScrollAreaState>` | — | merged last; put the bounded size here; an object or a state callback |
-| `aria-description` | `string` | none | an extra description announced after the name; a `Tooltip` writes its tip here |
+| `aria-description` | `string` | none | an extra description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its tip here) |
 | `children` | `ReactNode` | — | content |
 | `testId` | `string` | — | stable locator |
 | `ref` | `Ref<ScrollAreaHandle>` | none | `element` for measuring and `scrollTo`, which reports the position it lands on |

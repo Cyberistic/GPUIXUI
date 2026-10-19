@@ -44,7 +44,7 @@ const email = "Contact email";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `370`: the recipe has one field size (`h-9`, 36 px) |
 | `fullWidth` | `boolean` | `false` | implied by the recipe's `w-full`; kept for API stability |
 | `label` | `string` | none | accessible name; pair with a visible `Label` |
-| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
+| `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<FieldState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 

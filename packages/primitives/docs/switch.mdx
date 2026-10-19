@@ -32,7 +32,7 @@ import { Switch } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name |
-| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
+| `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SwitchState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 

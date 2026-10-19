@@ -52,7 +52,7 @@ track.
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name, trimmed; a blank label is absent |
 | `formatValue` | `(value: number) => string` | `String` | the announced text; a blank result falls back to the value |
-| `aria-description` | `string` | none | description announced after the name; a `Tooltip` writes its text here |
+| `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<SliderThumbState>` | — | merged last on the thumb; an object or a state callback |
 | `testId` | `string` | — | names the track; the thumb becomes `${testId}-thumb` |
