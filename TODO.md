@@ -1350,6 +1350,9 @@ retired once both branches are one
       tests, 544 passed / 111 failed, 19 failing files. **Re-run after plan
       `391`:** 41 files, 657 tests, 546 passed / 111 failed, the same 19 files —
       the two new tooltip cases pass and nothing was re-baselined.
+      **Re-run 2026-10-19 after plan `574`:** 46 files, 700 tests, 589 passed /
+      111 failed, the same 19 failing files; the new late-value matrix is 12/12
+      and no assertion was re-baselined.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1436,6 +1439,20 @@ retired once both branches are one
       same 3 offline and 2 runtime cases fail without the fix (offline
       731/734 → 734/734, scoped live 9/13 → 11/13 — the remaining two are plan
       `529`'s artifact failures; plan `573`).
+
+`[x]` `packages/primitives`: **the late-value contract was measured on two of
+      its fourteen parts** — plan `324` fixed the shared rule so a value supplied
+      after mount reaches the control, but only `Input` and `Checkbox` (and later
+      `NumberField`) had a case; a part keeping a private copy of its mount value
+      would have passed its own suite. `runtime/late-value.runtime.test.tsx` now
+      mounts each remaining part uncontrolled, re-renders with a value and reads
+      the accessibility tree: `Switch`, `Toggle`, `RadioGroup`, `ToggleGroup`,
+      `CheckboxGroup`, `Rating`, `Slider`, `RangeSlider`, `OTPField`,
+      `NumberField`, `TextArea` and `Select` (12 cases). With `withValue` frozen
+      at mount all 12 fail; restored, 12/12 pass. The package README, the
+      inventory's runtime paragraph and the live-suite row carry the measured
+      counts (plan `574`; offline stays 51 files / 734 tests, live 46 files /
+      700 tests → 589 passed / 111 failed, the same 19 files).
 
 `[x]` `packages/primitives`: **a selection row's visible description reached no
       assistive technology** — `CheckboxGroup` and `RadioGroup` painted

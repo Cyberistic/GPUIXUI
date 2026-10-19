@@ -228,9 +228,10 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 (valid/invalid `Input` and `TextArea`) and `otp.runtime` (every cell).
 
 `Runtime (041)` = observed by
-`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**657 tests
-in 41 files at plan `391` — 546 passed / 111 failed on the host's plan-379/529
-binding delta; this plan's two tooltip cases pass, and the leading 640 in 36
+`nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**700 tests
+in 46 files at plan `574` — 589 passed / 111 failed on the host's plan-379/529
+binding delta; the new late-value matrix passes 12/12, and the 657 in 41 files
+below is plan `391`'s measurement; the leading 640 in 36
 files is plan `383`'s measurement of the then-current tree: the new
 text-overflow file passed 3/3; 637 in 35 files at plan `382` — the new spacer file passed 4/4, and the 633 below are
 plan `381`'s full run; 633 tests
