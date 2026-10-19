@@ -428,6 +428,13 @@ retired once both branches are one
       2 dialog + 1 drawer + 1 confirmation native cases (Dialog 19, Drawer 16,
       Confirmation dialog 6), three mutation proofs; docs, `COMPONENTS.md` and
       the inventory synced (owner: components)
+    - [x] A disabled colour picker leaves the tab order — plan 628: the swatches
+      dropped out with `disabled`, but the HEX input only became `readOnly`, and
+      a read-only input is still a tab stop, so a keyboard user could reach a
+      field they could not edit. The field now carries `tabIndex={-1}` when
+      disabled; 1 new native case (Color picker 11), proven to fail on the old
+      input and a pin keeps the enabled field reachable; docs, `COMPONENTS.md`
+      and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

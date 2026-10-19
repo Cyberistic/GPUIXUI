@@ -185,6 +185,24 @@ describe("ColorPicker", () => {
     picker.unmount();
   });
 
+  it("leaves the tab order when disabled", () => {
+    const disabled = renderComponent(<Harness disabled />);
+
+    expect(
+      disabled.renderer.findByTestId("picker-hex")?.customProps?.tabIndex,
+    ).toBe(-1);
+
+    disabled.unmount();
+
+    const enabled = renderComponent(<Harness />);
+
+    expect(
+      enabled.renderer.findByTestId("picker-hex")?.customProps?.tabIndex,
+    ).not.toBe(-1);
+
+    enabled.unmount();
+  });
+
   it("hands validity to a style callback, in both themes", () => {
     const picker = renderComponent(<Harness />);
     expect(picker.renderer.findByTestId("picker")?.style.gap).toBe(8);

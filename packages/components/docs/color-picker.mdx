@@ -62,7 +62,7 @@ The runnable build is `examples/color-picker.example.tsx`, registered in
 | `defaultValue` | `string` | `"#000000"` | Uncontrolled starting value. |
 | `onValueChange` | `(value: string) => void` | — | A swatch press or a valid commit. |
 | `swatches` | `ReadonlyArray<string>` | six theme colours | The grid, in order. |
-| `disabled` | `boolean` | `false` | Swatches leave the tab order; the field is read-only. |
+| `disabled` | `boolean` | `false` | Swatches and the HEX field leave the tab order; the field is read-only. |
 | `style` | `StateStyle<ColorPickerState>` | — | `{ disabled, valid }`. |
 
 With a `testId`, the parts are addressable as `${testId}-swatch-${index}`,
@@ -87,9 +87,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   focused swatch paints the token ring (plan 522).
 - The field is a real input named "<label> hex value"; an invalid draft is
   described through `aria-description` (`0.10.0` supports it).
-- Disabled is `tabIndex={-1}` plus `readOnly` and dimming: there is no
-  `aria-disabled` in `0.10.0`; the swatches and the hex field announce
-  `Disabled` through `aria-description`.
+- Disabled puts the swatches **and** the HEX field out of the tab order
+  (`tabIndex={-1}`), keeps the field read-only and dims the group: there is no
+  `aria-disabled` in `0.10.0`, and the swatches and field announce `Disabled`
+  through `aria-description`.
 
 ## Limitations
 
@@ -105,10 +106,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (10 tests):
+`src/behaviour/color-picker.test.tsx` runs in the real GPUix renderer (11 tests):
 the parts, the theme swatches, a swatch press and selection, the swatch focus
 ring, a typed shorthand, an invalid draft, commit and revert on `Tab` and on an
-outside press, disabled, and a style callback in both themes.
+outside press, disabled, the disabled field's tab stop, and a style callback in
+both themes.
 
 `src/color/hex.test.ts` (8 pure tests) covers shorthand, case, a missing hash,
 alpha refusal, invalid input and equivalence.

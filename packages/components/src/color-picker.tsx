@@ -216,6 +216,7 @@ export const ColorPicker = ({
           testId={testId === undefined ? undefined : `${testId}-hex`}
           value={draft}
           readOnly={disabled}
+          {...(disabled ? { tabIndex: -1 } : {})}
           onSubmit={() => commit()}
           onChange={(event) => setDraft(event.value ?? "")}
           onKeyDown={(event) => {
