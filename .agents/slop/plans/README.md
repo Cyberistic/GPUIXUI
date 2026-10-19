@@ -320,6 +320,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [663](./663-selected-label-fills.md) | The pressed selected row's label and text-role count in the prose | F | 316, 506, 623, 651, 659 | done |
 | [664](./664-ledger-pair-counts.md) | The ledger's pair counts and the pressed fill in the hierarchy | F | 071, 398, 525, 617, 651, 659, 663 | done |
 | [665](./665-elevation-content-prose.md) | The elevation-content prose names every fill, not nine of fifteen | F | 376, 584, 610, 617 | done |
+| [666](./666-scrim-explanation-chips.md) | The scrim explanation names the three chips it counts | F | 099, 375, 508, 610, 617 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3495,6 +3496,15 @@ reads every paragraph that enumerates it — count and members both derived, wit
 the wrap normalised — so a fourth enumeration cannot start citing the index
 without listing what it holds. No colour, pair, floor, metric or shipped theme
 moves.
+
+Plan `666` applies the same rule to the scrim. The catalogue has two
+present-tense explanations of `overlayWashPairs`; plan 508 added the three solid
+status chips to the first, but the contrast-audit paragraph kept the pre-508
+list while its own next sentence counted twenty-one pairs, and called the
+missing group "the three resting fills" — a phrase that names nothing. The
+paragraph now enumerates all twenty-one surfaces, says which chips its rationale
+sentence means, and a guard derives both the count and the member list from
+`overlaySurfaces`. No colour, pair, floor, metric or shipped theme moves.
 
 ## How to use a plan
 
