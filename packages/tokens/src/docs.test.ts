@@ -2515,6 +2515,18 @@ describe("docs/tokens.md theme contract", () => {
     expect(markdown).toContain("density: { controlHeight: { md: 34 } }");
   });
 
+  it("sends a stored density through the guard, not into extendTheme raw", () => {
+    const page = markdown.replace(/\s+/g, " ");
+
+    expect(page).toContain(
+      "A persisted density is `unknown`; narrow it with `isDensityName` before it reaches `extendTheme`",
+    );
+    expect(page).toContain("`themeWithDensity`");
+    // The old sentence promised an empty-metric theme that the merge never
+    // produces: a stale value keeps the base's preset instead.
+    expect(page).not.toContain("a theme with no metrics");
+  });
+
   it("states the preset a density override starts from", () => {
     const density = contosoDensityPlatformStyle.structure.density;
 

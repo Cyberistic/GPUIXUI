@@ -336,6 +336,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [683](./683-chip-surface-count.md) | The chip surface count plan 651 left at eight | F | 308, 399, 651, 682 | done |
 | [684](./684-remaining-eight-surface-counts.md) | The last two eight-surface counts after plan 651 | F | 308, 399, 651, 683 | done |
 | [685](./685-theme-diff.md) | The inverse of `extendTheme`: an edited theme as overrides | F | 011, 051, 063, 085, 089, 321, 353, 389, 529 | done |
+| [686](./686-density-boundary-truth.md) | A stale density keeps the preset; the page says it empties the metrics | F | 068, 089, 380, 534, 685 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -1950,6 +1951,16 @@ because the mode is not overridable. The suite round-trips all 24 shipped sets,
 a platform over another platform, a high base to an explicit default, and an
 edit touching every expressible group, and pins the minimal shapes. No colour,
 pair, floor, metric or shipped theme moves.
+
+Plan `686` corrects one sentence the density section states and nothing held to
+the code.
+The page told a reader that an un-narrowed stored density "becomes a theme with
+no metrics"; a stale string keeps the base's preset, and the documented
+`themeWithDensity` helper returns the theme unchanged — both already executed and
+guarded. The paragraph now names `isDensityName`, `themeWithDensity` and the
+shared `resolveThemeChoice` rule instead of the false consequence, and a
+`docs.test.ts` case fails on the old claim or a missing helper name. No code,
+colour, pair, floor, metric or shipped theme moves.
 
 ### Reference adoption (block `200–299`)
 

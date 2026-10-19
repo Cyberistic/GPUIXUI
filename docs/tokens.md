@@ -1065,8 +1065,11 @@ override names, or the base theme's when it names none.
 
 `densityNames` lists the three presets in documentation order, and
 `DensityName` derives from it, so a preset cannot exist without a table row or a
-value in `densityPresets`. A persisted density is `unknown`; narrow it before it
-reaches `extendTheme`, or a stale setting becomes a theme with no metrics:
+value in `densityPresets`. A persisted density is `unknown`; narrow it with
+`isDensityName` before it reaches `extendTheme` — `themeWithDensity` in
+[`src/persisted-choices.example.ts`](../packages/tokens/src/persisted-choices.example.ts)
+returns the theme unchanged for a value the library does not ship, and
+`resolveThemeChoice` applies the same rule:
 
 ```ts
 import { isDensityName, type DensityName } from "@gpuixui/tokens";

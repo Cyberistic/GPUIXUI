@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 308/384
+`[x]` `[████████░░]` 309/385
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2588,6 +2588,12 @@ guard reads every enumerating paragraph (dash, not a comma reference),
 normalises its wrap and derives both the count word and the members from
 `elevationContentSurfaces`; no colour, pair, floor, metric or shipped theme
 moves (plan 665)
+`[x]` Correct the density boundary sentence — the catalogue said an un-narrowed
+stored density "becomes a theme with no metrics", while a stale value keeps the
+theme's own preset and the documented `themeWithDensity` helper returns the
+theme unchanged (both executed and guarded); the paragraph now names
+`isDensityName`, `themeWithDensity` and the shared `resolveThemeChoice` rule,
+and `docs.test.ts` fails on the old consequence or a missing helper (plan 686)
 `[x]` Ship the inverse of `extendTheme` — `themeOverrides(base, theme)` returns
 the minimal overrides that rebuild an edited theme, so a runtime editor can store
 or print an edit instead of a whole theme object; each group is compared field
