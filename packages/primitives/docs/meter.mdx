@@ -23,7 +23,7 @@ import { Meter, Stack, Text } from "@gpuixui/primitives";
 
 | Prop | Type | Default | Consequence |
 | ---- | ---- | ------- | ----------- |
-| `value` | `number` | required | the measurement; clamped into the range |
+| `value` | `number` | required | the measurement; clamped into the range (`NaN` reads as `min`, `+Infinity` as `max`, `-Infinity` as `min`) |
 | `min` / `max` | `number` | `0` / `100` | the range the fill is a fraction of |
 | `tone` | `primary \| success \| destructive \| muted` | `"primary"` | the fill's colour role |
 | `size` | `"sm" \| "md"` | `"md"` | track height from `spacing.xs` / `sm` |

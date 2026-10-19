@@ -61,6 +61,29 @@ describe("Meter", () => {
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("50");
   });
 
+  it("clamps an infinite measurement to its own end of the range", () => {
+    // The bug guarded (plan 637): the shared clamp read `+Infinity` as the
+    // minimum, so a meter promised "full" announced `"0"` and painted `0%`,
+    // while `Progress` painted the same value as `100%`.
+    const high = renderMeter(
+      { value: Number.POSITIVE_INFINITY, label: "Disk" },
+      testTheme,
+    );
+    expect(expectSome(hostProp(high, "aria-valuetext"))).toBe("100");
+    const highFill =
+      elementChildren(high)[0] ?? expect.fail("the meter has no fill");
+    expect(stringIn(highFill, "width")).toBe("100%");
+
+    const low = renderMeter(
+      { value: Number.NEGATIVE_INFINITY, label: "Disk" },
+      testTheme,
+    );
+    expect(expectSome(hostProp(low, "aria-valuetext"))).toBe("0");
+    const lowFill =
+      elementChildren(low)[0] ?? expect.fail("the meter has no fill");
+    expect(stringIn(lowFill, "width")).toBe("0%");
+  });
+
   it("announces a formatted measurement when given one", () => {
     const element = renderMeter(
       { value: 12, max: 16, formatValue: (value) => `${value} of 16` },

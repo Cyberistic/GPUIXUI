@@ -74,6 +74,21 @@ describe("clampValue", () => {
     expect(clampValue(140, RANGE)).toBe(100);
   });
 
+  it("clamps an infinity to the bound on its side", () => {
+    // The bug guarded (plan 637): `Number.isFinite` sent every non-finite value
+    // down the `NaN` branch, so `value={+Infinity}` painted the minimum — the
+    // opposite of an out-of-range value, while `Progress`/`NumberField` already
+    // clamped it to the maximum.
+    expect(clampValue(Number.POSITIVE_INFINITY, RANGE)).toBe(100);
+    expect(clampValue(Number.NEGATIVE_INFINITY, RANGE)).toBe(0);
+    expect(
+      clampValue(Number.POSITIVE_INFINITY, { min: 1, max: 10, step: 2 }),
+    ).toBe(10);
+    expect(
+      clampValue(Number.NEGATIVE_INFINITY, { min: 1, max: 10, step: 2 }),
+    ).toBe(1);
+  });
+
   it("reads an unreadable value as the minimum, never as a full track", () => {
     expect(clampValue(Number.NaN, RANGE)).toBe(0);
   });
@@ -111,6 +126,16 @@ describe("valueFraction / fractionValue", () => {
     expect(fractionValue(-1, RANGE)).toBe(0);
     expect(fractionValue(2, RANGE)).toBe(100);
     expect(fractionValue(Number.NaN, RANGE)).toBe(0);
+  });
+
+  it("maps an infinite value to its own end of the track", () => {
+    // The bug guarded (plan 637): `valueFraction` inherited the old clamp's
+    // minimum, and `fractionValue` treated `±Infinity` like `NaN`, so an
+    // infinite value painted an empty track instead of a full one.
+    expect(valueFraction(Number.POSITIVE_INFINITY, RANGE)).toBe(1);
+    expect(valueFraction(Number.NEGATIVE_INFINITY, RANGE)).toBe(0);
+    expect(fractionValue(Number.POSITIVE_INFINITY, RANGE)).toBe(100);
+    expect(fractionValue(Number.NEGATIVE_INFINITY, RANGE)).toBe(0);
   });
 });
 
@@ -212,6 +237,14 @@ describe("pointerValue", () => {
     expect(pointerValue(500, BOX, RANGE, 8)).toBe(100);
   });
 
+  it("clamps a pointer sent to infinity to the nearest end", () => {
+    // The same rule as a pointer far outside the box (plan 637): infinity is a
+    // position beyond the track, not an unreadable one.
+    expect(pointerValue(Number.POSITIVE_INFINITY, BOX, RANGE, 8)).toBe(100);
+    expect(pointerValue(Number.NEGATIVE_INFINITY, BOX, RANGE, 8)).toBe(0);
+    expect(pointerValue(Number.NaN, BOX, RANGE, 8)).toBe(0);
+  });
+
   it("reads a track no wider than its inset as the minimum", () => {
     expect(pointerValue(100, { x: 100, width: 8 }, RANGE, 8)).toBe(0);
   });
@@ -227,6 +260,17 @@ describe("range spans", () => {
       start: 0,
       end: 100,
     });
+  });
+
+  it("clamps an infinite end to its own bound", () => {
+    // The bug guarded (plan 637): `RangeSlider value={[0, Infinity]}` normalised
+    // to `[0, 0]`, so a promised full band painted at the start.
+    expect(
+      normalizeSpan({ start: 0, end: Number.POSITIVE_INFINITY }, RANGE),
+    ).toStrictEqual({ start: 0, end: 100 });
+    expect(
+      normalizeSpan({ start: Number.NEGATIVE_INFINITY, end: 50 }, RANGE),
+    ).toStrictEqual({ start: 0, end: 50 });
   });
 
   it("picks the nearer end to move", () => {

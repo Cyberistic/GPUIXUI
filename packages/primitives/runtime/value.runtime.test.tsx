@@ -20,6 +20,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { Button } from "../src/components/Button.js";
 import { Meter } from "../src/components/Meter.js";
+import { Rating } from "../src/components/Rating.js";
 import { RangeSlider, Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { sliderInset } from "../src/core/index.js";
@@ -411,6 +412,62 @@ it("never lets the two ends cross", async () => {
   runtime.mouseUpAt(past.x, past.y);
   expect(announced(runtime, "Price minimum")).toBe("90");
   expect(announced(runtime, "Price maximum")).toBe("90");
+});
+
+it("clamps an infinity to its own bound in every value control", async () => {
+  // The bug guarded (plan 637): `core/value.ts` collapsed every non-finite
+  // number into the `NaN` branch, so `+Infinity` painted the *minimum* on a
+  // slider, range slider and meter (announced `"0"`) while `Progress` and
+  // `NumberField` clamped to the maximum; `Rating` read it as unrated.
+  const runtime = await mount(
+    <Stack direction="column" gap="md">
+      <Slider testId="high" label="High" value={Number.POSITIVE_INFINITY} />
+      <RangeSlider
+        testId="band"
+        label="Band"
+        value={[0, Number.POSITIVE_INFINITY] as const}
+      />
+      <Meter testId="disk" label="Disk" value={Number.POSITIVE_INFINITY} />
+      <Rating testId="stars" label="Stars" value={Number.POSITIVE_INFINITY} />
+    </Stack>,
+  );
+  expect(announced(runtime, "High")).toBe("100");
+  expect(announced(runtime, "Band maximum")).toBe("100");
+  expect(announced(runtime, "Disk")).toBe("100");
+  expect(announced(runtime, "5 of 5")).toBe("checked");
+  const meter = boundsOf(runtime, "disk");
+  const fill = elementById(runtime, trackOf(runtime, "disk").children[0] ?? -1);
+  const fillBox = Option.getOrElse(runtime.paintBoundsOfId(fill.id), () =>
+    expect.fail("the meter painted no fill"),
+  );
+  expect(Math.abs(fillBox.width - meter.width)).toBeLessThan(2);
+
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="md">
+        <Slider testId="low" label="Low" value={Number.NEGATIVE_INFINITY} />
+        <RangeSlider
+          testId="low-band"
+          label="Low band"
+          value={[Number.NEGATIVE_INFINITY, 50] as const}
+        />
+        <Meter
+          testId="low-disk"
+          label="Low disk"
+          value={Number.NEGATIVE_INFINITY}
+        />
+        <Rating
+          testId="low-stars"
+          label="Low stars"
+          value={Number.NEGATIVE_INFINITY}
+        />
+      </Stack>
+    </Surface>,
+  );
+  expect(announced(runtime, "Low")).toBe("0");
+  expect(announced(runtime, "Low band minimum")).toBe("0");
+  expect(announced(runtime, "Low disk")).toBe("0");
+  expect(announced(runtime, "1 of 5")).toBe("unchecked");
 });
 
 it("announces a meter's measurement and paints it inside its own range", async () => {

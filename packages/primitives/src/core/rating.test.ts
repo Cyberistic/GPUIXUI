@@ -47,6 +47,14 @@ describe("clampRating", () => {
     expect(clampRating(Number.NaN, 5)).toBe(0);
   });
 
+  it("clamps an infinity to its own end of 0..max", () => {
+    // The bug guarded (plan 637): `Number.isFinite` treated `+Infinity` as
+    // unreadable, so a rating handed a sentinel maximum painted no stars while
+    // every other value control clamped it to its own bound.
+    expect(clampRating(Number.POSITIVE_INFINITY, 5)).toBe(5);
+    expect(clampRating(Number.NEGATIVE_INFINITY, 5)).toBe(0);
+  });
+
   it("treats a zero or fractional max as one star, not as a broken group", () => {
     expect(clampRating(3, 0)).toBe(1);
     expect(clampRating(3, 2.5)).toBe(2);

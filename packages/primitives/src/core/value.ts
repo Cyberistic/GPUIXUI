@@ -145,12 +145,13 @@ const stopIndex = (stops: Stops, value: number): number =>
  * Clamp a value into the range and snap it to the nearest stop.
  *
  * `max` is always a stop, so a step that does not divide the span still fills
- * the track. A value that is not a number reads as `min`: an unknown position
- * must never look like a deliberate one.
+ * the track. `NaN` reads as `min`: an unknown position must never look like a
+ * deliberate one. An infinity is not unknown — it is out of range, so it clamps
+ * to the bound on its own side (plan `637`).
  */
 export const clampValue = (value: number, range: ValueRange): number => {
   const normalized = normalizeRange(range);
-  if (!Number.isFinite(value)) return normalized.min;
+  if (Number.isNaN(value)) return normalized.min;
   const clamped = Math.min(normalized.max, Math.max(normalized.min, value));
   if (normalized.step === 0) return clamped;
   return nearestStop(stopsOf(normalized), clamped);
@@ -177,12 +178,17 @@ export const valueText = (
     return (clampValue(value, range) - min) / span;
   };
 
-/** The value at a fraction of the track, clamped and snapped. */
+/**
+ * The value at a fraction of the track, clamped and snapped.
+ *
+ * `NaN` reads as the start of the track; an infinite fraction is simply beyond
+ * an end and clamps to it (plan `637`).
+ */
 export const fractionValue = (fraction: number, range: ValueRange): number => {
   const { min, max } = normalizeRange(range);
-  const bounded = Number.isFinite(fraction)
-    ? Math.min(1, Math.max(0, fraction))
-    : 0;
+  const bounded = Number.isNaN(fraction)
+    ? 0
+    : Math.min(1, Math.max(0, fraction));
   return clampValue(min + bounded * (max - min), range);
 };
 
@@ -258,7 +264,8 @@ export const decideValueKey = (
  *
  * `inset` is half a thumb: the usable span runs from one thumb radius inside
  * each end to the other, so the thumb is centred exactly where the pointer is.
- * A pointer outside the box clamps to the nearest end.
+ * A pointer outside the box clamps to the nearest end — including one sent to
+ * infinity, which is out of range rather than unreadable (plan `637`).
  */
 export const pointerValue = (
   x: number,
@@ -267,7 +274,7 @@ export const pointerValue = (
   inset = 0,
 ): number => {
   const span = box.width - 2 * inset;
-  if (!Number.isFinite(x) || span <= 0) return normalizeRange(range).min;
+  if (Number.isNaN(x) || span <= 0) return normalizeRange(range).min;
   return fractionValue((x - box.x - inset) / span, range);
 };
 

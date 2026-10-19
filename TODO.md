@@ -1989,6 +1989,19 @@ retired once both branches are one
       inventory row corrected (plan `599`; offline 58 → 59 files / 820 tests,
       full runtime 52 files / 735 tests green on two consecutive runs).
 
+`[x]` `packages/primitives`: **an infinity painted the minimum of every value
+      control** — measured (2026-10-19): `core/value.ts` treated every non-finite
+      number like `NaN`, so `Slider`/`RangeSlider`/`Meter` with
+      `value={Infinity}` painted and announced the floor (`Meter`: `"0"`, `0%`)
+      and `Rating` read unrated, while `Progress` (`"100%"`) and `NumberField`
+      (`max`) already clamped to the value's own side; the docs promised
+      "out-of-range values are clamped". `clampValue`, `fractionValue`,
+      `pointerValue` and `clampRating` now special-case `NaN` only; `±Infinity`
+      clamps to its own bound. 5 core + 1 element + 1 runtime case, the runtime
+      failing by name without the fix (`expected '0' to be '100'`); plan `637`,
+      offline 843/843, full runtime 57 files / 798 green on the release-tag
+      build.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the

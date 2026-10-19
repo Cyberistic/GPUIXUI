@@ -13,9 +13,14 @@ import * as Option from "effect/Option";
 export const ratingLimit = (max: number): number =>
   Math.max(1, Math.trunc(Number.isFinite(max) ? max : 1));
 
-/** Clamp a rating to `0..max`; a value that is not a number reads as unrated. */
+/**
+ * Clamp a rating to `0..max`; `NaN` reads as unrated.
+ *
+ * An infinity is out of range, not unreadable: it clamps to the end on its own
+ * side, the rule every value control follows (plan `637`).
+ */
 export const clampRating = (value: number, max: number): number => {
-  if (!Number.isFinite(value)) return 0;
+  if (Number.isNaN(value)) return 0;
   return Math.min(ratingLimit(max), Math.max(0, Math.trunc(value)));
 };
 
