@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 239/316
+`[x]` `[████████░░]` 239/317
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -452,6 +452,16 @@ the status-text contract already measures on `card` (plan 332; owner:
 identity light theme and 1.014:1 on Aero light, so a pending event has no dot;
 use `borderStrong`, the 3:1 functional boundary, or `mutedForeground` for the
 secondary floor (plan 332; owner: `components`)
+`[ ]` Cross-team: `components` paints the Notification centre's unread dot with
+the accent ink, not the fill — `notification-centre.tsx:833` marks an unread row
+with a 6px `primary` dot, and the row's own states take the dot onto the
+`active` pressed wash and the `accent` fill: macOS dark's `primary` measures
+**2.836:1** on `active` and **2.748:1** on `selected`, under the 3:1 mark floor,
+so a pressed or selected unread notification loses its dot. `primaryText` — the
+accent's readable ink — clears the same surfaces at 5.587:1 and 5.675:1 at the
+tightest, and the text contract already holds it on all four row washes; this is
+the care plan 557 applied to the native field, one glyph over (plan 332's mark
+list; owner: `components`; found while auditing plan 585)
 `[ ]` Cross-team: `components` moves the menu checkbox item's check glyph off
 `accent` — `menu/item.tsx:286` paints `theme.colors.accent` on the menu's
 `popover` (1.11–1.39:1) and on the `hover`/`active` row fill (1.00–1.08:1),
