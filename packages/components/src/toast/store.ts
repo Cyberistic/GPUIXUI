@@ -99,7 +99,11 @@ export class ToastStore extends Context.Service<
 
 /** How many toasts are kept, and how long a draft without a `duration` lives. */
 export interface ToastStoreOptions {
-  /** Toasts kept before the oldest is dropped. Default 3. */
+  /**
+   * Toasts kept before the oldest is dropped. Default 3. A finite value is
+   * truncated and floored at 1; a non-finite one keeps the default, because a
+   * malformed cap must never make the queue unbounded.
+   */
   readonly max?: number;
   /** Auto-dismiss delay for a draft with no `duration`. Default 5 seconds. */
   readonly defaultDuration?: Duration.Input;
@@ -107,6 +111,12 @@ export interface ToastStoreOptions {
 
 const DEFAULT_MAX = 3;
 const DEFAULT_DURATION = Duration.seconds(5);
+
+/** A finite cap is whole and at least one; a malformed one is the default. */
+const queueMax = (value: number | undefined): number => {
+  if (value === undefined || !Number.isFinite(value)) return DEFAULT_MAX;
+  return Math.max(1, Math.trunc(value));
+};
 
 const decodeDraft = Schema.decodeUnknownEffect(ToastInput);
 
@@ -121,7 +131,7 @@ const dismisses = (duration: Duration.Duration): boolean =>
 export const makeToastStore = Effect.fn("ToastStore.make")(function* (
   options?: ToastStoreOptions,
 ): Effect.fn.Return<ToastStoreService, never, Scope.Scope> {
-  const max = Math.max(1, Math.trunc(options?.max ?? DEFAULT_MAX));
+  const max = queueMax(options?.max);
   const fallback = pipe(
     Duration.fromInput(options?.defaultDuration ?? DEFAULT_DURATION),
     Option.getOrElse(() => DEFAULT_DURATION),

@@ -44,7 +44,7 @@ pointer events back on, so a toast never blocks the page underneath.
 
 | Rule | Value |
 | ---- | ----- |
-| stack size | 3 by default (`max`); pushing a fourth drops the oldest |
+| stack size | 3 by default (`max`); pushing a fourth drops the oldest, a finite cap is truncated and floored at 1, and a non-finite one keeps the default instead of removing the bound |
 | auto-dismiss | 5 seconds by default (`defaultDuration`) |
 | custom duration | `duration: Duration.seconds(6)` |
 | zero or infinite duration | never auto-dismisses; the card stays until dismissed |
@@ -117,7 +117,7 @@ string }; tone?: "info" | "success" | "warning" | "danger"; duration?: Duration 
 
 | Part | Renders | Props |
 | ---- | ------- | ----- |
-| `ToastProvider` | provider (no host element) | `max?: number` (default `3`), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
+| `ToastProvider` | provider (no host element) | `max?: number` (default `3`; a finite value truncates and floors at 1, a non-finite value is the default), `defaultDuration?: Duration.Input` (default `5 seconds`), `children?: ReactNode` |
 | `ToastViewport` | `div` (`role="group"`, `aria-label="Notifications"`, `testId="toast-viewport"`) | `position?: "top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` (default `"bottom-right"`), `children?: ReactNode` (an optional element before the toasts, e.g. "Dismiss all") |
 | `useToast` | hook | returns `{ toasts, push(draft, { onAction }?), dismiss(id), dismissAll(), pause(id), resume(id), actionFor(id), timingFor(id) }`; `timingFor` is `Option<ToastTiming>` and is absent for a toast with no timer |
 
@@ -173,7 +173,8 @@ from its two pinned edges.
   `TestClock` auto-dismiss, the stale-timer regression, custom durations,
   rejected input, pause/resume with the remaining time, the published
   `ToastTiming` (start, elapsed, paused, removed, absent for an infinite timer),
-  the timing stream and action decoding (present, absent, empty label).
+  the timing stream and action decoding (present, absent, empty label). The
+  malformed-cap guard proves `NaN` and `Infinity` each keep the newest three.
 - `src/toast/timing.test.ts` — six pure cases for the percentage, clamping, the
   zero-total guard, one running tick, a paused tick and the final zero.
 `src/behaviour/toast.test.tsx` runs in the real GPUix renderer (20 tests): push

@@ -615,6 +615,15 @@ retired once both branches are one
       addressable apart; 2 native cases (Alert 14), both failing on the old
       source; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
       (owner: components)
+    - [x] A malformed toast cap keeps the default queue bound — plan 677;
+      measured on 2026-10-19: `max: NaN` and `max: Infinity` each kept all five
+      pushed toasts (the documented bound is 3), because `Math.max(1, NaN)` is
+      `NaN` and the overflow arithmetic propagated it. A finite cap now
+      truncates and floors at 1, a non-finite one keeps the default, and the
+      queue can no longer become unbounded from a bad config value; 2 store
+      cases fail on the old source (store 22 → 24), the native Toast suite stays
+      20/20; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
@@ -1252,8 +1261,8 @@ the docs-site workstream; the `packages/components` half is plan 337)
       in `src/exports.test.ts`, unit 474
 `[ ]` Licence inventory and attribution complete
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
-      re-run from the components worktree on 2026-10-19 (plans 660/661):
-      all three exit 0; the unit suite is 473 tests in 46 files. The full native
+      re-run from the components worktree on 2026-10-19 (plan 677):
+      all three exit 0; the unit suite is 476 tests in 46 files. The full native
       behaviour suite was last run at **820 passed / 31 failed of 851** after
       plan 657 — every failure a recorded plan-540 binding defect (focus/blur
       delivery, box measurement), not a component regression. Plans 660–662 ran

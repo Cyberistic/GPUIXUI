@@ -5,7 +5,7 @@
 | Phase | F (Tier 2 hardening) |
 | Owner | `components` (`packages/components`) |
 | Depends on | 110, 115, 117, 123, 124, 322, 338, 370, 548, 592, 651 |
-| Status | **planned** — measured on 2026-10-19; implementation starts after this plan is indexed |
+| Status | **done** — a finite cap truncates and floors at 1; a non-finite cap keeps the default 3; 2 store cases fail at `HEAD` and pass after (store 24/24), native Toast 20/20 |
 | Claimed number | `677` — every number through `676` is claimed across the worktrees; `677` is the first free one, checked on 2026-10-19 and recorded in `PLAN.md` D30 |
 
 ## 0. Why this plan exists
@@ -271,5 +271,17 @@ Both-direction proof:
 
 ## 7. Results
 
-To be filled after implementation with the measured before/after output, the
-final test counts and the gate results.
+- `src/toast/store.ts`: `queueMax` returns `DEFAULT_MAX` for an absent or
+  non-finite value and otherwise `Math.max(1, Math.trunc(value))`; `max` is
+  computed through it. The option's doc comment states the rule.
+- `src/toast/store.test.ts`: two cases push four persistent toasts with
+  `max: NaN` and `max: Infinity` and expect `["2","3","4"]`. Both failed at
+  `HEAD` with `expected [ '1', '2', '3', '4' ] to deeply equal [ '2', '3', '4' ]`
+  (2 failed, 22 passed); after the fix the file is 24/24.
+- Native Toast suite unchanged: 20/20.
+- Docs: `docs/toast.mdx` stack-size row, `max` API row and store verification
+  bullet; `COMPONENTS.md` Toasts row (`22 → 24` store cases plus the rule);
+  `TODO.md` ticked; `PLAN.md` D30 and the plan index synced.
+- Gates: `nub run --filter @gpuixui/components test` 476/476 (46 files),
+  `nub run test` exit `0` (all workspaces), `nub run check` exit `0`,
+  `nub run lint` exit `0`.

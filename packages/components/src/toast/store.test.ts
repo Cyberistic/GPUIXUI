@@ -116,6 +116,43 @@ describe("ToastStore", () => {
     ),
   );
 
+  /**
+   * The bug these guard (plan 677): `max` went through
+   * `Math.max(1, Math.trunc(…))`, which propagates NaN, so a malformed cap made
+   * the overflow NaN and the queue unbounded — the opposite of the documented
+   * bound. A queue cap is a safety bound, so a non-finite value keeps the
+   * default 3.
+   */
+  it.effect("keeps the default bound when max is NaN", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+
+        expect(ids(yield* store.toasts)).toEqual(["2", "3", "4"]);
+      }),
+      { max: Number.NaN },
+    ),
+  );
+
+  it.effect("keeps the default bound when max is infinite", () =>
+    withStore(
+      Effect.gen(function* () {
+        const store = yield* ToastStore;
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+        yield* store.push(persistent);
+
+        expect(ids(yield* store.toasts)).toEqual(["2", "3", "4"]);
+      }),
+      { max: Number.POSITIVE_INFINITY },
+    ),
+  );
+
   it.effect("dismisses one toast and leaves the rest", () =>
     withStore(
       Effect.gen(function* () {
