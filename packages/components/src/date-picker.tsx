@@ -93,6 +93,7 @@ import {
   textStyle,
   useTheme,
 } from "./internal/theme.js";
+import { stateDescription } from "./internal/state-description.js";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover.js";
 
 /** The rules a date-picker part follows; throws outside a {@link DatePicker}. */
@@ -233,18 +234,20 @@ export const DatePicker = ({
 
   const choose = useCallback(
     (day: DateTime.Utc): void => {
-      if (!isAvailable(day, bounds)) return;
+      // A disabled control never changes its value, however it was opened.
+      if (disabled || !isAvailable(day, bounds)) return;
       setSelected(formatIsoDay(day));
       closeToTrigger();
     },
-    [bounds, closeToTrigger, setSelected],
+    [bounds, closeToTrigger, disabled, setSelected],
   );
 
   /** Drop the selection and close; the next open anchors on today. */
   const clear = useCallback((): void => {
+    if (disabled) return;
     setSelected(null);
     closeToTrigger();
-  }, [closeToTrigger, setSelected]);
+  }, [closeToTrigger, disabled, setSelected]);
 
   assertParts(datePickerRoot, children);
 
@@ -426,6 +429,7 @@ export const DatePickerCalendar = ({
     labels,
     todayDay,
     clearable,
+    disabled,
     open,
     choose,
     clear,
@@ -467,6 +471,9 @@ export const DatePickerCalendar = ({
       return;
     }
     wasOpen.current = true;
+    // An inert surface takes no focus: a caller-forced open of a disabled
+    // picker must not pull the keyboard into a calendar it cannot operate.
+    if (disabled) return;
     setViewMonth(startOfMonth(anchor));
     setActive(Option.some(anchor));
     setMode("days");
@@ -475,6 +482,7 @@ export const DatePickerCalendar = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     open,
+    disabled,
     Option.getOrNull(selectedIso),
     DateTime.formatIsoDateUtc(todayDay),
   ]);
@@ -548,6 +556,7 @@ export const DatePickerCalendar = ({
 
   /** Point the chooser at the viewed month and focus it once it has rendered. */
   const openMonths = (): void => {
+    if (disabled) return;
     setMonthFocus(nearestAvailableMonth(viewMonthIndex, availableMonths));
     pendingMonthFocus.current = true;
     setMode("months");
@@ -584,6 +593,7 @@ export const DatePickerCalendar = ({
   };
 
   const handleMonthKeyDown = (event: EventPayload): void => {
+    if (disabled) return;
     Match.value(event).pipe(
       Match.when(isLeft, () =>
         moveMonthFocus(stepMonth(monthFocus, -1, availableMonths)),
@@ -609,6 +619,7 @@ export const DatePickerCalendar = ({
   };
 
   const handleKeyDown = (event: EventPayload): void => {
+    if (disabled) return;
     Match.value(event).pipe(
       Match.when(isLeft, () => moveDays(-1)),
       Match.when(isRight, () => moveDays(1)),
@@ -658,7 +669,7 @@ export const DatePickerCalendar = ({
             label={labels.previousYear}
             size="sm"
             testId="date-prev-year"
-            disabled={!canBrowseYear(viewMonth, -1, bounds)}
+            disabled={disabled || !canBrowseYear(viewMonth, -1, bounds)}
             onClick={() => stepYear(-1)}
           >
             <Icon
@@ -672,7 +683,7 @@ export const DatePickerCalendar = ({
             label={labels.previousMonth}
             size="sm"
             testId="date-prev"
-            disabled={!canBrowseMonth(viewMonth, -1, bounds)}
+            disabled={disabled || !canBrowseMonth(viewMonth, -1, bounds)}
             onClick={() => setViewMonth(addMonths(viewMonth, -1))}
           >
             <Icon
@@ -686,6 +697,7 @@ export const DatePickerCalendar = ({
           variant="ghost"
           size="sm"
           testId="date-month"
+          disabled={disabled}
           aria-label={mode === "months" ? labels.showDays : labels.chooseMonth}
           onClick={() => (mode === "months" ? backToDays() : openMonths())}
         >
@@ -698,7 +710,7 @@ export const DatePickerCalendar = ({
             label={labels.nextYear}
             size="sm"
             testId="date-next-year"
-            disabled={!canBrowseYear(viewMonth, 1, bounds)}
+            disabled={disabled || !canBrowseYear(viewMonth, 1, bounds)}
             onClick={() => stepYear(1)}
           >
             <Icon
@@ -712,7 +724,7 @@ export const DatePickerCalendar = ({
             label={labels.nextMonth}
             size="sm"
             testId="date-next"
-            disabled={!canBrowseMonth(viewMonth, 1, bounds)}
+            disabled={disabled || !canBrowseMonth(viewMonth, 1, bounds)}
             onClick={() => setViewMonth(addMonths(viewMonth, 1))}
           >
             <Icon
@@ -727,6 +739,7 @@ export const DatePickerCalendar = ({
         <div
           role="grid"
           aria-label={labels.chooseMonth}
+          {...stateDescription(disabled)}
           onKeyDown={handleMonthKeyDown}
           style={{
             display: "flex",
@@ -748,6 +761,7 @@ export const DatePickerCalendar = ({
                 const index = row * 3 + column;
                 const month = monthAt(index);
                 const available = availableMonths[index] === true;
+                const interactive = available && !disabled;
                 const isSelected = index === viewMonthIndex;
                 const name = Option.getOrElse(
                   Arr.get(labels.months, index),
@@ -763,10 +777,10 @@ export const DatePickerCalendar = ({
                         : `${formatMonthLabel(month, labels)}, ${labels.unavailable}`
                     }
                     aria-selected={isSelected}
-                    tabIndex={index === monthFocus ? 0 : -1}
+                    tabIndex={!disabled && index === monthFocus ? 0 : -1}
                     ref={attachMonth(index)}
                     testId={`date-month-${index}`}
-                    onClick={available ? () => chooseMonth(index) : undefined}
+                    onClick={interactive ? () => chooseMonth(index) : undefined}
                     onFocus={() => setMonthFocus(index)}
                     style={{
                       ...textStyle(theme, "caption"),
@@ -781,15 +795,17 @@ export const DatePickerCalendar = ({
                         : undefined,
                       color: isSelected
                         ? theme.colors.primaryForeground
-                        : available
+                        : interactive
                           ? theme.colors.foreground
                           : theme.colors.mutedForeground,
-                      cursor: available ? "pointer" : "not-allowed",
+                      cursor: interactive ? "pointer" : "not-allowed",
                       hover:
-                        isSelected || !available
+                        isSelected || !interactive
                           ? undefined
                           : { backgroundColor: theme.colors.hover },
-                      ...(index === monthFocus ? focusRing(theme) : {}),
+                      ...(interactive && index === monthFocus
+                        ? focusRing(theme)
+                        : {}),
                     }}
                   >
                     {name}
@@ -803,6 +819,7 @@ export const DatePickerCalendar = ({
         <div
           role="grid"
           aria-label={label}
+          {...stateDescription(disabled)}
           onKeyDown={handleKeyDown}
           style={{
             display: "flex",
@@ -835,6 +852,7 @@ export const DatePickerCalendar = ({
               {Arr.map(week, ({ day, inMonth }) => {
                 const iso = formatIsoDay(day);
                 const available = isAvailable(day, bounds);
+                const interactive = available && !disabled;
                 const isSelected = Option.contains(selectedIso, iso);
                 const isToday = isSameDay(day, todayDay);
                 return (
@@ -847,10 +865,12 @@ export const DatePickerCalendar = ({
                         : `${formatDayLabel(day, labels)}, ${labels.unavailable}`
                     }
                     aria-selected={isSelected}
-                    tabIndex={iso === formatIsoDay(tabbable) ? 0 : -1}
+                    tabIndex={
+                      !disabled && iso === formatIsoDay(tabbable) ? 0 : -1
+                    }
                     ref={attachCell(iso)}
                     testId={`date-day-${iso}`}
-                    onClick={available ? () => choose(day) : undefined}
+                    onClick={interactive ? () => choose(day) : undefined}
                     onFocus={() => setActive(Option.some(day))}
                     style={{
                       ...textStyle(theme, "caption"),
@@ -867,18 +887,18 @@ export const DatePickerCalendar = ({
                       // than disabled: the grid has no dead cells.
                       color: isSelected
                         ? theme.colors.primaryForeground
-                        : available && inMonth
+                        : interactive && inMonth
                           ? theme.colors.foreground
                           : theme.colors.mutedForeground,
                       borderWidth: isToday ? theme.borderWidth.thin : undefined,
                       borderColor: isToday ? theme.colors.primary : undefined,
-                      cursor: available ? "pointer" : "not-allowed",
+                      cursor: interactive ? "pointer" : "not-allowed",
                       hover:
-                        isSelected || !available
+                        isSelected || !interactive
                           ? undefined
                           : { backgroundColor: theme.colors.hover },
-                      ...(iso ===
-                      formatIsoDay(Option.getOrElse(active, () => tabbable))
+                      ...(interactive &&
+                      iso === formatIsoDay(Option.getOrElse(active, () => tabbable))
                         ? focusRing(theme)
                         : {}),
                     }}
@@ -891,7 +911,7 @@ export const DatePickerCalendar = ({
           ))}
         </div>
       )}
-      {clearable && Option.isSome(selectedDay) ? (
+      {clearable && !disabled && Option.isSome(selectedDay) ? (
         <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Button variant="ghost" size="sm" testId="date-clear" onClick={clear}>
             {labels.clear}

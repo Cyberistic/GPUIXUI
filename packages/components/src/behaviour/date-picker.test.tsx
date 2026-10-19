@@ -17,9 +17,15 @@
  * view; a 31st disappearing when the chosen month is shorter; a year stepper
  * entering a year with no available month; a chooser month outside the bounds
  * still navigating; and keyboard movement wrapping into another year.
+ *
+ * Plan 612 adds the disabled surface: a `disabled` picker that the caller forces
+ * open (or that is already open when it turns disabled) used to focus a day,
+ * choose one, clear the value and browse months. The cases below pin that the
+ * value cannot change and that every control leaves the tab order and the ring.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import {
   clickCentreOf,
@@ -385,6 +391,81 @@ describe("DatePicker", () => {
 
     finishMotion(picker);
     expect(picker.renderer.findByTestId("date-picker-content")).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("refuses a day and the clear action while disabled", () => {
+    const onValueChange = vi.fn();
+    const picker = renderComponent(
+      <Picker
+        disabled
+        defaultOpen
+        defaultValue="2026-10-17"
+        clearable
+        onValueChange={onValueChange}
+      />,
+    );
+
+    // The surface is painted (a caller forced it open); it is inert, not absent.
+    expect(isShown(picker, "date-picker-content")).toBe(true);
+
+    clickCentreOf(picker, "date-day-2026-10-18");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(isShown(picker, "date-clear")).toBe(false);
+
+    picker.unmount();
+  });
+
+  it("leaves a disabled calendar with no tab stop, ring or header action", () => {
+    const picker = renderComponent(
+      <Picker disabled defaultOpen defaultValue="2026-10-17" />,
+    );
+    const day = picker.renderer.findByTestId("date-day-2026-10-17");
+    const grid = picker.renderer
+      .findByType("div")
+      .find(
+        (element) =>
+          element.customProps?.role === "grid" &&
+          element.customProps?.["aria-label"] === "Calendar",
+      );
+
+    expect(day?.customProps?.tabIndex).toBe(-1);
+    expect(day?.style.boxShadow).toBeUndefined();
+    expect(day?.style.cursor).toBe("not-allowed");
+    expect(grid?.customProps?.["aria-description"]).toBe("Disabled");
+
+    Arr.forEach(["date-prev", "date-next", "date-month"], (testId) => {
+      const control = picker.renderer.findByTestId(testId);
+      expect(control?.customProps?.tabIndex).toBe(-1);
+      expect(control?.customProps?.["aria-description"]).toBe("Disabled");
+    });
+    expect(focusedTestId(picker)).toEqual(Option.none());
+
+    picker.unmount();
+  });
+
+  it("ignores the arrow keys after it turns disabled", () => {
+    const onValueChange = vi.fn();
+    const renderPicker = (disabled: boolean) => (
+      <Picker
+        disabled={disabled}
+        defaultOpen
+        defaultValue="2026-10-17"
+        onValueChange={onValueChange}
+      />
+    );
+    const picker = renderComponent(renderPicker(false));
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+
+    picker.rerender(renderPicker(true));
+    picker.renderer.simulateKeystrokes("right");
+
+    expect(focusedTestId(picker)).toEqual(Option.some("date-day-2026-10-17"));
+    expect(
+      picker.renderer.findByTestId("date-day-2026-10-17")?.style.boxShadow,
+    ).toBeUndefined();
+    expect(onValueChange).not.toHaveBeenCalled();
 
     picker.unmount();
   });
