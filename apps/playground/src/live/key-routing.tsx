@@ -9,8 +9,10 @@
  *
  * Plan `390` corrected the companion observation: React's `onFocus` for a live
  * click is **window-state dependent** (measured `0` and `1` for the same code on
- * the same host), so the scenario asserts focus movement and key delivery, not
- * the counter. `autoFocus` still does not dispatch `onFocus` in either state.
+ * the same host). Plan `603` measured the same for `autoFocus`: the counter read
+ * `0` in earlier runs and `1` in the plan-599 gate. So the scenario asserts
+ * native focus and key delivery, not any `onFocus` counter; both counters stay
+ * in the readout as observations.
  *
  * The counters are the observation: a readout, never a screenshot. Focus is
  * read from the renderer the runner owns (`AsyncSmokeHost.focused`), not from

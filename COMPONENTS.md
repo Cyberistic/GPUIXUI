@@ -237,7 +237,8 @@ bottom-side menu can cover its trigger; synthetic wheel scrolling
 (`deltaY` negative scrolls down, the opposite of the DOM); a `<virtual-list>`
 **retains** every row but **paints** a window (~9 of 5 000); an `<anchored>`
 paints no surface of its own, so overlay handlers belong on the content div;
-`autoFocus` takes native focus without dispatching `onFocus`; and the app-level
+`autoFocus` takes native focus (its React `onFocus` is host-state dependent —
+plan `603`); and the app-level
 window key handler (`render({ onKeyDown })`) receives a keystroke after the
 focused element's `onKeyDown` — the command-palette / application-menu path.
 `shell-navigation` adds the shell's own rule: a flex child needs `minHeight: 0`
@@ -931,11 +932,12 @@ so the blur claim is a **re-verify**.
 They also measured the
 live focus rule (plan `345`, corrected by plan `390`):
 a key reaches the focused element, bubbles through every ancestor and then the
-window handler; `autoFocus` focuses natively without running React's `onFocus`.
-A **click's** `onFocus` delivery is window-state dependent — the same code read
-`innerFocus=0` and `innerFocus=1` on this host hours apart — so the live suite
-asserts that the click focuses the child, not the counter. `live-key-routing`
-isolates the delivery (22 checks), including a live `cmd-k` chord, and wires
+window handler. React's `onFocus` delivery is **host-state dependent for both a
+click and `autoFocus`** — the same code read `innerFocus=0` and `innerFocus=1`
+on this host hours apart, and the `autoFocus` count did the same (plan `603`),
+so the live suite asserts native focus and key delivery, never the counter.
+`live-key-routing` isolates the delivery (20 checks), including a live `cmd-k`
+chord, and wires
 `useWindowKey` into the live runner, so app-level shortcuts now have live
 coverage too. React's `onBlur` for a live focus change is likely the same
 question; the `InlineEdit` blur commit needs re-verification (cross-team row).

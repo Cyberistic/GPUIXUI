@@ -4022,11 +4022,10 @@ const keyRouting: LiveScenario = {
         yield* textOf(ctx, "key-routing-readout"),
         "window=1",
       );
-      yield* ctx.expectContains(
-        "autoFocus does not run React's onFocus",
-        yield* textOf(ctx, "key-routing-readout"),
-        "innerFocus=0",
-      );
+      // Plan `390` retracted the click half of the `onFocus` claim; plan `603`
+      // retracts the `autoFocus` half. The same code read `innerFocus=0` and
+      // `innerFocus=1` on this host, so the counter stays in the readout and is
+      // never asserted. Native focus and key delivery are the stable claims.
 
       yield* ctx.host.key("down");
       yield* settle;

@@ -110,7 +110,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       reverted. Headless control `scroll-into-view` green at 34 checks.
       Focused ids run: `live-scroll-into-view`, `scroll-into-view`.
 
-`[x]` Prove the **panel and floating-layer primitives in a real window** per
+`[~]` Correct the **`autoFocus` `onFocus` claim** per plan `603`: the plan-`600`
+      gate's only failure was `autoFocus does not run React's onFocus`
+      (`innerFocus=1`); the same code read `innerFocus=0` in earlier runs, so the
+      `autoFocus` half is as state-dependent as the click half plan `390`
+      corrected. The assertion is gone (`live-key-routing` 21 → 20 checks) and both
+      counters stay in the readout; native focus, key delivery and the `cmd-k`
+      chord are still asserted.
+
+[x] Prove the **panel and floating-layer primitives in a real window** per
       plan `594`: `live-panel-nested` (30 checks) drives the vertical split
       `180 → 228` and the nested split `300 → 360` without moving the other, the
       sidebar collapsing to painted width **`0`** (not `null`) and restoring
