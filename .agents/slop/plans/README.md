@@ -3648,7 +3648,7 @@ pairs); the macOS dark accent moves one designed step (`#0A84FF` → `#2E93FF`,
 3.214:1 on `selected`) with its hover, press, ring and selection wash, and the
 documented brand example lightens its primary family (`#9579FF`, 3.146:1 on the
 inherited selection) and drops the scrim override its lighter fill no longer
-needs. No other colour, floor or metric moves.
+needs. No other shipped set or role moves.
 
 ## How to use a plan
 

@@ -3,8 +3,8 @@
 > **Status: executed 2026-10-19.** The selected option's check now has pairs on
 > `selected` and `selectedActive`; the shipped macOS dark accent moves one
 > designed step so the check clears 3:1 on the fill it marks, the documented
-> brand example moves its primary family, and every other colour, floor and
-> metric stays. Execution evidence is at the end of this plan.
+> brand example moves its primary family, and the rest of the shipped palettes,
+> floors and metrics stay. Execution evidence is at the end of this plan.
 
 ## Why
 
@@ -365,7 +365,8 @@ Add one row to the tokens table after `695`:
 ```
 
 Add a short paragraph after the `695` summary stating the defect, the two added
-pairs, the one moved platform value and that no other colour moves.
+pairs, the moved macOS accent family and documented brand, and that no other
+shipped set or role moves.
 
 ## Commands
 
