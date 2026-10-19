@@ -254,6 +254,13 @@ retired once both branches are one
       List failures flip to pass, and the three row-removal cases stay red
       pending plan 540's focus-event fix; docs, `COMPONENTS.md` and the
       inventory synced (owner: components)
+    - [ ] The message scroller measures its pin in the scroller's visible box —
+      plan 582; measured: a scroll container's own bounds are reported in
+      scrolled content space (viewport `y: -1080` at offset `-1080`) while its
+      rows are in window space, so nine cases were read as plan-540 failures: the
+      suite wheeled at off-screen coordinates and a scroll back to the end could
+      never re-pin. Measure the unscrolled root's box, wheel at the root, and add
+      a re-pin case (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122
