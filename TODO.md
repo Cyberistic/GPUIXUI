@@ -599,6 +599,14 @@ retired once both branches are one
       between real gestures, as plan 587 established; docs,
       `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] The combobox trigger's ring follows native focus — plan 672; measured:
+      a trigger focused by code, Tab or the focus an accepted close returns
+      reported the focused host but painted no ring, because 0.10.0 delivers no
+      React focus/blur for a native move. One `useNativeFocusId` sample now
+      serves both SearchInput and the trigger, so the ring appears on native
+      focus and is given up while the popup's field owns it; 2 native cases
+      (Combobox 54), both failing on the old source; docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
     - [x] Context menu Shift+F10 opening and focus return — plan 122

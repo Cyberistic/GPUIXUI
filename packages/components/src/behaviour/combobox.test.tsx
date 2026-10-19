@@ -45,6 +45,7 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { darkTheme, focusRing, lightTheme } from "../internal/theme.js";
 import {
@@ -1309,6 +1310,55 @@ describe("Combobox", () => {
     ).toBeUndefined();
     expect(
       picker.renderer.findByTestId("combobox-input")?.style.boxShadow,
+    ).toEqual(focusRing(darkTheme).boxShadow);
+
+    picker.unmount();
+  });
+
+  /**
+   * Native focus (plan 672). The bug these guard, measured: the ring came only
+   * from the `autoFocus` seed and React `focus`/`blur`, and 0.10.0 delivers
+   * neither for a native move — so a trigger reached by Tab, by a press, or by
+   * the focus an accepted close returns looked exactly like an unfocused one.
+   */
+  it("paints its ring when focus lands on the closed trigger", async () => {
+    const picker = renderComponent(<TriggerPicker />);
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("combobox-trigger")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow !==
+        undefined,
+    );
+
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
+    ).toEqual(focusRing(darkTheme).boxShadow);
+
+    picker.unmount();
+  });
+
+  it("rings the trigger again when an accepted close returns focus", async () => {
+    const picker = renderComponent(<TriggerPicker />);
+    await open(picker);
+
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
+    ).toBeUndefined();
+
+    picker.renderer.simulateKeystrokes("escape");
+    await until(
+      () =>
+        picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow !==
+        undefined,
+    );
+
+    expect(focusedTestId(picker)).toEqual(Option.some("combobox-trigger"));
+    expect(
+      picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
     ).toEqual(focusRing(darkTheme).boxShadow);
 
     picker.unmount();

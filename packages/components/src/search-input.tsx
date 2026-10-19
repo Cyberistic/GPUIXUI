@@ -24,11 +24,12 @@ import {
   type StateStyle,
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
@@ -65,9 +66,6 @@ export interface SearchInputState {
   readonly focused: boolean;
 }
 
-/** How often the field asks the renderer which host holds focus, ms. */
-const FOCUS_SAMPLE_MS = 50;
-
 /** A search field with a leading search icon and a conditional clear control. */
 export const SearchInput = ({
   value: valueProp,
@@ -91,35 +89,24 @@ export const SearchInput = ({
     defaultValue,
     onChange: onValueChange,
   });
-  const [focused, setFocused] = useState(autoFocus && !disabled);
-  const [clearFocused, setClearFocused] = useState(false);
   const input = useRef<PublicInstance | null>(null);
   const clearControl = useRef<PublicInstance | null>(null);
   const attach = useCallback((next: PublicInstance | null) => {
     input.current = next;
   }, []);
   const setInput = useMergedRef<PublicInstance | null>(attach, ref);
-
-  useEffect(() => {
-    if (disabled || renderer == null) {
-      setClearFocused(false);
-      setFocused(false);
-      return;
-    }
-    const read = (): void => {
-      const focusedId = renderer.getFocusedElementId?.() ?? null;
-      const clearId = clearControl.current?.id ?? null;
-      const inputId = input.current?.id ?? null;
-      const onClear = clearId !== null && focusedId === clearId;
-      setClearFocused(onClear);
-      // No React focus/blur is delivered for a native focus change, so the
-      // sample is the only signal in either direction (plans 536/540).
-      setFocused(focusedId !== null && (focusedId === inputId || onClear));
-    };
-    read();
-    const timer = setInterval(read, FOCUS_SAMPLE_MS);
-    return () => clearInterval(timer);
-  }, [disabled, renderer]);
+  // The sample is the only focus signal: 0.10.0 delivers no React focus/blur
+  // for a native move (plans 536/540, 659/660). Until it reports a host, the
+  // `autoFocus` seed stands, because the runtime applies that focus after
+  // React's effects (plan 388).
+  const focusedId = useNativeFocusId(!disabled);
+  const clearFocused =
+    focusedId !== null && focusedId === (clearControl.current?.id ?? null);
+  const focused =
+    clearFocused ||
+    (focusedId === null
+      ? autoFocus && !disabled
+      : focusedId === (input.current?.id ?? null));
 
   const clear = (): void => {
     if (disabled || value === "") return;
@@ -173,14 +160,6 @@ export const SearchInput = ({
         }}
         onSubmit={() => {
           if (!disabled) onSubmit?.(value);
-        }}
-        onFocus={(event) => {
-          setFocused(true);
-          rest.onFocus?.(event);
-        }}
-        onBlur={(event) => {
-          setFocused(false);
-          rest.onBlur?.(event);
         }}
         style={{
           ...textStyle(theme, "body"),

@@ -5,7 +5,7 @@
 | Phase | F (Tier 2 hardening) |
 | Owner | `components` (`packages/components`) |
 | Depends on | 110, 116, 388, 394, 522, 523, 536, 540, 565, 583, 659, 660 |
-| Status | planned |
+| Status | **done** — a shared `useNativeFocusId` sample drives SearchInput and the combobox trigger; 2 native cases fail at `HEAD` and pass after, SearchInput 18/18 unchanged |
 | Claimed number | `672` — the first free number after `671`; `670`/`671` are `tokens-theme`'s, checked across every worktree and recorded in `PLAN.md` D30 |
 
 ## 0. Why this plan exists
@@ -111,13 +111,22 @@ Read the root's `trigger` ref from the existing context. Replace the
 ```ts
 const focusedId = useNativeFocusId(!disabled);
 const focused =
-  focusedId !== null && focusedId === (trigger.current?.id ?? null);
+  focusedId === null
+    ? autoFocus && !disabled
+    : focusedId === (trigger.current?.id ?? null);
 ```
 
 Keep the caller-composed `onFocus`/`onBlur` and the existing style condition
 `focused && !disabled && !open`. `trigger.current` is the instance
 `registerTrigger` stores, so no second ref is needed. Delete the
 `setFocused` calls in those handlers.
+
+**Measured during implementation:** the first sample runs before the runtime
+applies `autoFocus` (plan 388), so a null sample must not clear the seed. The
+seed therefore stands only while the renderer reports no host at all; the first
+reported host — the input, the clear control, another control or the trigger —
+is authoritative. That keeps the synchronous `autoFocus` assertions and still
+clears the ring as soon as focus is somewhere observable.
 
 ### 3.3 `SearchInput`
 
@@ -128,8 +137,10 @@ const focusedId = useNativeFocusId(!disabled);
 const clearFocused =
   focusedId !== null && focusedId === (clearControl.current?.id ?? null);
 const focused =
-  focusedId !== null &&
-  (focusedId === (input.current?.id ?? null) || clearFocused);
+  clearFocused ||
+  (focusedId === null
+    ? autoFocus && !disabled
+    : focusedId === (input.current?.id ?? null));
 ```
 
 The `onFocus`/`onBlur` handlers keep forwarding the caller's callbacks; only
@@ -236,3 +247,20 @@ component wirings must restore both failures.
 - `docs/combobox.mdx`, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the plan
   index agree.
 - One commit: `fix(components): the combobox trigger's ring follows native focus (plan 672)`.
+
+## 7. Results
+
+- `internal/native-focus.ts`: `useNativeFocusId(enabled)` samples
+  `getFocusedElementId()` every 50 ms while enabled and reports `null` when
+  nothing is focused.
+- `combobox.tsx`: the trigger derives its ring from the sampled host; the
+  `autoFocus` seed stands only until a host is reported.
+- `search-input.tsx`: the local interval and its two state booleans are gone;
+  the field and clear-capture states derive from the same hook.
+- `behaviour/combobox.test.tsx`: two cases — focus forced onto the closed
+  trigger, and an accepted close returning focus — 54 tests.
+- Both-direction proof: with only the two source files reverted, both new cases
+  fail (`expected undefined to deeply equal { offsetX: 0, … }`); restoring them
+  passes 54/54. SearchInput stays 18/18 after the refactor.
+- Docs and inventory synced: `docs/combobox.mdx` (54), `COMPONENTS.md`,
+  `TODO.md`, `PLAN.md` D30 and the plan index.

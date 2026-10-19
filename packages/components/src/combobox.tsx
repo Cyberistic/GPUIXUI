@@ -80,6 +80,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss } from "./internal/key.js";
 import { controlName } from "./internal/name.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   assertParts,
   type PartChildren,
@@ -548,12 +549,18 @@ export const ComboboxTrigger = ({
   ...rest
 }: ComboboxTriggerProps) => {
   const theme = useTheme();
-  const { selectedValues, open, disabled, labelFor, registerTrigger } =
+  const { selectedValues, open, disabled, labelFor, registerTrigger, trigger } =
     useCombobox();
-  // The runtime focuses `autoFocus` after React's effects, so `onFocus` never
-  // runs on mount and the ring would be computed from a stale state (plan 388).
-  // A disabled trigger is never focused or ringed (plans 394, 527).
-  const [focused, setFocused] = useState(autoFocus && !disabled);
+  // The runtime delivers no React `focus`/`blur` for a native focus change
+  // (plans 536/540), so the ring follows the host the renderer reports —
+  // whether the trigger was tabbed onto, pressed, or given focus back by an
+  // accepted close (plan 672). Until it reports a host, the `autoFocus` seed
+  // stands, because that focus is applied after React's effects (plan 388).
+  const focusedId = useNativeFocusId(!disabled);
+  const focused =
+    focusedId === null
+      ? autoFocus && !disabled
+      : focusedId === (trigger.current?.id ?? null);
   const display =
     selectedValues.length === 0
       ? placeholder
@@ -577,14 +584,8 @@ export const ComboboxTrigger = ({
       {...rest}
       {...(name === undefined ? {} : { "aria-label": name })}
       {...stateDescription(disabled, rest["aria-description"])}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
+      onFocus={onFocus}
+      onBlur={onBlur}
       onKeyDown={(event) => {
         onKeyDown?.(event);
         // Escape closes the open popup as one surface, like the search field.

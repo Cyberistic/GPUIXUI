@@ -336,16 +336,20 @@ same shape for a row composed by hand.
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+  (plans 390/603/605). The closed trigger is the exception the component can
+  measure: while enabled it samples the renderer's focused host, so it rings
+  when focus lands on it and when an accepted close returns focus (plan 672).
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (52 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (54 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), `defaultOpen` with its one empty-query report, the controlled
 open/close contract (a refused close leaves the popup painted), the trigger's own
 ring (auto-focused in both themes; given up while the
-popup's field holds focus), a caller `style` merging over the trigger's base, a
+popup's field holds focus; painted from the sampled native focus when the
+trigger is reached by code and when an accepted close returns focus), a caller
+`style` merging over the trigger's base, a
 disabled trigger painting no ring, a trigger named from its placeholder and from
 its selected labels when no `label` is authored (a caller `aria-label` still
 wins and is trimmed), a centred popup and a near-bottom popup that opens above
