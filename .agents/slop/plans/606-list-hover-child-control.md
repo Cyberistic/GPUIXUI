@@ -134,6 +134,11 @@ In `src/behaviour/list.test.tsx`, three native cases:
    the row is accent, leave, assert both handlers ran once. This fails if the
    hook replaces instead of composes, and the accent assertion fails without
    the group.
+4. **"clears the tint when a hovered trailing control is removed"** (added with
+   the result pass) — hover the member, rerender without it, move the pointer
+   off the row, assert the row is no longer accent. Fails without the hook's
+   unmount cleanup: the stale member count keeps the row lit after its own
+   leave.
 
 No pixel or screenshot assertion (D24); the assertion is the row's own authored
 style after the event.
@@ -199,6 +204,10 @@ branch.
   group still receives the caller's `onMouseEnter`/`onMouseLeave`.
 - `nub run --filter @gpuixui/components test`: **44 files, 444 tests passed**.
 - `nub run check`: `check:tests`, lint, format and type-check all clean.
+- the fourth case (`clears the tint when a hovered trailing control is removed`)
+  was added after that run: List is now **60 tests, 57 passed, 3 failed** — the
+  same three plan-540 rows and none from this plan; the new case fails with the
+  hook's unmount cleanup removed (observed, reverted).
 - `nub run test` (workspace): every package green; components 444, primitives
   282.
 - `nub run --filter @gpuixui/components test:behaviour`: **768 passed, 35

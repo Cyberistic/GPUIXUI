@@ -338,7 +338,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (59 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (60 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
@@ -347,7 +347,8 @@ their roles, the absence and uniqueness of the tab stop, selection by click and 
 key, a disabled row rejecting both and carrying no pointer affordance, real
 focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move (including
-under a trailing `Button`, and clearing when the pointer leaves), the dense
+under a trailing `Button`, clearing when the pointer leaves, and after a hovered
+control is removed), the dense
 height, the controlled list not moving its own selection, type-ahead jumping and
 cycling while skipping disabled and unlabelled rows, activation by `Enter` and by
 click (and not by `Space`, a disabled row, a plain list without the prop, or a

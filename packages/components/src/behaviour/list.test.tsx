@@ -739,6 +739,47 @@ describe("List", () => {
     list.unmount();
   });
 
+  it("clears the tint when a hovered trailing control is removed", () => {
+    // The member's unmount cleanup must leave the group, or a removed control
+    // keeps the row lit with no pointer over it.
+    const list = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem
+          testId="row-a"
+          value="a"
+          trailing={<Button testId="trailing-action">Open</Button>}
+        >
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    hoverCentreOf(list, "trailing-action");
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).toBe(
+      darkTheme.colors.accent,
+    );
+
+    list.rerender(
+      <List testId="list" selectionMode="single">
+        <ListItem testId="row-a" value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    // The row may re-take the pointer on the rerender (it is still under it);
+    // leaving the row then proves the removed member left the group, because a
+    // stale count would keep the tint after the row's own leave.
+    const row = requireBounds(list, "row-a");
+    list.renderer.nativeSimulateMouseMove(row.x + row.width + 100, row.y + 400);
+
+    expect(list.renderer.findByTestId("row-a")?.style.backgroundColor).not.toBe(
+      darkTheme.colors.accent,
+    );
+
+    list.unmount();
+  });
+
   it("reports a multiple selection as a listbox of options with one tab stop", () => {
     const list = renderComponent(multiCatalog());
 

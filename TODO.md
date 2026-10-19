@@ -336,8 +336,9 @@ retired once both branches are one
       hover cancels the row's refinement and the row goes flat under a trailing
       button; the row tracks its own crossing and `Button`/`IconButton` report
       their hover through an internal hover group (unmount-safe), while a custom
-      interactive child stays per element and is documented. 3 native cases
-      (List 59), both-direction proof (all three fail before the wiring); docs,
+      interactive child stays per element and is documented, and a member removed
+      while hovered leaves the group on unmount. 4 native cases (List 60),
+      both-direction proof (all four fail before the wiring); docs,
       `COMPONENTS.md` and the inventory synced (owner: components)
     - [x] List multiple selection (`selectionMode="multiple"`, modifiers, range) and the duplicate `COMPONENTS.md` row — plan 120
     - [x] Accordion arrow/Home/End movement between headers — plan 121
@@ -973,10 +974,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
 `[x]` All gates green (`nub run check`, `nub run lint`, `nub run test`) —
       re-run from the components worktree on 2026-10-19 (plans 606/608): all
       three exit 0; the unit suite is 445 tests in 44 files. The native
-      behaviour suite is **768 passed / 35 failed of 803** — every failure is
+      behaviour suite is **769 passed / 35 failed of 804** — every failure is
       a recorded plan-540 binding defect (focus/blur delivery, box
-      measurement), not a component regression (plan 606 §8 ran it on this
-      tree). Re-run before release, since every later merge can change them
+      measurement), not a component regression (run on this tree 2026-10-19).
+      Re-run before release, since every later merge can change them
 
 ## Swarm-owned blockers (fix these)
 
