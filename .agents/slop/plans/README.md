@@ -289,6 +289,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [613](./613-ring-figures.md) | The content ring's quoted figures | F | 544, 611 | done |
 | [616](./616-docs-source-links.md) | The catalogue's four dead source links, and a link guard | F | 355, 356, 613 | done |
 | [617](./617-ledger-check-counts.md) | The ledger's check counts, in one owner | F | 398, 567, 602, 611 | done |
+| [618](./618-applied-default-elevation.md) | A default request takes the requested palette's elevation opacity | F | 301, 373, 505, 541, 545, 551 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3112,6 +3113,19 @@ test, and four historical audits in the contrast and metric rows still said
 count is held to `countWord(themeChecks.length)`, the four audits say "every
 check", and the new `inventory.test.ts` case proves its pattern rejects both
 historical spellings. No token, pair, floor, metric or theme moves.
+
+Plan `618` closes the last branch of plan `541`'s "the level decides the palette,
+and the palette decides the elevation opacity". The `"default"` branch of
+`applyPlatformStyle` merged a style's partial elevation over the **base**, so a
+copied style that named a colour but no elevation level, applied to an AAA base
+requesting `"default"`, declared the default palette and its black `shadow` tint
+while keeping the AAA dark alphas (0.10/0.14/0.18 instead of 0.40/0.65/0.80);
+`themeFailures` rejected the library's own result with 15 elevation pairs, worst
+**1.0175:1**. A level the style does not name now comes from the requested
+palette's elevation, a named level still wins, and a same-level base keeps its
+edits. Every shipped style names `sm`/`md`/`lg`, so no shipped pixel moves; the
+new `applied-level-elevation.test.ts` states the pre-fix composition and the
+executed example gains the copied colour-only style.
 
 ## How to use a plan
 
