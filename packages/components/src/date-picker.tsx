@@ -898,7 +898,8 @@ export const DatePickerCalendar = ({
                           ? undefined
                           : { backgroundColor: theme.colors.hover },
                       ...(interactive &&
-                      iso === formatIsoDay(Option.getOrElse(active, () => tabbable))
+                      iso ===
+                        formatIsoDay(Option.getOrElse(active, () => tabbable))
                         ? focusRing(theme)
                         : {}),
                     }}
