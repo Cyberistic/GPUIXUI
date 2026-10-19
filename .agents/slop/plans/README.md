@@ -297,6 +297,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [623](./623-selected-label-tier.md) | The selected row's label is a tier below its title | F | 312, 316, 381, 500 | done |
 | [624](./624-field-query-and-action.md) | The field minimum holds the query and the action it documents | F | 353, 358, 384, 523, 620 | done |
 | [625](./625-dialog-drawer-shell-chrome.md) | The dialog and drawer shells hold their close control | F | 353, 358, 556, 598, 620, 624 | done |
+| [627](./627-surface-border-fit.md) | The fixed surfaces fit their own border | F | 353, 358, 384, 598, 620, 625 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3227,6 +3228,22 @@ widths to `3 * spacing["2xl"] + h3.fontSize` (88px) and the bottom-drawer height
 to the close zone, one row and the bottom padding (96px); the shipped
 360/320/240 clear them at 4.09×/3.64×/2.50×, so no value moves. The suite fails
 five cases on the pre-fix tree and passes all seven after it.
+
+Plan `627` applies plan 384's content-box rule to the fixed surfaces that landed
+after it. A control, a field, a keycap and a date trigger subtract
+`2 * borderWidth.thin`; the menu minimum, Toast card, notification inbox and the
+dialog/drawer shells did not, and every one of those surfaces paints its border
+**inside** its own width or height. A coherent theme with
+`borderWidth.thin: 12` and `dialogWidthSm: 88` — exactly the plan-625 bound —
+painted a 72px padding-and-close-control chrome into a 64px content box while
+`themeMetricFailures` and `themeFailures` both returned `[]`; the same held for
+the Toast at 80/66, the drawer widths and the bottom-drawer height. Seven bounds
+now include the surface's two borders: the shipped identities move from
+53/66/50/88/88/96/280 to **55/68/52/90/90/98/282**, and the shipped
+180/380/320/360/320/240/380 clear them at 3.27×/5.59×/6.15×/4.00×/3.56×/2.45×/
+1.35×, so no token value moves. The suite states the shipped bounds, proves each
+surface can fail on its own, reads a theme's own border instead of the fixture's
+12, and carries one case through the total check.
 
 ## How to use a plan
 
