@@ -524,6 +524,64 @@ describe("docs selected-row label fills", () => {
   });
 });
 
+describe("docs primaryText surfaces", () => {
+  /**
+   * The bug these cases catch: plan 651 added `primaryText` on the pressed
+   * `selectedActive` row to the contract and changed the catalogue's count from
+   * eight to nine, but the sentence still enumerated eight. The two role-table
+   * use cells, the *Brand action* paragraph and the package README repeated the
+   * omission, and the design-system interaction-state guard could not see it —
+   * its own link row already named the pressed fill.
+   */
+  const linkSurfaces = [
+    ...new Set(
+      contrastPairs
+        .filter(
+          ([role, , pairClass]) =>
+            role === "primaryText" && pairClass === "secondary",
+        )
+        .map(([, background]) => background),
+    ),
+    // The four soft status fills are the second half of the sentence and are
+    // owned by `softPanelTextPairs`; this list is the at-rest surfaces.
+  ].filter((surface) => !surface.endsWith("Soft"));
+
+  it("names the pressed selected row among the at-rest link surfaces", () => {
+    expect(linkSurfaces).toHaveLength(9);
+    expect(linkSurfaces).toContain("selectedActive");
+
+    const from = markdownProse.indexOf("Brand-toned text is checked on the");
+    const to = markdownProse.indexOf("`softPanelTextPairs`", from);
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+
+    const clause = markdownProse.slice(from, to);
+    expect(clause).toContain(`the ${countWord(linkSurfaces.length)} surfaces`);
+    linkSurfaces.forEach((surface) =>
+      expect(clause, surface).toContain(`\`${surface}\``),
+    );
+  });
+
+  it("names the pressed row in both role tables", () => {
+    const cells = markdown
+      .split("\n")
+      .filter((line) => line.startsWith("| `primaryText` |"));
+    expect(cells).toHaveLength(2);
+    cells.forEach((cell) => expect(cell).toContain("`selectedActive`"));
+  });
+
+  it("names the pressed row in the brand-action paragraph and the README", () => {
+    const from = markdownProse.indexOf("Brand-toned text — a link");
+    const to = markdownProse.indexOf("A runnable example lives in", from);
+    expect(from).toBeGreaterThan(-1);
+    expect(to).toBeGreaterThan(from);
+    expect(markdownProse.slice(from, to)).toContain("`selectedActive`");
+
+    const readme = readmeSource.replace(/\s+/g, " ");
+    expect(readme).toContain("`accent`/`selected`/`selectedActive` fills");
+  });
+});
+
 /** The `## Types` row for `name`, or a failure naming it. */
 const typeRow = (name: string): string => {
   const line = markdown

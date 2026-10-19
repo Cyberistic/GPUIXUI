@@ -1185,6 +1185,14 @@ cleared the chip's 1.05:1 floor and the boundary check returned `[]` while the
 error ring vanished; the pair joins `invalidRingPairs`, every shipped set already
 passes (3.761:1 at the tightest, XP light), and the contract grows 460 → 461
 (plan 671)
+`[x]` Name the pressed row among the link's surfaces — plan 651 changed the
+catalogue's "eight surfaces a link paints" to "nine" when it added
+`primaryText` on `selectedActive`, but the sentence still enumerated eight, and
+the two `primaryText` role-table use cells, the *Brand action* paragraph and the
+package README repeated the omission while the design-system guard stayed green.
+All five now name the pressed row, and a derived `docs.test.ts` case reads the
+nine at-rest surfaces from `contrastPairs` and holds each passage to them; no
+token value, pair, floor or metric moves (plan 672)
 `[ ]` Cross-team: `components` gives the Carousel's inactive indicator a mark
 role — `carousel.tsx:382` paints the dot with `theme.colors.border` on the
 canvas, and `border` on `background` is a *divider* pair (1.05:1): it measures

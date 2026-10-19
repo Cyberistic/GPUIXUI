@@ -73,8 +73,8 @@ subtree.
 `primary` is a fill: it carries `primaryForeground`, and it is only measured as
 a fill. Brand-toned text — a link, a label, an icon — reads `primaryText`, which
 is held to the text floor on the plain surfaces, the `hover`/`active` washes a
-link paints, the `accent`/`selected` fills a link sits on inside a row
-(plan 314) and the four soft status fills a link in a status panel sits on
+link paints, the `accent`/`selected`/`selectedActive` fills a link sits on inside
+a row (plan 314) and the four soft status fills a link in a status panel sits on
 (plan 346), and through the text-selection wash on all thirteen of those
 surfaces (plan 528). A brand that changes `primary` should set `primaryText`
 beside it.

@@ -206,8 +206,9 @@ surface: it carries `primaryForeground`, and it is measured only as a fill.
 Brand-toned text — a link, a label, an icon — reads `primaryText`, held to
 4.5:1 on `background`, `card`, `popover` and `muted`, on the `hover` and
 `active` washes the Link variant paints behind its own label, on the
-`accent`/`selected` fills a selectable row paints under it, and on the four soft
-status fills a link in a status panel sits on. The split is not
+`accent`/`selected` fills a selectable row paints under it and the pressed
+`selectedActive` it keeps, and on the four soft status fills a link in a status
+panel sits on. The split is not
 cosmetic: the macOS accent `#0071E3` measures 4.21:1 on that canvas and 3.44:1
 on the pressed wash, while its text step `#00478F` clears both.
 
@@ -226,7 +227,7 @@ A runnable example lives in
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills, inline code on the `accent` wash and through a text selection |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected`/`selectedActive` row fills, inline code on the `accent` wash and through a text selection |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -530,7 +531,7 @@ carries, so it cannot claim another.
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
-| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected` row fills and through a text selection |
+| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected`/`selectedActive` row fills and through a text selection |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |
@@ -3247,10 +3248,10 @@ where the dim frame measures **1.074:1** and the opaque pair 1.179:1. The other
 seven surfaces are wider, and every other shipped set already cleared 1.05:1 at
 0.6 (the next tightest is 1.072:1), so no other value moves.
 Brand-toned text is checked on the nine surfaces a link paints —
-`background`, `card`, `popover`, `muted`, the `hover`/`active` washes and the
-`accent`/`selected` fills a selectable row paints — and on the four soft status
-fills a link in a status panel sits on
-(`softPanelTextPairs`), so a platform accent cannot
+`background`, `card`, `popover`, `muted`, the `hover`/`active` washes, the
+`accent`/`selected` fills a selectable row paints and the pressed
+`selectedActive` it keeps — and on the four soft status fills a link in a status
+panel sits on (`softPanelTextPairs`), so a platform accent cannot
 ship as an unreadable link: the audit found macOS light at 4.21:1 on its
 canvas and 3.44:1 on the pressed wash, macOS dark at 2.84:1 on `active`, and
 high-contrast dark at 6.94:1 under its 7:1 floor. The two row fills were added
