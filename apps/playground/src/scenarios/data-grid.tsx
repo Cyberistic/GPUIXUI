@@ -18,7 +18,7 @@
  * The sort/filter/window maths is pure (`data-grid-model.ts`); the view and the
  * scenario's expectations call the same functions.
  */
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import { Effect } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -180,14 +180,18 @@ const DataGridProbe = () => {
     setPanX(x);
   };
 
-  /** A sort or filter invalidates the reader's row, so the anchor returns to the top. */
-  useEffect(() => {
+  /**
+   * A sort or filter invalidates the reader's row, so the anchor returns to the
+   * top **in the same update** — an effect would paint one frame at the old
+   * anchor, which is both a visible transient and a load-dependent test race.
+   */
+  const restart = (): void => {
     Option.match(Option.fromNullishOr(list.current?.id), {
       onNone: () => {},
       onSome: (id) => renderer?.scrollToItem?.(id, 0),
     });
     setAnchor({ index: 0, offset: 0 });
-  }, [direction, query, renderer]);
+  };
 
   const jump = (): void => {
     Option.match(Option.fromNullishOr(list.current?.id), {
@@ -206,9 +210,10 @@ const DataGridProbe = () => {
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <Pressable
           testId="dg-sort"
-          onClick={() =>
-            setDirection((current) => (current === "asc" ? "desc" : "asc"))
-          }
+          onClick={() => {
+            setDirection((current) => (current === "asc" ? "desc" : "asc"));
+            restart();
+          }}
         >
           <text style={{ color: theme.colors.foreground }}>
             {`sort: ${direction}`}
@@ -217,7 +222,10 @@ const DataGridProbe = () => {
         <input
           testId="dg-filter"
           value={query}
-          onChange={(event) => setQuery(event.value ?? "")}
+          onChange={(event) => {
+            setQuery(event.value ?? "");
+            restart();
+          }}
           style={{
             width: 120,
             color: theme.colors.inputForeground,
@@ -225,7 +233,13 @@ const DataGridProbe = () => {
             padding: 6,
           }}
         />
-        <Pressable testId="dg-clear" onClick={() => setQuery("")}>
+        <Pressable
+          testId="dg-clear"
+          onClick={() => {
+            setQuery("");
+            restart();
+          }}
+        >
           <text style={{ color: theme.colors.foreground }}>clear</text>
         </Pressable>
         <Pressable testId="dg-jump" onClick={jump}>
