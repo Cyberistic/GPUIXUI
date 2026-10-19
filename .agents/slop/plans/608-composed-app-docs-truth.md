@@ -199,7 +199,7 @@ Run from the repository root (`/Users/cyberistic/GPUIXUI/workspaces/primitives`)
 
 ```sh
 # 1. The new guard alone.
-nub run --filter @gpuixui/primitives exec vitest run src/composed-app-docs.test.ts
+nub run --filter @gpuixui/primitives test src/composed-app-docs.test.ts
 
 # 2. The package's offline suite.
 nub run --filter @gpuixui/primitives test
@@ -229,17 +229,18 @@ directions on the same tree:
 # 1. Before: the guard is not yet written, so build it against the OLD prose.
 #    Temporarily restore the old sentences in a scratch copy, or run the new
 #    test after only writing the test file (the old prose is still in the docs).
-nub run --filter @gpuixui/primitives exec vitest run src/composed-app-docs.test.ts
+nub run --filter @gpuixui/primitives test src/composed-app-docs.test.ts
 # Expected: the count cases and the autoFocus/partial-pass cases fail by name.
 
 # 2. Apply §2.1 and §2.2.
-nub run --filter @gpuixui/primitives exec vitest run src/composed-app-docs.test.ts
+nub run --filter @gpuixui/primitives test src/composed-app-docs.test.ts
 # Expected: 4/4 pass.
 
-# 3. Mutate one claim back and observe the right case fail:
-#    - change "7 tests" back to "6 tests"  -> case 2 fails
-#    - restore "does not receive `autoFocus`" -> case 3 fails
-#    - restore "6 of the 7 pass" -> case 4 fails
+# 3. Mutate one claim at a time and observe the right case fail:
+#    - change "7 tests" back to "6 tests"  -> case 1 fails
+#    - add "does not receive `autoFocus`" to the inventory paragraph -> case 2 fails
+#    - add the same claim to the README note -> case 3 fails
+#    - change "all 7 pass" to "6 of the 7 pass" -> case 4 fails
 #    Restore the corrected text after each mutation.
 ```
 
@@ -274,9 +275,9 @@ Stop and report rather than improvise if:
   `nub run --filter @gpuixui/primitives test` → **60 files / 837 tests**;
   `nub run check`, `nub run lint` and `nub run test` green.
 - Both directions: with the old prose, the new guard fails the count, the
-  autoFocus and the partial-pass cases; with the corrected prose, 4/4 pass.
-  Each of the three mutations in §4 was applied once and failed its case by
-  name.
+  inventory autoFocus, the README autoFocus and the partial-pass cases; with the
+  corrected prose, 4/4 pass. Each of the four mutations in §4 was applied once
+  and failed its case by name.
 
 ## 7. Acceptance
 
