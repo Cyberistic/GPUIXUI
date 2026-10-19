@@ -10,6 +10,7 @@ export * from "./native-text-check.js";
 export * from "./opacity.js";
 export * from "./platform-recipes.js";
 export * from "./platforms.js";
+export * from "./ring.js";
 export * from "./scale.js";
 export * from "./shipped-themes.js";
 export * from "./styles.js";

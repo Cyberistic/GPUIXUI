@@ -257,6 +257,7 @@ const checkWords = {
   opacity: "role opacity",
   typeface: "typeface form",
   contrast: "contrast",
+  ring: "content ring",
   highlight: "find highlight",
   nativeText: "native text fades",
   hierarchy: "text hierarchy",
@@ -270,6 +271,7 @@ const checkFunctions = {
   opacity: "themeOpacityFailures",
   typeface: "themeTypefaceFailures",
   contrast: "themeContrastFailures",
+  ring: "themeRingFailures",
   highlight: "themeHighlightFailures",
   nativeText: "themeNativeTextFailures",
   hierarchy: "themeTextTierFailures",
@@ -2145,6 +2147,7 @@ describe("docs/tokens.md typeface contract", () => {
       "seven",
       "eight",
       "nine",
+      "ten",
     ] as const;
     const names = themeChecks.map((kind) => checkWords[kind]);
     const sentence = `${names.slice(0, -1).join(", ")} and ${names.slice(-1).join("")}`;
@@ -2168,6 +2171,49 @@ describe("docs/tokens.md typeface contract", () => {
     [markdown, designSystem].forEach((document) => {
       expect(document).not.toMatch(/\ball (?:three|four) checks\b/);
     });
+  });
+});
+
+describe("docs/tokens.md content ring", () => {
+  const bound = (theme: Theme): number =>
+    Math.sqrt(
+      Tokens.contrastRatio(theme.colors.foreground, theme.colors.background),
+    );
+
+  it("names the helper, the check and both public types", () => {
+    [
+      "contrastRing",
+      "themeRingFailures",
+      "ContrastRing",
+      "RingFailure",
+    ].forEach((name) => expect(markdown, name).toContain(name));
+    expect(designSystem).toContain("`contrastRing(theme)`");
+    expect(designSystem).toContain("`themeRingFailures`");
+  });
+
+  it("states the worst-case rule and the composition's cost", () => {
+    expect(markdownProse).toContain("worst case over **every** colour");
+    expect(markdownProse).toContain("square root");
+    expect(markdownProse).toContain("single shadow slot");
+  });
+
+  it("states the bounds the shipped sets guarantee", () => {
+    const light = bound(getTheme("light")).toFixed(2);
+    const aaa = Math.min(
+      ...shippedThemes
+        .filter(({ theme }) => theme.contrast === "high")
+        .map(({ theme }) => bound(theme)),
+    ).toFixed(2);
+    const tightest = Math.min(
+      ...shippedThemes
+        .filter(({ theme }) => theme.contrast === "default")
+        .map(({ theme }) => bound(theme)),
+    ).toFixed(2);
+
+    [light, aaa, tightest].forEach((ratio) =>
+      expect(markdownProse, ratio).toContain(`${ratio}:1`),
+    );
+    expect(Tokens.themeRingFailures(getTheme("light"))).toEqual([]);
   });
 });
 

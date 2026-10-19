@@ -987,11 +987,18 @@ step away from the canvas — darker in light, lighter in dark — so a light
 clears the 1.05:1 step, the on-colour floor and the surface floor. Each part is
 available on its own — `themeColorFailures`, `themeOpacityFailures`,
 `themeTypefaceFailures`,
-`themeContrastFailures`, `themeHighlightFailures`, `themeNativeTextFailures`,
+`themeContrastFailures`, `themeRingFailures`, `themeHighlightFailures`,
+`themeNativeTextFailures`,
 `themeTextTierFailures`, `themeDirectionFailures` and `themeMetricFailures` — but
 a consumer that runs only one has not run the guarantee: a zero focus-ring spread,
 an unparseable `shadow` tint or a translucent one the paint discards passes the
-contrast check alone. `themeChecks`
+contrast check alone. A marker on content whose colour the theme does not own is
+a two-tone ring: `contrastRing(theme)` returns the theme's `background` next to
+the content and `foreground` outside it at `borderWidth.strong`, and the worst
+case over any content colour is the square root of the tone pair's contrast —
+3.70:1 at the tightest shipped set, above the mark floor. `themeRingFailures`
+reports a theme that falls below it, because the body floor does not imply the
+ring's. `themeChecks`
 is the ordered index of those parts. A family name is one exact, non-empty
 family — not a CSS comma stack, not a CSS generic keyword, not a CSS-quoted name
 and not a padded name

@@ -71,6 +71,7 @@ const checkFunctions = {
   opacity: "themeOpacityFailures",
   typeface: "themeTypefaceFailures",
   contrast: "themeContrastFailures",
+  ring: "themeRingFailures",
   highlight: "themeHighlightFailures",
   nativeText: "themeNativeTextFailures",
   hierarchy: "themeTextTierFailures",

@@ -51,6 +51,7 @@ const failureTypes = {
   opacity: "OpacityFailure",
   typeface: "TypefaceFailure",
   contrast: "ContrastFailure",
+  ring: "RingFailure",
   highlight: "HighlightFailure",
   nativeText: "NativeTextFailure",
   hierarchy: "TextTierFailure",
@@ -64,6 +65,7 @@ const checkFunctions = {
   opacity: "themeOpacityFailures",
   typeface: "themeTypefaceFailures",
   contrast: "themeContrastFailures",
+  ring: "themeRingFailures",
   highlight: "themeHighlightFailures",
   nativeText: "themeNativeTextFailures",
   hierarchy: "themeTextTierFailures",
@@ -81,6 +83,7 @@ const ordinals = [
   "seventh",
   "eighth",
   "ninth",
+  "tenth",
 ] as const;
 
 describe("packages/tokens/README.md", () => {
@@ -115,6 +118,7 @@ describe("packages/tokens/README.md", () => {
       "seven",
       "eight",
       "nine",
+      "ten",
     ] as const;
     const count = countWords[themeChecks.length];
     expect(readme).toContain(`That is one of ${count} checks`);

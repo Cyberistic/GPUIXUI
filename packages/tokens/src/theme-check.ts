@@ -14,6 +14,7 @@ import {
   type NativeTextFailure,
 } from "./native-text-check.js";
 import { themeOpacityFailures, type OpacityFailure } from "./opacity.js";
+import { themeRingFailures, type RingFailure } from "./ring.js";
 import type { Theme, ThemeContrast } from "./theme.js";
 import { themeTypefaceFailures, type TypefaceFailure } from "./typeface.js";
 
@@ -30,6 +31,7 @@ export const themeChecks = [
   "opacity",
   "typeface",
   "contrast",
+  "ring",
   "highlight",
   "nativeText",
   "hierarchy",
@@ -46,6 +48,7 @@ type FailurePayload = {
   readonly opacity: OpacityFailure;
   readonly typeface: TypefaceFailure;
   readonly contrast: ContrastFailure;
+  readonly ring: RingFailure;
   readonly highlight: HighlightFailure;
   readonly nativeText: NativeTextFailure;
   readonly hierarchy: TextTierFailure;
@@ -58,7 +61,8 @@ type FailurePayload = {
  * is a role outside the hex form the token maths parses, `opacity` is an alpha
  * channel the role is not painted with, `typeface` is a family name the runtime
  * cannot resolve as written, `contrast` is a documented pair
- * below its floor, `highlight` is a find-highlight wash whose text misses its
+ * below its floor, `ring` is a two-tone ring whose worst case over an arbitrary
+ * content colour misses the mark floor, `highlight` is a find-highlight wash whose text misses its
  * floor or whose active match is not a perceivable step above the match,
  * `nativeText` is a native document fade, two-fade composition or ink wash below
  * its floor, `hierarchy` is a text tier that is not a perceivable step
@@ -76,11 +80,12 @@ export type ThemeFailure = {
  * Every defect in an edited theme, from one call.
  *
  * The extension mechanism's guarantee is only whole when the colour-format,
- * opacity, typeface, contrast, find-highlight, native-document, text-hierarchy,
+ * opacity, typeface, contrast, ring, find-highlight, native-document, text-hierarchy,
  * direction and metric checks all run: a theme whose only defect is a `shadow:
  * "black"` tint, a translucent elevation tint the paint discards, a solid modal
  * scrim, a zero focus-ring spread, a CSS family stack, a disabled label raised
- * to body strength, a find highlight that erases its own text or collapses the
+ * to body strength, a two-tone ring that collapses over a swatch, a find
+ * highlight that erases its own text or collapses the
  * active match into the match, a native document whose fade or ink wash erases
  * its text, or a light pointer ladder
  * whose hover and press lighten returns `[]` from the contrast check alone. This
@@ -88,9 +93,9 @@ export type ThemeFailure = {
  * {@link themeChecks} owns — the three format checks first, so a malformed role
  * is named before the `NaN` ratios it causes, an alpha channel before the tint
  * it repaints and a malformed family before the type scale painted with it,
- * then contrast, then the find-highlight washes, then the native document
- * paints, then the text hierarchy, then the interaction direction, then metrics
- * — and tags each failure with the check that found it.
+ * then contrast, then the ring, then the find-highlight washes, then the native
+ * document paints, then the text hierarchy, then the interaction direction, then
+ * metrics — and tags each failure with the check that found it.
  *
  * `contrast` defaults to the level the theme declares, exactly like
  * {@link themeContrastFailures}, so a high-contrast theme is checked against
@@ -127,6 +132,9 @@ export function themeFailures(
     ),
     ...themeContrastFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "contrast", ...failure }),
+    ),
+    ...themeRingFailures(theme, contrast).map(
+      (failure): ThemeFailure => ({ kind: "ring", ...failure }),
     ),
     ...themeHighlightFailures(theme, contrast).map(
       (failure): ThemeFailure => ({ kind: "highlight", ...failure }),

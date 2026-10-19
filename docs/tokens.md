@@ -83,6 +83,7 @@ missing here is not public.
 | `ContrastFailure` | One documented pair a theme misses, with its floor and ratio, plus the wash, the opacity or the elevation `level` when the pair is composited. |
 | `ContrastPair` | A `[foreground, background, pairClass]` contract row. |
 | `ContrastPairClass` | The floor class a pair is held to. |
+| `ContrastRing` | The two tones and thickness of a ring that stays visible on arbitrary content. |
 | `ControlSize` | `"sm"`, `"md"` or `"lg"`, derived from `controlSizes`. |
 | `Density` | Resolved control heights, padding and row height for a preset. |
 | `DensityName` | A preset name from `densityNames`. |
@@ -133,6 +134,7 @@ missing here is not public.
 | `PlatformVariant` | A platform that carries its own style: `darwin`, `linux` or `win32`. |
 | `Radius` | The corner-radius scale. |
 | `RecipeShippedTheme` | A recipe set in `shippedThemes`, with the recipe it came from. |
+| `RingFailure` | A two-tone ring whose worst case over an arbitrary colour misses the mark floor. |
 | `SelectionStyle` | `{ selectionColor }` for inherited text selection. |
 | `ShippedTheme` | One shipped set, discriminated by `source`: identity, platform or recipe. |
 | `Spacing` | The spacing scale shared by padding, margin and gap. |
@@ -149,7 +151,7 @@ missing here is not public.
 | `ThemeColors` | The 70 semantic colour roles. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
-| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `highlight`, `nativeText`, `hierarchy`, `direction` or `metric`. |
+| `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `ring`, `highlight`, `nativeText`, `hierarchy`, `direction` or `metric`. |
 | `ThemeFailureKind` | The check that found a `ThemeFailure`; one member of `themeChecks`. |
 | `ThemeMode` | `"light"` or `"dark"`. |
 | `ThemeOverrides` | A partial theme for `extendTheme`. |
@@ -1376,6 +1378,64 @@ A runnable example lives in
 [`src/focus-ring.example.ts`](../packages/tokens/src/focus-ring.example.ts) and
 [`src/inset-focus-ring.example.ts`](../packages/tokens/src/inset-focus-ring.example.ts).
 
+### A ring over arbitrary content
+
+A marker on content the theme does not own — a colour swatch, a user-supplied
+preview, a custom theme tile — cannot be one role: a ring painted with
+`foreground` measures **1.000:1** on a `foreground` swatch. `contrastRing(theme)`
+returns the theme's two extreme tones, `background` next to the content and
+`foreground` outside it, at `borderWidth.strong`:
+
+```tsx
+import { contrastRing } from "@gpuixui/tokens";
+
+const ring = contrastRing(theme);
+// {
+//   inner: theme.colors.background,
+//   outer: theme.colors.foreground,
+//   width: theme.borderWidth.strong,
+// }
+```
+
+For any content colour the two contrasts multiply to the tone pair's own ratio,
+so the worst case over **every** colour is its square root:
+`sqrt(contrast(outer, inner))`. The identity light pair guarantees **3.98:1** and
+the AAA pairs **4.58:1**; the tightest shipped set (`Dark · Linux`) guarantees
+**3.70:1**, above the 3:1 mark floor (4.5:1 at AAA). The outer tone's surface
+side is already held by the body pairs — `foreground` on the four surfaces a
+swatch sits on, the row washes and the soft status fills — and
+`themeRingFailures(theme)` reports a theme whose worst case falls below the
+floor.
+
+Paint the inner tone as the border and the outer as a zero-blur shadow spread by
+the same width:
+
+```tsx
+import { contrastRing } from "@gpuixui/tokens";
+
+const ring = contrastRing(theme);
+const ringed = {
+  borderColor: ring.inner,
+  borderWidth: ring.width,
+  boxShadow: {
+    offsetX: 0,
+    offsetY: 0,
+    blurRadius: 0,
+    spreadRadius: ring.width,
+    color: ring.outer,
+  },
+};
+```
+
+That uses the runtime's single shadow slot, so the ringed element cannot also
+carry an elevation shadow; a wrapper painting `outer` with `padding: ring.width`
+around an inner border is the alternative. This is not the focus indicator: a
+control's keyboard ring is `focusRing(theme)`, and a ring inside a filled control
+is `insetFocusRing(theme, family)`. The executed composition is
+[`src/contrast-ring.example.ts`](../packages/tokens/src/contrast-ring.example.ts)
+and the regression suite is
+[`src/ring.test.ts`](../packages/tokens/src/ring.test.ts).
+
 ## Text selection
 
 GPUix 0.10.0 exposes `selectionColor` and `userSelect` as inherited `StyleDesc`
@@ -2020,11 +2080,11 @@ Merge rules:
 ### Checking a theme
 
 An edited theme — a copied platform style or a brand palette — can be held to
-the same floors as the shipped ones. The guarantee is nine checks — colour
-format, role opacity, typeface form, contrast, find highlight, native text
-fades, text hierarchy, interaction direction and numeric metrics — and
-[`themeFailures`](#one-check) runs all of them in one call; the sections below
-explain each one it composes.
+the same floors as the shipped ones. The guarantee is ten checks — colour
+format, role opacity, typeface form, contrast, content ring, find highlight,
+native text fades, text hierarchy, interaction direction and numeric metrics —
+and [`themeFailures`](#one-check) runs all of them in one call; the sections
+below explain each one it composes.
 
 ```ts
 import { themeContrastFailures } from "@gpuixui/tokens";
@@ -2644,7 +2704,8 @@ every elevation level fully opaque, a translucent `shadow` tint whose byte
 `elevationShadow` replaces, a solid `overlay` scrim that hides the window, a
 `sans: "Inter, system-ui, sans-serif"`
 stack, which silently paints the system face, a `disabledForeground` raised
-to body strength, a find highlight that erases its own text or collapses the
+to body strength, a two-tone ring that collapses over a swatch, a find highlight
+that erases its own text or collapses the
 active match into the match, a native document whose fade or ink wash erases its
 text, or a light pointer ladder that lightens on hover
 returns `[]`
@@ -2668,13 +2729,14 @@ themeFailures(theme);
 The order is diagnostic: the format checks first — `color`, `opacity`,
 then `typeface`, so a malformed role is named before the `NaN` ratios it causes,
 an alpha channel before the tint it repaints and a malformed family before the
-type scale painted with it — then `contrast`, then `highlight`, then
+type scale painted with it — then `contrast`, then `ring`, then `highlight`, then
 `nativeText`, then `hierarchy`, then `direction`, then `metric`. `themeChecks`
 is that order as a list and
 `ThemeFailureKind` is the union it derives, so a report or a settings screen
 names each check without retyping them, and adding a check is one edit at the
 index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
-`TypefaceFailure`, `ContrastFailure`, `HighlightFailure`, `NativeTextFailure`,
+`TypefaceFailure`, `ContrastFailure`, `RingFailure`, `HighlightFailure`,
+`NativeTextFailure`,
 `TextTierFailure`, `DirectionFailure` or
 `MetricFailure` — the
 same payload the individual check returns — plus its `kind`. A
@@ -2682,7 +2744,7 @@ same payload the individual check returns — plus its `kind`. A
 surface, role and ratio, and `pairClass: "step"` carries the surface and the
 ratio between the two washes. The `contrast`
 argument defaults to the level the theme declares and reaches the contrast,
-highlight and hierarchy halves unchanged, so `themeFailures(theme, "high")` asks
+ring, highlight and hierarchy halves unchanged, so `themeFailures(theme, "high")` asks
 a stricter question of a theme that does not claim AAA floors; the opacity and
 metric halves are level-independent, because a shape does not change at AAA. A
 consumer's test is one

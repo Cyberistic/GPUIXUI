@@ -481,11 +481,15 @@ ring — `color-picker.tsx:161` paints the selection ring in `theme.colors.foreg
 on the swatch's own fill, and the six default swatches are `primary`, `secondary`,
 `accent`, `muted`, `destructive` and `foreground`, so the ring measures
 **1.000:1** on the `foreground` swatch in every theme and 1.56–2.98:1 on
-`primary`/`destructive` in most sets, under the 3:1 mark floor. A ring that must
-contrast with arbitrary content needs two tones — e.g. a `background` inner ring
-plus a `borderStrong`/`foreground` outer ring — or a `primaryForeground` check
-glyph on the swatch; no single palette role can guarantee contrast with a
-user-supplied colour (plan 389 audit; owner: `components`)
+`primary`/`destructive` in most sets, under the 3:1 mark floor. Paint the two
+tones from `contrastRing(theme)` — the `background` inner tone as the border and
+the `foreground` outer tone as a zero-blur spread shadow, as
+`packages/tokens/src/contrast-ring.example.ts` does — which guarantees
+`sqrt(contrast(foreground, background))` against any swatch (3.70:1 at the
+tightest shipped set) and is held by `themeRingFailures` — or a
+`primaryForeground` check glyph on the swatch; no
+single palette role can guarantee contrast with a user-supplied colour (plan 389
+audit; token half shipped in plan 611; owner: `components`)
 `[ ]` Cross-team: `components` uses `primaryText` for the Accordion trigger's
 hover label — `accordion.tsx:474` sets `color: primary` on hover, and the fill
 role measures 4.21:1 on the macOS light canvas and 3.82:1 on a card, under the
@@ -2139,6 +2143,16 @@ sat undimmed behind a dialog; the three join `contentFillSurfaces`, taking the
 scrim and dialog-face walks 18 → 21 pairs and the `md` elevation walk 12 → 15
 fills, every shipped set already clears 1.05:1 (1.284:1 at the tightest) and no
 colour moves (plan 610)
+`[x]` Ship a ring that stays visible on arbitrary content — a selected swatch
+ringed in one role vanishes on a swatch of that colour (the ColorPicker's
+`foreground` swatch measured **1.000:1**), so `contrastRing(theme)` returns the
+theme's `background` beside the content and `foreground` outside it at
+`borderWidth.strong`, whose worst case over any colour is
+`sqrt(contrast(foreground, background))` (3.70:1 at the tightest shipped set,
+4.58:1 at AAA); `themeRingFailures` reports a theme below the `mark` floor and
+`themeFailures` composes it as the tenth kind, `ring`; the executed one-element
+composition is a border plus a spread shadow, and no colour, pair, floor or
+metric moves (plan 611)
 
 ## Phase C — Tier 1–2 components
 

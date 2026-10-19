@@ -299,13 +299,14 @@ import { themeContrastFailures } from "@gpuixui/tokens";
 themeContrastFailures(brandTheme); // []
 ```
 
-That is one of nine checks, and running it alone is not the guarantee: a zero
+That is one of ten checks, and running it alone is not the guarantee: a zero
 `borderWidth.strong` (no focus ring), a `scrollbar: "rebeccapurple"` role, a
 translucent `shadow` tint the paint discards, a solid `overlay` scrim, a CSS
-family stack, a `disabledForeground` raised to body strength, a native document
+family stack, a `disabledForeground` raised to body strength, a two-tone ring
+that collapses over a swatch, a native document
 whose fade or ink wash erases its text, or a light pointer ladder whose hover
 lightens passes it.
-`themeFailures(theme, contrast = theme.contrast)` composes all nine and tags each
+`themeFailures(theme, contrast = theme.contrast)` composes all ten and tags each
 entry with the `kind` that found it:
 
 ```ts
@@ -314,14 +315,15 @@ import { themeFailures } from "@gpuixui/tokens";
 themeFailures(brandTheme); // [] when every colour, family, pair, tier, ladder and metric holds
 ```
 
-The order is diagnostic — `color`, `opacity`, `typeface`, `contrast`,
+The order is diagnostic — `color`, `opacity`, `typeface`, `contrast`, `ring`,
 `highlight`, `nativeText`, `hierarchy`, `direction` and
 `metric` — and `themeChecks` is that order as a list, so a report or a settings
 screen iterates the index instead of retyping the kinds. The payload is the same
 `ColorFailure`, `OpacityFailure`, `TypefaceFailure`, `ContrastFailure`,
-`HighlightFailure`, `NativeTextFailure`, `TextTierFailure`, `DirectionFailure`
+`RingFailure`, `HighlightFailure`, `NativeTextFailure`, `TextTierFailure`,
+`DirectionFailure`
 or `MetricFailure` the individual check returns. `themeTextTierFailures` is the
-seventh check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below
+eighth check: `textTiers` is `[dimmer, brighter]` for `mutedForeground` below
 the body role each surface paints — `foreground` on the canvas and the row washes,
 `cardForeground` on a card, `popoverForeground` on a menu, dialog or toast and
 `inputForeground` in a field — and for `disabledForeground` and `placeholder`
@@ -329,7 +331,7 @@ below `mutedForeground`; each is held one 1.05:1 step below the tier above it on
 the surfaces both are documented on. `selectedForeground` is deliberately not a
 body tier: it is the secondary-strength tint an inherited label keeps inside a
 selected row, whose title is `foreground`. `themeDirectionFailures` is the
-eighth: `stateLadders` names the four filled families, the panel action, the
+ninth: `stateLadders` names the four filled families, the panel action, the
 generic wash and the selected step, and each step must move away from the
 canvas — darker in light, lighter in dark — so a light `primaryHover` that is
 lighter than its `primary` is reported even though the 1.05:1 step floor passes.
@@ -752,6 +754,24 @@ const ring = insetFocusRing(getTheme("dark"), "primary"); // primaryForeground
 
 A runnable example lives in
 [`src/inset-focus-ring.example.ts`](./src/inset-focus-ring.example.ts).
+
+A marker on content the theme does not own — a colour swatch, a user-supplied
+preview — needs two tones: a ring painted with one role vanishes on content of
+that colour. `contrastRing(theme)` returns `background` next to the content and
+`foreground` outside it at `borderWidth.strong`; the worst case over any content
+colour is the square root of the pair's contrast (3.70:1 at the tightest shipped
+set, above the mark floor), and `themeRingFailures(theme)` reports a theme that
+falls below it:
+
+```ts
+import { contrastRing, getTheme } from "@gpuixui/tokens";
+
+const ring = contrastRing(getTheme("dark"));
+// border: ring.inner at ring.width, shadow: ring.outer spread by ring.width
+```
+
+A runnable example lives in
+[`src/contrast-ring.example.ts`](./src/contrast-ring.example.ts).
 
 ## Selection and scrollbars
 
