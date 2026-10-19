@@ -29,7 +29,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | `200–299` | reference adoption and gap sequencing |
 | `300–399` | free |
 | `400–499` | docs site |
-| `500–599` | tokens and theming overflow (this workstream) |
+| `500–699` | tokens and theming overflow (this workstream; numbers are shared across worktrees, so take the next free — `599` and `600` are in use by `playground`) |
 
 ## The plan set
 
@@ -277,6 +277,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [595](./595-field-control-fill.md) | The interactive fill a control paints inside a field | F | 309, 353, 357, 394, 503, 527 | done |
 | [596](./596-control-glyph-fit.md) | The matching icon must fit its control | F | 358, 372, 384, 517, 521, 552 | done |
 | [598](./598-notification-panel-dimensions.md) | The notification inbox's fixed surface metrics | F | 353, 358, 365, 384, 530, 556, 568 | done |
+| [601](./601-date-field-width.md) | The date field's fixed width and the overlay's false calendar claim | F | 353, 358, 384, 556, 598 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3064,6 +3065,16 @@ control (a 34px content box); a large slider thumb outgrew the same track. Every
 control size is now held to its matching tier plus its two borders, the plan-384
 rule keeps its single diagnostic, and every shipped pair keeps at least 8px of
 content (compact), so no token value moves.
+
+Plan `601` closes the last fixed field metric and a false claim beside it. The
+date trigger paints a 220px field around its own `spacing.md` insets, gap and
+disclosure glyph, but the width was a component literal, while `overlayWidth`
+was documented as the "combobox and calendar width" — the calendar is
+content-sized at seven `calendarCellSize` cells (238px before padding). The
+field becomes `dimensions.dateFieldWidth`, a content-fit rule holds it to its
+own insets, gap, one `label` glyph and its `caption` chevron, and the documents
+derive the calendar's grid from `calendarCellSize`. No shipped colour, pair or
+pixel moves.
 
 ## How to use a plan
 
