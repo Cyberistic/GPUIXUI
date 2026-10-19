@@ -23,3 +23,11 @@ export const wholeIndex = (value: number, count: number): number => {
   const whole = Number.isFinite(value) ? Math.trunc(value) : 0;
   return Math.min(Math.max(whole, 0), count - 1);
 };
+
+/**
+ * A caller's 1-based step number: a whole value at least 1. A fractional value
+ * names no step, so it is truncated to the step below it; a non-finite one
+ * starts at the first step, matching `wholeIndex`'s first-entry rule.
+ */
+export const wholeStep = (value: number): number =>
+  Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : 1;

@@ -51,6 +51,11 @@ The status is derived from `value` — there is no `status` prop to contradict i
 | `= value` | `current` | `primary` fill, `primaryForeground` number | `foreground` |
 | `> value` | `upcoming` | `muted` fill, `mutedForeground` number | `mutedForeground` |
 
+The root normalises its 1-based `value` once before comparing: a fractional
+value is truncated to the step below it (`1.5` → step 1) and a non-finite one
+starts at the first step, so exactly one row is current even when the caller
+passes a malformed number (plan 661).
+
 `StepperStepState` is the public state object: `{ status }`. Pass a function to
 `style` to read it:
 
@@ -108,11 +113,12 @@ A custom theme changes the whole indicator with no code change — see
 
 ## Verification
 
-`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer (10 tests): step
+`src/behaviour/stepper.test.tsx` runs in the real GPUix renderer (12 tests): step
 order with labels and descriptions, derived statuses in both themes, the selected
 current step, the three status descriptions, a caller description joined with
 the status, label colours per status, both orientations, list naming, a consumer
-`style` winning, and `style` callbacks receiving the status.
+`style` winning, `style` callbacks receiving the status, and a fractional or
+non-finite root value still naming exactly one current step.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

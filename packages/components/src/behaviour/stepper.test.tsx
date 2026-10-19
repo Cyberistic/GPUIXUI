@@ -3,8 +3,9 @@
  *
  * The bugs these guard: a status that is passed instead of derived from `value`;
  * an inverted comparison that swaps complete and upcoming; a current step that is
- * never announced; labels that ignore the muted role for upcoming steps; and a
- * `style` callback that cannot see the derived status.
+ * never announced; labels that ignore the muted role for upcoming steps; a
+ * `style` callback that cannot see the derived status; and a fractional or
+ * non-finite root value that named no current step (plan 661).
  */
 
 import { describe, expect, it } from "vitest";
@@ -233,6 +234,54 @@ describe("Stepper", () => {
     expect(stepper.renderer.findByTestId("one")?.style.opacity).toBe(0.4);
     expect(stepper.renderer.findByTestId("two")?.style.opacity).toBe(1);
     expect(stepper.renderer.findByTestId("three")?.style.opacity).toBe(0.4);
+
+    stepper.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 661): a fractional root value was never equal to
+   * an integer step, so every row was complete or upcoming and none was
+   * current.
+   */
+  it("names the step below a fractional value as current", () => {
+    const stepper = renderComponent(<Checkout value={1.5} />);
+
+    const rows = nodesWithRole(stepper.renderer, "listitem");
+    expect(rows.map((row) => Option.contains(row.selected, true))).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    expect(rows.map((row) => Option.getOrUndefined(row.description))).toEqual([
+      "Current",
+      "Upcoming",
+      "Upcoming",
+    ]);
+
+    stepper.unmount();
+  });
+
+  /**
+   * The bug this guards (plan 661): a non-finite root value compared false with
+   * every step, so the stepper painted no current row at all.
+   */
+  it("starts a non-finite value at the first step", () => {
+    const stepper = renderComponent(
+      <Stepper value={Number.NaN} label="Checkout">
+        <StepperStep value={1} label="Account" />
+        <StepperStep value={2} label="Billing" />
+      </Stepper>,
+    );
+
+    const rows = nodesWithRole(stepper.renderer, "listitem");
+    expect(rows.map((row) => Option.contains(row.selected, true))).toEqual([
+      true,
+      false,
+    ]);
+    expect(rows.map((row) => Option.getOrUndefined(row.description))).toEqual([
+      "Current",
+      "Upcoming",
+    ]);
 
     stepper.unmount();
   });

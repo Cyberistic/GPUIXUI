@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { wholeCap, wholeIndex } from "./count.js";
+import { wholeCap, wholeIndex, wholeStep } from "./count.js";
 
 describe("wholeCap", () => {
   it("truncates a finite count and keeps the floor", () => {
@@ -43,5 +43,20 @@ describe("wholeIndex", () => {
 
   it("reports zero for an empty list", () => {
     expect(wholeIndex(2, 0)).toBe(0);
+  });
+});
+
+describe("wholeStep", () => {
+  it("truncates a fractional step and keeps the first step as the floor", () => {
+    expect(wholeStep(1.5)).toBe(1);
+    expect(wholeStep(2.9)).toBe(2);
+    expect(wholeStep(0)).toBe(1);
+    expect(wholeStep(-3)).toBe(1);
+  });
+
+  it("starts a non-finite step at the first step", () => {
+    expect(wholeStep(Number.NaN)).toBe(1);
+    expect(wholeStep(Number.POSITIVE_INFINITY)).toBe(1);
+    expect(wholeStep(Number.NEGATIVE_INFINITY)).toBe(1);
   });
 });

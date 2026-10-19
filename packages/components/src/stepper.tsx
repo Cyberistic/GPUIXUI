@@ -2,10 +2,11 @@
  * Stepper: a multi-step progress indicator.
  *
  * The status is derived from `value`, never passed: a step before the current
- * one is complete, the current one is current, the rest are upcoming. The
- * component holds no state and takes no callback — the workflow that owns the
- * value renders the stepper from it, the same way a `Field` does not own its
- * value.
+ * one is complete, the current one is current, the rest are upcoming. The root
+ * normalises that value once, so a fractional or non-finite number still names
+ * exactly one step (plan 661). The component holds no state and takes no
+ * callback — the workflow that owns the value renders the stepper from it, the
+ * same way a `Field` does not own its value.
  *
  * Measured limitation: `@gpuix/native@0.10.0` has no `aria-current`, so the
  * current step carries `aria-selected` — the substitution Pagination uses.
@@ -21,6 +22,7 @@ import {
 } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { createContext, useContext } from "react";
+import { wholeStep } from "./internal/count.js";
 import {
   assertParts,
   type PartChildren,
@@ -107,9 +109,12 @@ export const Stepper = ({
 }: StepperProps) => {
   const theme = useTheme();
   assertParts(stepperRoot, children);
+  // A fractional or non-finite value names no step; normalise once so exactly
+  // one row is current (plan 661).
+  const current = wholeStep(value);
 
   return (
-    <StepperContext.Provider value={{ value, orientation }}>
+    <StepperContext.Provider value={{ value: current, orientation }}>
       <div
         role="list"
         {...(label === undefined ? {} : { "aria-label": label })}
