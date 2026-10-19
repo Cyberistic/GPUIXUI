@@ -99,9 +99,9 @@ The suite is **103/103 green here** (exit `0`, `.artifacts/smoke-report.json`, *
 2026-10-19, the merge/release gate on the final branch; it covered every live
 scenario registered at that point, including the twins added after the previous
 gate — `live-panel-nested`/`live-floating` (plan `594`), `live-qr` (plan `599`)
-and `live-scroll-into-view` (plan `601`). Both `host` lines carry the pins. The 0.10.0 box
-contract (plan `529` §6.3) — bounds report a content origin and a borderless
-size — is what every geometry check now asserts.
+and `live-scroll-into-view` (plan `601`). Both `host` lines carry the pins. The
+0.10.0 box contract (plan `529` §6.3) — bounds report a content origin and a
+borderless size — is what every geometry check now asserts.
 
 **The paint counter is structural (plan `527`, `frame-stats` + `live-frames`):**
 `getDebugFrameOverlayStats()` counts **paints**, not frame-loop ticks — an idle
