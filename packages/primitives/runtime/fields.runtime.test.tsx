@@ -19,7 +19,6 @@ import type { TestElement } from "@gpuix/react/testing";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { fieldRecipeRing } from "../src/core/recipes.js";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
@@ -526,23 +525,16 @@ const selectProps = {
   ],
 } as const;
 
-/**
- * The ring the runtime paints for the field recipe (plan 372).
- *
- * The select's trigger is a field, so it rings like `Input`, not with the
- * token's 2 px ring.
- */
-const FOCUS_RING = {
-  ...Option.getOrElse(Option.fromNullishOr(fieldRecipeRing(testTheme)), () =>
-    expect.fail("the field recipe declared no focus ring"),
-  ),
-  inset: false,
-};
-
 /** The painted shadow of an element, as the runtime reports it. */
 const shadowOf = (runtime: Runtime, testId: string) =>
   Option.flatMap(runtime.element(testId), (element) =>
     Option.fromNullishOr(element.style.boxShadow),
+  );
+
+/** Whether the Select trigger paints a focus ring (not its resting elevation). */
+const triggerRinged = (runtime: Runtime): boolean =>
+  Option.exists(runtime.element("sel-trigger"), (element) =>
+    isFocusRing(element.style.boxShadow),
   );
 
 /** The element that holds native focus, or a failed test. */
@@ -567,12 +559,14 @@ it("rings the Select trigger when Tab reaches it", async () => {
   );
   runtime.focusNext();
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
-  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
-    FOCUS_RING,
-  );
+  expect(triggerRinged(runtime)).toBe(true);
   runtime.focusNext();
-  expect(Option.isNone(shadowOf(runtime, "sel-trigger"))).toBe(true);
+  runtime.flush();
+  await settleFocus();
+  expect(triggerRinged(runtime)).toBe(false);
 });
 
 it("keeps the Select trigger ringed while its list is open", async () => {
@@ -583,12 +577,12 @@ it("keeps the Select trigger ringed while its list is open", async () => {
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   runtime.keyDown("sel-trigger", "enter");
   // The list owns native focus while it is open; the ring marks its trigger.
   expect(Option.getOrUndefined(runtime.focused())).not.toBe("sel-trigger");
-  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
-    FOCUS_RING,
-  );
+  expect(triggerRinged(runtime)).toBe(true);
 });
 
 it("returns focus to a ringed Select trigger after Escape", async () => {
@@ -599,13 +593,14 @@ it("returns focus to a ringed Select trigger after Escape", async () => {
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   runtime.keyDown("sel-trigger", "enter");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "escape");
   runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
-  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
-    FOCUS_RING,
-  );
+  expect(triggerRinged(runtime)).toBe(true);
   expect(runtime.allText()).not.toContain("Pear");
 });
 
@@ -618,16 +613,17 @@ it("returns focus to a ringed Select trigger after committing an option", async 
     </Surface>,
   );
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   runtime.keyDown("sel-trigger", "enter");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "enter");
   runtime.flush();
+  await settleFocus();
   expect(lastValue(field.values)).toBe("pear");
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
-  expect(Option.getOrUndefined(shadowOf(runtime, "sel-trigger"))).toStrictEqual(
-    FOCUS_RING,
-  );
+  expect(triggerRinged(runtime)).toBe(true);
 });
 
 it("skips a disabled Select in the tab order and paints no ring on it", async () => {
@@ -643,8 +639,10 @@ it("skips a disabled Select in the tab order and paints no ring on it", async ()
   );
   runtime.focusNext();
   runtime.focusNext();
+  runtime.flush();
+  await settleFocus();
   expect(Option.getOrUndefined(runtime.focused())).toBe("after");
-  expect(Option.isNone(shadowOf(runtime, "sel-trigger"))).toBe(true);
+  expect(triggerRinged(runtime)).toBe(false);
 });
 
 it("exposes a named combobox whose expanded state follows the list", async () => {

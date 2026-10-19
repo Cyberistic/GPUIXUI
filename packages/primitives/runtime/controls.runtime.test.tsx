@@ -37,7 +37,7 @@ import {
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { Surface, openWindow, testTheme } from "./fixture.js";
+import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -456,6 +456,7 @@ it("paints an attached group's focus ring inside its clip", async () => {
   const before = boundsOf(runtime, "one");
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   expect(runtime.focused()).toStrictEqual(Option.some("one"));
   const group = boundsOf(runtime, "g");
   const one = boundsOf(runtime, "one");
@@ -511,13 +512,15 @@ it("keeps the outer ring for a separated group", async () => {
   );
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   const button = Option.getOrElse(runtime.element("one"), () =>
     expect.fail("the focused button painted no element"),
   );
-  expect(button.style.boxShadow).toStrictEqual({
-    ...buttonRecipeRing(testTheme),
-    inset: false,
-  });
+  // `inset` is the renderer's normalisation: the release build reports the five
+  // authored fields, the main-derived one adds `inset: false` (plan 590).
+  const ring = buttonRecipeRing(testTheme);
+  expect(ring).toBeDefined();
+  expect(button.style.boxShadow).toMatchObject(ring ?? {});
   expect(
     Arr.filter(
       runtime.all(),
@@ -1154,11 +1157,13 @@ it("rings the radio that holds focus, and only that one", async () => {
   runtime.click("before");
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   expect(focusedLabel(runtime)).toBe("Alpha");
   expect(ringed(runtime, "Alpha")).toBe(true);
   expect(ringed(runtime, "Beta")).toBe(false);
   runtime.focusNext();
   runtime.flush();
+  await settleFocus();
   expect(ringed(runtime, "Alpha")).toBe(false);
 });
 
@@ -1209,9 +1214,11 @@ it("rings a focused Checkbox and Switch, and clears it when focus leaves", async
     );
   runtime.click("cb");
   runtime.flush();
+  await settleFocus();
   expect(shadow("Agree")).toBe(true);
   runtime.click("sw");
   runtime.flush();
+  await settleFocus();
   // The ring moved with focus: a stale one would leave both painted.
   expect(shadow("Agree")).toBe(false);
   expect(shadow("Dark mode")).toBe(true);

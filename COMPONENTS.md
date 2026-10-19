@@ -242,16 +242,18 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19 (**after plan
-`591`: 50 files / 722 tests — 656 passed / 66 failed on the store's
-release-tag build**, 13 failing files). The native-focus tracker restored the
+`592`: 50 files / 722 tests — 669 passed / 53 failed on the store's
+release-tag build**, 12 failing files). The native-focus tracker restored the
 19 focus-matrix cases and the disabled ring cases (both files are green in a
 fresh process); plan `591` restored the lifetime of a seeded focus state and the
-`NumberField` blur commit (six cases, no new failures). The remaining failures
-are the 2 px published box model (plan `529` §6.5), the runtime-internal tooltip
-open-on-focus, the `Select`-trigger ring assertions that predate the tracker's
-settle, and the host's window-accumulation degradation in a full run (plan `379`
-§6). Earlier measurements: 721 tests at plan `590` — 647 passed / 74 failed;
-700 tests in
+`NumberField` blur commit (six cases), and plan `592` made the tracker-dependent
+suites wait for the sample (activation 81/81, roving 6/6, loading 9/9 and the
+five Select-trigger ring cases scoped). The remaining failures are the 2 px
+published box model (plan `529` §6.5), the runtime-internal tooltip
+open-on-focus, the attached-group ring's content-box offset, and the host's
+window-accumulation degradation in a full run (plan `379` §6). Earlier
+measurements: 656 passed / 66 failed at plan `591`; 721 tests at plan `590` —
+647 passed / 74 failed; 700 tests in
 46 files at plan `574` — 589 passed / 111 failed; the new late-value matrix
 passes 12/12, and the 657 in 41 files
 below is plan `391`'s measurement; the leading 640 in 36

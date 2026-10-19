@@ -30,7 +30,7 @@ import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import type { Runtime } from "../src/testing/index.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, settleFocus } from "./fixture.js";
 
 const THREE = [
   { value: "a", label: "Alpha" },
@@ -173,6 +173,16 @@ it("commits star 1 from an unrated rating, then moves on", async () => {
       onValueChange={(value) => reports.push(String(value))}
     />,
   );
+  // Focus star 1 and let the tracker publish it: the release runtime sends no
+  // `onFocus`, so the rating's cursor is the value tab stop until the sample
+  // lands (plan `592`).
+  const star = Option.getOrElse(runtime.element("ra-star-1"), () =>
+    expect.fail("the rating painted no first star"),
+  );
+  runtime.renderer.focusElement(star.id);
+  runtime.renderer.dispatchNativeEvents();
+  runtime.flush();
+  await settleFocus();
   runtime.keyDown("ra-star-1", "space");
   runtime.keyUp("ra-star-1", "space");
   expect(reports).toStrictEqual(["1"]);

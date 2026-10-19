@@ -29,7 +29,7 @@ import { Rating } from "../src/components/Rating.js";
 import { Switch } from "../src/components/Switch.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, settleFocus } from "./fixture.js";
 
 const options = [
   { value: "a", label: "Alpha" },
@@ -219,13 +219,17 @@ const SEQUENCES: ReadonlyArray<Sequence> = [
 ];
 
 /** Focus the named element, so the sequence is delivered where a user's would be. */
-const focus = (runtime: Runtime, testId: string): void => {
+const focus = async (runtime: Runtime, testId: string): Promise<void> => {
   const element = Option.getOrElse(runtime.element(testId), () =>
     expect.fail(`no element ${testId} in the activation scene`),
   );
   runtime.renderer.focusElement(element.id);
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
+  // The release runtime dispatches no `onFocus`; the tracker publishes the new
+  // host on its next sample, and the activation rules read that state. Without
+  // the wait the sequence targets the pre-focus tab stop (plan `592`).
+  await settleFocus();
 };
 
 it.each(
@@ -249,7 +253,7 @@ it.each(
       </Surface>,
     );
     runtime.flush();
-    focus(runtime, testCase.focusId);
+    await focus(runtime, testCase.focusId);
     sequence.run(runtime, testCase.focusId);
     runtime.flush();
     // A repeat and the wrong key phase report nothing; an activation reports

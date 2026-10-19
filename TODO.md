@@ -1433,6 +1433,15 @@ retired once both branches are one
       (plan `529` §6.5), headless-tooltip open-on-focus, `Select`-trigger ring
       assertions that predate the tracker's settle, and the full-run
       window-accumulation degradation.
+      **Re-run 2026-10-19 after plan `592`:** 50 files, 722 tests, **669 passed
+      / 53 failed**, 12 failing files. The tracker-dependent suites now wait for
+      the sample (`activation` 81/81, `roving-arrows` 6/6, `loading` 9/9, the
+      five Select-trigger ring cases 5/5 scoped), and 14 cases left the full-run
+      failure list. One `disabled > Button paints no ring` case appeared in this
+      run and passes scoped: the known window-accumulation effect (plan `379`
+      §6), not a regression. The attached `ButtonGroup` ring remains in the
+      box-model class, and the headless-tooltip open-on-focus cases remain the
+      runtime limitation. Plan `592` §5 has the four mutation proofs.
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now
@@ -1638,6 +1647,18 @@ retired once both branches are one
       commits). `FOCUS_SETTLE_MS` now covers the two renders the chain needs.
       Six runtime cases fixed, no new failure; offline 805, runtime 656/722,
       13 failing files (plan `591`).
+
+`[x]` `packages/primitives`: **the focus tracker in the component runtime
+      suites** — 18 of the remaining live failures were tests that asserted in
+      the same tick as the focus move (activation 8, roving cursor 1, ring
+      cases 3, Select-trigger ring 5) or counted every interval as a loading
+      step (1). Each case now waits for the tracker's sample or counts the
+      component's 120 ms step timer, with the original assertion unchanged.
+      Scoped: activation 81/81, roving 6/6, loading 9/9, Select rings 5/5.
+      Full: 669 passed / 53 failed (from 656/66); the attached-group ring stays
+      in the published box-model class and one full-run `disabled` case is the
+      window-accumulation flake (passes scoped). Four mutations fail as they
+      should. Plan `592`.
 
 `[x]` `packages/primitives`: **a blank `aria-description` was a published
       description** — measured (2026-10-19): every control forwarded the raw

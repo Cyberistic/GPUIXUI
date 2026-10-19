@@ -194,7 +194,12 @@ it("animates an indeterminate Progress and leaves a determinate one still", asyn
     try {
       runtime.render(<Surface>{progress}</Surface>);
       runtime.flush();
-      return spy.mock.calls.length;
+      // The focus tracker also schedules an interval (50 ms, plan 590); the
+      // loading step is the 120 ms one. Counting every interval read the
+      // tracker as a step animation (plan 592).
+      return Arr.length(
+        Arr.filter(spy.mock.calls, ([, delay]) => delay === 120),
+      );
     } finally {
       spy.mockRestore();
     }
