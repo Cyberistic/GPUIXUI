@@ -53,7 +53,8 @@ type FailurePayload = {
  * channel the role is not painted with, `typeface` is a family name the runtime
  * cannot resolve as written, `contrast` is a documented pair
  * below its floor, `highlight` is a find-highlight wash whose text misses its
- * floor, `hierarchy` is a text tier that is not a perceivable step
+ * floor or whose active match is not a perceivable step above the match,
+ * `hierarchy` is a text tier that is not a perceivable step
  * below the tier above it, `direction` is a pointer ladder that steps toward the
  * canvas instead of away from it, and `metric` is a numeric invariant a
  * component relies on.
@@ -72,7 +73,8 @@ export type ThemeFailure = {
  * metric checks all run: a theme whose only defect is a `shadow: "black"` tint,
  * a translucent elevation tint the paint discards, a solid modal scrim, a zero
  * focus-ring spread, a CSS family stack, a disabled label raised to body
- * strength, a find highlight that erases its own text or a light pointer ladder
+ * strength, a find highlight that erases its own text or collapses the active
+ * match into the match, or a light pointer ladder
  * whose hover and press lighten returns `[]` from the contrast check alone. This
  * function composes them all in diagnostic order — the order
  * {@link themeChecks} owns — the three format checks first, so a malformed role

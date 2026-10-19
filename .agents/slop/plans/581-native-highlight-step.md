@@ -4,7 +4,13 @@
 573 (`nativeHighlight`, `nativeHighlightStep`, `themeHighlightFailures`),
 342 (the published step floor), 381 (`selected`'s step past `accent`).
 
-**Status:** planned.
+**Status:** done. Executed on `agent/tokens-theme`.
+
+**Implementation note.** The near-opaque example the plan named first,
+`#DCE7FFFC`, did not leave the contrast check empty: as a wash it measures
+1.038:1 on the soft status fills, so `themeContrastFailures` already reported
+it for a different reason. `#C9D6EAFC` is the value the plan and the test carry:
+the two washes measure **1.0019:1** while `themeContrastFailures` returns `[]`.
 
 ---
 
@@ -21,18 +27,19 @@ paint the same colour:
 
 ```ts
 const planted = extendTheme(lightTheme, {
-  colors: { selection: "#DCE7FFFC" }, // 98.8% alpha
+  colors: { selection: "#C9D6EAFC" }, // 98.8% alpha
 });
 
 nativeHighlight(planted);
-// { color: "#DCE7FFFC", activeColor: "#DCE7FFFF" }
+// { color: "#C9D6EAFC", activeColor: "#C9D6EAFF" }
 
 themeHighlightFailures(planted); // []
 themeFailures(planted); // []
 ```
 
-Both washes composite to `#DCE7FF` over the card, so every text pair passes
-(foreground is 13.60:1 there) while `active` and `match` measure **1.000:1**.
+Both washes composite to nearly the same pale blue over the card, so every text
+pair passes (foreground is 11.51:1 there) while `active` and `match` measure
+**1.0019:1**.
 A find bar with this theme paints every match identically; the reader cannot
 tell which match Return will jump to, and the library's one total check says
 the theme is fine.
@@ -169,7 +176,7 @@ return [...failures, ...stepFailures];
 ### 3.3 `packages/tokens/src/native-highlight.test.ts`
 
 Header: add the plan-581 bug — the step promise was held on the shipped sets
-only, and `selection: "#DCE7FFFC"` leaves both washes at **1.000:1** while
+only, and `selection: "#C9D6EAFC"` leaves both washes at **1.0019:1** while
 `themeHighlightFailures` and `themeFailures` return `[]`.
 
 Changes:
@@ -182,10 +189,10 @@ Changes:
    );
    ```
 2. New case **“reports an active match that is not a step above the match”**:
-   - build `planted` with `selection: "#DCE7FFFC"`;
+   - build `planted` with `selection: "#C9D6EAFC"`;
    - assert `themeContrastFailures(planted)` returns `[]` (the text pairs and
      the wash's own visibility all pass — this is why the old check missed it);
-   - find the `pairClass === "step"` failure, assert `ratio` is `1` (to three
+   - find the `pairClass === "step"` failure, assert `ratio` is `1.002` (to three
      decimals) and `floor` is `contrastFloors.default.step`;
    - assert `themeFailures(planted)` contains a failure with
      `kind: "highlight"` and `pairClass: "step"`.
@@ -214,8 +221,8 @@ Changes:
    match that is not `contrastFloors[level].step` above the match on the
    surface it paints on, so an edited `selection` close to opaque — either wash
    then paints the same colour — fails even though every text pair passes.
-   State the regression with the shipped value (`#123456`/`#DCE7FFFC` style
-   edit) and no new figure.
+   State the regression with the edited value (`#C9D6EAFC` style edit) and no new
+   figure.
 3. **One total check** — in the list of what a theme whose only defect escapes
    the contrast check can carry, add “a find highlight that erases its own text
    **or collapses the active match into the match**”; in the paragraph that
@@ -239,7 +246,7 @@ step above the match. One sentence; no new figures.
 - **Theme contrast check** row: in the find-highlight sentence, add that
   `themeHighlightFailures` also reports an active match that is not one `step`
   above the match, after a near-opaque `selection` collapsed both washes to
-  **1.000:1** while every text pair passed (plan 581). Do not change any pair
+  **1.0019:1** while every text pair passed (plan 581). Do not change any pair
   count.
 - **Design tokens** row: the `nativeHighlight` sentence gains the same clause
   in one short phrase.
@@ -282,7 +289,7 @@ so record the manual run in the commit message:
 
 1. With the fix: `nub run --filter @gpuixui/tokens test -- native-highlight` is
    green, and `themeHighlightFailures` on the near-opaque theme reports a
-   `step` failure at **1.000:1**.
+   `step` failure at **1.0019:1**.
 2. Revert only the step walk in `themeHighlightFailures` (keep the union and
    the suite); re-run. Expect the new case to fail because no `step` failure is
    returned.
@@ -299,7 +306,7 @@ so record the manual run in the commit message:
   `HighlightFailure`, so `public-types.test.ts` and the docs type index stay at
   their current names.
 - **STOP** if `themeContrastFailures(planted)` is not `[]` for
-  `selection: "#DCE7FFFC"`. The case exists to prove the old check passed; pick
+  `selection: "#C9D6EAFC"`. The case exists to prove the old check passed; pick
   another near-opaque pale wash and record its measured text ratios instead of
   weakening the assertion.
 
@@ -307,7 +314,7 @@ so record the manual run in the commit message:
 
 - `themeHighlightFailures` reports both arms, discriminated by `pairClass`;
   `themeFailures` tags both `kind: "highlight"`.
-- An edited `selection` at 98.8% alpha produces a step failure at **1.000:1**
+- An edited `selection` at 98.8% alpha produces a step failure at **1.0019:1**
   while the contrast check stays empty; the test fails without the step walk.
 - Every shipped set still returns `[]` from `themeFailures`; no colour, pair,
   floor or check count changes.

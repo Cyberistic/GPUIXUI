@@ -11,6 +11,13 @@
  * role and the same RGB one step stronger, and `nativeHighlightPairs` holds
  * every matchable text role through both washes. This file fails without the
  * fix.
+ *
+ * Plan 581: the step was held on the shipped sets only. `nativeHighlightStep`
+ * is an absolute alpha, so an edited `selection` at 98.8% alpha
+ * (`#C9D6EAFC`) paints both washes the same pale blue — **1.0019:1** — while
+ * every text pair passes and `themeHighlightFailures`/`themeFailures` returned
+ * `[]`.
+ * The check now publishes the step on the four surfaces `bg` may name.
  */
 import { describe, expect, it } from "vitest";
 // `node:fs` is deliberate, as in the other tree-local documentation guards: the
@@ -30,6 +37,8 @@ import {
   nativeHighlightStep,
   nativeTextSurfaces,
   nativeTextTheme,
+  themeContrastFailures,
+  themeFailures,
   themeHighlightFailures,
   type ThemeColors,
 } from "./index.js";
@@ -126,10 +135,33 @@ describe("the native find-highlight contract", () => {
       colors: { selection: alpha(lightTheme.colors.selection, 0.95) },
     });
     const failure = themeHighlightFailures(planted).find(
-      ({ wash }) => wash === "active",
+      (item) => item.pairClass === "secondary" && item.wash === "active",
     );
     expect(failure).toBeDefined();
     expect(failure?.ratio).toBeLessThan(contrastFloors.default.secondary);
+  });
+
+  it("reports an active match that is not a step above the match", () => {
+    const planted = extendTheme(lightTheme, {
+      colors: { selection: "#C9D6EAFC" },
+    });
+    // Every text pair and the wash's own visibility pass: the old check could
+    // not see that both washes paint the same colour.
+    expect(themeContrastFailures(planted)).toEqual([]);
+
+    const step = themeHighlightFailures(planted).find(
+      (failure) => failure.pairClass === "step",
+    );
+    expect(step).toBeDefined();
+    expect(step?.ratio).toBeCloseTo(1.002, 3);
+    expect(step?.floor).toBe(contrastFloors.default.step);
+
+    expect(
+      themeFailures(planted).some(
+        (failure) =>
+          failure.kind === "highlight" && failure.pairClass === "step",
+      ),
+    ).toBe(true);
   });
 
   it("makes the active match a perceivable step above the match", () => {
@@ -143,6 +175,12 @@ describe("the native find-highlight contract", () => {
           `${theme.name} ${surface}`,
         ).toBeGreaterThanOrEqual(contrastFloors.default.step);
       });
+      expect(
+        themeHighlightFailures(theme).some(
+          (failure) => failure.pairClass === "step",
+        ),
+        theme.name,
+      ).toBe(false);
     });
   });
 

@@ -264,7 +264,7 @@ Blocks are reserved so concurrent workstreams do not collide:
 | [572](./572-native-text-metric-scale.md) | The native text metrics that hold type | F | 367, 569 | done |
 | [573](./573-native-find-highlight.md) | The find-highlight wash the native text theme feeds | F | 069, 081, 087, 337, 569 | done |
 | [574](./574-native-syntax-document-surfaces.md) | The native syntax palette on every document surface | F | 088, 319, 503, 528, 569, 572, 573 | done |
-| [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | planned |
+| [581](./581-native-highlight-step.md) | The active find match must be a perceivable step | F | 342, 381, 573 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the

@@ -33,19 +33,32 @@ export interface NativeHighlight {
   readonly activeColor: string;
 }
 
-/** A find-highlight wash whose text misses its floor. */
-export interface HighlightFailure {
-  /** Which of the two washes was painted. */
-  readonly wash: "match" | "active";
-  /** The surface the document paints on. */
-  readonly surface: keyof ThemeColors;
-  /** The text role the wash sat behind. */
-  readonly foreground: keyof ThemeColors;
-  /** The floor the pair missed, at the theme's declared contrast level. */
-  readonly floor: number;
-  /** The measured ratio; `NaN` when a role is not a colour the maths parses. */
-  readonly ratio: number;
-}
+/** A find-highlight pair that misses its floor. */
+export type HighlightFailure =
+  | {
+      /** Highlighted text misses the `secondary` floor through the wash. */
+      readonly pairClass: "secondary";
+      /** Which of the two washes was painted. */
+      readonly wash: "match" | "active";
+      /** The surface the document paints on. */
+      readonly surface: keyof ThemeColors;
+      /** The text role the wash sat behind. */
+      readonly foreground: keyof ThemeColors;
+      /** The floor the pair missed, at the theme's declared contrast level. */
+      readonly floor: number;
+      /** The measured ratio; `NaN` when a role is not a colour the maths parses. */
+      readonly ratio: number;
+    }
+  | {
+      /** The active match is not a perceivable step above the match. */
+      readonly pairClass: "step";
+      /** The surface the two washes were composited over. */
+      readonly surface: keyof ThemeColors;
+      /** The `step` floor for the theme's declared contrast level. */
+      readonly floor: number;
+      /** The measured ratio between the two painted washes. */
+      readonly ratio: number;
+    };
 
 const alphaByte = /^#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})$/;
 
@@ -133,26 +146,59 @@ export function nativeHighlight(theme: Theme): NativeHighlight {
  * body strength would need a wash that paints nothing. The wash's own
  * visibility is the contrast check's `selection` pair: a selection that
  * vanishes into its surface is reported there.
+ *
+ * The same walk reports the **step** between the two washes: an active match
+ * that is not one `contrastFloors[level].step` above the match is reported on
+ * the surface where the pair collapses. The step is an absolute alpha, so a
+ * near-opaque `selection` paints both washes the same colour even though every
+ * text pair still passes; the floor is the one the filled families and the
+ * selected row publish.
  */
 export function themeHighlightFailures(
   theme: Theme,
   contrast: ThemeContrast = theme.contrast,
 ): ReadonlyArray<HighlightFailure> {
-  const floor = contrastFloors[contrast].secondary;
+  const floors = contrastFloors[contrast];
   const highlight = nativeHighlight(theme);
   const washes = [
     ["match", highlight.color],
     ["active", highlight.activeColor],
   ] as const;
-  return washes.flatMap(([wash, paint]) =>
+  const textFailures = washes.flatMap(([wash, paint]) =>
     nativeHighlightPairs.flatMap(([foreground, surface]) => {
       const ratio = contrastRatio(
         theme.colors[foreground],
         painted(paint, surface, theme),
       );
-      return ratio >= floor
+      return ratio >= floors.secondary
         ? []
-        : [{ wash, surface, foreground, floor, ratio }];
+        : [
+            {
+              pairClass: "secondary" as const,
+              wash,
+              surface,
+              foreground,
+              floor: floors.secondary,
+              ratio,
+            },
+          ];
     }),
   );
+  const stepFailures = nativeTextSurfaces.flatMap((surface) => {
+    const ratio = contrastRatio(
+      painted(highlight.activeColor, surface, theme),
+      painted(highlight.color, surface, theme),
+    );
+    return ratio >= floors.step
+      ? []
+      : [
+          {
+            pairClass: "step" as const,
+            surface,
+            floor: floors.step,
+            ratio,
+          },
+        ];
+  });
+  return [...textFailures, ...stepFailures];
 }

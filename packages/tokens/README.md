@@ -796,7 +796,9 @@ seeds its default washes from the text theme's `accent`, and that field is
 identity dark. `nativeHighlight` returns the `selection` role and one
 `nativeHighlightStep` stronger for the active match; `nativeHighlightPairs`
 holds every matchable role to the secondary floor, and `themeHighlightFailures`
-composes the check into `themeFailures`.
+composes the check into `themeFailures` — including the active match's `step`
+above the match, so a near-opaque `selection` that paints both washes the same
+colour is reported.
 
 ```tsx
 import { nativeHighlight, nativeTextTheme } from "@gpuixui/tokens";

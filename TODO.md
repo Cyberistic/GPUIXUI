@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 234/301
+`[x]` `[████████░░]` 235/301
 
 `[x]` Write and index the tokens/theme plan set (plans 010–019, 050–072)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
@@ -1933,6 +1933,12 @@ text roles take one designed step (macOS/Windows/XP/Aero `infoText`, XP
 `successText`/`warningText`/`destructiveText`, Aero `warningText`), so the
 tightest opaque pair is **7.562:1** and the tightest inked **7.008:1**
 (plan 574)
+`[x]` Publish the find bar's active-match step — `nativeHighlightStep` is an
+absolute alpha, so an edited `selection` close to opaque painted both washes the
+same colour while every text pair and `themeFailures` returned `[]`; the check
+now reports a `pairClass: "step"` failure on the four surfaces `bg` may name,
+the union is documented in the type index, and every shipped set already clears
+the floor (plan 581)
 `[ ]` Cross-team: `components` passes `nativeTextTheme(theme)` to every
 `<markdown>`, `<code>` and `<diff>` — `message.tsx` renders `<markdown
 source={text} />` with no prop, so an assistant message is painted with the

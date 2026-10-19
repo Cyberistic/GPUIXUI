@@ -96,7 +96,7 @@ missing here is not public.
 | `FilledControlStyle` | The resting, hover and pressed fills and the one foreground. |
 | `FocusRing` | `{ boxShadow }` for the focus ring. |
 | `FontWeight` | A numeric CSS weight, `1…1000`; the shipped scale uses `400`, `500` and `600`. |
-| `HighlightFailure` | A find-highlight wash whose text misses its floor, with the wash, surface, role and ratio. |
+| `HighlightFailure` | A find-highlight pair that misses its floor: a text role under the secondary floor through a wash, or an active match that is not a perceivable step above the match. |
 | `IconSize` | Icon sizes for `xs` to `xl`. |
 | `IdentityShippedTheme` | An identity set in `shippedThemes`, with no platform style. |
 | `MetricFailure` | One metric a theme misses, with its group, rule and values. |
@@ -1674,6 +1674,15 @@ every syntax capture to the **secondary** floor on all four `Surface` tones
 `themeFailures`; [`native-highlight.test.ts`](./src/native-highlight.test.ts)
 derives every figure above.
 
+The same check holds the step itself. An active match that is not one
+`contrastFloors[level].step` above the match on the surface it paints on is
+reported with `pairClass: "step"`, because `nativeHighlightStep` is an absolute
+alpha: an edited `selection` close to opaque paints both washes the same colour
+while every text pair still passes. A theme with `selection: "#C9D6EAFC"`
+returns `[]` from the contrast check, and the step arm is the only one that
+sees the collapsed match. A text failure keeps its `pairClass: "secondary"` and
+the wash, surface, role and ratio it always had.
+
 A runnable example lives in
 [`src/native-text.example.ts`](./src/native-text.example.ts).
 
@@ -2477,7 +2486,9 @@ every elevation level fully opaque, a translucent `shadow` tint whose byte
 `elevationShadow` replaces, a solid `overlay` scrim that hides the window, a
 `sans: "Inter, system-ui, sans-serif"`
 stack, which silently paints the system face, a `disabledForeground` raised
-to body strength or a light pointer ladder that lightens on hover returns `[]`
+to body strength, a find highlight that erases its own text or collapses the
+active match into the match, or a light pointer ladder that lightens on hover
+returns `[]`
 from `themeContrastFailures` while being unusable.
 `themeFailures(theme, contrast = theme.contrast)` composes all of them and tags
 each entry with the check that found it:
@@ -2507,7 +2518,10 @@ index. A `ThemeFailure` is the underlying `ColorFailure`, `OpacityFailure`,
 `TypefaceFailure`, `ContrastFailure`, `HighlightFailure`, `TextTierFailure`,
 `DirectionFailure` or
 `MetricFailure` — the
-same payload the individual check returns — plus its `kind`. The `contrast`
+same payload the individual check returns — plus its `kind`. A
+`HighlightFailure` is either arm: `pairClass: "secondary"` carries the wash,
+surface, role and ratio, and `pairClass: "step"` carries the surface and the
+ratio between the two washes. The `contrast`
 argument defaults to the level the theme declares and reaches the contrast,
 highlight and hierarchy halves unchanged, so `themeFailures(theme, "high")` asks
 a stricter question of a theme that does not claim AAA floors; the opacity and
