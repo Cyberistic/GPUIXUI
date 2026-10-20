@@ -123,6 +123,10 @@ import {
 import { shadowLiveScenario, shadowView } from "../scenarios/shadow.js";
 import { borderLiveScenario, borderView } from "../scenarios/border.js";
 import {
+  stateColourLiveScenario,
+  stateColourView,
+} from "../scenarios/state.js";
+import {
   captureLive,
   expectColour,
   expectPixel,
@@ -12767,6 +12771,27 @@ const liveBorderPixels: LiveScenario = {
 };
 
 /**
+ * Declared hover and active colours in a real window (plan `754`).
+ *
+ * The headless pass proves the fill changes; this twin proves the same states
+ * survive a window's hover/active delivery and paint path, where the pointer
+ * is a real mouse and every read needs a settle before the frame commits.
+ */
+const liveStatePixels: LiveScenario = {
+  ...stateColourLiveScenario,
+  view: stateColourView,
+  ready: "state-stage",
+  steps: (ctx) =>
+    stateColourLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-state-pixels.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -13902,6 +13927,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   livePixelColour,
   liveShadowPixels,
   liveBorderPixels,
+  liveStatePixels,
   terminal,
   selectionSignal,
 ];

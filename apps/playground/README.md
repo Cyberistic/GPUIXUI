@@ -1592,8 +1592,8 @@ as shipped.
 
 ## The live window run (plan `189`)
 
-The 109-scenario headless suite runs on the offscreen `TestRenderer`, and the
-live registry lists 98 scenarios. `smoke:live` opens
+The 110-scenario headless suite runs on the offscreen `TestRenderer`, and the
+live registry lists 99 scenarios. `smoke:live` opens
 a **real GPUix window**, mounts the shipped `App`, and drives it through
 `@gpuix/native/automation` — `getByTestId`, `click`, keys, the wheel and
 `screenshot`. It reports through the same `Smoke` model and exit codes, so a
@@ -1639,7 +1639,8 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-table-sort` | the shipped `table-select-sort` view: a real wheel moves the body (`y ≈ -200`), `table-sort` makes `table-first` read `Item 199` (the reordered row the automation tree points at), a click selects `r199`, and the selection survives a re-sort back to `Item 000` |
 | `live-grid` | the pinned, windowed grid in a window: a real wheel moves the body ten rows with the frozen column aligned, a `deltaX` wheel over the body is swallowed, the component pan reaches `-360` and the last viewport at `-1700` with header/body alignment, an off-window column has no painted bounds, and six Rights plus three Downs pan and align the reveal — 53 checks (plan `556`). Every child of a live scroller reports a moved box whatever its `position`, so `sticky` stays a headless claim; a scroller's own box moves with its scroll and must be cached first |
 | `live-data-grid` | the virtualized data grid in a window: a real wheel virtualizes the `<virtual-list>` body (header stays, pan stays `0`), a header `deltaX` wheel pans the header and body together (`-90`, then `-400` at the far edge) with the frozen column still, a panned body cell selects its row and takes native focus, the frozen row follows `getListScrollTop`, and a filter/sort from anchor `45` resets to `0` (`count=11`, first `1`; descending first `59`) — 83 checks (plan `606`). **Measured harness difference:** a `deltaX` wheel over a body **cell** pans the scroller live (`-400 → -310`), while the offscreen `TestRenderer` swallows the same verb (plan `338`), so the headless suite keeps using the affordance. A wheel needs the pointer over its target first (`hover` + settle), or the window can deliver it at the previous pointer position |
-| `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` without hover, a release returns `100`, and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
+| `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` (and enters hover, corrected by plan `754`; the release still returns `100`), and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
+| `live-state-pixels` | declared hover and active **colours** in a window: a real hover paints `primary` and leaves its neighbours, leaving reverts, hovering the parent paints `accent` but not the child, hovering the child paints `success` and reverts the parent, a press paints `destructive`, a release-then-hover paints `primary`, and a press while hovered stays `destructive` — 50 checks (plan `754`). **The press itself enters hover**: with `active` removed the pressed box paints the hover fill, so the check is precedence, not "active without hover" |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
@@ -2152,8 +2153,8 @@ ignoring the scale fails `green paints green: expected #00ff00ff, got
 #ff0000ff`; breaking the `Sub` unfilter fails the package test; and removing the
 capture fails with the named `ENOENT` reason instead of a crash.
 
-This settles **colour and the two style families every surface uses**, not
-pixels of everything: anti-aliased edges, glyph rendering and scannability are
+This settles **colour, the two style families every surface uses and the
+pointer-state fills**, not pixels of everything: anti-aliased edges, glyph rendering and scannability are
 still out of scope. Border bands and corner radii are now decoded insurance
 too (plan `745` below), including the measured rule that `overflow: "hidden"`
 clips a child to the **square** content box rather than the rounded shape.
@@ -2242,10 +2243,52 @@ unit test pin the width instead. Removing the thin border reads
 `expected #11141aff, got #a7a9ffff`. Removing `overflow: "hidden"` is a
 **null result** — the clip is square either way, which is the finding itself.
 
+### Declared hover and active colours, in the frame (plan `754`)
+
+`declared-styles` / `live-states` prove the mechanism on a **layout** property
+(hover `100 → 140`, active `180`) and plan `335` measured that the style report
+keeps the **authored** colour, so the usual use of the refinement — a
+colour-only fill behind 30 `hover:` and 39 `active:` declarations — had no
+frame evidence anywhere. `state-pixels` and `live-state-pixels` (**50 checks
+each**) decode six pointer states on one 640 × 360 stage:
+
+| State | Sample | Expectation | Measured |
+| ----- | ------ | ----------- | -------- |
+| hover | the hovered box / its neighbour / the leave target | `primary` / `card` / `card` | `#A7A9FF` / `#191D25` / `#191D25` |
+| leaving | the previously hovered box | `card` — the hover reverts | `#191D25` |
+| parent hover | the parent / the child | `accent` / `card` — a parent hover does not paint its child | `#2E2370` / `#191D25` |
+| child hover | the child / the parent | `success` / `muted` — the child owns the hover and the parent reverts | `#3BC97F` / `#222730` |
+| press | the pressed box | `destructive` — active wins | `#FF6B6B` |
+| release, hover | the pressed box | `primary` — the release clears active and the hover applies | `#A7A9FF` |
+| press while hovered | the pressed box | `destructive` — active wins over hover | `#FF6B6B` |
+
+The pure `state-pixels.ts` owns the precedence (`active > hover > rest`), the
+fixture role mapping and `hasDistinctStates`, a precondition that refuses a
+fixture whose hover equals its own fill (the mutation that makes every pixel
+check vacuous) **before** a frame is captured.
+
+Six frames cost ~40–50 s per host because the offscreen 2560 × 1600 PNG
+dominates every capture, so the sequence asserts one frame per distinct pointer
+state and no state twice; active persistence outside the box stays a geometry
+claim from plan `557`. Seven mutations were observed and reverted: removing the
+hover reads `expected #a7a9ffff, got #191d25ff`, removing the parent's hover
+`expected #2e2370ff, got #222730ff`, removing the child's `expected
+#3bc97fff, got #191d25ff`, swapping hover and active on the press fixture
+`expected #ff6b6bff, got #a7a9ffff`, removing `active` the same way, an
+indistinguishable fixture fails the precondition in 15 ms, and inverting the
+resolver is two red unit tests.
+
+**A measured correction:** a synthetic press **enters hover** on the pressed
+element. With `active` removed, the held box paints the hover colour; plan
+`335`'s "a press at a point does not set the hover state" describes the state
+**after** the release, not during the press. Components are unaffected (active
+wins), but a probe must not read a press as "active without hover".
+
 ## Evidence on this host
 
-The suite is **109/109 green** here (`exit 0`, 4027 checks, 65 capabilities,
-**177.8 s** at the plan `751` gate, 2026-10-20; plan `745` added the 64-check
+The suite is **110/110 green** here (`exit 0`, 4077 checks, 65 capabilities,
+**240.0 s** with plan `754`'s six-frame state probe, 2026-10-20; plan `754`
+added the 50-check `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
 head; plan `736`
 added the 28-check `shadow-pixels`; plan
@@ -2255,7 +2298,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-109/109 scenarios passed · capabilities: layout=verified root=verified text=verified
+110/110 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2276,7 +2319,9 @@ The last full merge/release gate ran **98/98** (`exit 0`, **2780** checks, 61
 capabilities; **1171.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
 head `debe433a` (plan `751`, 0 behind `origin/master`; the commit changes only
 plans), with the whole headless registry at **109/109** (**4027** checks, 65
-capabilities, 177.8 s) on the same head. The registry and the gate agree at
+capabilities, 177.8 s) on the same head. Plan `754` then added
+`live-state-pixels` (50 checks), so the live registry is **99** and the next
+merge gate is expected to read 99/99. The registry and the gate agree at
 **98**. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
@@ -2312,6 +2357,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | typography | an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` widens the run; a `<text>` block fills its parent. **`textAlign` is a no-op** (`left`/`center`/`right` all leave the glyph run at the block edge) — `alignSelf` in a column flex or a narrower width in a `justifyContent` row is the working route |
 | grid layout | equal tracks split a width to the half pixel (`93.5/93/93.5` in 300 with 10 px gaps); explicit rows split a fixed height and stretch an unsized child, but a declared height wins; auto rows follow the tallest child; **default and `zero` `gridColumnMin` are equal**, `min-content` fills with unequal tracks, `max-content` leaves the remainder unused; nested grids resolve against their cell; an oversized child **overflows** its track; `justifyContent` centres content-sized tracks; a fixed-height wrapping row **stretches its line boxes** unless it sets `alignContent: "flex-start"` (measured 104 → 38) |
 | focus | **`onBlur` fires; `onFocus` does not** on the release-tag binding (plans `529`, `583`). `autoFocus`, a click and a traversal all move native focus, reported by `getFocusedElementId()`; a `"tab"` keystroke reaches `onKeyDown` but does not traverse in the `TestRenderer` — `focusNext`/`focusPrevious` do. **Overflow:** a clipped tab is still a tab stop and focus does not reveal it (`tab-strip-focus`) |
+| states | the authored `style.hover` / `style.active` are real: a hover paints its declared fill and reverts on leave, the state is **per element** (a child's hover reverts its parent's), active is applied on a press and wins over hover, and a release clears it. **The press enters hover too** — with `active` absent the held box paints its hover fill — so "active without hover" is not observable; the frame checks precedence (plan `754`) |
 | overlay | the `<anchored>` paints no surface of its own, so `onMouseDownOutside`/`onKeyDown` go on the **content div**; the popup takes focus on open and Escape reaches it |
 | modal | `useGpuix().renderer` is the programmatic-focus path: `focusElement` moves native focus from component code, `getElementBounds` is the existence check before returning focus, and `focusNextWithin`/`focusPreviousWithin` cycle `content → a → b → open-popover → close → content` without leaking. A nested popover's Escape closes only the popover; a second Escape closes the modal |
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |

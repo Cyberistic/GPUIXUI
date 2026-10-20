@@ -95,17 +95,32 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[~]` `[█████████░]` 131/132 plans-and-harness
+`[x]` `[██████████]` 132/132 plans-and-harness
 
-`[~]` **Prove declared hover and active colours in the frame** per plan `754`:
+`[x]` **Prove declared hover and active colours in the frame** per plan `754`:
       the 30 `hover:`/39 `active:` declarations are colour-only and were proven
       only as geometry (`declared-styles`) plus the authored style report, so a
       runtime that applies the refinement but drops its fill would leave every
       button, row, tab and menu item with an invisible hover/pressed state.
-      `state-pixels` and `live-state-pixels` decode ten pointer states from the
-      frame: hover replaces and leaving reverts, hover is owned per element,
-      active paints, active wins over hover, and a held pointer outside keeps
-      it. Pure `state-pixels.ts` + tests; exact ids run recorded here.
+      A pure `state-pixels.ts` (13 tests; playground **495 → 508**) and
+      `state-pixels` / `live-state-pixels` (**50 checks each**, six decoded
+      frames) prove: hover paints `primary` (`#A7A9FF`) and leaves its
+      neighbours `card` (`#191D25`), leaving reverts, the parent's hover paints
+      `accent` (`#2E2370`) but not the child, the child's paints `success`
+      (`#3BC97F`) and reverts the parent, a press paints `destructive`
+      (`#FF6B6B`), a release restores the hover fill, and a press while hovered
+      stays `destructive` (active wins). **Measured correction:** a synthetic
+      press **enters hover** — with `active` removed the held box paints the
+      hover fill — so plan `557`'s "press does not set hover" is the
+      post-release state. Six frames is the cost ceiling (an offscreen capture
+      is ~10.5 s; ten states cost 107 s and were cut to six); active
+      persistence outside the box stays the plan-`557` geometry claim. Seven
+      mutation proofs observed and reverted (M1–M5 and M7 fail by name, M6's
+      precondition fails in 15 ms). Exact ids run: `state-pixels` (green ×3 +
+      M1–M6), `live-state-pixels` (green ×2). Full headless **110/110**
+      (**4077** checks, 65 capabilities, 240.0 s), exit `0`; live registry
+      **99**, no full live gate (merge gate); `nub run check`/`lint`/`test`
+      green.
 
 `[x]` **Run the promotion gate on the head that includes the border pixels**
       per plan `751`: verification only on code head `debe433a` (0 behind
