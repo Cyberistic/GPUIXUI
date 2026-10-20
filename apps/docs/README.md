@@ -525,6 +525,21 @@ row. `component-aliases.test.ts` rejects a shared term or one that shadows
 another component's title, and `smoke:build` queries two recovered terms
 against the production index.
 
+A hand-authored page has no such record, so it gets its own guarded table
+(plan 598): `src/lib/page-aliases.ts` maps a page URL to the phrases a reader
+types for it — `theme switch` and `system theme` → Dark mode, `demo` and
+`sample` → Examples, `how to use` and `import` → Getting started, `version` →
+Installation. A page alias is matched only as the **whole** query: a prefix
+would let `theme` claim Dark mode through `theme switch`, and an inner word would
+let `switch` claim it too. `pageAliasRank` scores `0` above a component's title
+token and a live scene's instruction, and `pageAliasHits` synthesizes the page
+result, so the alias answers a query the lexical index never retrieved. The
+table is page-only — `hint` and `supporting text` are component vocabulary and
+live in `component-aliases.ts` — and `page-aliases.test.ts` rejects a key that
+outlives a page, a key on a component page, a shared term, and a term that
+shadows a page or component name. `smoke:build` asserts `theme switch` and
+`hint` against the production index.
+
 The table got a second measured pass (plan 579). `typeahead`, `passcode`,
 `wizard`, `pin code`, `segmented control`, `hover card`, `menubar` and
 `scrollview` returned nothing or another component; the same table now answers

@@ -1066,6 +1066,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the open-source word the License summary names",
     },
+    {
+      query: "theme switch",
+      expected: "/docs/dark-mode",
+      first: true,
+      what: "a page alias a component's title token and scene instruction outrank",
+    },
+    {
+      query: "hint",
+      expected: "/docs/components/inline-validation",
+      first: true,
+      what: "a component alias recovered beside `helper text`",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

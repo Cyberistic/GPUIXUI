@@ -19,6 +19,7 @@ import {
 import { iconSearchEntry } from "./icon-search";
 import { hostPropsSearchEntry } from "./host-props-search";
 import { layeringSearchEntry } from "./layering-search";
+import { pageAliasRank } from "./page-aliases";
 import { platformSearchEntry } from "./platform-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import {
@@ -408,6 +409,27 @@ export const pageDescriptionHits = (
   );
 
 /**
+ * A page whose alias names the query is a candidate even when no index
+ * returned it (`demo`, `sample`) — the rule `pageTitleHits` uses (plan 598).
+ */
+export const pageAliasHits = (
+  query: string,
+  pages: ReadonlyMap<string, PageMetadata>,
+): ReadonlyArray<SortedResult> =>
+  [...pages].flatMap(([url, page]) =>
+    pageAliasRank(url, query) === undefined
+      ? []
+      : [
+          {
+            id: `page-alias:${url}`,
+            url,
+            type: "page" as const,
+            content: page.title,
+          },
+        ],
+  );
+
+/**
  * A generated document whose promoted name matches is a candidate even when the
  * lexical index never returned it (plan 569): the index tokenises `focusRing`
  * as one word, so `focus ring` never retrieves the table that names it. The
@@ -509,7 +531,14 @@ export const mergeResults = (
         page?.description === undefined || component !== undefined
           ? undefined
           : descriptionMatchRank(page.description, query);
+      /**
+       * Only the page itself earns an editorial alias; a text chunk at the same
+       * URL is prose (plan 598).
+       */
+      const aliasRank =
+        result.type === "page" ? pageAliasRank(result.url, query) : undefined;
       const ranks = [
+        aliasRank,
         component === undefined ? undefined : componentRank(component, query),
         promotedNameRank(generated, query),
         sceneInstructionRank(scenes.get(result.url), query),
@@ -569,6 +598,7 @@ export const search = async (
     [
       ...pageTitleHits(query),
       ...pageDescriptionHits(query, summaryPages),
+      ...pageAliasHits(query, pageMetadata),
       ...generatedNameHits(query),
       ...sceneInstructionHits(query),
       ...registryResults,

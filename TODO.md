@@ -471,15 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 164/164
+`[x]` `[██████████]` 165/165
 
-`[~]` **A page answers the phrase its metadata cannot (plan 598)** — plan 597
+`[x]` **A page answers the phrase its metadata cannot (plan 598)** — plan 597
       §6.4 recorded `system theme` → Switch as a ranker question; the sweep
       found the same class across `theme switch`, `color scheme`, `hint`,
       `demo`, `how to use` and `version`. One guarded page-alias table, matched
       as the whole query only, sends each to the page that owns it; a page
       alias can no longer lose to a component's shared word or a scene
-      instruction.
+      instruction. 111 files / 841 docs tests, 99-page `smoke:build`, root
+      gates green; eight forced defects run and reverted (plan 598 §6.3).
 
 `[x]` **The site's own output is findable (plan 597)** — the page-action
       vocabulary (`page actions`, `copy page`, `view as markdown`, …) and the

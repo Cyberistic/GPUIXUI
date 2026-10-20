@@ -3,7 +3,8 @@
 **Phase:** F (documentation platform, search)
 **Workstream:** docs-site
 **Depends on:** 410, 419, 431, 566, 568, 574, 579, 582, 585, 593, 597
-**Status:** in progress — §6 is filled only by the runs in §3
+**Status:** implemented — §6 records the commands, the 31-test suite and the
+eight two-direction proofs
 
 ## 1. The measured defect
 
@@ -50,6 +51,13 @@ Why each is structural, not a missing summary word:
 - **A word is a prefix of a phrase.** `version` already retrieves Installation's
   prerequisites, but the page itself is second behind its own heading.
 
+Inline validation is a **component page**, so `hint` and `supporting text` are
+component vocabulary, not page vocabulary: they belong in plan 566's
+`component-aliases.ts` beside `helper text` and `error message`, and their
+expected result (`/docs/components/inline-validation`) is unchanged. The page
+table therefore owns only pages without a component record, which is also what
+`summaryPages` already means (plan 568).
+
 A summary can carry these words, but it cannot win: the description tier is
 deliberately below a title token (plan 568), and the scene-instruction tier sits
 between them (plan 582). Changing either rule would re-rank most of the site.
@@ -83,7 +91,6 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map([
       "colour scheme",
     ],
   ],
-  ["/docs/components/inline-validation", ["hint", "supporting text"]],
   ["/docs/examples", ["demo", "sample"]],
   ["/docs/getting-started", ["how to use", "import", "imports"]],
   ["/docs/installation", ["version", "versions"]],
@@ -110,6 +117,10 @@ export const pageAliasRank = (
     : undefined;
 };
 ```
+
+`component-aliases.ts` gains `hint` and `supporting text` for
+`inline-validation`; the existing component-alias guards and smoke check cover
+them, so this table stays page-only.
 
 Exact-only is deliberate and is the difference from `aliasMatchRank` (plan 566),
 which allows a query prefix for a **component** term (`text` → `textbox`).
@@ -175,7 +186,7 @@ New file: `apps/docs/src/lib/page-aliases.test.ts`:
 | no term equals a page title | an alias shadows a page's own name |
 | no term equals a component title, slug, exported symbol, part, props type or component alias | the misroute class plan 566 guards |
 | `pageAliasRank` is exact-only | a prefix or an inner word matches |
-| the fifteen measured queries return the owning page **first** | the table or the wiring is lost |
+| the thirteen page queries and the two component queries return the owning page **first** | the table or the wiring is lost |
 | eight regression queries keep their current owner | a term steals `theme`, `switch`, `toggle`, `color picker`, `text`, `examples`, `dark mode` or `installation` |
 
 The integration cases use the real `search()` with `{ timeout: 120_000 }`, the
@@ -204,8 +215,8 @@ Run from `apps/docs`.
    only.
 2. `src/lib/search.ts`: `pageAliasHits`, the `mergeResults` rank and the
    `search()` candidate.
-3. Add the fifteen-query table and the eight regressions to
-   `page-aliases.test.ts`.
+3. Add the thirteen page queries, the two component queries and the eight
+   regressions to `page-aliases.test.ts`.
 4. `nub run --filter docs test -- src/lib/page-aliases.test.ts` → every case
    passes; then the two-direction proofs in §5.
 5. `scripts/smoke-build.ts` two queries; README paragraph.
@@ -225,7 +236,7 @@ Run from `apps/docs`.
 - Stop if a term must be a prefix match (for example to make `theme sw` work);
   that is plan 566's component rule, not a page rule.
 - Stop if a query passes only because the lexical index returned the page
-  anyway; prove synthesis with a query the index misses (`hint`, `demo`).
+  anyway; prove synthesis with a query the index misses (`demo`, `sample`).
 - Stop if `smoke:build` cannot run (exit `2`); report it as unverified rather
   than a pass.
 
@@ -237,7 +248,7 @@ The two-direction proofs, each run and reverted:
    first result is again Switch.
 2. Delete both `theme switch` and `switch theme` and remove the Switch scene's
    instruction match by querying `theme switcher` → still fails.
-3. Remove `...pageAliasHits(...)` from `search()` → `hint` and `demo` fail
+3. Remove `...pageAliasHits(...)` from `search()` → `demo` and `sample` fail
    (the index does not retrieve either page).
 4. Remove the `aliasRank` from `mergeResults` → the synthesized candidates are
    unranked, so every measured query fails.
@@ -260,13 +271,56 @@ command it reports has run.
 
 ### 6.1 What shipped
 
-<!-- filled after implementation -->
+- `apps/docs/src/lib/page-aliases.ts` — the table, the flattened term list and
+  the exact-only `pageAliasRank`.
+- `apps/docs/src/lib/search.ts` — `pageAliasHits`, the `aliasRank` in
+  `mergeResults` (page results only) and the candidate in `search()`.
+- `apps/docs/src/lib/component-aliases.ts` — `hint` and `supporting text` on
+  `inline-validation`, beside `helper text` and `error message`.
+- `apps/docs/src/lib/page-aliases.test.ts` — 31 tests: 8 table guards, 15
+  measured queries, 8 regressions.
+- `apps/docs/scripts/smoke-build.ts` — `theme switch` → `/docs/dark-mode` and
+  `hint` → `/docs/components/inline-validation`, both `first: true`.
+- `apps/docs/README.md` — the `## Search` paragraph.
+
+The five regressions the plan checked outside the new file are already guarded
+in `src/lib/search.test.ts` and stayed green: `table` → Data display, `panel` →
+Workspace, `aria` → Accessibility, `focus ring` → Tokens API, `getting started`
+→ Getting started (an exact page title, `pageTitleHits`' rank `0`).
 
 ### 6.2 Commands run
 
-<!-- filled after implementation -->
+From `apps/docs`:
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter docs test src/lib/page-aliases.test.ts` | 1 file / 31 tests pass (9.4 s) |
+| `nub run --filter docs check-types` | `fumadocs-mdx && tsc --noEmit` twice, exit `0` |
+| `nub run --filter docs test` | **111 files / 841 tests** pass (30.5 s) |
+| `nub run --filter docs smoke:build` | 99 pages, 220 links, 1 288 anchors, search checked, **exit `0`** |
+
+From the repository root:
+
+| Command | Result |
+| ------- | ------ |
+| `nub run check` | exit `0` (test-quality, lint, format, every package's types) |
+| `nub run lint` | exit `0` |
+| `nub run test` | exit `0` — docs 111 files / 841 tests, components 32 / 308, primitives 25 / 282, tokens 11 / 197, icons 3 / 19, testing 3 / 19, playground 2 / 11 |
 
 ### 6.3 Two-direction proofs (each run, then reverted)
 
-<!-- filled after implementation -->
+| # | Forced defect | Measured failure |
+| - | ------------- | ---------------- |
+| 1 | delete `"theme switch"` from the table | 2 fail — the exact-only case (`expected undefined to be +0`) and `theme switch` (`expected '/docs/components/switch' to be '/docs/dark-mode'`) |
+| 2 | delete the whole `/docs/dark-mode` entry | 9 fail; the before-results are plan 598 §1's table exactly: `system theme`/`theme switch` → Switch, `theme toggle`/`toggle theme` → Toggle, `theme switcher` → Theming page, `color scheme` → Color picker, `colour scheme` → `/docs/theming#semantic-roles` |
+| 3 | drop `...pageAliasHits(...)` from `search()` | 7 fail: `demo` → `/docs/patterns/confirmation-flow#composition`, `sample` → `/docs/typography`, `how to use` → Toggle, `import` → Native testing, `theme toggle`, `toggle theme`, `color scheme`, `colour scheme` |
+| 4 | drop `aliasRank` from `mergeResults` | 13 fail — every page-alias query; only the two component aliases still pass, which is the point of keeping them in `component-aliases.ts` |
+| 5 | add `"switch"` as a term | `does not shadow a component title, name or alias` fails with `[ 'switch' ]`; the exact-only case also fails (`expected +0 to be undefined`) |
+| 6 | add `"demo"` to a second page | `uses a term for one page only` fails with `[ 'demo' ]` |
+| 7 | rename a key to `/docs/not-a-page` | `keys every alias to a page that exists` fails with `[ '/docs/not-a-page' ]` |
+| 8 | remove the wiring, then `smoke:build` | **exit `1`** naming the query: with `pageAliasHits` gone, `FAIL /api/search?query=theme%20switch: the first result is not under /docs/dark-mode …`; with `hint` removed from the component alias, `FAIL /api/search?query=hint: … not under /docs/components/inline-validation`. Restored → `smoke: search checked`, `smoke: ok`, exit `0` |
+
+Every proof was reverted and the file set above is the restored state; the final
+`smoke:build` after restoration is the exit-`0` run recorded in §6.2.
+
 
