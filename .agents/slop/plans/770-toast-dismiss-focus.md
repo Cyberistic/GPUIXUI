@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 115, 117, 123, 124, 322, 370, 516, 522, 525, 597, 677, 738, 743, 769 |
-| Status | pending |
+| Status | done — measured 2026-10-20: at `HEAD` the four new native cases fail — the per-card handles do not exist, and the two host-filtered focus cases read `28` (the exiting card's control) and `null` after the exit instead of the neighbour's `40`; with the change `toast.test.tsx` + `motion-surface.test.tsx` is 34/34. The full native suite is **970 passed / 20 failed of 990** — exactly this turn's 20 recorded plan-540 classes plus the four new passes; unit 495 in 47 files; `check`/`lint`/`test` exit 0 |
 | Claimed number | `770` — the first free number across every worktree at claim time (`769` is this workstream's; checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

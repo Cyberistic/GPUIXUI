@@ -3,11 +3,13 @@
  *
  * GPUix has no `zIndex`; stacking is paint order, so the viewport must be the
  * **last child of the app root**. The container is `pointerEvents: "none"` so the
- * page underneath stays usable; each card turns pointer events back on.
+ * page underneath stays usable; each card turns pointer events back on. A card's
+ * controls dismiss their own card, so the viewport first hands focus to the next
+ * live card's dismiss control — the control unmounts with its card (plan 770).
  */
 
 import type { Props, PublicInstance } from "@gpuix/react";
-import { AnimatePresence } from "@gpuix/react";
+import { AnimatePresence, useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { toastMotion } from "@gpuixui/tw";
@@ -67,7 +69,17 @@ const toneIcon = (value: ToastTone): IconName =>
   );
 
 /** One card. Its left bar and icon carry the tone; the surface is neutral. */
-const ToastCard = ({ toast }: { readonly toast: Toast }) => {
+const ToastCard = ({
+  toast,
+  focusNeighbour,
+  registerDismiss,
+}: {
+  readonly toast: Toast;
+  /** Hands focus to the next live card before this one is dismissed (plan 770). */
+  readonly focusNeighbour: () => void;
+  /** Publishes this card's dismiss host so a neighbour can be focused. */
+  readonly registerDismiss: (id: string, host: number | null) => void;
+}) => {
   const theme = useTheme();
   const { dismiss, pause, resume, actionFor, timingFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
@@ -115,10 +127,23 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
     (instance: PublicInstance | null) => setActionHost(instance?.id ?? null),
     [],
   );
-  const attachDismiss = useCallback(
-    (instance: PublicInstance | null) => setDismissHost(instance?.id ?? null),
-    [],
+  const publishDismiss = useCallback(
+    (host: number | null) => registerDismiss(toast.id, host),
+    [registerDismiss, toast.id],
   );
+  const attachDismiss = useCallback(
+    (instance: PublicInstance | null) => {
+      setDismissHost(instance?.id ?? null);
+      publishDismiss(instance?.id ?? null);
+    },
+    [publishDismiss],
+  );
+  // The control unmounts with its card, so the next live card's dismiss control
+  // takes the focus instead of leaving it on nothing (plan 770).
+  const dismissAndFocus = (): void => {
+    focusNeighbour();
+    dismiss(toast.id);
+  };
   const published = Option.match(timingFor(toast.id), {
     onNone: () => undefined,
     onSome: (timing) => timing,
@@ -234,9 +259,10 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
               <Button
                 size="sm"
                 variant="secondary"
-                testId="toast-action"
+                testId={`toast-${toast.id}-action`}
                 ref={attachAction}
                 onClick={() => {
+                  focusNeighbour();
                   onSelect();
                   dismiss(toast.id);
                 }}
@@ -248,9 +274,9 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
           <IconButton
             label="Dismiss"
             size="sm"
-            testId="toast-dismiss"
+            testId={`toast-${toast.id}-dismiss`}
             ref={attachDismiss}
-            onClick={() => dismiss(toast.id)}
+            onClick={dismissAndFocus}
           >
             <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
           </IconButton>
@@ -345,8 +371,25 @@ export const ToastViewport = ({
   ...rest
 }: ToastViewportProps) => {
   const theme = useTheme();
+  const renderer = useGpuix().renderer;
   const { toasts } = useToast();
   const cardMotion = motionProps(toastMotion(theme));
+  // Each live card publishes its dismiss host, so dismissing one card can hand
+  // focus to its neighbour before the card leaves the tree (plan 770).
+  const dismissHosts = useRef(new Map<string, number>());
+  const registerDismiss = useCallback(
+    (id: string, host: number | null): void => {
+      if (host === null) dismissHosts.current.delete(id);
+      else dismissHosts.current.set(id, host);
+    },
+    [],
+  );
+  const focusNeighbour = (index: number): void => {
+    const neighbour = toasts[index + 1] ?? toasts[index - 1];
+    if (neighbour === undefined) return;
+    const host = dismissHosts.current.get(neighbour.id);
+    if (host !== undefined) renderer?.focusElement?.(host);
+  };
 
   return (
     <div
@@ -373,13 +416,17 @@ export const ToastViewport = ({
     >
       {children}
       <AnimatePresence initial={false}>
-        {Arr.map(toasts, (toast) => (
+        {Arr.map(toasts, (toast, index) => (
           <MotionSurface
             key={toast.id}
             testId={`toast-${toast.id}-surface`}
             {...cardMotion}
           >
-            <ToastCard toast={toast} />
+            <ToastCard
+              toast={toast}
+              focusNeighbour={() => focusNeighbour(index)}
+              registerDismiss={registerDismiss}
+            />
           </MotionSurface>
         ))}
       </AnimatePresence>
@@ -398,6 +445,7 @@ export const toastMeta = {
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
     "the keyboard hold samples the renderer's focused host every 50 ms, because 0.10.0 delivers no React focus/blur for a native focus change",
+    "dismissing the last card leaves focus alone: a toast is pushed programmatically and has no trigger to return to",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

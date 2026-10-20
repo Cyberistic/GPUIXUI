@@ -18,6 +18,11 @@
  * 500 ms exit ghost made the old paint-only assertion pass anyway. The hold now
  * samples the renderer's focused host, and every hold case reads the queue and
  * its timer instead of the painted card.
+ *
+ * Plan 770: a card's controls shared one `testId` across cards, and dismissing a
+ * card left focus on nothing while the other cards were still painted. Each
+ * card's controls are now `toast-<id>-dismiss` / `toast-<id>-action`, and a
+ * dismissal hands focus to the next live card's dismiss control.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -233,12 +238,142 @@ describe("Toast", () => {
     clickCentreOf(page, "push-warning");
     await settle();
 
-    clickCentreOf(page, "toast-dismiss");
+    clickCentreOf(page, "toast-1-dismiss");
     await settle();
     finishExit(page);
 
     expect(page.renderer.getAllText()).not.toContain("Saved changes");
     expect(page.renderer.getAllText()).toContain("Disk nearly full");
+
+    page.unmount();
+  });
+
+  it("names each card's controls after the card", async () => {
+    const page = renderComponent(<Harness onAction={() => undefined} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    clickCentreOf(page, "push-action");
+    await settle();
+
+    // Two cards on screen shared one handle before plan 770, so neither a
+    // consumer nor this suite could address one card's control.
+    expect(page.renderer.findByTestId("toast-1-dismiss")).toBeDefined();
+    expect(page.renderer.findByTestId("toast-2-dismiss")).toBeDefined();
+    expect(page.renderer.findByTestId("toast-2-action")).toBeDefined();
+    expect(page.renderer.findByTestId("toast-1-action")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("hands focus to the next card when a dismiss control removes its card", async () => {
+    // Written against host ids, so the case fails on the old source for the
+    // focus reason and not because the control names changed (plan 770).
+    const page = renderComponent(<Harness />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    clickCentreOf(page, "push-warning");
+    await settle();
+
+    const dismisses = page.renderer
+      .findByType("div")
+      .filter(
+        (element) =>
+          element.testId?.startsWith("toast-") === true &&
+          element.testId.endsWith("-dismiss"),
+      );
+    expect(dismisses).toHaveLength(2);
+    const first = dismisses[0];
+    const second = dismisses[1];
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    if (first === undefined || second === undefined) return;
+
+    page.renderer.focusElement(first.id);
+    page.renderer.nativeSimulateKeyDown(first.id, "enter");
+    await settle();
+
+    expect(page.renderer.getFocusedElementId()).toBe(second.id);
+
+    finishExit(page);
+    expect(page.renderer.getFocusedElementId()).toBe(second.id);
+
+    page.unmount();
+  });
+
+  it("hands focus to the card above when the last card is dismissed", async () => {
+    const page = renderComponent(<Harness />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    clickCentreOf(page, "push-warning");
+    await settle();
+    clickCentreOf(page, "push-persistent");
+    await settle();
+
+    const dismisses = page.renderer
+      .findByType("div")
+      .filter(
+        (element) =>
+          element.testId?.startsWith("toast-") === true &&
+          element.testId.endsWith("-dismiss"),
+      );
+    expect(dismisses).toHaveLength(3);
+    const middle = dismisses[1];
+    const last = dismisses[2];
+    expect(middle).toBeDefined();
+    expect(last).toBeDefined();
+    if (middle === undefined || last === undefined) return;
+
+    page.renderer.focusElement(last.id);
+    page.renderer.nativeSimulateKeyDown(last.id, "enter");
+    await settle();
+    finishExit(page);
+
+    expect(page.renderer.getFocusedElementId()).toBe(middle.id);
+
+    page.unmount();
+  });
+
+  it("hands focus to the neighbouring card when an action removes its card", async () => {
+    const onAction = vi.fn();
+    const page = renderComponent(<Harness onAction={onAction} />);
+
+    clickCentreOf(page, "push-action");
+    await settle();
+    clickCentreOf(page, "push-warning");
+    await settle();
+
+    const actions = page.renderer
+      .findByType("div")
+      .filter(
+        (element) =>
+          element.testId?.startsWith("toast-") === true &&
+          element.testId.endsWith("-action"),
+      );
+    const dismisses = page.renderer
+      .findByType("div")
+      .filter(
+        (element) =>
+          element.testId?.startsWith("toast-") === true &&
+          element.testId.endsWith("-dismiss"),
+      );
+    expect(actions).toHaveLength(1);
+    expect(dismisses).toHaveLength(2);
+    const action = actions[0];
+    const neighbour = dismisses[1];
+    expect(action).toBeDefined();
+    expect(neighbour).toBeDefined();
+    if (action === undefined || neighbour === undefined) return;
+
+    page.renderer.focusElement(action.id);
+    page.renderer.nativeSimulateKeyDown(action.id, "enter");
+    await settle();
+    finishExit(page);
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(page.renderer.getFocusedElementId()).toBe(neighbour.id);
 
     page.unmount();
   });
@@ -300,7 +435,7 @@ describe("Toast", () => {
 
     clickCentreOf(page, "push");
     await settle();
-    clickCentreOf(page, "toast-dismiss");
+    clickCentreOf(page, "toast-1-dismiss");
     await settle();
     clickCentreOf(page, "push-warning");
     await settle();
@@ -338,7 +473,7 @@ describe("Toast", () => {
     clickCentreOf(page, "push");
     await settle();
 
-    const dismiss = page.renderer.findByTestId("toast-dismiss");
+    const dismiss = page.renderer.findByTestId("toast-1-dismiss");
     expect(dismiss).toBeDefined();
     page.renderer.focusElement(dismiss?.id ?? -1);
 
@@ -369,7 +504,7 @@ describe("Toast", () => {
 
     hoverCentreOf(page, "toast-1");
     page.renderer.focusElement(
-      page.renderer.findByTestId("toast-dismiss")?.id ?? -1,
+      page.renderer.findByTestId("toast-1-dismiss")?.id ?? -1,
     );
     hoverCentreOf(page, "elsewhere");
 
@@ -402,7 +537,7 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     await settle();
 
-    hoverCentreOf(page, "toast-action");
+    hoverCentreOf(page, "toast-1-action");
     await new Promise((resolve) => setTimeout(resolve, 150));
     await settle();
     const held = progressWidth(page);
@@ -423,7 +558,7 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     await settle();
 
-    hoverCentreOf(page, "toast-dismiss");
+    hoverCentreOf(page, "toast-1-dismiss");
     await new Promise((resolve) => setTimeout(resolve, 150));
     await settle();
     const held = progressWidth(page);
@@ -446,7 +581,7 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     await settle();
 
-    hoverCentreOf(page, "toast-action");
+    hoverCentreOf(page, "toast-1-action");
     await new Promise((resolve) => setTimeout(resolve, 150));
     await settle();
     const held = progressWidth(page);
@@ -511,7 +646,7 @@ describe("Toast", () => {
 
     expect(page.renderer.getAllText()).toContain("Undo");
 
-    clickCentreOf(page, "toast-action");
+    clickCentreOf(page, "toast-1-action");
     await settle();
     finishExit(page);
 
@@ -528,7 +663,7 @@ describe("Toast", () => {
     await settle();
 
     expect(page.renderer.getAllText()).toContain("Archived, no handler");
-    expect(page.renderer.findByTestId("toast-action")).toBeUndefined();
+    expect(page.renderer.findByTestId("toast-1-action")).toBeUndefined();
 
     page.unmount();
   });
@@ -540,7 +675,7 @@ describe("Toast", () => {
     await settle();
 
     expect(page.renderer.findByTestId("toast-1")).toBeDefined();
-    expect(page.renderer.findByTestId("toast-action")).toBeUndefined();
+    expect(page.renderer.findByTestId("toast-1-action")).toBeUndefined();
 
     page.unmount();
   });
@@ -554,7 +689,7 @@ describe("Toast", () => {
     await settle();
 
     page.renderer.focusElement(
-      page.renderer.findByTestId("toast-action")?.id ?? -1,
+      page.renderer.findByTestId("toast-1-action")?.id ?? -1,
     );
 
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -586,7 +721,7 @@ describe("Toast", () => {
     await settle();
 
     page.renderer.focusElement(
-      page.renderer.findByTestId("toast-action")?.id ?? -1,
+      page.renderer.findByTestId("toast-1-action")?.id ?? -1,
     );
     await new Promise((resolve) => setTimeout(resolve, 150));
     await settle();
@@ -633,7 +768,7 @@ describe("Toast", () => {
 
     clickCentreOf(page, "push");
     await settle();
-    clickCentreOf(page, "toast-dismiss");
+    clickCentreOf(page, "toast-1-dismiss");
     await settle();
 
     // The store has dropped it, but the animated card is still on screen.

@@ -52,6 +52,7 @@ pointer events back on, so a toast never blocks the page underneath.
 | hovering a card or one of its controls | pauses its clock; leaving resumes with the **remaining** time |
 | focusing a card's controls | pauses its clock; moving focus away resumes with the **remaining** time |
 | an action | one labelled control; pressing it runs the handler once and dismisses the toast |
+| dismissing a card | its dismiss control or its action dismisses that card and hands focus to the next live card's dismiss control (the card below it, else the one above); the last card leaves focus alone |
 | progress | a positive finite `duration` paints a 2px bar across the card bottom; it shrinks every 100 ms, freezes during a pause and resumes with the same remainder |
 | placement | `position` picks `top-left`, `top-right`, `bottom-left` or `bottom-right` (default); the oldest toast is topmost and the stack hugs the named horizontal side in every corner |
 
@@ -142,7 +143,14 @@ from its two pinned edges.
 - Each card is a `role="status"` region whose accessible name is its message
   (`title: description`), so the content that changed is the status content; the
   viewport is a `role="group"` named `Notifications`. Each card's dismiss control
-  is a labelled button.
+  is a labelled button, addressed as `toast-<id>-dismiss`; a card with an action
+  addresses it as `toast-<id>-action` (plan 770 — the cards used to share one
+  handle, so no two cards' controls could be told apart).
+- Dismissing a card from one of its own controls hands focus to the next live
+  card's dismiss control, because the control unmounts with its card and would
+  otherwise leave focus on nothing while other notifications remain. Dismissing
+  the only card leaves focus alone: a toast is pushed programmatically and has no
+  trigger to return to, so the viewport does not invent one (plan 770).
 - **No `aria-live` and no `aria-atomic`** in `@gpuix/native@0.10.0`; a named
   status region is the supported announcement, and the runtime exposes no
   live-region concept beyond it.
@@ -184,8 +192,10 @@ from its two pinned edges.
   malformed-cap guard proves `NaN` and `Infinity` each keep the newest three.
 - `src/toast/timing.test.ts` — six pure cases for the percentage, clamping, the
   zero-total guard, one running tick, a paused tick and the final zero.
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (24 tests): push
-and the card's status name, stacking order, dismissing one card, `dismissAll`,
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (28 tests): push
+and the card's status name, stacking order, dismissing one card, the per-card
+control handles, focus handed to the next card (below, and above when the last
+one goes) by a dismiss control and by an action, `dismissAll`,
 the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
 hover pausing a card's auto-dismiss, keyboard focus pausing it through the

@@ -188,7 +188,7 @@ describe("Animated surfaces", () => {
     finishMotion(page, 500);
     expect(isShown(page, "toast-1-surface")).toBe(true);
 
-    clickCentreOf(page, "toast-dismiss");
+    clickCentreOf(page, "toast-1-dismiss");
     expect(isShown(page, "toast-1")).toBe(true);
     expect(isShown(page, "toast-1-surface")).toBe(true);
 

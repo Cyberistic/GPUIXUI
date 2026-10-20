@@ -1262,6 +1262,17 @@ retired once both branches are one
       495 in 47 files, full native suite 966/20 of 986 with the baseline's same
       plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
       synced (owner: components)
+    - [x] A dismissed toast hands focus to the next card — plan 770; measured
+      2026-10-20: two cards on screen shared one `toast-dismiss` handle, and
+      dismissing one left focus on the exiting control and then on nothing while
+      the other card was still painted. Each card's controls are now
+      `toast-<id>-dismiss` / `toast-<id>-action`, and a dismissal hands focus to
+      the next live card's dismiss control before the card leaves (below, else
+      above); the last card leaves focus alone, documented because a toast has no
+      trigger to return to. 4 native cases (Toast 24 → 28), all red at `HEAD`;
+      unit 495 in 47 files, full native suite 970/20 of 990 with the same
+      plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
+      synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
