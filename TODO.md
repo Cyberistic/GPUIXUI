@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 345/422
+`[x]` `[████████░░]` 346/423
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2971,6 +2971,15 @@ role — and seven entries, the catalogue states 5.814, the ledger names each
 figure's set and pair, and `figures.test.ts` rejects the old digits per entry
 and fails when a sentence's role, fill or tint stops being the one that measures
 (plan 760)
+`[x]` Correct the Status tones ledger row's surface claims — it said
+`statusFillPairs` holds each solid fill on "the eight surfaces a chip sits on"
+and named seven `xText` surfaces, while `chipSurfaces`/`statusTextSurfaces` hold
+nine, the `muted` panel and the pressed `selectedActive` wash included; plan 683
+had called both `COMPONENTS.md` mentions historical, but this sentence is present
+tense. The row now says nine and names every surface, `inventory.test.ts` derives
+the count from `statusFillPairs` and holds the `xText` clause to
+`statusTextSurfaces`, and no token value, pair, floor, metric, role or shipped
+theme moves (plan 766)
 
 ## Phase C — Tier 1–2 components
 

@@ -384,6 +384,7 @@ references without buying correctness.
 | [757](./757-tint-measurement-claims.md) | The tint is measured, and three passages still say it is not | F | 085, 371, 505, 747–750, 754 | done |
 | [758](./758-theme-edit-member-boundary.md) | The edit artifact that drops a scale member the theme declares | F | 685, 727, 744 | done |
 | [760](./760-native-text-figures.md) | The native-text figures have one owner | F | 071, 544, 569–592, 717 | done |
+| [766](./766-status-row-surface-claims.md) | The status row counts a list of eight and names seven surfaces | F | 399, 548, 549, 651, 683 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3897,6 +3898,20 @@ entries (five page clauses, the ledger's two) take `documentedFigures` to
 56; the ledger states each figure with its set and its pair, and
 `figures.test.ts` rejects the pre-760 digits per entry. No colour, pair, floor,
 metric, role or shipped theme moves.
+
+Plan `766` closes the last stale count plan `683` left behind. The ledger's
+Status tones row said `statusFillPairs` holds each solid fill on "the eight
+surfaces a chip sits on" and enumerated the `xText` surfaces as seven — the
+plain surfaces plus the four unpressed washes — while `chipSurfaces`,
+`statusTextSurfaces`, `softBorderSurfacePairs`, the catalogue and the design
+system all hold nine, the `muted` panel and the pressed `selectedActive` wash
+included. Plan `683` had called both ledger mentions historical statements about
+plans `308` and `399`; this sentence is present tense and names the current
+lists. The row now says nine and names every `xText` surface, and
+`inventory.test.ts` derives the count from `statusFillPairs` and slices the
+`xText` clause to hold it to `statusTextSurfaces`, so a name elsewhere in the
+row cannot stand in for a missing member. No token value, pair, floor, metric,
+role or shipped theme moves.
 
 ## How to use a plan
 

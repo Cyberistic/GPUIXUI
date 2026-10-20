@@ -45,6 +45,8 @@ import {
   selectionSoftWashPairs,
   selectionStatusPairs,
   selectionWashPairs,
+  statusFillPairs,
+  statusTextSurfaces,
 } from "./contrast.js";
 import { tierSurfaces } from "./figures.js";
 import { motionLevels, motionPhases } from "./motion.js";
@@ -321,6 +323,27 @@ describe("COMPONENTS.md design-system rows", () => {
     expect(retypedCheckCount.test("while all six checks returned")).toBe(true);
     expect(retypedCheckCount.test("while all nine checks returned")).toBe(true);
     expect(retypedCheckCount.test("while every check returned")).toBe(false);
+  });
+
+  it("names every surface the status lists measure", () => {
+    const status = row("Status tones");
+    const chipSurfaces = [
+      ...new Set(statusFillPairs.map(([, background]) => background)),
+    ];
+    const labelClause = status.slice(
+      status.indexOf("`xText` for labels"),
+      status.indexOf(";", status.indexOf("`xText` for labels")),
+    );
+
+    expect(chipSurfaces).toHaveLength(9);
+    expect(chipSurfaces.toSorted()).toEqual([...statusTextSurfaces].toSorted());
+    expect(status).toContain(
+      `on the ${countWord(chipSurfaces.length)} surfaces a chip sits on`,
+    );
+    expect(status).not.toContain("on the eight surfaces a chip sits on");
+    statusTextSurfaces.forEach((surface) => {
+      expect(labelClause, surface).toContain(`\`${surface}\``);
+    });
   });
 
   it("names the Toast countdown's groove exception", () => {
