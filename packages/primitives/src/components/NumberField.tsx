@@ -16,6 +16,7 @@ import { useRef, useState, type ReactElement } from "react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import {
   clampNumeric,
@@ -25,20 +26,20 @@ import {
   stepNumber,
   type NumberRange,
 } from "../core/number.js";
-import {
-  controlFocusStyle,
-  controlStyle,
-  fieldTextStyle,
-  nativeTextTheme,
-  numberInputStyle,
-  numberStepperColumnStyle,
-  numberStepperStyle,
-} from "../core/style.js";
+import { nativeTextTheme } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { fieldVariant } from "../core/variants.js";
 import {
+  numberFieldClass,
+  numberInputClass,
+  numberStepperClass,
+  numberStepperColumnClass,
+} from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import {
+  focusRingStyle,
   mergeStyle,
+  suppressFeedback,
   useControlState,
   useFocus,
   type FocusState,
@@ -70,6 +71,8 @@ export interface NumberFieldProps {
   /** Overrides the display text; the value still parses with `core/number.ts`. */
   readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -103,21 +106,18 @@ export const renderNumberField = (
 ): ReactElement => {
   const range = numberRange(props);
   const disabled = props.disabled === true;
-  const spec = {
-    variant: fieldVariant,
-    size: props.size ?? "md",
-    invalid: props.invalid,
-    disabled: props.disabled,
-  };
-  const chrome = mergeStyle(
-    mergeStyle(
-      mergeStyle(mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)), {
-        paddingRight: 0,
-      }),
-      focus.focused && !disabled ? controlFocusStyle(spec, theme) : {},
-    ),
-    props.style,
+  const size = props.size ?? "md";
+  const invalid = props.invalid === true;
+  const resolved = recipeTw.classesToStyle(
+    cn(numberFieldClass({ size, invalid }), props.className),
+    theme,
   );
+  let chrome = resolved.style;
+  if (invalid) chrome = mergeStyle(chrome, resolved.invalid);
+  if (disabled)
+    chrome = suppressFeedback(mergeStyle(chrome, resolved.disabled));
+  const ring = focus.focused && !disabled ? focusRingStyle(theme, invalid) : {};
+  chrome = mergeStyle(mergeStyle(chrome, ring), props.style);
   const atMin = props.min !== undefined && state.current <= props.min;
   const atMax = props.max !== undefined && state.current >= props.max;
   const stepButton = (
@@ -131,7 +131,10 @@ export const renderNumberField = (
         if (disabled || blocked) return;
         handlers.onValue(stepNumber(state.current, range, direction));
       }}
-      style={numberStepperStyle({ disabled: disabled || blocked }, theme)}
+      style={
+        recipeTw.classesToStyle(numberStepperClass(disabled || blocked), theme)
+          .style
+      }
     >
       <Icon
         name={name}
@@ -155,7 +158,7 @@ export const renderNumberField = (
         tabIndex={disabled ? -1 : undefined}
         theme={nativeTextTheme(theme)}
         aria-label={props.label}
-        style={numberInputStyle()}
+        style={recipeTw.classesToStyle(numberInputClass, theme).style}
         onChange={(event: EventPayload) => {
           if (disabled) return;
           handlers.onTextChange(event.value ?? "");
@@ -178,7 +181,9 @@ export const renderNumberField = (
           handlers.onCommit();
         }}
       />
-      <div style={numberStepperColumnStyle(theme)}>
+      <div
+        style={recipeTw.classesToStyle(numberStepperColumnClass, theme).style}
+      >
         {stepButton(1, "chevron-up", atMax)}
         {stepButton(-1, "chevron-down", atMin)}
       </div>

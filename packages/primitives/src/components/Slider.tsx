@@ -28,6 +28,7 @@ import type {
 } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import * as Option from "effect/Option";
+import { cn } from "@gpuixui/tw";
 import {
   clampValue,
   decideValueKey,
@@ -40,17 +41,18 @@ import {
   type ValueRange,
   type ValueSpan,
 } from "../core/value.js";
-import {
-  sliderFillStyle,
-  sliderInset,
-  sliderRailStyle,
-  sliderThumbStyle,
-  sliderTrackStyle,
-  type SliderSpec,
-} from "../core/style.js";
+import { sliderInset } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
+  sliderFillClass,
+  sliderRailClass,
+  sliderThumbClass,
+  sliderTrackClass,
+} from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import {
+  focusRingStyle,
   mergeStyle,
   useControlState,
   useFocus,
@@ -80,6 +82,8 @@ export interface SliderProps {
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -98,6 +102,8 @@ export interface RangeSliderProps {
   readonly label?: string;
   readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -128,6 +134,32 @@ export interface SliderHandlers {
   readonly onPointerUp: () => void;
 }
 
+/** The resolved fill for a fraction: the recipe plus its data-driven width. */
+const fillStyle = (
+  fraction: number,
+  invalid: boolean,
+  theme: PrimitiveTheme,
+): StyleDesc =>
+  mergeStyle(recipeTw.classesToStyle(sliderFillClass(invalid), theme).style, {
+    width: `${fraction * 100}%`,
+  });
+
+/** The resolved thumb, ringed when it holds focus. */
+const thumbStyle = (
+  size: ControlSize,
+  invalid: boolean,
+  focused: boolean,
+  theme: PrimitiveTheme,
+): StyleDesc => {
+  const resolved = recipeTw.classesToStyle(
+    sliderThumbClass(size, invalid),
+    theme,
+  );
+  return focused
+    ? mergeStyle(resolved.style, focusRingStyle(theme))
+    : resolved.style;
+};
+
 export const renderSlider = (
   props: SliderProps,
   theme: PrimitiveTheme,
@@ -137,12 +169,15 @@ export const renderSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const value = clampValue(state.current, range);
-  const spec: SliderSpec = {
-    size: props.size ?? "md",
-    invalid: props.invalid,
-    disabled: props.disabled,
-    focused: focus.focused,
-  };
+  const size = props.size ?? "md";
+  const invalid = props.invalid === true;
+  const resolved = recipeTw.classesToStyle(
+    cn(sliderTrackClass(size), props.className),
+    theme,
+  );
+  let track = resolved.style;
+  if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
+  track = mergeStyle(track, props.style);
   return (
     <div
       ref={handlers.registerTrack}
@@ -163,13 +198,11 @@ export const renderSlider = (
       }}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(sliderTrackStyle(spec, theme), props.style)}
+      style={track}
     >
-      <div style={sliderRailStyle(theme)}>
-        <div
-          style={sliderFillStyle(valueFraction(value, range), spec, theme)}
-        />
-        <div style={sliderThumbStyle(spec, theme)} />
+      <div style={recipeTw.classesToStyle(sliderRailClass, theme).style}>
+        <div style={fillStyle(valueFraction(value, range), invalid, theme)} />
+        <div style={thumbStyle(size, invalid, focus.focused, theme)} />
       </div>
     </div>
   );
@@ -213,17 +246,18 @@ export const renderRangeSlider = (
 ): ReactElement => {
   const range = sliderRange(props);
   const span = spanOf(state.current, range);
-  const base: SliderSpec = {
-    size: props.size ?? "md",
-    invalid: props.invalid,
-    disabled: props.disabled,
-  };
+  const size = props.size ?? "md";
+  const invalid = props.invalid === true;
   const labels =
     props.label === undefined
       ? ([undefined, undefined] as const)
       : ([`${props.label} minimum`, `${props.label} maximum`] as const);
   const thumb = (index: 0 | 1): ReactElement => {
     const value = index === 0 ? span.start : span.end;
+    const focused = Option.exists(
+      focus.focusedIndex,
+      (focused) => focused === index,
+    );
     return (
       <div
         ref={handlers.registerThumb(index)}
@@ -244,19 +278,17 @@ export const renderRangeSlider = (
               ),
           });
         }}
-        style={sliderThumbStyle(
-          {
-            ...base,
-            focused: Option.exists(
-              focus.focusedIndex,
-              (focused) => focused === index,
-            ),
-          },
-          theme,
-        )}
+        style={thumbStyle(size, invalid, focused, theme)}
       />
     );
   };
+  const resolved = recipeTw.classesToStyle(
+    cn(sliderTrackClass(size), props.className),
+    theme,
+  );
+  let track = resolved.style;
+  if (props.disabled === true) track = mergeStyle(track, resolved.disabled);
+  track = mergeStyle(track, props.style);
   return (
     <div
       ref={handlers.registerTrack}
@@ -266,17 +298,17 @@ export const renderRangeSlider = (
       onMouseDown={handlers.onPointerDown}
       onMouseMove={handlers.onPointerMove}
       onMouseUp={handlers.onPointerUp}
-      style={mergeStyle(sliderTrackStyle(base, theme), props.style)}
+      style={track}
     >
-      <div style={sliderRailStyle(theme)}>
+      <div style={recipeTw.classesToStyle(sliderRailClass, theme).style}>
         <div
-          style={sliderFillStyle(valueFraction(span.start, range), base, theme)}
+          style={fillStyle(valueFraction(span.start, range), invalid, theme)}
         />
         {thumb(0)}
         <div
-          style={sliderFillStyle(
+          style={fillStyle(
             valueFraction(span.end, range) - valueFraction(span.start, range),
-            base,
+            invalid,
             theme,
           )}
         />

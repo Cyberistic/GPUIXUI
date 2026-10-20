@@ -32,6 +32,21 @@ export const suppressFeedback = (style: StyleDesc): StyleDesc => ({
   active: { backgroundColor: style.backgroundColor },
 });
 
+/**
+ * A disabled selection control (checkbox, radio, switch) keeps its resting
+ * fill **and border**, and drops the press response entirely — unlike a field,
+ * whose disabled hover still lifts the fill. Matches `selectionBoxStyle`'s and
+ * `switchTrackStyle`'s disabled branch.
+ */
+export const suppressSelectionFeedback = (style: StyleDesc): StyleDesc => ({
+  ...style,
+  hover: {
+    backgroundColor: style.backgroundColor,
+    borderColor: style.borderColor,
+  },
+  active: {},
+});
+
 /** The focus ring, destructive-coloured when the field is invalid. */
 export const focusRingStyle = (
   theme: PrimitiveTheme,

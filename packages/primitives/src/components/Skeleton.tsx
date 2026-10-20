@@ -9,30 +9,42 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import {
   PULSE_STEPS,
   pulseOpacity,
-  skeletonStyle,
   type SkeletonSpec,
 } from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { skeletonClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
 export interface SkeletonProps extends SkeletonSpec {
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
 export const renderSkeleton = (
-  { style, testId, ...spec }: SkeletonProps,
+  { style, className, testId, ...spec }: SkeletonProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => (
   <div
     testId={testId}
     style={mergeStyle(
-      { ...skeletonStyle(spec, theme), opacity: pulseOpacity(step) },
+      mergeStyle(
+        recipeTw.classesToStyle(cn(skeletonClass(spec), className), theme)
+          .style,
+        {
+          width: spec.width ?? "100%",
+          height: spec.height ?? theme.typography.body.lineHeight,
+          opacity: pulseOpacity(step),
+        },
+      ),
       style,
     )}
   />

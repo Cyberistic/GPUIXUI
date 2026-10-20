@@ -9,10 +9,10 @@
 
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import { Icon } from "@gpuixui/icons";
 import { decideActivation } from "../core/keyboard.js";
 import {
-  selectionBoxStyle,
   selectionMarkColor,
   type SelectionAccent,
   type SelectionSpec,
@@ -20,8 +20,12 @@ import {
 } from "../core/selection.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
+import { selectionBoxClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import {
+  focusRingStyle,
   mergeStyle,
+  suppressSelectionFeedback,
   useControlState,
   useFocus,
   type FocusState,
@@ -44,6 +48,8 @@ export interface CheckboxProps {
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -94,7 +100,16 @@ export const renderCheckbox = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
-  const box = selectionBoxStyle(spec, theme);
+  const resolved = recipeTw.classesToStyle(
+    cn(selectionBoxClass(spec), props.className),
+    theme,
+  );
+  let box = resolved.style;
+  if (spec.disabled === true) {
+    box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
+  }
+  if (spec.focused === true) box = mergeStyle(box, focusRingStyle(theme));
+  box = mergeStyle(box, props.style);
   return (
     <div
       role="checkbox"

@@ -9,20 +9,16 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
+import { indeterminateOffset, SPINNER_SEGMENTS } from "../core/loading.js";
 import {
-  indeterminateFillStyle,
-  indeterminateLeadStyle,
-  indeterminateOffset,
-  SPINNER_SEGMENTS,
-} from "../core/loading.js";
-import {
-  progressFillStyle,
   progressPercent,
-  progressTrackStyle,
   type ProgressSpec,
   type ProgressTone,
 } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { progressFillClass, progressTrackClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -36,6 +32,8 @@ export interface ProgressProps {
   /** Accessible name, e.g. "Uploading". */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -43,21 +41,35 @@ export interface ProgressProps {
 const SEGMENT = 40;
 
 export const renderProgress = (
-  { value, tone = "primary", size = "md", label, style, testId }: ProgressProps,
+  {
+    value,
+    tone = "primary",
+    size = "md",
+    label,
+    style,
+    className,
+    testId,
+  }: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
-  const spec: ProgressSpec = { value, tone, size };
-  const track = mergeStyle(progressTrackStyle(spec, theme), {
-    ...style,
-    display: "flex",
-    flexDirection: "row",
-  });
   const determinate = value !== undefined;
   const percent = determinate ? progressPercent(value) : 0;
-  const fill = determinate
-    ? progressFillStyle(spec, theme)
-    : indeterminateFillStyle(SEGMENT, theme.colors.primary, theme);
+  const track = mergeStyle(
+    recipeTw.classesToStyle(cn(progressTrackClass(size), className), theme)
+      .style,
+    { ...style, display: "flex", flexDirection: "row" },
+  );
+  const fill = mergeStyle(
+    recipeTw.classesToStyle(
+      progressFillClass(determinate ? tone : "primary"),
+      theme,
+    ).style,
+    { width: `${determinate ? percent : SEGMENT}%` },
+  );
+  const lead = mergeStyle(recipeTw.classesToStyle("shrink-0", theme).style, {
+    width: `${indeterminateOffset(step, SEGMENT)}%`,
+  });
   return (
     <div
       role="progressbar"
@@ -70,9 +82,7 @@ export const renderProgress = (
         <div style={fill} />
       ) : (
         <>
-          <div
-            style={indeterminateLeadStyle(indeterminateOffset(step, SEGMENT))}
-          />
+          <div style={lead} />
           <div style={fill} />
         </>
       )}

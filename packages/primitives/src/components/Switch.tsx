@@ -9,17 +9,17 @@
 
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
-import {
-  switchThumbStyle,
-  switchTrackStyle,
-  type SelectionAccent,
-  type SelectionSpec,
-} from "../core/selection.js";
+import type { SelectionAccent, SelectionSpec } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
+import { switchThumbClass, switchTrackClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import {
+  focusRingStyle,
   mergeStyle,
+  suppressSelectionFeedback,
   useControlState,
   useFocus,
   type FocusState,
@@ -40,6 +40,8 @@ export interface SwitchProps {
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -68,6 +70,17 @@ export const renderSwitch = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         toggle();
     };
+  const resolved = recipeTw.classesToStyle(
+    cn(switchTrackClass(spec), props.className),
+    theme,
+  );
+  let track = resolved.style;
+  if (spec.disabled === true) {
+    track = suppressSelectionFeedback(mergeStyle(track, resolved.disabled));
+  }
+  if (spec.focused === true) track = mergeStyle(track, focusRingStyle(theme));
+  track = mergeStyle(track, props.style);
+  const thumb = recipeTw.classesToStyle(switchThumbClass(spec), theme).style;
   return (
     <div
       role="switch"
@@ -80,9 +93,9 @@ export const renderSwitch = (
       onKeyUp={onKey("up")}
       onFocus={focus.onFocus}
       onBlur={focus.onBlur}
-      style={mergeStyle(switchTrackStyle(spec, theme), props.style)}
+      style={track}
     >
-      <div style={switchThumbStyle(spec, theme)} />
+      <div style={thumb} />
     </div>
   );
 };

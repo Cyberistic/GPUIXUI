@@ -13,14 +13,12 @@
 
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
-import {
-  progressFillStyle,
-  progressTrackStyle,
-  type ProgressSpec,
-  type ProgressTone,
-} from "../core/style.js";
+import { cn } from "@gpuixui/tw";
+import type { ProgressTone } from "../core/style.js";
 import { clampValue, normalizeRange, valueFraction } from "../core/value.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { progressFillClass, progressTrackClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -39,6 +37,8 @@ export interface MeterProps {
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -53,20 +53,29 @@ export const renderMeter = (
     step: 0,
   });
   const value = clampValue(props.value, range);
-  const spec: ProgressSpec = {
-    value: valueFraction(value, range) * 100,
-    tone: props.tone ?? "primary",
-    size: props.size ?? "md",
-  };
+  const size = props.size ?? "md";
+  const tone = props.tone ?? "primary";
+  const fraction = valueFraction(value, range);
+  const track = mergeStyle(
+    recipeTw.classesToStyle(
+      cn(progressTrackClass(size), props.className),
+      theme,
+    ).style,
+    props.style,
+  );
+  const fill = mergeStyle(
+    recipeTw.classesToStyle(progressFillClass(tone), theme).style,
+    { width: `${fraction * 100}%` },
+  );
   return (
     <div
       role="meter"
       aria-label={props.label}
       aria-valuetext={props.formatValue?.(value) ?? String(value)}
       testId={props.testId}
-      style={mergeStyle(progressTrackStyle(spec, theme), props.style)}
+      style={track}
     >
-      <div style={progressFillStyle(spec, theme)} />
+      <div style={fill} />
     </div>
   );
 };

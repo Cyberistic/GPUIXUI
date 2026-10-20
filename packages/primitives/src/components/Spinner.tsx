@@ -10,13 +10,15 @@
 import type { ReactElement } from "react";
 import type { StyleDesc } from "@gpuix/react";
 import * as Arr from "effect/Array";
+import { cn } from "@gpuixui/tw";
 import {
   SPINNER_SEGMENTS,
-  spinnerDotStyle,
   spinnerDots,
   type SpinnerAccent,
 } from "../core/loading.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { spinnerDotClass, spinnerGroupClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import { mergeStyle, useStep } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -28,35 +30,37 @@ export interface SpinnerProps {
   /** Accessible name. Defaults to "Loading". */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
 export const renderSpinner = (
-  { size, accent = "primary", label = "Loading", style, testId }: SpinnerProps,
+  {
+    size,
+    accent = "primary",
+    label = "Loading",
+    style,
+    className,
+    testId,
+  }: SpinnerProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
   const dot = size ?? theme.iconSize.md;
+  const group = mergeStyle(
+    recipeTw.classesToStyle(cn(spinnerGroupClass, className), theme).style,
+    style,
+  );
+  const dotStyle = (active: boolean, opacity: number): StyleDesc =>
+    mergeStyle(
+      recipeTw.classesToStyle(spinnerDotClass(active, accent), theme).style,
+      { width: dot, height: dot, opacity },
+    );
   return (
-    <div
-      role="status"
-      aria-label={label}
-      testId={testId}
-      style={mergeStyle(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing["2xs"],
-        },
-        style,
-      )}
-    >
+    <div role="status" aria-label={label} testId={testId} style={group}>
       {Arr.map(spinnerDots(step, 3), (point, index) => (
-        <div
-          key={index}
-          style={spinnerDotStyle({ size: dot, accent }, point, theme)}
-        />
+        <div key={index} style={dotStyle(point.active, point.opacity)} />
       ))}
     </div>
   );

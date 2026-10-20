@@ -22,21 +22,31 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
 import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import {
   decideAbsolute,
   decideActivation,
   decideMove,
 } from "../core/keyboard.js";
-import {
-  radioDotStyle,
-  selectionBoxStyle,
-  type SelectionAccent,
-  type SelectionSpec,
-  type SelectionState,
+import type {
+  SelectionAccent,
+  SelectionSpec,
+  SelectionState,
 } from "../core/selection.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { mergeStyle, useControlState } from "./internal.js";
+import {
+  radioDotClass,
+  selectionBoxClass,
+  stackClass,
+} from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import {
+  focusRingStyle,
+  mergeStyle,
+  suppressSelectionFeedback,
+  useControlState,
+} from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
 
@@ -64,6 +74,8 @@ export interface RadioGroupProps {
   /** Accessible name for the group. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
@@ -155,20 +167,26 @@ export const renderRadioGroup = (
     if (decideActivation(key, "down", event.isHeld === true))
       select(activeIndex);
   };
+  const group = mergeStyle(
+    recipeTw.classesToStyle(
+      cn(
+        stackClass({
+          direction: orientation === "horizontal" ? "row" : "column",
+          gap: "sm",
+        }),
+        props.className,
+      ),
+      theme,
+    ).style,
+    props.style,
+  );
   return (
     <div
       role="radiogroup"
       aria-label={props.label}
       testId={props.testId}
       onKeyDown={onKeyDown}
-      style={mergeStyle(
-        {
-          display: "flex",
-          flexDirection: orientation === "horizontal" ? "row" : "column",
-          gap: theme.spacing.sm,
-        },
-        props.style,
-      )}
+      style={group}
     >
       {Arr.map(options, (option, index) => {
         const current = itemState(option, state.current);
@@ -184,6 +202,17 @@ export const renderRadioGroup = (
             (focused) => focused === index,
           ),
         };
+        const resolved = recipeTw.classesToStyle(
+          selectionBoxClass(spec),
+          theme,
+        );
+        let box = resolved.style;
+        if (disabled) {
+          box = suppressSelectionFeedback(mergeStyle(box, resolved.disabled));
+        }
+        if (spec.focused === true) {
+          box = mergeStyle(box, focusRingStyle(theme));
+        }
         return (
           <div
             key={option.value}
@@ -197,17 +226,23 @@ export const renderRadioGroup = (
             }}
             onFocus={() => focus.onFocus(index)}
             onBlur={() => focus.onBlur(index)}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: theme.spacing.sm,
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
+            style={
+              recipeTw.classesToStyle(
+                cn(
+                  "flex flex-row items-center gap-sm",
+                  disabled ? "cursor-not-allowed" : "cursor-pointer",
+                ),
+                theme,
+              ).style
+            }
           >
-            <div style={selectionBoxStyle(spec, theme)}>
+            <div style={box}>
               {current === "checked" ? (
-                <div style={radioDotStyle(spec, theme)} />
+                <div
+                  style={
+                    recipeTw.classesToStyle(radioDotClass(spec), theme).style
+                  }
+                />
               ) : null}
             </div>
             <Text role="label" tone={disabled ? "muted" : "default"}>
