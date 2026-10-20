@@ -85,7 +85,7 @@ export const automationEntryGroups: ReadonlyArray<AutomationGroup> = [
       {
         name: "connectTest",
         summary:
-          "Wraps a `TestAutomationRenderer` in an `App` without a process boundary — the in-process path `enableAutomation` serves.",
+          "Wraps a `TestAutomationRenderer` in an `App` with no transport at all — for a renderer and a test in the same process.",
       },
     ],
   },
@@ -322,7 +322,7 @@ export const locatorMethods: ReadonlyArray<AutomationRow> = [
     name: "fill",
     summary: "Replace the element's text through the runtime's input path.",
   },
-  { name: "press", summary: "Send one key while this element has focus." },
+  { name: "press", summary: "Focus the element and send one key." },
   {
     name: "textContent",
     summary: "Own text plus every descendant's, in document order.",
