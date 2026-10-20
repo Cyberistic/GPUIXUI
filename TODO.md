@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 194/194
+`[~]` `[██████████]` 194/195
+
+`[~]` **Testing your components has a page (plan 628)** — the consumer-facing
+      test renderer had no owner: `createTestRoot`, `hasNativeTestRenderer`,
+      `jsdom`, `playwright`, `storybook`, `fixture` and `spy` returned nothing,
+      and `test renderer` reached a Hotkey input limitation. `/docs/testing`
+      renders the window options, `TestElement`, 45 of the 61 `TestRenderer`
+      members in seven groups, the 16 another page owns, and the nine absent
+      tools with their substitutes.
 
 `[x]` **Selection, highlighting and find have a page (plan 627)** — the
       runtime selects text natively, paints match washes and exposes a find
