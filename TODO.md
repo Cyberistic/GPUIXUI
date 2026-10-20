@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 355/431
+`[x]` `[████████░░]` 358/435
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -1391,7 +1391,8 @@ two roles (they were the same value in the identity, macOS light and three more
 sets), a selected row visibly falls back to the unselected hover wash while the
 pointer is over it. Do not paint the unselected hover wash over a selected row:
 keep `selected` under hover and paint the designed `selectedActive` on press, a
-24% canvas veil that previews deselection one measured step toward the canvas
+24% veil of white in light and black in dark over `selected` that previews
+deselection one measured step toward the canvas
 (`selectionPressStepPairs`), instead of the unselected `active` wash (owner:
 `components`; plans 381 and 651).
 `[ ]` Cross-team: `components` gives a notification's open row a persistent state —
@@ -2620,7 +2621,8 @@ ladder", but identity light measured **1.001:1** on that press (the selection
 and the press wash are the same luminance), eleven of twelve default palettes
 sat under the 1.05:1 step floor and eight moved the wrong way while both the
 contrast and direction checks returned `[]`. The press is the one state that
-previews deselection, so `selectedActive` is a 24% canvas veil over `selected`
+previews deselection, so `selectedActive` is a 24% veil of white in light and
+black in dark over `selected`
 (the one `stateLadders` entry with `direction: "toward"`),
 `selectionPressStepPairs` publishes its step, `selectionPressPairs` holds the
 text and chrome a pressed row paints, `statusTextSurfaces` adds the fill, and
@@ -3088,6 +3090,19 @@ so each of the four range mutations and a shipped `avatarSize.lg` edit fail it;
 the ledger and the plan index state the corrected ranges, plan `725`'s own file
 keeps its text as history, and no colour, pair, floor, metric, role or shipped
 theme moves (plan 787)
+`[x]` Hold the pressed selected row's veil to the value it ships — seven
+current-state surfaces (the `selectedActive` JSDoc, the executed example that
+owns the two bytes, `docs/tokens.md`, both design-system passages, both ledger
+rows and the step test's header) described the press as a 24% veil derived from
+the canvas colour, while all 24 shipped sets are a 24% veil of white in light
+and black in dark over `selected`, the mode's extreme; identity light's own
+canvas composite is `#E5E8FE` against the shipped `#E7EAFF`, and the two AAA
+sets are the only ones where the readings agree, which is why the wording
+survived. The fraction now builds the two veils,
+`selection-press-claims.test.ts` derives them
+and holds every shipped set, proves the canvas is a *different* fill in the two
+default identities, and reads every passage so the phrase cannot return; no
+colour, pair, floor, metric, role or shipped theme moves (plan 789)
 
 ## Phase C — Tier 1–2 components
 

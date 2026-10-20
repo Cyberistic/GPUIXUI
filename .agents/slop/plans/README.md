@@ -396,6 +396,7 @@ references without buying correctness.
 | [781](./781-platform-style-text-step.md) | The three platform headers that name the wrong readable ink | F | 063, 082, 528, 591 | done |
 | [785](./785-brand-example-figures.md) | The brand example's quoted figures have one owner | F | 098, 526, 536, 544, 698, 760 | done |
 | [787](./787-ledger-scale-ranges.md) | The ledger's scale ranges: the avatar range and the density ladder it hid | F | 054, 062, 303, 313, 664, 725, 766, 767 | done |
+| [789](./789-selection-press-veil.md) | The pressed selected row's veil: the mode's extreme, not the canvas | F | 081, 651, 723, 742 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
