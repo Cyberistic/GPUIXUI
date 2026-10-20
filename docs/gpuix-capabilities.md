@@ -142,7 +142,7 @@ verdict, the evidence, and the honest workaround.
 | System appearance or high-contrast detection | **unverified** | `GpuixTheme.appearance` is set by the app; no OS preference API in 0.10.0 | the app owns the theme choice |
 | IME and composition input | **unverified** | no composition or paste events in `HostProps` | treat every `onChange` value as committed text and document the gap |
 | Font registration | **not supported** | `registerFont` is not on the 0.10.0 `NativeRenderer` (main-only; §6) | installed family names; a consumer-installed face |
-| Clipboard API | **not supported** | no clipboard method and no `onPaste` in 0.10.0 | app-level platform integration, documented as a limitation |
+| Clipboard API | **not supported** | no programmatic clipboard **method** and no `onPaste` in 0.10.0; a native `<input>`/`<textarea>` still binds the platform's own `cmd-c`/`cmd-x`/`cmd-v`/`cmd-z` (`shift-cmd-z` redo) | app-level platform integration for a Copy **button**; a text field's own copy, cut, paste and undo work, and `OTPField`'s six-digit paste is proven end to end (plans `752`, playground `764`) |
 
 ## 4. Cross-cutting gaps
 
