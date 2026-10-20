@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 353/429
+`[x]` `[████████░░]` 354/430
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3063,6 +3063,19 @@ action's entry join `documentedFigures`, the brand's two figures are derived in
 `theme.test.ts` and both brand places now name the canvas (the tightest of the
 four document tones), and the plan-510 sentence loses its unguarded "thirteen";
 no colour, pair, floor, metric or shipped theme moves (plan 770)
+`[x]` Give the brand example's quoted figures one owner — the executed extension
+story is quoted in four documents (the catalogue's *Theme API* section, the
+design system §3, the package README and the example's own header), and
+falsifying two catalogue figures (`4.24` → `4.99`, `3.146` → `3.199`) left
+**7045 tests** green: only the 1.157 catalogue sentence and the numeric 3.146
+were held, and nothing read the README, the design system or the header.
+`brand-figures.test.ts` derives the inherited-foreground cost (the dark
+`primaryForeground` on the pre-098 fill `#7C5CFF`, written out because plan
+`098` moved it), the selected option's check (3.146:1) and the dialog face over
+the scrim the brand keeps (1.157:1), and holds each document to every figure it
+quotes; all nine single-figure mutations and a brand-fill edit fail it. The
+suite is separate from `documentedFigures`, whose provenance names a shipped
+theme; no colour, pair, floor, metric or shipped theme moves (plan 785)
 
 ## Phase C — Tier 1–2 components
 

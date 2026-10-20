@@ -394,6 +394,7 @@ references without buying correctness.
 | [778](./778-aaa-elevation-tint.md) | The AAA elevation tint and its three alphas, in three unguarded passages | F | 085, 099, 376, 505, 777 | done |
 | [780](./780-hex-guard-boundary.md) | The one boundary guard that cannot take a boundary value | F | 067, 068, 096, 371, 540, 565 | done |
 | [781](./781-platform-style-text-step.md) | The three platform headers that name the wrong readable ink | F | 063, 082, 528, 591 | done |
+| [785](./785-brand-example-figures.md) | The brand example's quoted figures have one owner | F | 098, 526, 536, 544, 698, 760 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4020,6 +4021,22 @@ counterfactual — "a black tint measured **1.000:1** at every level" — from t
 default dark tint painted over the AAA canvas. No token value, pair, floor,
 metric, role or shipped theme moves; `contrastPairs` stays **470** and the figure
 table stays **70**.
+
+Plan `785` gives the brand example's three published figures an owner. The
+executed extension story is quoted in four documents — the catalogue, the design
+system, the package README and the example's own header — and falsifying two of
+its figures in the catalogue (`4.24` → `4.99`, `3.146` → `3.199`) left **7045
+tests** green: `docs.test.ts` pins only the 1.157 catalogue sentence,
+`theme.test.ts` pins 3.146 numerically but never against a sentence, and nothing
+reads the README, the design system or the header. `brand-figures.test.ts`
+derives the inherited-foreground cost (the dark `primaryForeground` on the
+pre-098 fill `#7C5CFF`, written out because plan `098` moved it), the selected
+option's check (`primary` on `selected`, 3.146:1) and the dialog face
+(`popover` over the identity scrim composited with the brand's action, 1.157:1)
+from the package, and holds each document to every figure it quotes. The brand
+is an executed example rather than a shipped set, so the suite is separate from
+`documentedFigures`, whose provenance names a shipped theme. No token value,
+pair, floor, metric, role or shipped theme moves; `contrastPairs` stays **470**.
 
 ## How to use a plan
 
