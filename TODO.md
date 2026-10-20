@@ -1770,6 +1770,17 @@ retired once both branches are one
       `Rating` row fails by name in the old direction; 1 core + 2 element + 2
       runtime cases rewritten, plan `800`
 
+`[x]` `packages/primitives`: **a hover preview survived the transition that made
+      the rating inert** — a preview is state, and `renderRating` detaches
+      `onMouseLeave` while `disabled`/`readOnly`, so the clearing event never
+      arrives. Measured: hover star 4 (4 filled), re-render `readOnly` (2), then
+      interactive again with the pointer untouched painted **4**; the same with
+      `disabled`. `Rating` drops its local preview when it becomes inert, so the
+      committed value stays painted until the pointer enters a star again. 2
+      transition rows + 1 interactive control in
+      `runtime/rating.runtime.test.tsx` (22/22), the old direction failing both
+      rows with `expected 4 to be 2`; plan `801`
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

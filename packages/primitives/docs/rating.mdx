@@ -84,9 +84,12 @@ click would set. The preview follows the star under the pointer — hovering sta
 state do not change, because a preview is not a selection.
 
 `disabled` and `readOnly` ratings take no hover handlers and never preview: a
-preview is an input affordance, and an inert control has none. An `invalid`
-preview fills with the brand role like any other; the destructive role stays on
-the stars that are still missing.
+preview is an input affordance, and an inert control has none. A rating that
+*becomes* inert also drops the preview it was holding, so a read-only lock while
+the pointer is over star 4 does not revive star 4's preview when the field is
+editable again — the committed value paints until the pointer enters a star
+(plan `801`). An `invalid` preview fills with the brand role like any other; the
+destructive role stays on the stars that are still missing.
 
 `starStyle`'s `filled` follows the paint, not the committed value, so a custom
 star style cannot disagree with the icon beside it.

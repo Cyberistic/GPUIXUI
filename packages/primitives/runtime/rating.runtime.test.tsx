@@ -404,6 +404,61 @@ it.each(
   expect(seen).toStrictEqual([]);
 });
 
+/** How many stars paint the filled (brand) tint. */
+const filledStars = (runtime: Runtime): number =>
+  Arr.length(
+    Arr.filter(Arr.range(1, 5), (index) =>
+      Object.is(
+        paintedColor(runtime, `${index} of 5`),
+        testTheme.colors.primary,
+      ),
+    ),
+  );
+
+it.each([
+  ["read-only", { readOnly: true }],
+  ["disabled", { disabled: true }],
+] as const)(
+  "drops a hover preview when the rating becomes %s",
+  async (_name, props) => {
+    // The bug guarded (plan 801): a preview is an input affordance, but a control
+    // made inert cannot receive the pointer leave that clears it, so the stale
+    // preview painted again the moment the control became interactive — measured
+    // 4 stars hovered, 2 while inert, 4 again with the pointer never on star 4.
+    const runtime = await openWindow();
+    const mount = (extra: object): void => {
+      runtime.render(
+        <Surface>
+          <Rating testId="ra" label="Quality" defaultValue={2} {...extra} />
+        </Surface>,
+      );
+      runtime.flush();
+    };
+    mount({});
+    runtime.hover("ra-star-4");
+    runtime.flush();
+    expect(filledStars(runtime)).toBe(4);
+    mount(props);
+    expect(filledStars(runtime)).toBe(2);
+    mount({});
+    expect(filledStars(runtime)).toBe(2);
+  },
+);
+
+it("keeps a preview while the pointer stays inside an interactive rating", async () => {
+  // The control: the transition above must not pass by previews having stopped
+  // working altogether.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={2} />
+    </Surface>,
+  );
+  runtime.hover("ra-star-4");
+  runtime.flush();
+  expect(filledStars(runtime)).toBe(4);
+});
+
 /** A star's authored style, read back from the painted host. */
 const starStyle = (runtime: Runtime, label: string): Record<string, unknown> =>
   byLabel(runtime, label).style;

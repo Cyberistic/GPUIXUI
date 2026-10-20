@@ -12,7 +12,7 @@
  * monochrome and cannot be filled by a style.
  */
 
-import { useState, type ReactElement } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import { useGpuix } from "@gpuix/react";
 import type { PublicInstance } from "@gpuix/react";
 import * as Arr from "effect/Array";
@@ -252,6 +252,16 @@ export const Rating = (props: RatingProps): ReactElement => {
   const { renderer } = useGpuix();
   const focus = useRovingFocus();
   const [preview, setPreview] = useState<Option.Option<number>>(Option.none());
+  const inert = props.disabled === true || props.readOnly === true;
+  /**
+   * A preview is an input affordance, and an inert control never receives the
+   * pointer leave that would clear it: measured, a rating hovered on star 4 and
+   * then made read-only painted 2 while inert and 4 again the moment it became
+   * interactive, with the pointer never back on star 4 (plan `801`).
+   */
+  useEffect(() => {
+    if (inert) setPreview(Option.none());
+  }, [inert]);
   const state = useControlState(
     props.value,
     clampRating(props.defaultValue ?? 0, ratingMax(props.max)),
