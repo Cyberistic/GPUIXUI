@@ -788,8 +788,9 @@ fourteen surfaces at the same floor — the field's `input` fill included
 (plan `650`) — and three values move one designed step away from
 the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
 `#B0B0B0` — staying 1.301:1 (identity dark) and 1.168:1 (AAA dark) below
-secondary text at the tightest. The tightest washed pair is now **3.177:1**
-(Aero light `destructiveSoft`) and **4.722:1** at AAA (plan `510`).
+secondary text at the tightest. The tightest washed pair is **3.177:1**
+(Aero light `destructiveSoft`) and **4.844:1** in the AAA light palette
+(plan `510`).
 
 The same gap exists one role over. A field's typed text is its own role
 (`inputForeground`), and a theme may give it ink apart from the body copy, but

@@ -5,6 +5,8 @@ import {
   contrastRatio,
   inactivePanelActionPairs,
   nativeSyntaxPairs,
+  selectionInactivePairs,
+  selectionSoftPairs,
   selectionSurfaces,
   toastTonePairs,
   trackSurfacePairs,
@@ -506,6 +508,75 @@ const inactivePanelActionFigures: ReadonlyArray<DocumentedFigure> = [
     decimals: 3,
     sentence: "{figure}:1 AAA dark), and the label",
   },
+];
+
+/**
+ * The washed unavailable label: `disabledForeground` through the composited
+ * `selection` wash on every surface `inactiveSurfaces` names.
+ *
+ * Plan `510` wrote the tightest pair as 3.177:1 for Aero light and 4.722:1 "at
+ * AAA"; plan `520` then moved the AAA dark label, so the shipped AAA minimum is
+ * the light palette's **4.844:1** while the dark palette measures 7.932:1. The
+ * catalogue, the design system, the README and the ledger kept quoting the
+ * pre-520 figure, and one occurrence named the dark palette as the minimum
+ * (plan `770`). The
+ * tightest entry walks the whole pair list, so the set it names is the set that
+ * produces the minimum, and the AAA entry measures the one pair on the palette
+ * the sentence names.
+ */
+const selectionInactiveFigures = (
+  document: FigureDocument,
+): ReadonlyArray<DocumentedFigure> => [
+  {
+    document,
+    name: "the washed unavailable label's tightest pair",
+    pairs: selectionInactivePairs,
+    kind: "selection",
+    claim: "tightest",
+    provenance: recipeTheme("aero", "light", "default"),
+    decimals: 3,
+    sentence:
+      "tightest washed pair is **{figure}:1** (Aero light `destructiveSoft`)",
+  },
+  {
+    document,
+    name: "the washed unavailable label's AAA minimum",
+    pairs: [["disabledForeground", "destructiveSoft", "inactive"]],
+    kind: "selection",
+    claim: "value",
+    provenance: identityTheme("light", "high"),
+    decimals: 3,
+    sentence: "and **{figure}:1** in the AAA light palette",
+  },
+];
+
+/**
+ * The panel action's label through the same wash. `selectionSoftPairs` holds
+ * `softActionForeground` on the four soft fills at the body floor; identity dark
+ * on `infoSoft` is the shipped minimum, and the figure had no owner until plan
+ * `770` — falsifying it in the catalogue left every suite green.
+ */
+const selectionPanelActionFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the washed panel action's label",
+  pairs: selectionSoftPairs.filter(
+    ([foreground]) => foreground === "softActionForeground",
+  ),
+  kind: "selection",
+  claim: "tightest",
+  provenance: identityTheme("dark", "default"),
+  decimals: 3,
+  sentence:
+    "every shipped set clears them (**{figure}:1** at the tightest, identity dark on `infoSoft`)",
+};
+
+/** The washed entries the four documents state, plus the panel action. */
+const selectionWashFigures: ReadonlyArray<DocumentedFigure> = [
+  ...selectionInactiveFigures("docs/tokens.md"),
+  ...selectionInactiveFigures("docs/design-system.md"),
+  ...selectionInactiveFigures("packages/tokens/README.md"),
+  ...selectionInactiveFigures("COMPONENTS.md"),
+  selectionPanelActionFigure,
 ];
 
 /**
@@ -1109,6 +1180,7 @@ const nativePaintFigures: ReadonlyArray<DocumentedFigure> = [
 /** Every figure this table holds. */
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
+  ...selectionWashFigures,
   ...inactivePanelActionFigures,
   ...disabledDimFigures,
   trackSurfaceFigure,

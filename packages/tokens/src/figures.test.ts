@@ -133,6 +133,32 @@ describe("figures the catalogue states in the present tense", () => {
 
     expect(ratios.every((ratio) => Number.isFinite(ratio))).toBe(true);
   });
+
+  // The table checks that a document quotes its sentence *somewhere*, so a page
+  // that keeps a second copy of a corrected claim passes. The washed-inactive
+  // claim is stated twice in the catalogue — once in the interaction section and
+  // once in the plan-510 history — and the second copy said "AAA dark" until
+  // plan 770, so both copies are counted here.
+  it("quotes the washed inactive sentence in both catalogue passages", () => {
+    const page = documents["docs/tokens.md"];
+    const claimed = page.match(/the tightest washed pair is/g) ?? [];
+
+    expect(claimed).toHaveLength(2);
+    expect(page).not.toContain("4.722");
+  });
+
+  it("rejects the pre-520 AAA figure in every document", () => {
+    (
+      [
+        "docs/tokens.md",
+        "docs/design-system.md",
+        "packages/tokens/README.md",
+        "COMPONENTS.md",
+      ] as const
+    ).forEach((document) => {
+      expect(documents[document], document).not.toContain("4.722");
+    });
+  });
 });
 
 describe("tier figures the documents state in the present tense", () => {

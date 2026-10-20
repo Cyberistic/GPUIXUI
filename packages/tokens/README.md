@@ -687,7 +687,8 @@ same fourteen surfaces, because `selectionColor` inherits into it: the previous
 light `#6E7787` measured **2.586:1** on Windows light's `selected` fill and the
 AAA sets 3.43:1 / 4.36:1 while every check returned `[]`, so `#545D6C`,
 `#444444` and `#D0D0D0` ship and the tightest washed pair is **3.177:1** (Aero
-light `destructiveSoft`; 4.722:1 at AAA) (plan 510). A disabled raised action
+light `destructiveSoft`) and **4.844:1** in the AAA light palette (plan 510). A
+disabled raised action
 inside a tone-tinted panel keeps its `softAction` fill, so its label is held
 through the inverse `selectionOnFill` veil too (`selectionFillInactivePairs`):
 identity dark measured **2.799:1** and AAA dark **3.304:1** there, so

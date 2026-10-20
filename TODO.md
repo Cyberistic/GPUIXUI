@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 347/424
+`[x]` `[████████░░]` 348/425
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2987,6 +2987,17 @@ other page say nine after plan 651 added the pressed `selectedActive` wash; the
 sentence now says nine and `readme.test.ts` derives the word from the pair list
 and rejects the stale phrase, and no token value, pair, floor, metric, role or
 shipped theme moves (plan 767)
+`[x]` Hold the washed figures the pages quote — the washed unavailable label's
+AAA figure was **4.722:1** "at AAA" (the pre-520 AAA *dark* value; plan `520`
+moved `disabledForeground`, so the AAA minimum is now the light palette's
+4.844:1 and the dark palette measures 7.932:1) in the catalogue, the design
+system, the README and the ledger, and the panel action's 8.667:1 and the light
+brand's 6.941:1 / 7.957:1 had no derivation at all — falsifying all five in
+place left every suite green. The washed-inactive tightest and AAA entries and the panel
+action's entry join `documentedFigures`, the brand's two figures are derived in
+`theme.test.ts` and both brand places now name the canvas (the tightest of the
+four document tones), and the plan-510 sentence loses its unguarded "thirteen";
+no colour, pair, floor, metric or shipped theme moves (plan 770)
 
 ## Phase C — Tier 1–2 components
 

@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs";
 import { brandLightTheme, brandTheme } from "./brand-theme.example.js";
 import { accessibleDarkTheme, resolveTheme } from "./high-contrast.example.js";
 import { alpha, densityPresets, type ElevationShape } from "./index.js";
+import { nativeInk } from "./native-ink.js";
 import { shippedThemes } from "./shipped-themes.js";
 import {
   contrastFloors,
@@ -24,6 +25,7 @@ import {
   highContrastLightTheme,
   highContrastThemes,
   lightTheme,
+  nativeTextSurfaces,
   themes,
   themeContrastFailures,
   themeFailures,
@@ -329,6 +331,40 @@ describe("brand example", () => {
       "primaryText on background",
     ]);
     expect(themeFailures(brandLightTheme)).toEqual([]);
+  });
+
+  it("states the brand's ink figures on the canvas they measure", () => {
+    const ink = nativeInk(brandLightTheme, "background");
+    const linked = contrastRatio(brandLightTheme.colors.primaryText, ink);
+    const regressed = contrastRatio("#5330C8", ink);
+
+    expect(Number(linked.toFixed(3))).toBe(7.957);
+    expect(Number(regressed.toFixed(3))).toBe(6.941);
+
+    // The canvas is the tightest of the four tones a document may paint on, so
+    // it is the surface a sentence about "the ink wash" must name.
+    const tones = nativeTextSurfaces.map((surface) =>
+      contrastRatio(
+        brandLightTheme.colors.primaryText,
+        nativeInk(brandLightTheme, surface),
+      ),
+    );
+    expect(Math.min(...tones)).toBe(linked);
+
+    const example = readFileSync(
+      new URL("./brand-theme.example.ts", import.meta.url),
+      "utf8",
+    ).replaceAll(/\s+/g, " ");
+    const ledger = readFileSync(
+      new URL("../../../COMPONENTS.md", import.meta.url),
+      "utf8",
+    );
+
+    expect(example).toContain("6.941:1");
+    expect(example).toContain("7.957:1");
+    expect(example).toContain("over the canvas");
+    expect(ledger).toContain("7.957:1");
+    expect(ledger).toContain("through the wash on the canvas");
   });
 
   it("keeps the brand's selected-option check on the fill it marks", () => {

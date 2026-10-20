@@ -27,8 +27,8 @@ import { createTheme, darkTheme } from "./index.js";
  *
  * The light brand's link ink takes one step inside its own violet family —
  * `#5330C8` → `#4B2AB4` — because a native document paints body text on a 3.5%
- * ink wash, where the old value measured 6.941:1, under the body floor the
- * total check enforces (plan 745).
+ * ink wash over the canvas, where the old value measured 6.941:1 and this one
+ * 7.957:1, under the body floor the total check enforces (plan 745).
  */
 export const brandTheme = createTheme({
   mode: "dark",

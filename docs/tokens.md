@@ -2577,8 +2577,8 @@ XP and Aero light already passed. Plan `520` moves AAA dark once more
 disabled raised action's inverse veil. The values stay below `mutedForeground` by
 1.301:1 (identity dark) and 1.168:1 (AAA dark) at the tightest, and 1.542:1
 below `softActionForeground` (identity dark), so an unavailable label is still
-distinguishable from secondary text; the tightest washed pair is now
-**3.177:1** (Aero light `destructiveSoft`) and **4.722:1** at AAA.
+distinguishable from secondary text; the tightest washed pair is **3.177:1**
+(Aero light `destructiveSoft`) and **4.844:1** in the AAA light palette.
 
 The parts are public too. `contrastRatio(foreground, background)` is the WCAG
 ratio for opaque colours — `#RRGGBB`, or the paint-identical `#RRGGBBFF`
@@ -3744,12 +3744,13 @@ Plan `510` holds the unavailable label through the text-selection wash.
 measured the label only at rest, so the previous light `#6E7787` measured
 **2.586:1** on Windows light's `selected` fill and 2.604–2.945:1 on the other
 default light sets, and the AAA sets 3.430:1 and 4.357:1, while every check
-returned `[]`. `selectionInactivePairs` adds a washed pair on each of the
-thirteen `inactiveSurfaces`, and three values move one designed step away from
+returned `[]`. `selectionInactivePairs` adds a washed pair on every surface the
+list names, and three values move one designed step away from
 the panel — `#6E7787` → `#545D6C`, `#5A5A5A` → `#444444`, `#A9A9A9` →
 `#B0B0B0` — while staying 1.455:1 below `mutedForeground` at the tightest when
-that plan shipped. Every shipped set passes (3.177:1 Aero light, 4.722:1 AAA
-dark), no `contrastPairs` entry moves, and `contrastPairs` stays **394**.
+that plan shipped. Every shipped set passes, and the tightest washed pair is
+**3.177:1** (Aero light `destructiveSoft`) and **4.844:1** in the AAA light
+palette. No `contrastPairs` entry moves, and `contrastPairs` stays **394**.
 Plan `512` holds the panel action's label through the same wash. Plan `394` gave
 a ghost action inside a tone-tinted panel its own role, `softActionForeground`,
 but `selectionSoftPairs` still measured the body `foreground` the description
@@ -3757,9 +3758,9 @@ paints, not the action's label; identity light with `softActionForeground:
 "#444444"` measured 7.347–7.556:1 at rest and **5.685–5.847:1** through the wash,
 under the 7:1 body floor, while `themeContrastFailures` returned `[]`. The four
 soft fills join the list for the panel action — 12 → **16** pairs — and every
-shipped set clears them (8.667:1 at the tightest, identity dark on `infoSoft`),
-so no colour moves, no `contrastPairs` entry moves, and `contrastPairs` stays
-**394**. The same audit corrected `softAction`'s JSDoc, which still described a
+shipped set clears them (**8.667:1** at the tightest, identity dark on
+`infoSoft`), so no colour moves, no `contrastPairs` entry moves, and
+`contrastPairs` stays **394**. The same audit corrected `softAction`'s JSDoc, which still described a
 ghost action as painting the canvas `hover`/`active` washes plan `394` replaced.
 Plan `514` gives the disabled action inside a tone-tinted panel its resting
 pair — `disabledForeground` on `softAction`, at the inactive floor — and the
@@ -4114,8 +4115,8 @@ and `selectionSoftWashPairs` the wash to 1.05:1, after identity light
 added in plan `362` — the identity dark body on `infoSoft` at **8.14:1** and Windows
 light's caption on `destructiveSoft` at **5.08:1** at the tightest — and the
 ghost action's label plan `394` moved off `foreground` joins them in plan `512`:
-every shipped set clears **8.667:1** (identity dark on `infoSoft`), so no colour
-moves. A status panel now keeps its description, its action and its caption
+every shipped set clears them (**8.667:1** at the tightest, identity dark on
+`infoSoft`), so no colour moves. A status panel now keeps its description, its action and its caption
 selected on any platform, and a brand-toned link is held through the wash too
 (`selectionLinkPairs`, plan `528`). The card's own
 `cardForeground` is measured beside the default `foreground` (plan `363`), so a
@@ -4250,7 +4251,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **56** entries across
+state — `documentedFigures` and `documentedTierFigures`, **65** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure
