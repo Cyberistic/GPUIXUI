@@ -164,7 +164,9 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   one Escape (plan `669`) — and a genuinely new event is a new task. The claim
   also carries **Tab ownership**: a popover walks its own tab stops and claims
   each press, so the trap of an enclosing `Dialog` or `Drawer` leaves that press
-  alone and resumes once the panel closes (plan `719`).
+  alone and resumes once the panel closes (plan `719`); a modal does the same, so
+  a `ConfirmDialog` or `Dialog` opened from a dialog owns the keyboard and the
+  enclosing trap resumes on the next press (plan `728`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.

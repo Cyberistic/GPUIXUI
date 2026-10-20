@@ -94,8 +94,9 @@ enclosing handler reads it, and a genuinely new event is a new task.
 
 A nested surface that handles `Tab` itself owns that press: a `Popover` inside
 the content walks its own controls and the trap resumes once its panel closes
-(plan 719). Every other `Tab`, and the caller's own `onKeyDown`, behaves as
-before.
+(plan 719), and a modal opened from the content — a `ConfirmDialog`, another
+`Dialog` — traps its own `Tab` while the enclosing dialog yields (plan 728).
+Every other `Tab`, and the caller's own `onKeyDown`, behaves as before.
 
 The opener is captured before the surface mounts, so a control inside the
 content that carries `autoFocus` (a form field, say) does not become the saved

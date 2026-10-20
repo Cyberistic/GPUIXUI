@@ -13,7 +13,7 @@ import { Match } from "effect";
 import { useLayoutEffect, useRef, useState } from "react";
 import { useControllableState } from "./controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./dismiss-layer.js";
-import { isEventClaimed } from "./event-claim.js";
+import { claimEvent, isEventClaimed } from "./event-claim.js";
 import { isDismiss, isTab } from "./key.js";
 
 /** The open state a modal exposes to its parts. */
@@ -101,9 +101,11 @@ export const useModalFocus = (
 };
 
 /**
- * Escape closes the topmost overlay; Tab wraps inside the surface unless an
- * inner surface (a popover's walk) claimed the event. `onKeyDown` runs last, so a
- * caller observes every key after the modal rules.
+ * Escape closes the topmost overlay. Tab wraps inside the surface and claims
+ * the press, so a nested modal's trap is the one that acts on it and an
+ * enclosing modal yields — the rule plan 719 established for a popover's own
+ * Tab walk. `onKeyDown` runs last, so a caller observes every key after the
+ * modal rules.
  */
 export const handleModalKeyDown = ({
   event,
@@ -132,6 +134,7 @@ export const handleModalKeyDown = ({
         } else {
           renderer?.focusNextWithin?.(contentId ?? -1);
         }
+        claimEvent(value);
       }),
       Match.orElse(() => undefined),
     );

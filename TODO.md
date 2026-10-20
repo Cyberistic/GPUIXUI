@@ -1062,6 +1062,21 @@ retired once both branches are one
       spread onto the root; 3 native cases (6 → 9) all failing at `HEAD`, three
       mutation proofs; example, docs, `COMPONENTS.md` and the inventory count
       synced
+    - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
+      confirmation opened from a dialog lost the keyboard on the first Tab
+      (Cancel → the outer dialog's first control, while the confirmation stayed
+      painted and its Confirm action was skipped), because both modal surfaces
+      trapped the same press. `handleModalKeyDown` now claims each Tab it
+      handles, and the existing claim reader makes the enclosing trap yield;
+      Escape's one-layer close is unchanged. 2 new failing cases + 1 pin
+      (Confirmation dialog 7 → 10), two mutation proofs; docs,
+      `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
+    - [ ] A modal opened in the same commit as its parent loses the initial
+      focus to the parent (measured 2026-10-20 with both `open` at mount: focus
+      ends on the outer surface, not the confirmation's Cancel). A nested modal
+      opened later is correct (plan 728); the mount-order case needs its own
+      plan (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
@@ -1459,7 +1474,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       defects plus Tabs' removed-host case (the plan-708 follow-up). Plan 712
       then flipped that case too: 1 disabled-tab-cleanup case added, 2 pins
       added, and the full native suite is **875 passed / 28 failed of 903** —
-      every remaining failure is a recorded plan-540 binding defect.
+      every remaining failure is a recorded plan-540 binding defect. Plan 728
+      re-ran all three gates on 2026-10-20: `check`, `lint` and `test` exit 0
+      (unit 485 in 46 files), and the full native suite is
+      **908 passed / 28 failed of 936** — the same plan-540 binding classes and
+      no new failure; Confirmation dialog is 10/10.
 
 ## Swarm-owned blockers (fix these)
 

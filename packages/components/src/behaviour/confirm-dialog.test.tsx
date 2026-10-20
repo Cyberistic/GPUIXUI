@@ -5,18 +5,26 @@
  * Enter destroys something); a cancel that confirms; a confirm that closes the
  * dialog itself (a failed save would vanish); a loading state that still accepts
  * a click or lets Escape dismiss the dialog mid-write; and a danger tone that
- * does not paint the destructive role.
+ * does not paint the destructive role. An opened-from-a-dialog confirmation lost
+ * the keyboard: one Tab moved focus into the dialog behind it while the
+ * confirmation stayed painted, because both modal surfaces trapped the same
+ * press. The first two nested-modal cases fail on that; the escape case pins the
+ * one-layer close and the resumed outer trap.
  */
 
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ConfirmDialog } from "../confirm-dialog.js";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../dialog.js";
+import { Button } from "../internal/button.js";
 import { darkTheme } from "../internal/theme.js";
 import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  isShown,
+  nextTask,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
 import { nodesNamed, nodesWithRole } from "../internal/a11y.js";
@@ -42,6 +50,31 @@ const Harness = ({
       loading={loading}
       tone={tone}
     />
+  );
+};
+
+/** A dialog whose Delete action asks for confirmation, as an app composes it. */
+const DialogWithConfirm = () => {
+  const [confirm, setConfirm] = useState(false);
+  return (
+    <Dialog open onOpenChange={() => undefined}>
+      <DialogContent label="Settings" testId="outer-content">
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+        <Button testId="outer-first">First</Button>
+        <Button testId="outer-delete" onClick={() => setConfirm(true)}>
+          Delete
+        </Button>
+        <ConfirmDialog
+          open={confirm}
+          onOpenChange={setConfirm}
+          title="Delete?"
+          description="This cannot be undone."
+          onConfirm={() => undefined}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -141,6 +174,56 @@ describe("ConfirmDialog", () => {
     const accept = confirm.renderer.findByTestId("confirm-accept");
     expect(accept?.style.backgroundColor).toBe(darkTheme.colors.destructive);
     expect(accept?.style.color).toBe(darkTheme.colors.destructiveForeground);
+
+    confirm.unmount();
+  });
+
+  it("keeps Tab inside a confirmation opened from a dialog", async () => {
+    const confirm = renderComponent(<DialogWithConfirm />);
+    clickCentreOf(confirm, "outer-delete");
+    finishMotion(confirm);
+
+    expect(focusedTestId(confirm)).toEqual(Option.some("confirm-cancel"));
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(confirm)).toEqual(Option.some("confirm-accept"));
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(confirm)).toEqual(Option.some("confirm-cancel"));
+
+    confirm.unmount();
+  });
+
+  it("keeps Shift+Tab inside it too", async () => {
+    const confirm = renderComponent(<DialogWithConfirm />);
+    clickCentreOf(confirm, "outer-delete");
+    finishMotion(confirm);
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("shift-tab");
+    expect(focusedTestId(confirm)).toEqual(Option.some("confirm-accept"));
+
+    confirm.unmount();
+  });
+
+  it("closes only the confirmation and lets the outer trap resume", async () => {
+    const confirm = renderComponent(<DialogWithConfirm />);
+    clickCentreOf(confirm, "outer-delete");
+    finishMotion(confirm);
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("escape");
+    finishMotion(confirm);
+
+    expect(isShown(confirm, "confirm-accept")).toBe(false);
+    expect(isShown(confirm, "outer-first")).toBe(true);
+    expect(focusedTestId(confirm)).toEqual(Option.some("outer-delete"));
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(confirm)).toEqual(Option.some("dialog-close"));
 
     confirm.unmount();
   });

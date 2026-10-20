@@ -52,6 +52,10 @@ are required.
 | `Tab` / `Shift+Tab` | cycle the two actions (the dialog traps focus) |
 | `Escape` | cancels, unless `loading` |
 
+A confirmation opened from a `Dialog` owns its `Tab`: the enclosing dialog's trap
+yields to the press the confirmation handled and resumes when it closes
+(plan 728).
+
 ## Tones
 
 `tone="default"` uses the primary button; `tone="danger"` uses the destructive
@@ -102,11 +106,13 @@ description are unchanged: the wording, not the colour, carries the consequence.
 
 ## Verification
 
-`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (7 tests):
+`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (10 tests):
 Cancel-focused-on-open, Enter cancelling without confirming, confirm reporting
 once and leaving the dialog open, both actions and Escape inert while loading,
 the busy state announced on the confirm action, the description announced on the
-dialog, and the danger tone reading the destructive roles.
+dialog, the danger tone reading the destructive roles, a confirmation opened
+from a dialog keeping `Tab` and `Shift+Tab` inside it, and closing alone with
+the outer trap resuming.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
