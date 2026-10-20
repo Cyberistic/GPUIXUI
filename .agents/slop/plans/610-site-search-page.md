@@ -2,7 +2,7 @@
 
 Phase: F
 Depends on: 410, 411, 419, 431, 442, 490, 500, 504, 505, 507, 524, 561, 564, 566, 568, 569, 570, 578, 580, 582, 587, 591, 598, 601, 607, 608, 609
-Status: planned
+Status: implemented
 
 ## 1. The measured defect
 
@@ -232,6 +232,31 @@ list already uses:
 | `search index` | `/docs/site-search` | `true` | the generated-document vocabulary |
 | `search` | `/docs/components/search-input` | `true` | the component word the new page must not steal |
 
+### 2.8 `apps/docs/src/lib/typo.ts` (edit, measured consequence)
+
+Titling the page **Site search** creates a second one-edit target for `seach`:
+the component name *Search input* and the page title *Site search* both match a
+word at tier `2`, so `typoMatch` refuses the tie and `seach` fell back to the
+lexical index's *Icon names* (measured while implementing: `seach ->
+/docs/components/icon`, where plan 607 requires Search input).
+
+The fix is a rule, not an exception: **a page title matches as a whole name or
+a whole phrase, never by a word inside it.** A component title is a proper name
+(`Search input` legitimately owns `seach`); a page title is a short subject
+phrase whose words are generic (`site`, `search`, `component`), and a word of
+one is not evidence that the page is what the reader misspelled. Concretely:
+
+- `TypoName.kind` gains `"page"`; `targetTier` skips the word branch for it
+  (whole-name tier `0`, phrase arm unchanged), and `phraseTier` treats a page
+  like a name (tier `0`) rather than an alias.
+- `search.ts` builds page titles with `kind: "page"`.
+- `typo.test.ts` adds the measured pair (Site search + Search input → Search
+  input) and proves a page title still matches as a whole name (`theem` →
+  Theming, `componet` → Components).
+
+STOP if any plan-607/608 typo expectation other than `seach` changes: that would
+mean the rule is wider than this measurement.
+
 ## 3. Test plan
 
 ### `apps/docs/src/lib/search-docs.test.ts` (new)
@@ -302,9 +327,10 @@ The last five are regressions; the table in the test is the record.
    Search input).
 3. Point one `indexedSurfaces` URL at `/docs/components/button` → the data test
    fails by document title and URL.
-4. Change `MAX_SEARCH_LIMIT` to `40` → the rank-constant row fails (the page
-   renders the live value, so the test proves it is live rather than remembered;
-   revert immediately).
+4. Type a wrong literal (`value: "7"` for `TYPO_MATCH_RANK`, replacing the
+   imported constant) → `search-docs.test.ts` fails the rank-constant row; the
+   page reads the module, and the source guard fails if the imports it needs are
+   removed. Revert immediately.
 5. Remove `site-search` from `meta.json` → `content.test.ts` fails
    "orders every top-level page on disk in the sidebar".
 6. Rename the component in `mdx.tsx`'s registration → the page render test fails
@@ -350,3 +376,74 @@ The last five are regressions; the table in the test is the record.
   and every path a reader copies resolves.
 - All gates in §4 are green, and the results (file/test counts, page count,
   browser smoke exits) are recorded here.
+
+## 7. What was measured
+
+Implemented 2026-10-20 on `agent/docs-site`.
+
+**Files:** `src/lib/search-ranks.ts`, `src/lib/search-docs.ts`,
+`src/lib/search-docs.test.ts`, `src/components/search-reference.tsx`,
+`src/components/search-reference.test.tsx`, `content/docs/site-search.mdx`,
+`content/docs/meta.json`, `src/components/mdx.tsx`, `src/lib/page-aliases.ts`,
+`src/lib/page-aliases.test.ts`, `src/lib/search.ts`, `src/lib/typo.ts`,
+`src/lib/typo.test.ts`, `scripts/smoke-build.ts`.
+
+**Before → after** (the harness from §1; the six owned queries now return the
+page, the five regression rows are unchanged):
+
+```text
+cmd k          component-pages#the-gesture-vocabulary → /docs/site-search
+search index   /docs/components/search-input          → /docs/site-search
+search ranking /docs/components/search-input          → /docs/site-search
+api/search     component-pages#search-vocabulary      → /docs/site-search
+ranking        /docs/components/range-slider          → /docs/site-search
+lexical        (nothing)                              → /docs/site-search
+search         /docs/components/search-input          → unchanged
+search input   /docs/components/search-input          → unchanged
+```
+
+**The second measured defect, found while implementing:** titling the page
+*Site search* made `seach` ambiguous between the page title and the Search input
+component, and the tie fell back to the lexical index — measured
+`seach -> /docs/components/icon`, where plan 607 requires Search input. §2.8
+records the rule that closes it (a page title matches as a whole name or whole
+phrase, never by a word inside it) and the two tests that guard it.
+
+**Gates:**
+
+- `nub run --filter docs test` — 122 files / 1 117 tests, green.
+- `nub run --filter docs check-types` — exit `0`.
+- `nub run --filter docs build` — exit `0`.
+- `nub run smoke:build --no-build` — 104 pages, 229 links, 1 348 anchors,
+  search checked (the three new queries included), exit `0`.
+- `nub run smoke:search` — palette, index filter and phone path green, exit `0`.
+- `nub run check` — exit `0` (test-quality checker, lint, format, every
+  workspace's types).
+- `nub run test` — docs 122 / 1 117 and primitives 25 / 282, green.
+- `nub run smoke:a11y` — the new page's two tables are audited with every other
+  page in both schemes (result recorded in the commit).
+
+**Two-direction proofs (each run, then reverted):**
+
+1. Removed `<SearchReference />` from the page → 2 tests failed:
+   *renders the generated reference* and *is the only page that renders the
+   reference*.
+2. Deleted the `/docs/site-search` alias block → the vocabulary test failed with
+   `search index -> /docs/components/search-input`,
+   `search ranking -> /docs/components/search-input`,
+   `api/search -> /docs/site-search#the-search-api` and `cmd k` landing on
+   `#ranking` instead of the page top.
+3. Pointed the Roadmap surface at `/docs/components/button` → the index test
+   failed naming `Roadmap :: /docs/components/button`.
+4. Typed `value: "7"` for `TYPO_MATCH_RANK` → the rank test failed on the
+   `TYPO_MATCH_RANK` row (the source guard also fails if the imports are
+   removed).
+5. Removed `site-search` from `meta.json` → `content.test.ts` failed *orders
+   every top-level page on disk in the sidebar* with `[ 'site-search' ]`.
+6. Removed the component from `getMDXComponents()` → `mdx-components.test.ts`
+   failed *registers every component the pages use* with
+   `[ 'SearchReference' ]`.
+
+**Deliberate test change:** `page-aliases.test.ts` moved `search index` from
+`regressions` to `owned`. The row existed so a future owner would have to change
+it deliberately; this plan is that change.

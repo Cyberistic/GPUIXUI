@@ -1240,6 +1240,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the deployment and hosting page, which returned nothing before plan 609",
     },
+    {
+      query: "cmd k",
+      expected: "/docs/site-search",
+      first: true,
+      what: "the palette shortcut the Site search page owns",
+    },
+    {
+      query: "search index",
+      expected: "/docs/site-search",
+      first: true,
+      what: "the generated-document vocabulary the Site search page owns",
+    },
+    {
+      query: "search",
+      expected: "/docs/components/search-input",
+      first: true,
+      what: "the Search input component the Site search page must not steal",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

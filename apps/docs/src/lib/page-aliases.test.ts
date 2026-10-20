@@ -24,8 +24,10 @@ import { source } from "./source";
  * index loses to a component token (`state management`, `transparency`,
  * `rendering`, `panel`, `speed`, `credits`, `vitest`, the colour-vision words).
  * Every new term is an `owned` row, and the queries that must keep their owner
- * stay in `regressions` — including the measured limits `tabel`, `read only`
- * and `search index`, so a future fix has to change the row deliberately.
+ * stay in `regressions` — including the measured limits `tabel` and
+ * `read only`, so a future fix has to change the row deliberately. Plan 610
+ * deliberately moves `search index` from that list to `owned`: the Site search
+ * page now owns it.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -256,6 +258,10 @@ const owned = [
   ["colorblind", "/docs/theming"],
   ["colour blindness", "/docs/theming"],
   ["color blindness", "/docs/theming"],
+  ["cmd k", "/docs/site-search"],
+  ["search index", "/docs/site-search"],
+  ["search ranking", "/docs/site-search"],
+  ["api/search", "/docs/site-search"],
 ] as const;
 
 const regressions = [
@@ -302,7 +308,6 @@ const regressions = [
   ["media queries", "/docs/styling"],
   ["table", "/docs/data-display"],
   ["tables", "/docs/data-display"],
-  ["search index", "/docs/components/search-input"],
   ["read only", "/docs/troubleshooting"],
   ["tabel", "/docs/components/label"],
   ["keyboard navigation", "/docs/roadmap"],

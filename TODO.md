@@ -471,7 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 176/176
+`[x]` `[██████████]` 177/177
+
+`[x]` **Site search has a page (plan 610)** — the site documented its output,
+      deployment and previews but not its own search: `cmd k` reached a
+      gesture-vocabulary paragraph, `search index`/`search ranking` reached
+      Search input, `api/search` reached the component-pages guide and `lexical`
+      returned nothing. `/docs/site-search` now names the palette path, the two
+      indexes, the five exported rank constants, both route limits, all 16
+      generated documents and the five steps for indexing a new surface; the
+      values are rendered from `search-ranks.ts`/`search-docs.ts`, and a test
+      compares the document list with `generatedSearchEntries`. Titling the page
+      exposed a tie (`seach` matched both *Site search* and *Search input*), so
+      `typoMatch` now takes a page title as a whole name or phrase only —
+      restoring `seach` → Search input. 122 files / 1 117 docs tests, 104-page
+      `smoke:build`, six two-direction proofs in plan 610 §7.
 
 `[x]` **Deployment and hosting have a page (plan 609)** — `deployment`,
       `hosting`, `cloudflare` and `workers` returned nothing, `host` meant the

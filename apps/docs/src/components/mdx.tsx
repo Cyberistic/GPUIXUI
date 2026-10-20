@@ -28,6 +28,7 @@ import { ThemeEditor } from "./theme-editor";
 import { RelatedComponents } from "./related-components";
 import { ShowcaseComponents } from "./showcase";
 import { RoadmapTable } from "./roadmap-table";
+import { SearchReference } from "./search-reference";
 import { PlatformValues } from "./platform-values";
 import { PlatformStyles } from "./platform-styles";
 import { TokenColors } from "./token-colors";
@@ -52,6 +53,7 @@ export function getMDXComponents(components?: MDXComponents) {
     RelatedComponents,
     ShowcaseComponents,
     RoadmapTable,
+    SearchReference,
     CapabilityMatrix,
     NativePreview,
     NativePlatforms,

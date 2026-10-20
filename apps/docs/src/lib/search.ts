@@ -34,9 +34,21 @@ import { stylingSearchEntry } from "./styling-search";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
 import { stem, typoMatch, type TypoName } from "./typo";
+import {
+  DEFAULT_SEARCH_LIMIT,
+  DESCRIPTION_MATCH_RANK,
+  MAX_SEARCH_LIMIT,
+  PHRASE_TYPO_MATCH_RANK,
+  TYPO_MATCH_RANK,
+} from "./search-ranks";
 
-export const DEFAULT_SEARCH_LIMIT = 10;
-export const MAX_SEARCH_LIMIT = 50;
+export {
+  DEFAULT_SEARCH_LIMIT,
+  DESCRIPTION_MATCH_RANK,
+  MAX_SEARCH_LIMIT,
+  PHRASE_TYPO_MATCH_RANK,
+  TYPO_MATCH_RANK,
+};
 
 /**
  * A planned component has no page, so its result must not pretend it does. It
@@ -126,7 +138,12 @@ export const valueSearchIndex: Index = {
   keywords: valueExports.map((value) => value.name).join(" "),
 };
 
-const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
+/**
+ * Every docs-owned document: rendered React from package data, so the page index
+ * never sees it. The Site search page renders this list, and a test compares the
+ * page's copy with it (plan 610).
+ */
+export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   accessibilitySearchEntry,
   hostPropsSearchEntry,
   layeringSearchEntry,
@@ -142,14 +159,14 @@ const generatedEntries: ReadonlyArray<GeneratedSearchEntry> = [
 ];
 
 const generatedByUrl = new Map(
-  generatedEntries.map((entry) => [entry.index.url, entry]),
+  generatedSearchEntries.map((entry) => [entry.index.url, entry]),
 );
 
 const registrySearch = createSearchAPI("simple", {
   indexes: [
     ...components.map(componentSearchIndex),
     valueSearchIndex,
-    ...generatedEntries.map((entry) => entry.index),
+    ...generatedSearchEntries.map((entry) => entry.index),
   ],
 });
 
@@ -194,7 +211,7 @@ const typoNames: ReadonlyArray<TypoName> = [
     (page): TypoName => ({
       name: page.data.title,
       url: page.url,
-      kind: "name",
+      kind: "page",
     }),
   ),
   ...[...pageAliases].flatMap(([url, terms]) =>
@@ -407,27 +424,6 @@ const descriptionMatchRank = (
     : undefined;
 };
 
-/** A summary names the page's subject one tier below its own title. */
-export const DESCRIPTION_MATCH_RANK = 4;
-
-/**
- * A one-edit typo of a single word is a candidate, never a winner over a real
- * match (plan 607): one above the highest real rank (`3` for a summary phrase,
- * offset by `DESCRIPTION_MATCH_RANK`). A genuine match therefore always
- * outranks a misspelling, however close the name is.
- */
-export const TYPO_MATCH_RANK = 8;
-
-/**
- * A phrase whose every word names a word of one whole title or alias is name
- * evidence, not prose (plan 608): it sits with a real word-level name match
- * (`2`), below an exact or prefix name (`0`–`1`) and above a suffix coincidence
- * (`3`), a single token (`4`–`6`) and a summary phrase (`4`–`7`). A token match
- * is what stole `buton group` (Radio group), `seach input` (Text inputs) and
- * `theem toggle` (Toggle) from the name the phrase nearly spelled.
- */
-export const PHRASE_TYPO_MATCH_RANK = 2;
-
 /**
  * A page whose summary names the query is a candidate even when the page index
  * answered it with headings only or omitted it, the same rule `pageTitleHits`
@@ -481,7 +477,7 @@ export const pageAliasHits = (
  */
 export const generatedNameHits = (
   query: string,
-  entries: ReadonlyArray<GeneratedSearchEntry> = generatedEntries,
+  entries: ReadonlyArray<GeneratedSearchEntry> = generatedSearchEntries,
 ): ReadonlyArray<SortedResult> =>
   entries.flatMap((entry) =>
     promotedNameRank(entry, query) === undefined

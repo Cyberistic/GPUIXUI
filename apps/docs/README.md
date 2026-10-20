@@ -39,6 +39,18 @@ Fumadocs + TanStack Start (SSR), built with Vite, Tailwind 4 and
 `fumadocs-mdx`. It deploys as a Cloudflare Worker through
 `packages/deploy/alchemy.run.docs.ts` (`rootDir: "../../apps/docs"`).
 
+## Site search
+
+`/docs/site-search` is the reader page; the rules live in code. Fumadocs builds a
+lexical index over the MDX pages, and every surface rendered from package data
+owns a document in `generatedSearchEntries` (`src/lib/search.ts`) merged into one
+`simple` index. `src/lib/search-ranks.ts` holds the pure rank constants and route
+limits so the page's table can import them without the server index, and
+`src/lib/search-docs.ts` lists the generated documents — `search-docs.test.ts`
+compares that list with the real entries. A page title enters the typo tier as a
+whole name only, never by a word inside it, so `seach` still names Search input.
+`smoke:build` queries the production index; `smoke:search` operates the palette.
+
 ## Commands
 
 ```sh

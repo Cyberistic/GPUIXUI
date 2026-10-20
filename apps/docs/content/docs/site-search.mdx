@@ -1,0 +1,168 @@
+---
+title: Site search
+description: How the documentation site's search works — the ⌘K palette, the page index and the generated search index documents, ranking, aliases, the /api/search route, and how to index a new generated surface.
+---
+
+This page documents **the documentation site's own search**. If you are looking
+for the text field component, see [Search input](/docs/components/search-input);
+if you want a command palette in your application, see
+[Command menu](/docs/components/command-menu).
+
+Search matters more here than on a typical docs site: it is the only way to
+reach a component page without walking the sidebar, and the site's tables are
+rendered from package data rather than authored prose, so they are invisible to
+a page index that has never seen them. The ranking and the generated documents
+exist to close that gap.
+
+## Using it
+
+Press `⌘K` on macOS or `Ctrl+K` elsewhere — the shortcut accepts either
+modifier. Below the `sm` breakpoint the header carries a search button instead,
+so the palette is reachable on a phone.
+
+| Key | What happens |
+| --- | ------------ |
+| type | the list filters as you type; a blank field lists nothing |
+| `Enter` | opens the highlighted result and moves focus to the destination page |
+| `Escape` | closes the palette and returns focus to the control that opened it |
+
+Those three paths are operated by `smoke:search` in a real browser, not
+inferred from the markup: the palette is a controlled dialog with no trigger of
+its own, so focus restoration is the site's job
+(`apps/docs/src/search/search-focus.tsx`).
+
+## The two indexes
+
+Fumadocs builds a lexical index over every MDX page. That index knows authored
+prose and headings, and nothing that a page **renders** from package data: a
+component record, a token table, the icon catalogue, the roadmap, a capability
+matrix. Those surfaces get their own search documents instead, merged into one
+`simple` index at request time:
+
+| Index | Built from | Finds |
+| ----- | ---------- | ----- |
+| page index | `createFromSource(source)` over `content/docs/**` | prose, headings and anchors |
+| registry index | one document per component record, the Values API, and the generated documents below | component names, exported symbols, parts, token roles, scene instructions |
+
+The registry index also carries each component record's slug, parts, props-type
+names and reader aliases, so `DialogTitle` and `textbox` resolve without any
+prose containing them. Generated prop-table rows are dropped from the page
+index: `aria-label` and `children` would otherwise match almost any
+accessibility query and bury the paragraph that answers it.
+
+A page appears once in the merged answer, even when both indexes returned it.
+Results can still point at a heading inside that page — a fragment is often the
+better answer.
+
+## Ranking
+
+Every candidate is scored, and the smallest rank wins. A whole name beats a
+word inside a name, a name beats an instruction, and any real match beats a
+misspelling. The constants below are the ones the ranker exports; the table is
+rendered from them, so it cannot state a remembered value.
+
+<SearchReference />
+
+The prose order, from strongest to weakest:
+
+1. **A name** — a component's title, slug, exported symbol or declared part; a
+   page's own title; an editorial alias (the reader's word for the thing). An
+   exact match beats a prefix, which beats one word of a name.
+2. **A scene instruction** — the sentence above a live scene (`wheel up`,
+   `type a name`), so a gesture reaches the page that shows it.
+3. **A word inside a name, a multiword generated name, or the first word of a
+   page summary** — `popover placement` reaches Popovers, `file tree` reaches
+   the roadmap, `table` reaches Data display through its summary.
+4. **A summary phrase** — every word of the query appears in one page's
+   description. Only a hand-authored page is scored by its summary; a component
+   already has a title and aliases, so an incidental mention there never
+   promotes it.
+5. **A one-edit misspelling of a name** — a candidate only when nothing real
+   matched; `botton`, `acordian` and `theem editr` reach their pages this way.
+6. **Everything else** — the index's own order.
+
+Ties break on the shorter title (`Buttons` before `Button groups`), then on the
+index's order. An empty or whitespace-only query returns `[]` rather than
+arbitrary prose.
+
+The two editorial tables are part of the ranker, not page content:
+
+| Table | What it maps | Guard |
+| ----- | ------------ | ----- |
+| `apps/docs/src/lib/component-aliases.ts` | a component slug to the words a reader types for it (`textbox`, `modal`, `one time password`) | `component-aliases.test.ts` |
+| `apps/docs/src/lib/page-aliases.ts` | a hand-authored page to the phrase its title and summary cannot own (`cmd k`, `theme switch`, `self host`) | `page-aliases.test.ts` |
+
+Both match a **whole query** only. That rule is deliberate: if `modal` matched
+inside a longer query, `modal focus` would jump from the measured capability
+row to the Dialogs page merely because one alias is `modal`.
+
+## The search API
+
+The palette talks to one route. It takes a query and a limit, and returns
+Fumadocs `SortedResult` objects — `id`, `url`, `type` (`page`, `heading` or
+`text`) and `content`:
+
+```sh
+curl -s "http://localhost:3000/api/search?query=button&limit=3"
+```
+
+`limit` is optional. An unparseable value falls back to the default, and an
+out-of-range value is clamped rather than rejected. A blank query returns `[]`.
+The route is the whole server surface:
+
+<include lang="ts" meta='title="apps/docs/src/routes/api/search.ts"'>
+  ../../src/routes/api/search.ts
+</include>
+
+## Adding a searchable surface
+
+The rule for contributors is one sentence: **every surface rendered from
+package data owns a search document.** A new table or catalogue added to a page
+is findable exactly when its document exists, and invisible otherwise — the
+page index never sees rendered React.
+
+1. Build a `GeneratedSearchEntry`: a Fumadocs `Index` (`title`, `description`,
+   `content`, `url`, `breadcrumbs`, `keywords`) and the `names` it is promoted
+   for.
+2. Promote only **distinctive** names. `isDistinctiveName` accepts camelCase,
+   dotted and hyphenated names (`destructiveSoft`, `spacing.md`,
+   `chevrons-up-down`); a plain word (`input`, `label`, `theme`) is indexed but
+   never promoted, so the page that owns the word keeps the first result.
+3. Add the entry to `generatedSearchEntries` in `apps/docs/src/lib/search.ts`.
+4. Add its title and URL to `indexedSurfaces` in
+   `apps/docs/src/lib/search-docs.ts`; `search-docs.test.ts` compares the two
+   lists and fails on a missing or extra row.
+5. Add one query to `scripts/smoke-build.ts` so the production index, not only
+   the unit tests, proves the surface is reachable.
+
+The contract the entries share is small:
+
+<include lang="ts" meta='title="apps/docs/src/lib/generated-search.ts"'>
+  ../../src/lib/generated-search.ts
+</include>
+
+## What search does not do
+
+- **No semantic search.** It is a lexical index plus explicit ranks and alias
+  tables; there is no embedding model and no synonym expansion beyond those
+  tables.
+- **One edit, not fuzzy matching.** A misspelling is corrected only when it is
+  one edit from a name (or one edit per word of a phrase), and it never
+  outranks a real match.
+- **No stemming beyond one shared rule.** Inflections are compared through the
+  stem in `apps/docs/src/lib/typo.ts` (`theme` → Theming, `resize` →
+  resizable); it is an English-shaped heuristic, not a language model.
+- **No analytics or personalisation.** Results are the same for every reader;
+  nothing about a query is stored.
+- **A plain word is never promoted from a generated document.** That is a
+  deliberate trade: the component or page that owns the word keeps it.
+
+## Related
+
+- [Component pages](/docs/component-pages) — the record-and-page template,
+  including the alias table a component page may add.
+- [Components](/docs/components) — the index and its filter, which reads the
+  same aliases.
+- [Contributing](/docs/contributing) — the checks that guard the site, including
+  `smoke:search` and `smoke:build`.
+- [Previews](/docs/previews) — every live scene whose instruction is searchable.

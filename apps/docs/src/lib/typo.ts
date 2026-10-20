@@ -137,11 +137,17 @@ export const formsWithinOneEdit = (left: string, right: string): boolean => {
   );
 };
 
-/** A name a query can misspell; `alias` is editorial vocabulary. */
+/**
+ * A name a query can misspell. A component name and an alias also match by a
+ * word inside them (`seach` names Search input); a page title matches as a
+ * whole name or phrase only, because a word of a short title (`Site search`,
+ * `Component API`) is generic evidence that would tie with the component that
+ * word really names (plan 610).
+ */
 export interface TypoName {
   readonly name: string;
   readonly url: string;
-  readonly kind: "name" | "alias";
+  readonly kind: "name" | "page" | "alias";
 }
 
 /** The one page a one-edit query names. */
@@ -165,21 +171,23 @@ const targetTier = (query: string, target: TypoName): number | undefined => {
   const name = target.name.trim().toLowerCase();
   const whole =
     name !== query && formsWithinOneEdit(query, name)
-      ? target.kind === "name"
-        ? 0
-        : 1
+      ? target.kind === "alias"
+        ? 1
+        : 0
       : undefined;
-  const word = splitWords(name).some(
-    (part) =>
-      query.length >= MIN_WORD_TYPO_LENGTH &&
-      part.length >= MIN_WORD_TYPO_LENGTH &&
-      part !== query &&
-      formsWithinOneEdit(query, part),
-  )
-    ? target.kind === "name"
-      ? 2
-      : 3
-    : undefined;
+  const word =
+    target.kind !== "page" &&
+    splitWords(name).some(
+      (part) =>
+        query.length >= MIN_WORD_TYPO_LENGTH &&
+        part.length >= MIN_WORD_TYPO_LENGTH &&
+        part !== query &&
+        formsWithinOneEdit(query, part),
+    )
+      ? target.kind === "name"
+        ? 2
+        : 3
+      : undefined;
   const tiers = [whole, word].filter(
     (tier): tier is number => tier !== undefined,
   );
@@ -211,9 +219,9 @@ const phraseTier = (
   });
   if (matches.some((match) => match === undefined)) return undefined;
   return matches.includes("typo")
-    ? target.kind === "name"
-      ? 0
-      : 1
+    ? target.kind === "alias"
+      ? 1
+      : 0
     : undefined;
 };
 

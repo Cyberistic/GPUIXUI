@@ -65,6 +65,27 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["/docs/license", ["credits", "acknowledgements", "acknowledgments"]],
   ["/docs/contributing", ["vitest", "publish docs"]],
   [
+    "/docs/site-search",
+    [
+      "cmd k",
+      "cmd+k",
+      "ctrl k",
+      "ctrl+k",
+      "search index",
+      "search indexes",
+      "search ranking",
+      "search results",
+      "search api",
+      "api/search",
+      "lexical search",
+      "full text search",
+      "full-text search",
+      "search document",
+      "index document",
+      "search architecture",
+    ],
+  ],
+  [
     "/docs/deployment",
     [
       "deployment",

@@ -38,6 +38,12 @@ const alias = (value: string, url: string): TypoName => ({
   kind: "alias",
 });
 
+const page = (value: string, url: string): TypoName => ({
+  name: value,
+  url,
+  kind: "page",
+});
+
 describe("withinOneEdit", () => {
   it("accepts an equal word", () => {
     expect(withinOneEdit("button", "button")).toBe(true);
@@ -124,8 +130,8 @@ describe("typoMatch", () => {
 
   it("matches a page title by its stem", () => {
     const names = [
-      name("Theming", "/docs/theming"),
-      name("Theme editor", "/docs/theme-editor"),
+      page("Theming", "/docs/theming"),
+      page("Theme editor", "/docs/theme-editor"),
       alias("theme switch", "/docs/dark-mode"),
     ];
     expect(typoMatch("theem", names)?.url).toBe("/docs/theming");
@@ -133,8 +139,8 @@ describe("typoMatch", () => {
 
   it("matches a single-word title whose plural is the same word", () => {
     const names = [
-      name("Components", "/docs/components"),
-      name("Component API", "/docs/component-api"),
+      page("Components", "/docs/components"),
+      page("Component API", "/docs/component-api"),
     ];
     expect(typoMatch("componet", names)?.url).toBe("/docs/components");
   });
@@ -167,8 +173,21 @@ describe("typoMatch", () => {
     ).toBeUndefined();
   });
 
+  it("does not name a word inside a page title", () => {
+    const names = [
+      page("Site search", "/docs/site-search"),
+      name("Search inputs", "/docs/components/search-input"),
+    ];
+    expect(typoMatch("seach", names)?.url).toBe(
+      "/docs/components/search-input",
+    );
+    expect(
+      typoMatch("seach", [page("Site search", "/docs/site-search")]),
+    ).toBeUndefined();
+  });
+
   it("matches a transposition the shared stem hid", () => {
-    const names = [name("Theming", "/docs/theming")];
+    const names = [page("Theming", "/docs/theming")];
     expect(typoMatch("themnig", names)?.url).toBe("/docs/theming");
   });
 });
