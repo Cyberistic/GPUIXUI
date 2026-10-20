@@ -73,11 +73,11 @@ export const useModalState = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer(
-      () => dismiss.current(),
+    return pushDismissLayer(() => dismiss.current(), {
       depth,
-      ownsSurface(renderer, () => surfaceId.current),
-    );
+      owns: ownsSurface(renderer, () => surfaceId.current),
+      modal: true,
+    });
   }, [open, depth, renderer]);
 
   return { depth, open, setOpen, surfaceId };

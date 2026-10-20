@@ -22,6 +22,11 @@
  * parent's) and one Escape closed the dialog **and** the confirmation. Layer
  * order is now the nesting depth, with open order breaking ties between
  * siblings.
+ *
+ * Plan 824 measured that a painted surface owning a press (a toast card) also
+ * stopped every open overlay from dismissing. Ownership now decides whose control
+ * runs, and the layer's own modality decides whether the press also dismisses: a
+ * non-modal overlay closes like any outside press, a modal keeps its work.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -189,8 +194,8 @@ describe("dismiss layer stack", () => {
     // A modal nested in the dialog's content pushes first, because React runs a
     // child's layout effects before its parent's. The confirmation is painted on
     // top, so it must be the one Escape reaches.
-    const removeConfirmation = pushDismissLayer(confirmation, 1);
-    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeConfirmation = pushDismissLayer(confirmation, { depth: 1 });
+    const removeDialog = pushDismissLayer(dialog, { depth: 0 });
 
     expect(dismissTopLayer(escape())).toBe(true);
     expect(confirmation).toHaveBeenCalledTimes(1);
@@ -222,8 +227,8 @@ describe("dismiss layer stack", () => {
     // layer answers for its own surface, and a press inside it is no dismissal.
     const popup = vi.fn();
     const dialog = vi.fn();
-    const removeDialog = pushDismissLayer(dialog, 0);
-    const removePopup = pushDismissLayer(popup, 1, () => true);
+    const removeDialog = pushDismissLayer(dialog, { depth: 0 });
+    const removePopup = pushDismissLayer(popup, { depth: 1, owns: () => true });
 
     expect(dismissTopLayer({ ...escape(), x: 500, y: 510 })).toBe(false);
     expect(popup).not.toHaveBeenCalled();
@@ -235,7 +240,10 @@ describe("dismiss layer stack", () => {
 
   it("dismisses a layer by a press outside its own surface", () => {
     const popup = vi.fn();
-    const removePopup = pushDismissLayer(popup, 0, () => false);
+    const removePopup = pushDismissLayer(popup, {
+      depth: 0,
+      owns: () => false,
+    });
 
     expect(dismissTopLayer({ ...escape(), x: 10, y: 10 })).toBe(true);
     expect(popup).toHaveBeenCalledTimes(1);
@@ -249,8 +257,8 @@ describe("dismiss layer stack", () => {
     // press claims nothing, so the same event still reaches the next layer.
     const popup = vi.fn();
     const dialog = vi.fn();
-    const removeDialog = pushDismissLayer(dialog, 0);
-    const removePopup = pushDismissLayer(popup, 1, () => true);
+    const removeDialog = pushDismissLayer(dialog, { depth: 0 });
+    const removePopup = pushDismissLayer(popup, { depth: 1, owns: () => true });
     const press = escape();
 
     expect(dismissTopLayer(press)).toBe(false);
@@ -265,10 +273,10 @@ describe("dismiss layer stack", () => {
 
   it("reports whether a deeper layer is open", () => {
     expect(hasDeeperLayer(0)).toBe(false);
-    const removeDialog = pushDismissLayer(vi.fn(), 0);
+    const removeDialog = pushDismissLayer(vi.fn(), { depth: 0 });
     expect(hasDeeperLayer(0)).toBe(false);
 
-    const removeConfirmation = pushDismissLayer(vi.fn(), 1);
+    const removeConfirmation = pushDismissLayer(vi.fn(), { depth: 1 });
     expect(hasDeeperLayer(0)).toBe(true);
     expect(hasDeeperLayer(1)).toBe(false);
 
@@ -283,7 +291,7 @@ describe("dismiss layer stack", () => {
     // before the release could run the control. A non-dismiss surface owns its
     // box, and the owned press claims nothing so the click still reaches it.
     const dialog = vi.fn();
-    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeDialog = pushDismissLayer(dialog, { depth: 0, modal: true });
     const removeCard = registerPressSurface(
       (event) => event.x === 100 && event.y === 100,
     );
@@ -298,7 +306,7 @@ describe("dismiss layer stack", () => {
 
   it("still dismisses for a press the registered surface does not own", () => {
     const dialog = vi.fn();
-    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeDialog = pushDismissLayer(dialog, { depth: 0, modal: true });
     const removeCard = registerPressSurface(
       (event) => event.x === 100 && event.y === 100,
     );
@@ -310,9 +318,31 @@ describe("dismiss layer stack", () => {
     removeDialog();
   });
 
+  it("dismisses a non-modal overlay under a press a painted surface owns", () => {
+    // Plan 824 measured a toast action pressed while a dropdown menu was open:
+    // the action ran and the menu stayed painted, although a press outside every
+    // menu surface closes it. Ownership decides whose control runs; modality
+    // decides whether the press also dismisses.
+    const menu = vi.fn();
+    const removeMenu = pushDismissLayer(menu);
+    const removeCard = registerPressSurface(
+      (event) => event.x === 100 && event.y === 100,
+    );
+
+    // Clean up even when the expectation fails: the stack is module state, and a
+    // leaked layer or surface would decide the next case (plan 326's rule).
+    try {
+      expect(dismissTopLayer(press(100, 100))).toBe(true);
+      expect(menu).toHaveBeenCalledTimes(1);
+    } finally {
+      removeCard();
+      removeMenu();
+    }
+  });
+
   it("forgets a registered surface when it unregisters", () => {
     const dialog = vi.fn();
-    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeDialog = pushDismissLayer(dialog, { depth: 0, modal: true });
     const owns = vi.fn(() => true);
     const removeCard = registerPressSurface(owns);
 

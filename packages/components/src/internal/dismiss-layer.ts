@@ -24,6 +24,12 @@
  * therefore owns the presses inside its own surface (plan `816`): a picker
  * popup, menu panel or popover hanging below a dialog keeps the press that was
  * meant for its row.
+ *
+ * **A painted surface that is not a layer owns its press, but only a modal keeps
+ * its work.** A toast card takes the press so its own control runs (plan `820`);
+ * a non-modal overlay beneath it still treats that press as outside itself and
+ * closes, because that is what an outside press does, while a modal (a dialog's
+ * unsaved work) stays (plan `824`).
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -47,15 +53,30 @@ interface DismissLayer {
   readonly onDismiss: DismissHandler;
   readonly depth: number;
   readonly owns: DismissOwnership | undefined;
+  readonly modal: boolean;
+}
+
+/** What an overlay tells the stack about its layer. */
+export interface DismissLayerOptions {
+  /** How deeply the layer is nested in other overlays. Default `0`. */
+  readonly depth?: number;
+  /** The surface the layer paints; a press inside it is not an outside press. */
+  readonly owns?: DismissOwnership;
+  /**
+   * A modal keeps its work when a painted surface that is not a layer (a toast
+   * card) takes the press. Every other overlay treats that press as outside
+   * itself and closes, like any other outside press (plan 824).
+   */
+  readonly modal?: boolean;
 }
 
 let layers: ReadonlyArray<DismissLayer> = [];
 
 /**
- * Painted overlay surfaces that are not dismiss layers. A toast card floats above
- * the app but Escape must not close it, so it registers its box instead of a
- * layer; a press on it belongs to the card, never to the overlay beneath it
- * (plan `820`).
+ * Painted surfaces that are not dismiss layers. A toast card floats above the
+ * app but Escape must not close it, so it registers its box instead of a layer;
+ * a press on it belongs to the card, never to a modal beneath it (plans `820`,
+ * `823`, `824`).
  */
 let pressSurfaces: ReadonlyArray<DismissOwnership> = [];
 
@@ -73,14 +94,14 @@ export const registerPressSurface = (owns: DismissOwnership): (() => void) => {
 /**
  * Make `onDismiss` the topmost layer at `depth`. Returns the removal function,
  * which the overlay calls when it closes or unmounts. Pass `owns` so a press on
- * the layer's own surface never dismisses it.
+ * the layer's own surface never dismisses it, and `modal` so a press on a
+ * painted surface that is not a layer (a toast) never destroys the modal's work.
  */
 export const pushDismissLayer = (
   onDismiss: DismissHandler,
-  depth = 0,
-  owns?: DismissOwnership,
+  { depth = 0, owns, modal = false }: DismissLayerOptions = {},
 ): (() => void) => {
-  layers = Arr.append(layers, { onDismiss, depth, owns });
+  layers = Arr.append(layers, { onDismiss, depth, owns, modal });
   return () => {
     layers = Arr.filter(layers, (layer) => layer.onDismiss !== onDismiss);
   };
@@ -93,10 +114,10 @@ export const pushDismissLayer = (
  */
 export const dismissTopLayer = (event: EventPayload): boolean => {
   if (isEventClaimed(event)) return false;
-  // A press on a painted surface that is not a layer (a toast card) belongs to
-  // that surface: the control under the pointer runs, and nothing is dismissed
-  // or claimed (plan 820).
-  if (Arr.some(pressSurfaces, (owns) => owns(event))) return false;
+  // A surface that is not a layer (a toast card, the stack's own slot) owns the
+  // press either way, so the control under the pointer runs; whether an overlay
+  // also closes is the layer's own modality (plan 824).
+  const ownedBySurface = Arr.some(pressSurfaces, (owns) => owns(event));
   const topmost = Arr.reduce(
     layers,
     Option.none<DismissLayer>(),
@@ -114,6 +135,9 @@ export const dismissTopLayer = (event: EventPayload): boolean => {
       // nothing is dismissed and nothing is claimed: the click that follows
       // belongs to the row or control under the pointer (plan 816).
       if (layer.owns?.(event) === true) return false;
+      // A modal keeps its work behind a notification; a non-modal overlay closes
+      // exactly as for any other outside press, and claims the event (plan 824).
+      if (layer.modal && ownedBySurface) return false;
       claimEvent(event);
       layer.onDismiss(event);
       return true;

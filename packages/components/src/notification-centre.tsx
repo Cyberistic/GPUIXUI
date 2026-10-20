@@ -506,8 +506,7 @@ export const NotificationCentreContent = ({
         }
         requestClose(event.eventType === "keyDown" ? "trigger" : "none");
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
   }, [depth, open, renderer, surface, trigger]);
 

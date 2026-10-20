@@ -319,6 +319,52 @@ const SlotOverDialogPage = ({
   </ToastProvider>
 );
 
+/** A menu open over a toast whose action the user presses. */
+const ToastUnderMenu = ({ onAction }: { readonly onAction: () => void }) => {
+  const toast = useToast();
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: 1200,
+        height: 760,
+      }}
+    >
+      <Button
+        testId="raise"
+        onClick={() =>
+          toast.push(
+            { title: "Saved", tone: "success", action: { label: "Undo" } },
+            { onAction },
+          )
+        }
+      >
+        Raise
+      </Button>
+      <ToastViewport />
+      <DropdownMenu>
+        <DropdownMenuTrigger testId="sort-trigger">Sort</DropdownMenuTrigger>
+        <DropdownMenuContent testId="sort-panel">
+          <DropdownMenuItem testId="sort-name">Name</DropdownMenuItem>
+          <DropdownMenuItem testId="sort-date">Date</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
+const ToastUnderMenuPage = ({
+  onAction,
+}: {
+  readonly onAction: () => void;
+}) => (
+  <ToastProvider>
+    <ToastUnderMenu onAction={onAction} />
+  </ToastProvider>
+);
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -540,6 +586,26 @@ describe("composition", () => {
 
     expect(onDismissAll).toHaveBeenCalledTimes(1);
     expect(isShown(scene, "slot-editor")).toBe(true);
+
+    scene.unmount();
+  });
+
+  it("closes a menu from a press on the toast stack, and still runs the toast's action", async () => {
+    const onAction = vi.fn();
+    const scene = renderComponent(<ToastUnderMenuPage onAction={onAction} />);
+    clickCentreOf(scene, "raise");
+    await settle();
+    finishMotion(scene, 500);
+    clickCentreOf(scene, "sort-trigger");
+    finishMotion(scene);
+    expect(isShown(scene, "sort-panel")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(isShown(scene, "sort-panel")).toBe(false);
 
     scene.unmount();
   });

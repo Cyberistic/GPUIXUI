@@ -164,8 +164,7 @@ export const DropdownMenu = ({
         }
         close(event.eventType === "keyDown" ? "dismiss" : "outside");
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
   }, [close, depth, open, renderer, surface]);
 

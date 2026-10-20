@@ -446,8 +446,7 @@ export const Combobox = ({
         close.current();
         if (event.eventType === "keyDown") restoreFocus.current = true;
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
   }, [depth, renderer, surface, visibleOpen]);
 

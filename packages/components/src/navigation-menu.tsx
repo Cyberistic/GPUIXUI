@@ -346,8 +346,7 @@ export const NavigationMenu = ({
         }
         requestClose(null);
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
   }, [depth, open, renderer, requestClose, surface, triggerFor]);
 

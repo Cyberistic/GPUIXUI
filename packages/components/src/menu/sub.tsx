@@ -363,8 +363,7 @@ export const MenuSubContent = ({
           return;
         closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
     return () => {
       pop();

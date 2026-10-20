@@ -328,8 +328,7 @@ const PopoverSurface = ({
         }
         requestClose(event.eventType === "keyDown" ? "trigger" : "none");
       },
-      depth,
-      ownsSurface(renderer, () => surface.current?.id),
+      { depth, owns: ownsSurface(renderer, () => surface.current?.id) },
     );
   }, [depth, open, renderer, requestClose, surface, trigger]);
 
