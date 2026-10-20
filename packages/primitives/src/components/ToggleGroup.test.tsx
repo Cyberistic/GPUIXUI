@@ -77,6 +77,42 @@ const propOf = (element: ReactElement, index: number, name: string) =>
   expectSome(hostProp(itemAt(element, index), name));
 
 describe("ToggleGroup", () => {
+  it("carries autoFocus on the item at its tab stop, and never while disabled", () => {
+    // The bug this guards (plan 808): a segmented control's entry point is the
+    // item that already owns `tabIndex 0` (the pressed one in `single`), not
+    // the group root — and a disabled group must not focus while a read-only
+    // one still does (plan 804).
+    const flags = (props: Partial<ToggleGroupSingleProps>) =>
+      Arr.map(
+        elementChildren(
+          renderToggleGroup(
+            { ...single, ...props },
+            testTheme,
+            selected(["left"]),
+            0,
+            unfocused,
+            handlers(),
+          ),
+        ),
+        (item) => hostProp(item, "autoFocus"),
+      );
+    expect(flags({ autoFocus: true })).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, readOnly: true })).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, disabled: true })).toStrictEqual([
+      Option.none(),
+      Option.none(),
+      Option.none(),
+    ]);
+  });
+
   it("shrinks an item and contains its label", () => {
     // Plan 368: a segmented control given a width must not paint an item's
     // label outside itself; the item shares the group's width and the label is

@@ -88,6 +88,7 @@ rule `Select`, `Rating` and the selection family follow.
 | `readOnly` | `boolean` | `false` | shows the value for review: keeps the tab stop, ring and announced value, and refuses pointer, keys and commit; `disabled` wins (plan `802`) |
 | `invalid` | `boolean` | `false` | the destructive role on the fill and thumb border |
 | `label` | `string` | none | accessible name, trimmed; a blank label is absent |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the track on mount, including a later mount. A disabled slider never focuses; a read-only one still does (plan `808`) |
 | `formatValue` | `(value: number) => string` | `String` | the announced text; a blank result falls back to the value |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SliderState>` | — | merged last, on the track; an object or a state callback |
@@ -107,6 +108,10 @@ Any other key is left alone, so a slider inside a form does not swallow it. The
 slider is a single tab stop, and the focus ring is painted on the thumb. Each
 accepted key step also reports `onValueCommit` once with the settled value; a key
 that cannot move the value (an arrow at a bound) reports nothing.
+
+`autoFocus` puts native focus on that track when the slider mounts, including a
+later mount behind a loading state; a disabled slider never focuses, and a
+read-only one still does (plan `808`).
 
 ## Accessibility
 

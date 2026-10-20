@@ -101,6 +101,15 @@ interface ToggleGroupBase {
   readonly readOnly?: boolean;
   /** The group's accessible name. There is no `aria-labelledby` on GPUix. */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the group's tab stop — the pressed item in `single`,
+   * the last focused item in `multiple`, else the first item — on mount,
+   * including a later mount.
+   *
+   * A disabled group never focuses; a read-only one still does, because its
+   * stop and rings are kept for review (plans `804`, `808`).
+   */
+  readonly autoFocus?: boolean;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<ToggleGroupState>;
   /**
@@ -267,6 +276,9 @@ export const renderToggleGroup = (
             aria-label={ariaName(text)}
             aria-valuetext={pressedValueText(pressed)}
             tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
+            autoFocus={
+              disabled || index !== stopIndex ? undefined : props.autoFocus
+            }
             testId={
               props.testId === undefined
                 ? undefined

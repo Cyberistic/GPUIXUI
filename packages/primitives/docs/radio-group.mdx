@@ -41,6 +41,7 @@ import { RadioGroup } from "@gpuixui/primitives";
 | `readOnly` | `boolean` | `false` | shows the choice for review: keeps the tab stop and ring, arrows move focus only, every activation is refused (plan `799`) |
 | `invalid` | `boolean` | `false` | a failed validation: the empty circles take the destructive border |
 | `label` | `string` | none | accessible name for the group |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the group's tab stop on mount — the selected option, or the first enabled one. A disabled group never focuses; a read-only one still does (plan `808`) |
 | `style` | `StateStyle<RadioGroupState>` | — | merged last; an object or a state callback |
 | `optionStyle` | `StateStyle<RadioOptionState>` | — | merged last on each option row; an object or a state callback |
 | `testId` | `string` | — | names the group; options become `${testId}-${value}` |
@@ -77,6 +78,10 @@ visual (plan `799`).
 | Enter / Space | select the focused option |
 | Any printable character | select the next **enabled** option whose text starts with the typed prefix, wrapping; a repeated letter advances |
 | Tab | moves to the group as **one** stop; the selected option holds it, or the first enabled one when nothing is selected |
+
+`autoFocus` puts native focus on that same tab-stop option when the group
+mounts, including a later mount behind a loading state; a disabled group never
+focuses, and a read-only one still does because it keeps its stop (plan `808`).
 
 Arrows and Home/End **select as they move** and take focus with them, matching
 the platform radio contract. The tab stop is the selection, or the first enabled

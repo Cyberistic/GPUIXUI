@@ -118,6 +118,15 @@ export interface CheckboxGroupProps {
   readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the group's **first enabled row** — the select-all
+   * parent when it exists and is enabled, otherwise the first enabled option.
+   *
+   * Each row is its own tab stop (D27), so the entry point is the first one the
+   * user could act on. A disabled group never focuses; a read-only one still
+   * does, because its rows keep their stops and rings (plan `808`).
+   */
+  readonly autoFocus?: boolean;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<CheckboxGroupState>;
   /**
@@ -157,6 +166,8 @@ interface RowSpec {
   readonly accent: SelectionAccent;
   readonly focused: boolean;
   readonly testId: string | undefined;
+  /** Takes native focus on mount; the first enabled row is the entry point. */
+  readonly autoFocus?: boolean;
   readonly onActivate: () => void;
   readonly focus: CheckboxGroupFocus;
   readonly index: number;
@@ -179,6 +190,7 @@ const renderRow = (
     accent,
     focused,
     testId,
+    autoFocus,
     onActivate,
     focus,
     index,
@@ -226,6 +238,7 @@ const renderRow = (
       aria-description={ariaName(description)}
       aria-valuetext={selectionValueText(state)}
       tabIndex={disabled ? undefined : 0}
+      autoFocus={disabled ? undefined : autoFocus}
       testId={testId}
       onClick={() => {
         if (!inert) onActivate();
@@ -301,6 +314,26 @@ export const renderCheckboxGroup = (
     Arr.isReadonlyArrayEmpty(
       Arr.filter(options, (option) => option.disabled !== true),
     );
+  /**
+   * The first row a keyboard user could act on — the entry point `autoFocus`
+   * takes. Each row is its own tab stop (D27), so the first enabled row is the
+   * honest one; a disabled group has none (plan `808`).
+   */
+  const optionOffset = selectAllLabel === undefined ? 0 : 1;
+  const firstEnabledRow: Option.Option<number> =
+    props.disabled === true
+      ? Option.none()
+      : selectAllLabel !== undefined && !parentDisabled
+        ? Option.some(0)
+        : Option.map(
+            Arr.findFirstIndex(options, (option) => option.disabled !== true),
+            (optionIndex) => optionIndex + optionOffset,
+          );
+  /** The host prop: `undefined` is how a host element says "not focused". */
+  const autoFocusRow = (index: number): boolean | undefined =>
+    Option.exists(firstEnabledRow, (first) => first === index)
+      ? props.autoFocus
+      : undefined;
   const parent =
     selectAllLabel === undefined
       ? null
@@ -316,6 +349,7 @@ export const renderCheckboxGroup = (
             accent,
             focused: isFocused(0),
             testId: rowId("all"),
+            autoFocus: autoFocusRow(0),
             onActivate: handlers.onToggleAll,
             focus,
             index: 0,
@@ -347,6 +381,7 @@ export const renderCheckboxGroup = (
         accent,
         focused: isFocused(index),
         testId: rowId(option.value),
+        autoFocus: autoFocusRow(index),
         onActivate: () => handlers.onToggle(option.value),
         focus,
         index,

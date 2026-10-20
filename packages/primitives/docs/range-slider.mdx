@@ -81,6 +81,7 @@ rule `Select`, `Rating` and the selection family follow.
 | `readOnly` | `boolean` | `false` | shows both ends for review: keeps both tab stops, rings and announced values, and refuses pointer, keys and commit; `disabled` wins (plan `802`) |
 | `invalid` | `boolean` | `false` | destructive fill and thumb borders |
 | `label` | `string` | none | group name, trimmed; thumbs become `"<label> minimum"` / `"<label> maximum"`, and a blank label leaves the group and both thumbs unnamed |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the **start** thumb on mount, including a later mount. A disabled slider never focuses; a read-only one still does (plan `808`) |
 | `formatValue` | `(value: number) => string` | `String` | the announced text of each thumb; a blank result falls back to the value |
 | `style` | `StateStyle<RangeSliderState>` | — | merged last, on the track; an object or a state callback |
 | `thumbStyle` | `StateStyle<RangeSliderThumbState>` | — | merged last on each thumb; an object or a state callback |
@@ -104,6 +105,11 @@ press: a right or middle click moves neither end and takes no focus. Each
 accepted key step reports `onValueCommit` once with the settled pair; a step
 that cannot move — an arrow at a bound, or one blocked by the other thumb —
 reports nothing.
+
+`autoFocus` puts native focus on the **start** thumb when the slider mounts,
+including a later mount behind a loading state — the pair's first value is the
+entry point; a disabled slider never focuses, and a read-only one still does
+(plan `808`).
 
 ## Accessibility
 

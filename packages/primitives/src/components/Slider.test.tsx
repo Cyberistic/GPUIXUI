@@ -93,6 +93,30 @@ const partsOf = (element: ReactElement): ReadonlyArray<ReactElement> =>
   elementChildren(railOf(element));
 
 describe("Slider", () => {
+  it("carries autoFocus on the track, and never while disabled", () => {
+    // The bug this guards (plan 808): the track is the slider's only focusable
+    // root, so it is the entry point; a disabled slider must not focus while a
+    // read-only one still does (plan 802).
+    const flags = (props: Partial<Parameters<typeof renderSlider>[0]>) =>
+      hostProp(
+        renderSlider(
+          { label: "Volume", ...props },
+          testTheme,
+          valueOf(42),
+          idle,
+          sliderHandlers(vi.fn()),
+        ),
+        "autoFocus",
+      );
+    expect(flags({ autoFocus: true })).toStrictEqual(Option.some(true));
+    expect(flags({ autoFocus: true, readOnly: true })).toStrictEqual(
+      Option.some(true),
+    );
+    expect(flags({ autoFocus: true, disabled: true })).toStrictEqual(
+      Option.none(),
+    );
+  });
+
   it("is a named slider that announces its value instead of aria-valuenow", () => {
     const element = renderSlider(
       { value: 42, label: "Volume" },
@@ -296,6 +320,41 @@ describe("RangeSlider", () => {
       { focusedIndex: Option.some(1), onFocus: vi.fn(), onBlur: vi.fn() },
       rangeHandlers(onSpanChange),
     );
+
+  it("carries autoFocus on the start thumb only, and never while disabled", () => {
+    // The bug this guards (plan 808): both thumbs are tab stops, so the entry
+    // point has to be chosen — the start thumb is the pair's first value. A
+    // disabled slider must not focus; a read-only one still does (plan 802).
+    const flags = (props: Partial<Parameters<typeof renderRangeSlider>[0]>) => {
+      const element = renderRangeSlider(
+        { label: "Price", ...props },
+        testTheme,
+        spanOf(20, 60),
+        { focusedIndex: Option.none(), onFocus: vi.fn(), onBlur: vi.fn() },
+        rangeHandlers(vi.fn()),
+      );
+      const [, start, , end] = partsOf(element);
+      return Arr.map(
+        [
+          expectSome(Option.fromNullishOr(start)),
+          expectSome(Option.fromNullishOr(end)),
+        ],
+        (thumb) => hostProp(thumb, "autoFocus"),
+      );
+    };
+    expect(flags({ autoFocus: true })).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, readOnly: true })).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, disabled: true })).toStrictEqual([
+      Option.none(),
+      Option.none(),
+    ]);
+  });
 
   it("is a named group holding two named sliders", () => {
     const element = render();

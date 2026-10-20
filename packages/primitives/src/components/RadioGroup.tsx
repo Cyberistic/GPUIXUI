@@ -120,6 +120,15 @@ export interface RadioGroupProps {
   readonly invalid?: boolean;
   /** Accessible name for the group. */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the group's tab stop — the selected option, or the
+   * first enabled one — on mount, including a later mount.
+   *
+   * Like every control, a focusable root honours the host prop. A disabled
+   * group never focuses; a read-only one still does, because the review state
+   * keeps its stop and ring (plans `799`, `808`).
+   */
+  readonly autoFocus?: boolean;
   /** An object, or a callback over the group's public state. */
   readonly style?: StateStyle<RadioGroupState>;
   /**
@@ -307,6 +316,9 @@ export const renderRadioGroup = (
             aria-description={ariaName(option.description)}
             aria-valuetext={current === "checked" ? "checked" : "unchecked"}
             tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
+            autoFocus={
+              disabled || index !== activeIndex ? undefined : props.autoFocus
+            }
             testId={
               props.testId === undefined
                 ? undefined

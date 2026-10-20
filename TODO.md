@@ -2776,15 +2776,17 @@ retired once both branches are one
       mutations failing by name; offline 75 files / 1066 tests, `auto-focus`
       20/20 (plan `807`).
 
-`[ ]` `packages/primitives`: **`autoFocus` on the roving composites** —
+`[x]` `packages/primitives`: **`autoFocus` on the roving composites** —
       `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Rating`, `Slider` and
-      `RangeSlider` still have no `autoFocus` (plan `807` scoped them out on
-      purpose). Unlike the single-root controls, the decision is *which item*
-      receives the focus: the tab stop (the selected/checked item, or the first
-      enabled one), the slider's start thumb, the rating's value star. Measure
-      whether the tab-stop host honours `autoFocus` on a later mount, then add
-      the prop with a per-part rule, a matrix row each and a page row. Owner:
-      primitives.
+      `RangeSlider` now take it, and each forwards the host prop to the element
+      that already owns `tabIndex 0`: the value's radio, the **first enabled
+      checkbox row** (each row is its own stop, D27), the toggle group's stop,
+      the rating's value star, the slider track, and the range slider's
+      **start** thumb. A disabled composite never focuses, a read-only one still
+      does, and mounting reports no value change (focus is not activation). 6
+      element + 18 runtime cases across the existing matrix, four mutations
+      failing by name; offline 75 files / 1072 tests, `auto-focus` 38/38 (plan
+      `808`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

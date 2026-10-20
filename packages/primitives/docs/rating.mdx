@@ -48,6 +48,7 @@ unrated; an infinity is out of range and clamps to its own end (`+Infinity` is
 | `readOnly` | `boolean` | `false` | shows the value and keeps the group's one tab stop, but takes no input; full contrast, default pointer, rings while focused (plans `796`, `800`) |
 | `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the value's star on mount (star 1 when unrated). A disabled rating never focuses; a read-only one still does (plan `808`) |
 | `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
 | `starStyle` | `StateStyle<RatingStarState>` | — | merged last on each star; an object or a state callback |
 | `testId` | `string` | — | names the group; stars become `${testId}-star-N` (1-based) |
@@ -60,6 +61,11 @@ unrated; an infinity is out of range and clamps to its own end (`+Infinity` is
 | `ArrowLeft` / `ArrowDown` | − one star from the focused star, clamped at `0` |
 | `Home` / `End` | one star / `max` |
 | `Enter` / `Space` | select the star the ring is on (key down / key up) |
+
+`autoFocus` puts native focus on the star that holds the group's tab stop when
+the rating mounts — the value's star, or star 1 when unrated — including a later
+mount behind a loading state. A disabled rating never focuses; a read-only one
+still does (plan `808`).
 | `Delete` / `Backspace` | clear to `0` |
 
 The group holds **one tab stop** — on the current rating, or on the first star

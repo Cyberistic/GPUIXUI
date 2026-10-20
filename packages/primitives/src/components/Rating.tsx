@@ -73,6 +73,14 @@ export interface RatingProps {
   readonly invalid?: boolean;
   /** The group's name; each star is announced as "N of max". */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the group's tab stop — the value's star, or star 1
+   * when unrated — on mount, including a later mount.
+   *
+   * A disabled rating never focuses; a read-only one still does, because the
+   * review state keeps its stop and ring (plans `800`, `808`).
+   */
+  readonly autoFocus?: boolean;
   /** An object, or a callback over the rating's public state. */
   readonly style?: StateStyle<RatingState>;
   /**
@@ -161,6 +169,7 @@ export const renderRating = (
         aria-label={`${index} of ${max}`}
         aria-valuetext={index <= value ? "checked" : "unchecked"}
         tabIndex={focusable ? (index === tabStop ? 0 : -1) : undefined}
+        autoFocus={focusable && index === tabStop ? props.autoFocus : undefined}
         testId={
           props.testId === undefined
             ? undefined

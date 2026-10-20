@@ -769,6 +769,43 @@ describe("Switch", () => {
 });
 
 describe("RadioGroup", () => {
+  it("carries autoFocus on the option its tab stop is on, and never while disabled", () => {
+    // The bug this guards (plan 808): a roving group has no single focusable
+    // root, so `autoFocus` must land on the element that already owns
+    // `tabIndex 0`. A disabled group must not focus; a read-only one still
+    // must, because the review state keeps its stop (plan 799).
+    const active = 1;
+    const flags = (props: Partial<Parameters<typeof renderRadioGroup>[0]>) =>
+      Arr.map(
+        elementChildren(
+          renderRadioGroup(
+            { options, ...props },
+            testTheme,
+            text("beta"),
+            active,
+            unfocused,
+            radioHandlers(vi.fn()),
+          ),
+        ),
+        (option) => hostProp(option, "autoFocus"),
+      );
+    expect(flags({ autoFocus: true })).toStrictEqual([
+      Option.none(),
+      Option.some(true),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, readOnly: true })).toStrictEqual([
+      Option.none(),
+      Option.some(true),
+      Option.none(),
+    ]);
+    expect(flags({ autoFocus: true, disabled: true })).toStrictEqual([
+      Option.none(),
+      Option.none(),
+      Option.none(),
+    ]);
+  });
+
   it("moves the selection with the arrow key and reports the option it landed on", () => {
     const onSelect = vi.fn();
     const element = renderRadioGroup(
@@ -1198,6 +1235,39 @@ describe("CheckboxGroup", () => {
 
   const box = (element: ReturnType<typeof render>, index: number) =>
     expectSome(Arr.get(elementChildren(row(element, index)), 0));
+
+  it("carries autoFocus on the first enabled row, and never while disabled", () => {
+    // The bug this guards (plan 808): every row is its own tab stop (D27), so
+    // a group's `autoFocus` cannot land on "the root"; it belongs to the first
+    // row a keyboard user could act on — the select-all parent when present —
+    // and a disabled group must not focus while a read-only one still does.
+    const flags = (element: ReturnType<typeof render>) =>
+      Arr.map(elementChildren(element), (child) =>
+        hostProp(child, "autoFocus"),
+      );
+    expect(flags(render({ selectAll: "All", autoFocus: true }))).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+      Option.none(),
+    ]);
+    expect(
+      flags(
+        render({
+          autoFocus: true,
+          options: [
+            { value: "email", label: "Email", disabled: true },
+            { value: "push", label: "Push" },
+          ],
+        }),
+      ),
+    ).toStrictEqual([Option.none(), Option.some(true)]);
+    expect(
+      flags(render({ selectAll: "All", autoFocus: true, disabled: true })),
+    ).toStrictEqual([Option.none(), Option.none(), Option.none()]);
+    expect(
+      flags(render({ selectAll: "All", autoFocus: true, readOnly: true })),
+    ).toStrictEqual([Option.some(true), Option.none(), Option.none()]);
+  });
 
   it("names the group and gives every row the checkbox contract", () => {
     const element = render({ label: "Channels" });

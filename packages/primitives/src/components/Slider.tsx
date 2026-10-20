@@ -135,6 +135,12 @@ export interface SliderProps extends TriggerHandlers {
   readonly invalid?: boolean;
   /** Accessible name. */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the track — the slider's only focusable root — on
+   * mount, including a later mount. A disabled slider never focuses; a
+   * read-only one still does, because it keeps its tab stop (plan `808`).
+   */
+  readonly autoFocus?: boolean;
   /** How the value is announced. Defaults to `String(value)`. */
   readonly formatValue?: (value: number) => string;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
@@ -175,6 +181,14 @@ export interface RangeSliderProps {
   readonly invalid?: boolean;
   /** The group's name; each thumb becomes "<label> minimum"/"<label> maximum". */
   readonly label?: string;
+  /**
+   * Puts the keyboard on the **start** thumb, which keeps its tab stop beside
+   * the end thumb — on mount, including a later mount.
+   *
+   * A disabled slider never focuses; a read-only one still does, because both
+   * thumbs keep their stops and rings (plans `802`, `808`).
+   */
+  readonly autoFocus?: boolean;
   readonly formatValue?: (value: number) => string;
   /** An object, or a callback over the range slider's public state. */
   readonly style?: StateStyle<RangeSliderState>;
@@ -238,6 +252,7 @@ export const renderSlider = (
       aria-description={ariaName(props["aria-description"])}
       aria-valuetext={sliderValueText(value, props.formatValue)}
       tabIndex={props.disabled === true ? undefined : 0}
+      autoFocus={props.disabled === true ? undefined : props.autoFocus}
       testId={props.testId}
       onMouseEnter={props.onMouseEnter}
       onMouseLeave={props.onMouseLeave}
@@ -364,6 +379,9 @@ export const renderRangeSlider = (
         aria-label={labels[index]}
         aria-valuetext={sliderValueText(value, props.formatValue)}
         tabIndex={props.disabled === true ? undefined : 0}
+        autoFocus={
+          props.disabled === true || index !== 0 ? undefined : props.autoFocus
+        }
         onFocus={() => focus.onFocus(index)}
         onBlur={() => focus.onBlur(index)}
         onKeyDown={(event) => {

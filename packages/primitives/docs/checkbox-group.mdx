@@ -62,6 +62,7 @@ Uncontrolled, with no parent row:
 | `readOnly` | `boolean` | `false` | shows the selection for review: keeps every row's tab stop and ring, refuses every change (plan `799`) |
 | `invalid` | `boolean` | `false` | every **empty** box takes the destructive border |
 | `label` | `string` | none | the group's accessible name |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the **first enabled row** on mount — the select-all parent when present, else the first enabled option. A disabled group never focuses; a read-only one still does (plan `808`) |
 | `style` | `StateStyle<CheckboxGroupState>` | — | merged last on the group; an object or a state callback |
 | `rowStyle` | `StateStyle<CheckboxRowState>` | — | merged last on each row; an object or a state callback |
 | `testId` | `string` | — | names the group; rows become `${testId}-${value}` and the parent `${testId}-all` |
@@ -102,6 +103,12 @@ stronger state; it also leaves the tab order and fades each box. 0.10.0 has no
 | Enter | toggles the focused row on key **down** |
 | held key | repeat events do nothing |
 | disabled row | Enter and Space do nothing, even when the row was focused before it became disabled (plan 332) |
+
+`autoFocus` puts native focus on the **first enabled row** when the group mounts,
+including a later mount behind a loading state — the select-all parent when it
+exists and is enabled, otherwise the first enabled option. A disabled group
+never focuses; a read-only one still does, because its rows keep their stops
+(plan `808`).
 | arrows | **not handled** — arrows do not move between checkboxes on the platform |
 
 The focus ring follows the row's **value**, so reordering or filtering `options`

@@ -74,6 +74,30 @@ const labelOf = (star: ReactElement): unknown =>
   expectSome(hostProp(star, "aria-label"));
 
 describe("Rating", () => {
+  it("carries autoFocus on the star its tab stop is on, and never while disabled", () => {
+    // The bug this guards (plan 808): the entry point is the value's star (the
+    // same star that owns `tabIndex 0`, plan 800), not the group root. A
+    // disabled rating must not focus; a read-only one still does.
+    const flags = (props: RatingProps, value: number) =>
+      Arr.map(starsOf(render({ label: "Quality", ...props }, value)), (star) =>
+        hostProp(star, "autoFocus"),
+      );
+    const onThird = [
+      Option.none(),
+      Option.none(),
+      Option.some(true),
+      Option.none(),
+      Option.none(),
+    ];
+    expect(flags({ autoFocus: true }, 3)).toStrictEqual(onThird);
+    expect(flags({ autoFocus: true, readOnly: true }, 3)).toStrictEqual(
+      onThird,
+    );
+    expect(flags({ autoFocus: true, disabled: true }, 3)).toStrictEqual(
+      Arr.map(Arr.range(1, 5), () => Option.none()),
+    );
+  });
+
   it("is a named group of stars, each announced as N of max", () => {
     const element = render({ label: "Quality" }, 0);
     expect(expectSome(hostProp(element, "role"))).toBe("radiogroup");
