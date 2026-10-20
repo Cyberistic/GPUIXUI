@@ -8,14 +8,17 @@
  * opened depended on which falsy value the caller's conditional produced:
  * `false` and `"   "` opened nothing, `null` opened an empty popover.
  *
- * The gate is now `paintsContent` (plan 743): absent content returns the child
- * unchanged, while any element — even an empty fragment — is still content.
+ * The gate is now `paintsContent` (plans 743, 782): absent content returns the
+ * child unchanged, an element normally counts, and a `Text` run or a fragment
+ * is looked through because it paints exactly its children — so a computed tip
+ * wrapped for typography and blank is still no tip.
  */
 
 import { Fragment, type ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import { Text } from "./Text.js";
 import { renderTooltip } from "./Tooltip.js";
 import {
   elementChildren,
@@ -65,6 +68,23 @@ describe("Tooltip content", () => {
     // The passing direction: an over-broad gate would drop these.
     expect(elementChildren(tipOf("A hint")).length).toBe(2);
     expect(elementChildren(tipOf(<div testId="tip-body" />)).length).toBe(2);
+  });
+
+  it("looks through a Text run that says nothing", () => {
+    // Plan 782: a computed hint is often wrapped for typography. A blank run
+    // opened an empty anchored layer and published an unnamed tooltip node.
+    expect(isChildAlone(<Text>{""}</Text>)).toBe(true);
+    expect(isChildAlone(<Text>{"   "}</Text>, "Billing cycle")).toBe(true);
+    // The rule looks through a `Text` or a fragment, not through every element:
+    // a real run and an element with chrome of its own still open a tip.
+    expect(isChildAlone(<Text>Real tip</Text>)).toBe(false);
+    expect(
+      isChildAlone(
+        <div>
+          <Text>{""}</Text>
+        </div>,
+      ),
+    ).toBe(false);
   });
 
   it("does not describe the trigger when the tip paints nothing", () => {

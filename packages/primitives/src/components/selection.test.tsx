@@ -326,6 +326,56 @@ describe("Checkbox", () => {
     expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Email");
   });
 
+  it("looks through a Text run that says nothing", () => {
+    // Plan 782: a computed label is often wrapped for typography, and the gate
+    // treated any element as content. A blank run painted an empty row and,
+    // without a real `label`, left a focusable checkbox with no name.
+    const blank = renderCheckbox(
+      { children: <Text>{""}</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(blank)).toHaveLength(0);
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+
+    const named = renderCheckbox(
+      { label: "Alerts", children: <Text>{"   "}</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(named)).toHaveLength(0);
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Alerts");
+
+    const real = renderCheckbox(
+      { children: <Text>Email me</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(real)).toHaveLength(2);
+    expect(expectSome(hostProp(real, "aria-label"))).toBe("Email me");
+
+    // The rule looks through a `Text`, not through every element: an icon
+    // still makes the row the plan-743 contract promises.
+    const icon = renderCheckbox(
+      {
+        children: (
+          <Icon name="star" size="sm" color={testTheme.colors.foreground} />
+        ),
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(icon)).toHaveLength(2);
+  });
+
   it("names itself from portable text, nested text included", () => {
     // Plan 746: the visible label is text whatever element wraps it. A `Text`
     // child is the natural way to control the run's typography, and an icon
@@ -618,6 +668,52 @@ describe("Switch", () => {
     );
     expect(elementChildren(mixed)).toHaveLength(2);
     expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Wireless");
+  });
+
+  it("looks through a Text run that says nothing", () => {
+    // Plan 782: the same gate as Checkbox, one wrapper later.
+    const blank = renderSwitch(
+      { children: <Text>{""}</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(blank)).toHaveLength(1);
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+
+    const named = renderSwitch(
+      { label: "Wi-Fi", children: <Text>{"   "}</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(named)).toHaveLength(1);
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Wi-Fi");
+
+    const real = renderSwitch(
+      { children: <Text>Pause</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(real)).toHaveLength(2);
+    expect(expectSome(hostProp(real, "aria-label"))).toBe("Pause");
+
+    const icon = renderSwitch(
+      {
+        children: (
+          <Icon name="moon" size="sm" color={testTheme.colors.foreground} />
+        ),
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(icon)).toHaveLength(2);
   });
 });
 

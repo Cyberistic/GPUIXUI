@@ -16,6 +16,7 @@ import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
+import { Text } from "../src/components/Text.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNodes, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { awaitFrame, openWindow, Surface } from "./fixture.js";
@@ -202,6 +203,49 @@ it("does not paint an empty labelled row for a blank Switch child", async () => 
     .filter((node) => node.aria?.role === "Switch")
     .map((node) => node.aria?.label);
   expect(labels).toStrictEqual(["Wi-Fi"]);
+});
+
+it("does not paint a labelled row for a Text run that says nothing", async () => {
+  // Plan 782: a computed label is often wrapped for typography, and the gate
+  // treated any element as content. The empty run painted the row (2 children)
+  // instead of leaving the bare box named by `label`.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox testId="c" label="Alerts">
+        <Text>{""}</Text>
+      </Checkbox>
+    </Surface>,
+  );
+  expect(childCount(runtime, "c")).toBe(0);
+  expect(announced(runtime, "Alerts")).toBe("unchecked");
+
+  const blank = await openWindow();
+  blank.render(
+    <Surface>
+      <Switch testId="s" label="Waiver">
+        <Text>{"   "}</Text>
+      </Switch>
+    </Surface>,
+  );
+  expect(childCount(blank, "s")).toBe(1);
+  expect(announced(blank, "Waiver")).toBe("unchecked");
+});
+
+it("keeps a real Text-wrapped label as the row's name and hit area", async () => {
+  // The passing direction: looking through a `Text` must not drop a real one.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox testId="c">
+        <Text>Email notifications</Text>
+      </Checkbox>
+    </Surface>,
+  );
+  expect(childCount(runtime, "c")).toBe(2);
+  expect(announced(runtime, "Email notifications")).toBe("unchecked");
+  runtime.click("c");
+  expect(announced(runtime, "Email notifications")).toBe("checked");
 });
 
 /** The description the accessibility node named `label` publishes, if any. */

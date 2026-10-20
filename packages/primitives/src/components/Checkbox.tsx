@@ -26,13 +26,13 @@ import {
 import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
+import { paintsContent } from "./content.js";
 import {
   composeHandler,
   composeRef,
   controlName,
   hasText,
   joinDescription,
-  paintsContent,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,

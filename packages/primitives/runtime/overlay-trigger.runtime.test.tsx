@@ -24,6 +24,7 @@ import { Select } from "../src/components/Select.js";
 import { Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
+import { Text } from "../src/components/Text.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { Tooltip } from "../src/components/Tooltip.js";
@@ -501,4 +502,33 @@ it("re-opens a focus-opened tip after focus leaves and returns", async () => {
   runtime.flush();
   await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(tipPainted(runtime.allText())).toBe(true);
+});
+
+it("does not open a tip for a Text run that says nothing", async () => {
+  // Plan 782: a computed hint is often wrapped for typography. The gate treated
+  // any element as content, so a blank run opened an empty layer and put the
+  // label on the trigger's description — a tip that says nothing.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Tooltip
+        content={<Text>{"   "}</Text>}
+        label="Billing cycle"
+        side="bottom"
+        testId="tip"
+      >
+        <Button testId="target" label="Delete">
+          Delete
+        </Button>
+      </Tooltip>
+    </Surface>,
+  );
+  runtime.hover("target");
+  runtime.flush();
+  expect(Option.isNone(runtime.bounds("tip"))).toBe(true);
+  const trigger = Option.getOrElse(
+    a11yNode(runtime.a11y(), { role: "Button", label: "Delete" }),
+    () => expect.fail("the Button produced no accessibility node"),
+  );
+  expect(trigger.aria?.description).toBeUndefined();
 });

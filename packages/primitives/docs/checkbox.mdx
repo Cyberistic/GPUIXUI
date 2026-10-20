@@ -32,9 +32,11 @@ name="star"/> Accept</Checkbox>`): the name is the text the row paints (plan
 **A blank text child is not a label.** A computed label that trims to nothing
 paints no row: the box renders on its own and `label` (when supplied) still
 names it. A blank run beside real text is ignored, and the row is named by the
-text that says something (plan `743`). This is the same blank-text rule as an
-empty `label` or caption, and it prevents an empty row and an unnamed focus
-stop.
+text that says something (plan `743`). The same holds when the label is wrapped
+for typography — `<Checkbox><Text>{label}</Text></Checkbox>` is looked through,
+because a `Text` run paints exactly its children (plan `782`). This is the same
+blank-text rule as an empty `label` or caption, and it prevents an empty row and
+an unnamed focus stop.
 
 An indeterminate **parent** over a set of options is `CheckboxGroup`'s job — it
 derives the tri-state and never clears a disabled option:
@@ -72,7 +74,7 @@ there is no row to paint into, so the hint is announced but not painted.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
-| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child paints no row (plan `743`) |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child — raw or inside a `Text` run — paints no row (plans `743`, `782`) |
 | `description` | `string` | none | a visible hint **under** the label in a labelled row; it is also the row's announced description, trimmed, and a blank value paints and announces nothing. Without `children` it is announced but not painted, and a slot tip is composed after it (`"hint. tip"`) — plan `748` |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<CheckboxState>` | — | merged last on the control surface — the box without text, the row with it; an object or a state callback |
@@ -208,9 +210,9 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
   labelled row is still a `Tooltip` trigger (plan `740`; all six fail against the
   unlabelled tree). A **blank** text child paints the bare box, named by
   `label`, rather than an empty row (plan `743`; the two blank-child cases fail
-  against the old row gate). A **description** paints its caption, is announced
-  as the row's description, and a press on the caption still toggles (plan
-  `748`).
+  against the old row gate) — including a blank label wrapped in a `Text` run
+  (plan `782`). A **description** paints its caption, is announced as the row's
+  description, and a press on the caption still toggles (plan `748`).
 - `runtime/examples.runtime.test.tsx` — the **checkbox example** (plan `374`)
   mounts the labelled boxes in their real role: a tri-state header over a column
   of rows. The header announces `mixed`, a row click repaints the caller's

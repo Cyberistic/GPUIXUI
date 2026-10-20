@@ -200,22 +200,6 @@ export const textOf = (children: ReactNode): Option.Option<string> =>
   );
 
 /**
- * Whether a child list paints anything.
- *
- * `Children.toArray` already drops `null`, `undefined` and booleans, so what
- * remains is text/numbers — meaningful only when they say something — or an
- * element, which paints its own content. A control uses this to decide whether
- * a visible label exists at all: blank text is absent, the rule `ariaName` and
- * `hasText` already apply (plans `026`, `396`, `577`, `740`).
- */
-export const paintsContent = (children: ReactNode): boolean =>
-  Arr.some(Children.toArray(children), (part) =>
-    P.isString(part) || P.isNumber(part)
-      ? Str.isNonEmpty(Str.trim(`${part}`))
-      : true,
-  );
-
-/**
  * A caller's explicit name, when it says anything.
  *
  * A label is often computed (`label={record.name}`) and can arrive empty or as

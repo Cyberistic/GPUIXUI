@@ -2551,6 +2551,18 @@ retired once both branches are one
       `destructive` through both states; 1 resolver case + 10 runtime cases
       across the five surfaces and a valid-field negative, both directions
       measured (plan `781`).
+`[x]` `packages/primitives`: **a blank label wrapped for typography was still
+      content** — measured (2026-10-20): `paintsContent` treated any element as
+      content, so `<Checkbox><Text>{label}</Text></Checkbox>` with a blank
+      `label` painted an empty labelled row (2 children, no name; the bare box
+      is 0), the same for `Switch` (2 vs 1), and
+      `<Tooltip content={<Text>{hint}</Text>}>` opened an empty anchored layer
+      with a description although the docs say blank text is absent. A `Text`
+      run and a fragment are now looked through — they paint exactly their
+      children — while any other element still counts, so an icon child and a
+      rich tip keep their documented shapes. The rule moved to
+      `components/content.ts`; 3 offline + 2 scoped runtime cases, both
+      directions measured (plan `782`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

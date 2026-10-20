@@ -65,10 +65,10 @@ import {
 import { paintedBox } from "../core/bounds.js";
 import { surfaceStyle } from "../core/style.js";
 import type { PrimitiveTheme } from "../core/theme.js";
+import { paintsContent } from "./content.js";
 import {
   ariaName,
   mergeStyle,
-  paintsContent,
   useControlState,
   useFloatingFollow,
 } from "./internal.js";
@@ -80,8 +80,9 @@ export interface TooltipProps {
    * The tip. A string is also the trigger's description; long text wraps inside
    * a measured cap; keep it short anyway, because a tip is a hint, not a
    * paragraph. Content that paints nothing — a computed `null`, an empty list, a
-   * blank string — is **no tip**: the child renders unchanged instead of opening
-   * an empty layer (plans `573`, `744`).
+   * blank string, or a `Text` run (or fragment) whose own children are blank —
+   * is **no tip**: the child renders unchanged instead of opening an empty layer
+   * (plans `573`, `744`, `782`).
    */
   readonly content: ReactNode;
   /**
@@ -256,9 +257,11 @@ export interface TooltipHandlers {
  * unchanged, so a computed blank translation cannot publish a blank description
  * or open an empty popover. Neither is any other content that paints nothing
  * (plan `744`) — a computed `null` or an empty list would still open a layer and
- * publish an unnamed tooltip node; an element always counts, because the
- * component cannot know what it paints. A real string is trimmed for the
- * accessibility tree and painted exactly as the caller wrote it.
+ * publish an unnamed tooltip node. An element counts, because the component
+ * cannot know what its chrome paints, except a `Text` run or a fragment, which
+ * paint exactly their children and are looked through (plan `782`). A real
+ * string is trimmed for the accessibility tree and painted exactly as the
+ * caller wrote it.
  */
 export const renderTooltip = (
   {
@@ -279,7 +282,9 @@ export const renderTooltip = (
   const text = P.isString(content) ? ariaName(content) : undefined;
   // A tip that paints nothing is no tip (plans 573, 744): a computed node can
   // resolve to `null`, and a layer with no content still publishes an unnamed
-  // `Tooltip` node. An element always counts — only absent content is absent.
+  // `Tooltip` node. An element counts because it may paint chrome of its own,
+  // except a `Text` run or fragment, which paint only their children and are
+  // looked through (plan 782).
   if (!paintsContent(content)) {
     return <>{children}</>;
   }
