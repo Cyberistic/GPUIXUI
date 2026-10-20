@@ -378,6 +378,7 @@ references without buying correctness.
 | [747](./747-disabled-fill-exemption-claims.md) | The disabled fill's exemption, in the three passages plan 737 missed | F | 306, 737, 742 | done |
 | [749](./749-placeholder-surface-claims.md) | The placeholder role's surface claims | F | 317, 527, 651, 659, 747 | done |
 | [750](./750-disabled-fill-palette-and-status-claims.md) | The disabled fill's reason in the palette doc and the status paragraph | F | 306, 737, 747, 749 | done |
+| [753](./753-dimensions-consumer-reach.md) | The dimensions promise the shipped components do not keep | F | 353, 556, 720 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3838,6 +3839,17 @@ theme, and both pages refuted the same reason elsewhere. All three now name
 `disabledFillPairs` and the five surfaces, `disabled-fill-claims.test.ts` derives
 the surface list from the pair list and fails on the restored reason or a missing
 surface, and no colour, pair, floor, metric or role moves.
+
+Plan `753` closes the last promise on the design-system page that the tokens do
+not keep: §6 said the fixed metrics "live in `theme.dimensions` so a brand can
+widen a dialog or a toast without touching component source", but no consumer
+reads a dimension — the dialog keeps a local 360/480/640 ladder, the Toast a
+380px card, the menu a 180px minimum, and the rest are literals too — so the
+edit changed nothing. The only guard over the paragraph pinned its numbers, not
+the promise. The sentence now names the three shipped literals, the cross-team
+migrations already in `TODO.md` and the `style` prop a brand passes today, and
+`dimension-consumer-reach.test.ts` derives those literals from `dimensions` and
+fails if the unconditional promise returns.
 
 ## How to use a plan
 

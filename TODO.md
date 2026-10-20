@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 339/416
+`[x]` `[████████░░]` 340/417
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2924,6 +2924,17 @@ example a consumer copies failed the total check while its contrast half passed;
 the link ink takes one designed step (`#4B2AB4`, 7.957:1 through the wash), both
 brands are held to `themeFailures`, and a regression case rebuilds the pre-fix
 palette and pins the three `nativeText` entries; only the example moves (plan 745)
+`[x]` Correct the dimensions promise the shipped components do not keep — the
+design system said the metrics "live in `theme.dimensions` so a brand can widen a
+dialog or a toast without touching component source", but no consumer reads a
+dimension: the dialog keeps a local `MAX_WIDTH` 360/480/640, the Toast
+`CARD_WIDTH` 380, the menu a 180px minimum, and the rest are literals too, so
+editing the token changed nothing while the only guard over the paragraph
+(`docs.test.ts`) pinned its numbers. The sentence now names the three shipped
+literals, the cross-team migrations in `TODO.md` and the `style` prop a brand
+passes today; `dimension-consumer-reach.test.ts` derives the literals from
+`dimensions` and fails on the restored promise, and no token value, pair, floor,
+metric or role moves (plan 753)
 
 ## Phase C — Tier 1–2 components
 
