@@ -1531,6 +1531,28 @@ retired once both branches are one
       last" instruction (superseded by 820) is corrected, the example uses the
       slot, and `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the
       index are synced (owner: components)
+    - [x] A press on the toast stack still dismisses a non-modal overlay — plan
+      824; measured 2026-10-21 with the composite suite: a press on a toast's
+      action ran the action **and left an open dropdown menu painted**, although
+      the menu's page says a press outside every menu surface closes it, because
+      plan 820's owned-press early return applied to every layer. Ownership now
+      decides whose control runs and `modal` decides whether the press also
+      dismisses: a non-modal overlay closes like any outside press, while a
+      dialog or drawer keeps its work. 1 unit + 1 composite case red at `HEAD`
+      (17/18, 10/11), 18/18 and 11/11 after, three mutation proofs; unit 521 in
+      48 files, `check`/`lint`/`test` exit 0, scoped smoke `overlay-dialog` and
+      `modal-focus-trap` green; docs, `docs/component-api.md`, `COMPONENTS.md`,
+      `PLAN.md` D30 and the index synced (owner: components)
+    - [ ] A dialog opened from a menu row loses the keyboard when it closes —
+      measured 2026-10-21 while probing plan 824: a `DropdownMenuItem`
+      `onSelect` opens a `Dialog`; on Escape the dialog closes and the focused
+      host is `None`. `useModalFocus` captures the opener at the surface's first
+      render (plan 638), which is the menu **row**, and the row unmounts with the
+      menu, so the restore finds no bounds and a root dialog has no enclosing
+      surface to fall back to (plan 730). The natural target is the menu trigger,
+      which the menu restores to in a layout effect that runs after the capture.
+      Needs a decision: a successor mark written by the row before `onSelect`, or
+      a capture that can resolve a dead opener (plan 824 §7) (owner: components)
     - [x] A press on a toast belongs to the toast — plan 820; measured
       2026-10-21: a toast raised from inside an open dialog was painted **under**
       the dialog's veil and its own action never ran (0 calls) while the press

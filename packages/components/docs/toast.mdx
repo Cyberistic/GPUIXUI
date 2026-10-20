@@ -176,12 +176,14 @@ from its two pinned edges.
   (`priority: 2`, `occlude: false`, window-sized), because a dialog's veil is an
   anchored layer at the runtime's default priority `1` and would otherwise paint
   over the stack and swallow its presses. A press on a card therefore belongs to
-  the toast: its action or dismiss control runs and an overlay beneath stays
-  open, while a press anywhere else still closes that overlay (plan 820). The
-  viewport's own `children` control is part of the stack too and owns its presses
-  the same way, so "Dismiss all" above a dialog does not close the dialog (plan
-  823). Render the viewport once in the app root; paint order no longer follows
-  tree order.
+  the toast: its action or dismiss control runs. Whether an overlay beneath also
+  closes depends on whether that overlay is modal: a **dialog or drawer keeps its
+  work**, while a **menu, popover, picker, preview card or notification centre
+  beneath closes**, exactly as for a press anywhere else outside it (plans 820,
+  824). The viewport's own `children` control is part of the stack too and owns
+  its presses the same way, so "Dismiss all" above a dialog does not close the
+  dialog (plan 823). Render the viewport once in the app root; paint order no
+  longer follows tree order.
   A viewport mounted **after** a dialog can be dropped from the native tree by
   this binding when that dialog closes with a picker inside (TODO.md interlock,
   plan 820 §7), so render it before the app's dialogs.

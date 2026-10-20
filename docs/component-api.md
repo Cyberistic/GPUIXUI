@@ -186,7 +186,11 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   **and its own controls** (the viewport's `children` slot), and it lives in its
   own deferred anchored layer above every modal, because a dialog's veil is an
   anchored layer too and would otherwise paint over it and take its presses
-  (plans `820`, `823`).
+  (plans `820`, `823`). Ownership decides whose control runs; **modality decides
+  whether the press also dismisses**: a press on the stack closes a non-modal
+  overlay beneath it (a menu, popover, picker, preview card or notification
+  centre) exactly as any outside press does, while a modal — the dialog or drawer
+  holding the user's work — keeps its surface open (plan `824`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.
