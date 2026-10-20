@@ -917,7 +917,8 @@ and an unparseable tint is returned unchanged, so `shadow: "black"` painted a
 metric check returned `[]`. Plan `505` measures the shadow, so that tint also
 fails the contrast check as `NaN`; the colour check remains the one that names
 the form. Every shipped set is hex, so the check moves no
-value; `isHexColor` is the predicate for a single stored role.
+value; `isHexColor` narrows a single stored role — an `unknown` boundary value —
+to the hex string.
 
 The form has a second half. `themeOpacityFailures` asks for the alpha the role is
 painted with: the three veils — `selection`, `overlay` and `selectionOnFill` —

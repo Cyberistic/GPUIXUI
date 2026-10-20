@@ -405,8 +405,8 @@ unchanged, so a copied theme with `shadow: "black"` paints a **fully opaque**
 shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone — while the
 metric check returns `[]`. Since plan 505 the elevation check reports the tint as
 `NaN` too, so the colour check is the one that names the form. `#000` and
-`rgb(0 0 0)` behave the same way; `isHexColor(value)` is the predicate for a
-single stored role.
+`rgb(0 0 0)` behave the same way; `isHexColor(value)` narrows a single stored
+role — an `unknown` boundary value — to the hex string.
 
 The same bytes have a second form: the alpha channel.
 `themeOpacityFailures(theme)` holds the three veils — `selection`, `overlay` and

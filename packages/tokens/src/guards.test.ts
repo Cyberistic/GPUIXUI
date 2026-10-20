@@ -13,6 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  colorRoles,
   controlSizes,
   densityNames,
   densityPresets,
@@ -21,6 +22,7 @@ import {
   highContrastThemes,
   isControlSize,
   isDensityName,
+  isHexColor,
   isPlatformName,
   isStatusTone,
   isThemeContrast,
@@ -148,6 +150,48 @@ describe("isControlSize", () => {
   it("rejects casing, whitespace, aliases and non-strings", () => {
     ["", "SM", "Md", "medium", "large", "md ", "xsmall", ...nonStrings].forEach(
       (value) => expect(isControlSize(value), String(value)).toBe(false),
+    );
+  });
+});
+
+describe("isHexColor", () => {
+  it("accepts the six- and eight-digit hex form, either case", () => {
+    ["#191D25", "#7567F23D", "#191d25", "#7567f23d"].forEach((value) =>
+      expect(isHexColor(value), value).toBe(true),
+    );
+  });
+
+  it("rejects every other CSS form, a malformed string and non-strings", () => {
+    [
+      "#FFF",
+      "#191D25FF00",
+      "#GG0000",
+      "black",
+      "rgb(0 0 0)",
+      "",
+      // The regex coerces its argument, and a symbol cannot be coerced: the
+      // guard has to test the type before it tests the form.
+      Symbol("hex"),
+      ...nonStrings,
+    ].forEach((value) => expect(isHexColor(value), String(value)).toBe(false));
+  });
+
+  it("narrows an unknown value to the string a role must be", () => {
+    const accepted = (value: unknown): string =>
+      isHexColor(value) ? value : "#000000";
+
+    expect(accepted("#191D25")).toBe("#191D25");
+    expect(accepted(42)).toBe("#000000");
+    expect(accepted(undefined)).toBe("#000000");
+  });
+
+  it("accepts every shipped role value", () => {
+    shippedThemes.forEach(({ theme }) =>
+      colorRoles.forEach((role) =>
+        expect(isHexColor(theme.colors[role]), `${theme.name} ${role}`).toBe(
+          true,
+        ),
+      ),
     );
   });
 });

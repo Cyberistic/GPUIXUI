@@ -2787,14 +2787,16 @@ opaque** shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone �
 and the contrast check reports each composited level as `NaN`. `#000` and
 `rgb(0 0 0)` behave the same way. Every shipped identity theme, platform variant
 and recipe is hex, so the check moves no value; it guards the next edit.
-`isHexColor` is the predicate for one value, for a boundary that receives a role
-from storage, a URL or a payload:
+`isHexColor(value)` takes the `unknown` value a boundary receives — a role from
+storage, a URL or a payload — and narrows it to the hex string the token maths
+parses:
 
 ```ts
 import { isHexColor } from "@gpuixui/tokens";
 
 isHexColor("#191D25"); // true
 isHexColor("rebeccapurple"); // false
+isHexColor(null); // false
 ```
 
 No runtime schema: themes authored in TypeScript are trusted at compile time.

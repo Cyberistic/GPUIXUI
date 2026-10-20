@@ -202,6 +202,14 @@ green at 263 tests; the tint now derives from the resolved AAA theme, the three
 percentages from `highContrastDarkElevation`, and the "black tint measured
 1.000:1 at every level" rationale from the default dark tint on the AAA canvas
 (plan 778, found while landing plan 777)
+`[x]` Give the one boundary guard a boundary signature — `isHexColor` was
+documented as the predicate "for a boundary that receives a role from storage, a
+URL or a payload", but it took a `string` and returned a `boolean`, so the
+documented call could not be written against an `unknown` value and it returned
+no narrowed string; it is the only guard the `guards.test.ts` non-string matrix
+could not cover. It now takes `unknown` and narrows to the hex string, is held
+by the same matrix as the other seven guards, and the three passages state the
+narrowing; no colour, pair, floor, metric or shipped theme moves (plan 780)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
