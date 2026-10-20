@@ -473,6 +473,14 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 `[x]` `[██████████]` 164/164
 
+`[~]` **A page answers the phrase its metadata cannot (plan 598)** — plan 597
+      §6.4 recorded `system theme` → Switch as a ranker question; the sweep
+      found the same class across `theme switch`, `color scheme`, `hint`,
+      `demo`, `how to use` and `version`. One guarded page-alias table, matched
+      as the whole query only, sends each to the page that owns it; a page
+      alias can no longer lose to a component's shared word or a scene
+      instruction.
+
 `[x]` **The site's own output is findable (plan 597)** — the page-action
       vocabulary (`page actions`, `copy page`, `view as markdown`, …) and the
       License subject `open source` reach the page that owns them, from one
