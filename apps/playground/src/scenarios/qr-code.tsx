@@ -12,11 +12,13 @@
  *    so the quiet zone can be baked in and the code stays two-colour.
  *
  * The fixtures are real encoder output (Python `qrcode` 7.4.2, EC level M) and
- * are **renderer fixtures, not an encoder**. Scannability is not asserted: there
- * is no decoder on this host and no pixel readback; the screenshot is the visual
- * evidence and this file's claims stop at geometry, colour, nodes and a11y.
+ * are **renderer fixtures, not an encoder**. Scannability is still not asserted:
+ * there is no decoder on this host. What plan `708` does assert is the sampled
+ * precondition — every module centre in the decoded frame reconstructs the
+ * authored matrix, inside a four-module quiet zone, on both the `div` route and
+ * the full-colour `<img>` route.
  *
- * Measured facts: plan `518` §8.
+ * Measured facts: plan `518` §8, plan `708` §3.
  */
 import { useState } from "react";
 import { Effect } from "effect";
@@ -29,6 +31,8 @@ import { fieldText, nodeFor } from "../a11y.js";
 import { palettes } from "../palettes.js";
 import { Pressable, Readout } from "../ui.js";
 import type { PlaygroundScenario } from "../types.js";
+import { captureHeadless, readSync } from "./frames.js";
+import { qrFrameChecks } from "./qr-pixels.js";
 import { QR_V1, QR_V4 } from "./qr-fixtures.js";
 import {
   darkModules,
@@ -329,7 +333,17 @@ export const qrScenario: PlaygroundScenario = {
         `QR code for ${QR_V1.payload}`,
       );
 
-      // 3. Cost: one retained node per dark module.
+      // 3. Pixels: the frame's module centres are the authored matrix.
+      const divFrame = yield* captureHeadless(ctx.host);
+      const divRows = yield* qrFrameChecks(ctx, readSync(ctx.host), divFrame, {
+        label: "the module grid",
+        matrix: QR_V1.matrix,
+        spec: SPECS.v1,
+        dark: dark.colors.foreground,
+        light: dark.colors.background,
+      });
+
+      // 4. Cost: one retained node per dark module.
       const divNodes = yield* retained(ctx);
       ctx.host.click("qr-mode-svg");
       ctx.host.advance(0);
@@ -340,7 +354,7 @@ export const qrScenario: PlaygroundScenario = {
         darkModules(QR_V1.matrix).length - 1,
       );
 
-      // 4. The single tinted SVG mask.
+      // 5. The single tinted SVG mask.
       yield* ctx.expectEqual(
         "the svg route is one svg node",
         typeOf(ctx, "qr-svg"),
@@ -370,7 +384,7 @@ export const qrScenario: PlaygroundScenario = {
         "none",
       );
 
-      // 5. The full-colour image route is also one node.
+      // 6. The full-colour image route is also one node.
       ctx.host.click("qr-mode-img");
       ctx.host.advance(0);
       const imgNodes = yield* retained(ctx);
@@ -408,7 +422,23 @@ export const qrScenario: PlaygroundScenario = {
         false,
       );
 
-      // 6. Switching back leaves no residue, and version 4 scales the cost.
+      // 7. Pixels: the single-node route paints the same code, in its own
+      // two colours (`#000` on `#fff`, baked into the SVG).
+      const imgFrame = yield* captureHeadless(ctx.host);
+      const imgRows = yield* qrFrameChecks(ctx, readSync(ctx.host), imgFrame, {
+        label: "the image route",
+        matrix: QR_V1.matrix,
+        spec: SPECS.v1,
+        dark: "#000000",
+        light: "#ffffff",
+      });
+      yield* ctx.expectEqual(
+        "the image route and the module grid paint the same matrix",
+        Arr.join(imgRows, "\n"),
+        Arr.join(divRows, "\n"),
+      );
+
+      // 8. Switching back leaves no residue, and version 4 scales the cost.
       ctx.host.click("qr-mode-div");
       ctx.host.advance(0);
       const restored = yield* retained(ctx);

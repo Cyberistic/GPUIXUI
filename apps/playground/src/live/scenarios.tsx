@@ -37,6 +37,7 @@ import { layoutGridScenario } from "../scenarios/layout-grid.js";
 import { typographyScenario } from "../scenarios/typography.js";
 import { chartScenario } from "../scenarios/chart.js";
 import { qrScenario } from "../scenarios/qr-code.js";
+import { QR_V1 } from "../scenarios/qr-fixtures.js";
 import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
@@ -123,6 +124,7 @@ import {
   TOLERANCE,
 } from "../scenarios/frames.js";
 import { palettePixels } from "../scenarios/palette-pixels.js";
+import { qrFrameChecks } from "../scenarios/qr-pixels.js";
 import { palettes, type PaletteId } from "../palettes.js";
 import { appChromeScenario } from "../scenarios/app-chrome.js";
 import { menuBarScenario } from "../scenarios/menu-bar.js";
@@ -8827,9 +8829,10 @@ const liveChart: LiveScenario = {
  * `div` per dark module, one sourced `<svg>` mask and one SVG data-URL
  * `<img>`. This twin measures what a window can settle — the matrix-relative
  * geometry of the 226-node absolute grid, the absent light module, the module
- * hit target, both single-node routes and the v4 scale. Colour
- * (`paintedStyle`), the retained-node cost (`retainedElements`) and the
- * AccessKit `Image` node stay headless: the live renderer exposes none of them
+ * hit target, both single-node routes and the v4 scale. Colour is now sampled
+ * from the frame (plan `708`): every module centre on both the module grid and
+ * the image route reconstructs the authored matrix. The retained-node cost and
+ * the AccessKit `Image` node stay headless: the live renderer exposes neither
  * (plan `197`).
  */
 const liveQr: LiveScenario = {
@@ -8930,6 +8933,19 @@ const liveQr: LiveScenario = {
         "hit=r3c3",
       );
 
+      // Pixels: the frame's module centres are the authored matrix (plan 708).
+      const divFrame = yield* captureLive(
+        ctx.host,
+        `${LIVE_ARTIFACTS}/${liveQr.id}.png`,
+      );
+      const divRows = yield* qrFrameChecks(ctx, readAsync(ctx.host), divFrame, {
+        label: "the live module grid",
+        matrix: QR_V1.matrix,
+        spec: { module: 6, quiet: 4 },
+        dark: palettes.dark.colors.foreground,
+        light: palettes.dark.colors.background,
+      });
+
       // The single tinted SVG mask: one node, the matrix box, no modules.
       yield* ctx.host.click("qr-mode-svg");
       yield* ctx.host.waitFor("qr-svg");
@@ -8992,6 +9008,22 @@ const liveQr: LiveScenario = {
         "the live data URL has a source",
         Str.includes("img: no src")(painted),
         false,
+      );
+
+      // Pixels: the single-node route paints the same code, in its own
+      // two colours (`#000` on `#fff`, baked into the SVG).
+      const imgFrame = yield* captureLive(ctx.host);
+      const imgRows = yield* qrFrameChecks(ctx, readAsync(ctx.host), imgFrame, {
+        label: "the live image route",
+        matrix: QR_V1.matrix,
+        spec: { module: 6, quiet: 4 },
+        dark: "#000000",
+        light: "#ffffff",
+      });
+      yield* ctx.expectEqual(
+        "the live image route and the module grid paint the same matrix",
+        Arr.join(imgRows, "\n"),
+        Arr.join(divRows, "\n"),
       );
 
       // Returning to the grid leaves no residue and no drift.

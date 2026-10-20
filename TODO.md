@@ -97,6 +97,14 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 120/120 plans-and-harness
 
+`[~]` **Prove the QR module grid in pixels** per plan `708`: the last named
+      QR gap ("scannability is not asserted — no pixel readback") is now a
+      decoded-frame assertion. A pure `qr-pixels.ts` samples every module centre
+      and reconstructs the authored 21 × 21 matrix on the `div` route and the
+      `<img>` route; the quiet zone is sampled at four corners; the two
+      reconstructions must agree. No decoder, so scannability itself stays
+      unclaimed. Focused ids: `qr-code`, `live-qr`.
+
 `[x]` **Prove the diff's word-level wash in pixels** per plan `707`: the last
       named colour gap (`wordDiff` was "screenshot-only" since plan `648`) is
       now a decoded-frame assertion. A pure `word-wash.ts` finds the run that
