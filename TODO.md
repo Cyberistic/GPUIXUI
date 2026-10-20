@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 375/450
+`[x]` `[████████░░]` 376/451
 
 `[x]` Own the two catalogue sentences that state a figure beside a derived
 claim — `docs.test.ts` derives §Text selection's *set* of affected fills (through
@@ -3317,6 +3317,17 @@ identity dark's pair (`1.074:1` dim, `1.179:1` opaque), the nine-surface order
 inside that set and the enumeration's ordered minimum with its set and surface,
 rejects the pre-fix sentence, and moves the minimum with a planted palette; no
 colour, pair, floor, metric, role or shipped theme moves (plan 821)
+`[x]` Correct the disabled label's tier figures and their sets — the catalogue
+said "1.542:1 below `softActionForeground` (identity dark)", but `1.542:1` is the
+**high-contrast dark** step and identity dark measures **1.877:1**; plan `537`
+fixed the same attribution on the §Text hierarchy sentence and missed this one,
+and neither this passage nor the design system's "staying 1.301:1 (identity
+dark) and 1.168:1 (AAA dark)" was read by a test (the literal `1.301` appeared in
+no suite). The sentence now names high-contrast dark and states identity dark's
+own figure, and `disabled-label-tier-claims.test.ts` derives all four steps with
+the hierarchy's own surface list and measurement, reads both passages, rejects
+the pre-fix attribution, and moves the figures with a planted palette; no
+colour, pair, floor, metric, role or shipped theme moves (plan 822)
 
 ## Phase C — Tier 1–2 components
 

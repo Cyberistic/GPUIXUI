@@ -2607,7 +2607,8 @@ XP and Aero light already passed. Plan `520` moves AAA dark once more
 (`#B0B0B0` → `#D0D0D0`) and identity dark from `#A1A9B7` → `#B0B8C6`, for the
 disabled raised action's inverse veil. The values stay below `mutedForeground` by
 1.301:1 (identity dark) and 1.168:1 (AAA dark) at the tightest, and 1.542:1
-below `softActionForeground` (identity dark), so an unavailable label is still
+below `softActionForeground` (high-contrast dark, where identity dark measures
+1.877:1), so an unavailable label is still
 distinguishable from secondary text; the tightest washed pair is **3.177:1**
 (Aero light `destructiveSoft`) and **4.844:1** in the AAA light palette.
 
