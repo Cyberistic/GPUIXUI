@@ -99,6 +99,7 @@ import { borderScenario } from "./border.js";
 import { stateColourScenario } from "./state.js";
 import { opacityScenario } from "./opacity.js";
 import { hiddenSurfaceScenario } from "./hidden-surface.js";
+import { clipScenario } from "./clip.js";
 import { textDecorationScenario } from "./text-decoration.js";
 import { textInkScenario } from "./text-ink.js";
 import { fieldInkScenario } from "./field-ink.js";
@@ -205,6 +206,7 @@ export const PROBE_CAPABILITIES = [
   "media",
   "frames",
   "gradient",
+  "clip",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -274,6 +276,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   stateColourScenario,
   opacityScenario,
   hiddenSurfaceScenario,
+  clipScenario,
   textDecorationScenario,
   textInkScenario,
   fieldInkScenario,

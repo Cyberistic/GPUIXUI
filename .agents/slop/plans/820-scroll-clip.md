@@ -1,7 +1,7 @@
 # 820 — The clip contract, in the frame: what `overflow` clips, and where
 
 **Phase:** F (native behaviour in the frame) · **Workstream:** playground ·
-**Status:** planned
+**Status:** landed
 
 **Depends on:** `140`, `177`, `184`, `186`, `338`, `347`, `376`, `601`, `674`,
 `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722`, `724`, `734`, `736`,
@@ -343,7 +343,64 @@ measured value in the failure message, as every pixel check does.
 
 ---
 
-## 9. Outcome
+## 9. Outcome (measured 2026-10-21)
 
-Filled in when the probe lands: the four measured answers, the check counts, the
-focused ids run, the mutation proofs and each failing check's message.
+**Status:** landed. One expectation was corrected by the frame, one record was
+contradicted, and the runtime's `overflowX` side effect was measured.
+
+**Measured facts (both hosts, 98 checks):**
+
+- `overflowY: "scroll"` clips both edges, and the clip **follows the offset**:
+  below the box is the stage at rest, above it is the stage after a `-120`
+  wheel, and both interior samples paint exactly the strip
+  `stripIndexAt(60, offset, y)` selects.
+- The clipped child keeps its **360 px** layout height while 120 px paints.
+- `overflowX: "scroll"` forces **`display: flex`**: three blocks with no
+  `display` declared lay out in a row (same `y`, `160 ± 1` apart) with their
+  widths kept — the source's `flex().min_w_0()` and the `flex_none` child
+  wrapper, visible in the frame.
+- **Corrected expectation:** a one-axis `scroll` clips paint on **both** axes —
+  an x-only viewport paints nothing below its box and a y-only one paints
+  nothing beside it. The wheel is axis-restricted, the paint clip is not, so
+  the plan's `clippedAxes` answer was wrong for `scroll`; `paintClip` records
+  the measured rule and `hidden` keeps its declared axes.
+- **Corrected box contract:** a padded, bordered box's reported box is an
+  *offset pair* — `x` is the content origin (border + padding) while `width`
+  excludes only the borders, exactly as plan `529` §6.3 says. Reconstructing an
+  outer box is `x - padding - border` and `width + 2 * border`; the first
+  padding-band sample was 8 px outside the element because of this.
+- `overflow: "hidden"` clips to the **padding box**: a point inside the 16 px
+  padding band still paints the child, so a panel's padding is inside its clip.
+- `overflow: "auto"` is the controlled non-clip (`scrollOffset` is `null`).
+- A press 10 px outside the box does **not** reach the clipped child
+  (`hits=1` unchanged) while a press inside runs the strip's own handler.
+- **Record corrected:** an `<img>` child **is** clipped by a plain
+  `overflow: "hidden"` parent — plan `385`'s "does not clip an `<img>` child"
+  is not reproduced here, so the rounded-crop limitation comes from something
+  else (its own radius or the mask's stacking), not from the parent's clip.
+
+**Runs:**
+
+| Run | Result |
+| --- | ------ |
+| `nub run --filter playground test` | 653 tests (645 → **653**, +8) |
+| `nub apps/playground/dist/smoke/run.js --only scroll-clip` | 1/1, **98** checks, exit `0` (five green runs) |
+| `nub apps/playground/dist/live/run.js --only live-scroll-clip` | 1/1, **98** checks, exit `0` (two green runs) |
+
+**Mutation proofs (each failed by name, then reverted):**
+
+| Mutation | Failing check |
+| -------- | ------------- |
+| `clip-v` drops `overflowY: "scroll"` | `the vertical viewport does not paint below its box: expected #11141aff, got #a7a9ffff` |
+| `clip-v-child` is two strips (120 px) | `the clipped child keeps its layout height: expected 360 ± 4, got 120` |
+| `clip-h` drops `overflowX: "scroll"` | `the x-only row shares its y: expected 20 ± 1, got 140` |
+| `clip-hidden` drops `overflow: "hidden"` | `the hidden box does not paint outside its border: expected #11141aff, got #191d25ff` |
+| `clippedAxes` collapses to `both` | three unit tests red (axis precedence, x-only, `paintClip` hidden axes) |
+| `stripIndexAt` ignores the offset | `the scrolled viewport paints the strip the offset selects: expected #191d25ff, got #a7a9ffff` |
+| `paintClip` drops the scroll rule | `any scroll container clips both axes: expected "y", got "x"` |
+| the image expectation flips to `escapes` | `an image child escapes the parent's clip: expected true, got false` |
+
+**Files:** `scenarios/clip-model.ts` (+ test), `scenarios/clip.tsx`,
+`scenarios/index.ts` (the `clip` probe capability), `live/scenarios.tsx`,
+`packages/testing/src/smoke.ts` (the `clip` capability),
+`apps/playground/README.md`, `COMPONENTS.md`, the plan index and `TODO.md`.

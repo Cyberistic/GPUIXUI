@@ -844,6 +844,41 @@ not merely untintable — it paints no scrollbar at all**, so the `COMPONENTS.md
 and `ScrollArea` sentences were wrong and are corrected; the `tab-overflow`
 "reserved scrollbar" comment was a 1 px rounding of the strip's padding.
 
+## The clip contract (plan `820`)
+
+Every scrollable surface in the library relies on one unwritten rule — a
+viewport paints only inside its box, and a press outside that box never reaches
+the clipped child — and the records only ever measured pieces of it: that
+`auto` does **not** clip (plan `801`), one corner under `hidden` (plan `745`),
+and the refused press on a collapsed body (plans `186`/`819`). The
+grid-cell-editing limits said it outright: *"paint beyond the list's own
+viewport clip was not measured"*. `scroll-clip` / `live-scroll-clip` (**98
+checks each**, two decoded frames per host, six fixtures on one 680 × 420
+stage) measure it, and the axes rule is `clip-model.ts`.
+
+| Question | Measured (both hosts) |
+| -------- | --------------------- |
+| a `overflowY: "scroll"` viewport | clips **both** edges: a point 10 px below the box is the stage, and after a `-120` wheel a point 10 px **above** it is the stage too |
+| the paint and the offset | both interior samples paint exactly the strip `stripIndexAt(60, offset, y)` selects, so the paint follows the measured offset rather than a frozen frame |
+| layout vs paint | the clipped child still reports its **360 px** layout height while only 120 px paints — a consumer can measure it |
+| `overflowX: "scroll"` | the runtime forces **`display: flex`**: three blocks with no `display` declared lay out in a **row** (same `y`, `160 ± 1` apart) with their widths kept (`flex_none`) |
+| any one-axis `scroll` | clips **both** axes: an x-only viewport paints nothing below its box and a y-only one paints nothing beside it. Only the **wheel** is axis-restricted, so `paintClip` returns `"both"` for any scroll and `hidden` keeps its declared axes |
+| `overflow: "hidden"` | the clip rectangle is the **padding box**: a child that reaches 188 px, inside a 16 px padding band, still paints `card`; the element's own fill and the stage start at the border |
+| `overflow: "auto"` | the controlled non-clip: the child paints below the box and `scrollOffset` is `null` (plan `801` re-guarded) |
+| a press outside the box | does **not** reach the clipped child (`hits=1` stays `1`), while a press inside runs the strip's own handler |
+| an `<img>` child under `hidden` | **clipped like any other child** — the point 30 px outside the box paints the stage, not the bitmap. Plan `385`'s "a parent `overflow: hidden` does not clip an `<img>` child" is **not reproduced** for a plain hidden parent, so the rounded-crop limitation must come from something else |
+
+Eight mutation proofs failed by name and were reverted: dropping
+`overflowY: "scroll"` paints the child below the box (`expected #11141aff, got
+#a7a9ffff`), a 120 px child fails the layout check (`expected 360 ± 4, got
+120`), dropping `overflowX: "scroll"` stacks the blocks (`expected 20 ± 1, got
+140`), dropping `overflow: "hidden"` paints outside the border (`got
+#191d25ff`), a collapsed `clippedAxes` fails three unit tests, an
+offset-ignoring `stripIndexAt` paints the rest strip (`expected #191d25ff, got
+#a7a9ffff`), a `paintClip` without the scroll rule disagrees between the two
+one-axis styles (`expected "y", got "x"`), and flipping the image expectation
+fails the clip check by name.
+
 ## Gradient backgrounds (plan `807`)
 
 `StyleDesc.background` publishes a **two-stop linear gradient** with an angle
@@ -1352,8 +1387,9 @@ anchored child does not follow a scrolling virtual row.
 **Limits:** no double click, no multi-cell range, no validation, no undo and no
 persisted edit; a right-click context menu and column virtualization stay with
 plans `164` and `185`. The menu opens from a row near the top, so paint beyond
-the list's own viewport clip was not measured (the close-on-scroll rule makes
-it moot for this contract).
+the list's own viewport clip was not measured **here** — the clip itself is now
+measured by `scroll-clip` / `live-scroll-clip` (plan `820`), and the
+close-on-scroll rule makes it moot for this contract.
 
 ## Application chrome (plan `350`)
 
@@ -2777,8 +2813,11 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **121/121 green** here (`exit 0`, 4573 checks, 66 capabilities,
-2026-10-20 after plan `807`; **577.8 s**; **120/120** · 4452 · 525.80 s after
+The suite is **123/123 green** here (`exit 0`, 4738 checks, 67 capabilities,
+2026-10-21 after plan `820`; **422.6 s**, which includes plan `819`'s 60-check
+`hidden-surface`, plan `816`'s 7 extra `surface-theme` checks and plan `820`'s
+98-check `scroll-clip`; the run before them read **121/121** · 4573 · 577.8 s
+after plan `807`; **120/120** · 4452 · 525.80 s after
 plan `801`, or 348.41 s on the head that
 merges `origin/master`'s `packages/motion`; **119/119** · 4359 after plan
 `797`; **118/118** · 4340 · 302.0 s before it, after plan
@@ -2807,7 +2846,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-121/121 scenarios passed · capabilities: layout=verified root=verified text=verified
+123/123 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2821,7 +2860,7 @@ scale=verified tier2=verified replace=verified states=verified
 truncation=verified grid-layout=verified typography=verified inspector=verified
 editor=verified data-toolbar=verified query=verified notification=verified
 crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
-media=verified window=verified frames=verified gradient=verified
+media=verified window=verified frames=verified gradient=verified clip=verified
 ```
 
 The last full merge/release gate ran **106/106** (`exit 0`, **3059** checks,

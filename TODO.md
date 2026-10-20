@@ -143,7 +143,33 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 151/151 plans-and-harness
+`[x]` `[██████████]` 152/152 plans-and-harness
+
+`[x]` **Prove the clip contract in the frame** per plan `820`: every scrollable
+      surface relies on one unwritten rule — a viewport paints only inside its
+      box and a press outside it never reaches the clipped child — and the
+      records only measured pieces (`auto` does not clip, plan `801`; one corner
+      under `hidden`, plan `745`; the refused press, plans `186`/`819`), with the
+      grid-cell-editing limits naming the gap outright. `scroll-clip` /
+      `live-scroll-clip` (**98 checks each**, two decoded frames per host, six
+      fixtures on one 680 × 420 stage) measure: `scroll` clips both edges and
+      the paint follows the measured offset (both interior samples equal
+      `stripIndexAt`); the clipped child keeps its **360 px** layout height while
+      120 px paints; `overflowX: "scroll"` forces **`display: flex`** (three
+      blocks with no `display` lay out in a row, `160 ± 1` apart); **a one-axis
+      `scroll` clips paint on both axes** (only the wheel is restricted — the
+      plan's `clippedAxes` answer was corrected, `paintClip` records the rule);
+      `hidden` clips to the **padding box** (188 px still shows the child);
+      `auto` is the controlled non-clip; a press 10 px outside leaves `hits=1`
+      unchanged; and an `<img>` child **is** clipped, contradicting plan `385`'s
+      claim. **Box-contract correction:** a padded box's reported `x` is the
+      content origin while `width` excludes only the borders. Eight mutation
+      proofs failed by name (below-box paint `#a7a9ffff`, height `120`, row
+      `y=140`, outside-border `#191d25ff`, three unit tests, offset-ignoring
+      strip, `expected "y", got "x"`, flipped image direction). Focused ids run:
+      `scroll-clip` (green ×5 + eight mutations), `live-scroll-clip` (green ×2).
+      Playground tests **645 → 653**; `packages/testing` gained the `clip`
+      capability. Plan: `.agents/slop/plans/820-scroll-clip.md`.
 
 `[x]` **Prove the hidden-surface recipe in the frame** per plan `819`: the
       tabbed-pane/carousel recipe (`visibility: "hidden"` + `pointerEvents:
@@ -343,6 +369,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `gradient-pixels`/`live-gradient` (122 checks each),
       `apps/playground/src/scenarios/gradient-model.ts`.
 
+`[ ]` **Cross-team:** the docs capability matrix (`apps/docs/src/lib/capabilities.ts`
+      + its test) must gain the `clip` capability and the ids `scroll-clip` +
+      `live-scroll-clip`, and the Theming/Layout pages need the clip recipe (a
+      one-axis `scroll` clips both axes, `overflowX` forces a flex row, `hidden`
+      clips to the padding box, a clipped child keeps its layout but loses the
+      hit). Owner: `docs-site`; evidence: plan `820` §9,
+      `apps/playground/README.md`'s "The clip contract". Recorded here because
+      `COMPONENTS.md` now carries the `clip` row and the docs gate compares the
+      two.
 `[ ]` **Cross-team:** the docs-site capability matrix must gain the `gradient`
       capability with the ids `gradient-pixels` and `live-gradient`, and the
       Theming page needs the gradient recipe (angle convention, the two-stop

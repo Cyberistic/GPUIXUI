@@ -84,6 +84,7 @@ export const CAPABILITIES = [
   "window",
   "frames",
   "gradient",
+  "clip",
 ] as const;
 /** Every capability the suite can report a verdict for. */
 export const Capability = Schema.Literals(CAPABILITIES);

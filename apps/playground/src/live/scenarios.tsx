@@ -135,6 +135,7 @@ import {
   hiddenSurfaceLiveScenario,
   hiddenSurfaceView,
 } from "../scenarios/hidden-surface.js";
+import { clipLiveScenario, clipView } from "../scenarios/clip.js";
 import {
   textDecorationLiveScenario,
   textDecorationView,
@@ -13227,6 +13228,27 @@ const liveGradient: LiveScenario = {
 };
 
 /**
+ * The clip contract in a real window (plan `820`).
+ *
+ * The headless pass proves the axes, the clip origin and the hit path; this
+ * twin proves the same viewport clips a window's paint, that a real wheel moves
+ * it, and that the clipped child still ignores a press outside it.
+ */
+const liveClip: LiveScenario = {
+  ...clipLiveScenario,
+  view: clipView,
+  ready: "clip-stage",
+  steps: (ctx) =>
+    clipLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-scroll-clip.png`),
+        ),
+      ),
+};
+
+/**
  * Text decoration in a real window (plan `775`).
  *
  * The headless pass proves the two declared lines, the control's absence and
@@ -14457,6 +14479,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTextInk,
   liveFieldInk,
   liveScrollAffordance,
+  liveClip,
   liveGradient,
   liveTruncationPixels,
   liveSurfaceTheme,
