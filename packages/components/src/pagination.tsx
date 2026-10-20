@@ -16,6 +16,12 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  PAGINATION_ELLIPSIS,
+  PAGINATION_LIST,
+  PAGINATION_ROOT,
+} from "@gpuixui/tw";
 import * as Arr from "effect/Array";
 import { createContext, useContext, useMemo } from "react";
 import { Button } from "./internal/button.js";
@@ -25,7 +31,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { controlHeight, textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { controlHeight, useTheme } from "./internal/theme.js";
 import { pageWindow, type PageItem } from "./pagination/logic.js";
 
 /** The rules a pagination part follows; throws outside a {@link Pagination}. */
@@ -62,6 +69,7 @@ export interface PaginationProps extends Omit<Props, "children"> {
   readonly siblingCount?: number;
   /** Keep the first and last page visible. Default `true`. */
   readonly showEdges?: boolean;
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -76,6 +84,7 @@ export const Pagination = ({
   onPageChange,
   siblingCount = 1,
   showEdges = true,
+  className,
   children,
   style,
   ...rest
@@ -100,12 +109,7 @@ export const Pagination = ({
         aria-label="Pagination"
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: theme.spacing.xs,
-          },
+          recipeStyle(cn(PAGINATION_ROOT, className), theme),
           style,
         )}
       >
@@ -177,10 +181,16 @@ export const PaginationNext = ({ style, ...rest }: PaginationNextProps) => {
 };
 
 /** {@link PaginationList} props. */
-export type PaginationListProps = Props;
+export interface PaginationListProps extends Props {
+  readonly className?: string;
+}
 
 /** The page window: page buttons and the ellipses that stand in for gaps. */
-export const PaginationList = ({ style, ...rest }: PaginationListProps) => {
+export const PaginationList = ({
+  className,
+  style,
+  ...rest
+}: PaginationListProps) => {
   const theme = useTheme();
   const { window } = usePagination();
 
@@ -188,12 +198,7 @@ export const PaginationList = ({ style, ...rest }: PaginationListProps) => {
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.xs,
-        },
+        recipeStyle(cn(PAGINATION_LIST, className), theme),
         style,
       )}
     >
@@ -261,10 +266,13 @@ export const PaginationItem = ({
 };
 
 /** {@link PaginationEllipsis} props. */
-export type PaginationEllipsisProps = Props;
+export interface PaginationEllipsisProps extends Props {
+  readonly className?: string;
+}
 
 /** A non-focusable stand-in for pages the window leaves out. */
 export const PaginationEllipsis = ({
+  className,
   style,
   ...rest
 }: PaginationEllipsisProps) => {
@@ -275,12 +283,7 @@ export const PaginationEllipsis = ({
       aria-label="More pages"
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-          paddingLeft: theme.spacing["2xs"],
-          paddingRight: theme.spacing["2xs"],
-        },
+        recipeStyle(cn(PAGINATION_ELLIPSIS, className), theme),
         style,
       )}
     >

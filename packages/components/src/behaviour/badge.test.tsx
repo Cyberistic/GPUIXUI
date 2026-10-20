@@ -37,10 +37,11 @@ const styleOf = (
     () => ({}),
   );
 
-/** The padding a size adds above and below its line height. */
+/** The pill height a size adds: its leading plus the `py-0.5` padding. `sm`
+ *  uses `text-xs` (16px leading); `md` adopts `text-sm` (20px leading) — the
+ *  fixed metric, not the theme's off-grid `label` role (ADR 0006). */
 const heightFor = (theme: Theme, size: BadgeSize): number =>
-  theme.typography[size === "sm" ? "caption" : "label"].lineHeight +
-  theme.spacing["2xs"] * 2;
+  (size === "sm" ? 16 : 20) + theme.spacing["2xs"] * 2;
 
 describe("Badge", () => {
   it("renders its label as text", () => {

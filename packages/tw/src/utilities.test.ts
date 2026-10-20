@@ -136,3 +136,38 @@ describe("expanded shadcn utilities", () => {
     expect(unsupportedReason(token)).toBeDefined();
   });
 });
+
+describe("component utility additions", () => {
+  it.each([
+    ["flex-row", { flexDirection: "row" }],
+    ["items-stretch", { alignItems: "stretch" }],
+    ["justify-end", { justifyContent: "flex-end" }],
+    ["flex-grow", { flexGrow: 1 }],
+    ["self-start", { alignSelf: "flex-start" }],
+    ["text-ellipsis", { textOverflow: "ellipsis" }],
+    ["border-t", { borderTopWidth: 1 }],
+  ])("maps %s", (name, expected) => {
+    expect(resolved(name)).toEqual(expected);
+  });
+
+  it("maps the font families to the theme's families", () => {
+    expect(resolved("font-sans")).toEqual({
+      fontFamily: lightTheme.typography.sans,
+    });
+    expect(resolved("font-mono")).toEqual({
+      fontFamily: lightTheme.typography.mono,
+    });
+  });
+
+  it("resolves the soft status roles and their alpha borders", () => {
+    expect(resolved("bg-infoSoft")).toEqual({
+      backgroundColor: lightTheme.colors.infoSoft,
+    });
+    expect(resolved("text-successSoftForeground")).toEqual({
+      color: lightTheme.colors.successSoftForeground,
+    });
+    expect(resolved("border-warning/30")).toEqual({
+      borderColor: alpha(lightTheme.colors.warning, 0.3),
+    });
+  });
+});

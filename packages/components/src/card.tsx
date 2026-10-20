@@ -3,25 +3,32 @@
  *
  * A surface only — it does not focus, scroll, dismiss or trap anything, and it
  * has no state. Compose the parts in reading order: header (title, description),
- * content, footer. Every part merges the caller's `style` last so a consumer can
- * override one rule without forking the component (plan 110 §8).
+ * content, footer. The resting appearance is a Tailwind recipe
+ * (`@gpuixui/tw`'s `CARD_*`), compiled against shadcn's fixed metrics; the
+ * caller's `className` is joined after the recipe and its `style` is merged
+ * last, so a consumer can override one rule without forking the component.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
+import {
+  CARD_BASE,
+  CARD_CONTENT,
+  CARD_DESCRIPTION,
+  CARD_FOOTER,
+  CARD_HEADER,
+  CARD_TITLE,
+  CARD_VARIANTS,
+  cn,
+} from "@gpuixui/tw";
 import {
   assertParts,
   type PartChildren,
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import {
-  elevationShadow,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The surface treatment. `outline` borders, `elevated` floats, `plain` does neither. */
 export type CardVariant = "outline" | "elevated" | "plain";
@@ -30,24 +37,15 @@ export type CardVariant = "outline" | "elevated" | "plain";
 export interface CardProps extends Omit<Props, "children"> {
   /** Default `"outline"`. */
   readonly variant?: CardVariant;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: PartChildren;
 }
-
-/** The rules a variant adds to the base surface. */
-const surface = (theme: Theme, variant: CardVariant) =>
-  Match.value(variant).pipe(
-    Match.when("outline", () => ({
-      borderWidth: theme.borderWidth.thin,
-      borderColor: theme.colors.border,
-    })),
-    Match.when("elevated", () => ({ boxShadow: elevationShadow(theme, "md") })),
-    Match.when("plain", () => ({})),
-    Match.exhaustive,
-  );
 
 /** A bordered or elevated surface that groups related content. */
 export const Card = ({
   variant = "outline",
+  className,
   children,
   style,
   ...rest
@@ -58,14 +56,7 @@ export const Card = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: theme.colors.card,
-          borderRadius: theme.radius.lg,
-          overflow: "hidden",
-          ...surface(theme, variant),
-        },
+        recipeStyle(cn(CARD_BASE, CARD_VARIANTS[variant], className), theme),
         style,
       )}
     >
@@ -74,107 +65,107 @@ export const Card = ({
   );
 };
 
-/** The block above the content: a title, a description and any meta row. */
+/** {@link CardHeader} props. */
 export interface CardHeaderProps extends Omit<Props, "children"> {
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The block above the content: a title, a description and any meta row. */
-export const CardHeader = ({ children, style, ...rest }: CardHeaderProps) => {
+export const CardHeader = ({
+  className,
+  children,
+  style,
+  ...rest
+}: CardHeaderProps) => {
   const theme = useTheme();
   assertParts(cardHeaderContract, children);
   return (
     <div
       {...rest}
-      style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.xs,
-          padding: theme.spacing.xl,
-          paddingBottom: theme.spacing.lg,
-        },
-        style,
-      )}
+      style={mergeStyles(recipeStyle(cn(CARD_HEADER, className), theme), style)}
     >
       {children}
     </div>
   );
 };
 
+/** {@link CardTitle} props. */
+export interface CardTitleProps extends Props {
+  readonly className?: string;
+}
+
 /** The card's heading. Announced as a level-3 heading. */
-export const CardTitle = ({ style, ...rest }: Props) => {
+export const CardTitle = ({ className, style, ...rest }: CardTitleProps) => {
   const theme = useTheme();
   return (
     <text
       role="heading"
       aria-level={3}
       {...rest}
-      style={mergeStyles(
-        { ...textStyle(theme, "h3"), color: theme.colors.foreground },
-        style,
-      )}
+      style={mergeStyles(recipeStyle(cn(CARD_TITLE, className), theme), style)}
     />
   );
 };
 
+/** {@link CardDescription} props. */
+export interface CardDescriptionProps extends Props {
+  readonly className?: string;
+}
+
 /** One line of supporting copy under {@link CardTitle}. */
-export const CardDescription = ({ style, ...rest }: Props) => {
+export const CardDescription = ({
+  className,
+  style,
+  ...rest
+}: CardDescriptionProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "body"),
-          color: theme.colors.mutedForeground,
-        },
+        recipeStyle(cn(CARD_DESCRIPTION, className), theme),
         style,
       )}
     />
   );
 };
+
+/** {@link CardContent} props. */
+export interface CardContentProps extends Props {
+  readonly className?: string;
+}
 
 /** The card body: rows of whatever the card is about, stacked with a gap. */
-export const CardContent = ({ style, ...rest }: Props) => {
+export const CardContent = ({
+  className,
+  style,
+  ...rest
+}: CardContentProps) => {
   const theme = useTheme();
   return (
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing.lg,
-          padding: theme.spacing.xl,
-        },
+        recipeStyle(cn(CARD_CONTENT, className), theme),
         style,
       )}
     />
   );
 };
 
+/** {@link CardFooter} props. */
+export interface CardFooterProps extends Props {
+  readonly className?: string;
+}
+
 /** The actions row, separated from the content by a top border. */
-export const CardFooter = ({ style, ...rest }: Props) => {
+export const CardFooter = ({ className, style, ...rest }: CardFooterProps) => {
   const theme = useTheme();
   return (
     <div
       {...rest}
-      style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: theme.spacing.md,
-          padding: theme.spacing.lg,
-          borderTopWidth: theme.borderWidth.thin,
-          // `StyleDesc` has no `borderTopColor`; the footer's only border is the
-          // top one, so `borderColor` colours exactly it.
-          borderColor: theme.colors.border,
-        },
-        style,
-      )}
+      style={mergeStyles(recipeStyle(cn(CARD_FOOTER, className), theme), style)}
     />
   );
 };

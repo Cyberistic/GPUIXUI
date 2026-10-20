@@ -104,9 +104,22 @@ caller sizes, pulse opacity) flows through `style` while token arithmetic is a
 named derived token. `MIGRATION.md` documents the tiers and the merge order;
 `recipe/geometry.test.ts` proves the equivalence per variant/size plus the
 merge order. Zero primitives remain on their `core/` resolver.
-`[ ]` Convert `packages/components` (Toast, Dialog, Popover, …) onto
-`@gpuixui/tw` — these may adopt the shadcn recipes' fixed metrics instead of the
-primitives' density scale.
+`[ ]` Convert `packages/components` onto `@gpuixui/tw` — these may adopt the
+shadcn recipes' fixed metrics instead of the primitives' density scale.
+
+`[ ]` `[██░░░░░░░░]` 8/39
+
+`[x]` Convert the eight leaf components — `Card`, `Badge`, `Alert`, `Avatar`,
+`List`, `Pagination`, `EmptyState`, `Stepper` — onto `@gpuixui/tw`. Each renders
+a `className` recipe (`CARD_*`, `BADGE_*`, … in `packages/tw/src/recipes.ts`)
+compiled through `classesToStyle` with the **default** registry (shadcn's fixed
+metrics), accepts a caller `className` joined last via `cn`, and keeps its
+variants/sizes/states and behaviour. `src/recipe/recipe.test.ts` proves the
+compiled `StyleDesc` per variant/size, the merge order and a no-unsupported
+sweep. The off-grid `label` role adopts `text-sm` (14/20); list rows and stepper
+markers keep density (ADR 0006).
+`[ ]` Convert the remaining Tier 2 components (Toast, Dialog, Popover, Menu,
+Command, and the rest) once this slice proves the model.
 
 ### Design tokens and theming (`tokens-theme`)
 

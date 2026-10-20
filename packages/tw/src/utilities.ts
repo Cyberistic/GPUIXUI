@@ -59,6 +59,15 @@ const ROLE: Readonly<Record<string, keyof ThemeColors>> = {
   skeleton: "skeleton",
   selection: "selection",
   placeholder: "placeholder",
+  // Soft status surfaces the Alert, Badge and Toast tones paint.
+  infoSoft: "infoSoft",
+  infoSoftForeground: "infoSoftForeground",
+  successSoft: "successSoft",
+  successSoftForeground: "successSoftForeground",
+  warningSoft: "warningSoft",
+  warningSoftForeground: "warningSoftForeground",
+  destructiveSoft: "destructiveSoft",
+  destructiveSoftForeground: "destructiveSoftForeground",
 };
 
 /** The literal colours Tailwind writes by name. */
@@ -190,18 +199,24 @@ export const resolveUtility = (
   if (name === "border") return { borderWidth: 1 };
   // shadcn's `--input` is a border role; our tokens' `input` is the field fill.
   if (name === "border-input") return { borderColor: theme.colors.border };
+  if (name === "border-t") return { borderTopWidth: 1 };
   if (name === "outline-none" || name === "outline-hidden") return {};
   if (name === "bg-transparent") return { backgroundColor: "transparent" };
   if (name === "flex" || name === "inline-flex") return { display: "flex" };
   if (name === "grid") return { display: "grid" };
+  if (name === "flex-row") return { flexDirection: "row" };
   if (name === "flex-col") return { flexDirection: "column" };
   if (name === "flex-col-reverse") return { flexDirection: "column-reverse" };
   if (name === "flex-1") return { flexGrow: 1, flexShrink: 1, flexBasis: 0 };
+  if (name === "flex-grow") return { flexGrow: 1 };
   if (name === "items-center") return { alignItems: "center" };
   if (name === "items-start") return { alignItems: "flex-start" };
+  if (name === "items-stretch") return { alignItems: "stretch" };
   if (name === "justify-center") return { justifyContent: "center" };
   if (name === "justify-between") return { justifyContent: "space-between" };
+  if (name === "justify-end") return { justifyContent: "flex-end" };
   if (name === "shrink-0") return { flexShrink: 0 };
+  if (name === "self-start") return { alignSelf: "flex-start" };
   if (name === "w-full") return { width: "100%" };
   if (name === "w-auto") return { width: "auto" };
   if (name === "h-full") return { height: "100%" };
@@ -210,6 +225,9 @@ export const resolveUtility = (
   if (name === "overflow-hidden") return { overflow: "hidden" };
   if (name === "leading-none") return { lineHeight: 1 };
   if (name === "whitespace-nowrap") return { whiteSpace: "nowrap" };
+  if (name === "text-ellipsis") return { textOverflow: "ellipsis" };
+  if (name === "font-sans") return { fontFamily: theme.typography.sans };
+  if (name === "font-mono") return { fontFamily: theme.typography.mono };
   if (name === "select-none") return { userSelect: "none" };
   if (name === "pointer-events-none") return { pointerEvents: "none" };
   if (name === "pointer-events-auto") return { pointerEvents: "auto" };
