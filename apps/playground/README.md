@@ -2565,7 +2565,7 @@ scenario in either registry passed one**. The runtime's base is always
 `Theme::dark()` (`Theme::from_prop(None)`), so a preview or code block inside
 our light palette painted Comet's colours while bounds, painted text and the
 authored style report all stayed green. `surface-theme` /
-`live-surface-theme` (**50 checks each**) mount eleven fixtures on one
+`live-surface-theme` (**55 checks each**) mount eleven fixtures on one
 880 × 580 stage — the themed mount beside its default twin — and read a single
 A/B frame per host:
 
@@ -2580,6 +2580,7 @@ A/B frame per host:
 | `textFaint` | the themed code's gutter numbers carry `placeholder` |
 | plane | `<code>` and `<markdown>` paint **no** surface (their top-right corner is the panel's `card`); `<diff>` **does** paint `theme.bg` |
 | diff tints | the context row is `background` exactly; the added/deleted rows are `diffAdd`/`diffDel` at **5.5 %** over it, and the two differ |
+| `diffHunkBg` | the hunk header paints a **6 %** `mutedForeground` wash over the plane (`#1A1D23`), not the opaque `muted` surface (`#222730`) |
 
 `nativeContentTheme(theme)` (in `surface-theme-model.ts`) is the mapping: every
 colour is a semantic role, every one of the 24 syntax kinds is a role, and
@@ -2588,10 +2589,27 @@ plane and the other surfaces' *absence* distinguishable. `packages/primitives`
 already owns `nativeTextTheme` for inputs; hoisting this beside it is a
 cross-team task (the playground cannot edit that package).
 
-**Not claimed:** `border` (table hairline), `textDim`, `caret`, `codeWash` and
-`diffHunkBg` are mapped and unit-tested but not pixel-sampled; `font_sans` /
-`font_mono` advances are already measured by `font-family` for `<text>`. The
-diff row bands assume the default 36/28/21 metrics.
+**The washes (plan `816`).** `codeWash` and `diffHunkBg` are *fills* whose alpha
+is the point: the runtime paints `code_wash` as a quad behind inline code
+(`markdown/render.rs:362`) and `diff_hunk_bg` as the hunk row's `bg`
+(`diff.rs:546`), with 12 % / 5 % defaults. Mapping both to `muted` — an opaque
+surface — made inline code a solid `#222730` block and the hunk header a solid
+bar. They are now derived with the tokens' `alpha`: `alpha(primary, 0.12)` for
+the token chip and `alpha(mutedForeground, 0.06)` for the chrome band, so the
+dark hunk paints `#1A1D23` and the light one `#ECEFF1`, and a palette move
+carries both. The hunk band is asserted in both hosts; restoring `muted` fails
+`the hunk header paints diffHunkBg over the diff plane` with
+`expected #1a1d23ff, got #222730ff`, and the opaque mapping fails two unit
+guards (`expected '30' to be '1F'`).
+
+**Not claimed:** the inline-code chip's own pixels — its geometry follows the
+runtime's text layout (`INLINE_CODE_PAD_X`/`INSET_Y`), and a glyph-free sample
+point inside it cannot be derived without a new scan, so its translucent value
+is pinned by the mapping test while the hunk band proves the fill mechanism.
+`border` (table hairline), `textDim` and `caret` are mapped and unit-tested but
+not pixel-sampled; `font_sans` / `font_mono` advances are already measured by
+`font-family` for `<text>`. The diff row bands assume the default 36/28/21
+metrics.
 
 ### The modal veil: what the scrim actually paints (plan `791`)
 

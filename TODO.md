@@ -143,7 +143,24 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 149/149 plans-and-harness
+`[x]` `[██████████]` 150/150 plans-and-harness
+
+`[x]` **Make the content-surface washes translucent** per plan `816`:
+      `nativeContentTheme` mapped `codeWash` and `diffHunkBg` to the **opaque**
+      `muted` surface, so inline code painted a solid `#222730` block and the
+      diff hunk header a solid bar — while the runtime paints `code_wash` as the
+      quad behind the run (`markdown/render.rs:362`, 12 % default) and
+      `diff_hunk_bg` as the row's `bg` (`diff.rs:546`, 5 %). Both now derive
+      through the tokens' `alpha`: `alpha(primary, 0.12)` and
+      `alpha(mutedForeground, 0.06)`. The hunk band is frame-measured in both
+      hosts — dark **`#1A1D23`**, light `#ECEFF1` — and the old value fails by
+      name (`expected #1a1d23ff, got #222730ff`, exit `1`); two unit guards
+      failed with `expected '30' to be '1F'`. `surface-theme` and
+      `live-surface-theme` went **50 → 55** checks each; playground tests
+      **635 → 642**; `nub run check`/`lint`/`test` green. The inline-code chip's
+      own pixels stay unsampled (its geometry follows the text layout). Focused
+      ids run: `surface-theme`, `live-surface-theme` (plus the two mutation
+      runs). Plan: `.agents/slop/plans/816-content-surface-washes.md`.
 
 `[x]` **Run the promotion gate on the head that includes the extension guard**
       per plan `812`: the last gate (plan `786`) covered 106 live ids and four
