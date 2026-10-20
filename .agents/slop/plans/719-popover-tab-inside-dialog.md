@@ -218,6 +218,13 @@ Measured after the change (2026-10-20): `Popover 23/26` and `Dialog 21/21`, so
 the two-file run is `3 failed | 44 passed (47)` — the three failures are the
 recorded plan-540 placement cases, unchanged.
 
+The playground smoke registry is GPUix-primitives only (no Tier 2 scenario for
+this component), so the native `TestRenderer` suite is the interaction evidence.
+The modal path this change touches does have two scenarios, both re-run on
+2026-10-20: `nub apps/playground/dist/smoke/run.js --only modal-focus-trap`
+(1/1, `modal=verified`) and `--only overlay-dialog` (1/1,
+`overlay=verified`).
+
 From the repo root:
 
 ```sh
