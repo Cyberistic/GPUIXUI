@@ -393,6 +393,19 @@ retired once both branches are one
       zero/infinite duration; 6 timing + 5 store + 1 stream + 2 native cases
       (Toast 20), two mutation proofs; docs, `COMPONENTS.md` and the inventory
       synced (owner: components)
+    - [x] A toast holds its clock over its own controls — plan 738; measured
+      2026-10-20: resting the pointer on the action control resumed the bar
+      (`380 → 304` over 400 ms) although the pointer was on the card, because GPUix
+      hover is per element and the card saw only its own `onMouseLeave` (the
+      plan-606 rule); the dismiss control held by accident. `ToastCard` now owns a
+      `selfHovered` + member count + focus count through the shared hover group
+      (whose `register` is optional for a surface that needs only crossings), so
+      the action, the dismiss control and the card body all hold the clock and
+      leaving resumes with the remainder; 3 native cases (Toast 20 → 23), plan-738
+      both-direction proof (the action case failed with `266` against `342`) and
+      three mutation proofs (provider removed, member term removed, resume
+      removed); docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
+      (owner: components)
     - [x] The chat composer paints the focus ring — plan 595: measured that an
       `autoFocus` `<textarea>` was the focused element yet painted no
       `boxShadow`, the one focusable part plan 522 never reached. It now seeds
@@ -1511,7 +1524,11 @@ the docs-site workstream; the `packages/components` half is plan 337)
       2026-10-20: `check`, `lint` and `test` exit 0 (unit 488 in 46 files), and
       the full native suite is **919 passed / 28 failed of 947** — the four new
       combobox keyboard cases all pass and the remaining failures are the same
-      plan-540 binding classes.
+      plan-540 binding classes. Plan 738 re-ran all three gates on 2026-10-20:
+      `check`, `lint` and `test` exit 0 (unit 488 in 46 files), and the full
+      native suite is **922 passed / 28 failed of 950** — the three new toast
+      hover cases pass and the remaining failures are the same plan-540
+      classes.
 
 ## Swarm-owned blockers (fix these)
 

@@ -26,8 +26,9 @@ import {
 export interface HoverGroup {
   readonly enter: () => void;
   readonly leave: () => void;
-  /** Register a focusable member's host id; returns its unregister. */
-  readonly register: (id: number) => () => void;
+  /** Register a focusable member's host id; a surface that needs no ids omits
+   *  it, because only a row that hands focus on has to read them back. */
+  readonly register?: (id: number) => () => void;
 }
 
 /** Provided by a surface that tracks its own children's hover. */
@@ -62,7 +63,7 @@ export const useHoverGroupMember = (
 
   useLayoutEffect(() => {
     if (group === null || instance === undefined) return;
-    return group.register(instance);
+    return group.register?.(instance);
   }, [group, instance]);
 
   if (group === null) {

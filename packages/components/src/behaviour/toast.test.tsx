@@ -362,6 +362,74 @@ describe("Toast", () => {
     page.unmount();
   });
 
+  it("holds the auto-dismiss clock while the pointer is on the toast's action", async () => {
+    const page = renderComponent(
+      <Harness duration={Duration.seconds(2)} onAction={() => undefined} />,
+    );
+
+    clickCentreOf(page, "push-action");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
+
+    hoverCentreOf(page, "toast-action");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await settle();
+    const held = progressWidth(page);
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    expect(progressWidth(page)).toBe(held);
+
+    page.unmount();
+  });
+
+  it("holds the auto-dismiss clock while the pointer is on the dismiss control", async () => {
+    const page = renderComponent(<Harness duration={Duration.seconds(2)} />);
+
+    clickCentreOf(page, "push");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
+
+    hoverCentreOf(page, "toast-dismiss");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await settle();
+    const held = progressWidth(page);
+
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    expect(progressWidth(page)).toBe(held);
+
+    page.unmount();
+  });
+
+  it("resumes the auto-dismiss clock after the pointer leaves the action", async () => {
+    const page = renderComponent(
+      <Harness duration={Duration.seconds(2)} onAction={() => undefined} />,
+    );
+
+    clickCentreOf(page, "push-action");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await settle();
+
+    hoverCentreOf(page, "toast-action");
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await settle();
+    const held = progressWidth(page);
+
+    hoverCentreOf(page, "elsewhere");
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await settle();
+
+    expect(progressWidth(page)).toBeLessThan(held);
+
+    page.unmount();
+  });
+
   it("paints a shrinking bar that holds while the pointer rests on the card", async () => {
     const page = renderComponent(<Harness duration={Duration.seconds(2)} />);
 

@@ -14,8 +14,16 @@ import { toastMotion } from "@gpuixui/tw";
 import { Match } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Button, IconButton } from "../internal/button.js";
+import { HoverGroupContext, type HoverGroup } from "../internal/hover-group.js";
 import { MotionSurface, motionProps } from "../internal/motion.js";
 import {
   elevationShadow,
@@ -62,7 +70,39 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const theme = useTheme();
   const { dismiss, pause, resume, actionFor, timingFor } = useToast();
   const palette = tone(theme, asTone(toast.tone));
-  const held = useRef({ hover: false, focus: 0, paused: false });
+  // A control's hover cancels the card's own crossing (plan 606), so the
+  // controls report theirs through the group; either source holds the clock.
+  const held = useRef({ self: false, members: 0, focus: 0, paused: false });
+  const syncHold = useCallback((): void => {
+    const { self, members, focus } = held.current;
+    const after = self || members > 0 || focus > 0;
+    if (after === held.current.paused) return;
+    held.current.paused = after;
+    if (after) pause(toast.id);
+    else resume(toast.id);
+  }, [pause, resume, toast.id]);
+  const hoverGroup = useMemo<HoverGroup>(
+    () => ({
+      enter: () => {
+        held.current.members += 1;
+        syncHold();
+      },
+      leave: () => {
+        held.current.members = Math.max(0, held.current.members - 1);
+        syncHold();
+      },
+    }),
+    [syncHold],
+  );
+  const setSelfHover = (value: boolean): void => {
+    held.current.self = value;
+    syncHold();
+  };
+  /** Two controls can hold focus; a count keeps moving between them held. */
+  const setFocus = (value: boolean): void => {
+    held.current.focus = Math.max(0, held.current.focus + (value ? 1 : -1));
+    syncHold();
+  };
   const published = Option.match(timingFor(toast.id), {
     onNone: () => undefined,
     onSome: (timing) => timing,
@@ -80,26 +120,6 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
     return () => clearInterval(interval);
   }, [published]);
 
-  /** Pause while either reason holds; resume only when the last one leaves. */
-  const syncHold = (): void => {
-    const after = held.current.hover || held.current.focus > 0;
-    if (after === held.current.paused) return;
-    held.current.paused = after;
-    if (after) pause(toast.id);
-    else resume(toast.id);
-  };
-
-  const setHover = (value: boolean): void => {
-    held.current.hover = value;
-    syncHold();
-  };
-
-  /** Two controls can hold focus; a count keeps moving between them held. */
-  const setFocus = (value: boolean): void => {
-    held.current.focus = Math.max(0, held.current.focus + (value ? 1 : -1));
-    syncHold();
-  };
-
   const action = Option.flatMap(toast.action, (candidate) =>
     Option.map(actionFor(toast.id), (onSelect) => ({
       candidate,
@@ -115,137 +135,143 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   });
 
   return (
-    <div
-      role="status"
-      aria-label={accessibleName}
-      testId={`toast-${toast.id}`}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        position: "relative",
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "flex-start",
-        width: CARD_WIDTH,
-        backgroundColor: theme.colors.popover,
-        color: theme.colors.popoverForeground,
-        borderWidth: theme.borderWidth.thin,
-        borderColor: theme.colors.border,
-        borderRadius: theme.radius.md,
-        boxShadow: elevationShadow(theme, "md"),
-        overflow: "hidden",
-        pointerEvents: "auto",
-      }}
-    >
+    <HoverGroupContext.Provider value={hoverGroup}>
       <div
-        style={{ width: 3, alignSelf: "stretch", backgroundColor: palette.fg }}
-      />
-      <div
+        role="status"
+        aria-label={accessibleName}
+        testId={`toast-${toast.id}`}
+        onMouseEnter={() => setSelfHover(true)}
+        onMouseLeave={() => setSelfHover(false)}
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "row",
           alignItems: "flex-start",
-          gap: theme.spacing.lg,
-          flexGrow: 1,
-          padding: theme.spacing.lg,
+          width: CARD_WIDTH,
+          backgroundColor: theme.colors.popover,
+          color: theme.colors.popoverForeground,
+          borderWidth: theme.borderWidth.thin,
+          borderColor: theme.colors.border,
+          borderRadius: theme.radius.md,
+          boxShadow: elevationShadow(theme, "md"),
+          overflow: "hidden",
+          pointerEvents: "auto",
         }}
       >
-        <Icon
-          name={toneIcon(toast.tone)}
-          color={palette.fg}
-          size="md"
-          label={toast.tone}
+        <div
+          style={{
+            width: 3,
+            alignSelf: "stretch",
+            backgroundColor: palette.fg,
+          }}
         />
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing["2xs"],
+            flexDirection: "row",
+            alignItems: "flex-start",
+            gap: theme.spacing.lg,
             flexGrow: 1,
-            minWidth: 0,
+            padding: theme.spacing.lg,
           }}
         >
-          <text
+          <Icon
+            name={toneIcon(toast.tone)}
+            color={palette.fg}
+            size="md"
+            label={toast.tone}
+          />
+          <div
             style={{
-              ...textStyle(theme, "bodyStrong"),
-              color: theme.colors.popoverForeground,
+              display: "flex",
+              flexDirection: "column",
+              gap: theme.spacing["2xs"],
+              flexGrow: 1,
+              minWidth: 0,
             }}
           >
-            {toast.title}
-          </text>
-          {Option.match(toast.description, {
+            <text
+              style={{
+                ...textStyle(theme, "bodyStrong"),
+                color: theme.colors.popoverForeground,
+              }}
+            >
+              {toast.title}
+            </text>
+            {Option.match(toast.description, {
+              onNone: () => null,
+              onSome: (description) => (
+                <text
+                  style={{
+                    ...textStyle(theme, "caption"),
+                    color: theme.colors.mutedForeground,
+                  }}
+                >
+                  {description}
+                </text>
+              ),
+            })}
+          </div>
+          {Option.match(action, {
             onNone: () => null,
-            onSome: (description) => (
-              <text
-                style={{
-                  ...textStyle(theme, "caption"),
-                  color: theme.colors.mutedForeground,
+            onSome: ({ candidate, onSelect }) => (
+              <Button
+                size="sm"
+                variant="secondary"
+                testId="toast-action"
+                onClick={() => {
+                  onSelect();
+                  dismiss(toast.id);
                 }}
+                onFocus={() => setFocus(true)}
+                onBlur={() => setFocus(false)}
               >
-                {description}
-              </text>
+                {candidate.label}
+              </Button>
             ),
           })}
+          <IconButton
+            label="Dismiss"
+            size="sm"
+            testId="toast-dismiss"
+            onClick={() => dismiss(toast.id)}
+            onFocus={() => setFocus(true)}
+            onBlur={() => setFocus(false)}
+          >
+            <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
+          </IconButton>
         </div>
-        {Option.match(action, {
+        {Option.match(shown, {
           onNone: () => null,
-          onSome: ({ candidate, onSelect }) => (
-            <Button
-              size="sm"
-              variant="secondary"
-              testId="toast-action"
-              onClick={() => {
-                onSelect();
-                dismiss(toast.id);
-              }}
-              onFocus={() => setFocus(true)}
-              onBlur={() => setFocus(false)}
-            >
-              {candidate.label}
-            </Button>
-          ),
-        })}
-        <IconButton
-          label="Dismiss"
-          size="sm"
-          testId="toast-dismiss"
-          onClick={() => dismiss(toast.id)}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
-        >
-          <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
-        </IconButton>
-      </div>
-      {Option.match(shown, {
-        onNone: () => null,
-        onSome: (timing) =>
-          timing.totalMs <= 0 ? null : (
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                bottom: 0,
-                width: "100%",
-                height: 2,
-                backgroundColor: theme.colors.muted,
-                pointerEvents: "none",
-              }}
-            >
+          onSome: (timing) =>
+            timing.totalMs <= 0 ? null : (
               <div
-                testId={`toast-${toast.id}-progress`}
                 style={{
-                  width: Math.round(
-                    (progressPercent(timing) / 100) * CARD_WIDTH,
-                  ),
+                  position: "absolute",
+                  left: 0,
+                  bottom: 0,
+                  width: "100%",
                   height: 2,
-                  backgroundColor: palette.fg,
+                  backgroundColor: theme.colors.muted,
                   pointerEvents: "none",
                 }}
-              />
-            </div>
-          ),
-      })}
-    </div>
+              >
+                <div
+                  testId={`toast-${toast.id}-progress`}
+                  style={{
+                    width: Math.round(
+                      (progressPercent(timing) / 100) * CARD_WIDTH,
+                    ),
+                    height: 2,
+                    backgroundColor: palette.fg,
+                    pointerEvents: "none",
+                  }}
+                />
+              </div>
+            ),
+        })}
+      </div>
+    </HoverGroupContext.Provider>
   );
 };
 
