@@ -569,6 +569,7 @@ describe("group roots and overlays", () => {
       onKey: vi.fn(),
       onPick: vi.fn(),
       registerCell: () => () => {},
+      onSubmit: vi.fn(),
     };
     const element = renderOtpField(
       { style: record.style, disabled: true, invalid: true },
@@ -960,6 +961,7 @@ describe("per-item style", () => {
       onKey: vi.fn(),
       onPick: vi.fn(),
       registerCell: () => () => {},
+      onSubmit: vi.fn(),
     };
     const element = renderOtpField(
       { length: 3, cellStyle: record.style },

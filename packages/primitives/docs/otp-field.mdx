@@ -58,6 +58,28 @@ reports the new code, including a correction made inside a code that was already
 full. That is what lets the usual `onComplete={(code) => verify(code)}` verify a
 mistyped digit again without the user clearing a cell first (plan `360`).
 
+## Submit
+
+Unlike `TextArea` — where Enter is the newline — a one-time code has no newline
+to lose, so Enter is the platform's submit gesture on any cell (the `Input` and
+`NumberField` rule, plans `046`/`339`). `onSubmit` reports **the code the field
+holds**, not the cell's raw event: every other callback here speaks one string,
+and which cell reported it is an implementation detail.
+
+```tsx
+<OTPField
+  label="Verification code"
+  onValueChange={setCode}
+  onSubmit={(code) => verify(code)}
+/>
+```
+
+A partial code is submitted as it stands — the field does not validate, exactly
+as `onValueChange` reports partial codes — so the caller decides whether `12` is
+worth sending. A `readOnly` field still submits the code it is showing, while a
+`disabled` field reports nothing: it is inert on every path. Enter does not move
+the caret or the cell.
+
 ## Read-only
 
 `readOnly` shows a code without allowing an edit: every cell is visible, the
@@ -80,6 +102,7 @@ order entirely (plan `786`).
 | `defaultValue` | `string` | — | initial code when uncontrolled |
 | `onValueChange` | `(value: string) => void` | — | the code after every edit that changed it |
 | `onComplete` | `(value: string) => void` | — | fires after an edit that leaves the code full, with the new code |
+| `onSubmit` | `(value: string) => void` | — | Enter in any cell, with the code the field holds; a partial code is submitted as it stands, a `readOnly` field still submits, and a `disabled` one reports nothing (plan `805`). The payload is the code, not the cell's event |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: every cell is the field's square (`h-9`, 36 × 36) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
 | `readOnly` | `boolean` | `false` | visible and focusable, but no cell accepts typing, paste, Backspace or an arrow; one tab stop remains on the first cell (plan `786`) |
@@ -101,6 +124,7 @@ order entirely (plan `786`).
 | `Home` / `End` | first / last cell |
 | `Backspace` | deletes the current character; in an empty cell, clears the one before and moves there |
 | `Delete` | deletes the current character (native) |
+| `Enter` | reports the code to `onSubmit`; the caret and the cell stay put |
 
 The field is **one tab stop**, not `length` stops (plan `076`): Tab enters where
 typing continues and the next Tab leaves the code, so a form does not appear to
@@ -218,8 +242,9 @@ or `filled`.
   (first empty cell, last cell when full, nonsense lengths).
 - `src/components/OTPField.test.tsx` — `length` named inputs, per-cell handlers,
   click-to-pick, autoFocus on the first cell, one ring, destructive borders,
-  square geometry, disabled guards, and **exactly one `tabIndex={0}`** on the
-  first empty / focused cell.
+  square geometry, disabled guards, the submit handler on every cell (present
+  while read-only, absent while disabled), and **exactly one `tabIndex={0}`** on
+  the first empty / focused cell.
 - `runtime/otp.runtime.test.tsx` — six digits **typed one at a time** fill six
   cells and complete once; a correction inside a full code reports the new code
   again and a half-deleted code reports nothing (plan `360`); focus advances and moves back with the arrow keys;
@@ -227,7 +252,9 @@ or `filled`.
   filled one; the a11y tree has a `Group` and six `TextInput`s; invalid paints
   every cell; one ring, painted from mount with `autoFocus`; disabled refuses
   input and leaves the tab order; **Tab enters the code once and leaves it**
-  (plan `076`). Measured 2026-10-17 (plans 054 §9, 064 §6 and 076 §7).
+  (plan `076`); Enter reports the code to `onSubmit` — full, partial, read-only
+  and disabled (plan `805`). Measured 2026-10-17 (plans 054 §9, 064 §6 and 076
+  §7), 2026-10-21 (plan `805`).
 - `runtime/otp-paste.runtime.test.tsx` — the real clipboard path: a copied
   six-digit code fills every cell from one paste, with one `onValueChange`, one
   `onComplete` and focus on the last cell; a separator is dropped; an over-long

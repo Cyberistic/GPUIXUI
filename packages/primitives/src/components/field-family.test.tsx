@@ -80,6 +80,7 @@ const otpHandlers: OTPFieldHandlers = {
   onKey: vi.fn(),
   onPick: vi.fn(),
   registerCell: () => () => {},
+  onSubmit: vi.fn(),
 };
 const numberHandlers: NumberFieldHandlers = {
   onTextChange: vi.fn(),

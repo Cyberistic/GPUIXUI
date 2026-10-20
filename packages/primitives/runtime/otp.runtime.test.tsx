@@ -332,3 +332,89 @@ it("refuses input and leaves the tab order while disabled", async () => {
     Option.exists(runtime.focused(), (id) => id.startsWith("otp-cell")),
   ).toBe(false);
 });
+
+it("reports the code on Enter, so a code step submits from the keyboard", async () => {
+  // The gap guarded (plan 805): `OTPField` was the one single-line field with
+  // no submit path, while `Input` and `NumberField` both report Enter. A single
+  // line `<input>` consumes Enter's key down and reports the host's `submit`
+  // (measured, plan 339), so the cell now forwards it with the code.
+  const field = recorder();
+  const submits: string[] = [];
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      autoFocus
+      onValueChange={field.onValueChange}
+      onComplete={field.onComplete}
+      onSubmit={(code) => submits.push(code)}
+    />,
+  );
+  Arr.forEach(["1", "2", "3", "4", "5", "6"], (digit) => runtime.type(digit));
+  expect(field.complete).toStrictEqual(["123456"]);
+  runtime.keyDown("otp-cell-6", "enter");
+  runtime.keyUp("otp-cell-6", "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual(["123456"]);
+  // Enter is not a second `onComplete`, and it does not move the caret.
+  expect(field.complete).toStrictEqual(["123456"]);
+  expect(focusedId(runtime)).toBe("otp-cell-6");
+});
+
+it("submits a partial code as it stands", async () => {
+  // The field does not validate: a caller may submit a form before every cell
+  // is filled, exactly as `onValueChange` reports partial codes.
+  const submits: string[] = [];
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      autoFocus
+      onSubmit={(code) => submits.push(code)}
+    />,
+  );
+  runtime.type("1");
+  runtime.type("2");
+  runtime.keyDown("otp-cell-3", "enter");
+  runtime.keyUp("otp-cell-3", "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual(["12"]);
+});
+
+it("reports no submit while disabled", async () => {
+  const submits: string[] = [];
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verification code"
+      disabled
+      defaultValue="123456"
+      onSubmit={(code) => submits.push(code)}
+    />,
+  );
+  runtime.keyDown("otp-cell-1", "enter");
+  runtime.keyUp("otp-cell-1", "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual([]);
+});
+
+it("still submits the code it shows while read-only", async () => {
+  // `readOnly` is the review state, not a disabled one: it refuses edits but a
+  // form may submit the code the field is showing, like `NumberField` (339).
+  const submits: string[] = [];
+  const runtime = await mount(
+    <OTPField
+      testId="otp"
+      label="Verified code"
+      readOnly
+      autoFocus
+      defaultValue="123456"
+      onSubmit={(code) => submits.push(code)}
+    />,
+  );
+  expect(focusedId(runtime)).toBe("otp-cell-1");
+  runtime.keyDown("otp-cell-1", "enter");
+  runtime.keyUp("otp-cell-1", "enter");
+  runtime.flush();
+  expect(submits).toStrictEqual(["123456"]);
+});

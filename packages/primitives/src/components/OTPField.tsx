@@ -96,6 +96,20 @@ export interface OTPFieldProps {
    * reports nothing here.
    */
   readonly onComplete?: (value: string) => void;
+  /**
+   * Enter in any cell, with the code the field holds.
+   *
+   * A single-line `<input>` consumes Enter's key down and reports it as the
+   * host's `submit` (the `NumberField` rule, plan `339`), so a code step can be
+   * finished from the keyboard instead of reaching for another control. The
+   * payload is the **code**, not the cell's event: every other callback here
+   * speaks one string, and the cell that reported it is an implementation
+   * detail. A partial code is submitted as it stands — the caller decides
+   * whether it is complete, exactly as it does for `onValueChange`. A
+   * `readOnly` field still submits the code it shows; a `disabled` one is inert
+   * on every path (plan `805`).
+   */
+  readonly onSubmit?: (value: string) => void;
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   /** Read-only, out of the tab order and inert. */
@@ -137,6 +151,8 @@ export interface OTPFieldHandlers {
   readonly onKey: (index: number, key: string) => void;
   /** Point native focus at a cell — a click on an empty cell lands on the code. */
   readonly onPick: (index: number) => void;
+  /** Enter in a cell: report the code the field holds (plan `805`). */
+  readonly onSubmit: () => void;
   readonly registerCell: (
     index: number,
   ) => (instance: PublicInstance | null) => void;
@@ -232,6 +248,12 @@ export const renderOtpField = (
             if (inert) return;
             handlers.onKey(index, event.key ?? "");
           }}
+          onSubmit={
+            // Enter is the platform's submit gesture, not an edit: a read-only
+            // field still submits the code it shows, while a disabled field is
+            // inert on every path and carries no submit at all (plan `805`).
+            disabled ? undefined : () => handlers.onSubmit()
+          }
           onClick={() => {
             if (inert) return;
             handlers.onPick(index);
@@ -360,6 +382,7 @@ export const OTPField = (props: OTPFieldProps): ReactElement => {
       focusCell(
         Math.min(index, normalizeOtp(state.value.current, limit).length),
       ),
+    onSubmit: () => props.onSubmit?.(state.value.current),
     registerCell: (index) => (instance) => {
       if (instance === null) cellIds.current.delete(index);
       else cellIds.current.set(index, instance.id);

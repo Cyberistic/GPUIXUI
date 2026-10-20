@@ -3,8 +3,9 @@
  *
  * The code is caller-owned state, the field only reports it, and the action
  * that consumes it is a real button with a real failure path: the demo accepts
- * `123456`, and anything else paints the field invalid. A code field that has
- * never been wired to a submit step proves nothing.
+ * `123456`, and anything else paints the field invalid. Enter submits the same
+ * way (the field's `onSubmit`), so the flow is not pointer-only. A code field
+ * that has never been wired to a submit step proves nothing.
  */
 
 import { useState, type ReactElement } from "react";
@@ -20,6 +21,8 @@ export const OtpExample = (): ReactElement => {
     "idle",
   );
   const complete = code.length === DEMO_CODE.length;
+  const verify = (next: string): void =>
+    setStatus(next === DEMO_CODE ? "verified" : "rejected");
 
   return (
     <Box
@@ -60,6 +63,9 @@ export const OtpExample = (): ReactElement => {
               if (status === "rejected") setStatus("idle");
             }}
             onComplete={() => setStatus("idle")}
+            onSubmit={(next) => {
+              if (next.length === DEMO_CODE.length) verify(next);
+            }}
             invalid={status === "rejected"}
             size="lg"
             autoFocus
@@ -71,9 +77,7 @@ export const OtpExample = (): ReactElement => {
             testId="otp-example-verify"
             variant="primary"
             disabled={!complete}
-            onActivate={() =>
-              setStatus(code === DEMO_CODE ? "verified" : "rejected")
-            }
+            onActivate={() => verify(code)}
           >
             Verify
           </Button>
@@ -101,7 +105,7 @@ export const OtpExample = (): ReactElement => {
             : status === "rejected"
               ? "That code does not match. Try 123456."
               : complete
-                ? "Code complete — press Verify."
+                ? "Code complete — press Enter or Verify."
                 : `${DEMO_CODE.length - code.length} digits to go.`}
         </Text>
       </Stack>

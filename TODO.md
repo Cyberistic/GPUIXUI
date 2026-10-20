@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 174/174
+`[x]` `[████████████]` 175/175
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2734,6 +2734,20 @@ retired once both branches are one
       stay out. Offline 75 files / 1060 tests, the new native file 7/7, nine
       scoped files 164/164, full runtime 78 files / 992 tests, six mutation
       rounds failing their named case (plan `804`).
+
+`[x]` `packages/primitives`: **`OTPField` could not be submitted from the
+      keyboard** — `Input` and `NumberField` report Enter (the platform's submit
+      gesture on a single-line `<input>`, plan `339`), `TextArea` deliberately
+      does not, and `OTPField` had no submit path at all: the only way to finish
+      a code step was a pointer press on a separate button, which the example
+      itself taught ("Code complete — press Verify."). Every cell now forwards
+      the host's `submit` as `onSubmit(code)` — the code, not the cell's event,
+      because the part speaks one string. A partial code is submitted as it
+      stands, a `readOnly` field still submits the code it shows, a `disabled`
+      one carries no submit at all, and Enter moves neither the caret nor the
+      cell. 2 element + 4 runtime + 1 example case, four mutations failing their
+      named case; offline 75 files / 1062 tests, `otp` 17/17, examples 20/20
+      (plan `805`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

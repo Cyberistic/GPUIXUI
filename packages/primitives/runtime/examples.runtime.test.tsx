@@ -297,8 +297,23 @@ it("verifies the one-time-code example and repaints its status", async () => {
   renderExample(runtime, "otp");
   expect(runtime.allText()).toContain("6 digits to go.");
   Arr.forEach(["1", "2", "3", "4", "5", "6"], (digit) => runtime.type(digit));
-  expect(runtime.allText()).toContain("Code complete — press Verify.");
+  expect(runtime.allText()).toContain("Code complete — press Enter or Verify.");
   runtime.click("otp-example-verify");
+  expect(
+    Arr.some(runtime.allText(), (line) => line.startsWith("Verified.")),
+  ).toBe(true);
+});
+
+it("verifies the one-time-code example from the keyboard", async () => {
+  // The gap guarded (plan 805): the example's only submit path was a pointer
+  // press on a separate button, so a code step could not be finished from the
+  // keyboard. The field's `onSubmit` now answers Enter and the example uses it.
+  const runtime = await openWindow();
+  renderExample(runtime, "otp");
+  Arr.forEach(["1", "2", "3", "4", "5", "6"], (digit) => runtime.type(digit));
+  runtime.keyDown("otp-example-code-cell-6", "enter");
+  runtime.keyUp("otp-example-code-cell-6", "enter");
+  runtime.flush();
   expect(
     Arr.some(runtime.allText(), (line) => line.startsWith("Verified.")),
   ).toBe(true);

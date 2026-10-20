@@ -44,6 +44,7 @@ const handlers = (over: Partial<OTPFieldHandlers> = {}): OTPFieldHandlers => ({
   onKey: vi.fn(),
   onPick: vi.fn(),
   registerCell: () => () => {},
+  onSubmit: vi.fn(),
   ...over,
 });
 
@@ -235,5 +236,39 @@ describe("OTPField", () => {
     expect(onEdit).toHaveBeenCalledTimes(0);
     expect(onKey).toHaveBeenCalledTimes(0);
     expect(onPick).toHaveBeenCalledTimes(0);
+  });
+
+  it("carries Enter on every cell, because a code step submits from the keyboard", () => {
+    // The gap guarded (plan 805): `OTPField` was the one single-line field with
+    // no submit path, so a code step could only be finished with a pointer on a
+    // separate button. The platform reports Enter as the host's `submit`.
+    const onSubmit = vi.fn();
+    const element = render({ length: 4 }, "12", idle, { onSubmit });
+    cellsOf(element).forEach((_input, index) => {
+      expectSome(hostHandler(cell(element, index), "onSubmit"))({
+        elementId: 0,
+        eventType: "submit",
+      });
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(4);
+  });
+
+  it("carries the submit handler on a read-only field, and none while disabled", () => {
+    const onSubmit = vi.fn();
+    const readOnly = render({ length: 3, readOnly: true }, "123", idle, {
+      onSubmit,
+    });
+    expectSome(hostHandler(cell(readOnly, 0), "onSubmit"))({
+      elementId: 0,
+      eventType: "submit",
+    });
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const disabled = render({ length: 3, disabled: true }, "123", idle, {
+      onSubmit,
+    });
+    expect(hostHandler(cell(disabled, 0), "onSubmit")).toStrictEqual(
+      Option.none(),
+    );
+    expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 });
