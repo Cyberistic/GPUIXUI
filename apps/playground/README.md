@@ -703,7 +703,7 @@ the pointer, then repeats it on a row inside a scrolled container. What holds:
 | right click on the trigger | `mouseDown(button 2)` → `auxClick` → `mouseUp`; `isRightClick` is `true` and the payload carries **window coordinates** (`100,50` at the element centre) |
 | `auxClick` payload | **no `button`** (`undefined`); guard on `isRightClick`, never `button === 2` |
 | `onClick` for a right click | **never fires** — `onClick` is primary-only |
-| a right click on a child | bubbles to the trigger, so a row's label can carry the gesture |
+| a right click on a child | is delivered to the trigger (the painted hit target, plan `724`), so a row's label can carry the gesture |
 | `<anchored position={pointer}>` | exact — 180×110 at exactly the pointer point |
 | outside press / Escape | both dismiss; the outside element receives the press first |
 | `shift-f10` | arrives as `key=f10` with `modifiers.shift`; the surface auto-focuses; Escape returns focus to the trigger |
@@ -1365,7 +1365,7 @@ surface. 55 checks; live twin `live-editor` (19 checks).
 | geometry | pane A `420`, divider `6`, pane B after it; each pane is a 28 px tab strip over a 372 px viewport |
 | independent scroll | a `-200` wheel pans pane A only; pane B stays at 0 and the readout agrees |
 | panning | the code box moves by exactly `-200` and its height does not change — the viewport pans the surface, it does not re-lay it out |
-| focus and activation | a click lands on the `<code>` child, bubbles to the viewport, makes `active=b` and puts native focus on `editor-b-viewport` |
+| focus and activation | a click on the `<code>` reaches the viewport — the painted hit target, not a bubble (plan `724`) — makes `active=b` and puts native focus on `editor-b-viewport` |
 | tab swap | `util` paints `helper0`, stops painting `alpha0`, leaves pane B's document alone, and starts the new document at the top |
 | resize | a `+80` divider drag sets `500`; pane A and its code paint `500`, pane B's code `354`, and no offset moves |
 | keyboard | `End` clamps at `560`; the divider is an AccessKit `Splitter` with `aria-valuetext="560px"`; the two surfaces are `TextInput`s named `Editor A`/`Editor B` |
@@ -1623,7 +1623,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-roving-focus` | the roving-tabindex model in a window: a click + Down move native focus and the index, Enter activates, a component-owned `renderer.focusElement` reaches a never-clicked row and the next key lands there; a real `-1200` wheel moves the virtual anchor, unpaints a previously painted row and leaves native focus on `vrow-3`, which stays painted and still receives the next Down; scrolling back restores the path — 28 checks (plan `637`). **Measured:** focusing a virtual row already reveals it, so the pre-wheel anchor is `3`; the check uses the anchor, not row 0 |
 | `live-tab-focus` | the tab strip's focus model in a window: a synthetic `tab` key reaches the focused tab but does not traverse (so the live tab-order proof uses the renderer's own `focusNext`), nine traversal steps reach the last clipped tab with the strip's offset unchanged (focus does not reveal), one more leaves the strip, the roving strip is one stop, and End/Home move selection, focus and the reveal — 18 checks (plan `565`) |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
-| `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
+| `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click reaches the trigger (the painted hit target, plan `724`), and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
 | `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) — 22 checks (plan `715`). The drag is **held** mid-gesture to read the drop indicator's pixels: `primary` at the bar and over the tab strip, `card`/`muted` beside it; a second held gesture over the left pane reads the centre zone's `18 %` wash (`#33364C`) and its removal, and a release outside every pane drops nothing |
 | `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
