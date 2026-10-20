@@ -420,8 +420,8 @@ phrase, never by a word inside it) and the two tests that guard it.
 - `nub run check` — exit `0` (test-quality checker, lint, format, every
   workspace's types).
 - `nub run test` — docs 122 / 1 117 and primitives 25 / 282, green.
-- `nub run smoke:a11y` — the new page's two tables are audited with every other
-  page in both schemes (result recorded in the commit).
+- `nub run smoke:a11y` — 104 pages × 2 schemes, 0 violations, exit `0`; the
+  new page's two tables are audited with every other page.
 
 **Two-direction proofs (each run, then reverted):**
 
