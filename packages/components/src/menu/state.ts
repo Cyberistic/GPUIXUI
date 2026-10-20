@@ -34,7 +34,10 @@ export interface MenuRow extends MenuItemSpec {
 }
 
 /** Why a menu closed, which decides where focus goes afterwards. */
-export type MenuCloseReason = "activate" | "dismiss" | "outside" | "leave";
+export type MenuCloseReason = "activate" | "dismiss" | "outside";
+
+/** Where a `Tab` that left a menu continues from its trigger. */
+export type LeaveDirection = "next" | "previous";
 
 /** The rules a menu part follows; throws outside a menu content. */
 export interface MenuContextValue {
@@ -56,9 +59,14 @@ export interface MenuContextValue {
   readonly activateActive: () => void;
   /**
    * Close the menu. `activate` and `dismiss` return focus to the trigger;
-   * `leave` (Tab) and `outside` (a press elsewhere) leave focus where it went.
+   * `outside` (a press elsewhere) leaves focus where it went.
    */
   readonly close: (reason: MenuCloseReason) => void;
+  /**
+   * `Tab` left the menu: close every level and continue in app order from the
+   * trigger, so focus never stays on a row that is being unmounted.
+   */
+  readonly leave: (direction: LeaveDirection) => void;
   /**
    * Close the submenu opened from this menu, if one is open. Silent: the pointer
    * is already where the user put it, so focus must not move.
@@ -102,11 +110,12 @@ const upsert = (
 };
 
 /**
- * The menu's registry and highlight. `close` belongs to the root, because only it
- * knows which surface is open.
+ * The menu's registry and highlight. `close` and `leave` belong to the root,
+ * because only it knows which surface is open and where its trigger is.
  */
 export const useMenuState = (
   close: (reason: MenuCloseReason) => void,
+  leave: (direction: LeaveDirection) => void,
 ): MenuContextValue => {
   const renderer = useGpuix().renderer;
   const [rows, setRows] = useState<ReadonlyArray<MenuRow>>([]);
@@ -204,6 +213,7 @@ export const useMenuState = (
       typeahead,
       activateActive,
       close,
+      leave,
       closeSubmenu,
       claimSubmenu,
     }),
@@ -214,6 +224,7 @@ export const useMenuState = (
       close,
       closeSubmenu,
       focusRow,
+      leave,
       noteFocus,
       register,
       rows,

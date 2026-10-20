@@ -19,7 +19,7 @@ import { mergeStyles } from "@gpuix/react/floating";
 import { Match, pipe } from "effect";
 import * as Option from "effect/Option";
 import { createContext, type ReactNode, type RefObject } from "react";
-import { isEventClaimed } from "../internal/event-claim.js";
+import { claimEvent, isEventClaimed } from "../internal/event-claim.js";
 import { dismissTopLayer } from "../internal/dismiss-layer.js";
 import {
   isActivation,
@@ -91,8 +91,13 @@ export const menuKeyHandler = (
             Match.when(isDismiss, (value) => {
               dismissTopLayer(value);
             }),
-            // A menu is not modal: Tab closes it and lets focus move on.
-            Match.when(isTab, () => menu.close("leave")),
+            // A menu is not modal: Tab closes it and continues from the trigger,
+            // because no enclosing surface can resolve a row the close unmounts
+            // (plan 722).
+            Match.when(isTab, (value) => {
+              claimEvent(value);
+              menu.leave(value.modifiers?.shift === true ? "previous" : "next");
+            }),
             Match.orElse(() => undefined),
           ),
       }),

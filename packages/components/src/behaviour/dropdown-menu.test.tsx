@@ -53,6 +53,7 @@ import * as Option from "effect/Option";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef, useState, type Ref } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
@@ -467,6 +468,66 @@ const RightEdgeSubmenu = ({
 /** Focus the trigger, as Tab would. */
 const focusTrigger = (root: ComponentTestRoot): void => {
   root.renderer.focusElement(root.renderer.findByTestId("trigger")?.id ?? -1);
+};
+
+/**
+ * A menu between two app controls, bare or inside a dialog, so a tab-out has a
+ * control on each side to continue to.
+ */
+const Framed = ({
+  inDialog = false,
+  withSubmenu = false,
+  open,
+  onOpenChange,
+}: {
+  readonly inDialog?: boolean;
+  readonly withSubmenu?: boolean;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+}) => {
+  const menu = (
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+      <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+      <DropdownMenuContent testId="menu" label="File actions">
+        <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+          Rename
+        </DropdownMenuItem>
+        {withSubmenu ? (
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger testId="share">
+              Share
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent testId="submenu" label="Share">
+              <DropdownMenuItem testId="copy-link" onSelect={() => undefined}>
+                Copy link
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+  const body = (
+    <>
+      <Button testId="before">Before</Button>
+      {menu}
+      <Button testId="after">After</Button>
+    </>
+  );
+  return inDialog ? (
+    <Dialog open onOpenChange={() => undefined}>
+      <DialogContent label="File actions" testId="dialog">
+        <DialogTitle>File actions</DialogTitle>
+        {body}
+      </DialogContent>
+    </Dialog>
+  ) : (
+    <div
+      style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+    >
+      {body}
+    </div>
+  );
 };
 
 describe("DropdownMenu", () => {
@@ -1487,5 +1548,80 @@ describe("Menu groups", () => {
     ).toBe("Caller");
 
     menu.unmount();
+  });
+});
+
+describe("Tab leaves the menu", () => {
+  it("closes on Tab and continues with the control after the trigger", () => {
+    const menu = renderComponent(<Framed />);
+    focusTrigger(menu);
+    menu.renderer.simulateKeystrokes("down");
+
+    menu.renderer.simulateKeystrokes("tab");
+
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(menu)).toEqual(Option.some("after"));
+
+    menu.unmount();
+  });
+
+  it("closes on Shift+Tab and continues with the control before the trigger", () => {
+    const menu = renderComponent(<Framed />);
+    focusTrigger(menu);
+    menu.renderer.simulateKeystrokes("down");
+
+    menu.renderer.simulateKeystrokes("shift-tab");
+
+    expect(menu.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(menu)).toEqual(Option.some("before"));
+
+    menu.unmount();
+  });
+
+  it("closes on Tab inside a dialog and moves focus once", () => {
+    const scene = renderComponent(<Framed inDialog />);
+    focusTrigger(scene);
+    scene.renderer.simulateKeystrokes("down");
+
+    // The dialog's trap must not step as well: one Tab is one move (plan 719).
+    scene.renderer.simulateKeystrokes("tab");
+
+    expect(scene.renderer.findByTestId("menu")).toBeUndefined();
+    expect(scene.renderer.findByTestId("dialog")).toBeDefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("after"));
+
+    scene.unmount();
+  });
+
+  it("closes every level on Tab from a submenu", () => {
+    const scene = renderComponent(<Framed withSubmenu />);
+    focusTrigger(scene);
+    scene.renderer.simulateKeystrokes("down");
+    scene.renderer.simulateKeystrokes("down");
+    scene.renderer.simulateKeystrokes("right");
+    expect(scene.renderer.findByTestId("submenu")).toBeDefined();
+
+    scene.renderer.simulateKeystrokes("tab");
+
+    expect(scene.renderer.findByTestId("submenu")).toBeUndefined();
+    expect(scene.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("after"));
+
+    scene.unmount();
+  });
+
+  it("keeps the menu and the user's focus when the caller refuses the close", () => {
+    const scene = renderComponent(
+      <Framed open onOpenChange={() => undefined} />,
+    );
+    scene.renderer.simulateKeystrokes("down");
+    expect(focusedTestId(scene)).toEqual(Option.some("rename"));
+
+    scene.renderer.simulateKeystrokes("tab");
+
+    expect(scene.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("rename"));
+
+    scene.unmount();
   });
 });

@@ -78,7 +78,7 @@ describes.
 | `Enter` / `Space` | runs the highlighted row and closes |
 | Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes and returns focus to the trigger |
-| `Tab` | closes and lets focus move on — a menu is not modal |
+| `Tab` / `Shift+Tab` | closes and continues with the next/previous control after the trigger — a menu is not modal, so the close owns the hand-off |
 | `ArrowRight` on a submenu trigger | opens it and focuses its first row |
 | `ArrowDown` / `ArrowUp` on an open submenu trigger | enters the submenu at its first/last row |
 | `ArrowLeft` or `Escape` inside a submenu | closes that level and returns focus to its trigger |
@@ -337,7 +337,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (57 tests):
+`src/behaviour/dropdown-menu.test.tsx` runs in the real GPUix renderer (62 tests):
 the `menu` role, keyboard opening on the first/last enabled row, a real `Space`
 key-down/key-up pair staying open on the first row, a disabled
 trigger that ignores `ArrowDown`/`ArrowUp`, a
@@ -364,8 +364,12 @@ staying open, a controlled value that does not drift, `Enter`/`Space` selection,
 a skipped disabled row, the `menuitemradio` role and its selected state, and a
 group inside a submenu that closes one level on `Escape` — group naming: a
 group named from its label child, its `label` prop, and a caller `aria-label`
-winning over both — and a caller `ref` on a submenu composed with the level's
-internal surface ref, so a press inside it still runs its row (plan 696).
+winning over both — a caller `ref` on a submenu composed with the level's
+internal surface ref, so a press inside it still runs its row (plan 696) — and
+`Tab` leaving the menu: the control after the trigger, the one before it on
+`Shift+Tab`, the same inside a dialog where the modal trap must not also step,
+every level closing from a submenu row, and a refused controlled close leaving
+the menu and the user's focus alone (plan 722).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

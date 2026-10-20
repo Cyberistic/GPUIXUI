@@ -55,6 +55,7 @@ import {
   MenuContext,
   useMenuContext,
   useMenuState,
+  type LeaveDirection,
   type MenuCloseReason,
 } from "./menu/state.js";
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
@@ -114,6 +115,8 @@ export const DropdownMenu = ({
   const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
   const restoreFocus = useRef(false);
+  /** Where a `Tab` that closed the menu continues from the trigger. */
+  const leaveFocus = useRef<LeaveDirection | null>(null);
   const wasOpen = useRef(false);
   /** The edge a keyboard open should land on once the rows register. */
   const pendingFocus = useRef<"first" | "last" | null>(null);
@@ -127,10 +130,16 @@ export const DropdownMenu = ({
 
   const close = useCallback((reason: MenuCloseReason) => {
     restoreFocus.current = reason === "activate" || reason === "dismiss";
+    leaveFocus.current = null;
     setOpenRef.current(false);
   }, []);
 
-  const menu = useMenuState(close);
+  const leave = useCallback((direction: LeaveDirection) => {
+    leaveFocus.current = direction;
+    setOpenRef.current(false);
+  }, []);
+
+  const menu = useMenuState(close, leave);
 
   // A press on the menu's own trigger is that trigger's gesture: claim the event
   // so an enclosing dialog stays open, but let the click close the menu, because
@@ -155,9 +164,17 @@ export const DropdownMenu = ({
     }
     if (!wasOpen.current) return;
     wasOpen.current = false;
-    if (!restoreFocus.current) return;
     const target = trigger.current;
-    if (target !== null) renderer?.focusElement?.(target.id);
+    const direction = leaveFocus.current;
+    leaveFocus.current = null;
+    if (target === null) return;
+    if (direction !== null) {
+      renderer?.focusElement?.(target.id);
+      if (direction === "next") renderer?.focusNext?.();
+      else renderer?.focusPrevious?.();
+      return;
+    }
+    if (restoreFocus.current) renderer?.focusElement?.(target.id);
   }, [open, renderer]);
 
   useLayoutEffect(() => {

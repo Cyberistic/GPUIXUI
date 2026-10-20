@@ -368,8 +368,10 @@ nub exec vitest run --config vitest.behaviour.config.ts \
   src/behaviour/dropdown-menu.test.tsx src/behaviour/context-menu.test.tsx
 # before (measured 2026-10-20): 3 failed | 77 passed (80) — the three are the
 #   recorded plan-540 placement cases
-# after: 3 failed | 82 passed (85) — the same three placement cases and the five
+# after: 3 failed | 83 passed (86) — the same three placement cases and the five
 #   new dropdown cases + the new context case among the passes
+#   (measured 2026-10-20: Dropdown menu 62 (59 pass, 2 placement + 1 submenu
+#   placement), Context menu 24 (23 pass, 1 placement))
 
 nub exec vitest run --config vitest.behaviour.config.ts \
   src/behaviour/dialog.test.tsx
@@ -389,9 +391,21 @@ nub run --filter @gpuixui/components test:behaviour
 ```
 
 The playground smoke registry is GPUix-primitives only (no Tier 2 menu
-scenario), so the native `TestRenderer` suite is the interaction evidence; the
-two modal scenarios this change touches are `--only modal-focus-trap` and
-`--only overlay-dialog`.
+scenario), so the native `TestRenderer` suite is the interaction evidence. The
+two modal scenarios this change touches were re-run on 2026-10-20:
+
+```sh
+nub apps/playground/dist/smoke/run.js --only modal-focus-trap
+# ok modal-focus-trap — 1/1 scenarios passed · modal=verified
+nub apps/playground/dist/smoke/run.js --only overlay-dialog
+# ok overlay-dialog — 1/1 scenarios passed · overlay=verified
+```
+
+Measured after the change (2026-10-20): Dropdown menu 62 (59 passed; the centred
+surface and right-edge placements are the recorded plan-540 failures), Context
+menu 24 (23 passed; its right-edge submenu case is the third), Dialog 21/21.
+`nub run check`, `nub run lint` and `nub run test` all exit 0 (unit 485 in 46
+files).
 
 ## 6. STOP conditions
 

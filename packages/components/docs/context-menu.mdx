@@ -84,7 +84,7 @@ pointer point, which is why this component uses `anchored` directly.
 | `ArrowLeft` inside a submenu | closes that level and returns focus to its trigger |
 | Letter keys | jumps to the next enabled row whose label starts with the typed prefix |
 | `Escape` | closes; a keyboard-opened menu returns focus to the trigger |
-| `Tab` | closes and moves on |
+| `Tab` / `Shift+Tab` | closes and continues with the next/previous control after the trigger |
 
 The trigger is a tab stop (unless disabled). The surface takes focus on open. The
 highlighted row is the focused row, exactly as in **Dropdown menu**. An outside
@@ -196,7 +196,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (23 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (24 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
@@ -215,7 +215,8 @@ checkbox/radio marks with the row's `popoverForeground` ink, because `accent` is
 a wash and measures about 1.1:1 on the menu surface. A caller `ref` on
 `ContextMenuContent` is composed with the surface's internal ref (plan 696). A
 controlled close the caller refuses keeps focus in a keyboard-opened menu; the
-trigger is focused only once the close is accepted.
+trigger is focused only once the close is accepted. `Tab` closes and continues
+with the control after the trigger (plan 722).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

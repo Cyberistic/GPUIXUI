@@ -55,6 +55,7 @@ import {
   MenuContext,
   useMenuContext,
   useMenuState,
+  type LeaveDirection,
   type MenuCloseReason,
 } from "./state.js";
 import { resolveSubmenuPoint } from "./sub-placement.js";
@@ -250,6 +251,7 @@ export const MenuSubContent = ({
   const parent = useMenuContext();
   assertParts(menuSubContent, children);
   const parentClose = parent.close;
+  const parentLeave = parent.leave;
   const parentClaim = parent.claimSubmenu;
   const restoreFocus = useRef(false);
   const surface = useRef<PublicInstance | null>(null);
@@ -265,13 +267,22 @@ export const MenuSubContent = ({
       setOpen(false);
       Match.value(reason).pipe(
         Match.when("activate", () => parentClose("activate")),
-        Match.when("leave", () => parentClose("leave")),
         Match.when("outside", () => parentClose("outside")),
         Match.when("dismiss", () => undefined),
         Match.exhaustive,
       );
     },
     [parentClose, setOpen],
+  );
+
+  // Tab leaves the whole menu, not one level: a submenu is a detail of one
+  // widget, and the root is the only part with a trigger to continue from.
+  const leave = useCallback(
+    (direction: LeaveDirection) => {
+      setOpen(false);
+      parentLeave(direction);
+    },
+    [parentLeave, setOpen],
   );
 
   // The hover policy lives in `MenuSub`; it closes through this level's own
@@ -283,7 +294,7 @@ export const MenuSubContent = ({
     };
   }, [close, hoverClose]);
 
-  const menu = useMenuState(close);
+  const menu = useMenuState(close, leave);
 
   // The trigger stays focusable while its submenu is open. Down/Up and the
   // row's own focus event use this to enter the submenu at the right edge.

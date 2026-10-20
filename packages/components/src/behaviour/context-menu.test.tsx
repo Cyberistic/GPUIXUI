@@ -24,6 +24,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
 import { createRef, useRef, useState, type Ref } from "react";
 import * as Option from "effect/Option";
+import { Button } from "../internal/button.js";
 import {
   boundsOf,
   clickCentreOf,
@@ -131,6 +132,26 @@ const RefusesFirstClose = () => {
     />
   );
 };
+
+/** A right-click row between two app controls, so a tab-out has a destination. */
+const FramedRow = () => (
+  <div
+    style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
+  >
+    <Button testId="before">Before</Button>
+    <ContextMenu>
+      <ContextMenuTrigger testId="row" style={{ width: 320, height: 120 }}>
+        <text>Project</text>
+      </ContextMenuTrigger>
+      <ContextMenuContent testId="menu" label="Project actions">
+        <ContextMenuItem testId="open" onSelect={() => undefined}>
+          Open
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+    <Button testId="after">After</Button>
+  </div>
+);
 
 /** Focus the trigger, as Tab would. */
 const focusRow = (root: ComponentTestRoot): void => {
@@ -644,6 +665,22 @@ describe("ContextMenu autoFocus", () => {
 
     expect(focusedTestId(row)).toEqual(Option.some("row"));
     expect(row.renderer.findByTestId("row")?.style.boxShadow).toBeDefined();
+
+    row.unmount();
+  });
+});
+
+describe("Tab leaves the context menu", () => {
+  it("closes on Tab and continues with the control after the trigger", () => {
+    const row = renderComponent(<FramedRow />);
+    focusRow(row);
+    row.renderer.simulateKeystrokes("shift-f10");
+    row.renderer.simulateKeystrokes("down");
+
+    row.renderer.simulateKeystrokes("tab");
+
+    expect(row.renderer.findByTestId("menu")).toBeUndefined();
+    expect(focusedTestId(row)).toEqual(Option.some("after"));
 
     row.unmount();
   });

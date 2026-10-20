@@ -48,6 +48,7 @@ import { MenuRadioGroup, MenuRadioItem } from "./menu/radio.js";
 import {
   MenuContext,
   useMenuState,
+  type LeaveDirection,
   type MenuCloseReason,
 } from "./menu/state.js";
 import { MenuSub, MenuSubContent, MenuSubTrigger } from "./menu/sub.js";
@@ -58,6 +59,9 @@ interface Point {
   readonly x: number;
   readonly y: number;
 }
+
+/** Where an accepted context-menu close leaves focus. */
+type ContextCloseFocus = "trigger" | "none" | LeaveDirection;
 
 /** The rules a context-menu part follows; throws outside a root. */
 interface ContextMenuContextValue {
@@ -122,13 +126,16 @@ export const ContextMenu = ({
 
   // Where focus goes once the close is accepted; a refused close leaves the
   // keyboard-opened menu and the user's focus alone.
-  const requestClose = useCloseFocus<"trigger" | "none">(
+  const requestClose = useCloseFocus<ContextCloseFocus>(
     open,
     () => setOpenRef.current(false),
     (focus) => {
       if (focus === "none") return;
       const target = triggerId.current;
-      if (target !== undefined) renderer?.focusElement?.(target);
+      if (target === undefined) return;
+      renderer?.focusElement?.(target);
+      if (focus === "next") renderer?.focusNext?.();
+      else if (focus === "previous") renderer?.focusPrevious?.();
     },
   );
 
@@ -141,7 +148,13 @@ export const ContextMenu = ({
     },
     [requestClose],
   );
-  const menu = useMenuState(close);
+
+  const leave = useCallback(
+    (direction: LeaveDirection) => requestClose(direction),
+    [requestClose],
+  );
+
+  const menu = useMenuState(close, leave);
 
   useLayoutEffect(() => {
     if (!open) return;
