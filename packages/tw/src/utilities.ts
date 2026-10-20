@@ -209,6 +209,7 @@ export const resolveUtility = (
   if (name === "flex-col-reverse") return { flexDirection: "column-reverse" };
   if (name === "flex-1") return { flexGrow: 1, flexShrink: 1, flexBasis: 0 };
   if (name === "flex-grow") return { flexGrow: 1 };
+  if (name === "flex-wrap") return { flexWrap: "wrap" };
   if (name === "items-center") return { alignItems: "center" };
   if (name === "items-start") return { alignItems: "flex-start" };
   if (name === "items-stretch") return { alignItems: "stretch" };
@@ -217,6 +218,7 @@ export const resolveUtility = (
   if (name === "justify-end") return { justifyContent: "flex-end" };
   if (name === "shrink-0") return { flexShrink: 0 };
   if (name === "self-start") return { alignSelf: "flex-start" };
+  if (name === "self-stretch") return { alignSelf: "stretch" };
   if (name === "w-full") return { width: "100%" };
   if (name === "w-auto") return { width: "auto" };
   if (name === "h-full") return { height: "100%" };
@@ -241,6 +243,8 @@ export const resolveUtility = (
   if (name === "text-center") return { textAlign: "center" };
   if (name === "text-right") return { textAlign: "right" };
   if (name === "underline") return { textDecoration: "underline" };
+  if (name === "h-px") return { height: 1 };
+  if (name === "w-px") return { width: 1 };
 
   if (name.startsWith("h-")) {
     const value = lengthValue(name.slice(2), theme);
@@ -312,6 +316,22 @@ export const resolveUtility = (
     return value === undefined
       ? undefined
       : { marginTop: value, marginBottom: value };
+  }
+  if (name.startsWith("mt-")) {
+    const value = lengthValue(name.slice(3), theme);
+    return value === undefined ? undefined : { marginTop: value };
+  }
+  if (name.startsWith("mb-")) {
+    const value = lengthValue(name.slice(3), theme);
+    return value === undefined ? undefined : { marginBottom: value };
+  }
+  if (name.startsWith("ml-")) {
+    const value = lengthValue(name.slice(3), theme);
+    return value === undefined ? undefined : { marginLeft: value };
+  }
+  if (name.startsWith("mr-")) {
+    const value = lengthValue(name.slice(3), theme);
+    return value === undefined ? undefined : { marginRight: value };
   }
   if (name.startsWith("inset-x-")) {
     const value = lengthValue(name.slice(8), theme);

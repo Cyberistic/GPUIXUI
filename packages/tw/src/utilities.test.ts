@@ -146,6 +146,14 @@ describe("component utility additions", () => {
     ["self-start", { alignSelf: "flex-start" }],
     ["text-ellipsis", { textOverflow: "ellipsis" }],
     ["border-t", { borderTopWidth: 1 }],
+    ["flex-wrap", { flexWrap: "wrap" }],
+    ["self-stretch", { alignSelf: "stretch" }],
+    ["h-px", { height: 1 }],
+    ["w-px", { width: 1 }],
+    ["mt-1", { marginTop: 4 }],
+    ["mb-1", { marginBottom: 4 }],
+    ["ml-1", { marginLeft: 4 }],
+    ["mr-1", { marginRight: 4 }],
   ])("maps %s", (name, expected) => {
     expect(resolved(name)).toEqual(expected);
   });

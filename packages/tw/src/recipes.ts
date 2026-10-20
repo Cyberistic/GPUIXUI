@@ -159,3 +159,142 @@ export const STEPPER_MARKER_TEXT = "text-xs font-sans";
 export const STEPPER_LABEL = "text-sm font-medium font-sans";
 export const STEPPER_DESCRIPTION = "text-xs font-sans text-muted-foreground";
 export const STEPPER_TEXT = "flex flex-col gap-0.5";
+
+/** `accordion.tsx` — the disclosure stack. The trigger height keeps density
+ * (ADR 0006) and the item divider is conditional on the last item, so both stay
+ * in the component's `style`. */
+export const ACCORDION_ROOT = "flex flex-col w-full";
+export const ACCORDION_ITEM = "flex flex-col";
+export const ACCORDION_TRIGGER =
+  "flex flex-row items-center justify-between gap-2 px-1 w-full text-sm font-medium font-sans text-foreground";
+export const ACCORDION_TRIGGER_ROW =
+  "flex flex-row items-center flex-grow min-w-0";
+export const ACCORDION_INDICATOR = "text-xs font-sans text-muted-foreground";
+export const ACCORDION_CONTENT =
+  "flex flex-col gap-2 px-1 pb-2 text-muted-foreground";
+
+/** `breadcrumb.tsx` — the trail and its crumbs. */
+export const BREADCRUMB_ROOT = "flex flex-row items-center";
+export const BREADCRUMB_LIST = "flex flex-row items-center flex-wrap gap-1";
+export const BREADCRUMB_ITEM = "flex flex-row items-center gap-1";
+export const BREADCRUMB_LINK =
+  "text-xs font-sans text-muted-foreground cursor-pointer px-0.5 rounded-sm";
+export const BREADCRUMB_PAGE = "text-xs font-sans text-foreground";
+export const BREADCRUMB_SEPARATOR =
+  "text-xs font-sans text-muted-foreground select-none";
+export const BREADCRUMB_ELLIPSIS = "text-xs font-sans text-muted-foreground";
+
+/** `carousel.tsx` — the slide shell. The slide's `display` is the component's
+ * active-index switch and stays in `style`. */
+export const CAROUSEL_ROOT = "flex flex-col gap-2";
+export const CAROUSEL_TRACK =
+  "flex flex-row overflow-hidden rounded-lg border border-input bg-card";
+export const CAROUSEL_SLIDE = "flex flex-col flex-grow";
+
+/** `collapsible.tsx` — the single disclosure section. */
+export const COLLAPSIBLE_ROOT = "flex flex-col gap-0.5";
+export const COLLAPSIBLE_TRIGGER =
+  "flex flex-row items-center justify-between gap-2 px-2 py-1.5 rounded-sm text-sm font-medium font-sans text-foreground cursor-pointer";
+export const COLLAPSIBLE_CONTENT =
+  "flex flex-col gap-2 px-2 pt-1.5 pb-2 text-muted-foreground";
+
+/** `countdown.tsx` — the clock text. The expired colour stays in `style`. */
+export const COUNTDOWN = "text-xs font-sans";
+
+/** `field.tsx` — the labelled control block. The input height keeps density
+ * (ADR 0006) and its validity colours stay in `style`. */
+export const FIELD_ROOT = "flex flex-col gap-1";
+export const FIELD_LABEL_ROW = "flex flex-row gap-0.5";
+export const FIELD_LABEL = "text-sm font-medium font-sans text-foreground";
+export const FIELD_REQUIRED = "text-sm font-medium font-sans text-destructive";
+export const FIELD_DESCRIPTION = "text-xs font-sans text-muted-foreground";
+export const FIELD_ERROR = "text-xs font-sans text-destructive";
+export const FIELD_INPUT = "text-sm font-sans w-full px-2 rounded-md border";
+
+/** `fieldset.tsx` — the named group. */
+export const FIELDSET_ROOT = "flex flex-col gap-3";
+export const FIELDSET_LEGEND = "text-sm font-medium font-sans";
+
+/** `form.tsx` — the owned-value form boundary. */
+export const FORM_ROOT = "flex flex-col gap-3";
+export const FORM_ERRORS = "flex flex-col gap-0.5";
+export const FORM_ERROR = "text-xs font-sans text-destructive";
+
+/** `hotkey-recorder.tsx` — the chord capture control. The min-height keeps
+ * density (ADR 0006). */
+export const HOTKEY_RECORDER =
+  "flex flex-row items-center justify-between gap-2 px-2 bg-background rounded-md border border-input";
+export const HOTKEY_RECORDER_TEXT = "text-sm font-sans text-muted-foreground";
+export const HOTKEY_RECORDER_KEYS = "flex flex-row items-center gap-1";
+export const HOTKEY_RECORDER_CLEAR =
+  "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
+
+/** `inline-edit.tsx` — the display/input swap. Both heights keep density
+ * (ADR 0006). */
+export const INLINE_EDIT_DISPLAY =
+  "flex flex-row items-center self-start px-1 rounded-sm";
+export const INLINE_EDIT_DISPLAY_TEXT = "text-sm font-medium font-sans";
+export const INLINE_EDIT_INPUT =
+  "text-sm font-sans px-1.5 bg-background text-input-foreground rounded-sm border border-input";
+
+/** `keyboard-shortcuts.tsx` — the cheat sheet and its keycaps. */
+export const KEYBOARD_SHORTCUTS_ROOT = "flex flex-col gap-4";
+export const KEYBOARD_SHORTCUTS_GROUP = "flex flex-col gap-0.5";
+export const KEYBOARD_SHORTCUTS_HEADING =
+  "text-xs font-sans text-muted-foreground";
+export const KEYBOARD_SHORTCUTS_ROW = "flex flex-col gap-0.5";
+export const KEYBOARD_SHORTCUTS_SEPARATOR = "h-px bg-border";
+export const KEYBOARD_SHORTCUT =
+  "flex flex-row items-center justify-between gap-3 py-1.5";
+export const KEYBOARD_SHORTCUT_LABEL =
+  "text-sm font-medium font-sans text-foreground";
+export const KEYBOARD_SHORTCUT_KEYS = "flex flex-row items-center gap-1";
+export const KEYCAP =
+  "flex flex-row items-center justify-center min-w-5 h-5 px-1.5 bg-muted rounded-sm border border-input";
+export const KEYCAP_TEXT = "text-xs font-sans text-muted-foreground";
+
+/** `mention-input.tsx` — the mention field and its floating list. The field
+ * height keeps density (ADR 0006). */
+export const MENTION_INPUT_FIELD =
+  "flex flex-row items-center px-2 bg-background rounded-md border border-input";
+export const MENTION_INPUT_CONTROL =
+  "text-sm font-sans flex-grow h-full text-input-foreground";
+export const MENTION_INPUT_LIST =
+  "flex flex-col min-w-[200px] p-1 bg-popover rounded-md border border-input pointer-events-auto";
+export const MENTION_INPUT_ITEM =
+  "flex flex-row items-center px-1.5 py-1 rounded-sm";
+export const MENTION_INPUT_ITEM_TEXT = "text-sm font-sans";
+
+/** `search-input.tsx` — the search field. The height keeps density (ADR 0006). */
+export const SEARCH_INPUT =
+  "flex flex-row items-center gap-2 px-2 bg-background border border-input rounded-md";
+export const SEARCH_INPUT_ICON =
+  "text-sm font-sans text-muted-foreground select-none";
+export const SEARCH_INPUT_CONTROL =
+  "text-sm font-sans flex-grow h-full text-input-foreground";
+export const SEARCH_INPUT_CLEAR =
+  "text-xs font-sans flex items-center justify-center size-[18px] rounded-sm text-muted-foreground cursor-pointer";
+
+/** `tag-input.tsx` — the token group. The min-height and field height keep
+ * density (ADR 0006). */
+export const TAG_INPUT_ROOT =
+  "flex flex-row flex-wrap items-center gap-1 px-1.5 py-0.5 bg-background rounded-md border border-input";
+export const TAG_INPUT_FIELD =
+  "text-sm font-sans flex-grow min-w-20 text-input-foreground";
+export const TAG_INPUT_CHIP =
+  "flex flex-row items-center gap-1 px-1.5 py-0.5 bg-muted rounded-sm";
+export const TAG_INPUT_CHIP_TEXT = "text-xs font-sans text-muted-foreground";
+export const TAG_INPUT_CHIP_REMOVE =
+  "text-xs font-sans flex items-center justify-center size-4 rounded-sm text-muted-foreground";
+
+/** `timeline.tsx` — the event rail. The dot fill and the last item's padding
+ * stay in `style`; the connector is a 1px element (`w-px`). */
+export const TIMELINE_ROOT = "flex flex-col gap-3";
+export const TIMELINE_ITEM = "flex flex-row items-stretch self-stretch gap-2";
+export const TIMELINE_RAIL = "flex flex-col items-center w-4";
+export const TIMELINE_DOT = "size-2 rounded-full mt-1";
+export const TIMELINE_CONNECTOR = "w-px flex-grow bg-border mt-0.5";
+export const TIMELINE_CONTENT = "flex flex-col gap-0.5 flex-grow";
+export const TIMELINE_TIMESTAMP = "text-xs font-sans text-muted-foreground";
+export const TIMELINE_TITLE = "text-sm font-medium font-sans";
+export const TIMELINE_DESCRIPTION = "text-sm font-sans text-muted-foreground";
