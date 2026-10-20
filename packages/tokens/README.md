@@ -105,9 +105,10 @@ level index and `elevationSurfaces` the six persistent page surfaces the
 contrast check composites each defined level over — the canvas, a card, the
 quiet panel, the `input` fill a flipped popover opens over, the `selected` fill
 a context menu opens over and a floating surface. A menu or popover (`md`) also
-opens across the resting content fills `elevationContentSurfaces` names — the
-four filled actions, the three solid status chips, the raised panel action and
-the four soft status panels — so its shadow is measured there too; the tightest
+opens across the fifteen resting content fills `elevationContentSurfaces` names
+— the four filled actions, the three solid status chips, the raised panel
+action, the four soft status panels, a disabled control, a loading row and a
+value indicator's groove — so its shadow is measured there too; the tightest
 shipped pair is **1.058:1** (AAA dark, `md` on `info`) and the page surfaces
 alone are **1.061:1** (identity dark, `sm` on `background`). At high contrast a
 platform style contributes a level's geometry and the base keeps the opacity its

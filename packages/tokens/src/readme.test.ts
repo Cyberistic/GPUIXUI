@@ -21,11 +21,18 @@ import packageJson from "../package.json";
 import { colorRoles } from "./color.js";
 import {
   contrastFloors,
+  elevationContentSurfaces,
+  elevationSurfaces,
   skeletonPulsePairs,
   stateFillSurfaces,
   statusFillPairs,
 } from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
+import {
+  deriveFigure,
+  documentedFigures,
+  quotesFigure,
+} from "./figures.js";
 import { motionLevels, motionPhases } from "./motion.js";
 import {
   platformNames,
@@ -63,6 +70,21 @@ const countWords = [
   "eight",
   "nine",
   "ten",
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen",
+  "twenty",
+  "twenty-one",
+  "twenty-two",
+  "twenty-three",
+  "twenty-four",
+  "twenty-five",
 ] as const;
 
 const countWord = (count: number): string => countWords[count] ?? String(count);
@@ -132,22 +154,8 @@ describe("packages/tokens/README.md", () => {
   });
 
   it("states the number of checks from the index", () => {
-    const countWords = [
-      "zero",
-      "one",
-      "two",
-      "three",
-      "four",
-      "five",
-      "six",
-      "seven",
-      "eight",
-      "nine",
-      "ten",
-    ] as const;
-    const count = countWords[themeChecks.length];
-    expect(readme).toContain(`That is one of ${count} checks`);
-    expect(readme).toContain(`composes all ${count}`);
+    expect(readme).toContain(`That is one of ${countWord(themeChecks.length)} checks`);
+    expect(readme).toContain(`composes all ${countWord(themeChecks.length)}`);
   });
 
   it("states the diagnostic order from the index", () => {
@@ -405,6 +413,67 @@ describe("packages/tokens/README.md", () => {
 
       expect(stated.length, phrase).toBeGreaterThan(0);
       stated.forEach((count) => expect(count, phrase).toBe(countWord(size)));
+    });
+  });
+
+  it("states the elevation walk's surface and group counts from their lists", () => {
+    // §Shadows enumerates the `md` content fills by group rather than by name,
+    // and every count there was hand-typed: mutating the page-surface count and
+    // the three group counts left the whole suite green (plan 777). The words
+    // join the indexes that own them, and the groups must reconstruct
+    // `elevationContentSurfaces` — a fill that joins the walk without joining a
+    // group leaves the prose short.
+    const solidChips = statusTones.filter(
+      (tone) => !filledControlFamilies.some((family) => family === tone),
+    );
+    const softPanels = statusTones.map((tone) => `${tone}Soft`);
+    const grouped: ReadonlyArray<string> = [
+      ...filledControlFamilies,
+      ...solidChips,
+      "softAction",
+      ...softPanels,
+    ];
+    const rest = elevationContentSurfaces
+      .filter((surface) => !grouped.some((name) => name === surface))
+      .toSorted();
+
+    expect(readme).toContain(
+      `\`elevationSurfaces\` the ${countWord(elevationSurfaces.length)} persistent page surfaces`,
+    );
+    expect(readme).toContain(
+      `the ${countWord(elevationContentSurfaces.length)} resting content fills`,
+    );
+    expect(readme).toContain(
+      `the ${countWord(filledControlFamilies.length)} filled actions, the ${countWord(solidChips.length)} solid status chips, the raised panel action, the ${countWord(softPanels.length)} soft status panels`,
+    );
+    expect(rest).toEqual(["disabled", "skeleton", "track"]);
+    expect(readme).toContain(
+      "a disabled control, a loading row and a value indicator's groove",
+    );
+  });
+
+  it("quotes the elevation figures from the figure table", () => {
+    // The two ratios in §Shadows were the last hand-typed figures on the page:
+    // a palette or alpha move left them behind while `readme.test.ts` stayed
+    // green at 36/36 (plan 777). `figures.ts` composes each level the way the
+    // contrast checker does and derives both the ratio and the shipped set.
+    const names = [
+      "the md shadow across the page and content fills",
+      "the page shadow across the persistent surfaces",
+    ];
+
+    names.forEach((name) => {
+      const entry = documentedFigures.find(
+        (candidate) => candidate.name === name,
+      );
+      if (entry === undefined) {
+        expect.unreachable(`${name} is in the figure table`);
+      }
+      const derived = deriveFigure(entry);
+      if (derived.kind === "missing") {
+        expect.unreachable(`${name} names a shipped set`);
+      }
+      expect(quotesFigure(readme, entry, derived.figure), name).toBe(true);
     });
   });
 });

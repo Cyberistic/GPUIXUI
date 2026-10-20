@@ -325,6 +325,25 @@ describe("the figures the package's own JSDoc states", () => {
     ).toEqual([]);
   });
 
+  it("composes each shadow at the level it names", () => {
+    // A shadow entry without its level measures `NaN`; a level on another kind
+    // is a field the entry's measurement never reads.
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => entry.kind === "shadow" && entry.level === undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+    expect(
+      documentedFigures
+        .filter(
+          (entry) => entry.kind !== "shadow" && entry.level !== undefined,
+        )
+        .map((entry) => entry.name),
+    ).toEqual([]);
+  });
+
   it("measures the caret on the nine surfaces a field sits on", () => {
     const expected = [
       "background",

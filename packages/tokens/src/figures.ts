@@ -3,6 +3,8 @@ import {
   compositeOver,
   contrastPairs,
   contrastRatio,
+  elevationContentSurfaces,
+  elevationSurfaces,
   inactivePanelActionPairs,
   nativeSyntaxPairs,
   selectionInactivePairs,
@@ -13,6 +15,7 @@ import {
   textTierSurfaces,
   type ContrastPair,
 } from "./contrast.js";
+import { elevationShadow, type ElevationLevel } from "./elevation.js";
 import { nativeInk, nativeInkOpacity } from "./native-ink.js";
 import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
 import type { PlatformRecipeName } from "./platform-recipes.js";
@@ -85,7 +88,13 @@ export type FigureKind =
    * A role painted whole on the runtime's fixed black-or-white ink wash: the
    * tone decides the ink and the composition, so no theme role carries it.
    */
-  | "ink";
+  | "ink"
+  /**
+   * A level's painted drop shadow: the `shadow` tint at the level's own alpha,
+   * composited over the surface it lands on and held to that surface. The entry
+   * names the level in {@link DocumentedFigure.level}.
+   */
+  | "shadow";
 
 /** The opacity the shipped consumers dim a disabled control with. */
 export const disabledDimOpacity = 0.5;
@@ -157,6 +166,11 @@ export interface DocumentedFigure {
       readonly opacity: number;
     };
   };
+  /**
+   * The elevation level a `"shadow"` entry paints. Omitted for every other kind,
+   * and the suite fails an entry that needs it and omits it.
+   */
+  readonly level?: ElevationLevel;
   /** The precision the sentence quotes. */
   readonly decimals: number;
   /** The sentence, with `{figure}` where the derived ratio belongs. */
@@ -281,6 +295,17 @@ const measure = (
         colors[foreground],
         nativeInk(theme, background, composition.opacity),
       );
+    }
+    case "shadow": {
+      if (entry.level === undefined) {
+        return Number.NaN;
+      }
+      const shadow = elevationShadow(theme, entry.level);
+      if (shadow === undefined) {
+        return Number.NaN;
+      }
+      const surface = colors[background];
+      return contrastRatio(compositeOver(shadow.color, surface), surface);
     }
   }
 };
@@ -1242,6 +1267,50 @@ const nativePaintFigures: ReadonlyArray<DocumentedFigure> = [
   countdownGrooveFigure,
 ];
 
+/**
+ * The `md` shadow a menu or popover paints across the page and the resting
+ * content fills beside its trigger. A shadow is not a role pair: the painted
+ * colour is the `shadow` tint at the level's own alpha, so the entry names the
+ * level and the walk composites it exactly as `themeContrastFailures` does. The
+ * front door quotes the tightest shipped pair, which is the AAA dark set's
+ * shadow across the `info` chip.
+ */
+const elevationContentFigure: DocumentedFigure = {
+  document: "packages/tokens/README.md",
+  name: "the md shadow across the page and content fills",
+  pairs: [...elevationSurfaces, ...elevationContentSurfaces].map(
+    (surface): ContrastPair => ["shadow", surface, "surface"],
+  ),
+  kind: "shadow",
+  level: "md",
+  claim: "tightest",
+  provenance: identityTheme("dark", "high"),
+  decimals: 3,
+  sentence:
+    "the tightest shipped pair is **{figure}:1** (AAA dark, `md` on `info`)",
+};
+
+/**
+ * The page-surface half of the walk: `sm` and `lg` land on the six persistent
+ * page surfaces only, because a card is placed in the layout and a dialog sits
+ * on the scrim the face contract measures. Identity dark's `sm` shadow on its
+ * canvas is the tightest shipped pair.
+ */
+const elevationPageFigure: DocumentedFigure = {
+  document: "packages/tokens/README.md",
+  name: "the page shadow across the persistent surfaces",
+  pairs: elevationSurfaces.map(
+    (surface): ContrastPair => ["shadow", surface, "surface"],
+  ),
+  kind: "shadow",
+  level: "sm",
+  claim: "tightest",
+  provenance: identityTheme("dark", "default"),
+  decimals: 3,
+  sentence:
+    "the page surfaces alone are **{figure}:1** (identity dark, `sm` on `background`)",
+};
+
 /** Every figure this table holds. */
 export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   toastToneFigure,
@@ -1257,6 +1326,8 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...ringFigures,
   ...insetRingFigures,
   ...nativePaintFigures,
+  elevationContentFigure,
+  elevationPageFigure,
 ];
 
 /** One body-role tier: secondary text below the role a surface paints. */
