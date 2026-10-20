@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release gate) |
 | Owner | playground workstream |
 | Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745` |
@@ -115,9 +115,37 @@ nub run test
 - A suite exits `2`: the host has no binding; this is not evidence and the gate
   cannot be claimed.
 
-## 6. Results
+## 6. Results (2026-10-20, darwin-x64)
 
-_(Filled by the executor.)_
+Verification only; no source change. `origin/master` was 0 behind, so no merge
+was needed. The gate ran on docs head `debe433a` (code head `c4224479`).
+
+| Suite | Scenarios | Checks | Capabilities | Duration | Exit |
+| ----- | --------- | ------ | ------------ | -------- | ---- |
+| headless (`TestRenderer`) | **109/109** | **4027** | 65 | 177.8 s | `0` |
+| live (real window) | **98/98** | **2780** | 61 | **1171.6 s** | `0` |
+
+`border-pixels` and `live-border-pixels` each report **64**; `live-shadow-pixels`
+stays **28**, `live-click-routing` **25** and `live-tier2-editing` took its
+**32**-check branch. The live total is plan `739`'s 2716 + 64 exactly and the
+headless total plan `739`'s 3963 + 64, so every check plan `745` added ran in the
+full sequence rather than only focused. Both `host` lines carry
+`gpuix 9fcd6288`, `zed 81c99f81` and runtime shaders; a plain `--all` wrote no
+`provenance.json` and no capture directory.
+
+```sh
+nub run --filter playground build            # exit 0
+nub apps/playground/dist/smoke/run.js        # 109/109 · 4027 · 65 · 177.8 s · exit 0
+nub apps/playground/dist/live/run.js --all   # 98/98 · 2780 · 61 · 1171.6 s · exit 0
+nub run check                                # exit 0
+nub run lint                                 # exit 0
+nub run test                                 # exit 0; playground 495, testing 69, components 308,
+                                             # primitives 282, tokens 196, tw 103, icons 19, docs 7
+```
+
+Artifacts: `apps/playground/.artifacts/smoke-report.json` and
+`live-report.json`. This is the gate for the promotion fast-forward; the
+owner/supervisor performs the merge.
 
 ## 7. Rollback
 

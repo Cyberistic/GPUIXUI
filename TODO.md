@@ -95,7 +95,21 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 130/130 plans-and-harness
+`[x]` `[██████████]` 131/131 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the border pixels**
+      per plan `751`: verification only on code head `debe433a` (0 behind
+      `origin/master`) — headless **109/109** (**4027** checks, 65 capabilities,
+      177.8 s) and live **98/98** (**2780** checks, 61 capabilities,
+      **1171.6 s**), both exit `0`. `border-pixels` and `live-border-pixels`
+      are **64** each, so the live total is plan `739`'s 2716 + 64 and the
+      headless total `3963 + 64` exactly; `live-tier2-editing` took its
+      32-check branch. Both `host` lines carry the release-tag pins
+      (`gpuix 9fcd6288`, `zed 81c99f81`, runtime shaders), and a plain `--all`
+      wrote no `provenance.json` and no capture directory. `nub run
+      check`/`lint`/`test` green (playground **495**, testing 69, components
+      308, primitives 282, tokens 196, tw 103, icons 19, docs 7). This is the
+      current promotion gate.
 
 `[x]` **Prove borders and corner radii in the frame** per plan `745`: the two
       style families every component is built from (78 `borderRadius` uses)
@@ -2126,6 +2140,18 @@ focused id is `live-frames`.
       32-check branch. A plain `--all` wrote no `provenance.json` and no capture
       directory, and both `host` lines carry the release-tag pins. `nub run
       check`/`lint`/`test` green (playground **487**, testing 69, components
+      308, primitives 282, tokens 196, tw 103, icons 19, docs 7). This was the
+      gate until plan `751`; the owner/supervisor still performs the merge.
+      **Addendum (plan `751`, 2026-10-20):** plan `745` then registered
+      `border-pixels` (64 checks) and `live-border-pixels` (64), so both full
+      registries ran again on code head `debe433a` (0 behind `origin/master`):
+      headless **109/109** (**4027** checks, 65 capabilities, 177.8 s) and live
+      **98/98** (**2780** checks, 61 capabilities, **1171.6 s**), both exit `0`.
+      The live total is `2716 + 64` and the headless total `3963 + 64` exactly,
+      so every new check ran in the full sequence; `live-tier2-editing` took its
+      32-check branch. A plain `--all` wrote no `provenance.json` and no capture
+      directory, and both `host` lines carry the release-tag pins. `nub run
+      check`/`lint`/`test` green (playground **495**, testing 69, components
       308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward**; the owner/supervisor still
       performs the merge.

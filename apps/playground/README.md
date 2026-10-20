@@ -2245,8 +2245,9 @@ unit test pin the width instead. Removing the thin border reads
 ## Evidence on this host
 
 The suite is **109/109 green** here (`exit 0`, 4027 checks, 65 capabilities,
-**225.2 s**, 2026-10-20; plan `745` added the 64-check `border-pixels`;
-plan `739`'s gate read 108/108 and 3963 on the shadow-pixel head; plan `736`
+**177.8 s** at the plan `751` gate, 2026-10-20; plan `745` added the 64-check
+`border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
+head; plan `736`
 added the 28-check `shadow-pixels`; plan
 `724` added the 18-check `click-routing` and plan `734` grew it to 33; the count
 was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
@@ -2271,14 +2272,12 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **97/97** (`exit 0`, **2716** checks, 61
-capabilities; **1140.5 s**; `.artifacts/live-report.json`, 2026-10-20) on code
-head `ea2e668b` (plan `739`, 0 behind `origin/master`; the plan commit after it
-changes only plans), with the whole headless
-registry at **108/108** (**3963** checks, 65 capabilities, 223.6 s) on the same
-head. Plan `745` then registered **`live-border-pixels`** — the live registry is
-**98**, and that twin is focused-green (64 checks, twice) but has not yet run in
-a full live gate. It
+The last full merge/release gate ran **98/98** (`exit 0`, **2780** checks, 61
+capabilities; **1171.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
+head `debe433a` (plan `751`, 0 behind `origin/master`; the commit changes only
+plans), with the whole headless registry at **109/109** (**4027** checks, 65
+capabilities, 177.8 s) on the same head. The registry and the gate agree at
+**98**. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2287,10 +2286,13 @@ checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 `live-diff`'s word wash (31), `live-qr`'s module pixels (52),
 `live-crop-area`'s mask pixels (18), `live-docking`'s indicator paint order (22),
 `live-media`'s waveform pixels (25), `live-click-routing`'s click-routing
-contract (25) and `live-shadow-pixels`' ring/elevation pixels (28). The total is
-the plan-`735` gate's 2688 plus `live-shadow-pixels`' 28 exactly, and the
-headless registry grew by `shadow-pixels`' 28. A plain `--all`
-wrote no frame and no `provenance.json`. This gate supersedes plan `735`'s 96/96
+contract (25), `live-shadow-pixels`' ring/elevation pixels (28) and
+`live-border-pixels`' border/radius pixels (64). The total is the plan-`739`
+gate's 2716 plus plan `745`'s 64 exactly, and the headless registry is the
+plan-`739` gate's 3963 plus `border-pixels`' 64. A plain `--all`
+wrote no frame and no `provenance.json`. Plan `751` re-ran both suites on this
+head and is the current promotion gate. This gate supersedes plan `739`'s 97/97
+(`2716`) on `ea2e668b`, plan `735`'s 96/96
 (`2688`) on `e384a66a`, plan `723`'s 95/95
 (`2663`) on `74e27a3f`, plan `714`'s 2638 on
 `f91537b0`, plan `702`'s 2616 on `1cb4d302`, plan `699`'s 2576 on `4101684e`,
