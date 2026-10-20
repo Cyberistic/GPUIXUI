@@ -42,10 +42,43 @@ import {
 
 const isEmpty = (value: object): boolean => Object.keys(value).length === 0;
 
+const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * Whether two themes declare the same members, at every depth. `extendTheme`
+ * merges with a spread, so a brand can widen a scale — `{ ...spacing, "6xl":
+ * 96 }` — and the numeric contract accepts the result as a `Theme`. A
+ * `ThemeOverrides` names only the declared members, so the diff cannot carry an
+ * added step back; refusing the pair is what keeps a returned set able to
+ * rebuild the theme it was measured against.
+ */
+const sameMembers = (base: unknown, theme: unknown): boolean => {
+  if (Array.isArray(base) || Array.isArray(theme)) {
+    return (
+      Array.isArray(base) &&
+      Array.isArray(theme) &&
+      base.length === theme.length &&
+      base.every((member, index) => sameMembers(member, theme[index]))
+    );
+  }
+  if (isRecord(base) && isRecord(theme)) {
+    const members = Object.keys(base);
+    return (
+      members.length === Object.keys(theme).length &&
+      members.every(
+        (member) => member in theme && sameMembers(base[member], theme[member]),
+      )
+    );
+  }
+  return true;
+};
+
 /**
  * The entries of a flat numeric scale that differ. The caller passes the
  * package's ordered index, so a new step joins the diff from the one owner a
- * table iterates.
+ * table iterates. A step the base does not declare never reaches this walk:
+ * {@link themeOverrides} refuses a pair whose member sets differ.
  */
 const changedSteps = <K extends string>(
   keys: ReadonlyArray<K>,
@@ -225,9 +258,15 @@ const changedMotion = (
  *
  * A tuned density is expressed against the preset it names, because
  * `mergeDensity` starts from that preset rather than from the base's metrics;
- * an elevation level is replaced whole, matching the documented merge rule. A
- * different `mode` returns `undefined`: `extendTheme` cannot change the mode, so
- * the caller must choose a base of the theme's mode.
+ * an elevation level is replaced whole, matching the documented merge rule.
+ *
+ * `undefined` means the pair cannot be expressed, and there are two cases: a
+ * different `mode`, which `extendTheme` cannot change, and a group whose
+ * member set differs from the base's — a brand that widens a scale with an
+ * extra step, `{ ...spacing, "6xl": 96 }`, which the checks accept as a `Theme`
+ * while a `ThemeOverrides` can only name the declared members. Refusing is what
+ * keeps the promise: a returned set always rebuilds the theme it was measured
+ * against, and a caller holding an unnamed member keeps its theme object.
  *
  * The overrides are relative to that **exact** base, not merely its mode — a
  * Windows edit replayed on the identity of the same mode paints the identity's
@@ -253,7 +292,7 @@ export function themeOverrides(
   base: Theme,
   theme: Theme,
 ): ThemeOverrides | undefined {
-  if (base.mode !== theme.mode) {
+  if (base.mode !== theme.mode || !sameMembers(base, theme)) {
     return undefined;
   }
 
@@ -325,9 +364,12 @@ export interface ThemeEdit {
  *
  * An edit of a theme a choice cannot name — a brand theme, or any theme built by
  * `extendTheme` — is measured against the resolved choice, so the brand's own
- * differences travel in the overrides and the pair still reproduces it. The one
- * theme the artifact cannot express is a different `mode`; that case returns
- * `undefined` and the caller keeps its theme object.
+ * differences travel in the overrides and the pair still reproduces it while
+ * every group keeps the member set the base declares. Two themes the artifact
+ * cannot express return `undefined`: a different `mode`, and one whose scale
+ * carries a member the base does not — the extra step a brand spreads into
+ * `spacing` is accepted by the checks and cannot travel in `ThemeOverrides`.
+ * The caller keeps its theme object in both cases.
  *
  * @example
  * ```ts

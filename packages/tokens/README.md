@@ -199,7 +199,10 @@ overrides that rebuild `theme` from `base`, for an editor that stores or prints
 an edit rather than a whole theme object. Each group is compared field by field
 and an unchanged group is omitted; a tuned density is expressed against the
 preset it names, an elevation level is replaced whole, and `undefined` means the
-modes differ, because `extendTheme` cannot change the mode. The overrides are
+pair cannot be expressed: the modes differ, or a group carries a member the base
+does not declare — the extra step a brand spreads into a scale, which the checks
+accept and a `ThemeOverrides` cannot name, so the returned set always rebuilds
+the theme it was measured against. The overrides are
 relative to the exact base, not merely its mode, so a stored edit is a
 `ThemeEdit` — the base's `ThemeChoice` plus the overrides: `themeEdit(choice,
 edited)` resolves the choice before it diffs, so the pair cannot name another

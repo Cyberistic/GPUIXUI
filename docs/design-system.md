@@ -1033,10 +1033,12 @@ The extension mechanism is deliberately small:
 - `themeOverrides(base, theme)` — the inverse of `extendTheme`: the minimal
   override set that rebuilds an edited theme, so an editor can store or print an
   edit instead of a whole theme object. A different mode returns `undefined`,
-  because the mode is not overridable. The overrides are relative to the exact
-  base, not its mode, so the stored artifact is a `ThemeEdit`: `themeEdit(choice,
-  edited)` records the base's `ThemeChoice` and `applyThemeEdit(edit)` resolves
-  it back.
+  because the mode is not overridable, and so does a group whose member set
+  differs from the base's — a scale a brand widened with an extra step, which
+  the checks accept and a `ThemeOverrides` cannot name. The overrides are
+  relative to the exact base, not its mode, so the stored artifact is a
+  `ThemeEdit`: `themeEdit(choice, edited)` records the base's `ThemeChoice` and
+  `applyThemeEdit(edit)` resolves it back.
 
 A choice that survives a restart — the mode, the contrast variant, the density,
 the platform style — arrives as `unknown`. Narrow it with `isThemeMode`,

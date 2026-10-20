@@ -2285,8 +2285,12 @@ field the way `extendTheme` merges them, and a group with no change is omitted,
 so `themeOverrides(theme, theme)` is `{}`. A tuned density is expressed against
 the preset it names — `mergeDensity` starts from that preset, not from the base's
 metrics — and an elevation level is replaced whole, matching the documented merge
-rule. A different `mode` returns `undefined`, because `extendTheme` cannot change
-the mode.
+rule. `undefined` means the pair cannot be expressed, for one of two reasons: a
+different `mode`, because `extendTheme` cannot change the mode, or a group whose
+member set differs from the base's — the extra step a brand spreads into a scale
+(`{ ...spacing, "6xl": 96 }`) is a theme every check accepts, while a
+`ThemeOverrides` can only name the declared members, so refusing the pair is what
+keeps the returned set able to rebuild the theme it was measured against.
 
 The overrides are relative to that **exact base**, not merely its mode, so a
 stored edit records the base it was made against. A Windows application that
@@ -2303,8 +2307,10 @@ it was not measured against, and `applyThemeEdit(edit)` resolves the recorded
 choice and applies the overrides. A base a `ThemeChoice` cannot name — a brand
 theme, or any theme built by `extendTheme` — is measured against the resolved
 choice, so the brand's own differences travel in the overrides and the pair still
-reproduces it. The one theme the pair cannot express is a different `mode`;
-`themeEdit` returns `undefined` there and the caller keeps its theme object.
+reproduces it while every group keeps the member set the base declares. A
+different `mode` and an added scale member are the two themes the pair cannot
+express; `themeEdit` returns `undefined` there and the caller keeps its theme
+object.
 
 ```ts
 import {

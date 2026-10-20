@@ -3836,6 +3836,36 @@ describe("the shareable theme choice's documents", () => {
   });
 });
 
+describe("the edit artifact's member boundary", () => {
+  const readmeProse = readmeSource.replace(/\s+/g, " ");
+
+  it("states both themes the pair cannot express", () => {
+    expect(markdownProse).toContain(
+      "the extra step a brand spreads into a scale",
+    );
+    expect(markdownProse).toContain("the two themes the pair cannot express");
+    expect(designSystem).toContain(
+      "a group whose member set differs from the base's",
+    );
+    expect(readmeProse).toContain(
+      "a group carries a member the base does not declare",
+    );
+  });
+
+  it("states it in the diff's own JSDoc", () => {
+    const source = readFileSync(
+      new URL("./theme-diff.ts", import.meta.url),
+      "utf8",
+    ).replace(/\s+/g, " ");
+
+    expect(source).toContain("member set differs from the base's");
+    expect(source).toContain("cannot travel in `ThemeOverrides`");
+    expect(source).not.toContain(
+      "The one theme the artifact cannot express is a different `mode`",
+    );
+  });
+});
+
 describe("the panel action's rationale figures", () => {
   const softSurfaces = softActionPairs
     .filter(([fill]) => fill === "softAction")

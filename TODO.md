@@ -148,6 +148,14 @@ measures proves the predicate can fail. No colour, pair, floor, metric, role or
 shipped theme moves; `contrastPairs` stays 470 (plan 754)
 `[x]` Make the canonical theme link carry the density it resolves — `themeChoiceParams` documented density as the one axis always written (the fallback belongs to the platform: `platform=darwin` is compact, the same link on `win32` is comfortable) but encoded one only when the row named it, so the canonical link for `{ platform: "darwin" }` was `platform=darwin` alone and lost its compact on a platform edit; the writer now resolves the choice and always emits `density`, the JSDoc, catalogue, design system and README state the total rule, and `canonicalLink` is executed (plan 755)
 `[x]` Hold the tint's measurement claim — plan `505` made `shadow` a measured composition (the contrast check composites each defined elevation level at its own alpha over `elevationSurfaces`, plus `elevationContentSurfaces` for `md`), but three present-tense passages still said the tint has no pair: the public `themeColorFailures` JSDoc ("no other check sees it"), the catalogue's *Colour format* section ("The tint roles have no pair … while both other checks returned `[]`") and the ledger's Theme colour check row, while the catalogue's own completeness paragraph says `scrollbar` is the one role that is not a pair; the three now state the walk and its plan, the ledger keeps its plan-371 history in the past tense, and `tint-claims.test.ts` derives the 33 painted pairs (6 `sm` + 21 `md` + 6 `lg`) from the shipped levels and rejects the old sentences. No colour, pair, floor, metric or shipped theme moves (plan 757)
+`[x]` Make the edit artifact refuse a member it cannot carry — `themeOverrides`
+walked the shipped scale indexes, so a brand that widened a scale kept its extra
+step while the diff returned `{}` and `themeEdit` stored a pair whose replay was
+the identity, although `themeFailures` accepted the widened theme and three
+documents promised the pair reproduces it; the diff now compares every group's
+member set at every depth and returns `undefined` beside a mode mismatch, so a
+returned set always rebuilds the theme it was measured against, and no colour,
+pair, metric or shipped theme moves (plan 758)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
