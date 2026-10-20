@@ -37,6 +37,7 @@ apps/playground    Native GPUix playground and smoke tests
 packages/config    Shared TypeScript and tooling configuration
 packages/deploy    Alchemy stack: the docs site's Cloudflare resources
 packages/tokens     Design tokens, themes and the React theme provider
+packages/motion     Motion physics (springs, easing, timelines, inertia) + React hooks
 packages/primitives Tier 1 render primitives
 packages/icons      Icon set and sizing rules
 packages/components Tier 2 composition and feedback components
