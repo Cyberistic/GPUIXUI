@@ -307,7 +307,8 @@ export interface TextSpec {
   readonly align?: "start" | "center" | "end";
   /** Inline decoration the runtime paints; omitted means none. */
   readonly decoration?: TextDecoration;
-  readonly truncate?: boolean;
+  /** One line: `true`/`"end"` clip the tail, `"start"` keeps it (plan 783). */
+  readonly truncate?: boolean | TextTruncate;
   /** Maximum visible lines. GPUix clips after this many. */
   readonly clamp?: number;
   /** Selectable text: off by default for chrome, on for content. */
@@ -322,6 +323,15 @@ export interface TextSpec {
 
 /** The inline decorations the runtime paints; absence is the third state. */
 export type TextDecoration = "underline" | "line-through";
+
+/**
+ * Which end a one-line run keeps when it overflows.
+ *
+ * `"end"` clips the tail (the runtime's `ellipsis`); `"start"` keeps the tail
+ * and clips the beginning (`ellipsis-start`), which is the honest shape for a
+ * path or identifier whose distinguishing part is its end (plan `783`).
+ */
+export type TextTruncate = "start" | "end";
 
 /** Roles whose family is the monospace face. */
 const MONO_ROLES: ReadonlyArray<TextRole> = ["code", "codeBlock"];
@@ -368,10 +378,10 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     style.textAlign = spec.align === "end" ? "right" : spec.align;
   }
   if (spec.decoration !== undefined) style.textDecoration = spec.decoration;
-  if (spec.truncate === true) {
-    style.whiteSpace = "nowrap";
-    style.textOverflow = "ellipsis";
-  }
+  // A one-line truncation and a multi-line clamp are alternatives: the clamp is
+  // a height cap with no ellipsis (plan 082), so it wins and the truncation pair
+  // is not emitted at all. The runtime's `textOverflow` can keep either end
+  // (plan 783); `true` is the shipped tail form.
   const lines = clampLines(spec.clamp);
   if (Option.isSome(lines)) {
     // The runtime's `lineClamp` is not part of its text-layout cache key, so the
@@ -380,6 +390,12 @@ export const textStyle = (spec: TextSpec, theme: PrimitiveTheme): StyleDesc => {
     style.whiteSpace = "normal";
     style.maxHeight = lines.value * role.lineHeight;
     style.overflow = "hidden";
+  } else if (spec.truncate === "start") {
+    style.whiteSpace = "nowrap";
+    style.textOverflow = "ellipsis-start";
+  } else if (spec.truncate === true || spec.truncate === "end") {
+    style.whiteSpace = "nowrap";
+    style.textOverflow = "ellipsis";
   }
   return style;
 };

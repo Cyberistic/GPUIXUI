@@ -394,6 +394,32 @@ describe("textStyle", () => {
     expect(clamped.overflow).toBe("hidden");
   });
 
+  it("keeps either end of a one-line run, and lets a clamp win", () => {
+    // The bug guarded (plan 783): the runtime's `textOverflow` has two values,
+    // and the public prop only ever sent the tail one, so a path whose meaning
+    // is its filename could not keep its end.
+    const end = text({ role: "body", tone: "default", truncate: "end" });
+    expect(end.whiteSpace).toBe("nowrap");
+    expect(end.textOverflow).toBe("ellipsis");
+    const start = text({ role: "body", tone: "default", truncate: "start" });
+    expect(start.whiteSpace).toBe("nowrap");
+    expect(start.textOverflow).toBe("ellipsis-start");
+    const off = text({ role: "body", tone: "default", truncate: false });
+    expect(off.whiteSpace).toBeUndefined();
+    expect(off.textOverflow).toBeUndefined();
+    // A multi-line clamp is a different shape, so it wins and emits no
+    // truncation at all rather than leaving an inert `textOverflow` behind.
+    const clamped = text({
+      role: "body",
+      tone: "default",
+      truncate: "start",
+      clamp: 2,
+    });
+    expect(clamped.textOverflow).toBeUndefined();
+    expect(clamped.whiteSpace).toBe("normal");
+    expect(clamped.maxHeight).toBe(2 * testTheme.typography.body.lineHeight);
+  });
+
   it("caps a clamp on the role's own line height", () => {
     const clamped = text({ role: "codeBlock", tone: "default", clamp: 3 });
     expect(clamped.maxHeight).toBe(

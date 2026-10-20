@@ -379,6 +379,18 @@ describe("type", () => {
     expect(numberIn(truncated, "maxHeight")).toStrictEqual(Option.none());
   });
 
+  it("keeps the end of a run when truncation starts", () => {
+    // The bug guarded (plan 783): the public prop only ever sent the runtime's
+    // tail ellipsis, so a path could not keep its filename.
+    const start = renderText({ truncate: "start" }, testTheme);
+    expect(expectSome(stringIn(start, "textOverflow"))).toBe("ellipsis-start");
+    expect(expectSome(stringIn(start, "whiteSpace"))).toBe("nowrap");
+    const end = renderText({ truncate: "end" }, testTheme);
+    expect(expectSome(stringIn(end, "textOverflow"))).toBe("ellipsis");
+    const off = renderText({ truncate: false }, testTheme);
+    expect(stringIn(off, "textOverflow")).toStrictEqual(Option.none());
+  });
+
   it("may shrink below its own content width", () => {
     // The bug guarded (plan 383): a text run kept CSS's automatic content floor,
     // so a sentence in a bounded row painted past it and pushed its sibling out.

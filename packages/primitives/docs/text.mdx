@@ -70,7 +70,7 @@ a font size.
 | `align` | `"start" \| "center" \| "end"` | runtime default | horizontal alignment; `"end"` is sent to the runtime as its `right` (plan `365`) |
 | `decoration` | `"underline" \| "line-through"` | none | the runtime's `textDecoration`; paint only, never a semantic emphasis (plan `377`) |
 | `label` | `string` | none | names a **mark** (e.g. a required `*`) as an image; omit it for prose, and a blank name is absent |
-| `truncate` | `boolean` | `false` | one line, clipped with an ellipsis |
+| `truncate` | `boolean \| "start" \| "end"` | `false` | one line; `true`/`"end"` clips the tail, `"start"` keeps the tail and clips the beginning (plan `783`) |
 | `clamp` | `number` | none | hard-clip after N lines (a value below 1 is ignored) |
 | `selectable` | `boolean` | `false` | a pointer drag takes the text (measured, plan `385`); off keeps chrome inert |
 | `shrink` | `boolean` | `true` | may shrink below its widest word (`minWidth: 0`); `false` restores the automatic floor a `Grid` `max-content` track measures (plan `587`) |
@@ -98,6 +98,34 @@ automatic content floor (`minWidth: "auto"`). Measured (plan `587`): the same
 two runs paint `33 / 235` px with `shrink={false}` and `0 / 0` without it. The
 default stays `true` because the bounded-row overflow is the common case; a
 content-sized grid cell is the exception and says so.
+
+## Truncation
+
+`truncate` clips a run to **one line** and keeps the end that carries the
+meaning. Prose is identified by its first words, so the default (`true`, and the
+explicit `"end"`) clips the tail. A path, package specifier or identifier is
+identified by its **last** segment, so `truncate="start"` keeps that end and
+clips the beginning:
+
+```tsx
+// Good: the filename survives the narrow column.
+<Text role="caption" truncate="start">
+  workspaces/primitives/packages/primitives/src/components/Button.tsx
+</Text>
+
+// Wrong: the reader sees the shared prefix and never the file.
+<Text role="caption" truncate>
+  workspaces/primitives/packages/primitives/src/components/Button.tsx
+</Text>
+```
+
+The two forms send the runtime's own `textOverflow` values — `"ellipsis"` and
+`"ellipsis-start"` — and a capture comparison proves the leading form paints the
+tail and differs from the tail form (plan `783`). Truncation needs a bounded
+width; a run that fits is untouched. A valid `clamp` wins over either truncation
+(a clamp is a multi-line height cap with no ellipsis, plan `082`), and a
+fixed-height **control** label always clips its tail — only the standalone
+`Text` chooses its end.
 
 ## Keyboard
 
@@ -179,7 +207,9 @@ hard-coded pixel value.
 - No responsive type scale or fluid sizing.
 - Selection is **pointer-only**: no keyboard extension, no copy binding, and no
   `selectionColor` prop — the runtime paints its own highlight colour.
-- `truncate` needs a bounded width to truncate against.
+- `truncate` needs a bounded width to truncate against, and it is one line: the
+  leading form cannot be combined with a multi-line `clamp`, because the clamp
+  wins and clips the bottom edge without an ellipsis.
 - `clamp` needs a bounded width to know how many lines the text would take;
   the cap is a maximum, so shorter text keeps its natural height.
 
@@ -209,7 +239,10 @@ hard-coded pixel value.
   `365`).
 - `runtime/text-overflow.runtime.test.tsx` — a 220 px row wraps a long sentence,
   keeps its 40 px sibling inside, leaves a column's width alone, and truncates a
-  one-line run to the row's width (plan `383`).
+  one-line run to the row's width (plan `383`); a capture also proves
+  `truncate="start"` is byte-identical to a manual
+  `textOverflow: "ellipsis-start"` frame, different from `truncate`, on one line
+  inside its row, and inert on a run that fits (plan `783`).
 - `runtime/layout.runtime.test.tsx` — the string is painted, its box height
   equals the role's line height, and each role's measured semantics match the
   table above: `h1`/`h2` are `Heading` nodes with level 1/2 and their text as

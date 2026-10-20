@@ -66,10 +66,8 @@ export const LayoutExample = (): ReactElement => {
       style={{ width: 340, height: 420, overflow: "hidden" }}
     >
       <Stack
-        direction="row"
-        align="center"
-        justify="between"
-        gap="sm"
+        direction="column"
+        gap="xs"
         style={{
           paddingLeft: theme.spacing.md,
           paddingRight: theme.spacing.md,
@@ -77,9 +75,21 @@ export const LayoutExample = (): ReactElement => {
           paddingBottom: theme.spacing.sm,
         }}
       >
-        <Text role="h3">Inspector</Text>
-        <Text role="caption" tone="muted">
-          {properties.length} properties
+        <Stack direction="row" align="center" justify="between" gap="sm">
+          <Text role="h3">Inspector</Text>
+          <Text role="caption" tone="muted">
+            {properties.length} properties
+          </Text>
+        </Stack>
+        {/* The source path is identified by its filename, so the run keeps its
+            end and clips the beginning (plan 783). */}
+        <Text
+          role="caption"
+          tone="muted"
+          truncate="start"
+          testId="layout-example-path"
+        >
+          workspaces/primitives/packages/primitives/src/components/Button.tsx
         </Text>
       </Stack>
 

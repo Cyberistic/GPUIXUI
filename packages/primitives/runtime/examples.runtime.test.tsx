@@ -115,6 +115,17 @@ it("composes the layout example around a scrolling property list", async () => {
   expect(Option.isSome(runtime.element("layout-example-properties"))).toBe(
     true,
   );
+  // The source path is the plan-783 shape: it keeps its filename by clipping the
+  // beginning, so it stays one caption line inside the panel instead of wrapping.
+  const panel = Option.getOrElse(runtime.bounds("layout-example"), () =>
+    expect.fail("the inspector painted no box"),
+  );
+  const path = Option.getOrElse(runtime.bounds("layout-example-path"), () =>
+    expect.fail("the inspector's source path painted no box"),
+  );
+  expect(path.height).toBe(testTheme.typography.caption.lineHeight);
+  expect(path.x).toBeGreaterThanOrEqual(panel.x);
+  expect(path.x + path.width).toBeLessThanOrEqual(panel.x + panel.width);
 });
 
 it("updates the inspector's position readout on a wheel scroll", async () => {

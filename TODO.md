@@ -2564,6 +2564,22 @@ retired once both branches are one
       `components/content.ts`; 3 offline + 2 scoped runtime cases, both
       directions measured (plan `782`).
 
+`[x]` `packages/primitives`: **a `Text` run could not keep the end of a long
+      value** — measured (2026-10-20): the published runtime's
+      `StyleDesc.textOverflow` has two values, `"ellipsis"` and
+      `"ellipsis-start"`, and captures proved they paint differently (84 676 vs
+      84 626 bytes on a 180 px row, both different from the untruncated run),
+      but `Text` exposed only `truncate?: boolean`, which always sent the tail
+      form. A path whose meaning is its filename could therefore only be shown
+      with the filename hidden, and the page never said the capability existed.
+      `truncate` now accepts `"start"` beside `true`/`"end"`; the leading form
+      keeps the tail and clips the beginning, a run that fits is unchanged, and
+      a valid `clamp` wins over both (a multi-line cap has no ellipsis). 1 core
+      + 1 element + 2 runtime cases; the layout inspector shows the
+      shape. Both directions measured — the old resolver fails the two offline
+      cases, two runtime cases (`false` equality; 54 vs 18 px height) and the
+      example case (32 vs 16) (plan `783`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

@@ -13,6 +13,7 @@ import {
   textStyle,
   type TextDecoration,
   type TextTone,
+  type TextTruncate,
 } from "../core/style.js";
 import type { PrimitiveTheme, TextRole } from "../core/theme.js";
 import { ariaName, mergeStyle } from "./internal.js";
@@ -32,8 +33,13 @@ export interface TextProps {
    * as `Icon`'s `label`); omit it for text, and a blank name is absent.
    */
   readonly label?: string;
-  /** One line, clipped with an ellipsis. */
-  readonly truncate?: boolean;
+  /**
+   * One line, clipped with an ellipsis. `true`/`"end"` keep the beginning and
+   * clip the tail, which is right for prose; `"start"` keeps the tail instead —
+   * the shape for a path, package specifier or identifier whose meaning is at
+   * its end (plan `783`). A valid `clamp` wins over it.
+   */
+  readonly truncate?: boolean | TextTruncate;
   /** Clip after this many lines. */
   readonly clamp?: number;
   /** Let the user select this text. Off for chrome, on for content. */

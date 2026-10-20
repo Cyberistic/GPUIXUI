@@ -254,6 +254,7 @@ export type {
   TextDecoration,
   TextSpec,
   TextTone,
+  TextTruncate,
 } from "./style.js";
 
 export {
