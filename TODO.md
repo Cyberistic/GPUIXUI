@@ -2604,6 +2604,15 @@ retired once both branches are one
       `IconButton` + standalone: exactly one `Status`), both directions
       measured (old: 3 statuses) (plan `785`).
 
+`[~]` `packages/primitives`: **the field family's read-only state** — `Input`
+      and `TextArea` accept `readOnly` (and the native runtime enforces it), but
+      `NumberField` and `OTPField` have no such state, `FieldState`/
+      `OTPFieldState`/`OTPCellState`/`RatingState` cannot paint it, and no
+      runtime suite drives a read-only field at all. Plan `786`: one
+      `fieldInert` rule, the two missing props, `readOnly` in every state
+      payload, a read-only OTP tab stop on cell 1, offline + scoped runtime
+      matrices and both examples.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails
