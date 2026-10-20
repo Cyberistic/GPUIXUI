@@ -1207,6 +1207,67 @@ describe("search", { timeout: 120_000 }, () => {
     expect(label[0]?.url).toBe("/docs/components/label");
   });
 
+  it("reaches the runtime's second theme (plan 629)", async () => {
+    const expected = [
+      ["native text theme", "/docs/native-text-theme"],
+      ["syntax theme", "/docs/native-text-theme"],
+      ["syntax colors", "/docs/native-text-theme"],
+      ["code theme", "/docs/native-text-theme"],
+      ["code metrics", "/docs/native-text-theme"],
+      ["diff theme", "/docs/native-text-theme"],
+      ["diff colors", "/docs/native-text-theme"],
+      ["markdown metrics", "/docs/native-text-theme"],
+      ["gutter", "/docs/native-text-theme"],
+      ["caret color", "/docs/native-text-theme"],
+      ["GpuixTheme", "/docs/native-text-theme"],
+      ["SyntaxTheme", "/docs/native-text-theme"],
+      ["GpuixMetrics", "/docs/native-text-theme"],
+      ["nativeTextTheme", "/docs/native-text-theme"],
+      ["textFaint", "/docs/native-text-theme"],
+      ["codeTextSize", "/docs/native-text-theme"],
+      ["diffHunkBg", "/docs/native-text-theme"],
+      ["mdHeadingSizes", "/docs/native-text-theme"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("keeps the owners the native text theme must not steal (plan 629)", async () => {
+    const expected = [
+      ["theme", "/docs/theming"],
+      ["text", "/docs/components/text"],
+      ["input", "/docs/components/text-input"],
+      ["syntax highlighting", "/docs/roadmap"],
+      ["code editor", "/docs/roadmap"],
+      ["diff viewer", "/docs/roadmap"],
+      ["rich text", "/docs/roadmap"],
+      ["word diff", "/docs/native-elements"],
+      ["line numbers", "/docs/native-elements"],
+      ["markdown table", "/docs/native-elements"],
+      ["monospace", "/docs/typography"],
+      ["selection", "/docs/selection"],
+      ["highlight", "/docs/selection"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        const destination = first?.url.split("#")[0];
+        return destination === url
+          ? null
+          : `${query} -> ${destination ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
   it("caps the merged response at the limit", async () => {
     const results = await search("select", 3);
     expect(results).toHaveLength(3);

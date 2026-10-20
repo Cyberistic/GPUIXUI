@@ -167,6 +167,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "every JSX element, its props and what has no component",
   },
   {
+    title: "Native text theme",
+    url: "/docs/native-text-theme",
+    what: "GpuixTheme, syntax colours, code/diff/markdown metrics and the token mapping",
+  },
+  {
     title: "Selection and find",
     url: "/docs/selection",
     what: "the selection API, every `HighlightSpec` field and the find controller",

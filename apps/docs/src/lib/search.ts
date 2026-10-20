@@ -34,6 +34,7 @@ import { source } from "./source";
 import { siteOutputSearchEntry } from "./site-output-search";
 import { stylingSearchEntry } from "./styling-search";
 import { nativeElementsSearchEntry } from "./native-elements-search";
+import { nativeTextSearchEntry } from "./native-text-search";
 import { troubleshootingErrorSearchEntry } from "./troubleshooting-error-search";
 import { selectionSearchEntry } from "./selection-search";
 import { testingSearchEntry } from "./testing-search";
@@ -165,6 +166,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   siteOutputSearchEntry,
   stylingSearchEntry,
   nativeElementsSearchEntry,
+  nativeTextSearchEntry,
   troubleshootingErrorSearchEntry,
   selectionSearchEntry,
   testingSearchEntry,

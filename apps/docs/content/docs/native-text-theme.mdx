@@ -1,0 +1,210 @@
+---
+title: Native text theme
+description: "The runtime's GpuixTheme — the palette, syntax colours, code/diff/markdown metrics and font families behind native code, diff, markdown, input and textarea elements, how the library maps its tokens onto it, and what it leaves unset."
+---
+
+A GPUix app has **two themes**. [`@gpuixui/tokens`](/docs/theming) describes the
+React components; **`GpuixTheme`** describes the runtime's own text engine. The
+two meet in `nativeTextTheme`, which maps the design system onto the five
+elements whose props take a theme.
+
+This page is the runtime half. It is a renderer API, not a component: the
+library ships no wrapper for `<code>`, `<diff>` or `<markdown>` yet, and those
+are [roadmap](/docs/roadmap) targets. [Native elements](/docs/native-elements)
+is what each tag paints; [Styling](/docs/styling) is the `style` prop beside it.
+
+## Which elements take a theme
+
+<NativeTextElements />
+
+`<div>` and `<text>` are the runtime's two **built-in** element types. The React
+reconciler forwards only its universal props to them, so a `theme` on a layout box
+is dropped rather than inherited. Put the theme on the input, code, diff or
+markdown element itself.
+
+There is also **no global setter**: the renderer has no `setTheme`, so each of
+these five elements carries its own `theme` object. Share one object from your
+own module when several surfaces must agree.
+
+## The palette
+
+Eighteen fields, every one optional. The declaration says they layer on the
+runtime's built-in **dark** theme, or on its **light** one when `appearance` is
+`"light"`.
+
+<NativeTextThemeFields />
+
+`bg` is the content plane behind code and diff bodies, not the application
+window; the window is the host's own surface. `textFaint` is what a placeholder
+reads with, and `caret` is the text editor's own caret, which is why a native
+`<input>` looks consistent with the rest of the library even though the field's
+border and padding come from `StyleDesc`.
+
+## Syntax colours
+
+`syntax` is a `SyntaxTheme`: **24 capture classes**, each a CSS colour. It is
+paint only — a colour is not a role in the accessibility tree.
+
+<SyntaxThemeFields />
+
+An unspecified class keeps the runtime's built-in palette, so a theme can set
+only the captures it wants to change. The same palette reaches a `<code>` block,
+fenced code inside `<markdown>`, and the code rows of a `<diff>`.
+
+## Row metrics
+
+`metrics` is a `GpuixMetrics`: **29 numbers** in three families. The declaration
+says they live in the theme rather than in native constants, so tuning a row
+height is a React render with no rebuild.
+
+<GpuixMetricsFields />
+
+The two heading fields are four-number arrays in `[h1, h2, h3, h4–h6]` order.
+The `code` family is shared by `<code>` and a markdown fenced block. The `diff`
+family is load-bearing: a diff virtualizes with a height model it computes
+without measuring, so every row kind needs its height up front.
+
+## Mapping the design system
+
+`nativeTextTheme(theme)` is the library's one mapping from
+[`@gpuixui/tokens`](/docs/theming) to `GpuixTheme`. It sets nine fields and
+leaves nine at the runtime defaults:
+
+<NativeTextMapping />
+
+It is applied by `Input`, `TextArea`, `NumberField` and `OTPField`, and exported
+from `@gpuixui/primitives` and `@gpuixui/primitives/core`. A custom field can
+call it directly:
+
+```tsx
+import type { ReactElement } from "react";
+import { useTheme } from "@gpuixui/tokens/react";
+import { nativeTextTheme } from "@gpuixui/primitives";
+
+export const AmountField = (): ReactElement => {
+  const theme = useTheme();
+  return (
+    <input
+      aria-label="Amount"
+      defaultValue="42"
+      theme={nativeTextTheme(theme)}
+      style={{
+        height: theme.density.controlHeight.md,
+        paddingLeft: theme.density.controlPaddingX.md,
+        paddingRight: theme.density.controlPaddingX.md,
+        backgroundColor: theme.colors.input,
+        color: theme.colors.inputForeground,
+        borderWidth: theme.borderWidth.thin,
+        borderColor: theme.colors.borderStrong,
+      }}
+    />
+  );
+};
+```
+
+The unmapped fields are deliberate. `border` is drawn by the component's own
+`StyleDesc` so the shared focus ring can replace it; the code, diff and syntax
+fields wait for the components that would paint them. Text input's
+[Theming](/docs/components/text-input#theming) section is the component-side
+half of this mapping.
+
+## A code block
+
+`<code>` is a syntax-highlighted, read-only block. It paints **no surface of its
+own** — no fill, border, radius or padding — so `style` is the surface and the
+theme is the content:
+
+```tsx
+import type { ReactElement } from "react";
+import type { GpuixTheme } from "@gpuix/react";
+
+const source = "export const answer = 42;";
+
+const codeTheme: GpuixTheme = {
+  appearance: "dark",
+  bg: "#16161e",
+  codeText: "#c4b5fd",
+  codeWash: "rgba(167, 139, 250, 0.12)",
+  fontMono: "Menlo",
+  metrics: { codeTextSize: 12.5, codeLineHeight: 20, codeGutterMinWidth: 32 },
+  syntax: { keyword: "#c4b5fd", string: "#a7f3d0", comment: "#8b949e" },
+};
+
+export const Snippet = (): ReactElement => (
+  <code
+    code={source}
+    language="ts"
+    showLineNumbers
+    theme={codeTheme}
+    style={{ padding: 12, borderRadius: 8, backgroundColor: "#16161e" }}
+  />
+);
+```
+
+Rows never wrap and the block is its own horizontal scroller, so `whiteSpace`
+and `overflowX` do nothing here. The colours above are one example, not the
+library's palette; the library ships no code component yet, so there is no token
+role to read. [Native elements](/docs/native-elements#code-diffs-and-markdown)
+documents the props and the scroll behaviour.
+
+## Diff and markdown
+
+`<diff>` uses the palette's `diffAdd`, `diffDel` and `diffHunkBg` plus the
+`diff` metrics; `<markdown>` uses the body, heading, table and fenced-block
+metrics plus `codeText`/`codeWash` for inline code. Both take the same
+`GpuixTheme`, so one object can style a diff and the document around it:
+
+```tsx
+import type { ReactElement } from "react";
+import type { GpuixTheme } from "@gpuix/react";
+
+const documentTheme: GpuixTheme = {
+  appearance: "light",
+  diffAdd: "#0f7b4f",
+  diffDel: "#b42318",
+  diffHunkBg: "rgba(15, 123, 79, 0.06)",
+  codeText: "#6d28d9",
+  codeWash: "rgba(109, 40, 217, 0.10)",
+  metrics: {
+    mdHeadingSizes: [19, 16, 15, 14],
+    mdCodeRadius: 10,
+    diffLineHeight: 21,
+  },
+};
+
+export const Review = ({
+  patch,
+  notes,
+}: {
+  readonly patch: string;
+  readonly notes: string;
+}): ReactElement => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <diff patch={patch} wordDiff theme={documentTheme} />
+    <markdown source={notes} theme={documentTheme} />
+  </div>
+);
+```
+
+`<diff>`'s file-header, show-more and line-click events and `<markdown>`'s link
+handler belong to the elements, not the theme; the
+[Native elements](/docs/native-elements#code-diffs-and-markdown) page owns them.
+
+## What is not provided
+
+<NativeTextAbsences />
+
+## Evidence and limits
+
+Every field, element and mapping on this page is checked against the installed
+`@gpuix/native` declarations, the installed reconciler's forwarding sets and the
+real `nativeTextTheme` source (`packages/primitives/src/core/style.ts`) by
+`native-text.test.ts`, in both directions. The playground's `text-native`
+scenario proves `<code>` and `<markdown>` paint their own text in the native
+runtime.
+
+No probe in this repository measures a **painted colour**, so this page does not
+claim a screenshot-diffed syntax palette: the fields are declared by the runtime
+and forwarded to the element, and a theme's visual result is the application's
+to verify. [Previews](/docs/previews) explains the evidence tiers the site uses
+when a real surface can prove a state.

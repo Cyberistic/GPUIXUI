@@ -916,6 +916,32 @@ the page must change. `motion`, `animation` and `easing` reach the section
 through the page-alias table; `smoke:build` asserts `easing`, which returned
 nothing at all before (plan 600).
 
+## Native text theme
+
+`/docs/native-text-theme` documents the runtime's **second** theme. `GpuixTheme`
+is not `@gpuixui/tokens`: it is the palette, syntax colours and layout metrics
+the native `<input>`, `<textarea>`, `<code>`, `<diff>` and `<markdown>` elements
+paint with, and `nativeTextTheme` is the library's one mapping from the design
+system onto it.
+
+The page renders all 18 `GpuixTheme` fields, the 24 `SyntaxTheme` capture classes
+and the 29 `GpuixMetrics` numbers from `src/lib/native-text.ts`.
+`src/lib/native-text.test.ts` compares every row with the installed
+`@gpuix/native` declarations in both directions, reads the installed
+reconciler's `BUILT_IN_TYPES`/`UNIVERSAL_PROPS` to prove a `theme` on `div`/`text`
+is dropped, and guards `nativeTextTheme`'s nine keys against
+`packages/primitives/src/core/style.ts`. The page also states the nine fields the
+helper leaves unset and why. It explicitly does **not** claim a painted-colour
+capture: the palette is declared and forwarded, and no probe measures a theme's
+rendered colour.
+
+The search entry promotes `GpuixTheme`, `SyntaxTheme`, `GpuixMetrics`,
+`nativeTextTheme` and the camelCase fields; the plain capture classes (`comment`,
+`string`, `label`, `invalid`) stay indexed but unpromoted, so they cannot steal a
+component page. `syntax theme`, `code metrics`, `diff colors`, `markdown metrics`,
+`gutter` and `caret color` are page aliases, and `smoke:build` asserts
+`GpuixTheme` and `syntax theme` against the production index.
+
 ## Code highlighting
 
 Code fences, source includes and generated prop tables are highlighted by two

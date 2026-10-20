@@ -24,6 +24,14 @@ import { PartStates } from "./part-states-table";
 import { NativePlatforms } from "./native-platforms";
 import { AbsentElements, NativeElementsTable } from "./native-elements-table";
 import {
+  GpuixMetricsFields,
+  NativeTextAbsences,
+  NativeTextElements,
+  NativeTextMapping,
+  NativeTextThemeFields,
+  SyntaxThemeFields,
+} from "./native-text-tables";
+import {
   FindRangeFields,
   HighlightFields,
   SelectionAbsences,
@@ -94,6 +102,12 @@ export function getMDXComponents(components?: MDXComponents) {
     TextSearchFields,
     FindRangeFields,
     SelectionAbsences,
+    NativeTextElements,
+    NativeTextThemeFields,
+    SyntaxThemeFields,
+    GpuixMetricsFields,
+    NativeTextMapping,
+    NativeTextAbsences,
     LiveSurface,
     LiveSceneIndex,
     ComponentPreview,

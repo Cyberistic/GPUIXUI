@@ -1444,6 +1444,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the testing page's own subject, which reached a Hotkey limitation before plan 628",
     },
+    {
+      query: "GpuixTheme",
+      expected: "/docs/native-text-theme",
+      first: true,
+      what: "the runtime's second theme, which returned nothing before plan 629",
+    },
+    {
+      query: "syntax theme",
+      expected: "/docs/native-text-theme",
+      first: true,
+      what: "the native text theme's subject, which reached Theming before plan 629",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

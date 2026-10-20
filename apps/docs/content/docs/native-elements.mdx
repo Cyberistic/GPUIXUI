@@ -100,7 +100,10 @@ files and the docs icon gallery draws the same markup in the browser — see
 ## Code, diffs and markdown
 
 These three are read-only content surfaces with no component yet. Each accepts
-the content as a prop, so the application owns the string.
+the content as a prop, so the application owns the string. Their palette, syntax
+colours and row metrics are the
+[Native text theme](/docs/native-text-theme) — a separate object from
+`@gpuixui/tokens`.
 
 `<code>` highlights one block. It paints **no surface of its own** — no fill,
 border or padding — so `style` is the surface. Rows never wrap and the block

@@ -115,6 +115,14 @@
  * actions` stay on Contributing, `screenshot` on Previews, `coverage` on the
  * Roadmap, `selection` on Selection and find, `accessibility tree` on
  * Accessibility, and `snapshot`/`golden` deliberately leave Architecture.
+ *
+ * Plan 629 adds the native text theme vocabulary: `syntax theme`, `syntax
+ * colors`, `code theme`, `code metrics`, `diff theme`, `markdown metrics`,
+ * `gutter` and `caret color` name the runtime's second theme. The component
+ * targets (`syntax highlighting`, `code editor`, `diff viewer`, `rich text`)
+ * stay on the Roadmap; `word diff`, `line numbers` and `markdown table` stay on
+ * Native elements; `theme` stays on Theming and `text`/`input` on their
+ * component pages.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -365,6 +373,38 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "jsx elements",
       "native element",
       "element catalogue",
+    ],
+  ],
+  [
+    "/docs/native-text-theme",
+    [
+      "native text",
+      "text theme",
+      "syntax theme",
+      "syntax themes",
+      "syntax color",
+      "syntax colors",
+      "syntax colour",
+      "syntax colours",
+      "code theme",
+      "code themes",
+      "code colors",
+      "code colours",
+      "code metrics",
+      "diff theme",
+      "diff themes",
+      "diff colors",
+      "diff colours",
+      "diff metrics",
+      "markdown theme",
+      "markdown themes",
+      "markdown colors",
+      "markdown colours",
+      "markdown metrics",
+      "gutter",
+      "gutters",
+      "caret color",
+      "caret colour",
     ],
   ],
   [

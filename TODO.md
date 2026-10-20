@@ -471,7 +471,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 195/195
+`[x]` `[██████████]` 196/196
+
+`[x]` **The runtime's second theme has a page (plan 629)** — `GpuixTheme`,
+      `SyntaxTheme` and `GpuixMetrics` had no owner: `syntax colors` reached the
+      colour picker, `code metrics` Theming's scale table, and `GpuixTheme`,
+      `gutter` and every camelCase field returned nothing, although the library
+      maps its tokens onto that theme through `nativeTextTheme`. `/docs/native-text-theme`
+      renders all 18 palette fields, 24 syntax colours and 29 code/diff/markdown
+      metrics, the five elements that take a theme, the 9 mapped + 9 unset
+      fields, and the five absences; `native-text.test.ts` reads the installed
+      declarations, the reconciler's forwarding sets and the real helper source
+      in both directions. 148 files / 1 580 docs tests, 112-page `smoke:build`,
+      a11y (112×2) and responsive green; two forced failures and five
+      corrections in plan 629 §11.
 
 `[x]` **Testing your components has a page (plan 628)** — the consumer-facing
       test renderer had no owner: `createTestRoot`, `hasNativeTestRenderer`,
