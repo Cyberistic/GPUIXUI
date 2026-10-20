@@ -88,10 +88,10 @@ from a screenshot:
 - **A failed frame says so.** The preview document reports
   `data-gpuix="ready"` once GPUI's window exists and `data-gpuix="failed"` with
   a `data-reason` otherwise. Inspect the iframe when the frame stays blank.
-- **It needs a working GPU backend in the tab.** A browser without WebGL cannot
-  paint the scene; the canvas is also outside the browser accessibility tree,
-  so the page's prose remains the description
-  ([Accessibility](/docs/accessibility)).
+- **It needs a browser with WebGPU.** GPUix's WebAssembly renderer initialises
+  on the browser's WebGPU backend, so a tab with WebGPU disabled cannot paint
+  the scene. The canvas is also outside the browser accessibility tree, so the
+  page's prose remains the description ([Accessibility](/docs/accessibility)).
 - **It is not the desktop runtime.** A blank live surface says nothing about
   the native binding or the native suites; [Previews](/docs/previews) states
   what each tier proves.
