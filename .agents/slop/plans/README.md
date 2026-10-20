@@ -415,6 +415,7 @@ references without buying correctness.
 | [818](./818-warning-fill-figures.md) | The light `warning` fill's fill-only figure is restated in twelve passages and derived in two | F | 057, 332, 348, 399, 733, 749, 806, 810, 815, 817 | done |
 | [819](./819-beside-derived-figures.md) | Two catalogue passages state figures beside a derived claim | F | 344, 382, 504, 513, 620, 624, 627, 645, 667, 818 | done |
 | [821](./821-skeleton-pulse-tightest-set.md) | The skeleton pulse's "next tightest" figure and the set it names | F | 078, 094, 311, 322, 387, 393, 536, 544, 619, 737 | done |
+| [822](./822-disabled-label-tier-figures.md) | The disabled label's tier figures, and the one attributed to the wrong set | F | 392, 500, 510, 520, 537, 623, 729 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4273,6 +4274,20 @@ the list nine. `skeleton-pulse-claims.test.ts` derives identity dark's pair
 (`1.074:1` dim, `1.179:1` opaque), the nine-surface order inside that set and the
 enumeration's ordered minimum with its set and surface, proves the reader rejects
 the pre-fix sentence, and moves the minimum with a planted palette; no colour,
+pair, floor, metric, role or shipped theme moves.
+
+Plan `822` corrects the disabled label's tier figures. The catalogue stated
+"1.542:1 below `softActionForeground` (identity dark)", while `1.542:1` is the
+**high-contrast dark** step on the shared panel surfaces and identity dark
+measures **1.877:1**; plan `537` corrected the same attribution on the §Text
+hierarchy sentence and this passage kept it. Neither that sentence nor the
+design system's "staying 1.301:1 (identity dark) and 1.168:1 (AAA dark) below
+secondary text" was read by a test — the literal `1.301` appeared in no suite —
+so a palette edit could leave both quoting a figure the package no longer
+produces. The sentence now names high-contrast dark and states identity dark's
+own figure, and `disabled-label-tier-claims.test.ts` derives all four steps with
+the hierarchy's surface list and measurement, reads both passages, rejects the
+pre-fix attribution and moves the figures with a planted palette; no colour,
 pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
