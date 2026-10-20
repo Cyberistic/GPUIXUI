@@ -453,10 +453,14 @@ A native field's caret is the accent's **readable ink** (`primaryText`), not the
 of it. `nativeFieldTheme(theme)` is the `theme` prop GPUix 0.10.0 reads for
 `caret`; `caretPairs` holds `primaryText` on the field's `input` fill, and the
 four surface tones and four row washes an in-place editor paints are already
-held by the `primaryText` text pairs. On macOS dark the fill measures **2.748:1**
-on a selected row and **2.836:1** on a pressed one, under the 3:1 mark floor.
-Without the prop the built-in dark caret measures **2.795:1** on the AAA light
-quiet panel, under the 4.5:1 mark floor.
+held by the `primaryText` text pairs. The fill failed that mark when the caret
+moved (plan `557`): macOS dark measured **2.748:1** on a selected row and
+**2.836:1** on a pressed one, under the 3:1 mark floor. Plan `698` has since
+moved it to **3.214:1** on `selected` and **3.317:1** on `active` for the
+option's check; the caret keeps the ink role because `primaryText` clears every
+surface with margin (**5.587:1** at the tightest). Without the prop the built-in
+dark caret measures **2.795:1** on the AAA light quiet panel, under the 4.5:1
+mark floor.
 
 A filled control steps through its own family — `x` → `xHover` → `xActive` — so
 the state is an editable, measured fill, not a translucent tint that takes its

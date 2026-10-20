@@ -1775,13 +1775,15 @@ grey and wash stand. Evidence: `@gpuix/native@0.10.0` (`9fcd628`),
 The one paint the theme can reach is the caret. `nativeFieldTheme(theme)` returns
 the runtime `theme` prop a field reads — `{ caret: theme.colors.primaryText }` —
 because a caret is a 1px **mark**, not a label on a fill: `primary` is the fill,
-and on macOS dark it measures **2.748:1** on a `selected` row and **2.836:1** on
-a pressed one, under the 3:1 mark floor, so a caret in an in-place editor
-(`InlineEdit` paints a field on the four row washes) vanished there while every
-check returned `[]`. `primaryText` is the accent's readable ink: the text pairs
-already hold it on the four `Surface` tones and the four row washes at the
-4.5:1 secondary floor, and `caretPairs` holds it on the field's own `input`
-fill at the mark floor. It clears all nine surfaces in every shipped set
+and when the caret moved (plan `557`) macOS dark measured **2.748:1** on a
+`selected` row and **2.836:1** on a pressed one, under the 3:1 mark floor, so a
+caret in an in-place editor (`InlineEdit` paints a field on the four row washes)
+vanished there while every check returned `[]`. Plan `698` has since moved the
+fill to **3.214:1** on `selected` and **3.317:1** on `active` for the option's
+check, so the caret keeps the ink role: `primaryText` is the accent's readable
+ink, the text pairs already hold it on the four `Surface` tones and the four row
+washes at the 4.5:1 secondary floor, and `caretPairs` holds it on the field's own
+`input` fill at the mark floor. It clears all nine surfaces in every shipped set
 (**5.587:1** at the tightest, Windows dark on `active`). Without the prop the
 field keeps the runtime's built-in dark caret (`#7C86FF`), which measures
 **3.129:1** on the AAA light `input` and **2.795:1** on its quiet panel, under

@@ -473,15 +473,17 @@ export const markRoles = ["primary", "success", "destructive"] as const;
  * The native field's caret on the one surface the text contract does not
  * already hold: its own `input` fill. The caret is the accent's readable ink
  * (`primaryText`), not the `primary` fill — the fill is tuned for a label on top
- * of it, and on macOS dark it measures **2.748:1** on `selected` and
- * **2.836:1** on `active`, under the 3:1 mark floor, so a caret in a selected
- * inline edit vanished while every check returned `[]`. The other eight
- * surfaces a field sits on — the four `Surface` tones and the four row washes an
- * in-place editor paints — are already held by `primaryTextPairs` at the higher
- * `secondary` floor. This pair is a `mark` because a caret is a 1px indicator,
- * not text; `primaryText` clears it on all nine surfaces in every shipped set
- * (5.587:1 at the tightest, Windows dark on `active`). It is published inside
- * {@link markPairs}, so the mark class is whole.
+ * of it. Before plan 698 moved it the macOS dark fill measured **2.748:1** on
+ * `selected` and **2.836:1** on `active`, under the 3:1 mark floor, so a caret
+ * in a selected inline edit vanished while every check returned `[]`; the fill
+ * now measures 3.214:1 on `selected` and 3.317:1 on `active`, and the caret
+ * stays the ink. The other eight surfaces a field sits on — the four `Surface`
+ * tones and the four row washes an in-place editor paints — are already held by
+ * `primaryTextPairs` at the higher `secondary` floor. This pair is a `mark`
+ * because a caret is a 1px indicator, not text; `primaryText` clears it on all
+ * nine surfaces in every shipped set (5.587:1 at the tightest, Windows dark on
+ * `active`). It is published inside {@link markPairs}, so the mark class is
+ * whole.
  */
 export const caretPairs: readonly ContrastPair[] = [
   ["primaryText", "input", "mark"],

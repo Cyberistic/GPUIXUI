@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 317/394
+`[x]` `[████████░░]` 318/395
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2673,6 +2673,15 @@ plan 650 added, and a guard derives that count, the field's washed-text count
 and the skeleton pulse's surface count from `inactiveSurfaces`,
 `selectionInputPairs` and `skeletonPulsePairs`, with a case proving the pre-fix
 sentence fails (plan 703)
+`[x]` Hold the caret's shipped fill figures to plan 698's move — the macOS dark
+accent moved from `#0A84FF` to `#2E93FF` so the selected option's check clears
+the mark floor, taking the fill from 2.748:1 to **3.214:1** on `selected` and
+from 2.836:1 to **3.317:1** on `active`, while five places still said in the
+present tense that the shipped fill measured under the 3:1 floor; the four stale
+sentences and the inventory now name the move, the historical failure and
+today's figures, and a guard derives both ratios from
+`getPlatformTheme("darwin", "dark")` and rejects the pre-698 present tense; no
+colour, pair, floor, metric or shipped set moves (plan 705)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

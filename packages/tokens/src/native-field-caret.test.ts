@@ -232,3 +232,76 @@ describe("native field caret", () => {
     expect(darkSearchField.style.color).toBe(dark.colors.inputForeground);
   });
 });
+
+/**
+ * Plan 698 moved macOS dark's `primary` for the selected option's check, taking
+ * the fill to 3.214:1 on `selected` and 3.317:1 on `active`; five documents kept
+ * describing the pre-698 fill in the present tense — "the fill measures
+ * **2.748:1** on a selected row … under the 3:1 mark floor" — which the shipped
+ * set no longer produces. The figures derive from the resolved set, so the next
+ * accent move fails the sentences instead of leaving the package's own
+ * rationale describing a value it does not ship (plan 535's class).
+ */
+describe("the caret's shipped fill figures", () => {
+  const macOSDark = getPlatformTheme("darwin", "dark");
+  const selected = contrastRatio(
+    macOSDark.colors.primary,
+    macOSDark.colors.selected,
+  );
+  const active = contrastRatio(
+    macOSDark.colors.primary,
+    macOSDark.colors.active,
+  );
+
+  /** A file's prose with its comment markers and line breaks collapsed. */
+  const prose = (path: string, stripComments: boolean): string =>
+    readFileSync(new URL(path, import.meta.url), "utf8")
+      .split("\n")
+      .map((line) =>
+        stripComments ? line.replace(/^\s*(?:\*|\/\/)\s?/, "") : line,
+      )
+      .join(" ")
+      .replace(/\s+/g, " ");
+
+  /** The five places that justify the caret's role. */
+  const documents = [
+    ["styles.ts", prose("./styles.ts", true)],
+    ["contrast.ts", prose("./contrast.ts", true)],
+    ["docs/design-system.md", prose("../../../docs/design-system.md", false)],
+    ["docs/tokens.md", prose("../../../docs/tokens.md", false)],
+    ["COMPONENTS.md", prose("../../../COMPONENTS.md", false)],
+  ] as const;
+
+  /** Whether a passage names a ratio on a surface, bold or plain. */
+  const names = (passage: string, figure: number, surface: string): boolean =>
+    [
+      `${figure.toFixed(3)}:1 on \`${surface}\``,
+      `**${figure.toFixed(3)}:1** on \`${surface}\``,
+    ].some((needle) => passage.includes(needle));
+
+  /** Today's fill on both row fills, and no present-tense claim of the old one. */
+  const statesCurrentFill = (passage: string): boolean =>
+    names(passage, selected, "selected") &&
+    names(passage, active, "active") &&
+    !passage.includes("fill measures **2.748:1**");
+
+  it("states today's fill on both rows it marks", () => {
+    expect(selected).toBeCloseTo(3.214, 3);
+    expect(active).toBeCloseTo(3.317, 3);
+
+    documents.forEach(([name, passage]) => {
+      expect(statesCurrentFill(passage), name).toBe(true);
+    });
+  });
+
+  it("rejects the pre-698 present tense", () => {
+    const stale =
+      "On the shipped macOS dark set the fill measures **2.748:1** on a selected row and **2.836:1** on a pressed one, under the 3:1 mark floor.";
+    expect(statesCurrentFill(stale)).toBe(false);
+
+    // A page that adds today's figure elsewhere still fails while the old
+    // sentence stands.
+    const mixed = `${stale} Plan 698 moved the fill to ${selected.toFixed(3)}:1 on \`selected\` and ${active.toFixed(3)}:1 on \`active\`.`;
+    expect(statesCurrentFill(mixed)).toBe(false);
+  });
+});
