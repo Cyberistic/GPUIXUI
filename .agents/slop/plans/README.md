@@ -381,6 +381,7 @@ references without buying correctness.
 | [753](./753-dimensions-consumer-reach.md) | The dimensions promise the shipped components do not keep | F | 353, 556, 720 | done |
 | [754](./754-pair-enforcement.md) | A published pair list is enforced, not only unique | F | 071, 349, 546, 651, 737 | done |
 | [755](./755-canonical-density.md) | The canonical link writes the density it resolves | F | 380, 529, 534, 542, 688 | done |
+| [757](./757-tint-measurement-claims.md) | The tint is measured, and three passages still say it is not | F | 085, 371, 505, 747–750, 754 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
