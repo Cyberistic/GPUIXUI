@@ -5,13 +5,20 @@
  * blank and never shifts when an image is missing. The component owns no state:
  * there is no image-loading or image-error state in this version, and the
  * initials are what a consumer sees until the image paints.
+ *
+ * The static structure is a Tailwind recipe (`AVATAR_*`) compiled against
+ * shadcn's fixed metrics; the diameter and presence dot are the dynamic values
+ * that stay in `style`, and the caller's `className` is joined after the root
+ * recipe.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import { AVATAR_DISC, AVATAR_FALLBACK, AVATAR_ROOT, cn } from "@gpuixui/tw";
 import { Match } from "effect";
 import { initials } from "./avatar/logic.js";
-import { textStyle, useTheme, type Theme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme, type Theme } from "./internal/theme.js";
 
 /** The four diameters, in pixels. */
 export type AvatarSize = "xs" | "sm" | "md" | "lg";
@@ -29,6 +36,8 @@ export interface AvatarProps extends Props {
   readonly size?: AvatarSize;
   /** Renders the presence dot. Omit for no dot. */
   readonly status?: AvatarStatus;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /**
@@ -62,6 +71,7 @@ export const Avatar = ({
   src,
   size = "md",
   status,
+  className,
   style,
   ...rest
 }: AvatarProps) => {
@@ -74,41 +84,21 @@ export const Avatar = ({
       aria-label={name}
       {...rest}
       style={mergeStyles(
-        {
-          // The root is not clipped so the presence dot can sit on the rim; the
-          // inner disc is what clips the picture into a circle.
-          position: "relative",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
+        // The root is not clipped so the presence dot can sit on the rim; the
+        // inner disc is what clips the picture into a circle.
+        mergeStyles(recipeStyle(cn(AVATAR_ROOT, className), theme), {
           width: diameter,
           height: diameter,
-          flexShrink: 0,
-        },
+        }),
         style,
       )}
     >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "100%",
-          height: "100%",
-          borderRadius: theme.radius.full,
-          overflow: "hidden",
-          backgroundColor: theme.colors.muted,
-        }}
-      >
+      <div style={recipeStyle(AVATAR_DISC, theme)}>
         {src === undefined ? (
           <text
-            style={{
-              ...textStyle(theme, "label"),
+            style={mergeStyles(recipeStyle(AVATAR_FALLBACK, theme), {
               fontSize: Math.round(diameter * 0.4),
-              color: theme.colors.foreground,
-            }}
+            })}
           >
             {initials(name)}
           </text>

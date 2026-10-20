@@ -8,11 +8,24 @@
  * Compound parts (`docs/component-api.md` §8): the root owns `role="alert"` and
  * the tone; `AlertIcon`, `AlertContent`, `AlertTitle`, `AlertDescription` and
  * `AlertDismiss` read that tone through a context, so a part is never given a
- * duplicated `tone` prop.
+ * duplicated `tone` prop. The resting appearance is a Tailwind recipe
+ * (`ALERT_*`), compiled against shadcn's fixed metrics; the caller's `className`
+ * is joined after each part's recipe and its `style` is merged last. The tone's
+ * readable foreground is still one dynamic value, so the icon and title paint it
+ * through `style`.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import {
+  ALERT_BASE,
+  ALERT_CONTENT,
+  ALERT_DESCRIPTION,
+  ALERT_ICON,
+  ALERT_TITLE,
+  ALERT_TONES,
+  cn,
+} from "@gpuixui/tw";
 import { createContext, useContext } from "react";
 import { IconButton } from "./internal/button.js";
 import {
@@ -21,7 +34,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { textStyle, tone, toneSurface, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { tone, useTheme } from "./internal/theme.js";
 
 /** The four status tones an alert can carry. */
 export type AlertTone = "info" | "success" | "warning" | "danger";
@@ -48,6 +62,7 @@ const useAlert = (): AlertContextValue => {
 export interface AlertProps extends Omit<Props, "children"> {
   /** Default `"info"`. */
   readonly tone?: AlertTone;
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -57,6 +72,7 @@ export interface AlertProps extends Omit<Props, "children"> {
  */
 export const Alert = ({
   tone: value = "info",
+  className,
   children,
   style,
   ...rest
@@ -71,15 +87,7 @@ export const Alert = ({
         role="alert"
         {...rest}
         style={mergeStyles(
-          {
-            ...toneSurface(theme, value),
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            gap: theme.spacing.lg,
-            padding: theme.spacing.lg,
-            borderRadius: theme.radius.md,
-          },
+          recipeStyle(cn(ALERT_BASE, ALERT_TONES[value], className), theme),
           style,
         )}
       >
@@ -90,23 +98,22 @@ export const Alert = ({
 };
 
 /** {@link AlertIcon} props. */
-export type AlertIconProps = Props;
+export interface AlertIconProps extends Props {
+  readonly className?: string;
+}
 
 /** The leading glyph, painted in the tone's foreground. */
-export const AlertIcon = ({ style, ...rest }: AlertIconProps) => {
+export const AlertIcon = ({ className, style, ...rest }: AlertIconProps) => {
+  const theme = useTheme();
   const { foreground } = useAlert();
 
   return (
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          flexShrink: 0,
+        mergeStyles(recipeStyle(cn(ALERT_ICON, className), theme), {
           color: foreground,
-        },
+        }),
         style,
       )}
     />
@@ -115,11 +122,13 @@ export const AlertIcon = ({ style, ...rest }: AlertIconProps) => {
 
 /** {@link AlertContent} props. */
 export interface AlertContentProps extends Omit<Props, "children"> {
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
 /** The growing column between the glyph and the dismiss control. */
 export const AlertContent = ({
+  className,
   children,
   style,
   ...rest
@@ -131,12 +140,7 @@ export const AlertContent = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-          flexGrow: 1,
-        },
+        recipeStyle(cn(ALERT_CONTENT, className), theme),
         style,
       )}
     >
@@ -146,10 +150,12 @@ export const AlertContent = ({
 };
 
 /** {@link AlertTitle} props. */
-export type AlertTitleProps = Props;
+export interface AlertTitleProps extends Props {
+  readonly className?: string;
+}
 
 /** The heading. It always uses the tone's readable foreground. */
-export const AlertTitle = ({ style, ...rest }: AlertTitleProps) => {
+export const AlertTitle = ({ className, style, ...rest }: AlertTitleProps) => {
   const theme = useTheme();
   const { foreground } = useAlert();
 
@@ -157,7 +163,9 @@ export const AlertTitle = ({ style, ...rest }: AlertTitleProps) => {
     <text
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "bodyStrong"), color: foreground },
+        mergeStyles(recipeStyle(cn(ALERT_TITLE, className), theme), {
+          color: foreground,
+        }),
         style,
       )}
     />
@@ -165,20 +173,26 @@ export const AlertTitle = ({ style, ...rest }: AlertTitleProps) => {
 };
 
 /** {@link AlertDescription} props. */
-export type AlertDescriptionProps = Props;
+export interface AlertDescriptionProps extends Props {
+  readonly className?: string;
+}
 
 /**
  * Body prose in the page foreground rather than the tone's, because body text
  * has to stay readable on the tint. It is a container, so it may hold an action.
  */
-export const AlertDescription = ({ style, ...rest }: AlertDescriptionProps) => {
+export const AlertDescription = ({
+  className,
+  style,
+  ...rest
+}: AlertDescriptionProps) => {
   const theme = useTheme();
 
   return (
     <div
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), color: theme.colors.foreground },
+        recipeStyle(cn(ALERT_DESCRIPTION, className), theme),
         style,
       )}
     />

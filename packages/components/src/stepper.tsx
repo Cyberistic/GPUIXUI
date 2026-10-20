@@ -19,6 +19,17 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  STEPPER_DESCRIPTION,
+  STEPPER_LABEL,
+  STEPPER_MARKER,
+  STEPPER_MARKER_TEXT,
+  STEPPER_ORIENTATION,
+  STEPPER_ROOT,
+  STEPPER_STEP,
+  STEPPER_TEXT,
+} from "@gpuixui/tw";
 import { Match } from "effect";
 import { createContext, useContext } from "react";
 import {
@@ -27,12 +38,8 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import {
-  controlHeight,
-  textStyle,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { controlHeight, useTheme, type Theme } from "./internal/theme.js";
 
 /** The two axes a stepper can run along. */
 export type StepperOrientation = "horizontal" | "vertical";
@@ -92,6 +99,7 @@ export interface StepperProps extends Omit<Props, "children"> {
   readonly orientation?: StepperOrientation;
   /** The list's accessible name. */
   readonly label?: string;
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -100,6 +108,7 @@ export const Stepper = ({
   value,
   orientation = "horizontal",
   label,
+  className,
   children,
   style,
   ...rest
@@ -114,12 +123,10 @@ export const Stepper = ({
         {...(label === undefined ? {} : { "aria-label": label })}
         {...rest}
         style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: orientation === "horizontal" ? "row" : "column",
-            alignItems: orientation === "horizontal" ? "flex-start" : "stretch",
-            gap: theme.spacing["2xl"],
-          },
+          recipeStyle(
+            cn(STEPPER_ROOT, STEPPER_ORIENTATION[orientation], className),
+            theme,
+          ),
           style,
         )}
       >
@@ -137,6 +144,8 @@ export interface StepperStepProps extends Omit<Props, "children" | "style"> {
   readonly label: string;
   /** One line of supporting copy under the name. */
   readonly description?: string;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the step's derived status. */
   readonly style?: StateStyle<StepperStepState>;
 }
@@ -151,6 +160,7 @@ export const StepperStep = ({
   value,
   label,
   description,
+  className,
   style,
   ...rest
 }: StepperStepProps) => {
@@ -167,61 +177,38 @@ export const StepperStep = ({
       aria-selected={status === "current"}
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.md,
-        },
+        recipeStyle(cn(STEPPER_STEP, className), theme),
         resolveStyle(style, { status }),
       )}
     >
       <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "center",
+        style={mergeStyles(recipeStyle(STEPPER_MARKER, theme), {
           width: side,
           height: side,
-          borderRadius: theme.radius.full,
           backgroundColor: marker.backgroundColor,
-        }}
+        })}
       >
         <text
-          style={{
-            ...textStyle(theme, "caption"),
+          style={mergeStyles(recipeStyle(STEPPER_MARKER_TEXT, theme), {
             color: marker.color,
-          }}
+          })}
         >
           {String(value)}
         </text>
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: theme.spacing["2xs"],
-        }}
-      >
+      <div style={recipeStyle(STEPPER_TEXT, theme)}>
         <text
-          style={{
-            ...textStyle(theme, "label"),
+          style={mergeStyles(recipeStyle(STEPPER_LABEL, theme), {
             color:
               status === "upcoming"
                 ? theme.colors.mutedForeground
                 : theme.colors.foreground,
-          }}
+          })}
         >
           {label}
         </text>
         {description === undefined ? null : (
-          <text
-            style={{
-              ...textStyle(theme, "caption"),
-              color: theme.colors.mutedForeground,
-            }}
-          >
+          <text style={recipeStyle(STEPPER_DESCRIPTION, theme)}>
             {description}
           </text>
         )}

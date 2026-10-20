@@ -4,13 +4,24 @@
  * A panel, not a surface: it paints no background and no border, because it sits
  * inside a `Card`, a panel or a table body that already supplies one. Centred and
  * unfocusable — the only interactive thing in it is whatever the caller passes as
- * `action`.
+ * `action`. The resting appearance is a Tailwind recipe (`EMPTY_STATE_*`),
+ * compiled against shadcn's fixed metrics; the caller's `className` is joined
+ * after the root recipe and its `style` is merged last.
  */
 
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import {
+  cn,
+  EMPTY_STATE_ACTION,
+  EMPTY_STATE_DESCRIPTION,
+  EMPTY_STATE_ICON,
+  EMPTY_STATE_ROOT,
+  EMPTY_STATE_TITLE,
+} from "@gpuixui/tw";
 import type { ReactNode } from "react";
-import { textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The widest a description is allowed to run before it wraps. */
 const MEASURE = 360;
@@ -25,6 +36,8 @@ export interface EmptyStateProps extends Props {
   readonly description?: string;
   /** The way out: usually a `Button`. */
   readonly action?: ReactNode;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
 
 /** A centred panel for a collection that has nothing in it. */
@@ -33,6 +46,7 @@ export const EmptyState = ({
   title,
   description,
   action,
+  className,
   style,
   ...rest
 }: EmptyStateProps) => {
@@ -42,52 +56,25 @@ export const EmptyState = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: theme.spacing.lg,
-          padding: theme.spacing["3xl"],
-        },
+        recipeStyle(cn(EMPTY_STATE_ROOT, className), theme),
         style,
       )}
     >
       {icon === undefined ? null : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            color: theme.colors.mutedForeground,
-          }}
-        >
-          {icon}
-        </div>
+        <div style={recipeStyle(EMPTY_STATE_ICON, theme)}>{icon}</div>
       )}
-      <text
-        style={{
-          ...textStyle(theme, "bodyStrong"),
-          color: theme.colors.foreground,
-          textAlign: "center",
-        }}
-      >
-        {title}
-      </text>
+      <text style={recipeStyle(EMPTY_STATE_TITLE, theme)}>{title}</text>
       {description === undefined ? null : (
         <text
-          style={{
-            ...textStyle(theme, "body"),
-            color: theme.colors.mutedForeground,
-            textAlign: "center",
+          style={mergeStyles(recipeStyle(EMPTY_STATE_DESCRIPTION, theme), {
             maxWidth: MEASURE,
-          }}
+          })}
         >
           {description}
         </text>
       )}
       {action === undefined ? null : (
-        <div style={{ display: "flex", flexDirection: "row" }}>{action}</div>
+        <div style={recipeStyle(EMPTY_STATE_ACTION, theme)}>{action}</div>
       )}
     </div>
   );

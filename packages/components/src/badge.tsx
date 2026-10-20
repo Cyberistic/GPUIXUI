@@ -4,18 +4,17 @@
  * Non-interactive by design — a badge is never a button and nothing inside one
  * is clickable. Colour comes from the theme's semantic roles, and the four
  * status variants from the soft-tone palette Alert and Toast share, so a custom
- * theme restyles every badge with no code change.
+ * theme restyles every badge with no code change. The resting appearance is a
+ * Tailwind recipe (`BADGE_*`), compiled against shadcn's fixed metrics; the
+ * caller's `className` is joined after the recipe and its `style` is merged
+ * last.
  */
 
-import type { Props, StyleDesc } from "@gpuix/react";
+import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
-import { Match } from "effect";
-import {
-  textStyle,
-  toneSurface,
-  useTheme,
-  type Theme,
-} from "./internal/theme.js";
+import { BADGE_BASE, BADGE_SIZES, BADGE_VARIANTS, cn } from "@gpuixui/tw";
+import { recipeStyle } from "./internal/recipe.js";
+import { useTheme } from "./internal/theme.js";
 
 /** The badge's colour family. */
 export type BadgeVariant =
@@ -36,36 +35,15 @@ export interface BadgeProps extends Props {
   readonly variant?: BadgeVariant;
   /** Default `"md"`. */
   readonly size?: BadgeSize;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
 }
-
-/** The type role a size uses wholesale, so line height sets the pill's height. */
-const typeRole = { sm: "caption", md: "label" } as const;
-
-/** One variant's fill, text colour and border. The four tones share a surface. */
-const variantStyle = (theme: Theme, value: BadgeVariant): StyleDesc =>
-  Match.value(value).pipe(
-    Match.when("neutral", () => ({
-      backgroundColor: theme.colors.muted,
-      color: theme.colors.mutedForeground,
-    })),
-    Match.when("primary", () => ({
-      backgroundColor: theme.colors.primary,
-      color: theme.colors.primaryForeground,
-    })),
-    Match.when("outline", () => ({
-      color: theme.colors.mutedForeground,
-      borderWidth: theme.borderWidth.thin,
-      borderColor: theme.colors.border,
-    })),
-    // The remaining variants are exactly the four status tones, so an eighth
-    // variant cannot compile without its own case above.
-    Match.orElse((tone) => toneSurface(theme, tone)),
-  );
 
 /** A status label: one line of text on a pill, sized by its type role. */
 export const Badge = ({
   variant = "neutral",
   size = "md",
+  className,
   style,
   ...rest
 }: BadgeProps) => {
@@ -74,21 +52,10 @@ export const Badge = ({
     <div
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, typeRole[size]),
-          ...variantStyle(theme, variant),
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          // A badge hugs its text inside a column layout instead of stretching.
-          alignSelf: "flex-start",
-          borderRadius: theme.radius.full,
-          paddingTop: theme.spacing["2xs"],
-          paddingBottom: theme.spacing["2xs"],
-          paddingLeft: theme.spacing.md,
-          paddingRight: theme.spacing.md,
-          whiteSpace: "nowrap",
-        },
+        recipeStyle(
+          cn(BADGE_BASE, BADGE_SIZES[size], BADGE_VARIANTS[variant], className),
+          theme,
+        ),
         style,
       )}
     />

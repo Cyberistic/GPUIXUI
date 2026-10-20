@@ -22,6 +22,13 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import {
+  cn,
+  LIST_ITEM,
+  LIST_ITEM_DESCRIPTION,
+  LIST_ITEM_TITLE,
+  LIST_ROOT,
+} from "@gpuixui/tw";
 import { Match, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -57,7 +64,8 @@ import {
   isUp,
   typedChar,
 } from "./internal/key.js";
-import { focusRing, textStyle, useTheme } from "./internal/theme.js";
+import { recipeStyle } from "./internal/recipe.js";
+import { focusRing, useTheme } from "./internal/theme.js";
 import { useTypeahead } from "./internal/typeahead.js";
 import { range, sameValues, selectAll, toggle } from "./list/selection.js";
 
@@ -216,6 +224,7 @@ const report = (props: ListProps, next: ReadonlyArray<string>): void =>
 interface ListBaseProps extends Omit<Props, "children"> {
   /** Row height `rowHeight` instead of `rowHeight + spacing.md`. */
   readonly dense?: boolean;
+  readonly className?: string;
   readonly children?: PartChildren;
 }
 
@@ -275,6 +284,7 @@ export const List = (props: ListProps) => {
     onValueChange: _onValueChange,
     onActivate,
     dense = false,
+    className,
     onKeyDown,
     children,
     style,
@@ -548,14 +558,7 @@ export const List = (props: ListProps) => {
           handleKeyDown(event);
           onKeyDown?.(event);
         }}
-        style={mergeStyles(
-          {
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing["2xs"],
-          },
-          style,
-        )}
+        style={mergeStyles(recipeStyle(cn(LIST_ROOT, className), theme), style)}
       >
         {children}
       </div>
@@ -580,6 +583,8 @@ export interface ListItemProps extends Omit<Props, "children" | "style"> {
   /** Slot after the text: a badge, a shortcut. */
   readonly trailing?: ReactNode;
   readonly children?: PartChildren;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   /** A style, or a function of the row's state. */
   readonly style?: StateStyle<ListItemState>;
 }
@@ -601,6 +606,7 @@ export const ListItem = ({
   leading,
   trailing,
   children,
+  className,
   onFocus,
   onClick,
   style,
@@ -675,17 +681,10 @@ export const ListItem = ({
             }
       }
       style={mergeStyles(
-        {
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap: theme.spacing.lg,
-          paddingLeft: theme.spacing.lg,
-          paddingRight: theme.spacing.lg,
+        mergeStyles(recipeStyle(cn(LIST_ITEM, className), theme), {
           height: dense
             ? theme.density.rowHeight
             : theme.density.rowHeight + theme.spacing.md,
-          borderRadius: theme.radius.sm,
           opacity: disabled ? 0.5 : 1,
           ...(selectable
             ? {
@@ -700,10 +699,10 @@ export const ListItem = ({
                 color: theme.colors.selectedForeground,
               }
             : {}),
-          // No `focusVisible` in 0.10.0: the active row is ringed whenever it is
-          // the active one, keyboard or click.
+          // No `focusVisible` in 0.10.0: the active row is ringed whenever it
+          // is the active one, keyboard or click.
           ...(isActive ? focusRing(theme) : {}),
-        },
+        }),
         resolveStyle(style, state),
       )}
     >
@@ -745,33 +744,46 @@ export const ListItem = ({
   );
 };
 
+/** {@link ListItemTitle} props. */
+export interface ListItemTitleProps extends Props {
+  readonly className?: string;
+}
+
 /** The row's one-line label. */
-export const ListItemTitle = ({ style, ...rest }: Props) => {
+export const ListItemTitle = ({
+  className,
+  style,
+  ...rest
+}: ListItemTitleProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        { ...textStyle(theme, "body"), color: theme.colors.foreground },
+        recipeStyle(cn(LIST_ITEM_TITLE, className), theme),
         style,
       )}
     />
   );
 };
 
+/** {@link ListItemDescription} props. */
+export interface ListItemDescriptionProps extends Props {
+  readonly className?: string;
+}
+
 /** The row's second line: metadata, a path, a subtitle. */
-export const ListItemDescription = ({ style, ...rest }: Props) => {
+export const ListItemDescription = ({
+  className,
+  style,
+  ...rest
+}: ListItemDescriptionProps) => {
   const theme = useTheme();
   return (
     <text
       {...rest}
       style={mergeStyles(
-        {
-          ...textStyle(theme, "caption"),
-          color: theme.colors.mutedForeground,
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        },
+        recipeStyle(cn(LIST_ITEM_DESCRIPTION, className), theme),
         style,
       )}
     />
