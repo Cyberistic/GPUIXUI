@@ -273,14 +273,16 @@ axis-isolation tests, inverting the layout fails the layout test, and forcing
 
 The indicator (plan 715) is measured in the real renderer: it sits on the
 selected tab's span and the rail's inner edge, follows a selection change, is
-caught mid-slide on the first frame after a switch (dropping the motion makes it
-jump and fails the case), hangs on the left edge in a vertical set, paints the
-active theme's `primary`, refuses to paint with no selection or after its
-selected trigger is removed, takes the selected fill off the trigger (the same
-tree without an indicator still paints `colors.card`), and keeps a caller's
-`testId`, follows a controlled `value`, and stays put when a controlled set
-refuses the press. Reading the bar with the rail's padding removed fails the span and the
-vertical cases; taking the caller's `testId` away fails the naming case.
+caught mid-slide on the first frame after a switch, hangs on the left edge in a
+vertical set, paints the active theme's `primary`, and refuses to paint with no
+selection or after its selected trigger is removed. Mounting it takes the
+selected fill off the trigger — the same tree without an indicator still paints
+`colors.card` — keeps a caller's `testId`, follows a controlled `value`, and
+stays put when a controlled set refuses the press. Four mutations each fail a
+case: dropping the motion makes the bar jump, dropping the rail's padding puts
+the span and the vertical bar in the wrong place, ignoring the indicator in the
+trigger's fill doubles the emphasis, and discarding the caller's `testId` breaks
+the naming case.
 
 A trigger forwards `onBlur` after clearing its focus ring, so the caller's handler
 runs exactly once.
