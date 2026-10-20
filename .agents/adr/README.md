@@ -36,3 +36,10 @@ What becomes easier, what becomes harder, what is now impossible.
   runnable published binding and its measured limits.
 - `0003-darwin-x64-source-build.md` — the `darwin-x64` binding is built from
   source with `runtime_shaders`; the native smoke suite is green on this host.
+- `0004-compound-part-api.md` — the base-gpui compound-part contract, translated
+  to React.
+- `0005-component-state-model.md` — stateful components are a pure runtime plus
+  a thin context and thin parts.
+- `0006-component-fixed-metrics.md` — components compile through `@gpuixui/tw`'s
+  default registry (shadcn's fixed metrics); primitives keep the density scale;
+  list rows and stepper markers keep density.

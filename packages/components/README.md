@@ -9,13 +9,28 @@ component.
 
 ## Boundary
 
-Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/primitives`
-(only where a behavioural primitive is genuinely needed — see plan 110 §7),
-`@gpuix/react` and its subpaths, and `react`.
+Allowed imports, in full: `effect`, `@gpuixui/tokens`, `@gpuixui/tw`,
+`@gpuixui/primitives` (only where a behavioural primitive is genuinely needed —
+see plan 110 §7), `@gpuix/react` and its subpaths, and `react`.
 
 Never: `apps/*`, `packages/data-grid`, `packages/docking`, `packages/editor`,
 `node:*` in component source (the inventory test is the sole repository-check
-exception, plan 117 §3), DOM APIs, CSS or `className`.
+exception, plan 117 §3), DOM APIs or CSS.
+
+## Styling
+
+A component's resting appearance is a Tailwind recipe exported from
+`@gpuixui/tw` (`CARD_BASE`, `BADGE_VARIANTS`, …), compiled through
+`classesToStyle` against the **default** registry — shadcn's fixed metrics
+(`h-9` = 36, `px-4` = 16, `text-sm` = 14/20) — not the primitives' density
+scale (ADR 0006). The caller's `className` is joined after the recipe via `cn`
+so it wins conflicts, and its `style` is merged last so it wins outright. The
+`internal/recipe.ts` seam wraps the compile; no other file imports
+`@gpuixui/tw`'s compiler directly.
+
+Two parts keep density, because they must stay aligned with the density-driven
+controls beside them: a list row's height (`theme.density.rowHeight`) and a
+stepper marker's side (`controlHeight`).
 
 ## What is here
 
@@ -68,6 +83,7 @@ exception, plan 117 §3), DOM APIs, CSS or `className`.
 | `src/core/runtime.ts` | the shared state model: `createRuntime({ initial, reduce, query })` with a pure command fold (`run`); no React, no GPUix (plan 201) |
 | `src/internal/placement.ts`, `src/internal/use-placement.ts` | the measured anchored-placement rule: true `center` and a one-shot flip off the trigger when GPUix's snap would cover it (plan 323) |
 | `src/internal/theme.ts` | the one seam over `@gpuixui/tokens`: re-exports `alpha`, `focusRing`, `elevationShadow` and `statusTone`, and maps the component tone `danger` to the token role `destructive` (plan 157) |
+| `src/internal/recipe.ts` | the one seam over `@gpuixui/tw`: compiles a class-string recipe to the resting `StyleDesc` (ADR 0006) |
 | `src/internal/button.tsx` | `Button`/`IconButton` — the local stand-in for `@gpuixui/primitives` (plan 110 §7) |
 | `src/internal/interaction.ts`, `src/internal/a11y.ts` | behaviour-suite helpers: hit-testing, focus, bounds, the accessibility dump |
 | `src/behaviour/theme-matrix.test.tsx` | the both-theme assertions for the components without one in their own suite |
