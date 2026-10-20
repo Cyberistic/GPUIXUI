@@ -6,8 +6,10 @@
  * (and costs height before the reader asks); a failed tool call that looks like
  * a successful one and hides its result; citations that report the wrong source
  * or fire twice; slots that paint empty space when they have no data; a
- * streaming status that is always visible; actions that appear without a
- * consumer wiring them.
+ * streaming status that is always visible; a streaming status announced with no
+ * name at all (0.10.0 does not name a role-bearing `div` from its text child, so
+ * the visible label has to become `aria-label`, and a blank authored value must
+ * fall back to it); actions that appear without a consumer wiring them.
  */
 
 import { useState } from "react";
@@ -228,6 +230,55 @@ describe("Message", () => {
 
     expect(row.renderer.findByTestId("streaming")).toBeDefined();
     expect(row.renderer.getAllText()).toContain("Streaming");
+    // The one element that exists to announce progress must carry a name: the
+    // visible label is the name (plan 799).
+    expect(nodesWithRole(row.renderer, "status")).toMatchObject([
+      { role: "status", name: "Streaming" },
+    ]);
+
+    row.unmount();
+  });
+
+  it("names the streaming status from its visible label", () => {
+    const row = renderComponent(
+      <Row variant="assistant" streaming>
+        <MessageStreaming label="Writing" />
+      </Row>,
+    );
+
+    expect(nodesWithRole(row.renderer, "status")).toMatchObject([
+      { role: "status", name: "Writing" },
+    ]);
+    expect(row.renderer.getAllText()).toContain("Writing");
+
+    row.unmount();
+  });
+
+  it("lets a caller's status name win whole", () => {
+    const row = renderComponent(
+      <Row variant="assistant" streaming>
+        <MessageStreaming label="Writing" aria-label="Assistant is writing" />
+      </Row>,
+    );
+
+    expect(nodesWithRole(row.renderer, "status")).toMatchObject([
+      { role: "status", name: "Assistant is writing" },
+    ]);
+    expect(row.renderer.getAllText()).toContain("Writing");
+
+    row.unmount();
+  });
+
+  it("falls back to the label when the caller's status name is blank", () => {
+    const row = renderComponent(
+      <Row variant="assistant" streaming>
+        <MessageStreaming label="Writing" aria-label="   " />
+      </Row>,
+    );
+
+    expect(nodesWithRole(row.renderer, "status")).toMatchObject([
+      { role: "status", name: "Writing" },
+    ]);
 
     row.unmount();
   });

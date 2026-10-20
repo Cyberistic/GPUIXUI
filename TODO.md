@@ -1427,6 +1427,17 @@ retired once both branches are one
       the panel keeps the root `label`. 3 native cases (29 → 32), 2 red at
       `HEAD`; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
       (owner: components)
+    - [x] A streaming message's status line carries its name — plan 799; measured
+      2026-10-20: `MessageStreaming` painted `role="status"` with an empty name
+      for both the default and a custom `label`, because 0.10.0 does not name a
+      role-bearing `div` from its text child, and a blank authored `aria-label`
+      was announced as whitespace. The name is now composed once with
+      `controlName` (authored wins trimmed, else the visible label), the existing
+      streaming case asserts it and three cases cover the custom label, the
+      authored pin and the blank fallback. 13 native cases (10 → 13), three red
+      at `HEAD`; unit 509 in 48 files, full native suite 1018 passed / 20 failed
+      of 1038 with the same plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md`
+      D30 and the plan index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

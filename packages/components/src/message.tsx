@@ -28,6 +28,7 @@ import {
   CollapsibleTrigger,
 } from "./collapsible.js";
 import { Button } from "./internal/button.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -224,11 +225,17 @@ export const MessageContent = ({
 
 /** {@link MessageStreaming} props. */
 export interface MessageStreamingProps extends Omit<Props, "children"> {
-  /** The status text. Default `"Streaming"`. */
+  /**
+   * The visible status text, and its name unless the caller authors one.
+   * Default `"Streaming"`.
+   */
   readonly label?: string;
 }
 
-/** A status line that exists only while the row is streaming. */
+/**
+ * A status line that exists only while the row streams. Its visible `label` is
+ * also its accessible name; a caller's authored `aria-label` wins whole.
+ */
 export const MessageStreaming = ({
   label = "Streaming",
   style,
@@ -238,10 +245,13 @@ export const MessageStreaming = ({
   const { variant, streaming } = useMessage();
   if (!streaming) return null;
 
+  const name = controlName(rest["aria-label"], label);
+
   return (
     <div
       {...rest}
       role="status"
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(
         { ...block(theme, variant), ...textStyle(theme, "caption") },
         style,
