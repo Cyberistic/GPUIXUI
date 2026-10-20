@@ -2783,9 +2783,9 @@ retired once both branches are one
       checkbox row** (each row is its own stop, D27), the toggle group's stop,
       the rating's value star, the slider track, and the range slider's
       **start** thumb. A disabled composite never focuses, a read-only one still
-      does, and mounting reports no value change (focus is not activation). 6
-      element + 18 runtime cases across the existing matrix, four mutations
-      failing by name; offline 75 files / 1072 tests, `auto-focus` 38/38 (plan
+      does, and mounting reports no value change (focus is not activation). 7
+      element + 19 runtime cases across the existing matrix, four mutations
+      failing by name; offline 75 files / 1073 tests, `auto-focus` 39/39 (plan
       `808`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)

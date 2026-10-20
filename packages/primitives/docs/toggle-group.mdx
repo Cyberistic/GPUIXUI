@@ -67,7 +67,7 @@ the selection actually changed.
 | `disabled` | `boolean` | `false` | every item inert and out of the tab order |
 | `readOnly` | `boolean` | `false` | shows the pressed set for review: keeps the one tab stop and rings, refuses every press, arrows/type-ahead move the ring only (plan `804`) |
 | `label` | `string` | none | the group's accessible name |
-| `autoFocus` | `boolean` | `false` | puts the keyboard on the group's tab stop on mount — the pressed item in `single`, else the item the stop names. A disabled group never focuses; a read-only one still does (plan `808`) |
+| `autoFocus` | `boolean` | `false` | puts the keyboard on the group's tab stop on mount — in `single` the pressed item; in `multiple` the first enabled item, because no item has held focus yet. A disabled group never focuses; a read-only one still does (plan `808`) |
 | `style` | `StateStyle<ToggleGroupState>` | — | merged over the group container; an object or a state callback |
 | `itemStyle` | `StateStyle<ToggleItemState>` | — | merged last on each item, after its focus ring; an object or a state callback |
 | `testId` | `string` | — | the group's locator; items become `${testId}-${value}` |
@@ -86,8 +86,10 @@ group once and out again. The stop follows the item's **value**, so reordering
 or filtering `options` does not move it to whatever now sits at the old index.
 
 `autoFocus` puts native focus on that same stop when the group mounts, including
-a later mount behind a loading state; a disabled group never focuses, and a
-read-only one still does (plan `808`).
+a later mount behind a loading state. In `multiple` nothing has held focus yet at
+mount, so the entry is the **first enabled item** even when a later one is
+pressed; a disabled group never focuses, and a read-only one still does (plan
+`808`).
 
 | Key | `single` | `multiple` |
 | --- | -------- | ---------- |

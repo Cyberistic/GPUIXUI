@@ -125,9 +125,9 @@ No other package is touched.
 
 ```sh
 nub run --filter @gpuixui/primitives check-types          # exit 0
-nub run --filter @gpuixui/primitives test                 # 75 files / 1072 tests, exit 0
+nub run --filter @gpuixui/primitives test                 # 75 files / 1073 tests, exit 0
 nub run --filter @gpuixui/primitives test:runtime runtime/auto-focus.runtime.test.tsx
-# 1 file, 20 existing + 18 new tests, exit 0
+# 1 file, 20 existing + 19 new tests, exit 0
 nub run --filter @gpuixui/primitives test:runtime runtime/tab-order.runtime.test.tsx \
   runtime/focus-ring.runtime.test.tsx runtime/selection-read-only.runtime.test.tsx \
   runtime/slider-read-only.runtime.test.tsx runtime/toggle-read-only.runtime.test.tsx
@@ -205,8 +205,8 @@ Measured 2026-10-21 in this worktree (release-tag binding):
 | Command | Result |
 | ------- | ------ |
 | `nub run --filter @gpuixui/primitives check-types` | exit 0 |
-| `nub run --filter @gpuixui/primitives test` | 75 files / **1072 tests** green (was 1066; +6 element cases) |
-| `nub run --filter @gpuixui/primitives test:runtime runtime/auto-focus.runtime.test.tsx` | 1 file / **38 tests** green (was 20; +18 composite rows) |
+| `nub run --filter @gpuixui/primitives test` | 75 files / **1073 tests** green (was 1066; +7 element cases) |
+| `nub run --filter @gpuixui/primitives test:runtime runtime/auto-focus.runtime.test.tsx` | 1 file / **39 tests** green (was 20; +19 composite rows) |
 | scoped ring/tab/review matrices | green (see §7.1) |
 | `nub run lint` / `nub run fmt` | exit 0 / primitives paths clean |
 
@@ -219,7 +219,8 @@ paint and the tab order cannot disagree:
 | ---- | ------------------------------ |
 | `RadioGroup` (`defaultValue="b"`) | `rg-b` |
 | `CheckboxGroup` (with `selectAll`) | `cg-all` |
-| `ToggleGroup` (`defaultValue="centre"`) | `tg-centre` |
+| `ToggleGroup` (`single`, `defaultValue="centre"`) | `tg-centre` |
+| `ToggleGroup` (`multiple`, `defaultValue=["right"]`) | `tg-left` — the first enabled item, since no item has held focus yet |
 | `Rating` (`defaultValue={3}`) | `rating-star-3` |
 | `Slider` | `slider` |
 | `RangeSlider` | `range-thumb-start` |

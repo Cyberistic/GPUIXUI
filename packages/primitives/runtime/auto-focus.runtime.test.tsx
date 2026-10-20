@@ -518,3 +518,32 @@ it.each(composites)("does not focus a disabled $name", async (row) => {
   });
   expect(focused(runtime)).toBe("none");
 });
+
+it("enters a multiple ToggleGroup at its first enabled item, not a pressed one", async () => {
+  // `multiple`'s tab stop is the item that last held focus, and at mount none
+  // has — so the entry point is the first enabled item even when a later one
+  // is pressed (plan 808). The prop must ride the stop, not "the pressed one".
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Loading />
+    </Surface>,
+  );
+  runtime.render(
+    <Surface>
+      <ToggleGroup
+        testId="fmt"
+        type="multiple"
+        label="Formatting"
+        options={[
+          { value: "left", label: "Left" },
+          { value: "centre", label: "Centre" },
+          { value: "right", label: "Right" },
+        ]}
+        defaultValue={["right"]}
+        autoFocus
+      />
+    </Surface>,
+  );
+  expect(focused(runtime)).toBe("fmt-left");
+});

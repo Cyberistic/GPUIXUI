@@ -113,6 +113,51 @@ describe("ToggleGroup", () => {
     ]);
   });
 
+  it("enters a multiple group at its first enabled item, not at a pressed one", () => {
+    // The bug this guards (plan 808): in `multiple` the stop is the item that
+    // last held focus, and at mount nothing has — so the entry is the first
+    // enabled item even when a later one is pressed. The prop must ride that
+    // stop, not "the pressed item".
+    const flags = (
+      groupOptions: ReadonlyArray<ToggleGroupOption>,
+      activeIndex: number,
+    ) =>
+      Arr.map(
+        elementChildren(
+          renderToggleGroup(
+            {
+              type: "multiple",
+              options: groupOptions,
+              label: "Formatting",
+              defaultValue: ["right"],
+              autoFocus: true,
+            },
+            testTheme,
+            selected(["right"]),
+            activeIndex,
+            unfocused,
+            handlers(),
+          ),
+        ),
+        (item) => hostProp(item, "autoFocus"),
+      );
+    expect(flags(options, 0)).toStrictEqual([
+      Option.some(true),
+      Option.none(),
+      Option.none(),
+    ]);
+    const leftOff: ReadonlyArray<ToggleGroupOption> = [
+      { value: "left", label: "Align left", disabled: true },
+      { value: "centre", label: "Align centre" },
+      { value: "right", label: "Align right" },
+    ];
+    expect(flags(leftOff, 1)).toStrictEqual([
+      Option.none(),
+      Option.some(true),
+      Option.none(),
+    ]);
+  });
+
   it("shrinks an item and contains its label", () => {
     // Plan 368: a segmented control given a width must not paint an item's
     // label outside itself; the item shares the group's width and the label is
