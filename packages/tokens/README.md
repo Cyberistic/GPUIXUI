@@ -199,8 +199,12 @@ overrides that rebuild `theme` from `base`, for an editor that stores or prints
 an edit rather than a whole theme object. Each group is compared field by field
 and an unchanged group is omitted; a tuned density is expressed against the
 preset it names, an elevation level is replaced whole, and `undefined` means the
-modes differ, because `extendTheme` cannot change the mode. A runnable example
-lives in [`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
+modes differ, because `extendTheme` cannot change the mode. The overrides are
+relative to the exact base, not merely its mode, so a stored edit is a
+`ThemeEdit` — the base's `ThemeChoice` plus the overrides: `themeEdit(choice,
+edited)` resolves the choice before it diffs, so the pair cannot name another
+base, and `applyThemeEdit(edit)` replays it. A runnable example lives in
+[`src/theme-diff.example.ts`](./src/theme-diff.example.ts).
 
 A filled control reads its states from `filledControl(theme, family)` — the
 resting, hover and pressed fills and the one foreground readable on all three —

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 329/407
+`[x]` `[████████░░]` 330/408
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2806,6 +2806,17 @@ cross-preset order at all (a preset whose rows shrank as density grew passed
 every check); the pairs now derive from the indexes, the density ladder covers
 all three metrics, and a synthetic inverted preset proves the check can fail —
 every shipped value already holds, so no metric moves (plan 725)
+`[x]` Record the base a stored edit was made against — `themeOverrides` is
+relative to the exact base, but all four documents that describe the inverse
+corrected only the mode ("choose a base of the theme's mode"), so a Windows
+application that stored `{ radius: { md: 8 } }` and replayed it on
+`getTheme("light")` painted the identity's `radius.sm` 4 / `xl` 12 instead of
+Windows' 2 / 8, its `border` and its type, while `themeFailures` returned `[]`
+for both themes: a silent look regression no gate could see. `ThemeEdit` is the
+stored artifact, `themeEdit(choice, edited)` resolves the choice before it diffs
+so a mismatched base is not representable, `applyThemeEdit(edit)` replays it, and
+`theme-edit.test.ts` walks all 24 platform and recipe sets plus the URL codec
+(plan 727)
 
 ## Phase C — Tier 1–2 components
 

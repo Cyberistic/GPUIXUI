@@ -368,6 +368,7 @@ references without buying correctness.
 | [720](./720-density-consumer-exception.md) | The density promise the shipped field family and Button no longer keep | F | 010, 089, 353, 389, primitives `370`–`372` | done |
 | [723](./723-pressed-row-selection-wash.md) | The pressed selected row's text selection | F | 081, 524, 651, 689, 700 | done |
 | [725](./725-scale-ladder-indexes.md) | The scale ladders the tests still retype | F | 068, 096, 305, 372, 552, 668 | done |
+| [727](./727-stored-theme-edit-base.md) | A stored edit records the base it was made against | F | 063, 311, 380, 529, 685, 713 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3713,6 +3714,17 @@ ladder covers control height, padding and the row, and a synthetic inverted
 preset proves the order check can fail. Every shipped value already holds
 (spacing 2…64, avatars 16…40, controls 24/28/32 → 32/36/40, rows 28 → 32 → 36),
 so no metric moves.
+
+727 closes the persistence half of the extension mechanism. `themeOverrides` is
+relative to the base it was measured against, and four consumer documents
+corrected only the mode (“choose a base of the theme's mode”) — so a Windows
+application that stored `{ radius: { md: 8 } }` and replayed it on the identity
+silently painted the identity's radii, border and type instead of the Windows
+ones, with `themeFailures` returning `[]` for both. The rule is the base, not its
+mode: `ThemeEdit` is the artifact (`{ base: ThemeChoice, overrides }`),
+`themeEdit(choice, edited)` resolves the choice before it diffs so a mismatched
+base is not representable, `applyThemeEdit(edit)` is the replay, and the test
+walks every shipped platform and recipe in both modes and both contrast levels.
 
 ## How to use a plan
 

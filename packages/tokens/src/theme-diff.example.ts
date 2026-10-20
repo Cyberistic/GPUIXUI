@@ -1,10 +1,19 @@
 /**
  * The inverse of `extendTheme`: an edited theme is expressed as the overrides
  * that reproduce it, so an editor can store or emit the small set instead of a
- * whole theme object. This file is type-checked and asserted in
- * `theme-diff.test.ts`.
+ * whole theme object. The second half is the base: overrides are relative to the
+ * exact theme they were measured against, so a stored edit records its base as a
+ * `ThemeChoice`. This file is type-checked and asserted in `theme-diff.test.ts`
+ * and `theme-edit.test.ts`.
  */
-import { extendTheme, getTheme, themeOverrides } from "./index.js";
+import {
+  extendTheme,
+  getPlatformTheme,
+  getTheme,
+  themeEdit,
+  themeOverrides,
+  type ThemeChoice,
+} from "./index.js";
 
 /** The base an editor starts from. */
 export const exportedBase = getTheme("light");
@@ -25,3 +34,30 @@ export const exportedTheme = extendTheme(exportedBase, {
  * {@link exportedBase}, ready to print in a `createTheme` module.
  */
 export const exportedOverrides = themeOverrides(exportedBase, exportedTheme);
+
+/** A stored edit names a shipped base, not an identity: the Windows variant. */
+export const exportedBaseChoice = {
+  mode: "light",
+  platform: "win32",
+} as const satisfies ThemeChoice;
+
+/** The Windows base the editor opened. */
+export const exportedPlatformBase = getPlatformTheme(
+  exportedBaseChoice.platform,
+  exportedBaseChoice.mode,
+);
+
+/** One step moved on the platform's own radii. */
+export const exportedPlatformTheme = extendTheme(exportedPlatformBase, {
+  radius: { md: 8 },
+});
+
+/**
+ * The stored pair — the choice that rebuilds the base and the overrides that
+ * rebuild the edit — un-narrowed, as `exportedOverrides` is. A same-mode choice
+ * never yields `undefined`; the suite narrows it.
+ */
+export const exportedPlatformEdit = themeEdit(
+  exportedBaseChoice,
+  exportedPlatformTheme,
+);

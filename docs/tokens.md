@@ -151,6 +151,7 @@ missing here is not public.
 | `ThemeChoice` | A persisted theme choice: five unknown axes for `resolveThemeChoice`. |
 | `ThemeChoiceKey` | A query key from `themeChoiceKeys`. |
 | `ThemeColors` | The 71 semantic colour roles. |
+| `ThemeEdit` | A stored edit: the base's `ThemeChoice` and the overrides measured against it. |
 | `ThemeConfig` | Input to `createTheme`: a mode, a palette selector and overrides. |
 | `ThemeContrast` | `"default"` or `"high"`. |
 | `ThemeFailure` | One defect from `themeFailures`, tagged `color`, `opacity`, `typeface`, `contrast`, `ring`, `highlight`, `nativeText`, `hierarchy`, `direction` or `metric`. |
@@ -2284,17 +2285,47 @@ so `themeOverrides(theme, theme)` is `{}`. A tuned density is expressed against
 the preset it names — `mergeDensity` starts from that preset, not from the base's
 metrics — and an elevation level is replaced whole, matching the documented merge
 rule. A different `mode` returns `undefined`, because `extendTheme` cannot change
-the mode: choose a base of the theme's mode. The executed example is
-[`src/theme-diff.example.ts`](../packages/tokens/src/theme-diff.example.ts).
+the mode.
+
+The overrides are relative to that **exact base**, not merely its mode, so a
+stored edit records the base it was made against. A Windows application that
+opens the shipped Windows light variant, moves `radius.md` to 8 and replays the
+resulting `{ radius: { md: 8 } }` on the identity of the same mode replaces the
+platform's own steps — `radius.sm` 4 instead of 2, `radius.xl` 12 instead of 8,
+`border` `#D6DAE1` instead of `#D6D6D6` — and `themeFailures` returns `[]` for
+both themes: the wrong base is a silent look regression, not a contract failure.
+
+`ThemeEdit` is the artifact that avoids it: the base's `ThemeChoice`, which a
+settings row or a URL already persists, plus the overrides. `themeEdit(choice,
+edited)` resolves the choice *before* it diffs, so the pair can never name a base
+it was not measured against, and `applyThemeEdit(edit)` resolves the recorded
+choice and applies the overrides. A base a `ThemeChoice` cannot name — a brand
+theme, or any theme built by `extendTheme` — is stored as the whole theme.
 
 ```ts
-import { extendTheme, getTheme, themeOverrides } from "@gpuixui/tokens";
+import {
+  applyThemeEdit,
+  extendTheme,
+  getPlatformTheme,
+  resolveThemeChoice,
+  themeEdit,
+  type ThemeChoice,
+} from "@gpuixui/tokens";
 
-const base = getTheme("dark");
-const edited = extendTheme(base, { density: "compact", radius: { md: 8 } });
+const choice: ThemeChoice = { mode: "light", platform: "win32" };
+const base = resolveThemeChoice(choice);
+const edited = extendTheme(base, { radius: { md: 8 } });
 
-themeOverrides(base, edited); // { radius: { md: 8 }, density: "compact" }
+const stored = themeEdit(choice, edited);
+const theme = stored === undefined ? undefined : applyThemeEdit(stored);
+
+// The stored pair is `{ base: choice, overrides: { radius: { md: 8 } } }`;
+// `resolveThemeChoice(stored.base)` rebuilds the Windows base, not the identity.
+getPlatformTheme("win32", "light").name; // "Light · Windows"
 ```
+
+The executed example is
+[`src/theme-diff.example.ts`](../packages/tokens/src/theme-diff.example.ts).
 
 ### Checking a theme
 

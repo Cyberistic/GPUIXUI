@@ -26,7 +26,13 @@ import {
   type DensityOverrides,
   type DensityName,
 } from "./scale.js";
-import type { Theme, ThemeOverrides, TypographyOverrides } from "./theme.js";
+import {
+  extendTheme,
+  type Theme,
+  type ThemeOverrides,
+  type TypographyOverrides,
+} from "./theme.js";
+import { resolveThemeChoice, type ThemeChoice } from "./theme-choice.js";
 import {
   textRoles,
   type TextRole,
@@ -221,8 +227,13 @@ const changedMotion = (
  * `mergeDensity` starts from that preset rather than from the base's metrics;
  * an elevation level is replaced whole, matching the documented merge rule. A
  * different `mode` returns `undefined`: `extendTheme` cannot change the mode, so
- * the caller must choose a base of the theme's mode, and the absence is not a
- * silently wrong diff.
+ * the caller must choose a base of the theme's mode.
+ *
+ * The overrides are relative to that **exact** base, not merely its mode — a
+ * Windows edit replayed on the identity of the same mode paints the identity's
+ * radii, edge and type, and `themeFailures` reports neither — so a stored edit
+ * is a {@link ThemeEdit}: it records the base's {@link ThemeChoice} and
+ * {@link applyThemeEdit} resolves it back.
  *
  * The function is pure and total over the typed `Theme`; every shipped theme
  * round-trips — `<platform>` over the identity of its mode, a platform over
@@ -285,4 +296,78 @@ export function themeOverrides(
     ...(isEmpty(iconSize) ? {} : { iconSize }),
     ...(isEmpty(avatarSize) ? {} : { avatarSize }),
   };
+}
+
+/**
+ * A stored edit: the shipped base it was made against, named as the choice a
+ * settings row or a URL already persists, and the minimal overrides
+ * {@link themeOverrides} measured against it.
+ *
+ * {@link ThemeOverrides} alone is base-relative, so replaying an edit of the
+ * Windows variant on the identity of the same mode silently paints the
+ * identity's radii, edge and type. Storing the pair is what makes the replay
+ * faithful.
+ */
+export interface ThemeEdit {
+  /** The choice {@link applyThemeEdit} resolves to the base. */
+  readonly base: ThemeChoice;
+  /** The overrides measured against that base. */
+  readonly overrides: ThemeOverrides;
+}
+
+/**
+ * Store an edit of a shipped base as the pair {@link applyThemeEdit} replays.
+ *
+ * The base is resolved from `choice` before the diff, so the artifact can never
+ * name a base it was not measured against. A different `mode` returns
+ * `undefined` — the one case `extendTheme` cannot express; every same-mode
+ * choice reproduces `edited` through {@link applyThemeEdit}.
+ *
+ * An edit of a theme a choice cannot name — a brand theme, or any theme built
+ * by `extendTheme` — is stored as the whole theme instead.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   applyThemeEdit,
+ *   extendTheme,
+ *   getPlatformTheme,
+ *   themeEdit,
+ * } from "@gpuixui/tokens";
+ *
+ * const choice = { mode: "light", platform: "win32" } as const;
+ * const base = getPlatformTheme(choice.platform, choice.mode);
+ * const edited = extendTheme(base, { radius: { md: 8 } });
+ * const stored = themeEdit(choice, edited);
+ *
+ * const theme = stored === undefined ? base : applyThemeEdit(stored);
+ * ```
+ */
+export function themeEdit(
+  choice: ThemeChoice,
+  edited: Theme,
+): ThemeEdit | undefined {
+  const overrides = themeOverrides(resolveThemeChoice(choice), edited);
+  return overrides === undefined ? undefined : { base: choice, overrides };
+}
+
+/**
+ * Rebuild a stored edit: resolve the choice it records, then apply its
+ * overrides.
+ *
+ * `applyThemeEdit(themeEdit(choice, edited))` reproduces `edited` for every
+ * same-mode choice naming a shipped base, which is the round trip
+ * `theme-edit.test.ts` walks over every platform and recipe set.
+ *
+ * @example
+ * ```ts
+ * import { applyThemeEdit, getTheme, themeEdit } from "@gpuixui/tokens";
+ *
+ * const choice = { mode: "dark" } as const;
+ * const stored = themeEdit(choice, getTheme("dark"));
+ * const theme = stored === undefined ? undefined : applyThemeEdit(stored);
+ * ```
+ */
+export function applyThemeEdit(edit: ThemeEdit): Theme {
+  return extendTheme(resolveThemeChoice(edit.base), edit.overrides);
 }
