@@ -49,9 +49,10 @@ The caller owns the data. The component never stores a notification, a read flag
 or an unread count:
 
 - `unreadCount` is derived from `read !== true` on every render.
-- A row press, or `Enter` on the active row, calls `onRead(id)`. Call it twice
-  and the second request is idempotent only if your data says so — the
-  component reports what happened, it does not toggle.
+- A row press, `Enter` or `Space` on the active row calls `onRead(id)`. A button
+  activates `Space` on release, so its press does nothing and a held key cannot
+  read twice. Call it twice and the second request is idempotent only if your
+  data says so — the component reports what happened, it does not toggle.
 - Opening the panel never marks anything read, so the count cannot drift from a
   glance at the inbox.
 - `onMarkAllRead` and `onClear` are requests; omit either handler and its
@@ -81,10 +82,11 @@ heading, so a filtered list never renames a section.
 The panel is focused when it opens. `ArrowDown` / `ArrowUp` move the active row
 over notifications only — headings are skipped and the ends clamp. The feed
 scrolls the active row into view with an 8 px margin, so the reading cursor
-never leaves the panel. `Enter` requests a read for the active row. Arrow keys
-and `Enter` belong to the panel surface and its rows: while a header action
-holds focus, `Enter` runs that action and the arrows leave the reading cursor
-where it is. `Escape` closes the panel and returns focus to the trigger. The
+never leaves the panel. `Enter` and `Space` (on release) request a read for the
+active row. Arrow keys, `Enter` and `Space` belong to the panel surface and its
+rows: while a header action holds focus, `Enter` runs that action and the arrows
+leave the reading cursor where it is, and `Space` runs that action instead of
+reading a row. `Escape` closes the panel and returns focus to the trigger. The
 panel is **non-modal**, so `Tab` leaves it rather than trapping focus.
 
 ## API
@@ -162,15 +164,17 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (22 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
 the panel staying open and the dot clearing on the next data update, mark-all
 and clear, Escape and an outside press, a **held** trigger press closing on
 release, arrow movement skipping headings with
-Enter reading the reached row, the arrow revealing an off-screen row in both
-directions, a header action that runs without reading a row,
+Enter reading the reached row, Space reading it on release while its press reads
+nothing, a header action owning its Space as well as its Enter, the arrow
+revealing an off-screen row in both directions, a header action that runs
+without reading a row,
 a header action that keeps the reading cursor and focus in place, arrows and
 Enter still reaching the row that holds focus, a prepend that leaves the reader's
 row where it was, the light theme's roles, and a controlled close the caller

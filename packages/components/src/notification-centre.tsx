@@ -66,7 +66,13 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
-import { isDismiss, isDown, isEnter, isUp } from "./internal/key.js";
+import {
+  isDismiss,
+  isDown,
+  isEnter,
+  isSpaceRelease,
+  isUp,
+} from "./internal/key.js";
 import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
@@ -403,6 +409,7 @@ export const NotificationCentreContent = ({
   autoFocus = true,
   children,
   onKeyDown,
+  onKeyUp,
   onMouseDownOutside,
   style,
   ref,
@@ -481,6 +488,14 @@ export const NotificationCentreContent = ({
     if (isEnter(event)) readActive();
   };
 
+  // A row draws as a button, so Space activates on release — the shared
+  // button contract (plans 332/334). A key that belongs to a header action
+  // never reaches the rows.
+  const handleKeyUp = (event: EventPayload): void => {
+    if (!ownsRowKeys()) return;
+    if (isSpaceRelease(event)) readActive();
+  };
+
   if (!open) return null;
 
   return (
@@ -503,6 +518,10 @@ export const NotificationCentreContent = ({
       onKeyDown={(event: EventPayload) => {
         onKeyDown?.(event);
         handleKeyDown(event);
+      }}
+      onKeyUp={(event: EventPayload) => {
+        onKeyUp?.(event);
+        handleKeyUp(event);
       }}
       style={mergeStyles(panelStyle(theme), style)}
     >

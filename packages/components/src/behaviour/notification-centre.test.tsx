@@ -9,6 +9,10 @@
  * the panel open; arrow keys that walk group headings instead of notifications;
  * and a surface that only works in the dark theme. A held trigger press closed
  * on the press and re-opened on the release (plan 583).
+ *
+ * A notification row draws as a button, but only Enter read it; Space on
+ * release now does too (plan 741), because GPUix synthesizes no activation
+ * click for a role-bearing div. A header action still owns its own keys.
  */
 
 import * as Arr from "effect/Array";
@@ -366,6 +370,52 @@ describe("NotificationCentre", () => {
 
     expect(onRead).toHaveBeenCalledTimes(1);
     expect(onRead).toHaveBeenCalledWith("review");
+
+    root.unmount();
+  });
+
+  it("reads the active row with Space, on its release", () => {
+    const onRead = vi.fn();
+    const root = renderComponent(
+      <Centre notifications={seed} onRead={onRead} defaultOpen />,
+    );
+    const row = root.renderer.findByTestId("feed-review");
+    if (row === undefined) throw new Error("behaviour: no row");
+
+    press(root, "down");
+    expect(root.renderer.getFocusedElementId?.()).toBe(row.id);
+
+    root.renderer.nativeSimulateKeyDown(row.id, "space");
+    expect(onRead).not.toHaveBeenCalled();
+
+    root.renderer.nativeSimulateKeyUp(row.id, "space");
+    expect(onRead).toHaveBeenCalledTimes(1);
+    expect(onRead).toHaveBeenCalledWith("review");
+    expect(isShown(root, "panel")).toBe(true);
+
+    root.unmount();
+  });
+
+  it("leaves a header action's Space press to that action", () => {
+    const onRead = vi.fn();
+    const onMarkAllRead = vi.fn();
+    const root = renderComponent(
+      <Centre
+        notifications={seed}
+        onRead={onRead}
+        onMarkAllRead={onMarkAllRead}
+        defaultOpen
+      />,
+    );
+    const action = root.renderer.findByTestId("mark-all");
+    if (action === undefined) throw new Error("behaviour: no header action");
+
+    root.renderer.nativeSimulateKeyDown(action.id, "space");
+    root.renderer.nativeSimulateKeyUp(action.id, "space");
+
+    expect(onMarkAllRead).toHaveBeenCalledTimes(1);
+    expect(onRead).not.toHaveBeenCalled();
+    expect(isShown(root, "panel")).toBe(true);
 
     root.unmount();
   });

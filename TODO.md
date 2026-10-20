@@ -1118,6 +1118,17 @@ retired once both branches are one
       (Combobox 63 → 67), three of them failing at `HEAD` and the disabled pin
       green; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory count synced
       (owner: components)
+    - [x] A notification row activates from Space — plan 741; measured
+      2026-10-20: a row draws as `role="button"` and reads on a press and on
+      `Enter`, but the two halves of a real Space press produced `0` read
+      requests with the row or the panel focused, while the header actions (the
+      internal `Button`) already activated on release. The panel now handles
+      `isSpaceRelease` behind the existing focused-element gate, so a header
+      action still owns its Space instead of reading the active row; 2 native
+      cases (Notification centre 20 → 22), the release case failing at `HEAD`
+      and the header-action pin failing when the gate is removed; docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the inventory count synced
+      (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
