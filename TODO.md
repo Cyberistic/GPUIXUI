@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 320/397
+`[x]` `[████████░░]` 321/398
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2701,6 +2701,17 @@ only that each cell contained `selectedActive`, so a missing wash passed. Both
 cells now name the four plain surfaces and the two washes, and the case derives
 all nine at-rest surfaces from `contrastPairs` and holds each cell to every one;
 no colour, pair, floor, metric or shipped set moves (plan 709)
+`[x]` Hold the fill the row press rejects to its figure and its premise — "the
+row keeps `active` rather than `accentActive`" rested on two present-tense
+measurements, `foreground` on the accent family's pressed fill at **6.677:1** on
+macOS dark (under the 7:1 body floor) and no shipped set under it on `active`,
+and neither was derived: the literal appeared only in that sentence, no pair
+measures `foreground` on `accentActive` at all, and plan 698 had already moved
+the macOS dark accent family one step while plan 706 found the neighbouring
+paragraph quoting the pre-698 figure. A `documentedFigures` entry derives the
+ratio from macOS dark, and a premise case holds both halves — macOS dark is the
+only set under the floor on the rejected fill, every set clears it on the kept
+one; no colour, pair, floor, metric or shipped set moves (plan 710)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

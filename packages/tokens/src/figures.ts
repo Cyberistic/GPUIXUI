@@ -520,6 +520,28 @@ const trackSelectedFigure: DocumentedFigure = {
 };
 
 /**
+ * The fill `docs/tokens.md` rejects as a selectable row's press, and the figure
+ * the rejection rests on. `accentActive` is the accent *family's* pressed fill —
+ * a filled control's press, not a row wash — and on macOS dark a row label on it
+ * measures 6.677:1, under the 7:1 body floor. The row keeps `active` instead.
+ * Plan 698 moved the macOS dark accent family one step after this sentence was
+ * written, so the figure is derived rather than trusted; the sibling premise
+ * (every set clears the floor on `active`) lives in
+ * `row-press-direction.test.ts`.
+ */
+const rowPressFillFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the row label on the pressed accent fill",
+  pairs: [["foreground", "accentActive", "body"]],
+  kind: "plain",
+  claim: "value",
+  provenance: platformTheme("darwin", "dark", "default"),
+  decimals: 3,
+  sentence:
+    "on macOS dark a row label measures **{figure}:1** on it, under the 7:1 body floor",
+};
+
+/**
  * The two roles `docs/tokens.md` rejects as a groove, and the figures the
  * rejection rests on. `border` is a line role: as a groove it would have to
  * carry the four `PROGRESS_TONES` as marks, and the tightest of them measures
@@ -688,6 +710,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...disabledDimFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
+  rowPressFillFigure,
   ...trackRejectedRoleFigures,
   ...ringFigures,
 ];

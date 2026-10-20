@@ -77,4 +77,36 @@ describe("the selectable row's press direction", () => {
     );
     expect(contrastPairs).toContainEqual(["active", "accent", "step"]);
   });
+
+  /**
+   * The sentence that keeps a row's press on `active` rather than `accentActive`
+   * rests on two measurements: on macOS dark a row label on the accent family's
+   * pressed fill misses the 7:1 body floor, and no shipped set misses it on the
+   * role the row keeps. Plan `698` moved that family one step after the sentence
+   * was written, so both halves are derived here — a palette move that makes the
+   * rejected fill readable, or the kept one unreadable, fails instead of leaving
+   * a rationale the shipped sets no longer support.
+   */
+  it("keeps the row's press on the fill that clears the body floor", () => {
+    const floor = contrastFloors.default.body;
+    const label = (fill: "active" | "accentActive") =>
+      shippedThemes.map(({ theme }) => ({
+        name: theme.name,
+        ratio: contrastRatio(theme.colors.foreground, theme.colors[fill]),
+      }));
+
+    const rejected = label("accentActive");
+    const short = rejected.filter(({ ratio }) => ratio < floor);
+    expect(short.map(({ name }) => name)).toEqual(["Dark · macOS"]);
+
+    const worst = rejected.reduce((current, next) =>
+      next.ratio < current.ratio ? next : current,
+    );
+    expect(worst.name).toBe("Dark · macOS");
+    expect(Number(worst.ratio.toFixed(3))).toBe(6.677);
+
+    label("active").forEach(({ name, ratio }) =>
+      expect(ratio, name).toBeGreaterThanOrEqual(floor),
+    );
+  });
 });
