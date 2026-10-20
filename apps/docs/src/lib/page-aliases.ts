@@ -24,7 +24,10 @@
  * but the index loses to a component token — `state management` on Component
  * API, `transparency`, `width` and `letter spacing` on Styling, `rendering` and
  * `server side rendering` on Architecture, `speed`, `credits`, `vitest`,
- * `panel` and the colour-vision words — plan 608. `page-aliases.test.ts`
+ * `panel` and the colour-vision words — plan 608. A ninth covers deployment
+ * (plan 609): `deployment`, `hosting`, `cloudflare`, `workers`, `self host` and
+ * `custom domain` name the Deployment page, while `publish` stays on
+ * Installation and `host props` stays on Component API. `page-aliases.test.ts`
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
@@ -60,7 +63,26 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   ["/docs/accessibility", ["keyboard focus"]],
   ["/docs/license", ["credits", "acknowledgements", "acknowledgments"]],
-  ["/docs/contributing", ["vitest"]],
+  ["/docs/contributing", ["vitest", "publish docs"]],
+  [
+    "/docs/deployment",
+    [
+      "deployment",
+      "deploy",
+      "deploying",
+      "hosting",
+      "host",
+      "self-host",
+      "self host",
+      "self-hosting",
+      "self hosting",
+      "cloudflare",
+      "cloudflare workers",
+      "workers",
+      "custom domain",
+      "production build",
+    ],
+  ],
   ["/docs/workspace", ["panel", "panels", "pane", "panes"]],
   [
     "/docs/styling",
@@ -133,6 +155,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "controlled state",
       "controlled component",
       "uncontrolled state",
+      "host props",
+      "host properties",
+      "shared host props",
     ],
   ],
   ["/docs/data-display", ["select row", "selectable rows"]],

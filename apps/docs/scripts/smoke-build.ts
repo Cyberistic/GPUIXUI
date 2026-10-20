@@ -1234,6 +1234,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the styling model page, which did not exist before plan 606",
     },
+    {
+      query: "cloudflare",
+      expected: "/docs/deployment",
+      first: true,
+      what: "the deployment and hosting page, which returned nothing before plan 609",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

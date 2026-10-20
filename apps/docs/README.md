@@ -883,6 +883,32 @@ VITE_SITE_URL=https://preview.example.com nub run --filter docs build
 `src/routes/sitemap[.]xml.ts` and `src/routes/robots[.]txt.ts`; a new page needs
 no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
+## Deployment
+
+The site is one Cloudflare Worker. `packages/deploy/alchemy.run.docs.ts`
+declares it as `gpuixui-docs` at `docs.gpuixui.dev` with
+`rootDir: "../../apps/docs"`; `wrangler.jsonc` pins compatibility
+`2026-10-01` with `nodejs_compat`. The deploy command is `nub run deploy:docs`
+from the repository root and needs Cloudflare credentials.
+
+`nub run build` writes `dist/client` (static assets, including
+`gpuix-preview/`) and `dist/server` (`index.js` plus the `wrangler.json` the
+Cloudflare Vite plugin generates). The pages a reader needs are on
+`/docs/deployment`.
+
+`smoke:deploy` verifies the artifact without an account: it builds, runs
+`wrangler deploy --dry-run` against the generated config, and checks
+Cloudflare's budgets (25 MiB per asset, 20,000 files per version, 64 MiB of
+Worker JavaScript) from the real output. Exit `0` means the artifact packaged;
+`1` names a config mismatch or the file that crossed a limit; `2` means the
+check could not run. The limits live in `src/lib/deployment.ts`, and
+`src/lib/deployment-page.test.ts` compares them with
+`packages/deploy/alchemy.run.docs.ts`, `wrangler.jsonc` and `src/lib/site.ts`.
+
+Two things stay unverified: `deploy:docs` itself (no credentials in this
+checkout) and the production host serving `/gpuix-preview/` (tracked in
+`TODO.md`). Neither is inferred from the dry run.
+
 ## Machine discovery
 
 Three routes serve the documentation to a reader that is not a browser, all

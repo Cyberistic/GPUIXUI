@@ -1,0 +1,149 @@
+---
+title: Deployment and hosting
+description: How this documentation site is built and deployed as a Cloudflare Worker — the Worker name, domain and root directory, the measured asset budgets, the credential-free dry run, self-hosting with VITE_SITE_URL, and exactly what is not verified.
+---
+
+This page covers **this documentation site**: how it is built, what the deploy
+resource declares, and what the build is allowed to upload. Shipping a desktop
+app built with the library is a different problem, answered under
+[Native bindings](/docs/installation#native-bindings) and
+[Troubleshooting](/docs/troubleshooting); no packaging guide exists yet.
+
+## What deploys
+
+The site is one Cloudflare Worker, declared in
+`packages/deploy/alchemy.run.docs.ts` as a `Cloudflare.Website.Vite` stack:
+
+| Fact | Value | Declared in |
+| ---- | ----- | ----------- |
+| Worker name | `gpuixui-docs` | `packages/deploy/alchemy.run.docs.ts` |
+| Custom domain | `docs.gpuixui.dev` | `packages/deploy/alchemy.run.docs.ts` |
+| App root | `../../apps/docs` | `packages/deploy/alchemy.run.docs.ts` |
+| Compatibility date | `2026-10-01` | `apps/docs/wrangler.jsonc` |
+| Compatibility flag | `nodejs_compat` | `apps/docs/wrangler.jsonc` |
+| Worker entry | `@tanstack/react-start/server-entry` | `apps/docs/wrangler.jsonc` |
+
+`alchemy.run.docs.ts` is outside `apps/docs`, so the site does not import it; the
+Worker name, domain and root directory are read by a test that parses the stack
+file, and the page fails when they disagree.
+
+## Build
+
+```sh
+nub run --filter docs build
+```
+
+The build runs two steps: `build:preview` compiles the live-surface document
+under `public/gpuix-preview/`, then Vite builds the TanStack Start app. The
+output has two halves:
+
+- `dist/client/` — the static assets, including `brand/`, `screenshots/` and the
+  `gpuix-preview/` bundle with its WebAssembly renderer;
+- `dist/server/` — the Worker script `index.js`, the server chunks, and the
+  `wrangler.json` the Cloudflare Vite plugin generates. That generated config
+  sets `no_bundle: true` and points `assets.directory` at `../client`.
+
+`nub run --filter docs preview` serves that output locally, which is what the
+built-site smokes do.
+
+## Verify the artifact without an account
+
+A deploy needs Cloudflare credentials; packaging the artifact does not.
+
+```sh
+nub run --filter docs smoke:deploy
+# or, when dist/ is current:
+nub apps/docs/scripts/smoke-deploy.ts --no-build
+```
+
+`smoke:deploy` builds the app, runs `wrangler deploy --dry-run` against the
+generated config, and then measures the real output directory. It proves three
+things: the build succeeds, the Worker config packages with every asset, and
+every measured file is inside the budgets below. It prints one summary line with
+the file count, the largest asset and the Worker script size.
+
+| Exit | Meaning |
+| ---- | ------- |
+| `0` | the artifact built, packaged and fits the budgets |
+| `1` | a config mismatch or a budget was exceeded; the failing file is named |
+| `2` | the check could not run — no build output, no wrangler, or the build failed |
+
+`2` is never a pass. It means the artifact was not verified.
+
+## The asset budget
+
+Cloudflare documents the limits for one Worker version
+([Workers limits](https://developers.cloudflare.com/workers/platform/limits/)):
+
+| Limit | Value | Why it matters here |
+| ----- | ----- | ------------------- |
+| Individual static asset | 25 MiB | the live surface's `gpuix-preview/assets/*.wasm` is the largest file in the build |
+| Static assets per Worker version | 20,000 | the Free-plan count; this repository does not claim a paid plan |
+| Worker script | 64 MiB uncompressed | `dist/server/index.js` plus its server chunks |
+
+The live surface is the reason the first row is close enough to check. A
+renderer bump grows that wasm, and a build that crosses 25 MiB is rejected by
+the platform. `smoke:deploy` measures the largest asset rather than trusting a
+remembered number, and it fails when the wasm is absent, so the budget that
+matters cannot be skipped.
+
+## Custom domain and canonical URLs
+
+`src/lib/site.ts` defaults the site origin to the deploy resource's domain,
+`https://docs.gpuixui.dev`. The sitemap, every page's canonical link and its
+OpenGraph URL use that origin, so a copy served from another host must set it:
+
+```sh
+VITE_SITE_URL=https://preview.example.com nub run --filter docs build
+```
+
+Nothing else changes: a self-hosted build is the same `dist/client` plus
+`dist/server` pair, served by the Worker runtime the generated config targets.
+
+## What is verified, and what is not
+
+Verified on this host:
+
+- the production build (`nub run --filter docs build`);
+- the credential-free packaging, by `smoke:deploy`'s `wrangler deploy --dry-run`;
+- the built output, by `smoke:build`: every sitemap page renders, every internal
+  link and fragment resolves, and this page's search term answers. Other browser
+  gates are listed in [Contributing](/docs/contributing#docs-site).
+
+**Not verified:**
+
+- **The account deploy.** `nub run deploy:docs` lives in `packages/deploy` and
+  needs Cloudflare credentials; no run from this checkout has been recorded, so
+  this page does not claim a deployment happened.
+- **The production host serving the live surface.** The deployed site must serve
+  the WebAssembly renderer under `/gpuix-preview/`. That check is tracked in
+  `TODO.md` and needs a real deployment URL; until then, treat the live previews
+  as verified locally, not on the deployed host.
+- **Per-component native screenshots.** Component pages cite their native test
+  suite rather than a capture; the capture pipeline exists but the playground
+  has no component screens yet.
+
+A dry run is not a deploy. If you need to know whether the account side works,
+run `smoke:preview` with `--base-url` against the deployed origin after the
+deploy path is confirmed.
+
+## Shipping an app built with GPUIXUI
+
+This page does not describe packaging a desktop application. The runtime is a
+native window through `@gpuix/native`, and the binding is platform-specific:
+[Installation](/docs/installation#native-bindings) lists the published targets
+and the one unpublished platform, and
+[Troubleshooting](/docs/troubleshooting#the-native-binding-is-missing-for-this-platform)
+names the failure when a host has no binding. Signing, notarisation,
+installers and auto-update are not implemented or documented in this repository.
+
+## Related
+
+- [Contributing](/docs/contributing) — the gates a change must pass, and the
+  docs site's own discovery output.
+- [Native smoke suite](/docs/native-testing) — the `0`/`1`/`2` exit contract the
+  deploy check follows.
+- [Previews](/docs/previews) — the five preview tiers, including the WebAssembly
+  surface this build ships.
+- [Troubleshooting](/docs/troubleshooting) — the failures a deployed copy can
+  reproduce.

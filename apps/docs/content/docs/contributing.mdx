@@ -73,6 +73,7 @@ every check your change can affect:
 | `nub run --filter docs test` | pages, registry, links, search, previews, copyable fence imports | `1` on a failure |
 | `nub run --filter docs check-types` | the app, the preview document and MDX types | `1` on a type error |
 | `nub run --filter docs build` | the production Worker bundle builds | `1` on a build error |
+| `nub run --filter docs smoke:deploy` | the deployment artifact: the build succeeds, `wrangler deploy --dry-run` accepts the generated Worker config, and every file is inside Cloudflare's per-asset, file-count and Worker-size limits | `1` a config mismatch or an exceeded budget, `2` could not verify |
 | `nub run --filter docs smoke:build` | every sitemap page renders in the production output, its document head carries the description, social card, icon and light/dark theme colour, every internal link and brand asset resolves, every `#fragment` lands on a heading, search answers, an unknown slug is a 404, and no page's headings skip a level | `1` broken, `2` could not verify |
 | `nub run --filter docs smoke:browser` | the built site hydrates; every preview surface paints the theme and platform the toggles publish, and every code colour clears the 4.5:1 text floor in both schemes | `1` wrong paint, `2` could not verify |
 | `nub run --filter docs smoke:console` | every sitemap page loads in the production build with no console error, uncaught exception or error-level log entry — the class a server-HTML crawl cannot see | `1` a page errored, `2` could not verify |

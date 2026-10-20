@@ -1577,6 +1577,38 @@ describe("generated name candidates (plan 569)", () => {
     );
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
+  /**
+   * Plan 609: `deployment`, `hosting`, `cloudflare` and `workers` had no owner,
+   * `host` and `self-host` meant the component *host element*, and
+   * `production build` reached a Contributing section. The Deployment page
+   * names the Worker path; `publish docs` stays on Contributing and `host props`
+   * on Component API.
+   */
+  it("finds the deployment page by the words readers use (plan 609)", async () => {
+    const expected = [
+      ["deployment", "/docs/deployment"],
+      ["deploy", "/docs/deployment"],
+      ["hosting", "/docs/deployment"],
+      ["host", "/docs/deployment"],
+      ["self-host", "/docs/deployment"],
+      ["self host", "/docs/deployment"],
+      ["cloudflare", "/docs/deployment"],
+      ["workers", "/docs/deployment"],
+      ["custom domain", "/docs/deployment"],
+      ["production build", "/docs/deployment"],
+      ["host props", "/docs/component-api"],
+      ["publish docs", "/docs/contributing"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
 });
 
 describe("withoutTypeTableRows", () => {
