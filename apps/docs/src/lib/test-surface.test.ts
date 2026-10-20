@@ -216,7 +216,7 @@ describe("the page", () => {
     const missing = [
       "<TestWindowTable />",
       "<TestElementTable />",
-      "<TestMethodGroups />",
+      ...testMethodGroups.map((group) => `<TestMethods group="${group.id}" />`),
       "<TestMethodExclusions />",
       "<TestingAbsences />",
     ].filter((block) => !page.includes(block));

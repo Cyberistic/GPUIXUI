@@ -60,7 +60,7 @@ import {
 import {
   TestElementTable,
   TestMethodExclusions,
-  TestMethodGroups,
+  TestMethods,
   TestingAbsences,
   TestWindowTable,
 } from "./test-surface";
@@ -123,7 +123,7 @@ export function getMDXComponents(components?: MDXComponents) {
     PortingGaps,
     TestWindowTable,
     TestElementTable,
-    TestMethodGroups,
+    TestMethods,
     TestMethodExclusions,
     TestingAbsences,
     ...components,

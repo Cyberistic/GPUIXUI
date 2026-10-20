@@ -76,31 +76,26 @@ export function TestElementTable() {
   );
 }
 
-export function TestMethodGroups() {
+export function TestMethods({ group }: { readonly group: string }) {
+  const found = testMethodGroups.find((entry) => entry.id === group);
+  if (found === undefined) return null;
   return (
-    <div data-test-methods>
-      {testMethodGroups.map((group) => (
-        <section key={group.id} data-test-group={group.id}>
-          <h3 className="mt-5 mb-1 text-base font-medium">{group.title}</h3>
-          <p className="mb-2 text-sm text-fd-muted-foreground">{group.note}</p>
-          <Table label={`${group.title} methods`} marker={group.id}>
-            {group.methods.map((method) => (
-              <tr
-                key={method.name}
-                data-test-method={method.name}
-                className="border-b border-fd-border align-top last:border-0"
-              >
-                <td className="py-2 pr-4 font-mono whitespace-nowrap">
-                  {method.name}
-                </td>
-                <td className="py-2 text-fd-muted-foreground">
-                  {method.summary}
-                </td>
-              </tr>
-            ))}
-          </Table>
-        </section>
-      ))}
+    <div data-test-methods={found.id}>
+      <p className="mb-2 text-sm text-fd-muted-foreground">{found.note}</p>
+      <Table label={`${found.title} methods`} marker={found.id}>
+        {found.methods.map((method) => (
+          <tr
+            key={method.name}
+            data-test-method={method.name}
+            className="border-b border-fd-border align-top last:border-0"
+          >
+            <td className="py-2 pr-4 font-mono whitespace-nowrap">
+              {method.name}
+            </td>
+            <td className="py-2 text-fd-muted-foreground">{method.summary}</td>
+          </tr>
+        ))}
+      </Table>
     </div>
   );
 }
@@ -111,23 +106,32 @@ export function TestMethodGroups() {
  */
 export function TestMethodExclusions() {
   return (
-    <Table
-      label="Test renderer members owned by another page"
-      marker="excluded"
-    >
-      {excludedTestMethods.map((method) => (
-        <tr
-          key={method.name}
-          data-excluded-method={method.name}
-          className="border-b border-fd-border align-top last:border-0"
-        >
-          <td className="py-2 pr-4 font-mono whitespace-nowrap">
-            {method.name}
-          </td>
-          <td className="py-2 text-fd-muted-foreground">{method.owner}</td>
-        </tr>
-      ))}
-    </Table>
+    <section data-test-method-exclusions>
+      <h3 className="mt-5 mb-1 text-base font-medium">
+        Members another page owns
+      </h3>
+      <p className="mb-2 text-sm text-fd-muted-foreground">
+        These are public on the same class. Each is documented where a test
+        would look for its subject, not duplicated here.
+      </p>
+      <Table
+        label="Test renderer members owned by another page"
+        marker="excluded"
+      >
+        {excludedTestMethods.map((method) => (
+          <tr
+            key={method.name}
+            data-excluded-method={method.name}
+            className="border-b border-fd-border align-top last:border-0"
+          >
+            <td className="py-2 pr-4 font-mono whitespace-nowrap">
+              {method.name}
+            </td>
+            <td className="py-2 text-fd-muted-foreground">{method.owner}</td>
+          </tr>
+        ))}
+      </Table>
+    </section>
   );
 }
 

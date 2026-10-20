@@ -232,8 +232,12 @@ Four components, registered in `src/components/mdx.tsx`:
 
 - `<TestWindowTable />` — two columns (field, meaning), grouped as one table.
 - `<TestElementTable />` — the nine fields.
-- `<TestMethodGroups />` — one `<h3>` per group with the note and a table of
-  method/meaning.
+- `<TestMethods group="find" />` — one group's note and method table, placed
+  under its matching `##` heading (`find`, `input`, `focus`, `time`, `scroll`,
+  `render`, `inspect`), so each section owns its table instead of one block
+  listing every group.
+- `<TestMethodExclusions />` — the 16 members another page owns, with an `h3`
+  and a note.
 - `<TestingAbsences />` — one row per absence with its substitute.
 
 Every cell reads `test-surface.ts`; the MDX page retypes no name.
@@ -419,3 +423,7 @@ Corrections measured during implementation:
    `@gpuixui/primitives` there pulled the package's sources into a program with
    the wrong `jsxImportSource` and produced DOM-type errors. The harness was
    removed; the example stays on `<div>`/`<text>` so it needs no package type.
+9. The first page structure rendered all seven method groups under
+   `## Finding what rendered`, so the six headings below it owned prose but no
+   table. `<TestMethods group="…" />` now renders one group under its matching
+   heading, and the page guard requires all seven markers.
