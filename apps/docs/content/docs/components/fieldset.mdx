@@ -18,22 +18,31 @@ lifecycle.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Field, FieldInput, Fieldset } from "@gpuixui/components";
 
-<Fieldset legend="Billing address" disabled={saving}>
-  <Field label="Street" description="Street and number">
-    <FieldInput
-      value={street}
-      onChange={(event) => setStreet(event.value ?? "")}
-    />
-  </Field>
-  <Field label="City" description="Where the invoice is sent">
-    <FieldInput
-      value={city}
-      onChange={(event) => setCity(event.value ?? "")}
-    />
-  </Field>
-</Fieldset>;
+export function BillingAddress() {
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [saving] = useState(false);
+
+  return (
+    <Fieldset legend="Billing address" disabled={saving}>
+      <Field label="Street" description="Street and number">
+        <FieldInput
+          value={street}
+          onChange={(event) => setStreet(event.value ?? "")}
+        />
+      </Field>
+      <Field label="City" description="Where the invoice is sent">
+        <FieldInput
+          value={city}
+          onChange={(event) => setCity(event.value ?? "")}
+        />
+      </Field>
+    </Fieldset>
+  );
+}
 ```
 
 `legend` is both the visible heading and the group's accessible name, so an

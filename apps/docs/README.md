@@ -1100,6 +1100,14 @@ component with no variants or sizes still gets the section — say "none" rather
 than deleting it, so a reader can tell the difference between "not documented"
 and "does not apply".
 
+Every fenced `tsx` example on such a page is a **standalone module** (plan 613):
+it imports everything it uses and declares the state and callbacks it
+references, inside a component when the state is React state. `nub run --filter
+docs test -- example-snippets` compiles all of them with the app's real options
+and names the page, fence and line; a fragment that leans on the surrounding
+page fails the suite. Copy the shape of a passing example rather than pasting a
+snippet from an issue.
+
 `<RelatedComponents>` links a related record only when it is no longer
 `planned`; a planned record renders as a plain "(planned)" label, because a link
 would 404. `src/components/related-components.test.tsx` guards that rule.

@@ -17,20 +17,27 @@ its own value, tab stop and focus ring.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { RangeSlider, Stack, Text } from "@gpuixui/primitives";
 
-<Stack direction="column" gap="sm">
-  <Text role="caption" tone="muted">
-    ${price[0]} – ${price[1]}
-  </Text>
-  <RangeSlider
-    label="Budget"
-    value={price}
-    onChange={setPrice}
-    step={5}
-    formatValue={(value) => `$${value}`}
-  />
-</Stack>;
+export function BudgetFilter() {
+  const [price, setPrice] = useState<readonly [number, number]>([20, 80]);
+
+  return (
+    <Stack direction="column" gap="sm">
+      <Text role="caption" tone="muted">
+        ${price[0]} – ${price[1]}
+      </Text>
+      <RangeSlider
+        label="Budget"
+        value={price}
+        onChange={setPrice}
+        step={5}
+        formatValue={(value) => `$${value}`}
+      />
+    </Stack>
+  );
+}
 ```
 
 The value is always `[start, end]` in that order. The ends can touch but never

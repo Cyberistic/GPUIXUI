@@ -16,10 +16,14 @@ fade mask. It is a `div`: the runtime has no separate scroller element.
 ```tsx
 import { ScrollArea, Stack, Text } from "@gpuixui/primitives";
 
+const rows = ["src/components/Button.tsx", "src/lib/tokens.ts"];
+
 <ScrollArea axis="vertical" style={{ height: 240 }}>
   <Stack direction="column" gap="sm">
     {rows.map((row) => (
-      <Text role="body" key={row}>{row}</Text>
+      <Text role="body" key={row}>
+        {row}
+      </Text>
     ))}
   </Stack>
 </ScrollArea>;

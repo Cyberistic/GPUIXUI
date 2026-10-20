@@ -18,9 +18,17 @@ current page.
 
 ```tsx
 import {
-  Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList,
-  BreadcrumbPage, BreadcrumbSeparator,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@gpuixui/components/breadcrumb";
+
+const go = (destination: string) => {
+  // navigate to the destination
+};
 
 <Breadcrumb maxItems={3}>
   <BreadcrumbList>

@@ -16,16 +16,25 @@ so nothing the component holds is invisible to the caller.
 ## Usage
 
 ```tsx
-import { TagInput, TagInputChip, TagInputField } from "@gpuixui/components";
+import { useState } from "react";
+import {
+  TagInput,
+  TagInputChip,
+  TagInputField,
+} from "@gpuixui/components";
 
-const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
+export function TagPicker() {
+  const [tags, setTags] = useState<ReadonlyArray<string>>(["design"]);
 
-<TagInput label="Tags" value={tags} onValueChange={setTags} max={5}>
-  {tags.map((tag) => (
-    <TagInputChip key={tag} value={tag} />
-  ))}
-  <TagInputField placeholder="Add a tag…" />
-</TagInput>;
+  return (
+    <TagInput label="Tags" value={tags} onValueChange={setTags} max={5}>
+      {tags.map((tag) => (
+        <TagInputChip key={tag} value={tag} />
+      ))}
+      <TagInputField placeholder="Add a tag…" />
+    </TagInput>
+  );
+}
 ```
 
 ## Variants

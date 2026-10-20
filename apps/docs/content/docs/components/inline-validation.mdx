@@ -19,16 +19,31 @@ no auto-validate per keystroke and no form library.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Field, FieldInput } from "@gpuixui/components/field";
 
-<Field
-  label="Workspace URL"
-  description="Lowercase words joined by hyphens."
-  error={error}
-  required
->
-  <FieldInput value={slug} onChange={(event) => setSlug(event.value ?? "")} />
-</Field>;
+const validationError = (value: string): string | undefined =>
+  value !== "" && value.includes(" ")
+    ? "Use hyphens instead of spaces."
+    : undefined;
+
+export function WorkspaceUrlField() {
+  const [slug, setSlug] = useState("");
+
+  return (
+    <Field
+      label="Workspace URL"
+      description="Lowercase words joined by hyphens."
+      error={validationError(slug)}
+      required
+    >
+      <FieldInput
+        value={slug}
+        onChange={(event) => setSlug(event.value ?? "")}
+      />
+    </Field>
+  );
+}
 ```
 
 The parts are `Field`, `FieldLabel`, `FieldDescription`, `FieldError` and

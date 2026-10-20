@@ -17,11 +17,14 @@ value; the component owns only the draft.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { InlineEdit } from "@gpuixui/components";
 
-const [name, setName] = useState("Untitled workspace");
+export function WorkspaceName() {
+  const [name, setName] = useState("Untitled workspace");
 
-<InlineEdit label="Workspace name" value={name} onCommit={setName} />;
+  return <InlineEdit label="Workspace name" value={name} onCommit={setName} />;
+}
 ```
 
 ## Variants

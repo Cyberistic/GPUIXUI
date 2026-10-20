@@ -17,20 +17,29 @@ the item states.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Label, Select } from "@gpuixui/primitives";
 
-<Label>Region</Label>
-<Select
-  value={region}
-  onChange={setRegion}
-  label="Region"
-  fullWidth
-  options={[
-    { value: "eu-west", label: "Europe — West" },
-    { value: "us-east", label: "United States — East" },
-    { value: "legacy", label: "Legacy region", disabled: true },
-  ]}
-/>;
+export function RegionField() {
+  const [region, setRegion] = useState("eu-west");
+
+  return (
+    <>
+      <Label>Region</Label>
+      <Select
+        value={region}
+        onChange={setRegion}
+        label="Region"
+        fullWidth
+        options={[
+          { value: "eu-west", label: "Europe — West" },
+          { value: "us-east", label: "United States — East" },
+          { value: "legacy", label: "Legacy region", disabled: true },
+        ]}
+      />
+    </>
+  );
+}
 ```
 
 ## Variants

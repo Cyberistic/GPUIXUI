@@ -21,10 +21,12 @@ import { Input, Label, labelledBy } from "@gpuixui/primitives";
 
 const name = "Workspace name";
 
-<Label description="Shown on invitations and in the app switcher.">
-  {name}
-</Label>
-<Input {...labelledBy(name)} fullWidth />;
+<>
+  <Label description="Shown on invitations and in the app switcher.">
+    {name}
+  </Label>
+  <Input {...labelledBy(name)} fullWidth />
+</>;
 ```
 
 ## Variants

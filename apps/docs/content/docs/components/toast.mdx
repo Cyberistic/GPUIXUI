@@ -15,21 +15,40 @@ the resulting array.
 ## Usage
 
 ```tsx
-import {
-  ToastProvider, ToastViewport, useToast,
-} from "@gpuixui/components/toast";
+import { ToastProvider, ToastViewport } from "@gpuixui/components/toast";
+
+const App = () => null;
 
 <ToastProvider>
   <App />
   <ToastViewport />
 </ToastProvider>;
+```
 
-const toast = useToast();
-toast.push({
-  title: "Changes published",
-  description: "The site rebuilds in about a minute.",
-  tone: "success",
-});
+Any component inside the provider can push. The second example pushes when the
+reader publishes; the third shows an action and its handler:
+
+```tsx
+import { useToast } from "@gpuixui/components/toast";
+import { Button } from "@gpuixui/primitives";
+
+export function PublishButton() {
+  const toast = useToast();
+
+  return (
+    <Button
+      onClick={() =>
+        toast.push({
+          title: "Changes published",
+          description: "The site rebuilds in about a minute.",
+          tone: "success",
+        })
+      }
+    >
+      Publish
+    </Button>
+  );
+}
 ```
 
 ## Variants
@@ -59,10 +78,28 @@ A toast may carry one action, such as Undo. The label is data in the draft and
 the handler is passed beside it, so a toast never holds a closure in the store:
 
 ```tsx
-toast.push(
-  { title: "Message archived", action: { label: "Undo" } },
-  { onAction: () => restore() },
-);
+import { useToast } from "@gpuixui/components/toast";
+import { Button } from "@gpuixui/primitives";
+
+export function ArchiveButton() {
+  const toast = useToast();
+  const restore = () => {
+    // undo the archive
+  };
+
+  return (
+    <Button
+      onClick={() =>
+        toast.push(
+          { title: "Message archived", action: { label: "Undo" } },
+          { onAction: restore },
+        )
+      }
+    >
+      Archive
+    </Button>
+  );
+}
 ```
 
 Pressing the action runs `onAction` once and dismisses the toast. A label with no

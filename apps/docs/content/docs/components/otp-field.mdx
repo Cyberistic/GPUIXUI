@@ -17,19 +17,29 @@ receives one string, and the package distributes it across the cells
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Label, OTPField, Stack } from "@gpuixui/primitives";
 
-<Stack direction="column" gap="xs">
-  <Label description="Six digits from your authenticator">
-    Verification code
-  </Label>
-  <OTPField
-    label="Verification code"
-    value={code}
-    onChange={setCode}
-    onComplete={(complete) => verify(complete)}
-  />
-</Stack>;
+export function VerificationCode() {
+  const [code, setCode] = useState("");
+  const verify = (complete: string) => {
+    // verify the completed code
+  };
+
+  return (
+    <Stack direction="column" gap="xs">
+      <Label description="Six digits from your authenticator">
+        Verification code
+      </Label>
+      <OTPField
+        label="Verification code"
+        value={code}
+        onChange={setCode}
+        onComplete={verify}
+      />
+    </Stack>
+  );
+}
 ```
 
 `length` defaults to six. The value is contiguous from the first cell, so typing

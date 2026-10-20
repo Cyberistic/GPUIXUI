@@ -16,15 +16,20 @@ sheet cannot disagree.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { HotkeyRecorder } from "@gpuixui/components";
 
-const [hotkey, setHotkey] = useState<string | null>("mod+k");
+export function PaletteHotkey() {
+  const [hotkey, setHotkey] = useState<string | null>("mod+k");
 
-<HotkeyRecorder
-  label="Toggle command palette"
-  value={hotkey}
-  onChange={setHotkey}
-/>;
+  return (
+    <HotkeyRecorder
+      label="Toggle command palette"
+      value={hotkey}
+      onChange={setHotkey}
+    />
+  );
+}
 ```
 
 ## Variants

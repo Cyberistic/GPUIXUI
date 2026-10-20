@@ -14,18 +14,30 @@ Confirm does not close the dialog — the caller owns the async work.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
 
-<ConfirmDialog
-  open={open}
-  onOpenChange={setOpen}
-  title="Archive this project?"
-  description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
-  confirmLabel="Archive project"
-  tone="danger"
-  loading={saving}
-  onConfirm={archive}
-/>;
+export function ArchiveProject() {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const archive = () => {
+    setSaving(true);
+    // archive, then close and reset `saving`
+  };
+
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={setOpen}
+      title="Archive this project?"
+      description="The project leaves everyone's sidebar. Its 18 open tasks stay attached and no files are deleted."
+      confirmLabel="Archive project"
+      tone="danger"
+      loading={saving}
+      onConfirm={archive}
+    />
+  );
+}
 ```
 
 `children` renders between the description and the actions — a checkbox, a

@@ -18,18 +18,25 @@ renders empty rather than a zero to delete.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Label, NumberField, Stack } from "@gpuixui/primitives";
 
-<Stack direction="column" gap="xs">
-  <Label description="1–99">Copies</Label>
-  <NumberField
-    label="Copies"
-    value={copies}
-    onChange={setCopies}
-    min={1}
-    max={99}
-  />
-</Stack>;
+export function CopiesField() {
+  const [copies, setCopies] = useState(1);
+
+  return (
+    <Stack direction="column" gap="xs">
+      <Label description="1–99">Copies</Label>
+      <NumberField
+        label="Copies"
+        value={copies}
+        onChange={setCopies}
+        min={1}
+        max={99}
+      />
+    </Stack>
+  );
+}
 ```
 
 While the user types, the draft text is kept verbatim (`1.` stays `1.`), so the

@@ -17,18 +17,25 @@ children — a deviation from shadcn's shape recorded as decision D16 in
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { RadioGroup } from "@gpuixui/primitives";
 
-<RadioGroup
-  label="Digest cadence"
-  value={cadence}
-  onChange={setCadence}
-  options={[
-    { value: "daily", label: "Daily" },
-    { value: "weekly", label: "Weekly", description: "Every Monday." },
-    { value: "never", label: "Never" },
-  ]}
-/>;
+export function DigestCadence() {
+  const [cadence, setCadence] = useState("weekly");
+
+  return (
+    <RadioGroup
+      label="Digest cadence"
+      value={cadence}
+      onChange={setCadence}
+      options={[
+        { value: "daily", label: "Daily" },
+        { value: "weekly", label: "Weekly", description: "Every Monday." },
+        { value: "never", label: "Never" },
+      ]}
+    />
+  );
+}
 ```
 
 ## Variants

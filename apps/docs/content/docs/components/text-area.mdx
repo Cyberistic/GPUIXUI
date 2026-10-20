@@ -17,19 +17,28 @@ arrives (plan 046).
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Label, TextArea, labelledBy } from "@gpuixui/primitives";
 
 const notes = "Description";
 
-<Label>{notes}</Label>
-<TextArea
-  {...labelledBy(notes)}
-  value={value}
-  onChange={setValue}
-  minRows={3}
-  maxRows={8}
-  fullWidth
-/>;
+export function DescriptionField() {
+  const [value, setValue] = useState("");
+
+  return (
+    <>
+      <Label>{notes}</Label>
+      <TextArea
+        {...labelledBy(notes)}
+        value={value}
+        onChange={setValue}
+        minRows={3}
+        maxRows={8}
+        fullWidth
+      />
+    </>
+  );
+}
 ```
 
 ## Variants

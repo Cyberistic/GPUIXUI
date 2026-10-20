@@ -14,24 +14,36 @@ the text and the highlight, and the consumer declares the candidate items.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import {
   MentionInput,
   MentionInputItem,
   MentionInputList,
 } from "@gpuixui/components";
 
-<MentionInput
-  label="Comment"
-  value={comment}
-  onValueChange={setComment}
-  onMention={(name) => notify(name)}
->
-  <MentionInputList>
-    {people.map((person) => (
-      <MentionInputItem key={person} value={person} />
-    ))}
-  </MentionInputList>
-</MentionInput>;
+const people = ["Ada Lovelace", "Grace Hopper"];
+const notify = (name: string) => {
+  // notify the mentioned person
+};
+
+export function CommentField() {
+  const [comment, setComment] = useState("");
+
+  return (
+    <MentionInput
+      label="Comment"
+      value={comment}
+      onValueChange={setComment}
+      onMention={notify}
+    >
+      <MentionInputList>
+        {people.map((person) => (
+          <MentionInputItem key={person} value={person} />
+        ))}
+      </MentionInputList>
+    </MentionInput>
+  );
+}
 ```
 
 ## Variants

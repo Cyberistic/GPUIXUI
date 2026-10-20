@@ -16,11 +16,14 @@ not jump as the user pages.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Pagination } from "@gpuixui/components/pagination";
 
-const [page, setPage] = useState(1);
+export function PageBrowser() {
+  const [page, setPage] = useState(1);
 
-<Pagination page={page} pageCount={9} onPageChange={setPage} />;
+  return <Pagination page={page} pageCount={9} onPageChange={setPage} />;
+}
 ```
 
 ## Variants

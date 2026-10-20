@@ -17,13 +17,20 @@ choice submitted with a form, a switch is applied immediately.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Switch } from "@gpuixui/primitives";
 
-<Switch
-  checked={paused}
-  onChange={setPaused}
-  label="Pause all notifications"
-/>;
+export function PauseNotifications() {
+  const [paused, setPaused] = useState(false);
+
+  return (
+    <Switch
+      checked={paused}
+      onChange={setPaused}
+      label="Pause all notifications"
+    />
+  );
+}
 ```
 
 ## Variants

@@ -76,6 +76,25 @@ approximation, where the record declares one, follows them:
 <ComponentPreview slug="button" />
 ```
 
+## The examples
+
+Every fenced `ts`/`tsx` block on a component page is a **standalone module**: it
+imports everything it uses, declares the state and callbacks it references, and
+compiles with the app's real compiler options (`jsxImportSource:
+"@gpuix/react"`). React state lives inside a named component, because a hook at
+module top level is not runnable. A reader can copy the fence into a file and
+type-check it.
+
+`src/example-snippets.test.ts` extracts every fence from
+`content/docs/components/*.mdx` and compiles each one, naming the page, fence and
+MDX line on failure. It also rejects a fence that is a script with no import or
+export, because that example leans on the surrounding page.
+
+The rule is the second half of plan 577: that plan made an example's imports
+resolve; this one makes the module compile. It found three pages that named
+props the component does not have (Alert `title`, Combobox `label`, DatePicker
+`label`), so an example can no longer drift from the props type it documents.
+
 ## The blocks
 
 | Block | What it does | Rule |
@@ -207,6 +226,7 @@ dark page (plan 457 §9).
 | Check | What it proves |
 | ----- | -------------- |
 | `src/component-pages.test.ts` | every section, the usage example, the API table and the source include |
+| `src/example-snippets.test.ts` | every fenced example is a standalone module that compiles against the real packages |
 | `src/component-truth.test.ts` | every repository path a page names exists; no placeholder prose |
 | `src/content-references.test.ts` | every include and props table resolves; the record and page agree on `api` |
 | `src/component-api-tables.test.ts` | every props table renders at least one row from the file it names |

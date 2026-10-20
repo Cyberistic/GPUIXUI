@@ -16,27 +16,44 @@ one three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` an
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Checkbox } from "@gpuixui/primitives";
 
-<Checkbox
-  checked={email}
-  onChange={setEmail}
-  label="Email notifications"
-/>;
+export function EmailNotifications() {
+  const [email, setEmail] = useState(true);
+
+  return (
+    <Checkbox
+      checked={email}
+      onChange={setEmail}
+      label="Email notifications"
+    />
+  );
+}
 ```
 
 An indeterminate parent:
 
 ```tsx
-<Checkbox
-  checked={email && push}
-  indeterminate={!email !== !push}
-  onChange={(next) => {
-    setEmail(next);
-    setPush(next);
-  }}
-  label="All channels"
-/>;
+import { useState } from "react";
+import { Checkbox } from "@gpuixui/primitives";
+
+export function AllChannels() {
+  const [email, setEmail] = useState(true);
+  const [push, setPush] = useState(false);
+
+  return (
+    <Checkbox
+      checked={email && push}
+      indeterminate={!email !== !push}
+      onChange={(next) => {
+        setEmail(next);
+        setPush(next);
+      }}
+      label="All channels"
+    />
+  );
+}
 ```
 
 ## Variants

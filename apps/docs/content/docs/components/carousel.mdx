@@ -17,6 +17,7 @@ translating track is not honestly expressible.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import {
   Carousel,
   CarouselControl,
@@ -24,16 +25,31 @@ import {
   CarouselTrack,
 } from "@gpuixui/components";
 
-<Carousel label="Workspace previews" value={index} onValueChange={setIndex} loop>
-  <CarouselTrack>
-    <CarouselSlide>…</CarouselSlide>
-    <CarouselSlide>…</CarouselSlide>
-  </CarouselTrack>
-  <div style={{ display: "flex", gap: 8 }}>
-    <CarouselControl direction="previous" />
-    <CarouselControl direction="next" />
-  </div>
-</Carousel>;
+export function WorkspacePreviews() {
+  const [index, setIndex] = useState(0);
+
+  return (
+    <Carousel
+      label="Workspace previews"
+      value={index}
+      onValueChange={setIndex}
+      loop
+    >
+      <CarouselTrack>
+        <CarouselSlide>
+          <text>Dashboard</text>
+        </CarouselSlide>
+        <CarouselSlide>
+          <text>Editor</text>
+        </CarouselSlide>
+      </CarouselTrack>
+      <div style={{ display: "flex", gap: 8 }}>
+        <CarouselControl direction="previous" />
+        <CarouselControl direction="next" />
+      </div>
+    </Carousel>
+  );
+}
 ```
 
 Declare slides directly inside `CarouselTrack`: the track numbers its direct

@@ -36,9 +36,16 @@ beside it. A busy action keeps its place and shows a spinner instead of
 disappearing:
 
 ```tsx
+import { Button } from "@gpuixui/primitives";
+
+const saving = true;
+const save = () => {
+  // persist the draft
+};
+
 <Button variant="primary" loading={saving} onActivate={save}>
   Create project
-</Button>
+</Button>;
 ```
 
 ## Variants

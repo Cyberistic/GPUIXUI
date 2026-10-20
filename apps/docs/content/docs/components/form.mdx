@@ -18,6 +18,8 @@ the caller passes the value it already holds.
 ## Usage
 
 ```tsx
+import * as Schema from "effect/Schema";
+import { useState } from "react";
 import { Field, FieldInput, Form } from "@gpuixui/components";
 import { Button } from "@gpuixui/primitives";
 
@@ -26,33 +28,44 @@ const Signup = Schema.Struct({
   name: Schema.NonEmptyString,
 });
 
-<Form
-  schema={Signup}
-  value={{ email, name }}
-  pending={saving}
-  onSubmit={save}
-  label="Create account"
->
-  {(form) => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Field label="Email" description="We never share it">
-        <FieldInput
-          value={email}
-          onChange={(event) => setEmail(event.value ?? "")}
-        />
-      </Field>
-      <Field label="Name">
-        <FieldInput
-          value={name}
-          onChange={(event) => setName(event.value ?? "")}
-        />
-      </Field>
-      <Button onClick={form.submit} disabled={form.pending}>
-        Create account
-      </Button>
-    </div>
-  )}
-</Form>;
+export function SignupForm() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [saving] = useState(false);
+  const save = () => {
+    // persist the decoded account
+  };
+
+  return (
+    <Form
+      schema={Signup}
+      value={{ email, name }}
+      pending={saving}
+      onSubmit={save}
+      label="Create account"
+    >
+      {(form) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <Field label="Email" description="We never share it">
+            <FieldInput
+              value={email}
+              onChange={(event) => setEmail(event.value ?? "")}
+            />
+          </Field>
+          <Field label="Name">
+            <FieldInput
+              value={name}
+              onChange={(event) => setName(event.value ?? "")}
+            />
+          </Field>
+          <Button onClick={form.submit} disabled={form.pending}>
+            Create account
+          </Button>
+        </div>
+      )}
+    </Form>
+  );
+}
 ```
 
 ## Variants
@@ -97,7 +110,7 @@ stand-in:
 needed to render it is the render prop:
 
 ```ts
-interface FormState {
+export interface FormState {
   readonly errors: ReadonlyArray<string>;
   readonly pending: boolean;
   readonly submit: () => void;

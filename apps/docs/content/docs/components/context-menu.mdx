@@ -16,19 +16,34 @@ control.
 
 ```tsx
 import {
-  ContextMenu, ContextMenuContent, ContextMenuItem,
-  ContextMenuSeparator, ContextMenuTrigger,
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
 } from "@gpuixui/components/context-menu";
+
+const openProject = () => {
+  // open the project
+};
+const copyPath = () => {
+  // copy the project path
+};
+const remove = () => {
+  // delete the project
+};
 
 <ContextMenu>
   <ContextMenuTrigger>
     <text>GPUIXUI</text>
   </ContextMenuTrigger>
   <ContextMenuContent label="Project actions">
-    <ContextMenuItem onSelect={open}>Open</ContextMenuItem>
+    <ContextMenuItem onSelect={openProject}>Open</ContextMenuItem>
     <ContextMenuItem onSelect={copyPath}>Copy path</ContextMenuItem>
     <ContextMenuSeparator />
-    <ContextMenuItem tone="destructive" onSelect={remove}>Delete…</ContextMenuItem>
+    <ContextMenuItem tone="destructive" onSelect={remove}>
+      Delete…
+    </ContextMenuItem>
   </ContextMenuContent>
 </ContextMenu>;
 ```

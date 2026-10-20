@@ -18,14 +18,21 @@ a position.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Rating, Stack, Text } from "@gpuixui/primitives";
 
-<Stack direction="column" gap="xs">
-  <Rating label="Quality" value={score} onChange={setScore} />
-  <Text role="caption" tone="muted">
-    {score === 0 ? "Not rated" : `${score} of 5`}
-  </Text>
-</Stack>;
+export function QualityRating() {
+  const [score, setScore] = useState(0);
+
+  return (
+    <Stack direction="column" gap="xs">
+      <Rating label="Quality" value={score} onChange={setScore} />
+      <Text role="caption" tone="muted">
+        {score === 0 ? "Not rated" : `${score} of 5`}
+      </Text>
+    </Stack>
+  );
+}
 ```
 
 Omit `value` to let the rating own its state; `defaultValue` sets the start

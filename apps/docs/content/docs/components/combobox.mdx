@@ -14,16 +14,39 @@ runtime's — and adds the option shape, ranking, row look and value semantics.
 ## Usage
 
 ```tsx
-import { Combobox } from "@gpuixui/components/combobox";
+import { useState } from "react";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxList,
+  ComboboxTrigger,
+} from "@gpuixui/components/combobox";
 
-<Combobox
-  label="Assign reviewer"
-  options={[
-    { value: "ada", label: "Ada Lovelace", description: "Engineering" },
-    { value: "grace", label: "Grace Hopper", description: "Compilers" },
-  ]}
-  onValueChange={(value) => setReviewer(typeof value === "string" ? value : null)}
-/>;
+export function ReviewerField() {
+  const [reviewer, setReviewer] = useState<string | null>(null);
+
+  return (
+    <Combobox
+      value={reviewer ?? undefined}
+      options={[
+        { value: "ada", label: "Ada Lovelace", description: "Engineering" },
+        { value: "grace", label: "Grace Hopper", description: "Compilers" },
+      ]}
+      onValueChange={(value) =>
+        setReviewer(typeof value === "string" ? value : null)
+      }
+    >
+      <ComboboxTrigger label="Assign reviewer" />
+      <ComboboxContent>
+        <ComboboxInput label="Search reviewers" />
+        <ComboboxList label="Reviewers" />
+        <ComboboxEmpty />
+      </ComboboxContent>
+    </Combobox>
+  );
+}
 ```
 
 ## Variants

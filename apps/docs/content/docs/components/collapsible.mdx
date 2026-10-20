@@ -17,13 +17,16 @@ overkill — one advanced-options block, one "show details" row.
 
 ```tsx
 import {
-  Collapsible, CollapsibleContent, CollapsibleTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from "@gpuixui/components/collapsible";
+import { Input } from "@gpuixui/primitives";
 
 <Collapsible defaultOpen={false}>
   <CollapsibleTrigger>Advanced options</CollapsibleTrigger>
   <CollapsibleContent>
-    <Option label="Retry budget" value="3 attempts" />
+    <Input label="Retry budget" defaultValue="3 attempts" />
   </CollapsibleContent>
 </Collapsible>;
 ```

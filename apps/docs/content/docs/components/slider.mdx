@@ -17,19 +17,26 @@ stop; the arrows and the pointer act on the same value.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Slider, Stack, Text } from "@gpuixui/primitives";
 
-<Stack direction="column" gap="sm">
-  <Text role="caption" tone="muted">
-    Quality · {quality}%
-  </Text>
-  <Slider
-    label="Quality"
-    value={quality}
-    onChange={setQuality}
-    formatValue={(value) => `${value}%`}
-  />
-</Stack>;
+export function QualitySlider() {
+  const [quality, setQuality] = useState(80);
+
+  return (
+    <Stack direction="column" gap="sm">
+      <Text role="caption" tone="muted">
+        Quality · {quality}%
+      </Text>
+      <Slider
+        label="Quality"
+        value={quality}
+        onChange={setQuality}
+        formatValue={(value) => `${value}%`}
+      />
+    </Stack>
+  );
+}
 ```
 
 Omit `value` to let the slider own its state; `defaultValue` sets the start.

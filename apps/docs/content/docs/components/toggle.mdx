@@ -17,16 +17,23 @@ other actions.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Toggle } from "@gpuixui/primitives";
 
-<Toggle
-  pressed={grid}
-  onPressedChange={setGrid}
-  label="Grid"
-  variant="outline"
->
-  Grid
-</Toggle>;
+export function GridToggle() {
+  const [grid, setGrid] = useState(true);
+
+  return (
+    <Toggle
+      pressed={grid}
+      onPressedChange={setGrid}
+      label="Grid"
+      variant="outline"
+    >
+      Grid
+    </Toggle>
+  );
+}
 ```
 
 Omit `pressed` to let the toggle own its state; `defaultPressed` sets the start.

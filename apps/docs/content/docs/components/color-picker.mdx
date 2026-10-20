@@ -16,16 +16,21 @@ saturation/value square, and that is an honest limitation, not an omission.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { ColorPicker } from "@gpuixui/components";
 
-const [accent, setAccent] = useState("#3b82f6");
+export function AccentColour() {
+  const [accent, setAccent] = useState("#3b82f6");
 
-<ColorPicker
-  label="Accent colour"
-  value={accent}
-  onValueChange={setAccent}
-  swatches={["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"]}
-/>;
+  return (
+    <ColorPicker
+      label="Accent colour"
+      value={accent}
+      onValueChange={setAccent}
+      swatches={["#ef4444", "#f59e0b", "#22c55e", "#3b82f6"]}
+    />
+  );
+}
 ```
 
 The public value is always lowercase `#rrggbb`. Typed input accepts `#abc`,

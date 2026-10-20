@@ -14,15 +14,31 @@ GPUix `input` owns typing, and `menu/logic.ts` owns which row is active.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { CommandMenu } from "@gpuixui/components/command-menu";
 
-<CommandMenu
-  open={open}
-  onOpenChange={setOpen}
-  actions={[
-    { id: "save", label: "Save", group: "File", shortcut: "⌘S", perform: save },
-  ]}
-/>;
+export function CommandPalette() {
+  const [open, setOpen] = useState(false);
+  const save = () => {
+    // persist the document
+  };
+
+  return (
+    <CommandMenu
+      open={open}
+      onOpenChange={setOpen}
+      actions={[
+        {
+          id: "save",
+          label: "Save",
+          group: "File",
+          shortcut: "⌘S",
+          perform: save,
+        },
+      ]}
+    />
+  );
+}
 ```
 
 ## Variants

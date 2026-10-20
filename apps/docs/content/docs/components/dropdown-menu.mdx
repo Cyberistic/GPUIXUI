@@ -19,9 +19,19 @@ highlight, dismissal and focus return.
 
 ```tsx
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@gpuixui/components/dropdown-menu";
+
+const rename = () => {
+  // rename the file
+};
+const remove = () => {
+  // delete the file
+};
 
 <DropdownMenu>
   <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
@@ -29,7 +39,9 @@ import {
     <DropdownMenuItem onSelect={rename}>Rename</DropdownMenuItem>
     <DropdownMenuItem disabled>Duplicate</DropdownMenuItem>
     <DropdownMenuSeparator />
-    <DropdownMenuItem tone="destructive" onSelect={remove}>Delete</DropdownMenuItem>
+    <DropdownMenuItem tone="destructive" onSelect={remove}>
+      Delete
+    </DropdownMenuItem>
   </DropdownMenuContent>
 </DropdownMenu>;
 ```
@@ -75,11 +87,26 @@ an outside press closes without stealing focus.
 A submenu groups actions behind one secondary level:
 
 ```tsx
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@gpuixui/components/dropdown-menu";
+
+const copyLink = () => {
+  // copy the share link
+};
+const sendByEmail = () => {
+  // open the share sheet
+};
+
 <DropdownMenuSub>
   <DropdownMenuSubTrigger>Share</DropdownMenuSubTrigger>
   <DropdownMenuSubContent label="Share">
     <DropdownMenuItem onSelect={copyLink}>Copy link</DropdownMenuItem>
-    <DropdownMenuItem onSelect={email}>Email</DropdownMenuItem>
+    <DropdownMenuItem onSelect={sendByEmail}>Email</DropdownMenuItem>
   </DropdownMenuSubContent>
 </DropdownMenuSub>;
 ```

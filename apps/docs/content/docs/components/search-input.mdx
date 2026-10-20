@@ -16,14 +16,24 @@ every keystroke and never debounces.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { SearchInput } from "@gpuixui/components/search-input";
 
-<SearchInput
-  placeholder="Filter files…"
-  onValueChange={setQuery}
-  onSubmit={runSearch}
-  onClear={() => setQuery("")}
-/>;
+export function FileSearch() {
+  const [query, setQuery] = useState("");
+  const runSearch = () => {
+    // filter the file list with `query`
+  };
+
+  return (
+    <SearchInput
+      placeholder="Filter files…"
+      onValueChange={setQuery}
+      onSubmit={runSearch}
+      onClear={() => setQuery("")}
+    />
+  );
+}
 ```
 
 Put a `Field` around it when the search needs a visible label, or pass

@@ -26,6 +26,12 @@ import {
   MessageScrollerViewport,
 } from "@gpuixui/components";
 
+const messages: ReadonlyArray<{ readonly id: string; readonly body: string }> =
+  [
+    { id: "1", body: "Ready to review?" },
+    { id: "2", body: "On it." },
+  ];
+
 <MessageScroller label="Conversation">
   <MessageScrollerViewport style={{ height: 320 }}>
     {messages.map((message) => (

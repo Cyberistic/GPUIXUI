@@ -14,11 +14,26 @@ no calendar primitive and no native date input, so the grid is ours: pure
 ## Usage
 
 ```tsx
-import { DatePicker } from "@gpuixui/components/date-picker";
+import { useState } from "react";
+import {
+  DatePicker,
+  DatePickerCalendar,
+  DatePickerContent,
+  DatePickerTrigger,
+} from "@gpuixui/components/date-picker";
 
-const [due, setDue] = useState<string | null>("2026-10-30");
+export function DueDateField() {
+  const [due, setDue] = useState<string | null>("2026-10-30");
 
-<DatePicker label="Due date" value={due} onValueChange={setDue} />;
+  return (
+    <DatePicker value={due} onValueChange={setDue} today="2026-10-17">
+      <DatePickerTrigger label="Due date" />
+      <DatePickerContent>
+        <DatePickerCalendar />
+      </DatePickerContent>
+    </DatePicker>
+  );
+}
 ```
 
 ## Variants

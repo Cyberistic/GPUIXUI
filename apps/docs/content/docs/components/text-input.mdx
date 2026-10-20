@@ -18,18 +18,27 @@ wins.
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import { Input, Label, labelledBy } from "@gpuixui/primitives";
 
 const email = "Contact email";
 
-<Label description="Where notifications are delivered.">{email}</Label>
-<Input
-  {...labelledBy(email)}
-  value={value}
-  onChange={setValue}
-  placeholder="you@example.com"
-  fullWidth
-/>;
+export function EmailField() {
+  const [value, setValue] = useState("");
+
+  return (
+    <>
+      <Label description="Where notifications are delivered.">{email}</Label>
+      <Input
+        {...labelledBy(email)}
+        value={value}
+        onChange={setValue}
+        placeholder="you@example.com"
+        fullWidth
+      />
+    </>
+  );
+}
 ```
 
 ## Variants

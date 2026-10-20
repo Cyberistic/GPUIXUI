@@ -17,6 +17,7 @@ is [Date pickers](/docs/components/date-picker).
 ## Usage
 
 ```tsx
+import { useState } from "react";
 import {
   TimePicker,
   TimePickerClear,
@@ -24,14 +25,18 @@ import {
   TimePickerSeparator,
 } from "@gpuixui/components";
 
-const [standup, setStandup] = useState<string | null>("09:30");
+export function StandupTime() {
+  const [standup, setStandup] = useState<string | null>("09:30");
 
-<TimePicker value={standup} onValueChange={setStandup} minuteStep={15}>
-  <TimePickerSegment segment="hours" />
-  <TimePickerSeparator />
-  <TimePickerSegment segment="minutes" />
-  <TimePickerClear />
-</TimePicker>;
+  return (
+    <TimePicker value={standup} onValueChange={setStandup} minuteStep={15}>
+      <TimePickerSegment segment="hours" />
+      <TimePickerSeparator />
+      <TimePickerSegment segment="minutes" />
+      <TimePickerClear />
+    </TimePicker>
+  );
+}
 ```
 
 The public value is `HH:mm`, 24-hour, or `null` for "no time". Never a
