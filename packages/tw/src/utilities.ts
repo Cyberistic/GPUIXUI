@@ -15,6 +15,7 @@ import {
   type Theme,
   type ThemeColors,
 } from "@gpuixui/tokens";
+import { CalcResult, evaluateCalc } from "./calc.js";
 
 /** A resolved utility, or a function that needs the theme. */
 export type Utility = StyleDesc | ((theme: Theme) => StyleDesc);
@@ -145,6 +146,32 @@ const spacingValue = (value: string): number | undefined => {
   return Number.isFinite(n) ? SPACING(n) : undefined;
 };
 
+/** A `calc(...)` expression in a value, or nothing when it is not one. */
+const calcExpression = (value: string): string | undefined => {
+  if (value.startsWith("calc(") && value.endsWith(")")) return value;
+  if (value.startsWith("[") && value.endsWith("]")) {
+    const inner = value.slice(1, -1);
+    return inner.startsWith("calc(") && inner.endsWith(")") ? inner : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * A geometry length: a spacing step, an `[Npx]` value, or a compile-time
+ * `calc(...)`. A rejected `calc()` returns `undefined`, so the class lands in
+ * `unsupported` (with the reason from `unsupportedReason`).
+ */
+const lengthValue = (value: string, theme: Theme): number | undefined => {
+  const calc = calcExpression(value);
+  if (calc !== undefined) {
+    return CalcResult.$match(evaluateCalc(calc, theme), {
+      Resolved: ({ value: number }) => number,
+      Rejected: () => undefined,
+    });
+  }
+  return spacingValue(value);
+};
+
 /**
  * A positive integer track count. GPUix exposes `gridTemplateColumns` /
  * `gridTemplateRows` as numbers (no track strings, no `repeat()`), so only an
@@ -198,98 +225,98 @@ export const resolveUtility = (
   if (name === "underline") return { textDecoration: "underline" };
 
   if (name.startsWith("h-")) {
-    const value = spacingValue(name.slice(2));
+    const value = lengthValue(name.slice(2), theme);
     return value === undefined ? undefined : { height: value };
   }
   if (name.startsWith("w-")) {
-    const value = spacingValue(name.slice(2));
+    const value = lengthValue(name.slice(2), theme);
     return value === undefined ? undefined : { width: value };
   }
   if (name.startsWith("min-h-")) {
-    const value = spacingValue(name.slice(6));
+    const value = lengthValue(name.slice(6), theme);
     return value === undefined ? undefined : { minHeight: value };
   }
   if (name.startsWith("min-w-")) {
-    const value = spacingValue(name.slice(6));
+    const value = lengthValue(name.slice(6), theme);
     return value === undefined ? undefined : { minWidth: value };
   }
   if (name.startsWith("max-w-")) {
     const key = name.slice(6);
     const named = MAX_WIDTH[key];
     if (named !== undefined) return { maxWidth: named };
-    const value = spacingValue(key);
+    const value = lengthValue(key, theme);
     return value === undefined ? undefined : { maxWidth: value };
   }
   if (name.startsWith("size-")) {
-    const value = spacingValue(name.slice(5));
+    const value = lengthValue(name.slice(5), theme);
     return value === undefined ? undefined : { width: value, height: value };
   }
   if (name.startsWith("p-")) {
-    const value = spacingValue(name.slice(2));
+    const value = lengthValue(name.slice(2), theme);
     return value === undefined ? undefined : { padding: value };
   }
   if (name.startsWith("px-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined
       ? undefined
       : { paddingLeft: value, paddingRight: value };
   }
   if (name.startsWith("py-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined
       ? undefined
       : { paddingTop: value, paddingBottom: value };
   }
   if (name.startsWith("pl-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined ? undefined : { paddingLeft: value };
   }
   if (name.startsWith("pr-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined ? undefined : { paddingRight: value };
   }
   if (name.startsWith("pt-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined ? undefined : { paddingTop: value };
   }
   if (name.startsWith("pb-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined ? undefined : { paddingBottom: value };
   }
   if (name.startsWith("mx-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined
       ? undefined
       : { marginLeft: value, marginRight: value };
   }
   if (name.startsWith("my-")) {
-    const value = spacingValue(name.slice(3));
+    const value = lengthValue(name.slice(3), theme);
     return value === undefined
       ? undefined
       : { marginTop: value, marginBottom: value };
   }
   if (name.startsWith("inset-x-")) {
-    const value = spacingValue(name.slice(8));
+    const value = lengthValue(name.slice(8), theme);
     return value === undefined ? undefined : { left: value, right: value };
   }
   if (name.startsWith("inset-y-")) {
-    const value = spacingValue(name.slice(8));
+    const value = lengthValue(name.slice(8), theme);
     return value === undefined ? undefined : { top: value, bottom: value };
   }
   if (name.startsWith("top-")) {
-    const value = spacingValue(name.slice(4));
+    const value = lengthValue(name.slice(4), theme);
     return value === undefined ? undefined : { top: value };
   }
   if (name.startsWith("right-")) {
-    const value = spacingValue(name.slice(6));
+    const value = lengthValue(name.slice(6), theme);
     return value === undefined ? undefined : { right: value };
   }
   if (name.startsWith("bottom-")) {
-    const value = spacingValue(name.slice(7));
+    const value = lengthValue(name.slice(7), theme);
     return value === undefined ? undefined : { bottom: value };
   }
   if (name.startsWith("left-")) {
-    const value = spacingValue(name.slice(5));
+    const value = lengthValue(name.slice(5), theme);
     return value === undefined ? undefined : { left: value };
   }
   if (name.startsWith("grid-cols-")) {
@@ -301,15 +328,15 @@ export const resolveUtility = (
     return count === undefined ? undefined : { gridTemplateRows: count };
   }
   if (name.startsWith("gap-x-")) {
-    const value = spacingValue(name.slice(6));
+    const value = lengthValue(name.slice(6), theme);
     return value === undefined ? undefined : { columnGap: value };
   }
   if (name.startsWith("gap-y-")) {
-    const value = spacingValue(name.slice(6));
+    const value = lengthValue(name.slice(6), theme);
     return value === undefined ? undefined : { rowGap: value };
   }
   if (name.startsWith("gap-")) {
-    const value = spacingValue(name.slice(4));
+    const value = lengthValue(name.slice(4), theme);
     return value === undefined ? undefined : { gap: value };
   }
   if (name.startsWith("rounded-")) {

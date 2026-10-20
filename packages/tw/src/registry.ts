@@ -10,6 +10,7 @@
 import { Order, pipe } from "effect";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import type { StyleDesc } from "@gpuix/react";
@@ -40,11 +41,16 @@ export interface TwState {
  *
  * The key is matched exactly, or as a family prefix: `tone` handles
  * `tone-40` and receives `"40"` as `value`.
+ *
+ * A resolver may return a plain `number` instead of a shape: it is a derived
+ * length token, bound to a square (`width` and `height`) — the one place a
+ * number alone is unambiguous. Derived geometry that is not square (a width, a
+ * height, an inset, a negative margin) returns the shape instead.
  */
 export type TwUtilityResolver = (
   theme: Theme,
   value?: string,
-) => StyleDesc | undefined;
+) => StyleDesc | number | undefined;
 
 /**
  * A custom variant resolver, called before the built-in variant table.
@@ -129,6 +135,10 @@ const families = (
     ),
   );
 
+/** A numeric resolver's number, bound to a square (`width` and `height`). */
+const asShape = (resolved: StyleDesc | number): StyleDesc =>
+  P.isNumber(resolved) ? { width: resolved, height: resolved } : resolved;
+
 /** The custom utility for `name`, then the built-in table. */
 export const resolveRegistryUtility = (
   registry: TwRegistry,
@@ -138,7 +148,7 @@ export const resolveRegistryUtility = (
   const exact = R.get(registry.utilities, name);
   if (Option.isSome(exact)) {
     const resolved = exact.value(theme);
-    if (resolved !== undefined) return resolved;
+    if (resolved !== undefined) return asShape(resolved);
   }
 
   const family = Arr.findFirst(families(registry.utilities), ([key]) =>
@@ -146,8 +156,14 @@ export const resolveRegistryUtility = (
   );
   return Option.match(family, {
     onNone: () => resolveUtility(name, theme),
-    onSome: ([key, resolve]) =>
-      resolve(theme, Str.slice(key.length + 1, name.length)(name)) ??
-      resolveUtility(name, theme),
+    onSome: ([key, resolve]) => {
+      const resolved = resolve(
+        theme,
+        Str.slice(key.length + 1, name.length)(name),
+      );
+      return resolved === undefined
+        ? resolveUtility(name, theme)
+        : asShape(resolved);
+    },
   });
 };

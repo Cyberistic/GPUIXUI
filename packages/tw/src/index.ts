@@ -35,6 +35,16 @@ export {
 export { resolveUtility, type Utility } from "./utilities.js";
 export { unsupportedClasses } from "./unsupported.js";
 export {
+  CALC_REASONS,
+  calcReason,
+  calcReasonFromClass,
+  calcExpressions,
+  evaluateCalc,
+  isThemeTokenName,
+  themeTokenNumber,
+  type CalcResult,
+} from "./calc.js";
+export {
   BUTTON_BASE,
   BUTTON_SIZES,
   BUTTON_VARIANTS,
