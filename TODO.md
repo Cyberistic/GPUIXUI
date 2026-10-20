@@ -54,7 +54,16 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 371/446
+`[x]` `[████████░░]` 372/447
+
+`[x]` Own the state table's floor figures and the inactive floor — §8's seven
+state rows (the surface floor on `hover`, `loading`, `unchecked` and `status`,
+the `step` floor on `selected`, the `inactive` pair on `disabled` and the
+boundary pair on `invalid`) and the three passages that state the library's one
+non-WCAG floor quoted ten figures that no case read: mutating any one, or moving
+`contrastFloors`, left all 7127 tests green because §9's table is derived while
+§8's vocabulary is prose; `state-floor-claims.test.ts` derives every figure from
+`contrastFloors` and reads the rows and paragraphs, and no value moves (plan 817)
 
 `[x]` Own the border roles' figures and fill lists — the three present-tense
 passages that state `border`'s floors (1.05:1, 3:1 at AAA) and `borderStrong`'s
