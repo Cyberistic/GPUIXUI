@@ -41,3 +41,6 @@ references
 # Tooling backups
 *.bak-*
 *.bak
+
+# Agent screenshot artifacts — verification only, never repository content
+.agents/slop/dashboard/
