@@ -95,7 +95,37 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 121/121 plans-and-harness
+`[x]` `[██████████]` 122/122 plans-and-harness
+
+`[x]` **Prove the docking drop indicator's paint order in pixels** per plan
+      `715`: the indicator's box and authored `backgroundColor` were asserted,
+      so a bar painted **under** the pane's tab strip or body passed every
+      check — the README recorded the limit as "paint order is inferred, not
+      asserted". A pure `dock-pixels.ts` samples the bar 1 px inside its left
+      edge, the same x at the **tab strip's row**, and the body/strip 10 px
+      inside the bar; the live twin now holds the drag (`pressWindow` →
+      `movePointer` → capture → release) and adds the centre zone's `18 %`
+      composite plus its removal. `docking-layout` **80 → 85** checks and
+      `live-docking` **8 → 22**, three consecutive focused live runs (18.9 /
+      19.2 / 20.1 s; ~9 s headless with the capture). **Measured:** the bar is
+      the group's last child, so it paints above the strip (`#A7A9FF` at both
+      rows) with `card #191D25` / `muted #222730` beside it; moving it before
+      the **tablist** fails `the drop bar paints over the tab strip`
+      (`expected #a7a9ffff, got #222730ff`) while moving it before the *panel*
+      is a recorded **null result** (the body is transparent — the strip is the
+      load-bearing sibling); `opacity: 0.18` composites to `#33364C` over
+      `card` and `opacity: 1` fails (`expected #33364cff, got #a7a9ffff`);
+      `CENTRE_OPACITY = 0.4` is a null result (the view and the expectation
+      share the constant). **A measured correction:** the model's 4 px edge box
+      paints **2 px** — it straddles the 1 px border and the group's clip, and
+      the reported box's centre is the border (`#2A303B`) — so a docking
+      component must inset it inside the content box. The third `blendOver`
+      copy was hoisted into `Pixels` (+1 testing test) and the duplicated
+      `frameSampler`/`parseColour` into `frames.ts`. Focused ids:
+      `docking-layout`, `live-docking` (×3 + mutations). Full headless
+      **106/106** (**3892** checks), exit `0`; `nub run check`/`lint`/`test`
+      green (playground **472**, testing **69**). No full live gate (merge
+      gate).
 
 `[x]` **Run the promotion gate on the head that includes the QR and crop
       pixels** per plan `714`: verification only on code head `f91537b0`
@@ -1762,7 +1792,7 @@ focused id is `live-frames`.
 `[x]` Probe the remaining Tier 1 controls natively per plan `169`: `RadioGroup` arrow selection/wrap, `Rating` clamp/clear, `NumberField` step/clamp, `OTPField` focus advance and Backspace — 38/38 green, two-direction proofs recorded
 `[x]` Probe the shipped Tier 1 primitives natively per plan `168`: mount `@gpuixui/primitives` (`Button`, `Toggle`, `Input`, `Checkbox`, `Switch`, `Select`, `Slider`, `Progress`, `Meter`, `Skeleton`, `Tooltip`) through the tokens theme and add the `components` capability — 36/36 green, two-direction proofs recorded
 `[ ]` **packages/data-grid** (no owner yet): implement the contract plans `152`, `185` and `338` measured — one plain horizontal scroller holding the header and a wide `<virtual-list>`, a frozen column placed from `getListScrollTop` read inside `onVisibleRange`, a `scrollToItem(0)` reset on every sort/filter, a pan affordance outside the rows (a body-cell `deltaX` wheel is swallowed by the list), and component-windowed columns when the grid is wider than this probe. `data-grid-virtual` is the acceptance evidence.
-`[ ]` **packages/docking** (owner: docking): implement the contract plan `184` measured — a recursive layout tree, 48 px edge drop zones from the surface rectangle, right/bottom-secondary and left/top-primary splits, prune/collapse of emptied groups, `key={node.id}` on every split, `Region`/`TabList`/`TabPanel` semantics, and app-owned JSON restore. The playground's `docking-layout` is the acceptance evidence.
+`[ ]` **packages/docking** (owner: docking): implement the contract plan `184` measured — a recursive layout tree, 48 px edge drop zones from the surface rectangle, right/bottom-secondary and left/top-primary splits, prune/collapse of emptied groups, `key={node.id}` on every split, `Region`/`TabList`/`TabPanel` semantics, and app-owned JSON restore. The playground's `docking-layout` is the acceptance evidence. **Plan `715` adds two constraints:** the indicator must be the pane's **last child** (it paints over the tab strip; before the tablist, the strip hides it) and its edge bar must be **inset inside the content box** — a 4 px box at the content edge straddles the 1 px border and paints 2 px.
 `[ ]` Cross-team: `@gpuixui/components` must handle the measured floating defects — `PopoverContent`/`DropdownMenuContent` expose `align="center"`, which is short by half the panel on both axes, and `fit="snap"` does not flip, so a near-bottom menu must choose `side="top"` itself (owner: `components`; evidence: plan `156` §8)
 `[ ]` Cross-team: `motion.div`'s published `MotionDivProps` omits `testId`, `role` and the `aria-*` props, so an animated surface cannot be addressed in a smoke test or given an accessible role through the typed API. Add a typed motion wrapper (published `HostProps` + `motion`) in `@gpuixui/components` and use it for Collapsible/sidebar/toast surfaces (owner: `components`; evidence: plan `157` §8)
 `[~]` **Promote the playground workstream to the integration branch** —

@@ -963,6 +963,9 @@ reads geometry **from component code during a gesture**.
 | ---- | -------- |
 | pane geometry | a `ref` gives a `PublicInstance.id`; `useGpuix().renderer.getElementBounds(id)` returns the surface's window box; every group box the `rects` model projects from it matched the runtime within 1 px, including splits created mid-run |
 | drop indicator | an **absolute child of a `position: "relative"` pane**: the right bar sits at `pane.right − 4` (4 × pane height), the top bar on the pane's top edge; the centre zone covers the pane. `paintedStyle.backgroundColor` is the palette's `primary`; `pointerEvents: "none"` keeps it out of the hit path |
+| indicator paint order (plan `715`) | the bar is the group's **last child**, so it paints above the pane. A decoded frame reads its `primary` at the bar (`#A7A9FF`) **and at the tab strip's row**, with the body (`card #191D25`) and the strip (`muted #222730`) 10 px inside it. Moving the indicator **before the tablist** makes the strip's row read `muted` (`expected #a7a9ffff, got #222730ff`); moving it before the *panel* changes nothing — the strip, not the body, is the load-bearing sibling |
+| the bar is 2 px, not 4 | the model's 4 px box straddles the pane's content edge and its 1 px border, and the group's `overflow: "hidden"` plus the border clip the rest: the frame shows a 2 px bar and the reported box's centre is the **border** (`#2A303B`), so a docking component must inset the bar inside the content box if it wants 4 px |
+| centre zone (plan `715`) | `opacity: 0.18` composites: the body reads `#33364C` — `primary` at 18 % over `card`, exact — and `card` again once the pointer leaves every pane. The overlay covers the strip too; a release outside all panes drops nothing |
 | zones | a 48 px edge band; the nearest edge wins a corner, otherwise the centre |
 | captured drag | every held move reached the pressed tab **while the indicator re-rendered on each move**; the `up` applied exactly one drop. The handler must be on the tab, not the group |
 | edge drop | right/bottom puts the new group **secondary**, left/top **primary**, at half the target's extent |
@@ -972,10 +975,10 @@ reads geometry **from component code during a gesture**.
 | restore | the tree owns every size; save → reset → restore re-applies the outer `280` and nested `324`/`197` through a keyed remount, and the restored tree answers a tab click |
 | a11y | the dump exposes `Region` (the pane, labelled), `TabList`, `TabPanel`, `Tab` (with `aria-selected`) and `Splitter`. Role names are AccessKit's capitalised names, not the authored tokens |
 
-Limits: there is no docking package yet; the indicator's paint order is inferred
-from the last-child rule (`toast-lifecycle`) and not asserted; the
-gesture-ending click is a measured `drag-targets` fact and must be suppressed by
-a component; a detached tab stays in-window (0.10.0 has one app window).
+Limits: there is no docking package yet; the gesture-ending click is a measured
+`drag-targets` fact and must be suppressed by a component; a detached tab stays
+in-window (0.10.0 has one app window). The edge bar paints 2 px of its 4 px box
+(see above) — a component decision, not a runtime defect.
 
 ## Detachable tabs as floating panels (plan `194`)
 
@@ -1621,7 +1624,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-tab-focus` | the tab strip's focus model in a window: a synthetic `tab` key reaches the focused tab but does not traverse (so the live tab-order proof uses the renderer's own `focusNext`), nine traversal steps reach the last clipped tab with the strip's offset unchanged (focus does not reveal), one more leaves the strip, the roving strip is one stop, and End/Home move selection, focus and the reveal — 18 checks (plan `565`) |
 | `live-selection` | a real pointer drag selects three text nodes; a drag anchored in `userSelect: none` selects nothing; a crossing drag keeps both sides and skips the chrome; `clearSelection` and a click empty it — 9 checks |
 | `live-context-menu` | a right click opens a pointer-placed menu (its painted box equals the click point within 1 px); a disabled row is inert, Copy runs and closes, outside/Escape dismiss, a child click bubbles, and a right click inside a **scrolled** container still places the menu at the pointer — 31 checks |
-| `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) |
+| `live-docking` | dragging the Notes tab onto the editor pane's right edge prunes it from the left group, creates `panel-1` and splits the target (`split-1=`) — 22 checks (plan `715`). The drag is **held** mid-gesture to read the drop indicator's pixels: `primary` at the bar and over the tab strip, `card`/`muted` beside it; a second held gesture over the left pane reads the centre zone's `18 %` wash (`#33364C`) and its removal, and a release outside every pane drops nothing |
 | `live-float` | a paced drag from the Alpha tab, released outside the dock, opens the floating panel at the release point within 1 px; its title bar drags it to exactly `(200, 60)`; its tab takes focus, Escape closes it and returns focus to `float-tab-beta`; the close button drops the reopened tab — 28 checks |
 | `live-primitives` | the **shipped** `Button` activates, a disabled `Button` refuses, and the `Toggle` reports `pressed=true` |
 | `live-table` | a painted `<virtual-list>` row is hit-testable (`r3`), the list scrolls to `[0,-300]`, the selection survives, and `getListScrollTop` reports the logical anchor exactly — `[0, 0, h]` at rest, `[120, 0, h]` after `scrollToItem(120)` |
@@ -2056,10 +2059,10 @@ sample it.
 
 `packages/testing` gained a pure `Pixels` module: an 8-bit, non-interlaced PNG
 decoder (all five filters, colour types 0/2/4/6), `pixelAt`, `hexToRgba`,
-`rgbaNear`, `frameScale` and `framePoint`. The inflate is injected, so the
-package still has no Node or GPUix import; the scenario passes `node:zlib`'s
-`inflateSync` and writes the capture through a temporary file it removes in
-`Effect.ensuring`.
+`rgbaNear`, `blendOver`, `frameScale` and `framePoint`. The inflate is injected,
+so the package still has no Node or GPUix import; the scenario passes
+`node:zlib`'s `inflateSync` and writes the capture through a temporary file it
+removes in `Effect.ensuring`.
 
 | Fact | Measured |
 | ---- | -------- |
@@ -2087,6 +2090,12 @@ absence of the fixture's colour: the loader still emits no load/error event.
 The crop masks are the same kind of check (plan `713`): the image inside the
 crop and the image under a 60 % background wash, sampled before and after a
 resize, so a mask that paints nothing or stops following the crop fails.
+**Paint order** is now a pixel claim too (plan `715`): the docking drop bar and
+the tab strip it covers are both sampled, so an indicator moved under the strip
+fails by name, and the centre zone's `opacity: 0.18` is asserted as the
+composite `#33364C` rather than an authored style. The sampling lookup
+(`frameSampler`) and the sRGB composite (`Pixels.blendOver`) are shared by every
+pixel module; `parseColour` is the one token parser.
 
 ## Evidence on this host
 
@@ -2147,7 +2156,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | floating | `<anchored side align gap>` is exact for `side`, `gap` and `align="start"`/`"end"` (`bottom` = `anchor.bottom + gap`, `right` = `anchor.right + gap`). **`align="center"` is off by half the panel on both axes** (it ends the panel at the anchor's centre line), and **`fit="snap"` clamps to `window − snapMargin` without flipping**, so a bottom-side menu can end up over its trigger |
 | popups | Select and Combobox open, commit and close under synthetic input, including native keys after `autoFocus`; Select returns focus to its trigger on every close. `nativeSimulateMouseMove` delivers enter/leave, so a hover tooltip is measurable; its close is a JS timer, not the GPUI clock |
 | a11y | the AccessKit dump maps every typed ARIA token to a role; names come only from `aria-label`; CheckBox/Switch have no checked state; the tree follows the painted virtual window |
-| docking | the surface's window rectangle is read from component code (`ref` → `renderer.getElementBounds`), and every model-derived pane box matches; an absolute drop bar resolves to its nested `position: "relative"` pane and paints the palette's `primary`; a captured tab drag survives indicator re-renders and applies one drop; edge drops split (new group secondary on right/bottom, primary on left/top), a centre drop merges; an emptied group prunes and its split collapses; **every split needs `key={node.id}`**; a recursive layout restores exactly through a keyed remount; AccessKit exposes `Region`/`TabList`/`TabPanel`/`Tab`/`Splitter` |
+| docking | the surface's window rectangle is read from component code (`ref` → `renderer.getElementBounds`), and every model-derived pane box matches; an absolute drop bar resolves to its nested `position: "relative"` pane and paints the palette's `primary`; **the bar is the pane's last child, so it paints above the tab strip too** (plan `715`: the frame reads `primary` at the bar and at the strip's row, and `muted` beside it; before the tablist it reads `muted`) — its 4 px box straddles the border and paints 2 px; the centre zone's `opacity: 0.18` composites to `#33364C` over `card`; a captured tab drag survives indicator re-renders and applies one drop; edge drops split (new group secondary on right/bottom, primary on left/top), a centre drop merges; an emptied group prunes and its split collapses; **every split needs `key={node.id}`**; a recursive layout restores exactly through a keyed remount; AccessKit exposes `Region`/`TabList`/`TabPanel`/`Tab`/`Splitter` |
 | content | `<svg>`/`<img>`/`<diff>` are retained **and** painted (bounds fire from `on_painted`); `<canvas>` is retained but renders nothing and drops its children; `setImagePixels` uploads a bitmap through the ref. **Image sources (plan `690`):** `live-content` decodes the captured frame and samples the 1 × 1 red fixture (alpha `127`) in the path, data-URL and byte boxes; all three paint the same alpha-blended colour (the data-URL box is the reference) and it is red-dominant, while the missing-path, refused-URL and invalid-data boxes do **not** paint it. The offscreen loader still never settles, so the path/http(s) proof is live-only and a consumer owns the error state |
 | drag | capture owns every move and the up; hover is frozen during the drag; the gesture ends in a click on the source; a drop on a handler-less element still clicks; `onFileDrop` carries paths and coordinates |
 | drag autoscroll | the runtime does **not** scroll a held drag at an edge; component code scrolls with `renderer.scrollTo` on each held move, keeps the capture and the up, and derives the drop index from the pointer and the live offset |
@@ -2193,6 +2202,8 @@ src/panels/split-pane.tsx the pointer-captured divider
 src/panels/dock.ts      the docking model: tree, geometry, drops, JSON boundary
 src/panels/dock.test.ts the pure docking rules
 src/scenarios/*.tsx      one view + one steps effect per capability
+src/scenarios/frames.ts  the shared frame capture/sampling and token parsing
+src/scenarios/dock-pixels.ts the docking indicator's paint-order samples
 src/scenarios/theme.tsx  the token gallery (colour roles, type, ring, shadow)
 src/scenarios/primitives.tsx the shipped Tier 1 components (actions, fields, display)
 src/scenarios/primitives-advanced.tsx choice and entry controls (radio, rating, number, OTP)
