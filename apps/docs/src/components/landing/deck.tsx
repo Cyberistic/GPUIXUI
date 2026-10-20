@@ -5,9 +5,9 @@ import type { Platform } from "./data";
 const SHUFFLE_MS = 1600;
 
 /**
- * The hero: a centered headline with the platform switch as the segmented
- * control above it, and the deck presented as a product window below. Owns the
- * shuffle state so the "Certified on …" line always tracks the top card.
+ * The hero: a centered headline with actions, then the platform switch as the
+ * control for the deck, and the deck presented as a product window below. Owns
+ * the shuffle state so the switch and the deck stay in sync.
  */
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -36,17 +36,8 @@ export function Hero() {
     setPaused(true);
   };
 
-  const current = platforms[top] ?? platforms[0];
-
   return (
     <header className="landing-hero">
-      <div className="landing-hero-badge">
-        <span className="landing-pill">New</span>
-        <p className="landing-eyebrow">GPUix + React · native components</p>
-      </div>
-
-      <PlatformSwitch onChange={select} value={top} />
-
       <h1 className="landing-title">
         One library.
         <br />
@@ -75,9 +66,9 @@ export function Hero() {
         </a>
       </div>
 
-      <p className="landing-cert">
-        Certified on <strong>{current.label}</strong>
-      </p>
+      <div className="landing-switch-row">
+        <PlatformSwitch onChange={select} value={top} />
+      </div>
 
       <div
         className="landing-window"

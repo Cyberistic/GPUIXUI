@@ -246,45 +246,21 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 88px 0 72px;
+  padding: 40px 0 56px;
 }
 
-.landing-hero-badge {
+/* platform switch — the segmented control that drives the deck */
+.landing-switch-row {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 26px;
+  justify-content: flex-start;
+  width: min(880px, 100%);
+  margin: 24px auto 0;
 }
 
-.landing-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(198, 255, 61, 0.5);
-  background: var(--accent-wash);
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent-text);
-}
-
-.landing-eyebrow {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--dim);
-}
-
-/* platform switch — the segmented control above the headline */
 .landing-switch {
   display: inline-flex;
   gap: 2px;
-  margin: 0 0 30px;
+  margin: 0;
   padding: 4px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
@@ -331,7 +307,7 @@
 }
 
 .landing-title {
-  font-size: clamp(44px, 7.4vw, 92px);
+  font-size: clamp(38px, 5vw, 64px);
   line-height: 0.95;
   letter-spacing: -0.045em;
   margin: 0;
@@ -344,29 +320,17 @@
 }
 
 .landing-sub {
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--muted);
   max-width: 46ch;
-  margin: 22px auto 0;
-}
-
-.landing-cert {
-  margin: 26px 0 0;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.landing-cert strong {
-  color: var(--accent-text);
-  font-weight: 650;
+  margin: 14px auto 0;
 }
 
 .landing-actions {
   display: flex;
   gap: 12px;
-  margin-top: 30px;
+  margin-top: 20px;
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -412,7 +376,7 @@
 .landing-window {
   position: relative;
   width: min(880px, 100%);
-  margin: 64px auto 0;
+  margin: 12px auto 0;
   border: 1px solid var(--line-strong);
   border-radius: 24px;
   background:
@@ -480,7 +444,7 @@
 
 .landing-deck {
   position: relative;
-  height: 400px;
+  height: 320px;
   overflow: hidden;
   border-radius: 0 0 24px 24px;
 }
@@ -488,9 +452,9 @@
 .landing-card {
   position: absolute;
   left: 50%;
-  top: 40px;
+  top: 28px;
   width: min(460px, calc(100% - 64px));
-  height: 300px;
+  height: 240px;
   overflow: hidden;
   border-radius: 14px;
   background: var(--card);
@@ -514,13 +478,13 @@
 }
 
 .landing-card[data-pos="1"] {
-  transform: translateX(-50%) translateY(32px) rotate(-1.6deg) scale(0.93);
+  transform: translateX(-50%) translateY(24px) rotate(-1.6deg) scale(0.93);
   z-index: 2;
   opacity: 0.82;
 }
 
 .landing-card[data-pos="2"] {
-  transform: translateX(-50%) translateY(64px) rotate(1.6deg) scale(0.86);
+  transform: translateX(-50%) translateY(44px) rotate(1.6deg) scale(0.86);
   z-index: 1;
   opacity: 0.55;
 }
@@ -691,7 +655,7 @@
 }
 
 .landing-deck-note {
-  margin: 18px auto 0;
+  margin: 14px auto 0;
   max-width: 44ch;
   font-family: var(--mono);
   font-size: 11px;
@@ -1032,7 +996,7 @@
 /* ---- responsive ---- */
 @media (max-width: 1000px) {
   .landing-hero {
-    padding: 56px 0 48px;
+    padding: 36px 0 44px;
   }
 
   .landing-deck {
@@ -1062,6 +1026,10 @@
 @media (max-width: 640px) {
   .landing-nav-links {
     display: none;
+  }
+
+  .landing-switch-row {
+    justify-content: center;
   }
 
   .landing-switch {
