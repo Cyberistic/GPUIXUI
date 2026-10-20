@@ -563,12 +563,18 @@ describe("docs primaryText surfaces", () => {
     );
   });
 
-  it("names the pressed row in both role tables", () => {
+  it("names every at-rest surface in both role tables", () => {
+    expect(linkSurfaces).toHaveLength(9);
+
     const cells = markdown
       .split("\n")
       .filter((line) => line.startsWith("| `primaryText` |"));
     expect(cells).toHaveLength(2);
-    cells.forEach((cell) => expect(cell).toContain("`selectedActive`"));
+    cells.forEach((cell) =>
+      linkSurfaces.forEach((surface) =>
+        expect(cell, surface).toContain(`\`${surface}\``),
+      ),
+    );
   });
 
   it("names the pressed row in the brand-action paragraph and the README", () => {

@@ -229,7 +229,7 @@ A runnable example lives in
 | `primaryForeground` | `#FFFFFF` | `#11141A` | text and icons on `primary` |
 | `primaryHover` | `#4C39B5` | `#C7CBFF` | primary action while hovered |
 | `primaryActive` | `#3B2C8F` | `#E0E3FF` | primary action while pressed |
-| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected`/`selectedActive` row fills, inline code on the `accent` wash and through a text selection |
+| `primaryText` | `#4C39B5` | `#C7CBFF` | brand-toned text, links, icons and the native field caret on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes the Link variant paints, the `accent`/`selected`/`selectedActive` row fills, inline code on the `accent` wash and through a text selection |
 | `secondary` | `#EEF1F5` | `#2A303B` | secondary action |
 | `secondaryForeground` | `#2A303B` | `#E1E5EC` | text on `secondary` |
 | `secondaryHover` | `#E1E5EC` | `#3D4552` | secondary action while hovered |
@@ -533,7 +533,7 @@ carries, so it cannot claim another.
 | `primaryForeground` | `#FFFFFF` | `#000000` | text and icons on `primary` |
 | `primaryHover` | `#2E2370` | `#E0E3FF` | primary action while hovered |
 | `primaryActive` | `#1C1547` | `#EEF0FF` | primary action while pressed |
-| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links, icons and the native field caret on plain surfaces, the `accent`/`selected`/`selectedActive` row fills and through a text selection |
+| `primaryText` | `#241C5C` | `#E0E3FF` | brand-toned text, links, icons and the native field caret on `background`/`card`/`popover`/`muted`, the `hover`/`active` washes the Link variant paints, the `accent`/`selected`/`selectedActive` row fills and through a text selection |
 | `secondary` | `#E8E8E8` | `#2E2E2E` | secondary action |
 | `secondaryForeground` | `#000000` | `#FFFFFF` | text on `secondary` |
 | `secondaryHover` | `#D6D6D6` | `#3D3D3D` | secondary action while hovered |

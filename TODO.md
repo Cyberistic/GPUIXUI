@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 319/396
+`[x]` `[████████░░]` 320/397
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2692,6 +2692,15 @@ false); the clause now states the tightest tone on the AAA dark divider
 a press exists only under the pointer — and two `documentedFigures` entries plus
 a premise case derive both ratios from `shippedThemes`; no colour, pair, floor,
 metric or shipped set moves (plan 706)
+`[x]` Name every wash in the brand-toned text role cells — both `primaryText`
+rows said "on plain surfaces" (a phrase the page uses for three surfaces in one
+place and four in another) plus the three row fills, omitting the `hover`/`active`
+washes `primaryTextPairs` measures and that the paragraph above, the design
+system's link and floor rows and the README all name; plan 672's case asserted
+only that each cell contained `selectedActive`, so a missing wash passed. Both
+cells now name the four plain surfaces and the two washes, and the case derives
+all nine at-rest surfaces from `contrastPairs` and holds each cell to every one;
+no colour, pair, floor, metric or shipped set moves (plan 709)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

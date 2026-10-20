@@ -358,6 +358,7 @@ references without buying correctness.
 | [703](./703-design-system-inactive-surface-count.md) | The design system's inactive-label surface count | F | 510, 650, 674, 689 | done |
 | [705](./705-caret-fill-figures.md) | The caret's shipped fill figures after plan 698 | F | 511, 557, 682, 698 | done |
 | [706](./706-track-rejected-roles.md) | The value groove's rejected roles | F | 309, 332, 347, 503, 698, 705 | done |
+| [709](./709-primary-text-cell-washes.md) | The brand-toned text cells' washes | F | 082, 314, 528, 651, 672 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
