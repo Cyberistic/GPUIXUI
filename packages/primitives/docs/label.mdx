@@ -8,6 +8,11 @@ control by reference — GPUix 0.10.0 has no `aria-labelledby` — so the contro
 carries its own `aria-label` through its `label` prop. `labelledBy(name)` builds
 that prop from the same string.
 
+It can still do the one thing a native label does: give it the control's ref as
+`control` and a press on the visible name focuses that control. That is a
+pointer convenience, **not** an association — the control's own `label` remains
+its accessible name.
+
 ## Usage
 
 ```tsx
@@ -21,6 +26,19 @@ const name = "Workspace name";
 <Input {...labelledBy(name)} fullWidth />;
 ```
 
+With click-to-focus, pass the field's ref to both the label and the field:
+
+```tsx
+import { useRef } from "react";
+import type { PublicInstance } from "@gpuix/react";
+import { Input, Label } from "@gpuixui/primitives";
+
+const field = useRef<PublicInstance | null>(null);
+
+<Label control={field}>Workspace name</Label>
+<Input ref={field} label="Workspace name" fullWidth />;
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -29,6 +47,7 @@ const name = "Workspace name";
 | `requiredLabel` | `string` | `"required"` | the marker's accessible name; a blank value falls back to the default |
 | `invalid` | `boolean` | `false` | paints the name in the destructive role |
 | `description` | `string` | none | a caption line under the name; a blank one paints nothing |
+| `control` | `RefObject<PublicInstance \| null>` | none | a press on the visible label moves native focus to that control; pointer-only, and no `aria-labelledby` association |
 | `style` | `StateStyle<LabelState>` | — | merged last; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 | `children` | `ReactNode` | — | the name |
@@ -39,7 +58,9 @@ caller spreads it into an `Input`, `TextArea`, `Select`, `Checkbox`, `Switch` or
 
 ## Keyboard
 
-Not focusable. A label that responds to a click is a button.
+Not focusable. A label is pointer-only: `control` moves focus on a press, and
+keyboard users Tab to the control directly. The press runs no activation — it
+never changes a value.
 
 ## Accessibility
 
@@ -47,6 +68,8 @@ Not focusable. A label that responds to a click is a button.
 - The control's own `label` prop is its accessible name; there is **no
   `aria-labelledby`**, so the two are separate nodes. A test asserts both exist
   (`fields.runtime.test.tsx`).
+- `control` moves native focus on a press. It adds no relation, no `for` and no
+  name — assistive technology still hears only the control's own `label`.
 - `required` is a mark, not `aria-required`; 0.10.0 has no `aria-required`, and
   the runtime has no `aria-labelledby` to bind the mark to the control. The
   marker itself **is** announced — as an image named `required`, read after the
@@ -66,6 +89,10 @@ description uses `caption` + `mutedForeground`. The required star is
 text but reaches assistive technology as an image with that name (plan `581`). No
 literal size or colour.
 
+A clickable label's only extra paint is `cursor: "pointer"`, and a caller's
+`style` can still override it. It takes **no** hover or press wash: a label is
+text, not a clickable row (plan `749`).
+
 ## Style by state
 
 `style` takes an object or a callback over `LabelState` — the runtime's own
@@ -84,12 +111,20 @@ property; returning `{}` keeps the default look. The state type is exported.
 
 ## Limitations
 
-
-- No click-to-focus: the runtime has no `for`/`htmlFor`, and the label cannot
-  move focus to another element.
-- No association by reference (above) — the name is written in two places when
-  both the visible label and the control's name are needed. `labelledBy` keeps
-  the *control* side to one object, not the pair.
+- **Focus, not association.** `control` moves focus on a press; the name is
+  still written twice (the visible label and the control's `label`), because
+  GPUix 0.10.0 has no `aria-labelledby` and no `for`/`htmlFor`.
+- `control` targets a **single-root** control: `Input`, `TextArea`,
+  `NumberField`, `Select`, `Checkbox`, `Switch`, `Button` and `Toggle`. A roving
+  group's ref is its non-focusable root, so a press on a label pointing at
+  `RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Rating`, `Slider`,
+  `RangeSlider` or `OTPField` focuses nothing.
+- Only the **painted text** is a target: the empty part of a full-width label is
+  not hit-tested (measured, plan `749`), so a press there does nothing.
+- A **disabled** target receives focus if the ref points at one. The renderer
+  exposes no focusable query and the ref carries no state; the control's
+  handlers are guarded (plan `025`) and it paints no ring (plan `332`). Point
+  `control` at a control that can take focus.
 - `required` does not validate anything. Validate with `Schema` at the boundary.
 - The required marker is not associated with the control (no `aria-labelledby`);
   it is announced in reading order as an image named by `requiredLabel`, but a
@@ -120,6 +155,15 @@ property; returning `{}` keeps the default look. The state type is exported.
   named `required` (or `requiredLabel`) and no bare `*` node exists; a label
   without `required` publishes no image (plan `581`); the marker keeps its
   painted width in a narrow column while the name wraps (plan `647`).
+- `src/components/Label.test.tsx` — the activation rule (no control → no
+  handler, a ref focuses its instance, a null ref and a missing renderer are
+  no-ops), the pointer cursor with no wash, no tab stop or invented role, the
+  caller's cursor winning, and the unchanged name/marker/description tree
+  (plan `749`).
+- `runtime/label-control.runtime.test.tsx` — a real press on the painted name
+  and on the description focuses the field; a label without `control`, and a ref
+  that names nothing, leave focus where it was; Tab still skips the label
+  (plan `749`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

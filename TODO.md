@@ -2412,6 +2412,20 @@ retired once both branches are one
       (offline 70 files / 966 tests, the scoped live file 10/10 and the examples
       file 19/19; plan `748`).
 
+`[x]` `packages/primitives`: **`Label` said it could not move focus, but the
+      runtime publishes `focusElement`** — `docs/label.mdx` called click-to-focus
+      impossible ("no `for`/`htmlFor`, and the label cannot move focus"), while a
+      probe measured that a press on the label's text bubbles to its root and
+      `renderer.focusElement(ref.current.id)` focuses the field. `Label.control`
+      takes the control's ref and restores a native label's one behaviour
+      without claiming the missing `aria-labelledby` association; pointer-only,
+      a null ref is a no-op, and the tree is unchanged without it. 9 element + 5
+      scoped runtime cases, both directions (the two press cases fail with focus
+      left on the sentinel; the offline negative case fails when the activation
+      is unconditional), and the form example pairs its four labels (offline 71
+      files / 975 tests, runtime 69 files / 891 tests, examples 19/19; plan
+      `749`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

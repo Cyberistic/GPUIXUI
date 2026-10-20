@@ -5,10 +5,12 @@
  * save button shows the busy state the library supports, and the progress bar
  * appears only while the request is in flight. `Label` carries the visible name
  * and each control carries the same name for assistive technology, because the
- * runtime has no `aria-labelledby` (see `docs/label.mdx`).
+ * runtime has no `aria-labelledby` (see `docs/label.mdx`). Each label gets its
+ * control's ref, so a press on the visible name focuses the field (plan `749`).
  */
 
-import { useState, type ReactElement } from "react";
+import { useRef, useState, type ReactElement } from "react";
+import type { PublicInstance } from "@gpuix/react";
 import {
   Box,
   Button,
@@ -45,6 +47,10 @@ export const FormExample = (): ReactElement => {
   const [notes, setNotes] = useState("");
   const [region, setRegion] = useState("eu-west");
   const [saving, setSaving] = useState(false);
+  const nameField = useRef<PublicInstance | null>(null);
+  const ownerField = useRef<PublicInstance | null>(null);
+  const regionField = useRef<PublicInstance | null>(null);
+  const notesField = useRef<PublicInstance | null>(null);
 
   return (
     <Box
@@ -80,10 +86,15 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label required description="Shown in the workspace switcher.">
+          <Label
+            control={nameField}
+            required
+            description="Shown in the workspace switcher."
+          >
             Project name
           </Label>
           <Input
+            ref={nameField}
             value={name}
             onValueChange={setName}
             label="Project name"
@@ -95,10 +106,14 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="The person who receives access requests.">
+          <Label
+            control={ownerField}
+            description="The person who receives access requests."
+          >
             Owner email
           </Label>
           <Input
+            ref={ownerField}
             value={owner}
             onValueChange={setOwner}
             label="Owner email"
@@ -108,8 +123,9 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label>Region</Label>
+          <Label control={regionField}>Region</Label>
           <Select
+            ref={regionField}
             value={region}
             onValueChange={setRegion}
             label="Region"
@@ -119,8 +135,14 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         <Stack direction="column" gap="2xs">
-          <Label description="Markdown is not interpreted.">Description</Label>
+          <Label
+            control={notesField}
+            description="Markdown is not interpreted."
+          >
+            Description
+          </Label>
           <TextArea
+            ref={notesField}
             value={notes}
             onValueChange={setNotes}
             label="Description"

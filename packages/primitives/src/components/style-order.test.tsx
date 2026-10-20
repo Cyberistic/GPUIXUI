@@ -376,7 +376,7 @@ const GUARDS: ReadonlyArray<Guard> = [
   },
   {
     name: "Label",
-    render: (style) => renderLabel({ style, children: "Email" }),
+    render: (style) => renderLabel({ style, children: "Email" }, testTheme),
   },
   {
     name: "InfoTip",

@@ -556,7 +556,10 @@ describe("group roots and overlays", () => {
 
   it("Label reports its invalid state on the stack", () => {
     const record = recorder<LabelState>();
-    const element = renderLabel({ style: record.style, invalid: true });
+    const element = renderLabel(
+      { style: record.style, invalid: true },
+      testTheme,
+    );
     expect(lastState(record.seen)).toStrictEqual({ invalid: true });
     expect(componentBackground(element)).toBe(PAINT);
   });

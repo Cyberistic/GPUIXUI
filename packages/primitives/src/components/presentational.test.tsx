@@ -468,12 +468,15 @@ describe("type", () => {
     // gate, so a computed blank description still painted a caption `Text` —
     // one empty line of the caption role under every label (and under every
     // group option). A blank description is absent, as its own docstring says.
-    const blank = renderLabel({ description: "   ", children: "Email" });
+    const blank = renderLabel(
+      { description: "   ", children: "Email" },
+      testTheme,
+    );
     expect(elementChildren(blank)).toHaveLength(1);
-    const described = renderLabel({
-      description: "A hint.",
-      children: "Email",
-    });
+    const described = renderLabel(
+      { description: "A hint.", children: "Email" },
+      testTheme,
+    );
     expect(elementChildren(described)).toHaveLength(2);
     expect(
       elementProp(
@@ -508,7 +511,9 @@ describe("type", () => {
       expectSome(
         Arr.get(
           elementChildren(
-            expectSome(Arr.get(elementChildren(renderLabel(props)), 0)),
+            expectSome(
+              Arr.get(elementChildren(renderLabel(props, testTheme)), 0),
+            ),
           ),
           1,
         ),
@@ -544,7 +549,10 @@ describe("type", () => {
     });
     // No `required`, no marker — the name row has one child.
     const row = expectSome(
-      Arr.get(elementChildren(renderLabel({ children: "Email" })), 0),
+      Arr.get(
+        elementChildren(renderLabel({ children: "Email" }, testTheme)),
+        0,
+      ),
     );
     expect(elementChildren(row)).toHaveLength(1);
   });
@@ -558,11 +566,10 @@ describe("type", () => {
       { focused: false },
     );
     expect(expectSome(hostProp(button, "aria-label"))).toBe("Email");
-    // `Label` composes rather than renders, so its own contribution is the
-    // column stack it asks for; the text inside is `Text`'s.
-    expect(expectSome(elementProp(renderLabel({}), "direction"))).toBe(
-      "column",
-    );
+    // `Label` owns the column it asks for; the text inside is `Text`'s.
+    expect(
+      expectSome(stringIn(renderLabel({}, testTheme), "flexDirection")),
+    ).toBe("column");
   });
 });
 
