@@ -228,12 +228,10 @@ export const Surface = ({
     gate.current = Option.some(completed);
 
     live.current = false;
-    const session = Effect.suspend(() =>
-      Option.match(previous, {
-        onNone: () => Effect.void,
-        onSome: (pending) => Deferred.await(pending),
-      }),
-    ).pipe(
+    const session = Option.match(previous, {
+      onNone: () => Effect.void,
+      onSome: (pending) => Deferred.await(pending),
+    }).pipe(
       Effect.andThen(adapter.create(host)),
       Effect.andThen(Effect.suspend(() => adapter.resize(boundsRef.current))),
       Effect.andThen(adapter.setVisible(true)),
