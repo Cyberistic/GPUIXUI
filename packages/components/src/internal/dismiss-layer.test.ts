@@ -31,6 +31,7 @@ import {
   dismissTopLayer,
   hasDeeperLayer,
   pushDismissLayer,
+  registerPressSurface,
 } from "./dismiss-layer.js";
 
 /** A syntactically complete Escape; only its fields matter across copies. */
@@ -38,6 +39,14 @@ const escape = (): EventPayload => ({
   elementId: 1,
   eventType: "keyDown",
   key: "escape",
+});
+
+/** A press at one point; ownership predicates read its coordinates. */
+const press = (x: number, y: number): EventPayload => ({
+  elementId: 2,
+  eventType: "mouseDownOutside",
+  x,
+  y,
 });
 
 /** The claim is module state; each test starts as a new task. */
@@ -265,6 +274,52 @@ describe("dismiss layer stack", () => {
 
     removeConfirmation();
     expect(hasDeeperLayer(0)).toBe(false);
+
+    removeDialog();
+  });
+  it("leaves a press on a registered surface unclaimed for the overlay beneath", () => {
+    // Plan 820 measured a toast card over an open dialog: the card's own action
+    // arrived as an "outside" press for the dialog, which closed on mouse down
+    // before the release could run the control. A non-dismiss surface owns its
+    // box, and the owned press claims nothing so the click still reaches it.
+    const dialog = vi.fn();
+    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeCard = registerPressSurface(
+      (event) => event.x === 100 && event.y === 100,
+    );
+    const owned = press(100, 100);
+
+    expect(dismissTopLayer(owned)).toBe(false);
+    expect(dialog).not.toHaveBeenCalled();
+
+    removeCard();
+    removeDialog();
+  });
+
+  it("still dismisses for a press the registered surface does not own", () => {
+    const dialog = vi.fn();
+    const removeDialog = pushDismissLayer(dialog, 0);
+    const removeCard = registerPressSurface(
+      (event) => event.x === 100 && event.y === 100,
+    );
+
+    expect(dismissTopLayer(press(20, 20))).toBe(true);
+    expect(dialog).toHaveBeenCalledTimes(1);
+
+    removeCard();
+    removeDialog();
+  });
+
+  it("forgets a registered surface when it unregisters", () => {
+    const dialog = vi.fn();
+    const removeDialog = pushDismissLayer(dialog, 0);
+    const owns = vi.fn(() => true);
+    const removeCard = registerPressSurface(owns);
+
+    removeCard();
+    expect(dismissTopLayer(press(100, 100))).toBe(true);
+    expect(dialog).toHaveBeenCalledTimes(1);
+    expect(owns).not.toHaveBeenCalled();
 
     removeDialog();
   });

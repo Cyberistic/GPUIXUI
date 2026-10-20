@@ -52,6 +52,25 @@ interface DismissLayer {
 let layers: ReadonlyArray<DismissLayer> = [];
 
 /**
+ * Painted overlay surfaces that are not dismiss layers. A toast card floats above
+ * the app but Escape must not close it, so it registers its box instead of a
+ * layer; a press on it belongs to the card, never to the overlay beneath it
+ * (plan `820`).
+ */
+let pressSurfaces: ReadonlyArray<DismissOwnership> = [];
+
+/** Register a painted surface that owns presses. Returns the removal function. */
+export const registerPressSurface = (owns: DismissOwnership): (() => void) => {
+  pressSurfaces = Arr.append(pressSurfaces, owns);
+  return () => {
+    pressSurfaces = Arr.filter(
+      pressSurfaces,
+      (candidate) => candidate !== owns,
+    );
+  };
+};
+
+/**
  * Make `onDismiss` the topmost layer at `depth`. Returns the removal function,
  * which the overlay calls when it closes or unmounts. Pass `owns` so a press on
  * the layer's own surface never dismisses it.
@@ -74,6 +93,10 @@ export const pushDismissLayer = (
  */
 export const dismissTopLayer = (event: EventPayload): boolean => {
   if (isEventClaimed(event)) return false;
+  // A press on a painted surface that is not a layer (a toast card) belongs to
+  // that surface: the control under the pointer runs, and nothing is dismissed
+  // or claimed (plan 820).
+  if (Arr.some(pressSurfaces, (owns) => owns(event))) return false;
   const topmost = Arr.reduce(
     layers,
     Option.none<DismissLayer>(),

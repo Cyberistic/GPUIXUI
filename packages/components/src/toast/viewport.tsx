@@ -9,7 +9,7 @@
  */
 
 import type { Props, PublicInstance } from "@gpuix/react";
-import { AnimatePresence, useGpuix } from "@gpuix/react";
+import { AnimatePresence, useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
 import { toastMotion } from "@gpuixui/tw";
@@ -25,9 +25,11 @@ import {
   type ReactNode,
 } from "react";
 import { Button, IconButton } from "../internal/button.js";
+import { registerPressSurface } from "../internal/dismiss-layer.js";
 import { HoverGroupContext, type HoverGroup } from "../internal/hover-group.js";
 import { MotionSurface, motionProps } from "../internal/motion.js";
 import { useNativeFocusId } from "../internal/native-focus.js";
+import { ownsSurface } from "../internal/pointer.js";
 import {
   elevationShadow,
   textStyle,
@@ -116,6 +118,16 @@ const ToastCard = ({
   const [actionHost, setActionHost] = useState<number | null>(null);
   const [dismissHost, setDismissHost] = useState<number | null>(null);
   const focusedHost = useNativeFocusId(true);
+  // The card is a painted overlay surface, not a dismiss layer: a press on its
+  // own controls belongs to the toast, so an overlay underneath never treats it
+  // as an outside press (plan 820). `ownsSurface` reads the host at event time.
+  const surface = useRef<PublicInstance | null>(null);
+  const renderer = useGpuix().renderer;
+  useEffect(
+    () =>
+      registerPressSurface(ownsSurface(renderer, () => surface.current?.id)),
+    [renderer],
+  );
   const focusHeld =
     focusedHost !== null &&
     (focusedHost === actionHost || focusedHost === dismissHost);
@@ -181,6 +193,7 @@ const ToastCard = ({
         role="status"
         aria-label={accessibleName}
         testId={`toast-${toast.id}`}
+        ref={surface}
         onMouseEnter={() => setSelfHover(true)}
         onMouseLeave={() => setSelfHover(false)}
         style={{
@@ -372,6 +385,7 @@ export const ToastViewport = ({
 }: ToastViewportProps) => {
   const theme = useTheme();
   const renderer = useGpuix().renderer;
+  const window = useWindowSize();
   const { toasts } = useToast();
   const cardMotion = motionProps(toastMotion(theme));
   // Each live card publishes its dismiss host, so dismissing one card can hand
@@ -392,45 +406,63 @@ export const ToastViewport = ({
   };
 
   return (
-    <div
-      role="group"
-      aria-label="Notifications"
-      testId="toast-viewport"
-      {...rest}
-      style={mergeStyles(
-        {
-          position: "absolute",
-          ...corner(theme, position),
-          display: "flex",
-          flexDirection: "column",
-          alignItems:
-            position === "top-left" || position === "bottom-left"
-              ? "flex-start"
-              : "flex-end",
-          gap: theme.spacing.md,
-          maxWidth: CARD_WIDTH,
-          pointerEvents: "none",
-        },
-        style,
-      )}
+    // A deferred anchored layer above every modal (priority 2): a dialog's veil
+    // is itself an anchored layer at the default priority 1, so a plain tree
+    // child would be painted under it and unreachable (plan 820).
+    <anchored
+      position={{ x: 0, y: 0 }}
+      priority={2}
+      occlude={false}
+      style={{ position: "absolute" }}
     >
-      {children}
-      <AnimatePresence initial={false}>
-        {Arr.map(toasts, (toast, index) => (
-          <MotionSurface
-            key={toast.id}
-            testId={`toast-${toast.id}-surface`}
-            {...cardMotion}
-          >
-            <ToastCard
-              toast={toast}
-              focusNeighbour={() => focusNeighbour(index)}
-              registerDismiss={registerDismiss}
-            />
-          </MotionSurface>
-        ))}
-      </AnimatePresence>
-    </div>
+      <div
+        style={{
+          width: window.width,
+          height: window.height,
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          role="group"
+          aria-label="Notifications"
+          testId="toast-viewport"
+          {...rest}
+          style={mergeStyles(
+            {
+              position: "absolute",
+              ...corner(theme, position),
+              display: "flex",
+              flexDirection: "column",
+              alignItems:
+                position === "top-left" || position === "bottom-left"
+                  ? "flex-start"
+                  : "flex-end",
+              gap: theme.spacing.md,
+              maxWidth: CARD_WIDTH,
+              pointerEvents: "none",
+            },
+            style,
+          )}
+        >
+          {children}
+          <AnimatePresence initial={false}>
+            {Arr.map(toasts, (toast, index) => (
+              <MotionSurface
+                key={toast.id}
+                testId={`toast-${toast.id}-surface`}
+                {...cardMotion}
+              >
+                <ToastCard
+                  toast={toast}
+                  focusNeighbour={() => focusNeighbour(index)}
+                  registerDismiss={registerDismiss}
+                />
+              </MotionSurface>
+            ))}
+          </AnimatePresence>
+        </div>
+      </div>
+    </anchored>
   );
 };
 
@@ -442,7 +474,7 @@ export const toastMeta = {
   gpuixSupport: "yes",
   focusable: true,
   limitations: [
-    "no zIndex: the viewport stacks by paint order, so render it last in the app root",
+    "the stack is a deferred anchored layer at priority 2 so it paints above a modal veil, and a card owns its presses (plan 820)",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
     "the keyboard hold samples the renderer's focused host every 50 ms, because 0.10.0 delivers no React focus/blur for a native focus change",
     "dismissing the last card leaves focus alone: a toast is pushed programmatically and has no trigger to return to",

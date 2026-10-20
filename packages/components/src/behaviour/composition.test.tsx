@@ -148,7 +148,6 @@ const SettingsWorkflow = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ToastViewport />
     </div>
   );
 };
@@ -211,6 +210,63 @@ const MenuInShortDialog = ({
     </DropdownMenu>
   </ShortDialog>
 );
+
+/** A dialog that raises an error toast: the shape plan 820 measured. */
+const ToastOverDialog = ({ onAction }: { readonly onAction: () => void }) => {
+  const toast = useToast();
+  const [open, setOpen] = useState(true);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: 1200,
+        height: 760,
+      }}
+    >
+      <Button testId="outside">Outside</Button>
+      <ToastViewport />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Editor" testId="editor" size="sm">
+          <DialogTitle>Editor</DialogTitle>
+          <Button
+            testId="fail"
+            onClick={() =>
+              toast.push(
+                {
+                  title: "Could not save",
+                  tone: "danger",
+                  action: { label: "Retry" },
+                },
+                { onAction },
+              )
+            }
+          >
+            Save
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const ToastOverDialogPage = ({
+  onAction,
+}: {
+  readonly onAction: () => void;
+}) => (
+  <ToastProvider>
+    <ToastOverDialog onAction={onAction} />
+  </ToastProvider>
+);
+
+/** The toast store updates through its runtime: let the microtasks drain. */
+const settle = async (): Promise<void> => {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 /** Type `text` into the focused field, one real keystroke each. */
 const type = (
@@ -369,6 +425,46 @@ describe("composition", () => {
     expect(
       Arr.length(nodesNamed(scene.renderer, "Settings saved")),
     ).toBeGreaterThanOrEqual(1);
+
+    scene.unmount();
+  });
+  it("runs a toast action above an open dialog without dismissing it", async () => {
+    const onAction = vi.fn();
+    const scene = renderComponent(<ToastOverDialogPage onAction={onAction} />);
+    finishMotion(scene);
+
+    clickCentreOf(scene, "fail");
+    await settle();
+    finishMotion(scene, 500);
+    expect(isShown(scene, "toast-1")).toBe(true);
+    expect(isShown(scene, "editor")).toBe(true);
+
+    clickCentreOf(scene, "toast-1-action");
+    await settle();
+    finishMotion(scene, 500);
+
+    expect(onAction).toHaveBeenCalledTimes(1);
+    expect(isShown(scene, "toast-1")).toBe(false);
+    expect(isShown(scene, "editor")).toBe(true);
+
+    scene.unmount();
+  });
+
+  it("still closes the dialog on a press outside with a toast up", async () => {
+    const scene = renderComponent(
+      <ToastOverDialogPage onAction={() => undefined} />,
+    );
+    finishMotion(scene);
+
+    clickCentreOf(scene, "fail");
+    await settle();
+    expect(isShown(scene, "toast-1")).toBe(true);
+
+    clickCentreOf(scene, "outside");
+    finishMotion(scene, 500);
+
+    expect(isShown(scene, "editor")).toBe(false);
+    expect(isShown(scene, "toast-1")).toBe(true);
 
     scene.unmount();
   });
