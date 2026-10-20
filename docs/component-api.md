@@ -238,6 +238,19 @@ A part that becomes disabled drops its painted focus even though no `blur`
 arrives, so a disabled control never shows a ring; re-enabling waits for the
 next real focus signal (plan `680`).
 
+**A control that removes itself hands focus on.** Activating a control that
+unmounts with its own data must not strand the keyboard. When the part belongs to
+a group that survives, focus moves to the group's surviving stop: a removed
+`List` row hands to the live tab stop (plan 708), a removed or disabled `Tabs`
+tab hands on (plans 712, 646), a removed notification row reveals the next live
+row (plan 746), a tag chip's removal control hands to the tag field and a
+recorder's clear control to the recorder itself (plan 769), and a dismissed toast
+card hands to the next live card's dismiss control — below, else above
+(plan 770). When nothing survives to receive it, focus is left alone rather than
+invented: the last toast card has no trigger to return to, and its page says so.
+The handover lives in the activation handler, so a value change the app made
+itself never moves focus.
+
 **A part that draws an interactive role names itself.** 0.10.0 reports no
 accessible name for a `div role="button"` (or tab, link, …) whose label is only a
 text child — measured for menu rows in plan `387` and for every example in plan
