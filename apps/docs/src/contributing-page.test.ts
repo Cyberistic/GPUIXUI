@@ -31,6 +31,13 @@ const section = (document: string, heading: string): string => {
   return document.slice(start, next === -1 ? undefined : next);
 };
 
+const topSection = (document: string, heading: string): string => {
+  const start = document.indexOf(`## ${heading}`);
+  if (start === -1) return "";
+  const next = document.indexOf("\n## ", start + heading.length);
+  return document.slice(start, next === -1 ? undefined : next);
+};
+
 const siteOutput = section(page, "Site output");
 const description = page.match(/^description:\s*(.+)$/m)?.[1] ?? "";
 
@@ -79,5 +86,25 @@ describe("Contributing — site output", () => {
 
   it("points a maintainer at the detail the readers do not need", () => {
     expect(siteOutput).toContain("apps/docs/README.md");
+  });
+});
+
+describe("Contributing — continuous integration", () => {
+  const continuousIntegration = topSection(page, "Continuous integration");
+
+  it("names the gate commands the workflow will run", () => {
+    const missing = ["nub run check", "nub run lint", "nub run test"].filter(
+      (command) => !page.includes(command),
+    );
+    expect(missing).toEqual([]);
+    expect(continuousIntegration).toContain("[Gates](#gates)");
+  });
+
+  it("states that no workflow is committed", () => {
+    expect(continuousIntegration).toContain(
+      "No workflow file is committed yet",
+    );
+    expect(continuousIntegration).toContain("/docs/native-testing");
+    expect(continuousIntegration).toMatch(/exits `2`/);
   });
 });

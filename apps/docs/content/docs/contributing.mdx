@@ -31,6 +31,14 @@ nub run lint
 nub run test
 ```
 
+## Continuous integration
+
+The [Gates](#gates) above are what CI runs. No workflow file is committed yet, so a
+green pull request is currently a local run rather than a CI run; the
+published-binary run of the native suite is still owed. A check that exits `2`
+did not run — treat it as "run it where it can run", never as a pass
+([Native smoke suite](/docs/native-testing)).
+
 ## Tests
 
 A test must be able to fail. `nub run check` rejects a test that asserts nothing,

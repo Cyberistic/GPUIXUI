@@ -471,7 +471,22 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 178/178
+`[x]` `[██████████]` 179/179
+
+`[x]` **The authoring, framework and performance vocabulary reaches its owner
+      (plan 612)** — `add component`, `new component`, `component template`,
+      `first component`, `create component`, `write a component` and
+      `component docs` all reached the Components index although the template is
+      `/docs/component-pages`; `ci` reached Skeleton, `github actions` Toast
+      actions, `checks` Troubleshooting and `quality gate` Accessibility; size
+      words reached Spinner; `virtualization` the Roadmap; `callback` Keycap and
+      `callbacks` nothing; `nextjs`, `next.js`, `remix` and `tauri` returned
+      nothing and `electron` the Introduction. 27 exact alias terms route the
+      first four groups, `## Not a web UI library` answers the framework
+      question from the real renderer boundary, and `## Continuous integration`
+      states that no workflow is committed yet. 123 files / 1 178 docs tests,
+      105-page `smoke:build`, root gates green; six two-direction proofs in plan
+      612 §9.
 
 `[x]` **The adoption path has a page (plan 611)** — `MISSION.md` names shadcn/ui
       as the DX reference, but the site documented the substrate and never the

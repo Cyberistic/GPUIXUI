@@ -68,7 +68,18 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   ["/docs/accessibility", ["keyboard focus"]],
   ["/docs/license", ["credits", "acknowledgements", "acknowledgments"]],
-  ["/docs/contributing", ["vitest", "publish docs"]],
+  [
+    "/docs/contributing",
+    [
+      "vitest",
+      "publish docs",
+      "ci",
+      "continuous integration",
+      "github actions",
+      "checks",
+      "quality gate",
+    ],
+  ],
   [
     "/docs/site-search",
     [
@@ -88,6 +99,21 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "search document",
       "index document",
       "search architecture",
+    ],
+  ],
+  [
+    "/docs/component-pages",
+    [
+      "add component",
+      "add a component",
+      "adding a component",
+      "new component",
+      "create component",
+      "create a component",
+      "write a component",
+      "component template",
+      "first component",
+      "component docs",
     ],
   ],
   [
@@ -160,6 +186,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "slow list",
       "slow table",
       "speed",
+      "bundle size",
+      "download size",
+      "page weight",
     ],
   ],
   [
@@ -184,9 +213,14 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "host props",
       "host properties",
       "shared host props",
+      "callback",
+      "callbacks",
     ],
   ],
-  ["/docs/data-display", ["select row", "selectable rows"]],
+  [
+    "/docs/data-display",
+    ["select row", "selectable rows", "virtualization", "virtualisation"],
+  ],
   ["/docs/examples", ["demo", "sample"]],
   [
     "/docs/installation",
@@ -317,6 +351,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "radix ui",
       "aschild",
       "as child",
+      "nextjs",
+      "next.js",
+      "remix",
+      "tauri",
+      "electron",
     ],
   ],
 ]);

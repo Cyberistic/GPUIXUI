@@ -51,6 +51,21 @@ not one attribute:
   call and no `className` to merge. A consumer `style` object is spread last,
   so the field you pass wins.
 
+## Not a web UI library
+
+Every component here renders a GPUix host element, not a DOM node: there is no
+server renderer and no hydration phase. React frameworks whose output is a
+browser tree — Next.js and Remix — cannot render a GPUIXUI component, and
+desktop shells that embed a browser view — Electron and Tauri — have the same
+boundary because the webview, not the native renderer, would paint the tree.
+
+The one browser-rendered path is this site's isolated live surface: the
+published `@gpuix/native` WebAssembly renderer, labelled as a browser renderer
+and never presented as the desktop binary. If the product is a web application,
+the honest choice is a DOM library such as shadcn/ui; the
+[Styling](/docs/styling) page states what replaces CSS, and
+[Architecture](/docs/architecture) states which renderer paints what.
+
 ## A port in practice
 
 The screen a shadcn project is most likely to carry first is a card with a

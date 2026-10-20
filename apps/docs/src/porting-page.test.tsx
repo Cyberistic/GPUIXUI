@@ -164,10 +164,29 @@ describe("the shadcn/ui porting page", () => {
       "<PortingGaps />",
       "## What maps across",
       "## What changes in the code",
+      "## Not a web UI library",
       "## A port in practice",
       "## What has no counterpart yet",
     ];
     expect(required.filter((block) => !page.includes(block))).toEqual([]);
+  });
+
+  it("answers the framework question with the real boundary", () => {
+    const page = readFileSync(pagePath, "utf8");
+    const start = page.indexOf("## Not a web UI library");
+    const end = page.indexOf("\n## ", start + 1);
+    const section = page.slice(start, end === -1 ? undefined : end);
+    const missing = [
+      "Next.js",
+      "Remix",
+      "Electron",
+      "Tauri",
+      "WebAssembly",
+      "not a DOM node",
+    ].filter((word) => !section.includes(word));
+    expect(missing).toEqual([]);
+    expect(section).toContain("/docs/architecture");
+    expect(section).toContain("/docs/styling");
   });
 
   it("counts no row total in prose", () => {
@@ -189,12 +208,18 @@ describe(
   "the adoption vocabulary reaches the page",
   { timeout: 120_000 },
   () => {
-    it.each(["migration", "shadcn", "aschild"])(
-      "%s reaches the page",
-      async (query) => {
-        const [first] = await search(query);
-        expect(first?.url).toBe(pageUrl);
-      },
-    );
+    it.each([
+      "migration",
+      "shadcn",
+      "aschild",
+      "nextjs",
+      "next.js",
+      "remix",
+      "tauri",
+      "electron",
+    ])("%s reaches the page", async (query) => {
+      const [first] = await search(query);
+      expect(first?.url).toBe(pageUrl);
+    });
   },
 );
