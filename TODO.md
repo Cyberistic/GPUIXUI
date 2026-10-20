@@ -469,9 +469,17 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–594)
+## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 162/162
+`[x]` `[██████████]` 163/163
+
+`[x]` **Every page is readable and copyable as Markdown (plan 596)** — a
+      per-page `/docs/<slug>.md` route renders the same `llms()` document the
+      site already produces, and each page carries the `Copy Markdown` control
+      and a `View as Markdown` link; the URL scheme round-trips over every page
+      and the built-site smoke fetches the route. 109 files / 801 docs tests,
+      99-page `smoke:build`, axe in both schemes, 390 px and console smokes
+      green; four forced defects measured in plan 596 §6.3.
 
 `[x]` **The theme editor (plan 595)** — `/docs/theme-editor` edits 16 semantic
       roles and a density preset through the library's own `extendTheme`,

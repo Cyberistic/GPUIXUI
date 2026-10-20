@@ -766,7 +766,7 @@ no sitemap edit. `src/lib/sitemap.test.ts` proves every page appears once.
 
 ## Machine discovery
 
-Two routes serve the documentation to a reader that is not a browser, both
+Three routes serve the documentation to a reader that is not a browser, all
 generated from the page tree so a new page needs no edit here:
 
 - `/llms.txt` (`src/routes/llms[.]txt.ts`) is the index: every page's title,
@@ -776,12 +776,20 @@ generated from the page tree so a new page needs no edit here:
   `page.data.getText("processed")` — the authored Markdown, with the title,
   description and absolute source URL above it. Data-driven MDX blocks stay as
   component tags because they are React, not prose.
+- `/docs/<slug>.md` (`src/routes/docs/{$}[.]md.ts`) is one page, the same
+  render `/llms-full.txt` carries, addressed on its own. `src/lib/llms.ts` owns
+  the render (`renderPageMarkdown`), so the full document and the per-page route
+  cannot diverge; `src/lib/page-markdown.ts` names the URL. Every page links to
+  it from the **Copy Markdown** button and the **View as Markdown** anchor in
+  `src/routes/docs/$.tsx`.
 
 `src/lib/llms.test.ts` proves the index links every source page once, absolutely,
 and that the full document renders each page. `smoke:build` compares the served
 index with the sitemap in **both** directions: a page a crawler sees cannot be
 missing from the index, and an index link cannot point at a page the site does
-not serve.
+not serve. It also fetches `/docs/components/button.md`, requires
+`text/markdown` and an `# Buttons` body, requires `/docs/nope.md` to `404`, and
+requires the built component page to carry both controls.
 
 ## Adding a component page
 

@@ -632,6 +632,67 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   }
   console.log(`smoke: llms discovery checked`);
 
+  // Per-page Markdown (plan 596). The route serves one page as the same
+  // `llms()` render the full document carries, and the built page offers it.
+  const pageMarkdown = await request(`${baseUrl}/docs/components/button.md`);
+  if (pageMarkdown === null) {
+    problems.push({
+      where: "/docs/components/button.md",
+      what: "request failed",
+    });
+  } else if (pageMarkdown.status !== 200) {
+    problems.push({
+      where: "/docs/components/button.md",
+      what: `expected 200, got ${pageMarkdown.status}`,
+    });
+  } else if (pageMarkdown.contentType?.startsWith("text/markdown") !== true) {
+    problems.push({
+      where: "/docs/components/button.md",
+      what: `content-type ${pageMarkdown.contentType ?? "missing"} is not text/markdown`,
+    });
+  } else if (
+    !pageMarkdown.body.startsWith("# Buttons") ||
+    pageMarkdown.body.includes("---\ntitle:")
+  ) {
+    problems.push({
+      where: "/docs/components/button.md",
+      what: "is not the rendered Buttons Markdown",
+    });
+  }
+
+  const missingMarkdown = await request(`${baseUrl}/docs/nope.md`);
+  if (missingMarkdown === null || missingMarkdown.status !== 404) {
+    problems.push({
+      where: "/docs/nope.md",
+      what:
+        missingMarkdown === null
+          ? "request failed"
+          : `expected 404, got ${missingMarkdown.status}`,
+    });
+  }
+
+  const buttonPage = pages.find(
+    ({ path }) => path === "/docs/components/button",
+  );
+  const controls =
+    buttonPage === undefined
+      ? null
+      : [
+          "Copy Markdown",
+          "View as Markdown",
+          'href="/docs/components/button.md"',
+        ].filter((text) => !buttonPage.page.body.includes(text));
+  if (controls === null || controls.length > 0) {
+    problems.push({
+      where: "/docs/components/button",
+      what:
+        controls === null
+          ? "is not in the sitemap, so its Markdown control cannot be checked"
+          : `does not offer ${controls.join(", ")}`,
+    });
+  }
+  console.log(`smoke: page markdown checked`);
+
   const ids = new Map(
     pages.map(({ path, page }) => [path, elementIds(page.body)] as const),
   );

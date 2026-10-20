@@ -38,6 +38,7 @@ const routes = [
   ["/robots.txt", "src/routes/robots[.]txt.ts"],
   ["/llms.txt", "src/routes/llms[.]txt.ts"],
   ["/llms-full.txt", "src/routes/llms-full[.]txt.ts"],
+  ["/docs/<slug>.md", "src/routes/docs/{$}[.]md.ts"],
   [MANIFEST_PATH, "src/routes/site[.]webmanifest.ts"],
 ] as const;
 
@@ -53,7 +54,7 @@ describe("Contributing — site output", () => {
     const missing = routes.flatMap(([route, module]) => {
       const problems = [
         existsSync(join(appRoot, module)) ? null : `missing module ${module}`,
-        siteOutput.includes(route) ? null : `page omits ${route}`,
+        siteOutput.includes(`| \`${route}\` |`) ? null : `page omits ${route}`,
       ].filter((problem): problem is string => problem !== null);
       return problems;
     });

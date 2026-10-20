@@ -97,7 +97,12 @@ so a route cannot describe a page the sitemap does not serve:
 | `/robots.txt` | crawlers, naming the sitemap | `apps/docs/src/routes/robots[.]txt.ts` |
 | `/llms.txt` | every page, absolutely linked, for an LLM crawler | `apps/docs/src/lib/llms.ts` |
 | `/llms-full.txt` | every page as processed Markdown | `apps/docs/src/lib/llms.ts` |
+| `/docs/<slug>.md` | one page as the processed Markdown `llms-full.txt` carries | `apps/docs/src/routes/docs/{$}[.]md.ts` |
 | `/site.webmanifest` | the install document: name, start URL, palette colours and both icons | `apps/docs/src/lib/site-manifest.ts` |
+
+Every page carries a **Copy Markdown** button and a **View as Markdown** link,
+both addressing the page's `/docs/<slug>.md` route, so a reader or an agent can
+take one page away without the full manual.
 
 Every page inherits the favicon (the SVG mark `/brand/mark.svg` plus a 32 px
 `/brand/favicon-32.png`), the apple-touch icon
