@@ -471,7 +471,22 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 185/185
+`[x]` `[██████████]` 186/186
+
+`[x]` **Security and privacy have a page (plan 619)** — measured 2026-10-20:
+      `security`, `privacy`, `telemetry`, `cookies`, `vulnerability`, `gdpr`,
+      `sandbox` and `security policy` returned nothing or another page, so a
+      consumer could not learn whether the library calls home, writes storage
+      or runs remote code. `/docs/security` states the library's measured
+      behaviour (no network, no storage, no dynamic code), the native trust
+      boundary (no sandbox), what this site stores and sends, how to report a
+      vulnerability and what is not audited; `security-page.test.ts` scans the
+      four package sources, the app manifest and sources, the live-surface
+      sandbox, the platform key and the policy files in both directions,
+      19 exact aliases route the question forms (`tracking` stays on Styling),
+      and three production queries guard the built index. 126 files /
+      1 295 docs tests, 107-page `smoke:build`, root `check` green; five
+      two-direction proofs in plan 619 §8.
 
 `[x]` **The licence question has an answer (plan 617)** — measured 2026-10-20:
       `is it free` returned List, `commercial use` a text-area limitation,
@@ -1580,6 +1595,7 @@ previews (the four interaction-only pages carry a measured tier-V reason).
 
 `[ ]` **Components / repo docs**: `docs/component-api.md` §2 promises a warning when `value` and `defaultValue` are both supplied, and §4 promises `defaultPrevented` is respected. `packages/components/src/internal/controllable.ts` logs no warning, and `packages/primitives/src/core/keyboard.ts` records that GPUix 0.10.0 carries no `defaultPrevented` and no preventDefault. Plan 482 documents the shipped truth on `/docs/component-api`; correct the contract or the code, then align the page. Owner: components (the contract doc is outside `apps/docs`)
 `[ ]` **Licensing**: record the MIT licence for `@fumadocs-editor/core`, `@fumadocs-editor/ui` and `@fumadocs-editor/studio` (dev-only authoring dependencies, plan 467) in `LICENSES/`. `apps/docs` cannot write the licence inventory; owner: licensing
+`[ ]` **Security policy**: decide whether the repository commits a `SECURITY.md` with a private disclosure channel. `/docs/security` states the absence today and `src/security-page.test.ts` flips when a policy lands, so the page follows the decision either way; owner: repo owner / coordinator
 `[ ]` **Licensing**: record the MPL-2.0 licence for `axe-core@4.10.2`, the dev-only accessibility engine `smoke:a11y` injects into the browser (plan 512). It is not in the shipped bundle, but it is a direct dev dependency; owner: licensing
 `[ ]` **Licensing: declare the library's own licence** — the repository has no root
       `LICENSE`, no `COPYING`/`UNLICENSE` file and no `license` field in any

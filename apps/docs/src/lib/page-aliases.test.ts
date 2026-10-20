@@ -42,6 +42,11 @@ import { source } from "./source";
  * `coming soon`, `coverage`). The regression rows pin `split panes` to the
  * roadmap target, so the new `split view` alias proves the table is
  * exact-only.
+ *
+ * Plan 619 adds the trust vocabulary: `security`, `privacy`, `telemetry`,
+ * `analytics`, `cookies`, `data collection`, `vulnerability`, `security policy`
+ * and the reporting/network terms name Security and privacy. The regression
+ * row pins `tracking` to Styling, where it means letter spacing.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -381,6 +386,25 @@ const owned = [
   ["coverage", "/docs/roadmap"],
   ["coverage map", "/docs/roadmap"],
   ["what is implemented", "/docs/roadmap"],
+  ["security", "/docs/security"],
+  ["privacy", "/docs/security"],
+  ["telemetry", "/docs/security"],
+  ["analytics", "/docs/security"],
+  ["cookies", "/docs/security"],
+  ["data collection", "/docs/security"],
+  ["vulnerability", "/docs/security"],
+  ["vulnerabilities", "/docs/security"],
+  ["security policy", "/docs/security"],
+  ["report a vulnerability", "/docs/security"],
+  ["report vulnerabilities", "/docs/security"],
+  ["gdpr", "/docs/security"],
+  ["sandbox", "/docs/security"],
+  ["sandboxing", "/docs/security"],
+  ["remote code", "/docs/security"],
+  ["network requests", "/docs/security"],
+  ["network access", "/docs/security"],
+  ["tracking cookies", "/docs/security"],
+  ["browser tracking", "/docs/security"],
 ] as const;
 
 const regressions = [
@@ -434,6 +458,7 @@ const regressions = [
   ["resize", "/docs/workspace"],
   ["split panes", "/docs/roadmap"],
   ["data", "/docs/data-display"],
+  ["tracking", "/docs/styling"],
 ] as const;
 
 describe(

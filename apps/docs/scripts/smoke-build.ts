@@ -1175,6 +1175,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the commercial-use question the page now answers",
     },
     {
+      query: "security",
+      expected: "/docs/security",
+      first: true,
+      what: "the security page readers ask for before installing",
+    },
+    {
+      query: "telemetry",
+      expected: "/docs/security",
+      first: true,
+      what: "the telemetry question the page now answers",
+    },
+    {
+      query: "gdpr",
+      expected: "/docs/security",
+      first: true,
+      what: "an alias-only trust term with no title or summary match",
+    },
+    {
       query: "theme switch",
       expected: "/docs/dark-mode",
       first: true,

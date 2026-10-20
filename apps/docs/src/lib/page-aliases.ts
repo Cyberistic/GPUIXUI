@@ -60,6 +60,13 @@
  * `split panes` deliberately keeps reaching the roadmap's `Resizable split
  * panes` target (plan 564), so `split view` is a separate phrase, not a
  * prefix.
+ *
+ * The fourteenth block (plan 619) covers the trust question: `security`,
+ * `privacy`, `telemetry`, `analytics`, `cookies`, `data collection`,
+ * `vulnerability`, `security policy`, `report a vulnerability`, `gdpr`,
+ * `sandbox` and `remote code` name the Security and privacy page. `tracking`
+ * stays on Styling — it is that page's letter-spacing alias — and `support` and
+ * `help` stay on Troubleshooting.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -469,6 +476,30 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "does it work with remix",
       "does it work with electron",
       "does it work with tauri",
+    ],
+  ],
+  [
+    "/docs/security",
+    [
+      "security",
+      "privacy",
+      "telemetry",
+      "analytics",
+      "cookies",
+      "data collection",
+      "vulnerability",
+      "vulnerabilities",
+      "security policy",
+      "report a vulnerability",
+      "report vulnerabilities",
+      "gdpr",
+      "sandbox",
+      "sandboxing",
+      "remote code",
+      "network requests",
+      "network access",
+      "tracking cookies",
+      "browser tracking",
     ],
   ],
 ]);

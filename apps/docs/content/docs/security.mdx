@@ -1,0 +1,81 @@
+---
+title: Security and privacy
+description: "What the library and this site do with your data: no telemetry, analytics or cookies, no network calls in the library, the native trust boundary, and the security work still owed."
+---
+
+The library is native code that ships into your application; this site is a
+separate documentation app. They have different trust boundaries, and neither
+sends telemetry.
+
+## The library
+
+`@gpuixui/tokens`, `@gpuixui/primitives`, `@gpuixui/components` and
+`@gpuixui/icons` are source you compile into your own binary. In the shipped
+sources they:
+
+- **make no network requests** — no `fetch`, `XMLHttpRequest`, `WebSocket` or
+  `EventSource`;
+- **write nothing to storage** — no `localStorage`, `sessionStorage`,
+  `indexedDB` or `document.cookie`;
+- **run no remote or dynamic code** — no `eval`, no `new Function`, and no
+  `innerHTML` or `dangerouslySetInnerHTML`.
+
+There is no analytics client, no crash reporter and no update check. Components
+read the theme you provide and call the handlers you pass; what your application
+does with a value is your application's decision.
+
+## The native trust boundary
+
+GPUix draws the interface inside your process, not in a web view or an iframe.
+There is no sandbox between the library and the rest of your application, and no
+browser origin boundary to rely on: a component can read the state you give it
+and call the handlers you pass, and that is the whole surface. Files, network
+access, secrets and process privileges are the application's responsibility, not
+the library's.
+
+Run untrusted content outside the process. [Architecture](/docs/architecture)
+names the renderer boundary, and [Styling](/docs/styling) records what the
+runtime supports.
+
+## This site
+
+The documentation site has no accounts, no analytics and no advertising. Its own
+code sets no cookies. It stores two preferences in your browser's
+`localStorage`: the colour mode the theme switch uses, and `gpuixui:platform`
+for the platform style. Both are UI state; neither is sent anywhere.
+
+Two requests leave the page:
+
+- a search query goes to this site's own `/api/search`, which reads the built
+  index and stores nothing about the query ([Site search](/docs/site-search));
+- pressing **Load live preview** sends a `HEAD` request for the same-origin
+  preview bundle, then loads it in an iframe with
+  `sandbox="allow-scripts allow-same-origin"`. It is a ~20 MB WebAssembly build
+  served from this site, not a third party, and it loads only when you ask.
+
+There are no third-party embeds, fonts or scripts.
+[Deployment](/docs/deployment) names the host.
+
+## Reporting a vulnerability
+
+No security policy is committed: there is no `SECURITY.md` and no private
+disclosure channel. Report a suspected vulnerability through the repository's
+issue tracker
+([Contributing](/docs/contributing#issues-and-pull-requests)) and do not include
+secrets, tokens or personal data in the report. Until a policy exists, do not
+assume a private channel.
+
+## What is not verified
+
+No dependency audit, software bill of materials, fuzzing run or penetration test
+is committed. The browser gates (`smoke:a11y`, `smoke:console`, the responsive
+and keyboard smokes) test behaviour and accessibility, not security. The
+[License](/docs/license) page owns the library's licensing status, which is a
+separate question.
+
+## Related
+
+- [Architecture](/docs/architecture) — what runs where.
+- [Troubleshooting](/docs/troubleshooting) — the failures readers hit.
+- [Contributing](/docs/contributing) — issues, tests and the gates.
+- [License](/docs/license) — the library's licence status.

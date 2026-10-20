@@ -19,6 +19,20 @@ it. The question forms (`is it free`, `can i use this`, `commercial use`,
 `price`, `copyright`) are exact page aliases, so ⌘K reaches the page that
 answers them.
 
+## Security and privacy
+
+`/docs/security` answers the trust question the consumer or operator asks before
+installing: the library makes no network requests, writes no storage and runs no
+remote or dynamic code, while the site stores two UI preferences and sends only
+its own `/api/search` query and the opt-in preview `HEAD`. It states the native
+trust boundary honestly — there is no sandbox between the library and the host
+application — and the work not yet done (no dependency audit, SBOM, fuzzing or
+penetration test). `src/security-page.test.ts` reads the package sources, the
+app's manifest and sources, the live-surface sandbox, the platform storage key
+and the policy files, so a claim that stops being true fails by name and a
+deleted sentence fails too. The question forms are exact page aliases; `tracking`
+stays on Styling as its letter-spacing alias.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the
