@@ -2208,7 +2208,8 @@ no longer a style-only proof.
 ## Evidence on this host
 
 The suite is **108/108 green** here (`exit 0`, 3963 checks, 65 capabilities,
-**185.4 s**, 2026-10-20; plan `736` added the 28-check `shadow-pixels`; plan
+**223.6 s**, 2026-10-20; plan `739`'s gate; plan `736` added the 28-check
+`shadow-pixels`; plan
 `724` added the 18-check `click-routing` and plan `734` grew it to 33; the count
 was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `708` added 7 QR pixel checks; plan `701` added 41 wash checks to
@@ -2232,11 +2233,11 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **96/96** (`exit 0`, **2688** checks, 61
-capabilities; **1191.4 s**; `.artifacts/live-report.json`, 2026-10-20) on code
-head `e384a66a` (plan `735`, 0 behind `origin/master`; the plan commit after it
+The last full merge/release gate ran **97/97** (`exit 0`, **2716** checks, 61
+capabilities; **1140.5 s**; `.artifacts/live-report.json`, 2026-10-20) on code
+head `ea2e668b` (plan `739`, 0 behind `origin/master`; the plan commit after it
 changes only plans), with the whole headless
-registry at **107/107** (**3935** checks, 65 capabilities, 197.4 s) on the same
+registry at **108/108** (**3963** checks, 65 capabilities, 223.6 s) on the same
 head. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
@@ -2245,11 +2246,12 @@ checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 (68), `live-chart`'s colour pixels (71), `live-highlights`' wash fixtures (53),
 `live-diff`'s word wash (31), `live-qr`'s module pixels (52),
 `live-crop-area`'s mask pixels (18), `live-docking`'s indicator paint order (22),
-`live-media`'s waveform pixels (25) and `live-click-routing`'s click-routing
-contract (25). The total is the plan-`723` gate's 2663 plus `live-click-routing`'s
-25 exactly (plan `724` registered the id at 13; plan `734` added 12 inline
-checks), and the headless registry grew by `click-routing`'s 33. A plain `--all`
-wrote no frame and no `provenance.json`. This gate supersedes plan `723`'s 95/95
+`live-media`'s waveform pixels (25), `live-click-routing`'s click-routing
+contract (25) and `live-shadow-pixels`' ring/elevation pixels (28). The total is
+the plan-`735` gate's 2688 plus `live-shadow-pixels`' 28 exactly, and the
+headless registry grew by `shadow-pixels`' 28. A plain `--all`
+wrote no frame and no `provenance.json`. This gate supersedes plan `735`'s 96/96
+(`2688`) on `e384a66a`, plan `723`'s 95/95
 (`2663`) on `74e27a3f`, plan `714`'s 2638 on
 `f91537b0`, plan `702`'s 2616 on `1cb4d302`, plan `699`'s 2576 on `4101684e`,
 plan `691`'s 2545 on `47068722`,
@@ -2258,10 +2260,6 @@ plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
-**Addendum (plan `736`):** `shadow-pixels` and `live-shadow-pixels` (28 checks
-each) are registered after that gate, so the current registries are **108**
-headless and **97** live and the merge gate must cover this head; both focused
-runs are green on it.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2458,14 +2456,14 @@ narrower. Each deviation is deliberate and measured:
   **scale-cost** probe (plan `302`) reads the retained-node and syntax-cache
   counters: 3 host nodes per virtual row, no leak across jumps, a shared
   document for identical code, and no reparse on a theme switch.
-  The **real-window** suite (`smoke:live`) ran in full at **96/96** on
-  2026-10-20 (**2688** checks, 61 capabilities; 1191.4 s; exit `0`, the merge
-  gate; plan `735` on code head `e384a66a`, including `live-highlights`' 53 wash
+  The **real-window** suite (`smoke:live`) ran in full at **97/97** on
+  2026-10-20 (**2716** checks, 61 capabilities; 1140.5 s; exit `0`, the merge
+  gate; plan `739` on code head `ea2e668b`, including `live-highlights`' 53 wash
   checks, `live-theme`'s 39 pixel checks,
   `live-pixel-colour`, `live-content`'s 68 image-source checks, `live-chart`'s
   71 chart-colour checks, `live-docking`'s 22 indicator checks,
-  `live-media`'s 25 waveform checks and `live-click-routing`'s 25 click-routing
-  checks,
+  `live-media`'s 25 waveform checks, `live-click-routing`'s 25 click-routing
+  checks and `live-shadow-pixels`' 28 ring/elevation checks,
   plan `658`'s Tier 1 checks, `live-theme-platform` and `live-shell`) — the plan
   `532` terminal twin, the plan `534` variable-row twin, the plan `535`/`536`
   pointer twins, plan `554`'s select/combobox/tooltip twins, plan `556`'s

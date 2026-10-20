@@ -96,15 +96,15 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **107/107 green here** (exit `0`, `.artifacts/smoke-report.json`, **3935 checks**, 65 capabilities; **197.4 s** at the plan `735` gate; plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it). The live suite **last ran in full at 96/96**
-(`live-report.json`, **2688 checks**, 61 capabilities; **1191.4 s**, exit `0`)
-on 2026-10-20, the merge/release gate (plan `735`, code head `e384a66a` at the
-gate). That total is plan `723`'s 2663 plus **25 checks from
-`live-click-routing`** (plan `724` registered it at 13; plan `734` added 12
-inline checks), so
-the docking indicator's paint order, the waveform's bars, gaps and wash, the
+The suite is **108/108 green here** (exit `0`, `.artifacts/smoke-report.json`, **3963 checks**, 65 capabilities; **223.6 s** at the plan `739` gate; plan `736` added the 28-check `shadow-pixels`; plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it). The live suite **last ran in full at 97/97**
+(`live-report.json`, **2716 checks**, 61 capabilities; **1140.5 s**, exit `0`)
+on 2026-10-20, the merge/release gate (plan `739`, code head `ea2e668b` at the
+gate). That total is plan `735`'s 2688 plus **28 checks from
+`live-shadow-pixels`** (plan `736`), so
+the ring and elevation pixels join the docking indicator's paint order, the
+waveform's bars, gaps and wash, the
 wash colours, the palette's frame pixels, the image-source pixels,
-the chart's colour contract and both click-routing probes are included in the
+the chart's colour contract and both click-routing probes in the
 full sequence rather than merely registered. The gate
 covered every live scenario registered at that point, including `live-scale`
 (plan `620`, the retained-tree cost model in a window), `live-selection-signal`
@@ -119,14 +119,14 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 96**, and the full gate covers all of them. The
+**Registered live scenarios are 97**, and the full gate covers all of them. The
 live registry is guarded by `liveScenarioProblems` (plan `639`); the count grew
-from 95 to 96 with plan `724`'s `live-click-routing`. Plans `697` and
+from 96 to 97 with plan `736`'s `live-shadow-pixels`. Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
-`722` added **11** to `live-media` and plans `724`/`734` added **25** to
-`live-click-routing`; plan `735` measured them inside the full
-sequence: **2688** checks, exit `0`.
+`722` added **11** to `live-media`, plans `724`/`734` added **25** to
+`live-click-routing` and plan `736` added **28** to `live-shadow-pixels`; plan
+`739` measured them inside the full sequence: **2716** checks, exit `0`.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
 `live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s
@@ -188,11 +188,12 @@ a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
 (`nub run --filter playground smoke:live`, plan `189`). The last full run was
-**96/96 green** (2688 checks, 61 capabilities; 1191.4 s) on the release-tag
-binding through plan `656`'s capture-capable live runner (plan `735`'s gate on
-code head `e384a66a`, including `live-docking`'s 22 paint-order checks,
+**97/97 green** (2716 checks, 61 capabilities; 1140.5 s) on the release-tag
+binding through plan `656`'s capture-capable live runner (plan `739`'s gate on
+code head `ea2e668b`, including `live-docking`'s 22 paint-order checks,
 `live-media`'s 25 waveform checks,
 `live-click-routing`'s 25 click-routing checks,
+`live-shadow-pixels`' 28 ring/elevation checks,
 `live-highlights`' 53 wash checks,
 `live-theme`'s 39 pixel checks,
 `live-pixel-colour`, `live-content`'s 68 image-source checks and `live-chart`'s

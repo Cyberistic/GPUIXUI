@@ -95,7 +95,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 128/128 plans-and-harness
+`[x]` `[██████████]` 129/129 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the shadow pixels** per
+      plan `739`: verification only on code head `ea2e668b` (0 behind
+      `origin/master`, so the promotion is still a fast-forward) — headless
+      **108/108** (**3963** checks, 65 capabilities, 223.6 s) and live
+      **97/97** (**2716** checks, 61 capabilities, **1140.5 s**), both exit `0`.
+      `shadow-pixels` is **28** and `live-shadow-pixels` **28**, so the live
+      total is plan `735`'s 2688 + 28 exactly and the headless total is
+      `3935 + 28`; `live-tier2-editing` took its 32-check branch and
+      `live-click-routing` stayed **25**. Both `host` lines carry the
+      release-tag pins (`gpuix 9fcd6288`, `zed 81c99f81`, runtime shaders), and
+      a plain `--all` wrote no `provenance.json` and no capture directory.
+      Artifacts: `apps/playground/.artifacts/smoke-report.json` and
+      `live-report.json`. `nub run check`/`lint`/`test` green (playground
+      **487**, testing 69, components 308, primitives 282, tokens 196, tw 103,
+      icons 19, docs 7). Commands run: `nub run --filter playground build`,
+      the bare headless runner, `nub apps/playground/dist/live/run.js --all`,
+      then the three gates. Records updated: `apps/playground/README.md`,
+      `COMPONENTS.md`, plan `739` §7 and the plan index.
 
 `[x]` **Prove the focus ring and elevation shadow in the frame** per plan `736`:
       both were only ever read back from the runtime's **style report**, so a
@@ -2066,6 +2085,19 @@ focused id is `live-frames`.
       (playground **481**, testing 69, components 308, primitives 282, tokens
       196, tw 103, icons 19, docs 7). **This is the current gate for the
       promotion fast-forward.**
+      **Addendum (plan `739`, 2026-10-20):** plan `736` then added
+      `shadow-pixels` (28 checks) and `live-shadow-pixels` (28), so both full
+      registries ran again on code head `ea2e668b` (0 behind `origin/master`):
+      headless **108/108** (**3963** checks, 65 capabilities, 223.6 s) and live
+      **97/97** (**2716** checks, 61 capabilities, **1140.5 s**), both exit `0`.
+      The live total is `2688 + 28` and the headless total `3935 + 28` exactly,
+      so every new check ran in the full sequence; `live-tier2-editing` took its
+      32-check branch. A plain `--all` wrote no `provenance.json` and no capture
+      directory, and both `host` lines carry the release-tag pins. `nub run
+      check`/`lint`/`test` green (playground **487**, testing 69, components
+      308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
+      current gate for the promotion fast-forward**; the owner/supervisor still
+      performs the merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7
