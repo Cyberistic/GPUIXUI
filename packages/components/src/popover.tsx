@@ -257,10 +257,19 @@ const PopoverSurface = ({
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
-  /** The first tab stop measured when the surface opened, and the stops visited. */
+  /** The first tab stop measured when the surface opened. */
   const firstTabStop = useRef<number | null>(null);
-  const visitedForward = useRef<ReadonlyArray<number>>([]);
-  const visitedBackward = useRef<ReadonlyArray<number>>([]);
+  /**
+   * The stops walked since the walk last changed direction, and that direction.
+   * Arriving at a stop this walk already passed is a wrap and closes the
+   * popover; the list, not a control's identity, keeps a content change from
+   * trapping the user. Turning round starts a new walk, so a stop the user
+   * stepped back over is reachable again (plan 718).
+   */
+  const walk = useRef<{
+    readonly backwards: boolean;
+    readonly stops: ReadonlyArray<number>;
+  }>({ backwards: false, stops: [] });
   const placement = usePlacement({
     // The surface exists only while open or exiting, so a close must not reset
     // the measured placement and make the exit ghost jump (plan 525).
@@ -276,8 +285,7 @@ const PopoverSurface = ({
   // itself otherwise. `autoFocus={false}` leaves the caller's focus alone.
   useLayoutEffect(() => {
     firstTabStop.current = null;
-    visitedForward.current = [];
-    visitedBackward.current = [];
+    walk.current = { backwards: false, stops: [] };
     const element = surface.current;
     if (!open || element === null || !autoFocus) return;
     const first = firstTabStopOf(renderer, element.id);
@@ -286,7 +294,7 @@ const PopoverSurface = ({
       return;
     }
     firstTabStop.current = first;
-    visitedForward.current = [first];
+    walk.current = { backwards: false, stops: [first] };
   }, [autoFocus, open, renderer]);
 
   // A popover is a dismiss layer so a dialog underneath does not also close on
@@ -314,10 +322,11 @@ const PopoverSurface = ({
   };
 
   /**
-   * Tab moves through the surface's tab stops. The cycle is bounded by the
-   * stops visited since it opened: a wrap closes the popover. The visited list,
-   * not a control's identity, is what keeps a content change from trapping the
-   * user.
+   * Tab moves through the surface's tab stops. A wrap — arriving at a stop this
+   * walk already passed — closes the popover, as does leaving the surface. The
+   * walk starts over when the user turns round, so stepping back over a control
+   * does not end the walk (plan 718); the list, not a control's identity, is
+   * what keeps a content change from trapping the user.
    */
   const handleTab = (backwards: boolean): void => {
     const element = surface.current;
@@ -342,13 +351,18 @@ const PopoverSurface = ({
         previous === null ||
         previous === element.id ||
         !inside(renderer, element.id, previous) ||
-        Arr.contains(visitedBackward.current, previous)
+        (walk.current.backwards && Arr.contains(walk.current.stops, previous))
       ) {
         stay();
         leave(true);
         return;
       }
-      visitedBackward.current = Arr.append(visitedBackward.current, previous);
+      walk.current = {
+        backwards: true,
+        stops: walk.current.backwards
+          ? Arr.append(walk.current.stops, previous)
+          : [previous],
+      };
       return;
     }
 
@@ -372,15 +386,23 @@ const PopoverSurface = ({
         return;
       }
       firstTabStop.current = next;
-      visitedForward.current = [next];
+      walk.current = { backwards: false, stops: [next] };
       return;
     }
-    if (next === first || Arr.contains(visitedForward.current, next)) {
+    if (
+      next === first ||
+      (!walk.current.backwards && Arr.contains(walk.current.stops, next))
+    ) {
       stay();
       leave(false);
       return;
     }
-    visitedForward.current = Arr.append(visitedForward.current, next);
+    walk.current = {
+      backwards: false,
+      stops: walk.current.backwards
+        ? [next]
+        : Arr.append(walk.current.stops, next),
+    };
   };
 
   const surfaceMotion = motionProps(

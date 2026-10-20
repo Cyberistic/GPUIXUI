@@ -374,6 +374,57 @@ describe("Popover", () => {
     popover.unmount();
   });
 
+  it("walks forward again after a step back", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("second"));
+
+    popover.renderer.simulateKeystrokes("shift-tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("first"));
+
+    // Turning round starts a new walk: `second` was reached on the way out, not
+    // on this pass, so arriving there again is not a wrap (plan 718).
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("second"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("third"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.renderer.simulateKeystrokes("tab");
+    finishMotion(popover);
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("elsewhere"));
+
+    popover.unmount();
+  });
+
+  it("leaves before the first control after turning round", () => {
+    const popover = renderComponent(<Columns />);
+    clickCentreOf(popover, "trigger");
+    finishMotion(popover);
+
+    popover.renderer.simulateKeystrokes("tab");
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("third"));
+
+    popover.renderer.simulateKeystrokes("shift-tab");
+    popover.renderer.simulateKeystrokes("shift-tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("first"));
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+
+    popover.renderer.simulateKeystrokes("shift-tab");
+    finishMotion(popover);
+    expect(popover.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("before"));
+
+    popover.unmount();
+  });
+
   it("closes instead of trapping when the first tab stop is removed", () => {
     const popover = renderComponent(<Removable />);
     clickCentreOf(popover, "trigger");
