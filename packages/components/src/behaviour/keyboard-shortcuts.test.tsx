@@ -3,8 +3,10 @@
  *
  * The bugs these guard: a group that loses its rows or its heading, a chord
  * rendered with the wrong platform glyphs, keycaps that do not paint the muted
- * surface, rows that stop being list items, and a style callback that cannot
- * see the formatted keys.
+ * surface, rows that stop being list items, a style callback that cannot see the
+ * formatted keys, and a row with no accessible name at all — 0.10.0 does not
+ * lift a `div`'s contents into its name, so the label and the keycaps arrived as
+ * three loose `label` nodes beside an unnamed `listitem` (plan 772).
  */
 
 import { describe, expect, it } from "vitest";
@@ -242,5 +244,86 @@ describe("KeyboardShortcuts", () => {
       lightTheme.colors.foreground,
     );
     light.unmount();
+  });
+
+  /**
+   * The bug these guard (plan 772): every row was an unnamed `listitem`, and its
+   * label plus two keycaps arrived as three unrelated `label` nodes, because
+   * 0.10.0 does not lift a `div`'s contents into its accessible name. The
+   * association between "Save" and `⌘ S` was positional only.
+   */
+  it("names each row by its label and its chord", () => {
+    const sheet = renderComponent(<Sheet />);
+
+    expect(
+      nodesWithRole(sheet.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["New file, Ctrl N", "Save, Ctrl Shift S", "Go to line, Ctrl G"]);
+
+    sheet.unmount();
+  });
+
+  it("names a row with no chord by its label", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Editor shortcuts">
+        <KeyboardShortcutsGroup label="File">
+          <KeyboardShortcut label="Rename" accelerator="" />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(
+      nodesWithRole(sheet.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["Rename"]);
+
+    sheet.unmount();
+  });
+
+  it("names a row with the glyphs it paints", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Zoom">
+        <KeyboardShortcutsGroup label="View">
+          <KeyboardShortcut
+            label="Zoom in"
+            accelerator="mod++"
+            platform="darwin"
+          />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    // The name follows the rendered keycaps, not the raw accelerator: `mod++`
+    // would name the row with a string the user never sees.
+    expect(
+      nodesWithRole(sheet.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["Zoom in, ⌘ +"]);
+
+    sheet.unmount();
+  });
+
+  it("lets the caller name a row", () => {
+    const sheet = renderComponent(
+      <KeyboardShortcuts label="Editor shortcuts">
+        <KeyboardShortcutsGroup label="File">
+          <KeyboardShortcut
+            label="Save"
+            accelerator="mod+s"
+            platform="darwin"
+            aria-label="Save the document"
+          />
+          <KeyboardShortcut
+            label="Undo"
+            accelerator="mod+z"
+            platform="darwin"
+            aria-label="  "
+          />
+        </KeyboardShortcutsGroup>
+      </KeyboardShortcuts>,
+    );
+
+    expect(
+      nodesWithRole(sheet.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["Save the document", "Undo, ⌘ Z"]);
+
+    sheet.unmount();
   });
 });

@@ -70,3 +70,27 @@ export const controlName = (
       Option.orElse(() => clean(plainText(children))),
     ),
   );
+
+/**
+ * The name for a part whose visible content is several strings rather than one
+ * text child — a label and the value it pairs with. The caller's `aria-label`
+ * wins when it authored one; otherwise the trimmed, non-empty parts are joined
+ * by `", "`. `None` means the caller must name it.
+ */
+export const composedName = (
+  authored: string | undefined,
+  parts: ReadonlyArray<string>,
+): Option.Option<string> =>
+  pipe(
+    clean(authored),
+    Option.orElse(() =>
+      clean(
+        pipe(
+          parts,
+          Arr.map(Str.trim),
+          Arr.filter(Str.isNonEmpty),
+          Arr.join(", "),
+        ),
+      ),
+    ),
+  );

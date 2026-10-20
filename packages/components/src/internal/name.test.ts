@@ -1,15 +1,18 @@
 /**
- * The name rule for role-bearing parts (plan 391).
+ * The name rules for role-bearing parts (plans 391, 772).
  *
  * The bug these guard: GPUix 0.10.0 reports no name for a `div role="button"`
  * whose text is a child, so a control that does not supply `aria-label` is
  * anonymous to assistive technology. `controlName` must read only plain text,
  * never an element's own label, and never overwrite the caller's name.
+ * `composedName` names a part whose visible content is several strings — a
+ * shortcut row's label and its chord — with the same precedence.
  */
 
 import { createElement, Fragment } from "react";
+import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { controlName, plainText } from "./name.js";
+import { composedName, controlName, plainText } from "./name.js";
 
 describe("plainText", () => {
   it("reads a string child", () => {
@@ -57,5 +60,35 @@ describe("controlName", () => {
     expect(
       controlName(undefined, createElement("span", { "aria-label": "icon" })),
     ).toBeUndefined();
+  });
+});
+
+describe("composedName", () => {
+  it("keeps the caller's aria-label over the composed parts", () => {
+    expect(
+      Option.getOrNull(composedName("Save the document", ["Save", "⌘ S"])),
+    ).toBe("Save the document");
+  });
+
+  it("joins the parts with a comma and a space", () => {
+    expect(Option.getOrNull(composedName(undefined, ["Save", "⌘ S"]))).toBe(
+      "Save, ⌘ S",
+    );
+  });
+
+  it("drops empty parts instead of leaving a separator behind", () => {
+    expect(Option.getOrNull(composedName(undefined, ["Rename", "  "]))).toBe(
+      "Rename",
+    );
+  });
+
+  it("falls back to the parts when the authored label is blank", () => {
+    expect(Option.getOrNull(composedName("   ", ["Undo", "⌘ Z"]))).toBe(
+      "Undo, ⌘ Z",
+    );
+  });
+
+  it("has no name when neither the caller nor the parts supply one", () => {
+    expect(Option.isNone(composedName(undefined, ["", "  "]))).toBe(true);
   });
 });

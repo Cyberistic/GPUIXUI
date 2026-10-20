@@ -94,7 +94,7 @@ merges `style` last.
 | ---- | ------- | ----- |
 | `KeyboardShortcuts` | `div` with `role="list"` | `label?`, `children` |
 | `KeyboardShortcutsGroup` | `div` with `role="group"` and a level-3 heading | `label` (required), `level?: 1 \| 2 \| 3 \| 4 \| 5 \| 6`, raw `aria-level` when `level` is absent, `children` |
-| `KeyboardShortcut` | `div` with `role="listitem"` | `label` (required), `accelerator` (required), `platform?`, `style?: StateStyle<KeyboardShortcutState>` |
+| `KeyboardShortcut` | `div` with `role="listitem"` | `label` (required), `accelerator` (required), `platform?`, `style?: StateStyle<KeyboardShortcutState>`; named `<label>, <chord>` (a caller `aria-label` wins) |
 | `Keycap` | one key cap | `children: string`, `style?: StateStyle<KeycapState>` |
 
 `KeyboardShortcutState` is `{ keys: ReadonlyArray<string> }` — the formatted
@@ -113,6 +113,13 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 - The root is a named `list`; every shortcut is a `listitem`; each group is a
   named `group` with a heading whose level is the caller's (`level`, default 3;
   a raw `aria-level` is the fallback and stays off the group element).
+- **Each row is named `<label>, <chord>`** — `Save, ⌘ S` — from the same keycaps
+  it paints, so the label and its chord are one announcement rather than three
+  loose strings. A caller `aria-label` wins (trimmed), and an empty accelerator
+  contributes nothing, so a row with no chord is named by its label alone. This
+  is needed because `@gpuix/native@0.10.0` does not lift a `div`'s contents into
+  its accessible name (measured for menu rows and across every example in plans
+  387/391), so a `listitem` wrapper is otherwise anonymous.
 - Keycaps are text; a screen reader reads the chord's glyphs in order. On macOS
   that is "⌘ N"; on Windows "Ctrl N".
 - There is no `aria-keyshortcuts` in `@gpuix/native@0.10.0`, so a keycap cannot
@@ -128,13 +135,15 @@ every cheat sheet with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (10 tests):
+`src/behaviour/keyboard-shortcuts.test.tsx` runs in the real GPUix renderer (14 tests):
 declaration order, list/group/listitem roles, the default level-3 headings, a
 caller-set group level, a raw `aria-level` fallback (and that it never reaches
-the group element), a plus chord painting its `+` key, the
-muted keycap surface, a consumer style callback receiving the formatted keys,
-and both themes. `src/shortcut/accelerator.test.ts` adds 11 pure tests for the
-grammar.
+the group element), a plus chord painting its `+` key, the muted keycap surface,
+a consumer style callback receiving the formatted keys, a row named by its label
+and its chord (the painted platform glyphs, a chordless row, the caller's name
+winning, and the name following the glyphs rather than the raw accelerator), and
+both themes. `src/shortcut/accelerator.test.ts` adds 11 pure tests for the
+grammar, and `src/internal/name.test.ts` 5 for the shared naming rule.
 
 ```sh
 nub run --filter @gpuixui/components test

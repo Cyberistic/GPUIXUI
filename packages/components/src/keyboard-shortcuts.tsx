@@ -8,7 +8,9 @@
  *
  * A group is a `role="group"` named by its heading; rows are `listitem`s inside
  * the root's `role="list"`. Separators are 1px elements, not borders: 0.10.0 has
- * per-side border widths but a single `borderColor`.
+ * per-side border widths but a single `borderColor`. A row names itself from its
+ * label and the glyphs it paints, because 0.10.0 does not lift a `div`'s
+ * contents into its accessible name (plan 772).
  */
 
 import type { Props } from "@gpuix/react";
@@ -17,8 +19,11 @@ import {
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
+import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { Children, isValidElement } from "react";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
+import { composedName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -221,15 +226,22 @@ export const KeyboardShortcut = ({
   accelerator,
   platform,
   style,
+  "aria-label": authoredLabel,
   ...rest
 }: KeyboardShortcutProps) => {
   const theme = useTheme();
   const keys = formatAccelerator(accelerator, platform);
+  // 0.10.0 does not lift a `div`'s contents into its accessible name (plans
+  // 387/391), so the row names itself from the label and the glyphs it paints.
+  const name = Option.getOrUndefined(
+    composedName(authoredLabel, [label, Arr.join(" ")(keys)]),
+  );
 
   return (
     <div
       role="listitem"
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(
         {
           display: "flex",

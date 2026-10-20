@@ -1273,6 +1273,17 @@ retired once both branches are one
       unit 495 in 47 files, full native suite 970/20 of 990 with the same
       plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
       synced (owner: components)
+    - [x] A shortcut row is named by its label and its chord — plan 772; measured
+      2026-10-20: every `KeyboardShortcut` row was a `listitem` with an empty
+      name while its label and two keycaps arrived as three loose `label` nodes
+      (Timeline and Stepper rows already carry theirs), because 0.10.0 does not
+      lift a `div`'s contents into its accessible name. A shared `composedName`
+      names the row `<label>, <chord>` from the glyphs it paints, a caller
+      `aria-label` wins trimmed and a chordless row is named by its label alone;
+      4 native cases (10 → 14) plus 5 pure naming cases, all four native cases
+      red at `HEAD`; unit 500 in 47 files, full native suite 974/20 of 994 with
+      the same plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the
+      plan index synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
