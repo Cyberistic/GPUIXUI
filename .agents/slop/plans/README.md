@@ -414,6 +414,7 @@ references without buying correctness.
 | [817](./817-state-floor-figures.md) | The state table's floor figures and the inactive floor have no owner | F | 306, 309, 347, 354, 381, 393, 501, 510, 543, 674, 737, 815 | done |
 | [818](./818-warning-fill-figures.md) | The light `warning` fill's fill-only figure is restated in twelve passages and derived in two | F | 057, 332, 348, 399, 733, 749, 806, 810, 815, 817 | done |
 | [819](./819-beside-derived-figures.md) | Two catalogue passages state figures beside a derived claim | F | 344, 382, 504, 513, 620, 624, 627, 645, 667, 818 | done |
+| [821](./821-skeleton-pulse-tightest-set.md) | The skeleton pulse's "next tightest" figure and the set it names | F | 078, 094, 311, 322, 387, 393, 536, 544, 619, 737 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4259,6 +4260,20 @@ the seven files *and their per-file counts*, proves the reader can tell the
 fill's claim from the high-contrast soft surface's `1.12:1`, and shows the
 premise can fail on a planted palette; no colour, pair, floor, metric or shipped
 theme moves.
+
+Plan `821` corrects the loading pulse's tightest-set claim. The catalogue said
+the pulse's dim frame was tightest in identity dark and that "the next tightest
+is 1.072:1", while the shipped enumeration's tightest is `Light · Windows XP` on
+its `active` wash at **1.059:1** — tighter than the set the paragraph is about.
+Plan `619` moved that wash one designed step after plan `393`'s audit, and the
+recipes joined `shippedThemes` in plans `311`/`387`, so the parenthetical quoted
+the third-tightest frame and no set produced it; nothing read either half, and
+the surface count in the same sentence still said seven after plan `322` made
+the list nine. `skeleton-pulse-claims.test.ts` derives identity dark's pair
+(`1.074:1` dim, `1.179:1` opaque), the nine-surface order inside that set and the
+enumeration's ordered minimum with its set and surface, proves the reader rejects
+the pre-fix sentence, and moves the minimum with a planted palette; no colour,
+pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 
