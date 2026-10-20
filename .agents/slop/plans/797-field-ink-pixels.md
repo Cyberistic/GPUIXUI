@@ -1,6 +1,6 @@
 # 797 — The field ink contract, in the frame: text, placeholder, selection wash and caret
 
-**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** planned
+**Phase:** F (pixel evidence) · **Workstream:** playground · **Status:** landed
 
 **Depends on:** `100`, `110`, `120`, `140`, `150`, `188`, `197`, `330`, `533`,
 `624`, `674`, `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722`, `736`,
@@ -397,3 +397,25 @@ cite this plan so the owner can amend it.
   green; no full live gate.
 - README, TODO.md and the plan index carry the measured facts and the exact ids
   run.
+
+---
+
+## 11. Outcome (measured on this host, 2026-10-20)
+
+- `field-ink-pixels` — **19 checks**, green (8.4 s focused); `live-field-ink` —
+  **19 checks**, green (6.5 s focused, three runs). The frame agrees with §2.2
+  in both hosts: text `#EEF1F5`, placeholder `#8F8F8F` with 0 px of the token,
+  selection `#3C4271` with 0 px of the dark token's `#3B3E59`.
+- **The caret half was dropped** (§2.3, §8): 0 caret pixels at 0 ms and 250 ms
+  with native focus confirmed, in the live window as well as offscreen. Recorded
+  in `apps/playground/README.md`, `TODO.md` and this plan; the caret stays
+  source evidence only.
+- Five runtime mutations (M1–M6 minus the two caret rows the drop removed) and
+  the unit mutation observed red by name and reverted; focused green again after
+  each revert.
+- 12 pure tests (playground **593 → 605**). Full headless **119/119 · 4359 · 65**
+  (exit `0`, exactly `4340 + 19`) on the committed head; live registry
+  **107 → 108**; no full live gate (merge gate).
+- `nub run check`, `nub run lint` and `nub run test` green (playground **605**,
+  testing 69, components 308, primitives 282, tokens 196, tw 103, icons 19,
+  docs 7).
