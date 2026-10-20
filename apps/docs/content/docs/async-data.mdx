@@ -1,0 +1,208 @@
+---
+title: Async data and effects
+description: "Load data in a GPUix app: the library has no data layer, React effects run at your boundary, and loading, failure and cancellation are values — with the toast runtime as the shipped template, and Suspense, query caches and workers absent."
+---
+
+The library renders your interface; it does not fetch, cache or persist
+anything. Your application owns the request, the clock and the failure — this
+page is the shape that work takes in a GPUix app, and the absences you should
+plan around. [Architecture](/docs/architecture#state-and-effect) records where
+Effect lives in the packages themselves.
+
+## The library does not fetch
+
+No package ships an HTTP client, a query cache, a retry helper or a storage
+layer. A component calls the handlers you pass and paints the values you give
+it; the renderer never initiates network work. [Security and
+privacy](/docs/security#the-library) proves that scan for the shipped sources.
+
+No workspace installs a data or state library either — there is no React Query,
+SWR, Axios, Jotai, Zustand or Redux. The only runtime dependency on Effect is
+`@gpuixui/components`, whose toast store needs one. That means the choice of
+transport and cache is yours, and nothing in this library has an opinion about
+it.
+
+## Where an effect may run
+
+React 19 effects work in the runtime: the render is synchronous, but a
+`useEffect` still runs after a commit and a state update from it paints on the
+next frame. The library uses them for the two things that genuinely continue
+after a render — the toast provider's subscription and the loading indicators'
+frame counter.
+
+The library schedules three timers of its own, and none of them is a data
+request: the toast store's auto-dismiss (a `FiberMap` entry clocked by `Clock`),
+Preview card's open and close delay (a `setTimeout` pair), and the loading
+indicators' frame step (a `setInterval`). [Countdown](/docs/components/countdown)
+owns no timer at all — your clock passes `remainingMs` on every render.
+
+The toast provider is the package's only `ManagedRuntime`, and it is the shipped
+template for a boundary:
+
+<include lang="tsx" meta='title="packages/components/src/toast/provider.tsx"'>
+  ../../../../packages/components/src/toast/provider.tsx
+</include>
+
+Read it as five decisions:
+
+1. **One runtime per provider.** `ManagedRuntime.make` runs inside the
+   `useState` initialiser, so a re-render does not create a second runtime.
+2. **Subscription, not polling.** One `runFork` runs the store's `changes`
+   stream and calls `setToasts`; the cleanup interrupts that fiber.
+3. **Commands are fire-and-forget.** `push`, `dismiss` and `pause` each
+   `runFork` an effect and return; the queue arrives through the subscription.
+4. **Disposal is explicit.** The runtime is disposed from a cleanup, not left to
+   the garbage collector.
+5. **StrictMode is handled.** `createRuntimeLifecycle` defers disposal by one
+   microtask, so React's mount/unmount/remount keeps one live runtime:
+
+<include lang="ts" meta='title="packages/components/src/toast/lifecycle.ts"'>
+  ../../../../packages/components/src/toast/lifecycle.ts
+</include>
+
+The store behind it is the other half of the template: a `SubscriptionRef` is
+the single source of truth, a `FiberMap` owns the auto-dismiss timers so
+dismissing cancels the timer at once, `Clock` supplies the deadlines, and ids
+are monotonic so a timer cannot dismiss a toast other than its own. Its suite
+drives those timers under `TestClock` (`packages/components/src/toast/store.test.ts`).
+
+## Model the states
+
+Four states cover an ordinary load, and a tagged union makes each one
+unrepresentable when it does not apply:
+
+| State | What the reader sees | Shipped component |
+| ----- | -------------------- | ----------------- |
+| `loading` | a rest placeholder, not a blank region | [Skeleton](/docs/components/skeleton), [Spinner](/docs/components/spinner) |
+| `ready` with rows | the data | your composition, or [Data display](/docs/data-display) |
+| `ready` empty | an explanation and a next action | [Empty states](/docs/components/empty-state) |
+| `failed` | what failed and what to do | [Alerts](/docs/components/alert), [Toasts](/docs/components/toast) |
+
+Decode the boundary with `Schema` and keep the error in the failure branch.
+This hook is application code, not a library export:
+
+```tsx
+import { Effect, Schema } from "effect";
+import { useEffect, useState } from "react";
+
+const Project = Schema.Struct({ id: Schema.String, name: Schema.String });
+type Project = typeof Project.Type;
+
+class ProjectLoadError extends Schema.TaggedError<ProjectLoadError>()(
+  "ProjectLoadError",
+  { cause: Schema.Unknown },
+) {}
+
+/** Your transport. The library never calls `fetch`; this one does. */
+declare const fetchProjects: (signal: AbortSignal) => Promise<unknown>;
+
+type ProjectsState =
+  | { readonly _tag: "loading" }
+  | { readonly _tag: "ready"; readonly projects: ReadonlyArray<Project> }
+  | { readonly _tag: "failed"; readonly reason: ProjectLoadError };
+
+const loadProjects = (signal: AbortSignal) =>
+  Effect.tryPromise({
+    try: async () =>
+      Schema.decodeUnknownSync(Schema.Array(Project))(await fetchProjects(signal)),
+    catch: (cause) => new ProjectLoadError({ cause }),
+  });
+
+export const useProjects = (): ProjectsState => {
+  const [state, setState] = useState<ProjectsState>({ _tag: "loading" });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let live = true;
+
+    void Effect.runPromise(loadProjects(controller.signal)).then(
+      (projects) => live && setState({ _tag: "ready", projects }),
+      (reason: ProjectLoadError) => live && setState({ _tag: "failed", reason }),
+    );
+
+    return () => {
+      live = false;
+      controller.abort();
+    };
+  }, []);
+
+  return state;
+};
+```
+
+`Effect.runPromise` belongs at this boundary — a React effect is an entrypoint,
+like `main.ts`. A helper that returns an `Effect` should stay an `Effect` until
+the caller decides to run it, which is why the exported `validate` and
+`validateAll` return effects while `Form` runs `validateAll` synchronously at
+submit.
+
+## Cancel and dispose
+
+- **A request** is cancelled through the `AbortSignal` you pass to your
+  transport, in the effect's cleanup. Set a `live` flag as well: an abort is not
+  a guarantee that a resolved promise stops calling back.
+- **Effect work** is cancelled by interrupting its fiber. The provider's
+  cleanup interrupts the subscription; the toast store's timers live in a
+  `FiberMap`, so they die with the runtime's scope.
+- **A timeout** is an outcome, not an exception: `Effect.timeoutOption` turns a
+  slow lookup into `Option.none()` at the boundary that can act on it.
+- **Repeated mounts** reuse a cached effect with `Effect.cached` rather than
+  starting the same request twice.
+
+## Failure is a value
+
+`Schema.TaggedError` names the expected failures and `Effect.tryPromise` maps a
+rejection into that error channel, so the failure branch above is typed rather
+than a message string. Keep that pattern at every external boundary: SDKs,
+files, processes and network calls.
+
+Three failures stay separate:
+
+| Failure | Owner |
+| ------- | ----- |
+| a field value is invalid | [Inline validation](/docs/components/inline-validation) — schema messages beside the field |
+| a load failed | this page — a typed error in the state union, painted by an Alert or a Toast |
+| rendering threw | [Troubleshooting](/docs/troubleshooting#a-component-throws) — a class boundary, the runtime's overlay and `createRoot`'s `onUncaughtError` |
+
+A class boundary does not catch an async rejection; the process handlers do.
+That is another reason the request lives in an effect with its own failure
+branch, not in a render.
+
+## Test it
+
+The renderer runs a synchronous pipeline, so there is no `act` and no
+`waitFor`: measure after the input call returns
+([Testing](/docs/testing#the-render-loop)). Two clocks cover the rest:
+
+- `advanceTime` runs a timer the application scheduled — a toast's dismissal or
+  a hover delay;
+- `TestClock` (Effect's) makes an Effect store deterministic, which is how the
+  toast store's suite asserts a pause/resume without sleeping.
+
+Keep the transport injectable. `fetchProjects` above is a declaration so the
+hook has no fixed network call; a test passes its own function and asserts the
+three states without a server.
+
+## What is not provided
+
+| Absent | What to do instead |
+| ------ | ------------------ |
+| `Suspense` — nothing in the installed `@gpuix/react` mentions it, and no component uses a boundary | model the loading state explicitly, as above |
+| a query cache, deduplication or refetch policy | keep the cache in your application, or use Effect's `cached`/`Request` |
+| an HTTP client or a `fetch` wrapper | use your transport inside `Effect.tryPromise` |
+| a worker, thread or process | keep long work off the render path; the library starts none |
+| async field validation | validate synchronously today ([Inline validation](/docs/components/inline-validation)) |
+| async option loading in a Combobox | provide the ranked options you already have ([Combobox](/docs/components/combobox)) |
+| an async runner for a dialog | the caller owns the promise and the loading flag ([Confirmation dialogs](/docs/components/confirm-dialog)) |
+| automatic retries or telemetry | add a `Schedule` where the operation is idempotent; nothing is reported anywhere ([Security](/docs/security)) |
+
+## Related
+
+- [Architecture](/docs/architecture#state-and-effect) — where Effect lives in
+  the packages, and what runs where.
+- [Component API](/docs/component-api#controlled-and-uncontrolled) — when state
+  belongs to a component and when it belongs to you.
+- [Testing your components](/docs/testing) — the synchronous render loop and
+  its clocks.
+- [Troubleshooting](/docs/troubleshooting) — the failures a reader can hit.
+- [Toasts](/docs/components/toast) — the shipped runtime boundary.

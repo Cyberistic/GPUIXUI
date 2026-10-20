@@ -40,12 +40,24 @@ const pages = Arr.sort(
   Order.String,
 );
 
-const examples: ReadonlyArray<ExampleSnippet> = pages.flatMap((page) =>
-  fencedExamples(
+/**
+ * Non-component pages whose fences are also copyable modules. Plan 632's async
+ * page teaches a request hook with a real `effect`/`react` import, so it gets
+ * the same compiler the component pages get; the other hand-authored pages hold
+ * illustrative fragments that are not standalone modules.
+ */
+const extraPages = ["async-data"] as const;
+
+const examples: ReadonlyArray<ExampleSnippet> = [
+  ...pages.map((page) => ({
     page,
-    readFileSync(join(pagesDirectory, `${page}.mdx`), "utf8"),
-  ),
-);
+    path: join(pagesDirectory, `${page}.mdx`),
+  })),
+  ...extraPages.map((page) => ({
+    page,
+    path: join(appRoot, "content/docs", `${page}.mdx`),
+  })),
+].flatMap(({ page, path }) => fencedExamples(page, readFileSync(path, "utf8")));
 
 /**
  * Compile every example through the repository's own `tsc`, in a generated

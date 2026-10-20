@@ -1480,6 +1480,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the native text theme's subject, which reached Theming before plan 629",
     },
+    {
+      query: "useeffect",
+      expected: "/docs/async-data",
+      first: true,
+      what: "the async-data subject, which returned nothing before plan 632",
+    },
+    {
+      query: "suspense",
+      expected: "/docs/async-data",
+      first: true,
+      what: "the loading-model absence the async page states, which returned nothing before",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

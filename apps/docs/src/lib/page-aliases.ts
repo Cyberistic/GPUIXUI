@@ -142,6 +142,14 @@
  * stays on Theming, where it is a palette; `scales` stays on Theming's token
  * scale; `zoom` and `scale` alone are deliberately absent, because `zoom` is
  * `zoomWindow()`'s native action and `scale` is a token word.
+ *
+ * Plan 632 adds the async vocabulary, which had no owner: `async`,
+ * `data fetching`, `suspense`, `useeffect`, `isloading`, `cache`, `retry`,
+ * `polling`, `cancellation`, `promises`, `effectful`, `server state` and
+ * `error handling` name Async data and effects. `loading` keeps Spinner's page,
+ * `state management` keeps Component API, `managed runtime` and `effect` keep
+ * Architecture, `fetch` and `network` keep Security, and `debounce` keeps
+ * Testing's clock section — the async page links each rather than claiming it.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -785,6 +793,7 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "remote code",
       "network requests",
       "network access",
+      "fetch",
       "tracking cookies",
       "browser tracking",
     ],
@@ -840,6 +849,41 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "4k",
       "logical pixels",
       "display resolution",
+    ],
+  ],
+  [
+    "/docs/async-data",
+    [
+      "async",
+      "async data",
+      "asynchronous",
+      "data fetching",
+      "fetching",
+      "fetch data",
+      "suspense",
+      "suspense fallback",
+      "useeffect",
+      "use effect",
+      "use effect cleanup",
+      "react effects",
+      "isloading",
+      "promises",
+      "promise chain",
+      "cache",
+      "caching",
+      "query cache",
+      "retry",
+      "retries",
+      "polling",
+      "poll",
+      "cancellation",
+      "cancelled request",
+      "effectful",
+      "server state",
+      "abort signal",
+      "abortsignal",
+      "error handling",
+      "async error",
     ],
   ],
 ]);

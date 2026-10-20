@@ -79,6 +79,14 @@ import { source } from "./source";
  * Layouts with its new sourced `## Centring` section; `spacing`, `read only`
  * and `table` stay pinned, so the new exact phrases cannot steal the words the
  * earlier passes assigned.
+ *
+ * Plan 632 adds the async vocabulary: `async`, `data fetching`, `suspense`,
+ * `useeffect`, `isloading`, `cache`, `retry`, `polling`, `cancellation`,
+ * `promises`, `effectful`, `server state` and `error handling` name Async data
+ * and effects. The regression rows keep `loading` on Spinner, `state management`
+ * on Component API, `managed runtime` on Architecture, `fetch` on Security and
+ * `debounce` on Testing's clock section, because the async page links those
+ * owners rather than claiming their words.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -577,6 +585,39 @@ const owned = [
   ["4k", "/docs/window"],
   ["logical pixels", "/docs/window"],
   ["display resolution", "/docs/window"],
+  // Plan 632: async data and effects. The regression rows below keep
+  // `loading`, `state management`, `managed runtime`, `fetch` and `debounce`
+  // with the pages that already answer them.
+  ["async", "/docs/async-data"],
+  ["async data", "/docs/async-data"],
+  ["asynchronous", "/docs/async-data"],
+  ["data fetching", "/docs/async-data"],
+  ["fetching", "/docs/async-data"],
+  ["fetch data", "/docs/async-data"],
+  ["suspense", "/docs/async-data"],
+  ["suspense fallback", "/docs/async-data"],
+  ["useeffect", "/docs/async-data"],
+  ["use effect", "/docs/async-data"],
+  ["use effect cleanup", "/docs/async-data"],
+  ["react effects", "/docs/async-data"],
+  ["isloading", "/docs/async-data"],
+  ["promises", "/docs/async-data"],
+  ["promise chain", "/docs/async-data"],
+  ["cache", "/docs/async-data"],
+  ["caching", "/docs/async-data"],
+  ["query cache", "/docs/async-data"],
+  ["retry", "/docs/async-data"],
+  ["retries", "/docs/async-data"],
+  ["polling", "/docs/async-data"],
+  ["poll", "/docs/async-data"],
+  ["cancellation", "/docs/async-data"],
+  ["cancelled request", "/docs/async-data"],
+  ["effectful", "/docs/async-data"],
+  ["server state", "/docs/async-data"],
+  ["abort signal", "/docs/async-data"],
+  ["abortsignal", "/docs/async-data"],
+  ["error handling", "/docs/async-data"],
+  ["async error", "/docs/async-data"],
 ] as const;
 
 const regressions = [
@@ -651,6 +692,12 @@ const regressions = [
   // Plan 631: the palette and the token scale keep their words.
   ["high contrast", "/docs/theming#high-contrast"],
   ["scales", "/docs/theming#scales-and-control-metrics"],
+  // Plan 632: the async page links these owners instead of claiming them.
+  ["loading", "/docs/components/spinner"],
+  ["state management", "/docs/component-api"],
+  ["managed runtime", "/docs/architecture"],
+  ["fetch", "/docs/security"],
+  ["debounce", "/docs/testing#time"],
 ] as const;
 
 describe(
