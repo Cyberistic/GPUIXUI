@@ -20,6 +20,7 @@
 import type { Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
+import * as Option from "effect/Option";
 import { createContext, useContext, type ReactNode } from "react";
 import { Avatar } from "./avatar.js";
 import {
@@ -28,7 +29,7 @@ import {
   CollapsibleTrigger,
 } from "./collapsible.js";
 import { Button } from "./internal/button.js";
-import { controlName, controlNameFrom } from "./internal/name.js";
+import { composedName, controlName, controlNameFrom } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -328,6 +329,8 @@ export const MessageReasoning = ({
 /** {@link MessageToolCalls} props. */
 export interface MessageToolCallsProps extends Omit<Props, "children"> {
   readonly calls: ReadonlyArray<MessageToolCall>;
+  /** The group's accessible name. Default `"Tool calls"`. */
+  readonly label?: string;
 }
 
 /** The status word's colour: failed is destructive, done is success. */
@@ -340,79 +343,93 @@ const callStatusColor = (theme: Theme, status: MessageToolCallStatus): string =>
     Match.exhaustive,
   );
 
-/** One row per tool call, with its result when the call produced one. */
+/**
+ * One row per tool call, with its result when the call produced one. The group
+ * name is the caller's (`aria-label`, then `label`), and each row is named
+ * `"<name>, <status>"` because 0.10.0 does not lift a `div`'s contents into its
+ * accessible name (plan 806).
+ */
 export const MessageToolCalls = ({
   calls,
+  label = "Tool calls",
   style,
+  "aria-label": authoredName,
   ...rest
 }: MessageToolCallsProps) => {
   const theme = useTheme();
   const { variant } = useMessage();
   if (calls.length === 0) return null;
+  const name = controlNameFrom(authoredName, [label]);
 
   return (
     <div
       {...rest}
       role="list"
-      aria-label="Tool calls"
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(block(theme, variant), style)}
     >
-      {calls.map((call) => (
-        <div
-          key={`${call.name}-${call.status}-${call.result ?? ""}`}
-          role="listitem"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            gap: theme.spacing["2xs"],
-            paddingLeft: theme.spacing.md,
-            paddingRight: theme.spacing.md,
-            paddingTop: theme.spacing.sm,
-            paddingBottom: theme.spacing.sm,
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
-            borderRadius: theme.radius.md,
-            backgroundColor: theme.colors.card,
-          }}
-        >
+      {calls.map((call) => {
+        const rowName = Option.getOrUndefined(
+          composedName(undefined, [call.name, call.status]),
+        );
+        return (
           <div
+            key={`${call.name}-${call.status}-${call.result ?? ""}`}
+            role="listitem"
+            {...(rowName === undefined ? {} : { "aria-label": rowName })}
             style={{
               display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              gap: theme.spacing.sm,
+              flexDirection: "column",
+              width: "100%",
+              gap: theme.spacing["2xs"],
+              paddingLeft: theme.spacing.md,
+              paddingRight: theme.spacing.md,
+              paddingTop: theme.spacing.sm,
+              paddingBottom: theme.spacing.sm,
+              borderWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.md,
+              backgroundColor: theme.colors.card,
             }}
           >
-            <text
+            <div
               style={{
-                ...textStyle(theme, "label"),
-                color: theme.colors.foreground,
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                gap: theme.spacing.sm,
               }}
             >
-              {call.name}
-            </text>
-            <text
-              style={{
-                ...textStyle(theme, "caption"),
-                color: callStatusColor(theme, call.status),
-              }}
-            >
-              {call.status}
-            </text>
+              <text
+                style={{
+                  ...textStyle(theme, "label"),
+                  color: theme.colors.foreground,
+                }}
+              >
+                {call.name}
+              </text>
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: callStatusColor(theme, call.status),
+                }}
+              >
+                {call.status}
+              </text>
+            </div>
+            {call.result === undefined ? null : (
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {call.result}
+              </text>
+            )}
           </div>
-          {call.result === undefined ? null : (
-            <text
-              style={{
-                ...textStyle(theme, "caption"),
-                color: theme.colors.mutedForeground,
-              }}
-            >
-              {call.result}
-            </text>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -433,18 +450,20 @@ export const MessageSources = ({
   label = "Sources",
   style,
   testId,
+  "aria-label": authoredName,
   ...rest
 }: MessageSourcesProps) => {
   const theme = useTheme();
   const { variant } = useMessage();
   if (sources.length === 0) return null;
+  const name = controlNameFrom(authoredName, [label]);
 
   return (
     <div
       {...rest}
       testId={testId}
       role="group"
-      aria-label={label}
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(block(theme, variant), style)}
     >
       {sources.map((source, index) => (
@@ -474,67 +493,83 @@ export const MessageSources = ({
 /** {@link MessageAttachments} props. */
 export interface MessageAttachmentsProps extends Omit<Props, "children"> {
   readonly attachments: ReadonlyArray<MessageAttachment>;
+  /** The group's accessible name. Default `"Attachments"`. */
+  readonly label?: string;
 }
 
-/** Attachment chips: the name and, when the caller knows it, the size/type. */
+/**
+ * Attachment chips: the name and, when the caller knows it, the size/type. The
+ * group name is the caller's (`aria-label`, then `label`), and each chip is named
+ * `"<name>"` or `"<name>, <meta>"` because 0.10.0 does not lift a `div`'s contents
+ * into its accessible name (plan 806).
+ */
 export const MessageAttachments = ({
   attachments,
+  label = "Attachments",
   style,
+  "aria-label": authoredName,
   ...rest
 }: MessageAttachmentsProps) => {
   const theme = useTheme();
   const { variant } = useMessage();
   if (attachments.length === 0) return null;
+  const name = controlNameFrom(authoredName, [label]);
 
   return (
     <div
       {...rest}
       role="list"
-      aria-label="Attachments"
+      {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(
         { ...block(theme, variant), flexDirection: "row", flexWrap: "wrap" },
         style,
       )}
     >
-      {attachments.map((attachment) => (
-        <div
-          key={attachment.name}
-          role="listitem"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: theme.spacing.xs,
-            paddingLeft: theme.spacing.sm,
-            paddingRight: theme.spacing.sm,
-            paddingTop: theme.spacing["2xs"],
-            paddingBottom: theme.spacing["2xs"],
-            borderWidth: theme.borderWidth.thin,
-            borderColor: theme.colors.border,
-            borderRadius: theme.radius.full,
-            backgroundColor: theme.colors.muted,
-          }}
-        >
-          <text
+      {attachments.map((attachment) => {
+        const rowName = Option.getOrUndefined(
+          composedName(undefined, [attachment.name, attachment.meta ?? ""]),
+        );
+        return (
+          <div
+            key={attachment.name}
+            role="listitem"
+            {...(rowName === undefined ? {} : { "aria-label": rowName })}
             style={{
-              ...textStyle(theme, "caption"),
-              color: theme.colors.foreground,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: theme.spacing.xs,
+              paddingLeft: theme.spacing.sm,
+              paddingRight: theme.spacing.sm,
+              paddingTop: theme.spacing["2xs"],
+              paddingBottom: theme.spacing["2xs"],
+              borderWidth: theme.borderWidth.thin,
+              borderColor: theme.colors.border,
+              borderRadius: theme.radius.full,
+              backgroundColor: theme.colors.muted,
             }}
           >
-            {attachment.name}
-          </text>
-          {attachment.meta === undefined ? null : (
             <text
               style={{
                 ...textStyle(theme, "caption"),
-                color: theme.colors.mutedForeground,
+                color: theme.colors.foreground,
               }}
             >
-              {attachment.meta}
+              {attachment.name}
             </text>
-          )}
-        </div>
-      ))}
+            {attachment.meta === undefined ? null : (
+              <text
+                style={{
+                  ...textStyle(theme, "caption"),
+                  color: theme.colors.mutedForeground,
+                }}
+              >
+                {attachment.meta}
+              </text>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

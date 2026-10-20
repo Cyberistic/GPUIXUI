@@ -1460,6 +1460,15 @@ retired once both branches are one
       rewritten), and both callers use it; 3 pure + 1 native field case, all four
       red at `HEAD`; docs, `docs/field.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and
       the plan index synced (owner: components)
+    - [x] A message section is named by the caller, and its rows carry names —
+      plan 806; measured 2026-10-20: tool-call and attachment rows arrived as
+      empty `listitem`s, the hard-coded `"Tool calls"`/`"Attachments"` replaced a
+      caller's authored `aria-label`, and `MessageSources` preferred `label` to
+      an authored name. Both sections gain `label?` and resolve their region with
+      `controlNameFrom`; each row is named from its data through `composedName`.
+      3 native cases (message 16 → 19), all three red at `HEAD`; docs,
+      `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced (owner:
+      components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

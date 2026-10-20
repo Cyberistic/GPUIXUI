@@ -11,7 +11,10 @@
  * the visible label has to become `aria-label`, and a blank authored value must
  * fall back to it); a row announced by the internal variant token (`"user
  * message"`) with the caller's `aria-label` overwritten by the derived one,
- * because it was written after `{...rest}`; actions that appear without a
+ * because it was written after `{...rest}`; a tool-call or attachment row that
+ * arrived as an empty `listitem`, a section that replaced the caller's
+ * `aria-label` with its hard-coded default, and a sources group that preferred
+ * `label` to an authored name (plan 806); actions that appear without a
  * consumer wiring them.
  */
 
@@ -223,6 +226,110 @@ describe("Message", () => {
     );
 
     expect(row.renderer.findByTestId("attachments")).toBeUndefined();
+
+    row.unmount();
+  });
+
+  it("names a tool-call group from the caller and each row from its call", () => {
+    const calls = [
+      { name: "search", status: "done" as const, result: "3 results" },
+      { name: "fetch", status: "failed" as const, result: "refused" },
+    ];
+    const row = renderComponent(
+      <Row variant="assistant">
+        <MessageToolCalls testId="calls" calls={calls} />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "list").map((node) => node.name),
+    ).toEqual(["Tool calls"]);
+    expect(
+      nodesWithRole(row.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["search, done", "fetch, failed"]);
+
+    row.rerender(
+      <Row variant="assistant">
+        <MessageToolCalls
+          testId="calls"
+          aria-label="Search steps"
+          calls={calls}
+        />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "list").map((node) => node.name),
+    ).toEqual(["Search steps"]);
+
+    row.unmount();
+  });
+
+  it("names an attachment group from the caller and each chip from its file", () => {
+    const attachments = [
+      { name: "report.pdf", meta: "1.2 MB" },
+      { name: "notes.txt" },
+    ];
+    const row = renderComponent(
+      <Row variant="user">
+        <MessageAttachments testId="attachments" attachments={attachments} />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "list").map((node) => node.name),
+    ).toEqual(["Attachments"]);
+    expect(
+      nodesWithRole(row.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["report.pdf, 1.2 MB", "notes.txt"]);
+
+    row.rerender(
+      <Row variant="user">
+        <MessageAttachments
+          testId="attachments"
+          label="Files"
+          aria-label="Client files"
+          attachments={attachments}
+        />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "list").map((node) => node.name),
+    ).toEqual(["Client files"]);
+
+    row.unmount();
+  });
+
+  it("prefers a caller's authored name on a sources group", () => {
+    const row = renderComponent(
+      <Row variant="assistant">
+        <MessageSources
+          label="Sources"
+          aria-label="Citations"
+          sources={[{ label: "Spec", url: "https://example.com/spec" }]}
+        />
+      </Row>,
+    );
+
+    const groups = () =>
+      nodesWithRole(row.renderer, "group").map((node) => node.name);
+
+    expect(groups()).toContain("Citations");
+    expect(groups()).not.toContain("Sources");
+
+    row.rerender(
+      <Row variant="assistant">
+        <MessageSources
+          label="Sources"
+          aria-label="   "
+          sources={[{ label: "Spec", url: "https://example.com/spec" }]}
+        />
+      </Row>,
+    );
+
+    expect(groups()).toContain("Sources");
+    expect(groups()).not.toContain("Citations");
 
     row.unmount();
   });
