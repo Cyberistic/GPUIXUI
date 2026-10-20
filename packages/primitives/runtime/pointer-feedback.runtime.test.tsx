@@ -251,9 +251,11 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
  *
  * Plan `802`: the slider track owns the press, the captured drag and the
  * `cursor`, so a read-only track that kept its hover/active wash would promise
- * an edit it refuses. This is a slider-only rule on purpose — a read-only text
- * field still invites text selection and therefore keeps its boundary hover
- * (`core/recipes.ts`), and `Rating` declares no pointer style at all.
+ * an edit it refuses. Plan `804` adds the pressed family for the same reason: a
+ * read-only `Toggle`/`ToggleGroup` item is a mode shown for review. This is not
+ * a general read-only rule — a read-only text field still invites text
+ * selection and therefore keeps its boundary hover (`core/recipes.ts`), and
+ * `Rating` declares no pointer style at all.
  */
 const READ_ONLY_GESTURES: ReadonlyArray<{
   readonly name: string;
@@ -263,6 +265,19 @@ const READ_ONLY_GESTURES: ReadonlyArray<{
   {
     name: "RangeSlider",
     node: <RangeSlider testId="c" label="Band" readOnly />,
+  },
+  { name: "Toggle", node: <Toggle testId="c" label="Snap" readOnly /> },
+  {
+    name: "ToggleGroup",
+    node: (
+      <ToggleGroup
+        type="single"
+        testId="c"
+        label="Align"
+        options={[{ value: "left", label: "Align left" }]}
+        readOnly
+      />
+    ),
   },
 ];
 

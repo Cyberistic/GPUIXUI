@@ -5,7 +5,8 @@
  * mode at a time, re-pressing the active mode changes nothing), formatting is a
  * set (each item presses independently). Underline is disabled to show that a
  * group skips it with the arrows and refuses its press, and the summary is
- * derived from both groups rather than repeated by hand.
+ * derived from both groups rather than repeated by hand. A third group is
+ * read-only: a stored style the toolbar displays but does not edit.
  */
 
 import { useState, type ReactElement } from "react";
@@ -67,6 +68,26 @@ export const ToggleGroupExample = (): ReactElement => {
         </Stack>
 
         <Separator orientation="horizontal" />
+
+        {/* The review state: a stored style shown without an edit path. */}
+        <Stack direction="row" gap="sm" align="center">
+          <Text role="label" tone="muted">
+            Saved
+          </Text>
+          <ToggleGroup
+            type="single"
+            testId="toggle-group-example-locked"
+            label="Saved alignment"
+            variant="outline"
+            options={[
+              { value: "left", label: "Align left" },
+              { value: "centre", label: "Align centre" },
+              { value: "right", label: "Align right" },
+            ]}
+            value="centre"
+            readOnly
+          />
+        </Stack>
 
         <Text role="caption" tone="muted">
           {`Align ${align} · Formatting ${

@@ -221,10 +221,10 @@ each star:
   ring and its display paint while every input path reports nothing, and the
   writable twin in the same file reports a click (plan `800`).
 - `runtime/tab-order.runtime.test.tsx` — the read-only tab-stop matrix over the
-  ten parts that declare the state: `Input`, `TextArea`, `NumberField`,
-  `OTPField`, `Select`, `Rating`, `Checkbox`, `Switch`, `CheckboxGroup`,
-  `RadioGroup`; the `Rating` row is the bug plan `800` fixed (it landed on the
-  trailing sentinel instead).
+  parts that declare the state: `Input`, `TextArea`, `NumberField`, `OTPField`,
+  `Select`, `Rating`, `Checkbox`, `Switch`, `CheckboxGroup`, `RadioGroup`,
+  `Slider`, `RangeSlider`, `Toggle`, `ToggleGroup`; the `Rating` row is the bug
+  plan `800` fixed (it landed on the trailing sentinel instead).
   Measured 2026-10-17 (plan 054 §9, plan 070 §6) and 2026-10-18 (plans 094, 334).
 - `runtime/roving-arrows.runtime.test.tsx` — a controlled parent that never
   applies a reported value: three arrows move the ring 2 → 3 → 4 → 3 and report

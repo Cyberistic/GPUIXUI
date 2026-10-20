@@ -10,7 +10,7 @@
 import { useState, type ReactElement } from "react";
 import { Box, Separator, Stack, Text, Toggle } from "../src/index.js";
 
-/** Canvas toolbar: a pressed mode, a border variant, and a disabled mode. */
+/** Canvas toolbar: a pressed mode, a border variant, and a review row. */
 export const ToggleExample = (): ReactElement => {
   const [grid, setGrid] = useState(true);
   const [snap, setSnap] = useState(false);
@@ -52,6 +52,22 @@ export const ToggleExample = (): ReactElement => {
         </Stack>
 
         <Separator orientation="horizontal" />
+
+        {/* The review state: a stored mode the reader may inspect, not change. */}
+        <Stack direction="row" align="center" gap="sm">
+          <Text role="caption" tone="muted">
+            Saved preset
+          </Text>
+          <Toggle
+            testId="toggle-example-locked"
+            label="Snap to grid (locked)"
+            pressed
+            readOnly
+            variant="outline"
+          >
+            Snap
+          </Toggle>
+        </Stack>
 
         <Text role="caption" tone="muted">
           {`Grid ${grid ? "on" : "off"} · Snap ${snap ? "on" : "off"} · Lock unavailable until a layer is selected.`}

@@ -189,6 +189,35 @@ describe("Toggle", () => {
     expect(onPressedChange).toHaveBeenCalledTimes(0);
   });
 
+  it("keeps the tab stop and ring while read-only, and refuses every press", () => {
+    // The bug guarded (plan 804): `disabled` was the only non-editing state, so
+    // a stored mode shown for review was faded and out of the tab order. A
+    // read-only toggle is reachable and announced, and only the press is gone.
+    const onPressedChange = vi.fn();
+    const element = renderToggle(
+      { readOnly: true },
+      testTheme,
+      state(true),
+      idle,
+      onPressedChange,
+    );
+    expect(expectSome(hostProp(element, "tabIndex"))).toBe(0);
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("pressed");
+    expectSome(hostHandler(element, "onClick"))(keyEvent("click"));
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("enter"));
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("space"));
+    expectSome(hostHandler(element, "onKeyUp"))(keyEvent("space"));
+    expect(onPressedChange).toHaveBeenCalledTimes(0);
+    const ring = renderToggle(
+      { readOnly: true },
+      testTheme,
+      state(true),
+      focused,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyleRecord(ring))["boxShadow"]).toBeDefined();
+  });
+
   it("rings the button while it holds focus", () => {
     const ring = renderToggle({}, testTheme, state(false), focused, vi.fn());
     expect(expectSome(hostStyleRecord(ring))["boxShadow"]).toBeDefined();

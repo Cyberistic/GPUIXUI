@@ -70,6 +70,11 @@ export interface ControlSpec {
   readonly radius?: RadiusStep;
   readonly fullWidth?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Visible, focusable and refusing every change — the review state (plan
+   * `804`). `disabled` is the stronger state and wins.
+   */
+  readonly readOnly?: boolean;
   /** Validation failed: the border and ring switch to the destructive role. */
   readonly invalid?: boolean;
 }
@@ -78,7 +83,10 @@ export interface ControlSpec {
  * Resolve a control's chrome.
  *
  * Hover and active are **declared** in `style.hover`/`style.active`, which GPUI
- * applies natively — no `onMouseEnter` state, no re-render per pointer move.
+ * applies natively — no `onMouseEnter` state, no re-render per pointer move. A
+ * disabled control declares the resting fill instead (it must not respond at
+ * all), and a read-only one declares nothing: a wash would promise an edit it
+ * refuses (the plan-802 slider rule).
  */
 export const controlStyle = (
   spec: ControlSpec,
@@ -123,7 +131,12 @@ export const controlStyle = (
     borderColor: border,
     paddingLeft: padding,
     paddingRight: padding,
-    cursor: spec.disabled === true ? "not-allowed" : "pointer",
+    cursor:
+      spec.disabled === true
+        ? "not-allowed"
+        : spec.readOnly === true
+          ? "default"
+          : "pointer",
     // A control's label is chrome, not content: the runtime's root default is
     // selectable and only an explicit `"none"` opts out (measured, plan `386`).
     userSelect: "none",
@@ -134,7 +147,7 @@ export const controlStyle = (
     style.opacity = 0.5;
     style.hover = { backgroundColor: fill };
     style.active = { backgroundColor: fill };
-  } else {
+  } else if (spec.readOnly !== true) {
     style.hover = interactive(variant.hover(theme));
     style.active = interactive(variant.active(theme));
   }
@@ -177,7 +190,8 @@ export const interactionBorder = (
  * — the runtime never blurs a host element whose tab stop disappears — and a
  * control that cannot act must not advertise the caret (measured, plan `332`).
  * That is the one rule every ring painter follows; a caller must not re-test
- * `disabled` before asking.
+ * `disabled` before asking. A **read-only** control is focusable and keeps the
+ * ring: the state refuses change, not reading (plan `804`).
  */
 export const controlFocusStyle = (
   spec: ControlSpec,

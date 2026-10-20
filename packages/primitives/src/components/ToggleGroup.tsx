@@ -17,6 +17,11 @@
  * item announces its state through `aria-valuetext` (`"pressed"` /
  * `"not pressed"`), exactly like `Toggle`. The group itself is a named
  * `group`; there is no single-select semantic in AccessKit for buttons.
+ *
+ * A **read-only** group is a setting shown for review (plan `804`): its one tab
+ * stop, rings, names and announced states stay, every press is refused, and the
+ * arrows and type-ahead move the ring without moving the selection. `disabled`
+ * is the stronger state — it fades the group and leaves the tab order.
  */
 
 import { useMemo, useState, type ReactElement } from "react";
@@ -64,6 +69,8 @@ import { useTypeahead } from "./typeahead.js";
 /** The public state a `ToggleGroup` style callback receives. */
 export interface ToggleGroupState {
   readonly disabled: boolean;
+  /** Visible and focusable, but refuses every press (plan `804`). */
+  readonly readOnly: boolean;
 }
 
 /** The public state a `ToggleGroup` item callback receives. */
@@ -72,6 +79,7 @@ export interface ToggleItemState {
   readonly index: number;
   readonly pressed: boolean;
   readonly disabled: boolean;
+  readonly readOnly: boolean;
   readonly focused: boolean;
 }
 
@@ -85,6 +93,12 @@ interface ToggleGroupBase {
   readonly size?: ControlSize;
   /** Disables every item. */
   readonly disabled?: boolean;
+  /**
+   * Shows the pressed set for review: keeps the group's one tab stop and the
+   * item rings, refuses every press, and lets arrows and type-ahead move the
+   * ring only. `disabled` wins; 0.10.0 has no `aria-readonly` (plan `804`).
+   */
+  readonly readOnly?: boolean;
   /** The group's accessible name. There is no `aria-labelledby` on GPUix. */
   readonly label?: string;
   /** An object, or a callback over the group's public state. */
@@ -148,6 +162,7 @@ export const renderToggleGroup = (
   const { options, orientation = "horizontal", variant = "default" } = props;
   const size = props.size ?? "md";
   const paint = toggleVariants[variant];
+  const readOnly = props.readOnly === true;
   const count = Arr.length(options);
   const isDisabled = (index: number): boolean =>
     props.disabled === true || options[index]?.disabled === true;
@@ -159,10 +174,22 @@ export const renderToggleGroup = (
    * ring, so a relative move must start from the ring (plan `359`).
    */
   const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
+  /**
+   * Which item holds the group's one tab stop.
+   *
+   * Normally the value-derived stop (plan `692`). A **read-only** group never
+   * moves its value, so a reader who arrows away would otherwise leave the stop
+   * behind and Tab would return to the selected item instead of leaving the
+   * group — the stop follows the ring while reading (plan `804`).
+   */
+  const stopIndex = readOnly ? cursorIndex : activeIndex;
   const move = (index: number): void => {
     const option = Arr.get(options, index);
     if (Option.isNone(option)) return;
-    if (props.type === "single") handlers.onPress(option.value.value);
+    // A read-only group still navigates: a keyboard user must be able to read
+    // every item, but the press that selects is refused (plan `804`).
+    if (props.type === "single" && !readOnly)
+      handlers.onPress(option.value.value);
     handlers.onFocusMove(index);
   };
   return (
@@ -197,7 +224,10 @@ export const renderToggleGroup = (
           gap: theme.spacing["2xs"],
         },
         props.style,
-        { disabled: groupDisabled(props.disabled === true, options) },
+        {
+          disabled: groupDisabled(props.disabled === true, options),
+          readOnly,
+        },
       )}
     >
       {Arr.map(options, (option, index) => {
@@ -208,6 +238,7 @@ export const renderToggleGroup = (
           variant: pressed ? paint.pressed : paint.rest,
           size,
           disabled,
+          readOnly,
         };
         const itemFocused = Option.exists(
           focus.focusedIndex,
@@ -223,6 +254,7 @@ export const renderToggleGroup = (
           (event: EventPayload): void => {
             if (
               !disabled &&
+              !readOnly &&
               decideActivation(event.key ?? "", phase, event.isHeld === true)
             )
               handlers.onPress(option.value);
@@ -234,7 +266,7 @@ export const renderToggleGroup = (
             role="button"
             aria-label={ariaName(text)}
             aria-valuetext={pressedValueText(pressed)}
-            tabIndex={disabled ? undefined : index === activeIndex ? 0 : -1}
+            tabIndex={disabled ? undefined : index === stopIndex ? 0 : -1}
             testId={
               props.testId === undefined
                 ? undefined
@@ -245,7 +277,10 @@ export const renderToggleGroup = (
               // A click moves native focus to the item even where the runtime
               // dispatches no focus event (the pinned release build, plan 583),
               // so record the item the keyboard must return to (plan 600).
+              // Read-only keeps that record — the ring follows the click — but
+              // reports no press (plan 804).
               focus.onFocus(index);
+              if (readOnly) return;
               handlers.onPress(option.value);
             }}
             onKeyDown={onKey("down")}
@@ -268,6 +303,7 @@ export const renderToggleGroup = (
                 index,
                 pressed,
                 disabled,
+                readOnly,
                 focused: itemFocused,
               },
             )}
@@ -353,12 +389,13 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
    *
    * `multiple` only moves focus: typing a name must not press a formatting
    * button; activation stays the item's own Enter/Space/click (plan `751`).
+   * A read-only group moves the ring only, like its arrows (plan `804`).
    */
   const typeahead = useTypeahead(
     typeItems,
     Option.some(cursorIndex),
     (match) => {
-      if (props.type === "single")
+      if (props.type === "single" && props.readOnly !== true)
         state.set(
           nextSelection("single", state.value.current, match.item.value),
         );
@@ -376,8 +413,10 @@ export const ToggleGroup = (props: ToggleGroupProps): ReactElement => {
       onBlur: focus.onBlur,
     },
     {
-      onPress: (value) =>
-        state.set(nextSelection(props.type, state.value.current, value)),
+      onPress: (value) => {
+        if (props.readOnly === true) return;
+        state.set(nextSelection(props.type, state.value.current, value));
+      },
       onFocusMove: focusItem,
       onTypeahead: typeahead,
       registerItem: focus.registerItem,

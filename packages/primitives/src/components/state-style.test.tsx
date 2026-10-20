@@ -171,9 +171,29 @@ describe("Toggle", () => {
     expect(lastState(record.seen)).toStrictEqual({
       checked: true,
       disabled: false,
+      readOnly: false,
       focused: false,
     });
     expect(background(element)).toBe(PAINT);
+  });
+
+  it("reports the read-only review state", () => {
+    // Plan 804: the pressed state is a stored mode, so a review may show it
+    // without allowing a press. The payload is how a state style paints it.
+    const record = recorder<ToggleState>();
+    renderToggle(
+      { style: record.style, readOnly: true, pressed: true },
+      testTheme,
+      booleanState(true),
+      idle,
+      vi.fn(),
+    );
+    expect(lastState(record.seen)).toStrictEqual({
+      checked: true,
+      disabled: false,
+      readOnly: true,
+      focused: false,
+    });
   });
 });
 
@@ -406,7 +426,10 @@ describe("group roots and overlays", () => {
       groupFocus,
       handlers,
     );
-    expect(lastState(record.seen)).toStrictEqual({ disabled: true });
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      readOnly: false,
+    });
     expect(background(element)).toBe(PAINT);
   });
 
@@ -476,7 +499,44 @@ describe("group roots and overlays", () => {
         registerItem: () => () => {},
       },
     );
-    expect(lastState(record.seen)).toStrictEqual({ disabled: true });
+    expect(lastState(record.seen)).toStrictEqual({
+      disabled: true,
+      readOnly: false,
+    });
+  });
+
+  it("ToggleGroup reports its read-only state on the group and every item", () => {
+    // Plan 804: the group is one review surface — the group and each item must
+    // say so, or a state callback cannot paint the review look.
+    const group = recorder<ToggleGroupState>();
+    const item = recorder<ToggleItemState>();
+    renderToggleGroup(
+      {
+        type: "single",
+        options: [option("left"), option("centre")],
+        style: group.style,
+        itemStyle: item.style,
+        readOnly: true,
+      },
+      testTheme,
+      arrayState(["left"]),
+      0,
+      groupFocus,
+      {
+        onPress: vi.fn(),
+        onFocusMove: vi.fn(),
+        onTypeahead: vi.fn(),
+        registerItem: () => () => {},
+      },
+    );
+    expect(lastState(group.seen)).toStrictEqual({
+      disabled: false,
+      readOnly: true,
+    });
+    expect(Arr.map(item.seen, (state) => state.readOnly)).toStrictEqual([
+      true,
+      true,
+    ]);
   });
 
   it("Rating reports disabled and invalid on its box", () => {
@@ -827,6 +887,7 @@ describe("per-item style", () => {
         index: 0,
         pressed: true,
         disabled: false,
+        readOnly: false,
         focused: false,
       },
       {
@@ -834,6 +895,7 @@ describe("per-item style", () => {
         index: 1,
         pressed: false,
         disabled: false,
+        readOnly: false,
         focused: false,
       },
     ]);

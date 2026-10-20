@@ -29,6 +29,22 @@ Pressing paints `colors.accent` with `colors.accentForeground` — the role the
 theme reserves for a selected surface — so pressed, hover and focus are three
 different states.
 
+### Read-only
+
+`readOnly` is the review state for a stored mode — a saved-settings page or a
+document summary that shows "snap to grid: on" without letting the reader change
+it. It keeps the tab stop, the focus ring, the accessible name and the announced
+pressed state, and refuses every press (click, `Enter`, `Space`). The control
+paints the normal accent fill at full contrast with a `default` cursor; only
+`disabled` fades it and leaves the tab order, and `disabled` wins when both are
+passed. 0.10.0 has no `aria-readonly`, so the state is behavioural and visual.
+
+```tsx
+<Toggle pressed readOnly label="Snap to grid">
+  Snap to grid
+</Toggle>
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -40,6 +56,7 @@ different states.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | from the density scale |
 | `square` | `boolean` | `false` | equal width and height, for an icon-only toggle |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, no activation |
+| `readOnly` | `boolean` | `false` | shows the pressed mode for review: keeps the tab stop and ring, refuses every press, full contrast with a `default` cursor (plan `804`) |
 | `leading` / `trailing` | `ReactNode` | — | an icon or a count beside the label; the dedicated slots for an end icon, while a child element beside text shares the line (plan `803`) |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
@@ -56,7 +73,8 @@ different states.
 | a held key | ignored, so it does not repeat |
 
 A click activates as well. The toggle is one tab stop and paints the focus ring
-while it holds focus.
+while it holds focus. A read-only toggle keeps that stop and ring and answers
+every activation key with nothing (above).
 
 ## As an overlay trigger
 
@@ -93,6 +111,10 @@ boundary. The tip's string becomes the toggle's `aria-description`.
   a name and does not erase the content's (plan `396`). An element child with no
   text (a bare icon) yields no name — give it a `label`; the icon is decorative
   (plan `746`).
+- A **read-only** toggle announces the same name and `"pressed"`/`"not pressed"`
+  value: the state refuses changing the mode, not reading it. 0.10.0 has no
+  `aria-readonly`, so assistive technology cannot be told the difference between
+  a writable and a read-only toggle (plan `804`).
 - The label is **chrome, not content**: `userSelect: "none"` on the control, so
   a drag across a toggle cannot select its text (measured before plan `386`:
   the drag selected `"Grid view"`). A caller's `style` still merges last and can
@@ -103,7 +125,9 @@ boundary. The tip's string becomes the toggle's `aria-description`.
 Rest and pressed are two rows of `core/variants.ts`' `toggleVariants`, so the
 docs and the component read one table. Rest paints no fill (or a border for
 `outline`); pressed paints `colors.accent`/`colors.accentForeground`; hover and
-press lift the accent's alpha like a filled button. Nothing names a literal.
+press lift the accent's alpha like a filled button. Nothing names a literal. A
+read-only toggle declares no hover or press rule — it paints the resting row with
+a `default` cursor, so the pointer promises nothing it refuses (plan `804`).
 
 
 ## Style by state
@@ -119,6 +143,7 @@ runtime's own `StateStyle` type:
 | ----- | ---- | ------- |
 | `checked` | `boolean` | the pressed state (the contract's word for it) |
 | `disabled` | `boolean` | refuses pointer and keys |
+| `readOnly` | `boolean` | the review state: visible and focusable, refuses every press (plan `804`) |
 | `focused` | `boolean` | holds native focus |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -127,6 +152,8 @@ property; returning `{}` keeps the default look. `ToggleState` is exported.
 ## Limitations
 
 - No `aria-pressed` (above).
+- No `aria-readonly`: a read-only toggle keeps its tab stop and announced state,
+  but assistive technology is not told that it refuses a press (plan `804`).
 - No `loading` state: a toggle sets a mode instantly; a toggle that waits for a
   request should disable itself and show the result elsewhere.
 - `square` sizes the button; it does not size the icon — pass an icon whose size
@@ -151,6 +178,10 @@ property; returning `{}` keeps the default look. `ToggleState` is exported.
 - `src/components/label-row.test.tsx` and `runtime/label-row.runtime.test.tsx`
   — an icon child beside the words is one row, a text-only label is unchanged,
   and a long mixed label stays inside a narrow toggle (plan `803`).
+- `src/components/Toggle.test.tsx`, `src/core/style.test.ts` and
+  `runtime/toggle-read-only.runtime.test.tsx` — the read-only state: the tab
+  stop and ring stay, the press is refused, and the paint is full contrast with a
+  `default` cursor (plan `804`).
 - The disabled **handler** guard is proven at the element-tree level: a
   tabIndex-less toggle cannot be focused natively, so the runtime test can only
   prove the tab order.

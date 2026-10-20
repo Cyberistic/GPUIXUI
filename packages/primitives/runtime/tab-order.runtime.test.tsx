@@ -222,11 +222,12 @@ it.each(Arr.map(CASES, (testCase) => [testCase.name, testCase.node] as const))(
  *
  * The bug this guards (plan `800`): `Rating` gated its tab stop on
  * "interactive", so a read-only rating was the one value control a keyboard user
- * could not reach, while the nine other read-only parts keep theirs (plan `786`
+ * could not reach, while every other read-only part keeps theirs (plan `786`
  * for the fields, `797` for `Select`, `799` for the selection family, `802` for
- * the slider family). The disabled half above cannot see it, because a rating
- * that is skipped looks correct there. A read-only control must stay reachable,
- * so Tab has to land inside it rather than on the trailing sentinel.
+ * the slider family, `804` for the pressed family). The disabled half above
+ * cannot see it, because a rating that is skipped looks correct there. A
+ * read-only control must stay reachable, so Tab has to land inside it rather
+ * than on the trailing sentinel.
  */
 const READ_ONLY_CASES: ReadonlyArray<{
   readonly name: string;
@@ -272,6 +273,19 @@ const READ_ONLY_CASES: ReadonlyArray<{
   {
     name: "RangeSlider",
     node: <RangeSlider testId="c" label="Band" readOnly />,
+  },
+  { name: "Toggle", node: <Toggle testId="c" label="Snap" readOnly /> },
+  {
+    name: "ToggleGroup",
+    node: (
+      <ToggleGroup
+        type="single"
+        testId="c"
+        label="Align"
+        options={[...ONE_OPTION]}
+        readOnly
+      />
+    ),
   },
 ];
 

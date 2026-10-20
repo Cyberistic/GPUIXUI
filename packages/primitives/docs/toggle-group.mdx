@@ -65,6 +65,7 @@ the selection actually changed.
 | `variant` | `"default" \| "outline"` | `"default"` | `Toggle`'s two rest paints |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | control height and padding from the density scale |
 | `disabled` | `boolean` | `false` | every item inert and out of the tab order |
+| `readOnly` | `boolean` | `false` | shows the pressed set for review: keeps the one tab stop and rings, refuses every press, arrows/type-ahead move the ring only (plan `804`) |
 | `label` | `string` | none | the group's accessible name |
 | `style` | `StateStyle<ToggleGroupState>` | — | merged over the group container; an object or a state callback |
 | `itemStyle` | `StateStyle<ToggleItemState>` | — | merged last on each item, after its focus ring; an object or a state callback |
@@ -126,6 +127,30 @@ typed name must not toggle a formatting button — press `Enter` or `Space` to
 activate the item it reached. A `cmd`/`ctrl`/`alt` chord, a held repeat and a
 disabled group type nothing.
 
+## Read-only
+
+`readOnly` is the review state for a stored setting: a saved-settings page or a
+document summary showing "text alignment: centre" or a locked formatting set.
+It keeps the group's one tab stop, every item's name, announced state and focus
+ring, and refuses every press — click, `Enter`, `Space` and the type-ahead's
+selection. The arrows, `Home`/`End` and a typed prefix still move **the ring
+only**, so a keyboard user can read every item (the `RadioGroup` read-only rule);
+the committed value does not move, and the group's one tab stop follows the ring
+so Tab leaves from where the reader is. The paint is full contrast with a
+`default` cursor and no hover/press wash; only `disabled` fades the group and
+leaves the tab order, and `disabled` wins when both are passed. 0.10.0 has no
+`aria-readonly`, so the state is behavioural and visual.
+
+```tsx
+<ToggleGroup
+  type="single"
+  label="Alignment"
+  options={ALIGNMENTS}
+  value="centre"
+  readOnly
+/>
+```
+
 ## Accessibility
 
 - **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
@@ -148,6 +173,9 @@ disabled group type nothing.
   what the set is for.
 - There is no `aria-labelledby`, so a visible heading cannot name the group by
   reference: put its words in `label`.
+- A **read-only** group announces the same names and `"pressed"`/`"not pressed"`
+  values as a writable one. 0.10.0 has no `aria-readonly`, so assistive
+  technology cannot be told that a press is refused (plan `804`).
 - Each item's label is **chrome, not content**: `userSelect: "none"`, so a drag
   across an item cannot select its text (measured before plan `386`: the drag
   selected `"Align left"`). A caller's `itemStyle` still merges last.
@@ -160,7 +188,9 @@ appears here. The pressed fill is `colors.accent` / `colors.accentForeground`
 (the theme's "selected surface"); the outline variant adds `colors.border`.
 Sizes and the group gap come from `density` and `spacing["2xs"]`. Both themes
 and the high-contrast palettes switch the whole group because it paints only
-theme roles.
+theme roles. A read-only group keeps the accent fill for its pressed items and
+declares no hover or press rule, so the pointer promises nothing it refuses
+(plan `804`).
 
 ## Style by state
 
@@ -174,6 +204,7 @@ theme roles.
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | every item is disabled; an empty group is not |
+| `readOnly` | `boolean` | the review state: presses refused, the ring still moves (plan `804`) |
 
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
@@ -196,6 +227,7 @@ the item — after its own paint and focus ring:
 | `index` | `number` | position in `options` |
 | `pressed` | `boolean` | this item is pressed |
 | `disabled` | `boolean` | the item is disabled |
+| `readOnly` | `boolean` | the group is read-only: a press is refused (plan `804`) |
 | `focused` | `boolean` | the item holds native focus |
 
 `ToggleItemState` is exported. One callback receives every item; branch on
@@ -205,6 +237,8 @@ the item — after its own paint and focus ring:
 
 
 - No `aria-pressed` (above); the value text is the honest channel.
+- No `aria-readonly`: a read-only group keeps its stop and announced states, but
+  assistive technology is not told that a press is refused (plan `804`).
 - The group has no container chrome: it is a flex row of buttons. Wrap it in a
   `Box` when you want a rounded segmented container, as `ButtonGroup` does for
   attached buttons.
@@ -240,7 +274,11 @@ the item — after its own paint and focus ring:
 - `src/components/ToggleGroup.test.tsx` — named group and buttons, value text
   and no `aria-pressed`, one tab stop in both modes, disabled item out of the
   tab order with its press refused, axis, accent paint, Enter/Space/click
-  activation and the per-item `testId`.
+  activation and the per-item `testId`; the read-only case proves the stop is
+  kept, the press is refused and an arrow moves focus only (plan `804`).
+- `runtime/toggle-read-only.runtime.test.tsx` — the read-only state in the real
+  renderer: one stop and a ring, an arrow that moves the ring without moving the
+  announced value, refused click/Enter/Space, and a writable twin (plan `804`).
 - `runtime/toggle-group.runtime.test.tsx` — measured 2026-10-17 (plan 056 §9):
   a real click selects and unpresses the previous item; multiple toggles
   independently; Enter down and Space up activate once; an arrow moves focus

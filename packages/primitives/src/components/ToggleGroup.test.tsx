@@ -210,6 +210,56 @@ describe("ToggleGroup", () => {
     ).toStrictEqual([-1, -1, 0]);
   });
 
+  it("keeps the tab stop and ring while read-only, and refuses every press", () => {
+    // The bug guarded (plan 804): the only non-editing state was `disabled`,
+    // which faded the group and removed its one stop, so a stored segmented
+    // setting could not be reviewed by a keyboard or AT user. Read-only keeps
+    // the stop, the ring and the announced set; only the presses are gone.
+    const onPress = vi.fn();
+    const onFocusMove = vi.fn();
+    const readOnlyHandlers: ToggleGroupHandlers = {
+      ...handlers(onPress),
+      onFocusMove,
+    };
+    const group = renderToggleGroup(
+      { ...single, readOnly: true },
+      testTheme,
+      selected(["left"]),
+      0,
+      unfocused,
+      readOnlyHandlers,
+    );
+    expect(propOf(group, 0, "tabIndex")).toBe(0);
+    expect(propOf(group, 1, "tabIndex")).toBe(-1);
+    expect(propOf(group, 0, "aria-valuetext")).toBe("pressed");
+    expectSome(hostHandler(itemAt(group, 1), "onClick"))(clickEvent);
+    expectSome(hostHandler(itemAt(group, 1), "onKeyDown"))(keyEvent("enter"));
+    expectSome(hostHandler(itemAt(group, 1), "onKeyUp"))(keyUpEvent("space"));
+    expect(onPress).toHaveBeenCalledTimes(0);
+    // An arrow is navigation, not a press: the ring moves to the next item and
+    // the value stays where the review put it.
+    expectSome(hostHandler(group, "onKeyDown"))(keyEvent("right"));
+    expect(onFocusMove).toHaveBeenCalledWith(1);
+    expect(onPress).toHaveBeenCalledTimes(0);
+  });
+
+  it("moves its one tab stop with the ring while read-only", () => {
+    // Measured while implementing plan 804: the stop stayed on the value, so
+    // after arrowing to another item Tab returned to the selected one instead
+    // of leaving the group. A read-only group follows the ring.
+    const group = renderToggleGroup(
+      { ...single, readOnly: true },
+      testTheme,
+      selected(["left"]),
+      0,
+      { ...unfocused, focusedIndex: Option.some(1) },
+      handlers(),
+    );
+    expect(
+      [0, 1, 2].map((index) => propOf(group, index, "tabIndex")),
+    ).toStrictEqual([-1, 0, -1]);
+  });
+
   it("leaves a disabled item out of the tab order and refuses its press", () => {
     const onPress = vi.fn();
     const group = renderToggleGroup(

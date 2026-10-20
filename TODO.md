@@ -2716,6 +2716,24 @@ retired once both branches are one
       the next Tab. 6 offline + 7 scoped runtime cases, all four mutation
       directions proven; offline 73 files / 1011 tests, scoped live 4 files / 52
       (plan `786`).
+`[x]` `packages/primitives`: **the pressed family's read-only state** — plans
+      `786`–`802` gave twelve value-bearing parts a review state (`readOnly`
+      keeps the tab stop, ring, name and announced value, refuses every change,
+      paints full contrast with a `default` cursor) and excluded `Toggle` /
+      `ToggleGroup` as "`aria-pressed` actions" (D52). But a toggle stores a
+      mode ("a button that stays on") and `ToggleGroup type="single"` is the
+      segmented setting control the docs name for alignment/density/view — the
+      same stored value shape as `RadioGroup`, which has the state. With only
+      `disabled`, a saved-settings page could not show a pressed mode to a
+      keyboard or AT user (faded, out of the tab order). Both parts now take
+      `readOnly`: press refused, tab stop and ring kept, the group's arrows and
+      type-ahead move the ring only, and all three state payloads report it.
+      Measured while implementing: a read-only `single` group's stop stayed on
+      the value, so Tab returned to the selection after an arrow — it now
+      follows the ring. D54 records the revised boundary; `Button`/`IconButton`
+      stay out. Offline 75 files / 1060 tests, the new native file 7/7, seven
+      scoped files 164/164, six mutation rounds failing their named case
+      (plan `804`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -14,6 +14,10 @@
  * `toggleVariants`, and the activation/keyboard contract is `Button`'s —
  * Enter on key down, Space on key up, a held key ignored. The label is one
  * shrinkable item for the same measured reason as `Button` (plan `368`).
+ *
+ * A **read-only** toggle is a mode shown for review (plan `804`): it keeps the
+ * tab stop, ring and announced state, and refuses every press. `disabled` is
+ * the stronger state — it fades the control and leaves the tab order.
  */
 
 import { Fragment, type ReactElement, type ReactNode } from "react";
@@ -52,6 +56,8 @@ export interface ToggleState {
   /** The toggle's pressed state — the contract's word for it is `checked`. */
   readonly checked: boolean;
   readonly disabled: boolean;
+  /** Visible and focusable, but refuses every press (plan `804`). */
+  readonly readOnly: boolean;
   readonly focused: boolean;
 }
 
@@ -67,6 +73,12 @@ export interface ToggleProps extends TriggerHandlers {
   /** Equal width and height, for an icon-only toggle. */
   readonly square?: boolean;
   readonly disabled?: boolean;
+  /**
+   * Shows the pressed state for review: keeps the tab stop, the focus ring and
+   * the announced state, refuses pointer and keys, and paints full contrast
+   * with a `default` cursor. `disabled` wins. 0.10.0 has no `aria-readonly`.
+   */
+  readonly readOnly?: boolean;
   readonly leading?: ReactNode;
   readonly trailing?: ReactNode;
   /** Accessible name. Required when the toggle has only an icon. */
@@ -96,19 +108,22 @@ export const renderToggle = (
 ): ReactElement => {
   const { size = "md", variant = "default" } = props;
   const paint = toggleVariants[variant];
+  const inert = props.disabled === true || props.readOnly === true;
   const spec = {
     variant: state.current ? paint.pressed : paint.rest,
     size,
     square: props.square,
     disabled: props.disabled,
+    readOnly: props.readOnly,
   };
   const toggle = (): void => {
-    if (props.disabled === true) return;
+    if (inert) return;
     onPressedChange(!state.current);
   };
   const partState: ToggleState = {
     checked: state.current,
     disabled: props.disabled === true,
+    readOnly: props.readOnly === true,
     focused: focus.focused,
   };
   const onKey =

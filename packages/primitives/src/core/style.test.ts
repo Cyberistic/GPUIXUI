@@ -145,6 +145,21 @@ describe("controlStyle", () => {
     expect(style.active?.backgroundColor).toBe(style.backgroundColor);
   });
 
+  it("keeps a read-only control at full contrast with no pointer feedback", () => {
+    // The bug guarded (plan 804): the only non-editing state was `disabled`,
+    // which dims and leaves the tab order. A review control paints normally,
+    // promises nothing to the pointer, and only the press is refused.
+    const style = controlStyle(spec({ readOnly: true }), testTheme);
+    expect(style.cursor).toBe("default");
+    expect(style.opacity).toBeUndefined();
+    expect(style.hover).toBeUndefined();
+    expect(style.active).toBeUndefined();
+    // The focus ring is still the state's own: it is focusable.
+    expect(
+      controlFocusStyle(spec({ readOnly: true }), testTheme).boxShadow,
+    ).toBeDefined();
+  });
+
   it("keeps the label out of a text selection, enabled or disabled", () => {
     // Plan 386: the runtime's root is selectable and only an explicit `none`
     // opts out, so a drag across a toggle used to select its label.
