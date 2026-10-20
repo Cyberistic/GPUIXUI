@@ -1501,6 +1501,14 @@ retired once both branches are one
       on this host with the recorded plan-540 focus case the only failure; docs,
       `COMPONENTS.md`, `TODO.md`, the index and `PLAN.md` D30 synced
       (owner: components)
+    - [~] A malformed overlay offset keeps the documented default — plan 813;
+      measured 2026-10-20: a non-finite `sideOffset` collapses the gap
+      (Popover 91 → 85, Preview card 91 → 85, Notification centre 81 → 73,
+      Combobox 81 → 77), a non-finite `alignOffset` drops the measured centre
+      correction (21 → 53) and a non-finite `collisionPadding` skips the flip
+      and leaves a low panel off-window (709 → 759), because 0.10.0 coerces the
+      value to `0`. One `offsetOf` rule restores each surface's default
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
