@@ -32,7 +32,7 @@ control sits on (`background`, `card`, `popover`, `muted`) and the field fill
 | `Dark` | `#222730` | `popover` **1.000:1**, `muted` **1.000:1** |
 | `Dark · Linux` | `#222730` | `background` **1.036:1** |
 
-Seven pairs in six shipped sets. Two of them are the exact collision plan `306`
+Eight pairs in six shipped sets. Two of them are the exact collision plan `306`
 named as the defect and left in place: the identity dark `disabled` **is** its
 `muted` panel and its `popover`, and the identity light `disabled` **is** its
 `hover` wash. In the four light platform variants the fill is *lighter* than the
@@ -213,7 +213,7 @@ All token commands run from `packages/tokens`.
 ### 4.1 Evidence (before touching source)
 
 A throwaway probe under `src/` that prints, per shipped set, the five surface
-ratios for `disabled`. Expected: the seven pairs in §1 under 1.05:1. Delete the
+ratios for `disabled`. Expected: the eight pairs in §1 under 1.05:1. Delete the
 probe afterwards.
 
 ### 4.2 Scoped tests
@@ -280,10 +280,10 @@ New suite `src/disabled-fill.test.ts` (header comment states the bug):
 2. **"keeps every shipped set above the surface floor"** — every
    `shippedThemes` entry, every `disabledFillPairs` member, at
    `contrastFloors[theme.contrast].surface`. This is the case that fails on the
-   pre-fix palettes (seven pairs, six sets) and passes after §3.1–3.4.
+   pre-fix palettes (eight pairs, six sets) and passes after §3.1–3.4.
 3. **"reports the pre-fix palette"** — rebuild the pre-fix themes with
    `extendTheme(theme, { colors: { disabled: <old hex> } })` for the six sets and
-   assert `themeContrastFailures` returns exactly the seven `(disabled, surface)`
+   assert `themeContrastFailures` returns exactly the eight `(disabled, surface)`
    pairs, so the checker can fail and the guard names the regression.
 4. **"no shipped fill is its own panel"** — the identity light and dark values
    differ from `hover`, `muted` and `popover` by value and by at least 1.05:1

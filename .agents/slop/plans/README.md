@@ -3762,7 +3762,7 @@ surfaces stay thirteen.
 737 overturns plan 306's one exemption. `disabledControl(theme)` returns three
 roles and `opacity: 1`, and the fill was the only one no pair measured: an edited
 theme whose `disabled` equalled its panel returned `[]` from all ten checks while
-an unavailable control painted no fill at all. Seven shipped pairs in six sets
+an unavailable control painted no fill at all. Eight shipped pairs in six sets
 were under the 1.05:1 surface floor — the identity dark fill **was** its `muted`
 panel and its `popover` (`1.000:1`), the identity light fill **was** its `hover`
 wash, and the four light platform variants painted a fill *lighter* than their
