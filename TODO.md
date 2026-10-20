@@ -2827,6 +2827,25 @@ the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), every shipped
 set clears 1.068:1 at the tightest (AAA dark destructive), and both documents'
 "four row fills" for the selected label became the five the contract measures
 (plan 729)
+`[x]` Hold the unchecked selection control — the one control state with no
+designed paint: `primitives` draws a checkbox's edge with `input` (a field fill)
+and an off switch's track with `muted` (a surface role), so both measure
+1.000:1 on a card in six shipped sets while every check returned `[]`, and the
+off switch's knob (`foreground` on `track`) was in no pair at all; `foreground`
+on `track` joins `trackMarkPairs` (464 → **465**), design-system §8 gains the
+`unchecked` row beside the roles it names, `textTierSurfaces` becomes the one
+owner of where a text tier is compared (a mark on a groove is not copy), and
+every shipped set already passes, so no colour moves (plan 733)
+`[ ]` Cross-team: `primitives` paints an off switch's track with the designed
+groove — `switchTrackStyle` fills an unchecked switch with `muted`, a surface
+role that equals the card in every platform dark style (**1.000:1**) and sits
+1.027:1 from an identity-light card, so the control has no fill and only the
+`input` edge row 601 already replaces; paint `theme.colors.track` (measured on
+the panels and washes by `trackSurfacePairs`) and keep the `foreground` knob,
+which `trackMarkPairs` now holds on the groove. An unchecked checkbox keeps its
+transparent box and takes `borderStrong` (row 601). Copy the composition from
+`packages/tokens/src/unchecked-selection.example.ts` (owner: `primitives`;
+plan 733)
 
 ## Phase C — Tier 1–2 components
 

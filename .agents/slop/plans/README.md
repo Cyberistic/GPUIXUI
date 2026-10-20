@@ -370,6 +370,7 @@ references without buying correctness.
 | [725](./725-scale-ladder-indexes.md) | The scale ladders the tests still retype | F | 068, 096, 305, 372, 552, 668 | done |
 | [727](./727-stored-theme-edit-base.md) | A stored edit records the base it was made against | F | 063, 311, 380, 529, 685, 713 | done |
 | [729](./729-soft-panel-caption-tier.md) | The soft status panel's caption is not a tier below its ink | F | 320, 346, 362, 392, 500, 623, 703 | done |
+| [733](./733-unchecked-selection-control.md) | The unchecked selection control's off switch and its unmeasured knob | F | 084, 332, 347, 503, 601, 651 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3737,6 +3738,25 @@ four pairs derive from `statusTones`, the four AAA light inks take one step
 below the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), and every
 shipped set clears the step (1.068:1 at the tightest, AAA dark destructive). The
 README's selected-row sentence also gains the fifth fill plan 651 added.
+
+733 closes the one control state the package never defined. Every other state
+has a designed owner — `filledControl` for a filled action, `disabledControl` for
+an unavailable one, `focusRing`/`invalidFocusRing`/`insetFocusRing` for focus,
+`softAction` for a panel action — but the **unchecked** selection control had
+none, so `primitives` draws a checkbox's edge with `input` (a field *fill*) and
+an off switch's track with `muted` (a *surface* role): both measure **1.000:1**
+on a card in six shipped sets (identity light, Linux light and the four platform
+dark styles, whose `muted` and `input` are the card itself) while every check
+returned `[]`. The off switch's knob is `foreground` on the `track` groove and
+was in no pair at all, so an edited theme whose `foreground` equalled its `track`
+shipped a switch with no knob. `foreground` on `track` joins `trackMarkPairs`
+(464 → **465**, 8.536:1 at the tightest, identity dark, so no colour moves), and
+design-system §8 gains the `unchecked` row the table was missing. The plan also
+exported `textTierSurfaces`: the new mark made `track` a shared surface of the
+`mutedForeground`/`foreground` text tier, where neither role is copy, so the
+class rule now has one implementation (the hierarchy check, the figure table and
+the suite that counts tier surfaces all read it) and the documented thirteen
+surfaces stay thirteen.
 
 ## How to use a plan
 

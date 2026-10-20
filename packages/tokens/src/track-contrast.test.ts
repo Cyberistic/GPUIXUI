@@ -17,9 +17,10 @@
  * `track` is the designed groove. These tests prove the old role was invisible
  * on the surfaces a value indicator paints, that every shipped theme carries a
  * track that clears the surface floor on those surfaces and the persistent row
- * fills, and that the four progress fills stay marks against it. They also hold
- * the role to the palette: a platform cannot inherit the identity's groove and
- * call itself a preview.
+ * fills, and that the marks stay marks against it. Plan 733 adds the second
+ * kind of mark the groove carries: an off switch is the groove plus a knob, and
+ * the knob is `foreground` on `track`. They also hold the role to the palette: a
+ * platform cannot inherit the identity's groove and call itself a preview.
  */
 
 import { readFileSync } from "node:fs";
@@ -71,8 +72,11 @@ const progressMarks = [
   "mutedForeground",
 ] as const;
 
+/** Every mark the groove carries: the four progress fills and an off switch's knob. */
+const grooveMarks = [...progressMarks, "foreground"] as const;
+
 describe("the value indicator's track", () => {
-  it("publishes twelve surface pairs and four mark pairs", () => {
+  it(`publishes ${trackSurfacePairs.length} surface pairs and ${trackMarkPairs.length} mark pairs`, () => {
     expect(
       trackSurfacePairs.map(([foreground, background, pairClass]) => [
         foreground,
@@ -86,7 +90,7 @@ describe("the value indicator's track", () => {
         background,
         pairClass,
       ]),
-    ).toEqual(progressMarks.map((role) => [role, "track", "mark"]));
+    ).toEqual(grooveMarks.map((role) => [role, "track", "mark"]));
     expect(contrastPairs).toEqual(
       expect.arrayContaining([...trackSurfacePairs, ...trackMarkPairs]),
     );
@@ -129,7 +133,7 @@ describe("the value indicator's track", () => {
   it("keeps every progress fill a mark on the track", () => {
     const failures = variants.flatMap(([label, theme]) => {
       const floor = contrastFloors[theme.contrast].mark;
-      return progressMarks.flatMap((role) => {
+      return grooveMarks.flatMap((role) => {
         const ratio = contrastRatio(theme.colors[role], theme.colors.track);
         return ratio >= floor
           ? []

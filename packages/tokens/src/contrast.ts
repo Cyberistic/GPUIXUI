@@ -129,14 +129,15 @@ export const skeletonPulsePairs: readonly ContrastPair[] = skeletonSurfaces.map(
 
 /**
  * The surfaces a value indicator's unfilled groove sits on. A progress bar,
- * meter or slider rail can be placed on the four base surfaces, a selectable
- * row's persistent `accent` fill, a selected row's `selected` fill, the
- * `hover`/`active` washes a row or a slider paints under the pointer, and the
- * four soft status fills an Alert or Badge provides. An indeterminate progress
- * bar is only its groove — the fill is zero-width — and a slider's unfilled span
- * is the value the reader is about to change, so every surface the indicator
- * paints is measured. XP light's own `success` mark is what makes its groove
- * work here: the inherited identity green forced the rail toward the canvas.
+ * meter, slider rail or a switch that is off can be placed on the four base
+ * surfaces, a selectable row's persistent `accent` fill, a selected row's
+ * `selected` fill, the `hover`/`active` washes a row or a slider paints under
+ * the pointer, and the four soft status fills an Alert or Badge provides. An
+ * indeterminate progress bar is only its groove — the fill is zero-width — an
+ * off switch is its groove plus a knob, and a slider's unfilled span is the
+ * value the reader is about to change, so every surface the indicator paints is
+ * measured. XP light's own `success` mark is what makes its groove work here:
+ * the inherited identity green forced the rail toward the canvas.
  */
 const trackSurfaces = [
   "background",
@@ -161,13 +162,18 @@ export const trackSurfacePairs: readonly ContrastPair[] = trackSurfaces.map(
  * segment that matches its groove is a bar with no value. The four
  * `PROGRESS_TONES` in `primitives` are `primary`, `success`, `destructive` and
  * `muted` (which paints `mutedForeground`), so all four are held to the mark
- * floor on the track.
+ * floor on the track. A switch that is off is the groove with its knob on it,
+ * not a filled pill: `switchThumbStyle` paints that disc with `foreground`, so
+ * the knob is the fifth mark the groove carries — before it joined the list an
+ * edited theme whose `foreground` equalled its `track` shipped a switch with no
+ * knob while every check returned `[]`.
  */
 export const trackMarkPairs: readonly ContrastPair[] = [
   ["primary", "track", "mark"],
   ["success", "track", "mark"],
   ["destructive", "track", "mark"],
   ["mutedForeground", "track", "mark"],
+  ["foreground", "track", "mark"],
 ];
 
 /**
@@ -1280,15 +1286,48 @@ export interface TextTierFailure {
   readonly step: number;
 }
 
-/** The surfaces a role is documented on, in pair order, deduplicated. */
-const textSurfaces = (
+/**
+ * The pair classes a text tier is compared through: the three that carry text.
+ * A mark, a boundary, a fill, a step or a divider on the same surface is a
+ * different composition — the off switch's knob is `foreground` on `track` and
+ * the muted progress fill beside it is `mutedForeground`, and neither is copy —
+ * so those classes do not make a surface a tier.
+ */
+const textTierPairClasses: ReadonlyArray<ContrastPairClass> = [
+  "body",
+  "secondary",
+  "inactive",
+];
+
+/**
+ * The surfaces a role is measured on **as text**, in pair order.
+ *
+ * This is the single owner of "where a text tier is compared": the hierarchy
+ * check, the figure table that derives each documented step and the suites that
+ * count a tier's shared surfaces all read it, so a role that also paints a mark
+ * on a groove (the off switch's knob is `foreground` on `track`) cannot widen
+ * the hierarchy to a surface where neither role is text.
+ *
+ * @example
+ * ```ts
+ * import { getTheme, textTierSurfaces } from "@gpuixui/tokens";
+ *
+ * const theme = getTheme("light");
+ * textTierSurfaces("mutedForeground").length; // the surfaces a caption is measured on
+ * theme.colors.mutedForeground; // the role those pairs compare
+ * ```
+ */
+export function textTierSurfaces(
   role: keyof ThemeColors,
-): ReadonlyArray<keyof ThemeColors> =>
-  contrastPairs
-    .flatMap(([foreground, background]) =>
-      foreground === role ? [background] : [],
+): ReadonlyArray<keyof ThemeColors> {
+  return contrastPairs
+    .flatMap(([foreground, background, pairClass]) =>
+      foreground === role && textTierPairClasses.includes(pairClass)
+        ? [background]
+        : [],
     )
     .filter((surface, index, all) => all.indexOf(surface) === index);
+}
 
 /**
  * Every text tier that is not one step below the tier above it.
@@ -1324,8 +1363,8 @@ export function themeTextTierFailures(
 ): ReadonlyArray<TextTierFailure> {
   const step = contrastFloors[contrast].step;
   return textTiers.flatMap(([dimmer, brighter]) => {
-    const brighterSurfaces = textSurfaces(brighter);
-    return textSurfaces(dimmer).flatMap((surface) => {
+    const brighterSurfaces = textTierSurfaces(brighter);
+    return textTierSurfaces(dimmer).flatMap((surface) => {
       if (!brighterSurfaces.includes(surface)) {
         return [];
       }

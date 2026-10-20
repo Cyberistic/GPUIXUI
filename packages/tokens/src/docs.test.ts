@@ -3165,7 +3165,7 @@ describe("docs/design-system.md", () => {
       `| focus ring (\`ring\`) on \`background\`/\`card\`/\`popover\`/\`muted\`/\`accent\`, the \`hover\`/\`active\`/\`selected\` washes and the pressed \`selectedActive\`, the four soft status fills and the \`track\` groove a focused slider's thumb sits on, the \`destructive\` ring an invalid control paints on every ring surface except the canvas and the \`track\` groove, essential boundaries (\`borderStrong\`) on \`background\`/\`card\`/\`popover\`/\`muted\` and the \`input\` fill a field sits on, the four state washes, the pressed \`selectedActive\` and the four soft status fills, plus the invalid field edge (\`destructive\` on \`input\`/\`background\`) and the field's pressed edge (\`ring\` on \`input\`) | ${contrastFloors.default.boundary}:1 | ${contrastFloors.high.boundary}:1 |`,
       `| graphic marks (\`primary\`/\`success\`/\`destructive\` on \`background\`/\`card\`/\`popover\`/\`muted\`, \`primary\` and \`destructive\` on the \`input\` fill a slider thumb rings, \`primaryText\` on the \`input\` fill the native caret paints, and \`primary\` on the \`hover\` wash a highlighted combobox option paints its check on, plus the \`selected\` and \`selectedActive\` fills the chosen option marks) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| value indicator groove (\`track\`) on \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes and the pressed \`selectedActive\`, and the \`infoSoft\`/\`successSoft\`/\`warningSoft\`/\`destructiveSoft\` fills | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
-      `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
+      `| value indicator marks (\`primary\`/\`success\`/\`destructive\`/\`mutedForeground\` on \`track\`, and \`foreground\` for the knob of a switch at rest) | ${contrastFloors.default.mark}:1 | ${contrastFloors.high.mark}:1 |`,
       `| soft status surface (\`xSoft\`) on \`background\`/\`card\`/\`popover\`/\`muted\` | ${contrastFloors.default.surface}:1 | ${contrastFloors.high.surface}:1 |`,
       `| soft status edge (\`xSoftBorder\` on \`xSoft\` and on the nine surfaces a chip sits on, the pressed \`selectedActive\` included) | ${contrastFloors.default.divider}:1 | ${contrastFloors.high.divider}:1 |`,
       `| inactive label (\`disabledForeground\` on the \`disabled\` fill, the field's \`input\` fill, \`background\`/\`card\`/\`popover\`/\`muted\`, the \`hover\`/\`active\`/\`accent\`/\`selected\` washes, the pressed \`selectedActive\` and the four soft status fills, and through the composited \`selection\` wash on the same fourteen persistent surfaces — a pressed row is transient) | ${contrastFloors.default.inactive}:1 | ${contrastFloors.high.inactive}:1 |`,
@@ -3623,6 +3623,7 @@ describe("docs/design-system.md interaction states", () => {
       "pressed",
       "loading",
       "selected",
+      "unchecked",
       "link",
       "disabled",
       "invalid",
@@ -3672,6 +3673,22 @@ describe("docs/design-system.md interaction states", () => {
       )
       .map(([, background]) => background);
     expect(missing("link", linkSurfaces)).toEqual([]);
+  });
+
+  it("names the unchecked selection control's groove, edge and knob", () => {
+    const surfaces = [
+      ...new Set([
+        ...trackSurfacePairs.map(([, surface]) => surface),
+        ...contrastPairs
+          .filter(([role]) => role === "borderStrong")
+          .map(([, background]) => background),
+      ]),
+    ];
+    expect(missing("unchecked", surfaces)).toEqual([]);
+    const row = tableRow("unchecked");
+    ["track", "borderStrong", "foreground"].forEach((role) =>
+      expect(row, role).toContain(`\`${role}\``),
+    );
   });
 
   it("names every surface an inactive label is measured on", () => {

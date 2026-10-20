@@ -59,7 +59,13 @@ describe("the mark contract", () => {
       "primary on selectedActive",
       "primaryText on input",
       ...(
-        ["primary", "success", "destructive", "mutedForeground"] as const
+        [
+          "primary",
+          "success",
+          "destructive",
+          "mutedForeground",
+          "foreground",
+        ] as const
       ).map((role) => `${role} on track`),
     ].toSorted();
 

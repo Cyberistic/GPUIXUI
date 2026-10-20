@@ -23,6 +23,7 @@ import {
   inactiveSurfaces,
   selectionInactivePairs,
   selectionPressPairs,
+  textTierSurfaces,
 } from "./contrast.js";
 import { disabledRowStyle } from "./disabled-state.example.js";
 import { shippedThemes } from "./shipped-themes.js";
@@ -71,16 +72,6 @@ const missing = (
   const text = expand(tableRow(label));
   return surfaces.filter((surface) => !text.includes(`\`${surface}\``));
 };
-
-/** The surfaces a role is measured on, in pair order, deduplicated. */
-const surfaceSet = (
-  role: keyof ThemeColors,
-): ReadonlyArray<keyof ThemeColors> =>
-  contrastPairs
-    .flatMap(([foreground, background]) =>
-      foreground === role ? [background] : [],
-    )
-    .filter((surface, index, all) => all.indexOf(surface) === index);
 
 /** The prose's spelling of a small count. */
 const countWord = (count: number): string =>
@@ -168,8 +159,8 @@ describe("the pressed selected row in the documentation", () => {
       dimmer: keyof ThemeColors,
       brighter: keyof ThemeColors,
     ): number => {
-      const brighterSurfaces = surfaceSet(brighter);
-      return surfaceSet(dimmer).filter((surface) =>
+      const brighterSurfaces = textTierSurfaces(brighter);
+      return textTierSurfaces(dimmer).filter((surface) =>
         brighterSurfaces.includes(surface),
       ).length;
     };
@@ -196,8 +187,8 @@ describe("the pressed selected row in the documentation", () => {
   });
 
   it("counts the selected row's five label fills in both documents", () => {
-    const shared = surfaceSet("selectedForeground").filter((surface) =>
-      surfaceSet("foreground").includes(surface),
+    const shared = textTierSurfaces("selectedForeground").filter((surface) =>
+      textTierSurfaces("foreground").includes(surface),
     );
     expect(shared).toHaveLength(5);
     shared.forEach((surface) =>

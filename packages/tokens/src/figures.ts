@@ -7,6 +7,7 @@ import {
   selectionSurfaces,
   toastTonePairs,
   trackSurfacePairs,
+  textTierSurfaces,
   type ContrastPair,
 } from "./contrast.js";
 import type { PlatformRecipeName } from "./platform-recipes.js";
@@ -363,27 +364,18 @@ export interface TierFigure {
   readonly sentence: string;
 }
 
-/** The surfaces a role is documented on, straight from the contract. */
-const surfacesOf = (
-  role: keyof ThemeColors,
-): ReadonlyArray<keyof ThemeColors> =>
-  contrastPairs
-    .flatMap(([foreground, background]) =>
-      foreground === role ? [background] : [],
-    )
-    .filter((surface, index, all) => all.indexOf(surface) === index);
-
 /**
- * The surfaces a tier is compared on: the ones both roles are painted on. The
- * rule is `themeTextTierFailures`', so a surface joins the comparison by joining
- * both roles' pairs and the table cannot quote a step the checker never measures.
+ * The surfaces a tier is compared on: the ones both roles are painted on as
+ * text. The rule is `themeTextTierFailures`', read from the contract's
+ * `textTierSurfaces`, so the table cannot quote a step the checker never
+ * measures and a mark on a groove cannot widen a text tier.
  */
 export const tierSurfaces = ([
   dimmer,
   brighter,
 ]: TierFigure["tier"]): ReadonlyArray<keyof ThemeColors> => {
-  const brighterSurfaces = surfacesOf(brighter);
-  return surfacesOf(dimmer).filter((surface) =>
+  const brighterSurfaces = textTierSurfaces(brighter);
+  return textTierSurfaces(dimmer).filter((surface) =>
     brighterSurfaces.includes(surface),
   );
 };
@@ -584,6 +576,25 @@ const trackSelectedFigure: DocumentedFigure = {
   decimals: 3,
   sentence:
     "identity dark's `track` on its `selected` fill measures **{figure}:1**",
+};
+
+/**
+ * The off switch's knob, which plan 733 made a mark on the groove. A switch at
+ * rest is the groove plus its knob, and `switchThumbStyle` paints that disc with
+ * `foreground`; before the pair joined `trackMarkPairs` an edited theme whose
+ * `foreground` equalled its `track` shipped a switch with no knob while every
+ * check returned `[]`. Identity dark is the tightest shipped set.
+ */
+const trackKnobFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the off switch's knob on the groove",
+  pairs: [["foreground", "track", "mark"]],
+  kind: "plain",
+  claim: "tightest",
+  provenance: identityTheme("dark", "default"),
+  decimals: 3,
+  sentence:
+    "the knob clears the mark floor in every shipped set (**{figure}:1** at the tightest, identity dark)",
 };
 
 /**
@@ -950,6 +961,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...disabledDimFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
+  trackKnobFigure,
   rowPressFillFigure,
   caretPairFigure,
   ...trackRejectedRoleFigures,

@@ -288,7 +288,7 @@ A runnable example lives in
 | `disabled` | `#EEF1F5` | `#222730` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#545D6C` | `#B0B8C6` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#CBD1DB` | `#434C5A` | loading placeholder |
-| `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail |
+| `track` | `#D5D9E2` | `#3D4552` | the unfilled groove of a progress bar, meter or slider rail, and a switch that is off |
 | `scrollbar` | `#CBD1DB` | `#3D4552` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#191D25` | `#000000` | elevation tint (opaque; each level applies its own alpha) |
 
@@ -592,7 +592,7 @@ carries, so it cannot claim another.
 | `disabled` | `#E8E8E8` | `#2E2E2E` | disabled surface (kept near the panel; the control's `border` edge carries its shape) |
 | `disabledForeground` | `#444444` | `#D0D0D0` | disabled text, held to the `inactive` floor |
 | `skeleton` | `#B0B0B0` | `#565656` | loading placeholder |
-| `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail |
+| `track` | `#C6C8CD` | `#414141` | the unfilled groove of a progress bar, meter or slider rail, and a switch that is off |
 | `scrollbar` | `#9A9A9A` | `#8A8A8A` | scrollbar thumb (reserved: no tint in 0.10.0) |
 | `shadow` | `#000000` | `#FFFFFF` | elevation tint (opaque; each level applies its own alpha; light on the pure black AAA canvas) |
 
@@ -2927,8 +2927,13 @@ own title and an edited theme could paint both with one colour while
 `themeTextTierFailures` returned `[]`. The four high-contrast light inks take one
 step below the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), so
 every shipped set clears the step without moving the caption role.
-The surfaces are derived from `contrastPairs`, not retyped: thirteen shared
-surfaces for secondary text below body copy, one `card` for `cardForeground`,
+The surfaces are derived from `contrastPairs` through `textTierSurfaces`, the
+list the checker reads, and not retyped: it counts only the three text classes
+(`body`, `secondary` and `inactive`), so a mark on the same surface is a
+different composition — a switch's off knob is `foreground` on the `track`
+groove where the muted progress fill is `mutedForeground`, and neither is
+copy — giving thirteen shared surfaces for secondary text below body copy, one
+`card` for `cardForeground`,
 five for `popoverForeground` (`popover` and the four row fills it shares), the
 fourteen surfaces typed text is documented on for `inputForeground` (`muted`,
 `background`, `card`, `popover`, `input`, the pressed `selectedActive` and the
@@ -3793,8 +3798,9 @@ measured **2.748:1** on a `selected` row and **2.836:1** on a pressed one, under
 the 3:1 mark floor, while the eight other surfaces a field sits on were already
 held by the `primaryText` text pairs. Every shipped set clears the new pair (**8.204:1** at the tightest, `Light`), so
 no colour moves; taking it from
-396 to **464** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
-`671`, `698` and `700`.
+396 to **465** across plans `527`, `557`, `595`, `619`, `650`, `651`, `659`,
+`671`, `698`, `700` and `733`, the last of which adds the off switch's knob
+(`trackMarkPairs`).
 Plan `659` adds the field's typed text and hint inside a tone-tinted status
 panel — `softFieldPairs`, eight pairs — and the typed text on a pressed selected
 row, and moves the identity and AAA light hints one half-step that already
@@ -3973,6 +3979,24 @@ theme and every default-contrast platform and recipe dark set, while the designe
 (Windows dark). [`src/toast-countdown.example.ts`](../packages/tokens/src/toast-countdown.example.ts)
 is the copyable composition: `track` for the groove and the tone's `xText` for
 the bar.
+
+A switch that is off is the same kind of groove: its track is the unfilled part
+of a value indicator and its knob sits on it. `foreground` on `track` is the
+knob and joins `trackMarkPairs` — the knob clears the mark floor in every shipped set
+(**8.536:1** at the tightest, identity dark) — while the track and the edge
+`primitives` paints today are the control `TODO.md` records: `muted` for the
+track and `input` for the edge leave both under the 1.05:1 surface floor in six
+of the shipped sets (identity light, Linux light and the four platform dark
+styles),
+because the quiet panel and the field fill are the card itself there. The
+designed paint is `track` for the groove, `borderStrong` for the edge and
+`foreground` for the knob; an **unchecked** checkbox paints no fill of its own,
+so the panel shows through the box and the `borderStrong` edge is its shape. The
+checked state takes the accent family's fill with its on-colour
+(`filledControl`), ringed inside by `insetFocusRing`.
+[`src/unchecked-selection.example.ts`](../packages/tokens/src/unchecked-selection.example.ts)
+is the copyable composition, and `primitives` paints the shipped control with
+`muted`/`input` until its migration lands.
 
 Elevation is held by `elevation.test.ts` and `elevation-tint.test.ts`: a stored
 level is geometry plus an alpha and paints exactly the runtime's five fields, and
@@ -4169,7 +4193,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **48** entries across
+state — `documentedFigures` and `documentedTierFigures`, **49** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure
