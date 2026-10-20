@@ -469,9 +469,18 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–607)
+## Docs site workstream (plans 410–499, plus 500–613)
 
-`[x]` `[██████████]` 179/179
+`[~]` `[█████████░]` 179/180
+
+`[~]` **Every component example compiles (plan 613)** — the docs call each
+      fenced `tsx` block a copyable usage example, but nothing type-checks it:
+      measured 2026-10-20 at `cd7ecac7`, 73 examples on 66 component pages, **47
+      fail to compile with 133 diagnostics**, and three pages name props the
+      component does not have (Alert `title` + text children, Combobox `label`,
+      DatePicker `label`). The new `example-snippets` suite compiles every
+      snippet as a standalone module with the app's real options, the 47 are
+      fixed, and the template page and README state the rule.
 
 `[x]` **The authoring, framework and performance vocabulary reaches its owner
       (plan 612)** — `add component`, `new component`, `component template`,
