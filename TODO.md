@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 334/412
+`[x]` `[████████░░]` 336/414
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2872,6 +2872,25 @@ row's own pairs. `selection-press-exclusion.test.ts` reads all six blocks and
 fails on the refuted reason or a claim the pair lists contradict; no pair,
 colour, floor, metric or role moves (`selectionWashPairs` 11, `contrastPairs`
 470) (plan 742)
+`[x]` Correct the storage rule the extension story stated — `ThemeEdit` is
+`{ base, overrides }` and has no whole-theme variant, but the `themeEdit` JSDoc
+and the catalogue said an edit of a base a `ThemeChoice` cannot name "is stored as
+the whole theme", so a consumer looked for an artifact the package never returns
+while the sentence hid the capability it has: the diff is measured against the
+**resolved** choice, so a brand's differences travel in the overrides and the pair
+reproduces it. The two sentences now state that mechanism and the one limit (a
+different `mode` returns `undefined` and the caller keeps its theme object), and
+`theme-edit.test.ts` stores and replays the executed light brand, pins the
+artifact's two fields, and fails on the old sentence (plan 744)
+`[x]` Hold the documented light brand to the one-call guarantee — the catalogue
+holds the dark brand to `themeFailures`, but `theme.test.ts` held the light one to
+`themeContrastFailures` only, so its `primaryText: "#5330C8"` measured **6.941:1**
+through the 3.5% ink a native document paints under its body — a layer the
+native-text check gained after plan 098 wrote the family — and the executed
+example a consumer copies failed the total check while its contrast half passed;
+the link ink takes one designed step (`#4B2AB4`, 7.957:1 through the wash), both
+brands are held to `themeFailures`, and a regression case rebuilds the pre-fix
+palette and pins the three `nativeText` entries; only the example moves (plan 745)
 
 ## Phase C — Tier 1–2 components
 
