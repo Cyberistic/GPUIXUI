@@ -469,9 +469,23 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–613)
+## Docs site workstream (plans 410–499, plus 500–614)
 
-`[x]` `[██████████]` 180/180
+`[x]` `[██████████]` 181/181
+
+`[x]` **The design system, the data grid and the failure phrasings have an
+      owner (plan 614)** — measured 2026-10-20: `design system` reached a text
+      area's limitation (the site had no page that owned the subject), the
+      two-word `data grid` phrase plan 579 named still returned Stack because the
+      summary says `datagrids` and descriptions compare words not phrases, and
+      `nothing shows`/`invisible text`/`colors are wrong` reached component
+      pages while Troubleshooting already answers them in two sections. Theming
+      now states the graphite-and-iris identity and links the four layer owners;
+      19 exact aliases and one roadmap alias (`chat` → the planned
+      `Chat (AI conversation)` target) close the rest, with `grid`, `resize`,
+      `text`, `label`, `empty state` and `color picker` kept by regression rows.
+      125 files / 1 208 docs tests, 105-page `smoke:build`, four production
+      queries; five two-direction proofs in plan 614 §9.
 
 `[x]` **Every component example compiles (plan 613)** — the docs call each
       fenced `tsx` block a copyable usage example, but nothing type-checked it:
