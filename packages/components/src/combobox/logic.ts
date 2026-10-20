@@ -12,6 +12,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
+import { runsBy } from "../internal/runs.js";
 
 /** One selectable option. */
 export interface ComboboxOption {
@@ -46,40 +47,6 @@ export interface ComboboxRowRun {
   readonly group: Option.Option<string>;
   readonly values: ReadonlyArray<string>;
 }
-
-interface Run<A> {
-  readonly group: Option.Option<string>;
-  readonly items: ReadonlyArray<A>;
-  readonly from: number;
-}
-
-const sameGroup = (
-  left: Option.Option<string>,
-  right: Option.Option<string>,
-): boolean =>
-  Option.match(left, {
-    onNone: () => Option.isNone(right),
-    onSome: (name) => Option.exists(right, (candidate) => candidate === name),
-  });
-
-/** Split a sequence into maximal contiguous runs of equal group names. */
-const runsBy = <A>(
-  items: ReadonlyArray<A>,
-  groupOf: (item: A) => Option.Option<string>,
-): ReadonlyArray<Run<A>> =>
-  Arr.reduce(items, Arr.empty<Run<A>>(), (runs, item, index) => {
-    const group = groupOf(item);
-    return Option.match(Arr.last(runs), {
-      onNone: () => [{ group, items: [item], from: index }],
-      onSome: (run) =>
-        sameGroup(run.group, group)
-          ? Arr.append(Arr.dropRight(runs, 1), {
-              ...run,
-              items: Arr.append(run.items, item),
-            })
-          : Arr.append(runs, { group, items: [item], from: index }),
-    });
-  });
 
 /** The option runs, in declaration order. */
 export const optionRuns = (

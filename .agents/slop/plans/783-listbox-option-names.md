@@ -1,9 +1,13 @@
 # 783 — A listbox option carries a name, in both listboxes
 
-**Status:** planned 2026-10-20. **Workstream:** components. **Number claim:**
-`783` is the first free number across every worktree — components took `782`,
-primitives took `782` as well (the same tick, different slugs; recorded in
-`PLAN.md` D30), tokens-theme holds `780`/`781`.
+**Status:** done 2026-10-20 — 5 native cases + 2 pure cases; the three suites are
+Combobox 67 → 69, Command menu 26 → 29, List 65 → 67 (`accessibility` stays 1);
+unit 506 in 48 files; the full native suite is 996 passed / 20 failed of 1016 —
+the same recorded plan-540 binding classes as the pre-change run; `check`,
+`lint` and `test` exit 0. Seven mutation proofs in §4.5.
+**Workstream:** components. **Number claim:** `783` is the first free number
+across every worktree — components and primitives both took `782` in the same
+tick (different slugs; recorded in `PLAN.md` D30).
 
 ---
 
@@ -67,19 +71,31 @@ row was `listboxoption:""` — `ComboboxItem` sets `role="option"` and
 `aria-selected` and no name. The collection and its groups are already named
 (plan 395); its rows are not.
 
-### 1.3 Why the contract missed it
+### 1.3 The selectable List
+
+Adding `listboxoption` to the contract (§1.4) immediately reported **eight**
+unnamed rows from the `list` example: `ListItem` draws `role="option"` when the
+list is selectable, with `aria-selected`, and never a name. It is the third
+listbox in the package and the same defect, so it belongs in this plan.
+
+### 1.4 Why the contract missed it
 
 `src/behaviour/accessibility.test.tsx` holds every example to "an interactive
 node has a name", but its `INTERACTIVE_ROLES` list contains `"option"` — and the
 dump spells it **`listboxoption`** (AccessKit's own name, which the helper
 lowercases but does not map). The contract therefore never looked at a single
-option row. This is the same class of hole plan 391 closed for buttons, and it
-is why two shipped listboxes have unnamed rows.
+option row. Measured: with the role added to the list and the component fixes
+absent, the contract reports the eight List rows; with the role removed it
+passes while those rows are still unnamed. That is the hole, proven both ways.
 
-The docs do not currently claim option names (`docs/combobox.mdx` and
-`docs/command-menu.mdx` describe the rows as `role="option"` with
-`aria-selected`), so this is an omission in both components, not a false page —
-but it is the one thing a screen reader needs first.
+The combobox and command-palette examples mount **closed**, so the contract sees
+no rows there; their own behaviour suites are the evidence for those two (§4.2,
+§4.3). A future example left open would now be covered too.
+
+The docs do not currently claim option names (`docs/combobox.mdx`,
+`docs/command-menu.mdx` and `docs/list.mdx` describe the rows as `role="option"`
+with `aria-selected`), so this is an omission in all three components, not a
+false page — but it is the one thing a screen reader needs first.
 
 `role="listbox"`, `role="group"` and `aria-label` on an option **are** supported
 by 0.10.0 (measured: a probe tree with all three reported
@@ -93,12 +109,15 @@ by 0.10.0 (measured: a probe tree with all three reported
 | `packages/components/src/internal/runs.test.ts` | **new** — 2 pure cases (§4.1) |
 | `packages/components/src/combobox/logic.ts` | import `runsBy` from the shared module; delete the local `Run`/`sameGroup`/`runsBy` |
 | `packages/components/src/combobox.tsx` | `ComboboxItem` names its row from `labelFor(value)` |
+| `packages/components/src/list.tsx` | a selectable `ListItem` names its row: caller `aria-label`, then `textValue`, then its `ListItemTitle` |
 | `packages/components/src/command-menu.tsx` | `CommandMenuItem` names its row; `CommandMenuList` becomes a named `listbox` of named groups; `label?` prop |
 | `packages/components/src/behaviour/combobox.test.tsx` | 2 native cases |
 | `packages/components/src/behaviour/command-menu.test.tsx` | 3 native cases |
+| `packages/components/src/behaviour/list.test.tsx` | 2 native cases |
 | `packages/components/src/behaviour/accessibility.test.tsx` | add `listboxoption` to `INTERACTIVE_ROLES` (the contract hole) |
 | `packages/components/docs/combobox.mdx` | row naming + verification count |
 | `packages/components/docs/command-menu.mdx` | listbox/groups/rows, `label` API, verification count |
+| `packages/components/docs/list.mdx` | row naming + verification count |
 | `COMPONENTS.md` | Combobox and Command menu rows: naming, counts |
 | `TODO.md`, `PLAN.md` D30, `.agents/slop/plans/README.md` | bookkeeping |
 
@@ -186,6 +205,58 @@ headless row beside the role:
   create row is named `Create "…"` without a second branch.
 - No caller override: the row's name is the option's data label, which is
   already the caller's value. `ComboboxItemProps` gains nothing.
+
+### 3.2b `ListItem` names a selectable row
+
+A selectable row gets the same treatment, in the row's own terms:
+
+```tsx
+  const name = selectable
+    ? controlName(
+        rest["aria-label"] ?? textValue ?? titleTextOf(children),
+        children,
+      )
+    : undefined;
+```
+
+spread **after** `{...rest}`:
+
+```tsx
+        {...(name === undefined ? {} : { "aria-label": name })}
+```
+
+with one small helper beside the row:
+
+```tsx
+/** The first {@link ListItemTitle} child's plain text, if the row has one. */
+const titleTextOf = (children: ReactNode): string | undefined =>
+  Option.getOrUndefined(
+    Option.map(
+      Option.flatMap(
+        Arr.findFirst(
+          Children.toArray(children),
+          (child): child is ReactElement<{ readonly children?: ReactNode }> =>
+            isValidElement<{ readonly children?: ReactNode }>(child) &&
+            child.type === ListItemTitle,
+        ),
+        (title) => Option.fromNullishOr(title.props.children),
+      ),
+      plainText,
+    ),
+  );
+```
+
+Rules:
+
+- **selectable only.** A plain `ListItem` renders `role="listitem"`, whose
+  content is read naturally; an `aria-label` there would *replace* the title and
+  description with one string, so it is left alone (a caller's own `aria-label`
+  still passes through `rest`);
+- **priority:** the caller's `aria-label`, then `textValue` (the type-ahead
+  label, already the row's one-line name in the example), then the title part's
+  plain text, so a row without `textValue` is still named;
+- **no state, no effect:** the title is a declared child, so the row names
+  itself on render and a rename re-renders it.
 
 ### 3.3 `CommandMenuItem` names its row
 
@@ -311,6 +382,18 @@ Use `nodesWithRole(renderer, "listboxoption")` (the measured spelling).
 
 Run the count and use it in the page and the inventory row.
 
+### 4.2b List — `src/behaviour/list.test.tsx` (2 cases)
+
+Use `nodesWithRole(renderer, "listboxoption")`.
+
+1. **`names a selectable row from its title`** — the suite's `catalog` (no
+   `textValue`): expect `["Alpha", "Beta", "Gamma"]`. At `HEAD`: three empty
+   names.
+2. **`takes a row's name from textValue, and a caller's label over either`** —
+   two rows, one `textValue="alpha-row"` over the title `Alpha`, one
+   `aria-label="Beta row"`: expect `["alpha-row", "Beta row"]`. At `HEAD`: both
+   empty.
+
 ### 4.3 Command palette — `src/behaviour/command-menu.test.tsx` (3 cases)
 
 1. **`names every command row by its label`** — open the palette over the
@@ -329,21 +412,23 @@ Run the count and use it in the page and the inventory row.
 
 ### 4.4 The contract — `src/behaviour/accessibility.test.tsx`
 
-No new case: the existing all-example case now sees `listboxoption`. At `HEAD`,
-after adding the role to the list but before the component fix, it must report
-the unnamed option rows in the `combobox` and `command-menu` examples. After the
-fix it passes. Record both runs.
+No new case: the existing all-example case now sees `listboxoption`. Measured at
+`HEAD` with only the role added: it reports the **eight** unnamed rows of the
+`list` example (the combobox and command examples mount closed, so their rows
+are covered by §4.2/§4.3). With the role removed again it passes while those
+rows are still unnamed — the hole, both ways. After the fix it passes.
 
-### 4.5 Both-direction proof
+### 4.5 Both-direction proof (measured)
 
-| Mutation | Case that must fail |
-| -------- | ------------------- |
-| remove `aria-label` from `ComboboxItem` | combobox 1–2, the all-example contract |
-| remove the `aria-label` line from `CommandMenuItem` | command 1, the all-example contract |
+| Mutation | Cases that failed |
+| -------- | ----------------- |
+| remove `aria-label` from `ComboboxItem` | combobox 1–2 |
+| remove the `aria-label` line from `CommandMenuItem` | command 1 |
 | remove `role="listbox"` from the match column | command 2 |
 | remove the group wrapper's `role`/`aria-label` | command 3 |
-| remove `"listboxoption"` from `INTERACTIVE_ROLES` | the contract passes at `HEAD` (the recorded hole) |
-| restore the local `runsBy` copy in `combobox/logic.ts` and change one line of it | combobox group cases (pure + native) — proves the hoist is the one in use |
+| remove the row's `aria-label` from `ListItem` | list 1–2, the all-example contract (8 rows) |
+| remove `"listboxoption"` from `INTERACTIVE_ROLES` (List naming still absent) | the contract passed — the recorded hole |
+| make the shared `runsBy` treat every item as its own run | 5 combobox group cases + the command group case |
 
 ## 5. Docs, inventory and `COMPONENTS.md`
 
@@ -363,12 +448,21 @@ fix it passes. Record both runs.
 - API: `CommandMenuList` → `label?: string` (default `"Commands"`), host props.
 - Verification: the count and the three cases.
 
+`docs/list.mdx`:
+
+- Accessibility: "every selectable row is named by the caller's `aria-label`,
+  else its `textValue`, else its `ListItemTitle`; a plain `listitem` keeps its
+  content reading".
+- Verification: the count (67) and the two cases.
+
 `COMPONENTS.md`:
 
 - **Comboboxes** row: "each option and the create row is named by its label";
   update the native count.
 - **Command menus** row: "a named listbox of named options in named groups";
   update the native count.
+- **Lists / list items** row: "a selectable row is named by `aria-label`,
+  `textValue` or its title"; update the native count.
 
 `src/inventory.ts` needs no edit (records are read from the modules); if a row's
 limitations should mention that option rows are named, add it to the module's
@@ -388,15 +482,16 @@ nub run lint
 nub run test
 ```
 
-Expected: the three touched suites pass with their printed counts; the unit
-suite gains 2 (`internal/runs.test.ts`); the full native suite is the previous
-baseline plus the new passes — on 2026-10-20 that is **994 passed / 20 failed of
-1014** (re-diff against the run; the 20 recorded plan-540 classes are the only
-failures expected); `check`, `lint` and `test` exit 0.
+Measured on 2026-10-20: Combobox 69/69, Command menu 28 passed / 1 failed of 29
+(the recorded plan-530 scroll case), List 67/67, accessibility 1/1; unit 506 in
+48 files (the two new `internal/runs.test.ts` cases); full native suite **996
+passed / 20 failed of 1016** — the same 20 recorded plan-540 classes as the
+pre-change run and no other file changed; `check`, `lint` and `test` exit 0.
 
-Scoped smoke: no playground scenario mounts a combobox or command palette (the
-registry is GPUix primitives plus the Tier 2 samples — confirm with `--list`), so
-the `TestRenderer` suites are the native evidence. Do not run `--all`.
+Scoped smoke: no playground scenario mounts a combobox, command palette or
+selectable list (the registry is GPUix primitives plus the Tier 2 samples —
+confirm with `--list`), so the `TestRenderer` suites are the native evidence. Do
+not run `--all`.
 
 ## 7. STOP conditions
 
@@ -416,12 +511,13 @@ the `TestRenderer` suites are the native evidence. Do not run `--all`.
 
 ## 8. Acceptance
 
-- Both listboxes expose named options (`listboxoption` names are the visible
-  labels, or the create label), the command palette is a named `listbox` whose
-  grouped runs are named `group`s, and the combobox stays as it was otherwise.
-- The all-example contract covers `listboxoption` and fails at `HEAD` for both
-  examples, passes after.
-- Five new native cases + 2 pure cases, the six mutation proofs recorded in the
-  commit message.
+- All three listboxes expose named options (`listboxoption` names are the
+  visible labels, or the create label, or the row's title), the command palette
+  is a named `listbox` whose grouped runs are named `group`s, and nothing else
+  about them changed.
+- The all-example contract covers `listboxoption` and fails at `HEAD` for the
+  eight `list` rows, passes after.
+- Five new native cases + 2 pure cases, the seven mutation proofs recorded in
+  the commit message.
 - Docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the plan index agree with
   the run; `check`, `lint` and `test` exit 0.

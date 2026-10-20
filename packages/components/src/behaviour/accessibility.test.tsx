@@ -12,6 +12,10 @@
  * belongs to the other suites; here the rules are deliberately narrow: an
  * interactive node must have a name, and the walk must find interactive nodes at
  * all, so an empty tree cannot pass.
+ *
+ * AccessKit spells an `option` as **`listboxoption`** (measured 2026-10-20), so
+ * both spellings are listed: the contract must see a listbox row, or two shipped
+ * listboxes can carry unnamed options while this passes (plan 783).
  */
 
 import * as Arr from "effect/Array";
@@ -30,6 +34,7 @@ const INTERACTIVE_ROLES: ReadonlyArray<string> = [
   "combobox",
   "img",
   "link",
+  "listboxoption",
   "menuitem",
   "menuitemcheckbox",
   "menuitemradio",

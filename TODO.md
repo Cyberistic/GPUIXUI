@@ -1368,16 +1368,20 @@ retired once both branches are one
       five mutation proofs; unit 504 in 47 files, full native suite 989 passed /
       20 failed of 1009 — the same plan-540 classes as the pre-change run; docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
-    - [~] A listbox option carries a name, in both listboxes — plan 783;
-      measured 2026-10-20: every row in the command palette and the combobox
-      reported `listboxoption` with an empty name (the palette had no `listbox`
-      at all and its group labels were loose `label`s), because
+    - [x] A listbox option carries a name, in every listbox — plan 783;
+      measured 2026-10-20: every row in the command palette, the combobox **and**
+      a selectable List reported `listboxoption` with an empty name (the palette
+      had no `listbox` at all and its group labels were loose `label`s), because
       `accessibility.test.tsx` lists `"option"` while AccessKit spells the role
-      `listboxoption`, so the contract never saw a row. Rows are named by their
-      label (a create row by its create label), the palette's match column
-      becomes a named `listbox` of named groups over one hoisted `runsBy`, and
-      the contract covers `listboxoption`; 5 native + 2 pure cases with six
-      mutation proofs (owner: components)
+      `listboxoption`, so the contract never saw a row. Options are named by
+      their label (a create row by its create label), a selectable row by its
+      `aria-label`/`textValue`/title, the palette's match column is a named
+      `listbox` of named groups over one hoisted `runsBy`, and the contract
+      covers `listboxoption`. 5 native + 2 pure cases (Combobox 67 → 69,
+      Command menu 26 → 29, List 65 → 67), seven mutation proofs; unit 506 in 48
+      files, full native suite 996 passed / 20 failed of 1016 — the same
+      plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
@@ -1767,7 +1771,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
       `lint` and `test` exit 0 (unit 504 in 47 files) and the full native suite
       is **989 passed / 20 failed of 1009** — the four new heading cases pass,
       the 20 failures are exactly the pre-change run's list, and no other file
-      changed.
+      changed. Plan 783 re-ran the same gates on 2026-10-20: `check`, `lint` and
+      `test` exit 0 (unit 506 in 48 files) and the full native suite is **996
+      passed / 20 failed of 1016** — the seven new listbox cases pass and the 20
+      failures are the pre-change run's same list.
 
 ## Swarm-owned blockers (fix these)
 

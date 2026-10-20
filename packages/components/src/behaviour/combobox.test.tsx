@@ -1719,4 +1719,34 @@ describe("Combobox", () => {
 
     picker.unmount();
   });
+
+  it("names every option by its label", async () => {
+    const picker = renderComponent(<Picker />);
+    await open(picker);
+
+    expect(
+      nodesWithRole(picker.renderer, "listboxoption").map((node) => node.name),
+    ).toEqual(["Calendar", "Camera", "Vacation", "Desk booking"]);
+
+    picker.unmount();
+  });
+
+  it("names the create row by its create label", async () => {
+    const picker = renderComponent(
+      <Picker
+        onCreate={() => {}}
+        createLabel={(query) => `Start “${query}”`}
+      />,
+    );
+    await open(picker);
+
+    type(picker, "Design");
+    await settle();
+
+    expect(
+      nodesWithRole(picker.renderer, "listboxoption").map((node) => node.name),
+    ).toContain("Start “Design”");
+
+    picker.unmount();
+  });
 });

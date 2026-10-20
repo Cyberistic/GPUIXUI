@@ -998,6 +998,7 @@ export const ComboboxItem = ({ value, style, ref }: ComboboxItemProps) => {
     <HeadlessItem
       value={value}
       role="option"
+      aria-label={labelFor(value)}
       aria-selected={selected}
       disabled={isDisabled(value)}
       {...stateDescription(isDisabled(value))}

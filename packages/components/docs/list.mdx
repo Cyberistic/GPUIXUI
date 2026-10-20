@@ -308,6 +308,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - `aria-selected` is set on every row in both selectable modes, so the selection
   (including each member of a multiple selection) is announced rather than only
   painted.
+- **Every selectable row is named** by the caller's `aria-label`, else its
+  `textValue`, else its `ListItemTitle`; 0.10.0 never derives an option's name
+  from its contents, so a `listbox` of unnamed options would otherwise announce
+  only "option" (plan 783). A plain `listitem` keeps its content reading, so an
+  authored name is not needed there.
 - **`aria-multiselectable` cannot be declared.** `@gpuix/native@0.10.0`'s
   `HostProps` has no such attribute, so assistive technology learns the mode from
   the per-row `aria-selected` values, not from the listbox itself.
@@ -352,12 +357,13 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (65 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (67 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
 `src/list/row-state.test.ts` for the row-mask store: the modes and
-their roles, the absence and uniqueness of the tab stop, selection by click and by
+their roles, a selectable row named from its title, `textValue` and an authored
+`aria-label`, the absence and uniqueness of the tab stop, selection by click and by
 key, a disabled row rejecting both and carrying no pointer affordance, real
 focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move (including

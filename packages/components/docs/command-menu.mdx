@@ -139,7 +139,7 @@ last where it takes one.
 | ---- | ------- | ----- |
 | `CommandMenu` | Dialog-hosted palette | `open: boolean` (required), `onOpenChange: (open: boolean) => void` (required), `actions: ReadonlyArray<CommandAction>` (required), `filter?: (action: CommandAction, query: string) => boolean`, `recent?: ReadonlyArray<string>`, `defaultRecent?: ReadonlyArray<string>`, `onRecentChange?: (recent: ReadonlyArray<string>) => void`, `recentLimit?: number` (default `5`), `recentLabel?: string` (default `"Recent"`) |
 | `CommandMenuInput` | `input` | `placeholder?: string` (default `"Type a command…"`), `label?: string` (default `"Search commands"`) |
-| `CommandMenuList` | `div` | host props only; the key hint belongs to the list |
+| `CommandMenuList` | `div` (`role="listbox"`) | `label?: string` (the match column's accessible name, default `"Commands"`), host props; the key hint belongs to the list |
 | `CommandMenuItem` | `div` (`role="option"`) | `action: CommandAction` (required) |
 | `CommandMenuEmpty` | `text` | `children?: ReactNode` (default `"No matching commands"`) |
 
@@ -153,8 +153,11 @@ menu rows: `colors.hover` for the highlight with the 2px
 
 ## Accessibility and limitations
 
-- The dialog is named `"Command menu"`; the input is `"Search commands"`; rows
-  are `role="option"` with `aria-selected` for the highlight.
+- The dialog is named `"Command menu"`; the input is `"Search commands"`; the
+  match column is a `role="listbox"` named `Commands` (`label` renames it), each
+  contiguous group is a `role="group"` named by its heading, and every row is
+  named by its action label (0.10.0 never names an option from its contents —
+  plan 783), with `aria-selected` for the highlight.
 - **No `aria-activedescendant` or `aria-controls`** in 0.10.0: the relationship
   between the input and the highlighted row is visual only for assistive
   technology.
@@ -179,7 +182,7 @@ menu rows: `colors.hover` for the highlight with the 2px
 
 ## Verification
 
-`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (26 tests):
+`src/behaviour/command-menu.test.tsx` runs in the real GPUix renderer (29 tests):
 focus landing on the input, the input's focus ring, closing returning focus to
 the control that opened the palette, typing filtering the list while focus stays
 put, ArrowDown + Enter running the second match and closing, a clicked row, the
@@ -187,7 +190,9 @@ empty label, a custom filter, a disabled action refusing to run, Escape closing,
 a non-contiguous query matching initials, ranking deciding the default `Enter`
 target, group order surviving ranking, an empty query keeping declaration order,
 a caller-supplied empty state, the input's placeholder/name coming from the part,
-a caller-composed row running its `onClick` before the action, a highlighted row
+a caller-composed row running its `onClick` before the action, every row named by
+its label, the match column named and renamed by a caller `label`, each
+contiguous group named and its six rows inside it, a highlighted row
 staying inside the list viewport after 24 arrow presses and returning to the top
 as the highlight moves back up, and recents: a run command shown first on reopen,
 a non-finite `recentLimit` still recording the run, recency order without a

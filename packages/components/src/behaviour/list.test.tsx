@@ -50,6 +50,7 @@ import type { PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -1638,5 +1639,34 @@ describe("List", () => {
     expect(tabStop(list, ["row-a", "row-c"])).toEqual(["row-a"]);
 
     list.unmount();
+  });
+
+  it("names a selectable row from its title", () => {
+    const root = renderComponent(catalog);
+
+    expect(
+      nodesWithRole(root.renderer, "listboxoption").map((node) => node.name),
+    ).toEqual(["Alpha", "Beta", "Gamma"]);
+
+    root.unmount();
+  });
+
+  it("takes a row's name from textValue, and a caller's label over either", () => {
+    const root = renderComponent(
+      <List testId="list" selectionMode="single">
+        <ListItem testId="row-a" value="a" textValue="alpha-row">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+        <ListItem testId="row-b" value="b" aria-label="Beta row">
+          <ListItemTitle>Beta</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(
+      nodesWithRole(root.renderer, "listboxoption").map((node) => node.name),
+    ).toEqual(["alpha-row", "Beta row"]);
+
+    root.unmount();
   });
 });

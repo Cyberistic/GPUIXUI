@@ -21,6 +21,7 @@ import {
   requireBounds,
   until,
 } from "../internal/interaction.js";
+import { nodesWithRole } from "../internal/a11y.js";
 import { renderComponent } from "../internal/test-root.js";
 import { darkTheme, focusRing } from "../internal/theme.js";
 import {
@@ -739,6 +740,63 @@ describe("CommandMenu", () => {
     expect(
       palette.renderer.findByTestId("command-input")?.style.boxShadow,
     ).toBeUndefined();
+
+    palette.unmount();
+  });
+
+  it("names every command row by its label", () => {
+    const palette = renderComponent(<Palette perform={vi.fn()} />);
+
+    const rows = nodesWithRole(palette.renderer, "listboxoption");
+    expect(rows.map((row) => row.name)).toEqual([
+      "Open file",
+      "Open recent",
+      "Save",
+      "Export as PDF",
+      "Toggle sidebar",
+      "Delete project",
+    ]);
+    expect(rows.map((row) => row.selected)).toEqual([
+      Option.some(true),
+      Option.some(false),
+      Option.some(false),
+      Option.some(false),
+      Option.some(false),
+      Option.some(false),
+    ]);
+
+    palette.unmount();
+  });
+
+  it("names the match column, and the caller can rename it", () => {
+    const palette = renderComponent(<Palette perform={vi.fn()} />);
+    expect(
+      nodesWithRole(palette.renderer, "listbox").map((node) => node.name),
+    ).toEqual(["Commands"]);
+    palette.unmount();
+
+    const renamed = renderComponent(
+      <CommandMenu open actions={[]} onOpenChange={() => undefined}>
+        <CommandMenuInput />
+        <CommandMenuList label="Files" />
+        <CommandMenuEmpty />
+      </CommandMenu>,
+    );
+    expect(
+      nodesWithRole(renamed.renderer, "listbox").map((node) => node.name),
+    ).toEqual(["Files"]);
+    renamed.unmount();
+  });
+
+  it("names each contiguous group and keeps its rows inside it", () => {
+    const palette = renderComponent(<Palette perform={vi.fn()} />);
+
+    expect(
+      nodesWithRole(palette.renderer, "group").map((node) => node.name),
+    ).toEqual(["Navigation", "File", "View"]);
+    expect(
+      nodesWithRole(palette.renderer, "listboxoption").map((node) => node.name),
+    ).toHaveLength(6);
 
     palette.unmount();
   });

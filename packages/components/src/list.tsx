@@ -37,7 +37,9 @@ import * as Arr from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Option from "effect/Option";
 import {
+  Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -46,6 +48,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type ReactElement,
   type ReactNode,
 } from "react";
 import {
@@ -61,6 +64,7 @@ import {
   nextEnabled,
   type CollectionItem,
 } from "./internal/collection.js";
+import { controlName, plainText } from "./internal/name.js";
 import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
 import { HoverGroupContext, type HoverGroup } from "./internal/hover-group.js";
@@ -1039,6 +1043,15 @@ export const ListItem = ({
     disabled,
     selected: isSelected,
   };
+  // A listbox option gets no name from its contents in 0.10.0, so the row is
+  // named the way it types ahead: the caller's `aria-label`, then `textValue`,
+  // then its title. A plain `listitem` keeps its content reading.
+  const name = selectable
+    ? controlName(
+        rest["aria-label"] ?? textValue ?? titleTextOf(children),
+        children,
+      )
+    : undefined;
   assertParts(listItem, children);
 
   return (
@@ -1047,6 +1060,7 @@ export const ListItem = ({
         role={selectable ? "option" : "listitem"}
         {...(selectable ? { "aria-selected": isSelected } : {})}
         {...rest}
+        {...(name === undefined ? {} : { "aria-label": name })}
         {...stateDescription(disabled, rest["aria-description"])}
         ref={setElement}
         autoFocus={autoFocus && !disabled}
@@ -1149,6 +1163,23 @@ export const ListItem = ({
     </HoverGroupContext.Provider>
   );
 };
+
+/** The first {@link ListItemTitle} child's plain text, if the row has one. */
+const titleTextOf = (children: ReactNode): string | undefined =>
+  Option.getOrUndefined(
+    Option.map(
+      Option.flatMap(
+        Arr.findFirst(
+          Children.toArray(children),
+          (child): child is ReactElement<{ readonly children?: ReactNode }> =>
+            isValidElement<{ readonly children?: ReactNode }>(child) &&
+            child.type === ListItemTitle,
+        ),
+        (title) => Option.fromNullishOr(title.props.children),
+      ),
+      plainText,
+    ),
+  );
 
 /** The row's one-line label. */
 export const ListItemTitle = ({ style, ...rest }: Props) => {

@@ -281,7 +281,9 @@ the input→row relationship; `aria-selected` on the rows is the supported signa
 
 The trigger is a `button` node named by `label` (or its text) with a live
 `aria-expanded`, so the open state is announced even though 0.10.0 has no
-`aria-haspopup` (see [Limitations](#limitations)).
+`aria-haspopup` (see [Limitations](#limitations)). Each option row is named by
+its `label` (the create row by the create label): 0.10.0 never derives an
+option's name from its contents, so the part supplies it (plan 783).
 
 ## API
 
@@ -359,7 +361,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (67 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (69 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), opening from `Enter` and from the release of `Space` (with `Space`
 inert on its press, a disabled trigger inert to both, and the caller's key
@@ -400,8 +402,10 @@ keeps a later group from jumping an earlier one, a heading disappearing with its
 last match, grouped rows selecting by value, and an ungrouped create row, plus
 the scroll contract: 30 options keep the highlighted row inside the popup after
 24 arrow presses while the search field stays fixed, and the list returns to the
-top when the highlight walks back up. A picker mounted open together with its
-dialog closes alone and leaves the dialog open (plan 732).
+top when the highlight walks back up. Each option row (and the create row) is
+named by its label, so the listbox is a collection of named options. A picker
+mounted open together with its dialog closes alone and leaves the dialog open
+(plan 732).
 
 `src/combobox/logic.test.ts` covers the ranking table, `labelOf`, the run rule
 (`groupOfOption`, `optionRuns`, `rowRuns`, in-run ranking and disappearing

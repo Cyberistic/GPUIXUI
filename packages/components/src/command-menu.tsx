@@ -25,7 +25,6 @@ import * as Option from "effect/Option";
 import * as Str from "effect/String";
 import {
   createContext,
-  Fragment,
   useCallback,
   useContext,
   useLayoutEffect,
@@ -43,12 +42,14 @@ import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isDown, isUp } from "./internal/key.js";
+import { controlName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { runsBy } from "./internal/runs.js";
 import {
   controlHeight,
   focusRing,
@@ -324,14 +325,27 @@ export const CommandMenuInput = ({
 };
 
 /** {@link CommandMenuList} props. */
-export type CommandMenuListProps = Omit<Props, "children">;
+export interface CommandMenuListProps extends Omit<Props, "children"> {
+  /** The match column's accessible name. Default `"Commands"`. */
+  readonly label?: string;
+}
+
+/** An action's heading; an absent or blank group is ungrouped. */
+const groupOfAction = (action: CommandAction): Option.Option<string> =>
+  Option.filter(Option.fromNullishOr(action.group), (group) =>
+    Str.isNonEmpty(Str.trim(group)),
+  );
 
 /**
- * The match column: a heading at each group change, the rows, and the key hint.
- * The hint belongs to the list because it describes the list's keys; a custom
- * list drops it.
+ * The match column: one named group per contiguous run of actions sharing a
+ * `group`, the rows, and the key hint. The hint belongs to the list because it
+ * describes the list's keys; a custom list drops it.
  */
-export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
+export const CommandMenuList = ({
+  label = "Commands",
+  style,
+  ...rest
+}: CommandMenuListProps) => {
   const theme = useTheme();
   const { matches } = useCommandMenu();
 
@@ -349,6 +363,8 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
     >
       <div
         testId="command-list"
+        role="listbox"
+        aria-label={label}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -357,17 +373,21 @@ export const CommandMenuList = ({ style, ...rest }: CommandMenuListProps) => {
           overflow: "scroll",
         }}
       >
-        {Arr.map(matches, (action, index) => {
-          const previous =
-            index === 0 ? Option.none() : Arr.get(matches, index - 1);
-          const newGroup =
-            action.group !== undefined &&
-            !Option.exists(previous, (entry) => entry.group === action.group);
+        {Arr.map(runsBy(matches, groupOfAction), (run, index) => {
+          const group = Option.getOrUndefined(run.group);
           return (
-            <Fragment key={action.id}>
-              {newGroup ? <MenuLabel>{action.group}</MenuLabel> : null}
-              <CommandMenuItem action={action} />
-            </Fragment>
+            <div
+              key={`${group ?? "ungrouped"}-${index}`}
+              {...(group === undefined
+                ? {}
+                : { role: "group", "aria-label": group })}
+              style={{ display: "flex", flexDirection: "column" }}
+            >
+              {group === undefined ? null : <MenuLabel>{group}</MenuLabel>}
+              {Arr.map(run.items, (action) => (
+                <CommandMenuItem key={action.id} action={action} />
+              ))}
+            </div>
           );
         })}
       </div>
@@ -399,6 +419,7 @@ export const CommandMenuItem = ({
   const renderer = useGpuix().renderer;
   const { isActive, run } = useCommandMenu();
   const highlighted = isActive(action);
+  const name = controlName(rest["aria-label"], action.label);
   const [instance, setInstance] = useState<Option.Option<PublicInstance>>(
     Option.none(),
   );
@@ -425,6 +446,7 @@ export const CommandMenuItem = ({
       testId={`command-${action.id}`}
       ref={setRow}
       {...rest}
+      {...(name === undefined ? {} : { "aria-label": name })}
       onClick={(event) => {
         onClick?.(event);
         run(action);
