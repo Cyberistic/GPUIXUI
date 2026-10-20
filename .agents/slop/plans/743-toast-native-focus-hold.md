@@ -148,7 +148,7 @@ const Queue = () => {
     onNone: () => "none",
     onSome: (timing) => (timing.paused ? "held" : "running"),
   });
-  return <text testId="queue">{`${toast.toasts.length}:${held}`}</text>;
+  return <text testId="queue-state">{`${toast.toasts.length}:${held}`}</text>;
 };
 ```
 
@@ -157,15 +157,11 @@ Render it after `<ToastViewport />` inside the existing `Harness` (all
 is absolutely positioned, so the layout is not affected). Add one helper:
 
 ```ts
-const queueState = (root: ComponentTestRoot): string => {
-  const text = root.renderer.findByTestId("queue");
-  return root.renderer.getAllText().includes("") && text !== undefined
-    ? (root.renderer.getAllText().find((value) => value.includes(":")) ?? "?")
-    : "?";
-};
+const queueState = (root: ComponentTestRoot): string =>
+  root.renderer
+    .getAllText()
+    .find((text) => /^\d+:(held|running|none)$/.test(text)) ?? "?";
 ```
-
-(If the suite already has a helper that reads a text node by id, reuse it.)
 
 1. **Strengthen** `pauses auto-dismiss while keyboard focus is on the dismiss
    control`: after `focusElement(dismiss)` and 900 ms, assert
