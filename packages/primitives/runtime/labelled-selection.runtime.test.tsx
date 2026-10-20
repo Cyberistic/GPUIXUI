@@ -17,7 +17,7 @@ import { Checkbox } from "../src/components/Checkbox.js";
 import { Stack } from "../src/components/Stack.js";
 import { Switch } from "../src/components/Switch.js";
 import { Tooltip } from "../src/components/Tooltip.js";
-import { a11yValueOf, type Runtime } from "../src/testing/index.js";
+import { a11yNodes, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import { awaitFrame, openWindow, Surface } from "./fixture.js";
 
 /** What the node with this name announces, or a failure naming it. */
@@ -159,4 +159,47 @@ it("keeps a labelled Checkbox a Tooltip trigger", async () => {
   expect(focused(runtime)).toBe("c");
   expect(announced(runtime, "Email notifications")).toBe("unchecked");
   expect(runtime.allText()).toContain("Email notifications");
+});
+
+/** How many painted children the control with this id has. */
+const childCount = (runtime: Runtime, testId: string): number =>
+  Option.getOrElse(runtime.element(testId), () =>
+    expect.fail(`the runtime retained no element ${testId}`),
+  ).children.length;
+
+it("does not paint an empty labelled row for a blank Checkbox child", async () => {
+  // Plan 743: a whitespace-only text child is not a visible label. Before the
+  // fix this painted the box plus an empty `Text`, so the control had one child
+  // id and, with a blank `label`, no name.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox testId="c" label="Alerts">
+        {"   "}
+      </Checkbox>
+    </Surface>,
+  );
+  expect(childCount(runtime, "c")).toBe(0);
+  expect(announced(runtime, "Alerts")).toBe("unchecked");
+  const labels = a11yNodes(runtime.a11y())
+    .filter((node) => node.aria?.role === "CheckBox")
+    .map((node) => node.aria?.label);
+  expect(labels).toStrictEqual(["Alerts"]);
+});
+
+it("does not paint an empty labelled row for a blank Switch child", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="s" label="Wi-Fi">
+        {"   "}
+      </Switch>
+    </Surface>,
+  );
+  expect(childCount(runtime, "s")).toBe(1);
+  expect(announced(runtime, "Wi-Fi")).toBe("unchecked");
+  const labels = a11yNodes(runtime.a11y())
+    .filter((node) => node.aria?.role === "Switch")
+    .map((node) => node.aria?.label);
+  expect(labels).toStrictEqual(["Wi-Fi"]);
 });

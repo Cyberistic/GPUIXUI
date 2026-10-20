@@ -7,7 +7,7 @@
  * same three states are one paint resolved by `core/selection.ts`.
  */
 
-import { Children, type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode } from "react";
 import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
@@ -29,6 +29,7 @@ import {
   composeHandler,
   composeRef,
   controlName,
+  paintsContent,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -76,8 +77,9 @@ export interface CheckboxProps extends TriggerHandlers {
    * press anywhere toggles it and the text is heard by assistive technology —
    * the same shape `CheckboxGroup`'s rows use (`Label` beside a box cannot be
    * associated in 0.10.0). `label` still wins for the name when both are
-   * supplied; a blank `label` falls back to the text. Without children the box
-   * renders exactly as before.
+   * supplied; a blank `label` falls back to the text. A blank text child is not
+   * a visible label — it leaves the bare box, named by `label` when one is
+   * supplied. Without children the box renders exactly as before.
    */
   readonly children?: ReactNode;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
@@ -174,7 +176,7 @@ export const renderCheckbox = (
     onFocus: composeHandler(focus.onFocus, props.onFocus),
     onBlur: composeHandler(focus.onBlur, props.onBlur),
   } as const;
-  if (Children.toArray(props.children).length === 0) {
+  if (!paintsContent(props.children)) {
     return (
       <div {...control} style={resolvePartStyle(box, props.style, partState)}>
         {mark}

@@ -268,6 +268,42 @@ describe("Checkbox", () => {
       vi.fn(),
     );
     expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+    expect(elementChildren(blank)).toHaveLength(0);
+  });
+
+  it("does not paint an empty row for a blank text child", () => {
+    // Plan 743: a computed label can trim to nothing, and the row gate used to
+    // count any child. A blank run painted an empty `Text` and, without a real
+    // `label`, left a focusable checkbox with no name.
+    const blank = renderCheckbox(
+      { children: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(blank)).toHaveLength(0);
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+
+    const named = renderCheckbox(
+      { label: "Alerts", children: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(named)).toHaveLength(0);
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Alerts");
+
+    const mixed = renderCheckbox(
+      { children: ["  ", "Email"] },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(mixed)).toHaveLength(2);
+    expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Email");
   });
 
   it("keeps the bare box when a conditional label renders nothing", () => {
@@ -430,6 +466,41 @@ describe("Switch", () => {
       vi.fn(),
     );
     expect(expectSome(hostProp(padded, "aria-label"))).toBe("Wireless");
+  });
+
+  it("does not paint an empty row for a blank text child", () => {
+    // Plan 743: the same gate as Checkbox. A blank child is not a visible
+    // label, and a real explicit label still names the bare track.
+    const blank = renderSwitch(
+      { children: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    // The bare switch still paints its thumb: one child, not the row's two.
+    expect(elementChildren(blank)).toHaveLength(1);
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+
+    const named = renderSwitch(
+      { label: "Wi-Fi", children: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(named)).toHaveLength(1);
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Wi-Fi");
+
+    const mixed = renderSwitch(
+      { children: ["  ", "Wireless"] },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(mixed)).toHaveLength(2);
+    expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Wireless");
   });
 });
 

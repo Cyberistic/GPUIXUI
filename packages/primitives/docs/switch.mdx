@@ -29,6 +29,13 @@ the tab stop and the accessible name, so a press anywhere toggles it and a
 screen reader hears the text. Without children the track renders on its own and
 takes its name from `label`.
 
+**A blank text child is not a label.** A computed label that trims to nothing
+paints no row: the track renders on its own and `label` (when supplied) still
+names it. A blank run beside real text is ignored, and the row is named by the
+text that says something (plan `743`). This is the same blank-text rule as an
+empty `label` or caption, and it prevents an empty row and an unnamed focus
+stop.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -41,7 +48,7 @@ takes its name from `label`.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
-| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name, and a blank label is absent |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name; a blank text child paints no row (plan `743`) |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SwitchState>` | — | merged last on the control surface — the track without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
@@ -150,7 +157,9 @@ exported.
   the announced value flips; Space and Enter both toggle; the thumb slides
   through an intermediate position and rests at dx 3/13, dy 2 (plan 329).
 - `runtime/labelled-selection.runtime.test.tsx` — a press on the visible text
-  toggles the labelled switch and announces the new state (plan `740`).
+  toggles the labelled switch and announces the new state (plan `740`), and a
+  **blank** text child paints the bare track, named by `label`, rather than an
+  empty row (plan `743`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

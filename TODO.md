@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 167/167
+`[x]` `[████████████]` 168/168
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2330,6 +2330,18 @@ retired once both branches are one
       label and every existing string tip, and moving the blank-string guard
       after the resolution resurrects an empty labelled tip. Offline 69 files /
       953 tests, scoped live 1 file / 3 (plan `742`).
+
+`[x]` `packages/primitives`: **a blank text child painted an empty labelled
+      row** — plan `740` gated the standalone `Checkbox`/`Switch` row on
+      `Children.toArray(children).length`, so a computed label that trimmed to
+      nothing turned the bare box into a row with an empty `Text`; with a blank
+      `label` too, the focusable control had **no accessible name**, the class
+      plan `073` named for `InfoTip`, and the docs' own blank-text rule (plans
+      `026`, `396`, `577`) says blank is absent. One `paintsContent` rule now
+      gates the row: a blank text/number child paints the bare box, `label`
+      still names it, and a blank run beside real text is ignored. 2 element +
+      2 runtime cases, failing against the old `children.length` gate (offline
+      69 files / 955 tests, scoped live 1 file / 8; plan `743`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
