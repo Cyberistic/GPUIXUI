@@ -259,7 +259,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **65 test files**. The latest run's
+runtime-proven too. The runtime suite is **66 test files**. The latest run's
 totals live in `TODO.md`'s live-suite row and plan `597`, not here: a prose
 count cannot be held true by a test.
 The store artifact is the **release-tag** build (plan `529`;

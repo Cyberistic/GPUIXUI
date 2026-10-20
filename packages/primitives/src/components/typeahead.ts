@@ -26,10 +26,11 @@ const monotonicNanos = (): bigint => Effect.runSync(Clock.monotonicTimeNanos);
 /**
  * Type-ahead for a list-like control.
  *
- * `from` is the committed item's index; the search starts after the last match,
- * so a repeated letter advances to the next match. `onMatch` receives the item
- * and its index. A keystroke that matches nothing clears the prefix, so an
- * unmatched letter cannot poison the next one.
+ * `from` is the control's keyboard cursor: the committed item's index for a
+ * select (`Select`), the focused option for a roving group (`RadioGroup`). The
+ * search starts after the last match, so a repeated letter advances to the next
+ * match. `onMatch` receives the item and its index. A keystroke that matches
+ * nothing clears the prefix, so an unmatched letter cannot poison the next one.
  *
  * The search starts after the **last match**, not after `from` (plan `732`). A
  * controlled parent may defer or reject a reported value, which would leave

@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 166/166
+`[x]` `[████████████]` 167/167
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2316,6 +2316,20 @@ retired once both branches are one
       the 9 runtime cases, a value-derived cursor fails exactly the arrow-then-key
       case, and dropping either disabled guard fails its own case. Offline 69
       files / 950 tests, scoped live 1 file / 9 (plan `741`).
+
+`[x]` `packages/primitives`: **a rich `Tooltip` was invisible to assistive
+      technology** — a node tip painted a `tooltip` accessibility node with no
+      name and left its trigger without a description, because the runtime
+      cannot read text out of a node and the wrapper refused to invent one; the
+      page offered no remedy. `Tooltip` gains `label`, which is both the
+      trigger's `aria-description` and the open tip's name; a string tip still
+      defaults to its own text, a blank label falls back, a label can shorten the
+      announcement without changing the painted content, and an unlabelled node
+      tip stays unnamed (documented). 4 element + 3 runtime cases — ignoring the
+      label fails the named cases, dropping the string fallback fails the blank
+      label and every existing string tip, and moving the blank-string guard
+      after the resolution resurrects an empty labelled tip. Offline 69 files /
+      953 tests, scoped live 1 file / 3 (plan `742`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -799,10 +799,63 @@ describe("Tooltip", () => {
     expect(elementProp(tip, "aria-label")).toStrictEqual(Option.none());
   });
 
+  it("names a rich tip from its label", () => {
+    // The gap this guards (plan 742): a node tip has no text the runtime can
+    // read, so it painted an unnamed `tooltip` node and its trigger carried no
+    // description. `label` is the caller's words for both channels.
+    const parts = elementChildren(
+      renderTooltip(
+        { content: <div />, label: "  Billing cycle  ", children: null },
+        testTheme,
+      ),
+    );
+    const trigger = expectSome(Arr.get(parts, 0));
+    const tip = expectSome(Arr.get(parts, 1));
+    expect(expectSome(elementProp(tip, "role"))).toBe("tooltip");
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe(
+      "Billing cycle",
+    );
+    expect(expectSome(elementProp(tip, "aria-label"))).toBe("Billing cycle");
+  });
+
+  it("lets a label shorten a string tip's announcement without changing its paint", () => {
+    const tipOf = (label?: string) =>
+      expectSome(
+        Arr.get(
+          elementChildren(
+            renderTooltip(
+              { content: "3 items", label, children: null },
+              testTheme,
+            ),
+          ),
+          1,
+        ),
+      );
+    const named = tipOf("3 selected items");
+    expect(expectSome(elementProp(named, "aria-label"))).toBe(
+      "3 selected items",
+    );
+    expect(`${expectSome(elementProp(named, "children"))}`).toBe("3 items");
+  });
+
+  it("falls back to a string tip when the label is blank", () => {
+    const parts = elementChildren(
+      renderTooltip(
+        { content: "A hint", label: "   ", children: null },
+        testTheme,
+      ),
+    );
+    const trigger = expectSome(Arr.get(parts, 0));
+    const tip = expectSome(Arr.get(parts, 1));
+    expect(expectSome(elementProp(trigger, "aria-description"))).toBe("A hint");
+    expect(expectSome(elementProp(tip, "aria-label"))).toBe("A hint");
+  });
+
   it("drops a tip whose content is only whitespace", () => {
     // Plan 573: a computed blank translation published `aria-description: "   "`
     // and opened an empty popover named `"   "`. A whitespace-only string is no
-    // tip; the child renders unchanged.
+    // tip; the child renders unchanged. A label cannot resurrect it (plan 742):
+    // there is nothing to show.
     const tree = renderTooltip(
       { content: "   ", children: <div /> },
       testTheme,
@@ -811,6 +864,12 @@ describe("Tooltip", () => {
     const children = elementChildren(tree);
     expect(children).toHaveLength(1);
     expect(expectSome(hostTag(expectSome(Arr.get(children, 0))))).toBe("div");
+    const labelled = renderTooltip(
+      { content: "   ", label: "A hint", children: <div /> },
+      testTheme,
+    );
+    expect(labelled.type).toBe(Fragment);
+    expect(elementChildren(labelled)).toHaveLength(1);
   });
 
   it("trims a real string tip's description and name", () => {

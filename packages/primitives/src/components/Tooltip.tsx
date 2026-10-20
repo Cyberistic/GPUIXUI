@@ -80,6 +80,13 @@ export interface TooltipProps {
    * because a tip is a hint, not a paragraph.
    */
   readonly content: ReactNode;
+  /**
+   * The tip's accessible summary: the trigger's description and the open tip's
+   * name. Defaults to the content when it is a string. A **node** tip has no
+   * text the runtime can read, so without a label it paints unnamed (plan 742).
+   * A blank label falls back to a string content and is otherwise absent.
+   */
+  readonly label?: string;
   /** The element the tooltip describes. It must be focusable. */
   readonly children: ReactNode;
   /**
@@ -237,8 +244,9 @@ export interface TooltipHandlers {
  * A string tip is also the trigger's **description**: the runtime has no
  * `aria-describedby`, but it does expose `aria-description` and maps
  * `role="tooltip"`, so a screen-reader user hears the explanation on focus and
- * can reach the open tip as its own node (plan `071`). Non-string content is
- * painted and made a `tooltip` node, but is not given an invented name.
+ * can reach the open tip as its own node (plan `071`). A **rich** tip has no
+ * text the runtime can read, so it takes the caller's `label`, which names the
+ * tip and describes the trigger; without one it paints unnamed (plan `742`).
  *
  * A string that trims to nothing is **no tip** (plan `573`): the child renders
  * unchanged, so a computed blank translation cannot publish a blank description
@@ -248,6 +256,7 @@ export interface TooltipHandlers {
 export const renderTooltip = (
   {
     content,
+    label,
     children,
     open,
     disableHoverableContent,
@@ -260,10 +269,11 @@ export const renderTooltip = (
   theme: PrimitiveTheme,
   handlers: TooltipHandlers = {},
 ): ReactElement => {
-  const description = P.isString(content) ? ariaName(content) : undefined;
-  if (P.isString(content) && description === undefined) {
+  const text = P.isString(content) ? ariaName(content) : undefined;
+  if (P.isString(content) && text === undefined) {
     return <>{children}</>;
   }
+  const announced = ariaName(label) ?? text;
   const placed = handlers.placement ?? { align, offset: 0 };
   return (
     <GpuixTooltip
@@ -277,7 +287,7 @@ export const renderTooltip = (
       <TooltipTrigger
         asChild
         ref={handlers.triggerRef}
-        aria-description={description}
+        aria-description={announced}
         onMouseEnter={handlers.onEnter}
         onMouseLeave={handlers.onLeave}
         // The runtime closes on mousedown; remember the dismissal there so the
@@ -294,7 +304,7 @@ export const renderTooltip = (
       <TooltipContent
         ref={handlers.contentRef}
         role="tooltip"
-        aria-label={description}
+        aria-label={announced}
         side={side}
         align={placed.align}
         alignOffset={placed.offset}
