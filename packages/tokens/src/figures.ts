@@ -106,10 +106,12 @@ export type FigureDocument =
   | "docs/tokens.md"
   | "packages/tokens/README.md"
   | "packages/tokens/src/contrast.ts"
+  | "packages/tokens/src/disabled-state.example.ts"
   | "packages/tokens/src/native-text-check.ts"
   | "packages/tokens/src/ring.ts"
   | "packages/tokens/src/styles.ts"
-  | "packages/tokens/src/toast-countdown.example.ts";
+  | "packages/tokens/src/toast-countdown.example.ts"
+  | "packages/tokens/src/unchecked-selection.example.ts";
 
 /** Which shipped axis produced a theme, with the axes read from the theme. */
 export type ShippedThemeProvenance =
@@ -608,6 +610,45 @@ const selectionWashFigures: ReadonlyArray<DocumentedFigure> = [
   selectionPanelActionFigure,
 ];
 
+/** The dim of a filled primary action's label, on the panel the control sits on. */
+const dimmedPrimaryLabel = (
+  document: FigureDocument,
+  name: string,
+  claim: FigureClaim,
+  provenance: ShippedThemeProvenance,
+  panel: keyof ThemeColors,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name,
+  pairs: [["primaryForeground", "primary", "secondary"]],
+  kind: "dim",
+  claim,
+  provenance,
+  panel,
+  decimals: 3,
+  sentence,
+});
+
+/** The dim of a field's typed text, on its own `input` fill. */
+const dimmedFieldText = (
+  document: FigureDocument,
+  name: string,
+  claim: FigureClaim,
+  provenance: ShippedThemeProvenance,
+  sentence: string,
+): DocumentedFigure => ({
+  document,
+  name,
+  pairs: [["inputForeground", "input", "body"]],
+  kind: "dim",
+  claim,
+  provenance,
+  panel: "input",
+  decimals: 3,
+  sentence,
+});
+
 /**
  * The disabled dim the consumer packages still paint, the composition the
  * documents quote. GPUI composites an element and its children as one group, so
@@ -619,51 +660,180 @@ const selectionWashFigures: ReadonlyArray<DocumentedFigure> = [
  * the pages cannot drift again.
  */
 const disabledDimFigures: ReadonlyArray<DocumentedFigure> = [
+  dimmedPrimaryLabel(
+    "docs/design-system.md",
+    "the disabled primary action, dimmed on the identity light canvas",
+    "value",
+    identityTheme("light", "default"),
+    "background",
+    "A filled primary action at 50% opacity measures **{figure}:1** on the identity light canvas",
+  ),
+  dimmedPrimaryLabel(
+    "docs/design-system.md",
+    "the disabled primary action, dimmed on the worst shipped card",
+    "tightest",
+    platformTheme("linux", "light", "default"),
+    "card",
+    "the primary label measures **{figure}:1** on a Linux light card",
+  ),
+  dimmedFieldText(
+    "docs/tokens.md",
+    "the disabled field's typed text, dimmed on its input fill",
+    "tightest",
+    platformTheme("darwin", "light", "default"),
+    "the shipped primitives still dim the field at 50%, which measures **{figure}:1** on the macOS light `input` fill",
+  ),
+  dimmedPrimaryLabel(
+    "packages/tokens/README.md",
+    "the disabled dim's worst shipped card",
+    "tightest",
+    platformTheme("linux", "light", "default"),
+    "card",
+    "the dim measures **{figure}:1** at worst (Linux light, a card)",
+  ),
+];
+
+/**
+ * The disabled dim in `disabledControl`'s own JSDoc and in the executed example
+ * a consumer copies. Plan 539 held the two pages and plan 717 the source JSDoc
+ * it knew about; these two files repeat the same three figures and bumping any
+ * digit in them left the suite green (plan 805).
+ */
+const disabledStateFigures: ReadonlyArray<DocumentedFigure> = [
+  dimmedPrimaryLabel(
+    "packages/tokens/src/disabled-state.example.ts",
+    "the example's disabled primary label on the identity light canvas",
+    "value",
+    identityTheme("light", "default"),
+    "background",
+    "A filled primary action's label measures **{figure}:1** on the identity light canvas",
+  ),
+  dimmedPrimaryLabel(
+    "packages/tokens/src/disabled-state.example.ts",
+    "the example's disabled primary label on the worst card",
+    "tightest",
+    platformTheme("linux", "light", "default"),
+    "card",
+    "and **{figure}:1** at worst (Linux light, a card)",
+  ),
+  dimmedFieldText(
+    "packages/tokens/src/disabled-state.example.ts",
+    "the example's dimmed field text on its input fill",
+    "tightest",
+    platformTheme("darwin", "light", "default"),
+    "its typed text measures **{figure}:1** on the macOS light `input` fill",
+  ),
+  dimmedPrimaryLabel(
+    "packages/tokens/src/styles.ts",
+    "disabledControl's disabled label on the identity light canvas",
+    "value",
+    identityTheme("light", "default"),
+    "background",
+    "a filled primary action's label measures **{figure}:1** on the identity light canvas",
+  ),
+  dimmedPrimaryLabel(
+    "packages/tokens/src/styles.ts",
+    "disabledControl's disabled label on the worst card",
+    "tightest",
+    platformTheme("linux", "light", "default"),
+    "card",
+    "and **{figure}:1** at worst (Linux light, a card)",
+  ),
+  dimmedFieldText(
+    "packages/tokens/src/styles.ts",
+    "disabledControl's dimmed field text on its input fill",
+    "tightest",
+    platformTheme("darwin", "light", "default"),
+    "a disabled field's typed text **{figure}:1** on the macOS light `input` fill",
+  ),
+];
+
+/**
+ * The shipped Toast groove. `muted` equals `popover` in every default-contrast
+ * dark set (1.000:1) and steps to 1.059:1 at AAA — the distinction the header's
+ * pre-805 sentence erased.
+ */
+const toastGrooveFigures: ReadonlyArray<DocumentedFigure> = [
   {
-    document: "docs/design-system.md",
-    name: "the disabled primary action, dimmed on the identity light canvas",
-    pairs: [["primaryForeground", "primary", "secondary"]],
-    kind: "dim",
-    panel: "background",
+    document: "packages/tokens/src/toast-countdown.example.ts",
+    name: "the shipped Toast groove in the default-contrast dark sets",
+    pairs: [["muted", "popover", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityTheme("dark", "default"),
+    decimals: 3,
+    sentence: "so the groove measures **{figure}:1** there",
+  },
+  {
+    document: "packages/tokens/src/toast-countdown.example.ts",
+    name: "the shipped Toast groove at AAA",
+    pairs: [["muted", "popover", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityTheme("dark", "high"),
+    decimals: 3,
+    sentence: "the AAA dark sets step it to **{figure}:1**",
+  },
+];
+
+/**
+ * The unchecked selection control's two roles on a card: the checkbox edge is
+ * the card in identity light and on every default-contrast dark card but macOS
+ * dark, and the switch's track is the card on every default-contrast platform
+ * and recipe dark card. One figure cannot state those two sweeps; the suite
+ * holds them, these entries hold the numbers the header prints.
+ */
+const uncheckedSelectionFigures: ReadonlyArray<DocumentedFigure> = [
+  {
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked edge in identity light",
+    pairs: [["input", "card", "surface"]],
+    kind: "plain",
     claim: "value",
     provenance: identityTheme("light", "default"),
     decimals: 3,
-    sentence:
-      "A filled primary action at 50% opacity measures **{figure}:1** on the identity light canvas",
+    sentence: "the edge measures **{figure}:1** in identity light",
   },
   {
-    document: "docs/design-system.md",
-    name: "the disabled primary action, dimmed on the worst shipped card",
-    pairs: [["primaryForeground", "primary", "secondary"]],
-    kind: "dim",
-    panel: "card",
-    claim: "tightest",
-    provenance: platformTheme("linux", "light", "default"),
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked edge on macOS dark",
+    pairs: [["input", "card", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: platformTheme("darwin", "dark", "default"),
     decimals: 3,
-    sentence: "the primary label measures **{figure}:1** on a Linux light card",
+    sentence: "but macOS dark (**{figure}:1**)",
   },
   {
-    document: "docs/tokens.md",
-    name: "the disabled field's typed text, dimmed on its input fill",
-    pairs: [["inputForeground", "input", "body"]],
-    kind: "dim",
-    panel: "input",
-    claim: "tightest",
-    provenance: platformTheme("darwin", "light", "default"),
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked track on a platform dark card",
+    pairs: [["muted", "card", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: platformTheme("darwin", "dark", "default"),
     decimals: 3,
     sentence:
-      "the shipped primitives still dim the field at 50%, which measures **{figure}:1** on the macOS light `input` fill",
+      "the track **{figure}:1** on every default-contrast platform and recipe dark card",
   },
   {
-    document: "packages/tokens/README.md",
-    name: "the disabled dim's worst shipped card",
-    pairs: [["primaryForeground", "primary", "secondary"]],
-    kind: "dim",
-    panel: "card",
-    claim: "tightest",
-    provenance: platformTheme("linux", "light", "default"),
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked track in identity dark",
+    pairs: [["muted", "card", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityTheme("dark", "default"),
     decimals: 3,
-    sentence: "the dim measures **{figure}:1** at worst (Linux light, a card)",
+    sentence: "**{figure}:1** in identity dark",
+  },
+  {
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked track in identity light",
+    pairs: [["muted", "card", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: identityTheme("light", "default"),
+    decimals: 3,
+    sentence: "**{figure}:1** in identity light",
   },
 ];
 
@@ -1317,6 +1487,9 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...selectionWashFigures,
   ...inactivePanelActionFigures,
   ...disabledDimFigures,
+  ...disabledStateFigures,
+  ...toastGrooveFigures,
+  ...uncheckedSelectionFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
   trackKnobFigure,

@@ -66,6 +66,10 @@ import { nativeInk, nativeInkOpacity } from "./native-ink.js";
 import type { ThemeColors } from "./color.js";
 import type { ContrastPair } from "./contrast.js";
 
+/** A source document read as prose: the JSDoc decoration removed, not `**`. */
+const source = (url: URL): string =>
+  readFileSync(url, "utf8").replaceAll(/^[ \t]*\*(?!\*)[ \t]?/gm, "");
+
 const documents: Readonly<Record<FigureDocument, string>> = {
   "docs/tokens.md": readFileSync(
     new URL("../../../docs/tokens.md", import.meta.url),
@@ -83,25 +87,24 @@ const documents: Readonly<Record<FigureDocument, string>> = {
     new URL("../../../COMPONENTS.md", import.meta.url),
     "utf8",
   ),
-  "packages/tokens/src/ring.ts": readFileSync(
-    new URL("./ring.ts", import.meta.url),
-    "utf8",
-  ),
-  "packages/tokens/src/contrast.ts": readFileSync(
+  "packages/tokens/src/ring.ts": source(new URL("./ring.ts", import.meta.url)),
+  "packages/tokens/src/contrast.ts": source(
     new URL("./contrast.ts", import.meta.url),
-    "utf8",
   ),
-  "packages/tokens/src/native-text-check.ts": readFileSync(
+  "packages/tokens/src/native-text-check.ts": source(
     new URL("./native-text-check.ts", import.meta.url),
-    "utf8",
   ),
-  "packages/tokens/src/styles.ts": readFileSync(
+  "packages/tokens/src/styles.ts": source(
     new URL("./styles.ts", import.meta.url),
-    "utf8",
   ),
-  "packages/tokens/src/toast-countdown.example.ts": readFileSync(
+  "packages/tokens/src/toast-countdown.example.ts": source(
     new URL("./toast-countdown.example.ts", import.meta.url),
-    "utf8",
+  ),
+  "packages/tokens/src/disabled-state.example.ts": source(
+    new URL("./disabled-state.example.ts", import.meta.url),
+  ),
+  "packages/tokens/src/unchecked-selection.example.ts": source(
+    new URL("./unchecked-selection.example.ts", import.meta.url),
   ),
 };
 
