@@ -95,7 +95,29 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 132/132 plans-and-harness
+`[x]` `[██████████]` 133/133 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the state pixels** per
+      plan `755`: plan `751` gated code head `c4224479` at headless 109/109 and
+      live 98/98, then plan `754` added `state-pixels` and `live-state-pixels`
+      (50 checks each), so a promotion would have carried an ungated live
+      scenario. Verification only on code head `7b304a1f` (0 behind
+      `origin/master`, registry 110 headless / 99 live, both new ids listed):
+      headless **110/110** (**4077** checks, 65 capabilities, 224.9 s) and live
+      **99/99** (**2831** checks, 61 capabilities, **1245.6 s**), both exit `0`.
+      The live total is plan `751`'s 2780 + 50 + one check on
+      `live-tier2-editing`'s documented 33-check branch, and the headless total
+      is `4027 + 50` exactly, so both new scenarios ran inside the full
+      sequence; `state-pixels`/`live-state-pixels` report **50** each, while
+      `live-border-pixels` stays **64** and `live-shadow-pixels` **28**. Both
+      `host` lines carry the release-tag pins (`gpuix 9fcd6288`, `zed 81c99f81`,
+      runtime shaders), and a plain `--all` wrote no `provenance.json` and no
+      capture directory. `nub run check`, `nub run lint` and `nub run test`
+      green (playground **508**, testing 69, components 308, primitives 282,
+      tokens 196, tw 103, icons 19, docs 7). Artifacts:
+      `apps/playground/.artifacts/smoke-report.json` and `live-report.json`.
+      Exact ids: both whole registries (bare headless; live `--all`). This is
+      the current promotion gate.
 
 `[x]` **Prove declared hover and active colours in the frame** per plan `754`:
       the 30 `hover:`/39 `active:` declarations are colour-only and were proven
@@ -2179,7 +2201,22 @@ focused id is `live-frames`.
       check`/`lint`/`test` green (playground **495**, testing 69, components
       308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward**; the owner/supervisor still
-      performs the merge.
+      performs the merge. **Addendum (plan `755`, 2026-10-20):** plan `754`
+      then registered `state-pixels` (50 checks) and `live-state-pixels` (50),
+      so both full registries ran again on code head `7b304a1f` (0 behind
+      `origin/master`): headless **110/110** (**4077** checks, 65 capabilities,
+      224.9 s) and live **99/99** (**2831** checks, 61 capabilities,
+      **1245.6 s**), both exit `0`. The live total is `2780 + 50` plus one check
+      on `live-tier2-editing`'s documented 33-check branch, and the headless
+      total is `4027 + 50` exactly, so every new check ran in the full
+      sequence; `state-pixels` and `live-state-pixels` each report **50**,
+      `live-border-pixels` stays **64** and `live-shadow-pixels` **28**. A
+      plain `--all` wrote no `provenance.json` and no capture directory, and
+      both `host` lines carry the release-tag pins. `nub run check`/`lint`/
+      `test` green (playground **508**, testing 69, components 308, primitives
+      282, tokens 196, tw 103, icons 19, docs 7). **This is the current gate
+      for the promotion fast-forward**; the owner/supervisor still performs the
+      merge.
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

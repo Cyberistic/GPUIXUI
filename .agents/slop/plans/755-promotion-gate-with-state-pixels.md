@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (release gate) |
 | Owner | playground workstream |
 | Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `754` |
@@ -152,7 +152,35 @@ runtime mutations and the unit mutations. Do not add code to "prove" a gate.
 
 ## 7. Results
 
-_To be filled by the executor._
+Verification only; no source change. `origin/master` was 0 behind, so no merge
+was needed. The gate ran on docs head `95d84679` (code head `7b304a1f`, plan
+`754`).
+
+| Suite | Scenarios | Checks | Capabilities | Duration | Exit |
+| ----- | --------- | ------ | ------------ | -------- | ---- |
+| headless (`TestRenderer`) | **110/110** | **4077** | 65 | 224.9 s | `0` |
+| live (real window) | **99/99** | **2831** | 61 | **1245.6 s** | `0` |
+
+`state-pixels` and `live-state-pixels` each report **50**; `live-border-pixels`
+stays **64**, `live-shadow-pixels` **28**, `live-click-routing` **25**, and
+`live-tier2-editing` took its **33**-check branch. The headless total is plan
+`751`'s 4027 + 50 exactly; the live total is 2780 + 50 + that one branch check.
+Both `host` lines carry `gpuix 9fcd6288`, `zed 81c99f81` and runtime shaders; a
+plain `--all` wrote no `provenance.json` and no capture directory.
+
+```sh
+nub run --filter playground build            # exit 0
+nub apps/playground/dist/smoke/run.js        # 110/110 · 4077 · 65 · 224.9 s · exit 0
+nub apps/playground/dist/live/run.js --all   # 99/99 · 2831 · 61 · 1245.6 s · exit 0
+nub run check                                # exit 0
+nub run lint                                 # exit 0
+nub run test                                 # exit 0; playground 508, testing 69, components 308,
+                                             # primitives 282, tokens 196, tw 103, icons 19, docs 7
+```
+
+Artifacts: `apps/playground/.artifacts/smoke-report.json` and
+`live-report.json`. This is the gate for the promotion fast-forward; the
+owner/supervisor performs the merge.
 
 ## 8. Rollback
 

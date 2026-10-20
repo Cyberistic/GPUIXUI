@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (109/109 green); -> 2 on a host with no binding
+# -> 0 here (110/110 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -2315,14 +2315,12 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **98/98** (`exit 0`, **2780** checks, 61
-capabilities; **1171.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
-head `debe433a` (plan `751`, 0 behind `origin/master`; the commit changes only
-plans), with the whole headless registry at **109/109** (**4027** checks, 65
-capabilities, 177.8 s) on the same head. Plan `754` then added
-`live-state-pixels` (50 checks), so the live registry is **99** and the next
-merge gate is expected to read 99/99. The registry and the gate agree at
-**98**. It
+The last full merge/release gate ran **99/99** (`exit 0`, **2831** checks, 61
+capabilities; **1245.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
+head `7b304a1f` (plan `755`, 0 behind `origin/master`), with the whole headless
+registry at **110/110** (**4077** checks, 65 capabilities, 224.9 s) on the same
+head. The registry and the gate agree at **99**: every registered live scenario
+has now run together rather than only in focused batches. It
 includes every scenario this branch added: `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2331,12 +2329,14 @@ checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
 `live-diff`'s word wash (31), `live-qr`'s module pixels (52),
 `live-crop-area`'s mask pixels (18), `live-docking`'s indicator paint order (22),
 `live-media`'s waveform pixels (25), `live-click-routing`'s click-routing
-contract (25), `live-shadow-pixels`' ring/elevation pixels (28) and
-`live-border-pixels`' border/radius pixels (64). The total is the plan-`739`
-gate's 2716 plus plan `745`'s 64 exactly, and the headless registry is the
-plan-`739` gate's 3963 plus `border-pixels`' 64. A plain `--all`
-wrote no frame and no `provenance.json`. Plan `751` re-ran both suites on this
-head and is the current promotion gate. This gate supersedes plan `739`'s 97/97
+contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
+`live-border-pixels`' border/radius pixels (64) and `live-state-pixels`'
+hover/active pixels (50). The total is the plan-`751` gate's 2780 plus plan
+`754`'s 50 plus one check on `live-tier2-editing`'s documented 33-check branch,
+and the headless registry is that gate's 4027 plus `state-pixels`' 50. A plain
+`--all` wrote no frame and no `provenance.json`. Plan `755` re-ran both suites on
+this head and is the current promotion gate. This gate supersedes plan `751`'s
+98/98 (`2780`) on `debe433a`, plan `739`'s 97/97
 (`2716`) on `ea2e668b`, plan `735`'s 96/96
 (`2688`) on `e384a66a`, plan `723`'s 95/95
 (`2663`) on `74e27a3f`, plan `714`'s 2638 on
@@ -2536,7 +2536,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (109/109, 4027 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (110/110, 4077 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while
