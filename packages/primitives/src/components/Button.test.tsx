@@ -14,9 +14,11 @@ import type { ReactElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { Icon } from "@gpuixui/icons";
 import { buttonRecipeRing } from "../core/recipes.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderButton } from "./Button.js";
+import { Text } from "./Text.js";
 import { keyEvent, clickEvent } from "./testing/event.js";
 import {
   elementChildren,
@@ -56,6 +58,67 @@ describe("Button", () => {
     expect(hostProp(resting({ children: 3 }), "aria-label")).toStrictEqual(
       Option.some("3"),
     );
+    // The visible label is text whatever element wraps it (plan 746): an icon
+    // beside a word and a typography-wrapped run both name the button, while
+    // an icon alone still names nothing.
+    expect(
+      expectSome(
+        hostProp(
+          resting({
+            children: [
+              <Icon
+                key="i"
+                name="plus"
+                size="sm"
+                color={testTheme.colors.foreground}
+              />,
+              " Add",
+            ],
+          }),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Add");
+    expect(
+      expectSome(
+        hostProp(resting({ children: <Text>Nested</Text> }), "aria-label"),
+      ),
+    ).toBe("Nested");
+    expect(
+      expectSome(
+        hostProp(
+          resting({ children: [<Text key="t">Save</Text>, " changes"] }),
+          "aria-label",
+        ),
+      ),
+    ).toBe("Save changes");
+    expect(
+      hostProp(
+        resting({
+          children: (
+            <Icon name="plus" size="sm" color={testTheme.colors.foreground} />
+          ),
+        }),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
+    // A child's own accessible name is its own: an icon labelled "Add" names
+    // the image, not the button around it.
+    expect(
+      hostProp(
+        resting({
+          children: (
+            <Icon
+              name="plus"
+              size="sm"
+              color={testTheme.colors.foreground}
+              label="Add"
+            />
+          ),
+        }),
+        "aria-label",
+      ),
+    ).toStrictEqual(Option.none());
     expect(
       hostProp(resting({ children: <div /> }), "aria-label"),
     ).toStrictEqual(Option.none());

@@ -135,12 +135,13 @@ button reports nothing, while hover still opens its tip.
   late (plan `590`). Role, name, tab order, keyboard operation and activation
   are unaffected.
 - Role: `button`; the name is `label` when it says something (trimmed),
-  otherwise the **text-only** children joined and trimmed (`"Save changes"`).
-  GPUix does not derive a button's name from painted text, so the component
-  writes `aria-label` itself (measured: plan `058`). A computed `label=""` — or
-  whitespace — is **not** a name and does not erase the content's (plan `396`).
-  Content that is not all text — an icon, an element, a mixed list — yields no
-  name; pass `label` then.
+  otherwise the **text it paints** — string children, and text inside an element
+  child such as an icon-plus-word label or a `Text` run — joined and trimmed
+  (`"Save changes"`). GPUix does not derive a button's name from painted text, so
+  the component writes `aria-label` itself (measured: plan `058`). A computed
+  `label=""` — or whitespace — is **not** a name and does not erase the content's
+  (plan `396`). An element child with no text (a bare icon) contributes nothing,
+  so it yields no name; pass `label` then (plan `746`).
 - `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.

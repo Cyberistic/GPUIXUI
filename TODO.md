@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 168/168
+`[x]` `[████████████]` 169/169
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2368,6 +2368,19 @@ retired once both branches are one
       old behaviour fails 3 runtime cases by name and an `options.length` gate
       fails the empty-group one (offline 70 files / 959 tests, scoped live 1 file /
       4; plan `745`).
+
+`[x]` `packages/primitives`: **a visible label nested in an element did not
+      name its control** — measured (2026-10-20): `<Button><Icon name="plus"/>
+      Add</Button>`, `<Button><Text>Nested</Text></Button>`,
+      `<Toggle><Icon/> Grid</Toggle>`, `<Checkbox><Text>Accept</Text></Checkbox>`
+      and `<Switch><Text>Pause</Text></Switch>` all painted their words while the
+      Accessibility node carried **no label**, because the shared name rule
+      required every child to be a raw string. The rule now walks text leaves
+      inside element children (trimmed, joined, blank dropped), so the text a
+      control paints names it; an icon alone still names nothing and an explicit
+      `label` still wins. 2 element files + the name matrix's new six-control
+      case, both directions and an over-broad direction proven (offline 90 in the
+      two touched files, scoped live 34/34; plan `746`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

@@ -24,7 +24,10 @@ import { Checkbox } from "@gpuixui/primitives";
 A text child is the control's **visible label**: the row becomes the hit area,
 the tab stop and the accessible name, so a press anywhere toggles it and a
 screen reader hears the text. Without children the box renders on its own and
-takes its name from `label`.
+takes its name from `label`. The text may be wrapped (`<Checkbox><Text>Accept
+</Text></Checkbox>`) or sit beside a decorative icon (`<Checkbox><Icon
+name="star"/> Accept</Checkbox>`): the name is the text the row paints (plan
+`746`). An icon **alone** paints no text and names nothing — pass `label`.
 
 **A blank text child is not a label.** A computed label that trims to nothing
 paints no row: the box renders on its own and `label` (when supplied) still
@@ -57,7 +60,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
-| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name; a blank text child paints no row (plan `743`) |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child paints no row (plan `743`) |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<CheckboxState>` | — | merged last on the control surface — the box without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |

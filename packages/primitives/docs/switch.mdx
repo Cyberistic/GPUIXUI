@@ -27,7 +27,10 @@ import { Switch } from "@gpuixui/primitives";
 A text child is the switch's **visible label**: the row becomes the hit area,
 the tab stop and the accessible name, so a press anywhere toggles it and a
 screen reader hears the text. Without children the track renders on its own and
-takes its name from `label`.
+takes its name from `label`. The text may be wrapped (`<Switch><Text>Pause
+</Text></Switch>`) or sit beside a decorative icon: the name is the text the row
+paints (plan `746`). An icon **alone** paints no text and names nothing — pass
+`label`.
 
 **A blank text child is not a label.** A computed label that trims to nothing
 paints no row: the track renders on its own and `label` (when supplied) still
@@ -48,7 +51,7 @@ stop.
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
-| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name; a blank text child paints no row (plan `743`) |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child paints no row (plan `743`) |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SwitchState>` | — | merged last on the control surface — the track without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |

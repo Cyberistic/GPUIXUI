@@ -11,6 +11,7 @@
 import {
   Children,
   createContext,
+  isValidElement,
   useCallback,
   useContext,
   useEffect,
@@ -164,30 +165,39 @@ export const resolvePartStyle = <State>(
 export { isTrackedFocus, useNativeFocusId } from "./native-focus.js";
 
 /**
- * The accessible name a text-only child list gives a control.
+ * The text leaves of a child list, in paint order.
  *
- * GPUix does not derive a button's name from painted text (measured: plan `058`
- * §0), so a `Button`/`Toggle` must carry the name itself. This is the only
- * honest source: every child is a string or number. An icon, an element or a
- * mixed list returns `None` — the caller owns the name then, and the library
- * does not invent one.
+ * A control paints its children, so its name is the text inside them: a string
+ * or number is a leaf, an element contributes its own children, and an element
+ * with no text contributes nothing. This is why an icon beside a word names the
+ * control and a bare icon does not (plans `058`, `746`).
  */
-export const textOf = (children: ReactNode): Option.Option<string> => {
-  const parts = Children.toArray(children);
-  const textOnly = Arr.every(
-    parts,
-    (part) => P.isString(part) || P.isNumber(part),
+const textLeaves = (children: ReactNode): ReadonlyArray<string> =>
+  Arr.flatMap(Children.toArray(children), (part) =>
+    isValidElement<{ children?: ReactNode }>(part)
+      ? textLeaves(part.props.children)
+      : P.isString(part) || P.isNumber(part)
+        ? [`${part}`]
+        : [],
   );
-  if (!textOnly || Arr.isReadonlyArrayEmpty(parts)) return Option.none();
-  return pipe(
-    Arr.join(
-      Arr.map(parts, (part) => `${part}`),
-      "",
-    ),
-    Str.trim,
+
+/**
+ * The accessible name a child list gives a control.
+ *
+ * GPUix does not derive a control's name from painted text (measured: plan
+ * `058` §0), so `Button`/`Toggle`/`Checkbox`/`Switch` must carry the name
+ * themselves. The honest source is the text they paint, whatever element wraps
+ * it; an element with no text (an icon) returns `None`, so the library invents
+ * nothing and the caller keeps `label`. An element's own name never leaks into
+ * its parent (plan `746`).
+ */
+export const textOf = (children: ReactNode): Option.Option<string> =>
+  pipe(
+    Arr.map(textLeaves(children), Str.trim),
+    Arr.filter(Str.isNonEmpty),
+    Arr.join(" "),
     (name) => (Str.isEmpty(name) ? Option.none() : Option.some(name)),
   );
-};
 
 /**
  * Whether a child list paints anything.
@@ -254,11 +264,12 @@ export const ariaNameOr = (
 export { hasText, optionText } from "../core/text.js";
 
 /**
- * A control's name: an explicit label that says something, else its text
- * children.
+ * A control's name: an explicit label that says something, else the text it
+ * paints.
  *
- * The fallback is the rule `Button`/`Toggle` already document; a blank explicit
- * label must not beat it (plan `396`).
+ * The fallback is `textOf`, so a label wrapped in `Text` or placed beside an
+ * icon names the control it belongs to, while an icon alone names nothing. A
+ * blank explicit label must not beat it (plans `396`, `746`).
  */
 export const controlName = (
   label: string | undefined,

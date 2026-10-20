@@ -165,8 +165,10 @@ Consequences, all recorded in component rows:
   association mechanism and text is not part of the click target. Put the label
   **inside** the interactive element (the `CheckboxGroup` row contract), or the
   control must name itself;
-- text does not name an interactive ancestor: a text-only `Button` derives its
-  name from its children in component code;
+- text does not name an interactive ancestor: a `Button` derives its name from
+  the text it paints — string children, and text nested inside an element child
+  such as a `Text` run or a word beside an icon. An element with no text (a bare
+  icon) names nothing, so the caller passes `label` (plans `058`, `746`);
 - a focus ring is a zero-blur, spread-only `boxShadow` applied while the
   component holds focus, so a mouse press shows it too. **On published 0.10.0
   that ring never appears**, because no focus event reaches the component (see

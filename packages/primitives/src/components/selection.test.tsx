@@ -14,6 +14,7 @@ import * as Option from "effect/Option";
 import type { ReactElement } from "react";
 import { initValueState, type ValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
+import { Icon } from "@gpuixui/icons";
 import {
   checkboxState,
   renderCheckbox,
@@ -32,6 +33,7 @@ import {
   type CheckboxGroupFocus,
 } from "./CheckboxGroup.js";
 import { renderSwitch } from "./Switch.js";
+import { Text } from "./Text.js";
 import type { FocusState } from "./internal.js";
 import { clickEvent, keyEvent } from "./testing/event.js";
 import {
@@ -306,6 +308,60 @@ describe("Checkbox", () => {
     expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Email");
   });
 
+  it("names itself from portable text, nested text included", () => {
+    // Plan 746: the visible label is text whatever element wraps it. A `Text`
+    // child is the natural way to control the run's typography, and an icon
+    // beside a word is the common icon+label shape; both used to publish an
+    // unnamed focus stop while painting the words. An icon alone still names
+    // nothing (plan 058).
+    const nested = renderCheckbox(
+      { children: <Text>Accept</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(nested, "aria-label"))).toBe("Accept");
+    const mixed = renderCheckbox(
+      {
+        children: [
+          <Icon
+            key="i"
+            name="star"
+            size="sm"
+            color={testTheme.colors.foreground}
+          />,
+          " Accept",
+        ],
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Accept");
+    const explicit = renderCheckbox(
+      { label: "Terms", children: <Text>Accept</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(explicit, "aria-label"))).toBe("Terms");
+    const iconOnly = renderCheckbox(
+      {
+        children: (
+          <Icon name="star" size="sm" color={testTheme.colors.foreground} />
+        ),
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(iconOnly, "aria-label")).toStrictEqual(Option.none());
+  });
+
   it("keeps the bare box when a conditional label renders nothing", () => {
     // `{show && "Email"}` is a common shape; `false` is not a label. Without
     // this rule the control would paint an empty labelled row.
@@ -466,6 +522,49 @@ describe("Switch", () => {
       vi.fn(),
     );
     expect(expectSome(hostProp(padded, "aria-label"))).toBe("Wireless");
+  });
+
+  it("names itself from nested text, and an icon alone names nothing", () => {
+    // Plan 746: the row paints whatever element wraps the label, so the name
+    // must come from the text inside it. An icon-only child stays unnamed.
+    const nested = renderSwitch(
+      { children: <Text>Pause</Text> },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(nested, "aria-label"))).toBe("Pause");
+    const mixed = renderSwitch(
+      {
+        children: [
+          <Icon
+            key="i"
+            name="moon"
+            size="sm"
+            color={testTheme.colors.foreground}
+          />,
+          " Pause",
+        ],
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(mixed, "aria-label"))).toBe("Pause");
+    const iconOnly = renderSwitch(
+      {
+        children: (
+          <Icon name="moon" size="sm" color={testTheme.colors.foreground} />
+        ),
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(iconOnly, "aria-label")).toStrictEqual(Option.none());
   });
 
   it("does not paint an empty row for a blank text child", () => {

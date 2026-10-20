@@ -19,6 +19,7 @@ import type { ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { expect, it } from "vitest";
+import { Icon } from "@gpuixui/icons";
 import { Box } from "../src/components/Box.js";
 import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
@@ -47,7 +48,7 @@ import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode, a11yNodes, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow } from "./fixture.js";
+import { Surface, openWindow, testTheme } from "./fixture.js";
 
 /** Roles that carry an action or a value, so an unnamed one is a real defect. */
 const INTERACTIVE_ROLES: ReadonlyArray<string> = [
@@ -421,6 +422,61 @@ const SCENE: ReadonlyArray<ReactElement> = [
     options={[{ value: "left", label: "Left" }]}
   />,
 ];
+
+it("names a control from the text inside its children", async () => {
+  // Plan 746: the visible label is text whatever element wraps it. Before the
+  // fix the five labelled controls below painted their words and published no
+  // name, while the icon-only button was correctly unnamed.
+  const runtime = await openWindow();
+  const reports: Array<boolean> = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="column">
+        <Button testId="mixed">
+          <Icon name="plus" size="sm" color={testTheme.colors.foreground} /> Add
+        </Button>
+        <Button testId="nested">
+          <Text>Nested</Text>
+        </Button>
+        <Toggle testId="toggle">
+          <Icon name="grid" size="sm" color={testTheme.colors.foreground} />{" "}
+          Grid
+        </Toggle>
+        <Checkbox testId="check" onValueChange={(next) => reports.push(next)}>
+          <Text>Accept</Text>
+        </Checkbox>
+        <Switch testId="switch">
+          <Text>Pause</Text>
+        </Switch>
+        <Button testId="icon-only">
+          <Icon
+            name="plus"
+            size="sm"
+            color={testTheme.colors.foreground}
+            label="Add"
+          />
+        </Button>
+      </Stack>
+    </Surface>,
+  );
+  expect(
+    Arr.map(
+      Arr.filter(a11yNodes(runtime.a11y()), (node) =>
+        Arr.contains(INTERACTIVE_ROLES, node.aria?.role ?? ""),
+      ),
+      (node) => `${node.aria?.role ?? "?"}:${node.aria?.label ?? ""}`,
+    ),
+  ).toStrictEqual([
+    "Button:Add",
+    "Button:Nested",
+    "Button:Grid",
+    "CheckBox:Accept",
+    "Switch:Pause",
+    "Button:",
+  ]);
+  runtime.click("check");
+  expect(reports).toStrictEqual([true]);
+});
 
 it("creates no unnamed region for a blank ScrollArea label", async () => {
   // Plan 396: `label="   "` used to make the area a focusable `Region` whose
