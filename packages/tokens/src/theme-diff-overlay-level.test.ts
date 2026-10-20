@@ -10,6 +10,7 @@
  */
 import { describe, expect, it } from "vitest";
 import {
+  alpha,
   applyThemeEdit,
   elevationShadow,
   extendTheme,
@@ -61,7 +62,7 @@ describe("a defined overlay level is an edit the artifact can carry", () => {
       offsetY: 28,
       blurRadius: 64,
       spreadRadius: -12,
-      color: expect.stringMatching(/^#[0-9A-F]{8}$/i),
+      color: alpha(base.colors.shadow, overlayShape.alpha),
     });
   });
 
