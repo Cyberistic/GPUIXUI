@@ -15,7 +15,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   PreviewCard,
   PreviewCardContent,
@@ -198,6 +198,56 @@ describe("PreviewCard", () => {
     card.renderer.focusElement(card.renderer.findByTestId("trigger")?.id ?? -1);
     expect(card.renderer.findByTestId("preview")).toBeDefined();
 
+    card.renderer.simulateKeystrokes("escape");
+
+    expect(card.renderer.findByTestId("preview")).toBeUndefined();
+    expect(focusedTestId(card)).toEqual(Option.some("trigger"));
+
+    card.unmount();
+  });
+
+  it("keeps focus inside a card whose close the caller refuses", () => {
+    const onOpenChange = vi.fn();
+    const card = renderComponent(
+      <Workspace open={true} onOpenChange={onOpenChange} />,
+    );
+    card.renderer.focusElement(card.renderer.findByTestId("inside")?.id ?? -1);
+
+    card.renderer.simulateKeystrokes("escape");
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(card.renderer.findByTestId("preview")).toBeDefined();
+    expect(focusedTestId(card)).toEqual(Option.some("inside"));
+
+    card.unmount();
+  });
+
+  it("restores focus when a card refused once is later closed for real", async () => {
+    const RefusesOnce = () => {
+      const [open, setOpen] = useState(true);
+      const refused = useRef(false);
+      return (
+        <Workspace
+          open={open}
+          onOpenChange={(next) => {
+            if (!next && !refused.current) {
+              refused.current = true;
+              return;
+            }
+            setOpen(next);
+          }}
+        />
+      );
+    };
+    const card = renderComponent(<RefusesOnce />);
+    card.renderer.focusElement(card.renderer.findByTestId("inside")?.id ?? -1);
+
+    card.renderer.simulateKeystrokes("escape");
+    expect(card.renderer.findByTestId("preview")).toBeDefined();
+    expect(focusedTestId(card)).toEqual(Option.some("inside"));
+
+    // A claim lives one task, so a second real gesture needs a new one.
+    await after(10);
     card.renderer.simulateKeystrokes("escape");
 
     expect(card.renderer.findByTestId("preview")).toBeUndefined();

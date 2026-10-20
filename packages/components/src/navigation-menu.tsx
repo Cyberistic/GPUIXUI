@@ -34,6 +34,7 @@ import {
   useState,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
@@ -60,6 +61,8 @@ import { usePlacement } from "./internal/use-placement.js";
 interface NavigationMenuContextValue {
   readonly open: string | null;
   readonly setOpen: (value: string | null) => void;
+  /** Request a close; focus moves only when the close is accepted. */
+  readonly requestClose: (focus: string | null) => void;
   readonly registerTrigger: (
     value: string,
     instance: PublicInstance | null,
@@ -154,12 +157,23 @@ export const NavigationMenu = ({
   // anything open" without waiting for a commit.
   const openRef = useRef<string | null>(open);
   openRef.current = open;
+  // A close the caller refuses must leave the panel and the user's focus alone.
+  // The token is the trigger value to focus once the close is accepted.
+  const requestClose = useCloseFocus<string | null>(
+    open !== null,
+    () => setOpen(null),
+    (value) => {
+      if (value === null) return;
+      const instance = triggers.current.get(value);
+      if (instance !== undefined) renderer?.focusElement?.(instance.id);
+    },
+  );
   const hover = useHoverTravel({
     isOpen: () => openRef.current !== null,
     // Identity-aware: a panel opened by a key while the close timer runs must
     // survive; only the item that was open when the pointer left may close.
     close: () => {
-      if (openRef.current === open) setOpen(null);
+      if (openRef.current === open) requestClose(null);
     },
     openDelay,
     closeDelay,
@@ -224,16 +238,12 @@ export const NavigationMenu = ({
   );
 
   // One dismiss layer for the whole nav: Escape closes only this panel when the
-  // nav sits over a dialog, and focus returns to the open item's trigger. A press
-  // on that trigger is its own gesture (plan 583), so the layer claims it without
-  // closing; the click closes the panel.
+  // nav sits over a dialog, and focus returns to the open item's trigger once the
+  // close is accepted. A press on that trigger is its own gesture (plan 583), so
+  // the layer claims it without closing; the click closes the panel.
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
-    dismiss.current = () => {
-      const current = open;
-      setOpen(null);
-      if (current !== null) focusTrigger(current);
-    };
+    dismiss.current = () => requestClose(open);
   });
   useLayoutEffect(() => {
     if (open === null) return;
@@ -249,14 +259,15 @@ export const NavigationMenu = ({
         dismiss.current();
         return;
       }
-      setOpen(null);
+      requestClose(null);
     });
-  }, [open, renderer, setOpen, triggerFor]);
+  }, [open, renderer, requestClose, triggerFor]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({
       open,
       setOpen,
+      requestClose,
       registerTrigger,
       moveFocus,
       focusTrigger,
@@ -279,6 +290,7 @@ export const NavigationMenu = ({
       openOnHover,
       panelFocus,
       registerTrigger,
+      requestClose,
       setOpen,
       triggerFor,
     ],
@@ -387,6 +399,7 @@ export const NavigationMenuTrigger = ({
   const {
     open,
     setOpen,
+    requestClose,
     registerTrigger,
     moveFocus,
     requestPanelFocus,
@@ -418,7 +431,8 @@ export const NavigationMenuTrigger = ({
       }}
       onClick={(event) => {
         onClick?.(event);
-        setOpen(expanded ? null : value);
+        if (expanded) requestClose(null);
+        else setOpen(value);
       }}
       onKeyDown={(event: EventPayload) => {
         onKeyDown?.(event);
@@ -550,7 +564,7 @@ export const NavigationMenuLink = ({
   ...rest
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
-  const { setOpen } = useNavigationMenu();
+  const { requestClose } = useNavigationMenu();
   return (
     <Button
       {...rest}
@@ -558,7 +572,7 @@ export const NavigationMenuLink = ({
       onClick={(event) => {
         onClick?.(event);
         onSelect?.();
-        setOpen(null);
+        requestClose(null);
       }}
       style={mergeStyles(
         {

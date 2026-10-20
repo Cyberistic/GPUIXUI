@@ -12,9 +12,11 @@
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
 import {
   clickCentreOf,
+  focusedTestId,
   isShown,
   requireBounds,
 } from "../internal/interaction.js";
@@ -78,6 +80,7 @@ const Centre = ({
   onMarkAllRead,
   onClear,
   onOpenChange,
+  open,
   defaultOpen = false,
 }: {
   readonly notifications: ReadonlyArray<NotificationItem>;
@@ -85,6 +88,7 @@ const Centre = ({
   readonly onMarkAllRead?: () => void;
   readonly onClear?: () => void;
   readonly onOpenChange?: (open: boolean) => void;
+  readonly open?: boolean;
   readonly defaultOpen?: boolean;
 }) => (
   <NotificationCentre
@@ -93,6 +97,7 @@ const Centre = ({
     onMarkAllRead={onMarkAllRead}
     onClear={onClear}
     onOpenChange={onOpenChange}
+    open={open}
     defaultOpen={defaultOpen}
   >
     <NotificationCentreTrigger testId="bell" />
@@ -284,6 +289,24 @@ describe("NotificationCentre", () => {
 
     expect(isShown(root, "panel")).toBe(false);
     expect(onOpenChange).toHaveBeenLastCalledWith(false);
+
+    root.unmount();
+  });
+
+  it("keeps focus in a panel whose close the caller refuses", () => {
+    const onOpenChange = vi.fn();
+    const root = renderComponent(
+      <Centre notifications={seed} onOpenChange={onOpenChange} open />,
+    );
+    root.renderer.focusElement(
+      root.renderer.findByTestId("feed-deploy")?.id ?? -1,
+    );
+
+    root.renderer.simulateKeystrokes("escape");
+
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+    expect(isShown(root, "panel")).toBe(true);
+    expect(focusedTestId(root)).toEqual(Option.some("feed-deploy"));
 
     root.unmount();
   });

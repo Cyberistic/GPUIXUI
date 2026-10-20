@@ -25,6 +25,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isMenuKey } from "./internal/key.js";
@@ -119,20 +120,26 @@ export const ContextMenu = ({
     setOpenRef.current = setOpen;
   });
 
+  // Where focus goes once the close is accepted; a refused close leaves the
+  // keyboard-opened menu and the user's focus alone.
+  const requestClose = useCloseFocus<"trigger" | "none">(
+    open,
+    () => setOpenRef.current(false),
+    (focus) => {
+      if (focus === "none") return;
+      const target = triggerId.current;
+      if (target !== undefined) renderer?.focusElement?.(target);
+    },
+  );
+
   const close = useCallback(
     (reason: MenuCloseReason) => {
-      setOpenRef.current(false);
-      const target = triggerId.current;
-      if (
-        restoreFocus.current &&
-        target !== undefined &&
-        (reason === "activate" || reason === "dismiss")
-      ) {
-        renderer?.focusElement?.(target);
-      }
+      const restore =
+        restoreFocus.current && (reason === "activate" || reason === "dismiss");
+      requestClose(restore ? "trigger" : "none");
       restoreFocus.current = false;
     },
-    [renderer],
+    [requestClose],
   );
   const menu = useMenuState(close);
 

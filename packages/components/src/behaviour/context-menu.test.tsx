@@ -22,7 +22,7 @@
 
 import { describe, expect, it, vi } from "vitest";
 import type { PublicInstance } from "@gpuix/react";
-import { createRef, type Ref } from "react";
+import { createRef, useRef, useState, type Ref } from "react";
 import * as Option from "effect/Option";
 import {
   boundsOf,
@@ -57,12 +57,16 @@ const ProjectRow = ({
   onSelect,
   disabled,
   contentRef,
+  open,
+  onOpenChange,
 }: {
   readonly onSelect: (action: string) => void;
   readonly disabled?: boolean;
   readonly contentRef?: Ref<PublicInstance>;
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
 }) => (
-  <ContextMenu>
+  <ContextMenu open={open} onOpenChange={onOpenChange}>
     <ContextMenuTrigger
       testId="row"
       disabled={disabled}
@@ -107,6 +111,25 @@ const menuOrigin = (
     throw new Error("behaviour: the menu is not laid out");
   });
   return { x: bounds.x, y: bounds.y };
+};
+
+/** Accepts a keyboard open, refuses the first close, then accepts the next. */
+const RefusesFirstClose = () => {
+  const [open, setOpen] = useState(false);
+  const refused = useRef(false);
+  return (
+    <ProjectRow
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !refused.current) {
+          refused.current = true;
+          return;
+        }
+        setOpen(next);
+      }}
+      onSelect={vi.fn()}
+    />
+  );
 };
 
 /** Focus the trigger, as Tab would. */
@@ -350,6 +373,21 @@ describe("ContextMenu", () => {
 
     expect(row.renderer.findByTestId("menu")).toBeUndefined();
     expect(focusedTestId(row)).toEqual(Option.some("row"));
+
+    row.unmount();
+  });
+
+  it("keeps focus in a keyboard-opened menu whose close is refused", () => {
+    const row = renderComponent(<RefusesFirstClose />);
+    focusRow(row);
+
+    row.renderer.simulateKeystrokes("shift-f10");
+    expect(row.renderer.findByTestId("menu")).toBeDefined();
+
+    row.renderer.simulateKeystrokes("escape");
+
+    expect(row.renderer.findByTestId("menu")).toBeDefined();
+    expect(focusedTestId(row)).toEqual(Option.some("menu"));
 
     row.unmount();
   });

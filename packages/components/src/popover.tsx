@@ -46,6 +46,7 @@ import {
   type RefObject,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { isDismiss, isTab } from "./internal/key.js";
@@ -61,10 +62,15 @@ import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
+/** Where focus goes when a close is accepted. */
+type PopoverCloseFocus = "trigger" | "next" | "previous" | "none";
+
 /** The rules a {@link PopoverContent} follows; throws outside a {@link Popover}. */
 interface PopoverContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** Request a close; focus moves only when the close is accepted. */
+  readonly requestClose: (focus: PopoverCloseFocus) => void;
   readonly trigger: RefObject<PublicInstance | null>;
 }
 
@@ -106,11 +112,26 @@ export const Popover = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
+  // A close the caller refuses must leave the surface and the user's focus
+  // alone, so the restore waits for the observed `open -> false` transition.
+  const requestClose = useCloseFocus<PopoverCloseFocus>(
+    open,
+    () => setOpen(false),
+    (focus) => {
+      if (focus === "none") return;
+      const target = trigger.current;
+      if (target === null) return;
+      renderer?.focusElement?.(target.id);
+      if (focus === "next") renderer?.focusNext?.();
+      if (focus === "previous") renderer?.focusPrevious?.();
+    },
+  );
 
   const context = useMemo<PopoverContextValue>(
-    () => ({ open, setOpen, trigger }),
-    [open, setOpen],
+    () => ({ open, setOpen, requestClose, trigger }),
+    [open, requestClose, setOpen],
   );
 
   assertParts(popoverRoot, children);
@@ -124,7 +145,7 @@ export const Popover = ({
 
 /** Opens the popover it sits in. An ordinary button in every other respect. */
 export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
-  const { open, setOpen, trigger } = usePopoverContext();
+  const { open, setOpen, requestClose, trigger } = usePopoverContext();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -134,7 +155,8 @@ export const PopoverTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       aria-expanded={open}
       onClick={(event) => {
         onClick?.(event);
-        setOpen(!open);
+        if (open) requestClose("none");
+        else setOpen(true);
       }}
     />
   );
@@ -231,7 +253,7 @@ const PopoverSurface = ({
   ...rest
 }: PopoverContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger } = usePopoverContext();
+  const { open, requestClose, trigger } = usePopoverContext();
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -248,13 +270,6 @@ const PopoverSurface = ({
     margin: collisionPadding,
     trigger,
     surface,
-  });
-
-  // A re-render must not re-push the layer: that would move the popover above an
-  // overlay opened after it. The handler reads the latest setter through a ref.
-  const close = useRef<() => void>(() => undefined);
-  useLayoutEffect(() => {
-    close.current = () => setOpen(false);
   });
 
   // Focus enters the surface: the first tab stop when it has one, the surface
@@ -289,22 +304,13 @@ const PopoverSurface = ({
       ) {
         return;
       }
-      close.current();
-      if (event.eventType === "keyDown") {
-        const target = trigger.current;
-        if (target !== null) renderer?.focusElement?.(target.id);
-      }
+      requestClose(event.eventType === "keyDown" ? "trigger" : "none");
     });
-  }, [open, renderer, trigger]);
+  }, [open, renderer, requestClose, trigger]);
 
-  /** Close and hand focus to the app control after (or before) the trigger. */
+  /** Close and, once accepted, hand focus to the app control after (or before) the trigger. */
   const leave = (backwards: boolean): void => {
-    setOpen(false);
-    const target = trigger.current;
-    if (target === null) return;
-    renderer?.focusElement?.(target.id);
-    if (backwards) renderer?.focusPrevious?.();
-    else renderer?.focusNext?.();
+    requestClose(backwards ? "previous" : "next");
   };
 
   /**
@@ -319,6 +325,12 @@ const PopoverSurface = ({
     const current = renderer?.getFocusedElementId?.() ?? null;
     const first = firstTabStop.current;
 
+    // A refused close must leave the user on the stop they were on, so undo the
+    // inspecting move before asking; the accepted close moves focus itself.
+    const stay = (): void => {
+      if (current !== null) renderer?.focusElement?.(current);
+    };
+
     if (backwards) {
       if (first === null || current === first) {
         leave(true);
@@ -332,6 +344,7 @@ const PopoverSurface = ({
         !inside(renderer, element.id, previous) ||
         Arr.contains(visitedBackward.current, previous)
       ) {
+        stay();
         leave(true);
         return;
       }
@@ -346,6 +359,7 @@ const PopoverSurface = ({
       next === element.id ||
       !inside(renderer, element.id, next)
     ) {
+      stay();
       leave(false);
       return;
     }
@@ -353,6 +367,7 @@ const PopoverSurface = ({
       // Nothing was seeded (`autoFocus={false}`): only a move from the surface
       // can name the first stop; a control's own Tab leaves, as before.
       if (current !== element.id) {
+        stay();
         leave(false);
         return;
       }
@@ -361,6 +376,7 @@ const PopoverSurface = ({
       return;
     }
     if (next === first || Arr.contains(visitedForward.current, next)) {
+      stay();
       leave(false);
       return;
     }

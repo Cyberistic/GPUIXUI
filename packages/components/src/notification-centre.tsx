@@ -53,6 +53,7 @@ import {
 import { Badge } from "./badge.js";
 import { EmptyState } from "./empty-state.js";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import {
@@ -88,9 +89,13 @@ export interface NotificationCentreLabels {
 }
 
 /** The rules a notification-centre part follows; throws outside the root. */
+type NotificationCloseFocus = "trigger" | "none";
+
 interface NotificationCentreContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** Request a close; focus moves only when the close is accepted. */
+  readonly requestClose: (focus: NotificationCloseFocus) => void;
   readonly notifications: ReadonlyArray<NotificationItem>;
   readonly rows: ReadonlyArray<NotificationRow>;
   readonly unread: number;
@@ -167,6 +172,16 @@ export const NotificationCentre = ({
   const [activeId, setActiveId] = useState<Option.Option<string>>(
     Option.none(),
   );
+  // A close the caller refuses must leave the panel and the user's focus alone.
+  const requestClose = useCloseFocus<NotificationCloseFocus>(
+    open,
+    () => setOpen(false),
+    (focus) => {
+      if (focus === "none") return;
+      const target = trigger.current;
+      if (target !== null) renderer?.focusElement?.(target.id);
+    },
+  );
 
   const rows = useMemo(() => flattenRows(notifications), [notifications]);
   const unread = useMemo(() => unreadCount(notifications), [notifications]);
@@ -240,6 +255,7 @@ export const NotificationCentre = ({
     () => ({
       open,
       setOpen,
+      requestClose,
       notifications,
       rows,
       unread,
@@ -268,6 +284,7 @@ export const NotificationCentre = ({
       read,
       readActive,
       revealRow,
+      requestClose,
       rows,
       setActive,
       setOpen,
@@ -302,7 +319,8 @@ export const NotificationCentreTrigger = ({
   ref,
   ...rest
 }: NotificationCentreTriggerProps) => {
-  const { open, setOpen, unread, label, trigger } = useNotificationCentre();
+  const { open, setOpen, requestClose, unread, label, trigger } =
+    useNotificationCentre();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
   const count = unread > 99 ? "99+" : String(unread);
 
@@ -315,7 +333,8 @@ export const NotificationCentreTrigger = ({
       aria-label={`${label}, ${unread} unread`}
       onClick={(event) => {
         onClick?.(event);
-        setOpen(!open);
+        if (open) requestClose("none");
+        else setOpen(true);
       }}
     >
       {children ?? <text>{label}</text>}
@@ -386,7 +405,7 @@ export const NotificationCentreContent = ({
   const renderer = useGpuix().renderer;
   const {
     open,
-    setOpen,
+    requestClose,
     label: rootLabel,
     trigger,
     rowRefs,
@@ -404,11 +423,6 @@ export const NotificationCentreContent = ({
     surface,
   });
 
-  const close = useRef(() => setOpen(false));
-  useLayoutEffect(() => {
-    close.current = () => setOpen(false);
-  });
-
   useLayoutEffect(() => {
     if (!open) return;
     return pushDismissLayer((event) => {
@@ -421,11 +435,7 @@ export const NotificationCentreContent = ({
       ) {
         return;
       }
-      close.current();
-      if (event.eventType !== "keyDown") return;
-      const target = trigger.current;
-      if (target === null) return;
-      renderer?.focusElement?.(target.id);
+      requestClose(event.eventType === "keyDown" ? "trigger" : "none");
     });
   }, [open, renderer, trigger]);
 

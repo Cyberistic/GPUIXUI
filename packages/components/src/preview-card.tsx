@@ -30,6 +30,7 @@ import {
   type RefObject,
 } from "react";
 import { Button, type ButtonProps } from "./internal/button.js";
+import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
@@ -45,10 +46,15 @@ import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
 import { usePlacement } from "./internal/use-placement.js";
 
+/** Where focus goes when a close is accepted. */
+type PreviewCloseFocus = "trigger" | "none";
+
 /** The rules a card part follows; throws outside a {@link PreviewCard}. */
 interface PreviewCardContextValue {
   readonly open: boolean;
   readonly setOpen: (open: boolean) => void;
+  /** Request a close; focus moves only when the close is accepted. */
+  readonly requestClose: (focus: PreviewCloseFocus) => void;
   readonly trigger: RefObject<PublicInstance | null>;
   readonly hover: HoverTravel;
   /** Set while a dismissal restores focus, so that focus does not re-open. */
@@ -97,16 +103,38 @@ export const PreviewCard = ({
   });
   const trigger = useRef<PublicInstance | null>(null);
   const suppressFocusOpen = useRef(false);
+  const renderer = useGpuix().renderer;
+  // A close the caller refuses must leave the card and the user's focus alone.
+  const requestClose = useCloseFocus<PreviewCloseFocus>(
+    open,
+    () => setOpen(false),
+    (focus) => {
+      if (focus === "none") return;
+      const target = trigger.current;
+      if (target === null) return;
+      if (renderer?.getFocusedElementId?.() !== target.id) {
+        suppressFocusOpen.current = true;
+      }
+      renderer?.focusElement?.(target.id);
+    },
+  );
   const hover = useHoverTravel({
     isOpen: () => open,
-    close: () => setOpen(false),
+    close: () => requestClose("none"),
     openDelay,
     closeDelay,
   });
 
   const context = useMemo<PreviewCardContextValue>(
-    () => ({ open, setOpen, trigger, hover, suppressFocusOpen }),
-    [hover, open, setOpen],
+    () => ({
+      open,
+      setOpen,
+      requestClose,
+      trigger,
+      hover,
+      suppressFocusOpen,
+    }),
+    [hover, open, requestClose, setOpen],
   );
 
   assertParts(previewCardRoot, children);
@@ -120,7 +148,8 @@ export const PreviewCard = ({
 
 /** Opens the card on hover, focus or press. */
 export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
-  const { open, setOpen, trigger, hover, suppressFocusOpen } = usePreviewCard();
+  const { open, setOpen, requestClose, trigger, hover, suppressFocusOpen } =
+    usePreviewCard();
   const setTrigger = useMergedRef<PublicInstance | null>(trigger, ref);
 
   return (
@@ -150,7 +179,7 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
       }}
       onClick={(event) => {
         onClick?.(event);
-        if (open) setOpen(false);
+        if (open) requestClose("none");
         else hover.enter("trigger", () => setOpen(true));
       }}
       onKeyDown={(event: EventPayload) => {
@@ -193,7 +222,7 @@ export const PreviewCardContent = ({
   ...rest
 }: PreviewCardContentProps) => {
   const theme = useTheme();
-  const { open, setOpen, trigger, hover, suppressFocusOpen } = usePreviewCard();
+  const { open, requestClose, trigger, hover } = usePreviewCard();
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -204,11 +233,6 @@ export const PreviewCardContent = ({
     margin: collisionPadding,
     trigger,
     surface,
-  });
-
-  const close = useRef<() => void>(() => undefined);
-  useLayoutEffect(() => {
-    close.current = () => setOpen(false);
   });
 
   // One dismiss layer for the card, as Popover does: Escape closes the topmost
@@ -226,16 +250,9 @@ export const PreviewCardContent = ({
       ) {
         return;
       }
-      close.current();
-      if (event.eventType !== "keyDown") return;
-      const target = trigger.current;
-      if (target === null) return;
-      if (renderer?.getFocusedElementId?.() !== target.id) {
-        suppressFocusOpen.current = true;
-      }
-      renderer?.focusElement?.(target.id);
+      requestClose(event.eventType === "keyDown" ? "trigger" : "none");
     });
-  }, [open, renderer, suppressFocusOpen, trigger]);
+  }, [open, renderer, requestClose, trigger]);
 
   if (!open) return null;
 

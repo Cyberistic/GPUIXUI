@@ -56,12 +56,18 @@ const Filters = ({
 );
 
 /** A control-dense popover: the column chooser a keyboard user has to walk. */
-const Columns = () => (
+const Columns = ({
+  open,
+  onOpenChange,
+}: {
+  readonly open?: boolean;
+  readonly onOpenChange?: (open: boolean) => void;
+}) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
   >
     <Button testId="before">Before</Button>
-    <Popover>
+    <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger testId="trigger">Columns</PopoverTrigger>
       <PopoverContent testId="panel">
         <Button testId="first">First</Button>
@@ -508,6 +514,29 @@ describe("Popover", () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
     expect(popover.renderer.findByTestId("panel")).toBeDefined();
     expect(focusedTestId(popover)).toEqual(Option.some("panel"));
+
+    popover.unmount();
+  });
+
+  it("keeps Tab inside a panel whose close the caller refuses", () => {
+    const onOpenChange = vi.fn();
+    const popover = renderComponent(
+      <Columns open={true} onOpenChange={onOpenChange} />,
+    );
+    finishMotion(popover);
+
+    expect(focusedTestId(popover)).toEqual(Option.some("first"));
+    popover.renderer.simulateKeystrokes("tab");
+    popover.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(popover)).toEqual(Option.some("third"));
+
+    // The next Tab asks to leave; the caller refuses, so nothing may move.
+    popover.renderer.simulateKeystrokes("tab");
+    finishMotion(popover);
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("third"));
 
     popover.unmount();
   });

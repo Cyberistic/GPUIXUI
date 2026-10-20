@@ -225,6 +225,24 @@ describe("NavigationMenu", () => {
     nav.unmount();
   });
 
+  it("keeps focus in a panel whose close the caller refuses", () => {
+    const onValueChange = vi.fn();
+    const nav = renderComponent(
+      <Workspace value="platform" onValueChange={onValueChange} />,
+    );
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("link-overview")?.id ?? -1,
+    );
+
+    nav.renderer.simulateKeystrokes("escape");
+
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+    expect(focusedTestId(nav)).toEqual(Option.some("link-overview"));
+
+    nav.unmount();
+  });
+
   it("closes on an outside press", () => {
     const nav = renderComponent(<Workspace />);
     clickCentreOf(nav, "trigger-platform");
