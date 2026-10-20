@@ -137,6 +137,10 @@ import {
 } from "../scenarios/text-decoration.js";
 import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
 import {
+  textTruncationPixelsLiveScenario,
+  textTruncationView,
+} from "../scenarios/text-truncation.js";
+import {
   captureLive,
   expectColour,
   expectPixel,
@@ -13137,6 +13141,27 @@ const liveTextDecoration: LiveScenario = {
 };
 
 /**
+ * Text truncation in a real window (plan `778`).
+ *
+ * The headless pass compares the run's right-edge ink with the clipped control;
+ * this twin proves the same ellipsis survives a window's glyph rasteriser,
+ * which is the layer the authored style report cannot see.
+ */
+const liveTruncationPixels: LiveScenario = {
+  ...textTruncationPixelsLiveScenario,
+  view: textTruncationView,
+  ready: "truncation-stage",
+  steps: (ctx) =>
+    textTruncationPixelsLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-truncation-pixels.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -14278,6 +14303,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveOpacityPixels,
   liveTextDecoration,
   liveTextInk,
+  liveTruncationPixels,
   terminal,
   selectionSignal,
 ];

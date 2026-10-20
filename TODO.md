@@ -129,7 +129,27 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 139/139 plans-and-harness
+`[x]` `[██████████]` 140/140 plans-and-harness
+
+`[x]` **Prove the ellipsis glyph and the ink a constrained run keeps inside its
+      box** per plan `778`, closing plan `335` §6 item 9: the ellipsis was
+      geometry-only evidence and `getPaintedText()` returns the source run, so a
+      clipped-word paint passed every check. `text-truncation-pixels` /
+      `live-truncation-pixels` (**22 checks each**, focused green in 9.7 s and
+      8.0 s) put four 32 px runs in 200-wide boxes on one 640 × 360 stage and
+      read each right-edge ink profile: the ellipsis's tallest column is
+      **0.11** (75 ink px) against a clipped capital's **0.70** (713 px), so the
+      runtime paints a real `…`; the ellipsis and `overflow: "hidden"` runs keep
+      **0** ink outside their box, while a `nowrap` run with neither leaks
+      **1922** px into the strip beside it (the panel clip contains it), and the
+      `MMMM` control's edge band is blank. Ceilings frozen at `0.4`/`0.6`; the
+      new unit test caught `looksLikeDots` accepting a blank edge. Three
+      mutation proofs observed red and reverted (M1 no `textOverflow` → 0.70;
+      M2 short run → blank edge; M3 ceiling `1` → two unit tests). Full headless
+      **116/116** (**4228** checks, 65 capabilities, **275.0 s**, exit `0`,
+      exactly `4206 + 22`); playground **561** tests; live registry **104 → 105**
+      (`live-truncation-pixels` focused-green); no full live gate (merge gate).
+      Focused ids run: `text-truncation-pixels`, `live-truncation-pixels`.
 
 `[x]` **Run the promotion gate on the head that includes the text ink and
       decoration pixels** per plan `777`: verification only. Merged
@@ -2457,7 +2477,7 @@ focused id is `live-frames`.
 `[x]` Cross-team (risk, resolved by measurement): a **timer-driven `AnimatePresence` exit can be skipped** — plan `336` reproduced a frozen-clock exit that had been painted and still lost its leaving card, consistent with a queued `setRenderedChildren(presentChildren)` remounting the exiting child (a fresh motion state whose first frame is the exit settles at once). The playground no longer asserts a frozen timer exit (`toast-lifecycle` asserts it on a synchronous dismissal). **Plan `337` measured the shipped `ToastViewport`: it renders the queue directly with no `motion`/`AnimatePresence` (`viewport.tsx:227`), so a timer removal is a plain state update and there is no leaving card to skip.** The risk applies only to the local motion probe (already guarded) and to a consumer that wraps toast cards in `motion.div`; there is no component defect.
 `[ ]` Cross-team: **drag-and-drop and detachable tabs must hit-test pointer coordinates** — hover is frozen during a captured drag, the drag still ends in a click on the source, and a drop on an element without `onFileDrop` produces a click. The component owns the drop indicator and click suppression (owner: `components`/`docking`; evidence: plan `162` §8)
 `[ ]` Cross-team: export the composed examples from `@gpuixui/primitives` (`"./examples": "./examples/index.ts"` in its `exports` map) so the playground can show and smoke the ten realistic compositions its README already points at; plan `168` builds against the public root export for now (owner: `primitives`)
-`[ ]` Cross-team: `@gpuixui/primitives` `Text` must document the measured truncation caveats — `clamp` is real (`lineClamp` 2 → 52 px, 3 → 78 px, inherited from a width-constrained box) but GPUI **shares text layout per `(string, width)` and the key ignores `lineClamp`**, so two identical strings at one width clamp together (first laid out wins), and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis` while the painted report never carries the glyph. `truncate` is correct (owner: `primitives`; evidence: plan `335` §1/§12)
+`[ ]` Cross-team: `@gpuixui/primitives` `Text` must document the measured truncation caveats — `clamp` is real (`lineClamp` 2 → 52 px, 3 → 78 px, inherited from a width-constrained box) but GPUI **shares text layout per `(string, width)` and the key ignores `lineClamp`**, so two identical strings at one width clamp together (first laid out wins), and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis` while the painted report never carries the glyph. `truncate` is correct (owner: `primitives`; evidence: plan `335` §1/§12). **Plan `778` closes the glyph question and adds one caveat:** the runtime really paints the `…` (a 0.11 dot run against a clipped capital's 0.70) and both `textOverflow` and `overflow: "hidden"` keep the ink inside the box — but `nowrap` with **neither** leaks 1922 ink pixels beside its box, so `Text`'s truncate path must always ship one of them (evidence: plan `778` §8)
 `[ ]` Cross-team: `@gpuixui/components` must not assume a row/menu item stays hovered while the pointer is over a child — hover is **per element** and a child's hover cancels its parent's (measured 400/120, not 420/120). A whole-row highlight needs the `hover` style on the child too, or a documented decision not to have one (owner: `components`; evidence: plan `335` §1.3)
 `[x]` Playground (this workstream): `toast-lifecycle`'s frozen-exit assertion is deterministic — plan `336`. The flake's assertion now runs on the **synchronous** click dismissal (M1 fails it when `exit` is removed); the timer path asserts only what a timer proves (fired, own card only, survivor, later removal, reflow), and the two cards are named (`count=1`, `toast-6`, `toast-7`) before the timer starts (M2 fails it precisely when the long push is dropped, where the old assertion blamed a card that never existed). Suite `68/68`, 1785 checks (+4), three green full runs, gates green. Measured: a motion element's first painted frame is its from-state; a timer racing a paint and an `AnimatePresence` re-render is not a deterministic observation point
 `[x]` Playground: `tier2-toast` measures whether the **shipped** `ToastProvider`'s real timer can hit the same `AnimatePresence` remount that skips a leaving card — plan `337`. Measured: the shipped `ToastViewport` maps the queue straight to cards with **no `motion`/`AnimatePresence`**, so the timer removal is a plain state update and there is no leaving card; the timer fires with the GPUI motion clock frozen, the removed card has no painted bounds, and the survivor reflows to the 16 px inset. `tier2-toast` 21 → **25** checks, suite 1789 (+4), three green full runs; `smoke:live` stays 20/20; four mutation proofs (§8). No component defect: plan `336`'s race is a local-probe/consumer-motion property

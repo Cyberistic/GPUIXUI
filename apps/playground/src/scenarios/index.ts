@@ -100,6 +100,7 @@ import { stateColourScenario } from "./state.js";
 import { opacityScenario } from "./opacity.js";
 import { textDecorationScenario } from "./text-decoration.js";
 import { textInkScenario } from "./text-ink.js";
+import { textTruncationPixelsScenario } from "./text-truncation.js";
 import {
   primitivesActionsScenario,
   primitivesDisplayScenario,
@@ -267,6 +268,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   opacityScenario,
   textDecorationScenario,
   textInkScenario,
+  textTruncationPixelsScenario,
   a11yScenario,
   nativeSurfacesScenario,
   diffSurfaceScenario,

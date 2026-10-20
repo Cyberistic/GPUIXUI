@@ -82,7 +82,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | tier2 | `tier2-dialog`, `tier2-menu`, `tier2-toast`, `tier2-foundation`, `tier2-navigation`, `tier2-choice`, `tier2-forms`, `tier2-editing`, `tier2-flow`, `tier2-scroller`, `tier2-command` | verified |
 | replace | `replace-contract`, `live-replace` | verified |
 | states | `declared-styles`, `state-pixels`, `live-states`, `live-state-pixels`, `opacity-pixels`, `live-opacity-pixels` | verified |
-| truncation | `text-truncation`, `live-truncation` | verified |
+| truncation | `text-truncation`, `live-truncation`, `text-truncation-pixels`, `live-truncation-pixels` | verified |
 | inspector | `property-panel`, `live-inspector` | verified |
 | editor | `multi-pane-editor`, `live-editor` | verified |
 | data-toolbar | `data-toolbar`, `live-data-toolbar` | verified |
@@ -96,10 +96,12 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **115/115 green here** (exit `0`, `.artifacts/smoke-report.json`, **4206 checks**, 65 capabilities; **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `775` added the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 104/104**
+The suite is **116/116 green here** (exit `0`, `.artifacts/smoke-report.json`, **4228 checks**, 65 capabilities; **275.0 s** after plan `778`, **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `778` added the 22-check `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 104/104**
 (`live-report.json`, **2987 checks**, **62 capabilities**; **1273.3 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `777`, code head `85bd8cf1` at the
-gate); it covers every registered live scenario. That total is plan `768`'s
+gate); it covered every scenario registered at that point. Plan `778` then
+added `live-truncation-pixels` (22 checks, focused-green in 8.0 s), so the
+registry is **105** and the full live suite is still the gate. That total is plan `768`'s
 2933 plus the three text probes' **13 + 23 + 18** (`live-font-family`,
 `live-text-ink`, `live-text-decoration`), so the text ink, the decoration and
 the platform typeface join the clipboard, history and OTP-paste
@@ -122,14 +124,15 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 104, and the full gate covers all 104** (plan
-`777` includes plans `771`, `773` and `775`). The live registry is guarded by
+**Registered live scenarios are 105** (plan `777`'s gate covers the first 104;
+plan `778`'s `live-truncation-pixels` is focused-green). The live registry is guarded by
 `liveScenarioProblems` (plan `639`); the count grew from 96 to 97 with plan
 `736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels`, to
 99 with plan `754`'s `live-state-pixels`, to 100 with plan `761`'s
 `live-opacity-pixels`, to 101 with plan `764`'s `live-editing-actions`, to 102
-with plan `771`'s `live-font-family`, to 103 with plan `773`'s `live-text-ink`
-and to 104 with plan `775`'s `live-text-decoration`. Plans `697` and
+with plan `771`'s `live-font-family`, to 103 with plan `773`'s `live-text-ink`,
+to 104 with plan `775`'s `live-text-decoration` and to 105 with plan `778`'s
+`live-truncation-pixels`. Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
 `722` added **11** to `live-media`, plans `724`/`734` added **25** to
@@ -138,9 +141,10 @@ and to 104 with plan `775`'s `live-text-decoration`. Plans `697` and
 to the new `live-state-pixels`, plan `761` added **29** to the new
 `live-opacity-pixels`, plan `764` added **73** for the new
 `live-editing-actions`, plan `771` added **13** for the new `live-font-family`,
-plan `773` added **23** for the new `live-text-ink` and plan `775` added **18**
-for the new `live-text-decoration`; plan `777` measured the 104-scenario
-registry inside the full sequence: **2987** checks, exit `0`.
+plan `773` added **23** for the new `live-text-ink`, plan `775` added **18**
+for the new `live-text-decoration` and plan `778` added **22** for the new
+`live-truncation-pixels`; plan `777` measured the 104-scenario registry inside
+the full sequence: **2987** checks, exit `0`.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
 `live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s
@@ -201,8 +205,9 @@ wheel is always `precise: true`, `touchPhase: "moved"`, so `precise` cannot tell
 a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`). The registry is **104**
-scenarios; the last full run was **104/104 green** (2987 checks, 62 capabilities;
+(`nub run --filter playground smoke:live`, plan `189`). The registry is **105**
+scenarios; the last full run was **104/104 green** on the 104 registered then
+(2987 checks, 62 capabilities;
 1273.3 s) on the release-tag
 binding through plan `656`'s capture-capable live runner (plan `777`'s gate on
 code head `85bd8cf1`, including `live-editing-actions`' 73 clipboard/history
@@ -874,7 +879,7 @@ carries an evidenced limitation. The capability evidence lives in
 
 | Component | Status | GPUix support | Docs / example | Notes / limitations |
 | --------- | ------ | ------------- | -------------- | ------------------- |
-| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Truncation (`text-truncation`, plan `335`):** `truncate` is measured — `textOverflow: "ellipsis"` collapses to **one line** (26 px against 364 px wrapped), and the truncated string is still reported in full by `getPaintedText()`, so the ellipsis glyph itself is not assertable. `clamp` is measured — `lineClamp` clips to exactly N lines (2 → 52 px, 3 → 78 px) and works on a width-constrained box with no fixed height. **Caveat:** the runtime shares text layout per `(string, width)` and the key ignores `lineClamp`, so two identical strings at one width clamp together (first laid out wins); and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis`. **Type layout (`typography-layout`, plan `342`):** an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` reaches the layout (a word at 700 is ~4 px wider at 16 px); a `<text>` block **fills its parent** by default. **`textAlign` is a no-op in 0.10.0** — left/centre/right all leave the glyph run at the block's left edge, on the `<text>` and on its parent — so `Text`'s documented `align` prop currently does nothing. The working routes are moving the block: `alignSelf: "center"`/`"flex-end"` in a column flex (measured 82.5 / 165 in a 200 px column) or a narrower explicit width in a `justifyContent: "center"` row (70). **Defect recorded cross-team** for `primitives` to implement or document. **Live (`live-typography`, plan `591`):** a real window reproduces the contract exactly — `30/60` line heights, the `19.5/26/39` default line boxes, a bold run wider by more than 2 px, `alignSelf` at `100/200`, `justifyContent` at `70`, and `textAlign` left/centre/right still leaving every glyph x unchanged. **The face reaches the glyphs (`font-family`/`live-font-family`, plan `771`):** varying only `fontFamily` changes the shaped run — the default face is proportional, the platform mono is uniform to 1 px, and an unknown family falls back to the default's advance within 4 px (silent; `registerFont` does not exist on the pin, so a brand face cannot ship). **Ink colour (`text-ink-pixels`/`live-text-ink`, plan `773`):** the declared `color` reaches the glyph pixels in both hosts — four 64 px runs carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` and `success #3BC97F` (13,617 of 67,584 device pixels for the foreground run, exact), and no run paints the next role's token. Glyph shape, hinting and anti-aliasing quality remain unclaimed. **Decoration (`text-decoration-pixels`/`live-text-decoration`, plan `775`):** `textDecoration: "underline"` and `"line-through"` paint a continuous 427 px ink row at panel-relative `y=0.67` and `y=0.45` respectively, exactly in the run's `foreground`; the undeclared control's widest row is a 22 px glyph stem. A parent `div`'s declaration **does** propagate to its child `<text>` (the shipped `link` Button variant's hover underline is therefore visible), and an underline paints **1–2 device px below the `<text>` box**, so the panel — not the run box — is the sampling and hit-testing region. |
+| Text / typography | wip | yes | [text](packages/primitives/docs/text.mdx) · typography | **Runtime (041):** paints its string, and its box height is the role's line height. `textStyle` in `core/style.ts` covered by `style.test.ts`. Accepts `testId` (043), like every other primitive. **Truncation (`text-truncation`, plan `335`):** `truncate` is measured — `textOverflow: "ellipsis"` collapses to **one line** (26 px against 364 px wrapped), and the truncated string is still reported in full by `getPaintedText()`, so the ellipsis glyph itself is not assertable. `clamp` is measured — `lineClamp` clips to exactly N lines (2 → 52 px, 3 → 78 px) and works on a width-constrained box with no fixed height. **Caveat:** the runtime shares text layout per `(string, width)` and the key ignores `lineClamp`, so two identical strings at one width clamp together (first laid out wins); and `whiteSpace: "nowrap"` alone has the same geometry as `ellipsis`. **Type layout (`typography-layout`, plan `342`):** an explicit `lineHeight` is exact (30 → 60 for two wrapped lines); the default line box is ~1.6× the font size (12 → 19.5, 16 → 26, 24 → 39); `fontWeight` reaches the layout (a word at 700 is ~4 px wider at 16 px); a `<text>` block **fills its parent** by default. **`textAlign` is a no-op in 0.10.0** — left/centre/right all leave the glyph run at the block's left edge, on the `<text>` and on its parent — so `Text`'s documented `align` prop currently does nothing. The working routes are moving the block: `alignSelf: "center"`/`"flex-end"` in a column flex (measured 82.5 / 165 in a 200 px column) or a narrower explicit width in a `justifyContent: "center"` row (70). **Defect recorded cross-team** for `primitives` to implement or document. **Live (`live-typography`, plan `591`):** a real window reproduces the contract exactly — `30/60` line heights, the `19.5/26/39` default line boxes, a bold run wider by more than 2 px, `alignSelf` at `100/200`, `justifyContent` at `70`, and `textAlign` left/centre/right still leaving every glyph x unchanged. **The face reaches the glyphs (`font-family`/`live-font-family`, plan `771`):** varying only `fontFamily` changes the shaped run — the default face is proportional, the platform mono is uniform to 1 px, and an unknown family falls back to the default's advance within 4 px (silent; `registerFont` does not exist on the pin, so a brand face cannot ship). **Ink colour (`text-ink-pixels`/`live-text-ink`, plan `773`):** the declared `color` reaches the glyph pixels in both hosts — four 64 px runs carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` and `success #3BC97F` (13,617 of 67,584 device pixels for the foreground run, exact), and no run paints the next role's token. Glyph shape, hinting and anti-aliasing quality remain unclaimed. **Decoration (`text-decoration-pixels`/`live-text-decoration`, plan `775`):** `textDecoration: "underline"` and `"line-through"` paint a continuous 427 px ink row at panel-relative `y=0.67` and `y=0.45` respectively, exactly in the run's `foreground`; the undeclared control's widest row is a 22 px glyph stem. A parent `div`'s declaration **does** propagate to its child `<text>` (the shipped `link` Button variant's hover underline is therefore visible), and an underline paints **1–2 device px below the `<text>` box**, so the panel — not the run box — is the sampling and hit-testing region. **Ellipsis paint (`text-truncation-pixels`/`live-truncation-pixels`, plan `778`):** the ellipsis is a real glyph — the right edge is a short dot run (tallest column **0.11** of the line box, 75 ink px) against a clipped capital's **0.70** (713 px) — and both an ellipsis run and an `overflow: "hidden"` run keep **0** ink outside their box. A `nowrap` run with neither leaks **1922** ink pixels into the strip beside it, so truncating UI must supply one of the two (the shipped `Text` does). `ellipsis-start` and multi-line `lineClamp` paint remain unclaimed. |
 | Icons | wip | yes | [icon](packages/icons/docs/icon.mdx) · icons | **Runtime (041):** the raw `<svg source>` paints at 20×20 (`lg`) / 24×24 (`xl`); a decorative icon is absent from the a11y tree, a labelled one is an `Image`; a red vs blue capture differs byte-wise, so the tint reaches the paint. 18 offline tests. **Live (`live-content`, plan `577`):** a sourced `<svg>` reports its declared 48 × 48 painted box in a real window; the tint itself stays headless (no style/a11y report live, plan `197`). |
 | Separators | wip | yes | [separator](packages/primitives/docs/separator.mdx) · layout | **Runtime (041):** one border step across the surface. `ruleStyle` test. |
 | Spacers | wip | yes | [spacer](packages/primitives/docs/spacer.mdx) · layout | **Runtime (041):** a filler pushes its sibling to the far edge. `layout.test.ts`. |

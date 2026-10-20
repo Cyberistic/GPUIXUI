@@ -1684,6 +1684,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `761`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
 | `live-text-ink` | the four text roles in a window: a 64 px run's glyph pixels carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` or `success #3BC97F` (at least 32 device pixels each, exact ink), no run paints the next role's token, and the stage stays `background` — 23 checks (plan `773`). The scan maps the run's logical box through the frame's device scale (2) and reports the closest pixel on failure |
 | `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
+| `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -2452,6 +2453,34 @@ fails `the undeclared run paints no line` with `widest 427px at y=0.67` (exit
 syntax decorations, and selection interaction. Only a solid line's presence,
 band, continuity and colour are asserted.
 
+### Truncation, in the frame (plan `778`)
+
+Plan `335` measured truncation as geometry and recorded that `getPaintedText()`
+returns the source run, so the `…` itself was never asserted. A runtime that
+clipped the run instead of drawing an ellipsis — or painted past the layout box
+— would have passed every check. `text-truncation-pixels` /
+`live-truncation-pixels` (**22 checks each**) put four 32 px `MMMM …` runs in
+`200`-wide boxes on one 640 × 360 stage and read each run's right-edge ink and
+the strip beside its box:
+
+| Fixture | Right-edge ink | Tallest column | Ink beside the box |
+| ------- | -------------- | -------------- | ------------------ |
+| `ellipsis` | 75 / 3072 | **0.11** | **0** / 10240 |
+| `overflow: hidden` | 713 / 3072 | **0.70** | **0** / 10240 |
+| `nowrap`, no clip, no `textOverflow` | 713 / 3072 | 0.70 | **1922** / 10240 |
+| `MMMM` short control | 0 / 3072 | 0.00 | 0 / 10240 |
+
+**The ellipsis is a real glyph**, not a clipped word: its right edge is a short
+dot run (0.11 of the line box) while a clipped capital is 0.70. An ellipsis run
+and a clipped run keep **all** their ink inside the box; a `nowrap` run with
+neither leaks **1922** pixels into the strip beside it (the panel's clip is what
+kept it on screen). Truncating UI must supply one of the two — the shipped
+`Text` does. The ceilings (`0.4` dots, `0.6` clipped) sit between the measured
+values.
+
+**Not claimed:** `ellipsis-start`, multi-line `lineClamp` paint, the exact
+glyph, and the `Text` component's API. The probe mounts bare `<text>` runs.
+
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 
 The native editor binds `cmd-c`, `cmd-x`, `cmd-v`, `cmd-z` and `shift-cmd-z`
@@ -2498,11 +2527,13 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **115/115 green** here (`exit 0`, 4206 checks, 65 capabilities,
-**432.8 s** at the plan `777` gate, 2026-10-20; **484.1 s** at plan `773`, which
-read 114/114 · 4188; **237.6 s** at plan `771`, which read
+The suite is **116/116 green** here (`exit 0`, 4228 checks, 65 capabilities,
+**275.0 s** after plan `778`, 2026-10-20; **432.8 s** at the plan `777` gate,
+which read 115/115 · 4206; **484.1 s** at plan `773`, which read
+114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `775` added the 18-check `text-decoration-pixels`,
+read 112/112 · 4152; plan `778` added the 22-check
+`text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`,
 plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check
 `font-family`, plan `764` the 46-check `editing-actions`, plan
 `761` the 29-check `opacity-pixels`, plan `754` the 50-check
@@ -2515,7 +2546,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-115/115 scenarios passed · capabilities: layout=verified root=verified text=verified
+116/116 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2541,7 +2572,10 @@ checks, 65 capabilities, 432.8 s) on the same code. The live total is plan
 `live-text-decoration`'s 18, so every registered id ran inside the gate. The
 capability count is **62** rather than 61 because plans `773`/`775` now mount
 `text` in a live scenario directly, instead of relying on plan `653`'s
-`live-typography` alias alone. It includes every scenario this branch added:
+`live-typography` alias alone. Plan `778` then added `live-truncation-pixels`
+(22 checks, focused-green in 8.0 s), so the registry is **105** and the full
+live suite has not been re-run since. The gate includes every scenario this
+branch added:
 `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
