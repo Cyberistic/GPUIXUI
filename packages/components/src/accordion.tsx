@@ -416,9 +416,13 @@ export const AccordionTrigger = ({
     useAccordionContext();
   const { value, disabled, trigger } = useAccordionItemContext();
   const name = controlName(rest["aria-label"], children);
-  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
+  );
+  const [focused, setFocused] = useFocusState(
+    autoFocus,
+    disabled,
+    instance?.id,
   );
   const open = isOpen(value);
   const state: AccordionTriggerState = { open, disabled, focused };

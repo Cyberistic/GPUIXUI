@@ -221,10 +221,12 @@ dependent (playground plans 390, 603, 605). A ring is therefore guaranteed for
 host sends the event — unless the part measures the renderer's own focused host.
 The parts that own a ring and can be reached that way do exactly that while they
 are enabled (a 50 ms sample of `getFocusedElementId()`): `FieldInput` (plan 748),
-`SearchInput` (plans 659/660) and `ComboboxTrigger` while its popup is closed
-(plan 672). The sample reads the renderer's focus; it never invents focus from
-colour or hover, and every component page whose parts can take focus states the
-limitation (plan 608).
+`SearchInput` (plans 659/660), `ComboboxTrigger` while its popup is closed
+(plan 672), and the button-shaped parts — `Button`, `IconButton`, `TabsTrigger`,
+`AccordionTrigger` and `CollapsibleTrigger` — through the shared
+`useFocusState` host id (plan 752). The sample reads the renderer's focus; it
+never invents focus from colour or hover, and every component page whose parts
+can take focus states the limitation (plan 608).
 A part that becomes disabled drops its painted focus even though no `blur`
 arrives, so a disabled control never shows a ring; re-enabling waits for the
 next real focus signal (plan `680`).

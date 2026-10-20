@@ -21,7 +21,9 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -441,7 +443,7 @@ describe("Collapsible", () => {
     section.unmount();
   });
 
-  it("returns focus to the trigger when a close starts inside the body", () => {
+  it("returns focus to the trigger when a close starts inside the body", async () => {
     const section = renderComponent(<SelfClosing />);
     section.renderer.clockPause();
     settle(section);
@@ -454,9 +456,12 @@ describe("Collapsible", () => {
 
     expect(isHidden(section, "content")).toBe(true);
     expect(focusedTestId(section)).toEqual(Option.some("trigger"));
-    expect(
-      section.renderer.findByTestId("trigger")?.style.boxShadow,
-    ).toBeDefined();
+    // The ring follows the renderer's focused host (plan 752), so it arrives on
+    // the next sample rather than from a React `onFocus` the binding never sends.
+    await until(
+      () =>
+        section.renderer.findByTestId("trigger")?.style.boxShadow !== undefined,
+    );
 
     section.renderer.clockResume();
     section.unmount();
@@ -488,6 +493,56 @@ describe("Collapsible", () => {
     expect(focusedTestId(section)).toEqual(Option.some("close"));
 
     section.renderer.clockResume();
+    section.unmount();
+  });
+
+  /**
+   * Native focus (plan 752). The bug this guards, measured: a trigger reached by
+   * `focusElement` held native focus and painted no ring, because the ring came
+   * from React `onFocus` alone and the binding delivers no React event for a
+   * native move (plans 536/540).
+   */
+  it("paints a trigger's ring from native focus", async () => {
+    const section = renderComponent(
+      <div>
+        <Collapsible>
+          <CollapsibleTrigger testId="first">First</CollapsibleTrigger>
+          <CollapsibleContent>
+            <text>First body</text>
+          </CollapsibleContent>
+        </Collapsible>
+        <Collapsible>
+          <CollapsibleTrigger testId="second">Second</CollapsibleTrigger>
+          <CollapsibleContent>
+            <text>Second body</text>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>,
+    );
+    const trigger = (testId: string): number =>
+      section.renderer.findByTestId(testId)?.id ?? -1;
+
+    section.renderer.focusElement(trigger("second"));
+    await until(
+      () =>
+        section.renderer.findByTestId("second")?.style.boxShadow !== undefined,
+    );
+
+    expect(focusedTestId(section)).toEqual(Option.some("second"));
+    expect(section.renderer.findByTestId("second")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    section.renderer.focusElement(trigger("first"));
+    await until(
+      () =>
+        section.renderer.findByTestId("first")?.style.boxShadow !== undefined,
+    );
+
+    expect(
+      section.renderer.findByTestId("second")?.style.boxShadow,
+    ).toBeUndefined();
+
     section.unmount();
   });
 });

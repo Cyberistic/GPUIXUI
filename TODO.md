@@ -1092,6 +1092,27 @@ retired once both branches are one
       931 passed / 28 failed of 959 (the same plan-540 binding classes, no new
       failure); docs, `COMPONENTS.md` and the inventory synced (owner:
       components)
+    - [x] A button-shaped part's focus ring follows native focus — plan 752;
+      measured 2026-10-20: `focusElement` **and a real click** both left the
+      focused host on a `Button`, `IconButton`, tab, accordion header and
+      collapsible trigger painting `boxShadow: undefined`, because their ring came
+      from React `onFocus`/`onBlur` and the binding delivers neither for a native
+      move. `useFocusState` now takes the part's own host id and samples the
+      renderer's focused host (the plan-748 rule), keeping the `autoFocus` seed
+      only until a host is reported and never painting a ring while disabled; the
+      five parts pass the id they already held. 4 new cases + 1 disabled pin
+      (Button 15 → 17, Tabs 43 → 44, Accordion 25 → 26, Collapsible 16 → 17),
+      both-direction proof, and the two recorded red close-focus ring cases now
+      pass for the same reason; the full native suite is 938 passed / 26 failed
+      of 964 (the same plan-540 classes); `check`/`lint`/`test` exit 0 (unit 488
+      in 46 files); docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30
+      and the inventory synced (owner: components)
+    - [ ] The remaining ring owners sample native focus too — the follow-up to
+      plan 752: `Carousel` (group and dots), `ColorPicker` (swatch),
+      `HotkeyRecorder` (clear), `TagInput` (chip removal), `MentionInput` (row)
+      and `TimePicker` (clear) still paint from React `onFocus` only, so their
+      real-renderer ring cases stay in the plan-540 failure list (26 remaining).
+      Each needs the same host-id sample; a plan comes first (owner: components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed

@@ -21,8 +21,10 @@ import {
   hoverCentreOf,
   requireBounds,
   sizeOf,
+  until,
 } from "../internal/interaction.js";
-import { controlHeight, darkTheme } from "../internal/theme.js";
+import { FOCUS_SAMPLE_MS } from "../internal/native-focus.js";
+import { controlHeight, darkTheme, focusRing } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
 
 describe("Button", () => {
@@ -237,6 +239,69 @@ describe("Button", () => {
     expect(
       Option.map(sizeOf(button, "button"), ({ height }) => height),
     ).toEqual(Option.some(controlHeight(darkTheme, "md")));
+
+    button.unmount();
+  });
+
+  /**
+   * Native focus (plan 752). The bug this guards, measured: `focusElement` and a
+   * real click both left the focused host on a button painting no ring, because
+   * the ring came from React `onFocus` alone and 0.10.0 delivers no React event
+   * for a native focus move (plans 536/540).
+   */
+  it("paints the ring when native focus arrives and gives it up when it leaves", async () => {
+    const button = renderComponent(
+      <div>
+        <Button testId="first">One</Button>
+        <Button testId="second">Two</Button>
+      </div>,
+    );
+
+    button.renderer.focusElement(
+      button.renderer.findByTestId("first")?.id ?? -1,
+    );
+    await until(
+      () =>
+        button.renderer.findByTestId("first")?.style.boxShadow !== undefined,
+    );
+
+    expect(focusedTestId(button)).toEqual(Option.some("first"));
+    expect(button.renderer.findByTestId("first")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    button.renderer.focusElement(
+      button.renderer.findByTestId("second")?.id ?? -1,
+    );
+    await until(
+      () =>
+        button.renderer.findByTestId("second")?.style.boxShadow !== undefined,
+    );
+
+    expect(focusedTestId(button)).toEqual(Option.some("second"));
+    expect(
+      button.renderer.findByTestId("first")?.style.boxShadow,
+    ).toBeUndefined();
+
+    button.unmount();
+  });
+
+  it("paints no ring on a disabled button that holds native focus", async () => {
+    const button = renderComponent(
+      <Button testId="disabled" disabled>
+        Save
+      </Button>,
+    );
+
+    button.renderer.focusElement(
+      button.renderer.findByTestId("disabled")?.id ?? -1,
+    );
+    await new Promise((resolve) => setTimeout(resolve, FOCUS_SAMPLE_MS + 20));
+
+    expect(focusedTestId(button)).toEqual(Option.some("disabled"));
+    expect(
+      button.renderer.findByTestId("disabled")?.style.boxShadow,
+    ).toBeUndefined();
 
     button.unmount();
   });

@@ -74,7 +74,8 @@ focus before letting go cancels the change. A held key does not toggle twice.
 
 `autoFocus` sets the initial `focused` state, so the trigger's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
-never dispatches `onFocus`.
+never dispatches `onFocus`. Afterwards the ring follows the renderer's focused
+host (plan 752).
 
 A disabled trigger leaves the tab order, drops its own click and key action and
 dims to 50%; it paints no hover, press or focus ring, and a caller's `onKeyDown`
@@ -125,13 +126,15 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   boxes because the natural height is measured while the wrapper is clipped
   (plan 597).
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample through the shared `useFocusState` host id), so a trigger
+  reached by `Tab`, a programmatic move or a press paints the ring and losing
+  focus clears it (plan 752); caller `onBlur` still runs only when the runtime
+  delivers one.
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (16 tests):
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (17 tests):
 click toggling with the body kept mounted, `aria-expanded` following the body,
 Enter on press and Space on release, the controlled contract in both directions,
 the closed and open tab order, state surviving a close and a re-open, the

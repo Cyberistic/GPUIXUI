@@ -232,9 +232,11 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   tab. Because 0.10.0 dispatches no `focus`/`blur` and a removed host cannot be
   read, the holder is sampled every 50 ms while the tab exists; a removal inside
   that window is still a lost focus (plans 646/712).
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus` and then follow the renderer's focused
+  host (a 50 ms sample through the shared `useFocusState` host id), so a tab
+  reached by `Tab`, a programmatic move or a press paints the ring and losing
+  focus clears it (plan 752); caller `onBlur` still runs only when the runtime
+  delivers one.
 - `TabsIndicator` is measured from the rail and the selected trigger: the bar's
   start along the rail is **the component's own `spacing.xs` padding**, so a
   caller who overrides `TabsList`'s `style.padding` shifts it off the tab. The
@@ -244,13 +246,14 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (43 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (44 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
 controlled contract, a press on the already-selected uncontrolled tab reporting
 nothing (plan 517), a panel whose value matches nothing, a caller `ref`, a caller
-`onBlur` composed with the focus ring, and four vertical-axis cases — Down/Up
+`onBlur` composed with the focus ring, a trigger ring that follows a native focus
+move and clears when focus leaves (plan 752), and four vertical-axis cases — Down/Up
 movement with wrap, Left/Right ignored, the row/column layout, and manual
 activation. Dynamic tabs: a tab that becomes disabled hands the tab stop and
 focus to a live tab through the renderer's focused host (a native focus move

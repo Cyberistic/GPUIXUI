@@ -30,9 +30,10 @@ import {
   focusedTestId,
   isShown,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { FOCUS_SAMPLE_MS } from "../internal/native-focus.js";
-import { darkTheme, lightTheme } from "../internal/theme.js";
+import { darkTheme, focusRing, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -875,6 +876,37 @@ describe("Tabs", () => {
     expect(
       tabs.renderer.findByTestId("tab-danger")?.style.boxShadow,
     ).toBeDefined();
+
+    tabs.unmount();
+  });
+
+  /**
+   * Native focus (plan 752). The bug this guards, measured: a trigger reached by
+   * `focusElement` held native focus and painted no ring, because the ring came
+   * from React `onFocus` alone and the binding delivers no React event for a
+   * native move (plans 536/540).
+   */
+  it("paints a trigger's ring from native focus", async () => {
+    const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
+
+    focusTab(tabs, "tab-b");
+    await until(
+      () => tabs.renderer.findByTestId("tab-b")?.style.boxShadow !== undefined,
+    );
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-b"));
+    expect(tabs.renderer.findByTestId("tab-b")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    focusTab(tabs, "tab-a");
+    await until(
+      () => tabs.renderer.findByTestId("tab-a")?.style.boxShadow !== undefined,
+    );
+
+    expect(
+      tabs.renderer.findByTestId("tab-b")?.style.boxShadow,
+    ).toBeUndefined();
 
     tabs.unmount();
   });

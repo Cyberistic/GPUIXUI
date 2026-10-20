@@ -25,7 +25,9 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
+import { darkTheme, focusRing } from "../internal/theme.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -660,7 +662,7 @@ describe("Accordion", () => {
     faq.unmount();
   });
 
-  it("returns focus to the header when a close starts inside its body", () => {
+  it("returns focus to the header when a close starts inside its body", async () => {
     const faq = renderComponent(<SelfClosing />);
     faq.renderer.clockPause();
     settle(faq);
@@ -671,9 +673,12 @@ describe("Accordion", () => {
 
     expect(isHidden(faq, "content-one")).toBe(true);
     expect(focusedTestId(faq)).toEqual(Option.some("trigger-one"));
-    expect(
-      faq.renderer.findByTestId("trigger-one")?.style.boxShadow,
-    ).toBeDefined();
+    // The ring follows the renderer's focused host (plan 752), so it arrives on
+    // the next sample rather than from a React `onFocus` the binding never sends.
+    await until(
+      () =>
+        faq.renderer.findByTestId("trigger-one")?.style.boxShadow !== undefined,
+    );
 
     faq.renderer.clockResume();
     faq.unmount();
@@ -692,6 +697,41 @@ describe("Accordion", () => {
     expect(focusedTestId(faq)).toEqual(Option.some("close-one"));
 
     faq.renderer.clockResume();
+    faq.unmount();
+  });
+
+  /**
+   * Native focus (plan 752). The bug this guards, measured: a header reached by
+   * `focusElement` held native focus and painted no ring, because the ring came
+   * from React `onFocus` alone and the binding delivers no React event for a
+   * native move (plans 536/540).
+   */
+  it("paints a header's ring from native focus", async () => {
+    const faq = renderComponent(<Faq />);
+    const header = (testId: string): number =>
+      faq.renderer.findByTestId(testId)?.id ?? -1;
+
+    faq.renderer.focusElement(header("trigger-two"));
+    await until(
+      () =>
+        faq.renderer.findByTestId("trigger-two")?.style.boxShadow !== undefined,
+    );
+
+    expect(focusedTestId(faq)).toEqual(Option.some("trigger-two"));
+    expect(faq.renderer.findByTestId("trigger-two")?.style.boxShadow).toEqual(
+      focusRing(darkTheme).boxShadow,
+    );
+
+    faq.renderer.focusElement(header("trigger-one"));
+    await until(
+      () =>
+        faq.renderer.findByTestId("trigger-one")?.style.boxShadow !== undefined,
+    );
+
+    expect(
+      faq.renderer.findByTestId("trigger-two")?.style.boxShadow,
+    ).toBeUndefined();
+
     faq.unmount();
   });
 });

@@ -627,9 +627,13 @@ export const TabsTrigger = ({
     select,
     noteFocus,
   } = useTabsContext();
-  const [focused, setFocused] = useFocusState(autoFocus, disabled);
   const [instance, setInstance] = useState<PublicInstance | undefined>(
     undefined,
+  );
+  const [focused, setFocused] = useFocusState(
+    autoFocus,
+    disabled,
+    instance?.id,
   );
 
   const attach = useCallback((next: PublicInstance | null) => {
