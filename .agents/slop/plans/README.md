@@ -390,6 +390,7 @@ references without buying correctness.
 | [772](./772-inset-ring-figures.md) | The inset ring's figure and count have one owner, and the source-count guard cannot see `sixteen` | F | 609, 717, 760, 770 | done |
 | [774](./774-index-paragraph-counts.md) | The index paragraph states four catalogue sizes, and none has an owner | F | 059, 064, 066, 327, 398, 611 | done |
 | [775](./775-readme-index-counts.md) | The front door's index paragraph states four catalogue sizes, and none has an owner | F | 064, 519, 774 | done |
+| [777](./777-readme-elevation-paragraph.md) | The front door's elevation paragraph, and the twelve fills it states of fifteen | F | 347, 584, 610, 619, 665, 737, 749, 775 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3993,6 +3994,19 @@ two retypings beside it go with it: the motion-level case iterates
 status-family sentence takes its count from `statusTones`. The README needed no
 prose edit. No token value, pair, floor, metric, role or shipped theme moves;
 `contrastPairs` stays **470**.
+
+Plan `777` closes the last unowned paragraph on the same page: §*Shadows* names
+the six `elevationSurfaces`, the `md` content fills and two ratios, and mutating
+all five left `readme.test.ts` green. The paragraph was also stale — it
+enumerated twelve of the fifteen `elevationContentSurfaces` (`disabled`,
+`skeleton` and `track` joined in plans `737`, `619` and `347`) — so it names all
+fifteen, and its surface count, content-fill count, three group counts and two
+ratios are derived. An elevation shadow is not a role pair: it is the `shadow`
+tint at a level's alpha over a surface, so `figures.ts` gains a `"shadow"` kind
+that composes `elevationShadow(theme, level)` the way the contrast checker does,
+and the front door's two figures become table entries. The table grows 68 → 70.
+No token value, pair, floor, metric, role or shipped theme moves; `contrastPairs`
+stays **470**.
 
 ## How to use a plan
 
