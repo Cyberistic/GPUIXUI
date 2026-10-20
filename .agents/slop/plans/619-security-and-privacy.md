@@ -333,9 +333,10 @@ nub run check                       # exit 0
 nub run lint                        # exit 0
 ```
 
-No browser smoke is needed: the change adds one static page and no rendered
-control or live scene. The next cross-cutting docs change runs `smoke:a11y`
-over it (the page is plain prose and lists).
+No browser smoke is needed for the page's content: the change adds one static
+page and no rendered control or live scene. The scoped accessibility sweep was
+still run over it: `nub scripts/smoke-a11y.ts --only /docs/security` reported
+`1 pages × 2 schemes, 0 violations` and exit `0`.
 
 ## 8. Two-direction proofs
 
