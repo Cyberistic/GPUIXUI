@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 166/166
+`[x]` `[██████████]` 167/167
+
+`[x]` **Motion has an answer (plan 600)** — a reader's `motion`, `animation`
+      and `easing` landed on Card, an Accordion limitation or nothing, because no
+      page stated what the runtime can animate. Theming's `## Motion` names the
+      eight `MotionStyle` fields, the absent transform/rotation/colour, the
+      timing fields and the token gap; `motion-truth.test.ts` reads the installed
+      declarations in both directions and fails when `packages/tokens` gains a
+      motion module. 112 files / 878 docs tests, 99-page `smoke:build`, root
+      gates green; seven forced defects (plan 600 §6.3).
 
 `[x]` **A reader's integration phrase reaches its page (plan 599)** — the
       second page-alias pass covers the words whose owner is a *section*, not a

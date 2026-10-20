@@ -731,6 +731,17 @@ root entry is the **only** `@gpuixui/*` import the site may make
 (`@gpuixui/tokens/react` is forbidden, as is every GPUix runtime package);
 `src/architecture.test.ts` enforces the allow-list.
 
+Motion is the one design-system axis with no tokens yet, so Theming's
+`## Motion` section states what the *runtime* can animate instead: the
+`MotionStyle` keys, the timing fields, and the transform/rotation/colour that do
+not exist. `src/motion-truth.test.ts` parses `MotionStyle`, `MotionTransition`,
+`MotionEase` and the `@gpuix/react` exports from the installed declarations, so
+the section cannot outlive the API in either direction, and it fails when
+`packages/tokens/src/index.ts` gains a motion module — the day plan 019 lands,
+the page must change. `motion`, `animation` and `easing` reach the section
+through the page-alias table; `smoke:build` asserts `easing`, which returned
+nothing at all before (plan 600).
+
 ## Code highlighting
 
 Code fences, source includes and generated prop tables are highlighted by two

@@ -95,6 +95,51 @@ padding and row heights, and leaves colour and type alone. Elevation resolves to
 one shadow per surface because the native runtime paints one; `overlay` is
 reserved and paints nothing.
 
+## Motion
+
+GPUix animates through React: `motion.div` is the only animated host, and
+`AnimatePresence` keeps a child mounted until its `exit` motion finishes.
+`usePresence` and `useIsPresent` are how a child learns it is leaving.
+
+A `MotionStyle` can move eight things and nothing else:
+
+| Field | What it animates |
+| ----- | ---------------- |
+| `width` | the box width |
+| `height` | the box height |
+| `opacity` | the layer's opacity |
+| `top` | the top inset |
+| `right` | the right inset |
+| `bottom` | the bottom inset |
+| `left` | the left inset |
+| `borderRadius` | the corner radius |
+
+There is **no transform, no rotation, no colour and no clip**, which is why
+Spinner's arc, Drawer's slide and Carousel's slide are recorded as limitations on
+their pages rather than implemented as animation. `transition.duration` and
+`transition.delay` are in **seconds**, and `ease` accepts `linear`, `ease`,
+`easeIn`, `easeOut`, `easeInOut` or a four-number cubic-bezier tuple.
+
+```tsx
+import { motion } from "@gpuix/react";
+
+<motion.div
+  initial={{ opacity: 0, height: 0 }}
+  animate={{ opacity: 1, height: 96 }}
+  exit={{ opacity: 0, height: 0 }}
+  transition={{ duration: 0.18, ease: "easeOut" }}
+  onMotionComplete={() => {}}
+  style={{ borderColor: theme.colors.border }}
+/>;
+```
+
+The runtime has no `prefers-reduced-motion` query, so whether motion is skipped
+is the application's decision. `@gpuixui/tokens` ships **no motion group** yet:
+each component owns its timing constants, and durations and easings as tokens
+are tracked in `packages/tokens` plan 019. `motion-truth.test.ts` reads the
+installed declarations and this section in both directions, so a property the
+runtime gains cannot go undocumented and a property it loses cannot be claimed.
+
 ## Platform styles
 
 The library ships a platform style for **macOS**, **Linux** and **Windows**, plus

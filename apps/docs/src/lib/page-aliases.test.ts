@@ -140,6 +140,9 @@ const owned = [
   ["disabled", "/docs/component-api"],
   ["disabled state", "/docs/component-api"],
   ["how to install", "/docs/installation"],
+  ["motion", "/docs/theming"],
+  ["animation", "/docs/theming"],
+  ["easing", "/docs/theming"],
 ] as const;
 
 const regressions = [
@@ -158,6 +161,11 @@ const regressions = [
   ["typography", "/docs/typography"],
   ["disabled button", "/docs/components/button"],
   ["row selection", "/docs/roadmap"],
+  ["card", "/docs/components/card"],
+  ["accordion", "/docs/components/accordion"],
+  ["theming", "/docs/theming"],
+  ["duration", "/docs/components/countdown#composition"],
+  ["transition", "/docs/theming#motion"],
 ] as const;
 
 describe(

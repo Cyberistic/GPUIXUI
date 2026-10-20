@@ -50,6 +50,7 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["/docs/data-display", ["select row", "selectable rows"]],
   ["/docs/examples", ["demo", "sample"]],
   ["/docs/installation", ["version", "versions", "how to install"]],
+  ["/docs/theming", ["motion", "animation", "easing"]],
   ["/docs/typography", ["mono", "mono font", "monospace"]],
 ]);
 

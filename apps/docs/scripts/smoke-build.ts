@@ -1090,6 +1090,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the installation twin of `how to use`",
     },
+    {
+      query: "easing",
+      expected: "/docs/theming",
+      first: true,
+      what: "a timing word the motion section answers, which returned nothing before",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
