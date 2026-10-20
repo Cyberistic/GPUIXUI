@@ -141,6 +141,7 @@ import {
   scrollAffordanceLiveScenario,
   scrollAffordanceView,
 } from "../scenarios/scroll-affordance.js";
+import { gradientLiveScenario, gradientView } from "../scenarios/gradient.js";
 import {
   surfaceThemeLiveScenario,
   surfaceThemeView,
@@ -13177,6 +13178,28 @@ const liveScrollAffordance: LiveScenario = {
 };
 
 /**
+ * Gradient backgrounds in a real window (plan `807`).
+ *
+ * The headless pass proves the paint route, the two colour spaces, the stop
+ * clamp, precedence, the radius clip, the silent drop, the alpha fade, hover
+ * and the hit path; this twin proves the same route through a window's
+ * rasteriser and its real pointer delivery.
+ */
+const liveGradient: LiveScenario = {
+  ...gradientLiveScenario,
+  view: gradientView,
+  ready: "gradient-stage",
+  steps: (ctx) =>
+    gradientLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-gradient.png`),
+        ),
+      ),
+};
+
+/**
  * Text decoration in a real window (plan `775`).
  *
  * The headless pass proves the two declared lines, the control's absence and
@@ -14406,6 +14429,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTextInk,
   liveFieldInk,
   liveScrollAffordance,
+  liveGradient,
   liveTruncationPixels,
   liveSurfaceTheme,
   liveDialogScrim,

@@ -826,6 +826,35 @@ not merely untintable — it paints no scrollbar at all**, so the `COMPONENTS.md
 and `ScrollArea` sentences were wrong and are corrected; the `tab-overflow`
 "reserved scrollbar" comment was a 1 px rounding of the strip's padding.
 
+## Gradient backgrounds (plan `807`)
+
+`StyleDesc.background` publishes a **two-stop linear gradient** with an angle
+and an interpolation space, and neither the library nor either registry used it
+once. `gradient-pixels` / `live-gradient` (121 checks each) decode three frames
+per host — rest, hovered and left — and measure the whole route.
+
+| Question | Measured (both hosts) |
+| -------- | --------------------- |
+| does it paint? | yes: angle 90 blue→red reads `#0200FB` at the left and `#FB0001` at the right |
+| which way does the angle run? | **toward the second stop**: 90 puts the first stop at the left, 0 puts it at the bottom (up), 180 puts it at the top |
+| is `colorSpace` real? | yes: the blue→red midpoint is `#7F007F` in sRGB and `#8B53A0` in Oklab, 83 channels apart on G |
+| does the frame follow CSS Oklab? | within **6** channels across the curve (half-float shading), so the check's band is 12; the sRGB path is within 2 |
+| do stop positions clamp? | yes: `0.25/0.75` is flat `#0000FF` to 0.25 and `#FF0000` from 0.75 |
+| `backgroundColor` + `background` | the colour **wins**; a gradient is not a fallback |
+| an out-of-range stop (`1.5`) | **silently dropped**: the whole background resolves to `None` and the stage shows through. No error, no fallback |
+| a radius | clips the gradient (the corner is the stage) |
+| alpha stops | composite over the stage, so a fade needs no image: 50 % reads `#850A0D` over `#11141A` |
+| `hover` / `active` | accept a gradient, paint it and revert |
+| hit-testing | a gradient counts as a painted fill and **swallows** the press (`valid=0`); a clear child lets the parent take it (`clear=1`); `pointerEvents: "none"` hands it back (`none=1`) |
+
+The recipe: use `background: { type: "linear-gradient", angle, stops, colorSpace }`
+for a two-stop brand/surface/fade, validate the stops in component code (the
+runtime cannot report a bad one), never pair it with a `backgroundColor`
+expecting a fallback, and put it on a decorative overlay only with
+`pointerEvents: "none"`. Three stops, radial gradients and gradient animation
+are not in the runtime's type; the chart's `<img>` SVG route remains the
+full-colour escape hatch. `gradient-model.ts` owns the sRGB and CSS-Oklab maths.
+
 ## Variable row heights (plan `198`)
 
 `variable-rows` is the one virtual-list probe with **real, differing row
@@ -1168,7 +1197,7 @@ did for layouts), and every column is painted — column windowing stays
 that lists every column with a show/hide control and up/down controls. The grid
 keeps its 150 px frozen ID column; the four configurable columns start at
 `name 200`, `status 120`, `size 90`, `notes 150` (560 px of content in a 360 px
-viewport). 122 checks; live twin `live-column-config` (27 checks).
+viewport). 121 checks; live twin `live-column-config` (27 checks).
 
 | Fact | Measured |
 | ---- | -------- |
@@ -1732,6 +1761,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-scroll-into-view` | the element scroll route in a window: `End` focuses row 199 and the list paints it, `Home` returns to `y = 0`, `scrollToItem(120)` and `scrollIntoView(row 10)` both move the window and paint their target while leaving focus alone, three `Down`s paint and focus row 13, and a second `scrollIntoView` paints row 199 without moving focus — 39 checks (plan `601`). **Measured limit:** the element route only reveals a row the list has laid out; from the anchor at 120, row 20 moved the list while rows 50 and 100 did nothing — use `scrollToItem` for a far jump |
 | `live-field-ink` | the shipped `Input`'s three observable inks in a window: the typed text paints `inputForeground`, the placeholder paints the runtime's fixed `#8F8F8F` (the `placeholder` token paints 0 px), and a `cmd-a` selection paints the fixed `#3C4271` wash (the `selection` token paints 0 px) — 19 checks (plan `797`). The caret is not asserted: the automation window is never *active*, so `caret_shown` is false in both hosts |
 | `live-scroll-affordance` | the scroll affordance in a window: no gutter is reserved in either axis, no thumb paints at rest or while scrolling, the trailing strip takes the edge click, a real `-100` wheel scrolls the owned viewport and the component's mirror matches the runtime, the `-400` control and a press at the track's midpoint moves the derived thumb and its `mutedForeground` paint follows, and `overflow: "auto"` reports no offset while its child still paints below the box — 93 checks (plan `801`) |
+| `live-gradient` | gradient backgrounds in a window: the sRGB ends and midpoint, the Oklab midpoint against the CSS model and its distance from the sRGB answer, the vertical orientation, the `0.25/0.75` flat bands, `backgroundColor` winning over `background`, the radius clip, the silent drop of an out-of-range stop, the alpha fade's composites, a real hover gradient painting and reverting, and the three hit cases (a gradient swallows, a clear child does not, `pointerEvents: "none"` hands the press back) — 121 checks (plan `807`) |
 
 ### Search and replace in a real window (plan `587`)
 
@@ -2686,8 +2716,9 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **120/120 green** here (`exit 0`, 4452 checks, 65 capabilities,
-2026-10-20 after plan `801`; **525.80 s**, or **348.41 s** on the head that
+The suite is **121/121 green** here (`exit 0`, 4573 checks, 66 capabilities,
+2026-10-20 after plan `807`; **577.8 s**; **120/120** · 4452 · 525.80 s after
+plan `801`, or 348.41 s on the head that
 merges `origin/master`'s `packages/motion`; **119/119** · 4359 after plan
 `797`; **118/118** · 4340 · 302.0 s before it, after plan
 `791`; **302.4 s** at plan `784`, which
@@ -2696,7 +2727,8 @@ read 116/116 · 4228; **432.8 s** at the plan `777` gate,
 which read 115/115 · 4206; **484.1 s** at plan `773`, which read
 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; plan `801` added the 93-check
+read 112/112 · 4152; plan `807` added the 121-check
+`gradient-pixels`, plan `801` added the 93-check
 `scroll-affordance`, plan `797` added the 19-check
 `field-ink-pixels`, plan `791` the 62-check
 `dialog-scrim-pixels`, plan `784` added the 50-check
@@ -2714,7 +2746,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-119/119 scenarios passed · capabilities: layout=verified root=verified text=verified
+121/121 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2728,7 +2760,7 @@ scale=verified tier2=verified replace=verified states=verified
 truncation=verified grid-layout=verified typography=verified inspector=verified
 editor=verified data-toolbar=verified query=verified notification=verified
 crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
-media=verified window=verified frames=verified
+media=verified window=verified frames=verified gradient=verified
 ```
 
 The last full merge/release gate ran **106/106** (`exit 0`, **3059** checks,
@@ -2758,8 +2790,9 @@ and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
 The total is plan `777`'s 2987 plus those last two (22 + 50), and the headless
 total is that gate's 4206 plus 72 (`4278`). A plain
 `--all` wrote no frame and no `provenance.json`. **The live registry is now
-107**: plan `791`'s `live-dialog-scrim` is focused-green at 62 checks and the
-next full gate must include it. This gate supersedes plan
+110**: plans `791`'s `live-dialog-scrim` (62 checks), `797`'s `live-field-ink`
+(19), `801`'s `live-scroll-affordance` (93) and `807`'s `live-gradient` (121)
+are focused-green, and the next full gate must include all four. This gate supersedes plan
 `777`'s 104/104 (`2987`) on the plan-`775` head, plan
 `768`'s 101/101 (`2933`) on `f0c9a8f8`, plan `762`'s
 100/100 (`2860`) on `05013949`, plan `755`'s

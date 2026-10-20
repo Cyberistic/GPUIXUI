@@ -102,6 +102,7 @@ import { textDecorationScenario } from "./text-decoration.js";
 import { textInkScenario } from "./text-ink.js";
 import { fieldInkScenario } from "./field-ink.js";
 import { scrollAffordanceScenario } from "./scroll-affordance.js";
+import { gradientScenario } from "./gradient.js";
 import { textTruncationPixelsScenario } from "./text-truncation.js";
 import { surfaceThemeScenario } from "./surface-theme.js";
 import { dialogScrimScenario } from "./dialog-scrim.js";
@@ -202,6 +203,7 @@ export const PROBE_CAPABILITIES = [
   "qr",
   "media",
   "frames",
+  "gradient",
 ] as const;
 
 /** One view per capability, in the order the suite runs them. */
@@ -274,6 +276,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   textInkScenario,
   fieldInkScenario,
   scrollAffordanceScenario,
+  gradientScenario,
   textTruncationPixelsScenario,
   surfaceThemeScenario,
   dialogScrimScenario,

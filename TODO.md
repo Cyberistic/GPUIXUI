@@ -143,8 +143,28 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 145/145 plans-and-harness
+`[x]` `[██████████]` 146/146 plans-and-harness
 
+`[x]` **Prove gradient backgrounds in the frame** per plan `807`:
+      `StyleDesc.background` publishes a **two-stop linear gradient**
+      (`angle`, `stops`, `colorSpace: "srgb" | "oklab"`) and the library and both
+      registries used it **zero times**; the only gradients in the repo are inside
+      a chart's SVG data URL. `gradient-pixels` / `live-gradient` (**121 checks
+      each**, three frames per host) prove: the sRGB ends and midpoint
+      (`#7F007F`), the Oklab midpoint `#8B53A0` against the CSS model within 6
+      channels (83 from the sRGB answer), the angle pointing at the **second**
+      stop (0 = up), the `0.25/0.75` flat bands, **`backgroundColor` winning** over
+      `background` (not a fallback), the radius clip, an out-of-range stop being
+      **silently dropped**, an alpha fade compositing, a `hover` gradient
+      painting and reverting, and the three hit cases (a gradient **swallows** the
+      press, a clear child lets the parent take it, and `pointerEvents: "none"`
+      hands it back). A pure `gradient-model.ts` owns the sRGB and CSS-Oklab maths
+      (12 tests; playground **623 → 635**); ten runtime mutations and three unit
+      mutations observed red and reverted. Focused ids run: `gradient-pixels`
+      (green ×3 + ten mutations) and `live-gradient` (green ×4). End-of-task full
+      headless **121/121** (**4573** checks, 66 capabilities, 577.8 s, exit `0`;
+      exactly `4452 + 121`); live registry **109 → 110**, no full live gate (merge
+      gate). Plan: `.agents/slop/plans/807-gradient-backgrounds.md`.
 `[x]` **Prove the scroll affordance in the frame, and measure the runtime's
       gutter** per plan `801`: three records disagreed about the scrollbar and
       no scenario read one. `scroll-affordance` / `live-scroll-affordance`
@@ -218,6 +238,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       `renderer.getScrollOffset`, press mapped by `offsetForTrackPress`).
       Owner: `primitives`; evidence: plan `801` §2,
       `scroll-affordance`/`live-scroll-affordance`.
+
+`[ ]` **Cross-team:** `@gpuixui/tokens` should add semantic **gradient roles**
+      (a brand/surface/fade pair, or a documented decision that gradients stay an
+      app-owned style) now that a two-stop `background` gradient is measured: it
+      paints, sRGB and Oklab are both real, a radius clips it, an alpha stop
+      composites, and an invalid stop is silently dropped — so a role must be a
+      validated shape, not a raw object. Owner: `tokens`; evidence: plan `807`,
+      `gradient-pixels`/`live-gradient` (122 checks each),
+      `apps/playground/src/scenarios/gradient-model.ts`.
+
+`[ ]` **Cross-team:** the docs-site capability matrix must gain the `gradient`
+      capability with the ids `gradient-pixels` and `live-gradient`, and the
+      Theming page needs the gradient recipe (angle convention, the two-stop
+      limit, the silent invalid drop, `backgroundColor` precedence and the
+      `pointerEvents: "none"` hit rule). Owner: `docs-site`; evidence: plan
+      `807` §1/§2, `apps/playground/README.md`'s "Gradient backgrounds".
 
 `[ ]` **Cross-team (defect):** `@gpuixui/primitives`' `nativeTextTheme`
       (`core/style.ts`) documents that it keeps a field's "placeholder, caret

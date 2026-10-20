@@ -95,13 +95,15 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | media | `media-surface`, `live-media` | verified |
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
+| gradient | `gradient-pixels`, `live-gradient` | verified |
 
-The suite is **118/118 green here** (exit `0`, `.artifacts/smoke-report.json`, **4340 checks**, 65 capabilities; **302.0 s** after plan `791`, **302.4 s** at plan `784`, **275.0 s** after plan `778`, **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `791` added the 62-check `dialog-scrim-pixels`, plan `784` added the 50-check `surface-theme`, plan `778` added the 22-check `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 106/106**
+The suite is **121/121 green here** (exit `0`, `.artifacts/smoke-report.json`, **4573 checks**, 66 capabilities; **577.8 s** after plan `807`, **525.8 s** after plan `801`, **302.0 s** after plan `791`, **302.4 s** at plan `784`, **275.0 s** after plan `778`, **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `807` added the 121-check `gradient-pixels`, plan `801` added the 93-check `scroll-affordance`, plan `797` added the 19-check `field-ink-pixels`, plan `791` added the 62-check `dialog-scrim-pixels`, plan `784` added the 50-check `surface-theme`, plan `778` added the 22-check `text-truncation-pixels`, plan `775` the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 106/106**
 (`live-report.json`, **3059 checks**, **62 capabilities**; **1176.8 s**, exit `0`)
 on 2026-10-20, the merge/release gate (plan `786`); it covered every scenario
-registered at that point (**the live registry is now 107** — plan `791`'s
-`live-dialog-scrim` is focused-green at 62 checks and the next full gate must
-include it), including plan `778`'s `live-truncation-pixels` (22
+registered at that point (**the live registry is now 110** — plans `791`'s
+`live-dialog-scrim` (62 checks), `797`'s `live-field-ink` (19), `801`'s
+`live-scroll-affordance` (93) and `807`'s `live-gradient` (121) are
+focused-green and the next full gate must include all four), including plan `778`'s `live-truncation-pixels` (22
 checks) and plan `784`'s `live-surface-theme` (50). That total is plan `777`'s
 2987 plus those **22 + 50**, and plan `777` was plan `768`'s
 2933 plus the three text probes' **13 + 23 + 18** (`live-font-family`,
@@ -126,7 +128,7 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 106, and plan `786`'s gate covers all of them.**
+**Registered live scenarios are 110; plan `786`'s full gate covered 106 of them, and the four twins added since are focused-green.**
 The live registry is guarded by
 `liveScenarioProblems` (plan `639`); the count grew from 96 to 97 with plan
 `736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels`, to
@@ -134,7 +136,7 @@ The live registry is guarded by
 `live-opacity-pixels`, to 101 with plan `764`'s `live-editing-actions`, to 102
 with plan `771`'s `live-font-family`, to 103 with plan `773`'s `live-text-ink`,
 to 104 with plan `775`'s `live-text-decoration`, to 105 with plan `778`'s
-`live-truncation-pixels` and to 106 with plan `784`'s `live-surface-theme`.
+`live-truncation-pixels`, to 106 with plan `784`'s `live-surface-theme`, to 107 with plan `791`'s `live-dialog-scrim`, to 108 with plan `797`'s `live-field-ink`, to 109 with plan `801`'s `live-scroll-affordance` and to 110 with plan `807`'s `live-gradient`.
 Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
@@ -774,6 +776,7 @@ README/types document it, but no run has confirmed it here).
 | Capability | Status | GPUix support | Notes / limitations |
 | ---------- | ------ | ------------- | ------------------- |
 | Design tokens | done | yes (inline style values) | 47 semantic roles, 10 type roles, spacing/radii/density/elevation; light + dark; `colorRoles` indexes the roles for generated doc tables. `theme-color-roles` proves every role paints its exact value in dark, light and high contrast, and that the palette switch re-paints; `theme-type-and-shadow` proves every type role, `focusRing` and `elevationShadow` reach the renderer's style report, and `shadow-pixels` proves the ring and the elevation are **rasterized** (plan `736`): the 2 px band around a ringed box paints `ring #A7A9FF`, a matched unringed control paints the stage, the ringed interior stays `card #191D25`, and the `md` shadow darkens the stage below an elevated box (`#0C0E12` over `#11141A`) while a flat control does not. **Borders and radii are pixels too (plan `745`):** `border-pixels`/`live-border-pixels` prove a 1 px and a 2 px border paint their bands on all four edges (the outer quarter distinguishes the widths), a square corner stays `card` while a `radius.xl` corner is `background`, the rounded straight edge still paints, and a child that reaches a rounded parent's corner must carry its **own** radius — `overflow: "hidden"` clips to the square content box, not the rounded shape. |
+| Gradient surfaces | done | yes (a two-stop `background` style) | `gradient-pixels`/`live-gradient` (121 checks each) decode the frame: a two-stop linear gradient paints, the angle points at the **second** stop (0 = up, 90 = right), sRGB mixes by channel and `colorSpace: "oklab"` follows the CSS Oklab curve within 6 channels (the sRGB midpoint is 83 channels away), stop positions clamp into flat bands, `borderRadius` clips, an alpha stop composites, and `hover`/`active` accept one and revert. **Three traps:** an out-of-range stop is **silently dropped** (the stage shows through, no error), `backgroundColor` **wins** over `background` (it is not a fallback), and a gradient **joins the hit path** — a decorative overlay needs `pointerEvents: "none"`. Only two stops, no radial gradient and no gradient animation exist in the type; the chart's `<img>` SVG route remains the full-colour escape. |
 | Theme extension | done | yes (theme switch is a re-render) | `createTheme` / `extendTheme` / `ThemeProvider`; docs in `docs/tokens.md`. The gallery mounts through `ThemeProvider` and the switch re-renders the subtree natively. |
 | High-contrast theme | done | yes (values in a `Theme`) | AAA text floors (7:1) and 4.5:1 boundaries; same 47 roles; `getTheme(mode, "high")`; `theme-color-roles` asserts all 47 roles in high contrast and that its colour set differs from dark and light. Docs in `docs/tokens.md`. **Runtime (055):** Tier 1 paints only the high-contrast palette in both modes, and a switch from high-contrast light to dark repaints the mounted tree. |
 | Status tones | done | yes (values in a `Theme`) | `info` plus soft `info`/`success`/`warning`/`destructive` pairs with readable foregrounds; `statusTone(theme, tone)` and `alpha(color, amount)`; the contrast test holds soft text to 7:1 in all four colour sets. The soft roles are covered by `theme-color-roles`. |
