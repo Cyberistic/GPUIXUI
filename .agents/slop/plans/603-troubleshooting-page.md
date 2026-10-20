@@ -326,3 +326,10 @@ both directions.
 
 **Not changed:** no native or live suite was run — content, aliases and one
 content guard only. No path outside the docs-site workstream was edited.
+
+**Follow-up corrections, measured the same day.** The live-surface section names
+**WebGPU** (the backend the measured run records in `docs/preview-strategy.md`),
+and the overlay section states only the remedy that is provable: an ordinary
+child of an overflow container clips and there is no portal, so app-level
+surfaces mount at the root; it does not claim that re-parenting alone moves a
+layer to window coordinates.
