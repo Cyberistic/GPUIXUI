@@ -284,7 +284,7 @@ diagnostics across 40 fences**. All 74 compile now.
 | missing import | removed `import { Button }` from the second Buttons fence | `button.mdx:38` is both a non-module and `TS2304 Cannot find name 'Button'` |
 | wrong prop | `variant="nope"` on Badge | `badge.mdx:21 (fence 1) TS2322: '"nope"' is not assignable to 'BadgeVariant \| undefined'` |
 | fragment | removed the Separator import | `separator.mdx:30` in the module list and `TS2304 Cannot find name 'Separator'` |
-| two roots | unwrapped the Label fragment | `label.mdx:24 (fence 1) TS2657: JSX expressions must have one parent expression` |
+| two roots | unwrapped the Label fragment | `label.mdx:24 (fence 1) TS2657: JSX expressions must have one parent element` |
 
 **Gates.** `nub run check` green; `nub run test` green (docs: 124 files / 1 183
 tests); `nub run --filter docs build` and `smoke:build` exit `0` over the
