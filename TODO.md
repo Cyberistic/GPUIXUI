@@ -471,7 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–617)
 
-`[x]` `[██████████]` 186/186
+`[x]` `[██████████]` 187/187
+
+`[x]` **Operational vocabulary reaches its owner (plan 620)** — measured
+      2026-10-20: `changelog` returned nothing, `release notes` reached the
+      license page, `code of conduct` Text variants, `offline` Avatar,
+      `environment variables` the shadcn porting guide, `command line` the
+      Command menu and `faq` an Accordion section. Installation now names the
+      missing changelog and versioning contract, Contributing the missing code
+      of conduct, Deployment owns `VITE_SITE_URL`, and the Introduction carries
+      a linked FAQ — 22 exact aliases route the words and four regressions keep
+      `pwa`, `tracking`, `bundle size` and `version` where they belong.
+      `operational-docs.test.ts` reads the repository, `site.ts` and every FAQ
+      link in both directions; 127 files / 1 326 docs tests, 107-page
+      `smoke:build`, scoped axe green on the three changed pages; seven
+      two-direction proofs in plan 620 §8.
 
 `[x]` **Security and privacy have a page (plan 619)** — measured 2026-10-20:
       `security`, `privacy`, `telemetry`, `cookies`, `vulnerability`, `gdpr`,

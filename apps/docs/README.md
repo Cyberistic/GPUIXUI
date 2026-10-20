@@ -33,6 +33,17 @@ and the policy files, so a claim that stops being true fails by name and a
 deleted sentence fails too. The question forms are exact page aliases; `tracking`
 stays on Styling as its letter-spacing alias.
 
+## Operational answers
+
+The release, conduct, command-line, offline and self-hosting words reach the
+pages that own them: Installation names the missing changelog and versioning
+contract, Contributing names the missing code of conduct together with the
+offline/no-service-worker rule, Deployment owns `VITE_SITE_URL`, and the
+Introduction carries a linked FAQ. `src/operational-docs.test.ts` reads the
+repository for a committed `CHANGELOG.md` and `CODE_OF_CONDUCT.md`, reads
+`src/lib/site.ts` for the environment variable, and resolves every FAQ link
+through the page tree, so each claim fails in both directions.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the

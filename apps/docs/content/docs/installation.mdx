@@ -66,6 +66,18 @@ native binding and a desktop session;
 `nub run --filter @gpuixui/basic-app check-types` is the check that runs
 without a window. [Examples](/docs/examples) records what it verifies.
 
+## Releases and versioning
+
+Nothing here has been released: there is **no changelog**, no upgrade guide and
+no versioning policy to consult, because every package is still `0.0.0` and
+private to this repository. The pinned versions in the table above are the only
+contract the project states today.
+
+When the first release lands, its notes belong here beside that table. Until
+then, upgrading means updating the workspace and re-running
+`nub run check-types`: GPUix is pre-1.0, so a newer `@gpuix/react` can require a
+newer adapter even when the component API has not changed.
+
 ## The intended install
 
 ```sh

@@ -1193,6 +1193,30 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "an alias-only trust term with no title or summary match",
     },
     {
+      query: "changelog",
+      expected: "/docs/installation",
+      first: true,
+      what: "the release question the version page now answers",
+    },
+    {
+      query: "faq",
+      expected: "/docs",
+      first: true,
+      what: "the starting point the Introduction now provides",
+    },
+    {
+      query: "offline",
+      expected: "/docs/contributing",
+      first: true,
+      what: "the offline claim Contributing already states",
+    },
+    {
+      query: "environment variables",
+      expected: "/docs/deployment",
+      first: true,
+      what: "the self-hosting variable Deployment owns",
+    },
+    {
       query: "theme switch",
       expected: "/docs/dark-mode",
       first: true,

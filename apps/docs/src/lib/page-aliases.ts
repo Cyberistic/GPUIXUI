@@ -67,11 +67,18 @@
  * `sandbox` and `remote code` name the Security and privacy page. `tracking`
  * stays on Styling — it is that page's letter-spacing alias — and `support` and
  * `help` stay on Troubleshooting.
+ *
+ * Plan 620 adds the operational vocabulary to the pages that own it: the
+ * release words (`changelog`, `release notes`, `releases`, `upgrade`,
+ * `breaking changes`) on Installation, the conduct, command-line and offline
+ * words on Contributing, the self-hosting variable on Deployment, and `faq` on
+ * the Introduction.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
   readonly string[]
 >([
+  ["/docs", ["faq", "frequently asked questions"]],
   [
     "/docs/dark-mode",
     [
@@ -138,6 +145,14 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "where is the source code",
       "where is the code",
       "source code",
+      "code of conduct",
+      "coc",
+      "command line",
+      "command-line",
+      "offline",
+      "offline access",
+      "service worker",
+      "service workers",
     ],
   ],
   [
@@ -193,6 +208,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "workers",
       "custom domain",
       "production build",
+      "environment variable",
+      "environment variables",
+      "env var",
+      "env vars",
+      "site url",
     ],
   ],
   [
@@ -340,6 +360,13 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "is windows supported",
       "is linux supported",
       "is mac supported",
+      "changelog",
+      "change log",
+      "release notes",
+      "releases",
+      "upgrade",
+      "upgrading",
+      "breaking changes",
     ],
   ],
   [

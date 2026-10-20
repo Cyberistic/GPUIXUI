@@ -47,6 +47,11 @@ import { source } from "./source";
  * `analytics`, `cookies`, `data collection`, `vulnerability`, `security policy`
  * and the reporting/network terms name Security and privacy. The regression
  * row pins `tracking` to Styling, where it means letter spacing.
+ *
+ * Plan 620 adds the operational vocabulary: release words name Installation,
+ * conduct/command-line/offline words name Contributing, the self-hosting
+ * variable names Deployment, and `faq` names the Introduction. The regression
+ * rows keep `pwa`, `bundle size` and `version` where they already belong.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -405,6 +410,29 @@ const owned = [
   ["network access", "/docs/security"],
   ["tracking cookies", "/docs/security"],
   ["browser tracking", "/docs/security"],
+  ["code of conduct", "/docs/contributing"],
+  ["coc", "/docs/contributing"],
+  ["command line", "/docs/contributing"],
+  ["command-line", "/docs/contributing"],
+  ["offline", "/docs/contributing"],
+  ["offline access", "/docs/contributing"],
+  ["service worker", "/docs/contributing"],
+  ["service workers", "/docs/contributing"],
+  ["changelog", "/docs/installation"],
+  ["change log", "/docs/installation"],
+  ["release notes", "/docs/installation"],
+  ["releases", "/docs/installation"],
+  ["upgrade", "/docs/installation"],
+  ["upgrading", "/docs/installation"],
+  ["breaking changes", "/docs/installation"],
+  ["versioning", "/docs/installation"],
+  ["environment variable", "/docs/deployment"],
+  ["environment variables", "/docs/deployment"],
+  ["env var", "/docs/deployment"],
+  ["env vars", "/docs/deployment"],
+  ["site url", "/docs/deployment"],
+  ["faq", "/docs"],
+  ["frequently asked questions", "/docs"],
 ] as const;
 
 const regressions = [
@@ -459,6 +487,9 @@ const regressions = [
   ["split panes", "/docs/roadmap"],
   ["data", "/docs/data-display"],
   ["tracking", "/docs/styling"],
+  ["pwa", "/docs/contributing"],
+  ["bundle size", "/docs/performance"],
+  ["version", "/docs/installation"],
 ] as const;
 
 describe(
