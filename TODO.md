@@ -107,7 +107,7 @@ merge order. Zero primitives remain on their `core/` resolver.
 `[ ]` Convert `packages/components` onto `@gpuixui/tw` — these may adopt the
 shadcn recipes' fixed metrics instead of the primitives' density scale.
 
-`[ ]` `[██░░░░░░░░]` 8/39
+`[ ]` `[██████░░░░]` 23/39
 
 `[x]` Convert the eight leaf components — `Card`, `Badge`, `Alert`, `Avatar`,
 `List`, `Pagination`, `EmptyState`, `Stepper` — onto `@gpuixui/tw`. Each renders
@@ -118,8 +118,22 @@ variants/sizes/states and behaviour. `src/recipe/recipe.test.ts` proves the
 compiled `StyleDesc` per variant/size, the merge order and a no-unsupported
 sweep. The off-grid `label` role adopts `text-sm` (14/20); list rows and stepper
 markers keep density (ADR 0006).
-`[ ]` Convert the remaining Tier 2 components (Toast, Dialog, Popover, Menu,
-Command, and the rest) once this slice proves the model.
+`[x]` Convert the fifteen non-overlay Tier 2 components — `Accordion`,
+`Breadcrumb`, `Carousel`, `Collapsible`, `Countdown`, `Field`, `Fieldset`,
+`Form`, `HotkeyRecorder`, `InlineEdit`, `KeyboardShortcuts`, `MentionInput`,
+`SearchInput`, `TagInput`, `Timeline` — onto `@gpuixui/tw` recipes. Each renders
+its resting appearance from a recipe (`ACCORDION_*`, `BREADCRUMB_*`, …), accepts
+a caller `className` joined last via `cn`, and keeps its variants/sizes/states,
+refs, keyboard behaviour and tests. Control geometry (`controlHeight`, list
+`rowHeight`) keeps density; everything else compiles from the fixed shadcn
+recipe. The recipe oracle per part, the merge-order test and the
+no-unsupported-classes sweep all extend `src/recipe/recipe.test.ts`; the
+utilities the new recipes need (`flex-wrap`, `self-stretch`, `h-px`/`w-px`,
+`mt-`/`mb-`/`ml-`/`mr-`) landed in the default registry. None were skipped.
+`[ ]` Convert the overlays and pickers — command-menu, confirm-dialog,
+context-menu, dialog, drawer, dropdown-menu, navigation-menu, popover,
+preview-card, tabs, toast, combobox, date-picker, time-picker, color-picker,
+message-scroller — in their own pass.
 
 ### Design tokens and theming (`tokens-theme`)
 

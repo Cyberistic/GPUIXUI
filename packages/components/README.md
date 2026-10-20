@@ -28,9 +28,14 @@ so it wins conflicts, and its `style` is merged last so it wins outright. The
 `internal/recipe.ts` seam wraps the compile; no other file imports
 `@gpuixui/tw`'s compiler directly.
 
-Two parts keep density, because they must stay aligned with the density-driven
-controls beside them: a list row's height (`theme.density.rowHeight`) and a
-stepper marker's side (`controlHeight`).
+Two kinds of metric keep density, because they must stay aligned with the
+density-driven controls beside them: a list row's height
+(`theme.density.rowHeight`), and a control's height/side — the accordion
+trigger's `controlHeight(theme, "lg")`, the field/search/mention/tag and
+inline-edit input heights (`controlHeight(theme, "md")`/`"sm"`), the
+hotkey-recorder's min-height, and the stepper marker's side (`controlHeight`).
+Everything else — structure, type roles, spacing, radius, border and semantic
+colours — compiles from the fixed shadcn recipe.
 
 ## What is here
 

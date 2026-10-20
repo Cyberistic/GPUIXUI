@@ -25,11 +25,15 @@ string is the single source of truth for a component's resting appearance, the
 caller's `className` is joined after it via `cn` (so it wins conflicts), and the
 caller's `style` is merged last (so it wins outright).
 
-Two deliberate exceptions keep density: a list row's height
-(`theme.density.rowHeight`) and a stepper marker's side (`controlHeight`), both
-because they must stay aligned with the density-driven controls beside them.
-The off-grid `label` type role (13/18) has no Tailwind size, so it adopts
-`text-sm font-medium` (14/20) — the nearest fixed metric.
+One class of metric deliberately keeps density: **control geometry** — a list
+row's height (`theme.density.rowHeight`) and a control's height/side
+(`controlHeight`, and `controlPaddingX` where a control exposes it) — because a
+control must stay aligned with the density-driven controls beside it. This
+covers the stepper marker's side, the accordion trigger's height, the field /
+search / mention / tag input heights, the inline-edit display and input heights,
+and the hotkey-recorder's min-height. The off-grid `label` type role (13/18) has
+no Tailwind size, so it adopts `text-sm font-medium` (14/20) — the nearest fixed
+metric.
 
 ## Consequences
 
@@ -37,5 +41,6 @@ The off-grid `label` type role (13/18) has no Tailwind size, so it adopts
   a consumer who wants density still reaches it through `className`/`style`.
 - A recipe diff against shadcn stays meaningful, exactly as the primitives'
   recipes diff against their resolvers.
-- The two density exceptions are pinned in `COMPONENTS.md` so a future agent
-  does not "fix" them back onto the fixed scale.
+- The control-geometry density exceptions are pinned in
+  `packages/components/README.md` (§Styling) so a future agent does not "fix"
+  them back onto the fixed scale.

@@ -42,4 +42,4 @@ What becomes easier, what becomes harder, what is now impossible.
   a thin context and thin parts.
 - `0006-component-fixed-metrics.md` — components compile through `@gpuixui/tw`'s
   default registry (shadcn's fixed metrics); primitives keep the density scale;
-  list rows and stepper markers keep density.
+  control geometry (list rows and control heights) keeps density.
