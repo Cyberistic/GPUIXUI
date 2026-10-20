@@ -211,7 +211,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 - `role="tablist"`, `role="tab"`, `role="tabpanel"` and `aria-selected` are
   exposed; the roving tab index is the single-stop pattern. Give the list a
-  `label` so the tab set has a name.
+  `label` so the tab set has a name — the shipped examples do, and a caller
+  `aria-label` wins over it.
 - Each trigger names itself from its plain-text child, because 0.10.0 reports no
   name from contents; a trigger composed from elements passes `aria-label`.
 - **No `aria-orientation`, `aria-controls` or `aria-labelledby`** in

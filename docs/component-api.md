@@ -257,8 +257,14 @@ text child — measured for menu rows in plan `387` and for every example in pla
 `391`. A part therefore supplies `aria-label` from its plain-text children, and
 the caller's authored `aria-label` always wins. `internal/name.ts` owns the rule;
 `src/behaviour/accessibility.test.tsx` mounts every example and fails on an
-unnamed interactive node. A label composed from elements is not plain text, so
-that caller passes `aria-label` itself.
+unnamed node in **any** role except `list`/`listitem` (which read their content
+from children, so ARIA requires no name and naming a row would repeat it). The
+rule is stated over roles rather than over a spelling list on purpose: AccessKit
+calls an `option` `listboxoption` and an `<input>` `textinput`, and a hand-written
+list silently skipped both until plans `783`/`790`; a root that names a region
+(`TabsList`, `List`, `Field`, `Fieldset`, `MentionInput`, `ColorPicker`,
+`TimePicker`, `TagInput`) takes `label`. A label composed from elements is not
+plain text, so that caller passes `aria-label` itself.
 
 ## 6. Translation table
 

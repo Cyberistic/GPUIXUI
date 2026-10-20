@@ -267,6 +267,12 @@ const report = (props: ListProps, next: ReadonlyArray<string>): void =>
 interface ListBaseProps extends Omit<Props, "children"> {
   /** Row height `rowHeight` instead of `rowHeight + spacing.md`. */
   readonly dense?: boolean;
+  /**
+   * The list's accessible name. A caller `aria-label` wins, as everywhere else;
+   * 0.10.0 cannot name a role-bearing `div` from its text children, so an
+   * unnamed listbox is announced as a bare "list box" (plan 792).
+   */
+  readonly label?: string;
   readonly children?: PartChildren;
 }
 
@@ -329,6 +335,7 @@ export const List = (props: ListProps) => {
     onValueChange: _onValueChange,
     onActivate,
     dense = false,
+    label,
     onKeyDown,
     children,
     style,
@@ -872,6 +879,7 @@ export const List = (props: ListProps) => {
     <ListContext.Provider value={context}>
       <div
         role={selectable ? "listbox" : "list"}
+        {...(label === undefined ? {} : { "aria-label": label })}
         {...rest}
         onKeyDown={(event) => {
           handleKeyDown(event);

@@ -112,6 +112,7 @@ export const ListExample = () => {
         </CardHeader>
         <List
           testId="recent-files"
+          label="Recent files"
           selectionMode="single"
           value={selected}
           onValueChange={setSelected}
@@ -156,6 +157,7 @@ export const ListExample = () => {
         </CardHeader>
         <List
           testId="reviewers"
+          label="Reviewers"
           selectionMode="multiple"
           value={assigned}
           onValueChange={setAssigned}
@@ -184,6 +186,7 @@ export const ListExample = () => {
         </CardHeader>
         <List
           testId="quick-actions"
+          label="Quick actions"
           onActivate={(value) => setRan(value)}
           style={{ padding: theme.spacing.md, paddingTop: 0 }}
         >

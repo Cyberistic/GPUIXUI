@@ -72,7 +72,7 @@ export const TabsExample = () => {
         onValueChange={setTab}
         style={{ padding: theme.spacing.lg, paddingTop: 0 }}
       >
-        <TabsList testId="settings-tabs">
+        <TabsList label="Settings sections" testId="settings-tabs">
           <TabsIndicator />
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>

@@ -250,6 +250,7 @@ row.
 | `onValueChange` | `(value: string) => void` (single) · `(values: ReadonlyArray<string>) => void` (multiple) | — |
 | `onActivate` | `(value: string) => void` — single and `none` only; absent from the multiple variant | — |
 | `dense` | `boolean` | `false` |
+| `label` | `string` — the list's accessible name; a caller `aria-label` wins | — |
 
 The value type follows the mode: a `single` list cannot be given an array and a
 `multiple` list cannot be given a string — the props are a discriminated union,
@@ -304,7 +305,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 `aria-disabled` semantics (plan 516).
 
 - `role="list"`/`"listitem"` without selection and `listbox`/`option` with it, so
-  assistive technology reads a list of rows either way.
+  assistive technology reads a list of rows either way. The root is named by
+  `label` (a caller `aria-label` wins), because 0.10.0 cannot name a role-bearing
+  `div` from its children and an unnamed listbox is announced as a bare
+  "list box" (plan 792).
 - `aria-selected` is set on every row in both selectable modes, so the selection
   (including each member of a multiple selection) is announced rather than only
   painted.
@@ -357,13 +361,15 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/list.test.tsx` runs in the real GPUix renderer (67 tests) plus
+`src/behaviour/list.test.tsx` runs in the real GPUix renderer (70 tests) plus
 `src/internal/collection.test.ts` for the navigation arithmetic,
 `src/internal/typeahead.test.ts` for the shared prefix matching,
 `src/list/selection.test.ts` for the multiple-selection rules, and
 `src/list/row-state.test.ts` for the row-mask store: the modes and
-their roles, a selectable row named from its title, `textValue` and an authored
-`aria-label`, the absence and uniqueness of the tab stop, selection by click and by
+their roles, a list root named from its `label` (and a caller `aria-label` over
+it, in both the selectable and plain shapes), a selectable row named from its
+title, `textValue` and an authored `aria-label`, the absence and uniqueness of
+the tab stop, selection by click and by
 key, a disabled row rejecting both and carrying no pointer affordance, real
 focus moving with wrap-around past a
 disabled row, `Home`/`End`, the accent hover on a real mouse move (including

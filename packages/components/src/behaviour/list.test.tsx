@@ -1669,4 +1669,57 @@ describe("List", () => {
 
     root.unmount();
   });
+
+  it("names a selectable list from its label", () => {
+    const root = renderComponent(
+      <List testId="list" label="Recent files" selectionMode="single">
+        <ListItem value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(
+      nodesWithRole(root.renderer, "listbox").map((node) => node.name),
+    ).toEqual(["Recent files"]);
+
+    root.unmount();
+  });
+
+  it("a caller aria-label wins over the label", () => {
+    const root = renderComponent(
+      <List
+        testId="list"
+        label="Reviewers"
+        aria-label="Assigned reviewers"
+        selectionMode="multiple"
+      >
+        <ListItem value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(
+      nodesWithRole(root.renderer, "listbox").map((node) => node.name),
+    ).toEqual(["Assigned reviewers"]);
+
+    root.unmount();
+  });
+
+  it("names a plain list too", () => {
+    const root = renderComponent(
+      <List testId="list" label="Quick actions" onActivate={() => {}}>
+        <ListItem value="a">
+          <ListItemTitle>Alpha</ListItemTitle>
+        </ListItem>
+      </List>,
+    );
+
+    expect(
+      nodesWithRole(root.renderer, "list").map((node) => node.name),
+    ).toEqual(["Quick actions"]);
+
+    root.unmount();
+  });
 });

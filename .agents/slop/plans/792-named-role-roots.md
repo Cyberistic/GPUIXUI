@@ -1,6 +1,10 @@
 # 792 — Every painted role carries a name, and a selectable list and a tab rail get one
 
-**Status:** planned 2026-10-20.
+**Status:** done 2026-10-20 — 1 contract case (red at `HEAD` with `list: listbox`
+×2 + `tabs: tablist`) + 3 `List` native cases (67 → 70); unit 509 in 48 files;
+the full native suite is 1012 passed / 20 failed of 1032, the same recorded
+plan-540 binding classes as the 1010/20 of 1030 baseline (+3 new, −1 merged
+contract case). Both-direction and three mutation proofs in §4.
 **Workstream:** components (`packages/components`).
 **Number claim:** `792` is the first free number across every worktree —
 `components` holds `790`, `playground` `791`, `tokens-theme` `789`,
@@ -43,14 +47,16 @@ candidate the contract cannot see, and no test would fail if one lost its name.
 
 ### 1.2 Two shipped examples paint an unnamed role root
 
-With every role walked (the probe above), exactly two roots are unnamed:
+With every role walked (the probe above), exactly three roots are unnamed — the
+`list` example ships two selectable lists:
 
 | example | role | name |
 | ------- | ---- | ---- |
-| `list`  | `listbox` | **`""`** |
-| `tabs`  | `tablist` | **`""`** |
+| `list` (recent files) | `listbox` | **`""`** |
+| `list` (reviewers) | `listbox` | **`""`** |
+| `tabs` | `tablist` | **`""`** |
 
-Both roots carry named children — the list's options are named (plan 783) and
+All three roots carry named children — the list's options are named (plan 783) and
 the tab triggers and panels are named (plans 391/564) — so a screen reader
 announces "list box" and "tab list" with no subject.
 
@@ -160,7 +166,7 @@ the defect plans 783/790 patched twice. Keep the `found.length` guard so an empt
 tree cannot pass.
 
 Expected result at `HEAD` before the component change: the case fails with
-exactly `["list: listbox", "tabs: tablist"]` (measured, §1.2).
+exactly `["list: listbox", "list: listbox", "tabs: tablist"]` (measured, §1.2).
 
 ## 4. Tests
 
@@ -194,7 +200,7 @@ type errors before the change. Both-direction proof for them is the mutation in
 cd packages/components
 git stash push -- src/list.tsx examples/list.example.tsx examples/tabs.example.tsx
 nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accessibility.test.tsx
-# expected: 1 failed — ['list: listbox', 'tabs: tablist']
+# expected: 1 failed — ['list: listbox', 'list: listbox', 'tabs: tablist']
 git stash pop
 nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accessibility.test.tsx
 # expected: 1 passed
@@ -206,7 +212,7 @@ nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accessibility
 | -------- | --------- |
 | drop the `label` attribute from `List`'s root | list cases 1 and 3 |
 | move the computed `aria-label` **after** `{...rest}` and pass a blank `aria-label` | list case 2 |
-| drop `label` from the list example | contract: `list: listbox` |
+| drop `label` from the list example | contract: `list: listbox` ×2 |
 | drop `label` from the tabs example | contract: `tabs: tablist` |
 | add `"listbox"` to `UNNAMED_BY_DESIGN` | contract at `HEAD` (it silences the rule it should enforce) |
 
@@ -239,14 +245,14 @@ Run from `packages/components` unless stated:
 | Command | Expected |
 | ------- | -------- |
 | `nub x vitest run --config vitest.behaviour.config.ts src/behaviour/__probe.test.tsx` | prints the unnamed list in §1.2; **delete the file before committing** |
-| `nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accessibility.test.tsx` | 1 failed at `HEAD` (`list: listbox`, `tabs: tablist`); 1 passed after §3.2 |
+| `nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accessibility.test.tsx` | 1 failed at `HEAD` (`list: listbox` ×2, `tabs: tablist`); 1 passed after §3.2 |
 | `nub x vitest run --config vitest.behaviour.config.ts src/behaviour/list.test.tsx` | 70 passed |
 | `nub x vitest run --config vitest.behaviour.config.ts src/behaviour/tabs.test.tsx` | 44 passed, unchanged |
 | `nub run --filter @gpuixui/components test` | exit 0; unit count unchanged |
 | `nub run check` | exit 0 (inventory, docs counts, exports, test-count guards) |
 | `nub run lint` | exit 0 |
 | `nub run test` | exit 0 |
-| `nub run test:behaviour` (end-of-task check — the contract is cross-cutting) | record passed/failed/total; every failure must be one of the recorded plan-540 classes; expected total 1030 + 3 = 1033 with the same 20 recorded failures |
+| `nub run test:behaviour` (end-of-task check — the contract is cross-cutting) | record passed/failed/total; every failure must be one of the recorded plan-540 classes; expected total 1030 + 3 − 1 = 1032 with the same 20 recorded failures |
 
 Scoped native smoke: the headless playground registry is GPUix primitives and
 mounts no list or tabs example, so the `TestRenderer` suites above are the native
@@ -276,3 +282,28 @@ Stop and report with evidence if any of these happen:
 - Three new native cases; docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the
   plan index agree with the run.
 - `nub run check`, `nub run lint` and `nub run test` exit 0.
+
+## 9. Result (2026-10-20)
+
+Implemented as planned; the only correction is the measured failure count.
+
+- **Contract**: `UNNAMED_BY_DESIGN = ["list", "listitem"]` and one role-agnostic
+  case replace the two hand-written role lists. Measured at `HEAD` (component and
+  example sources stashed) it fails with exactly
+  `['list: listbox', 'list: listbox', 'tabs: tablist']` — the `list` example
+  ships two selectable lists, which the deduped probe had hidden — and passes
+  after the four `label`s land.
+- **`List`**: `label?: string` on the shared root props, rendered before
+  `{...rest}` exactly like `TabsList`, so a caller `aria-label` wins.
+- **Examples**: `Recent files`, `Reviewers`, `Quick actions` and
+  `Settings sections`.
+- **Tests**: `list.test.tsx` 67 → 70 (a selectable list named from `label`, a
+  caller `aria-label` winning, a plain list named); accessibility 2 → 1.
+- **Mutation proofs**: removing the root attribute fails the two `label` cases;
+  moving the computed attribute after `{...rest}` fails the caller-wins case;
+  dropping either example's label fails the contract with that example named.
+- **Gates**: `nub run check` (with `oxfmt` applied), `nub run lint` and
+  `nub run test` exit 0, unit 509 in 48 files.
+- **Native suite**: 1012 passed / 20 failed of 1032 — the baseline's same 20
+  plan-540 classes, no new failure. Headless smoke was not run: the playground
+  registry mounts no list or tabs example, so it cannot exercise this change.

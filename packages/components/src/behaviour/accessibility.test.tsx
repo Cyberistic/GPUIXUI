@@ -9,15 +9,13 @@
  *
  * Every registered example is mounted in the real renderer, so a new example or
  * a new part is covered without editing this file. The per-component behaviour
- * belongs to the other suites; here the rules are deliberately narrow: a node in
- * one of these roles must have a name, and the walk must find such nodes at all,
- * so an empty tree cannot pass.
- *
- * AccessKit spells an `option` as **`listboxoption`** (measured 2026-10-20), so
- * both spellings are listed: the contract must see a listbox row, or two shipped
- * listboxes can carry unnamed options while this passes (plan 783). An `<input>`
- * is spelled **`textinput`** for the same reason, and the missing spelling hid
- * two unnamed fields until plan 790.
+ * belongs to the other suites; here the rule is deliberately narrow and
+ * **role-agnostic**: every painted role except the two structural list roles must
+ * carry a name, and the walk must find nodes at all, so an empty tree cannot
+ * pass. Stating the rule over roles rather than over a spelling list is what
+ * plans 783 and 790 needed twice: AccessKit spells `option` as
+ * `listboxoption` and `<input>` as `textinput`, and a hand-written list silently
+ * skipped both (plan 792).
  */
 
 import * as Arr from "effect/Array";
@@ -29,37 +27,18 @@ import { examples } from "../../examples/index.js";
 import { a11yNodes } from "../internal/a11y.js";
 import { renderComponent } from "../internal/test-root.js";
 
-/** Roles whose name a user hears before the control's value or state. */
-const INTERACTIVE_ROLES: ReadonlyArray<string> = [
-  "button",
-  "checkbox",
-  "combobox",
-  "img",
-  "link",
-  "listboxoption",
-  "menuitem",
-  "menuitemcheckbox",
-  "menuitemradio",
-  "option",
-  "radio",
-  "searchbox",
-  "slider",
-  "switch",
-  "tab",
-  // AccessKit spells an `<input>` as `textinput`, exactly as it spells an
-  // `option` as `listboxoption`; see the module note. A text field is the one
-  // control a form is mostly made of, so both spellings are covered (plan 790).
-  "textinput",
-  "textbox",
-];
+/**
+ * Roles that take their content from children, which AccessKit reports as
+ * separate `label` nodes; ARIA requires no name for either, and naming a row
+ * would repeat the text it already reads.
+ */
+const UNNAMED_BY_DESIGN: ReadonlyArray<string> = ["list", "listitem"];
 
-/** Roles a screen reader announces without the user focusing them. */
-const ANNOUNCED_ROLES: ReadonlyArray<string> = ["alert", "status"];
-
-/** Mount every example and report the nodes of `roles`, named or not. */
-const walkRoles = (
-  roles: ReadonlyArray<string>,
-): { readonly found: Array<string>; readonly unnamed: Array<string> } => {
+/** Every node that must carry a name, named or not, per example. */
+const walkNamedRoles = (): {
+  readonly found: Array<string>;
+  readonly unnamed: Array<string>;
+} => {
   const root = renderComponent(<div />);
   const found: Array<string> = [];
   const unnamed: Array<string> = [];
@@ -71,7 +50,7 @@ const walkRoles = (
     );
     root.rerender(<Example key={id} />);
     Arr.forEach(a11yNodes(root.renderer), (node) => {
-      if (!Arr.contains(roles, node.role)) return;
+      if (Arr.contains(UNNAMED_BY_DESIGN, node.role)) return;
       found.push(id);
       if (node.name.length === 0) unnamed.push(`${id}: ${node.role}`);
     });
@@ -82,15 +61,8 @@ const walkRoles = (
 };
 
 describe("accessibility", () => {
-  it("names every interactive node in every example", () => {
-    const { found, unnamed } = walkRoles(INTERACTIVE_ROLES);
-
-    expect(found.length).toBeGreaterThan(0);
-    expect(unnamed).toEqual([]);
-  });
-
-  it("names every announced region in every example", () => {
-    const { found, unnamed } = walkRoles(ANNOUNCED_ROLES);
+  it("names every node that is not a structural list", () => {
+    const { found, unnamed } = walkNamedRoles();
 
     expect(found.length).toBeGreaterThan(0);
     expect(unnamed).toEqual([]);

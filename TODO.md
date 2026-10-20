@@ -1406,6 +1406,18 @@ retired once both branches are one
       token input 22), both-direction proof (the contract reports
       `search-input: textinput` and `tag-input: textinput` at `HEAD`); docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced (owner: components)
+    - [x] Every painted role carries a name — plan 792; measured 2026-10-20:
+      the accessibility contract was a hand-written role list, so it had missed
+      `listboxoption`, `textinput`, and now `image`, `multilinetextinput`,
+      `listbox` and `tablist` too. It is now one role-agnostic rule (every role
+      except the structural `list`/`listitem` needs a name), and at `HEAD` it
+      reports exactly the unnamed `listbox` ×2 and `tablist` of the shipped
+      examples. `List` gains `label` (a caller `aria-label` wins, like
+      `TabsList`) and all three lists plus the settings rail are named; 1
+      contract case + 3 native cases (List 67 → 70), three mutation proofs; unit
+      509 in 48 files, full native suite 1012/20 of 1032 with the same plan-540
+      classes; docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and
+      the plan index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
