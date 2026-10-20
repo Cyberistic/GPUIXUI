@@ -484,9 +484,9 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       own answer. `/docs/automation` renders the 38 entry exports, four runtime
       functions, 17 `Locator` methods, the `App`/mouse/clock surface, 25 protocol
       methods, 8 error codes, 9 `TreeNode` fields and nine absences from the
-      installed declarations; `automation.test.ts` (35 cases) fails in both
+      installed declarations; `automation.test.ts` (36 cases) fails in both
       directions, and Testing gained `## Driving a real window`. 152 files /
-      1 764 docs tests, 115-page `smoke:build` and two production queries, scoped
+      1 765 docs tests, 115-page `smoke:build` and two production queries, scoped
       axe (2 schemes) and 390 px green; nine forced defects and the measured
       search proof in plan 634 §11. **The page states that no workspace connects
       to a running app yet** — the cross-team ask is in Interlocks.

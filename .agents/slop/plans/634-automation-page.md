@@ -447,7 +447,7 @@ already referenced an "automation API" no page explained.
   row from the data module.
 - `apps/docs/content/docs/automation.mdx` — the 12 sections (§2), two compiled
   fences.
-- `apps/docs/src/automation.test.ts` — 35 cases.
+- `apps/docs/src/automation.test.ts` — 36 cases.
 
 **Changed**
 
@@ -489,7 +489,7 @@ and `App.call` declares a generic parameter (`call<M extends MethodName>(`).
 | `headless?: boolean` added | `a headless flag is now declared; the absence claim is stale` |
 | `readClipboard` export added | `a clipboard method is now declared; the absence claim is stale` |
 | `enableAutomation` removed from React declarations | `@gpuix/react no longer declares enableAutomation; the re-export claim is stale` |
-| alias block and generated entry removed | **3** findability cases failed: `e2e`, `end to end`, `sse` (`3 failed | 8 passed | 24 skipped`); restored, `35 passed` |
+| alias block and generated entry removed | **3** findability cases failed: `e2e`, `end to end`, `sse` (`3 failed | 8 passed | 25 skipped`); restored, `36 passed` |
 
 The search proof is narrower than §5.4 predicted: without the alias block the
 plain `automation`, `locator`, `getByTestId`, `connectStdio`, `dragTo` and
@@ -518,7 +518,7 @@ whose old owners (Testing, the Roadmap) win on prose: `e2e`, `end to end`,
 | Command | Result |
 | ------- | ------ |
 | `nub run --filter docs check-types` | exit 0 |
-| `nub run --filter docs test` | 152 files / 1 764 tests passed |
+| `nub run --filter docs test` | 152 files / 1 765 tests passed |
 | `nub run --filter docs build` | exit 0 |
 | `nub run --filter docs smoke:build` | exit 0 — 115 pages, 251 links, 1 483 anchors, search (two new queries), llms and markdown checks |
 | `nub scripts/smoke-a11y.ts --only /docs/automation` | exit 0 — 1 page × 2 schemes, 0 violations |

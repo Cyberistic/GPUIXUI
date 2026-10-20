@@ -44,12 +44,16 @@ enableAutomation(renderer);
 
 <AutomationAppSideTable />
 
+<AutomationEntryTable group="serve" />
+
 A browser or wasm app has no stdio: `installBrowserAutomation(renderer)` from
 `@gpuix/native/runtime` returns an `App` bound to the page's renderer, so a
 harness in the same document can drive it. In a browser, pointer events go to
 the canvas and **every** key and IME event goes to the hidden element
 `IME_MIRROR_SELECTOR`; `browserRendererAsTest` and `browserKeystrokeInit` make
 that split transparent.
+
+<AutomationEntryTable group="browser" />
 
 ## Connect from the test
 
@@ -145,9 +149,13 @@ A driver in another language speaks the same messages. `PROTOCOL_VERSION` is
 size. Each request carries an `id`, a `method` and `params`; the reply carries
 the same `id` and either a `result` or an error.
 
+<AutomationEntryTable group="options" />
+
 <AutomationCapabilities />
 
 <AutomationProtocolTable />
+
+<AutomationEntryTable group="protocol" />
 
 The eight error codes are the only failure taxonomy. `NotFound` and `Ambiguous`
 come from a selector, `Timeout` from `waitFor` or a transport, `Protocol` from a

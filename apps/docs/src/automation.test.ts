@@ -244,6 +244,17 @@ describe("the Automation page", () => {
     expect(rendered).toEqual([]);
   });
 
+  it("renders every entry group and invents none", () => {
+    const rendered = [
+      ...PAGE.matchAll(/<AutomationEntryTable group="([^"]+)" \/>/gu),
+    ]
+      .flatMap((match) => (match[1] === undefined ? [] : [match[1]]))
+      .sort();
+    const declared = automationEntryGroups.map((group) => group.id).sort();
+
+    expect(rendered).toEqual(declared);
+  });
+
   it("states the zero-config path and the browser path", () => {
     const facts = [
       "createNativeRenderer",
@@ -284,7 +295,7 @@ describe("the Automation page", () => {
     expect(PAGE).not.toMatch(/<NativePreview|<LiveSurface/);
   });
 
-  it("links the four pages that own the neighbouring subjects", () => {
+  it("links the five pages that own the neighbouring subjects", () => {
     const missing = [
       "/docs/testing",
       "/docs/native-testing",

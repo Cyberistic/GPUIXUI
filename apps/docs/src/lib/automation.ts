@@ -267,7 +267,7 @@ export const automationEntryGroups: ReadonlyArray<AutomationGroup> = [
       {
         name: "TreeNode",
         summary:
-          "One element in `getAutomationTree()`: id, type, text, testId, style, events, custom props, bounds and children.",
+          "One node in the automation tree: id, type, text, testId, style, events, custom props, bounds and children.",
       },
     ],
   },
