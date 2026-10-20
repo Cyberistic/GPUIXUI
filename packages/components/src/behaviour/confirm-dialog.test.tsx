@@ -10,6 +10,12 @@
  * confirmation stayed painted, because both modal surfaces trapped the same
  * press. The first two nested-modal cases fail on that; the escape case pins the
  * one-layer close and the resumed outer trap.
+ *
+ * The same-commit cases guard plan 730: a confirmation mounted **with** its
+ * dialog (a restored route, an interrupted delete) lost focus to the dialog
+ * surface behind it and one Escape closed both surfaces, leaving focus on
+ * nothing — React runs the child's layer push and focus effect before the
+ * parent's. Layer order and focus entry now follow the nesting.
  */
 
 import * as Option from "effect/Option";
@@ -66,6 +72,29 @@ const DialogWithConfirm = () => {
         <Button testId="outer-delete" onClick={() => setConfirm(true)}>
           Delete
         </Button>
+        <ConfirmDialog
+          open={confirm}
+          onOpenChange={setConfirm}
+          title="Delete?"
+          description="This cannot be undone."
+          onConfirm={() => undefined}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/** A dialog and its confirmation mounted together, as a restored route does. */
+const BothOpenAtMount = () => {
+  const [outer, setOuter] = useState(true);
+  const [confirm, setConfirm] = useState(true);
+  return (
+    <Dialog open={outer} onOpenChange={setOuter}>
+      <DialogContent label="Settings" testId="outer-content">
+        <DialogHeader>
+          <DialogTitle>Settings</DialogTitle>
+        </DialogHeader>
+        <Button testId="outer-first">First</Button>
         <ConfirmDialog
           open={confirm}
           onOpenChange={setConfirm}
@@ -224,6 +253,44 @@ describe("ConfirmDialog", () => {
     await nextTask();
     confirm.renderer.simulateKeystrokes("tab");
     expect(focusedTestId(confirm)).toEqual(Option.some("dialog-close"));
+
+    confirm.unmount();
+  });
+
+  it("keeps focus on Cancel when the confirmation opens with its dialog", () => {
+    const confirm = renderComponent(<BothOpenAtMount />);
+
+    // The confirmation is painted on top, so it owns the keyboard even though
+    // React ran its focus effect before the dialog's (plan 730).
+    expect(focusedTestId(confirm)).toEqual(Option.some("confirm-cancel"));
+
+    confirm.unmount();
+  });
+
+  it("closes only the confirmation and returns focus to the dialog", async () => {
+    const confirm = renderComponent(<BothOpenAtMount />);
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("escape");
+    finishMotion(confirm);
+
+    expect(isShown(confirm, "confirm-accept")).toBe(false);
+    expect(isShown(confirm, "outer-first")).toBe(true);
+    expect(focusedTestId(confirm)).toEqual(Option.some("outer-content"));
+
+    confirm.unmount();
+  });
+
+  it("leaves the dialog's trap in charge after the confirmation closes", async () => {
+    const confirm = renderComponent(<BothOpenAtMount />);
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("escape");
+    finishMotion(confirm);
+
+    await nextTask();
+    confirm.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(confirm)).toEqual(Option.some("outer-first"));
 
     confirm.unmount();
   });

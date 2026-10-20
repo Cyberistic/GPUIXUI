@@ -16,6 +16,12 @@
  * enclosing reader, so a third reader (a menu around a submenu, inside a dialog)
  * saw no claim and closed a second layer. A claim now stays readable for every
  * reader in its task.
+ *
+ * Plan 730 measured the ordering defect: a confirmation mounted together with
+ * its dialog pushed its layer first (React runs a child's effects before its
+ * parent's) and one Escape closed the dialog **and** the confirmation. Layer
+ * order is now the nesting depth, with open order breaking ties between
+ * siblings.
  */
 
 import type { EventPayload } from "@gpuix/react";
@@ -23,6 +29,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   dismissLayerCount,
   dismissTopLayer,
+  hasDeeperLayer,
   pushDismissLayer,
 } from "./dismiss-layer.js";
 
@@ -165,5 +172,52 @@ describe("dismiss layer stack", () => {
     expect(open).toHaveBeenCalledTimes(1);
 
     removeOpen();
+  });
+
+  it("puts a deeper layer above a shallower one, whatever the push order", () => {
+    const dialog = vi.fn();
+    const confirmation = vi.fn();
+    // A modal nested in the dialog's content pushes first, because React runs a
+    // child's layout effects before its parent's. The confirmation is painted on
+    // top, so it must be the one Escape reaches.
+    const removeConfirmation = pushDismissLayer(confirmation, 1);
+    const removeDialog = pushDismissLayer(dialog, 0);
+
+    expect(dismissTopLayer(escape())).toBe(true);
+    expect(confirmation).toHaveBeenCalledTimes(1);
+    expect(dialog).not.toHaveBeenCalled();
+
+    removeDialog();
+    removeConfirmation();
+  });
+
+  it("keeps open order between layers at the same depth", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const removeFirst = pushDismissLayer(first);
+    const removeSecond = pushDismissLayer(second);
+
+    dismissTopLayer(escape());
+
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+
+    removeSecond();
+    removeFirst();
+  });
+
+  it("reports whether a deeper layer is open", () => {
+    expect(hasDeeperLayer(0)).toBe(false);
+    const removeDialog = pushDismissLayer(vi.fn(), 0);
+    expect(hasDeeperLayer(0)).toBe(false);
+
+    const removeConfirmation = pushDismissLayer(vi.fn(), 1);
+    expect(hasDeeperLayer(0)).toBe(true);
+    expect(hasDeeperLayer(1)).toBe(false);
+
+    removeConfirmation();
+    expect(hasDeeperLayer(0)).toBe(false);
+
+    removeDialog();
   });
 });

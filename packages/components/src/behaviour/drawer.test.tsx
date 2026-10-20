@@ -6,10 +6,12 @@
  * returned, Escape closing the wrong layer, Tab escaping a modal, an
  * uninterruptible drawer that closes, a controlled drawer that moves on its
  * own, a closing drawer that leaves a clickable ghost, and an exit that never
- * unmounts.
+ * unmounts. The same-commit case guards plan 730: a confirmation mounted with a
+ * drawer lost focus to the drawer surface and one Escape closed both.
  */
 
 import { describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import type { DrawerSide, DrawerSize } from "../drawer.js";
 import {
   Drawer,
@@ -21,6 +23,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "../drawer.js";
+import { ConfirmDialog } from "../confirm-dialog.js";
 import { Field, FieldInput } from "../field.js";
 import { Button } from "../internal/button.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
@@ -29,6 +32,8 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  isShown,
+  nextTask,
   requireBounds,
 } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -76,7 +81,46 @@ const Workspace = ({
   </div>
 );
 
+/** A drawer and its confirmation mounted together, as a restored route does. */
+const DrawerWithConfirmAtMount = () => {
+  const [outer, setOuter] = useState(true);
+  const [confirm, setConfirm] = useState(true);
+  return (
+    <Drawer open={outer} onOpenChange={setOuter}>
+      <DrawerContent label="Details" testId="drawer-content">
+        <DrawerHeader>
+          <DrawerTitle>Details</DrawerTitle>
+        </DrawerHeader>
+        <Button testId="drawer-first">First</Button>
+        <ConfirmDialog
+          open={confirm}
+          onOpenChange={setConfirm}
+          title="Discard?"
+          description="The draft is lost."
+          onConfirm={() => undefined}
+        />
+      </DrawerContent>
+    </Drawer>
+  );
+};
+
 describe("Drawer", () => {
+  it("keeps a confirmation mounted with a drawer on top", async () => {
+    const drawer = renderComponent(<DrawerWithConfirmAtMount />);
+
+    expect(focusedTestId(drawer)).toEqual(Option.some("confirm-cancel"));
+
+    await nextTask();
+    drawer.renderer.simulateKeystrokes("escape");
+    finishMotion(drawer);
+
+    expect(isShown(drawer, "confirm-accept")).toBe(false);
+    expect(isShown(drawer, "drawer-first")).toBe(true);
+    expect(focusedTestId(drawer)).toEqual(Option.some("drawer-content"));
+
+    drawer.unmount();
+  });
+
   it("stays unmounted until the trigger is clicked", () => {
     const drawer = renderComponent(<Workspace />);
 
