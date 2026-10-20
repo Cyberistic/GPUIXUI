@@ -143,7 +143,49 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 152/152 plans-and-harness
+`[x]` `[██████████]` 153/153 plans-and-harness
+
+`[x]` **Prove the declared tween curve in the frame** per plan `823`: every
+      motion probe in both registries declares `ease: "linear"`, and none
+      declares a `delay` or a cubic-bezier, so a runtime that accepted
+      `MotionTransition`'s `ease`/`delay` and ignored them — or retargeted from
+      the target instead of the visible value — passed the whole suite while
+      every component's declared curve was unproven. `motion-curve` /
+      `live-motion-curve` (**150 checks each**, three green focused live runs)
+      put eight rails on one paused clock and compare every sample against a
+      pure CSS cubic-bezier model (18 unit tests): all five named eases reach
+      the paint (`easeIn` `22.4/75.7/149.2`, `ease` `98.0/192.6/230.5`,
+      `easeInOut` `31.0/120.0/209.0`, against `linear` `60/120/180` at
+      50/100/150 ms of 200 ms); a tuple (`[0.6, 0.05, 0.3, 0.95]` →
+      `24.5/143.4/222.8`) is at least **23 px** from every named curve at one
+      sample; a 100 ms `delay` holds **0 px** at 50 ms, 40 at 150 and 120 at 250;
+      omitting `transition` fits **`easeOut` over 300 ms** (225 ms = 217.6 px,
+      where a 200 ms default would be settled); a mid-tween flip continues from
+      the visible value (**96 → 57.6 px**, not 144 from the target nor 0). The
+      paint rounds to integer pixels (`ease at 50 ms` = `98` against
+      `98.0425…`), hence the ±2 px comparison; `motion.div` publishes no
+      `testId`, so a fill is measured as the following tick's displacement.
+      **Plan correction:** the bezier check first compared only the 50 ms sample,
+      where the tuple is 2 px from `easeIn` (both start slow) — it now uses the
+      maximum gap over the three samples. M1–M5 failed by name (a linear
+      `easeIn`; an `easeOut` tuple; a dropped `delay` → `got 60`; a linear
+      default → `got "linear"`; a no-op retarget → `got 172.5`) and M6 (a
+      pass-through `easedProgress`) failed 8 unit tests. Focused ids run:
+      `motion-curve` (green ×2 + five mutations + the zero-tolerance debug
+      read), `live-motion-curve` (green ×3). End-of-task full headless
+      **124/124** (**4888** checks, 67 capabilities, 1259.7 s under concurrent
+      load, exit `0`); live registry **110 → 111**; no full live gate (merge
+      gate). Plan:
+      `.agents/slop/plans/823-declared-motion-curves.md`.
+
+`[ ]` **Cross-team:** `@gpuixui/components` and `@gpuixui/tokens` may now treat
+      `MotionTransition.ease` (all five names, plus a four-number cubic-bezier
+      tuple), `.delay` and the 300 ms `easeOut` default as **measured** (plan
+      `823`, `motion-curve`/`live-motion-curve`). Re-check any component whose
+      transition was authored as if the curve were linear (the collapsible,
+      drawer, toast and sidebar tweens all declare `ease: "linear"` today) and
+      cite `motion-curve` from the motion token docs. Owner: `components` /
+      `tokens`; evidence: plan `823` §9, `PLAN.md` D98.
 
 `[x]` **Prove the clip contract in the frame** per plan `820`: every scrollable
       surface relies on one unwritten rule — a viewport paints only inside its

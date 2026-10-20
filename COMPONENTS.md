@@ -57,7 +57,7 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | command | `command-palette`, `live-command-palette` | verified |
 | theme | `theme-color-roles`, `theme-type-and-shadow`, `theme-platform`, `pixel-colour`, `shadow-pixels`, `border-pixels`, `live-theme`, `live-theme-platform`, `live-pixel-colour`, `live-shadow-pixels`, `live-border-pixels` | verified |
 | a11y | `a11y-tree` | verified |
-| motion | `motion-collapse`, `collapsible-height`, `live-motion`, `live-collapsible` | verified |
+| motion | `motion-collapse`, `motion-curve`, `collapsible-height`, `live-motion`, `live-motion-curve`, `live-collapsible` | verified |
 | content | `native-surfaces`, `live-content`, `markdown-surface`, `live-markdown`, `diff-surface`, `live-diff`, `surface-theme`, `live-surface-theme` | verified |
 | diff | `diff-surface`, `live-diff` | verified |
 | drag | `drag-targets`, `drag-autoscroll`, `live-drag-targets`, `live-drag-autoscroll` | verified |
@@ -347,6 +347,19 @@ exit settled. Two caveats: `onMotionComplete` reaches React only after
 published `motion.div` prop type omits `testId`/`role`/`aria-*`, so an animated
 surface is not directly addressable by a smoke test or an accessible role
 without a typed wrapper.
+
+**The declared curve is its own contract (`motion-curve`, plan `823`):** every
+other motion probe declares `ease: "linear"`, so `MotionTransition.ease`,
+`.delay` and the four-number cubic-bezier were unmeasured. Eight rails on one
+paused clock prove all five named eases reach the paint and match the CSS
+cubic-bezier model (`easeIn` 22.4/75.7/149.2 px against linear 60/120/180 at
+50/100/150 ms of a 200 ms tween), that `[0.6, 0.05, 0.3, 0.95]` is its own
+curve (at least 23 px from every name at one sample), that `delay` holds the
+from-value (0 px at 50 ms with a 100 ms delay), that omitting `transition` gives
+a **300 ms `easeOut`**, and that a retarget continues from the **visible** value
+(96 → 57.6 px). The paint rounds to integer pixels, hence ±2 px. Because
+`motion.div` publishes no `testId`, a probe reads the width as the following
+tick's displacement (`marker.x - rail.x`) — the same route as the sibling `y`.
 
 `collapsible-height` answers the height half of the same question, and the
 TODO on the shipped `CollapsibleContent` is answered by it. **`onLayout` does not

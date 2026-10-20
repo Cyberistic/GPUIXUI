@@ -1715,6 +1715,35 @@ Same caveat as every Tier 2 probe: this is the mechanism, not `@gpuixui/componen
 Mount the real `ToastProvider`/`ToastViewport` once that package is on the
 integration branch.
 
+## Motion curves (plan `823`)
+
+`motion-curve` measures the part of `MotionProps.transition` every other motion
+check held constant. `motion-collapse`, `live-motion`, `collapsible-height` and
+`live-collapsible` all declare `ease: "linear"`, so a runtime that accepted
+`ease`, `delay` and a four-number cubic-bezier and ignored them would have
+passed the whole suite.
+
+Eight rails share one paused clock; a rail's fill has no `testId`
+(`MotionDivProps` does not publish one), so the width is read as the
+**following tick's displacement** — `marker.x - rail.x` — the same sibling trick
+`motion-collapse` uses.
+
+| Fact | Measured |
+| ---- | -------- |
+| named curves | all five (`linear`, `ease`, `easeIn`, `easeOut`, `easeInOut`) reach the paint and match the **CSS cubic-bezier** model at 50 / 100 / 150 ms of a 200 ms tween (`22.4 / 75.7 / 149.2` for `easeIn`, `98.0 / 192.6 / 230.5` for `ease`, against `60 / 120 / 180` linear) |
+| a tuple | `[0.6, 0.05, 0.3, 0.95]` is its own curve (`24.5 / 143.4 / 222.8`), at least 23 px from every named curve at one sample — it is not aliased to a name |
+| `delay` | honoured in seconds: a 100 ms delay with a 200 ms `linear` tween paints **0 px at 50 ms**, 40 px at 150 ms, 120 px at 250 ms |
+| the default | omitting `transition` gives a **300 ms `easeOut`** tween (the fit names `easeOut`; 225 ms paints 217.6 px of 240, where a 200 ms default would be settled) |
+| retarget | a target change mid-tween continues from the **visible** value: 96 px at 80 ms, flip to 0, then **57.6 px** 80 ms later. From the target it would be 144, from zero 0 |
+| rounding | the paint is integer-rounded (`ease at 50 ms` measured `98` against `98.0425…`), so the checks compare with ±2 px |
+
+The recipe: a component may declare any published `ease` name or a
+cubic-bezier tuple and a `delay`, and the runtime will honour it; a design
+system can therefore ship easing tokens as real curves. The retarget rule is
+what makes a rapid toggle (collapse → expand before the tween ends) continuous
+instead of a jump. `live-motion-curve` repeats the same 150 checks in a real
+1100 × 720 window (three green focused runs).
+
 ## Collapsible sections (plan `186`)
 
 `collapsible-height` measures the recipe an animated, state-preserving
@@ -3104,7 +3133,9 @@ narrower. Each deviation is deliberate and measured:
   (`media-surface`, plan `520`), the **text ink** probe (`text-ink-pixels`,
   plan `773`) and the **text decoration** probe (`text-decoration-pixels`,
   plan `775`)
-  pass in real GPUix 0.10.0 on this host (119/119, 4359 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (**124/124**, **4888** checks, 67
+  capabilities, exit `0` — plan `823`, which adds `motion-curve`'s 150 curve
+  checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

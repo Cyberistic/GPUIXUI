@@ -46,6 +46,7 @@ import { inputPayloadScenario } from "../scenarios/input-payload.js";
 import { clickRoutingScenario } from "../scenarios/click-routing.js";
 import { modalScenario, MODAL_FOCUS_IDS } from "../scenarios/modal.js";
 import { motionScenario } from "../scenarios/motion.js";
+import { curveChecks, motionCurveScenario } from "../scenarios/motion-curve.js";
 import { floatingScenario } from "../scenarios/floating.js";
 import { panelScenario } from "../scenarios/panel.js";
 import { panelNestedScenario } from "../scenarios/panel-nested.js";
@@ -2329,6 +2330,47 @@ const motion: LiveScenario = {
       );
 
       yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${motion.id}.png`);
+    }),
+};
+
+/**
+ * The declared tween curve in a real window (plan `823`).
+ *
+ * Shares `curveChecks` with the headless scenario, so a measured correction can
+ * only land once; the window adds the real commit between each step (`settle`)
+ * because the automation protocol has no frame boundary.
+ */
+const liveMotionCurve: LiveScenario = {
+  id: "live-motion-curve",
+  title:
+    "Live motion curves: ease names, a cubic-bezier, a delay and a retarget",
+  capability: "motion",
+  view: motionCurveScenario.view,
+  ready: "curve-run",
+  steps: (ctx) =>
+    Effect.gen(function* () {
+      yield* curveChecks(ctx, {
+        pause: Effect.asVoid(ctx.host.pauseMotion()),
+        forward: (ms) =>
+          Effect.gen(function* () {
+            yield* ctx.host.fastForwardMotion(ms);
+            yield* settle;
+          }),
+        press: (testId) =>
+          Effect.gen(function* () {
+            yield* ctx.host.click(testId);
+            yield* settle;
+          }),
+        left: (testId) =>
+          Effect.map(ctx.host.bounds(testId), (box) =>
+            Option.map(Option.fromNullishOr(box), (bounds) => bounds.x),
+          ),
+        readout: Effect.map(
+          ctx.host.text("curve-readout"),
+          Option.fromNullishOr,
+        ),
+      });
+      yield* ctx.host.screenshot(`${LIVE_ARTIFACTS}/${liveMotionCurve.id}.png`);
     }),
 };
 
@@ -14392,6 +14434,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   panel,
   livePanelNested,
   motion,
+  liveMotionCurve,
   overlay,
   liveFloating,
   focus,
