@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 318/395
+`[x]` `[████████░░]` 319/396
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2682,6 +2682,16 @@ sentences and the inventory now name the move, the historical failure and
 today's figures, and a guard derives both ratios from
 `getPlatformTheme("darwin", "dark")` and rejects the pre-698 present tense; no
 colour, pair, floor, metric or shipped set moves (plan 705)
+`[x]` Hold the value groove's rejected-role rationale to the shipped figures —
+the sentence that rejected `border` and `active` as a groove said "`primary`
+measures 1.432:1 on the AAA divider" (that is `success`'s figure; `primary` is
+1.657:1) and "`primary` measures 2.84:1 on macOS dark" (pre-698; plan 698 moved
+it to **3.317:1**, over the 3:1 mark floor, so the contrast argument was
+false); the clause now states the tightest tone on the AAA dark divider
+(**1.324:1**, under the 4.5:1 mark floor) and rejects `active` for direction —
+a press exists only under the pointer — and two `documentedFigures` entries plus
+a premise case derive both ratios from `shippedThemes`; no colour, pair, floor,
+metric or shipped set moves (plan 706)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

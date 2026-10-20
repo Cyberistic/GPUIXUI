@@ -519,6 +519,46 @@ const trackSelectedFigure: DocumentedFigure = {
     "identity dark's `track` on its `selected` fill measures **{figure}:1**",
 };
 
+/**
+ * The two roles `docs/tokens.md` rejects as a groove, and the figures the
+ * rejection rests on. `border` is a line role: as a groove it would have to
+ * carry the four `PROGRESS_TONES` as marks, and the tightest of them measures
+ * 1.324:1 on the AAA dark divider, under the 4.5:1 the mark class demands.
+ * `active` is a pressed wash, and its ratio is *not* the objection — `primary`
+ * measures 3.317:1 on macOS dark's, over the 3:1 mark floor — because a press
+ * exists only under the pointer while a groove must be there at rest. Plan 347
+ * had quoted 1.432:1 for `primary` on the AAA divider (that is `success`'s
+ * figure) and the pre-698 2.84:1 for macOS dark's pressed wash.
+ */
+const trackRejectedRoleFigures: ReadonlyArray<DocumentedFigure> = [
+  {
+    document: "docs/tokens.md",
+    name: "the tightest progress tone on the divider",
+    pairs: [
+      ["primary", "border", "mark"],
+      ["success", "border", "mark"],
+      ["destructive", "border", "mark"],
+      ["mutedForeground", "border", "mark"],
+    ],
+    kind: "plain",
+    claim: "tightest",
+    provenance: identityTheme("dark", "high"),
+    decimals: 3,
+    sentence:
+      "the tightest of the four `PROGRESS_TONES` on the AAA dark divider measures **{figure}:1**",
+  },
+  {
+    document: "docs/tokens.md",
+    name: "the pressed wash's primary mark",
+    pairs: [["primary", "active", "mark"]],
+    kind: "plain",
+    claim: "value",
+    provenance: platformTheme("darwin", "dark", "default"),
+    decimals: 3,
+    sentence: "`primary` measures **{figure}:1** on macOS dark's pressed wash",
+  },
+];
+
 /** A sentence quoting the ring's derived bound, with the set it names. */
 const ringFigure = (
   document: FigureDocument,
@@ -648,6 +688,7 @@ export const documentedFigures: ReadonlyArray<DocumentedFigure> = [
   ...disabledDimFigures,
   trackSurfaceFigure,
   trackSelectedFigure,
+  ...trackRejectedRoleFigures,
   ...ringFigures,
 ];
 

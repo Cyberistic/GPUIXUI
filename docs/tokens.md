@@ -3872,9 +3872,12 @@ identity dark's `muted` is its `popover`, and every platform dark style's
 `muted` is its `card` and `popover`, all at **1.000:1**. An indeterminate
 progress bar is *only* its track (the fill is zero-width), so it painted nothing
 on a dark card, and a slider's unfilled span had no shape. `muted` cannot become
-a fill — plan `309` tuned it as the panel ladder — `border` is a line role
-(`primary` measures 1.432:1 on the AAA divider) and `active` is a pressed wash
-(`primary` measures 2.84:1 on macOS dark), so `track` is a designed neutral step
+a fill — plan `309` tuned it as the panel ladder — `border` is a line role, and
+the tightest of the four `PROGRESS_TONES` on the AAA dark divider measures
+**1.324:1**, under the 4.5:1 mark floor; `active` is a pressed wash (`primary`
+measures **3.317:1** on macOS dark's pressed wash, over the 3:1 mark floor, so
+the objection is direction, not contrast: a groove must be there at rest, while
+a press exists only under the pointer). So `track` is a designed neutral step
 in each palette: `#D5D9E2` light and `#3D4552` dark in the identity, one value
 per platform style, and `#C6C8CD`/`#414141` at high contrast. It is measured on
 the four base surfaces, the persistent `accent`/`selected` row fills, the
@@ -4093,7 +4096,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **29** entries across
+state — `documentedFigures` and `documentedTierFigures`, **31** entries across
 this page, the design system, the README, the ledger and the ring's JSDoc — and
 `packages/tokens/src/figures.test.ts` derives each one from `shippedThemes` with
 the checker's own measurement and asserts both the figure and the set (and

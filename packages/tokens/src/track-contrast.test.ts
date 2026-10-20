@@ -22,6 +22,7 @@
  * call itself a preview.
  */
 
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { shippedThemes } from "./shipped-themes.js";
 import {
@@ -205,5 +206,49 @@ describe("the value indicator's track", () => {
     expect(edited.colors.track).toBe(base.colors.hover);
     expect(edited.colors.background).toBe(base.colors.background);
     expect(edited.colors.skeleton).toBe(base.colors.skeleton);
+  });
+
+  /**
+   * Plan 347 rejected `border` and `active` as the groove, and the sentence that
+   * said why quoted 1.432:1 for `primary` on the AAA divider — that is
+   * `success`'s figure, and `primary` measures 1.657:1 — and macOS dark's
+   * pre-698 2.84:1 on the pressed wash. Plan 698 moved that wash to 3.317:1,
+   * over the 3:1 mark floor, so the old contrast argument is false.
+   *
+   * These are the premises the rewritten sentence states: `border` cannot carry
+   * the marks at AAA (the tightest tone is under the 4.5:1 floor), while
+   * `active` clears the default mark floor and is rejected for direction. A
+   * palette move that flips either premise fails here instead of leaving the
+   * page with a rationale the shipped sets no longer support.
+   */
+  it("rejects the two roles its rationale names, for the stated reasons", () => {
+    const tightestTone = shippedThemes
+      .flatMap(({ theme }) =>
+        progressMarks.map((role) => ({
+          theme,
+          role,
+          ratio: contrastRatio(theme.colors[role], theme.colors.border),
+        })),
+      )
+      .reduce((worst, current) =>
+        current.ratio < worst.ratio ? current : worst,
+      );
+
+    expect(tightestTone.theme.contrast).toBe("high");
+    expect(tightestTone.ratio).toBeLessThan(
+      contrastFloors[tightestTone.theme.contrast].mark,
+    );
+
+    const macOSDark = getPlatformTheme("darwin", "dark");
+    expect(
+      contrastRatio(macOSDark.colors.primary, macOSDark.colors.active),
+    ).toBeGreaterThanOrEqual(contrastFloors.default.mark);
+
+    const page = readFileSync(
+      new URL("../../../docs/tokens.md", import.meta.url),
+      "utf8",
+    ).replaceAll(/\s+/g, " ");
+    expect(page).not.toContain("`primary` measures 1.432:1 on the AAA divider");
+    expect(page).not.toContain("`primary` measures 2.84:1 on macOS dark");
   });
 });
