@@ -19,9 +19,10 @@ import type { Theme, ThemeContrast } from "./theme.js";
  *
  * It is an absolute step, not a multiplier, because an edited theme may carry a
  * `selection` at any alpha. The shipped sets sit between 14% and 33%, so the
- * active wash is 24–43%; the step keeps it a perceivable step above the match
- * (1.28:1 at the weakest, against the match's 1.17:1) while every highlighted
- * text role keeps the secondary floor.
+ * active wash is 24–43%; the step keeps the active match a measured step above
+ * the match (1.06:1 at the weakest on a painted surface), while the two washes
+ * clear a plain tone by 1.17:1 (match) or 1.28:1 (active) and every
+ * highlighted text role keeps the secondary floor.
  */
 export const nativeHighlightStep = 0.1;
 
@@ -101,9 +102,9 @@ const ownAlpha = (color: string): number => {
  * The pair class is `secondary`, not `body`: a visible highlight washes code and
  * prose, and no perceivable wash can keep a syntax token at body strength. The
  * neutral `hover` wash, the only other visible candidate, is 1.06:1 at its
- * weakest and still leaves syntax at 6.30:1; on the plain tone the selection
- * wash keeps every shipped role at 5.59:1 (match) and 4.80:1 (active), and on
- * the code block's painted ink surface at 5.21:1 and 4.51:1. Body text itself
+ * weakest and still leaves syntax at 6.74:1; on the plain tone the selection
+ * wash keeps every shipped role at 5.77:1 (match) and 4.99:1 (active), and on
+ * the code block's painted ink surface at 5.38:1 and 4.64:1. Body text itself
  * stays above the body floor (9.65:1 match, 8.03:1 active; 8.93:1 and 7.31:1
  * painted).
  */

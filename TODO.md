@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 324/401
+`[x]` `[████████░░]` 325/402
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2738,6 +2738,17 @@ after plan 557 wrote the sentence. `figures.ts` registers the pair as a
 `tightest` figure, so `figures.test.ts` derives both the ratio and the set, and
 the catalogue quotes the derived value. No token value, pair, floor, metric or
 shipped set moves (plan 714)
+`[x]` Hold the find-highlight JSDoc to the shipped sets — `highlight.ts` quoted
+seven current ratios and no test read either block, so five were stale after
+plan 574 moved eight light platform text roles and plans 590/649 moved the Aero
+inks: the plain minima said 5.59/4.80 (now **5.77/4.99**), the ink minima
+5.21/4.51 (now **5.38/4.64**), and syntax through the hover wash 6.30 (now
+**6.74**); the step JSDoc printed the washes' own plain-tone ratios (1.28/1.17)
+as if they were the step, which is **1.06** on a painted surface.
+`highlight-figures.test.ts` derives every figure and holds both the JSDoc and
+the page's sentences; the page's values were already derived by
+`native-highlight.test.ts`, whose presence check could not tell which sentence a
+figure belonged to. No token, pair, floor or metric moves (plan 716)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

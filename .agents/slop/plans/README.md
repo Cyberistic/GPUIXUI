@@ -363,6 +363,7 @@ references without buying correctness.
 | [711](./711-composition-matrix-budget.md) | The composition matrix's own budget | F | 333, 374, 398, 618 | done |
 | [713](./713-no-mutation-contract.md) | The extension mechanism's no-mutation contract | F | 011, 016, 063, 311, 321, 389, 685 | done |
 | [714](./714-caret-pair-figure.md) | The caret pair's quoted tightest figure | F | 557, 563, 590, 698, 705, 706, 710 | done |
+| [716](./716-highlight-figures.md) | The find-highlight JSDoc figures no test derives | F | 573, 574, 581, 590, 649, 710, 714 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
