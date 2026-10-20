@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 160/160
+`[x]` `[████████████]` 161/161
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2161,6 +2161,20 @@ retired once both branches are one
       the indictment of the old wait, and `src/runtime-hygiene.test.ts` fails by
       suite name if either name returns. Full runtime 60 files / 826 tests green
       twice, offline 62 files / 869 tests (plan `693`).
+
+`[x]` `packages/primitives`: **a labelled `ScrollArea` dropped the caller's
+      `onKeyUp`, and nothing checked slot-handler parity** — `ScrollAreaProps`
+      extends `TriggerHandlers`, so it advertises all twelve handlers, but
+      `renderScrollArea` forwarded the passive set, `onFocus`/`onBlur` and
+      `onKeyDown` and never wrote `onKeyUp`; every other single-root trigger
+      forwards it (the class plan `362` fixed on `NumberField`). It now passes
+      through unchanged, and `src/components/slot-handlers.test.tsx` proves each
+      handler reaches an element and calls the caller across eleven trigger
+      parts (the ref case included, except `ScrollArea`'s imperative handle),
+      failing by `part · handler`; the guard fails on `ScrollArea · onKeyUp`
+      before the fix and on `Button`/`Input`/`TextArea` when their forwarding is
+      removed. Offline 63 files / 890 tests, scoped live `layout` +
+      `scroll-area-trigger` 37/37 (plan `694`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

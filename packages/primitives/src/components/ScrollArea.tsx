@@ -15,6 +15,10 @@
  * its arrow keys. An unlabelled area stays the inert container it always was —
  * adding a tab stop to every existing layout silently would be worse.
  *
+ * The area is also a slot trigger: the passive handlers arrive through
+ * `passiveTriggerHandlers`, `onFocus`/`onBlur` compose with the focus ring, and
+ * `onKeyUp` passes through unchanged (the scroll rule is a key-down rule).
+ *
  * **Position (plan 337).** The scroll *event* carries deltas, and a scroll this
  * component performs itself dispatches no event at all — measured, PageDown
  * moved the region and reported nothing. `onScrollPositionChange` therefore
@@ -161,6 +165,7 @@ export const renderScrollArea = (
       onFocus={composeHandler(handlers.onFocus, props.onFocus)}
       onBlur={composeHandler(handlers.onBlur, props.onBlur)}
       onKeyDown={composeHandler(handlers.onKeyDown, props.onKeyDown)}
+      onKeyUp={props.onKeyUp}
       onScroll={onScroll}
       style={resolvePartStyle({ ...scrollStyle({ axis }), ...ring }, style, {
         focused: named && handlers.focused === true,

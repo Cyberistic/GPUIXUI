@@ -232,8 +232,8 @@ these examples as live previews: they are GPUix host trees, not DOM.
 `nub run --filter @gpuixui/primitives test` runs the suites: `core/` behaviour
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
-`src/components/testing/element.ts`. Measured 2026-10-19: the offline suite is
-**62 test files**, all passing, including a package-wide guard that a caller's
+`src/components/testing/element.ts`. Measured 2026-10-20: the offline suite is
+**63 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -241,6 +241,8 @@ that every public component is rendered by at least one example (plan `374`),
 one that holds the composed-app ledger to its real suite (plan `608`), one that
 keeps the Tier 1 inventory's "why wip" true (plan `648`), one that keeps the
 floating pages' trigger-follow claim true and both samplers live (plan `649`),
+one that every slot handler reaches an element and calls the caller on every
+single-root trigger (plan `694`),
 and one that fails by file name when a runtime suite has no header or is named
 like a scratch probe (plan `390`).
 

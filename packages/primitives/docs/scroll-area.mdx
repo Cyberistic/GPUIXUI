@@ -47,6 +47,13 @@ adding one to every existing layout silently would be the worse default
 | `testId` | `string` | — | stable locator |
 | `ref` | `Ref<ScrollAreaHandle>` | none | `element` for measuring, `id` for a slot trigger, and `scrollTo`, which reports the position it lands on |
 
+A **labelled** area is a slot trigger (see the Tooltip page's trigger table): it
+forwards the slot's passive mouse/scroll handlers and `ref`, composes
+`onFocus`/`onBlur` with its focus ring, composes `onKeyDown` with the scroll rule
+below, and passes `onKeyUp` through unchanged (the scroll contract is a key-down
+contract). An unlabelled area forwards none of them, because it is not a trigger
+(plan `638`).
+
 ## Scroll position
 
 `onScroll` reports a delta, not a position: the `EventPayload` has no offset, and
