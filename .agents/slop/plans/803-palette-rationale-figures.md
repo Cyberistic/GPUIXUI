@@ -297,7 +297,8 @@ nub run check
 nub run lint
 ```
 
-Expected: `212 + 1` files green; `check` and `lint` clean.
+Expected: **213** files and **7075** tests green (the suite had 212 files and
+7072 tests before this plan); `check` and `lint` clean.
 
 ## 8. STOP conditions
 
