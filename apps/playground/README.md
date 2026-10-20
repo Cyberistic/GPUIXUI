@@ -1543,7 +1543,7 @@ library had only assumed:
 | links | a coordinate click on a link's glyphs fires `onLinkClick` with `https://example.test/docs`; a click on prose does not. The element is `w_full`, so a short link is **not** reachable from the element centre |
 | children | React children stay in the retained tree but are never painted, like `<svg>`/`<canvas>` |
 | a11y | `role="article"` + `aria-label` is one AccessKit `Article`; internal headings and the table are **not** separate nodes |
-| styling | the document paints with its built-in `Theme` default; `theme` is the typed styling prop (only the default was measured) |
+| styling | the document paints with its built-in `Theme` default; `theme` is the typed styling prop. **Plan `784` measures what the prop actually carries**: a token-derived `GpuixTheme` reaches the heading/prose ink (`foreground`), the inline-code ink (`primary`), the link underline (`mutedForeground` — links are monochrome, not accent), the bullet disc (`primary` at 85 %) and the base selector (`appearance: "light"` paints dark ink). The document paints **no surface**, so a preview owns its own fill |
 
 The `(x + 2, y + 2) → (x + width, y + height - 2)` mapping is now used by the **live** suite too (`live-selection`, plan `191`), which proves a real pointer drag copies three text nodes, a drag anchored in `userSelect: none` selects nothing, and a crossing drag skips the chrome. The headless verdict remains the place for code/diff copy and `<code>` chrome exclusion.
 
@@ -1685,6 +1685,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-text-ink` | the four text roles in a window: a 64 px run's glyph pixels carry `foreground #EEF1F5`, `mutedForeground #A1A9B7`, `destructive #FF6B6B` or `success #3BC97F` (at least 32 device pixels each, exact ink), no run paints the next role's token, and the stage stays `background` — 23 checks (plan `773`). The scan maps the run's logical box through the frame's device scale (2) and reports the closest pixel on failure |
 | `live-text-decoration` | `underline` and `line-through` in a window: a 427 px continuous ink row at `y=0.67` (underline) and `y=0.45` (line-through) on a 280 × 96 panel, the undeclared control's widest row is 22 px (a glyph stem), both lines are exactly `foreground #EEF1F5`, and a wrapper `div`'s declaration reaches its child run — 18 checks (plan `775`). The scan uses the panel because an underline paints 1–2 device px **below** the `<text>` box |
 | `live-truncation-pixels` | the ellipsis glyph in a window: four 32 px runs in 200-wide boxes — the ellipsis's right edge is a short dot run (tallest column **0.11** against the clipped control's **0.70**), both keep **0** ink outside their box, the `MMMM` control's edge band is blank, and a `nowrap` run with neither leaks **1922** ink pixels beside its box — 22 checks (plan `778`). A blank right edge does not count as dots: `looksLikeDots` requires ink |
+| `live-surface-theme` | the content-surface theme in a window: one 880 × 580 stage mounts eleven themed/default fixtures and one frame proves the token reaches the paint — markdown text (`foreground`), inline code (`primary`), the bullet disc (`primary` at 85 %), the link underline (`mutedForeground`, and **no** `primary`: links are monochrome), both `appearance` bases, the code's syntax string and keyword tokens and its `placeholder` gutter, the `<code>`/`<markdown>` **absent** plane and the `<diff>` plane with both 5.5 % tints — 50 checks (plan `784`) |
 | `live-editing-actions` | the clipboard and history chords in a window: copy → paste is one change, a paste over a selection keeps the run and counts once more, cut deletes the run and pastes elsewhere, a pasted newline becomes a space in an `<input>` but survives in a `<textarea>` (and one undo reverses the paste), contiguous typing coalesces to one undo step and `shift-cmd-z` restores it while a new edit clears redo, a paste is its own step, `readOnly` refuses paste and cut, and a pasted six-digit code fills the OTP with focus on the last cell — 73 checks (plan `764`). Measured: the headless clock is **virtual**, so the `700 ms` coalescing window is only observable live (an 800 ms gap yields `u=ab`); a value-based wait cannot observe an idempotent second paste, so the event counter is the check |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
@@ -2480,6 +2481,41 @@ values.
 
 **Not claimed:** `ellipsis-start`, multi-line `lineClamp` paint, the exact
 glyph, and the `Text` component's API. The probe mounts bare `<text>` runs.
+
+### The content-surface theme: tokens reach markdown, code and diff (plan `784`)
+
+`<markdown>`, `<code>` and `<diff>` each publish `theme?: GpuixTheme`, and **no
+scenario in either registry passed one**. The runtime's base is always
+`Theme::dark()` (`Theme::from_prop(None)`), so a preview or code block inside
+our light palette painted Comet's colours while bounds, painted text and the
+authored style report all stayed green. `surface-theme` /
+`live-surface-theme` (**50 checks each**) mount eleven fixtures on one
+880 × 580 stage — the themed mount beside its default twin — and read a single
+A/B frame per host:
+
+| Field | Measured in the frame |
+| ----- | --------------------- |
+| `text` | the themed heading carries `foreground #EEF1F5`; the default twin carries the runtime's `#E5E5E5` and **zero** token pixels |
+| `codeText` | the themed inline-code run carries `primary`; the default twin carries the runtime's violet and no token |
+| `accent` | the bullet disc is `primary` at 85 % over `card` = **`#9294DE`** exactly (source: `opacity(theme.accent, 0.85)`) |
+| `textMuted` | the link underline carries `mutedForeground`, and the link paints **no** accent — the runtime keeps links monochrome |
+| `appearance` | `{ appearance: "light" }` paints darkest ink luminance **0.13** (`#222222`); `"dark"` paints **0.90** (`#E5E5E5`) |
+| `syntax` | the themed code paints its string token (`success`) and its keyword token (`primary`); the default twin paints neither |
+| `textFaint` | the themed code's gutter numbers carry `placeholder` |
+| plane | `<code>` and `<markdown>` paint **no** surface (their top-right corner is the panel's `card`); `<diff>` **does** paint `theme.bg` |
+| diff tints | the context row is `background` exactly; the added/deleted rows are `diffAdd`/`diffDel` at **5.5 %** over it, and the two differ |
+
+`nativeContentTheme(theme)` (in `surface-theme-model.ts`) is the mapping: every
+colour is a semantic role, every one of the 24 syntax kinds is a role, and
+`bg` is the app canvas rather than a card — which is what makes the diff's
+plane and the other surfaces' *absence* distinguishable. `packages/primitives`
+already owns `nativeTextTheme` for inputs; hoisting this beside it is a
+cross-team task (the playground cannot edit that package).
+
+**Not claimed:** `border` (table hairline), `textDim`, `caret`, `codeWash` and
+`diffHunkBg` are mapped and unit-tested but not pixel-sampled; `font_sans` /
+`font_mono` advances are already measured by `font-family` for `<text>`. The
+diff row bands assume the default 36/28/21 metrics.
 
 ### Editing actions: clipboard, history and the OTP paste (plan `764`)
 

@@ -137,6 +137,10 @@ import {
 } from "../scenarios/text-decoration.js";
 import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
 import {
+  surfaceThemeLiveScenario,
+  surfaceThemeView,
+} from "../scenarios/surface-theme.js";
+import {
   textTruncationPixelsLiveScenario,
   textTruncationView,
 } from "../scenarios/text-truncation.js";
@@ -13162,6 +13166,27 @@ const liveTruncationPixels: LiveScenario = {
 };
 
 /**
+ * The content-surface theme in a real window (plan `784`).
+ *
+ * The headless pass proves the A/B pair in one offscreen paint; this twin
+ * proves the same themed surfaces carry their tokens through a window's
+ * rasteriser, which is the layer no authored-style report can see.
+ */
+const liveSurfaceTheme: LiveScenario = {
+  ...surfaceThemeLiveScenario,
+  view: surfaceThemeView,
+  ready: "surface-stage",
+  steps: (ctx) =>
+    surfaceThemeLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-surface-theme.png`),
+        ),
+      ),
+};
+
+/**
  * The terminal surface in a real window (plan `532`).
  *
  * The headless probe measures colour, a11y and the synthetic key path. This twin
@@ -14304,6 +14329,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTextDecoration,
   liveTextInk,
   liveTruncationPixels,
+  liveSurfaceTheme,
   terminal,
   selectionSignal,
 ];

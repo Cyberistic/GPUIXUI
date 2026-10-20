@@ -129,7 +129,18 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 140/140 plans-and-harness
+`[~]` `[██████████]` 140/141 plans-and-harness
+
+`[~]` **Give the native content surfaces a token theme and prove which fields
+      reach the paint** per plan `784`: `<markdown>`, `<code>` and `<diff>` all
+      publish `theme?: GpuixTheme`, **no scenario in either registry passes
+      one**, and the runtime's base is always `Theme::dark()` — so an unthemed
+      preview inside our light palette paints Comet's colours and the suite
+      stays green. One `880 × 580` stage mounts eleven fixtures (themed/default
+      markdown text and inline code, a monochrome link, a bullet, both
+      appearances, themed/default code with a gutter, one diff) and reads one
+      A/B frame per host: `surface-theme` + `live-surface-theme`. Plan first:
+      `.agents/slop/plans/784-native-content-theme.md`.
 
 `[x]` **Prove the ellipsis glyph and the ink a constrained run keeps inside its
       box** per plan `778`, closing plan `335` §6 item 9: the ellipsis was
