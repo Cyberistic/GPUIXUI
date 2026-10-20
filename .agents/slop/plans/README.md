@@ -388,6 +388,7 @@ references without buying correctness.
 | [767](./767-status-fill-chip-count.md) | The package front door counts eight solid chip surfaces | F | 399, 651, 683, 766 | done |
 | [770](./770-washed-inactive-figure.md) | The washed unavailable label's AAA figure is stale, and three more washed figures have no owner | F | 510, 512, 520, 714, 717, 745, 760 | done |
 | [772](./772-inset-ring-figures.md) | The inset ring's figure and count have one owner, and the source-count guard cannot see `sixteen` | F | 609, 717, 760, 770 | done |
+| [774](./774-index-paragraph-counts.md) | The index paragraph states four catalogue sizes, and none has an owner | F | 059, 064, 066, 327, 398, 611 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3963,6 +3964,21 @@ learned the spelled-out forms — the rule plan `717` wrote could not see
 the phrase the rule replaced. No token value, pair, floor, metric, role or
 shipped theme moves; the figure table moves 65 → 68 and `contrastPairs` stays
 **470**.
+
+Plan `774` gives the catalogue's index paragraph its four sizes. §*For
+documentation sites* teaches `textRoles`, `statusTones`, `platformNames` and
+`filledControlFamilies` and states how big each catalogue is — "the ten
+typographic roles", "the four status families", "the four platform variants",
+"the four filled control families" — and every one of those words was
+hand-typed: incrementing each in turn left **7029 tests** green, while the
+`Typography` type row and the README already derive the same numbers. The four
+are now part of `describe("contract prose counts")`, which captures *every*
+occurrence of each phrase in the collapsed page and requires the count to be
+`countWord(index.length)`, so a fifth status tone, platform or filled family —
+or an eleventh type role — moves the paragraph with its index, and a stale
+second copy fails. The page needed no prose edit: it was right, just unowned. No
+token value, pair, floor, metric, role or shipped theme moves; `contrastPairs`
+stays **470**.
 
 ## How to use a plan
 
