@@ -30,6 +30,17 @@
  * override failed `check-types` with TS2561. Both are optional members now and
  * the bridge leaves them unset; the same paragraphs no longer call the derived
  * per-digit width and table floors runtime defaults.
+ *
+ * Plan 792: the palette's only table is a paragraph that groups captures by
+ * role, and the policy case below read the **names**, not the assignments — so
+ * moving `property` from `foreground` to `warningText` in the prose left 244
+ * tests green while every name and role still appeared somewhere. The three
+ * sentences that state the palette's size ("The 24 syntax capture colours", "a
+ * 24-capture syntax palette" and the ledger's copy) had no owner either: a
+ * capture added to `nativeSyntaxRoles` would leave all three saying 24. One case
+ * now parses each group, compares the whole `capture → role` map with the
+ * palette both ways, rejects a duplicate, and derives the three counts from the
+ * palette's keys.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -470,6 +481,44 @@ describe("native text theme", () => {
         new RegExp(`(^|[^A-Za-z0-9_$])${name}(?![A-Za-z0-9_$])`).test(docs),
         name,
       ).toBe(true),
+    );
+  });
+
+  it("maps every documented capture to the role the palette gives it", () => {
+    const docs = readDoc("../../../docs/tokens.md").replaceAll(/\s+/g, " ");
+    const marker = "`nativeSyntaxRoles` owns the capture palette:";
+    const start = docs.indexOf(marker);
+    const end = docs.indexOf("The captures are held", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+
+    const groups = docs
+      .slice(start + marker.length, end)
+      .split(";")
+      .map((group) => {
+        const names = Array.from(
+          group.matchAll(/`([A-Za-z][A-Za-z0-9]*)`/g),
+          (match) => match[1],
+        );
+        const role = names.at(-1);
+        return { role, captures: names.slice(0, -1) };
+      });
+
+    const named = groups.flatMap((group) => group.captures);
+    expect(new Set(named).size, "a capture is listed twice").toBe(named.length);
+
+    const documented = Object.fromEntries(
+      groups.flatMap(({ role, captures }) =>
+        captures.map((capture) => [capture, role]),
+      ),
+    );
+    expect(documented).toEqual({ ...nativeSyntaxRoles });
+
+    const captures = Object.keys(nativeSyntaxRoles).length;
+    expect(docs).toContain(`The ${captures} syntax capture colours`);
+    expect(docs).toContain(`a ${captures}-capture syntax palette`);
+    expect(readDoc("../../../COMPONENTS.md")).toContain(
+      `the ${captures}-capture syntax palette`,
     );
   });
 });

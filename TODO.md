@@ -54,10 +54,18 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 358/435
+`[x]` `[████████░░]` 359/436
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
+`[x]` Own the native syntax capture paragraph — the catalogue's only table of
+the palette grouped captures by role, and the policy case read the names, not
+the assignments, so moving `property` from `foreground` to `warningText` left
+244 tests green; the three `24` counts (the type table's "24 syntax capture
+colours", the native-text paragraph's "24-capture" and the ledger's copy) had no
+owner either. The case parses each group, compares the whole `capture → role`
+map with `nativeSyntaxRoles` both ways, rejects a duplicate and derives the
+three counts from the palette's keys; no palette value moves (plan 792)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and
