@@ -50,7 +50,7 @@ import {
   type ReactElement,
 } from "react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
-import type { PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
 import type { FloatingSide } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
@@ -84,6 +84,7 @@ import {
 } from "../core/bounds.js";
 import { fieldRecipeStyle, fieldRowStyle } from "../core/recipes.js";
 import { hasText } from "../core/text.js";
+import { typeaheadChar } from "../core/typeahead.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
@@ -112,6 +113,7 @@ import {
   type TriggerHandlers,
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
+import { useTypeahead } from "./typeahead.js";
 
 export type { SelectEntry, SelectOption, SelectOptionGroup };
 
@@ -773,6 +775,43 @@ export const Select = (props: SelectProps): ReactElement => {
     },
   );
   /**
+   * Type-ahead over the closed trigger.
+   *
+   * A focused select answers a typed prefix by choosing the next enabled option
+   * whose text starts with it, the way a desktop select does; without it a long
+   * list is arrow-only. The rule is `core/typeahead.ts` (500 ms window, repeated
+   * letter advances, disabled rows skipped). Only the **closed** trigger types:
+   * while the list is open GPUix owns the highlight and exposes no way to move
+   * it, so a second cursor here would disagree with the painted one (plan `731`).
+   */
+  const flat = useMemo(() => selectOptions(props.options), [props.options]);
+  const typeItems = useMemo(
+    () =>
+      Arr.map(flat, (option) => ({
+        value: option.value,
+        label: optionText(option.label, option.value),
+        disabled: option.disabled === true,
+      })),
+    [flat],
+  );
+  const selectedIndex = Option.flatMap(
+    Option.fromNullishOr(state.value.current),
+    (value) => Arr.findFirstIndex(flat, (option) => option.value === value),
+  );
+  const typeahead = useTypeahead(typeItems, selectedIndex, (match) =>
+    state.set(match.item.value),
+  );
+  const onTypeaheadKey = (event: EventPayload): void => {
+    // The caller sees every key first; the runtime has no `defaultPrevented`,
+    // so a caller cannot cancel the type-ahead (documented).
+    props.onKeyDown?.(event);
+    if (open || props.disabled === true) return;
+    Option.match(typeaheadChar(event), {
+      onNone: () => {},
+      onSome: typeahead,
+    });
+  };
+  /**
    * Moves the list so the highlighted row is inside it.
    *
    * The renderer's own `scrollIntoView` scrolls to the child **before** the
@@ -907,7 +946,7 @@ export const Select = (props: SelectProps): ReactElement => {
     ),
   );
   return renderSelect(
-    props,
+    { ...props, onKeyDown: onTypeaheadKey },
     theme,
     state.value,
     open,

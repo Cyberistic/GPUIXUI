@@ -2250,6 +2250,21 @@ retired once both branches are one
       double-dash hand-off plus a vacuity check for the scoped example
       (plan `700`; offline 68 files / 923 tests).
 
+`[x]` `packages/primitives`: **a long `Select` was arrow-only** — measured
+      (2026-10-20): a focused, closed trigger received every printable key
+      (`key: "e"`, no `keyChar`, real modifiers) but the wrapper had no rule, so
+      choosing from a 40-row list meant 40 arrow presses. A closed select now
+      answers a typed prefix the way a desktop select does: the next enabled
+      option whose text starts with it is committed through the one value rule,
+      with a 500 ms shared buffer, a repeated letter advancing, skipped
+      disabled/blank rows, wrap-around, and modifier chords and held repeats
+      refused. While the list is open nothing changes, because GPUix owns the
+      highlight. The rule is pure in `core/typeahead.ts` (with a thin
+      `useTypeahead` adapter); 17 core + 8 runtime cases, four failing without
+      the trigger's composed handler and the advance case failing when the
+      search includes the current item (plan `731`; offline 17 cases in the new
+      file, scoped runtime 8/8).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the
@@ -2330,6 +2345,19 @@ retired once both branches are one
       primitives parts table (`src/contract.test.ts`, plan `090`). Add the rows so
       the accepted contract and both packages agree; the doc is outside this
       workstream's paths.
+
+`[ ]` **components workstream — retire the private type-ahead rule.**
+      `packages/components/src/internal/typeahead.ts` holds the prefix rule
+      (`press`, `matchPrefix`, the 500 ms window) for menus and the selectable
+      `List`; primitives plan `731` hoisted it **down** into
+      `@gpuixui/primitives/core` (`pressTypeahead`, `matchTypeahead`,
+      `TYPEAHEAD_WINDOW`, `EMPTY_TYPEAHEAD`) for `Select`. The dependency arrow
+      only points this way, so components should import the core rule and delete
+      its copy (its `useTypeahead` hook and `monotonicNanos` can stay). Until
+      then the library has two copies of one prefix rule; the semantics are
+      identical by construction (repeated letter advances, disabled rows
+      skipped, case-insensitive, wrap). Owner: `components`; path outside this
+      workstream.
 
 `[ ]` **components workstream**: plan `201` §2.3 tells the thin context to call
       `useControllableState` from `@gpuix/react/floating`, but that function is

@@ -28,6 +28,20 @@ export { initValueState, setValue, withValue } from "./state.js";
 export type { ControlMode, ValueState } from "./state.js";
 
 export {
+  EMPTY_TYPEAHEAD,
+  matchTypeahead,
+  pressTypeahead,
+  TYPEAHEAD_WINDOW,
+  typeaheadChar,
+} from "./typeahead.js";
+export type {
+  TypeaheadBuffer,
+  TypeaheadItem,
+  TypeaheadKey,
+  TypeaheadMatch,
+} from "./typeahead.js";
+
+export {
   availableOn,
   availableWidth,
   decideHorizontalSide,

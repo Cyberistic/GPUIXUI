@@ -8,8 +8,8 @@ themes it to match the field chrome. The **open state is the wrapper's** — it
 follows the package's one controlled rule — so a select can be opened from code
 and a disabled select cannot be left with a dead menu (plan `346`). It is **not**
 a reimplementation: what this package owns is the trigger's paint, the list
-surface, the item states, the open state and the **accessibility contract**
-GPUix's headless Select does not set (plan `057`).
+surface, the item states, the open state, the trigger's type-ahead and the
+**accessibility contract** GPUix's headless Select does not set (plan `057`).
 
 ## Usage
 
@@ -191,9 +191,10 @@ will really paint.
 
 ## Keyboard
 
-Owned by GPUix's Select: the trigger opens with Enter/Space, the arrows move the
-highlight, Enter commits, Escape dismisses. This wrapper does not intercept any
-key. It **does** follow the highlight: the newly highlighted row is measured
+GPUix owns the keys it knows: the trigger opens with Enter/Space, the arrows move
+the highlight, Enter commits and Escape dismisses. The wrapper adds one rule on
+top — **type-ahead while the list is closed** — and otherwise does not intercept
+a key. It **does** follow the highlight: the newly highlighted row is measured
 against the list's painted box and the list moves by the overflow. It cannot use
 the renderer's `scrollIntoView`, which scrolls one child short — measured, it
 left the active row 2 px below the list and the previous row flush with its
@@ -206,6 +207,29 @@ The trigger is one tab stop. It paints the focus ring whenever it holds focus
 half a keyboard user would see no active state at all between opening and
 committing (plan `083`). Escape and a committed option both return focus to the
 trigger.
+
+### Type-ahead
+
+A long list is arrow-only without it, so a focused, **closed** select answers a
+typed prefix the way a desktop select does (plan `731`):
+
+- the next **enabled** option whose text (`label`, else `value`) starts with the
+  prefix is committed through `onValueChange`; the search starts after the
+  current selection and wraps;
+- pressing the same letter again advances to the next match — `e`, `e` on
+  Europe/Estonia chooses Europe, then Estonia;
+- consecutive letters accumulate for **500 ms** after the last keystroke, so
+  `u` then `g` matches `Uganda`; a letter that matches nothing clears the prefix
+  and nothing is reported;
+- `ctrl`/`cmd`/`alt` chords and held repeats type nothing: the chord belongs to
+  the application, and a held key repeats natively;
+- the caller's `onKeyDown` runs first for every key. There is no way to cancel
+  the type-ahead from it: 0.10.0's `EventPayload` has no `defaultPrevented`.
+
+**While the list is open the wrapper does nothing with a printable key.** GPUix
+owns the highlight and publishes no way to move it, so a second cursor here would
+disagree with the painted one; the honest contract is type-ahead on the closed
+trigger, not a simulated search inside the list.
 
 ## Accessibility
 
@@ -415,13 +439,29 @@ partial state. The caller's style merges **after** the focus ring, so an explici
   disabled keeps `open` true; the wrapper still paints closed and shows the list
   again if both `open` and `disabled` stop disagreeing. The request is sent once,
   not on every render.
-- No search or type-ahead. A long list wants a combobox, which is Tier 2.
+- No search field, and no fuzzy match. **Type-ahead** (above) is a prefix match
+  on the closed trigger only: it cannot move the open list's highlight (the
+  runtime owns it), cannot match in the middle of a word, and cannot match an
+  option whose text differs from its label.
 - No multi-select.
 - No `aria-haspopup` (absent from the runtime's host props); the `combobox`
   role, `expanded` and `selected` carry the semantics instead.
 
 ## Verification
 
+- `src/core/typeahead.test.ts` — the prefix rule without a runtime: the
+  renderer's measured shape (`key: "e"`, no `keyChar`) falls back to the key, a
+  produced character wins, named keys and blanks type nothing, modifier chords
+  and held repeats are refused, the 500 ms window resets the prefix, a repeated
+  letter keeps it, and matching skips disabled/blank rows, advances after the
+  current item, wraps and is case-insensitive (plan `731`). Reverting the `>`
+  search to `>=` fails the advance case.
+- `runtime/select-typeahead.runtime.test.tsx` — the same contract through the
+  real renderer: `e` commits Europe, a second `e` advances to Estonia, `u` then
+  `g` commits Uganda, a disabled option and a no-match letter report nothing, a
+  miss does not poison the next letter, `cmd-e` and a held key report nothing
+  while the caller's handler still sees them, and the caller sees every key
+  (plan `731`). Removing the trigger's composed handler fails four cases by name.
 - `src/components/state-style.test.tsx` — the container state payload, each
   per-item payload, and the callback winning over the component's own rules
   (plans 080, 081).
@@ -534,6 +574,9 @@ partial state. The caller's style merges **after** the focus ring, so an explici
 ```sh
 nub run --filter @gpuixui/primitives test
 nub run --filter @gpuixui/primitives test:runtime
+# scoped (plan 700): the path goes straight after the script
+nub run --filter @gpuixui/primitives test src/core/typeahead.test.ts
+nub run --filter @gpuixui/primitives test:runtime runtime/select-typeahead.runtime.test.tsx
 ```
 
 ## Related
