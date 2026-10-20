@@ -79,8 +79,8 @@ paint it, so the same role is held at the 3:1 mark floor (4.5:1 at AAA) on
 the `hover`/`selected`/`selectedActive` fills a chosen option marks (`markPairs`,
 `trackMarkPairs`). Brand-toned text — a link, a label, an icon — reads
 `primaryText`, which is held to the text floor on the plain surfaces, the
-`hover`/`active` washes a
-link paints, the `accent`/`selected`/`selectedActive` fills a link sits on inside
+`hover`/`active` washes a link paints, the
+`accent`/`selected`/`selectedActive` fills a link sits on inside
 a row (plan 314) and the four soft status fills a link in a status panel sits on
 (plan 346), and through the text-selection wash on all thirteen of those
 surfaces (plan 528). A brand that changes `primary` should set `primaryText`
