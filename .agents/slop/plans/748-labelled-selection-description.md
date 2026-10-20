@@ -172,13 +172,14 @@ The two-direction proof: delete the caption/announcement (or gate the caption on
 `undefined` instead of `hasText`) and the element cases 1–3 and the runtime case
 1/2 fail by name.
 
-### 2.8 `packages/primitives/examples/checkbox.example.tsx`
+### 2.8 `packages/primitives/examples/checkbox.example.tsx`, `examples/selection.example.tsx`
 
 Use the new shape where it belongs: each asset row becomes
 `<Checkbox description={asset.detail}>` and the trailing `Spacer` + muted
 `Text` are deleted (fewer elements, one hit area, the hint announced). Update the
 header comment (the "use `CheckboxGroup` … plus descriptions" sentence is no
-longer the only shape).
+longer the only shape). The selection example's switch stops hand-rolling its
+hint as a sibling `caption` and passes `description` instead.
 
 ### 2.9 `packages/primitives/docs/checkbox.mdx`, `docs/switch.mdx`
 
@@ -279,7 +280,7 @@ Stop and report rather than improvise if:
 | `nub run --filter @gpuixui/primitives check-types` | pass |
 | `nub run --filter @gpuixui/primitives test` | **70 files / 966 tests**, 0 failed (961 before; +5) |
 | `nub exec vitest run --config vitest.runtime.config.ts labelled-selection` | **10/10** (8 before; +2) |
-| `nub exec vitest run --config vitest.runtime.config.ts examples` | **19/19** after the example change |
+| `nub exec vitest run --config vitest.runtime.config.ts examples` | **19/19** after both example changes |
 | full runtime suite (one run, before the example edit) | **68 files / 886 tests**, 0 failed |
 | `nub run check:tests` | pass |
 | `nub run lint` | pass |
