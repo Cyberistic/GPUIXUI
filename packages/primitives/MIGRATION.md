@@ -9,38 +9,102 @@ primitives.
 
 ## Conversion status
 
-Converted — the resting appearance is a `src/recipe` class string, compiled
-through `recipeTw`, with the caller's `className` joined last:
+Every primitive's resting appearance is now a `src/recipe` class string,
+compiled through `recipeTw`, with the caller's `className` joined last and its
+`style` merged after that. The ten primitives skipped in the first wave (they
+needed *computed* geometry) are converted on the **derived** and **`style`**
+tiers described in §"The three tiers" — zero remain on their `core/` resolver.
 
-| Primitive | Recipe | Notes |
-| --------- | ------ | ----- |
-| `Button` | `buttonClass` | first wave |
-| `Input`, `TextArea` | `fieldClass` | `TextArea` is transitive — it renders `Input`'s `fieldChrome` |
-| `Text` | `textClass` | first wave |
-| `Stack`, `Grid` | `stackClass`, `gridClass` | first wave |
-| `Box` | `boxClass` | surface tones + layout facts |
-| `Label` | — | a `Stack` of `Text`; its `className`/`style` flow to the outer column |
-| `Separator` | `separatorClass` | also `separatorGroupClass` for the labelled row |
-| `ScrollArea` | `scrollClass` | |
-| `ButtonGroup` | `buttonGroupClass` | |
-| `Toggle` | `toggleClass` | |
-| `OTPField` | `otpGroupClass`, `fieldSquareClass` | |
-| `Select` | `selectTriggerClass`, `selectContentClass`, `selectItemClass` | |
-| `Rating` | `ratingStarClass`, `ratingGroupClass` | |
-| `Tooltip` | `tooltipClass` | |
+| Primitive | Recipe | Tier |
+| --------- | ------ | ---- |
+| `Button` | `buttonClass` | static |
+| `Input`, `TextArea` | `fieldClass` | static (`TextArea` is transitive — it renders `Input`'s `fieldChrome`) |
+| `Text` | `textClass` | static |
+| `Stack`, `Grid` | `stackClass`, `gridClass` | static |
+| `Box` | `boxClass` | static |
+| `Label` | — | static (a `Stack` of `Text`; `className`/`style` flow to the outer column) |
+| `Separator` | `separatorClass` | static |
+| `ScrollArea` | `scrollClass` | static |
+| `ButtonGroup` | `buttonGroupClass` | static |
+| `Toggle` | `toggleClass` | static |
+| `OTPField` | `otpGroupClass`, `fieldSquareClass` | static |
+| `Select` | `selectTriggerClass`, `selectContentClass`, `selectItemClass` | static |
+| `Rating` | `ratingStarClass`, `ratingGroupClass` | static |
+| `Tooltip` | `tooltipClass` | static |
+| `NumberField` | `numberFieldClass`, `numberStepperClass`, `numberInputClass` | derived (`w-stepper-column` = `iconSize.md + spacing.sm`) |
+| `Checkbox`, `RadioGroup`, `Switch` | `selectionBoxClass`, `radioDotClass`, `switchTrackClass`, `switchThumbClass` | derived (`size-icon`, `size-dot`, `switch-track`, `size-thumb`) |
+| `Slider`, `RangeSlider` | `sliderTrackClass`, `sliderRailClass`, `sliderFillClass`, `sliderThumbClass` | derived + `style` (`px-inset`, `slider-thumb`; the fill width is data) |
+| `Meter`, `Progress` | `progressTrackClass`, `progressFillClass` | derived + `style` (the fill width is data) |
+| `Spinner` | `spinnerGroupClass`, `spinnerDotClass` | static + `style` (caller dot size, per-step opacity) |
+| `Skeleton` | `skeletonClass` | static + `style` (caller width/height, pulse opacity) |
 
-Skipped — the component's resting appearance is a **computed numeric or
-dynamic value** that no utility maps to a static class string, so it stays on
-its `core/` resolver:
+## The three tiers
 
-| Primitive | Reason |
-| --------- | ------ |
-| `NumberField` | the stepper column width is `iconSize.md + spacing.sm`, a computed sum |
-| `Checkbox`, `RadioGroup`, `Switch` | `iconSize`-derived geometry — a scale the registry does not map — plus computed derivatives (radio dot `round(iconSize/2)`, switch track `round(iconSize × 1.75)`, switch thumb `iconSize − 2·spacing.2xs`) |
-| `Slider`, `RangeSlider` | computed percentage fill widths, `iconSize` thumb dimensions and negative margins |
-| `Meter`, `Progress` | computed percentage fill widths |
-| `Spinner` | a caller-number dot side plus per-step computed opacity |
-| `Skeleton` | arbitrary `width`/`height` (number or string) plus per-step pulse opacity |
+Tailwind has three mechanisms for a value; the registry now mirrors all three,
+typed:
+
+1. **Static** — a class that maps to a fixed `StyleDesc` (`h-md`,
+   `grid-cols-3`, `bg-primary`). This is the first wave.
+2. **Derived** — a utility whose value is a **function of the theme**. A
+   registry entry may return a plain `number` (bound to a square `width` +
+   `height`) or a full shape. This replaces `calc()` for reusable token
+   arithmetic, so a density or `iconSize` override moves the geometry exactly
+   as the old `core/` resolver did.
+3. **`style`** — a typed `style` prop merged **last**, for data the theme
+   cannot know (percentage fills, a caller's dot size, a pulse opacity).
+
+The derived tokens the primitives register (all read `theme.iconSize` /
+`theme.spacing`, so they follow an override):
+
+| Utility | Resolves | Used by |
+| ------- | -------- | ------- |
+| `size-icon-<size>` | `iconSize[size]` (square) | checkbox/radio box, slider thumb |
+| `size-dot-<size>` | `round(iconSize[size] / 2)` (square) | radio dot |
+| `size-thumb-<size>` | `iconSize[size] − 2·spacing["2xs"]` (square) | switch thumb |
+| `switch-track-<size>` | `round(iconSize[size] × 1.75)` × `iconSize[size]` | switch track |
+| `slider-thumb-<size>` | `iconSize[size]` square, `∓round(iconSize/2)` margins, strong border | slider thumb |
+| `px-inset-<size>` | `round(iconSize[size] / 2)` horizontal padding | slider track inset |
+| `w-stepper-column` | `iconSize.md + spacing.sm` | number-field stepper column |
+| `h-space-<step>` | `spacing[step]` | slider rail, progress/meter track |
+
+The rule: **arithmetic on a token → a derived token; data → `style`.**
+
+## The `calc()` escape hatch
+
+`@gpuixui/tw` now also evaluates a **compile-time numeric** `calc()` — numeric
+literals, `+ - * /`, parentheses, and `var(--token)` references to the theme's
+numeric scales — to a plain `number` at compile time. It exists for one-off
+arithmetic that is not worth naming; the derived tokens above are preferred for
+reusable arithmetic. The grammar rejects, through the `unsupportedReason` path
+(never a silent drop):
+
+- `%` (percentages);
+- `px` / `rem` / `em` and any other unit;
+- `min()` / `max()` / `clamp()`;
+- any other function, and an unknown `var(--token)`.
+
+`var(--token)` resolves against `--icon-size-*`, `--spacing-*`, `--radius-*`,
+`--border-width-*`, `--control-height-*`, `--control-padding-*` and
+`--row-height`.
+
+## Merge order
+
+A component resolves its style as **static → derived/`calc` → caller
+`className` → caller `style`**:
+
+```ts
+const resolved = recipeTw.classesToStyle(
+  cn(recipe, className),   // className wins the recipe
+  theme,
+);
+let style = resolved.style;
+// ... state buckets (disabled / invalid / focus) ...
+style = mergeStyle(style, props.style);   // style wins everything
+```
+
+`recipe.test.ts` and `recipe/geometry.test.ts` pin the equivalence against the
+pre-migration resolvers; `geometry.test.ts` also proves the merge order (a
+caller `className` beats the recipe and a caller `style` beats both).
 
 
 ## The two halves
@@ -205,6 +269,11 @@ anything else, so the built-in table still runs for numeric/unknown classes:
 | `type-` | typography role | `type-label` → label size/leading/weight; `text-sm` still a size, `text-primary` still a colour |
 | `type-size-` | typography role, size/leading only | `type-size-caption` → caption size/leading, weight inherited |
 
+The **derived** geometry utilities (`size-icon-*`, `switch-track-*`,
+`slider-thumb-*`, `px-inset-*`, `w-stepper-column`, `h-space-*`) are the same
+kind of family, but their value is a function of `theme.iconSize` /
+`theme.spacing` rather than a named scale step — see §"The three tiers".
+
 `type-*` (not `text-*`) is deliberate: `cn` resolves `text-*` as size-vs-colour,
 so a `text-h2` would be dropped as a colour conflict. The `type-` prefix keeps
 the role out of that namespace. `type-size-*` is the same role resolution
@@ -225,8 +294,9 @@ a primitive recipe:
   native element to style.
 - **child/sibling selectors** (`[&_svg]:*`, `group-*`, `peer-*`) — not part of
   an element's own `StyleDesc`.
-- **arbitrary values** (`calc()`, CSS variables, `color-mix()`, percentage
-  offsets like `top-1/2`) — no `StyleDesc` value.
+- **arbitrary values** (CSS variables, `color-mix()`, percentage offsets like
+  `top-1/2`) — no `StyleDesc` value. A numeric `calc()` **is** supported (see
+  §"The `calc()` escape hatch"); a unit/percentage/function `calc()` is rejected.
 - **`z-*`** — stacking order awaits the native `zIndex` slice.
 - **`bg-clip-padding`, `underline-offset-*`, `resize-none`, `backdrop-blur`** —
   no native capability.

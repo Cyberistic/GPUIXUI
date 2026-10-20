@@ -67,7 +67,7 @@ identity, stacked-native deck hero, library grid, proof, attribution
 
 ### `@gpuixui/tw` migration (`tw-primitives`)
 
-`[~]` `[██████░░░░]` 2/3
+`[x]` `[██████████]` 3/3
 
 `[x]` Add `@gpuixui/tw` as a `@gpuixui/primitives` dependency and convert the
 core primitives — `Button`, `Input`, `Text`, `Stack`, `Grid` (plus `TextArea`'s
@@ -83,13 +83,21 @@ stay unsupported — `MIGRATION.md` §"The grid").
 in `MIGRATION.md` — `Box`, `Label`, `Separator`, `ScrollArea`, `ButtonGroup`,
 `Toggle`, `OTPField`, `Select`, `Rating`, `Tooltip` now render through
 `recipeTw` (plus `TextArea`, transitively via `fieldChrome`). The components
-whose resting appearance is a computed numeric or dynamic value with no utility
-mapping stay on their `core/` resolver and are recorded as skips in
-`MIGRATION.md` §"Conversion status": `NumberField` (stepper column width),
-`Checkbox`/`RadioGroup`/`Switch` (iconSize-derived geometry and its computed
-derivatives), `Slider`/`RangeSlider` (percentage fills, iconSize thumbs,
-negative margins), `Meter`/`Progress` (percentage fills), `Spinner` (caller dot
-size + per-step opacity) and `Skeleton` (arbitrary dimensions + pulse opacity).
+whose resting appearance is a computed numeric or dynamic value stayed on
+their `core/` resolver pending the three-tier model below.
+`[x]` Land the three-tier styling model and convert the ten skipped primitives —
+`NumberField`, `Checkbox`, `RadioGroup`, `Switch`, `Slider`, `RangeSlider`,
+`Meter`, `Progress`, `Spinner`, `Skeleton`. The `@gpuixui/tw` registry now
+accepts a `(theme) => number` (square) or typed-shape **derived** utility
+(`size-icon-*`, `switch-track-*`, `slider-thumb-*`, `px-inset-*`,
+`w-stepper-column`, `h-space-*`) and a compile-time numeric `calc()` (`+ - * /`,
+parentheses, `var(--token)` against the numeric scales; percentages, units and
+functions rejected through `unsupportedReason`). Every primitive takes a
+`className` and a typed `style` prop, merged last, so data (percentage fills,
+caller sizes, pulse opacity) flows through `style` while token arithmetic is a
+named derived token. `MIGRATION.md` documents the tiers and the merge order;
+`recipe/geometry.test.ts` proves the equivalence per variant/size plus the
+merge order. Zero primitives remain on their `core/` resolver.
 `[ ]` Convert `packages/components` (Toast, Dialog, Popover, …) onto
 `@gpuixui/tw` — these may adopt the shadcn recipes' fixed metrics instead of the
 primitives' density scale.

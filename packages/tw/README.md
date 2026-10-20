@@ -107,15 +107,22 @@ difference is pinned in `src/aliases.test.ts`.
   before `cn` resolves conflicts.
 - Motion: `animate-in`, `fade-in-0`, `slide-in-from-*`, `duration-*`, `ease-*`
   map to `motion` props.
+- Compile-time numeric `calc()` in arbitrary values (`w-[calc(...)]`,
+  `size-[calc(...)]`, …): numeric literals, `+ - * /`, parentheses and
+  `var(--token)` references to the theme's numeric scales, evaluated against
+  the theme to a plain number. A derived utility (a registry entry returning
+  `(theme) => number` or a shape) is preferred for reusable arithmetic.
 
 ## What is recorded as unsupported
 
 `transition-*` (GPUix has no CSS transitions), `transform`/`origin-*`/`zoom-*`
 (GPUI has no transform), `z-*` (pending the GPUix `zIndex` patch),
 `backdrop-filter`, `selection:`/`file:`/`placeholder:`/`after:` pseudo-elements,
-`group-*`/`peer-*`/`*:` selectors, arbitrary `calc()`/CSS-variable values,
+`group-*`/`peer-*`/`*:` selectors, arbitrary CSS-variable/`color-mix()` values,
 percentage offsets such as `top-1/2`, and `resize-none` (no native resize
-handle).
+handle). A `calc()` with a percentage, a unit, `min()`/`max()`/`clamp()`, an
+unknown function or an unknown token is rejected with a reason from
+`src/calc.ts`, never silently dropped.
 
 Each unsupported class is returned in `unsupported` with its original name; it
 is never silently dropped. `unsupportedReason` gives the recorded reason
