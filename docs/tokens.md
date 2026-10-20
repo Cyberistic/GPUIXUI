@@ -275,7 +275,7 @@ A runnable example lives in
 | `borderStrong` | `#737C8C` | `#868FA0` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#191D25` | input field background |
 | `inputForeground` | `#191D25` | `#EEF1F5` | text typed into an input, on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints |
-| `placeholder` | `#5A6372` | `#A8B0BD` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints (a native field paints its own grey; see [Native text fields](#native-text-fields)) |
+| `placeholder` | `#5A6372` | `#A8B0BD` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints — `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` (`softFieldPairs`); a native field paints its own grey (see [Native text fields](#native-text-fields)) |
 | `ring` | `#4C39B5` | `#A7A9FF` | focus ring; the value groove a focused slider's thumb sits on |
 | `selection` | `#7567F23D` | `#A7A9FF24` | text selection wash (24% light, 14% dark; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |
@@ -579,7 +579,7 @@ carries, so it cannot claim another.
 | `borderStrong` | `#4A4F58` | `#AAAAAA` | essential control boundaries, including on row washes and soft status fills |
 | `input` | `#FFFFFF` | `#0D0D0D` | input field background |
 | `inputForeground` | `#000000` | `#FFFFFF` | text typed into an input, on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints |
-| `placeholder` | `#3B3E45` | `#D1D1D1` | placeholder text |
+| `placeholder` | `#3B3E45` | `#D1D1D1` | a hint the consumer renders on the `input` fill, the `background`/`card`/`popover`/`muted` surfaces a transparent field paints, the `hover`/`active`/`accent`/`selected`/`selectedActive` washes a field inside a row paints and the four soft status fills a field inside a status panel paints — `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft` (`softFieldPairs`) |
 | `ring` | `#4C39B5` | `#C7CBFF` | focus ring |
 | `selection` | `#7567F24D` | `#4C39B54D` | text selection wash (30% alpha; `selectionColor`) |
 | `selectionOnFill` | `#00000026` | `#FFFFFF26` | text selection veil for content painted on an opaque filled surface — a filled action or a solid status chip (15% in both modes; `selectionColor`) |

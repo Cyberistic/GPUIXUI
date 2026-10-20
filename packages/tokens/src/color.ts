@@ -226,7 +226,16 @@ export interface ThemeColors {
   readonly input: string;
   /** Text typed into an input. */
   readonly inputForeground: string;
-  /** Placeholder text inside an input, held to the secondary floor on the `input` fill, the four `Surface` tones a transparent field sits on and the four row washes an in-place field paints. */
+  /**
+   * Placeholder text inside an input, held to the secondary floor on the
+   * fourteen surfaces a field paints it on: the `input` fill, the four
+   * `Surface` tones a transparent field sits on (`background`, `card`,
+   * `popover`, `muted`), the four row washes an in-place field paints
+   * (`hover`, `active`, `accent`, `selected`), the pressed `selectedActive`
+   * fill it keeps, and the four soft status fills a field inside a status panel
+   * paints — `infoSoft`, `successSoft`, `warningSoft`, `destructiveSoft`
+   * (`softFieldPairs`).
+   */
   readonly placeholder: string;
   /** Focus ring. */
   readonly ring: string;
