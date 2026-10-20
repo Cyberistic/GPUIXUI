@@ -7,7 +7,7 @@
  * and its `popover` (**1.000:1**), the identity light fill **was** its `hover`
  * wash, and four light platform variants painted a fill lighter than their own
  * window (macOS 1.015:1, Windows 1.021:1, Windows 7 1.025:1, Linux 1.040:1).
- * Seven shipped pairs in six sets sat under the 1.05:1 surface floor while every
+ * Eight shipped pairs in six sets sat under the 1.05:1 surface floor while every
  * check returned `[]`. `disabledFillPairs` measures the fill on the five
  * surfaces a control is placed on, and five values move one designed step.
  */
