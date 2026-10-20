@@ -37,8 +37,8 @@ import {
   SURFACE,
   Surface,
   WINDOW,
+  awaitFrame,
   openWindow,
-  settleFocus,
   testTheme,
 } from "./fixture.js";
 
@@ -451,16 +451,20 @@ it("scrolls a labelled ScrollArea with the keyboard", async () => {
   runtime.flush();
   // The ring is derived from the tracker's sample, not the (missing) focus
   // event, so it paints on the next tick (plan `590`).
-  await settleFocus();
+  const ring = (): Option.Option<unknown> =>
+    Option.flatMap(runtime.element("s"), (element) =>
+      Option.fromNullishOr(element.style.boxShadow),
+    );
+  await awaitFrame(
+    () => Option.isSome(ring()),
+    "the scroll region paints its focus ring",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("s");
   // The region's name reaches assistive technology, not just the prop.
   expect(Option.isSome(a11yNode(runtime.a11y(), { role: "Region" }))).toBe(
     true,
   );
-  const ring = Option.flatMap(runtime.element("s"), (element) =>
-    Option.fromNullishOr(element.style.boxShadow),
-  );
-  expect(Option.isSome(ring)).toBe(true);
+  expect(Option.isSome(ring())).toBe(true);
   runtime.keyDown("s", "pagedown");
   const page = offsetOf(runtime);
   expect(page.y).toBeLessThan(0);

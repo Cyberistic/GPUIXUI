@@ -23,11 +23,24 @@ import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { describe, expect, it } from "vitest";
 
-/** A runtime suite and the first line it actually starts with. */
+/** A runtime suite, its source, and the first line it actually starts with. */
 interface RuntimeSuite {
   readonly name: string;
+  readonly text: string;
   readonly firstLine: string;
 }
+
+/** Read one file under `runtime/`. */
+const readRuntimeFile = (
+  name: string,
+): Effect.Effect<string, PlatformError, FileSystem.FileSystem | Path.Path> =>
+  Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.readFileString(
+      path.join(import.meta.dirname, "..", "runtime", name),
+    );
+  });
 
 /** The suites under `runtime/`. */
 const scan = (): Effect.Effect<ReadonlyArray<RuntimeSuite>, PlatformError> =>
@@ -42,6 +55,7 @@ const scan = (): Effect.Effect<ReadonlyArray<RuntimeSuite>, PlatformError> =>
       (name) =>
         Effect.map(fs.readFileString(path.join(directory, name)), (text) => ({
           name,
+          text,
           firstLine: pipe(
             Str.split(text, "\n"),
             Arr.findFirst((line) => Str.isNonEmpty(Str.trim(line))),
@@ -51,6 +65,13 @@ const scan = (): Effect.Effect<ReadonlyArray<RuntimeSuite>, PlatformError> =>
       { concurrency: 8 },
     );
   }).pipe(Effect.provide(NodeFileSystem.layer), Effect.provide(NodePath.layer));
+
+/** The fixture, whose exports every suite waits through. */
+const readFixture = (): Effect.Effect<string, PlatformError> =>
+  readRuntimeFile("fixture.tsx").pipe(
+    Effect.provide(NodeFileSystem.layer),
+    Effect.provide(NodePath.layer),
+  );
 
 const sorted = (values: ReadonlyArray<string>): ReadonlyArray<string> =>
   Arr.sort(values, Order.String);
@@ -78,5 +99,32 @@ describe("runtime suite hygiene", () => {
       sorted,
     );
     expect(probes).toStrictEqual([]);
+  });
+
+  /**
+   * **The bug this guards (plan `693`).** `fixture.tsx` exported `settleFocus()`,
+   * a fixed 120 ms sleep standing in for the native-focus tracker's sample. Under
+   * load the sleep elapsed before the paint (plan `691` measured 2–3 failing
+   * cases in two of three full runs), so a suite could fail a green component.
+   * `awaitFrame` polls the frame instead; nothing may reintroduce the sleep.
+   */
+  it("offers no fixed focus sleep, so a paint waits on the frame", async () => {
+    const suites = await Effect.runPromise(scan());
+    // Liveness: a scan that finds nothing would pass every rule.
+    expect(suites.length).toBeGreaterThan(30);
+    const fixture = await Effect.runPromise(readFixture());
+    const fixtureOffersSleep =
+      Str.includes("settleFocus")(fixture) ||
+      Str.includes("FOCUS_SETTLE_MS")(fixture);
+    const sleepers = pipe(
+      suites,
+      Arr.filter((suite) => Str.includes("settleFocus")(suite.text)),
+      Arr.map((suite) => suite.name),
+      sorted,
+    );
+    expect({ fixtureOffersSleep, sleepers }).toStrictEqual({
+      fixtureOffersSleep: false,
+      sleepers: [],
+    });
   });
 });

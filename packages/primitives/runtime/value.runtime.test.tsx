@@ -28,7 +28,7 @@ import { RangeSlider, Slider } from "../src/components/Slider.js";
 import { Stack } from "../src/components/Stack.js";
 import { sliderInset } from "../src/core/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
+import { Surface, awaitFrame, openWindow, testTheme } from "./fixture.js";
 
 const INSET = sliderInset("md", testTheme);
 
@@ -207,11 +207,14 @@ it("rings the focused thumb and clears it when focus leaves", async () => {
     Option.isSome(Option.fromNullishOr(thumbOf(runtime, "s").style.boxShadow));
   runtime.click("s");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => ringed(), "the slider thumb paints its ring");
   expect(ringed()).toBe(true);
   runtime.click("b");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !ringed(),
+    "the slider thumb clears its ring when focus leaves",
+  );
   expect(ringed()).toBe(false);
 });
 

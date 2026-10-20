@@ -19,7 +19,7 @@ import type { ReactElement } from "react";
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
-import type { Runtime } from "../src/testing/index.js";
+import { isFocusRing, isWithin, type Runtime } from "../src/testing/index.js";
 import { Button } from "../src/components/Button.js";
 import { Checkbox } from "../src/components/Checkbox.js";
 import { CheckboxGroup } from "../src/components/CheckboxGroup.js";
@@ -29,7 +29,7 @@ import { Rating } from "../src/components/Rating.js";
 import { Switch } from "../src/components/Switch.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const options = [
   { value: "a", label: "Alpha" },
@@ -229,7 +229,18 @@ const focus = async (runtime: Runtime, testId: string): Promise<void> => {
   // The release runtime dispatches no `onFocus`; the tracker publishes the new
   // host on its next sample, and the activation rules read that state. Without
   // the wait the sequence targets the pre-focus tab stop (plan `592`).
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element(testId), (item) =>
+        Arr.some(
+          runtime.all(),
+          (element) =>
+            isWithin(runtime, element, item.id) &&
+            isFocusRing(element.style.boxShadow),
+        ),
+      ),
+    `${testId} paints its focus ring`,
+  );
 };
 
 it.each(

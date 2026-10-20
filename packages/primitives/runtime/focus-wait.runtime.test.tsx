@@ -1,14 +1,15 @@
 /**
  * The focus wait itself, in the real runtime.
  *
- * **The bug guarded (plan `691`).** `settleFocus()` is a fixed 120 ms sleep
- * (`2 × 50 ms` tracker intervals + 20 ms), while the tracker publishes a
- * sample and React paints a render after it. Under load the sleep elapses
+ * **The bug guarded (plan `691`).** The fixture used to offer a fixed 120 ms
+ * sleep (`2 × 50 ms` tracker intervals + 20 ms), while the tracker publishes a
+ * sample and React paints a render after it. Under load the sleep elapsed
  * first: two of three full runtime runs failed 2–3 ring cases (zero rings in
  * the frame) although the same files pass scoped. This file proves the race
  * deterministically — a renderer that reports the focused id six polls late
  * paints no ring at the old wait — and that `awaitFrame` waits for the paint
- * without turning a missing paint into a pass.
+ * without turning a missing paint into a pass. The old wait is written as the
+ * literal `sleep(120)` it was, and plan `693` removed it from the fixture.
  *
  * The delay is counted in tracker polls, not wall-clock time, so the case is
  * deterministic and measures the interval it is about.
@@ -18,7 +19,7 @@ import { expect, it } from "vitest";
 import * as Option from "effect/Option";
 import { Input } from "../src/components/Input.js";
 import { isFocusRing, type Runtime } from "../src/testing/index.js";
-import { Surface, awaitFrame, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow, sleep } from "./fixture.js";
 
 /** Whether the input paints a focus ring (the resting recipe shadow is not one). */
 const ringed = (runtime: Runtime): boolean =>
@@ -60,7 +61,8 @@ it("waits for a ring the tracker reports late", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  // The fixed 120 ms wait this file exists to indict (plans `691`, `693`).
+  await sleep(120);
   // The failing direction: the fixed wait asserted here, before the sample.
   expect(ringed(runtime)).toBe(false);
   await awaitFrame(() => ringed(runtime), "the late focus ring");

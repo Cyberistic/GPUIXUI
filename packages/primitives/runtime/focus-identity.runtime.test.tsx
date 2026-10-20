@@ -19,7 +19,7 @@ import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { isFocusRing, type Runtime } from "../src/testing/index.js";
-import { Surface, awaitFrame, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const formatting = [
   { value: "bold", label: "Bold" },
@@ -109,14 +109,18 @@ it("keeps a multiple group's ring on the clicked item through a reorder", async 
     () => Option.isSome(runtime.element("reordered-marker")),
     "the reordered multiple tree paints",
   );
-  await settleFocus();
   await awaitFrame(
     () => ringOn(runtime, "tg-underline") && !ringOn(runtime, "tg-italic"),
     "the reordered multiple group keeps its ring on Underline",
   );
 
   runtime.click("before");
-  await settleFocus();
+  // The ring is the tracker's sample: waiting for it to clear proves the
+  // tracker saw focus leave before the next Tab reads the group's stop.
+  await awaitFrame(
+    () => !ringOn(runtime, "tg-underline"),
+    "the group clears its ring when the click takes focus",
+  );
   runtime.focusNext();
   expect(focused(runtime)).toBe("tg-underline");
 });
@@ -140,7 +144,6 @@ it("keeps a single group's ring on the selected item through a reorder", async (
     () => Option.isSome(runtime.element("reordered-marker")),
     "the reordered single tree paints",
   );
-  await settleFocus();
   await awaitFrame(
     () => ringOn(runtime, "tg-underline") && !ringOn(runtime, "tg-italic"),
     "the reordered single group keeps its ring on Underline",
@@ -193,7 +196,6 @@ it("keeps a checkbox group's ring on the clicked row through a reorder", async (
     () => Option.isSome(runtime.element("reordered-marker")),
     "the reordered checkbox tree paints",
   );
-  await settleFocus();
   await awaitFrame(
     () => boxRingOn(runtime, "cg-gamma") && !boxRingOn(runtime, "cg-beta"),
     "the reordered checkbox group keeps its ring on Gamma",

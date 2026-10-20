@@ -35,7 +35,8 @@ import { Box } from "../src/components/Box.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode } from "../src/testing/index.js";
-import { openWindow, settleFocus, Surface } from "./fixture.js";
+import { NATIVE_FOCUS_POLL_MS } from "../src/components/native-focus.js";
+import { openWindow, awaitFrame, sleep, Surface } from "./fixture.js";
 
 const TIP = "Scroll for newer entries";
 
@@ -118,15 +119,19 @@ it("opens a Tooltip on keyboard focus", async () => {
   runtime.render(filled());
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => tipPainted(runtime.allText()),
+    "the region's tooltip paints on focus",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 
   // Escape dismisses a focus-opened tip while the region keeps focus (the
-  // shared rule from plan 605); a fresh sample must not reopen it.
+  // shared rule from plan 605); a fresh sample must not reopen it. There is no
+  // observable for "the sample changed nothing", so elapse two real polls.
   runtime.keyDown("target", "escape");
   runtime.flush();
-  await settleFocus();
+  await sleep(2 * NATIVE_FOCUS_POLL_MS + 20);
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(false);
 });

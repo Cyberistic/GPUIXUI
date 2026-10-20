@@ -25,8 +25,12 @@ import { OTPField } from "../src/components/OTPField.js";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { ScrollArea } from "../src/components/ScrollArea.js";
 import { Stack } from "../src/components/Stack.js";
-import { openWindow, settleFocus, Surface } from "./fixture.js";
-import type { Bounds, Runtime } from "../src/testing/index.js";
+import { awaitFrame, openWindow, Surface } from "./fixture.js";
+import {
+  isFocusRing,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
 
 /** A painted box, or a failure naming what did not paint. */
 const bounds = (runtime: Runtime, testId: string): Bounds =>
@@ -104,7 +108,10 @@ it("reveals a Button below the fold and reports the move", async () => {
   expect(before.y).toBeGreaterThan(region.y + region.height);
 
   tabTo(runtime, "target");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the focused button into view",
+  );
   runtime.flush();
 
   const offset = offsetOf(runtime, "s");
@@ -143,7 +150,10 @@ it("reveals the focused option of a roving RadioGroup", async () => {
   );
 
   tabTo(runtime, "rg-a");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the focused radio into view",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s").y).toBeLessThan(0);
@@ -179,7 +189,10 @@ it("reveals the focused row of a CheckboxGroup", async () => {
   );
 
   tabTo(runtime, "cg-a");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the focused checkbox into view",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s").y).toBeLessThan(0);
@@ -204,7 +217,10 @@ it("reveals the focused cell of an OTPField", async () => {
   );
 
   tabTo(runtime, "otp-cell-1");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the focused OTP cell into view",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s").y).toBeLessThan(0);
@@ -226,7 +242,10 @@ it("reveals a field that mounts focused", async () => {
   runtime.flush();
   // The mount happens before the first paint; the tracker's first sample is
   // what lets the area measure the field (plan 606).
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the mounted focused field into view",
+  );
   runtime.flush();
 
   expect(Option.getOrUndefined(runtime.focused())).toBe("field");
@@ -246,7 +265,10 @@ it("reveals an autoFocus OTP cell", async () => {
     </Surface>,
   );
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").y < 0,
+    "the region scrolls the mounted focused OTP cell into view",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s").y).toBeLessThan(0);
@@ -268,7 +290,13 @@ it("scrolls back up to a control that takes focus above the viewport", async () 
   );
   runtime.flush();
   tabTo(runtime, "top");
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("top"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the top button paints its ring, so the tracker sampled focus",
+  );
   runtime.flush();
   runtime.wheel("s", 0, -400);
   runtime.flush();
@@ -276,11 +304,23 @@ it("scrolls back up to a control that takes focus above the viewport", async () 
   // Move focus away from the top button, so focusing it again is a change the
   // tracker can observe.
   tabTo(runtime, "bottom");
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("bottom"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the bottom button paints its ring, so the tracker sampled it",
+  );
   runtime.flush();
 
   focusElement(runtime, "top");
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("top"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the refocused button paints its ring, so the tracker sampled it",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s").y).toBe(0);
@@ -299,7 +339,13 @@ it("does not move a region for a control that is already visible", async () => {
   );
   runtime.flush();
   tabTo(runtime, "top");
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("top"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the visible button paints its ring",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s")).toStrictEqual({ x: 0, y: 0 });
@@ -328,7 +374,10 @@ it("reveals along the axis a horizontal region scrolls", async () => {
   );
 
   tabTo(runtime, "target");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "s").x < 0,
+    "the region scrolls along its horizontal axis",
+  );
   runtime.flush();
 
   const offset = offsetOf(runtime, "s");
@@ -351,7 +400,13 @@ it("does not move the region for a control outside it", async () => {
   );
   runtime.flush();
   tabTo(runtime, "outside");
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("outside"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the outside button paints its ring",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "s")).toStrictEqual({ x: 0, y: 0 });
@@ -382,7 +437,10 @@ it("reveals a focused control through a nested region", async () => {
   expect(bounds(runtime, "target").y).toBeGreaterThan(outer.y + outer.height);
 
   tabTo(runtime, "target");
-  await settleFocus();
+  await awaitFrame(
+    () => offsetOf(runtime, "outer").y < 0,
+    "the outer region scrolls the nested focused button into view",
+  );
   runtime.flush();
 
   expect(offsetOf(runtime, "outer").y).toBeLessThan(0);
@@ -418,7 +476,10 @@ it("reveals a padded nested region by its painted box", async () => {
   expect(offsetOf(runtime, "outer").y).toBeLessThan(-300);
 
   focusElement(runtime, "target");
-  await settleFocus();
+  await awaitFrame(
+    () => contains(bounds(runtime, "outer"), bounds(runtime, "inner")),
+    "the outer region scrolls the nested region back into view",
+  );
   runtime.flush();
 
   // The inner area's report starts at its content origin (plan 597), so passing

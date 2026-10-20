@@ -24,7 +24,7 @@ import { Stack } from "../src/components/Stack.js";
 import { Text } from "../src/components/Text.js";
 import { Toggle } from "../src/components/Toggle.js";
 import type { Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const FOCUSED = "#ff0000";
 const IDLE = "#00ff00";
@@ -54,7 +54,10 @@ it("Button's callback repaints when focus arrives", async () => {
   );
   expect(background(runtime, "b")).toBe(IDLE);
   runtime.focusNext();
-  await settleFocus();
+  await awaitFrame(
+    () => background(runtime, "b") === FOCUSED,
+    "the button repaints for the tracked focus",
+  );
   expect(background(runtime, "b")).toBe(FOCUSED);
 });
 
@@ -140,7 +143,10 @@ it("a labelled ScrollArea's callback follows its own focus", async () => {
   );
   expect(background(runtime, "area")).toBe(IDLE);
   runtime.focusNext();
-  await settleFocus();
+  await awaitFrame(
+    () => background(runtime, "area") === FOCUSED,
+    "the ScrollArea repaints for the tracked focus",
+  );
   expect(background(runtime, "area")).toBe(FOCUSED);
 });
 

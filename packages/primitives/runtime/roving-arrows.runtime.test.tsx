@@ -29,8 +29,8 @@ import * as Option from "effect/Option";
 import { RadioGroup } from "../src/components/RadioGroup.js";
 import { Rating } from "../src/components/Rating.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
-import type { Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { isFocusRing, type Runtime } from "../src/testing/index.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const THREE = [
   { value: "a", label: "Alpha" },
@@ -182,7 +182,13 @@ it("commits star 1 from an unrated rating, then moves on", async () => {
   runtime.renderer.focusElement(star.id);
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("ra-star-1"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the focused rating star paints its ring",
+  );
   runtime.keyDown("ra-star-1", "space");
   runtime.keyUp("ra-star-1", "space");
   expect(reports).toStrictEqual(["1"]);

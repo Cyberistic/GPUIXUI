@@ -34,8 +34,12 @@ import { Box } from "../src/components/Box.js";
 import { Select } from "../src/components/Select.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { FLOATING_FOLLOW_MS, FLOATING_MARGIN } from "../src/core/index.js";
-import type { Bounds, Runtime } from "../src/testing/index.js";
-import { Surface, WINDOW, openWindow, settleFocus, sleep } from "./fixture.js";
+import {
+  isFocusRing,
+  type Bounds,
+  type Runtime,
+} from "../src/testing/index.js";
+import { Surface, WINDOW, awaitFrame, openWindow, sleep } from "./fixture.js";
 
 const LONG = Array.from({ length: 60 }, (_, index) => `word${index}`).join(" ");
 
@@ -167,7 +171,13 @@ it("moves a Select list above when the host window shrinks", async () => {
   runtime.flush();
   // Let the focus tracker publish its sample, so no unrelated re-render can
   // sample the new size for a wrapper that does not subscribe.
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("sel-trigger"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the select trigger paints its tracked focus ring",
+  );
   const target = boundsOf(runtime, "sel-trigger");
   const before = boundsOf(runtime, "sel-content");
   expect(before.y).toBeGreaterThanOrEqual(target.y + target.height - 1);

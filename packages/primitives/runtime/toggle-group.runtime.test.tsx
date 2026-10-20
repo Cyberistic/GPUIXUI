@@ -14,7 +14,7 @@ import { Button } from "../src/components/Button.js";
 import { Stack } from "../src/components/Stack.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { a11yValueOf, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 const align = [
   { value: "left", label: "Left" },
@@ -138,6 +138,7 @@ it("moves only focus with an arrow in multiple mode", async () => {
 
 it("skips a disabled item with arrows and refuses its press", async () => {
   const runtime = await openWindow();
+  const trackedFocus: string[] = [];
   runtime.render(
     <Surface>
       <ToggleGroup
@@ -150,6 +151,10 @@ it("skips a disabled item with arrows and refuses its press", async () => {
           { value: "right", label: "Right" },
         ]}
         defaultValue="centre"
+        itemStyle={(state) => {
+          if (state.focused) trackedFocus.push(state.value);
+          return {};
+        }}
       />
     </Surface>,
   );
@@ -158,7 +163,11 @@ it("skips a disabled item with arrows and refuses its press", async () => {
   // The click moved native focus to the disabled item (the runtime does not
   // refuse focus), so the keyboard's next move starts there once the tracker
   // has sampled it: Right lands on the first enabled item after it (plan `601`).
-  await settleFocus();
+  // A disabled item paints no ring, so the item state callback is the observable.
+  await awaitFrame(
+    () => trackedFocus.includes("left"),
+    "the tracker reports the disabled item focused",
+  );
   runtime.keyDown("tg-left", "right");
   expect(focused(runtime)).toBe("tg-centre");
   runtime.keyDown("tg-centre", "right");
@@ -322,12 +331,12 @@ it("moves the multiple tab stop to an item that was clicked", async () => {
     </Surface>,
   );
   runtime.click("tg-underline");
-  await settleFocus();
   expect(focused(runtime)).toBe("tg-underline");
   expect(announced(runtime, "Underline")).toBe("pressed");
 
   runtime.click("before");
-  await settleFocus();
+  // The tab stop is the group's own last-clicked value (plan `600`), not the
+  // tracker's sample, so no wait stands between the click and Tab.
   runtime.focusNext();
   expect(focused(runtime)).toBe("tg-underline");
   // One stop, not three: the next Tab leaves the group.
@@ -360,11 +369,9 @@ it("keeps a disabled item out of the multiple tab stop", async () => {
     </Surface>,
   );
   runtime.click("tg-italic");
-  await settleFocus();
   expect(announced(runtime, "Italic")).toBe("not pressed");
 
   runtime.click("before");
-  await settleFocus();
   runtime.focusNext();
   expect(focused(runtime)).toBe("tg-bold");
 });

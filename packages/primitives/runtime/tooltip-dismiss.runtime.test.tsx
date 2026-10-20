@@ -29,7 +29,7 @@ import { Switch } from "../src/components/Switch.js";
 import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { Tooltip } from "../src/components/Tooltip.js";
-import { openWindow, settleFocus, Surface } from "./fixture.js";
+import { openWindow, awaitFrame, Surface } from "./fixture.js";
 
 /** The hint the tip paints; no other element uses it. */
 const TIP = "A hint";
@@ -91,7 +91,7 @@ const TRIGGERS: ReadonlyArray<TriggerCase> = [
 
 it.each(TRIGGERS)(
   "a focused $name trigger dismisses its tip on click",
-  async ({ node, rootStyle, focusedId = "target" }) => {
+  async ({ name, node, rootStyle, focusedId = "target" }) => {
     const runtime = await openWindow();
     runtime.render(
       <Surface>
@@ -102,7 +102,10 @@ it.each(TRIGGERS)(
     );
     runtime.focusNext();
     runtime.flush();
-    await settleFocus();
+    await awaitFrame(
+      () => tipPainted(runtime.allText()),
+      `${name} paints its tooltip on focus`,
+    );
     expect(Option.getOrUndefined(runtime.focused())).toBe(focusedId);
     expect(tipPainted(runtime.allText())).toBe(true);
     runtime.click(focusedId);
@@ -126,7 +129,10 @@ it("an InfoTip trigger dismisses its tip on click", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => tipPainted(runtime.allText()),
+    "the InfoTip paints its tooltip on focus",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.click("target");

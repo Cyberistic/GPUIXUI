@@ -33,11 +33,12 @@ import {
   a11yNode,
   a11yNodes,
   a11yValueOf,
+  isFocusRing,
   isWithin,
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus, testTheme } from "./fixture.js";
+import { Surface, awaitFrame, openWindow, testTheme } from "./fixture.js";
 
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
   Option.getOrElse(runtime.bounds(testId), () =>
@@ -498,7 +499,20 @@ it("paints an attached group's focus ring inside its clip", async () => {
   const before = boundsOf(runtime, "one");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  // The inset overlay is the tracker's sample: wait for the ring to paint.
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("one"), (button) =>
+        Arr.some(
+          runtime.all(),
+          (element) =>
+            element.id !== button.id &&
+            isWithin(runtime, element, button.id) &&
+            element.style.position === "absolute",
+        ),
+      ),
+    "the attached group paints its inset focus ring",
+  );
   expect(runtime.focused()).toStrictEqual(Option.some("one"));
   const group = boundsOf(runtime, "g");
   const one = boundsOf(runtime, "one");
@@ -556,7 +570,13 @@ it("keeps the outer ring for a separated group", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("one"), (element) =>
+        isFocusRing(element.style.boxShadow),
+      ),
+    "the separated group's button paints its outer ring",
+  );
   const button = Option.getOrElse(runtime.element("one"), () =>
     expect.fail("the focused button painted no element"),
   );
@@ -1206,13 +1226,19 @@ it("rings the radio that holds focus, and only that one", async () => {
   runtime.click("before");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => ringed(runtime, "Alpha") && !ringed(runtime, "Beta"),
+    "the radio that holds focus paints its ring",
+  );
   expect(focusedLabel(runtime)).toBe("Alpha");
   expect(ringed(runtime, "Alpha")).toBe(true);
   expect(ringed(runtime, "Beta")).toBe(false);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !ringed(runtime, "Alpha"),
+    "the radio clears its ring when focus leaves",
+  );
   expect(ringed(runtime, "Alpha")).toBe(false);
 });
 
@@ -1263,11 +1289,17 @@ it("rings a focused Checkbox and Switch, and clears it when focus leaves", async
     );
   runtime.click("cb");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => shadow("Agree"),
+    "the focused checkbox paints its ring",
+  );
   expect(shadow("Agree")).toBe(true);
   runtime.click("sw");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => shadow("Dark mode") && !shadow("Agree"),
+    "the ring moves to the switch",
+  );
   // The ring moved with focus: a stale one would leave both painted.
   expect(shadow("Agree")).toBe(false);
   expect(shadow("Dark mode")).toBe(true);

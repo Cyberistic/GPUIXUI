@@ -23,7 +23,7 @@ import {
   type Bounds,
   type Runtime,
 } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 /** The painted box: the field's root reports from its content origin. */
 const boundsOf = (runtime: Runtime, testId: string): Bounds =>
@@ -107,7 +107,10 @@ it("paints the chrome ring from mount when autoFocus is set", async () => {
   expect(ringed(runtime)).toBe(true);
   runtime.click("after");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !ringed(runtime),
+    "the field clears its ring when focus leaves",
+  );
   expect(ringed(runtime)).toBe(false);
 });
 
@@ -235,7 +238,10 @@ it("commits a draft typed after Enter when focus leaves", async () => {
   expect(runtime.paintedText()).toContain("1.50x");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !runtime.paintedText().includes("1.50x"),
+    "the tracked blur reformats the pending draft",
+  );
   expect(runtime.paintedText()).not.toContain("1.50x");
   expect(runtime.paintedText()).toContain("1.50");
 });
@@ -376,7 +382,13 @@ it("paints the ring on the field's chrome when the input has focus", async () =>
     expect.fail("the input painted no box"),
   );
   runtime.clickAt(box.x + box.width / 2, box.y + box.height / 2);
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.exists(runtime.element("nf"), (field) =>
+        isFocusRing(field.style["boxShadow"]),
+      ),
+    "the field's chrome paints its focus ring",
+  );
   const field = Option.getOrElse(runtime.element("nf"), () =>
     expect.fail("the runtime retained no field"),
   );
@@ -502,7 +514,10 @@ it("commits the draft when focus leaves an enabled field", async () => {
   expect(field.values).toStrictEqual([12]);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => field.values.length === 2,
+    "the tracked blur commits the draft",
+  );
   expect(field.values).toStrictEqual([12, 12]);
 });
 
@@ -518,7 +533,13 @@ it("reformats a pending draft when the tracker observes focus leaving", async ()
   runtime.type("1.5");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () =>
+      Option.getOrUndefined(
+        a11yValueOf(runtime.a11y(), { role: "TextInput", label: "Quantity" }),
+      ) === "1.50",
+    "the tracked blur reformats the announced value",
+  );
   expect(
     Option.getOrUndefined(
       a11yValueOf(runtime.a11y(), { role: "TextInput", label: "Quantity" }),
@@ -575,6 +596,11 @@ it("does not commit its draft once the field is disabled", async () => {
   runtime.flush();
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  // A disabled field must not commit; the ring clearing proves the tracker saw
+  // focus leave, so the absence of a second report is meaningful.
+  await awaitFrame(
+    () => !ringed(runtime),
+    "the disabled field clears its ring",
+  );
   expect(field.values).toStrictEqual([12]);
 });

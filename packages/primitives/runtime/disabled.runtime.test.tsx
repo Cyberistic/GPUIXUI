@@ -38,7 +38,7 @@ import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { ToggleGroup } from "../src/components/ToggleGroup.js";
 import { isFocusRing, type Runtime } from "../src/testing/index.js";
-import { Surface, openWindow, settleFocus } from "./fixture.js";
+import { Surface, awaitFrame, openWindow } from "./fixture.js";
 
 interface ActivationCase {
   readonly name: string;
@@ -388,13 +388,19 @@ it.each(Arr.map(RINGS, (testCase) => [testCase.name, testCase] as const))(
     runtime.render(<Surface>{testCase.node(false)}</Surface>);
     runtime.focusNext();
     runtime.flush();
-    await settleFocus();
+    await awaitFrame(
+      () => ringCount(runtime) === 1,
+      `${testCase.name} paints its focus ring`,
+    );
     expect(ringCount(runtime)).toBe(1);
     runtime.render(<Surface>{testCase.node(true)}</Surface>);
     runtime.flush();
     // The ring is derived from the tracker's sample, which clears on its next
-    // tick; assert after it, as the rest of this suite does (plan `592`).
-    await settleFocus();
+    // tick (plan `592`).
+    await awaitFrame(
+      () => ringCount(runtime) === 0,
+      `${testCase.name} clears its ring once disabled`,
+    );
     expect(ringCount(runtime)).toBe(0);
   },
 );
@@ -414,7 +420,10 @@ it("keeps the ring off a disabled control that still holds focus", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => ringCount(runtime) === 1,
+    "the focused checkbox row paints its ring",
+  );
   const focused = Option.getOrElse(runtime.focused(), () => "nothing");
   expect(focused).toBe("c-a");
   runtime.render(
@@ -429,5 +438,9 @@ it("keeps the ring off a disabled control that still holds focus", async () => {
   );
   runtime.flush();
   expect(runtime.focused()).toEqual(Option.some("c-a"));
+  await awaitFrame(
+    () => ringCount(runtime) === 0,
+    "the disabled row clears its ring",
+  );
   expect(ringCount(runtime)).toBe(0);
 });

@@ -28,7 +28,7 @@ import { TextArea } from "../src/components/TextArea.js";
 import { Toggle } from "../src/components/Toggle.js";
 import { Tooltip } from "../src/components/Tooltip.js";
 import { a11yNode } from "../src/testing/index.js";
-import { openWindow, settleFocus, Surface } from "./fixture.js";
+import { awaitFrame, openWindow, Surface } from "./fixture.js";
 
 const TIP = "A hint";
 
@@ -66,7 +66,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Button", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -170,7 +170,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Checkbox", async () 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -199,7 +199,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Switch", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -239,7 +239,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Slider", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -276,7 +276,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Select", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target-trigger");
   expect(tipPainted(runtime.allText())).toBe(true);
   // The slot must not have taken the trigger's own click: the list still opens.
@@ -302,7 +302,7 @@ it("opens a Tooltip on keyboard focus when its trigger is an Input", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.type("a");
@@ -320,7 +320,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a TextArea", async () 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -341,7 +341,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a NumberField", async 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(
     Option.exists(
       runtime.focusedElement(),
@@ -403,7 +403,7 @@ it("opens a Tooltip on keyboard focus when its trigger is a Toggle", async () =>
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -419,7 +419,7 @@ it("opens a Tooltip on keyboard focus when its trigger is an IconButton", async 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(true);
 });
@@ -440,11 +440,11 @@ it("closes a focus-opened tip on Escape while the trigger keeps focus", async ()
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.keyDown("target", "escape");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => !tipPainted(runtime.allText()), "the tip is absent");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(false);
 });
@@ -462,11 +462,11 @@ it("closes a focus-opened tip on click while the trigger keeps focus", async () 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.click("target");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => !tipPainted(runtime.allText()), "the tip is absent");
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(tipPainted(runtime.allText())).toBe(false);
 });
@@ -487,11 +487,11 @@ it("re-opens a focus-opened tip after focus leaves and returns", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(tipPainted(runtime.allText())).toBe(true);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => !tipPainted(runtime.allText()), "the tip is absent");
   expect(tipPainted(runtime.allText())).toBe(false);
   const target = Option.getOrElse(runtime.element("target"), () =>
     expect.fail("the trigger painted no host"),
@@ -499,6 +499,6 @@ it("re-opens a focus-opened tip after focus leaves and returns", async () => {
   runtime.renderer.focusElement(target.id);
   runtime.renderer.dispatchNativeEvents();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(() => tipPainted(runtime.allText()), "the tip paints");
   expect(tipPainted(runtime.allText())).toBe(true);
 });

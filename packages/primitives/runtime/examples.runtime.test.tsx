@@ -24,8 +24,8 @@ import { examples } from "../examples/index.js";
 import { a11yNode, a11yValueOf, type Runtime } from "../src/testing/index.js";
 import {
   Surface,
+  awaitFrame,
   openWindow,
-  settleFocus,
   testTheme,
   testThemeDark,
 } from "./fixture.js";
@@ -186,7 +186,10 @@ it("reaches the feedback example's tooltip by keyboard, with its description", a
   expect(trigger.aria?.description).toBe("Booked revenue, net of refunds.");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => runtime.allText().includes("Booked revenue, net of refunds."),
+    "the feedback tooltip paints on focus",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe(
     "feedback-example-tooltip-trigger",
   );

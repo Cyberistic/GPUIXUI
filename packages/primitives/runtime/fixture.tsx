@@ -20,7 +20,6 @@ import * as Arr from "effect/Array";
 import type { ReactNode } from "react";
 import { afterEach } from "vitest";
 import { Box } from "../src/components/Box.js";
-import { NATIVE_FOCUS_POLL_MS } from "../src/components/native-focus.js";
 import { ThemeProvider } from "../src/components/ThemeProvider.js";
 import { testTheme, testThemeDark } from "../src/core/testing/theme.fixture.js";
 import type { Density, PrimitiveTheme } from "../src/core/theme.js";
@@ -83,34 +82,14 @@ export const sleep = (milliseconds: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 /**
- * Wait for the native-focus tracker to settle.
- *
- * The tracker is a JS interval (`NativeFocusProvider`), not a GPUI timer, so
- * `advance` cannot move it. Two poll intervals are needed: one render publishes
- * the sample, and a control that derives state from the sample (its ring, or the
- * `NumberField` blur commit) renders again before the paint or the caller's
- * value can be asserted (plans `590`, `591`).
- */
-export const FOCUS_SETTLE_MS = 2 * NATIVE_FOCUS_POLL_MS + 20;
-
-/**
- * Wait long enough for the tracker to see a focus change and repaint.
- *
- * A floor, not a synchronization primitive: the tracker polls every 50 ms and
- * React paints a render after that, so under load this can elapse before the
- * frame the caller is about to read. A test that asserts a **paint** must use
- * `awaitFrame` with its own condition (plan `691`).
- */
-export const settleFocus = (): Promise<void> => sleep(FOCUS_SETTLE_MS);
-
-/**
  * Wait until the last painted frame satisfies `condition`, or fail with `what`.
  *
- * The tracker's paint is a sample plus a render, so a fixed sleep races it
- * (measured: a renderer reporting focus 300 ms late paints no ring at 120 ms,
- * and two of three full runs failed 2–3 ring cases while the files passed
- * scoped — plan `691`). Polling the frame lets a late paint pass while a paint
- * that never happens still fails, by the phrase the caller named.
+ * The native-focus tracker publishes its sample on a JS interval and React
+ * paints a render after it, so a fixed sleep races the paint (measured: a
+ * renderer reporting focus 300 ms late paints no ring at 120 ms, and two of
+ * three full runs failed 2–3 ring cases while the files passed scoped — plan
+ * `691`). Polling the frame lets a late paint pass while a paint that never
+ * happens still fails, by the phrase the caller named.
  */
 export const awaitFrame = async (
   condition: () => boolean,

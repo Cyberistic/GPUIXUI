@@ -45,8 +45,8 @@ import {
   SURFACE,
   Surface,
   WINDOW,
+  awaitFrame,
   openWindow,
-  settleFocus,
   testTheme,
 } from "./fixture.js";
 
@@ -204,7 +204,10 @@ it("paints an autoFocus Input's ring on mount, and clears it when focus leaves",
   expect(ringed(runtime, "field")).toBe(true);
   runtime.click("after");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !ringed(runtime, "field"),
+    "the field clears its ring when focus leaves",
+  );
   expect(ringed(runtime, "field")).toBe(false);
 });
 
@@ -567,12 +570,18 @@ it("rings the Select trigger when Tab reaches it", async () => {
   runtime.focusNext();
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
   expect(triggerRinged(runtime)).toBe(true);
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => !triggerRinged(runtime),
+    "the select trigger clears its ring when focus leaves",
+  );
   expect(triggerRinged(runtime)).toBe(false);
 });
 
@@ -585,7 +594,10 @@ it("keeps the Select trigger ringed while its list is open", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring",
+  );
   runtime.keyDown("sel-trigger", "enter");
   // The list owns native focus while it is open; the ring marks its trigger.
   expect(Option.getOrUndefined(runtime.focused())).not.toBe("sel-trigger");
@@ -601,11 +613,17 @@ it("returns focus to a ringed Select trigger after Escape", async () => {
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring",
+  );
   runtime.keyDown("sel-trigger", "enter");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "escape");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring again after Escape",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
   expect(triggerRinged(runtime)).toBe(true);
   expect(runtime.allText()).not.toContain("Pear");
@@ -621,13 +639,19 @@ it("returns focus to a ringed Select trigger after committing an option", async 
   );
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring",
+  );
   runtime.keyDown("sel-trigger", "enter");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "down");
   runtime.renderer.nativeSimulateKeyDown(focusedId(runtime), "enter");
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => triggerRinged(runtime),
+    "the select trigger paints its ring after committing",
+  );
   expect(lastValue(field.values)).toBe("pear");
   expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
   expect(triggerRinged(runtime)).toBe(true);
@@ -647,7 +671,12 @@ it("skips a disabled Select in the tab order and paints no ring on it", async ()
   runtime.focusNext();
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  // The disabled select never takes focus; the tracker's sample is proven by
+  // the control after it, which does paint a ring.
+  await awaitFrame(
+    () => ringed(runtime, "after"),
+    "the control after the disabled select paints its ring",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("after");
   expect(triggerRinged(runtime)).toBe(false);
 });
@@ -1967,7 +1996,10 @@ it("opens a Tooltip when its trigger takes keyboard focus", async () => {
   expect(runtime.allText()).not.toContain("A hint");
   runtime.focusNext();
   runtime.flush();
-  await settleFocus();
+  await awaitFrame(
+    () => runtime.allText().includes("A hint"),
+    "the tooltip opens on keyboard focus",
+  );
   expect(Option.getOrUndefined(runtime.focused())).toBe("target");
   expect(runtime.allText()).toContain("A hint");
 });

@@ -2151,6 +2151,17 @@ retired once both branches are one
       `cg-beta`) and 3/3 green; affected suites 104/104, full runtime 60 files /
       826 tests, offline 62 files / 868 tests (plan `692`).
 
+`[x]` `packages/primitives`: **the harness still offered the fixed focus sleep,
+      and 20 suites used it** — plan `691` added `awaitFrame` but left
+      `settleFocus()` (a 120 ms sleep) exported, with 78 call sites across 20
+      runtime suites still reading a tracker-derived value after it. Every wait
+      now names the observable its case reads and polls the frame
+      (`awaitFrame`); the fixture exports neither `settleFocus` nor
+      `FOCUS_SETTLE_MS`, `runtime/focus-wait` keeps the literal `sleep(120)` as
+      the indictment of the old wait, and `src/runtime-hygiene.test.ts` fails by
+      suite name if either name returns. Full runtime 60 files / 826 tests green
+      twice, offline 62 files / 869 tests (plan `693`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the
