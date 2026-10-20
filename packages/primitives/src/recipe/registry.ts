@@ -62,6 +62,28 @@ const TEXT_ROLE: Readonly<Partial<Record<string, TextRole>>> = {
 const spacingStep = (value: string | undefined): SpaceStep | undefined =>
   value === undefined ? undefined : SPACING_STEP[value];
 
+/** A control size by its class-string name, or nothing for a non-size value. */
+const controlSize = (value: string | undefined): ControlSize | undefined =>
+  value === undefined ? undefined : CONTROL_SIZE[value];
+
+/** The square icon side for a control size: `theme.iconSize[size]`. */
+const iconSide = (
+  theme: Theme,
+  value: string | undefined,
+): number | undefined => {
+  const size = controlSize(value);
+  return size === undefined ? undefined : theme.iconSize[size];
+};
+
+/** Half the icon side, rounded: `round(iconSize[size] / 2)`. */
+const halfIconSide = (
+  theme: Theme,
+  value: string | undefined,
+): number | undefined => {
+  const side = iconSide(theme, value);
+  return side === undefined ? undefined : Math.round(side / 2);
+};
+
 /** The three typographic numbers a role resolves to (family is separate). */
 const roleType = (
   theme: Theme,
@@ -112,6 +134,9 @@ export const recipeTw = createTw({
     "overflow-x-scroll": () => ({ overflowX: "scroll" }),
     "overflow-y-hidden": () => ({ overflowY: "hidden" }),
     "overflow-y-scroll": () => ({ overflowY: "scroll" }),
+    // An empty selection border is the field *fill* colour, not shadcn's
+    // `--input` border role (which the built-in table maps to `border`).
+    "border-input": (theme) => ({ borderColor: theme.colors.input }),
     "ml-0": () => ({ marginLeft: 0 }),
     "mr-0": () => ({ marginRight: 0 }),
     "mt-0": () => ({ marginTop: 0 }),
@@ -212,5 +237,47 @@ export const recipeTw = createTw({
       value === undefined
         ? undefined
         : { whiteSpace: "normal", lineClamp: Number(value) },
+
+    // Derived geometry: a number resolves to a square (`width` + `height`);
+    // a non-square value returns the shape it means. All read the theme's
+    // iconSize / spacing scales, so they follow a density or icon-size
+    // override exactly as the pre-migration `core/` resolvers did.
+    "size-icon": (theme, value) => iconSide(theme, value),
+    "size-dot": (theme, value) => halfIconSide(theme, value),
+    "size-thumb": (theme, value) => {
+      const side = iconSide(theme, value);
+      return side === undefined ? undefined : side - 2 * theme.spacing["2xs"];
+    },
+    "switch-track": (theme, value) => {
+      const side = iconSide(theme, value);
+      return side === undefined
+        ? undefined
+        : { width: Math.round(side * 1.75), height: side };
+    },
+    "slider-thumb": (theme, value) => {
+      const side = iconSide(theme, value);
+      if (side === undefined) return undefined;
+      const half = Math.round(side / 2);
+      return {
+        width: side,
+        height: side,
+        marginLeft: -half,
+        marginRight: -half,
+        borderWidth: theme.borderWidth.strong,
+      };
+    },
+    "px-inset": (theme, value) => {
+      const half = halfIconSide(theme, value);
+      return half === undefined
+        ? undefined
+        : { paddingLeft: half, paddingRight: half };
+    },
+    "w-stepper-column": (theme) => ({
+      width: theme.iconSize.md + theme.spacing.sm,
+    }),
+    "h-space": (theme, value) => {
+      const step = spacingStep(value);
+      return step === undefined ? undefined : { height: theme.spacing[step] };
+    },
   },
 });

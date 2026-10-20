@@ -10,6 +10,7 @@
 
 import type { ControlSize, TextRole } from "@gpuixui/tokens";
 import { cn } from "@gpuixui/tw";
+import type { SpinnerAccent } from "../core/loading.js";
 import type {
   BoxSpec,
   GridSpec,
@@ -18,8 +19,14 @@ import type {
   StackJustify,
   StackSpec,
 } from "../core/layout.js";
-import type { ScrollSpec, SurfaceTone, TextTone } from "../core/style.js";
-import type { ElevationLevel, SpaceStep } from "../core/theme.js";
+import type { SelectionAccent, SelectionState } from "../core/selection.js";
+import type {
+  ProgressTone,
+  ScrollSpec,
+  SurfaceTone,
+  TextTone,
+} from "../core/style.js";
+import type { ElevationLevel, RadiusStep, SpaceStep } from "../core/theme.js";
 import type { ButtonVariant, ToggleVariant } from "../core/variants.js";
 
 // ── Button ───────────────────────────────────────────────────────────
@@ -388,4 +395,218 @@ export const selectItemClass = (state: SelectItemPaint): string =>
         : state.highlighted === true
           ? "bg-hover"
           : undefined,
+  );
+
+// ── NumberField ──────────────────────────────────────────────────────
+
+/** The field chrome plus a zero right pad, so the stepper hugs the border. */
+export const numberFieldClass = (options: FieldRecipeOptions): string =>
+  cn(fieldClass(options), "pr-0");
+
+/** The class string the spin column resolves to. */
+export const numberStepperColumnClass =
+  "flex flex-col h-full shrink-0 w-stepper-column";
+
+/** The class string a step button resolves from its enabled state. */
+export const numberStepperClass = (disabled: boolean): string =>
+  cn(
+    "flex items-center justify-center flex-grow rounded-sm",
+    disabled
+      ? "cursor-not-allowed"
+      : "cursor-pointer hover:bg-hover active:bg-active",
+  );
+
+/** The class string the inner numeric input resolves to. */
+export const numberInputClass = "flex-grow h-full min-w-0 px-0 border-0";
+
+// ── Selection controls ───────────────────────────────────────────────
+
+/** The two roles an accent can paint a filled selection with. */
+const SELECTION_ROLE: Readonly<
+  Record<SelectionAccent, { readonly bg: string; readonly fg: string }>
+> = {
+  primary: { bg: "primary", fg: "primary-foreground" },
+  destructive: { bg: "destructive", fg: "destructive-foreground" },
+};
+
+/** The shared inputs a selection recipe resolves from. */
+export interface SelectionRecipeInput {
+  readonly size: ControlSize;
+  readonly accent: SelectionAccent;
+  readonly state: SelectionState;
+  readonly shape?: "square" | "circle";
+  readonly invalid?: boolean;
+}
+
+/** The class string a checkbox or radio box resolves from. */
+export const selectionBoxClass = ({
+  size,
+  accent,
+  state,
+  shape = "square",
+  invalid,
+}: SelectionRecipeInput): string => {
+  const filled = state !== "unchecked";
+  const { bg, fg } = SELECTION_ROLE[accent];
+  return cn(
+    "flex items-center justify-center shrink-0 border cursor-pointer",
+    `size-icon-${size}`,
+    shape === "circle" ? "rounded-full" : "rounded-sm",
+    "disabled:opacity-50 disabled:cursor-not-allowed",
+    filled
+      ? cn(
+          `bg-${bg} border-${bg} text-${fg}`,
+          `hover:bg-${bg}/90 hover:border-${bg}/90 active:border-ring`,
+        )
+      : cn(
+          invalid === true ? "border-destructive" : "border-input",
+          invalid === true ? "text-destructive" : "text-muted-foreground",
+          "hover:border-border-strong active:border-ring",
+        ),
+  );
+};
+
+/** The class string a checked radio's centre dot resolves to. */
+export const radioDotClass = ({
+  size,
+  accent,
+  state,
+  invalid,
+}: SelectionRecipeInput): string => {
+  const filled = state !== "unchecked";
+  return cn(
+    "shrink-0 rounded-full",
+    `size-dot-${size}`,
+    filled
+      ? `bg-${SELECTION_ROLE[accent].fg}`
+      : invalid === true
+        ? "bg-destructive"
+        : "bg-muted-foreground",
+  );
+};
+
+/** The class string a switch's track resolves from. */
+export const switchTrackClass = ({
+  size,
+  accent,
+  state,
+  invalid,
+}: SelectionRecipeInput): string => {
+  const filled = state !== "unchecked";
+  const { bg } = SELECTION_ROLE[accent];
+  return cn(
+    "flex flex-row items-center shrink-0 rounded-full border p-2xs cursor-pointer",
+    `switch-track-${size}`,
+    "disabled:opacity-50 disabled:cursor-not-allowed",
+    filled
+      ? cn(
+          `bg-${bg} border-${bg} justify-end`,
+          `hover:bg-${bg}/90 hover:border-${bg}/90 active:border-ring`,
+        )
+      : cn(
+          "bg-muted justify-start",
+          invalid === true ? "border-destructive" : "border-input",
+          "hover:border-border-strong active:border-ring",
+        ),
+  );
+};
+
+/** The class string a switch's thumb resolves from. */
+export const switchThumbClass = ({
+  size,
+  accent,
+  state,
+}: SelectionRecipeInput): string => {
+  const filled = state !== "unchecked";
+  return cn(
+    "shrink-0 rounded-full pointer-events-none",
+    `size-thumb-${size}`,
+    filled ? `bg-${SELECTION_ROLE[accent].fg}` : "bg-foreground",
+  );
+};
+
+// ── Slider / RangeSlider ─────────────────────────────────────────────
+
+/** The class string a slider's hit area resolves from. */
+export const sliderTrackClass = (size: ControlSize): string =>
+  cn(
+    "flex flex-row items-center w-full cursor-pointer",
+    `h-${size}`,
+    `px-inset-${size}`,
+    "disabled:opacity-50 disabled:cursor-not-allowed",
+  );
+
+/** The class string a slider's rail resolves to. */
+export const sliderRailClass =
+  "w-full h-space-xs rounded-full bg-muted flex flex-row items-center pointer-events-none";
+
+/** The class string a slider's filled span resolves from. */
+export const sliderFillClass = (invalid: boolean): string =>
+  cn(
+    "h-full shrink-0 rounded-full pointer-events-none",
+    invalid ? "bg-destructive" : "bg-primary",
+  );
+
+/** The class string a slider's thumb resolves from. */
+export const sliderThumbClass = (size: ControlSize, invalid: boolean): string =>
+  cn(
+    `slider-thumb-${size}`,
+    "shrink-0 rounded-full bg-input pointer-events-none",
+    invalid ? "border-destructive" : "border-primary",
+  );
+
+// ── Meter / Progress ─────────────────────────────────────────────────
+
+/** The spacing step each progress size sits at. */
+const PROGRESS_HEIGHT_STEP: Readonly<Record<"sm" | "md", SpaceStep>> = {
+  sm: "xs",
+  md: "sm",
+};
+
+/** The class string a progress or meter track resolves from. */
+export const progressTrackClass = (size: "sm" | "md"): string =>
+  `w-full h-space-${PROGRESS_HEIGHT_STEP[size]} rounded-full bg-muted overflow-hidden`;
+
+/** The colour role each progress tone paints. */
+const PROGRESS_TONE_CLASS: Readonly<Record<ProgressTone, string>> = {
+  primary: "bg-primary",
+  success: "bg-success",
+  destructive: "bg-destructive",
+  muted: "bg-muted-foreground",
+};
+
+/** The class string a progress or meter fill resolves from. */
+export const progressFillClass = (tone: ProgressTone): string =>
+  cn("h-full rounded-full", PROGRESS_TONE_CLASS[tone]);
+
+// ── Spinner / Skeleton ───────────────────────────────────────────────
+
+/** The class string a spinner's row resolves to. */
+export const spinnerGroupClass = "flex flex-row items-center gap-2xs";
+
+/** The colour role each spinner accent paints on the lit dot. */
+const SPINNER_ACCENT_CLASS: Readonly<Record<SpinnerAccent, string>> = {
+  primary: "bg-primary",
+  destructive: "bg-destructive",
+  muted: "bg-muted-foreground",
+};
+
+/** The class string a spinner dot resolves from its state. */
+export const spinnerDotClass = (
+  active: boolean,
+  accent: SpinnerAccent,
+): string =>
+  cn(
+    "shrink-0 rounded-full",
+    active ? SPINNER_ACCENT_CLASS[accent] : "bg-muted-foreground",
+  );
+
+/** The class string a skeleton's resting shape resolves from. */
+export const skeletonClass = (spec: {
+  readonly circle?: boolean;
+  readonly radius?: RadiusStep;
+}): string =>
+  cn(
+    "shrink-0 bg-skeleton",
+    spec.circle === true ? "rounded-full" : `rounded-${spec.radius ?? "sm"}`,
   );
