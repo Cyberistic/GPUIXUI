@@ -480,7 +480,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       `validation message`, `divider`, `placeholder`, `no results` and
       `centering` reached prose or another page. `FUNCTION_WORDS` in
       `search.ts` is the closed class skipped by `nameRank`, while `tab`/`box`
-      keep their pages; 18 exact page/component terms carry the measured
+      keep their pages; 25 exact page/component terms carry the measured
       questions and words, and Layouts gained a sourced `## Centring` section
       because an alias must point at prose that answers it. 148 files /
       1 603 docs tests, 112-page `smoke:build`, `smoke:search` green; three
