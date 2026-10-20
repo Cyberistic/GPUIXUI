@@ -2666,7 +2666,15 @@ focused id is `live-frames`.
       check`/`lint`/`test` green (playground **520**, testing 69, components
       308, primitives 282, tokens 196, tw 103, icons 19, docs 7). **This is the
       current gate for the promotion fast-forward**; the owner/supervisor still
-      performs the merge.
+      performs the merge. **Addendum (plans `791`, `797`, `801`, 2026-10-20):**
+      the registry gained `live-dialog-scrim` (62 checks), `live-field-ink` (19)
+      and `live-scroll-affordance` (93) after that gate, so the supervisor's
+      live merge/release gate must cover the current head (live registry
+      **109**, headless **120/120 · 4452 · 65**); the last full live run (plan
+      `786`) predates all three. `agent/playground` merged `origin/master`'s
+      `packages/motion` (`98afbf53` plus the landing merge) on 2026-10-20, so
+      the branch is 0 behind and promotion is still a fast-forward; the merge
+      needed one `nub install` to link the new workspace package.
       **Addendum (plan `786`, 2026-10-20):** plans `778` and `784` then
       registered `text-truncation-pixels` (22 checks) and `surface-theme` (50)
       with their live twins, taking the registries to **117** headless and
