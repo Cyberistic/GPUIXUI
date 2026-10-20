@@ -1,4 +1,4 @@
-# 756 — Declared opacity, in the frame: the disabled state and its subtree
+# 759 — Declared opacity, in the frame: the disabled state and its subtree
 
 | Field | Value |
 | ----- | ----- |

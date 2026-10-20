@@ -1,5 +1,5 @@
 /**
- * Guards the premises of the opacity pixel checks (plan `756`).
+ * Guards the premises of the opacity pixel checks (plan `759`).
  *
  * The bug being guarded: eleven shipped surfaces express `disabled` as nothing
  * but `opacity: 0.5`, and no suite ever reads the frame — so a runtime that

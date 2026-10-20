@@ -66,7 +66,7 @@ export const opacityBlend = (
  *
  * The equivalent one-shot mix is `nestedOpacity(outer, inner)`, but the runtime
  * composites the parent's surface, then the child over it, then the group at the
- * parent's opacity — and rounds to 8 bits at each step. Plan `756` measured the
+ * parent's opacity — and rounds to 8 bits at each step. Plan `759` measured the
  * two agreeing within 2 channels, so the expectation models the **steps** rather
  * than the idealised product, and a 4-channel drift still fails.
  */

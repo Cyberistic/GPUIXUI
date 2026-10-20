@@ -93,7 +93,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        another session (PID 42334) minutes later, so the `scripts/` fix is
        still required.
 
-       **Update 2026-10-20 ~14:10:** recurred during plan `756`. A second live
+       **Update 2026-10-20 ~14:10:** recurred during plan `759`. A second live
        session wrote a parallel `README.md` section and a second
        `live-opacity-pixels` table row, and ran its own full headless suite
        (111/111 · 4106 · 65 · 275.4 s) while this session's run was also live
@@ -107,7 +107,7 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 `[x]` `[██████████]` 134/134 plans-and-harness
 
 `[x]` **Prove declared opacity, the disabled state and its subtree in the frame**
-      per plan `756`: eleven shipped surfaces express `disabled` as nothing but
+      per plan `759`: eleven shipped surfaces express `disabled` as nothing but
       `opacity: 0.5` and every check read inertness, tab order and the authored
       style report — never the frame. A pure `opacity-pixels.ts` (12 tests;
       playground **508 → 520**) and `opacity-pixels` / `live-opacity-pixels`
@@ -2589,7 +2589,7 @@ retired once both branches are one
       decision (code examples plus a companion native playground, never a silent
       HTML/CSS reimplementation)
 `[ ]` **Cross-team (components)**: `opacity` dims the element's **whole subtree**
-      in 0.10.0 (plan `756`: a `success` child inside a half-opacity parent
+      in 0.10.0 (plan `759`: a `success` child inside a half-opacity parent
       paints `#266F4D`, not `#3BC97F`; nested halves multiply). Eleven surfaces
       express `disabled` as `opacity: 0.5`, so a disabled row's label and icon
       are already dimmed — do not repaint either at full strength, and do not
