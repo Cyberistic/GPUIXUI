@@ -385,6 +385,7 @@ references without buying correctness.
 | [758](./758-theme-edit-member-boundary.md) | The edit artifact that drops a scale member the theme declares | F | 685, 727, 744 | done |
 | [760](./760-native-text-figures.md) | The native-text figures have one owner | F | 071, 544, 569–592, 717 | done |
 | [766](./766-status-row-surface-claims.md) | The status row counts a list of eight and names seven surfaces | F | 399, 548, 549, 651, 683 | done |
+| [767](./767-status-fill-chip-count.md) | The package front door counts eight solid chip surfaces | F | 399, 651, 683, 766 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3912,6 +3913,19 @@ lists. The row now says nine and names every `xText` surface, and
 `xText` clause to hold it to `statusTextSurfaces`, so a name elsewhere in the
 row cannot stand in for a missing member. No token value, pair, floor, metric,
 role or shipped theme moves.
+
+Plan `767` catches the last stale solid-chip count in the package front door.
+`packages/tokens/README.md` said `statusFillPairs` holds the four solid fills on
+"those eight surfaces", two sentences after correctly naming the nine surfaces a
+chip sits on; `chipSurfaces` and the derived pair list have held nine since plan
+`651` added the pressed `selectedActive` wash, and `docs/tokens.md`,
+`docs/design-system.md`, the ledger (plan `766`) and the list itself already said
+so. Plan `683`'s README pass and plan `766`'s audit both missed this present-tense
+sentence because `readme.test.ts` guarded the skeleton pulse count but never the
+solid fills. The sentence now says nine, and the new case derives the count word
+from `statusFillPairs`, requires the floor and the `destructive` filter note, and
+rejects the old phrase, so a future surface moves the prose with the list. No
+token value, pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 

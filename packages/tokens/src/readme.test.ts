@@ -23,6 +23,7 @@ import {
   contrastFloors,
   skeletonPulsePairs,
   stateFillSurfaces,
+  statusFillPairs,
 } from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
 import { motion } from "./motion.js";
@@ -334,6 +335,17 @@ describe("packages/tokens/README.md", () => {
     expect(readme).toContain(
       "Each soft status surface has a designed edge (`xSoftBorder`) held to the divider floor on that surface",
     );
+  });
+
+  it("states the nine surfaces the solid status fills are measured on", () => {
+    const surfaces = [
+      ...new Set(statusFillPairs.map(([, background]) => background)),
+    ];
+    expect(surfaces).toHaveLength(9);
+    expect(readme).toContain(
+      `to the same ${contrastFloors.default.surface}:1 floor on those ${countWord(surfaces.length)} surfaces (the four \`destructive\` base surfaces are already the action fill's pairs)`,
+    );
+    expect(readme).not.toContain("on those eight surfaces");
   });
 
   it("states the typeface check and every rule", () => {

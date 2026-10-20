@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 346/423
+`[x]` `[████████░░]` 347/424
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2980,6 +2980,13 @@ tense. The row now says nine and names every surface, `inventory.test.ts` derive
 the count from `statusFillPairs` and holds the `xText` clause to
 `statusTextSurfaces`, and no token value, pair, floor, metric, role or shipped
 theme moves (plan 766)
+`[x]` Correct the package front door's solid-chip count — `packages/tokens/README.md`
+said `statusFillPairs` holds the four solid status fills on "those eight
+surfaces" while the same paragraph, `chipSurfaces`, `statusFillPairs` and every
+other page say nine after plan 651 added the pressed `selectedActive` wash; the
+sentence now says nine and `readme.test.ts` derives the word from the pair list
+and rejects the stale phrase, and no token value, pair, floor, metric, role or
+shipped theme moves (plan 767)
 
 ## Phase C — Tier 1–2 components
 
