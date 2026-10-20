@@ -198,7 +198,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 173/173
+`[x]` `[████████████]` 174/174
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -1712,6 +1712,20 @@ retired once both branches are one
       read-only while `disabled` keeps `not-allowed`/half-opacity/no-ring; 1
       core + 1 element + 2 scoped runtime cases, both directions proven (offline
       73 files / 1013 tests, scoped live 1 file / 18); plan `796`
+
+`[x]` `packages/primitives`: **`Select` was the one field-shaped control with no
+      read-only state** — D42 puts the trigger in the field family, and plan
+      `786` gave `Input`/`TextArea`/`NumberField`/`OTPField` a visible,
+      focusable, unchanged state; a review form's select had only `disabled`
+      (faded, out of the tab order) or a bare `Text` (no combobox role, name or
+      announced value). `readOnly` keeps the tab stop, ring, name and
+      `aria-valuetext`, refuses pointer/keys/type-ahead and a controlled
+      `open` (a parent is asked to close once, never to open), hides the
+      chevron, paints the normal field with a `default` cursor, and reports
+      `readOnly` in both state payloads; the runtime proves the tab order, the
+      closed list and a writable twin. 1 core + 1 element-tree + 2 runtime
+      cases, both directions proven (offline 73 files / 1014 tests, scoped live
+      1 file / 9); plan `797`
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

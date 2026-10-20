@@ -65,6 +65,9 @@ select is disabled — carries no accessible name (it is decoration, not content
 and sets `pointerEvents: "none"`, so a click aimed at it reaches the trigger. The
 indicator does not change the combobox's name or add an `Image` node.
 
+A **read-only** select paints no indicator: it has no list to promise (plan
+`797`).
+
 ## Open state
 
 `open` / `defaultOpen` / `onOpenChange` follow the same rule as every value in
@@ -106,6 +109,27 @@ focusable, named field showing its placeholder; a controlled parent receives one
 `onOpenChange(false)`, and an all-disabled list still opens, because seeing why
 nothing can be picked is information.
 
+**A read-only select is closed and unchanged.** `readOnly` is the display state
+for a value the user may read but not change — a region assigned by an
+administrator, a completed step in a review form. The trigger keeps its tab
+stop, ring, role, name, description and announced value; it paints the normal
+field chrome with a `default` cursor and no chevron, and every open path is
+refused: pointer, `Enter`/`Space`, arrows, type-ahead, and a controlled
+`open={true}` (the parent is asked to close once, never to open). `onValueChange`
+never fires. `disabled` is the stronger state: it also leaves the tab order and
+fades the field. 0.10.0 has no `aria-readonly`, so a screen reader hears a normal
+combobox with its value; read-only is behavioural and visual, not an announced
+state (plan `797`).
+
+```tsx
+<Select
+  label="Workspace"
+  value="acme-hq"
+  readOnly
+  options={[{ value: "acme-hq", label: "Acme HQ" }]}
+/>;
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -119,6 +143,7 @@ nothing can be picked is information.
 | `onOpenChange` | `(open: boolean) => void` | none | the select asks to open or close; a disabled select asks to close |
 | `placeholder` | `string` | none | shown before a choice; the announced value is trimmed, and a blank placeholder announces nothing |
 | `disabled` | `boolean` | `false` | refuses opening, closes an open list, and leaves the tab order |
+| `readOnly` | `boolean` | `false` | visible, focusable and unchanged: refuses every open path, hides the chevron and takes the `default` cursor, but keeps the tab stop; `disabled` wins (plan `797`) |
 | `invalid` | `boolean` | `false` | destructive border on the trigger |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
 | `fullWidth` | `boolean` | `false` | the trigger takes the field recipe's `w-full`; the list matches its measured width |
@@ -216,6 +241,10 @@ half a keyboard user would see no active state at all between opening and
 committing (plan `083`). Escape and a committed option both return focus to the
 trigger.
 
+A **read-only** trigger keeps that tab stop and its ring, but `Enter`, `Space`,
+the arrows and type-ahead all do nothing: there is no list to open and no value
+to commit (plan `797`).
+
 ### Type-ahead
 
 A long list is arrow-only without it, so a focused, **closed** select answers a
@@ -280,6 +309,12 @@ There is no `aria-haspopup` in `HostProps`, so the combobox role is the stronges
 honest claim. The value is announced through `aria-valuetext` — the runtime
 exposes no other value channel — and the visible text inside the trigger is not
 itself the accessible value.
+
+`HostProps` also has **no `aria-readonly`**. A read-only select therefore keeps
+the ordinary `combobox` node, name and `aria-valuetext`; it announces no state
+difference, and its disabled/read-only distinction is visual and behavioural
+(no list, no value change). The page says so rather than claiming an
+announcement the runtime cannot make (plan `797`).
 
 Focus is **visible**: the trigger paints the field recipe's 3 px ring while
 focused or open, the same ring `Input` paints. The runtime has no `focusVisible`,
@@ -397,6 +432,7 @@ sampler sleeps while the list is closed.
 | `open` | `boolean` | the list is open |
 | `disabled` | `boolean` | the trigger is disabled |
 | `invalid` | `boolean` | the trigger paints the destructive border |
+| `readOnly` | `boolean` | the display state: focusable and closed, but not disabled (plan `797`) |
 
 The callback's result merges after the component's own rules, so it wins per
 property; returning `{}` keeps the default look. The state type is exported.
@@ -417,6 +453,7 @@ on the visible trigger:
 | `disabled` | `boolean` | the trigger is disabled |
 | `placeholder` | `boolean` | the trigger is showing the placeholder |
 | `focused` | `boolean` | the trigger itself holds native focus |
+| `readOnly` | `boolean` | the display state: focusable and closed, but not disabled (plan `797`) |
 
 `SelectTriggerState` is exported by this package: GPUix's own three fields plus
 `focused`. The component always resolves all four, so a callback never sees a

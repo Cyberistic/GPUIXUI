@@ -114,6 +114,7 @@ describe("Select", () => {
     )({
       open: false,
       disabled: false,
+      readOnly: false,
       placeholder: false,
       focused: false,
     });
@@ -128,6 +129,7 @@ describe("Select", () => {
     const resting = {
       open: false,
       disabled: false,
+      readOnly: false,
       placeholder: false,
       focused: false,
     };
@@ -137,6 +139,57 @@ describe("Select", () => {
     expect(paint({ ...resting, disabled: true }).cursor).toBe("not-allowed");
     expect(selectItemStyle(testTheme)(rest).userSelect).toBe("none");
     expect(selectHeadingStyle(testTheme).userSelect).toBe("none");
+  });
+
+  it("paints a read-only trigger as a field with no pointer and no chevron", () => {
+    // The gap guarded (plan 797): `disabled` fades the field and leaves the tab
+    // order, so a review form had no display state for a chosen value. A
+    // read-only trigger keeps the field chrome and its tab stop, takes the
+    // default cursor, and hides the chevron that would promise a list.
+    const paint = selectTriggerStyle({ readOnly: true }, testTheme);
+    const resting = {
+      open: false,
+      disabled: false,
+      readOnly: true,
+      placeholder: false,
+      focused: false,
+    };
+    expect(paint(resting).cursor).toBe("default");
+    expect(paint(resting).opacity).toBeUndefined();
+    expect(paint({ ...resting, disabled: true }).cursor).toBe("not-allowed");
+
+    const readOnlyElement = renderSelect(
+      { options: [], label: "Fruit", testId: "sel", readOnly: true },
+      testTheme,
+      valueState("Apple"),
+      false,
+      noFocus,
+      handlers,
+    );
+    const readOnlyTrigger = childAt(readOnlyElement, 0);
+    // One child: the value, with no indicator after it.
+    expect(elementChildren(readOnlyTrigger)).toHaveLength(1);
+    expect(elementProp(readOnlyTrigger, "aria-expanded")).toEqual(
+      Option.some(false),
+    );
+    // The trigger is explicitly not disabled, so it keeps its native tab stop
+    // while the root refuses the runtime's item and arrow paths.
+    expect(elementProp(readOnlyTrigger, "disabled")).toEqual(
+      Option.some(false),
+    );
+
+    const editable = childAt(
+      renderSelect(
+        { options: [], label: "Fruit", testId: "sel" },
+        testTheme,
+        valueState("Apple"),
+        false,
+        noFocus,
+        handlers,
+      ),
+      0,
+    );
+    expect(elementChildren(editable)).toHaveLength(2);
   });
 
   it("rings the trigger with the field recipe while it holds focus or its list is open", () => {
@@ -149,6 +202,7 @@ describe("Select", () => {
     const resting = {
       open: false,
       disabled: false,
+      readOnly: false,
       placeholder: false,
       focused: false,
     };

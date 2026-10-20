@@ -87,11 +87,15 @@ describe("select entries", () => {
 });
 
 describe("select open state", () => {
-  it("closes a disabled select whatever the requested open says", () => {
-    // The bug guarded (plan 346): disabling a select while its controlled
-    // `open` stayed true painted a list the runtime refused to choose from.
+  it("closes a disabled or read-only select whatever the requested open says", () => {
+    // The bug guarded (plans 346, 797): disabling a select while its controlled
+    // `open` stayed true painted a list the runtime refused to choose from,
+    // and a read-only field must not offer a list it will never commit.
     expect(selectOpen(true, true)).toBe(false);
+    expect(selectOpen(true, false, true)).toBe(false);
+    expect(selectOpen(true, true, true)).toBe(false);
     expect(selectOpen(true, false)).toBe(true);
+    expect(selectOpen(true, false, false)).toBe(true);
     expect(selectOpen(false, false)).toBe(false);
   });
 

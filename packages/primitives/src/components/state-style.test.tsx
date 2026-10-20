@@ -591,7 +591,7 @@ describe("group roots and overlays", () => {
     expect(lastState(inert.seen)).toStrictEqual({ focused: false });
   });
 
-  it("Select reports open, disabled and invalid on its root", () => {
+  it("Select reports open, disabled, invalid and readOnly on its root", () => {
     const record = recorder<SelectState>();
     const handlers: SelectHandlers = {
       onOpenChange: vi.fn(),
@@ -613,6 +613,7 @@ describe("group roots and overlays", () => {
       open: true,
       disabled: true,
       invalid: true,
+      readOnly: false,
     });
     expect(componentBackground(element)).toBe(PAINT);
   });
@@ -921,6 +922,7 @@ describe("per-item style", () => {
       disabled: false,
       placeholder: false,
       focused: false,
+      readOnly: false,
     });
     expect(style.backgroundColor).toBe(PAINT);
   });

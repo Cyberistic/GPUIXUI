@@ -136,6 +136,7 @@ const SURFACES: ReadonlyArray<{
       )({
         open: false,
         disabled: false,
+        readOnly: false,
         placeholder: false,
         focused: false,
       }),
@@ -219,6 +220,7 @@ describe("the field family", () => {
     )({
       open: false,
       disabled: false,
+      readOnly: false,
       placeholder: false,
       focused: false,
     });

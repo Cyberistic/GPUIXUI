@@ -7,6 +7,12 @@
  * field must keep focus, its ring and its value while refusing every edit path.
  * Each case records `onValueChange`; the writable twins prove the same gesture
  * does report, so a probe that typed into nothing cannot pass.
+ *
+ * Plan `797` extends the same contract to the one field-shaped control that had
+ * only `disabled`: a read-only `Select` keeps its tab stop, name, announced
+ * value and field chrome while every open path is refused. The writable twin
+ * opens and reports on the same click, so a click that missed the trigger
+ * cannot pass.
  */
 
 import { expect, it } from "vitest";
@@ -15,8 +21,10 @@ import { Button } from "../src/components/Button.js";
 import { Input } from "../src/components/Input.js";
 import { NumberField } from "../src/components/NumberField.js";
 import { OTPField } from "../src/components/OTPField.js";
+import { Select } from "../src/components/Select.js";
 import { Stack } from "../src/components/Stack.js";
 import { TextArea } from "../src/components/TextArea.js";
+import { a11yValueOf } from "../src/testing/index.js";
 import { Surface, openWindow } from "./fixture.js";
 
 /** The `testId` of whatever holds native focus, or a failure naming the case. */
@@ -184,4 +192,100 @@ it("the same OTPField without readOnly reports typing and Backspace", async () =
   );
   runtime.type("9");
   expect(values).toStrictEqual(["9"]);
+});
+
+/** The fruit list the two Select cases share. */
+const FRUIT = [
+  { value: "apple", label: "Apple" },
+  { value: "pear", label: "Pear" },
+] as const;
+
+it("a read-only Select keeps its tab stop and refuses every open path", async () => {
+  const runtime = await openWindow();
+  const values: string[] = [];
+  const requests: boolean[] = [];
+  runtime.render(
+    <Surface>
+      <Stack direction="column" gap="md">
+        <Select
+          testId="sel"
+          label="Fruit"
+          placeholder="Pick a fruit"
+          defaultValue="apple"
+          readOnly
+          options={FRUIT}
+          onValueChange={(value) => values.push(value)}
+          onOpenChange={(open) => requests.push(open)}
+        />
+        <Button testId="after">Continue</Button>
+      </Stack>
+    </Surface>,
+  );
+  runtime.flush();
+
+  runtime.focusNext();
+  runtime.flush();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
+
+  // The displayed state, not the blocked one: the field keeps its chrome and
+  // takes the default cursor, and the chevron that promises a list is absent.
+  const trigger = Option.getOrElse(runtime.element("sel-trigger"), () =>
+    expect.fail("the read-only select painted no trigger"),
+  );
+  expect(trigger.style.cursor).toBe("default");
+  expect(trigger.style.opacity).toBeUndefined();
+  expect(Option.isNone(runtime.element("sel-chevron"))).toBe(true);
+  expect(
+    a11yValueOf(runtime.a11y(), { role: "ComboBox", label: "Fruit" }),
+  ).toEqual(Option.some("Apple"));
+
+  // Every path that opens an editable select is refused.
+  runtime.click("sel-trigger");
+  runtime.flush();
+  runtime.keyDown("sel-trigger", "enter");
+  runtime.flush();
+  runtime.keyDown("sel-trigger", "space");
+  runtime.flush();
+  runtime.keyDown("sel-trigger", "down");
+  runtime.flush();
+  // A printable key is the type-ahead path; unguarded it would commit "Pear".
+  runtime.keyDown("sel-trigger", "p");
+  runtime.flush();
+
+  expect(Option.isNone(runtime.element("sel-content"))).toBe(true);
+  expect(a11yValueOf(runtime.a11y(), { role: "ListBox" })).toEqual(
+    Option.none(),
+  );
+  expect(values).toStrictEqual([]);
+  expect(requests).toStrictEqual([]);
+  expect(Option.getOrUndefined(runtime.focused())).toBe("sel-trigger");
+
+  // The trigger is still a tab stop: the next Tab leaves the field.
+  runtime.focusNext();
+  runtime.flush();
+  expect(Option.getOrUndefined(runtime.focused())).toBe("after");
+});
+
+it("the same Select without readOnly opens and reports a choice", async () => {
+  const runtime = await openWindow();
+  const values: string[] = [];
+  runtime.render(
+    <Surface>
+      <Select
+        testId="sel"
+        label="Fruit"
+        placeholder="Pick a fruit"
+        defaultValue="apple"
+        options={FRUIT}
+        onValueChange={(value) => values.push(value)}
+      />
+    </Surface>,
+  );
+  runtime.flush();
+  runtime.click("sel-trigger");
+  runtime.flush();
+  expect(Option.isSome(runtime.element("sel-content"))).toBe(true);
+  runtime.click("sel-option-pear");
+  runtime.flush();
+  expect(values).toStrictEqual(["pear"]);
 });

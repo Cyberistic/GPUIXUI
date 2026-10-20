@@ -122,6 +122,12 @@ export type { SelectEntry, SelectOption, SelectOptionGroup };
 export interface SelectTriggerState extends GpuixSelectTriggerState {
   /** Whether the visible trigger itself holds native focus. */
   readonly focused: boolean;
+  /**
+   * Visible and focusable, but the list never opens and the value never
+   * changes. Distinct from `disabled`, which leaves the tab order and fades
+   * the field (plan `797`).
+   */
+  readonly readOnly: boolean;
 }
 
 /** The public state a `Select` style callback receives. */
@@ -129,6 +135,8 @@ export interface SelectState {
   readonly open: boolean;
   readonly disabled: boolean;
   readonly invalid: boolean;
+  /** The display state: focusable and unchanged, but no list (plan `797`). */
+  readonly readOnly: boolean;
 }
 
 export interface SelectProps extends TriggerHandlers {
@@ -158,6 +166,12 @@ export interface SelectProps extends TriggerHandlers {
   readonly onOpenChange?: (open: boolean) => void;
   readonly placeholder?: string;
   readonly disabled?: boolean;
+  /**
+   * Visible and focusable, but the list never opens and the value never
+   * changes. The chevron is hidden and the cursor is `default`; `disabled`
+   * also leaves the tab order and fades the field (plan `797`).
+   */
+  readonly readOnly?: boolean;
   /** Validation failed: the trigger's border takes the destructive role. */
   readonly invalid?: boolean;
   /** Defaults to `md`. */
@@ -187,6 +201,11 @@ export interface SelectProps extends TriggerHandlers {
 export interface SelectIndicatorProps {
   readonly open: boolean;
   readonly disabled: boolean;
+  /**
+   * A read-only field has no list to promise, so it paints no chevron
+   * (plan `797`).
+   */
+  readonly readOnly?: boolean;
   readonly testId?: string;
 }
 
@@ -195,24 +214,27 @@ export interface SelectIndicatorProps {
  *
  * Decoration, not content: no `label`, so it stays out of the accessibility
  * tree and cannot rename the combobox. The icon sets `pointerEvents: "none"`,
- * so a click inside it still reaches the trigger.
+ * so a click inside it still reaches the trigger. A read-only select paints
+ * none, because the list cannot open (plan `797`).
  */
 export const renderSelectIndicator = (
-  { open, disabled, testId }: SelectIndicatorProps,
+  { open, disabled, readOnly, testId }: SelectIndicatorProps,
   theme: PrimitiveTheme,
-): ReactElement => (
-  <Icon
-    name={open ? "chevron-up" : "chevron-down"}
-    size={theme.iconSize.sm}
-    color={disabled ? theme.colors.placeholder : theme.colors.mutedForeground}
-    testId={testId}
-  />
-);
+): ReactElement | null =>
+  readOnly === true ? null : (
+    <Icon
+      name={open ? "chevron-up" : "chevron-down"}
+      size={theme.iconSize.sm}
+      color={disabled ? theme.colors.placeholder : theme.colors.mutedForeground}
+      testId={testId}
+    />
+  );
 
 /** What the trigger's chrome reads from the select's props. */
 export interface SelectTriggerSpec {
   readonly invalid?: boolean;
   readonly fullWidth?: boolean;
+  readonly readOnly?: boolean;
 }
 
 /**
@@ -247,7 +269,11 @@ export const selectTriggerStyle =
     // pointer click, and its value must not be dragged out of it (measured,
     // plan `386`).
     userSelect: "none",
-    cursor: state.disabled ? "not-allowed" : "pointer",
+    cursor: state.disabled
+      ? "not-allowed"
+      : spec.readOnly === true
+        ? "default"
+        : "pointer",
   });
 
 /** The trigger's paint with a caller's contribution merged last. */
@@ -259,7 +285,11 @@ export const selectTriggerPartStyle =
     style?: StateStyle<SelectTriggerState>,
   ): ((state: GpuixSelectTriggerState) => StyleDesc) =>
   (state) => {
-    const resolved: SelectTriggerState = { ...state, focused };
+    const resolved: SelectTriggerState = {
+      ...state,
+      focused,
+      readOnly: spec.readOnly === true,
+    };
     return resolvePartStyle(
       selectTriggerStyle(spec, theme)(resolved),
       style,
@@ -493,6 +523,7 @@ export const renderSelect = (
     options,
     placeholder,
     disabled,
+    readOnly,
     invalid,
     fullWidth,
     label,
@@ -521,7 +552,7 @@ export const renderSelect = (
   handlers: SelectHandlers,
   placement: SelectPlacement = { collisionPadding: FLOATING_MARGIN },
 ): ReactElement => {
-  const spec: SelectTriggerSpec = { invalid, fullWidth };
+  const spec: SelectTriggerSpec = { invalid, fullWidth, readOnly };
   const slot: TriggerHandlers = {
     onMouseEnter,
     onMouseLeave,
@@ -591,7 +622,11 @@ export const renderSelect = (
       open={open}
       onValueChange={handlers.onValueChange}
       onOpenChange={handlers.onOpenChange}
-      disabled={disabled}
+      /* Read-only must also stop the runtime's item/arrow paths, not just the
+         wrapper's open state: a future layer leak would otherwise commit a
+         value. The trigger overrides its own `disabled` below so it keeps the
+         tab stop (plan 797). */
+      disabled={disabled === true || readOnly === true}
       testId={testId}
       style={resolvePartStyle(
         { width: fullWidth === true ? "100%" : undefined },
@@ -600,6 +635,7 @@ export const renderSelect = (
           open,
           disabled: disabled === true,
           invalid: invalid === true,
+          readOnly: readOnly === true,
         },
       )}
     >
@@ -611,7 +647,10 @@ export const renderSelect = (
         aria-description={ariaName(description)}
         aria-expanded={open}
         aria-valuetext={selectValueText(selectedLabel, placeholder)}
-        disabled={disabled}
+        /* Explicit, not `undefined`: GPUix resolves `disabledProp ??
+           context.disabled`, so a read-only root's disabled context would
+           otherwise remove the tab stop (plan 797). */
+        disabled={disabled === true}
         testId={testId === undefined ? undefined : `${testId}-trigger`}
         onFocus={composeHandler(focus.onFocus, onFocus)}
         onBlur={composeHandler(focus.onBlur, onBlur)}
@@ -624,6 +663,7 @@ export const renderSelect = (
           {
             open,
             disabled: disabled === true,
+            readOnly: readOnly === true,
             testId: testId === undefined ? undefined : `${testId}-chevron`,
           },
           theme,
@@ -728,11 +768,18 @@ export const Select = (props: SelectProps): ReactElement => {
   // controlled parent, so its state can agree with what the field paints.
   const hasChoices = selectHasChoices(props.options);
   useEffect(() => {
-    if ((props.disabled === true || !hasChoices) && openState.value.current)
+    if (
+      (props.disabled === true || props.readOnly === true || !hasChoices) &&
+      openState.value.current
+    )
       openState.set(false);
-  }, [props.disabled, hasChoices, openState.value.current]);
+  }, [props.disabled, props.readOnly, hasChoices, openState.value.current]);
   const open =
-    selectOpen(openState.value.current, props.disabled === true) && hasChoices;
+    selectOpen(
+      openState.value.current,
+      props.disabled === true,
+      props.readOnly === true,
+    ) && hasChoices;
   /**
    * The host window, sampled only while the list is painted.
    *
@@ -759,6 +806,7 @@ export const Select = (props: SelectProps): ReactElement => {
         {
           invalid: props.invalid === true,
           fullWidth: props.fullWidth === true,
+          readOnly: props.readOnly === true,
         },
         theme,
         false,
@@ -768,7 +816,14 @@ export const Select = (props: SelectProps): ReactElement => {
         disabled: props.disabled === true,
         placeholder: true,
       }),
-    [theme, props.invalid, props.fullWidth, props.disabled, props.triggerStyle],
+    [
+      theme,
+      props.invalid,
+      props.fullWidth,
+      props.disabled,
+      props.readOnly,
+      props.triggerStyle,
+    ],
   );
   const state = useControlState<string | undefined>(
     props.value,
@@ -808,9 +863,10 @@ export const Select = (props: SelectProps): ReactElement => {
   );
   const onTypeaheadKey = (event: EventPayload): void => {
     // The caller sees every key first; the runtime has no `defaultPrevented`,
-    // so a caller cannot cancel the type-ahead (documented).
+    // so a caller cannot cancel the type-ahead (documented). A read-only
+    // field never types: it may not change its value (plan 797).
     props.onKeyDown?.(event);
-    if (open || props.disabled === true) return;
+    if (open || props.disabled === true || props.readOnly === true) return;
     Option.match(typeaheadChar(event), {
       onNone: () => {},
       onSome: typeahead,
@@ -957,7 +1013,12 @@ export const Select = (props: SelectProps): ReactElement => {
     open,
     focus,
     {
-      onOpenChange: openState.set,
+      /* A read-only field refuses an open request outright; a controlled
+         parent is only ever asked to close, never to open (plan 797). */
+      onOpenChange: (next) => {
+        if (next && props.readOnly === true) return;
+        openState.set(next);
+      },
       onValueChange: state.set,
       registerTrigger: (instance) => {
         trigger.current = instance?.id ?? null;

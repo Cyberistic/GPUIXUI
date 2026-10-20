@@ -40,6 +40,9 @@ const REGIONS = [
   },
 ] as const;
 
+/** The workspace a project belongs to; the form cannot change it. */
+const WORKSPACES = [{ value: "acme-hq", label: "Acme HQ" }] as const;
+
 /** A form with four controls, a byte-sized progress state and a busy action. */
 export const FormExample = (): ReactElement => {
   const [name, setName] = useState("Atlas");
@@ -131,6 +134,17 @@ export const FormExample = (): ReactElement => {
             label="Region"
             fullWidth
             options={REGIONS}
+          />
+        </Stack>
+
+        <Stack direction="column" gap="2xs">
+          <Label description="Assigned by your administrator.">Workspace</Label>
+          <Select
+            value="acme-hq"
+            readOnly
+            label="Workspace"
+            fullWidth
+            options={WORKSPACES}
           />
         </Stack>
 

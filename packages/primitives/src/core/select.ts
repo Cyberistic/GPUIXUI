@@ -71,15 +71,17 @@ export const selectValueText = (
 
 /** Whether the select paints its list.
  *
- * A disabled select is closed even when its controlled `open` still says
- * otherwise: the runtime refuses every choice and dismissal path once disabled,
- * so a painted list would be a dead menu (measured, plan 346). The wrapper's
- * effect asks a controlled parent to agree, but paint does not wait for it.
+ * A disabled or read-only select is closed even when its controlled `open`
+ * still says otherwise: the runtime refuses every choice and dismissal path once
+ * disabled, and a read-only field must not offer a list it will not commit
+ * (measured, plans 346, 797). The wrapper's effect asks a controlled parent to
+ * agree, but paint does not wait for it.
  */
 export const selectOpen = (
   requestedOpen: boolean,
   disabled: boolean,
-): boolean => requestedOpen && !disabled;
+  readOnly = false,
+): boolean => requestedOpen && !disabled && !readOnly;
 
 /**
  * Whether a select has anything to list.
