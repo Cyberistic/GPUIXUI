@@ -138,6 +138,10 @@ import {
 import { textInkLiveScenario, textInkView } from "../scenarios/text-ink.js";
 import { fieldInkLiveScenario, fieldInkView } from "../scenarios/field-ink.js";
 import {
+  scrollAffordanceLiveScenario,
+  scrollAffordanceView,
+} from "../scenarios/scroll-affordance.js";
+import {
   surfaceThemeLiveScenario,
   surfaceThemeView,
 } from "../scenarios/surface-theme.js";
@@ -13151,6 +13155,28 @@ const liveFieldInk: LiveScenario = {
 };
 
 /**
+ * The scroll affordance in a real window (plan `801`).
+ *
+ * The headless pass proves the zero gutter, the absent thumb and the owned
+ * recipe in one offscreen paint; this twin proves the same strip and recipe
+ * through a window's rasteriser, where a platform-themed scrollbar would be the
+ * one thing the offscreen host could miss.
+ */
+const liveScrollAffordance: LiveScenario = {
+  ...scrollAffordanceLiveScenario,
+  view: scrollAffordanceView,
+  ready: "scroll-stage",
+  steps: (ctx) =>
+    scrollAffordanceLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-scroll-affordance.png`),
+        ),
+      ),
+};
+
+/**
  * Text decoration in a real window (plan `775`).
  *
  * The headless pass proves the two declared lines, the control's absence and
@@ -14379,6 +14405,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveTextDecoration,
   liveTextInk,
   liveFieldInk,
+  liveScrollAffordance,
   liveTruncationPixels,
   liveSurfaceTheme,
   liveDialogScrim,

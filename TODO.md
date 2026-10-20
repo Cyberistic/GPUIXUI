@@ -143,7 +143,40 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 144/144 plans-and-harness
+`[x]` `[██████████]` 145/145 plans-and-harness
+
+`[x]` **Prove the scroll affordance in the frame, and measure the runtime's
+      gutter** per plan `801`: three records disagreed about the scrollbar and
+      no scenario read one. `scroll-affordance` / `live-scroll-affordance`
+      (**90 checks each**, focused green in 29.2 s and 29.3 s) prove: the gutter
+      is **0 px** in both axes, **no** thumb paints at rest or while scrolling
+      (the trailing strip is the child's own fill at five heights, identical to
+      its interior, in both hosts), a click 3 px inside the edge reaches the
+      content and does not scroll, and `overflow: "auto"` is **inert** —
+      `getScrollOffset` stays `null`, a wheel does nothing, and the 2000 px
+      child still paints below the box. **A measured trap:** a thumb placed
+      *inside* a scroller scrolls away with the content (`230 → 130` after a
+      `-100` wheel), so the recipe puts the track and thumb as **siblings** of
+      the viewport in a `position: "relative"` wrapper. The probe measures that
+      recipe: a 6 px `mutedForeground` thumb over a `muted` track, length
+      `track² / content` floored at 24 px, a start derived from the scroll
+      progress, a mirror read from `getScrollOffset` in `onScroll` (never
+      accumulated deltas), the `-400` control and a midpoint track press
+      (`-920`) each moving the thumb and its pixel. A pure
+      `scrollbar-model.ts` owns the rules (18 tests; playground **605 → 623**).
+      Seven runtime mutations and one unit mutation observed red and reverted
+      (padding gutter; a drawn thumb in the runtime strip; a pinned thumb
+      start; a `card` thumb; a track press pinned to 0 → `expected -920 ± 2,
+      got 0`; `auto` → `scroll`; a thumb rendered on fitting content;
+      `MIN_THUMB` 20). Focused ids run: `scroll-affordance`,
+      `live-scroll-affordance` (plus M1–M7). End-of-task full headless
+      **120/120** (**4449** checks, 65 capabilities, 522.96 s, exit `0`;
+      exactly `4359 + 90`); live registry **108 → 109**; no full live gate
+      (merge gate). **Corrected records:** `COMPONENTS.md`'s Scrollable
+      containers row and the plan-`173` `tab-overflow` comment (this
+      workstream); `ScrollArea`'s "platform-themed thumb" comment is the
+      cross-team row below. Plan:
+      `.agents/slop/plans/801-scroll-affordance.md`.
 
 `[x]` **Prove the field ink contract in the frame** per plan `797`: the library's
       `nativeTextTheme` claims it keeps a field's "placeholder, caret and
@@ -171,6 +204,18 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
       (**4359** checks, 65 capabilities, exit `0`; exactly `4340 + 19`); live
       registry **107 → 108**; no full live gate (merge gate). Plan:
       `.agents/slop/plans/797-field-ink-pixels.md`.
+
+`[ ]` **Cross-team (defect):** `@gpuixui/primitives`' `ScrollArea` doc comment
+      and `core/style.ts:358` say GPUix 0.10.0 "paints the scrollbar with the
+      platform theme" and that `theme.colors.scrollbar` merely cannot be
+      applied. Measured false (plan `801`): the pin reserves **0 px** of gutter
+      and paints **no** thumb at all, and `overflow: "auto"` is inert. Correct
+      the comments and decide whether `ScrollArea` ships the owned-thumb recipe
+      (`apps/playground/src/scenarios/scrollbar-model.ts` is the reference:
+      wrapper + sibling track/thumb, offset mirrored from
+      `renderer.getScrollOffset`, press mapped by `offsetForTrackPress`).
+      Owner: `primitives`; evidence: plan `801` §2,
+      `scroll-affordance`/`live-scroll-affordance`.
 
 `[ ]` **Cross-team (defect):** `@gpuixui/primitives`' `nativeTextTheme`
       (`core/style.ts`) documents that it keeps a field's "placeholder, caret

@@ -272,10 +272,11 @@ export const tabOverflowScenario: PlaygroundScenario = {
         true,
       );
 
-      // 0.10.0 always reserves a platform scrollbar in an `overflow: scroll`
-      // strip, so the reveal stops with the last tab at the viewport's edge
-      // (its reported box starts 1 px past it). The neighbour is the one the
-      // reader can click (plan 529 §6.3).
+      // The reveal stops with the last tab at the viewport's edge (its reported
+      // box starts 1 px past it) — a rounding of the strip's own padding, not a
+      // reserved scrollbar: plan `801` measured that 0.10.0 reserves no gutter
+      // and paints no thumb. The neighbour is the one the reader can click
+      // (plan 529 §6.3).
       ctx.host.click("tab-8");
       yield* ctx.expectEqual("a revealed tab is clickable", activeTab(ctx), 8);
       const focused = yield* ctx.expectSome(
