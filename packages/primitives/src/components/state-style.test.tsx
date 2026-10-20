@@ -355,6 +355,7 @@ describe("group roots and overlays", () => {
     const handlers: RadioGroupHandlers = {
       onSelect: vi.fn(),
       onFocusMove: vi.fn(),
+      onTypeahead: vi.fn(),
       registerItem: () => () => {},
     };
     const element = renderRadioGroup(
@@ -433,7 +434,12 @@ describe("group roots and overlays", () => {
       textState("alpha"),
       0,
       groupFocus,
-      { onSelect: vi.fn(), onFocusMove: vi.fn(), registerItem: () => () => {} },
+      {
+        onSelect: vi.fn(),
+        onFocusMove: vi.fn(),
+        onTypeahead: vi.fn(),
+        registerItem: () => () => {},
+      },
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
@@ -661,6 +667,7 @@ describe("per-item style", () => {
     const handlers: RadioGroupHandlers = {
       onSelect: vi.fn(),
       onFocusMove: vi.fn(),
+      onTypeahead: vi.fn(),
       registerItem: () => () => {},
     };
     const element = renderRadioGroup(

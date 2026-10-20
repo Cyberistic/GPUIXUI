@@ -3,6 +3,8 @@
  *
  * A radio group navigates with the arrow keys and holds **one** tab stop: the
  * arrow selects and moves native focus with it, the way the platform behaves.
+ * A printable prefix does the same (the shared `core/typeahead.ts` rule), so a
+ * long group is not arrow-only (plan `741`).
  * Each item is the same three-state paint as a checkbox with the circle shape,
  * so the two controls cannot drift.
  *
@@ -17,7 +19,7 @@
  * `COMPONENTS.md`.
  */
 
-import { type ReactElement } from "react";
+import { useCallback, useMemo, type ReactElement } from "react";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { useGpuix } from "@gpuix/react";
@@ -28,6 +30,7 @@ import {
   decideMove,
   moveFrom,
 } from "../core/keyboard.js";
+import { typeaheadChar } from "../core/typeahead.js";
 import {
   groupDisabled,
   initialActiveIndex,
@@ -52,6 +55,7 @@ import {
 } from "./internal.js";
 import { useTheme } from "./ThemeProvider.js";
 import { Text } from "./Text.js";
+import { useTypeahead } from "./typeahead.js";
 
 export interface RadioOption {
   readonly value: string;
@@ -125,6 +129,8 @@ export interface RadioGroupHandlers {
   readonly onSelect: (value: string) => void;
   /** Move native focus to the option a keyboard move landed on. */
   readonly onFocusMove: (index: number) => void;
+  /** A printable character typed while the group holds focus. */
+  readonly onTypeahead: (char: string) => void;
   /** Register an option's host instance, so the group can call `focusElement`. */
   readonly registerItem: (
     index: number,
@@ -200,14 +206,28 @@ export const renderRadioGroup = (
    * ring can never name different options (plan `359`).
    */
   const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
-  const activate = (phase: "down" | "up", event: EventPayload): void => {
-    if (decideActivation(event.key ?? "", phase, event.isHeld === true))
-      select(cursorIndex);
+  /** Runs an activation key; returns whether the event was one. */
+  const activate = (phase: "down" | "up", event: EventPayload): boolean => {
+    if (!decideActivation(event.key ?? "", phase, event.isHeld === true))
+      return false;
+    select(cursorIndex);
+    return true;
   };
+  /**
+   * The three key branches, in order: a move/jump, activation, then a typed
+   * character. Each earlier branch consumes its key, so `enter`, `space`, the
+   * arrows and Home/End never reach the prefix rule; `typeaheadChar` refuses a
+   * chord, a held repeat and a key that types nothing (plan `741`).
+   */
   const onKeyDown = (event: EventPayload): void => {
     const key = event.key ?? "";
     if (move(key) || jump(key)) return;
-    activate("down", event);
+    if (activate("down", event)) return;
+    if (props.disabled === true) return;
+    Option.match(typeaheadChar(event), {
+      onNone: () => {},
+      onSome: handlers.onTypeahead,
+    });
   };
   return (
     <div
@@ -215,7 +235,9 @@ export const renderRadioGroup = (
       aria-label={ariaName(props.label)}
       testId={props.testId}
       onKeyDown={onKeyDown}
-      onKeyUp={(event) => activate("up", event)}
+      onKeyUp={(event) => {
+        activate("up", event);
+      }}
       style={resolvePartStyle(
         {
           display: "flex",
@@ -316,11 +338,51 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
       if (next !== undefined) props.onValueChange?.(next);
     },
   );
+  const activeIndex = initialActiveIndex(props.options, selected.value.current);
+  /**
+   * Where the keyboard is: the focused option, else the value-derived tab stop
+   * — the same cursor the arrows and activation use (plans `359`, `741`). The
+   * prefix search starts after it, so a deferring parent cannot trap it.
+   */
+  const cursorIndex = moveFrom(activeIndex, focus.focusedIndex);
+  const focusOption = useCallback(
+    (index: number) => {
+      Option.match(focus.idOf(index), {
+        onNone: () => {},
+        // Paint where focus is going in the same commit: the focus event
+        // follows the native call, and waiting for it would paint the ring
+        // a frame late. The call keeps its receiver — `focusElement` is a
+        // method on the renderer, not a free function.
+        onSome: (id) => {
+          renderer?.focusElement?.(id);
+          focus.onFocus(index);
+        },
+      });
+    },
+    [focus, renderer],
+  );
+  const typeItems = useMemo(
+    () =>
+      Arr.map(props.options, (option) => ({
+        value: option.value,
+        label: optionText(option.label, option.value),
+        disabled: option.disabled === true,
+      })),
+    [props.options],
+  );
+  const typeahead = useTypeahead(
+    typeItems,
+    Option.some(cursorIndex),
+    (match) => {
+      selected.set(match.item.value);
+      focusOption(match.index);
+    },
+  );
   return renderRadioGroup(
     props,
     theme,
     selected.value,
-    initialActiveIndex(props.options, selected.value.current),
+    activeIndex,
     {
       focusedIndex: focus.focusedIndex,
       onFocus: focus.onFocus,
@@ -328,18 +390,8 @@ export const RadioGroup = (props: RadioGroupProps): ReactElement => {
     },
     {
       onSelect: selected.set,
-      onFocusMove: (index) =>
-        Option.match(focus.idOf(index), {
-          onNone: () => {},
-          // Paint where focus is going in the same commit: the focus event
-          // follows the native call, and waiting for it would paint the ring
-          // a frame late. The call keeps its receiver — `focusElement` is a
-          // method on the renderer, not a free function.
-          onSome: (id) => {
-            renderer?.focusElement?.(id);
-            focus.onFocus(index);
-          },
-        }),
+      onFocusMove: focusOption,
+      onTypeahead: typeahead,
       registerItem: focus.registerItem,
     },
   );

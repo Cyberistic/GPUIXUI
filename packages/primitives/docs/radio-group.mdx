@@ -67,6 +67,7 @@ keeps its accent, so the error cannot be mistaken for the selection.
 | ← / → (horizontal) | the same on the horizontal axis |
 | Home / End | jump to the first / last **enabled** option and select it |
 | Enter / Space | select the focused option |
+| Any printable character | select the next **enabled** option whose text starts with the typed prefix, wrapping; a repeated letter advances |
 | Tab | moves to the group as **one** stop; the selected option holds it, or the first enabled one when nothing is selected |
 
 Arrows and Home/End **select as they move** and take focus with them, matching
@@ -87,6 +88,30 @@ is the keyboard's cursor, so a deferring parent cannot trap the keyboard by
 moving focus once and repeating the same move on every later key (plan `359`).
 The tab stop stays value-derived (or the first enabled option when nothing is
 selected), so Tab still enters on what is selected.
+
+### Type-ahead
+
+A long group is arrow-only without it, so the group answers a typed prefix the
+way a desktop radio group does (plan `741`). The rule is the same
+`core/typeahead.ts` module `Select` uses:
+
+- the next **enabled** option whose text (`label`, else `value`) starts with the
+  prefix is selected **and** focused, exactly like an arrow;
+- matching is case-insensitive, the search starts after the keyboard's cursor —
+  the focused option, else the tab stop — and wraps; a repeated letter
+  therefore advances (`E`, `E` on Europe/Estonia chooses Europe, then Estonia);
+- a disabled option and an option with no text at all are never matched;
+- a prefix that matches nothing changes nothing, and clears the buffer, so a dead
+  letter cannot poison the next one;
+- a `cmd`/`ctrl`/`alt` chord, a held repeat, `space`, `enter`, the arrows and
+  Home/End are not typed characters — the move, jump and activation branches
+  consume their keys first;
+- a `disabled` group types nothing.
+
+The buffer lives 500 ms after its last keystroke, matching `Select`. A controlled
+parent that defers or rejects the report still advances: the search starts from
+the group's cursor, not from the value the parent still holds (the plan-`732`
+rule, measured in the runtime).
 
 ## Accessibility
 
@@ -174,7 +199,6 @@ the option row:
 
 
 - Options are data: no compound `RadioGroupItem`, no rich child content.
-- No type-ahead selection.
 - A long option label **wraps** inside the row rather than widening it, so the
   text stays inside the group in **both** orientations (plans `368`, `380`).
 
@@ -200,7 +224,10 @@ the option row:
   option description becomes the row's `aria-description` (plan 500), a blank
   description paints no caption (plan `577`), and an
   option valued `""` is checked only when it is the selection while an absent
-  selection leaves it unchecked and does not take the tab stop (plan 502).
+  selection leaves it unchecked and does not take the tab stop (plan 502); a
+  printable key reaches the type-ahead rule while an arrow, Home/End, Enter,
+  Space, a chord and a held repeat do not, and a disabled group types nothing
+  (plan 741).
 - `runtime/option-description.runtime.test.tsx` — both groups' descriptions in
   the real accessibility tree, and a blank one staying absent (plan 500).
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
@@ -222,6 +249,12 @@ the option row:
   applies** a reported value: three arrows move the ring on to Beta, Gamma and
   back to Alpha and report each change; a disabled option is still skipped; the
   wrap back to the value the parent holds reports nothing (plan `359`).
+- `runtime/radio-typeahead.runtime.test.tsx` — the prefix rule in the real
+  renderer: a letter selects and focuses the next match, a repeated letter
+  advances, the search wraps, a disabled and a blank-text option are skipped, an
+  unmatched letter changes nothing, the prefix continues from the option the
+  arrows reached, a deferring parent still advances, a disabled group and a held
+  key type nothing (plan `741`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

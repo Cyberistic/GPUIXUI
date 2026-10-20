@@ -50,6 +50,7 @@ const checkboxHandlers: CheckboxGroupHandlers = {
 const radioHandlers: RadioGroupHandlers = {
   onSelect: vi.fn(),
   onFocusMove: vi.fn(),
+  onTypeahead: vi.fn(),
   registerItem: () => () => {},
 };
 const toggleHandlers: ToggleGroupHandlers = {

@@ -54,9 +54,11 @@ const unfocused: RadioGroupFocus = {
 /** The group's handlers, with the focus move recorded by default. */
 const radioHandlers = (
   onSelect: (value: string) => void,
+  onTypeahead: (char: string) => void = vi.fn(),
 ): RadioGroupHandlers => ({
   onSelect,
   onFocusMove: vi.fn(),
+  onTypeahead,
   registerItem: () => () => {},
 });
 const checked = (value: boolean): ValueState<boolean> =>
@@ -615,6 +617,66 @@ describe("RadioGroup", () => {
     );
     expectSome(hostHandler(element, "onKeyDown"))(keyEvent("down"));
     expect(onSelect).toHaveBeenCalledWith("alpha");
+  });
+
+  it("hands a printable key to the type-ahead rule and leaves every other key alone", () => {
+    // The bug guarded (plan 741): the group answered a printable key with
+    // nothing, so choosing a named option meant walking the arrows. The key
+    // branch must pass the character on, and the move/jump/activation branches
+    // must consume their own keys before it (an arrow is not a prefix).
+    const onTypeahead = vi.fn();
+    const onSelect = vi.fn();
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(onSelect, onTypeahead),
+    );
+    const down = expectSome(hostHandler(element, "onKeyDown"));
+    down(keyEvent("e"));
+    expect(onTypeahead).toHaveBeenCalledWith("e");
+    // The letter alone selects nothing; the rule decides what it matches.
+    expect(onSelect).toHaveBeenCalledTimes(0);
+    Arr.forEach(["down", "home", "enter", "space", "tab"], (key) =>
+      down(keyEvent(key)),
+    );
+    expect(onTypeahead).toHaveBeenCalledTimes(1);
+  });
+
+  it("refuses a chord and a held repeat before the character rule", () => {
+    const onTypeahead = vi.fn();
+    const element = renderRadioGroup(
+      { options },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn(), onTypeahead),
+    );
+    const down = expectSome(hostHandler(element, "onKeyDown"));
+    down(
+      keyEvent("e", {
+        modifiers: { shift: false, ctrl: false, alt: false, cmd: true },
+      }),
+    );
+    down(keyEvent("e", { isHeld: true }));
+    expect(onTypeahead).toHaveBeenCalledTimes(0);
+  });
+
+  it("types nothing into a disabled group", () => {
+    const onTypeahead = vi.fn();
+    const element = renderRadioGroup(
+      { options, disabled: true },
+      testTheme,
+      text("alpha"),
+      0,
+      unfocused,
+      radioHandlers(vi.fn(), onTypeahead),
+    );
+    expectSome(hostHandler(element, "onKeyDown"))(keyEvent("e"));
+    expect(onTypeahead).toHaveBeenCalledTimes(0);
   });
 
   it("never selects a disabled option through a click", () => {

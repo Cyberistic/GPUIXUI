@@ -115,6 +115,7 @@ const checkboxGroupHandlers = (): CheckboxGroupHandlers => ({
 const radioGroupHandlers = (): RadioGroupHandlers => ({
   onSelect: vi.fn(),
   onFocusMove: vi.fn(),
+  onTypeahead: vi.fn(),
   registerItem: () => () => {},
 });
 

@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 165/165
+`[x]` `[████████████]` 166/166
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2302,6 +2302,20 @@ retired once both branches are one
       against the unlabelled tree**; the checkbox and selection examples use the
       composition; offline 69 files / 947 tests, scoped live 5 files / 104, full
       runtime 64 files / 858 tests (plan `740`).
+
+`[x]` `packages/primitives`: **`RadioGroup` had no type-ahead**, the last
+      keyboard limitation in the selection family. A focused group answered every
+      printable key with nothing, so a named option in a long group meant walking
+      the arrows, while `Select` already answers a prefix (plans `731`/`732`).
+      The same `core/typeahead.ts` rule now selects **and** focuses the next
+      enabled option whose text starts with the typed prefix, starting from the
+      keyboard's cursor (not the committed value) and wrapping; a repeated letter
+      advances, a disabled or blank-text option is skipped, an unmatched letter
+      changes nothing, and a chord, a held repeat or a disabled group types
+      nothing. 3 element + 9 runtime cases — a missing prefix branch fails 7 of
+      the 9 runtime cases, a value-derived cursor fails exactly the arrow-then-key
+      case, and dropping either disabled guard fails its own case. Offline 69
+      files / 950 tests, scoped live 1 file / 9 (plan `741`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
