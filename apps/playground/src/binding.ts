@@ -1,11 +1,12 @@
 /**
- * Which native build this run is evidence for — plan `529`.
+ * Which native build this run is evidence for — plans `529` and `811`.
  *
  * A binding built from GPUix `main` looks like the release at runtime: the same
  * package version, the same JS. It is not the same Rust code, so the suite pins
  * the source it was built from (`bindingPin`), prints it in every report, and
  * refuses to run an artifact that carries a capability the pinned release does
- * not have (`provenanceIssue`).
+ * not have: a newer source, or a build with this repo's own `zIndex` patch
+ * (`provenanceIssue`).
  */
 import { Effect, FileSystem, Option, Path } from "effect";
 import { Binding } from "@gpuixui/testing";
@@ -64,7 +65,7 @@ export const provenanceIssue = (
             Effect.option,
             Effect.map(
               Option.flatMap((bytes) =>
-                Binding.fingerprintIssue(bytes, bindingPin),
+                Binding.artifactIssue(bytes, bindingPin),
               ),
             ),
           ),

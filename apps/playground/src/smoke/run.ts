@@ -423,7 +423,7 @@ export const program = (
     if (Option.isSome(issue)) {
       yield* Console.error(issue.value);
       yield* Console.error(
-        "rebuild the binding from the 0.10.0 tag (plan 529 §3) — the suite cannot claim verified 0.10.0 on a newer source",
+        "the suite reports verified 0.10.0 only on the pinned release build — restore it with nub run --filter playground build (plans 529 §3, 811)",
       );
       return EXIT.failed;
     }

@@ -11,7 +11,10 @@
 # .agents/slop/plans/140-gpuix-native-darwin-x64-build.md.
 #
 # apps/playground/patches/gpuix-zindex.patch adds `StyleDesc.zIndex` (paint and
-# hit order) to the pinned source; step 4 applies it idempotently.
+# hit order) to the pinned source. It is OPT-IN with GPUIX_ZINDEX=1 (plan 811):
+# the published package cannot type or install the field, so a default build
+# stays release-parity and the suite refuses an artifact that carries it. Step 4
+# applies it idempotently and reverts a stale application when the flag is off.
 #
 # The zed submodule comes from the GPUix fork (`remorses/zed`) at the commit
 # pinned by references/gpuix, not from upstream; the transform patch is ported to
@@ -24,6 +27,7 @@
 # the final .node is copied into node_modules (also gitignored).
 #
 # Usage:  sh apps/playground/scripts/build-native-binding.sh
+#         GPUIX_ZINDEX=1 sh apps/playground/scripts/build-native-binding.sh
 #         GPUIX_TRANSFORM=1 sh apps/playground/scripts/build-native-binding.sh
 set -eu
 
@@ -91,17 +95,27 @@ if ! grep -q 'runtime_shaders' "$manifest"; then
     echo "could not apply the runtime_shaders feature to $manifest" >&2; exit 1; }
 fi
 
-# 4. The zIndex extension: `StyleDesc.zIndex` orders paint and hit testing.
-#    The reference clone is read-only, so the change travels as a patch and is
-#    applied after the copy. Reverse-dry-run first, so a rebuild is idempotent.
-patch_file="$root/apps/playground/patches/gpuix-zindex.patch"
-if ( cd "$scratch/gpuix" && git apply --reverse --check "$patch_file" 2>/dev/null ); then
-  echo "gpuix-zindex.patch already applied"
-elif ( cd "$scratch/gpuix" && git apply "$patch_file" ); then
-  echo "applied $(basename "$patch_file")"
-else
-  echo "cannot apply $patch_file to $scratch/gpuix" >&2
-  exit 1
+# 4. Optional zIndex extension (plan 530): `StyleDesc.zIndex` orders paint and
+#    hit testing. The reference clone is read-only, so the change travels as a
+#    patch and is applied after the copy. It is OPT-IN (plan 811) because the
+#    published package cannot type or install the field, and the suite refuses
+#    an artifact that carries it. Reverse-dry-run first, so a rebuild is
+#    idempotent, and revert when the flag is off so a release build never
+#    inherits a previous run's extension.
+zindex_patch="$root/apps/playground/patches/gpuix-zindex.patch"
+if [ "${GPUIX_ZINDEX:-0}" = "1" ]; then
+  if ( cd "$scratch/gpuix" && git apply --reverse --check "$zindex_patch" 2>/dev/null ); then
+    echo "gpuix-zindex.patch already applied; this artifact is NOT release evidence"
+  elif ( cd "$scratch/gpuix" && git apply "$zindex_patch" ); then
+    echo "applied $(basename "$zindex_patch"); this artifact is NOT release evidence"
+  else
+    echo "cannot apply $zindex_patch to $scratch/gpuix" >&2
+    exit 1
+  fi
+elif ( cd "$scratch/gpuix" && git apply --reverse --check "$zindex_patch" 2>/dev/null ); then
+  ( cd "$scratch/gpuix" && git apply --reverse "$zindex_patch" ) || {
+    echo "cannot revert $zindex_patch from $scratch/gpuix" >&2; exit 1; }
+  echo "reverted $(basename "$zindex_patch"); set GPUIX_ZINDEX=1 to include it"
 fi
 
 # 5. Optional GPUI transform (plan 538). The patch only adds renderer API; the

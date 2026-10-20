@@ -7,10 +7,16 @@
  * capabilities (`registerFont`, `focusVisible`, the display-link frame wake)
  * that the released 0.10.0 binary does not contain.
  *
+ * The same is true in the other direction for this repo's own patches: a build
+ * with `GPUIX_ZINDEX=1` carries `StyleDesc.zIndex`, a field the published
+ * package can neither type nor install (plan `811`). Both cases are refused, so
+ * "verified 0.10.0" always names an artifact a consumer could run.
+ *
  * So the suite pins the source it was built from and fingerprints the binary
- * before it claims anything. `MAIN_ONLY_MARKERS` is a release fingerprint, not
- * a permanent ban: it only applies to the pin it was measured against.
+ * before it claims anything. The marker lists are release fingerprints, not
+ * permanent bans: they only apply to the pin they were measured against.
  */
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Str from "effect/String";
@@ -52,6 +58,19 @@ export const MAIN_ONLY_MARKERS: ReadonlyArray<string> = [
   "scrollY",
 ];
 
+/**
+ * Names that are compiled into a binding built from this repo's own patches to
+ * the pinned source (`apps/playground/patches/`), never into a published
+ * release. Each is a serde field name, so the compiler keeps it in the binary.
+ *
+ * Measured with `strings` on the 0.10.0 artifact (plan `811`): `zIndex` appears
+ * zero times and every release style key appears once. Unlike
+ * `MAIN_ONLY_MARKERS`, the remedy is a rebuild without the patch, not a newer
+ * source. A second extension must be measured against the release artifact
+ * before it is added; a name the release already contains is not a witness.
+ */
+export const LOCAL_EXTENSION_MARKERS: ReadonlyArray<string> = ["zIndex"];
+
 const MARKER_VERSION = "0.10.0";
 
 /** Latin-1 decodes one byte to one character, so a marker is a plain substring. */
@@ -61,10 +80,11 @@ const asText = (binary: Uint8Array): string =>
 const hasMarker = (text: string, marker: string): boolean =>
   Str.includes(marker)(text);
 
-const firstMarker = (text: string): Option.Option<string> =>
-  Option.fromNullishOr(
-    MAIN_ONLY_MARKERS.find((marker) => hasMarker(text, marker)),
-  );
+const firstPresent = (
+  text: string,
+  markers: ReadonlyArray<string>,
+): Option.Option<string> =>
+  Arr.findFirst(markers, (marker) => hasMarker(text, marker));
 
 /**
  * `Some(message)` when `binary` carries a capability the pinned release does
@@ -76,8 +96,39 @@ export const fingerprintIssue = (
 ): Option.Option<string> => {
   if (pin.version !== MARKER_VERSION) return Option.none();
   return Option.map(
-    firstMarker(asText(binary)),
+    firstPresent(asText(binary), MAIN_ONLY_MARKERS),
     (marker) =>
       `${pin.package} ${pin.version} cannot contain ${marker}: this binding was built from a newer GPUix source than the release`,
   );
 };
+
+/**
+ * `Some(message)` when `binary` carries one of this repo's own extensions, i.e.
+ * it was built with `GPUIX_ZINDEX=1` rather than from the pinned release. Gated
+ * on the measured pin: a later release may ship `zIndex` itself, and then it is
+ * a release capability rather than an extension.
+ */
+export const extensionIssue = (
+  binary: Uint8Array,
+  pin: BindingPin,
+): Option.Option<string> => {
+  if (pin.version !== MARKER_VERSION) return Option.none();
+  return Option.map(
+    firstPresent(asText(binary), LOCAL_EXTENSION_MARKERS),
+    (marker) =>
+      `${pin.package} ${pin.version} carries the local ${marker} extension: this artifact is not the pinned release build`,
+  );
+};
+
+/**
+ * `Some(reason)` when the artifact is not release-parity. A newer source is
+ * reported first because it is the stronger claim; a local extension is the
+ * fallback.
+ */
+export const artifactIssue = (
+  binary: Uint8Array,
+  pin: BindingPin,
+): Option.Option<string> =>
+  Option.orElse(fingerprintIssue(binary, pin), () =>
+    extensionIssue(binary, pin),
+  );
