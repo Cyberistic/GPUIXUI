@@ -16,7 +16,10 @@
  * visible label (`Platform`), so the one region the nav revealed had a name a
  * screen-reader user could not map to the trigger (plan 724). A malformed
  * `openDelay`/`closeDelay` ran its `setTimeout` at once, so the panel opened on
- * hover and closed before the pointer could travel into it (plan 763).
+ * hover and closed before the pointer could travel into it (plan 763). Choosing
+ * a link with `Enter` or a pointer left native focus on **nothing**, because the
+ * link asked for the close without a focus target (plan 807); it now returns to
+ * the item's trigger unless the app moves focus in `onSelect`.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -359,6 +362,71 @@ describe("NavigationMenu", () => {
     expect(onSelect).toHaveBeenCalledTimes(1);
     expect(onSelect).toHaveBeenCalledWith("overview");
     expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+
+    nav.unmount();
+  });
+
+  it("returns focus to the trigger when a link is chosen from the keyboard", () => {
+    const onSelect = vi.fn();
+    const nav = renderComponent(<Workspace onSelect={onSelect} />);
+    clickCentreOf(nav, "trigger-platform");
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("link-overview")?.id ?? -1,
+    );
+
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    expect(focusedTestId(nav)).toEqual(Option.some("trigger-platform"));
+
+    nav.unmount();
+  });
+
+  it("returns focus to the trigger when a link is chosen with the pointer", () => {
+    const onSelect = vi.fn();
+    const nav = renderComponent(<Workspace onSelect={onSelect} />);
+    clickCentreOf(nav, "trigger-platform");
+
+    clickCentreOf(nav, "link-overview");
+
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeUndefined();
+    expect(focusedTestId(nav)).toEqual(Option.some("trigger-platform"));
+
+    nav.unmount();
+  });
+
+  it("keeps the focus a consumer places in onSelect", () => {
+    let takeFocus: () => void = () => undefined;
+    const nav = renderComponent(<Workspace onSelect={() => takeFocus()} />);
+    takeFocus = () =>
+      nav.renderer.focusElement(
+        nav.renderer.findByTestId("elsewhere")?.id ?? -1,
+      );
+    clickCentreOf(nav, "trigger-platform");
+
+    clickCentreOf(nav, "link-overview");
+
+    expect(focusedTestId(nav)).toEqual(Option.some("elsewhere"));
+
+    nav.unmount();
+  });
+
+  it("keeps a link's focus when the caller refuses the close", () => {
+    const onValueChange = vi.fn();
+    const nav = renderComponent(
+      <Workspace value="platform" onValueChange={onValueChange} />,
+    );
+    nav.renderer.focusElement(
+      nav.renderer.findByTestId("link-overview")?.id ?? -1,
+    );
+
+    nav.renderer.simulateKeystrokes("enter");
+
+    expect(onValueChange).toHaveBeenCalledWith(null);
+    expect(nav.renderer.findByTestId("panel-platform")).toBeDefined();
+    expect(focusedTestId(nav)).toEqual(Option.some("link-overview"));
 
     nav.unmount();
   });

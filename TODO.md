@@ -1469,6 +1469,17 @@ retired once both branches are one
       3 native cases (message 16 → 19), all three red at `HEAD`; docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced (owner:
       components)
+    - [x] Choosing a navigation link returns focus to its trigger — plan 807;
+      measured 2026-10-20: a keyboard `Enter` and a pointer click both closed the
+      panel and left the focused host on nothing (`Option.none()`), because the
+      link requested the close with `null`. The link now sends its item's
+      trigger value through a close-intent union, and the restore runs only when
+      the close left focus on nothing, so an app that focuses its content in
+      `onSelect` keeps it; 4 native cases (Navigation menu 30 → 34), the two
+      focus cases red at `HEAD` and the guard proven by removing it; unit 512 in
+      48 files, full native suite 1029 passed / 20 failed of 1049 (the same
+      plan-540 classes); docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
+      synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

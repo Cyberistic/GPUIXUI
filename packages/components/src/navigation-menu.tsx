@@ -4,7 +4,9 @@
  * Exactly one panel is open at a time. Triggers form a roving group: Left/Right
  * move focus without opening, Home/End jump, Enter/Space or ArrowDown opens.
  * Escape closes the topmost overlay (the shared dismiss stack) and returns focus
- * to the trigger; an outside press closes.
+ * to the trigger; an outside press closes. Choosing a link closes the panel and
+ * returns focus to its trigger once the close is accepted, unless the app moves
+ * focus in `onSelect`.
  *
  * Hover follows the same travel rule as `PreviewCard`: entering a trigger opens
  * after `openDelay`, the pointer may cross into the panel, and leaving both
@@ -74,12 +76,21 @@ interface NavigationRow {
   readonly name: Option.Option<string>;
 }
 
+/**
+ * Where a close sends focus. Escape is a dismissal and always returns to its
+ * trigger; a chosen link yields to focus the app has already placed, because its
+ * own host is gone by the time the close is observed.
+ */
+type NavigationCloseFocus =
+  | { readonly kind: "trigger"; readonly value: string }
+  | { readonly kind: "link"; readonly value: string };
+
 /** The rules a nav part follows; throws outside a {@link NavigationMenu}. */
 interface NavigationMenuContextValue {
   readonly open: string | null;
   readonly setOpen: (value: string | null) => void;
   /** Request a close; focus moves only when the close is accepted. */
-  readonly requestClose: (focus: string | null) => void;
+  readonly requestClose: (focus: NavigationCloseFocus | null) => void;
   readonly registerTrigger: (
     value: string,
     instance: PublicInstance | null,
@@ -187,13 +198,16 @@ export const NavigationMenu = ({
   const openRef = useRef<string | null>(open);
   openRef.current = open;
   // A close the caller refuses must leave the panel and the user's focus alone.
-  // The token is the trigger value to focus once the close is accepted.
-  const requestClose = useCloseFocus<string | null>(
+  // The token is the trigger to focus once the close is accepted; a chosen
+  // link's restore yields to focus the app has already placed (plan 807).
+  const requestClose = useCloseFocus<NavigationCloseFocus | null>(
     open !== null,
     () => setOpen(null),
-    (value) => {
-      if (value === null) return;
-      const instance = triggers.current.get(value);
+    (focus) => {
+      if (focus === null) return;
+      const focused = renderer?.getFocusedElementId?.() ?? null;
+      if (focus.kind === "link" && focused !== null) return;
+      const instance = triggers.current.get(focus.value);
       if (instance !== undefined) renderer?.focusElement?.(instance.id);
     },
   );
@@ -308,7 +322,8 @@ export const NavigationMenu = ({
   // the layer claims it without closing; the click closes the panel.
   const dismiss = useRef<() => void>(() => undefined);
   useLayoutEffect(() => {
-    dismiss.current = () => requestClose(open);
+    dismiss.current = () =>
+      requestClose(open === null ? null : { kind: "trigger", value: open });
   });
   useLayoutEffect(() => {
     if (open === null) return;
@@ -672,6 +687,7 @@ export const NavigationMenuLink = ({
 }: NavigationMenuLinkProps) => {
   const theme = useTheme();
   const { requestClose } = useNavigationMenu();
+  const { value } = useNavItem();
   return (
     <Button
       {...rest}
@@ -679,7 +695,7 @@ export const NavigationMenuLink = ({
       onClick={(event) => {
         onClick?.(event);
         onSelect?.();
-        requestClose(null);
+        requestClose({ kind: "link", value });
       }}
       style={mergeStyles(
         {
