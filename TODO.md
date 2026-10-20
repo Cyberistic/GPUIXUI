@@ -95,15 +95,31 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 122/122 plans-and-harness
+`[x]` `[██████████]` 123/123 plans-and-harness
 
-`[~]` **Prove the media waveform in pixels** per plan `722`: the envelope,
+`[x]` **Prove the media waveform in pixels** per plan `722`: the envelope,
 wash and playhead were geometry and authored style only (`media-surface`), and
 the README recorded the limit as "colour/pixel readback (screenshot evidence
-only)". A pure `media-pixels.ts` samples the bar route's bar/gap/above-slot,
-the played wash over `card` and over a bar, the playhead, and the SVG image
-route's bar and transparent slot. In progress — counts land with the plan
-`722` §10 measurement.
+only)". A pure `media-pixels.ts` (9 tests; playground **472 → 481**) samples the
+bar route's bar 0/bar 32 centres, the `1.5` px gap and the slot above bar 32,
+the 30 % wash over `card` and over a bar, the playhead, and the SVG image
+route's bar plus its transparent slot; `media-surface` **62 → 72** checks and
+`live-media` **14 → 25**, green in both hosts (live three consecutive focused
+runs: 28.6 / 40.7 / 82.0 s). **Measured:** `mutedForeground #A1A9B7` at both
+bar centres, `card #191D25` in the gap and above the bar (slot 15 / bar 12 /
+gap 3 device px at scale 2), `#444766` for the wash over `card`, `#A3A9CD` over
+a bar, `foreground #EEF1F5` at the playhead, and the image route paints the
+same token with its transparent slot showing the stage. Seven mutations
+observed and reverted, six `exit 1`: a `card` bar (`expected #a1a9b7ff, got
+#191d25ff`), a filled envelope layer (gap), an opaque wash (`got #a7a9ffff`), a
+token-coloured playhead (`got #a1a9b7ff`), a red image fill (`got #ff0000ff`)
+and a `pos=0` frame for the 30 s wash (`expected #444766ff, got #191d25ff`);
+`PLAYED_ALPHA = 0.6` is a **null result** (the view and the expectation share
+the constant). Five unit mutations red (gap point, alpha, swapped image axes,
+above-slot, hardcoded bar x). Focused ids: `media-surface`, `live-media`; full
+headless **106/106** (**3902** checks, 65 capabilities, 168.6 s), exit `0`;
+`nub run check`/`lint`/`test` green. No full live gate (merge gate; the
+registry total should become **2649** for 95 ids).
 
 `[x]` **Prove the docking drop indicator's paint order in pixels** per plan
       `715`: the indicator's box and authored `backgroundColor` were asserted,

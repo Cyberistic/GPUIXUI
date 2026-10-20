@@ -2025,28 +2025,46 @@ window controls and no menu API, so this is honestly an in-window bar.
 `media-surface` closes the last inventory row with no runtime evidence, and the
 answer is deliberately split: **0.10.0 cannot play media**, so the player is an
 app boundary, while the waveform and the seek are ordinary primitives that work.
-62 checks plus 14 live and 15 pure model tests.
+72 checks plus 25 live and 15 pure model tests.
 
 | Fact | Measured |
 | ---- | -------- |
 | no media element | the closed `ElementType` union and the JSX intrinsics map both have exactly twelve tags, none of them `video`/`audio`/`media`; `NativeRenderer` exposes no transport or audio-device call, and `<canvas>` renders `gpui::Empty` |
 | the envelope | 64 bars, `left = i × 7.5`, `width 6`, heights `12…59`, every bottom edge on the stage's at `96` |
-| the image route | one `<img>` of an SVG data URL, `480 × 96`, no fallback, no per-bar node |
+| the envelope's pixels (plan `722`) | one frame at rest: bar 0's and bar 32's centres paint `mutedForeground #A1A9B7`, the `1.5` px gap between bars paints the stage's `card #191D25`, and the slot 8 px above bar 32 paints `card` — so a bar that paints nothing, a filled envelope or a full-height column fails by name. Slot `7.5` → 15 device px, bar 12, gap 3 at the frame's scale 2, so the gap sample is exact rather than anti-aliased |
+| the played wash, in pixels (plan `722`) | at 30 s the wash is `primary` at 30 %: `#444766` over `card` and `#A3A9CD` over a bar's `mutedForeground`, so a wash that covers only empty space fails; the 2 px playhead at `x = 121` is `foreground #EEF1F5` |
+| the image route | one `<img>` of an SVG data URL, `480 × 96`, no fallback, no per-bar node. Its pixels (plan `722`): the bar at the fixture's slot 32 paints the same `mutedForeground` (mapped proportionally into the reported box) and its transparent slot paints `card` — a blank decode or an opaque rasterisation fails |
 | the cost | the bar route retains **63 more host nodes** than the image route (`64` bars vs `1` image); switching back restores the exact count |
 | the seek | 4 px/s (`480 px ↔ 120 s`); a press 120 px in seeks to `30 s`, a held `+60 px` drag to `45 s`, and both ends clamp |
 | the hit target | a press **on the envelope does not scrub** (`pos=0`, empty log) because moves go to the pressed element; a plane **over** the envelope and a plane **under** it with `pointerEvents: "none"` on the painted layer both scrub |
 | keyboard | the plane takes native focus; Right `+1 s`, Shift+Right `+5 s`, Home/End the ends, all clamped |
 | accessibility | one AccessKit `Slider` named `Playback position` with `value = "36s of 120s"` (`aria-valuetext`, not `aria-valuenow`) |
 
-Five mutation proofs: dropping the seek clamp fails `expected "120", got "530"`;
-forcing the envelope to always block fails `expected "45", got "0"`; adding one
-route-specific host node fails the cost check at `expected 63, got 64`; dropping
-`aria-valuetext` fails `expected "36s of 120s", got "none"`; and a no-op
-`onMouseMove` fails the live drag at `pos=60` instead of `75`. `live-media`
-confirms the click, the paced drag, focus and the image route in a real window.
+Five mutation proofs from plan `520`: dropping the seek clamp fails
+`expected "120", got "530"`; forcing the envelope to always block fails
+`expected "45", got "0"`; adding one route-specific host node fails the cost
+check at `expected 63, got 64`; dropping `aria-valuetext` fails
+`expected "36s of 120s", got "none"`; and a no-op `onMouseMove` fails the live
+drag at `pos=60` instead of `75`. `live-media` confirms the click, the paced
+drag, focus and the image route in a real window.
+
+Plan `722` adds the colour half. Seven mutations observed and reverted (all but
+one `exit 1`): a bar painted `card` fails `the first bar paints the muted
+foreground` (`expected #a1a9b7ff, got #191d25ff`); a filled envelope layer fails
+`the gap between bars paints the stage` (`expected #191d25ff, got #a1a9b7ff`);
+an opaque wash fails `the wash over the stage is primary at 30 %`
+(`expected #444766ff, got #a7a9ffff`); a token-coloured playhead fails
+`the playhead paints the foreground` (`expected #eef1f5ff, got #a1a9b7ff`); a
+red image fill fails `the image envelope bar paints the muted foreground`
+(`expected #a1a9b7ff, got #ff0000ff`); sampling the `pos=0` frame for the 30 s
+wash fails `the wash over the stage is primary at 30 %`
+(`expected #444766ff, got #191d25ff`). `PLAYED_ALPHA = 0.6` is a **null result**:
+the view and the expectation import the same constant, so both move (the
+one-source-of-truth property, as in plans `713`/`715`).
 
 Not available: decoding, audio output, a media clock, per-bar hit targets in the
-image route, and colour/pixel readback (screenshot evidence only). A player must
+image route, and the image route's `1.5` px gap (a rasterised SVG may inset its
+content, so only the bar and its transparent slot are sampled). A player must
 own its decoder and clock in the app; the component renders the state it is
 given.
 
@@ -2093,14 +2111,19 @@ resize, so a mask that paints nothing or stops following the crop fails.
 **Paint order** is now a pixel claim too (plan `715`): the docking drop bar and
 the tab strip it covers are both sampled, so an indicator moved under the strip
 fails by name, and the centre zone's `opacity: 0.18` is asserted as the
-composite `#33364C` rather than an authored style. The sampling lookup
+composite `#33364C` rather than an authored style. The media waveform is the
+same kind of check (plan `722`, `media-pixels.ts`): a bar, the 1.5 px gap beside
+it and the slot above it prove the envelope is bars; the played wash is sampled
+over the stage and over a bar; and the SVG image route's bar and its transparent
+slot prove the one-node route paints the same envelope. The sampling lookup
 (`frameSampler`) and the sRGB composite (`Pixels.blendOver`) are shared by every
 pixel module; `parseColour` is the one token parser.
 
 ## Evidence on this host
 
-The suite is **106/106 green** here (`exit 0`, 3887 checks, 65 capabilities,
-**196.4 s**, 2026-10-20, the plan-`714` gate run; plan `713` added 8 crop-mask
+The suite is **106/106 green** here (`exit 0`, 3902 checks, 65 capabilities,
+**168.6 s**, 2026-10-20; plan `722` added 10 media checks — the count was 3892
+after the plan-`715` gate; plan `713` added 8 crop-mask
 pixel checks; plan `708` added 7 QR pixel checks; plan `701` added 41 wash
 checks to `search-highlights`):
 
@@ -2141,6 +2164,9 @@ plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
+**Superseded for the media id only:** plan `722` took `live-media` from 14 to
+**25** checks after this gate, so the next live gate's total should be
+**2649**; the focused run is green three times (28.6 / 40.7 / 82.0 s).
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2329,7 +2355,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (106/106, 3865 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (106/106, 3902 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

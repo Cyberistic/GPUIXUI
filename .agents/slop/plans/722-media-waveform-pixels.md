@@ -228,15 +228,15 @@ Run from `/Users/cyberistic/GPUIXUI/workspaces/playground`.
    `dist/live/run.js` rewritten; the binding install prints
    `gpuix-native.darwin-x64.node is current`.
 3. `nub apps/playground/dist/smoke/run.js --only media-surface` → `1/1`, exit
-   `0`, **62 → 71** checks. A failure prints `expected #…, got #…` — read the
+   `0`, **62 → 72** checks (71 + one bound read; measured). A failure prints `expected #…, got #…` — read the
    measured colour before changing code.
 4. `nub apps/playground/dist/live/run.js --only live-media` → `1/1`, exit `0`,
-   **14 → 23** checks. Run it **twice**; both green.
+   **14 → 25** checks (23 + two bound reads; measured). Run it **three times**; all green.
 5. `nub run check && nub run lint && nub run test` → green (playground unit
-   tests **472 → ~479**, testing 69, components 308, primitives 282, tokens
+   tests **472 → 481**, testing 69, components 308, primitives 282, tokens
    196, tw 103, icons 19, docs 7 — the non-playground counts are current).
 6. End-of-task full headless registry: `nub apps/playground/dist/smoke/run.js`
-   → **106/106**, exit `0`, checks **3892 + 9 = 3901**. No live `--all` (merge
+   → **106/106**, exit `0`, checks **3892 + 10 = 3902** (measured). No live `--all` (merge
    gate; focused `live-media` is this task's live evidence).
 
 ## 6. Test plan — unit tests that can fail
@@ -293,15 +293,52 @@ Stop and report instead of improvising if:
 ## 9. Acceptance
 
 - `media-pixels.ts` + its tests exist; `media.tsx` imports `PLAYED_ALPHA`.
-- `media-surface` reports **71** checks and `live-media` **23**, both green (the
-  live twice).
+- `media-surface` reports **72** checks and `live-media` **25**, both green (the
+  live three times).
 - Seven runtime mutations observed and reverted (six red, at most one recorded
   null), and the unit-test mutations observed red and reverted.
 - Ledgers updated with the real counts and the exact ids run.
 - `nub run check`, `nub run lint`, `nub run test` green; full headless
-  **106/106** with **3901** checks, exit `0`.
+  **106/106** with **3902** checks, exit `0`.
 - Commit(s) on `agent/playground`, pushed to origin. Never push to master.
 
-## 10. As measured
+## 10. As measured (2026-10-20)
 
-To be filled by the executor.
+The claim holds in both hosts: the waveform is bars, the gap is the stage, the
+wash covers both, and the image route paints the same envelope.
+
+- `media-surface` **62 → 72** checks (the nine samples plus one `boxOf` for
+  `media-bar-32`); `live-media` **14 → 25** (the nine samples plus the two new
+  bar bounds). Three consecutive focused live runs: 28.6 s, 40.7 s, 82.0 s,
+  all green. Headless with the three captures: 21–40 s (was ~0.4 s).
+- Colours are exact: `mutedForeground #A1A9B7` at bar 0 and bar 32;
+  `card #191D25` in the gap and 8 px above bar 32; the 30 % wash composites to
+  `#444766` over `card` and `#A3A9CD` over a bar; the playhead is
+  `foreground #EEF1F5`; the image route's bar is `mutedForeground` and its
+  transparent slot is `card` (no opaque white — the SVG keeps transparency, as
+  plan `697` measured for the chart).
+- Playground unit tests **472 → 481**; full headless **106/106**, **3902**
+  checks, exit `0` (168.6 s). `nub run check` / `lint` / `test` green.
+
+### 10.1 Mutation proofs observed and reverted
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | the bars' `backgroundColor` → `card` | `the first bar paints the muted foreground: expected #a1a9b7ff, got #191d25ff` |
+| M2 | widen bars to `SLOT` | the **geometry** check fails first (`bar 0 is 6 px wide`), so it does not isolate the pixel claim; M2′ is the lever |
+| M2′ | the envelope layer's own background → `mutedForeground` | `the gap between bars paints the stage: expected #191d25ff, got #a1a9b7ff` |
+| M3 | wash `alpha(primary, PLAYED_ALPHA + 0.7)` (opaque) | `the wash over the stage is primary at 30 %: expected #444766ff, got #a7a9ffff` |
+| M4 | playhead → `mutedForeground` | `the playhead paints the foreground: expected #eef1f5ff, got #a1a9b7ff` |
+| M5 | image route's SVG fill → `#FF0000` | `the image envelope bar paints the muted foreground: expected #a1a9b7ff, got #ff0000ff` |
+| M6 | `PLAYED_ALPHA = 0.6` | **null result** (green): the view and the expectation import the same constant — the one-source-of-truth property |
+| M7 | reset to `pos=0` before the played capture | `the wash over the stage is primary at 30 %: expected #444766ff, got #191d25ff` |
+| U1 | `gapPoint` → the bar's centre | `puts the gap sample strictly between a bar and the next slot` fails |
+| U2 | `PLAYED_ALPHA = 1` | the composite test fails |
+| U3 | `imagePoint` axes swapped | the mapping test and the inset test both fail (the asymmetric `width/4` point is why) |
+| U4 | `aboveBarPoint` → `bar.y + 1` | the above-slot test fails |
+| U5 | `barPoint` x hardcoded to `3` | `puts the bar sample at the bar's own centre` fails |
+
+M2's geometry precedence, M6's null result and U3's first (green) run — the
+symmetric corner/centre points were insensitive to a swap — are recorded
+corrections: the test gained a `width / 4` point.
+
