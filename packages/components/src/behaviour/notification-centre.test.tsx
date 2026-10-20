@@ -315,6 +315,59 @@ describe("NotificationCentre", () => {
     root.unmount();
   });
 
+  it("hands focus to the first live row when the focused notification is removed", () => {
+    const root = renderComponent(<Centre notifications={seed} defaultOpen />);
+    press(root, "down");
+    expect(focusedTestId(root)).toEqual(Option.some("feed-review"));
+
+    root.rerender(
+      <Centre notifications={seed.filter((item) => item.id !== "review")} />,
+    );
+
+    expect(isShown(root, "panel")).toBe(true);
+    expect(focusedTestId(root)).toEqual(Option.some("feed-deploy"));
+    expect(isShown(root, "feed-deploy")).toBe(true);
+
+    root.unmount();
+  });
+
+  it("does not steal focus when a row is removed while the trigger holds it", () => {
+    const root = renderComponent(<Centre notifications={seed} defaultOpen />);
+    press(root, "down");
+    root.renderer.focusElement(root.renderer.findByTestId("bell")?.id ?? -1);
+
+    root.rerender(
+      <Centre notifications={seed.filter((item) => item.id !== "review")} />,
+    );
+
+    expect(isShown(root, "panel")).toBe(true);
+    expect(focusedTestId(root)).toEqual(Option.some("bell"));
+
+    root.unmount();
+  });
+
+  it("remembers a surviving row across another removal before handing over", () => {
+    const root = renderComponent(<Centre notifications={seed} defaultOpen />);
+    press(root, "down");
+    expect(focusedTestId(root)).toEqual(Option.some("feed-review"));
+
+    root.rerender(
+      <Centre notifications={seed.filter((item) => item.id !== "token")} />,
+    );
+    expect(focusedTestId(root)).toEqual(Option.some("feed-review"));
+
+    root.rerender(
+      <Centre
+        notifications={seed.filter(
+          (item) => item.id !== "token" && item.id !== "review",
+        )}
+      />,
+    );
+    expect(focusedTestId(root)).toEqual(Option.some("feed-deploy"));
+
+    root.unmount();
+  });
+
   it("closes on an outside press", () => {
     const onOpenChange = vi.fn();
     const root = renderComponent(

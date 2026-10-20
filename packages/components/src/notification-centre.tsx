@@ -43,6 +43,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -183,6 +184,8 @@ export const NotificationCentre = ({
   const [activeId, setActiveId] = useState<Option.Option<string>>(
     Option.none(),
   );
+  /** The row the reading cursor last focused, remembered while it exists. */
+  const heldRow = useRef<Option.Option<string>>(Option.none());
   // A close the caller refuses must leave the panel and the user's focus alone.
   const requestClose = useCloseFocus<NotificationCloseFocus>(
     open,
@@ -217,7 +220,46 @@ export const NotificationCentre = ({
     if (!open) setActiveId(Option.none());
   }, [open]);
 
+  // A vanished selection is forgotten on the next data update, so a refill can
+  // never resume a row the reader has already lost (the plan-510 rule).
+  useEffect(() => {
+    setActiveId((current) => {
+      const live = Option.filter(current, (id) =>
+        Arr.some(notifications, (item) => item.id === id),
+      );
+      return Option.isSome(current) && Option.isNone(live)
+        ? Option.none()
+        : current;
+    });
+  }, [notifications]);
+
+  /**
+   * A row the reading cursor was on can disappear under the user (a read, a
+   * clear, a live feed dropping an old item). Its host is gone, so it cannot be
+   * read afterwards: the holder was remembered while it existed. Hand a lost
+   * focus to the live row the accent already names, and reveal it, but never
+   * steal focus from another control (plans 510/708/712).
+   */
+  useLayoutEffect(() => {
+    const held = heldRow.current;
+    if (Option.isNone(held)) return;
+    if (Arr.some(notifications, (item) => item.id === held.value)) return;
+    heldRow.current = Option.none();
+    const focused = renderer?.getFocusedElementId?.() ?? null;
+    if (focused !== null) return;
+    Option.match(active, {
+      onNone: () => undefined,
+      onSome: (id) => {
+        const row = rowRefs.current.get(id);
+        if (row === undefined) return;
+        renderer?.focusElement?.(row.id);
+        revealRow.current(id);
+      },
+    });
+  });
+
   const setActive = useCallback((id: string) => {
+    heldRow.current = Option.some(id);
     setActiveId(Option.some(id));
   }, []);
 
@@ -1034,6 +1076,7 @@ export const notificationCentreMeta = {
     "no `aria-live` in 0.10.0, so an arrival is not announced while the panel is closed; the trigger's accessible name carries the count",
     "the panel is non-modal: no focus trap and no `aria-modal`; `Tab` leaves it",
     "keyboard focus moves best-effort through `renderer.focusElement`; the active row's accent fill and ring are the visible cursor, and the feed scrolls it into view (plan 644), because 0.10.0 has no `aria-activedescendant`",
+    "a focused row that is removed hands focus to the first live row only when nothing else holds native focus; the holder is remembered while the row exists, because a removed host cannot be read (plan 746)",
   ],
   docs: "docs/notification-centre.mdx",
   example: "examples/notification-centre.example.tsx",

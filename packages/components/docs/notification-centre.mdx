@@ -86,7 +86,10 @@ never leaves the panel. `Enter` and `Space` (on release) request a read for the
 active row. Arrow keys, `Enter` and `Space` belong to the panel surface and its
 rows: while a header action holds focus, `Enter` runs that action and the arrows
 leave the reading cursor where it is, and `Space` runs that action instead of
-reading a row. `Escape` closes the panel and returns focus to the trigger. The
+reading a row. If the row the reader is on disappears (a read, a clear, a live
+feed), the cursor and native focus move to the first live row instead of being
+stranded; a removal while another control holds focus leaves that focus alone.
+`Escape` closes the panel and returns focus to the trigger. The
 panel is **non-modal**, so `Tab` leaves it rather than trapping focus.
 
 ## API
@@ -152,7 +155,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
 - **Non-modal**: no focus trap and no `aria-modal`; `Tab` leaves the panel.
 - **No `aria-activedescendant`**, so the active row is a painted accent fill and
   ring; native focus follows it through `focusElement` on a best-effort basis,
-  and the feed scrolls it into view (plan 644).
+  and the feed scrolls it into view (plan 644). The row the reader is on is
+  remembered while it exists, so a data update that removes it hands focus to
+  the first live row only when nothing else holds native focus — a host cannot
+  be read after it is gone (plan 746).
 - State is app-owned: a remount resets nothing you persist, and nothing you do
   not persist.
 - No per-notification actions menu, bulk selection or toast bridge in v1. The
@@ -164,7 +170,7 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (22 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (25 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
@@ -178,5 +184,7 @@ without reading a row,
 a header action that keeps the reading cursor and focus in place, arrows and
 Enter still reaching the row that holds focus, a prepend that leaves the reader's
 row where it was, the light theme's roles, and a controlled close the caller
-refuses leaving the panel and focus where they are. The pure grouping
+refuses leaving the panel and focus where they are. Removing the focused row
+hands focus to the first live row while a removal under the trigger's focus (or
+another row's) leaves it alone. The pure grouping
 and count rules live in `src/notification-centre/model.test.ts` (5 tests).

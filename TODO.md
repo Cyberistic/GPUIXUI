@@ -1141,6 +1141,17 @@ retired once both branches are one
       three mutation proofs plus the per-id mirror; docs, `COMPONENTS.md` (with
       the stale sampler paragraph), `PLAN.md` D30 and the inventory count synced
       (owner: components)
+    - [x] A removed notification row hands the reader's focus on — plan 746;
+      measured 2026-10-20: after `ArrowDown` focused a row, rerendering without
+      it left `focused = None` while the highlight fell back to the first row,
+      so the panel kept a painted cursor nothing was focused on. The row the
+      reading cursor reached is remembered while it exists (a removed host
+      cannot be read), the selection is forgotten on a data update, and a lost
+      focus moves to the first live row and reveals it only when no other host
+      holds focus; a removal elsewhere leaves the reader and another control's
+      focus alone. 1 new + 1 strengthened native case that both fail at `HEAD`,
+      one pin, three mutation proofs (25 total); docs, `COMPONENTS.md`,
+      `TODO.md`, `PLAN.md` D30 and the inventory count synced (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
