@@ -19,7 +19,7 @@ import {
 import { iconSearchEntry } from "./icon-search";
 import { hostPropsSearchEntry } from "./host-props-search";
 import { layeringSearchEntry } from "./layering-search";
-import { pageAliasRank } from "./page-aliases";
+import { pageAliasRank, pageAliases } from "./page-aliases";
 import { platformSearchEntry } from "./platform-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import {
@@ -33,6 +33,7 @@ import { siteOutputSearchEntry } from "./site-output-search";
 import { stylingSearchEntry } from "./styling-search";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
+import { stem, typoMatch, type TypoName } from "./typo";
 
 export const DEFAULT_SEARCH_LIMIT = 10;
 export const MAX_SEARCH_LIMIT = 50;
@@ -168,27 +169,49 @@ const summaryPages = new Map(
 );
 
 /**
- * The English inflections a page title or summary uses where the plain spelling
- * differs: `capabilities`/`capability`, `Theming`/`theme`, `running`/`run`,
- * `resize`/`resizable`. Stems are compared only in `matchRank` and in
- * `descriptionMatchRank`'s whole-word tier, after the exact and prefix tiers,
- * so an exact name still wins and a fragment inside a word is still rank `3`
- * (plans 585, 593). The `derived.length >= 3` guard stops `used` → `us` from
- * creating a two-letter stem.
+ * Every name a one-edit query can be a misspelling of (plan 607): a component's
+ * title, slug, exported symbols, declared parts and reader aliases; every page
+ * title; and every editorial page alias. The component URL is
+ * `componentSearchUrl`, so a planned record still opens the filtered index. A
+ * title is a `name`; an alias is vocabulary and ranks one tier below it.
  */
-const stem = (word: string): string => {
-  if (word.length < 4) return word;
-  const plural = word
-    .replace(/ies$/, "y")
-    .replace(/(?:s|x|z|ch|sh)es$/, "")
-    .replace(/(?<!s|u|i)s$/, "");
-  const gerund = plural.replace(/ing$/, "").replace(/([a-z])\1$/, "$1");
-  const derived = gerund.replace(/(?:able|ible|ed)$/, "");
-  const base = derived.length >= 3 ? derived : gerund;
-  return base.length > 3 ? base.replace(/e$/, "") : base;
-};
+const typoNames: ReadonlyArray<TypoName> = [
+  ...components.flatMap((component) => {
+    const url = componentSearchUrl(component);
+    return [
+      ...[
+        component.title,
+        component.slug,
+        ...componentSymbols(component),
+        ...component.parts.map((part) => part.name),
+      ].map((name): TypoName => ({ name, url, kind: "name" })),
+      ...aliasesFor(component.slug).map(
+        (name): TypoName => ({ name, url, kind: "alias" }),
+      ),
+    ];
+  }),
+  ...source.getPages().map(
+    (page): TypoName => ({
+      name: page.data.title,
+      url: page.url,
+      kind: "name",
+    }),
+  ),
+  ...[...pageAliases].flatMap(([url, terms]) =>
+    terms.map((name): TypoName => ({ name, url, kind: "alias" })),
+  ),
+];
 
-/** The stems of the words in a name, in order. */
+/**
+ * The stems of the words in a name, in order.
+ *
+ * Stems are compared only in `matchRank` and in `descriptionMatchRank`'s
+ * whole-word tier, after the exact and prefix tiers, so an exact name still
+ * wins and a fragment inside a word is still rank `3` (plans 585, 593). The
+ * inflection rules themselves, including the guard that stops `used` → `us`,
+ * live in `stem` (`typo.ts`), because the typo tier compares the same words
+ * (plan 607).
+ */
 const stems = (value: string): ReadonlyArray<string> =>
   value
     .toLowerCase()
@@ -388,6 +411,14 @@ const descriptionMatchRank = (
 export const DESCRIPTION_MATCH_RANK = 4;
 
 /**
+ * A one-edit typo is a candidate, never a winner over a real match (plan 607):
+ * one above the highest real rank (`3` for a summary phrase, offset by
+ * `DESCRIPTION_MATCH_RANK`). A genuine match therefore always outranks a
+ * misspelling, however close the name is.
+ */
+export const TYPO_MATCH_RANK = 8;
+
+/**
  * A page whose summary names the query is a candidate even when the page index
  * answered it with headings only or omitted it, the same rule `pageTitleHits`
  * applies to titles (plans 561, 568).
@@ -455,6 +486,30 @@ export const generatedNameHits = (
         ],
   );
 
+/**
+ * A page whose name a one-edit query misspells is a candidate even when the
+ * lexical index answered it with unrelated prose or nothing at all (plan 607):
+ * `acordian` and `dropdwon` returned no result before this, and `botton`
+ * returned Toggle. The synthesis applies the rule `pageTitleHits` uses; the
+ * rank still comes from `TYPO_MATCH_RANK` in `mergeResults`.
+ */
+export const typoHits = (
+  query: string,
+  names: ReadonlyArray<TypoName> = typoNames,
+): ReadonlyArray<SortedResult> => {
+  const target = typoMatch(query, names);
+  return target === undefined
+    ? []
+    : [
+        {
+          id: `typo:${target.url}`,
+          url: target.url,
+          type: "page" as const,
+          content: pageMetadata.get(target.url)?.title ?? target.name,
+        },
+      ];
+};
+
 interface Candidate {
   readonly result: SortedResult;
   readonly index: number;
@@ -495,7 +550,11 @@ export const withoutTypeTableRows = (
  * instead of a guide that mentions tables in passing. Ties break on the shorter
  * title (`Buttons` before `Button groups`) and then on the index's own order.
  * One entry survives per page URL, so a delivered component is not listed once
- * as a page and again as a registry record.
+ * as a page and again as a registry record. A one-edit misspelling of a name is
+ * a candidate at `TYPO_MATCH_RANK` — below every real match — and only for the
+ * page itself, never a text chunk at its URL (plan 607). `names` defaults to
+ * empty so the fixture tests never depend on the real content tree; `search()`
+ * passes the site's typo targets.
  *
  * `pages` defaults to empty so the fixture tests never depend on the content
  * tree; `search()` passes the real metadata map.
@@ -509,7 +568,9 @@ export const mergeResults = (
   query: string,
   pages: ReadonlyMap<string, PageMetadata> = new Map(),
   scenes: ReadonlyMap<string, string> = new Map(),
+  names: ReadonlyArray<TypoName> = [],
 ): ReadonlyArray<SortedResult> => {
+  const typo = typoMatch(query, names);
   const ranked = [...pageResults, ...registryResults]
     .map((result, index): Candidate => {
       const component = componentByUrl.get(result.url);
@@ -539,6 +600,14 @@ export const mergeResults = (
        */
       const aliasRank =
         result.type === "page" ? pageAliasRank(result.url, query) : undefined;
+      /**
+       * Only the page itself earns a typo hit; a text chunk at the same URL is
+       * prose, the rule plan 569 set for generated documents (plan 607).
+       */
+      const typoRank =
+        typo !== undefined && result.type === "page" && typo.url === result.url
+          ? TYPO_MATCH_RANK
+          : undefined;
       const ranks = [
         aliasRank,
         component === undefined ? undefined : componentRank(component, query),
@@ -548,6 +617,7 @@ export const mergeResults = (
         descriptionRank === undefined
           ? undefined
           : descriptionRank + DESCRIPTION_MATCH_RANK,
+        typoRank,
       ].filter((rank): rank is number => rank !== undefined);
       return {
         result,
@@ -602,12 +672,14 @@ export const search = async (
       ...pageDescriptionHits(query, summaryPages),
       ...pageAliasHits(query, pageMetadata),
       ...generatedNameHits(query),
+      ...typoHits(query),
       ...sceneInstructionHits(query),
       ...registryResults,
     ],
     query,
     pageMetadata,
     sceneInstructionByUrl,
+    typoNames,
   ).slice(0, limit);
 };
 

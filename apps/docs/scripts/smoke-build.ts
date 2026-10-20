@@ -977,6 +977,36 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the native binding target table",
     },
     {
+      query: "line height",
+      expected: "/docs/typography",
+      first: true,
+      what: "a typographic measure a suffix tier stole",
+    },
+    {
+      query: "does it work on windows",
+      expected: "/docs/installation",
+      first: true,
+      what: "a reader's platform question",
+    },
+    {
+      query: "i18n",
+      expected: "/docs/layouts",
+      first: true,
+      what: "the localization vocabulary",
+    },
+    {
+      query: "botton",
+      expected: "/docs/components/button",
+      first: true,
+      what: "a one-edit misspelling of a component name",
+    },
+    {
+      query: "acordian",
+      expected: "/docs/components/accordion",
+      first: true,
+      what: "a misspelling the lexical index never retrieves",
+    },
+    {
       query: "theme",
       expected: "/docs/theming",
       first: true,

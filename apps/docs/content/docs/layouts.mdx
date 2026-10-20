@@ -1,6 +1,6 @@
 ---
 title: Layouts
-description: Stacks, boxes, grids, separators and scroll containers from @gpuixui/primitives.
+description: Stacks, boxes, grids, separators and scroll containers from @gpuixui/primitives, and the localization and right-to-left limits.
 ---
 
 The layout primitives are the foundation every other component is built from.
@@ -30,7 +30,29 @@ site, so a layout cannot drift from the design system. What the runtime cannot
 do — responsive breakpoints, ragged grids, a tinted scrollbar — is recorded on
 the component page rather than worked around in a wrapper.
 
-Right-to-left layout is not implemented: the pinned runtime's style surface has
-no `direction`, and the primitives place children with `row`/`column` only, so
-nothing mirrors for an RTL locale. That is a library limitation, not a theme
-option.
+## Localization and direction
+
+The library ships no i18n layer, and the pinned runtime has no direction
+option. Each limit is proved on the page that owns it:
+
+- **Labels are fixed English.** [Date pickers](/docs/components/date-picker)
+  build their month and weekday names from a literal table, with no `Intl` and
+  no locale lookup; [Time pickers](/docs/components/time-picker) show a fixed
+  24-hour form with no AM/PM, locale, seconds or timezone;
+  [Countdown](/docs/components/countdown) renders a locale-free clock; the
+  [confirmation flow](/docs/patterns/confirmation-flow) says its copy is
+  English-only. Pagination's previous and next controls own their English
+  `aria-label`.
+- **There is no `locale` prop and no formatter.** A label a component shows is
+  either a prop the caller sets or a string the component owns; nothing
+  formats numbers or dates for a locale. A prop that accepted a locale and
+  silently did nothing would be worse than none.
+- **Right-to-left layout is not implemented.** The pinned runtime's style
+  surface has no `direction`, and the layout primitives place children with
+  `row`/`column` only, so nothing mirrors for an RTL locale. [Styling](/docs/styling)
+  records the rest of the absent CSS surface.
+
+The honest alternative is app-owned: pass your own strings where a component
+takes them, and compose mirrored order at the application level. A consumer
+who needs a full locale layer should not expect one from the component
+packages.

@@ -17,7 +17,10 @@
  * `help` and `support` name the Troubleshooting page. A sixth covers the
  * performance vocabulary (plan 605): `benchmark`, `fps`, `frame rate`, `10k
  * rows` and `memory` name the Performance page, while `virtualized` and
- * `large list` stay with Data display and List. `page-aliases.test.ts`
+ * `large list` stay with Data display and List. A seventh covers the typographic
+ * measure (`line height`, `line spacing`, `leading`), the platform question
+ * (`does it work on windows`) and the localization vocabulary (`i18n`, `rtl`,
+ * `text direction`) — plan 607. `page-aliases.test.ts`
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
@@ -107,7 +110,47 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ],
   ["/docs/data-display", ["select row", "selectable rows"]],
   ["/docs/examples", ["demo", "sample"]],
-  ["/docs/installation", ["version", "versions", "how to install"]],
+  [
+    "/docs/installation",
+    [
+      "version",
+      "versions",
+      "how to install",
+      "does it work on windows",
+      "does it work on linux",
+      "does it work on mac",
+      "does it work on macos",
+      "works on windows",
+      "work on windows",
+      "works on linux",
+      "runs on windows",
+      "runs on linux",
+      "is windows supported",
+      "is linux supported",
+      "is mac supported",
+    ],
+  ],
+  [
+    "/docs/layouts",
+    [
+      "localization",
+      "localisation",
+      "i18n",
+      "internationalization",
+      "internationalisation",
+      "translation",
+      "translations",
+      "locale",
+      "locales",
+      "rtl",
+      "ltr",
+      "right to left",
+      "left to right",
+      "text direction",
+      "mirroring",
+      "mirrored layout",
+    ],
+  ],
   [
     "/docs/troubleshooting",
     [
@@ -138,7 +181,18 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "prefers reduced motion",
     ],
   ],
-  ["/docs/typography", ["mono", "mono font", "monospace"]],
+  [
+    "/docs/typography",
+    [
+      "mono",
+      "mono font",
+      "monospace",
+      "line height",
+      "line-height",
+      "line spacing",
+      "leading",
+    ],
+  ],
   [
     "/docs/architecture",
     [

@@ -8,12 +8,14 @@ import {
   componentSearchIndex,
   componentSearchUrl,
   DEFAULT_SEARCH_LIMIT,
+  DESCRIPTION_MATCH_RANK,
   generatedNameHits,
   MAX_SEARCH_LIMIT,
   mergeResults,
   pageDescriptionHits,
   parseSearchLimit,
   search,
+  TYPO_MATCH_RANK,
   withoutTypeTableRows,
   type PageMetadata,
 } from "./search";
@@ -329,6 +331,90 @@ describe("search", { timeout: 120_000 }, () => {
       }),
     );
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  /**
+   * Plan 607: a misspelling has a tier of its own. Before it, the lexical
+   * index still returned *some* page for a typo, so `botton` returned Toggle
+   * and `theem` the Values API, while `acordian` and `dropdwon` returned
+   * nothing at all because the index omitted the page. Each row fails by query
+   * when the typo tier, its synthesis, its name/alias order or the stem it
+   * shares with the real matcher is removed.
+   */
+  it("finds the page a reader misspelled by one edit (plan 607)", async () => {
+    const expected = [
+      ["botton", "/docs/components/button"],
+      ["buton", "/docs/components/button"],
+      ["acordian", "/docs/components/accordion"],
+      ["dropdwon", "/docs/components/dropdown-menu"],
+      ["seach", "/docs/components/search-input"],
+      ["theem", "/docs/theming"],
+      ["componet", "/docs/components"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query);
+        return first?.url === url
+          ? null
+          : `${query} -> ${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("keeps a real name ahead of its one-edit neighbours", async () => {
+    const [button] = await search("button");
+    expect(button?.url).toBe("/docs/components/button");
+    const [buttons] = await search("buttons");
+    expect(buttons?.url).toBe("/docs/components/button");
+  });
+
+  it("scores a typo below every real rank", () => {
+    expect(TYPO_MATCH_RANK).toBeGreaterThan(DESCRIPTION_MATCH_RANK + 3);
+    const pages = new Map<string, PageMetadata>([
+      ["/docs/real", { title: "Real", description: "a botton setting" }],
+    ]);
+    const results = mergeResults(
+      [{ id: "real", url: "/docs/real", type: "page", content: "Real" }],
+      [],
+      "botton",
+      pages,
+      new Map(),
+      [{ name: "Buttons", url: "/docs/components/button", kind: "name" }],
+    );
+    expect(results[0]?.url).toBe("/docs/real");
+  });
+
+  it("promotes the typo's page, never a text chunk at its URL", () => {
+    const names = [
+      {
+        name: "Buttons",
+        url: "/docs/components/button",
+        kind: "name" as const,
+      },
+    ];
+    const results = mergeResults(
+      [
+        {
+          id: "page",
+          url: "/docs/components/button",
+          type: "page",
+          content: "Buttons",
+        },
+        {
+          id: "chunk",
+          url: "/docs/components/button",
+          type: "text",
+          content: "botton padding",
+        },
+      ],
+      [],
+      "botton",
+      new Map(),
+      new Map(),
+      names,
+    );
+    expect(results[0]?.type).toBe("page");
   });
 
   it("keeps a plain word on the page that titles it", async () => {

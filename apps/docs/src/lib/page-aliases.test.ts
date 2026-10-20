@@ -194,6 +194,24 @@ const owned = [
   ["memory usage", "/docs/performance"],
   ["slow list", "/docs/performance"],
   ["slow table", "/docs/performance"],
+  ["line height", "/docs/typography"],
+  ["line-height", "/docs/typography"],
+  ["line spacing", "/docs/typography"],
+  ["leading", "/docs/typography"],
+  ["does it work on windows", "/docs/installation"],
+  ["does it work on linux", "/docs/installation"],
+  ["works on windows", "/docs/installation"],
+  ["is windows supported", "/docs/installation"],
+  ["localization", "/docs/layouts"],
+  ["localisation", "/docs/layouts"],
+  ["i18n", "/docs/layouts"],
+  ["internationalization", "/docs/layouts"],
+  ["translation", "/docs/layouts"],
+  ["locale", "/docs/layouts"],
+  ["rtl", "/docs/layouts"],
+  ["right to left", "/docs/layouts"],
+  ["text direction", "/docs/layouts"],
+  ["mirroring", "/docs/layouts"],
 ] as const;
 
 const regressions = [
@@ -232,6 +250,10 @@ const regressions = [
   ["countdown", "/docs/components/countdown"],
   ["toast", "/docs/components/toast"],
   ["architecture", "/docs/architecture"],
+  ["spacing", "/docs/theming"],
+  ["font size", "/docs/typography"],
+  ["platform support", "/docs/installation#native-bindings"],
+  ["native binding", "/docs/installation#native-bindings"],
 ] as const;
 
 describe(
