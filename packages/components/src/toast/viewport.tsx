@@ -6,7 +6,7 @@
  * page underneath stays usable; each card turns pointer events back on.
  */
 
-import type { Props } from "@gpuix/react";
+import type { Props, PublicInstance } from "@gpuix/react";
 import { AnimatePresence } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Icon, type IconName } from "@gpuixui/icons";
@@ -25,6 +25,7 @@ import {
 import { Button, IconButton } from "../internal/button.js";
 import { HoverGroupContext, type HoverGroup } from "../internal/hover-group.js";
 import { MotionSurface, motionProps } from "../internal/motion.js";
+import { useNativeFocusId } from "../internal/native-focus.js";
 import {
   elevationShadow,
   textStyle,
@@ -72,10 +73,12 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
   const palette = tone(theme, asTone(toast.tone));
   // A control's hover cancels the card's own crossing (plan 606), so the
   // controls report theirs through the group; either source holds the clock.
-  const held = useRef({ self: false, members: 0, focus: 0, paused: false });
+  // Keyboard focus is sampled from the renderer, because 0.10.0 delivers no
+  // React focus/blur for a native focus change (plan 743).
+  const held = useRef({ self: false, members: 0, focus: false, paused: false });
   const syncHold = useCallback((): void => {
     const { self, members, focus } = held.current;
-    const after = self || members > 0 || focus > 0;
+    const after = self || members > 0 || focus;
     if (after === held.current.paused) return;
     held.current.paused = after;
     if (after) pause(toast.id);
@@ -98,11 +101,24 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
     held.current.self = value;
     syncHold();
   };
-  /** Two controls can hold focus; a count keeps moving between them held. */
-  const setFocus = (value: boolean): void => {
-    held.current.focus = Math.max(0, held.current.focus + (value ? 1 : -1));
+  const [actionHost, setActionHost] = useState<number | null>(null);
+  const [dismissHost, setDismissHost] = useState<number | null>(null);
+  const focusedHost = useNativeFocusId(true);
+  const focusHeld =
+    focusedHost !== null &&
+    (focusedHost === actionHost || focusedHost === dismissHost);
+  useEffect(() => {
+    held.current.focus = focusHeld;
     syncHold();
-  };
+  }, [focusHeld, syncHold]);
+  const attachAction = useCallback(
+    (instance: PublicInstance | null) => setActionHost(instance?.id ?? null),
+    [],
+  );
+  const attachDismiss = useCallback(
+    (instance: PublicInstance | null) => setDismissHost(instance?.id ?? null),
+    [],
+  );
   const published = Option.match(timingFor(toast.id), {
     onNone: () => undefined,
     onSome: (timing) => timing,
@@ -219,12 +235,11 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
                 size="sm"
                 variant="secondary"
                 testId="toast-action"
+                ref={attachAction}
                 onClick={() => {
                   onSelect();
                   dismiss(toast.id);
                 }}
-                onFocus={() => setFocus(true)}
-                onBlur={() => setFocus(false)}
               >
                 {candidate.label}
               </Button>
@@ -234,9 +249,8 @@ const ToastCard = ({ toast }: { readonly toast: Toast }) => {
             label="Dismiss"
             size="sm"
             testId="toast-dismiss"
+            ref={attachDismiss}
             onClick={() => dismiss(toast.id)}
-            onFocus={() => setFocus(true)}
-            onBlur={() => setFocus(false)}
           >
             <Icon name="x" color={theme.colors.mutedForeground} size="sm" />
           </IconButton>
@@ -383,6 +397,7 @@ export const toastMeta = {
   limitations: [
     "no zIndex: the viewport stacks by paint order, so render it last in the app root",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
+    "the keyboard hold samples the renderer's focused host every 50 ms, because 0.10.0 delivers no React focus/blur for a native focus change",
   ],
   docs: "docs/toast.mdx",
   example: "examples/toast.example.tsx",

@@ -151,11 +151,15 @@ from its two pinned edges.
   for a smooth-enough visual; the dismissal itself is exact.
 - Hovering a card pauses its clock, and so does keyboard focus on either of its
   controls; the clock resumes with the remaining time once both the pointer and
-  focus have left. A control inside the card reports its own pointer crossing
-  through the shared hover group, because GPUix hover is per element: moving from
-  the card body onto `Undo` or the dismiss control keeps the hold instead of
-  resuming the clock under the pointer. A consumer that needs a custom hold can
-  call `pause`/`resume` from `useToast()`.
+  focus have left. The keyboard reason is measured from the renderer's focused
+  host, sampled every 50 ms, because `@gpuix/native@0.10.0` delivers no React
+  `focus`/`blur` for a native focus change (plans 536/540, 743); the card holds
+  while the focused host is its own action or dismiss control, and it never
+  expires underneath one. A control inside the card reports its own pointer
+  crossing through the shared hover group, because GPUix hover is per element:
+  moving from the card body onto `Undo` or the dismiss control keeps the hold
+  instead of resuming the clock under the pointer. A consumer that needs a
+  custom hold can call `pause`/`resume` from `useToast()`.
 - No portal: the viewport is an absolutely positioned element in its parent, so
   put it at the app root.
 - The animated card wrapper carries `toast-<id>-surface`, while the card itself
@@ -180,13 +184,16 @@ from its two pinned edges.
   malformed-cap guard proves `NaN` and `Infinity` each keep the newest three.
 - `src/toast/timing.test.ts` — six pure cases for the percentage, clamping, the
   zero-total guard, one running tick, a paused tick and the final zero.
-`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (23 tests): push
+`src/behaviour/toast.test.tsx` runs in the real GPUix renderer (24 tests): push
 and the card's status name, stacking order, dismissing one card, `dismissAll`,
 the page staying clickable
 through the viewport, both themes, the queue still working after a dismiss,
-hover pausing a card's auto-dismiss, focus pausing it, focus holding through the
-pointer leaving, the clock holding while the pointer rests on the action or the
-dismiss control and resuming when it leaves the action, the shrinking progress
+hover pausing a card's auto-dismiss, keyboard focus pausing it through the
+sampled native focus (the queue and its timer are asserted, so the painted exit
+ghost cannot stand in for a hold), focus holding through the pointer leaving,
+the clock resuming once native focus leaves the card, the clock holding while
+the pointer rests on the action or the dismiss control and resuming when it
+leaves the action, the shrinking progress
 bar and its hover hold, no bar for a
 persistent toast, the action running once and dismissing, no control for an
 unhandled label, no control without an action, the action holding focus, the

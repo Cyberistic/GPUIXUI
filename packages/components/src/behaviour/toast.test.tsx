@@ -12,6 +12,12 @@
  * viewport could also ignore the corner it is given and always paint
  * bottom-right. A progress bar could keep shrinking through a hover hold, or
  * claim a total for a toast that never auto-dismisses.
+ *
+ * Plan 743: the keyboard hold used React `onFocus`, which 0.10.0 never sends for
+ * a native focus change, so a card still expired under keyboard focus and the
+ * 500 ms exit ghost made the old paint-only assertion pass anyway. The hold now
+ * samples the renderer's focused host, and every hold case reads the queue and
+ * its timer instead of the painted card.
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -114,6 +120,19 @@ const Controls = ({
   );
 };
 
+/**
+ * Toast 1's queue length and hold, so a hold test cannot pass on the exit ghost
+ * a dismissed card keeps painted for 500 ms (plan 743).
+ */
+const Queue = () => {
+  const toast = useToast();
+  const held = Option.match(toast.timingFor("1"), {
+    onNone: () => "none",
+    onSome: (timing) => (timing.paused ? "held" : "running"),
+  });
+  return <text testId="queue-state">{`${toast.toasts.length}:${held}`}</text>;
+};
+
 const Harness = ({
   onElsewhere,
   onAction,
@@ -134,9 +153,16 @@ const Harness = ({
         onAction={onAction}
       />
       <ToastViewport position={position} />
+      <Queue />
     </ToastProvider>
   </div>
 );
+
+/** The queue and hold a hold test must read instead of the painted card. */
+const queueState = (root: ComponentTestRoot): string =>
+  root.renderer
+    .getAllText()
+    .find((text) => /^\d+:(held|running|none)$/.test(text)) ?? "?";
 
 /** The store updates through its runtime, so let the microtask queue drain. */
 const settle = async (): Promise<void> => {
@@ -319,7 +345,8 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    // The card is still queued: a dismissed card stays painted for its exit.
+    expect(queueState(page)).toBe("1:held");
 
     page.renderer.focusElement(
       page.renderer.findByTestId("elsewhere")?.id ?? -1,
@@ -328,6 +355,7 @@ describe("Toast", () => {
     await settle();
     finishExit(page);
 
+    expect(queueState(page)).toBe("0:none");
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
     page.unmount();
@@ -348,7 +376,8 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    // Focus alone keeps the card queued after the pointer has left it.
+    expect(queueState(page)).toBe("1:held");
 
     page.renderer.focusElement(
       page.renderer.findByTestId("elsewhere")?.id ?? -1,
@@ -357,6 +386,7 @@ describe("Toast", () => {
     await settle();
     finishExit(page);
 
+    expect(queueState(page)).toBe("0:none");
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
 
     page.unmount();
@@ -530,7 +560,7 @@ describe("Toast", () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
     await settle();
 
-    expect(page.renderer.findByTestId("toast-1")).toBeDefined();
+    expect(queueState(page)).toBe("1:held");
 
     page.renderer.focusElement(
       page.renderer.findByTestId("elsewhere")?.id ?? -1,
@@ -539,7 +569,39 @@ describe("Toast", () => {
     await settle();
     finishExit(page);
 
+    expect(queueState(page)).toBe("0:none");
     expect(page.renderer.findByTestId("toast-1")).toBeUndefined();
+
+    page.unmount();
+  });
+
+  it("resumes the clock when native focus leaves the card", async () => {
+    const page = renderComponent(
+      <Harness duration={Duration.seconds(2)} onAction={() => undefined} />,
+    );
+
+    clickCentreOf(page, "push-action");
+    await settle();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    await settle();
+
+    page.renderer.focusElement(
+      page.renderer.findByTestId("toast-action")?.id ?? -1,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await settle();
+    const held = progressWidth(page);
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await settle();
+    expect(progressWidth(page)).toBe(held);
+
+    page.renderer.focusElement(
+      page.renderer.findByTestId("elsewhere")?.id ?? -1,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await settle();
+    expect(progressWidth(page)).toBeLessThan(held);
 
     page.unmount();
   });

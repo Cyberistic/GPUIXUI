@@ -1129,6 +1129,18 @@ retired once both branches are one
       and the header-action pin failing when the gate is removed; docs,
       `COMPONENTS.md`, `PLAN.md` D30 and the inventory count synced
       (owner: components)
+    - [x] A toast holds its clock under keyboard focus — plan 743; measured
+      2026-10-20: focusing the dismiss control with `renderer.focusElement` left
+      the queue empty after 900 ms, because the hold keyed on React `onFocus`,
+      which 0.10.0 never sends for a native focus change, and the three hold
+      cases still passed because the 500 ms exit ghost is painted at 900 ms. The
+      card now registers its two controls' host ids and samples the renderer's
+      focused host, so the clock holds while either holds native focus and
+      resumes with the remainder once focus leaves; the hold cases read the queue
+      and its timer instead of the painted card. 4 native cases (Toast 23 → 24),
+      three mutation proofs plus the per-id mirror; docs, `COMPONENTS.md` (with
+      the stale sampler paragraph), `PLAN.md` D30 and the inventory count synced
+      (owner: components)
   - Reference adoption
     - [x] 200 — adopt `base-gpui`'s compound-part contract as the Tier 1–2 API spec: `docs/component-api.md`, ADR 0004, `LICENSES/base-gpui.md`, `PLAN.md` D25 and a contract check in `inventory.test.ts` (plan 200; proven to fail by changing one translation row)
     - [x] 201 (components half) — `core/runtime.ts` (`createRuntime`: initial/reduce/query/run), its pure test, the `docs/component-api.md` §7 state-model section, ADR 0005 and PLAN.md D26 (plan 201; both-direction proof: deleting the select branch fails the fold test)
