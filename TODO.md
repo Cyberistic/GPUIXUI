@@ -54,7 +54,19 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 370/445
+`[x]` `[████████░░]` 371/446
+
+`[x]` Own the border roles' figures and fill lists — the three present-tense
+passages that state `border`'s floors (1.05:1, 3:1 at AAA) and `borderStrong`'s
+(3:1, 4.5:1) quoted four floor figures and two count words that no case read
+(mutating any of them left all 7121 tests green), and the catalogue's role
+introduction named six of the eight fills `controlFillRoles` measures, omitting
+the toggle's `accentHover`/`accentActive` pointer states that the same page's
+Verification paragraph names; `border-role-claims.test.ts` derives the four
+figures from `contrastFloors`, the two counts from `controlFillRoles` and
+`statusTones` and the four enumerations from `controlFillRoles`, the catalogue
+names all eight fills, and §7 states the boundary's high-contrast floor beside
+its default; no colour, pair, floor, metric or shipped theme moves (plan 815)
 
 `[x]` Own the value groove's surface list — `trackSurfacePairs` holds thirteen
 surfaces (four base, five state washes including the pressed `selectedActive`

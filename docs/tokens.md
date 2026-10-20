@@ -178,8 +178,9 @@ four soft status fills a tone-tinted Alert or Badge paints. A bordered
 control paints `border` on the fill behind it —
 `secondary` at rest, `secondaryHover`/`secondaryActive` while a filled neutral
 control is hovered or pressed, the generic `hover`/`active` washes on a ghost or
-outline control, and `accent` for an outline toggle that is on — so the divider
-is held to its floor on those fills too, not only on the plain surfaces.
+outline control, and the `accent`/`accentHover`/`accentActive` fills of an
+outline toggle that is on (`controlFillRoles`) — so the divider is held to its
+floor on those eight fills too, not only on the plain surfaces.
 
 There are 71 roles. The four status families — `info`, `success`, `warning` and
 `destructive` — each have three tonalities and a designed edge: a solid fill with
@@ -4309,6 +4310,20 @@ and surface each sentence names. It found two: the panel action's 1.542:1 step i
 high-contrast dark rather than identity dark (1.877:1), and the design system
 still quoted plan 392's 1.440:1 for the hint after plan `527` moved it to
 1.157:1.
+
+`packages/tokens/src/border-role-claims.test.ts` holds the two border roles'
+figures and lists. `border` and `borderStrong` are documented as a floor plus a
+fill list, and the four floor figures this page, the design system and the
+package README quote — 1.05:1 and 3:1 for the decorative divider, 3:1 and
+4.5:1 for the functional boundary — were prose: changing any of them left the
+whole suite green, so a `contrastFloors` edit could have left three documents
+quoting numbers the package no longer produces. The suite derives each figure
+from `contrastFloors`, each count word from `controlFillRoles` and
+`statusTones`, and each enumeration from `controlFillRoles`, and it caught the
+catalogue's role introduction naming six of the eight fills a bordered control
+paints — the toggle's `accentHover`/`accentActive` pointer states were missing —
+while the Verification paragraph above names all eight. No colour, pair, floor or
+metric moved (plan `815`).
 
 ## Limitations and future work
 

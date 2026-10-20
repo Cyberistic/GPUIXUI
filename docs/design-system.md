@@ -319,9 +319,10 @@ Two border roles:
   status fill, so those four fills carry the same floor; `xSoftBorder` is the
   edge around the surface, not a divider inside it.
 - `borderStrong` is functional — input and control boundaries. It meets 3:1
-  against the `background` canvas, a `card`, a `popover`, the `input` fill a
-  field paints, the `muted` panel, the `hover`/`active`/`accent`/`selected`
-  washes a row paints, the pressed `selectedActive` fill and the
+  (4.5:1 at high contrast) against the `background` canvas, a `card`, a
+  `popover`, the `input` fill a field paints, the `muted` panel, the
+  `hover`/`active`/`accent`/`selected` washes a row paints, the pressed
+  `selectedActive` fill and the
   `infoSoft`/`successSoft`/`warningSoft`/`destructiveSoft` fills a tone-tinted
   Alert paints, so a checkbox or field is
   perceivable without relying on fill alone.
