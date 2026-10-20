@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (native evidence) |
 | Owner | playground workstream |
 | Depends on | `100`, `110`, `120`, `140`, `150`, `189`, `197`, `674`, `690`, `697`, `701`, `707`, `708`, `713`, `715`, `722` |
@@ -267,6 +267,77 @@ Stop and report instead of improvising if:
 - `nub run check`, `nub run lint` and `nub run test` are green; the full
   headless registry is green.
 
-## 8. Results
+## 8. Results (2026-10-20, darwin-x64)
 
-Pending implementation.
+**Implementation.** `apps/playground/src/scenarios/shadow-pixels.ts` is the pure
+half: `ringBand` derives the outside distance from the token's spread
+(`floor(spread / 2)`, min 1), `interior`, `shadowSample` and `darkerThan`. The
+view and both scenarios live in `shadow.tsx`; `shadowChecks` is one generic
+function over the host and its inspection error, so the headless and live runs
+cannot drift. No `packages/testing` change was needed.
+
+**Measured, both hosts, tolerance 2** (the live frame is also the run artifact
+`live/live-shadow-pixels.png`):
+
+| Sample | Headless | Live |
+| ------ | -------- | ---- |
+| frame / window | `2560 × 1600` / `1280 × 800` | `2200 × 1440` / `1100 × 720` |
+| device scale | `2` | `2` |
+| ring band, left / right / top | `#A7A9FF` | `#A7A9FF` |
+| unringed control band | `#11141A` | `#11141A` |
+| ringed interior (+4 px) | `#191D25` | `#191D25` |
+| shadow below `md` (+4 px) | `#0C0E12` | `#0C0E12` |
+| flat control below (+4 px) | `#11141A` | `#11141A` |
+| channel deltas | `5 / 6 / 8` | `5 / 6 / 8` |
+
+So the runtime **does** rasterize a zero-blur, spread-only `boxShadow` on all
+four sides, and the `md` elevation paints its blur and alpha. The gap this plan
+opened with was real but the runtime is not deficient: the ring is now painted
+evidence, not a style claim.
+
+`SHADOW_DELTA` was **6** in the first draft and the first run failed on the red
+channel (`expected every channel at least 6 below #11141aff, got #0c0e12ff`,
+deltas `5/6/8`). It is now `4` — measured with one channel of headroom and still
+fails on a bright or absent shadow. The plan's floor was a hypothesis; the
+measured value replaced it, and the tolerance was not widened.
+
+**Commands run**
+
+```sh
+nub run --filter playground test
+# 45 files, 487 tests (481 + 6), green
+
+nub run --filter playground build
+# exit 0
+
+nub apps/playground/dist/smoke/run.js --only shadow-pixels
+# 1/1 scenarios passed · theme=verified, exit 0; 28 checks
+
+nub apps/playground/dist/live/run.js --only live-shadow-pixels
+# 1/1 scenarios passed · theme=verified, exit 0; 28 checks
+
+nub apps/playground/dist/smoke/run.js
+# 108/108 scenarios passed, 3963 checks, 65 capabilities, 185.4 s, exit 0
+```
+
+The full live suite was **not** run: this is not the merge/release gate. The
+live registry is now **97** and the headless registry **108**.
+
+**Mutation proofs (observed, then reverted)**
+
+| # | Mutation | Result |
+| - | -------- | ------ |
+| M1 | drop `...focusRing(theme)` from the ring box | `the ring paints outside the left edge: expected #a7a9ffff, got #11141aff`, exit `1` |
+| M2 | paint the ring box `colors.ring` instead of `card` | `the ring is a band, not a fill: expected #191d25ff, got #a7a9ffff`, exit `1` |
+| M3 | make the band distance `0` | two `shadow-pixels.test.ts` tests red, exit `1` (the scenario is not reached) |
+| M4 | drop the elevation `boxShadow` | `the elevation shadow darkens the stage below the box: … got #11141aff` (delta 0), exit `1` |
+| M5 | a white `md` shadow (`#FFFFFFA6`) | `… expected every channel at least 4 below #11141aff, got #5b5d61ff`, exit `1` |
+| M6 | give the flat control the same `md` shadow | `the elevation control paints the stage: expected #11141aff, got #0c0e12ff`, exit `1` |
+
+**Limits.** The elevation check is directional and magnitude-based, not an
+exact composite: a blurred shadow's alpha at a point is a GPUix implementation
+detail, so the probe compares against a matched flat control. Anti-aliased
+edges are still out of scope; the band sample sits 1 logical px outside the box
+at scale 2. The probe measures the token helper, not a focused shipped control:
+`primitives-actions` owns the component's merge/drop of `controlFocusStyle`, and
+this plan closes the paint half those two checks did not cover.

@@ -103,7 +103,7 @@ reports `1` even when the suite said `2`:
 
 ```sh
 nub run --filter playground build && nub apps/playground/dist/smoke/run.js; echo $?
-# -> 0 here (107/107 green); -> 2 on a host with no binding
+# -> 0 here (108/108 green); -> 2 on a host with no binding
 ```
 
 Artifacts (gitignored, under `.artifacts/`):
@@ -2172,16 +2172,50 @@ slot prove the one-node route paints the same envelope. The sampling lookup
 (`frameSampler`) and the sRGB composite (`Pixels.blendOver`) are shared by every
 pixel module; `parseColour` is the one token parser.
 
+### The focus ring and elevation, in the frame (plan `736`)
+
+`theme-type-and-shadow` reads `focusRing` and `elevationShadow` back from the
+runtime's **style report** — which cannot tell an accepted shadow from a painted
+one. `shadow-pixels` and `live-shadow-pixels` (28 checks each) decode a frame
+and sample four boxes on one 640 × 360 stage:
+
+| Sample | Expectation | Measured |
+| ------ | ----------- | -------- |
+| the band outside a `focusRing` box, left / right / top | the ring token, on **three** edges (an offset shadow cannot pass) | `#A7A9FF` = `ring` |
+| the same offset outside an unringed control | the stage background — the control that makes the band check falsifiable | `#11141A` |
+| 4 px inside the ringed box | its own `card` background, so the ring is a band, not a fill | `#191D25` |
+| 4 px below an `elevationShadow(theme, "md")` box | every channel at least 4 below the matched flat control | `#0C0E12` vs `#11141A` |
+| 4 px below the flat control | the stage background, so the darkening is the shadow | `#11141A` |
+
+The band is `2` logical px (the token's `borderWidth.strong` spread), sampled at
+`1` px outside the edge, the middle of four device pixels at scale `2`; the
+probe derives that distance from the token's spread, not a literal. The
+elevation check is **directional** (`darkerThan`): a shadow the runtime painted
+in a bright colour fails with a lighter sample, not "a difference". Both hosts
+paint the same values.
+
+Six mutation proofs, each observed and reverted: removing the ring fails
+`the ring paints outside the left edge` (`expected #a7a9ffff, got #11141aff`);
+painting the ringed box `ring` fails `the ring is a band, not a fill`
+(`expected #191d25ff, got #a7a9ffff`); a zero sample distance fails the pure
+geometry test; removing the elevation fails the darkening check with a `0`
+delta; a white elevation paints `#5B5D61` and fails the direction check; and
+giving the flat control its own shadow fails
+`the elevation control paints the stage` (`expected #11141aff, got #0c0e12ff`).
+A ring or elevation the paint layer drops therefore fails by name — the ring is
+no longer a style-only proof.
+
 ## Evidence on this host
 
-The suite is **107/107 green** here (`exit 0`, 3935 checks, 65 capabilities,
-**197.4 s**, 2026-10-20; plan `724` added the 18-check `click-routing` and plan
-`734` grew it to 33; the count was 3902 at the plan-`723` gate; plan `713` added
-8 crop-mask pixel checks; plan `708` added 7 QR pixel checks; plan `701` added
-41 wash checks to `search-highlights`):
+The suite is **108/108 green** here (`exit 0`, 3963 checks, 65 capabilities,
+**185.4 s**, 2026-10-20; plan `736` added the 28-check `shadow-pixels`; plan
+`724` added the 18-check `click-routing` and plan `734` grew it to 33; the count
+was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
+`708` added 7 QR pixel checks; plan `701` added 41 wash checks to
+`search-highlights`):
 
 ```
-107/107 scenarios passed · capabilities: layout=verified root=verified text=verified
+108/108 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2224,6 +2258,10 @@ plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
+**Addendum (plan `736`):** `shadow-pixels` and `live-shadow-pixels` (28 checks
+each) are registered after that gate, so the current registries are **108**
+headless and **97** live and the merge gate must cover this head; both focused
+runs are green on it.
 
 The measurements that shaped the scenarios (full list: plan `140` §4):
 
@@ -2256,7 +2294,7 @@ The measurements that shaped the scenarios (full list: plan `140` §4):
 | virtual table | `onVisibleRange` **lags the painted window by one gesture** — after two wheel gestures the painted rows were `32–40` while the range read `16`; an index-driven feature must use the painted rows as the current window |
 | tree | `paddingLeft` indents exactly (16px per depth); expand/collapse repaints the subtree; a clicked row takes native focus and receives arrow keys. Focus movement from component code is measured separately (`modal`), so a roving-tabindex tree can use `renderer.focusElement` |
 | log | bottom-anchored `<virtual-list>` starts at the tail and re-anchors on appends; `bottom` alone and `top` + `followTail` alone both anchor at the bottom. Scrolling up and appending does **not** snap back — a follow toggle is app state plus a scroll |
-| theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch |
+| theme | `TestElement.style` reports `backgroundColor`, `fontSize`, `fontFamily` and `boxShadow` verbatim, including 8-digit `#RRGGBBAA`; a provider re-render repaints every swatch. **The ring and elevation are painted, not only accepted (`shadow-pixels`, plan `736`):** the 2 px band outside a ringed box is `ring #A7A9FF` on three edges, an unringed control is the stage `#11141A`, the interior stays `card #191D25`, and an `md` elevation samples `#0C0E12` below the box against `#11141A` below a flat control |
 | components | the shipped `@gpuixui/primitives` mount and behave in the runtime through the token theme: click/Enter-down/Space-up activation, a focus ring that the component merges and drops, controlled `Input` edits plus `onSubmit`, `Checkbox`/`Switch` state on `aria-valuetext`, the themed `Select` commit/dismiss, `Slider` arrow steps, `Progress`/`Meter` value text, a painted `Skeleton`, and a hover `Tooltip`. `simulateKeystrokes("space")` delivers no key up, so the harness now exposes `keyDown`/`keyUp` (plan `168`) |
 | window key | the app-level `render({ onKeyDown })` handler runs after the focused element's `onKeyDown`, with `event.modifiers` set — the command-palette path |
 | search | `highlight`/`getPaintedHighlights` paint window-space boxes; a nested declaration replaces its ancestor; soft wraps paint one box per row; a surrogate-split range is refused; `<code>` is searched by query, not ranges; a virtual row's `matchIndexOffset` numbers matches document-wide |
@@ -2412,7 +2450,7 @@ narrower. Each deviation is deliberate and measured:
   (`tree-reorder`, plan `392`), the **QR probe** (`qr-code`, plan `518`), the
   **application menu bar** (`menu-bar`, plan `519`) and the **media surface**
   (`media-surface`, plan `520`)
-  pass in real GPUix 0.10.0 on this host (107/107, 3935 checks), with a written report and
+  pass in real GPUix 0.10.0 on this host (108/108, 3963 checks), with a written report and
   screenshots. The **message-scroller** probe
   (plan `300`) proves the chat/stream pin contract: the live anchor inside
   `onVisibleRange`, a follow on append and on a growing row, no yank while

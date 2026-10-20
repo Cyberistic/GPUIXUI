@@ -95,7 +95,31 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 127/127 plans-and-harness
+`[x]` `[██████████]` 128/128 plans-and-harness
+
+`[x]` **Prove the focus ring and elevation shadow in the frame** per plan `736`:
+      both were only ever read back from the runtime's **style report**, so a
+      `boxShadow` the style layer accepts but the paint layer drops would have
+      passed every check while every focus ring stayed invisible. A pure
+      `shadow-pixels.ts` (6 tests; playground **481 → 487**) derives the band
+      sample from the token's spread, the interior sample, the elevation drop
+      and a per-channel `darkerThan`; `shadow-pixels` and `live-shadow-pixels`
+      (**28 checks each**) mount four boxes and decode one frame. **Measured in
+      both hosts:** the `2` px band outside the ringed box is
+      `ring #A7A9FF` on the left, right and top edges; the same offset outside
+      an unringed control is the stage `#11141A`; 4 px inside is
+      `card #191D25` (a band, not a fill); 4 px below the `md` elevation is
+      `#0C0E12` against `#11141A` below the flat control (channel deltas
+      `5/6/8`). Six mutation proofs observed and reverted: the ring removed
+      (`expected #a7a9ffff, got #11141aff`), the box filled with `ring`
+      (`expected #191d25ff, got #a7a9ffff`), a zero band distance (two unit
+      tests red), the elevation removed (`got #11141aff`, delta 0), a white
+      elevation (`got #5b5d61ff`) and a shadowed control
+      (`expected #11141aff, got #0c0e12ff`). The elevation check is
+      directional, so a bright shadow fails instead of merely differing.
+      Focused ids run: `shadow-pixels` (green plus five mutation runs),
+      `live-shadow-pixels` (green plus two value-reading runs). No full live
+      gate (merge gate).
 
 `[x]` **Run the promotion gate on the head that includes the inline click-routing
       probe** per plan `735`: verification only on code head `e384a66a` (0 behind
