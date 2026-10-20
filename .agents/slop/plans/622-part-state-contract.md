@@ -1,6 +1,6 @@
 # 622 — The part-state contract states the real sources
 
-**Phase:** F · **Owner:** docs-site · **Status:** in progress
+**Phase:** F · **Owner:** docs-site · **Status:** implemented
 **Depends on:** 410, 413, 419, 431, 479, 482, 568, 601, 621
 
 ## 1. Why this plan exists
