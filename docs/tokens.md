@@ -3453,8 +3453,10 @@ that dim frame and `themeContrastFailures` reports it with the fraction as
 dark at **1.008:1** on `selected` — its opaque pair was only 1.058:1, so the
 fade crossed the floor — and the dark skeleton moved a half-step to `#434C5A`,
 where the dim frame measures **1.074:1** and the opaque pair 1.179:1. The other
-seven surfaces are wider, and every other shipped set already cleared 1.05:1 at
-0.6 (the next tightest is 1.072:1), so no other value moves.
+eight surfaces in that set are wider, and every shipped set clears 1.05:1 at 0.6,
+so no other value moves. The tightest dim frame in the enumeration is not this
+set: `Light · Windows XP`'s `active` wash measures **1.059:1**, a designed step
+plan `619` moved after this audit.
 Brand-toned text is checked on the nine surfaces a link paints —
 `background`, `card`, `popover`, `muted`, the `hover`/`active` washes, the
 `accent`/`selected` fills a selectable row paints and the pressed

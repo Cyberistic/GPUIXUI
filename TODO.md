@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 374/449
+`[x]` `[████████░░]` 375/450
 
 `[x]` Own the two catalogue sentences that state a figure beside a derived
 claim — `docs.test.ts` derives §Text selection's *set* of affected fills (through
@@ -3303,6 +3303,20 @@ source document as prose so a wrapped comment sentence is matchable,
 sweeps, and the catalogue states the table's new size; each case fails on a
 mutated digit or a restored stale sentence, and no colour, pair, floor, metric,
 role or shipped theme moves (plan 805)
+`[x]` Correct the loading pulse's tightest-set claim — the catalogue said the
+pulse's dim frame was tightest in identity dark and that "the next tightest is
+1.072:1", while the shipped enumeration's tightest is `Light · Windows XP` on its
+`active` wash at **1.059:1** — tighter than the set the paragraph is about,
+because plan `619` moved that wash one designed step after plan `393`'s audit and
+the XP/Aero recipes joined `shippedThemes` in plans `311`/`387`; the same
+sentence also still said seven surfaces after plan `322` made the list nine.
+Nothing read either half, so a later palette edit could leave the page naming the
+wrong set and a figure no set produces. The paragraph now names the true tightest
+set and figure and says eight, and `skeleton-pulse-claims.test.ts` derives
+identity dark's pair (`1.074:1` dim, `1.179:1` opaque), the nine-surface order
+inside that set and the enumeration's ordered minimum with its set and surface,
+rejects the pre-fix sentence, and moves the minimum with a planted palette; no
+colour, pair, floor, metric, role or shipped theme moves (plan 821)
 
 ## Phase C — Tier 1–2 components
 
