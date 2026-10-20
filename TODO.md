@@ -469,9 +469,22 @@ Work that this workstream needs but does not own. Another agent owns each row.
 
 Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/slop/plans/`.
 
-## Docs site workstream (plans 410–499, plus 500–596)
+## Docs site workstream (plans 410–499, plus 500–602)
 
-`[x]` `[██████████]` 168/168
+`[x]` `[██████████]` 169/169
+
+`[x]` **Architecture states the runtime contract (plan 602)** — the page named
+      every package but never said where Effect lives or which renderer paints
+      what, so `effect` returned a keyboard table, `browser` returned the
+      Project browser pattern and `ssr`/`hydration` returned nothing.
+      `## State and Effect` now names the toast `ManagedRuntime`, the `core/`
+      decision layer and the app-owned clock; `## What runs where` separates the
+      desktop renderer, the wasm live surface and the SSR/hydrated docs chrome.
+      `architecture-runtime.test.ts` reads the real provider, manifest,
+      countdown and preview-state sources in both directions, fourteen guarded
+      alias terms send the vocabulary to the page, and three production queries
+      check it; 113 files / 925 docs tests, 99-page `smoke:build`, root gates
+      green; the two measured proofs are in plan 602 §6.3.
 
 `[x]` **Keyboard and input conventions have one home (plan 601)** — `keyboard`,
       `keyboard shortcuts`, `enter key`, `space key`, `arrow keys` and
