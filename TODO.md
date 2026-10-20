@@ -93,21 +93,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        another session (PID 42334) minutes later, so the `scripts/` fix is
        still required.
 
-       **Update 2026-10-20 ~14:10:** recurred during plan `759`. A second live
+       **Update 2026-10-20 ~14:10–14:35:** recurred during the opacity probe
+       (drafted as plan `756`, renumbered to `759` and then to `761` — the
+       `components` worktree had already claimed both numbers). A second live
        session wrote a parallel `README.md` section and a second
-       `live-opacity-pixels` table row, and ran its own full headless suite
-       (111/111 · 4106 · 65 · 275.4 s) while this session's run was also live
-       (426.8 s under the load). Both runs agree on every count, so the tree is
-       consistent; this session removed the duplicated prose and kept one
-       section, one row and its own measured duration. No code was lost. The
-       `scripts/` fix is still the only durable remedy.
+       `live-opacity-pixels` table row, ran its own full headless suites
+       (111/111 · 4106 · 65 at 275.4 s and 398.1 s) while this session's run was
+       also live (426.8 s under the load), and committed `05013949`/`6cc3bc72`.
+       Every run agrees on every count, so the tree is consistent; this session
+       removed the duplicated prose, kept one section and one row, resolved the
+       plan number to `761`/`762` (both free across worktrees), and re-verified
+       the head. No code was lost. The `scripts/` fix is still the only durable
+       remedy.
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 134/134 plans-and-harness
 
 `[x]` **Prove declared opacity, the disabled state and its subtree in the frame**
-      per plan `759`: eleven shipped surfaces express `disabled` as nothing but
+      per plan `761`: eleven shipped surfaces express `disabled` as nothing but
       `opacity: 0.5` and every check read inertness, tab order and the authored
       style report — never the frame. A pure `opacity-pixels.ts` (12 tests;
       playground **508 → 520**) and `opacity-pixels` / `live-opacity-pixels`
@@ -2589,7 +2593,7 @@ retired once both branches are one
       decision (code examples plus a companion native playground, never a silent
       HTML/CSS reimplementation)
 `[ ]` **Cross-team (components)**: `opacity` dims the element's **whole subtree**
-      in 0.10.0 (plan `759`: a `success` child inside a half-opacity parent
+      in 0.10.0 (plan `761`: a `success` child inside a half-opacity parent
       paints `#266F4D`, not `#3BC97F`; nested halves multiply). Eleven surfaces
       express `disabled` as `opacity: 0.5`, so a disabled row's label and icon
       are already dimmed — do not repaint either at full strength, and do not

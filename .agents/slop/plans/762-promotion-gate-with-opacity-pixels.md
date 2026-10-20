@@ -1,31 +1,31 @@
-# 760 — The promotion gate on the head that includes the opacity pixels
+# 762 — The promotion gate on the head that includes the opacity pixels
 
 | Field | Value |
 | ----- | ----- |
 | Status | planned |
 | Phase | F (release gate) |
 | Owner | playground workstream |
-| Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `755`, `759` |
+| Depends on | `639`, `653`, `656`, `702`, `714`, `723`, `735`, `739`, `745`, `751`, `755`, `761` |
 | Feeds | the promotion fast-forward of `agent/playground` into `main` |
 
 ## 1. Goal
 
 Plan `755` gated code head `7b304a1f` with headless **110/110** (`4077`
-checks) and live **99/99** (`2831` checks). Plan `759` then added
+checks) and live **99/99** (`2831` checks). Plan `761` then added
 `opacity-pixels` (headless) and `live-opacity-pixels` (a real window), each
 **29** checks, so the registries are now **111** headless and **100** live.
 The last full gate therefore covers neither of the two new scenarios. A
 promotion fast-forward now would put an ungated live scenario on `main`.
 
 This plan is **verification only**: no source change. It re-runs both full
-suites on the head that includes plan `759`, reconciles the totals against the
+suites on the head that includes plan `761`, reconciles the totals against the
 predicted `4077 + 29 = 4106` headless and `2830 + 29 = 2859` live, and updates
 the three ledgers plus the plan index.
 
 ## 2. Preconditions
 
 1. `git status --short` is empty and `agent/playground` is pushed.
-2. `git log --oneline -6` shows plan `759`'s code commit (`05013949`), its
+2. `git log --oneline -6` shows plan `761`'s code commit (`05013949`), its
    renumber commit (`6cc3bc72`) and its ledger edits.
 3. `git fetch origin && git rev-list --left-right --count origin/master...HEAD`
    reads `0` behind. If it does not, merge `origin/master` **in this worktree**
@@ -111,7 +111,7 @@ nub run test
 | `apps/playground/README.md` | the live full-gate paragraph cites this run (**100/100**, the exact check total, duration, head), removes the "registry 100 vs gate 99" caveat, and records that `live-report.json` holds the full gate again |
 | `COMPONENTS.md` | the suite totals become **111/111** headless and **100/100** live with this run's numbers; the `states` row keeps its ids |
 | `TODO.md` | tick this task with the measured totals and the exact commands; update the promotion task's gate citation to this run |
-| `.agents/slop/plans/README.md` | add plan `760`'s row with the measured totals, and set its status **landed** |
+| `.agents/slop/plans/README.md` | add plan `762`'s row with the measured totals, and set its status **landed** |
 | this plan | §7 Results with the run, wall-clock, check counts and any branch variance |
 
 ## 5. STOP conditions
@@ -147,7 +147,7 @@ directions this gate can prove are already in place:
   checks exactly (`4077 + 29`, `2830 + 29` ±1). A mismatch means a scenario was
   skipped, double-counted or changed silently.
 
-Mutation proofs are not part of a gate: plan `759` already recorded five.
+Mutation proofs are not part of a gate: plan `761` already recorded five.
 Do not add code to "prove" a gate.
 
 ## 7. Results

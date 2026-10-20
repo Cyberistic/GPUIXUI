@@ -1,8 +1,8 @@
-# 759 — Declared opacity, in the frame: the disabled state and its subtree
+# 761 — Declared opacity, in the frame: the disabled state and its subtree
 
 | Field | Value |
 | ----- | ----- |
-| Status | planned |
+| Status | landed |
 | Phase | F (native evidence) |
 | Owner | playground workstream |
 | Depends on | `335`, `557`, `674`, `690`, `701`, `713`, `715`, `736`, `745`, `754`, `755` |
@@ -227,7 +227,8 @@ the expectation was then corrected for the two-step rounding before any check
 was weakened.
 
 End-of-task: the full headless registry is **111/111 · 4106 checks · 65
-capabilities · 398.1 s**, exit `0` — exactly `4077 + 29`; the live registry is
+capabilities · 398.1 s**, exit `0` — exactly `4077 + 29` (an independent run on
+the same head measured **426.8 s** under concurrent load, identical counts); the live registry is
 **100** (`live-opacity-pixels` focused-green; the full live suite is the merge
 gate and was not run here). `nub run check`/`lint`/`test` green.
 

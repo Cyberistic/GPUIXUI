@@ -1641,7 +1641,7 @@ gate: the full suite opens a real window and takes about nine minutes.
 | `live-data-grid` | the virtualized data grid in a window: a real wheel virtualizes the `<virtual-list>` body (header stays, pan stays `0`), a header `deltaX` wheel pans the header and body together (`-90`, then `-400` at the far edge) with the frozen column still, a panned body cell selects its row and takes native focus, the frozen row follows `getListScrollTop`, and a filter/sort from anchor `45` resets to `0` (`count=11`, first `1`; descending first `59`) — 83 checks (plan `606`). **Measured harness difference:** a `deltaX` wheel over a body **cell** pans the scroller live (`-400 → -310`), while the offscreen `TestRenderer` swallows the same verb (plan `338`), so the headless suite keeps using the affordance. A wheel needs the pointer over its target first (`hover` + settle), or the window can deliver it at the previous pointer position |
 | `live-states` | the declared-style probe in a window: a real hover applies `100 → 140`, hover is per element (parent `420` / child `100`, then parent `400` / child `120`), leaving reverts both, a press applies `active` `180` (and enters hover, corrected by plan `754`; the release still returns `100`), and a held pointer outside keeps `180` until release — 32 checks (plan `557`) |
 | `live-state-pixels` | declared hover and active **colours** in a window: a real hover paints `primary` and leaves its neighbours, leaving reverts, hovering the parent paints `accent` but not the child, hovering the child paints `success` and reverts the parent, a press paints `destructive`, a release-then-hover paints `primary`, and a press while hovered stays `destructive` — 50 checks (plan `754`). **The press itself enters hover**: with `active` removed the pressed box paints the hover fill, so the check is precedence, not "active without hover" |
-| `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `759`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
+| `live-opacity-pixels` | declared **opacity** in a window: an opaque fill paints `primary` exactly, the 0.5 disabled fill paints the blend `#5C5F8D`, its opaque neighbour stays `card`, a `success` child inside a half-opacity parent paints `#266F4D` (the subtree is dimmed with it), and two nested halves paint the product `#383B55` rather than a single `0.5` (`#5E608F`) — 29 checks (plan `761`). The runtime composites a nested pair in 8-bit steps, so the frame is 1–2 channels lighter than the idealised `0.25` mix (`#373953`) |
 | `live-truncation` | the truncation probe in a window: ellipsis/nowrap are one line, the unclamped sample wraps past eight lines, `lineClamp` is exact (`52` = 2 × `26`, `78` = 3 × `26`) and inherited from the box, the repeated string still lays out unclamped, and painted text stays the source run with no `…` glyph — 23 checks (plan `557`) |
 | `live-layers` | the nested-layer probe in a window: a click opens the parent, a row opens a focused submenu, an inside press activates once while the parent's outside handler sees it with coordinates, one key reaches two handlers as two payload **objects**, and one Escape or outside press closes exactly one layer — 41 checks (plan `558`). Measured: the field claim must be cleared on the next **task**, not a microtask; a window delivers the two handlers across a microtask, so the original microtask reset closed both |
 | `live-content` | the host-element surfaces in a window: the sourced `<svg>` keeps its 48 × 48 box, a missing `src` paints `img: no src` and an undecodable one `img: load failed`, a valid PNG data URL and a ref-uploaded 2 × 2 bitmap lay out without adding a fallback, the 640 px `<diff>` paints its four patch lines, and `<canvas>` has no bounds and drops its child from the paint (the retained child still answers `text`) — 28 checks (plan `577`). An `<img>` keeps the tracker's 1 px-per-axis loss live too (`96 × 64` → `94 × 62`) |
@@ -2285,7 +2285,7 @@ element. With `active` removed, the held box paints the hover colour; plan
 **after** the release, not during the press. Components are unaffected (active
 wins), but a probe must not read a press as "active without hover".
 
-### Declared opacity, the disabled state and its subtree (plan `759`)
+### Declared opacity, the disabled state and its subtree (plan `761`)
 
 Eleven shipped surfaces express **disabled** as nothing but
 `opacity: disabled ? 0.5 : 1` (`list`, `tabs`, `accordion`, menu and context-menu
@@ -2321,8 +2321,8 @@ additive turns three unit tests red.
 ## Evidence on this host
 
 The suite is **111/111 green** here (`exit 0`, 4106 checks, 65 capabilities,
-**398.1 s** with plans `754` and `759`'s pixel probes, 2026-10-20; plan
-`759` added the 29-check `opacity-pixels`, plan `754` added the 50-check
+**398.1 s** with plans `754` and `761`'s pixel probes, 2026-10-20; plan
+`761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
 `state-pixels`, plan `745` added the 64-check
 `border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
 head; plan `736`
@@ -2354,7 +2354,7 @@ The last full merge/release gate ran **99/99** (`exit 0`, **2831** checks, 61
 capabilities; **1245.6 s**; `.artifacts/live-report.json`, 2026-10-20) on code
 head `7b304a1f` (plan `755`, 0 behind `origin/master`), with the whole headless
 registry at **110/110** (**4077** checks, 65 capabilities, 224.9 s) on the same
-head. **The registry then grew to 100** with plan `759`'s
+head. **The registry then grew to 100** with plan `761`'s
 `live-opacity-pixels` (29 checks, two focused green runs), so the last full gate
 describes 99 of the 100 registered ids; the full live suite is the merge gate and
 was not re-run for a probe that adds one static scenario. `.artifacts/live-report.json`
