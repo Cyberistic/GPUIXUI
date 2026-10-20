@@ -123,6 +123,17 @@
  * stay on the Roadmap; `word diff`, `line numbers` and `markdown table` stay on
  * Native elements; `theme` stays on Theming and `text`/`input` on their
  * component pages.
+ *
+ * Plan 630 covers the measured question forms. The ranker used to treat every
+ * query word as a name prefix, so `to` — a prefix of Toggle and Tooltip — made
+ * `how to theme the app` return Toggle before Theming; a function word is no
+ * longer name evidence. The page aliases below name the owners the questions
+ * and reader words reached only through prose: the style fields (`padding`,
+ * `hover effect`, `set width`) on Styling, the measured centring vocabulary on
+ * Layouts (which gained a `## Centring` section), `build a table` on Data
+ * display, the overlay dismissal phrases on Component API, and `tab index`,
+ * `tabindex` and `autofocus` on Accessibility. `center` alone stays on Component
+ * API: an alias is exact, so `center content` cannot claim the bare word.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -168,6 +179,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "mouse events",
       "mouse input",
       "skip link",
+      "tab index",
+      "tabindex",
+      "autofocus",
     ],
   ],
   [
@@ -336,6 +350,10 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "corner radius",
       "width",
       "height",
+      "padding",
+      "set width",
+      "how to set width",
+      "hover effect",
       "responsive",
       "responsive layout",
       "responsive design",
@@ -540,6 +558,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "scrollintoview",
       "callback",
       "callbacks",
+      "outside click",
+      "click outside",
+      "close on outside click",
     ],
   ],
   [
@@ -550,6 +571,8 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "selectable rows",
       "virtualization",
       "virtualisation",
+      "build a table",
+      "how to build a table",
     ],
   ],
   ["/docs/examples", ["demo", "sample"]],
@@ -583,6 +606,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   [
     "/docs/layouts",
     [
+      "center content",
+      "how to center content",
+      "centering",
+      "centring",
+      "center a div",
       "localization",
       "localisation",
       "i18n",

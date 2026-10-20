@@ -71,6 +71,14 @@ import { source } from "./source";
  * `vitest`/`ci` on Contributing, `screenshot` on Previews, `coverage` on the
  * Roadmap, `selection` on Selection and find, and `transition` on Theming's
  * motion section — the page's first wording used that word and lost the row.
+ *
+ * Plan 630 adds the question forms and words the ranker's prefix matching
+ * misrouted: `how to theme the app` returned Toggle because `to` is a prefix of
+ * both Toggle and Tooltip, and the measured style, centring, table, overlay and
+ * accessibility words reached prose or a different page. `center` moves to
+ * Layouts with its new sourced `## Centring` section; `spacing`, `read only`
+ * and `table` stay pinned, so the new exact phrases cannot steal the words the
+ * earlier passes assigned.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -528,6 +536,29 @@ const owned = [
   ["test renderer", "/docs/testing"],
   ["a11y tree", "/docs/testing"],
   ["smoke test", "/docs/native-testing"],
+  // Plan 630: the measured question forms and reader words. Every row names a
+  // page that answers it; `center` moved to Layouts when the page gained its
+  // `## Centring` section, and `spacing`/`read only`/`table` stay pinned below.
+  ["how to build a table", "/docs/data-display"],
+  ["build a table", "/docs/data-display"],
+  ["how to center content", "/docs/layouts"],
+  ["center content", "/docs/layouts"],
+  ["centering", "/docs/layouts"],
+  ["centring", "/docs/layouts"],
+  ["center a div", "/docs/layouts"],
+  ["how to display an error", "/docs/components/inline-validation"],
+  ["display an error", "/docs/components/inline-validation"],
+  ["validation message", "/docs/components/inline-validation"],
+  ["how to set width", "/docs/styling"],
+  ["set width", "/docs/styling"],
+  ["padding", "/docs/styling"],
+  ["hover effect", "/docs/styling"],
+  ["outside click", "/docs/component-api"],
+  ["click outside", "/docs/component-api"],
+  ["close on outside click", "/docs/component-api"],
+  ["tab index", "/docs/accessibility"],
+  ["tabindex", "/docs/accessibility"],
+  ["autofocus", "/docs/accessibility"],
 ] as const;
 
 const regressions = [
@@ -572,6 +603,7 @@ const regressions = [
   ["native binding", "/docs/installation#native-bindings"],
   ["border radius", "/docs/styling"],
   ["media queries", "/docs/styling"],
+  ["center", "/docs/layouts"],
   ["table", "/docs/data-display"],
   ["tables", "/docs/data-display"],
   // Plan 626: Native elements owns the three read-only surfaces, so the

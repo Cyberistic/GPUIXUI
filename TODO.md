@@ -471,7 +471,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 196/196
+`[x]` `[██████████]` 197/197
+
+`[x]` **A function word no longer names a component (plan 630)** — every
+      question containing `to` returned Toggle/Tooltip, because `to` is a name
+      prefix: measured 2026-10-20, `how to theme the app` reached Toggle before
+      Theming, and `padding`, `hover effect`, `tab index`, `autofocus`,
+      `validation message`, `divider`, `placeholder`, `no results` and
+      `centering` reached prose or another page. `FUNCTION_WORDS` in
+      `search.ts` is the closed class skipped by `nameRank`, while `tab`/`box`
+      keep their pages; 18 exact page/component terms carry the measured
+      questions and words, and Layouts gained a sourced `## Centring` section
+      because an alias must point at prose that answers it. 148 files /
+      1 603 docs tests, 112-page `smoke:build`, `smoke:search` green; three
+      forced failures in plan 630 §11.2.
 
 `[x]` **The runtime's second theme has a page (plan 629)** — `GpuixTheme`,
       `SyntaxTheme` and `GpuixMetrics` had no owner: `syntax colors` reached the

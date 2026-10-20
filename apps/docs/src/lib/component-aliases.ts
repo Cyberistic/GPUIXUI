@@ -18,12 +18,18 @@
  * `callout`, `busy`, `sheet`) under the same rule. Plan 618 adds one measured
  * question: a reader looking for the "no data" state is describing Empty
  * states, whose record says `empty` but never the phrase they typed.
+ *
+ * Plan 630 adds the words and question forms a measured sweep found on the
+ * wrong page: `placeholder` on Text inputs, `divider` on Separators,
+ * `no results` on Empty states, `validation message` and the two error-question
+ * forms on Inline validation, and the two notification-question forms on Toasts.
+ * The function-word rule that fixed the question forms lives in `search.ts`.
  */
 export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
   readonly string[]
 >([
-  ["text-input", ["textbox", "text box", "text field"]],
+  ["text-input", ["textbox", "text box", "text field", "placeholder"]],
   ["checkbox", ["check box", "tick box"]],
   ["radio-group", ["radio button", "radio buttons"]],
   [
@@ -65,7 +71,7 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["hotkey-input", ["shortcut recorder", "hotkey input", "hotkey recorder"]],
   ["drawer", ["side sheet", "side panel", "sidepanel", "sheet"]],
   ["fieldset", ["field group"]],
-  ["toast", ["snackbar"]],
+  ["toast", ["snackbar", "show a notification", "how to show a notification"]],
   ["spinner", ["busy"]],
   [
     "keycap",
@@ -114,9 +120,18 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["select", ["select box", "dropdown list", "multi select", "multi-select"]],
   [
     "inline-validation",
-    ["helper text", "hint", "supporting text", "error message"],
+    [
+      "helper text",
+      "hint",
+      "supporting text",
+      "error message",
+      "display an error",
+      "how to display an error",
+      "validation message",
+    ],
   ],
-  ["empty-state", ["no data"]],
+  ["empty-state", ["no data", "no results"]],
+  ["separator", ["divider"]],
   ["time-picker", ["time"]],
 ]);
 

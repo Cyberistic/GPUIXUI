@@ -34,6 +34,27 @@ The primitives composed into a real application frame — title bar, collapsible
 navigation rail, scrolling content and status bar — are the
 [app-shell pattern](/docs/patterns/app-shell), which runs on the live surface.
 
+## Centring
+
+`align` places children across a stack's axis and `justify` distributes them
+along it. Centre on both axes by giving the stack the box it should centre
+inside — `fullHeight` for a column, `fullWidth` for a row:
+
+```tsx
+import { Stack, Text } from "@gpuixui/primitives";
+
+<Stack direction="column" align="center" justify="center" gap="sm" fullHeight>
+  <Text role="h3">No projects yet</Text>
+  <Text tone="muted">Create a project to get started.</Text>
+</Stack>;
+```
+
+A single item on one axis needs only that axis: `align="center"` in a row,
+`justify="center"` in a column. There is no `margin: auto` and no CSS class —
+the runtime places children with flexbox, and the parent or `fullWidth` /
+`fullHeight` supplies the box to centre inside. `grow` makes an item take the
+leftover space instead.
+
 ## Localization and direction
 
 The library ships no i18n layer, and the pinned runtime has no direction

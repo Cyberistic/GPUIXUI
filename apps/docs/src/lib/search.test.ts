@@ -1723,6 +1723,70 @@ describe("generated name candidates (plan 569)", () => {
     );
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
+  /**
+   * Plan 630: the ranker compared every query word with every name as a
+   * prefix, so the function word `to` — a prefix of Toggle and Tooltip — made
+   * `how to theme the app` return Toggle before Theming. A function word is no
+   * longer name evidence, while a real short name typed alone (`tab`, `box`)
+   * keeps its page. These three cases fail when the filter or the whole-tier
+   * guard is removed.
+   */
+  it("does not let a function word name a component (plan 630)", async () => {
+    const expected = [
+      ["how to theme the app", "/docs/theming"],
+      ["tab", "/docs/components/tabs"],
+      ["box", "/docs/components/box"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+  /**
+   * Plan 630: the measured question forms and reader words that reached another
+   * page or nothing. Each row is an exact alias on a page or component that
+   * answers it — the centring row points at Layouts' sourced `## Centring`
+   * section, and `padding` must not take `spacing` from Theming.
+   */
+  it("finds the measured question forms and words (plan 630)", async () => {
+    const expected = [
+      ["how to build a table", "/docs/data-display"],
+      ["how to center content", "/docs/layouts"],
+      ["how to display an error", "/docs/components/inline-validation"],
+      ["how to set width", "/docs/styling"],
+      ["how to show a notification", "/docs/components/toast"],
+      ["padding", "/docs/styling"],
+      ["hover effect", "/docs/styling"],
+      ["outside click", "/docs/component-api"],
+      ["tab index", "/docs/accessibility"],
+      ["autofocus", "/docs/accessibility"],
+      ["validation message", "/docs/components/inline-validation"],
+      ["divider", "/docs/components/separator"],
+      ["placeholder", "/docs/components/text-input"],
+      ["no results", "/docs/components/empty-state"],
+      // The words that must not move when the new rows land.
+      ["how to install", "/docs/installation"],
+      ["spacing", "/docs/theming"],
+      ["read only", "/docs/native-elements"],
+      ["table", "/docs/data-display"],
+      ["center", "/docs/layouts"],
+      ["toast", "/docs/components/toast"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
 });
 
 describe("withoutTypeTableRows", () => {

@@ -1001,6 +1001,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "the localization vocabulary",
     },
     {
+      query: "how to center content",
+      expected: "/docs/layouts",
+      first: true,
+      what: "a question form whose function words used to name Toggle (plan 630)",
+    },
+    {
+      query: "how to display an error",
+      expected: "/docs/components/inline-validation",
+      first: true,
+      what: "a question form the function word `to` used to steal (plan 630)",
+    },
+    {
       query: "botton",
       expected: "/docs/components/button",
       first: true,

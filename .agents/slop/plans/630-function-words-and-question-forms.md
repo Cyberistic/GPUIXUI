@@ -1,6 +1,6 @@
 # 630 — Search: a function word cannot name a component, and the measured question forms reach their owner
 
-**Status:** planned
+**Status:** implemented
 **Phase:** F
 **Depends on:** 410, 419, 431, 561, 566, 568, 598, 599, 607, 608, 610
 
@@ -364,15 +364,79 @@ full suite in step 3 is the authoritative run either way.
 
 ## 10. Acceptance criteria
 
-- [ ] `to` no longer names Toggle or Tooltip inside a question; `how to theme
+- [x] `to` no longer names Toggle or Tooltip inside a question; `how to theme
       the app` reaches Theming first.
-- [ ] `tab` and `box` still reach their component pages.
-- [ ] Every query in 7.1 C and D reaches its owner first.
-- [ ] `padding` moves from Component pages to Styling; `spacing` does not move.
-- [ ] The new `## Centring` section compiles and answers the alias.
-- [ ] `nub run --filter docs test`, `nub run check`, `nub run lint` and
+- [x] `tab` and `box` still reach their component pages.
+- [x] Every query in 7.1 C and D reaches its owner first.
+- [x] `padding` moves from Component pages to Styling; `spacing` does not move.
+- [x] The new `## Centring` section compiles and answers the alias.
+- [x] `nub run --filter docs test`, `nub run check`, `nub run lint` and
       `nub run --filter docs smoke:build` exit `0`.
-- [ ] `TODO.md`, `PLAN.md` (D66), `apps/docs/README.md`, the Site search page
+- [x] `TODO.md`, `PLAN.md` (D66), `apps/docs/README.md`, the Site search page
       and the plan index record the change.
-- [ ] The branch is committed and pushed to `origin/agent/docs-site`.
+- [x] The branch is committed and pushed to `origin/agent/docs-site`.
 
+
+## 11. Measured results
+
+Measured 2026-10-20 on `agent/docs-site`, all commands run from the worktree
+root.
+
+### 11.1 The rule, before and after
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `how to theme the app` | `/docs/components/toggle` | `/docs/theming` |
+| `how to change the theme` | `/docs/components/toggle` | `/docs/theming` |
+| `how to build a table` | `/docs/components/toggle` | `/docs/data-display` |
+| `how to center content` | `/docs/components/toggle` | `/docs/layouts` |
+| `how to display an error` | `/docs/components/toggle` | `/docs/components/inline-validation` |
+| `how to set width` | `/docs/components/toggle` | `/docs/styling` |
+| `how to show a notification` | `/docs/components/toggle` | `/docs/components/toast` |
+| `padding` | `/docs/component-pages` | `/docs/styling` |
+| `hover effect` | `/docs/architecture#state-and-effect` | `/docs/styling` |
+| `outside click` | `/docs/components/card` | `/docs/component-api` |
+| `tab index` | `/docs/components/tabs` | `/docs/accessibility` |
+| `autofocus` | `/docs/components/number-field#…` | `/docs/accessibility` |
+| `validation message` | `/docs/components/message-scroller` | `/docs/components/inline-validation` |
+| `divider` | `/docs/components/separator#…` | `/docs/components/separator` |
+| `placeholder` | `/docs/components/number-field#…` | `/docs/components/text-input` |
+| `no results` | `/docs/components/toast` | `/docs/components/empty-state` |
+| `centering` | `/docs/component-api` | `/docs/layouts` |
+| `center` | `/docs/component-api` | `/docs/layouts` |
+| `tab` | `/docs/components/tabs` | `/docs/components/tabs` |
+| `box` | `/docs/components/box` | `/docs/components/box` |
+| `to` | `/docs/components/toggle` | `/docs/components/button-group` |
+
+`to` no longer promotes a name; its remaining result is the lexical index's
+own order, not a name match.
+
+### 11.2 Two-direction proofs
+
+1. **The rule.** With the whole-tier guard and the token filter removed,
+   `nub exec vitest run src/lib/search.test.ts -t "function word"` failed with
+   `how to theme the app -> page:/docs/components/toggle`. Restored, the same
+   test passed.
+2. **The Layouts alias.** With `how to center content` removed,
+   `-t "measured question"` failed with
+   `how to center content -> page:/docs/components/card`. Restored, it passed.
+3. **The component alias.** With `validation message` removed, the same test
+   failed with
+   `validation message -> page:/docs/components/message-scroller`. Restored,
+   it passed.
+4. **The content the alias names.** The `## Centring` fence is compiled by
+   `src/example-snippets.test.ts` (5 tests pass), so the alias cannot point at
+   a recipe whose props do not exist. The page was reread after the edit: the
+   section states `align`/`justify`, the `fullHeight`/`fullWidth` box and the
+   absence of `margin: auto`, which is what the query asks for.
+
+### 11.3 Gates
+
+| Command | Result |
+| ------- | ------ |
+| `nub run --filter docs test` | 148 files / **1 603 tests** passed (was 1 580; the two new tables add 23 rows) |
+| `nub run check` | `check:tests`, `lint`, `fmt`, `check-types` all green |
+| `nub run lint` | exit 0 |
+| `nub run test` | every workspace green; `apps/docs` 148 / 1 603 |
+| `nub run --filter docs smoke:build` | exit 0 — **112 pages**, 1 444 anchors, search checked, including the two new question queries |
+| `nub run --filter docs smoke:search` | exit 0 — the palette, the component-index filter and the 390 px path still pass |

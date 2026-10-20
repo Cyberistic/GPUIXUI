@@ -293,12 +293,86 @@ const queryTerms = (query: string): ReadonlyArray<string> =>
     .filter((term) => term.length > 1);
 
 /**
+ * Closed-class English words: articles, prepositions, conjunctions, pronouns,
+ * auxiliaries and wh-words (plan 630). They are grammar, not names, and a query
+ * made only of them names nothing. `to` is a prefix of Toggle and Tooltip, so
+ * `how to theme the app` returned Toggle before Theming. A real short name
+ * (`tab`, `box`) is not in this set and keeps its page.
+ */
+const FUNCTION_WORDS: ReadonlySet<string> = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "at",
+  "be",
+  "by",
+  "can",
+  "could",
+  "did",
+  "do",
+  "does",
+  "for",
+  "from",
+  "had",
+  "has",
+  "have",
+  "how",
+  "i",
+  "if",
+  "in",
+  "into",
+  "is",
+  "it",
+  "its",
+  "me",
+  "my",
+  "no",
+  "not",
+  "of",
+  "on",
+  "or",
+  "our",
+  "should",
+  "so",
+  "than",
+  "that",
+  "the",
+  "their",
+  "them",
+  "then",
+  "there",
+  "these",
+  "they",
+  "this",
+  "to",
+  "up",
+  "was",
+  "we",
+  "were",
+  "what",
+  "when",
+  "where",
+  "which",
+  "while",
+  "who",
+  "why",
+  "will",
+  "with",
+  "would",
+  "you",
+  "your",
+]);
+
+/**
  * The best rank a name list earns for a query, in two tiers (plan 561).
  *
  * A whole-query match keeps plan 431's ranks (`0–3`). When the query is a
  * phrase, each word is tried against every name and its rank is offset by
  * `TOKEN_MATCH_RANK`, so `popover placement` still reaches `Popovers` while
  * `command palette` prefers the page whose own title matches the whole phrase.
+ * A function word is never evidence (plan 630).
  */
 const nameRank = (
   names: ReadonlyArray<string>,
@@ -312,13 +386,17 @@ const nameRank = (
     return ranks.length === 0 ? undefined : Math.min(...ranks);
   };
 
-  const whole = best(query);
+  const whole = FUNCTION_WORDS.has(query.trim().toLowerCase())
+    ? undefined
+    : best(query);
   if (whole !== undefined) return whole;
 
-  const tokens = queryTerms(query).flatMap((term) => {
-    const rank = best(term);
-    return rank === undefined ? [] : [rank + TOKEN_MATCH_RANK];
-  });
+  const tokens = queryTerms(query)
+    .filter((term) => !FUNCTION_WORDS.has(term))
+    .flatMap((term) => {
+      const rank = best(term);
+      return rank === undefined ? [] : [rank + TOKEN_MATCH_RANK];
+    });
   return tokens.length === 0 ? undefined : Math.min(...tokens);
 };
 

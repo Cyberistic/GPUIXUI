@@ -234,6 +234,22 @@ management` → Component API, `transparency`, `width` and `letter spacing` →
 Styling, `rendering` and `server side rendering` → Architecture, `speed`,
 `credits`, `vitest`, `panel` and the colour-vision words.
 
+A function word names nothing (plan 630). The ranker compared every query word
+with every name as a prefix, so `to` — a prefix of Toggle and Tooltip — made
+`how to theme the app` return Toggle before Theming. `FUNCTION_WORDS` in
+`src/lib/search.ts` is the closed class of articles, prepositions, conjunctions,
+pronouns, auxiliaries and wh-words: it is skipped in the name rank, while a real
+short name typed alone (`tab` → Tabs, `box` → Box) keeps its page. The measured
+question forms and words then got exact aliases — `padding` and `hover effect` →
+Styling, `how to center content` → Layouts, `how to build a table` → Data
+display, `outside click` → Component API, `tab index`/`autofocus` →
+Accessibility, `validation message` → Inline validation, `no results` → Empty
+states, `placeholder` → Text inputs, `divider` → Separators. Layouts gained a
+sourced `## Centring` section because an alias may only point at prose that
+answers it. `search.test.ts` runs both tables against the real index, and
+`smoke:build` checks `how to center content` and `how to display an error` in
+the production build.
+
 The extension half is `/docs/extending` (plan 488): the `core/` layer, the real
 `Toggle` source and the theme example. `src/extending.test.ts` reads
 `packages/primitives/src/core` and the page, so a new core module cannot ship
