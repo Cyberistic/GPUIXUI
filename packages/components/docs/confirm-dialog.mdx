@@ -56,6 +56,12 @@ A confirmation opened from a `Dialog` owns its `Tab`: the enclosing dialog's tra
 yields to the press the confirmation handled and resumes when it closes
 (plan 728).
 
+Mounted together with its dialog — a restored route, an interrupted delete —
+the confirmation still holds focus and the top layer: Cancel is focused, and one
+`Escape` closes only the confirmation and returns focus to the dialog surface
+(plan 730). Layer and focus order follow the modal nesting, not the order React
+runs effects in.
+
 ## Tones
 
 `tone="default"` uses the primary button; `tone="danger"` uses the destructive
@@ -106,13 +112,14 @@ description are unchanged: the wording, not the colour, carries the consequence.
 
 ## Verification
 
-`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (10 tests):
+`src/behaviour/confirm-dialog.test.tsx` runs in the real GPUix renderer (13 tests):
 Cancel-focused-on-open, Enter cancelling without confirming, confirm reporting
 once and leaving the dialog open, both actions and Escape inert while loading,
 the busy state announced on the confirm action, the description announced on the
 dialog, the danger tone reading the destructive roles, a confirmation opened
 from a dialog keeping `Tab` and `Shift+Tab` inside it, and closing alone with
-the outer trap resuming.
+the outer trap resuming, and a confirmation mounted with its dialog keeping
+focus, closing alone and returning focus to the dialog (plan 730).
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

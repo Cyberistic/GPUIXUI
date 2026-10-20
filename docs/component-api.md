@@ -167,6 +167,10 @@ this package's `internal/key.ts` predicates and `internal/activate.ts`:
   alone and resumes once the panel closes (plan `719`); a modal does the same, so
   a `ConfirmDialog` or `Dialog` opened from a dialog owns the keyboard and the
   enclosing trap resumes on the next press (plan `728`).
+  **Layer order is nesting order**: a modal's dismiss layer and initial focus
+  rank by how deeply it is nested in modal surfaces, with open order only
+  breaking ties between siblings, so a confirmation mounted together with its
+  dialog is still the top layer (`Dialog`, `Drawer`, plan `730`).
   Composite rows and cells (`List`, menu rows, grid
   and calendar cells) keep Space as a **selection** key on key down, per ARIA's
   listbox/grid patterns.

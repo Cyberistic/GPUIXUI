@@ -63,6 +63,9 @@ capped by the window size.
 - `dismissible={false}` ignores both Escape and an outside press.
 - A drawer opened inside a dialog pushes its own layer, so one Escape closes
   the drawer first (the shared dismiss stack, plan 112).
+- Layer order and focus entry follow the nesting, not the open order: a
+  confirmation mounted together with the drawer is still the top layer, holds
+  focus, and hands it back to the drawer surface when it closes (plan 730).
 
 ## Motion
 
@@ -136,15 +139,16 @@ with no code change — see [Theming](/docs/theming).
 
 ## Verification
 
-`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (17 tests): open
+`src/behaviour/drawer.test.tsx` runs in the real GPUix renderer (18 tests): open
 lifecycle, dialog naming and `aria-expanded`, the description announced through
 `aria-description`, the title's default and caller-set
 heading levels, full-window veil, focus in/return — including when the content
 contains an auto-focused field (plan 638) —
 backdrop dismissal, the Tab trap, all three sides and sizes, both themes, an
-uninterruptible drawer, a controlled drawer that stays closed, and the motion —
-entry props, the measured slide on both axes, and a closing surface that stays
-painted but inert until it unmounts.
+uninterruptible drawer, a controlled drawer that stays closed, a confirmation
+mounted with the drawer keeping focus and the top layer (plan 730), and the
+motion — entry props, the measured slide on both axes, and a closing surface
+that stays painted but inert until it unmounts.
 
 The four modal rules were extracted from Dialog into `internal/modal.ts` with no
 behaviour change; Dialog and Confirmation dialog keep their own suites as the
