@@ -443,6 +443,7 @@ Cross-cutting records:
 | `435b` | **Fumadocs Editor** — ship an MDX/rich-text editor as a component in the suite (not for authoring our docs) | C/E | `200`, `203` | planned |
 | `435c` | **RTL** — logical placement, a direction token, mirrored directional icons, and an RTL docs toggle | C/D | `063`, `200` | planned |
 | `437` | **Embedded APIs and foreign surfaces** — the `Surface`/adapter contract (a runtime seam), the headless-vs-DOM verdict per candidate API, the GPUI/GPUix capability findings, and the ranked extra-mile backlog split by owner | A/E | `020`, `130`, `203`, `530`, `537`, `435b` | spec complete (no implementation) |
+| `438` | **Keyboard controls, OTA updates, and the runtime gap list** — FlashSpace hotkey/OTA recon, the `@gpuix/native@0.10.0` key/focus/update surface with the exact missing list, the library-only vs runtime-change verdict, and the keyboard + OTA architectures | A | `020`, `310`, `316`, `437`, `reference-research.md` | spec complete (no implementation) |
 
 > The `200` block was written by the reference-adoption executor on
 > 2026-10-17 from `.agents/slop/reference-research.md`. The per-workstream plans
