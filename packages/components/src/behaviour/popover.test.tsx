@@ -11,7 +11,9 @@
  * the trigger was also discarded in favour of the internal one, so the picker that
  * composes this trigger lost focus after a selection. A held trigger press closed
  * on the press and re-opened on the release, because the one-gesture mark was
- * cleared before the click (plan 583).
+ * cleared before the click (plan 583). Inside a dialog, one `Tab` moved focus
+ * twice — the walk then the modal's trap — so a control was skipped and the
+ * backward exit stranded focus (plan 719).
  */
 
 import * as Option from "effect/Option";
@@ -29,6 +31,7 @@ import {
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
 import { Popover, PopoverContent, PopoverTrigger } from "../popover.js";
+import { Dialog, DialogContent, DialogTitle } from "../dialog.js";
 
 /** A filter popover in a page with another control to press outside on. */
 const Filters = ({
@@ -78,6 +81,32 @@ const Columns = ({
     <Button testId="elsewhere">Elsewhere</Button>
   </div>
 );
+
+/** The same panel inside a dialog, with app controls on both sides of it. */
+const ColumnsInDialog = ({
+  onKeyDown,
+}: {
+  readonly onKeyDown?: () => void;
+}) => {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent label="Settings" testId="dialog" onKeyDown={onKeyDown}>
+        <DialogTitle>Settings</DialogTitle>
+        <Button testId="before">Before</Button>
+        <Popover>
+          <PopoverTrigger testId="trigger">Columns</PopoverTrigger>
+          <PopoverContent testId="panel">
+            <Button testId="first">First</Button>
+            <Button testId="second">Second</Button>
+            <Button testId="third">Third</Button>
+          </PopoverContent>
+        </Popover>
+        <Button testId="after">After</Button>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 /** A panel whose first tab stop can disappear while it is open. */
 const Removable = () => {
@@ -590,5 +619,49 @@ describe("Popover", () => {
     expect(focusedTestId(popover)).toEqual(Option.some("third"));
 
     popover.unmount();
+  });
+
+  it("walks its own controls inside a dialog", () => {
+    const onKeyDown = vi.fn();
+    const scene = renderComponent(<ColumnsInDialog onKeyDown={onKeyDown} />);
+
+    clickCentreOf(scene, "trigger");
+    finishMotion(scene);
+    expect(focusedTestId(scene)).toEqual(Option.some("first"));
+
+    // The modal's Tab trap runs on the same event; only the walk may move
+    // focus, so one press reaches one control (plan 719).
+    scene.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(scene)).toEqual(Option.some("second"));
+
+    scene.renderer.simulateKeystrokes("tab");
+    expect(focusedTestId(scene)).toEqual(Option.some("third"));
+    expect(scene.renderer.findByTestId("panel")).toBeDefined();
+
+    scene.renderer.simulateKeystrokes("tab");
+    finishMotion(scene);
+    expect(scene.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("after"));
+
+    // A claimed key still reaches the dialog's own caller.
+    expect(onKeyDown).toHaveBeenCalledTimes(3);
+
+    scene.unmount();
+  });
+
+  it("walks backwards inside a dialog and leaves before the trigger", () => {
+    const scene = renderComponent(<ColumnsInDialog />);
+
+    clickCentreOf(scene, "trigger");
+    finishMotion(scene);
+    expect(focusedTestId(scene)).toEqual(Option.some("first"));
+
+    scene.renderer.simulateKeystrokes("shift-tab");
+    finishMotion(scene);
+
+    expect(scene.renderer.findByTestId("panel")).toBeUndefined();
+    expect(focusedTestId(scene)).toEqual(Option.some("before"));
+
+    scene.unmount();
   });
 });

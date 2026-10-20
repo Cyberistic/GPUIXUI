@@ -49,6 +49,7 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import { MotionSurface, motionProps } from "./internal/motion.js";
 import {
@@ -433,6 +434,9 @@ const PopoverSurface = ({
               dismissTopLayer(value);
             }),
             Match.when(isTab, (value) => {
+              // The walk moves focus itself, so an enclosing modal must not
+              // trap the same event and move it again (plan 719).
+              claimEvent(value);
               handleTab(value.modifiers?.shift === true);
             }),
             Match.orElse(() => undefined),
