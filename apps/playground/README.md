@@ -2687,7 +2687,8 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 ## Evidence on this host
 
 The suite is **120/120 green** here (`exit 0`, 4449 checks, 65 capabilities,
-2026-10-20 after plan `801`; 522.96 s; **119/119** · 4359 after plan `797`; **118/118** · 4340 · 302.0 s before it, after plan
+2026-10-20 after plan `801`; **522.96 s**; **119/119** · 4359 after plan
+`797`; **118/118** · 4340 · 302.0 s before it, after plan
 `791`; **302.4 s** at plan `784`, which
 read 117/117 · 4278; **275.0 s** after plan `778`, which
 read 116/116 · 4228; **432.8 s** at the plan `777` gate,
