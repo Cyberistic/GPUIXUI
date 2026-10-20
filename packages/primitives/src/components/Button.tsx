@@ -8,19 +8,25 @@
  *
  * Focus is the one interaction state the runtime forces on us — there is no
  * `focusVisible` (plan 020 §1.2) — so the component tracks focus and merges
- * `core/style.ts`'s ring while it holds it. A mouse press therefore shows the
- * ring too; that limitation is recorded in `COMPONENTS.md`. The `focused` flag
- * is React-local render state with no other reader, so `useState` is the right
+ * tokens' `focusRing` while it holds it. A mouse press therefore shows the ring
+ * too; that limitation is recorded in `COMPONENTS.md`. The `focused` flag is
+ * React-local render state with no other reader, so `useState` is the right
  * tool; an Atom would make one button's highlight global state.
+ *
+ * The resting appearance is a Tailwind recipe (`recipe/buttonClass`), compiled
+ * through `@gpuixui/tw`; the caller's `className` is joined last so it wins
+ * conflicts exactly as `cn` resolves them.
  */
 
 import { useState, type ReactElement, type ReactNode } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import { decideActivation } from "../core/keyboard.js";
-import { controlFocusStyle, controlStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { buttonVariants, type ButtonVariant } from "../core/variants.js";
-import { mergeStyle } from "./internal.js";
+import type { ButtonVariant } from "../core/variants.js";
+import { buttonClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
+import { focusRingStyle, mergeStyle, suppressFeedback } from "./internal.js";
 import { Spinner } from "./Spinner.js";
 import { useTheme } from "./ThemeProvider.js";
 
@@ -43,6 +49,8 @@ export interface ButtonProps {
   readonly onActivate?: () => void;
   readonly onClick?: (event: EventPayload) => void;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly children?: ReactNode;
   readonly testId?: string;
 }
@@ -65,13 +73,6 @@ export const renderButton = (
 ): ReactElement => {
   const { variant = "primary", size = "md" } = props;
   const busy = isBusy(props);
-  const spec = {
-    variant: buttonVariants[variant],
-    size,
-    square: props.square,
-    fullWidth: props.fullWidth,
-    disabled: props.disabled,
-  };
   const activate = (): void => {
     if (busy) return;
     props.onActivate?.();
@@ -82,6 +83,25 @@ export const renderButton = (
       if (decideActivation(event.key ?? "", phase, event.isHeld === true))
         activate();
     };
+
+  const resolved = recipeTw.classesToStyle(
+    cn(
+      buttonClass(variant, size, {
+        square: props.square,
+        fullWidth: props.fullWidth,
+      }),
+      props.className,
+    ),
+    theme,
+  );
+  const state =
+    props.disabled === true
+      ? suppressFeedback(mergeStyle(resolved.style, resolved.disabled))
+      : resolved.style;
+  const style = focus.focused
+    ? mergeStyle(state, focusRingStyle(theme))
+    : state;
+
   return (
     <div
       role="button"
@@ -100,15 +120,7 @@ export const renderButton = (
       onBlur={focus.onBlur}
       onKeyDown={onKey("down")}
       onKeyUp={onKey("up")}
-      style={mergeStyle(
-        focus.focused
-          ? mergeStyle(
-              controlStyle(spec, theme),
-              controlFocusStyle(spec, theme),
-            )
-          : controlStyle(spec, theme),
-        props.style,
-      )}
+      style={mergeStyle(style, props.style)}
     >
       {props.loading === true ? (
         <Spinner size={theme.iconSize.sm} label="Loading" />

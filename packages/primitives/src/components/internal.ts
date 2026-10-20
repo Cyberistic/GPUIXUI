@@ -10,6 +10,7 @@
 import { useEffect, useState } from "react";
 import * as Option from "effect/Option";
 import type { StyleDesc } from "@gpuix/react";
+import { focusRing } from "@gpuixui/tokens";
 import {
   initValueState,
   setValue,
@@ -23,6 +24,24 @@ export const mergeStyle = (
   base: StyleDesc,
   override: StyleDesc | undefined,
 ): StyleDesc => (override === undefined ? base : { ...base, ...override });
+
+/** A disabled control keeps its resting fill and drops hover/active feedback. */
+export const suppressFeedback = (style: StyleDesc): StyleDesc => ({
+  ...style,
+  hover: { backgroundColor: style.backgroundColor },
+  active: { backgroundColor: style.backgroundColor },
+});
+
+/** The focus ring, destructive-coloured when the field is invalid. */
+export const focusRingStyle = (
+  theme: PrimitiveTheme,
+  invalid?: boolean,
+): StyleDesc => {
+  const ring = focusRing(theme);
+  return invalid === true
+    ? { boxShadow: { ...ring.boxShadow, color: theme.colors.destructive } }
+    : ring;
+};
 
 /**
  * The theme a provider hands down.

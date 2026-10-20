@@ -21,7 +21,8 @@
   },
   "dependencies": {
     "@gpuixui/icons": "workspace:*",
-    "@gpuixui/tokens": "workspace:*"
+    "@gpuixui/tokens": "workspace:*",
+    "@gpuixui/tw": "workspace:*"
   },
   "peerDependencies": {
     "@gpuix/react": "catalog:",

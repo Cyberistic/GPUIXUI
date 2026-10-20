@@ -65,6 +65,26 @@ identity, stacked-native deck hero, library grid, proof, attribution
 `[x]` Deploy the Fumadocs app (landing + getting started) to
 <https://gpuixui.sudokw.com> on Cloudflare Workers via the alchemy stack
 
+### `@gpuixui/tw` migration (`tw-primitives`)
+
+`[~]` `[██░░░░░░░]` 1/3
+
+`[x]` Add `@gpuixui/tw` as a `@gpuixui/primitives` dependency and convert the
+core primitives — `Button`, `Input`, `Text`, `Stack` (plus `TextArea`'s shared
+`fieldChrome`) — onto the Tailwind recipe (`src/recipe/`). Each renders a
+`className` recipe compiled through `classesToStyle`, accepts a caller
+`className` joined last, and keeps its rendered `StyleDesc` equivalent to the
+pre-migration resolver. `recipe.test.ts` proves the equivalence per
+variant/size/tone; `MIGRATION.md` records the mapping for the rest.
+`[ ]` Convert the remaining `packages/primitives/src/components` (`Box`, `Label`,
+`Separator`, `ScrollArea`, `ButtonGroup`, `Toggle`, `TextArea`, `NumberField`,
+`OTPField`, `Select`, `Checkbox`, `RadioGroup`, `Switch`, `Rating`, `Slider`,
+`RangeSlider`, `Meter`, `Progress`, `Spinner`, `Skeleton`, `Tooltip`) with the
+recipe in `MIGRATION.md`.
+`[ ]` Convert `packages/components` (Toast, Dialog, Popover, …) onto
+`@gpuixui/tw` — these may adopt the shadcn recipes' fixed metrics instead of the
+primitives' density scale.
+
 ### Design tokens and theming (`tokens-theme`)
 
 `[x]` `[███████░░░]` 14/20

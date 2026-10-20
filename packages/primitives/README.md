@@ -46,11 +46,16 @@ test fixture — the theme is the only source of those values.
 | Layer | What lives there | Why it is separate |
 | ----- | ---------------- | ------------------ |
 | `core/` | theme re-export, `style.ts` (spec → `StyleDesc`), `variants.ts`, `keyboard.ts`, `state.ts`, `loading.ts`, `layout.ts`, `selection.ts` | pure and runtime-free: this is the part that can be proven without a GPUix runtime, and where the design decisions actually live |
+| `recipe/` | `@gpuixui/tw` registry + class-string builders for the components already migrated | the Tailwind recipe is the single source of truth for a component's resting appearance; `recipe.test.ts` proves it compiles to the same `StyleDesc` as `core/` |
 | `components/` | thin renderers over GPUix host elements | each is a resolver call plus, at most, React-local focus or value state |
 
 `core/` must not import `@gpuix/react` at runtime (type-only imports are erased).
 `components/` may import the published `/select`, `/tooltip`, `/floating`
 subpaths; the package root needs a native binding.
+
+The migration from `core/` resolvers to `recipe/` class strings is mechanical;
+the exact steps and the native-style-prop → utility-class mapping are in
+[`MIGRATION.md`](./MIGRATION.md).
 
 ## Components
 

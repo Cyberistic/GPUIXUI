@@ -324,6 +324,9 @@ importers:
       '@gpuixui/tokens':
         specifier: workspace:*
         version: link:../tokens
+      '@gpuixui/tw':
+        specifier: workspace:*
+        version: link:../tw
     devDependencies:
       '@effect/platform-node':
         specifier: 'catalog:'

@@ -5,21 +5,24 @@
  * `onChange`'s `event.value`; `value` is the external value pushed back in. The
  * controlled/uncontrolled decision is `core/state.ts`'s, so a field and a
  * checkbox cannot disagree about which value wins.
+ *
+ * The field chrome is a Tailwind recipe (`recipe/fieldClass`), compiled through
+ * `@gpuixui/tw`; the caller's `className` is joined last so it wins conflicts
+ * exactly as `cn` resolves them.
  */
 
 import type { ReactElement } from "react";
 import type { EventPayload, StyleDesc } from "@gpuix/react";
+import { cn } from "@gpuixui/tw";
 import type { ValueState } from "../core/state.js";
-import {
-  controlFocusStyle,
-  controlStyle,
-  fieldTextStyle,
-  nativeTextTheme,
-} from "../core/style.js";
+import { nativeTextTheme } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import { fieldVariant } from "../core/variants.js";
+import { fieldClass } from "../recipe/index.js";
+import { recipeTw } from "../recipe/registry.js";
 import {
+  focusRingStyle,
   mergeStyle,
+  suppressFeedback,
   useControlState,
   useFocus,
   type FocusState,
@@ -57,22 +60,29 @@ export interface FieldProps {
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
   readonly style?: StyleDesc;
+  /** A Tailwind class string, joined after the recipe so it wins conflicts. */
+  readonly className?: string;
   readonly testId?: string;
 }
 
 /** The chrome a field element draws, shared by the input and the textarea. */
 export const fieldChrome = (
-  { size = "md", invalid, disabled, fullWidth, style }: FieldProps,
+  { size = "md", invalid, disabled, fullWidth, style, className }: FieldProps,
   theme: PrimitiveTheme,
   focused: boolean,
 ): StyleDesc => {
-  const spec = { variant: fieldVariant, size, invalid, disabled, fullWidth };
-  const base = mergeStyle(
-    mergeStyle(controlStyle(spec, theme), fieldTextStyle(theme)),
-    disabled === true ? { cursor: "not-allowed" } : undefined,
+  const resolved = recipeTw.classesToStyle(
+    cn(fieldClass({ size, invalid, fullWidth }), className),
+    theme,
   );
+  let base = resolved.style;
+  if (invalid === true) base = mergeStyle(base, resolved.invalid);
+  if (disabled === true) {
+    base = mergeStyle(base, resolved.disabled);
+    base = suppressFeedback(base);
+  }
   const ring =
-    focused && disabled !== true ? controlFocusStyle(spec, theme) : {};
+    focused && disabled !== true ? focusRingStyle(theme, invalid) : {};
   return mergeStyle(mergeStyle(base, ring), style);
 };
 
