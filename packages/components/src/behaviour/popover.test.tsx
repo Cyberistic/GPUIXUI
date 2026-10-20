@@ -492,4 +492,23 @@ describe("Popover", () => {
 
     popover.unmount();
   });
+
+  it("does not take focus from a controlled close the caller refuses", () => {
+    const onOpenChange = vi.fn();
+    const popover = renderComponent(
+      <Filters open={true} onOpenChange={onOpenChange} />,
+    );
+    finishMotion(popover);
+
+    expect(focusedTestId(popover)).toEqual(Option.some("panel"));
+
+    popover.renderer.simulateKeystrokes("escape");
+    finishMotion(popover);
+
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(popover.renderer.findByTestId("panel")).toBeDefined();
+    expect(focusedTestId(popover)).toEqual(Option.some("panel"));
+
+    popover.unmount();
+  });
 });
