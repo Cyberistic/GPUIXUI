@@ -119,4 +119,23 @@ describe("the platform files' quoted figures", () => {
       )}:1 on the pressed wash`,
     );
   });
+
+  it("holds the disabled fill's step off its own dark surfaces", () => {
+    (
+      [
+        ["darwin", "macos.ts"],
+        ["linux", "linux.ts"],
+      ] as const
+    ).forEach(([platform, file]) => {
+      const dark = getPlatformTheme(platform, "dark");
+      expect(dark.colors.popover, file).toBe(dark.colors.card);
+      expect(dark.colors.muted, file).toBe(dark.colors.card);
+      expect(source(file), file).toContain(
+        `The card, popover and quiet panel are ${dark.colors.card}, so the fill is its own step above them (${fixed(
+          contrastRatio(dark.colors.disabled, dark.colors.card),
+          3,
+        )}:1) rather than the identity's neutral-850 (plan 737).`,
+      );
+    });
+  });
 });

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 361/440
+`[x]` `[████████░░]` 362/441
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -3125,6 +3125,14 @@ a value, not a member set; the record walk still owns the boundary, so a widened
 scale stays refused, the 0 → 1 and 1 → 0 transitions both round-trip, and the
 executed example defines the level; no colour, pair, floor, metric, role or
 shipped theme moves (plan 794)
+`[x]` Give the disabled fill's two platform rationales an owner — `linux.ts` and
+`macos.ts` state "The card, popover and quiet panel are `#…`, so the fill is its
+own step above them (1.126:1 / 1.139:1)", computed once by hand, while
+`platform-claims.test.ts` owns the other figures in those files and
+`disabled-fill.test.ts` pins only the identity; the case derives the step from
+`contrastRatio(disabled, card)` and requires the three surfaces to be the one hex
+the sentence prints, so a palette edit cannot leave a stale rationale; no colour,
+pair, floor, metric, role or shipped theme moves (plan 795)
 
 ## Phase C — Tier 1–2 components
 
