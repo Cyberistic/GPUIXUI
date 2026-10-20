@@ -49,14 +49,12 @@ const spec = (over: Partial<ControlSpec> = {}): ControlSpec => ({
 });
 
 /** The spread of a focused control's ring, if it has one. */
-const spreadOf = (style: ReturnType<typeof controlFocusStyle>): number =>
-  Option.getOrElse(
-    Option.map(
-      Option.fromNullishOr(style.boxShadow),
-      (shadow) => shadow.spreadRadius,
-    ),
-    () => 0,
-  );
+const spreadOf = (style: ReturnType<typeof controlFocusStyle>): number => {
+  const shadow = style.boxShadow;
+  return shadow !== undefined && !Array.isArray(shadow)
+    ? shadow.spreadRadius
+    : 0;
+};
 
 /**
  * The paint a variant declares for an interaction: a change of fill, of border
@@ -449,7 +447,13 @@ describe("value controls", () => {
 
   it("paints a ring on a focused thumb, at the token ring colour", () => {
     const focused = sliderThumbStyle({ ...spec, focused: true }, testTheme);
-    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
+    expect(focused.boxShadow).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: testTheme.borderWidth.strong,
+      color: testTheme.colors.ring,
+    });
     expect(sliderThumbStyle(spec, testTheme).boxShadow).toBeUndefined();
   });
 });

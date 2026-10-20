@@ -7,7 +7,7 @@
  * compound-part contract), and this module imports no component.
  */
 
-import type { EventPayload } from "@gpuix/react";
+import type { KeyEvent } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { Match } from "effect";
 import { useLayoutEffect, useRef } from "react";
@@ -105,7 +105,7 @@ export const handleModalKeyDown = ({
   renderer,
   onKeyDown,
 }: {
-  readonly event: EventPayload;
+  readonly event: KeyEvent;
   readonly contentId: number | undefined;
   readonly renderer:
     | {
@@ -113,14 +113,17 @@ export const handleModalKeyDown = ({
         focusPreviousWithin?: (id: number) => void;
       }
     | undefined;
-  readonly onKeyDown?: (event: EventPayload) => void;
+  readonly onKeyDown?: (event: KeyEvent) => void;
 }): void => {
   Match.value(event).pipe(
     Match.when(isDismiss, (value) => {
       dismissTopLayer(value);
     }),
-    Match.when(isTab, (value) => {
-      if (value.modifiers?.shift === true) {
+    Match.when(isTab, () => {
+      // 0.11.0 moves focus on Tab by default; the modal traps instead, so the
+      // default move is cancelled and the wrap is driven by `focusNextWithin`.
+      event.preventDefault();
+      if (event.modifiers?.shift === true) {
         renderer?.focusPreviousWithin?.(contentId ?? -1);
       } else {
         renderer?.focusNextWithin?.(contentId ?? -1);

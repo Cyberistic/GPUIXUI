@@ -1,17 +1,18 @@
 /**
  * The dismiss stack behind every overlay.
  *
- * `@gpuix/react@0.10.0` ships no `DismissableLayer`, so the question "which
- * Escape or outside press closes what" is answered here: open overlays push
- * themselves onto one module-level stack, and only the topmost layer may consume
- * a given event. Nesting therefore dismisses outside-in — a popover inside a
- * dialog closes the popover first.
+ * `@gpuix/react@0.11.0` ships a `DismissableLayer`, but it models one layer's
+ * dismissal, not "which Escape or outside press closes what" across a nested
+ * tree. That question is answered here: open overlays push themselves onto one
+ * module-level stack, and only the topmost layer may consume a given event.
+ * Nesting therefore dismisses outside-in — a popover inside a dialog closes the
+ * popover first.
  *
  * The event itself is the unit of consumption. A key or press bubbles from the
  * focused node up through every enclosing overlay, so without the identity guard
  * the popover would close and then the dialog would close on the same keystroke.
- * `EventPayload` has no `preventDefault` in 0.10.0; a `WeakSet` of handled events
- * is the smallest honest replacement.
+ * A `WeakSet` of handled events is the guard; `preventDefault` alone would stop
+ * the platform default but not the second overlay's own handler.
  */
 
 import type { EventPayload } from "@gpuix/react";

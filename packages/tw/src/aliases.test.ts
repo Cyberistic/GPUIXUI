@@ -87,10 +87,13 @@ describe("cn-input", () => {
       alpha(lightTheme.colors.input, 0.5),
     );
     expect(luma.focus.borderColor).toBe(lightTheme.colors.ring);
-    expect(luma.focus.boxShadow?.spreadRadius).toBe(3);
-    expect(luma.focus.boxShadow?.color).toBe(
-      alpha(lightTheme.colors.ring, 0.3),
-    );
+    expect(luma.focus.boxShadow).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: 3,
+      color: alpha(lightTheme.colors.ring, 0.3),
+    });
   });
 
   it("keeps luma's round, filled preset instead of new-york's square one", () => {
@@ -159,10 +162,13 @@ describe("cn-dialog-* and cn-popover-*", () => {
     expect(luma.gap).toBe(24);
     expect(luma.backgroundColor).toBe(lightTheme.colors.popover);
     expect(luma.maxWidth).toBe(448);
-    expect(luma.boxShadow?.spreadRadius).toBe(1);
-    expect(luma.boxShadow?.color).toBe(
-      alpha(lightTheme.colors.foreground, 0.05),
-    );
+    expect(luma.boxShadow).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: 1,
+      color: alpha(lightTheme.colors.foreground, 0.05),
+    });
     expect(luma.borderRadius).toBe(newYork.borderRadius);
     expect(luma.maxWidth).toBe(newYork.maxWidth);
   });

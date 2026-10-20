@@ -9,7 +9,7 @@
  * has no `transform` in `StyleDesc` (see `host.ts:121-237`).
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -414,7 +414,7 @@ export const AccordionTrigger = ({
     if (!disabled) toggle(value);
   };
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const handleKeyDown = (event: KeyEvent): void => {
     if (disabled) return;
     Match.value(event).pipe(
       Match.when(isActivation, flip),
@@ -441,7 +441,7 @@ export const AccordionTrigger = ({
               flip();
             }
       }
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         handleKeyDown(event);
         onKeyDown?.(event);
       }}

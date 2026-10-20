@@ -11,7 +11,7 @@
  * controls and the arrow keys share one clamp and one loop rule.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { KeyEvent, Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -133,7 +133,7 @@ export const Carousel = ({
         role="group"
         aria-label={label}
         tabIndex={0}
-        onKeyDown={(event: EventPayload) => {
+        onKeyDown={(event: KeyEvent) => {
           if (isRight(event)) context.step(1);
           else if (isLeft(event)) context.step(-1);
           else if (isFirst(event)) context.goTo(0);

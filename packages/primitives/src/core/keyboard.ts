@@ -11,11 +11,11 @@
  * key does not fire repeatedly, **Space** activates on key *up* the way a
  * browser button does, and a repeat event never activates.
  *
- * **Limitation:** `@gpuix/native` 0.10.0's `EventPayload` carries no
- * `defaultPrevented` and offers no way to prevent the platform default, so a
- * Space key down cannot be swallowed here. It does nothing on our controls,
- * but in a scroll container the runtime may also scroll — recorded in
- * `COMPONENTS.md`, and the reason there is no `preventDefault` field to fake.
+ * **Limitation:** these decisions are pure, so they cannot swallow the platform
+ * default — the component's own `onKeyDown` (which receives `KeyEvent`) calls
+ * `preventDefault()`. A Space key down is therefore not swallowed here. It does
+ * nothing on our controls, but in a scroll container the runtime may also scroll
+ * — recorded in `COMPONENTS.md`.
  */
 
 import * as Arr from "effect/Array";

@@ -8,7 +8,7 @@
  * the item that follows them, so hiding an item hides its separator too.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { KeyEvent, Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import * as Arr from "effect/Array";
 import {
@@ -247,7 +247,7 @@ export const BreadcrumbLink = ({
         onClick?.(event);
         onSelect?.();
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         if (isActivation(event)) onSelect?.();
         onKeyDown?.(event);
       }}

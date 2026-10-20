@@ -76,8 +76,13 @@ describe("selectionBoxStyle", () => {
 
   it("paints the focus ring on a focused box, and only then", () => {
     const focused = selectionBoxStyle(spec({ focused: true }), testTheme);
-    expect(focused.boxShadow?.color).toBe(testTheme.colors.ring);
-    expect(focused.boxShadow?.spreadRadius).toBe(testTheme.borderWidth.strong);
+    expect(focused.boxShadow).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: testTheme.borderWidth.strong,
+      color: testTheme.colors.ring,
+    });
     expect(selectionBoxStyle(spec(), testTheme).boxShadow).toBeUndefined();
   });
 
@@ -161,8 +166,14 @@ describe("switch", () => {
 
   it("paints the focus ring on a focused track, and only then", () => {
     expect(
-      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow?.color,
-    ).toBe(testTheme.colors.ring);
+      switchTrackStyle(spec({ focused: true }), testTheme).boxShadow,
+    ).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: testTheme.borderWidth.strong,
+      color: testTheme.colors.ring,
+    });
     expect(switchTrackStyle(spec(), testTheme).boxShadow).toBeUndefined();
   });
 });

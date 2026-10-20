@@ -9,7 +9,7 @@
  * consumer that queries on each one debounces its own effect.
  */
 
-import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -133,7 +133,7 @@ export const SearchInput = ({
           onChange?.(event);
           setValue(event.value ?? "");
         }}
-        onKeyDown={(event: EventPayload) => {
+        onKeyDown={(event: KeyEvent) => {
           onKeyDown?.(event);
           if (isDismiss(event)) clear();
         }}
@@ -161,7 +161,7 @@ export const SearchInput = ({
           testId="search-clear"
           tabIndex={disabled ? -1 : 0}
           onClick={clear}
-          onKeyDown={(event: EventPayload) => {
+          onKeyDown={(event: KeyEvent) => {
             if (event.key === "enter" || event.key === "space") clear();
           }}
           style={{

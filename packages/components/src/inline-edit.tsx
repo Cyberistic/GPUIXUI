@@ -10,7 +10,7 @@
  * after the swap, because focus does not follow a replaced element.
  */
 
-import type { EventPayload, InputProps, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, InputProps, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   mergeStyles,
@@ -128,7 +128,7 @@ export const InlineEdit = ({
 
   const commit = (): void => finish(true, true);
 
-  const handleInputKeyDown = (event: EventPayload): void => {
+  const handleInputKeyDown = (event: KeyEvent): void => {
     onKeyDown?.(event);
     if (isDismiss(event)) {
       cancel();
@@ -148,7 +148,7 @@ export const InlineEdit = ({
         {...rest}
         ref={setDisplay}
         onClick={start}
-        onKeyDown={(event: EventPayload) => {
+        onKeyDown={(event: KeyEvent) => {
           if (isActivation(event)) start();
         }}
         onFocus={(event) => {

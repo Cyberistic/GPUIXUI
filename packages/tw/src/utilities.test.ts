@@ -73,9 +73,14 @@ describe("expanded shadcn utilities", () => {
       color: lightTheme.colors.ring,
     });
     expect(
-      classesToStyle("focus-visible:ring-3", lightTheme).focus.boxShadow
-        ?.spreadRadius,
-    ).toBe(3);
+      classesToStyle("focus-visible:ring-3", lightTheme).focus.boxShadow,
+    ).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: 3,
+      color: lightTheme.colors.ring,
+    });
   });
 
   it("keeps border-input on the border role", () => {

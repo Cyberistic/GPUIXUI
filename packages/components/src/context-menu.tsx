@@ -11,7 +11,12 @@
  * a bare `anchored` element plus the shared {@link MenuSurface}.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type {
+  EventPayload,
+  KeyEvent,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { pipe } from "effect";
@@ -238,7 +243,7 @@ export const ContextMenuTrigger = ({
         if (disabled || event.isRightClick !== true) return;
         openAt({ x: event.x ?? 0, y: event.y ?? 0 });
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         if (isMenuKey(event)) openFromKey();
         onKeyDown?.(event);
       }}

@@ -22,7 +22,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Ref from "effect/Ref";
 import { useGpuix, useWindowSize } from "@gpuix/react";
-import type { EventPayload, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, PublicInstance } from "@gpuix/react";
 import { useTheme } from "@gpuixui/tokens/react";
 import type { Smoke } from "@gpuixui/testing";
 import { Body, Pressable, Readout } from "../ui.js";
@@ -112,8 +112,11 @@ const ModalProbe = () => {
     setLast(reason);
   };
 
-  const handleContentKey = (event: EventPayload) => {
+  const handleContentKey = (event: KeyEvent) => {
     if (event.key === "tab") {
+      // 0.11.0 moves focus on Tab by default; the trap cancels it and drives
+      // the wrap through `focusNextWithin` / `focusPreviousWithin`.
+      event.preventDefault();
       const id = Option.getOrElse(contentId, () => -1);
       if (event.modifiers?.shift === true) {
         renderer?.focusPreviousWithin?.(id);

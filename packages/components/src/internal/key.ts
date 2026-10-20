@@ -1,10 +1,10 @@
 /**
  * Named predicates over GPUix key events, so key names live in one place.
  *
- * Typed against `EventPayload`, which is what a key handler receives in the
- * installed `@gpuix/react@0.10.0`: that release has no `KeyEvent` type, so there
- * is no `preventDefault`. Components that need to suppress a default action must
- * do it through the runtime's own APIs, not through the event object.
+ * Typed against `EventPayload` — the fields these predicates read (`key`,
+ * `keyChar`, `modifiers`) — so they serve both plain events and `KeyEvent`
+ * (which extends it). A key handler that needs `preventDefault` types the event
+ * `KeyEvent` at the boundary; these predicates stay on the base shape.
  */
 
 import type { EventPayload } from "@gpuix/react";

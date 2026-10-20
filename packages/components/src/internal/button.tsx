@@ -15,7 +15,7 @@
  * dimming — assistive technology sees a button that does nothing.
  */
 
-import type { EventPayload, Props, StyleDesc } from "@gpuix/react";
+import type { KeyEvent, Props, StyleDesc } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import { Match } from "effect";
 import { useState } from "react";
@@ -120,7 +120,7 @@ const activation = (
     ? { onClick: undefined, onKeyDown }
     : {
         onClick,
-        onKeyDown: (event: EventPayload) => {
+        onKeyDown: (event: KeyEvent) => {
           if (isActivation(event)) onClick?.(event);
           onKeyDown?.(event);
         },

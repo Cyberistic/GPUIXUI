@@ -14,7 +14,7 @@
  * the content).
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
@@ -236,7 +236,7 @@ export const DrawerContent = ({
 
   const box = surfaceSize(side, size, window);
   const close = () => setOpen(false);
-  const handleKeyDown = (event: EventPayload): void => {
+  const handleKeyDown = (event: KeyEvent): void => {
     handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 

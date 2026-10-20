@@ -12,7 +12,7 @@
  * straight to the first link.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   FloatingLayer,
@@ -207,7 +207,7 @@ export const NavigationMenu = ({
           role="navigation"
           aria-label={label}
           {...rest}
-          onKeyDown={(event: EventPayload) => {
+          onKeyDown={(event: KeyEvent) => {
             onKeyDown?.(event);
             if (isDismiss(event)) dismissTopLayer(event);
           }}
@@ -317,7 +317,7 @@ export const NavigationMenuTrigger = ({
         onClick?.(event);
         setOpen(expanded ? null : value);
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
         if (isDown(event)) {
           setOpen(value);

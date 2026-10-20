@@ -73,7 +73,13 @@ describe("Input recipe", () => {
 
   it("routes focus, invalid and disabled to their own buckets", () => {
     expect(input.focus.borderColor).toBe(lightTheme.colors.ring);
-    expect(input.focus.boxShadow?.spreadRadius).toBe(3);
+    expect(input.focus.boxShadow).toEqual({
+      offsetX: 0,
+      offsetY: 0,
+      blurRadius: 0,
+      spreadRadius: 3,
+      color: alpha(lightTheme.colors.ring, 0.5),
+    });
     expect(input.invalid.borderColor).toBe(lightTheme.colors.destructive);
     expect(input.disabled.opacity).toBe(0.5);
     expect(input.disabled.pointerEvents).toBe("none");

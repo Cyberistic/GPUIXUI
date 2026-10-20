@@ -7,7 +7,7 @@
  * instead of promising an animation the runtime cannot measure yet.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { KeyEvent, Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -126,7 +126,7 @@ export const CollapsibleTrigger = ({
         onClick?.(event);
         toggle();
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         if (isActivation(event)) toggle();
         onKeyDown?.(event);
       }}

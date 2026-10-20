@@ -1,9 +1,14 @@
 /**
  * Dialog: a modal surface that takes the window until it is dismissed.
  *
- * `@gpuix/react@0.10.0` ships no dialog parts and no dismiss layer, so the
- * overlay is built from the primitives the release actually has (plan 112 §1c,
- * measured):
+ * `@gpuix/react@0.11.0` ships a headless dialog (`@gpuix/react/dialog`) with a
+ * Radix-style part model — `Root`/`Trigger`/`Portal`/`Backdrop`/`Popup`/
+ * `Title`/`Close`. This component does not wrap it: the library's public Dialog
+ * is a *styled* compound part with a shadcn shape (`Dialog`/`Trigger`/`Content`/
+ * `Header`/`Title`/`Description`/`Footer`/`Close`) and a theme-aware surface,
+ * which the headless primitive deliberately leaves to the caller. Rebuilding on
+ * it is a future migration, not a mapping; until then the overlay is built from
+ * the primitives the release has (plan 112 §1c, measured):
  *
  * - the veil is an `<anchored position={{x:0,y:0}}>` sized from `useWindowSize()`,
  *   because `position:"absolute"` resolves against the mount parent and a nested
@@ -11,15 +16,16 @@
  * - Escape is offered to `internal/dismiss-layer.ts`, whose top layer is this
  *   dialog, so nested overlays dismiss outside-in;
  * - focus-in, focus-return and the Tab trap use the renderer's own
- *   `focusElement` / `focusNextWithin` / `focusPreviousWithin`.
+ *   `focusElement` / `focusNextWithin` / `focusPreviousWithin`; the Tab trap
+ *   calls `event.preventDefault()` so 0.11.0's default Tab navigation does not
+ *   also move focus out of the surface.
  *
- * Known gaps in 0.10.0, recorded rather than papered over: no `aria-modal` and no
+ * Remaining gaps, recorded rather than papered over: no `aria-modal` and no
  * `aria-labelledby`, so the dialog is named with `aria-label` and its title is a
- * heading, not the dialog's accessible name; no `preventDefault`, so a key can be
- * observed but not cancelled.
+ * heading, not the dialog's accessible name.
  */
 
-import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, Props, PublicInstance } from "@gpuix/react";
 import { useGpuix, useWindowSize } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import {
@@ -226,7 +232,7 @@ export const DialogContent = ({
 
   const close = () => setOpen(false);
 
-  const handleKeyDown = (event: EventPayload): void => {
+  const handleKeyDown = (event: KeyEvent): void => {
     handleModalKeyDown({ event, contentId, renderer, onKeyDown });
   };
 

@@ -10,7 +10,7 @@
  * immediately (no delay). The delays are props so tests need no 300 ms sleep.
  */
 
-import type { EventPayload, PublicInstance } from "@gpuix/react";
+import type { KeyEvent, PublicInstance } from "@gpuix/react";
 import { useGpuix } from "@gpuix/react";
 import {
   FloatingLayer,
@@ -203,7 +203,7 @@ export const PreviewCardTrigger = ({ onClick, ref, ...rest }: ButtonProps) => {
         if (open) setOpen(false);
         else scheduleOpen();
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         rest.onKeyDown?.(event);
         if (isDismiss(event) && open) setOpen(false);
       }}
@@ -287,7 +287,7 @@ export const PreviewCardContent = ({
         onMouseDownOutside?.(event);
         dismissTopLayer(event);
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
         if (isDismiss(event)) dismissTopLayer(event);
       }}

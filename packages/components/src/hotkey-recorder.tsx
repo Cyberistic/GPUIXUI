@@ -11,7 +11,7 @@
  * could not prove.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { KeyEvent, Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -101,7 +101,7 @@ export const HotkeyRecorder = ({
         if (recording) setRecording(false);
         else start();
       }}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
         if (disabled) return;
         if (recording) {
@@ -188,7 +188,7 @@ export const HotkeyRecorder = ({
           testId={testId === undefined ? undefined : `${testId}-clear`}
           tabIndex={0}
           onClick={clear}
-          onKeyDown={(event: EventPayload) => {
+          onKeyDown={(event: KeyEvent) => {
             if (isActivation(event)) clear();
           }}
           style={{

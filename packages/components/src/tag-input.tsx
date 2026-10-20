@@ -11,7 +11,7 @@
  * therefore adds two tokens, and typing `","` adds the one before it.
  */
 
-import type { EventPayload, InputProps, Props } from "@gpuix/react";
+import type { KeyEvent, InputProps, Props } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -189,7 +189,7 @@ export const TagInputField = ({
       readOnly={disabled}
       value={draft}
       onChange={(event) => editDraft(event.value ?? "")}
-      onKeyDown={(event: EventPayload) => {
+      onKeyDown={(event: KeyEvent) => {
         onKeyDown?.(event);
         if (isEnter(event)) addDraft();
       }}
@@ -268,7 +268,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
           aria-label={`Remove ${value}`}
           tabIndex={0}
           onClick={() => remove(value)}
-          onKeyDown={(event: EventPayload) => {
+          onKeyDown={(event: KeyEvent) => {
             if (isActivation(event)) remove(value);
           }}
           style={{
