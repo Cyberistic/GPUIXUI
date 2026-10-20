@@ -1480,6 +1480,15 @@ retired once both branches are one
       48 files, full native suite 1029 passed / 20 failed of 1049 (the same
       plan-540 classes); docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index
       synced (owner: components)
+    - [x] A message row keeps a unique React key — plan 809; measured
+      2026-10-20: repeated attachment names, identical tool calls and duplicate
+      source URLs each made React log its duplicate-key warning (documented as
+      unsupported, and rows may be duplicated or omitted). The three display-only
+      sections now key by position, so every row paints; 3 native warning-and-
+      content cases (message 19 → 22), all three red at `HEAD`; unit 512 in 48
+      files, full native suite 1032 passed / 20 failed of 1052 (the same plan-540
+      classes); docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

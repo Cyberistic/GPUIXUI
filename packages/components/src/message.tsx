@@ -15,6 +15,10 @@
  * `<text>` when `format="text"`, which is what a token-by-token stream can use
  * if markdown repaint ever proves unreliable. `onLinkClick` reports the URL; the
  * caller opens it, because 0.10.0 has no `href`.
+ *
+ * Tool-call, attachment and source rows are keyed by position: a caller may
+ * legitimately repeat a call, an attachment name or a URL, and those rows are
+ * display-only, so the position is the only identity that cannot collide.
  */
 
 import type { Props, StyleDesc } from "@gpuix/react";
@@ -368,13 +372,13 @@ export const MessageToolCalls = ({
       {...(name === undefined ? {} : { "aria-label": name })}
       style={mergeStyles(block(theme, variant), style)}
     >
-      {calls.map((call) => {
+      {calls.map((call, index) => {
         const rowName = Option.getOrUndefined(
           composedName(undefined, [call.name, call.status]),
         );
         return (
           <div
-            key={`${call.name}-${call.status}-${call.result ?? ""}`}
+            key={index}
             role="listitem"
             {...(rowName === undefined ? {} : { "aria-label": rowName })}
             style={{
@@ -468,7 +472,7 @@ export const MessageSources = ({
     >
       {sources.map((source, index) => (
         <Button
-          key={source.url}
+          key={index}
           testId={testId === undefined ? undefined : `${testId}-${index}`}
           variant="ghost"
           size="sm"
@@ -525,13 +529,13 @@ export const MessageAttachments = ({
         style,
       )}
     >
-      {attachments.map((attachment) => {
+      {attachments.map((attachment, index) => {
         const rowName = Option.getOrUndefined(
           composedName(undefined, [attachment.name, attachment.meta ?? ""]),
         );
         return (
           <div
-            key={attachment.name}
+            key={index}
             role="listitem"
             {...(rowName === undefined ? {} : { "aria-label": rowName })}
             style={{

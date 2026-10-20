@@ -134,6 +134,9 @@ all of it with no code change.
   not a token-level parser.
 - Sources and links report URLs; the caller opens them.
 - Tool-call rows are display-only; a consumer wires retry/cancel outside.
+- A call, attachment or citation has no caller `id`, so rows are keyed by
+  position: repeating a call, an attachment name or a URL paints every row and
+  never collapses them into one.
 - No `aria-live`; streamed text is not announced.
 
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
@@ -142,15 +145,17 @@ all of it with no code change.
 
 ## Verification
 
-`src/behaviour/message.test.tsx` runs in the real GPUix renderer (19 tests): it
+`src/behaviour/message.test.tsx` runs in the real GPUix renderer (22 tests): it
 compares the two alignments, appends a token and reads `getPaintedText`, opens
 the reasoning disclosure, clicks a citation, flips a failed tool call, checks
 that empty slots render nothing, names each variant's row with a human phrase,
 names the row from `label` and a caller's `aria-label`, names the tool-call and
 attachment groups and every row in them, prefers a caller's authored name on the
-sources group, and names the streaming status from its label, a caller's name and
-a blank fallback. `src/inventory.test.ts` checks this page, the example and the
-`COMPONENTS.md` row.
+sources group, names the streaming status from its label, a caller's name and
+a blank fallback, and mounts repeated attachment names, identical tool calls and
+duplicate source URLs with no React duplicate-key warning and every row painted.
+`src/inventory.test.ts` checks this page, the example and the `COMPONENTS.md`
+row.
 
 ## Credit
 

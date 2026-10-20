@@ -15,11 +15,14 @@
  * arrived as an empty `listitem`, a section that replaced the caller's
  * `aria-label` with its hard-coded default, and a sources group that preferred
  * `label` to an authored name (plan 806); actions that appear without a
- * consumer wiring them.
+ * consumer wiring them. Two attachments with one name, two identical tool calls
+ * and two sources with one URL each made React log the duplicate-key warning,
+ * whose documented behaviour is unsupported (plan 809); the display-only rows
+ * are keyed by position so every row paints.
  */
 
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { darkTheme } from "../internal/theme.js";
 import { clickCentreOf, requireBounds } from "../internal/interaction.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -37,6 +40,18 @@ import {
   MessageStreaming,
   MessageToolCalls,
 } from "../message.js";
+
+/** React's duplicate-key warnings, separated from any unrelated error. */
+const sameKeyWarnings = (
+  calls: ReadonlyArray<ReadonlyArray<unknown>>,
+): ReadonlyArray<string> =>
+  calls
+    .map((call) => String(call[0]))
+    .filter((message) => message.includes("same key"));
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 /** A single row in a fixed column, so alignment is comparable. */
 const Row = ({
@@ -330,6 +345,88 @@ describe("Message", () => {
 
     expect(groups()).toContain("Sources");
     expect(groups()).not.toContain("Citations");
+
+    row.unmount();
+  });
+
+  it("keeps two attachments with the same name apart", () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const row = renderComponent(
+      <Row variant="assistant">
+        <MessageAttachments
+          attachments={[
+            { name: "a.txt", meta: "1 KB" },
+            { name: "a.txt", meta: "2 KB" },
+          ]}
+        />
+      </Row>,
+    );
+
+    row.rerender(
+      <Row variant="assistant">
+        <MessageAttachments
+          attachments={[
+            { name: "a.txt", meta: "3 KB" },
+            { name: "a.txt", meta: "4 KB" },
+          ]}
+        />
+      </Row>,
+    );
+
+    expect(sameKeyWarnings(error.mock.calls)).toEqual([]);
+    expect(
+      nodesWithRole(row.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["a.txt, 3 KB", "a.txt, 4 KB"]);
+
+    row.unmount();
+  });
+
+  it("keeps two identical tool calls apart", () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const row = renderComponent(
+      <Row variant="assistant">
+        <MessageToolCalls
+          calls={[
+            { name: "search", status: "done", result: "3" },
+            { name: "search", status: "done", result: "3" },
+          ]}
+        />
+      </Row>,
+    );
+
+    expect(sameKeyWarnings(error.mock.calls)).toEqual([]);
+    expect(
+      nodesWithRole(row.renderer, "listitem").map((node) => node.name),
+    ).toEqual(["search, done", "search, done"]);
+
+    row.unmount();
+  });
+
+  it("keeps two sources with the same URL apart", () => {
+    const error = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    const row = renderComponent(
+      <Row variant="assistant">
+        <MessageSources
+          sources={[
+            { label: "Spec", url: "https://example.com/spec" },
+            { label: "Spec", url: "https://example.com/spec" },
+          ]}
+        />
+      </Row>,
+    );
+
+    expect(sameKeyWarnings(error.mock.calls)).toEqual([]);
+    expect(
+      nodesWithRole(row.renderer, "button").filter(
+        (node) => node.name === "Open source Spec",
+      ),
+    ).toHaveLength(2);
 
     row.unmount();
   });
