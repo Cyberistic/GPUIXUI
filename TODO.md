@@ -1357,6 +1357,15 @@ retired once both branches are one
       green when their own suite is rerun. `docs/accordion.mdx`,
       `docs/collapsible.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [~] The notification centre's title and group labels are headings — plan
+      782; measured 2026-10-20: the panel title and both group labels arrived as
+      loose `label` nodes (zero headings in the panel) although the page calls
+      them headings, and `Header`/`Title` dropped a caller's
+      `testId`/`style`/`aria-level` because they do not extend `Props`. The
+      title becomes a caller-levelled heading (default 3, raw `aria-level`
+      honoured), each group label a heading (`groupLevel`, default 4), and both
+      parts take host props; 4 native cases with the mutation proofs in the plan
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)
