@@ -416,6 +416,7 @@ references without buying correctness.
 | [819](./819-beside-derived-figures.md) | Two catalogue passages state figures beside a derived claim | F | 344, 382, 504, 513, 620, 624, 627, 645, 667, 818 | done |
 | [821](./821-skeleton-pulse-tightest-set.md) | The skeleton pulse's "next tightest" figure and the set it names | F | 078, 094, 311, 322, 387, 393, 536, 544, 619, 737 | done |
 | [822](./822-disabled-label-tier-figures.md) | The disabled label's tier figures, and the one attributed to the wrong set | F | 392, 500, 510, 520, 537, 623, 729 | done |
+| [823](./823-wrong-role-mark-figures.md) | The wrong-role marks' five figures, and the two that put the canvas number on a card | F | 075, 309, 332, 342, 369, 818 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4289,6 +4290,23 @@ own figure, and `disabled-label-tier-claims.test.ts` derives all four steps with
 the hierarchy's surface list and measurement, reads both passages, rejects the
 pre-fix attribution and moves the figures with a planted palette; no colour,
 pair, floor, metric, role or shipped theme moves.
+
+Plan `823` owns the wrong-role marks' five figures. The design system's §9
+closes the mark section with the three shipped marks that paint the wrong role
+and quotes each one's evidence; two other passages restate the avatar's figure as
+"1.78:1 on a light card" / "**1.78:1** on its card", while `1.78:1` is the fill's
+measurement against the **canvas** and the light `card` measures **1.89:1** — the
+catalogue publishes that split, so the two passages contradicted a figure the
+package itself ships. No test derived any of the five figures: the two `warning`
+surfaces, the timeline dot's `1.036:1` on the identity canvas, and both `accent`
+ranges (`1.118–1.392:1` on `popover`, `1.000–1.113:1` on `hover`), so a palette
+edit in any of the 24 shipped sets could leave three documents quoting numbers —
+and a premise ("under the 3:1 mark floor") — the package no longer produces. The
+two attributions now name the card's own figure, and
+`wrong-role-mark-claims.test.ts` derives every figure from `shippedThemes`,
+holds the §9 paragraph, both `TODO.md` rows and the test header, checks the
+premise per set against `contrastFloors`, and moves the ranges with a planted
+palette; no colour, pair, floor, metric, role or shipped theme moves.
 
 ## How to use a plan
 
