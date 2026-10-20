@@ -16,6 +16,7 @@ import type { GpuixTheme, StyleDesc } from "@gpuix/react";
 import { elevationShadow, focusRing } from "@gpuixui/tokens";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { usableText } from "./text.js";
 import type {
   ColorRef,
   ControlSize,
@@ -513,9 +514,17 @@ export const progressPercent = (value: number): number =>
  * (`(loaded / total) * 100`) made it `"33.333333333333336%"`. A whole percent is
  * what a person reads, so the paint stays fractional and the text rounds
  * (plans `580`, `755`).
+ *
+ * A caller's `formatValue` is that sentence: `"3 of 10 files"` says more than
+ * `"30%"` when the bar stands for a quantity. A blank result is absence — the
+ * documented percentage stands in, so a computed missing unit cannot silence
+ * the bar (plan `780`).
  */
-export const progressValueText = (value: number): string =>
-  `${Math.round(progressPercent(value))}%`;
+export const progressValueText = (value: number, formatted?: string): string =>
+  Option.getOrElse(
+    usableText(formatted),
+    () => `${Math.round(progressPercent(value))}%`,
+  );
 
 /** The tones a progress bar can paint; `primary` by default. */
 export const PROGRESS_TONES = [

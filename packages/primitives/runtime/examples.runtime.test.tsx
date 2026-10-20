@@ -149,11 +149,13 @@ it("creates through the form example's busy action", async () => {
   renderExample(runtime, "form");
   expect(Option.getOrUndefined(runtime.focused())).toBe("form-example-name");
   runtime.click("form-example-save");
+  // The busy bar stands for a step count, so its `formatValue` sentence is the
+  // announcement (plan 780), not the default percentage.
   expect(
     Option.getOrUndefined(
       a11yValueOf(runtime.a11y(), { label: "Creating project" }),
     ),
-  ).toBe("62%");
+  ).toBe("Step 3 of 5");
 });
 
 it("pauses through the selection example's switch", async () => {

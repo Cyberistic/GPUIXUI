@@ -7,7 +7,8 @@
  * clamped by `core/style.ts`; an absent `value` means indeterminate. The step
  * timer runs only while the bar is indeterminate, and `tone` colours the fill
  * in both modes (plan 328). The announced percentage is a whole number while the
- * fill keeps its exact fraction (plan `754`).
+ * fill keeps its exact fraction (plan `755`); `formatValue` replaces that
+ * sentence when the bar stands for a quantity (plan `780`).
  */
 
 import type { ReactElement } from "react";
@@ -20,6 +21,7 @@ import {
 } from "../core/loading.js";
 import {
   progressFillStyle,
+  progressPercent,
   progressToneColor,
   progressTrackStyle,
   progressValueText,
@@ -39,6 +41,14 @@ export interface ProgressProps {
   readonly size?: ProgressSpec["size"];
   /** Accessible name, e.g. "Uploading". */
   readonly label?: string;
+  /**
+   * How the value is announced, e.g. `"3 of 10 files"`. Receives the clamped
+   * percentage — the value the fill paints, not the caller's raw quantity — so
+   * close over your own numbers for a byte or file count. Defaults to the whole
+   * percentage; a blank result falls back to it, and an indeterminate bar
+   * always announces `"loading"` (plan `780`).
+   */
+  readonly formatValue?: (value: number) => string;
   readonly style?: StyleDesc;
   readonly testId?: string;
 }
@@ -52,7 +62,15 @@ const isIndeterminate = (value: number | undefined): value is undefined =>
 
 /** The element tree `Progress` renders, determinate or indeterminate. */
 export const renderProgress = (
-  { value, tone = "primary", size = "md", label, style, testId }: ProgressProps,
+  {
+    value,
+    tone = "primary",
+    size = "md",
+    label,
+    formatValue,
+    style,
+    testId,
+  }: ProgressProps,
   theme: PrimitiveTheme,
   step: number,
 ): ReactElement => {
@@ -63,6 +81,11 @@ export const renderProgress = (
   });
   const track = mergeStyle(row, style);
   const determinate = !isIndeterminate(value);
+  const percent = value === undefined ? undefined : progressPercent(value);
+  const announcement =
+    percent === undefined
+      ? "loading"
+      : progressValueText(percent, formatValue?.(percent));
   const fill = determinate
     ? progressFillStyle(spec, theme)
     : indeterminateFillStyle(SEGMENT, progressToneColor(tone, theme), theme);
@@ -70,7 +93,7 @@ export const renderProgress = (
     <div
       role="progressbar"
       aria-label={ariaName(label)}
-      aria-valuetext={determinate ? progressValueText(value) : "loading"}
+      aria-valuetext={announcement}
       testId={testId}
       style={track}
     >

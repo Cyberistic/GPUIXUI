@@ -154,7 +154,12 @@ export const FormExample = (): ReactElement => {
         </Stack>
 
         {saving ? (
-          <Progress label="Creating project" value={62} tone="success" />
+          <Progress
+            label="Creating project"
+            value={60}
+            tone="success"
+            formatValue={() => "Step 3 of 5"}
+          />
         ) : null}
 
         <ButtonGroup

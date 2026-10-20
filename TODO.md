@@ -2529,6 +2529,17 @@ retired once both branches are one
       the only definition of the window, used by `pressTypeahead` too; after,
       `['ec','eu','ec']`. 3 core + 1 runtime case, both directions proven, the
       RadioGroup/ToggleGroup suites unchanged (plan `756`).
+`[x]` `packages/primitives`: **`Progress` could not announce the quantity it
+      measures** — its only accessibility channel is `aria-valuetext`, and it
+      always wrote the clamped percentage, so a determinate bar standing for
+      "3 of 10 files" could only say "30%", while `Meter`, `Slider`,
+      `RangeSlider` and `NumberField` all expose `formatValue`. `Progress` now
+      takes `formatValue` (the clamped percent; a blank result falls back to the
+      whole percentage; an indeterminate bar keeps `"loading"` and never calls
+      it), the percentage default is byte-identical, and the form example
+      mounts the shape. Core + element + AccessKit cases, both directions
+      measured; offline 71 files / 994 tests, scoped live 2 files / 22
+      (plan `780`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

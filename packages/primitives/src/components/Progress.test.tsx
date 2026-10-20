@@ -5,10 +5,12 @@
  * `aria-valuetext`. The bug to guard is paint outside the track: a value above
  * 100 or below 0 must clamp, and an indeterminate bar must not look finished.
  * A computed percentage must announce as a whole number while the fill keeps its
- * exact fraction (plan 754).
+ * exact fraction (plan 755). A bar that stands for a quantity announces the
+ * caller's sentence through `formatValue`, and a blank sentence falls back to
+ * the percentage (plan 780).
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import { testTheme } from "../core/testing/theme.fixture.js";
@@ -55,7 +57,7 @@ describe("Progress", () => {
   });
 
   it("announces a computed value as a whole percent while the fill stays exact", () => {
-    // Plan 754: the announcement is a sentence a person hears; the fill is
+    // Plan 755: the announcement is a sentence a person hears; the fill is
     // geometry. Rounding the paint would be a different, wrong fix.
     const element = renderProgress({ value: 100 / 3 }, testTheme, 0);
     expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("33%");
@@ -63,6 +65,36 @@ describe("Progress", () => {
     expect(expectSome(hostStyleString(fill, "width"))).toBe(
       "33.333333333333336%",
     );
+  });
+
+  it("announces the caller's sentence and leaves the fill's geometry alone", () => {
+    // Plan 780: "42%" cannot say how many files a copy has left.
+    const element = renderProgress(
+      { value: 42, formatValue: () => "3 of 10 files" },
+      testTheme,
+      0,
+    );
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe(
+      "3 of 10 files",
+    );
+    const fill = expectSome(Arr.get(elementChildren(element), 0));
+    expect(expectSome(hostStyleString(fill, "width"))).toBe("42%");
+  });
+
+  it("falls back to the percentage when the caller's sentence is blank", () => {
+    const element = renderProgress(
+      { value: 42, formatValue: () => "   " },
+      testTheme,
+      0,
+    );
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("42%");
+  });
+
+  it("never asks an indeterminate bar's formatter, and still says loading", () => {
+    const formatValue = vi.fn(() => "3 of 10 files");
+    const element = renderProgress({ formatValue }, testTheme, 0);
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("loading");
+    expect(formatValue).not.toHaveBeenCalled();
   });
 
   it("paints an indeterminate bar in the requested tone", () => {

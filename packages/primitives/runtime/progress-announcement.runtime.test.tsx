@@ -9,6 +9,10 @@
  * tick. The fix rounds the *sentence* and leaves the fill's geometry exact, so
  * this file asserts both halves: a rounded AccessKit value and a one-third
  * painted fill. Rounding the paint, or reverting the announcement, fails here.
+ *
+ * **The seam (plan `780`).** A bar that stands for a quantity announces the
+ * caller's sentence instead — `"3 of 10 files"` — while an indeterminate bar
+ * keeps `"loading"`; both are asserted against the real AccessKit tree.
  */
 
 import { expect, it } from "vitest";
@@ -45,4 +49,47 @@ it("announces a computed Progress as a whole percent and paints its fraction", a
     () => expect.fail("the Progress painted no fill"),
   );
   expect(Math.abs(fill.width - track.width / 3)).toBeLessThanOrEqual(1);
+});
+
+it("announces the caller's sentence for a Progress that counts something", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress
+        testId="pg"
+        value={42}
+        label="Copying files"
+        formatValue={() => "3 of 10 files"}
+      />
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Copying files" })).toEqual(
+    Option.some("3 of 10 files"),
+  );
+  const track = Option.getOrElse(runtime.bounds("pg"), () =>
+    expect.fail("the Progress painted no track"),
+  );
+  const fill = Option.getOrElse(
+    Option.flatMap(Arr.head(childrenOf(runtime, "pg")), (id) =>
+      runtime.boundsOfId(id),
+    ),
+    () => expect.fail("the Progress painted no fill"),
+  );
+  expect(Math.abs(fill.width - track.width * 0.42)).toBeLessThanOrEqual(1);
+});
+
+it("keeps an indeterminate Progress's announcement as loading", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Progress
+        testId="pg"
+        label="Preparing"
+        formatValue={() => "not a value"}
+      />
+    </Surface>,
+  );
+  expect(a11yValueOf(runtime.a11y(), { label: "Preparing" })).toEqual(
+    Option.some("loading"),
+  );
 });

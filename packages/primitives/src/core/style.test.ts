@@ -535,7 +535,7 @@ describe("progress", () => {
   });
 
   it("announces a whole percentage, not the float a computed value carries", () => {
-    // Plan 754: a caller feeding (loaded / total) * 100 made the bar announce
+    // Plan 755: a caller feeding (loaded / total) * 100 made the bar announce
     // "33.333333333333336%" — the paint stays exact, the sentence rounds.
     expect(progressValueText(100 / 3)).toBe("33%");
     expect(progressValueText(42)).toBe("42%");
@@ -545,6 +545,18 @@ describe("progress", () => {
     expect(progressValueText(Number.NaN)).toBe("0%");
     expect(progressValueText(Number.POSITIVE_INFINITY)).toBe("100%");
     expect(progressValueText(Number.NEGATIVE_INFINITY)).toBe("0%");
+  });
+
+  it("announces the caller's sentence when the bar stands for a quantity", () => {
+    // Plan 780: 42% of a file copy says nothing about how many files are left.
+    expect(progressValueText(42, "3 of 10 files")).toBe("3 of 10 files");
+    expect(progressValueText(100 / 3, "a third")).toBe("a third");
+  });
+
+  it("falls back to the percentage when the caller's sentence says nothing", () => {
+    // A computed unit string can be missing; blank is absence, not a silence.
+    expect(progressValueText(42, "   ")).toBe("42%");
+    expect(progressValueText(100 / 3, "")).toBe("33%");
   });
 
   it("paints the fill at the clamped percentage", () => {
