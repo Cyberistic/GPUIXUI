@@ -12,13 +12,13 @@
 >
 > - Guard first, over the unfixed prose: `src/figures.test.ts`,
 >   `src/theme.test.ts` and `src/docs.test.ts` ran **11 failed / 326 passed** —
->   the four washed entries (three documents × tightest + AAA) found no sentence,
->   the panel action's `8.667` found none, the catalogue's second washed copy
->   counted one instead of two, `4.722` was still present in all three documents,
->   the brand case found no `7.957` in the example, and the catalogue's table
->   size still said 56. The ledger's fifth occurrence was found while reviewing
->   the diff and joins the same table; its entries fail on the pre-fix row the
->   same way.
+>   the washed entries (the three documents the test read × tightest + AAA) found
+>   no sentence, the panel action's `8.667` found none, the catalogue's second
+>   washed copy counted one instead of two, `4.722` was still present in all
+>   three documents, the brand case found no `7.957` in the example, and the
+>   catalogue's table size still said 56. The ledger's fifth occurrence was
+>   found while reviewing the diff and joins the same table; its entries fail on
+>   the pre-fix row the same way.
 > - After the prose: **113/113** in the two figure suites and the whole package
 >   **208 files / 7024 tests**, all green. `nub run check`, `nub run lint` and
 >   `nub run test` pass.
