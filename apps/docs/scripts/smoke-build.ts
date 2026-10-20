@@ -24,6 +24,7 @@
  * smoke suite (plan 020).
  */
 
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import {
   SetupError,
   startDocsPreview,
@@ -35,6 +36,22 @@ import { SITE_NAME } from "../src/lib/site-head.ts";
 
 const REQUEST_TIMEOUT_MS = 15_000;
 const CONCURRENCY = 6;
+
+/**
+ * The shared client graph once carried `lucide-react`'s whole namespace: 1 849
+ * icon records in one 701 KiB chunk on every page, because
+ * `lucideIconsPlugin()` resolves names through `import { icons }`. The site
+ * declares no `icon`, so the fix removed the plugin (plan 604). The full set
+ * measured 1 849 records in one file; this site's tree-shaken glyphs measured
+ * 24 in total, 15 in the largest asset. The limit is far above real use and far
+ * below the set.
+ */
+const CLIENT_ASSETS = new URL(
+  "../../../apps/docs/dist/client/assets/",
+  import.meta.url,
+);
+const LUCIDE_ICON_RECORD = /name:`[a-z0-9-]+`,size:\d+,node:/g;
+const ICON_RECORD_LIMIT = 100;
 
 interface Options {
   readonly baseUrl: string | null;
@@ -384,6 +401,31 @@ const auditLinks = async (
       ? [{ where: path, what: `expected < 400, got ${response.status}` }]
       : [];
   }).then((groups) => groups.flat());
+
+const auditClientBundle = (): ReadonlyArray<Problem> => {
+  // A `--base-url` run may point at a deployment this checkout did not build.
+  if (!existsSync(CLIENT_ASSETS)) return [];
+  let total = 0;
+  const problems = readdirSync(CLIENT_ASSETS)
+    .filter((name) => name.endsWith(".js"))
+    .flatMap((name) => {
+      const file = new URL(name, CLIENT_ASSETS);
+      const records = [
+        ...readFileSync(file, "utf8").matchAll(LUCIDE_ICON_RECORD),
+      ].length;
+      total += records;
+      return records > ICON_RECORD_LIMIT
+        ? [
+            {
+              where: `/assets/${name}`,
+              what: `ships ${records} lucide icon records (limit ${ICON_RECORD_LIMIT}); no page in this site declares an icon (plan 604)`,
+            },
+          ]
+        : [];
+    });
+  console.log(`smoke: client bundle checked — ${total} lucide icon records`);
+  return problems;
+};
 
 const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
   const problems: Problem[] = [];
@@ -1235,7 +1277,7 @@ const main = async (): Promise<number> => {
       baseUrl = server.baseUrl;
     }
 
-    const problems = await audit(baseUrl);
+    const problems = [...auditClientBundle(), ...(await audit(baseUrl))];
     if (problems.length === 0) return 0;
     for (const problem of problems) {
       console.error(`FAIL ${problem.where}: ${problem.what}`);

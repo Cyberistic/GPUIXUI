@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–603)
 
-`[x]` `[██████████]` 170/170
+`[x]` `[██████████]` 171/171
+
+`[x]` **Every page stops downloading the lucide icon set (plan 604)** — the
+      loader enabled `lucideIconsPlugin()`, whose `import { icons }` bundled all
+      1 849 lucide records into one 701 KiB chunk on every page although no page
+      declares an `icon`. The plugin is gone; a source guard fails on the
+      plugin or an `icon` field, and `smoke:build` fails when one client script
+      carries more than 100 icon records (full set 1 849, this site 24).
+      Measured `/docs/components/button` 1 686 → 1 084 KiB and `/docs/theming`
+      1 572 → 970 KiB; 953 docs tests, 100-page `smoke:build`, both directions.
 
 `[x]` **A reader whose page is broken has a starting point (plan 603)** — the
       site documented each failure only where the feature lived, so `nothing

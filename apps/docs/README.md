@@ -770,6 +770,39 @@ dark one, both below the 4.5:1 text floor. They are replaced per theme
 in that module, not in CSS: `src/code-palette.test.ts` recomputes every ratio,
 and `smoke:browser` measures each painted code colour on the pages it visits.
 
+## Page weight
+
+The docs must stay fast to navigate, and nothing used to measure what the client
+graph shipped. `src/lib/source.ts` enabled Fumadocs' `lucideIconsPlugin()`,
+which resolves an `icon` name through `import { icons } from "lucide-react"` —
+a namespace import that defeats tree-shaking. **No page, `meta.json` or
+frontmatter in this site declares an `icon`**, so the plugin resolved nothing
+and every reader downloaded all 1 849 icon records in one 701 KiB chunk.
+
+The plugin is gone (plan 604). Two guards keep it gone:
+
+- `src/lib/source-icons.test.ts` fails when `source.ts` mentions `lucide`, when
+  a `meta.json` declares `icon`, or when a page's frontmatter does. An `icon`
+  now renders nothing, so the failure says to name a component or adopt an
+  explicit map instead.
+- `smoke:build` scans `dist/client/assets/*.js` after the build and fails when a
+  single script carries more than 100 lucide icon records
+  (`name:`…`,size:24,node:`). The full set measured 1 849; the tree-shaken
+  glyphs this site legitimately uses total 24, 15 in the largest asset.
+
+Measured on the production build, fresh Chrome profile per page,
+`performance.getEntriesByType("resource")`:
+
+| Page | Before | After |
+| ---- | ------ | ----- |
+| `/docs/components/button` | 1 686 KiB | 1 084 KiB |
+| `/docs/theming` | 1 572 KiB | 970 KiB |
+| `/docs/components` | 1 517 KiB | 915 KiB |
+| `/docs/components/context-menu` | 2 521 KiB | 1 919 KiB |
+
+The shared root chunk fell from 701 KiB to 261 KiB. The remaining page-specific
+chunk is the highlighted article the page renders, not duplicated library code.
+
 ## Icon catalogue
 
 The Icons page lists **every name the set ships**, filtered locally
