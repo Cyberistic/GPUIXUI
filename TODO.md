@@ -3179,6 +3179,21 @@ the `//` lines, derives each figure, plants `palette[ramp][950]` for the range
 whose sentence names that stop, and holds each sentence whole; every case fails
 under a mutated digit, a moved ramp step or a retuned veil; no colour, pair,
 floor, metric, role or shipped theme moves (plan 803)
+`[x]` Give the copyable examples' header figures an owner — nine
+`*.example.ts` files open with rationale figures a consumer copies and no suite
+read: bumping every ratio digit left 7071 of 7075 tests green, and `styles.ts`'s
+copy of the three disabled figures survived alone. Four sentences were already
+wrong — the Toast groove counted the AAA dark sets as 1.000:1 (they are 1.059:1),
+the unchecked control called both roles 1.000:1 in identity light and on every
+platform dark card (1.027:1, 1.126:1 and macOS dark's 1.221:1 are the values),
+and the platform example quoted two figures measured on hexes the file no longer
+contains (the shipped family measures 1.900:1 and 1.485:1). Thirteen figures
+join `documentedFigures` behind a shared dim factory, the figures suite reads a
+source document as prose so a wrapped comment sentence is matchable,
+`example-header-figures.test.ts` owns the example-own-theme figures and the two
+sweeps, and the catalogue states the table's new size; each case fails on a
+mutated digit or a restored stale sentence, and no colour, pair, floor, metric,
+role or shipped theme moves (plan 805)
 
 ## Phase C — Tier 1–2 components
 

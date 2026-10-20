@@ -56,11 +56,13 @@ Three sentences are not only unowned but **already wrong**:
 1. `toast-countdown.example.ts`: "`muted` is `popover` in the identity dark theme
    and **every platform and recipe dark set**, so the groove measures 1.000:1".
    Only the six **default-contrast** dark sets measure 1.000:1; every AAA dark
-   set measures 1.0585:1 (`muted #1A1A1A`, `popover #141414`).
+   set measures 1.0585…, which is **1.059:1** at three decimals (`muted
+   #1A1A1A`, `popover #141414`).
 2. `unchecked-selection.example.ts`: "on a card **the two** measure **1.000:1**
    in identity light and on **every** platform dark card". In identity light the
    checkbox edge is 1.000:1 but the switch track is **1.027:1**; on macOS dark
-   the track is 1.000:1 but the edge is **1.221:1**.
+   the track is 1.000:1 but the edge is **1.221:1**; identity dark's track is
+   **1.126:1**, so only the platform and recipe dark cards are exact 1.000:1.
 3. `platform-styles.example.ts`: "The Windows dark foreground this example used
    to inherit measured 2.96:1 on the fill and 2.12:1 on the hover (plan 310)."
    Those two numbers are black on `#005A9E`/`#004578` — neither hex is in the
@@ -97,34 +99,36 @@ row-press.example.ts
 toast-countdown.example.ts
   muted on popover, identity dark and the 5 default-contrast
   platform/recipe dark sets                                 1.0000 → 1.000
-  muted on popover, the six AAA dark sets                   1.0585 → 1.058
+  muted on popover, the six AAA dark sets                   1.0585 → 1.059
   floors.default.surface = 1.05
 
 unchecked-selection.example.ts
   identity light: input on card   1.0000 → 1.000
                   muted on card   1.0272 → 1.027
-  every default-contrast dark card:
+  identity dark:  muted on card   1.1263 → 1.126
+  every default-contrast platform/recipe dark card:
                   muted on card   1.0000 → 1.000
-                  input on card   1.0000 → 1.000 (linux, win32, xp, win7)
-                                  1.2209 → 1.221 (darwin)
+  every default-contrast dark card but macOS dark:
+                  input on card   1.0000 → 1.000 (identity, linux, win32, xp, win7)
+                  input on card   1.2209 → 1.221 (darwin)
   floors.default.surface = 1.05
 ```
 
-No shipped token, role, pair, floor or metric moves. Two prose sentences are
+No shipped token, role, pair, floor or metric moves. Three prose sentences are
 corrected; the rest gain an owner.
 
 ## 3. Decision
 
-1. Add the twelve figures measured on **shipped** themes to `documentedFigures`
-   (six disabled, two toast, four unchecked), so the existing per-entry loop
-   holds each document's sentence and its named set.
-2. Add one new `FigureDocument`, `packages/tokens/src/disabled-state.example.ts`,
-   and teach the figures suite to read a source document as prose (see step 3).
+1. Add the thirteen figures measured on **shipped** themes to
+   `documentedFigures` (six disabled, two toast, five unchecked), so the
+   existing per-entry loop holds each document's sentence and its named set.
+2. Add two new `FigureDocument`s, `packages/tokens/src/disabled-state.example.ts`
+   and `packages/tokens/src/unchecked-selection.example.ts`, and teach the
+   figures suite to read a source document as prose (see step 2).
 3. Add `packages/tokens/src/example-header-figures.test.ts` for the figures an
    **example theme** produces (`quietHighContrastTheme`, `invertedRowPressTheme`,
    the platform example's own family) and for the **sweeps** a single figure
-   cannot state ("every default-contrast dark set", "every default-contrast
-   dark card but macOS dark").
+   cannot state ("every default-contrast platform and recipe dark card").
 4. Correct the three sentences in §1 in place.
 
 `styles.ts`'s JSDoc is in scope because it is the same three figures as the
@@ -133,18 +137,19 @@ example it documents and it was equally unguarded; `figures.ts` already lists
 
 ## 4. Files to change
 
-1. `packages/tokens/src/figures.ts` — add the twelve entries and a small dim
+1. `packages/tokens/src/figures.ts` — add the thirteen entries and a small dim
    factory the four existing dim entries share.
-2. `packages/tokens/src/figures.test.ts` — read the new document, strip JSDoc
-   decoration from source documents.
+2. `packages/tokens/src/figures.test.ts` — read the two new documents, strip
+   JSDoc decoration from source documents.
 3. **create** `packages/tokens/src/example-header-figures.test.ts`.
 4. `packages/tokens/src/platform-styles.example.ts` — corrected header.
 5. `packages/tokens/src/toast-countdown.example.ts` — corrected header.
 6. `packages/tokens/src/unchecked-selection.example.ts` — corrected header.
-7. `.agents/slop/plans/README.md` — plan row `805` and a closing paragraph.
-8. `TODO.md` — a ticked row in the tokens section.
+7. `docs/tokens.md` — the table's size (83 entries) and the third suite's name.
+8. `.agents/slop/plans/README.md` — plan row `805` and a closing paragraph.
+9. `TODO.md` — a ticked row in the tokens section.
 
-No `.test.ts` other than the new suite changes.
+No other suite changes.
 
 ## 5. Step 1 — the dim factory and the new entries in `figures.ts`
 
@@ -291,7 +296,7 @@ const disabledStateFigures: ReadonlyArray<DocumentedFigure> = [
 
 /**
  * The shipped Toast groove. `muted` equals `popover` in every default-contrast
- * dark set (1.000:1) and steps to 1.058:1 at AAA — the distinction the header's
+ * dark set (1.000:1) and steps to 1.059:1 at AAA — the distinction the header's
  * pre-805 sentence erased.
  */
 const toastGrooveFigures: ReadonlyArray<DocumentedFigure> = [
@@ -320,9 +325,9 @@ const toastGrooveFigures: ReadonlyArray<DocumentedFigure> = [
 /**
  * The unchecked selection control's two roles on a card: the checkbox edge is
  * the card in identity light and on every default-contrast dark card but macOS
- * dark, and the switch's track is the card on every default-contrast dark card.
- * One figure cannot state those two sweeps; the suite holds them, these entries
- * hold the four numbers the header prints.
+ * dark, and the switch's track is the card on every default-contrast platform
+ * and recipe dark card. One figure cannot state those two sweeps; the suite
+ * holds them, these entries hold the numbers the header prints.
  */
 const uncheckedSelectionFigures: ReadonlyArray<DocumentedFigure> = [
   {
@@ -347,13 +352,24 @@ const uncheckedSelectionFigures: ReadonlyArray<DocumentedFigure> = [
   },
   {
     document: "packages/tokens/src/unchecked-selection.example.ts",
-    name: "the unchecked track on a default-contrast dark card",
+    name: "the unchecked track on a platform dark card",
+    pairs: [["muted", "card", "surface"]],
+    kind: "plain",
+    claim: "value",
+    provenance: platformTheme("darwin", "dark", "default"),
+    decimals: 3,
+    sentence:
+      "the track **{figure}:1** on every default-contrast platform and recipe dark card",
+  },
+  {
+    document: "packages/tokens/src/unchecked-selection.example.ts",
+    name: "the unchecked track in identity dark",
     pairs: [["muted", "card", "surface"]],
     kind: "plain",
     claim: "value",
     provenance: identityTheme("dark", "default"),
     decimals: 3,
-    sentence: "the track **{figure}:1** on every default-contrast dark card",
+    sentence: "**{figure}:1** in identity dark",
   },
   {
     document: "packages/tokens/src/unchecked-selection.example.ts",
@@ -363,7 +379,7 @@ const uncheckedSelectionFigures: ReadonlyArray<DocumentedFigure> = [
     claim: "value",
     provenance: identityTheme("light", "default"),
     decimals: 3,
-    sentence: "(**{figure}:1** in identity light)",
+    sentence: "**{figure}:1** in identity light",
   },
 ];
 ```
@@ -375,6 +391,7 @@ Add to the `FigureDocument` union, in path order:
 
 ```ts
   | "packages/tokens/src/disabled-state.example.ts"
+  | "packages/tokens/src/unchecked-selection.example.ts"
 ```
 
 ## 6. Step 2 — the documents reader in `figures.test.ts`
@@ -443,7 +460,7 @@ untouched; it removes only the comment's own ` *` prefix.
  * `popover` in the identity dark theme and every default-contrast platform and
  * recipe dark set, so the groove measures **1.000:1** there and the unfilled
  * remainder of the countdown has no shape; the AAA dark sets step it to
- * **1.058:1**, a hair over the surface floor. The designed groove is `track`
+ * **1.059:1**, a hair over the surface floor. The designed groove is `track`
 ```
 
 `packages/tokens/src/unchecked-selection.example.ts`, lines 6–13:
@@ -452,9 +469,11 @@ untouched; it removes only the comment's own ` *` prefix.
  * — a field *fill* — and a switch paints its track with `muted` — a *surface*,
  * so on a card the edge measures **1.000:1** in identity light and on every
  * default-contrast dark card but macOS dark (**1.221:1**), and the track
- * **1.000:1** on every default-contrast dark card (**1.027:1** in identity
- * light): all but macOS dark's edge sit under the **1.05:1** surface floor, so
- * the control has no shape. The designed state is the
+ * **1.000:1** on every default-contrast platform and recipe dark card,
+ * **1.027:1** in identity light and **1.126:1** in identity dark: all but macOS
+ * dark's edge and identity dark's track sit under the **1.05:1** surface floor,
+ * so in the light theme and on any platform dark card the control has no shape.
+ * The designed state is the
 ```
 
 Re-flow the paragraph so no quoted sentence needs the other side of a line
@@ -487,10 +506,9 @@ copyable files honest.
  */
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { alpha } from "./color.js";
 import {
-  quietHighContrastTheme,
   quietHighContrastFailures,
+  quietHighContrastTheme,
 } from "./contrast.example.js";
 import {
   compositeOver,
@@ -498,25 +516,42 @@ import {
   contrastRatio,
   themeContrastFailures,
 } from "./contrast.js";
-import { disabledDimOpacity } from "./figures.js";
-import {
-  getPlatformTheme,
-  highContrastThemes,
-  themes,
-} from "./index.js";
+import { deriveFigure, documentedFigures } from "./figures.js";
 import { resolveEditedPlatformTheme } from "./platform-styles.example.js";
-import { invertedRowPressTheme, rowPressFailures } from "./row-press.example.js";
-import { shippedThemes } from "./shipped-themes.js";
-import { getTheme } from "./theme.js";
+import {
+  invertedRowPressTheme,
+  rowPressFailures,
+} from "./row-press.example.js";
+import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
+import { getPlatformTheme, getTheme } from "./theme.js";
 
 /** A source module's comment block read as one paragraph. */
-const prose = (file: string): string =>
-  readFileSync(new URL(file, import.meta.url), "utf8")
+const proseOf = (url: URL): string =>
+  readFileSync(url, "utf8")
     .replaceAll(/^[ \t]*\*(?!\*)[ \t]?/gm, "")
     .replaceAll(/\s+/g, " ");
 
+/** A module beside this suite. */
+const prose = (file: string): string => proseOf(new URL(file, import.meta.url));
+
+/** A document named from the repository root. */
+const documentProse = (path: string): string =>
+  proseOf(new URL(`../../../${path}`, import.meta.url));
+
 const figure = (value: number, digits: number): string =>
   value.toFixed(digits);
+
+/** A default-contrast dark set. */
+const isDefaultDark = (entry: ShippedTheme): boolean =>
+  entry.theme.mode === "dark" && entry.theme.contrast === "default";
+
+/** The macOS dark platform variant's shipped entry. */
+const isMacDark = (entry: ShippedTheme): boolean =>
+  entry.source === "platform" && entry.platform === "darwin";
+
+const darkSets = shippedThemes.filter(
+  (entry) => entry.theme.mode === "dark",
+);
 ```
 
 Cases (each builds the sentence from derived numbers, so a moved palette or a
@@ -537,38 +572,24 @@ retyped digit fails):
    `contrastFloors.default.secondary`; the header quotes them and the floor.
 4. **the Toast groove's sweep** — every `mode === "dark" && contrast ===
    "default"` entry has `muted === popover` and measures 1.000; every
-   `contrast === "high"` dark entry measures 1.058; the header names the
+   `contrast === "high"` dark entry measures 1.059; the header names the
    default-contrast sweep and the AAA step (which the pre-805 sentence erased).
 5. **the unchecked control's sweep** — identity light edge 1.000 and track
-   1.027; every default-contrast dark entry's track 1.000; every one but
-   `darwin` dark's edge 1.000, `darwin` 1.221; the header quotes all four and
-   the 1.05 floor.
-6. **the two disabled copies agree** — the three figures in
-   `disabled-state.example.ts` equal the three in `styles.ts`, both quote the
-   `contrastFloors.default.inactive` floor word, and both are the derived dim.
+   1.027; identity dark's track 1.126; every default-contrast platform and
+   recipe dark entry's track 1.000; every entry but `darwin` dark's edge 1.000,
+   `darwin` 1.221; the header quotes all five and the 1.05 floor.
+6. **the two disabled copies agree** — the six `kind === "dim"` entries for
+   `disabled-state.example.ts` and `styles.ts` derive the same three figures,
+   each document quotes its derived values, and both quote the
+   `contrastFloors.default.inactive` floor word.
 7. **the pre-805 sentences are gone** — `platform-styles.example.ts` no longer
    contains `2.96:1`/`2.12:1`, the Toast header no longer says "every platform
-   and recipe dark set", the unchecked header no longer says "the two measure
-   **1.000:1** in identity light and on every platform dark card", and
-   `styles.ts` still names its three figures.
+   and recipe dark set", and the unchecked header no longer says "the two
+   measure **1.000:1** in identity light and on every platform dark card".
 
-Reference code for the dim helper (case 6) and case 4's sweep:
-
-```ts
-const dimmed = (label: string, fill: string, panel: string): number => {
-  const paintedFill = compositeOver(alpha(fill, disabledDimOpacity), panel);
-  return contrastRatio(
-    compositeOver(alpha(label, disabledDimOpacity), paintedFill),
-    paintedFill,
-  );
-};
-
-const darkSets = shippedThemes.filter(({ theme }) => theme.mode === "dark");
-const defaultDark = darkSets.filter(
-  ({ theme }) => theme.contrast === "default",
-);
-const highDark = darkSets.filter(({ theme }) => theme.contrast === "high");
-```
+Case 6 reads the entries through `deriveFigure` and compares the two documents'
+derived figure sets, so a figure that drifts in one copy and not the other is
+reported even if both still satisfy their own entry.
 
 `themeContrastFailures`/`quietHighContrastFailures` are the same list; use the
 exported constant once and assert its length once.
@@ -583,7 +604,7 @@ nub run check-types
 ```
 
 Expected: the new suite green, every `documentedFigures` case green including
-the twelve new ones, type check clean.
+the thirteen new ones, type check clean.
 
 **Prove every case can fail** (revert each mutation):
 
@@ -597,11 +618,13 @@ the twelve new ones, type check clean.
 7. `platform-styles.example.ts`: `1.900` → `1.899` → case 3 fails.
 8. `toast-countdown.example.ts`: put "every platform and recipe dark set" back
    → case 4 and case 7 fail.
-9. `toast-countdown.example.ts`: `1.058` → `1.059` → the AAA entry fails.
+9. `toast-countdown.example.ts`: `1.059` → `1.058` → the AAA entry fails.
 10. `unchecked-selection.example.ts`: `1.221` → `1.220` → case 5 fails.
 11. `unchecked-selection.example.ts`: `1.027` → `1.028` → case 5 and the entry
     fail.
-12. `shipped-themes.ts` is not touched; moving a palette value to make a sweep
+12. `unchecked-selection.example.ts`: `1.126` → `1.127` → case 5 and the entry
+    fail.
+13. `shipped-themes.ts` is not touched; moving a palette value to make a sweep
     fail is not required — cases 4 and 5 iterate the shipped enumeration, so a
     new shipped set that breaks either sweep fails them.
 
@@ -613,7 +636,7 @@ nub run check
 nub run lint
 ```
 
-Expected: **214** files and **7094** tests green (213/7075 before; twelve
+Expected: **214** files and **7095** tests green (213/7075 before; thirteen
 figure cases and seven suite cases are added); `check` and `lint` clean.
 
 ## 10. STOP conditions
@@ -633,10 +656,11 @@ figure cases and seven suite cases are added); `check` and `lint` clean.
 
 ## 11. Acceptance
 
-- The twelve new `documentedFigures` entries derive their figures and hold their
-  documents; the four corrected sentences quote the derived numbers and sets.
+- The thirteen new `documentedFigures` entries derive their figures and hold
+  their documents; the four corrected sentences quote the derived numbers and
+  sets.
 - The new suite's seven cases fail under their §9 mutation and pass when
   reverted; every quoted figure is derived, none typed.
-- `nub run --filter @gpuixui/tokens test` is green (214 files, 7094 tests),
+- `nub run --filter @gpuixui/tokens test` is green (214 files, 7095 tests),
   `nub run check-types` is clean.
 - `TODO.md` ticks the row and the plan index lists `805`.
