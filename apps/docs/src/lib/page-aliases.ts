@@ -6,7 +6,10 @@
  * and `how to use` name a page the index never retrieves for them.
  *
  * This is editorial search vocabulary, not page content: it stays out of the
- * frontmatter and is read only by the ranker. `page-aliases.test.ts` proves
+ * frontmatter and is read only by the ranker. A second measured pass covers the
+ * integration vocabulary (plan 599) — `react`, `provider`, `mono`, `escape`,
+ * `disabled` and `how to install`, each a word for a section or a convention
+ * rather than a title. `page-aliases.test.ts` proves
  * every key is a page `source.getPages()` serves, no key is a component page
  * (that is plan 566's table), no term is shared, and no term shadows a page or
  * component name — an alias that names something else misroutes the query.
@@ -28,9 +31,26 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "colour scheme",
     ],
   ],
+  [
+    "/docs/getting-started",
+    [
+      "how to use",
+      "import",
+      "imports",
+      "react",
+      "react provider",
+      "provider",
+      "providers",
+    ],
+  ],
+  [
+    "/docs/component-api",
+    ["escape", "escape key", "disabled", "disabled state"],
+  ],
+  ["/docs/data-display", ["select row", "selectable rows"]],
   ["/docs/examples", ["demo", "sample"]],
-  ["/docs/getting-started", ["how to use", "import", "imports"]],
-  ["/docs/installation", ["version", "versions"]],
+  ["/docs/installation", ["version", "versions", "how to install"]],
+  ["/docs/typography", ["mono", "mono font", "monospace"]],
 ]);
 
 /** Every alias term, flattening the table for the guards. */

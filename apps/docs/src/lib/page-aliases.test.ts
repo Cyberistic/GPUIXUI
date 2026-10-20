@@ -126,6 +126,20 @@ const owned = [
   ["version", "/docs/installation"],
   ["hint", "/docs/components/inline-validation"],
   ["supporting text", "/docs/components/inline-validation"],
+  ["react", "/docs/getting-started"],
+  ["react provider", "/docs/getting-started"],
+  ["provider", "/docs/getting-started"],
+  ["providers", "/docs/getting-started"],
+  ["mono", "/docs/typography"],
+  ["mono font", "/docs/typography"],
+  ["monospace", "/docs/typography"],
+  ["select row", "/docs/data-display"],
+  ["selectable rows", "/docs/data-display"],
+  ["escape", "/docs/component-api"],
+  ["escape key", "/docs/component-api"],
+  ["disabled", "/docs/component-api"],
+  ["disabled state", "/docs/component-api"],
+  ["how to install", "/docs/installation"],
 ] as const;
 
 const regressions = [
@@ -137,6 +151,13 @@ const regressions = [
   ["examples", "/docs/examples"],
   ["dark mode", "/docs/dark-mode"],
   ["installation", "/docs/installation"],
+  ["select", "/docs/components/select"],
+  ["keycap", "/docs/components/keycap"],
+  ["empty state", "/docs/components/empty-state"],
+  ["command menu", "/docs/components/command-menu"],
+  ["typography", "/docs/typography"],
+  ["disabled button", "/docs/components/button"],
+  ["row selection", "/docs/roadmap"],
 ] as const;
 
 describe(

@@ -540,6 +540,17 @@ outlives a page, a key on a component page, a shared term, and a term that
 shadows a page or component name. `smoke:build` asserts `theme switch` and
 `hint` against the production index.
 
+A second measured pass (plan 599) covered the integration vocabulary, where the
+owning subject is a **section** rather than a title: `react`, `react provider`,
+`provider` and `providers` → Getting started, `escape`, `escape key`, `disabled`
+and `disabled state` → Component API, `select row` and `selectable rows` → Data
+display, `mono`, `mono font` and `monospace` → Typography, and `how to install` →
+Installation. All five are entries in the same table; no ranker changed.
+`row selection` deliberately stays on the Roadmap (it promotes a target of that
+exact name), `motion`/`animation` have no owner until `packages/tokens` ships
+motion tokens, and `disabled button` keeps Button. `smoke:build` asserts `react`
+and `how to install`.
+
 The table got a second measured pass (plan 579). `typeahead`, `passcode`,
 `wizard`, `pin code`, `segmented control`, `hover card`, `menubar` and
 `scrollview` returned nothing or another component; the same table now answers

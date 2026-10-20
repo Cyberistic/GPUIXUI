@@ -1078,6 +1078,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a component alias recovered beside `helper text`",
     },
+    {
+      query: "react",
+      expected: "/docs/getting-started",
+      first: true,
+      what: "the integration word a token table's provider section outranks",
+    },
+    {
+      query: "how to install",
+      expected: "/docs/installation",
+      first: true,
+      what: "the installation twin of `how to use`",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

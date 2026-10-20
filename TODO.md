@@ -471,7 +471,16 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 165/165
+`[x]` `[██████████]` 166/166
+
+`[x]` **A reader's integration phrase reaches its page (plan 599)** — the
+      second page-alias pass covers the words whose owner is a *section*, not a
+      title: `react`/`provider` → Getting started, `escape`/`disabled` →
+      Component API, `select row` → Data display, `mono` → Typography,
+      `how to install` → Installation. The table grew, the ranker did not.
+      111 files / 862 docs tests, 99-page `smoke:build`, root gates green;
+      seven forced defects run and reverted (plan 599 §6.3), with `row
+      selection`, `motion` and `disabled button` recorded as measured non-fixes.
 
 `[x]` **A page answers the phrase its metadata cannot (plan 598)** — plan 597
       §6.4 recorded `system theme` → Switch as a ranker question; the sweep
