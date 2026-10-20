@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress (2026-10-20) |
+| Status | landed (2026-10-20) |
 | Phase | F (documentation truth) |
 | Owner | `tokens-theme` |
 | Depends on | `085`/`099`/`505` (the AAA tint), `376` (the design-system elevation prose), `777` (the elevation paragraph guard) |
@@ -129,4 +129,20 @@ nub run test
 
 ## 8. Execution record
 
-_(filled after implementation)_
+- **Before the fix**, replacing `#FFFFFF` with `#F5F5F5` and `10%, 14% and 18%`
+  with `11%, 15% and 19%` in the front door, the catalogue and the design system
+  left `readme.test.ts` + `docs.test.ts` green at **263 tests**.
+- **Both directions, after the fix.** Three mutations across all three passages,
+  each reverted: the alpha rewrite failed **2** cases, the tint rewrite failed
+  **5**, and `1.000:1` → `1.001:1` failed **5**. Both new cases are among them.
+- The percentage string derives from `highContrastDarkElevation` at
+  `sm`/`md`/`lg` (`elevationLevels` minus the empty `overlay`), rounded from the
+  level's first shape alpha; the tint derives from `getTheme("dark", "high")`.
+  The rationale paints the default dark tint at each shipped level's alpha over
+  the AAA canvas and holds every ratio to `1.000` at three decimals; the suite
+  also holds the default tint to `#000000` and the AAA canvas to `#000000`, so
+  the sentence's premise is measured rather than restated.
+- Green after: `@gpuixui/tokens` **208 files / 7038 tests**, `nub run check`,
+  `nub run lint` and `nub run test` pass. No token value, pair, floor, metric,
+  role or shipped theme moves; `contrastPairs` stays **470** and the figure
+  table stays **70**.

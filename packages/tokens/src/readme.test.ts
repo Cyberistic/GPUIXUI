@@ -18,9 +18,11 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import packageJson from "../package.json";
-import { colorRoles } from "./color.js";
+import { alpha, colorRoles } from "./color.js";
 import {
+  compositeOver,
   contrastFloors,
+  contrastRatio,
   elevationContentSurfaces,
   elevationSurfaces,
   skeletonPulsePairs,
@@ -28,6 +30,7 @@ import {
   statusFillPairs,
 } from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
+import { elevationLevels, highContrastDarkElevation } from "./elevation.js";
 import { deriveFigure, documentedFigures, quotesFigure } from "./figures.js";
 import { motionLevels, motionPhases } from "./motion.js";
 import {
@@ -39,6 +42,7 @@ import {
 import { shippedThemes } from "./shipped-themes.js";
 import { platformMonoCell, platformTableCells } from "./platform-table.js";
 import { filledControlFamilies, statusTones } from "./styles.js";
+import { getTheme, themes } from "./theme.js";
 import { themeChecks, type ThemeFailureKind } from "./theme-check.js";
 import { contosoDensityPlatformStyle } from "./platform-extension.example.js";
 import { typefaceRules } from "./typeface.js";
@@ -473,6 +477,45 @@ describe("packages/tokens/README.md", () => {
       }
       expect(quotesFigure(readme, entry, derived.figure), name).toBe(true);
     });
+  });
+
+  it("states the AAA tint, its three alphas and the tint it replaced", () => {
+    // §Shadows states "#FFFFFF" and "10%, 14% and 18%", and replacing both in
+    // the front door, the catalogue and the design system left the two
+    // documentation suites green at 263 tests (plan 778). The alphas derive
+    // from the shipped levels, the tint from the resolved AAA theme and the
+    // rationale from the default dark tint painted on the AAA canvas.
+    const aaa = getTheme("dark", "high");
+    const levels = elevationLevels.filter((level) => level !== "overlay");
+    const alphas = levels.map(
+      (level) =>
+        `${Math.round((highContrastDarkElevation[level][0]?.alpha ?? Number.NaN) * 100)}%`,
+    );
+    const identityDark = themes.dark;
+    const canvas = aaa.colors.background;
+    const figures = levels.map((level) =>
+      contrastRatio(
+        compositeOver(
+          alpha(
+            identityDark.colors.shadow,
+            identityDark.elevation[level][0]?.alpha ?? Number.NaN,
+          ),
+          canvas,
+        ),
+        canvas,
+      ).toFixed(3),
+    );
+    const [figure] = figures;
+
+    expect(readme).toContain(`\`shadow\` is \`${aaa.colors.shadow}\``);
+    expect(readme).toContain(`alphas (${sentenceList(alphas)})`);
+    expect(figures).toEqual(levels.map(() => "1.000"));
+    if (figure === undefined) {
+      expect.unreachable("the shipped elevation levels are not empty");
+    }
+    expect(readme).toContain(
+      `A black tint measured **${figure}:1** at every level there`,
+    );
   });
 });
 

@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 352/428
+`[x]` `[████████░░]` 353/429
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -195,13 +195,13 @@ fifteen, the two surface counts and three group counts derive from
 `elevationSurfaces`, `elevationContentSurfaces`, `filledControlFamilies` and
 `statusTones`, and the two ratios are `"shadow"` figure-table entries that
 compose `elevationShadow(theme, level)` (plans 376, 584, 610, 665 and 777)
-`[ ]` Hold the AAA elevation tint and its three alphas — the front door, the
+`[x]` Hold the AAA elevation tint and its three alphas — the front door, the
 catalogue and the design system state "`#FFFFFF`" and "10%, 14% and 18%", and
 replacing both in all three passages left `readme.test.ts` and `docs.test.ts`
-green at 263 tests; derive the tint from the resolved AAA theme, the three
+green at 263 tests; the tint now derives from the resolved AAA theme, the three
 percentages from `highContrastDarkElevation`, and the "black tint measured
 1.000:1 at every level" rationale from the default dark tint on the AAA canvas
-(found while landing plan 777)
+(plan 778, found while landing plan 777)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

@@ -158,6 +158,7 @@ import {
 import {
   elevationLevels,
   elevationShadow,
+  highContrastDarkElevation,
   type BoxShadow,
 } from "./elevation.js";
 import {
@@ -1124,6 +1125,58 @@ describe("docs/tokens.md numeric tables", () => {
   it("names the tint role elevation is composed from", () => {
     expect(markdown).toContain("`colors.shadow`");
     expect(markdown).toContain("`elevationShadows`");
+  });
+
+  it("states the AAA tint, its three alphas and the tint it replaced", () => {
+    // Both pages state "#FFFFFF" and "10%, 14% and 18%", and replacing both in
+    // every passage left readme.test.ts and docs.test.ts green at 263 tests
+    // (plan 778). The alphas derive from the shipped levels and the tint from
+    // the resolved AAA theme; the rationale derives from the default dark tint
+    // painted on the AAA canvas.
+    const aaa = getTheme("dark", "high");
+    const levels = elevationLevels.filter((level) => level !== "overlay");
+    const alphas = levels.map(
+      (level) =>
+        `${Math.round((highContrastDarkElevation[level][0]?.alpha ?? Number.NaN) * 100)}%`,
+    );
+    const stated = `${alphas.slice(0, -1).join(", ")} and ${alphas.at(-1)}`;
+    const identityDark = themes.dark;
+    const canvas = aaa.colors.background;
+    const blackOnCanvas = (level: (typeof levels)[number]): string =>
+      contrastRatio(
+        compositeOver(
+          alpha(
+            identityDark.colors.shadow,
+            identityDark.elevation[level][0]?.alpha ?? Number.NaN,
+          ),
+          canvas,
+        ),
+        canvas,
+      ).toFixed(3);
+    const figures = levels.map(blackOnCanvas);
+
+    expect(aaa.colors.shadow).toBe("#FFFFFF");
+    expect(identityDark.colors.shadow).toBe("#000000");
+    expect(canvas).toBe("#000000");
+    expect(figures).toEqual(levels.map(() => "1.000"));
+
+    const [figure] = figures;
+    if (figure === undefined) {
+      expect.unreachable("the shipped elevation levels are not empty");
+    }
+
+    expect(markdownProse).toContain(
+      `\`colors.shadow\` is \`${aaa.colors.shadow}\` there and \`highContrastDarkElevation\` carries the set's own alphas — ${stated} —`,
+    );
+    expect(designSystem).toContain(
+      `\`highContrastDarkElevation\` applies ${stated} of the \`${aaa.colors.shadow}\` tint`,
+    );
+    expect(markdownProse).toContain(
+      `A black tint measured **${figure}:1** at every level on that canvas`,
+    );
+    expect(designSystem).toContain(
+      `a black tint measured **${figure}:1** at every level on that canvas`,
+    );
   });
 
   it("quotes the tightest elevation pairs", () => {
