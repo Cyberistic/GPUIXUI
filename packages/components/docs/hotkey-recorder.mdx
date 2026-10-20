@@ -62,7 +62,7 @@ macOS keeps `ctrl` rather than being silently rewritten to `mod`.
 `autoFocus` sets the initial `focused` state, so the recorder's ring is painted
 on the first commit — the runtime applies native focus after React's effects and
 never dispatches `onFocus`. The clear control paints the token ring while it is
-focused (plan 522).
+focused, sampled from the renderer's focused host (plan 754).
 
 ## Theming
 
@@ -104,9 +104,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - The recorder stores a string; registering the chord with the runtime is the
   application's job.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; the recorder and its clear control also
+  sample the renderer's focused host (50 ms), so their rings follow a `Tab`
+  entry, a programmatic move or a press and clear when focus leaves
+  (plans 390/603/605, 754).
 
 ## Verification
 

@@ -224,9 +224,12 @@ are enabled (a 50 ms sample of `getFocusedElementId()`): `FieldInput` (plan 748)
 `SearchInput` (plans 659/660), `ComboboxTrigger` while its popup is closed
 (plan 672), and the button-shaped parts — `Button`, `IconButton`, `TabsTrigger`,
 `AccordionTrigger` and `CollapsibleTrigger` — through the shared
-`useFocusState` host id (plan 752). The sample reads the renderer's focus; it
-never invents focus from colour or hover, and every component page whose parts
-can take focus states the limitation (plan 608).
+`useFocusState` host id (plan 752). The remaining ring owners read the same
+sample through their own host ids: `Carousel` and its indicator dots, the colour
+swatches and HEX field, the recorder and its clear control, a chip's removal
+control, a mention row and the time-picker clear control (plan 754). The sample
+reads the renderer's focus; it never invents focus from colour or hover, and
+every component page whose parts can take focus states the limitation (plan 608).
 A part that becomes disabled drops its painted focus even though no `blur`
 arrives, so a disabled control never shows a ring; re-enabling waits for the
 next real focus signal (plan `680`).

@@ -26,10 +26,10 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
-import * as Option from "effect/Option";
 import {
   Children,
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -40,7 +40,9 @@ import { slideIndex } from "./carousel/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { Button } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
+import { useFocusState } from "./internal/focus.js";
 import { isFirst, isLast, isLeft, isRight } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   assertParts,
   type PartChildren,
@@ -111,8 +113,15 @@ export const Carousel = ({
   const theme = useTheme();
   const renderer = useGpuix().renderer;
   const root = useRef<PublicInstance | null>(null);
-  const setRoot = useMergedRef<PublicInstance | null>(root, ref);
-  const [focused, setFocused] = useState(autoFocus);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    root.current = next;
+    setInstance(next ?? undefined);
+  }, []);
+  const setRoot = useMergedRef<PublicInstance | null>(attach, ref);
+  const [focused, setFocused] = useFocusState(autoFocus, false, instance?.id);
   const [value, setValue] = useControllableState({
     value: valueProp,
     defaultValue,
@@ -378,9 +387,8 @@ export const CarouselIndicators = ({
   const theme = useTheme();
   const { active, count, goTo } = useCarousel();
   const indexes = count === 0 ? Arr.empty<number>() : Arr.range(0, count - 1);
-  const [focusedIndex, setFocusedIndex] = useState<Option.Option<number>>(
-    Option.none(),
-  );
+  const focusedId = useNativeFocusId(count > 0);
+  const dotIds = useRef<Array<number | undefined>>([]);
 
   return (
     <div
@@ -411,10 +419,11 @@ export const CarouselIndicators = ({
             aria-selected={isActive}
             tabIndex={0}
             testId={`carousel-indicator-${index}`}
+            ref={(element) => {
+              dotIds.current[index] = element?.id;
+            }}
             {...activationHandlers(() => goTo(index))}
             onClick={() => goTo(index)}
-            onFocus={() => setFocusedIndex(Option.some(index))}
-            onBlur={() => setFocusedIndex(Option.none())}
             style={mergeStyles(
               {
                 width: isActive ? 18 : 8,
@@ -424,7 +433,7 @@ export const CarouselIndicators = ({
                   ? theme.colors.primary
                   : theme.colors.border,
                 cursor: "pointer",
-                ...(Option.contains(focusedIndex, index)
+                ...(focusedId !== null && focusedId === dotIds.current[index]
                   ? focusRing(theme)
                   : {}),
               },

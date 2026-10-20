@@ -30,6 +30,7 @@ import {
   clickCentreOf,
   focusedTestId,
   requireBounds,
+  until,
 } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
 import {
@@ -566,13 +567,18 @@ describe("Carousel", () => {
    * neither painted the token ring, so a keyboard user could not see where
    * focus was.
    */
-  it("paints the focus ring on the group and the focused dot", () => {
+  it("paints the focus ring on the group and the focused dot", async () => {
     const gallery = renderComponent(<StatefulIndicators />);
 
     gallery.renderer.focusElement(
       gallery.renderer.findByTestId("carousel")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        gallery.renderer.findByTestId("carousel")?.style.boxShadow !==
+        undefined,
+    );
     expect(
       gallery.renderer.findByTestId("carousel")?.style.boxShadow,
     ).toBeDefined();
@@ -584,12 +590,22 @@ describe("Carousel", () => {
       gallery.renderer.findByTestId("carousel-indicator-1")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        gallery.renderer.findByTestId("carousel-indicator-1")?.style
+          .boxShadow !== undefined,
+    );
     expect(
       gallery.renderer.findByTestId("carousel-indicator-1")?.style.boxShadow,
     ).toBeDefined();
     expect(
       gallery.renderer.findByTestId("carousel-indicator-0")?.style.boxShadow,
     ).toBeUndefined();
+    await until(
+      () =>
+        gallery.renderer.findByTestId("carousel")?.style.boxShadow ===
+        undefined,
+    );
     expect(
       gallery.renderer.findByTestId("carousel")?.style.boxShadow,
     ).toBeUndefined();

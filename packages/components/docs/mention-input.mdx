@@ -102,8 +102,8 @@ never looks editable or focused (plan 527).
   announced as a listbox. There is no `aria-activedescendant` either.
 - Rows are focusable (`tabIndex=0`), so `Tab` then `Enter` can pick a row; the
   input's `Tab` behaviour is the platform's. A focused row paints the token ring
-  even when it is not the highlighted row, and a field with `autoFocus` seeds the
-  group ring (plan 522).
+  from the renderer's focused host (plan 754) even when it is not the
+  highlighted row, and a field with `autoFocus` seeds the group ring (plan 522).
 
 ## Limitations
 
@@ -117,9 +117,12 @@ never looks editable or focused (plan 527).
 - No `role="listbox"`/`option` in the dump, no `aria-activedescendant`.
 - Fixed `"Mentions"` label for the surface.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; suggestion rows also sample the
+  renderer's focused host (50 ms), so a row's ring follows a `Tab` entry, a
+  programmatic move or a press and clears when focus leaves. The **group** ring
+  then follows React `focus`/`blur`, which the runtime does not deliver for a
+  native move, so the group may not ring when focus reaches the field by code
+  (plans 390/603/605, 754).
 
 ## Verification
 

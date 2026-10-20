@@ -31,6 +31,7 @@ import { Match } from "effect";
 import * as Option from "effect/Option";
 import {
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
   useRef,
@@ -39,6 +40,7 @@ import {
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
+import { useFocusState } from "./internal/focus.js";
 import { isTab } from "./internal/key.js";
 import {
   assertParts,
@@ -423,7 +425,13 @@ export const TimePickerClear = ({
 }: TimePickerClearProps) => {
   const theme = useTheme();
   const { clearable, hasValue, disabled, testId, clear } = useTimePicker();
-  const [focused, setFocused] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const [focused, setFocused] = useFocusState(false, disabled, instance?.id);
   if (!clearable || !hasValue || disabled) return null;
 
   return (
@@ -432,6 +440,7 @@ export const TimePickerClear = ({
       aria-label={label}
       testId={`${testId}-clear`}
       tabIndex={0}
+      ref={attach}
       onClick={clear}
       {...activationHandlers(clear)}
       onFocus={() => setFocused(true)}

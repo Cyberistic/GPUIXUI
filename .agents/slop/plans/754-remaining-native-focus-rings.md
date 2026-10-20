@@ -7,7 +7,7 @@
 tokens-theme's (`753-dimensions-consumer-reach`), and the components workstream's
 highest is `752` (`PLAN.md` D30).
 
-**Status: planned** — the follow-up recorded in plan 752 §8 and `TODO.md`.
+**Status: done** (2026-10-20) — see §8 for the measured result.
 
 ---
 
@@ -268,4 +268,34 @@ Stop and report with evidence if any of these happen:
 
 ## 8. Result (filled when done)
 
-_Not yet implemented._
+Done 2026-10-20.
+
+- **The fix.** Every remaining ring owner now follows the renderer's focused
+  host. `Carousel`'s root and `ColorPicker`'s HEX field pass their host id to
+  `useFocusState`; `HotkeyRecorder` (root and clear), `TagInputChip`'s removal
+  control, `MentionInputItem` and `TimePickerClear` hold their own instance
+  state and pass the id. The two groups (`CarouselIndicators`, the colour
+  swatch grid) take one `useNativeFocusId` sample each and compare it with the
+  host ids their children register in a ref array, so a group costs one interval
+  rather than one per child. The caller `ref` still composes through
+  `useMergedRef` where a part already exposed one.
+- **Both directions.** With the six sources reverted (`git stash push`), the
+  combined run is `7 failed / 91 passed (98)`; the six ring cases fail with
+  `boxShadow: undefined` and the `mention-input > composes the caller's field
+  handlers` case fails for its binding reason. With the fix it is
+  `1 failed / 97 passed (98)` — only the caller-handler case remains.
+- **Counts.** Carousel 21/21, Color picker 13/13, Hotkey recorder 16/16,
+  Tag input 16/16, Mention input 17/18, Time picker 14/14. No test was added or
+  removed, so every docs and `COMPONENTS.md` count is unchanged.
+- **Full native suite.** `944 passed / 20 failed of 964` — the same 20
+  plan-540 binding classes (placement, the density height probe, the React
+  `onFocus`/`onBlur` cases in Inline edit, Mention input and Tabs). No new
+  failing file; the six ring cases left the list (plan 752 recorded 938/26).
+- **Gates.** `nub run check`, `nub run lint` and `nub run test` exit `0`
+  (unit 488 in 46 files). The inventory's focus-claim check still passes: each of
+  the six pages keeps the `autoFocus` claim and adds the sampled rule.
+- **Recorded limitation.** `MentionInput`'s `composes the caller's field
+  handlers` case stays red: the runtime delivers no React `focus` for
+  `focusElement`, and this plan does not synthesise a caller handler. The tag
+  input, mention input and time-picker **group** rings still follow React
+  `focus`/`blur` for their field/segment focus; their pages state it.

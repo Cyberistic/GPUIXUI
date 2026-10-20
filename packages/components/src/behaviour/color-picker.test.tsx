@@ -11,7 +11,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { ColorPicker } from "../color-picker.js";
-import { clickCentreOf } from "../internal/interaction.js";
+import { clickCentreOf, until } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -267,18 +267,44 @@ describe("ColorPicker", () => {
    * native focus and painted no ring, so a keyboard user could not see which
    * colour the next Enter would choose.
    */
-  it("paints the focus ring on a focused swatch", () => {
+  it("paints the focus ring on a focused swatch", async () => {
     const picker = renderComponent(<Harness />);
 
     picker.renderer.focusElement(
       picker.renderer.findByTestId("picker-swatch-1")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        picker.renderer.findByTestId("picker-swatch-1")?.style.boxShadow !==
+        undefined,
+    );
     expect(
       picker.renderer.findByTestId("picker-swatch-1")?.style.boxShadow,
     ).toBeDefined();
     expect(
       picker.renderer.findByTestId("picker-swatch-0")?.style.boxShadow,
+    ).toBeUndefined();
+
+    picker.renderer.focusElement(
+      picker.renderer.findByTestId("picker-swatch-0")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        picker.renderer.findByTestId("picker-swatch-0")?.style.boxShadow !==
+        undefined,
+    );
+    expect(
+      picker.renderer.findByTestId("picker-swatch-0")?.style.boxShadow,
+    ).toBeDefined();
+    await until(
+      () =>
+        picker.renderer.findByTestId("picker-swatch-1")?.style.boxShadow ===
+        undefined,
+    );
+    expect(
+      picker.renderer.findByTestId("picker-swatch-1")?.style.boxShadow,
     ).toBeUndefined();
 
     picker.unmount();

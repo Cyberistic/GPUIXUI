@@ -23,6 +23,7 @@ import {
   finishMotion,
   focusedTestId,
   nextTask,
+  until,
 } from "../internal/interaction.js";
 import { nodesWithRole } from "../internal/a11y.js";
 import {
@@ -339,7 +340,7 @@ describe("MentionInput", () => {
    * `autoFocus` field focused natively without running `onFocus`, so the
    * group's ring never lit.
    */
-  it("paints the focus ring on a focused row", () => {
+  it("paints the focus ring on a focused row", async () => {
     const mention = renderComponent(<Harness />);
     type(mention, "@an");
 
@@ -347,6 +348,11 @@ describe("MentionInput", () => {
       mention.renderer.findByTestId("row-anna")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        mention.renderer.findByTestId("row-anna")?.style.boxShadow !==
+        undefined,
+    );
     expect(focusedTestId(mention)).toEqual(Option.some("row-anna"));
     expect(
       mention.renderer.findByTestId("row-anna")?.style.boxShadow,
@@ -354,6 +360,26 @@ describe("MentionInput", () => {
     // The highlighted row paints the selection fill, not the ring.
     expect(
       mention.renderer.findByTestId("row-ana")?.style.boxShadow,
+    ).toBeUndefined();
+
+    mention.renderer.focusElement(
+      mention.renderer.findByTestId("row-ana")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        mention.renderer.findByTestId("row-ana")?.style.boxShadow !== undefined,
+    );
+    expect(
+      mention.renderer.findByTestId("row-ana")?.style.boxShadow,
+    ).toBeDefined();
+    await until(
+      () =>
+        mention.renderer.findByTestId("row-anna")?.style.boxShadow ===
+        undefined,
+    );
+    expect(
+      mention.renderer.findByTestId("row-anna")?.style.boxShadow,
     ).toBeUndefined();
 
     mention.unmount();

@@ -13,7 +13,12 @@
  * popover stays open for the next press (plan 399).
  */
 
-import type { EventPayload, InputProps, Props } from "@gpuix/react";
+import type {
+  EventPayload,
+  InputProps,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import {
   FloatingLayer,
   floatingRootStyle,
@@ -24,6 +29,7 @@ import {
   Children,
   createContext,
   isValidElement,
+  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
@@ -32,6 +38,7 @@ import {
 } from "react";
 import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
+import { useFocusState } from "./internal/focus.js";
 import { isActivation, isDismiss, isDown, isUp } from "./internal/key.js";
 import {
   assertParts,
@@ -39,6 +46,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
   applyMention,
@@ -355,12 +363,20 @@ export const MentionInputItem = ({
   onFocus,
   onBlur,
   autoFocus = false,
+  ref,
   ...rest
 }: MentionInputItemProps) => {
   const theme = useTheme();
   const { highlighted } = useContext(MentionItemContext);
   const { select, close } = useMention();
-  const [focused, setFocused] = useState(autoFocus);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attach, ref);
+  const [focused, setFocused] = useFocusState(autoFocus, false, instance?.id);
 
   return (
     <div
@@ -368,6 +384,7 @@ export const MentionInputItem = ({
       aria-selected={highlighted}
       tabIndex={0}
       {...rest}
+      ref={setElement}
       autoFocus={autoFocus}
       onFocus={(event) => {
         setFocused(true);

@@ -12,7 +12,12 @@
  * the rest stays the draft.
  */
 
-import type { EventPayload, InputProps, Props } from "@gpuix/react";
+import type {
+  EventPayload,
+  InputProps,
+  Props,
+  PublicInstance,
+} from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -21,12 +26,14 @@ import {
 import { Icon } from "@gpuixui/icons";
 import {
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { activationHandlers } from "./internal/activate.js";
+import { useFocusState } from "./internal/focus.js";
 import { isEnter } from "./internal/key.js";
 import {
   assertParts,
@@ -261,16 +268,28 @@ export interface TagInputChipState {
  * The control is named `<testId>-remove` when the chip has a `testId`, so a
  * consumer or a native harness can address one token's control.
  */
-export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
+export const TagInputChip = ({
+  value,
+  style,
+  ref,
+  ...rest
+}: TagInputChipProps) => {
   const theme = useTheme();
   const { disabled, remove } = useTagInput();
-  const [focused, setFocused] = useState(false);
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const [focused, setFocused] = useFocusState(false, disabled, instance?.id);
   const removeTestId =
     rest.testId === undefined ? undefined : `${rest.testId}-remove`;
 
   return (
     <div
       {...rest}
+      ref={ref}
       style={mergeStyles(
         {
           display: "flex",
@@ -302,6 +321,7 @@ export const TagInputChip = ({ value, style, ...rest }: TagInputChipProps) => {
           aria-label={`Remove ${value}`}
           testId={removeTestId}
           tabIndex={0}
+          ref={attach}
           onClick={() => remove(value)}
           {...activationHandlers(() => remove(value))}
           onFocus={() => setFocused(true)}

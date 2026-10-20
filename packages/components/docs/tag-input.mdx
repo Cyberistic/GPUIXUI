@@ -85,7 +85,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
   `testId="chip-design-remove"`, so a consumer or a harness can address one
   token's control without coordinates.
 - The field is a real input, so typing, selection and focus are native. A
-  focused chip's removal control paints the token ring, and a field with
+  focused chip's removal control paints the token ring from the renderer's
+  focused host (plan 754), and a field with
   `autoFocus` seeds the group ring (the runtime applies native focus after
   React's effects, so `onFocus` never runs — plan 522).
 - Removing a chip by keyboard is possible by tabbing to its control and pressing
@@ -102,9 +103,12 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Commas are always separators; a token cannot contain a comma.
 - Chips are rendered by the caller, so ordering is the caller's choice.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; a chip's removal control also samples
+  the renderer's focused host (50 ms), so its ring follows a `Tab` entry, a
+  programmatic move or a press and clears when focus leaves. The **group** ring
+  then follows React `focus`/`blur`, which the runtime does not deliver for a
+  native move, so the group may not ring when focus reaches the field by code
+  (plans 390/603/605, 754).
 
 ## Verification
 

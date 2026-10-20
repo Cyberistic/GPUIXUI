@@ -14,7 +14,7 @@
  * could not prove.
  */
 
-import type { EventPayload, Props } from "@gpuix/react";
+import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
@@ -22,12 +22,13 @@ import {
 } from "@gpuix/react/floating";
 import { Icon } from "@gpuixui/icons";
 import * as Option from "effect/Option";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { acceleratorOf } from "./hotkey/logic.js";
 import { activationHandlers } from "./internal/activate.js";
 import { claimEvent, isEventClaimed } from "./internal/event-claim.js";
 import { useFocusState } from "./internal/focus.js";
 import { isDismiss, isEnter, isSpaceRelease, isTab } from "./internal/key.js";
+import { useMergedRef } from "./internal/ref.js";
 import { stateDescription } from "./internal/state-description.js";
 import { Keycap } from "./keyboard-shortcuts.js";
 import { formatAccelerator } from "./shortcut/accelerator.js";
@@ -78,12 +79,34 @@ export const HotkeyRecorder = ({
   onKeyUp,
   onBlur,
   onMouseDownOutside,
+  ref,
   ...rest
 }: HotkeyRecorderProps) => {
   const theme = useTheme();
   const [recording, setRecording] = useState(false);
-  const [focused, setFocused] = useFocusState(autoFocus, disabled);
-  const [clearFocused, setClearFocused] = useState(false);
+  const [rootInstance, setRootInstance] = useState<PublicInstance | undefined>(
+    undefined,
+  );
+  const [clearInstance, setClearInstance] = useState<
+    PublicInstance | undefined
+  >(undefined);
+  const attachRoot = useCallback((next: PublicInstance | null) => {
+    setRootInstance(next ?? undefined);
+  }, []);
+  const attachClear = useCallback((next: PublicInstance | null) => {
+    setClearInstance(next ?? undefined);
+  }, []);
+  const setElement = useMergedRef<PublicInstance | null>(attachRoot, ref);
+  const [focused, setFocused] = useFocusState(
+    autoFocus,
+    disabled,
+    rootInstance?.id,
+  );
+  const [clearFocused, setClearFocused] = useFocusState(
+    false,
+    disabled,
+    clearInstance?.id,
+  );
   // A disabled recorder is inert: a recording that was open when the app
   // disabled it must not stay open and paint "Press keys…".
   useLayoutEffect(() => {
@@ -117,6 +140,7 @@ export const HotkeyRecorder = ({
       tabIndex={disabled ? -1 : 0}
       {...rest}
       {...stateDescription(disabled, rest["aria-description"])}
+      ref={setElement}
       testId={testId}
       autoFocus={autoFocus && !disabled}
       onMouseDownOutside={(event) => {
@@ -238,6 +262,7 @@ export const HotkeyRecorder = ({
           aria-label="Clear shortcut"
           testId={testId === undefined ? undefined : `${testId}-clear`}
           tabIndex={0}
+          ref={attachClear}
           onClick={() => clear(true)}
           {...activationHandlers((event) => {
             claimEvent(event);

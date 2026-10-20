@@ -101,7 +101,8 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 `aria-disabled` semantics (plan 516).
 
 - The root is a named `group` and takes focus for the arrow keys; the root and
-  every dot paint the token focus ring, and a root `autoFocus` seeds its ring.
+  every dot paint the token focus ring from the renderer's focused host (50 ms),
+  and a root `autoFocus` seeds its ring (plan 754).
 - A control inside a slide owns the keys it receives. Moving the carousel from
   the keyboard is the root's job, so tab back to the root (or press a control)
   rather than expecting arrows to work from a nested field.
@@ -124,9 +125,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Inactive slides stay mounted and are still reconciled: many heavy slides cost
   render time even though only one paints.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; the root and every dot also sample the
+  renderer's focused host (50 ms), so their rings follow a `Tab` entry, a
+  programmatic move or a press and clear when focus leaves
+  (plans 390/603/605, 754).
 
 ## Verification
 

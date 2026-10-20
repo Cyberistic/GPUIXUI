@@ -13,7 +13,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
-import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import {
+  clickCentreOf,
+  focusedTestId,
+  until,
+} from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -335,17 +339,33 @@ describe("TimePicker", () => {
    * control took native focus and painted no ring, so a keyboard user could not
    * see that the next Enter would clear the time.
    */
-  it("paints the focus ring on the clear control", () => {
+  it("paints the focus ring on the clear control", async () => {
     const time = renderComponent(<Time defaultValue="09:30" clearable />);
 
     time.renderer.focusElement(
       time.renderer.findByTestId("time-clear")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        time.renderer.findByTestId("time-clear")?.style.boxShadow !== undefined,
+    );
     expect(focusedTestId(time)).toEqual(Option.some("time-clear"));
     expect(
       time.renderer.findByTestId("time-clear")?.style.boxShadow,
     ).toBeDefined();
+
+    time.renderer.focusElement(
+      time.renderer.findByTestId("time-hours")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        time.renderer.findByTestId("time-clear")?.style.boxShadow === undefined,
+    );
+    expect(
+      time.renderer.findByTestId("time-clear")?.style.boxShadow,
+    ).toBeUndefined();
 
     time.unmount();
   });

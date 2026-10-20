@@ -105,9 +105,10 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Validation is on commit; there is no live preview of an invalid draft.
 - The swatch grid is a flat list; no hue strip or custom-swatch editing.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; the swatches and the HEX field also
+  sample the renderer's focused host (50 ms), so their rings follow a `Tab`
+  entry, a programmatic move or a press and clear when focus leaves
+  (plans 390/603/605, 754).
 
 ## Verification
 

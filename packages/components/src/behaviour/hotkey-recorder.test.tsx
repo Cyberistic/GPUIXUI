@@ -20,6 +20,7 @@ import {
   finishMotion,
   focusedTestId,
   nextTask,
+  until,
 } from "../internal/interaction.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import { renderComponent } from "../internal/test-root.js";
@@ -334,17 +335,35 @@ describe("HotkeyRecorder", () => {
    * control took native focus and painted no ring, so a keyboard user could not
    * see that the next Enter would clear the binding.
    */
-  it("paints the focus ring on the clear control", () => {
+  it("paints the focus ring on the clear control", async () => {
     const recorder = renderComponent(<Harness initial="ctrl+k" />);
 
     recorder.renderer.focusElement(
       recorder.renderer.findByTestId("recorder-clear")?.id ?? -1,
     );
 
+    await until(
+      () =>
+        recorder.renderer.findByTestId("recorder-clear")?.style.boxShadow !==
+        undefined,
+    );
     expect(focusedTestId(recorder)).toEqual(Option.some("recorder-clear"));
     expect(
       recorder.renderer.findByTestId("recorder-clear")?.style.boxShadow,
     ).toBeDefined();
+
+    recorder.renderer.focusElement(
+      recorder.renderer.findByTestId("recorder")?.id ?? -1,
+    );
+
+    await until(
+      () =>
+        recorder.renderer.findByTestId("recorder-clear")?.style.boxShadow ===
+        undefined,
+    );
+    expect(
+      recorder.renderer.findByTestId("recorder-clear")?.style.boxShadow,
+    ).toBeUndefined();
 
     recorder.unmount();
   });

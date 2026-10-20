@@ -1107,12 +1107,17 @@ retired once both branches are one
       of 964 (the same plan-540 classes); `check`/`lint`/`test` exit 0 (unit 488
       in 46 files); docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30
       and the inventory synced (owner: components)
-    - [ ] The remaining ring owners sample native focus too — the follow-up to
-      plan 752: `Carousel` (group and dots), `ColorPicker` (swatch),
-      `HotkeyRecorder` (clear), `TagInput` (chip removal), `MentionInput` (row)
-      and `TimePicker` (clear) still paint from React `onFocus` only, so their
-      real-renderer ring cases stay in the plan-540 failure list (26 remaining).
-      Each needs the same host-id sample; a plan comes first (owner: components)
+    - [x] The remaining ring owners sample native focus too — plan 754; measured
+      2026-10-20 across the six suites: `7 failed / 91 passed` before, with the
+      six ring cases red (`carousel` group/dot, colour swatch, recorder clear,
+      chip removal, mention row, time-picker clear) plus the recorded
+      `mention-input > composes the caller's field handlers` plan-540 case. Each
+      part now names its own host (`useFocusState` host id) or one group sample
+      plus per-child ids, so a ring follows `Tab`, a programmatic move and a
+      press and clears when focus leaves; the six ring cases pass and the
+      caller-handler case remains the binding's missing React `onFocus`
+      (`1 failed / 97 passed`). No count changed; docs, `COMPONENTS.md`,
+      `docs/component-api.md` and the plan index synced (owner: components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed

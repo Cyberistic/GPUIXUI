@@ -13,19 +13,20 @@
  * reverts on the same signals.
  */
 
-import type { Props } from "@gpuix/react";
+import type { Props, PublicInstance } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
-import { useLayoutEffect, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { normalizeHex, sameHex } from "./color/hex.js";
 import { activationHandlers } from "./internal/activate.js";
 import { useControllableState } from "./internal/controllable.js";
 import { useFocusState } from "./internal/focus.js";
 import { isTab } from "./internal/key.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import { stateDescription } from "./internal/state-description.js";
 import {
   controlHeight,
@@ -90,10 +91,15 @@ export const ColorPicker = ({
     onChange: onValueChange,
   });
   const [draft, setDraft] = useState(value);
-  const [focused, setFocused] = useFocusState(false, disabled);
-  const [focusedSwatch, setFocusedSwatch] = useState<Option.Option<number>>(
-    Option.none(),
+  const [instance, setInstance] = useState<PublicInstance | undefined>(
+    undefined,
   );
+  const attach = useCallback((next: PublicInstance | null) => {
+    setInstance(next ?? undefined);
+  }, []);
+  const [focused, setFocused] = useFocusState(false, disabled, instance?.id);
+  const focusedId = useNativeFocusId(!disabled);
+  const swatchIds = useRef<Array<number | undefined>>([]);
   const swatches = swatchesProp ?? defaultSwatches(theme);
   const valid = Option.isSome(normalizeHex(draft));
 
@@ -101,12 +107,6 @@ export const ColorPicker = ({
   useLayoutEffect(() => {
     setDraft(value);
   }, [value]);
-
-  // A disabled picker is inert: a swatch focused before the app disabled it
-  // must not keep the ring (plan 680).
-  useLayoutEffect(() => {
-    if (disabled) setFocusedSwatch(Option.none());
-  }, [disabled]);
 
   const commit = (): void => {
     Option.match(normalizeHex(draft), {
@@ -166,11 +166,12 @@ export const ColorPicker = ({
                 testId === undefined ? undefined : `${testId}-swatch-${index}`
               }
               tabIndex={disabled ? -1 : 0}
+              ref={(element) => {
+                swatchIds.current[index] = element?.id;
+              }}
               onClick={() => {
                 if (!disabled) choose(swatch);
               }}
-              onFocus={() => setFocusedSwatch(Option.some(index))}
-              onBlur={() => setFocusedSwatch(Option.none())}
               {...activationHandlers(() => choose(swatch), { disabled })}
               style={{
                 width: controlHeight(theme, "sm"),
@@ -183,7 +184,9 @@ export const ColorPicker = ({
                 borderColor: selected
                   ? theme.colors.foreground
                   : theme.colors.border,
-                ...(!disabled && Option.contains(focusedSwatch, index)
+                ...(!disabled &&
+                focusedId !== null &&
+                focusedId === swatchIds.current[index]
                   ? focusRing(theme)
                   : {}),
               }}
@@ -215,6 +218,7 @@ export const ColorPicker = ({
         />
         <input
           aria-label={`${label} hex value`}
+          ref={attach}
           {...stateDescription(
             disabled,
             valid ? undefined : "Invalid hex colour",

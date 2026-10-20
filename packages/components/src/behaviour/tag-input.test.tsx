@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as Option from "effect/Option";
 import { useState } from "react";
 import { nodesWithRole } from "../internal/a11y.js";
-import { focusedTestId } from "../internal/interaction.js";
+import { focusedTestId, until } from "../internal/interaction.js";
 import {
   renderComponent,
   type ComponentTestRoot,
@@ -269,12 +269,26 @@ describe("TagInput", () => {
    * `autoFocus` focused natively without running `onFocus`, so the group ring
    * its sibling sets never lit.
    */
-  it("paints the focus ring on a chip's removal control", () => {
+  it("paints the focus ring on a chip's removal control", async () => {
     const tags = renderComponent(<Harness initial={["design"]} />);
 
     tags.renderer.focusElement(removeControlOf(tags, "chip-design")?.id ?? -1);
 
+    await until(
+      () => removeControlOf(tags, "chip-design")?.style.boxShadow !== undefined,
+    );
     expect(removeControlOf(tags, "chip-design")?.style.boxShadow).toBeDefined();
+
+    tags.renderer.focusElement(
+      tags.renderer.findByTestId("tag-field")?.id ?? -1,
+    );
+
+    await until(
+      () => removeControlOf(tags, "chip-design")?.style.boxShadow === undefined,
+    );
+    expect(
+      removeControlOf(tags, "chip-design")?.style.boxShadow,
+    ).toBeUndefined();
 
     tags.unmount();
   });
