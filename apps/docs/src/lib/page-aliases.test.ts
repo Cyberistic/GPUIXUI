@@ -262,6 +262,18 @@ const owned = [
   ["search index", "/docs/site-search"],
   ["search ranking", "/docs/site-search"],
   ["api/search", "/docs/site-search"],
+  ["migration", "/docs/porting-from-shadcn"],
+  ["migrate", "/docs/porting-from-shadcn"],
+  ["porting", "/docs/porting-from-shadcn"],
+  ["convert", "/docs/porting-from-shadcn"],
+  ["shadcn", "/docs/porting-from-shadcn"],
+  ["shadcn ui", "/docs/porting-from-shadcn"],
+  ["from shadcn", "/docs/porting-from-shadcn"],
+  ["radix", "/docs/porting-from-shadcn"],
+  ["aschild", "/docs/porting-from-shadcn"],
+  ["tailwind", "/docs/styling"],
+  ["classname", "/docs/styling"],
+  ["sx", "/docs/styling"],
 ] as const;
 
 const regressions = [

@@ -471,7 +471,18 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 177/177
+`[x]` `[██████████]` 178/178
+
+`[x]` **The adoption path has a page (plan 611)** — `MISSION.md` names shadcn/ui
+      as the DX reference, but the site documented the substrate and never the
+      move: `migration`, `porting`, `tailwind` and `convert` returned nothing,
+      `shadcn` reached the Roadmap and Radio group, `radix` the Values API and
+      `asChild` Combobox. `/docs/porting-from-shadcn` maps shadcn components to
+      registry records, React idioms to a real file and an explaining page, and
+      the components with no counterpart to a still-`todo` roadmap target — all
+      three tables are `src/lib/porting.ts` data, guarded both ways. 123 files /
+      1 142 docs tests, 105-page `smoke:build`, six forced defects in plan 611
+      §6.
 
 `[x]` **Site search has a page (plan 610)** — the site documented its output,
       deployment and previews but not its own search: `cmd k` reached a

@@ -35,6 +35,11 @@ import { TokenColors } from "./token-colors";
 import { TokenScales } from "./token-scales";
 import { ValueIndex } from "./value-index";
 import { PlatformTypes, TypeScale } from "./type-scale";
+import {
+  PortingComponents,
+  PortingConcepts,
+  PortingGaps,
+} from "./porting-tables";
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
@@ -75,6 +80,9 @@ export function getMDXComponents(components?: MDXComponents) {
     ThemeCaptures,
     ThemeEditor,
     IconCatalogue,
+    PortingComponents,
+    PortingConcepts,
+    PortingGaps,
     ...components,
   } satisfies MDXComponents;
 }

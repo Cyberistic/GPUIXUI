@@ -151,6 +151,27 @@ The editor packages are exact-pinned devDependencies: the ecosystem is pre-v1, s
 a minor bump may change the serialization contract the guard proves. Re-run the
 suite before bumping.
 
+## Coming from shadcn/ui
+
+`/docs/porting-from-shadcn` answers the adoption question the rest of the site
+assumes: which component replaces the one a reader has, what happens to
+`className`/`cva`/`asChild`/`data-state`, and which shadcn components have no
+counterpart yet (plan 611). The three tables are `src/lib/porting.ts` data, not
+prose:
+
+- every mapped slug must be a delivered registry record (`bySlug`);
+- every "no counterpart" row must be a real Tier 3–5 target still marked `todo`
+  in the inventory, so shipping it fails the page instead of leaving the claim;
+- every React-idiom row names a repository file that exists and a page
+  `source.getPages()` serves.
+
+`src/porting-page.test.tsx` renders the three tables with
+`renderToStaticMarkup`, checks them against `getMDXComponents()`, the sidebar
+order and `absentStylingConcepts` (the page links Styling instead of denying the
+CSS vocabulary twice), and runs `migration`, `shadcn` and `aschild` through the
+real index. `smoke:build` asserts `migration`, `asChild` and `radix` against the
+**production** index; `tailwind` and `className` stay on `/docs/styling`.
+
 ## Built-site smoke check
 
 The unit suite reads the source tree. `smoke:build` reads the **production

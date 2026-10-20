@@ -31,6 +31,11 @@
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
+ *
+ * The tenth block (plan 611) covers the adoption vocabulary: `migration`,
+ * `porting`, `shadcn`, `radix` and `asChild` name the porting guide, while
+ * `tailwind` and `className` stay on Styling (plan 606) — the porting page links
+ * that owner rather than claiming its subject.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -292,6 +297,26 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "rendering",
       "server",
       "hydration",
+    ],
+  ],
+  [
+    "/docs/porting-from-shadcn",
+    [
+      "migration",
+      "migrate",
+      "migrating",
+      "porting",
+      "port",
+      "convert",
+      "conversion",
+      "shadcn",
+      "shadcn ui",
+      "shadcn/ui",
+      "from shadcn",
+      "radix",
+      "radix ui",
+      "aschild",
+      "as child",
     ],
   ],
 ]);

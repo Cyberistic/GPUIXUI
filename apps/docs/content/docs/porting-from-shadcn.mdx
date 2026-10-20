@@ -1,0 +1,141 @@
+---
+title: Coming from shadcn/ui
+description: Porting a shadcn/ui interface to the native runtime — the components that map across, what className, Tailwind, Radix and CSS variables become, and what is not shipped yet.
+---
+
+This library borrows shadcn/ui's architecture rather than its code: semantic
+colour roles, a small set of foundational primitives, compound parts you import
+directly, variants that read roles instead of colours, and source you own. The
+substrate is different in a way no component name reveals — shadcn renders DOM
+elements styled by Tailwind and powered by Radix, while every component here
+renders [GPUix host elements](/docs/architecture) styled by a `StyleDesc`
+object.
+
+So most components map one-to-one, and the code that surrounds them does not.
+This page is the part that a rename cannot tell you: the three tables below are
+read from the [registry](/docs/components), the [roadmap](/docs/roadmap) and the
+real package files, so a component that moves or ships changes them here. shadcn
+is credited as a design reference; nothing of its source or assets is copied
+([License](/docs/license)).
+
+## What maps across
+
+Read the last column before pasting: it names the shape difference that breaks a
+straight port. Every row links to the page with the generated props table, the
+real source and the native evidence.
+
+<PortingComponents />
+
+A repeated difference is the event: there is no `onClick`. Components expose
+`onActivate`, because the runtime has no DOM event and the component owns the
+keyboard contract — Enter activates on key down, Space on key up, and a repeating
+key never fires. That is one behaviour, [documented once](/docs/component-api).
+
+## What changes in the code
+
+The idioms below are not styling preferences; each is a capability the runtime
+does not have, with the replacement the library actually ships. The page that
+explains the full contract is linked in the last column.
+
+<PortingConcepts />
+
+Two consequences are worth stating in prose because they change file structure,
+not one attribute:
+
+- **Layout is a component.** shadcn composes with `flex gap-4 items-center`;
+  here [Stack and Grid](/docs/layouts) take direction, gap and alignment props
+  whose values are theme steps, so a call site cannot introduce a one-off
+  spacing. A `div` with `style` is the escape hatch, not the default.
+- **A variant is a prop, not a class string.** `variant` and `size` are typed
+  unions resolved from [semantic roles](/docs/styling); there is no `cn(...)`
+  call and no `className` to merge. A consumer `style` object is spread last,
+  so the field you pass wins.
+
+## A port in practice
+
+The screen a shadcn project is most likely to carry first is a card with a
+destructive action. Its shadcn shape:
+
+```tsx
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Delete this workspace?</CardTitle>
+  </CardHeader>
+  <CardContent className="text-sm text-muted-foreground">
+    The workspace and its 42 files are removed for everyone.
+  </CardContent>
+  <div className="flex justify-end gap-2">
+    <Button variant="ghost">Cancel</Button>
+    <Button variant="destructive">Delete workspace</Button>
+  </div>
+</Card>;
+```
+
+The same screen here — same parts, no classes, and the type role comes from the
+scale:
+
+```tsx
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@gpuixui/components/card";
+import { Button, Stack, Text } from "@gpuixui/primitives";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Delete this workspace?</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <Text role="body" tone="muted">
+      The workspace and its 42 files are removed for everyone.
+    </Text>
+  </CardContent>
+  <Stack direction="row" justify="end" gap="sm">
+    <Button variant="ghost">Cancel</Button>
+    <Button variant="destructive">Delete workspace</Button>
+  </Stack>
+</Card>;
+```
+
+The action itself should not be a bare button: a destructive action is a
+confirmation, so it becomes [`ConfirmDialog`](/docs/components/confirm-dialog).
+The [confirmation flow pattern](/docs/patterns/confirmation-flow) is that exact
+composition running on GPUix's published WebAssembly renderer — a real surface,
+not a browser imitation — and its page names which parts the native runtime
+verifies.
+
+## What has no counterpart yet
+
+Five shadcn components are roadmap targets rather than shipped ones. The table
+reads the inventory status, so it fills in the day a target lands instead of
+leaving the page claiming a component is missing:
+
+<PortingGaps />
+
+The [Roadmap](/docs/roadmap) lists every Tier 3–5 target with its exact status
+and the measured GPUix support for it. A component that needs an unavailable
+runtime capability is recorded there with its evidence, never shipped as a
+decorative placeholder.
+
+## Where to go next
+
+- [Getting started](/docs/getting-started) mounts the first real component and
+  the two providers a mixed app nests.
+- [Styling](/docs/styling) is the full `StyleDesc` surface and every CSS concept
+  the runtime does not have.
+- [Component API](/docs/component-api) is the parts, controlled-state, keyboard
+  and layering contract this page keeps pointing at.
+- [Theming](/docs/theming) and [Dark mode](/docs/dark-mode) are the values and
+  the app-owned mode.
+- [Contributing](/docs/contributing) is how to add a component and run every
+  check this site's own pages pass.

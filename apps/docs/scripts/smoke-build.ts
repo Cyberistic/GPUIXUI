@@ -1258,6 +1258,24 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the Search input component the Site search page must not steal",
     },
+    {
+      query: "migration",
+      expected: "/docs/porting-from-shadcn",
+      first: true,
+      what: "the adoption path, which returned nothing before plan 611",
+    },
+    {
+      query: "asChild",
+      expected: "/docs/porting-from-shadcn",
+      first: true,
+      what: "a React idiom the porting guide answers, which reached Combobox before plan 611",
+    },
+    {
+      query: "radix",
+      expected: "/docs/porting-from-shadcn",
+      first: true,
+      what: "the Radix substrate the porting guide owns, which reached the Values API before",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(
