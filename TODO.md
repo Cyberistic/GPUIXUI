@@ -2593,6 +2593,17 @@ retired once both branches are one
       child's override, and a cross-document guard fails if the page denies it
       again. Both directions measured (plan `784`).
 
+`[x]` `packages/primitives`: **a busy button published a second `Loading`
+      status inside itself** — measured (2026-10-20): a busy `Button` carried
+      `aria-description="Loading"` **and** a spinner whose `role="status"`
+      published a nested `Status: Loading` child, so one action reached
+      assistive technology as two nodes saying the same thing (`IconButton`
+      inherited it). `Spinner` gains `decorative` (`role="presentation"`, no
+      name), the busy `Button` passes it, and a standalone spinner remains a
+      named `Status`; 3 offline + 1 scoped runtime case (busy `Button` +
+      `IconButton` + standalone: exactly one `Status`), both directions
+      measured (old: 3 statuses) (plan `785`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

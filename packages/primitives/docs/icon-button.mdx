@@ -63,7 +63,7 @@ it leaves a text button at `h-8`/`h-9`/`h-10` (plan `370`; measured 375).
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | square box and icon size |
 | `radius` | `RadiusStep` | `"md"` | corner radius |
 | `disabled` | `boolean` | `false` | leaves the tab order, refuses activation, fades to 50% |
-| `loading` | `boolean` | `false` | paints a spinner **instead of** the icon, sized to the square (9/10/12 px dots at `sm`/`md`/`lg`), announces `Loading`, refuses activation |
+| `loading` | `boolean` | `false` | paints a decorative spinner **instead of** the icon, sized to the square (9/10/12 px dots at `sm`/`md`/`lg`), announces `Loading` in the button's description, refuses activation |
 | `onActivate` / `onClick` | — | none | the shared `Button` activation path; `onClick` receives the click or the key event |
 | `style` | `StateStyle<ButtonState>` | — | merged last over the button's own rules |
 | `testId` | `string` | — | stable locator |
@@ -104,7 +104,9 @@ state stays visible on a filled `primary` button (plan `754`).
   the tree has no second node for it — measured in the runtime: a `Button` named
   `"Close"` and **no** `Image` node.
 - No `aria-disabled`: a disabled button leaves the tab order instead.
-- `loading` sets `aria-description="Loading"`; GPUix has no `aria-busy`.
+- `loading` sets `aria-description="Loading"`; GPUix has no `aria-busy`. The
+  spinner is decorative, so the button publishes one node instead of a nested
+  `Status` saying the same thing (plan `785`).
 - The icon's visual tint is `style.color`, so contrast follows the button's
   foreground role in every theme.
 

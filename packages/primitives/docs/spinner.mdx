@@ -27,6 +27,7 @@ import { Spinner, Stack, Text } from "@gpuixui/primitives";
 | `accent` | `primary \| destructive \| muted` | `"primary"` | the lit dot's colour role |
 | `color` | `string` | — | a resolved dot colour for **every** dot, for a spinner on a filled surface (a busy `Button` passes its variant's foreground); overrides `accent` |
 | `label` | `string` | `"Loading"` | accessible name announced as a status; a blank label falls back to the default |
+| `decorative` | `boolean` | `false` | paints the same dots with `role="presentation"` and no name — for a spinner inside a control that already announces its busy state (a busy `Button`/`IconButton`) |
 | `style` | `StyleDesc` | — | merged last |
 | `testId` | `string` | — | stable locator |
 
@@ -42,6 +43,10 @@ Not focusable. Activity is status, not an action.
 ## Accessibility
 
 - Role: `Status`, with the `label` as its name.
+- `decorative` removes that node (`role="presentation"`, no name). Use it where
+  the surrounding control already says it is busy: a `Button` announces
+  `Loading` in its own description, so its indicator must not publish a second
+  nested `Status: Loading` — one action, one node (plan `785`).
 - Announce **what** is happening: the default "Loading" is a poor name when three
   spinners share a screen.
 - The dots themselves are decorative and carry no text.
@@ -69,14 +74,20 @@ itself (plan `754`).
   the runtime cannot paint falls back to the theme's `md` (plan `371`); a custom
   `color` paints every dot and the default accent/muted pair is unchanged
   (plan `754`).
+- `src/components/Spinner.test.tsx` — the default tree is a named `Status`; a
+  decorative spinner is `presentation` with no name and the same three dots; a
+  real label is trimmed and a blank one falls back (plan `785`).
 - `src/components/Button.test.tsx` — a busy button passes the variant's
-  foreground to its spinner (plan `754`).
+  foreground to its spinner (plan `754`) and makes that spinner decorative
+  (plan `785`).
 - `runtime/loading.runtime.test.tsx` — the lit dot's index changes over real
   time, the accent role reaches the paint, and AccessKit reports `Status` with
   the label.
 - `runtime/button-loading.runtime.test.tsx` — a busy primary `Button` paints
   its fill `colors.primary` and every dot `colors.primaryForeground`, so the
-  indicator is not lost in the fill (plan `754`).
+  indicator is not lost in the fill (plan `754`); a busy `Button` and
+  `IconButton` add no `Status` node, while a standalone spinner is the scene's
+  one `Status` (plan `785`).
 - `runtime/nonsense-numbers.runtime.test.tsx` — a `NaN` side paints the
   documented default instead of a zero-high row (plan `371`).
 - `runtime/examples.runtime.test.tsx` — the feedback example mounts it.

@@ -14,7 +14,9 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import type { TestElement } from "@gpuix/react/testing";
 import { Button } from "../src/components/Button.js";
-import type { Runtime } from "../src/testing/index.js";
+import { IconButton } from "../src/components/IconButton.js";
+import { Spinner } from "../src/components/Spinner.js";
+import { a11yNodes, type Runtime } from "../src/testing/index.js";
 import { Surface, openWindow, testTheme } from "./fixture.js";
 
 const idOf = (runtime: Runtime, testId: string): number =>
@@ -64,4 +66,32 @@ it("paints a busy Button's spinner in the variant foreground", async () => {
       testTheme.colors.primaryForeground,
     );
   });
+});
+
+it("does not add a second Loading status inside a busy control", async () => {
+  // The bug guarded (plan 785): the spinner published `Status: Loading` as a
+  // child of a button whose description already said "Loading", so one action
+  // reached assistive technology as two nodes saying the same thing. The
+  // standalone spinner is still a status and still carries its own name.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Button testId="busy" loading>
+        Saving
+      </Button>
+      <IconButton testId="icon-busy" icon="check" label="Apply" loading />
+      <Spinner testId="standalone" label="Standalone" />
+    </Surface>,
+  );
+  const nodes = a11yNodes(runtime.a11y());
+  const statuses = nodes.filter((node) => node.aria?.role === "Status");
+  expect(statuses).toHaveLength(1);
+  expect(statuses[0]?.aria?.label).toBe("Standalone");
+
+  const button = nodes.find((node) => node.aria?.label === "Saving");
+  expect(button?.aria?.role).toBe("Button");
+  expect(button?.aria?.description).toBe("Loading");
+  const iconButton = nodes.find((node) => node.aria?.label === "Apply");
+  expect(iconButton?.aria?.role).toBe("Button");
+  expect(iconButton?.aria?.description).toBe("Loading");
 });

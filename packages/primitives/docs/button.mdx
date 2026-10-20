@@ -56,12 +56,14 @@ sm / md / lg.
 - `disabled` — refuses click and keys, and leaves the tab order.
 - `loading` — shows a spinner, announces `Loading`, refuses activation, and
   **stays focusable** — unless `disabled` is also set, which always removes the
-  tab stop. The spinner is content, so it is sized to the button: a text button
-  keeps the `sm` icon step, while a `square` button fits its three dots to the
-  square's content box (9/10/12 px at `sm`/`md`/`lg`) instead of painting a
-  46 px row outside a 36 px square (plan `644`). Its dots take the **variant's
-  foreground**, the same role as the label, so the lit dot cannot disappear
-  into a filled `primary` or `destructive` surface (plan `754`).
+  tab stop. The spinner is **decorative**: the button's own description is the
+  one announcement, so the control does not publish a nested `Status: Loading`
+  (measured, plan `785`). It is content, so it is sized to the button: a text
+  button keeps the `sm` icon step, while a `square` button fits its three dots
+  to the square's content box (9/10/12 px at `sm`/`md`/`lg`) instead of painting
+  a 46 px row outside a 36 px square (plan `644`). Its dots take the
+  **variant's foreground**, the same role as the label, so the lit dot cannot
+  disappear into a filled `primary` or `destructive` surface (plan `754`).
 
 ## API
 
@@ -73,7 +75,7 @@ sm / md / lg.
 | `radius` | `RadiusStep` | `"md"` | corner radius; an attached `ButtonGroup` supplies `"none"` |
 | `fullWidth` | `boolean` | `false` | `width: 100%` |
 | `disabled` | `boolean` | `false` | blocks activation, leaves the tab order |
-| `loading` | `boolean` | `false` | spinner (fitted to the content box in a square button), `Loading` description, blocks activation |
+| `loading` | `boolean` | `false` | decorative spinner (fitted to the content box in a square button), `Loading` description, blocks activation |
 | `leading` / `trailing` | `ReactNode` | none | an icon or element on either side |
 | `label` | `string` | none | accessible name. A non-blank value overrides the name derived from text children and is trimmed; a blank one is ignored. Required when the content is not text (e.g. an icon) |
 | `onActivate` | `() => void` | none | called after `onClick` for a click or an activating key; not called while busy |
@@ -144,7 +146,9 @@ button reports nothing, while hover still opens its tip.
   `label=""` — or whitespace — is **not** a name and does not erase the content's
   (plan `396`). An element child with no text (a bare icon) contributes nothing,
   so it yields no name; pass `label` then (plan `746`).
-- `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`.
+- `loading` sets `aria-description="Loading"` — this runtime has no `aria-busy`
+  — and its spinner is decorative, so the control publishes one node, not a
+  `Status` child saying the same thing (plan `785`).
 - There is no `aria-disabled`: a disabled button is removed from the tab order
   instead, which is the strongest truthful alternative.
 - The label is **chrome, not content**: the control declares `userSelect: "none"`,
@@ -209,13 +213,18 @@ look. `ButtonState` is exported.
 - `src/components/Button.test.tsx` — tree-level props, busy blocking, the
   loading description, and the `radius` resolution with its `md` default; the
   slot handlers reach the host, focus/blur/keys compose, and a busy description
-  keeps `Loading` (plan 341). A clipped button paints the ring as an inset
-  overlay and no shadow; a standalone one keeps the outer ring (plan 344).
+  keeps `Loading` (plan 341). The busy spinner is decorative, so that description
+  is the control's only announcement (plan 785). A clipped button paints the
+  ring as an inset overlay and no shadow; a standalone one keeps the outer ring
+  (plan 344).
 - `runtime/controls.runtime.test.tsx` — a hit-tested click activates once; Enter
   on down, Space on up, a held key ignored; disabled and loading refuse both and
   a busy button still announces its role and name; a button wired with `onClick`
   alone reports Enter and Space, while a held key, a disabled one and a busy one
   report nothing (plan 085).
+- `runtime/button-loading.runtime.test.tsx` — a busy primary button's fill and
+  every spinner dot; a busy `Button` and `IconButton` add no `Status` node, so
+  their `Loading` description is the only announcement (plans `754`, `785`).
 - `runtime/overlay-trigger.runtime.test.tsx` — a `Tooltip` around a `Button`,
   `IconButton` and `Toggle` opens on hover; the `Button` also opens on focus,
   closes on click, and carries the tip as its `aria-description` (plan 341).

@@ -6,7 +6,7 @@
 | Owner | primitives workstream |
 | Paths | `packages/primitives/` (plus the Button and Loading-indicator rows in `COMPONENTS.md`) |
 | Depends on | `058` (names from text), `086` (IconButton), `093` (the accessible-name matrix), `644` (the spinner is sized inside a button), `754` (the busy spinner's contrast) |
-| Status | planned |
+| Status | done — measured both directions (§6) |
 
 ## 0. The defect, in one sentence
 
@@ -188,6 +188,27 @@ Then the scoped headless smoke scenario(s) that mount the Tier 1 set (derive
 their ids with `--list`; do **not** run `--all`).
 
 The full live suite is the merge/release gate and is **not** run while iterating.
+
+Measured results (2026-10-20):
+
+- **Old direction — the button wiring:** dropping `decorative` from the busy
+  `<Spinner>` fails `Button.test.tsx`'s new case with `expected { _tag: 'None' }
+  to strictly equal { _tag: 'Some' }`, and the runtime case fails with
+  `expected [ … ] to have a length of 1 but got 3`.
+- **Old direction — the spinner rule:** making `decorative` still send
+  `role="status"` fails `Spinner.test.tsx` with `expected 'status' to be
+  'presentation'`, and the runtime case again reports 3 statuses.
+- **New direction:** `Spinner.test.tsx` + `Button.test.tsx` are 28/28, the
+  runtime file is 2/2 (the new case reports exactly one `Status`, named
+  `Standalone`, and both busy controls carry `description: "Loading"`), the full
+  offline suite is **72 files / 1005 tests, 0 failed**, and `check-types`,
+  `nub run lint`, `nub run check:tests` and `nub run fmt` (one known cross-team
+  file aside: `apps/docs/src/components/docs/demos.tsx`) are green.
+- **Smoke:** `nub apps/playground/dist/smoke/run.js --only layout-flex` passes
+  (`layout=verified`). `focus-traversal` fails on the pinned release-tag binding
+  with no `onFocus` dispatch (`focus=none`) — the known artifact limitation
+  recorded in plans `583`/`590`, unrelated to this change (no focus path was
+  touched).
 
 ## 7. STOP conditions
 

@@ -277,6 +277,24 @@ describe("Button", () => {
     expect(expectSome(hostProp(loading, "aria-description"))).toBe("Loading");
   });
 
+  it("makes the busy spinner decorative, because the button announces Loading", () => {
+    // The bug guarded (plan 785): the spinner published its own `Status:
+    // Loading` node inside a button whose description already said "Loading".
+    const element = resting({
+      loading: true,
+      children: "Save",
+      "aria-description": "A hint",
+    });
+    const spinner = expectSome(
+      Option.fromNullishOr(elementChildren(element)[0]),
+    );
+    expect(elementProp(spinner, "decorative")).toStrictEqual(Option.some(true));
+    expect(elementProp(spinner, "label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(
+      "Loading. A hint",
+    );
+  });
+
   it("fits a square button's loading spinner inside the square", () => {
     // The bug guarded (plan 644): the three 14 px dots plus their gaps made a
     // 46 px row inside a 36 px icon button, so the spinner painted five pixels

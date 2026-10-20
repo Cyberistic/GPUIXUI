@@ -213,8 +213,11 @@ export const renderButton = (
       {props.loading === true ? (
         <Spinner
           size={spinnerDot}
-          label="Loading"
           color={buttonVariants[variant].foreground(theme)}
+          // The button's `aria-description` already says "Loading"; a second
+          // `Status` node inside it would announce the same state twice
+          // (measured, plan 785).
+          decorative
         />
       ) : (
         props.leading

@@ -35,6 +35,14 @@ export interface SpinnerProps {
   readonly color?: string;
   /** Accessible name. Defaults to "Loading". */
   readonly label?: string;
+  /**
+   * Paint without an accessibility node.
+   *
+   * Use it where the surrounding control already announces the busy state — a
+   * `Button` says "Loading" in its description — so the indicator is decoration
+   * instead of a second `Status` node. The dots are unchanged.
+   */
+  readonly decorative?: boolean;
   readonly style?: StyleDesc;
   readonly testId?: string;
 }
@@ -46,6 +54,7 @@ export const renderSpinner = (
     accent = "primary",
     color,
     label = "Loading",
+    decorative,
     style,
     testId,
   }: SpinnerProps,
@@ -53,10 +62,11 @@ export const renderSpinner = (
   step: number,
 ): ReactElement => {
   const dot = size ?? theme.iconSize.md;
+  const decoration = decorative === true;
   return (
     <div
-      role="status"
-      aria-label={ariaNameOr(label, "Loading")}
+      role={decoration ? "presentation" : "status"}
+      aria-label={decoration ? undefined : ariaNameOr(label, "Loading")}
       testId={testId}
       style={mergeStyle(spinnerRowStyle(theme), style)}
     >
