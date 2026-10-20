@@ -1438,6 +1438,18 @@ retired once both branches are one
       at `HEAD`; unit 509 in 48 files, full native suite 1018 passed / 20 failed
       of 1038 with the same plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md`
       D30 and the plan index synced (owner: components)
+    - [x] A message row's name is the caller's, and its default is a human phrase —
+      plan 802; measured 2026-10-20: `<Message aria-label="Ada Lovelace">`
+      announced `"user message"` because the derived name was written after
+      `{...rest}`, and the default leaked the internal variant token in lower
+      case (plan 564's defect in a second component). The row now takes `label`
+      and resolves one name with `controlNameFrom` (authored trimmed > `label` >
+      an exhaustive `"User message"` / `"Assistant message"` / `"System
+      message"`); the variant case asserts the human default and three cases
+      cover all three defaults, the `label` with a rename, and the authored pin
+      with a blank fallback. 16 native cases (13 → 16), all four red at `HEAD`;
+      docs, `COMPONENTS.md`, `PLAN.md` D30 and the plan index synced
+      (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

@@ -87,7 +87,7 @@ merges `style` last.
 
 | Part | Props |
 | ---- | ----- |
-| `Message` | `variant` (required), `streaming?` (false), children |
+| `Message` | `variant` (required), `label?` (the row's accessible name; a human phrase for the variant by default), `streaming?` (false), children |
 | `MessageAvatar` | `name` (required), `src?` |
 | `MessageContent` | `text` (required), `format?` (`"markdown"`), `onLinkClick?` |
 | `MessageReasoning` | `text` (required), `label?` (`"Reasoning"`), `defaultOpen?` (false) |
@@ -106,7 +106,10 @@ all of it with no code change.
 
 ## Accessibility
 
-- The row is a named `group`: `<variant> message`.
+- The row is a named `group`; the caller names it with `label` (or an authored
+  `aria-label`, which wins whole and is trimmed). The default is `"User
+  message"`, `"Assistant message"` or `"System message"` — a human phrase, never
+  the internal variant token (plan 802).
 - Reasoning is a real disclosure with `aria-expanded`.
 - Citations are focusable controls labelled `Open source <label>`; they report a
   URL through `onSelect` because 0.10.0 has no `href` element.
@@ -115,8 +118,9 @@ all of it with no code change.
   visible label. 0.10.0 does not name a role-bearing `div` from its text child
   (plan 799).
 - 0.10.0 has no `aria-labelledby`/`aria-describedby` and no explicit
-  `aria-live` control, so a row cannot reference its author element; the named
-  `status` role is the only channel it offers, and whether that announces is
+  `aria-live` control, so a row cannot reference its author element — pass the
+  author as `label` when the row should announce who wrote it. The named
+  `status` role is the only live channel it offers, and whether that announces is
   unverified here.
 
 ## Limitations
@@ -133,11 +137,12 @@ all of it with no code change.
 
 ## Verification
 
-`src/behaviour/message.test.tsx` runs in the real GPUix renderer (13 tests): it
+`src/behaviour/message.test.tsx` runs in the real GPUix renderer (16 tests): it
 compares the two alignments, appends a token and reads `getPaintedText`, opens
 the reasoning disclosure, clicks a citation, flips a failed tool call, checks
-that empty slots render nothing, and names the streaming status from its label,
-a caller's name and a blank fallback. `src/inventory.test.ts` checks this page,
+that empty slots render nothing, names each variant's row with a human phrase,
+names the row from `label` and a caller's `aria-label`, and names the streaming
+status from its label, a caller's name and a blank fallback. `src/inventory.test.ts` checks this page,
 the example and the `COMPONENTS.md` row.
 
 ## Credit

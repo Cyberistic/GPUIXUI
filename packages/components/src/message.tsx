@@ -28,7 +28,7 @@ import {
   CollapsibleTrigger,
 } from "./collapsible.js";
 import { Button } from "./internal/button.js";
-import { controlName } from "./internal/name.js";
+import { controlName, controlNameFrom } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -87,6 +87,8 @@ export interface MessageProps extends Omit<Props, "children"> {
   readonly variant: MessageVariant;
   /** Whether the body is still arriving. Default `false`. */
   readonly streaming?: boolean;
+  /** The row's accessible name. Defaults to a human phrase for `variant`. */
+  readonly label?: string;
   readonly children?: PartChildren;
 }
 
@@ -116,23 +118,41 @@ const block = (theme: Theme, variant: MessageVariant): StyleDesc => ({
   gap: theme.spacing.xs,
 });
 
-/** A conversation row: one of the three variants, with any slots below it. */
+/** The row's name when neither the caller nor `label` supplies one. */
+const variantName = (variant: MessageVariant): string =>
+  Match.value(variant).pipe(
+    Match.when("user", () => "User message"),
+    Match.when("assistant", () => "Assistant message"),
+    Match.when("system", () => "System message"),
+    Match.exhaustive,
+  );
+
+/**
+ * A conversation row: one of the three variants, with any slots below it. The
+ * caller names the row — `aria-label` wins, then `label` — and the default is a
+ * human phrase for the variant, never the internal token (plan 802).
+ */
 export const Message = ({
   variant,
   streaming = false,
+  label,
   children,
   style,
   ...rest
 }: MessageProps) => {
   const theme = useTheme();
   assertParts(messageRoot, children);
+  const name = controlNameFrom(rest["aria-label"], [
+    label,
+    variantName(variant),
+  ]);
 
   return (
     <MessageContext.Provider value={{ variant, streaming }}>
       <div
         {...rest}
         role="group"
-        aria-label={`${variant} message`}
+        aria-label={name}
         style={mergeStyles(
           {
             display: "flex",

@@ -9,7 +9,10 @@
  * streaming status that is always visible; a streaming status announced with no
  * name at all (0.10.0 does not name a role-bearing `div` from its text child, so
  * the visible label has to become `aria-label`, and a blank authored value must
- * fall back to it); actions that appear without a consumer wiring them.
+ * fall back to it); a row announced by the internal variant token (`"user
+ * message"`) with the caller's `aria-label` overwritten by the derived one,
+ * because it was written after `{...rest}`; actions that appear without a
+ * consumer wiring them.
  */
 
 import { useState } from "react";
@@ -36,14 +39,25 @@ import {
 const Row = ({
   variant,
   streaming = false,
+  label,
+  name,
   children,
 }: {
   readonly variant: "user" | "assistant" | "system";
   readonly streaming?: boolean;
+  readonly label?: string;
+  /** The caller's authored `aria-label`, which must win over `label`. */
+  readonly name?: string;
   readonly children?: PartChildren;
 }) => (
   <div style={{ width: 420, display: "flex", flexDirection: "column" }}>
-    <Message variant={variant} streaming={streaming} testId={`row-${variant}`}>
+    <Message
+      variant={variant}
+      streaming={streaming}
+      label={label}
+      aria-label={name}
+      testId={`row-${variant}`}
+    >
       {children}
     </Message>
   </div>
@@ -323,7 +337,77 @@ describe("Message", () => {
 
     expect(
       nodesWithRole(row.renderer, "group").map((node) => node.name),
-    ).toContain("system message");
+    ).toEqual(["System message"]);
+
+    row.unmount();
+  });
+
+  it("names every variant with a human phrase", () => {
+    const row = renderComponent(
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <Message variant="user">
+          <MessageContent text="From me" />
+        </Message>
+        <Message variant="assistant">
+          <MessageContent text="From the model" />
+        </Message>
+        <Message variant="system">
+          <MessageContent text="Session started" />
+        </Message>
+      </div>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "group").map((node) => node.name),
+    ).toEqual(["User message", "Assistant message", "System message"]);
+
+    row.unmount();
+  });
+
+  it("takes the row's name from label, and a rename updates it", () => {
+    const row = renderComponent(
+      <Row variant="assistant" label="Ada Lovelace">
+        <MessageContent text="From the model" />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "group").map((node) => node.name),
+    ).toEqual(["Ada Lovelace"]);
+
+    row.rerender(
+      <Row variant="assistant" label="Grace Hopper">
+        <MessageContent text="From the model" />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "group").map((node) => node.name),
+    ).toEqual(["Grace Hopper"]);
+
+    row.unmount();
+  });
+
+  it("lets the caller's authored name win over label", () => {
+    const row = renderComponent(
+      <Row variant="assistant" label="Grace Hopper" name="Ada Lovelace">
+        <MessageContent text="From the model" />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "group").map((node) => node.name),
+    ).toEqual(["Ada Lovelace"]);
+
+    row.rerender(
+      <Row variant="assistant" label="Grace Hopper" name="   ">
+        <MessageContent text="From the model" />
+      </Row>,
+    );
+
+    expect(
+      nodesWithRole(row.renderer, "group").map((node) => node.name),
+    ).toEqual(["Grace Hopper"]);
 
     row.unmount();
   });
