@@ -1703,14 +1703,15 @@ retired once both branches are one
       assertion + 1 runtime case, the runtime failing at `expected 2.5 to be 6`
       without the fix (plan `647`; offline 860, scoped live 4/4).
 
-`[ ]` `packages/primitives`: **a read-only rating paints the disabled pointer and
+`[x]` `packages/primitives`: **a read-only rating paints the disabled pointer and
       keeps a ring it cannot act on** — measured (2026-10-20): every `readOnly`
       star painted `cursor: "not-allowed"` (read-only is the display state, not
       the disabled one), and a rating focused on star 3 kept its painted ring
       after a re-render made it read-only, when every star had already lost its
-      tab stop. `ratingStarStyle` will paint `default`/full-contrast/no-ring for
-      read-only while `disabled` keeps `not-allowed`/half-opacity/no-ring; plan
-      `796`
+      tab stop. `ratingStarStyle` now paints `default`/full-contrast/no-ring for
+      read-only while `disabled` keeps `not-allowed`/half-opacity/no-ring; 1
+      core + 1 element + 2 scoped runtime cases, both directions proven (offline
+      73 files / 1013 tests, scoped live 1 file / 18); plan `796`
 
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2

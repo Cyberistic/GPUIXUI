@@ -45,7 +45,7 @@ unrated; an infinity is out of range and clamps to its own end (`+Infinity` is
 | `max` | `number` | `5` | how many stars to paint; a non-finite count (`NaN`, `Infinity`) reads as one star (plan `366`) |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | star size from `iconSize` |
 | `disabled` | `boolean` | `false` | out of the tab order, half opacity, inert |
-| `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop |
+| `readOnly` | `boolean` | `false` | shows the value, takes no input, no tab stop; the display state: full contrast, default pointer, no ring (plan `796`) |
 | `invalid` | `boolean` | `false` | a failed validation paints the empty stars destructive |
 | `label` | `string` | none | the group's name; stars are announced "N of max" |
 | `style` | `StateStyle<RatingState>` | — | merged last; an object or a state callback |
@@ -95,8 +95,9 @@ A star declares **no `hover` style rule**: the preview *is* its pointer feedback
 and it is stronger than a wash — the paint answers which value the click would
 set, not merely that the pointer arrived. This is the one recorded exception to
 the library's "an element that owns a pointer gesture declares its feedback"
-rule (`runtime/pointer-feedback.runtime.test.tsx`, plan `361`); a star still
-declares `cursor: "pointer"` and keeps the press contract.
+rule (`runtime/pointer-feedback.runtime.test.tsx`, plan `361`); an interactive
+star still declares `cursor: "pointer"` and keeps the press contract, while a
+read-only one is `default` and a disabled one `not-allowed` (plan `796`).
 
 ## Accessibility
 
@@ -116,7 +117,12 @@ declares `cursor: "pointer"` and keeps the press contract.
   `aria-checked`. A hover preview never changes that announcement — only the
   committed value does.
 - `readOnly` keeps the group visible to assistive technology but removes it from
-  the tab order; `disabled` also paints it muted. Neither previews.
+  the tab order; `disabled` also paints it muted. Neither previews. A read-only
+  star is **not** the blocked state: it keeps full contrast and the default
+  pointer and paints **no** focus ring, even when it still holds native focus
+  from before the prop changed — that ring would mark a control with no tab stop
+  and no input (plan `796`). A disabled star keeps `not-allowed` and half
+  opacity.
 
 ## Theming
 

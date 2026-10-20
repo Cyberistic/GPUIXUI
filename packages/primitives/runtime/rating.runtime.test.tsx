@@ -403,3 +403,53 @@ it.each(
   );
   expect(seen).toStrictEqual([]);
 });
+
+/** A star's authored style, read back from the painted host. */
+const starStyle = (runtime: Runtime, label: string): Record<string, unknown> =>
+  byLabel(runtime, label).style;
+
+it("drops the ring and the blocked cursor when a focused rating becomes read-only", async () => {
+  // The bug guarded (plan 796): `ratingStarStyle` excluded only `disabled` from
+  // the ring and treated read-only as blocked, so a rating made read-only while
+  // star 3 held native focus kept a ring although every star lost its tab stop.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={3} />
+    </Surface>,
+  );
+  runtime.focusNext();
+  await awaitFrame(
+    () => starStyle(runtime, "3 of 5")["boxShadow"] !== undefined,
+    "the rating ring",
+  );
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={3} readOnly />
+    </Surface>,
+  );
+  runtime.flush();
+  await awaitFrame(
+    () => starStyle(runtime, "3 of 5")["cursor"] === "default",
+    "the read-only paint",
+  );
+  expect(starStyle(runtime, "3 of 5")["boxShadow"]).toBeUndefined();
+  // The component does not move the runtime's focus; it only stops painting a
+  // state it no longer owns.
+  expect(Option.getOrUndefined(runtime.focused())).toBe("ra-star-3");
+});
+
+it("keeps a disabled rating visually blocked", async () => {
+  // The control for the case above: read-only is the display state, disabled is
+  // the blocked one, and the fix must not collapse them.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Rating testId="ra" label="Quality" defaultValue={3} disabled />
+    </Surface>,
+  );
+  const style = starStyle(runtime, "3 of 5");
+  expect(style["cursor"]).toBe("not-allowed");
+  expect(style["opacity"]).toBe(0.5);
+  expect(style["boxShadow"]).toBeUndefined();
+});

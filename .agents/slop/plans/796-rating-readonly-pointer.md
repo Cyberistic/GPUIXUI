@@ -175,12 +175,12 @@ merge gate, not this plan (AGENTS §3).
 | Direction | Command | Observed |
 | --------- | ------- | -------- |
 | probe before the fix | `test:runtime runtime/__probe-rating.runtime.test.tsx` (deleted) | `{ beforeRing: true, afterRing: true, cursor: "not-allowed", focused: "rating-star-3" }` |
-| new runtime cases | `test:runtime runtime/rating.runtime.test.tsx` | |
-| old A (cursor reverted) | same | |
-| old B (ring guard reverted) | same | |
-| core + element cases | `test src/core/style.test.ts src/components/Rating.test.tsx` | |
-| final offline | `test` | |
-| type gate | `check-types` | |
+| new runtime cases | `test:runtime runtime/rating.runtime.test.tsx` | **18/18 passed** (16 existing + the 2 new cases) |
+| old A (cursor reverted) | same + the core file | core `separates a read-only rating's pointer…`: `expected [ 'pointer', 'not-allowed', …(1) ] to strictly equal [ 'pointer', 'not-allowed', 'default' ]`; runtime `drops the ring and the blocked cursor…` failed the `cursor === "default"` wait |
+| old B (ring guard reverted to `disabled !== true`) | same + the element file | core `paints no ring for a control that cannot act`: `expected { offsetX: +0, offsetY: +0, …(3) } to be undefined`; element `paints no ring on a read-only star that still holds focus`: `expected [ false, true, false, false, false ] to strictly equal [ false, false, false, false, false ]`; runtime transition: `expected { offsetX: +0, offsetY: +0, …(3) } to be undefined` |
+| core + element cases | `test src/core/style.test.ts src/components/Rating.test.tsx` | **2 files / 82 tests passed** |
+| final offline | `test` | **73 files / 1013 tests passed** |
+| type gate | `check-types` | clean; `nub run check` stops only on `apps/docs/src/components/docs/demos.tsx`, the docs-site formatting task already in `TODO.md` (outside this workstream) |
 
 ## 7. STOP conditions
 

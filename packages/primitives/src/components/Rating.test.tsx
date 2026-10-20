@@ -270,6 +270,22 @@ describe("Rating", () => {
     expect(starred).toStrictEqual([false, true, false, false, false]);
   });
 
+  it("paints no ring on a read-only star that still holds focus", () => {
+    // The bug guarded (plan 796): a rating focused on star 3 keeps native focus
+    // when it becomes read-only, and the old guard excluded only `disabled`, so
+    // the star painted a ring although it had no tab stop and refused input.
+    const readOnly = render({ readOnly: true }, 3, 2);
+    expect(
+      starsOf(readOnly).map((star) =>
+        Option.isSome(
+          Option.flatMap(hostStyleRecord(star), (style) =>
+            Option.fromNullishOr(style["boxShadow"]),
+          ),
+        ),
+      ),
+    ).toStrictEqual([false, false, false, false, false]);
+  });
+
   it("paints the star under the pointer and keeps the announcement committed", () => {
     // The bug guarded (plan 094): a pointer could not preview what a click
     // would set, so an unrated group showed five outline stars under the mouse.

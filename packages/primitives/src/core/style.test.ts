@@ -261,6 +261,13 @@ describe("controlStyle", () => {
       ratingStarStyle({ size: "md", focused: true, disabled: true }, testTheme)
         .boxShadow,
     ).toBeUndefined();
+    // Plan 796: reading is not acting either. A rating that becomes read-only
+    // keeps native focus (nothing can move it from the component), so the ring
+    // painted a control that no longer had a tab stop.
+    expect(
+      ratingStarStyle({ size: "md", focused: true, readOnly: true }, testTheme)
+        .boxShadow,
+    ).toBeUndefined();
     // The enabled direction still rings, so the cases above cannot pass by the
     // painter having lost its ring entirely.
     expect(
@@ -269,6 +276,23 @@ describe("controlStyle", () => {
     expect(
       ratingStarStyle({ size: "md", focused: true }, testTheme).boxShadow,
     ).toBeDefined();
+  });
+
+  it("separates a read-only rating's pointer from the disabled one", () => {
+    // Plan 796: read-only is the display state, not the blocked one.
+    const interactive = ratingStarStyle({ size: "md" }, testTheme);
+    const disabled = ratingStarStyle({ size: "md", disabled: true }, testTheme);
+    const readOnly = ratingStarStyle({ size: "md", readOnly: true }, testTheme);
+    expect([
+      interactive.cursor,
+      disabled.cursor,
+      readOnly.cursor,
+    ]).toStrictEqual(["pointer", "not-allowed", "default"]);
+    expect([
+      interactive.opacity,
+      disabled.opacity,
+      readOnly.opacity,
+    ]).toStrictEqual([undefined, 0.5, undefined]);
   });
 
   it("warns the eye at rest for a field, and rings it when focused", () => {
