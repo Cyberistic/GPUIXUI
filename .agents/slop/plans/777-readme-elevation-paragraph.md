@@ -2,7 +2,7 @@
 
 | Field | Value |
 | ----- | ----- |
-| Status | in progress (2026-10-20) |
+| Status | landed (2026-10-20) |
 | Phase | F (documentation truth) |
 | Owner | `tokens-theme` |
 | Depends on | `584`/`610`/`665` (the elevation walks), `749` (`elevationContentSurfaces`), `775` (the front-door count guard), `376` (the catalogue's elevation prose) |
@@ -174,4 +174,27 @@ nub run test
 
 ## 8. Execution record
 
-_(filled after implementation)_
+- **Both directions, before the prose edit.** The new group-count case ran
+  against the shipped README and failed with
+  `expected '…' to contain 'the four filled actions, the three so…'`: the
+  paragraph enumerated twelve fills of the fifteen the contract walks, so the
+  sentence was both unguarded and stale. The two figure entries derive
+  **1.058** (AAA dark, `md` on `info`) and **1.061** (identity dark, `sm` on
+  `background`) from the shipped sets, matching the numbers the page already
+  quoted.
+- **Both directions, after the fix.** Eight single-claim mutations of
+  `packages/tokens/README.md`, each reverted after the run, failed exactly one
+  case in `readme.test.ts` (37 passed, 1 failed):
+  `seven persistent page surfaces`, `fourteen resting content fills`,
+  `five filled actions`, `four solid status chips`, `five soft status panels`,
+  `1.059:1`, `1.062:1`, and deleting `a disabled control, a loading row and`.
+- The `"shadow"` entries compose `elevationShadow(theme, level)` over each
+  surface at the level's own alpha, so a `shadow` tint or an elevation opacity
+  edit moves the figure with it. `figures.test.ts` holds the level field to the
+  kind.
+- `docs/tokens.md` states the table size as **70**, derived by `docs.test.ts`
+  from `documentedFigures.length + documentedTierFigures.length`.
+- Green after: `@gpuixui/tokens` **208 files / 7036 tests**, and
+  `check-types` clean. No token value, pair, floor, metric, role or shipped
+  theme moves; `contrastPairs` stays **470**. The figure table grows 68 → 70
+  entries (three new cases).

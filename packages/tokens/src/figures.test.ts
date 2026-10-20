@@ -330,16 +330,12 @@ describe("the figures the package's own JSDoc states", () => {
     // is a field the entry's measurement never reads.
     expect(
       documentedFigures
-        .filter(
-          (entry) => entry.kind === "shadow" && entry.level === undefined,
-        )
+        .filter((entry) => entry.kind === "shadow" && entry.level === undefined)
         .map((entry) => entry.name),
     ).toEqual([]);
     expect(
       documentedFigures
-        .filter(
-          (entry) => entry.kind !== "shadow" && entry.level !== undefined,
-        )
+        .filter((entry) => entry.kind !== "shadow" && entry.level !== undefined)
         .map((entry) => entry.name),
     ).toEqual([]);
   });

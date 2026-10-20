@@ -28,11 +28,7 @@ import {
   statusFillPairs,
 } from "./contrast.js";
 import { stateLadderNames } from "./direction.js";
-import {
-  deriveFigure,
-  documentedFigures,
-  quotesFigure,
-} from "./figures.js";
+import { deriveFigure, documentedFigures, quotesFigure } from "./figures.js";
 import { motionLevels, motionPhases } from "./motion.js";
 import {
   platformNames,
@@ -154,7 +150,9 @@ describe("packages/tokens/README.md", () => {
   });
 
   it("states the number of checks from the index", () => {
-    expect(readme).toContain(`That is one of ${countWord(themeChecks.length)} checks`);
+    expect(readme).toContain(
+      `That is one of ${countWord(themeChecks.length)} checks`,
+    );
     expect(readme).toContain(`composes all ${countWord(themeChecks.length)}`);
   });
 
