@@ -1054,6 +1054,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a subject word the Data display summary names (`graphs`)",
     },
+    {
+      query: "page actions",
+      expected: "/docs/contributing#site-output",
+      first: true,
+      what: "the page-action vocabulary plan 596 shipped",
+    },
+    {
+      query: "open source",
+      expected: "/docs/license",
+      first: true,
+      what: "the open-source word the License summary names",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

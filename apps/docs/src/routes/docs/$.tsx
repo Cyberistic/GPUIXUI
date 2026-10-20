@@ -13,7 +13,7 @@ import { Suspense, use } from "react";
 import { useMDXComponents } from "@/components/mdx";
 import { SkipLink } from "@/components/skip-link";
 import { baseOptions } from "@/lib/layout.shared";
-import { getPageMarkdownUrl } from "@/lib/page-markdown";
+import { getPageMarkdownUrl, PAGE_ACTIONS } from "@/lib/page-markdown";
 import { docsPageHead, docsPageMeta } from "@/lib/page-meta";
 import { docs, source } from "@/lib/source";
 
@@ -60,7 +60,7 @@ function Content({ path, markdownUrl }: { path: string; markdownUrl: string }) {
           href={markdownUrl}
           className="rounded-md border border-fd-border px-3 py-1.5 text-sm hover:bg-fd-accent"
         >
-          View as Markdown
+          {PAGE_ACTIONS.view}
         </a>
       </div>
       <DocsBody>

@@ -3,6 +3,17 @@ import { createGetUrl } from "fumadocs-core/source";
 /** The docs base URL; a page's Markdown URL is this path plus its slugs. */
 export const DOCS_ROUTE = "/docs";
 
+/**
+ * The labels the page control renders. `copy` mirrors the default label of
+ * Fumadocs' `MarkdownCopyButton` (its checked state says "Copied Markdown"), and
+ * `smoke:build` asserts both strings in the built HTML; `site-output-search.ts`
+ * promotes their words (plan 597).
+ */
+export const PAGE_ACTIONS = {
+  copy: "Copy Markdown",
+  view: "View as Markdown",
+} as const;
+
 const getDocsUrl = createGetUrl(DOCS_ROUTE);
 
 /**

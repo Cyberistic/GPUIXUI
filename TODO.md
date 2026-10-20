@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 163/163
+`[x]` `[██████████]` 164/164
+
+`[x]` **The site's own output is findable (plan 597)** — the page-action
+      vocabulary (`page actions`, `copy page`, `view as markdown`, …) and the
+      License subject `open source` reach the page that owns them, from one
+      route table and a generated index document, without stealing a
+      single-word owner. 110 files / 810 docs tests, two production queries,
+      99-page `smoke:build` and axe in both schemes green; two measured
+      non-fixes recorded in plan 597 §6.4.
 
 `[x]` **Every page is readable and copyable as Markdown (plan 596)** — a
       per-page `/docs/<slug>.md` route renders the same `llms()` document the

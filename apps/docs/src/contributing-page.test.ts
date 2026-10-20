@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { BRAND_ASSETS, MANIFEST_PATH } from "./lib/site-head";
+import { BRAND_ASSETS } from "./lib/site-head";
+import { SITE_OUTPUT_ROUTES } from "./lib/site-output";
 import { manifest } from "./lib/site-manifest";
 
 /**
@@ -33,15 +34,6 @@ const section = (document: string, heading: string): string => {
 const siteOutput = section(page, "Site output");
 const description = page.match(/^description:\s*(.+)$/m)?.[1] ?? "";
 
-const routes = [
-  ["/sitemap.xml", "src/routes/sitemap[.]xml.ts"],
-  ["/robots.txt", "src/routes/robots[.]txt.ts"],
-  ["/llms.txt", "src/routes/llms[.]txt.ts"],
-  ["/llms-full.txt", "src/routes/llms-full[.]txt.ts"],
-  ["/docs/<slug>.md", "src/routes/docs/{$}[.]md.ts"],
-  [MANIFEST_PATH, "src/routes/site[.]webmanifest.ts"],
-] as const;
-
 const headAssets = [
   BRAND_ASSETS.mark,
   BRAND_ASSETS.favicon,
@@ -50,14 +42,15 @@ const headAssets = [
 ] as const;
 
 describe("Contributing — site output", () => {
-  it("documents every discovery route that exists", () => {
-    const missing = routes.flatMap(([route, module]) => {
-      const problems = [
-        existsSync(join(appRoot, module)) ? null : `missing module ${module}`,
-        siteOutput.includes(`| \`${route}\` |`) ? null : `page omits ${route}`,
-      ].filter((problem): problem is string => problem !== null);
-      return problems;
-    });
+  it("documents every discovery route, and only its own routes", () => {
+    const documented = [...siteOutput.matchAll(/^\| `([^`]+)` \|/gm)].map(
+      (match) => match[1],
+    );
+    expect(documented).toEqual(SITE_OUTPUT_ROUTES.map(({ route }) => route));
+
+    const missing = SITE_OUTPUT_ROUTES.flatMap(({ module }) =>
+      existsSync(join(appRoot, module)) ? [] : [`missing module ${module}`],
+    );
     expect(missing).toEqual([]);
   });
 

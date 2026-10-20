@@ -791,6 +791,10 @@ not serve. It also fetches `/docs/components/button.md`, requires
 `text/markdown` and an `# Buttons` body, requires `/docs/nope.md` to `404`, and
 requires the built component page to carry both controls.
 
+`src/lib/site-output.ts` is the one route table: the Contributing page's guard
+and the generated search document both read it, so a discovery route cannot be
+served, undocumented or unfindable by itself (plan 597).
+
 ## Adding a component page
 
 The first real page is `content/docs/components/button.mdx` (plan 422); the
