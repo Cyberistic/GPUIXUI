@@ -2,7 +2,7 @@
 
 Phase: F
 Depends on: 410, 413, 418, 419, 431, 439, 470, 510, 516, 525, 584, 594, 597, 603, 608
-Status: planned
+Status: implemented
 
 ## 1. The measured defect
 
@@ -126,8 +126,9 @@ Order of work inside the script:
 3. Run `nub x wrangler deploy --dry-run --config dist/server/wrangler.json
    --outdir <temp dir>`; a spawn failure is `2`, a non-zero exit is `1` with the
    last stderr line. Delete the temp directory in a `finally`.
-4. Walk `dist/client`: `files` count and largest file. Walk/stat
-   `dist/server/index.js` for the Worker script size.
+4. Walk `dist/client`: `files` count and largest file. Sum the Worker's
+   JavaScript (`.js`/`.mjs`) under `dist/server`; the generated config sets
+   `no_bundle: true`, so those modules are the Worker bundle.
 5. Fail (`1`) by name when: `files > cloudflareLimits.assetsPerVersion`; the
    largest file `> bytesPerAsset`; the Worker script `> workerBytes`; or no
    `*.wasm` exists under `dist/client/gpuix-preview/assets` (the budget that
@@ -184,8 +185,8 @@ Run from `apps/docs` unless stated. A different result is a STOP condition.
 3. `nub run build` → exit `0`; `dist/client` and `dist/server/wrangler.json`
    exist.
 4. `nub run smoke:deploy` → exit `0` and one summary line; the measured run on
-   this host is 148 client files, largest `gpuix-preview/assets/gpuix-web_bg-*.wasm`
-   19.1 MiB, Worker script 242 KiB, dry-run `0`.
+   this host is 149 client files, largest `gpuix-preview/assets/gpuix-web_bg-*.wasm`
+   19.1 MiB, the Worker's JavaScript 36.1 MiB, dry-run `0`.
 5. `nub run --filter docs test` → every file passes, including the new
    `src/deployment-page.test.ts`.
 6. `nub run --filter docs check-types` → exit `0`, no output.
@@ -211,10 +212,10 @@ It reads the page and the real sources, in the style of
 4. **Canonical truth:** `SITE_URL`'s default is `https://${docsWorker.domain}`;
    the page names the domain and `VITE_SITE_URL`.
 5. **Budget truth:** the page states 25 MiB, 20,000 files and 64 MiB; those
-   numbers equal `cloudflareLimits`; the real `dist/client/gpuix-preview/assets/*.wasm`
-   exists and is below `bytesPerAsset`; the real client file count is below
-   `assetsPerVersion`. A renderer bump that crosses a limit fails here with the
-   measured size.
+   numbers equal `cloudflareLimits`. The real wasm and file count are measured
+   by `smoke:deploy`, not here: `dist/` is a build artifact, so the unit suite
+   must stay green on a clean checkout. The smoke fails with the measured size
+   when a renderer bump crosses a limit.
 6. **Check truth:** `package.json` defines `smoke:deploy`; `scripts/smoke-deploy.ts`
    exists; the page names the command and the `0`/`1`/`2` contract.
 7. **Honesty:** the page contains a "not verified" statement naming **Cloudflare
@@ -270,3 +271,64 @@ Two-direction proofs (run each, record the result, revert):
   build and the built-site smoke are green.
 - No COMPONENTS.md row is owed: this is a page about the docs site, not a
   component. The inventory is untouched.
+
+## 7. What was measured
+
+Implemented 2026-10-20 at `5aa473a6` plus this change, on the docs worktree.
+
+**Files:** `src/lib/deployment.ts` (facts, JSONC readers), `src/lib/deployment-page.test.ts`
+(9 tests), `scripts/smoke-deploy.ts`, `content/docs/deployment.mdx`, the
+`smoke:deploy` script/row, sidebar entry, Architecture link, `page-aliases.ts`,
+the search table, the production query and `apps/docs/README.md`.
+
+**The artifact, measured:**
+
+```text
+nub run smoke:deploy
+deploy: 149 files, largest dist/client/gpuix-preview/assets/gpuix-web_bg-*.wasm 19.1 MiB, worker 36.1 MiB, dry run 0
+exit 0
+```
+
+`wrangler deploy --dry-run` read 154 files and reported
+`Total Upload: 36964.32 KiB / gzip: 2497.79 KiB`. The Worker's JavaScript
+(`dist/server`, 142 modules) is 36.1 MiB against the 64 MiB limit.
+
+**Gates:**
+
+- `nub run test` (root): green — docs `120` files / `1 095` tests, primitives
+  25 / 282 and the rest of the workspace unchanged.
+- `nub run check`, `nub run lint`: green (the formatter rewrote three new files
+  before the second run).
+- `nub run --filter docs check-types`: green.
+- `nub run --filter docs build`: green.
+- `nub scripts/smoke-build.ts --no-build`: green — 103 pages, 227 links,
+  1 340 anchors, search checked (including `cloudflare`), exit `0`.
+
+**Two-direction proofs (each run, then reverted):**
+
+1. Removed `"deployment"` from `meta.json` → `content.test.ts` failed:
+   `orders every top-level page on disk in the sidebar`.
+2. Changed the page's Worker name to `gpuixui-docs-old` → `deployment-page.test.ts`
+   failed: `states the Worker the deploy stack really declares`, listing
+   `` `gpuixui-docs` ``.
+3. Set `cloudflareLimits.bytesPerAsset` to `1` → `smoke:deploy` exited `1`:
+   `FAIL dist/client/gpuix-preview/assets/…wasm is 19.1 MiB, over the 0.0 MiB
+   per-asset limit`.
+4. Changed `docsWorker.name` → `smoke:deploy` exited `1` with both
+   `generated Worker name …` and `wrangler.jsonc name …`.
+5. Removed the `/docs/deployment` alias block → the plan-609 search row failed
+   with `custom domain -> heading:/docs/deployment#custom-domain-and-canonical-urls`
+   and `production build -> text:/docs/deployment#what-is-verified-and-what-is-not`.
+6. Removed the `smoke:deploy` row from `contributing.mdx` →
+   `docs-checks.test.ts` failed: `names every docs-site smoke check` listing
+   `smoke:deploy`.
+
+**A measured regression the gate caught:** after the page landed,
+`smoke:build`'s existing `shared host props` query moved to `/docs/deployment`
+first. The section's full name is now an explicit Component API alias and the
+production query is green. This is recorded rather than hidden: adding a page
+changes the lexical ranking of every page, and the production search check is
+the guard that notices.
+
+**Not measured:** the account deploy (`nub run deploy:docs`) and the production
+host serving `/gpuix-preview/`; both need credentials or a deployment URL.

@@ -471,7 +471,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 175/175
+`[x]` `[██████████]` 176/176
+
+`[x]` **Deployment and hosting have a page (plan 609)** — `deployment`,
+      `hosting`, `cloudflare` and `workers` returned nothing, `host` meant the
+      component *host element*, and the site's own Worker path (declared in
+      `packages/deploy/alchemy.run.docs.ts`) was written down only in `TODO.md`.
+      `/docs/deployment` states the Worker name, domain, root directory,
+      compatibility facts, the build's two output halves, Cloudflare's three
+      budgets and the credential split; `smoke:deploy` builds, runs
+      `wrangler deploy --dry-run` and measures the real output (149 files,
+      largest wasm 19.1 MiB, Worker JS 36.1 MiB, exit `0`). The account deploy
+      and the production `/gpuix-preview/` asset stay explicitly unverified.
+      120 files / 1 095 docs tests, root gates green; six two-direction proofs
+      recorded in plan 609 §7.
 
 `[x]` **Styling has a page (plan 606)** — a React reader's first move is
       `className`, and the site never said there is no CSS: `className` and
@@ -1507,7 +1520,8 @@ previews (the four interaction-only pages carry a measured tier-V reason).
       per-platform variants in `packages/tokens` (the row above) and a
       Linux/Omarchy host for Recipe B; `apps/docs` must not invent the colours.
       Owner: coordinator / tokens-theme.
-`[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3)
+`[ ]` Owner: the Alchemy deploy path (`nub run deploy:docs`) is unverified — it needs Cloudflare credentials and lives in `packages/deploy`. The stand-down path is verified locally (plan 410 §3), and plan 609 verifies the artifact with `smoke:deploy`.
+`[ ]` **Packages/deploy: the stack's comment is stale.** `packages/deploy/alchemy.run.docs.ts` still says "Nothing deploys yet: this declares the resources so the shape of the deployment is fixed before the app exists — see apps/docs/README.md for what Phase B must build at rootDir", while the docs app has shipped since plan 410 and the artifact now packages (plan 609). Update the comment to describe the deployed app; the page derives its facts from the file, so the prose remains true either way. Owner: packages/deploy (outside `docs-site`'s paths).
 `[ ]` Repo: `README.md` still says "Phase A (audit and feasibility)" although Phase B tokens and the docs site are implemented; update the ledger to match `TODO.md`
 `[ ]` Owner: `packages/README.md` still lists only `config` and `deploy` under "Present"; `tokens`, `primitives`, `components` and `icons` have shipped (the docs prose now describes them, plan 426)
 `[ ]` Owner: `examples/basic-app/README.md` says `@gpuixui/tokens` "has not landed yet" and carries a stand-in palette; the package is on `main` and the docs page (plan 426) points readers at the example — reconcile the README
