@@ -97,6 +97,26 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 121/121 plans-and-harness
 
+`[x]` **Prove the crop masks in pixels** per plan `713`: the four masks were
+      asserted by geometry only, so a mask with no background passed every
+      check. A pure `crop-pixels.ts` derives the sRGB blend of the dark
+      background at `0.6` over the fixture's flat halves (`#224072FF` /
+      `#6C4B14FF`) and samples four points per capture — two undimmed inside the
+      crop (`#3B82F6FF` / `#F59E0BFF`) and two dimmed outside — at the initial
+      crop and after the measured `+40/+20` resize, so the mask's edge is proven
+      to move. `crop-area` **74 → 82** checks and `live-crop-area` **10 → 18**,
+      both green first run. Six runtime mutations observed and reverted (M1
+      removed background, M2′ opaque blend, M3 swapped halves, M4 a fixed
+      right-mask point failing only the resized capture, M6 a stale crop) plus
+      two unit mutations; **one null result**: `MASK_ALPHA = 0.3` moved both the
+      view and the expectation (one source of truth, the intended design). A
+      third null result (sampling the crop's centre) measured that the bitmap is
+      scaled to the box width — the divider paints at `stage.x + 160` — so plan
+      `385`'s "unobservable fit" now excludes the horizontal fit. Focused ids:
+      `crop-area`, `live-crop-area`; end-of-task full headless **106/106**
+      (**3887** checks), exit `0`; `nub run check`/`lint`/`test` green
+      (playground **466** tests, testing 68).
+
 `[x]` **Prove the QR module grid in pixels** per plan `708`: the last named
       QR gap ("scannability is not asserted — no pixel readback") is now a
       decoded-frame assertion. A pure `qr-pixels.ts` (9 tests; playground

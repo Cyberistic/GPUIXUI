@@ -1130,13 +1130,14 @@ The first live run failed with `Locator did not match any element` at
 
 `crop-area` is the runtime half of a crop surface: a 320 × 200 stage whose
 `<img>` box is the crop coordinate space, four plain `div` masks, four 12 px
-handles and a focusable crop box. 74 checks; live twin `live-crop-area`
-(10 checks).
+handles and a focusable crop box. 82 checks; live twin `live-crop-area`
+(18 checks).
 
 | Fact | Measured |
 | ---- | -------- |
-| the coordinate space | `objectFit: "contain"` and `"cover"` both report the same `320 × 200` box and paint no fallback; the renderer exposes no fitted-bitmap rect, no load event and no natural size, so the app owns the aspect mapping |
-| the mask | four `div`s are the exactly complement of the crop; a crop at `x = 0`/`y = 0` renders no left/top mask; the stage's 1 px border offsets every absolute child by 1 |
+| the coordinate space | `objectFit: "contain"` and `"cover"` both report the same `320 × 200` box and paint no fallback; the renderer exposes no fitted-bitmap rect, no load event and no natural size, so the app owns the aspect mapping. The **horizontal** fit is observable from the paint: the fixture's divider sits at `stage.x + 160`, so the bitmap is scaled to the box width (only the vertical letterbox is open) |
+| the mask | four `div`s are the exact complement of the crop; a crop at `x = 0`/`y = 0` renders no left/top mask; the stage's 1 px border offsets every absolute child by 1 |
+| the mask's colour | the background token at 60 % over the image — inside the crop `#3B82F6FF`/`#F59E0BFF`, under the mask `#224072FF`/`#6C4B14FF` in a decoded frame; after the resize the 240 px point is undimmed and the 312 px point is still masked (plan `713`) |
 | pass-through | with `pointerEvents: "none"` the click reaches the plane — **and still runs the mask's own handler** (log `mask:top>plane`); with `"auto"` only the mask runs. A click-through overlay must guard its handler by mode |
 | a handle drag | a 12 px handle keeps every held move and the release; `+40/+20` grows the crop `192 × 120 → 232 × 140`; the masks and handles follow within 1 px; the gesture ends in a click on the handle, not the image |
 | clamping | the SE handle stops at `256 × 160`; a move stops at `(0, 0)`; a shrink stops at `16 × 16`; the NW corner cannot pass the SE minimum |
@@ -1149,10 +1150,10 @@ down by 16 px after the baseline was captured. Both readouts now sit **below**
 the stage. The held gesture also lives in a `ref`, not React state, so a move
 can trust the press that started it before the commit lands.
 
-Limits: no pixel readback; a parent `overflow: hidden` does not clip an `<img>`
-child, so a rounded crop mask is not measured; rectangular selection only (no
-rotation or aspect lock); the accessibility model is a region plus a group and
-buttons, not a multi-value slider.
+Limits: a parent `overflow: hidden` does not clip an `<img>` child, so a rounded
+crop mask is not measured; rectangular selection only (no rotation or aspect
+lock); the accessibility model is a region plus a group and buttons, not a
+multi-value slider.
 
 ## Multi-step forms (plan `386`)
 
@@ -2083,12 +2084,16 @@ a file path** are checked by colour (plan `690`), and so is the chart's SVG
 artwork — its two opaque fills and both gradients — plus the sourced-SVG mask
 tints (plan `697`, in `live-chart`). A refused http(s) URL is proven by the
 absence of the fixture's colour: the loader still emits no load/error event.
+The crop masks are the same kind of check (plan `713`): the image inside the
+crop and the image under a 60 % background wash, sampled before and after a
+resize, so a mask that paints nothing or stops following the crop fails.
 
 ## Evidence on this host
 
-The suite is **106/106 green** here (`exit 0`, 3879 checks, 65 capabilities,
-**146.4 s**, 2026-10-20; plan `708` added 7 QR pixel checks; plan `701` added 41
-wash checks to `search-highlights`):
+The suite is **106/106 green** here (`exit 0`, 3887 checks, 65 capabilities,
+**236.7 s**, 2026-10-20; plan `713` added 8 crop-mask pixel checks; plan `708`
+added 7 QR pixel checks; plan `701` added 41 wash checks to
+`search-highlights`):
 
 ```
 106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2250,6 +2255,8 @@ src/scenarios/notification-model.test.ts the pure notification rules
 src/scenarios/notification-centre.tsx a bell, a non-modal panel and a newest-first virtual list
 src/scenarios/crop-model.ts the pure crop geometry, the mask complement and the readout
 src/scenarios/crop-model.test.ts the pure crop rules
+src/scenarios/crop-pixels.ts the mask composite and the four sampled points
+src/scenarios/crop-pixels.test.ts the pure crop-pixel expectations
 src/scenarios/crop.tsx the image box, four masks, captured handles and a keyboard crop
 src/scenarios/reorder-model.ts the pure boundary/index/move rules
 src/scenarios/reorder-model.test.ts the pure reorder rules
