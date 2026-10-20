@@ -129,7 +129,25 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 138/138 plans-and-harness
+`[x]` `[██████████]` 139/139 plans-and-harness
+
+`[x]` **Run the promotion gate on the head that includes the text ink and
+      decoration pixels** per plan `777`: verification only. Merged
+      `origin/master`'s docs-only `21b32697` (plan `439`) as `81b767e4` first,
+      so the head was 0 behind. Headless **115/115** (**4206** checks, 65
+      capabilities, **432.8 s**, exit `0`) and live **104/104** (**2987**
+      checks, **62** capabilities, **1273.3 s**, exit `0`); the live total is
+      plan `768`'s 2933 + 13 + 23 + 18 exactly (`live-font-family`,
+      `live-text-ink`, `live-text-decoration`), `live-tier2-editing` took its
+      33-check branch, and no `provenance.json` was written. The capability
+      count moved 61 → 62 because plans `773`/`775` now mount `text` in a live
+      scenario directly instead of relying on plan `653`'s `live-typography`
+      alias. `nub run check`/`lint`/`test` green (playground **548**, testing
+      69). Commands: `nub run --filter playground build`, the bare headless
+      runner, `nub apps/playground/dist/live/run.js --all`, then the three
+      gates. Exact ids run: the whole headless registry (bare) and the whole
+      live registry (`--all`). This is the promotion gate; the owner/supervisor
+      performs the merge.
 
 `[x]` **Prove text decoration reaches the frame, and measure the link variant's
       inheritance** per plan `775`: `textDecoration` is declared by the pinned

@@ -96,12 +96,13 @@ nub run --filter playground build && nub apps/playground/dist/smoke/run.js
 | window | `window-layout`, `live-window` | verified |
 | frames | `frame-stats`, `live-frames` | verified |
 
-The suite is **113/113 green here** (exit `0`, `.artifacts/smoke-report.json`, **4165 checks**, 65 capabilities; **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head, **247.2 s** at the plan `762` gate; plan `771` added the 13-check `font-family`, plan `764` added the 46-check `editing-actions`, plan `761` added the 29-check `opacity-pixels`, plan `754` added the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 101/101**
-(`live-report.json`, **2933 checks**, 61 capabilities; **1220.8 s**, exit `0`)
-on 2026-10-20, the merge/release gate (plan `768`, code head `f0c9a8f8` at the
-gate); the live registry is **102** since plan `771`'s `live-font-family` (13
-checks, focused-green twice — the full suite has not been re-run). That total is plan `762`'s 2860 plus **73 checks from
-`live-editing-actions`** (plan `764`), so the clipboard, history and OTP-paste
+The suite is **115/115 green here** (exit `0`, `.artifacts/smoke-report.json`, **4206 checks**, 65 capabilities; **432.8 s** at the plan `777` gate, **237.6 s** after plan `771`, **246.8 s** at the plan `768` gate, **339.8 s** on the plan `764` head; plan `775` added the 18-check `text-decoration-pixels`, plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check `font-family`, plan `764` the 46-check `editing-actions`, plan `761` the 29-check `opacity-pixels`, plan `754` the 50-check `state-pixels`; the plan `739` gate read 108/108 and 3963; plan `736` added the 28-check `shadow-pixels`, plan `701` added 41 checks to `search-highlights`, plan `715` added 5 to `docking-layout`, plan `722` added 10 to `media-surface`, plan `724` added the 18-check `click-routing` and plan `734` added 15 inline checks to it, plan `745` added the 64-check `border-pixels`). The live suite **last ran in full at 104/104**
+(`live-report.json`, **2987 checks**, **62 capabilities**; **1273.3 s**, exit `0`)
+on 2026-10-20, the merge/release gate (plan `777`, code head `85bd8cf1` at the
+gate); it covers every registered live scenario. That total is plan `768`'s
+2933 plus the three text probes' **13 + 23 + 18** (`live-font-family`,
+`live-text-ink`, `live-text-decoration`), so the text ink, the decoration and
+the platform typeface join the clipboard, history and OTP-paste
 contract joins the disabled/subtree pixels, the border and
 radius pixels, the ring and elevation pixels, the docking indicator's paint order, the
 waveform's bars, gaps and wash, the
@@ -121,22 +122,25 @@ colours), all through plan `656`'s capture-capable live runner (`live-shell`
 included; a plain `--all` wrote no frame or sidecar). Both `host` lines carry
 the pins. The 0.10.0 box contract (plan `529` §6.3) — bounds report a content
 origin and a borderless size — is what every geometry check now asserts.
-**Registered live scenarios are 101, and the full gate covers all 101** (plan
-`768` includes plan `764`'s `live-editing-actions`). The live registry is guarded by
+**Registered live scenarios are 104, and the full gate covers all 104** (plan
+`777` includes plans `771`, `773` and `775`). The live registry is guarded by
 `liveScenarioProblems` (plan `639`); the count grew from 96 to 97 with plan
 `736`'s `live-shadow-pixels`, to 98 with plan `745`'s `live-border-pixels`, to
 99 with plan `754`'s `live-state-pixels`, to 100 with plan `761`'s
-`live-opacity-pixels` and to 101 with plan `764`'s `live-editing-actions`. Plans `697` and
+`live-opacity-pixels`, to 101 with plan `764`'s `live-editing-actions`, to 102
+with plan `771`'s `live-font-family`, to 103 with plan `773`'s `live-text-ink`
+and to 104 with plan `775`'s `live-text-decoration`. Plans `697` and
 `701` added **31** checks to `live-chart` (40 → 71) and **41** to
 `live-highlights` (12 → 53), plan `715` added **14** to `live-docking`, plan
 `722` added **11** to `live-media`, plans `724`/`734` added **25** to
 `live-click-routing`, plan `736` added **28** to `live-shadow-pixels`, plan
 `745` added **64** to the new `live-border-pixels`, plan `754` added **50**
 to the new `live-state-pixels`, plan `761` added **29** to the new
-`live-opacity-pixels` and plan `764` added **73** for the new
-`live-editing-actions`; plan `768`
-measured the 101-scenario registry inside the full sequence: **2933** checks, exit
-`0`.
+`live-opacity-pixels`, plan `764` added **73** for the new
+`live-editing-actions`, plan `771` added **13** for the new `live-font-family`,
+plan `773` added **23** for the new `live-text-ink` and plan `775` added **18**
+for the new `live-text-decoration`; plan `777` measured the 104-scenario
+registry inside the full sequence: **2987** checks, exit `0`.
 
 **Colour is no longer screenshot-only (plan `674`, `pixel-colour` +
 `live-pixel-colour`):** the runtime writes the frame, and `@gpuixui/testing`'s
@@ -197,11 +201,13 @@ wheel is always `precise: true`, `touchPhase: "moved"`, so `precise` cannot tell
 a trackpad from a line wheel in a test.
 
 A second, smaller suite runs the shipped playground in a **real window**
-(`nub run --filter playground smoke:live`, plan `189`). The registry is **102**
-scenarios; the last full run was **101/101 green** (2933 checks, 61 capabilities;
-1220.8 s) on the release-tag
-binding through plan `656`'s capture-capable live runner (plan `768`'s gate on
-code head `f0c9a8f8`, including `live-editing-actions`' 73 clipboard/history
+(`nub run --filter playground smoke:live`, plan `189`). The registry is **104**
+scenarios; the last full run was **104/104 green** (2987 checks, 62 capabilities;
+1273.3 s) on the release-tag
+binding through plan `656`'s capture-capable live runner (plan `777`'s gate on
+code head `85bd8cf1`, including `live-editing-actions`' 73 clipboard/history
+checks,
+`live-text-ink`'s 23 ink checks and `live-text-decoration`'s 18 decoration
 checks,
 `live-state-pixels`' 50 hover/active checks,
 `live-border-pixels`' 64 border/radius checks,

@@ -2498,18 +2498,16 @@ copy), `expected "one two", got "changed"` (a rendered source value), and
 
 ## Evidence on this host
 
-The suite is **114/114 green** here (`exit 0`, 4188 checks, 65 capabilities,
-**484.1 s** at plan `773`, 2026-10-20; **237.6 s** at plan `771`, which read
+The suite is **115/115 green** here (`exit 0`, 4206 checks, 65 capabilities,
+**432.8 s** at the plan `777` gate, 2026-10-20; **484.1 s** at plan `773`, which
+read 114/114 · 4188; **237.6 s** at plan `771`, which read
 113/113 · 4165; **246.8 s** at the plan `768` gate, which
-read 112/112 · 4152; **339.8 s** on the plan `764`
-head; the runs at the plan `762` gate read 111/111 · 4106 · 247.2 s with plans
-`754` and `761`'s pixel probes; plan `773` added the 23-check `text-ink-pixels`,
-plan `771` added the 13-check `font-family`, plan
-`764` added the 46-check `editing-actions`, plan
-`761` added the 29-check `opacity-pixels`, plan `754` added the 50-check
-`state-pixels`, plan `745` added the 64-check
-`border-pixels`; plan `739`'s gate read 108/108 and 3963 on the shadow-pixel
-head; plan `736`
+read 112/112 · 4152; plan `775` added the 18-check `text-decoration-pixels`,
+plan `773` the 23-check `text-ink-pixels`, plan `771` the 13-check
+`font-family`, plan `764` the 46-check `editing-actions`, plan
+`761` the 29-check `opacity-pixels`, plan `754` the 50-check
+`state-pixels`, plan `745` the 64-check `border-pixels`; plan `739`'s gate read
+108/108 and 3963 on the shadow-pixel head; plan `736`
 added the 28-check `shadow-pixels`; plan
 `724` added the 18-check `click-routing` and plan `734` grew it to 33; the count
 was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
@@ -2517,7 +2515,7 @@ was 3902 at the plan-`723` gate; plan `713` added 8 crop-mask pixel checks; plan
 `search-highlights`):
 
 ```
-114/114 scenarios passed · capabilities: layout=verified root=verified text=verified
+115/115 scenarios passed · capabilities: layout=verified root=verified text=verified
 input=verified focus=verified overlay=verified modal=verified floating=verified
 select=verified combobox=verified tooltip=verified a11y=verified scroll=verified
 panel=verified motion=verified virtual-list=verified table=verified tree=verified
@@ -2534,24 +2532,16 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-**Plan `773` added the 23-check `text-ink-pixels` and plan `775` the 18-check
-`text-decoration-pixels`; the head is now 115/115 · 4206 and the live registry
-is 104 with `live-text-ink` (23 checks, twice) and `live-text-decoration`
-(18 checks) focused-green. Plan `771`'s `live-font-family` remains
-focused-green (13 checks, twice). The full live suite is still the gate below
-and has not been re-run.**
-
-The last full merge/release gate ran **101/101** (`exit 0`, **2933** checks, 61
-capabilities; **1220.8 s**; `.artifacts/live-report.json`, 2026-10-20) on the code
-head that includes plan `764` (`f0c9a8f8`; 0 behind `origin/master`), with the
-whole headless registry at **112/112** (**4152** checks, 65 capabilities,
-246.8 s) on the same code. The live registry is **101** entries, plan `764`'s
-`live-editing-actions` (73 checks) included, and the
-full headless suite on that head is **112/112 · 4152**, so every registered id
-ran inside the gate. Plan `768` is the last run gate, and it covers every
-registered id: plan `761`'s `live-opacity-pixels` (29 checks)
-and plan `764`'s `live-editing-actions` (73) join the sequence here. It includes
-every scenario this branch added:
+The last full merge/release gate ran **104/104** (`exit 0`, **2987** checks,
+**62** capabilities; **1273.3 s**; `.artifacts/live-report.json`, 2026-10-20) on
+the plan-`775` head (`85bd8cf1`, with `origin/master`'s docs-only `21b32697`
+merged as `81b767e4`), with the whole headless registry at **115/115** (**4206**
+checks, 65 capabilities, 432.8 s) on the same code. The live total is plan
+`768`'s 2933 plus `live-font-family`'s 13, `live-text-ink`'s 23 and
+`live-text-decoration`'s 18, so every registered id ran inside the gate. The
+capability count is **62** rather than 61 because plans `773`/`775` now mount
+`text` in a live scenario directly, instead of relying on plan `653`'s
+`live-typography` alias alone. It includes every scenario this branch added:
 `live-theme-platform` (plan `654`),
 `live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
 additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
@@ -2565,9 +2555,10 @@ contract (25), `live-shadow-pixels`' ring/elevation pixels (28),
 hover/active pixels (50) and `live-opacity-pixels`' disabled/subtree pixels (29)
 and `live-editing-actions`' clipboard, cut/paste, undo/redo and OTP-paste checks
 (73).
-The total is plan `762`'s 2860 plus `live-editing-actions`' 73, and the headless
-registry is that gate's 4106 plus `editing-actions`' 46 (`4152`). A plain
-`--all` wrote no frame and no `provenance.json`. This gate supersedes plan `762`'s
+The total is plan `768`'s 2933 plus the three text probes' 13 + 23 + 18, and the
+headless total is that gate's 4152 plus 54 (`4206`). A plain
+`--all` wrote no frame and no `provenance.json`. This gate supersedes plan
+`768`'s 101/101 (`2933`) on `f0c9a8f8`, plan `762`'s
 100/100 (`2860`) on `05013949`, plan `755`'s
 99/99 (`2831`) on `7b304a1f`, plan `751`'s
 98/98 (`2780`) on `debe433a`, plan `739`'s 97/97
