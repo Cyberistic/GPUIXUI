@@ -14,6 +14,7 @@ import { motion, type EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import {
   selectionRowStyle,
+  selectionRowTextStyle,
   switchThumbOffset,
   switchThumbStyle,
   switchTrackStyle,
@@ -24,10 +25,11 @@ import { shrinkLayoutStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
-  ariaName,
   composeHandler,
   composeRef,
   controlName,
+  hasText,
+  joinDescription,
   paintsContent,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -76,6 +78,16 @@ export interface SwitchProps extends TriggerHandlers {
    * supplied. Without children the switch renders exactly as before.
    */
   readonly children?: ReactNode;
+  /**
+   * A visible hint **under** the label, inside the labelled row.
+   *
+   * The caption is the row's `aria-description`, so the painted hint and the
+   * announced one are the same string (the rule `CheckboxGroup`'s rows follow,
+   * plan `500`). A blank value paints no line and announces nothing; without
+   * `children` there is no row to paint into, so it is announced but not
+   * painted. A slot tip is composed after it — `"hint. tip"` (plan `748`).
+   */
+  readonly description?: string;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
   readonly "aria-description"?: string;
   /** An object, or a callback over this switch's public state. */
@@ -134,6 +146,8 @@ export const renderSwitch = (
     />
   );
   const track = switchTrackStyle(spec, theme);
+  /** The hint needs a labelled row to sit in; a bare track announces it only. */
+  const caption = paintsContent(props.children) && hasText(props.description);
   /**
    * The one control surface, whether the track is the root or sits inside a
    * labelled row. A text child becomes the name, so a labelled switch is one
@@ -146,7 +160,10 @@ export const renderSwitch = (
     "aria-label": Option.getOrUndefined(
       controlName(props.label, props.children),
     ),
-    "aria-description": ariaName(props["aria-description"]),
+    "aria-description": joinDescription(
+      props.description,
+      props["aria-description"],
+    ),
     "aria-valuetext": state.current ? "checked" : "unchecked",
     tabIndex: props.disabled === true ? undefined : 0,
     testId: props.testId,
@@ -163,12 +180,24 @@ export const renderSwitch = (
       </div>
     );
   }
+  const label = (
+    <Text
+      role="label"
+      tone={props.disabled === true ? "muted" : "default"}
+      style={shrinkLayoutStyle}
+    >
+      {props.children}
+    </Text>
+  );
   return (
     <div
       {...control}
       style={resolvePartStyle(
         selectionRowStyle(
-          { disabled: props.disabled === true, align: "center" },
+          {
+            disabled: props.disabled === true,
+            align: caption ? "flex-start" : "center",
+          },
           theme,
         ),
         props.style,
@@ -176,13 +205,16 @@ export const renderSwitch = (
       )}
     >
       <div style={track}>{thumbElement}</div>
-      <Text
-        role="label"
-        tone={props.disabled === true ? "muted" : "default"}
-        style={shrinkLayoutStyle}
-      >
-        {props.children}
-      </Text>
+      {caption ? (
+        <div style={selectionRowTextStyle(theme)}>
+          {label}
+          <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
+            {props.description}
+          </Text>
+        </div>
+      ) : (
+        label
+      )}
     </div>
   );
 };

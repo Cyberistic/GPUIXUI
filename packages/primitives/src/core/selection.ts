@@ -201,6 +201,19 @@ export const selectionRowStyle = (
   return style;
 };
 
+/**
+ * The text column of a selection row: a name, and a caption under it.
+ *
+ * A row's label is one shrinkable run, and an optional description is a second
+ * line in the same column rather than a sibling of the box — that is what keeps
+ * the whole row one hit area and one accessibility node (plans `500`, `740`).
+ */
+export const selectionRowTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
+  display: "flex",
+  flexDirection: "column",
+  gap: theme.spacing["2xs"],
+});
+
 /** The pill's width as a multiple of its height (measured: 28×16 at `md`). */
 const SWITCH_TRACK_RATIO = 1.75;
 /** The thumb's side: the track height less one `2xs` inset on each edge. */

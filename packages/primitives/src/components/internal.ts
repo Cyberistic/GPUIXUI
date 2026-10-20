@@ -253,6 +253,31 @@ export const ariaNameOr = (
   );
 
 /**
+ * Two description sources as one announcement: a visible hint, then a slot tip.
+ *
+ * The runtime carries one `aria-description` string, and a `Tooltip` trigger
+ * writes its text into the same prop a control already reads. Each source is
+ * trimmed and blank is absent, so a computed empty hint cannot become a dangling
+ * `". "` (plans `577`, `586`); a sentence boundary keeps the two apart, the join
+ * a busy `Button` uses for `"Loading. …"`.
+ *
+ * The parameter and return types are the runtime's attribute shape, like
+ * `ariaName`: this helper is the boundary, and its body stays in `Option`.
+ */
+export const joinDescription = (
+  first: string | undefined,
+  second: string | undefined,
+): string | undefined =>
+  Option.match(usableLabel(first), {
+    onNone: () => Option.getOrUndefined(usableLabel(second)),
+    onSome: (head) =>
+      Option.match(usableLabel(second), {
+        onNone: () => head,
+        onSome: (tail) => `${head}. ${tail}`,
+      }),
+  });
+
+/**
  * Whether a string says something: non-blank after trimming.
  *
  * The caption rule for a visible description or a separator's label. A caller

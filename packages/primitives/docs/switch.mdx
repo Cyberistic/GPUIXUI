@@ -39,6 +39,16 @@ text that says something (plan `743`). This is the same blank-text rule as an
 empty `label` or caption, and it prevents an empty row and an unnamed focus
 stop.
 
+A labelled row can carry a second line. `description` is a visible hint under
+the label, and the same string is the row's announced description:
+
+```tsx
+<Switch description="Pauses every background sync.">Pause syncing</Switch>;
+```
+
+A blank `description` paints no line and announces nothing. Without `children`
+there is no row to paint into, so the hint is announced but not painted.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -52,6 +62,7 @@ stop.
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
 | `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child paints no row (plan `743`) |
+| `description` | `string` | none | a visible hint **under** the label in a labelled row; it is also the row's announced description, trimmed, and a blank value paints and announces nothing. Without `children` it is announced but not painted, and a slot tip is composed after it (`"hint. tip"`) — plan `748` |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<SwitchState>` | — | merged last on the control surface — the track without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
@@ -86,6 +97,9 @@ stop.
   putting the text inside the control.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus.
+- **A visible description** (`description`) is the row's `aria-description`, so
+  the printed hint and the heard one are the same string. A slot tip is joined
+  after it, so a switch can carry both its own hint and a tooltip.
 
 ## Theming
 
@@ -132,7 +146,10 @@ exported.
 
 - No `aria-checked` and no on/off text inside the control; the switch names
   itself through its text child, else `label`. A **sibling** label is still not
-  associated, and a child label is one run of text with no description line.
+  associated.
+- `description` is a **string** and paints only inside a labelled row. A node
+  description and a description above a bare track are not offered; there is no
+  per-part `descriptionStyle` (the caption uses the `caption` role).
 - The thumb's slide is a `left` inset because GPUix has no `transform`; there is
   no separate reduced-motion switch (0.10.0 exposes no OS preference), so an app
   that needs one should render a static indicator instead.
@@ -162,7 +179,8 @@ exported.
 - `runtime/labelled-selection.runtime.test.tsx` — a press on the visible text
   toggles the labelled switch and announces the new state (plan `740`), and a
   **blank** text child paints the bare track, named by `label`, rather than an
-  empty row (plan `743`).
+  empty row (plan `743`). A **description** paints its caption, is announced as
+  the row's description, and a press on the caption still toggles (plan `748`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

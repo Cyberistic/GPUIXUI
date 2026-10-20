@@ -17,6 +17,7 @@ import {
   selectionMarkColor,
   selectionMarkSize,
   selectionRowStyle,
+  selectionRowTextStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -25,10 +26,11 @@ import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import {
-  ariaName,
   composeHandler,
   composeRef,
   controlName,
+  hasText,
+  joinDescription,
   paintsContent,
   passiveTriggerHandlers,
   resolvePartStyle,
@@ -82,6 +84,17 @@ export interface CheckboxProps extends TriggerHandlers {
    * supplied. Without children the box renders exactly as before.
    */
   readonly children?: ReactNode;
+  /**
+   * A visible hint **under** the label, inside the labelled row.
+   *
+   * The caption is the row's `aria-description`, so what a sighted reader sees
+   * and what assistive technology hears are one string (the rule
+   * `CheckboxGroup`'s option rows follow, plan `500`). A blank value paints no
+   * line and announces nothing (plans `577`, `586`); without `children` there is
+   * no row to paint into, so the description is announced but not painted.
+   * A slot tip (`Tooltip`) is composed after it — `"hint. tip"`.
+   */
+  readonly description?: string;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
   readonly "aria-description"?: string;
   /** An object, or a callback over this checkbox's public state. */
@@ -155,6 +168,12 @@ export const renderCheckbox = (
       />
     );
   /**
+   * Whether the hint gets a line of its own. It needs a labelled row to sit in:
+   * a bare box has no text column, so the description is announced there but
+   * not painted (plan `748`).
+   */
+  const caption = paintsContent(props.children) && hasText(props.description);
+  /**
    * The one control surface, whether the box is the root or sits inside a
    * labelled row. A text child becomes the name, so a labelled control is one
    * node a screen reader can announce and a pointer can press anywhere on.
@@ -166,7 +185,10 @@ export const renderCheckbox = (
     "aria-label": Option.getOrUndefined(
       controlName(props.label, props.children),
     ),
-    "aria-description": ariaName(props["aria-description"]),
+    "aria-description": joinDescription(
+      props.description,
+      props["aria-description"],
+    ),
     "aria-valuetext": selectionValueText(current),
     tabIndex: props.disabled === true ? undefined : 0,
     testId: props.testId,
@@ -183,12 +205,24 @@ export const renderCheckbox = (
       </div>
     );
   }
+  const label = (
+    <Text
+      role="label"
+      tone={props.disabled === true ? "muted" : "default"}
+      style={shrinkLayoutStyle}
+    >
+      {props.children}
+    </Text>
+  );
   return (
     <div
       {...control}
       style={resolvePartStyle(
         selectionRowStyle(
-          { disabled: props.disabled === true, align: "center" },
+          {
+            disabled: props.disabled === true,
+            align: caption ? "flex-start" : "center",
+          },
           theme,
         ),
         props.style,
@@ -196,13 +230,16 @@ export const renderCheckbox = (
       )}
     >
       <div style={box}>{mark}</div>
-      <Text
-        role="label"
-        tone={props.disabled === true ? "muted" : "default"}
-        style={shrinkLayoutStyle}
-      >
-        {props.children}
-      </Text>
+      {caption ? (
+        <div style={selectionRowTextStyle(theme)}>
+          {label}
+          <Text role="caption" tone="muted" style={shrinkLayoutStyle}>
+            {props.description}
+          </Text>
+        </div>
+      ) : (
+        label
+      )}
     </div>
   );
 };

@@ -19,7 +19,7 @@
  */
 
 import type { ReactElement } from "react";
-import type { EventPayload, PublicInstance, StyleDesc } from "@gpuix/react";
+import type { EventPayload, PublicInstance } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
@@ -37,6 +37,7 @@ import {
   selectionMarkColor,
   selectionMarkSize,
   selectionRowStyle,
+  selectionRowTextStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
@@ -149,12 +150,6 @@ interface RowSpec {
   readonly registerRow?: (instance: PublicInstance | null) => void;
 }
 
-const rowTextStyle = (theme: PrimitiveTheme): StyleDesc => ({
-  display: "flex",
-  flexDirection: "column",
-  gap: theme.spacing["2xs"],
-});
-
 /** One checkbox row: the hit area, the tab stop and the accessible name. */
 const renderRow = (
   {
@@ -235,7 +230,7 @@ const renderRow = (
           />
         )}
       </div>
-      <div style={rowTextStyle(theme)}>
+      <div style={selectionRowTextStyle(theme)}>
         <Text
           role="label"
           tone={disabled ? "muted" : "default"}

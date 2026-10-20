@@ -3,18 +3,19 @@
  *
  * The standalone `Checkbox` in its real role — a column of labelled boxes. Each
  * box owns its visible text as the accessible name (`report.pdf`) and the whole
- * row as the hit area, and the header box is the tri-state parent: `checked`
- * when every asset is chosen, `indeterminate` when some are.
+ * row as the hit area, the file's size is the row's visible **description**, and
+ * the header box is the tri-state parent: `checked` when every asset is chosen,
+ * `indeterminate` when some are.
  *
  * A label **beside** a standalone box is still inert (GPUix has no
  * `aria-labelledby`); a label **inside** the control is the supported shape,
  * which is what every row here uses. `CheckboxGroup` remains the shape for a
- * value list with a select-all parent plus descriptions.
+ * value list with a select-all parent of its own.
  */
 
 import { useState, type ReactElement } from "react";
 import * as Arr from "effect/Array";
-import { Box, Checkbox, Separator, Spacer, Stack, Text } from "../src/index.js";
+import { Box, Checkbox, Separator, Stack, Text } from "../src/index.js";
 
 /** The assets a draft release carries. */
 const ASSETS = [
@@ -55,25 +56,21 @@ export const CheckboxExample = (): ReactElement => {
         <Separator orientation="horizontal" />
 
         {Arr.map(ASSETS, (asset, index) => (
-          <Stack key={asset.name} direction="row" align="center" gap="sm">
-            <Checkbox
-              testId={`checkbox-example-asset-${index}`}
-              checked={Arr.contains(selected, asset.name)}
-              onValueChange={() =>
-                setSelected((current) =>
-                  Arr.contains(current, asset.name)
-                    ? Arr.filter(current, (value) => value !== asset.name)
-                    : Arr.append(current, asset.name),
-                )
-              }
-            >
-              {asset.name}
-            </Checkbox>
-            <Spacer />
-            <Text role="caption" tone="muted">
-              {asset.detail}
-            </Text>
-          </Stack>
+          <Checkbox
+            key={asset.name}
+            testId={`checkbox-example-asset-${index}`}
+            checked={Arr.contains(selected, asset.name)}
+            description={asset.detail}
+            onValueChange={() =>
+              setSelected((current) =>
+                Arr.contains(current, asset.name)
+                  ? Arr.filter(current, (value) => value !== asset.name)
+                  : Arr.append(current, asset.name),
+              )
+            }
+          >
+            {asset.name}
+          </Checkbox>
         ))}
 
         <Separator orientation="horizontal" />

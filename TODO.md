@@ -2397,6 +2397,21 @@ retired once both branches are one
       case (offline 70 files / 961 tests, full runtime 68 files / 884 tests;
       plan `747`).
 
+`[x]` `packages/primitives`: **a labelled `Checkbox`/`Switch` row could not carry
+      a description** — both pages documented the gap ("a child label is one run
+      of text — no description line"), so a one-boolean settings row with a hint
+      had to become a one-option `CheckboxGroup` or hand-roll a row outside the
+      keyboard, ring and tooltip contracts; the checkbox example paid for it with
+      a trailing `Text` per row. `description` now paints a `caption` under the
+      label inside the same row, is announced as the row's `aria-description`
+      (trimmed; a blank paints and announces nothing), joins a slot tip after it
+      (`"hint. tip"`), and is announced-but-unpainted on a bare control. The row
+      aligns `flex-start` only when a caption paints; without one the tree is
+      byte-identical to plan `740`'s. 5 element + 2 scoped runtime cases, all
+      seven failing in the old direction, and the example uses the shape
+      (offline 70 files / 966 tests, the scoped live file 10/10 and the examples
+      file 19/19; plan `748`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

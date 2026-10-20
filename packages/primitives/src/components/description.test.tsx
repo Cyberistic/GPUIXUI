@@ -280,7 +280,13 @@ describe("every surface that declares the prop applies the rule", () => {
       (source) =>
         !Str.includes("aria-description={ariaName(")(source.body) &&
         !Str.includes('"aria-description": ariaName(')(source.body) &&
-        !Str.includes('ariaName(props["aria-description"])')(source.body),
+        !Str.includes('ariaName(props["aria-description"])')(source.body) &&
+        // A join helper (`joinDescription`) trims both of its sources, so a
+        // visible description and a slot tip compose without padding (748).
+        !(
+          Str.includes('"aria-description": joinDescription(')(source.body) &&
+          Str.includes('props["aria-description"]')(source.body)
+        ),
     );
     expect(Arr.map(raw, (source) => source.file)).toStrictEqual([]);
   });

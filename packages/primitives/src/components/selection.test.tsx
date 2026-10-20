@@ -1482,3 +1482,119 @@ describe("the row that owns the pointer paints its feedback", () => {
     });
   });
 });
+
+describe("a labelled row's description", () => {
+  const HINT = "At most one summary per day.";
+
+  /** The text column a labelled row paints: the name, then an optional hint. */
+  const column = (element: ReactElement): ReactElement =>
+    expectSome(Arr.get(elementChildren(element), 1));
+
+  it("paints a checkbox hint under its label, and announces the same string", () => {
+    // The limitation this closes (plan 748): both pages told readers a child
+    // label is one run of text with no description line, so a one-boolean
+    // settings row could not carry a hint. The caption is the row's
+    // `aria-description` — the rule plan 500 applies to a group row.
+    const element = renderCheckbox(
+      { children: "Email notifications", description: HINT },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-label"))).toBe(
+      "Email notifications",
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(HINT);
+    expect(expectSome(hostStyle(element, "alignItems"))).toBe("flex-start");
+    const text = column(element);
+    const lines = elementChildren(text);
+    expect(lines).toHaveLength(2);
+    expect(expectSome(elementProp(expectSome(Arr.head(lines)), "role"))).toBe(
+      "label",
+    );
+    const caption = expectSome(Arr.get(lines, 1));
+    expect(expectSome(elementProp(caption, "role"))).toBe("caption");
+    expect(expectSome(elementProp(caption, "children"))).toBe(HINT);
+  });
+
+  it("paints the same row for a switch", () => {
+    const element = renderSwitch(
+      { children: "Pause syncing", description: HINT },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "role"))).toBe("switch");
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(HINT);
+    const lines = elementChildren(column(element));
+    expect(
+      expectSome(elementProp(expectSome(Arr.get(lines, 1)), "children")),
+    ).toBe(HINT);
+  });
+
+  it("is absent when blank: no line, no gap, no announcement", () => {
+    // The blank rule (plans 577/586): a computed hint often trims to nothing,
+    // and painting it would leave an empty caption line. The tree must stay the
+    // one plan 740 ships.
+    const element = renderCheckbox(
+      { children: "Email notifications", description: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(element, "aria-description")).toStrictEqual(Option.none());
+    expect(expectSome(hostStyle(element, "alignItems"))).toBe("center");
+    const children = elementChildren(element);
+    expect(children).toHaveLength(2);
+    const label = expectSome(Arr.get(children, 1));
+    expect(expectSome(elementProp(label, "role"))).toBe("label");
+  });
+
+  it("composes a slot tip after the visible hint", () => {
+    const both = renderCheckbox(
+      {
+        children: "Email",
+        description: HINT,
+        "aria-description": "Opens a help panel.",
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(both, "aria-description"))).toBe(
+      `${HINT}. Opens a help panel.`,
+    );
+    const tipOnly = renderCheckbox(
+      {
+        children: "Email",
+        description: "   ",
+        "aria-description": "Opens a help panel.",
+      },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(tipOnly, "aria-description"))).toBe(
+      "Opens a help panel.",
+    );
+  });
+
+  it("announces a description it cannot paint on a bare control", () => {
+    // There is no text column without children, so the hint has nowhere to go
+    // visually — but dropping it silently would be worse than announcing it.
+    const element = renderCheckbox(
+      { label: "Email", description: HINT },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "aria-description"))).toBe(HINT);
+    expect(elementChildren(element)).toHaveLength(0);
+  });
+});

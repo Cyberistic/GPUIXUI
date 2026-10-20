@@ -47,6 +47,18 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 
 `Checkbox` itself paints `indeterminate` when a caller owns that state.
 
+A labelled row can carry a second line. `description` is a visible hint under
+the label, and the same string is the row's announced description:
+
+```tsx
+<Checkbox description="At most one summary per day.">
+  Email notifications
+</Checkbox>;
+```
+
+A blank `description` paints no line and announces nothing. Without `children`
+there is no row to paint into, so the hint is announced but not painted.
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -61,6 +73,7 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
 | `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
 | `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name. Text may be nested in an element (a `Text` run, or a word beside an icon); an icon alone names nothing (plan `746`). A blank text child paints no row (plan `743`) |
+| `description` | `string` | none | a visible hint **under** the label in a labelled row; it is also the row's announced description, trimmed, and a blank value paints and announces nothing. Without `children` it is announced but not painted, and a slot tip is composed after it (`"hint. tip"`) — plan `748` |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
 | `style` | `StateStyle<CheckboxState>` | — | merged last on the control surface — the box without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
@@ -96,6 +109,9 @@ clearing.
   `Label` beside a standalone box is still inert — GPUix has no
   `aria-labelledby`, so association only works by putting the text inside the
   control. Use `label` when there is no visible text.
+- **A visible description** (`description`) is the row's `aria-description`, so
+  the printed hint and the heard one are the same string. A slot tip is joined
+  after it, so a control can carry both its own hint and a tooltip.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus.
 
@@ -145,8 +161,10 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 
 - No `aria-checked` (above).
 - A **sibling** label is still not associated: only a child label can be inside
-  the interactive row. A child label is one run of text — no description line;
-  use `CheckboxGroup` when an option needs a label **and** a description.
+  the interactive row.
+- `description` is a **string** and paints only inside a labelled row. A node
+  description and a description above a bare box are not offered; there is no
+  per-part `descriptionStyle` either (the caption uses the `caption` role).
 - No partial-state animation and no custom mark.
 
 ## Verification
@@ -173,7 +191,9 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
   labelled row is still a `Tooltip` trigger (plan `740`; all six fail against the
   unlabelled tree). A **blank** text child paints the bare box, named by
   `label`, rather than an empty row (plan `743`; the two blank-child cases fail
-  against the old row gate).
+  against the old row gate). A **description** paints its caption, is announced
+  as the row's description, and a press on the caption still toggles (plan
+  `748`).
 - `runtime/examples.runtime.test.tsx` — the **checkbox example** (plan `374`)
   mounts the labelled boxes in their real role: a tri-state header over a column
   of rows. The header announces `mixed`, a row click repaints the caller's

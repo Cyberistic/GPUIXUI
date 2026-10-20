@@ -203,3 +203,65 @@ it("does not paint an empty labelled row for a blank Switch child", async () => 
     .map((node) => node.aria?.label);
   expect(labels).toStrictEqual(["Wi-Fi"]);
 });
+
+/** The description the accessibility node named `label` publishes, if any. */
+const described = (runtime: Runtime, label: string): string | undefined =>
+  Option.getOrUndefined(
+    Option.flatMap(
+      Option.fromNullishOr(
+        a11yNodes(runtime.a11y()).find((node) => node.aria?.label === label),
+      ),
+      (node) => Option.fromNullishOr(node.aria?.description),
+    ),
+  );
+
+it("paints and announces a labelled Checkbox's description", async () => {
+  // The gap this closes (plan 748): a settings row could not say what the
+  // boolean does. The hint is a caption inside the one row, so the printed text
+  // and the announced description are the same string, and the row is still one
+  // hit area — a press on the caption toggles.
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Checkbox testId="c" description="At most one summary per day.">
+        Email notifications
+      </Checkbox>
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("At most one summary per day.");
+  expect(described(runtime, "Email notifications")).toBe(
+    "At most one summary per day.",
+  );
+  expect(announced(runtime, "Email notifications")).toBe("unchecked");
+  runtime.click("c");
+  expect(announced(runtime, "Email notifications")).toBe("checked");
+});
+
+it("paints a labelled Switch's description and ignores a blank one", async () => {
+  const runtime = await openWindow();
+  runtime.render(
+    <Surface>
+      <Switch testId="s" description="Pauses every background sync.">
+        Pause syncing
+      </Switch>
+    </Surface>,
+  );
+  expect(runtime.allText()).toContain("Pauses every background sync.");
+  expect(described(runtime, "Pause syncing")).toBe(
+    "Pauses every background sync.",
+  );
+
+  const blank = await openWindow();
+  blank.render(
+    <Surface>
+      <Checkbox testId="c" description="   ">
+        Email notifications
+      </Checkbox>
+    </Surface>,
+  );
+  expect(
+    a11yNodes(blank.a11y()).filter(
+      (node) => node.aria?.description !== undefined,
+    ),
+  ).toStrictEqual([]);
+});
