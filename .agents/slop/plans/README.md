@@ -36,7 +36,8 @@ Numbering is per workstream. This index is the union of the workstreams' plans;
 the `200` block is the reference-adoption and gap-sequencing set, the primitives
 workstream owns `020–049`, the playground and components workstreams share
 `100–199` (two plans collide on `110`; renumbering is tracked in `TODO.md`), and
-the docs-site workstream owns `4xx`.
+the docs-site workstream owns `4xx` and continues at `500+` once that block
+filled (plans `500`–`623` at the time of writing).
 
 ### `tokens-theme` (block `010–019`, plus one overflow plan)
 
