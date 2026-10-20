@@ -8,22 +8,26 @@
  * animation that is a one-way position change (plan `329`).
  */
 
-import type { ReactElement } from "react";
+import { Children, type ReactElement, type ReactNode } from "react";
+import * as Option from "effect/Option";
 import { motion, type EventPayload } from "@gpuix/react";
 import { decideActivation } from "../core/keyboard.js";
 import {
+  selectionRowStyle,
   switchThumbOffset,
   switchThumbStyle,
   switchTrackStyle,
   type SelectionAccent,
   type SelectionSpec,
 } from "../core/selection.js";
+import { shrinkLayoutStyle } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import {
   ariaName,
   composeHandler,
   composeRef,
+  controlName,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -32,6 +36,7 @@ import {
   type StateStyle,
   type TriggerHandlers,
 } from "./internal.js";
+import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The public state a `Switch` style callback receives. */
@@ -58,6 +63,17 @@ export interface SwitchProps extends TriggerHandlers {
    * a hit area and not associated (no `aria-labelledby`).
    */
   readonly label?: string;
+  /**
+   * A visible label **inside** the control.
+   *
+   * The row becomes the hit area, the tab stop and the accessible name, so a
+   * press anywhere toggles it and the text is heard by assistive technology —
+   * the same shape `CheckboxGroup`'s rows use (`Label` beside a switch cannot be
+   * associated in 0.10.0). `label` still wins for the name when both are
+   * supplied; a blank `label` falls back to the text. Without children the
+   * switch renders exactly as before.
+   */
+  readonly children?: ReactNode;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
   readonly "aria-description"?: string;
   /** An object, or a callback over this switch's public state. */
@@ -104,36 +120,67 @@ export const renderSwitch = (
     focused: focus.focused,
     invalid: props.invalid === true,
   };
+  const thumbElement = (
+    <motion.div
+      initial={{ left: rest.left }}
+      animate={{ left: rest.left }}
+      transition={{
+        duration: SWITCH_THUMB_SLIDE_MS / 1000,
+        ease: "easeOut",
+      }}
+      style={thumb}
+    />
+  );
+  const track = switchTrackStyle(spec, theme);
+  /**
+   * The one control surface, whether the track is the root or sits inside a
+   * labelled row. A text child becomes the name, so a labelled switch is one
+   * node a screen reader can announce and a pointer can press anywhere on.
+   */
+  const control = {
+    ...passiveTriggerHandlers(props),
+    ref: composeRef(props.ref, focus.ref),
+    role: "switch",
+    "aria-label": Option.getOrUndefined(
+      controlName(props.label, props.children),
+    ),
+    "aria-description": ariaName(props["aria-description"]),
+    "aria-valuetext": state.current ? "checked" : "unchecked",
+    tabIndex: props.disabled === true ? undefined : 0,
+    testId: props.testId,
+    onClick: toggle,
+    onKeyDown: onKey("down", props.onKeyDown),
+    onKeyUp: onKey("up", props.onKeyUp),
+    onFocus: composeHandler(focus.onFocus, props.onFocus),
+    onBlur: composeHandler(focus.onBlur, props.onBlur),
+  } as const;
+  if (Children.toArray(props.children).length === 0) {
+    return (
+      <div {...control} style={resolvePartStyle(track, props.style, partState)}>
+        {thumbElement}
+      </div>
+    );
+  }
   return (
     <div
-      {...passiveTriggerHandlers(props)}
-      ref={composeRef(props.ref, focus.ref)}
-      role="switch"
-      aria-label={ariaName(props.label)}
-      aria-description={ariaName(props["aria-description"])}
-      aria-valuetext={state.current ? "checked" : "unchecked"}
-      tabIndex={props.disabled === true ? undefined : 0}
-      testId={props.testId}
-      onClick={toggle}
-      onKeyDown={onKey("down", props.onKeyDown)}
-      onKeyUp={onKey("up", props.onKeyUp)}
-      onFocus={composeHandler(focus.onFocus, props.onFocus)}
-      onBlur={composeHandler(focus.onBlur, props.onBlur)}
+      {...control}
       style={resolvePartStyle(
-        switchTrackStyle(spec, theme),
+        selectionRowStyle(
+          { disabled: props.disabled === true, align: "center" },
+          theme,
+        ),
         props.style,
         partState,
       )}
     >
-      <motion.div
-        initial={{ left: rest.left }}
-        animate={{ left: rest.left }}
-        transition={{
-          duration: SWITCH_THUMB_SLIDE_MS / 1000,
-          ease: "easeOut",
-        }}
-        style={thumb}
-      />
+      <div style={track}>{thumbElement}</div>
+      <Text
+        role="label"
+        tone={props.disabled === true ? "muted" : "default"}
+        style={shrinkLayoutStyle}
+      >
+        {props.children}
+      </Text>
     </div>
   );
 };

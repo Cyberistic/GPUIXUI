@@ -7,7 +7,8 @@
  * same three states are one paint resolved by `core/selection.ts`.
  */
 
-import type { ReactElement } from "react";
+import { Children, type ReactElement, type ReactNode } from "react";
+import * as Option from "effect/Option";
 import type { EventPayload } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { decideActivation } from "../core/keyboard.js";
@@ -15,16 +16,19 @@ import {
   selectionBoxStyle,
   selectionMarkColor,
   selectionMarkSize,
+  selectionRowStyle,
   type SelectionAccent,
   type SelectionSpec,
   type SelectionState,
 } from "../core/selection.js";
+import { shrinkLayoutStyle } from "../core/style.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
 import type { ValueState } from "../core/state.js";
 import {
   ariaName,
   composeHandler,
   composeRef,
+  controlName,
   passiveTriggerHandlers,
   resolvePartStyle,
   useControlState,
@@ -33,6 +37,7 @@ import {
   type StateStyle,
   type TriggerHandlers,
 } from "./internal.js";
+import { Text } from "./Text.js";
 import { useTheme } from "./ThemeProvider.js";
 
 /** The public state a `Checkbox` style callback receives. */
@@ -64,6 +69,17 @@ export interface CheckboxProps extends TriggerHandlers {
    * a labelled row.
    */
   readonly label?: string;
+  /**
+   * A visible label **inside** the control.
+   *
+   * The row becomes the hit area, the tab stop and the accessible name, so a
+   * press anywhere toggles it and the text is heard by assistive technology —
+   * the same shape `CheckboxGroup`'s rows use (`Label` beside a box cannot be
+   * associated in 0.10.0). `label` still wins for the name when both are
+   * supplied; a blank `label` falls back to the text. Without children the box
+   * renders exactly as before.
+   */
+  readonly children?: ReactNode;
   /** Extra description announced after the name. A slot (a `Tooltip`) writes the tip here. */
   readonly "aria-description"?: string;
   /** An object, or a callback over this checkbox's public state. */
@@ -128,30 +144,63 @@ export const renderCheckbox = (
     focused: focus.focused,
     invalid: props.invalid === true,
   };
+  const mark =
+    current === "unchecked" ? null : (
+      <Icon
+        name={markName(current)}
+        size={selectionMarkSize(spec.size, theme)}
+        color={selectionMarkColor(spec, theme)}
+      />
+    );
+  /**
+   * The one control surface, whether the box is the root or sits inside a
+   * labelled row. A text child becomes the name, so a labelled control is one
+   * node a screen reader can announce and a pointer can press anywhere on.
+   */
+  const control = {
+    ...passiveTriggerHandlers(props),
+    ref: composeRef(props.ref, focus.ref),
+    role: "checkbox",
+    "aria-label": Option.getOrUndefined(
+      controlName(props.label, props.children),
+    ),
+    "aria-description": ariaName(props["aria-description"]),
+    "aria-valuetext": selectionValueText(current),
+    tabIndex: props.disabled === true ? undefined : 0,
+    testId: props.testId,
+    onClick: toggle,
+    onKeyDown: onKey("down", props.onKeyDown),
+    onKeyUp: onKey("up", props.onKeyUp),
+    onFocus: composeHandler(focus.onFocus, props.onFocus),
+    onBlur: composeHandler(focus.onBlur, props.onBlur),
+  } as const;
+  if (Children.toArray(props.children).length === 0) {
+    return (
+      <div {...control} style={resolvePartStyle(box, props.style, partState)}>
+        {mark}
+      </div>
+    );
+  }
   return (
     <div
-      {...passiveTriggerHandlers(props)}
-      ref={composeRef(props.ref, focus.ref)}
-      role="checkbox"
-      aria-label={ariaName(props.label)}
-      aria-description={ariaName(props["aria-description"])}
-      aria-valuetext={selectionValueText(current)}
-      tabIndex={props.disabled === true ? undefined : 0}
-      testId={props.testId}
-      onClick={toggle}
-      onKeyDown={onKey("down", props.onKeyDown)}
-      onKeyUp={onKey("up", props.onKeyUp)}
-      onFocus={composeHandler(focus.onFocus, props.onFocus)}
-      onBlur={composeHandler(focus.onBlur, props.onBlur)}
-      style={resolvePartStyle(box, props.style, partState)}
-    >
-      {current === "unchecked" ? null : (
-        <Icon
-          name={markName(current)}
-          size={selectionMarkSize(spec.size, theme)}
-          color={selectionMarkColor(spec, theme)}
-        />
+      {...control}
+      style={resolvePartStyle(
+        selectionRowStyle(
+          { disabled: props.disabled === true, align: "center" },
+          theme,
+        ),
+        props.style,
+        partState,
       )}
+    >
+      <div style={box}>{mark}</div>
+      <Text
+        role="label"
+        tone={props.disabled === true ? "muted" : "default"}
+        style={shrinkLayoutStyle}
+      >
+        {props.children}
+      </Text>
     </div>
   );
 };

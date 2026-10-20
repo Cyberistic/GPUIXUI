@@ -213,6 +213,98 @@ describe("Checkbox", () => {
     expect(expectSome(elementProp(mark, "name"))).toBe("minus");
     expect(expectSome(elementProp(mark, "size"))).toBe(12);
   });
+
+  it("names a labelled checkbox from its text, and paints one row", () => {
+    // The limitation this closes (plan 740): a standalone box could not carry a
+    // visible label — a sibling `Label` was inert and unassociated. With a text
+    // child the root is the row: one role, one name, one hit area.
+    const element = renderCheckbox(
+      { children: "Email notifications" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "role"))).toBe("checkbox");
+    expect(expectSome(hostProp(element, "aria-label"))).toBe(
+      "Email notifications",
+    );
+    const children = elementChildren(element);
+    expect(children).toHaveLength(2);
+    const box = expectSome(Arr.head(children));
+    expect(expectSome(hostTag(box))).toBe("div");
+    expect(expectSome(hostStyle(box, "width"))).toBe(testTheme.iconSize.md);
+    const label = expectSome(Arr.get(children, 1));
+    expect(expectSome(elementProp(label, "role"))).toBe("label");
+    expect(expectSome(elementProp(label, "children"))).toBe(
+      "Email notifications",
+    );
+  });
+
+  it("lets an explicit label win, and a blank one fall back to the text", () => {
+    const named = renderCheckbox(
+      { label: "Alerts", children: "Email me" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Alerts");
+    const padded = renderCheckbox(
+      { label: "   ", children: "  Email me  " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Email me");
+    const blank = renderCheckbox(
+      { label: "   ", children: "   " },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(hostProp(blank, "aria-label")).toStrictEqual(Option.none());
+  });
+
+  it("keeps the bare box when a conditional label renders nothing", () => {
+    // `{show && "Email"}` is a common shape; `false` is not a label. Without
+    // this rule the control would paint an empty labelled row.
+    const element = renderCheckbox(
+      { children: false },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(elementChildren(element)).toHaveLength(0);
+    expect(hostProp(element, "aria-label")).toStrictEqual(Option.none());
+    expect(expectSome(hostProp(element, "role"))).toBe("checkbox");
+  });
+
+  it("merges the caller's style on the row when the control has a label", () => {
+    // A caller's `style` styles the control: the box without text, the row with
+    // it. The box inside a labelled row keeps only its own paint (plan 740).
+    const labelled = renderCheckbox(
+      { children: "Email", style: { paddingLeft: 4 } },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyle(labelled, "paddingLeft"))).toBe(4);
+    const box = expectSome(Arr.head(elementChildren(labelled)));
+    expect(hostStyle(box, "paddingLeft")).toStrictEqual(Option.none());
+    const bare = renderCheckbox(
+      { style: { paddingLeft: 4 } },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostStyle(bare, "paddingLeft"))).toBe(4);
+  });
 });
 
 describe("Switch", () => {
@@ -289,6 +381,53 @@ describe("Switch", () => {
     });
     expect(hostStyle(element, "hover")).toStrictEqual(destructive);
     expect(hostStyle(element, "active")).toStrictEqual(destructive);
+  });
+
+  it("names a labelled switch from its text, and keeps the thumb in a track", () => {
+    // Plan 740: the switch had the same inert-sibling-label limitation as the
+    // checkbox. With a text child the root is the row; the track and its thumb
+    // move inside it, still one node and one tab stop.
+    const element = renderSwitch(
+      { children: "Pause all notifications" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(element, "role"))).toBe("switch");
+    expect(expectSome(hostProp(element, "aria-label"))).toBe(
+      "Pause all notifications",
+    );
+    const children = elementChildren(element);
+    expect(children).toHaveLength(2);
+    const track = expectSome(Arr.head(children));
+    expect(expectSome(hostStyle(track, "height"))).toBe(testTheme.iconSize.md);
+    const thumb = expectSome(Arr.head(elementChildren(track)));
+    expect(expectSome(elementProp(thumb, "animate"))).toEqual({ left: 2 });
+    const label = expectSome(Arr.get(children, 1));
+    expect(expectSome(elementProp(label, "role"))).toBe("label");
+    expect(expectSome(elementProp(label, "children"))).toBe(
+      "Pause all notifications",
+    );
+  });
+
+  it("lets an explicit label win over the switch's visible text", () => {
+    const named = renderSwitch(
+      { label: "Wi-Fi", children: "Wireless" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(named, "aria-label"))).toBe("Wi-Fi");
+    const padded = renderSwitch(
+      { label: "   ", children: "Wireless" },
+      testTheme,
+      checked(false),
+      idle,
+      vi.fn(),
+    );
+    expect(expectSome(hostProp(padded, "aria-label"))).toBe("Wireless");
   });
 });
 
