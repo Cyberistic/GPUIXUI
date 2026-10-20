@@ -429,7 +429,9 @@ Artifact `.artifacts/smoke-report.json`: 118 scenarios, **4340** checks
 is **107** (`live-dialog-scrim` focused-green); the full live suite is the merge
 gate and was not run.
 
-**Completion gate.** `nub run check`, `nub run lint` and `nub run test` are
-recorded in the commit message; `nub run --filter playground test` is
-**593 passed** (580 at plan `786` + 13 new unit tests).
+**Completion gate.** `nub run check`, `nub run lint` and `nub run test` all ran
+green on the code head (`playground` **593 passed** — 580 at plan `786` + 13 new
+unit tests, `testing` 69). After merging `origin/master`'s four docs-only
+commits the merged head re-ran `check` and `test` green; the headless suite
+describes the code, which the merge does not touch.
 
