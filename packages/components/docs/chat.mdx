@@ -119,7 +119,8 @@ with no code change.
   `autoFocus` because the runtime focuses after React's effects and delivers no
   React focus event for it (plans 388, 536).
 - Stop and Send are real focusable controls with visible labels.
-- The failure is `role="alert"`.
+- The failure is `role="alert"`, named by `status.message`, because 0.10.0 does
+  not name a `div` from its contents (plan 788).
 - 0.10.0 has no `aria-live`, no `aria-labelledby`, and no way to describe the
   composer as "multiline"; the label carries the field's purpose.
 
@@ -143,12 +144,12 @@ with no code change.
 ## Verification
 
 `src/chat/logic.test.ts` covers every transition and identity row.
-`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (13 tests): it
+`src/behaviour/chat.test.tsx` runs in the real GPUix renderer (14 tests): it
 types and sends, proves Shift+Enter does not submit, stops a stream, refuses a
 second submit, retries after an error, stops on Escape, stops without closing an
-enclosing dialog, attaches, follows an appended row, renders the empty slot, and
-paints the focus ring while the composer holds focus (and none while it does
-not).
+enclosing dialog, attaches, follows an appended row, renders the empty slot, names the
+failure banner by its message, and paints the focus ring while the composer holds
+focus (and none while it does not).
 
 ## Credit
 

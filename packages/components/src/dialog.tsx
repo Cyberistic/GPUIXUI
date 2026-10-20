@@ -35,7 +35,7 @@ import {
   useState,
 } from "react";
 import { Button, IconButton, type ButtonProps } from "./internal/button.js";
-import { useDescriptionRegistry } from "./internal/description.js";
+import { useTextRegistry } from "./internal/text-registry.js";
 import { controlName } from "./internal/name.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
@@ -125,8 +125,12 @@ export const Dialog = ({
     dismissible,
   });
   const host = useOverlayHost();
-  const { description, register: registerDescription } =
-    useDescriptionRegistry();
+  const { register, textOf } = useTextRegistry();
+  const description = textOf("description");
+  const registerDescription = useCallback(
+    (text: string) => register("description", text),
+    [register],
+  );
 
   const context = useMemo<DialogContextValue>(
     () => ({ description, open, registerDescription, setOpen }),

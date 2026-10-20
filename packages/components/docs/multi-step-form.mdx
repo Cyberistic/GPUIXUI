@@ -181,8 +181,10 @@ from the theme. There are no literal colours or sizes.
 - With `label`, the root is `role="form"` named by `aria-label`. Without it the
   root is a plain container: 0.10.0 has no `aria-labelledby`, so an unnamed form
   is not exposed as a landmark.
-- The summary is a single `role="alert"`, so a failed action is announced once;
-  each distinct message is its own text node.
+- The summary is a single `role="alert"` **named by its messages** (joined with
+  `"; "` in schema order), so a failed action is one announcement; each distinct
+  message is also its own text node. 0.10.0 does not name a `div` from its
+  contents, so the name is supplied explicitly (plan 788).
 - `Stepper` renders the steps as a `role="list"`; the current item carries
   `aria-selected` because 0.10.0 has no `aria-current`.
 - The controls are the caller's: give each a real label and pass
@@ -209,7 +211,7 @@ from the theme. There are no literal colours or sizes.
 
 ## Verification
 
-`src/behaviour/multi-step-form.test.tsx` runs in the real GPUix renderer (17 tests): the first step and the indicator's current item, an invalid `next` showing
+`src/behaviour/multi-step-form.test.tsx` runs in the real GPUix renderer (18 tests): the first step and the indicator's current item, an invalid `next` showing
 its message in both themes, a valid `next` advancing once and clearing the
 message, `back` leaving a failing step, the last-step submit delivering the
 decoded instance in both themes, an invalid final submit showing every message,
@@ -218,7 +220,7 @@ a controlled `step` staying authoritative, an out-of-range controlled index
 clamping, a fractional controlled index naming the whole step below it (and
 `next` reporting a whole index), a non-finite controlled index starting at the
 first step, a controlled move hiding the previous step's message, one alert
-with one text node per distinct message, no validation before the first failed
+with one text node per distinct message and a name carrying them, no validation before the first failed
 action, a failed step re-checking when the draft changes, and messages
 persisting when `revalidate` is off.
 

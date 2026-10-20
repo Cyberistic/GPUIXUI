@@ -193,6 +193,25 @@ describe("Form", () => {
     form.unmount();
   });
 
+  /**
+   * The bug this guards (plan 788): the summary is the only announcement of a
+   * failed submit, and it was a `role="alert"` with no name — 0.10.0 does not
+   * lift a `div`'s text children into its accessible name.
+   */
+  it("names the summary by its messages", () => {
+    const form = renderComponent(
+      <Harness value={invalid} onSubmit={() => undefined} />,
+    );
+
+    clickCentreOf(form, "submit");
+
+    expect(
+      nodesWithRole(form.renderer, "alert").map((node) => node.name),
+    ).toEqual([expectedMessages.join("; ")]);
+
+    form.unmount();
+  });
+
   it("locates each message at the field that produced it", () => {
     const form = renderComponent(
       <LocatedHarness value={invalid} onSubmit={() => undefined} />,

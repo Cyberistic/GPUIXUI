@@ -24,6 +24,7 @@ export const ErrorSummary = ({ messages }: ErrorSummaryProps) => {
     onNonEmpty: (values) => (
       <div
         role="alert"
+        aria-label={Arr.join(values, "; ")}
         style={{
           display: "flex",
           flexDirection: "column",

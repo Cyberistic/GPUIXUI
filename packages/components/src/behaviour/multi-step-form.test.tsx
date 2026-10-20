@@ -179,6 +179,21 @@ describe("Multi-step form", () => {
     assertTheme("light", lightTheme.colors.destructive);
   });
 
+  /** The bug this guards (plan 788): the step summary was an unnamed alert. */
+  it("names the step summary by its messages", () => {
+    const form = renderComponent(
+      <Harness value={{ email: "nope", card: "4242" }} />,
+    );
+
+    clickCentreOf(form, "next");
+
+    expect(
+      nodesWithRole(form.renderer, "alert").map((node) => node.name),
+    ).toEqual([addressMessage]);
+
+    form.unmount();
+  });
+
   it("next on a valid step advances once and clears the message", () => {
     const onStepChange = vi.fn();
     const form = renderComponent(

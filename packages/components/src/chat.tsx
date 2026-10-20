@@ -18,6 +18,7 @@
 
 import type { EventPayload, Props, PublicInstance } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
+import * as Option from "effect/Option";
 import {
   Children,
   createContext,
@@ -40,6 +41,7 @@ import { useControllableState } from "./internal/controllable.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { useFocusState } from "./internal/focus.js";
 import { isDismiss } from "./internal/key.js";
+import { composedName } from "./internal/name.js";
 import {
   assertParts,
   type PartChildren,
@@ -260,6 +262,9 @@ export const ChatComposer = ({
   };
 
   const failed = ChatStatus.guards.error(status);
+  const bannerName = failed
+    ? Option.getOrUndefined(composedName(undefined, [status.message]))
+    : undefined;
 
   return (
     <div
@@ -273,6 +278,7 @@ export const ChatComposer = ({
       {failed ? (
         <div
           role="alert"
+          {...(bannerName === undefined ? {} : { "aria-label": bannerName })}
           style={{
             ...toneSurface(theme, "danger"),
             ...textStyle(theme, "body"),

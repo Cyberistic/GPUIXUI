@@ -230,6 +230,26 @@ describe("Chat", () => {
     chat.unmount();
   });
 
+  /**
+   * The bug this guards (plan 788): the failure banner is the only announcement
+   * of a failed turn, and it was a `role="alert"` with no name while its message
+   * sat beside it as loose text.
+   */
+  it("names the failure banner by its message", () => {
+    const chat = renderComponent(
+      <Harness
+        status={{ _tag: "error", message: "The model timed out." }}
+        onSubmit={() => undefined}
+      />,
+    );
+
+    expect(
+      nodesWithRole(chat.renderer, "alert").map((node) => node.name),
+    ).toEqual(["The model timed out."]);
+
+    chat.unmount();
+  });
+
   it("stops on Escape only while work is in flight", () => {
     const onSubmit = vi.fn();
     const onStop = vi.fn();

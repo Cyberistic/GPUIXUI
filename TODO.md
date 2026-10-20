@@ -1382,6 +1382,18 @@ retired once both branches are one
       files, full native suite 996 passed / 20 failed of 1016 — the same
       plan-540 classes; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] An alert region announces its message — plan 788; measured 2026-10-20:
+      every `role="alert"` the package painted was unnamed while its text was a
+      loose `label` (`Alert` root, the `Form`/`MultiStepForm` summary and the chat
+      failure banner), because 0.10.0 does not name a `div` from its contents. The
+      alert is named by its title (an untitled one by its description, a caller
+      `aria-label` wins, a rename updates it), the summary by its messages joined
+      `"; "`, the banner by `status.message`, and the all-example contract now
+      covers `alert`/`status` (red at `HEAD` for the alert example's four
+      regions); 7 native + 1 contract case (Alert 18, Form 14, Multi-step 18,
+      Chat 14), six mutation proofs; unit 506 in 48 files, full native suite
+      1004/20 of 1024 (the same plan-540 classes); docs, `COMPONENTS.md`,
+      `PLAN.md` D30 and the plan index synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

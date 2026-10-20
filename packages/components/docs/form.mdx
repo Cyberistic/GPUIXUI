@@ -164,8 +164,10 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 - With `label`, the root is `role="form"` named by `aria-label`. Without it the
   root is a plain container: 0.10.0 has no `aria-labelledby`, so an unnamed form
   is not exposed as a landmark.
-- The summary is a single `role="alert"`, so a failed submit is announced once;
-  each message is its own text node.
+- The summary is a single `role="alert"` **named by its messages** (joined with
+  `"; "` in schema order), so a failed submit is one announcement; each message
+  is also its own text node. 0.10.0 does not name a `div` from its contents, so
+  the name is supplied explicitly (plan 788).
 - The submit control is the caller's: give it a real label and pass
   `disabled={form.pending}`.
 
@@ -185,11 +187,12 @@ The form's layout uses `spacing.lg`; the summary uses `caption` type in
 
 ## Verification
 
-`src/behaviour/form.test.tsx` runs in the real GPUix renderer (13 tests): idle
+`src/behaviour/form.test.tsx` runs in the real GPUix renderer (14 tests): idle
 state, a valid submit delivering the decoded instance, an invalid submit showing
 every message and never submitting, one alert with separate message nodes,
 `pending` blocking a submit, a consumer `style` winning while the summary paints
-destructively in both themes, the named form landmark, each message located at
+destructively in both themes, the summary's name carrying every message, the
+named form landmark, each message located at
 its field path (with an accepted field returning `undefined`), an inline
 `Field` painting the located message plus the destructive input border, no
 validation before the first failed submit, a fixed field's message clearing on

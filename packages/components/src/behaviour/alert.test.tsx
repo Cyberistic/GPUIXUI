@@ -302,4 +302,84 @@ describe("Alert", () => {
 
     alert.unmount();
   });
+
+  /**
+   * The bug these guard (plan 788): 0.10.0 does not lift a `div`'s contents into
+   * its accessible name, so every `role="alert"` region — the one thing a screen
+   * reader announces — was unnamed while its title sat beside it as loose text.
+   */
+  it("names the region from its title", () => {
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertContent>
+          <AlertTitle>Payment failed</AlertTitle>
+          <AlertDescription>Try another card.</AlertDescription>
+        </AlertContent>
+      </Alert>,
+    );
+
+    expect(
+      nodesWithRole(alert.renderer, "alert").map((node) => node.name),
+    ).toEqual(["Payment failed"]);
+
+    alert.unmount();
+  });
+
+  it("names an untitled region from its description", () => {
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertDescription>Saved to the workspace.</AlertDescription>
+      </Alert>,
+    );
+
+    expect(
+      nodesWithRole(alert.renderer, "alert").map((node) => node.name),
+    ).toEqual(["Saved to the workspace."]);
+
+    alert.unmount();
+  });
+
+  it("follows a renamed title and falls back when the title is removed", () => {
+    const alert = renderComponent(
+      <Alert testId="alert">
+        <AlertTitle>Syncing</AlertTitle>
+        <AlertDescription>Two files remain.</AlertDescription>
+      </Alert>,
+    );
+
+    alert.rerender(
+      <Alert testId="alert">
+        <AlertTitle>Sync paused</AlertTitle>
+        <AlertDescription>Two files remain.</AlertDescription>
+      </Alert>,
+    );
+    expect(
+      nodesWithRole(alert.renderer, "alert").map((node) => node.name),
+    ).toEqual(["Sync paused"]);
+
+    alert.rerender(
+      <Alert testId="alert">
+        <AlertDescription>Two files remain.</AlertDescription>
+      </Alert>,
+    );
+    expect(
+      nodesWithRole(alert.renderer, "alert").map((node) => node.name),
+    ).toEqual(["Two files remain."]);
+
+    alert.unmount();
+  });
+
+  it("keeps a caller's aria-label over the computed name", () => {
+    const alert = renderComponent(
+      <Alert testId="alert" aria-label="Card declined">
+        <AlertTitle>Payment failed</AlertTitle>
+      </Alert>,
+    );
+
+    expect(
+      nodesWithRole(alert.renderer, "alert").map((node) => node.name),
+    ).toEqual(["Card declined"]);
+
+    alert.unmount();
+  });
 });

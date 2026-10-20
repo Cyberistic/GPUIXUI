@@ -1,8 +1,13 @@
 # 788 — An alert region announces its message
 
-**Status:** planned 2026-10-20. **Workstream:** components. **Number claim:**
-`788` is the first free number across every worktree (components `783`,
-primitives `784`, playground `786`, tokens-theme `787`).
+**Status:** done 2026-10-20 — 7 native cases + 1 contract case; the four suites
+grow Alert 14 → 18, Form 13 → 14, Multi-step 17 → 18, Chat 13 → 14; unit 506 in
+48 files; the full native suite is 1004 passed / 20 failed of 1024 — the same
+recorded plan-540 binding classes as the pre-change run; `check`, `lint` and
+`test` exit 0. Six mutation proofs in §4.5.
+**Workstream:** components. **Number claim:** `788` is the first free number
+across every worktree (components `783`, primitives `784`, playground `786`,
+tokens-theme `787`).
 
 ---
 
@@ -355,17 +360,19 @@ Use `nodesWithRole(renderer, "alert")` and read `[0]?.name`.
 
 ### 4.5 Both-direction proof
 
-| Mutation | Cases that fail |
-| -------- | --------------- |
-| remove the alert's `aria-label` line | alert 1–3; form 5; multi-step 6; chat 7; the announced-region contract (the alert example) |
-| name from the description before the title | alert 1 (reads the description) |
+| Mutation | Cases that failed (measured) |
+| -------- | ---------------------------- |
+| remove the alert's `aria-label` line | alert 1–3 + the announced-region contract (the `alert` example) |
+| name from the description before the title | alert 1, 3 |
 | drop the description subscription | alert 2–3 |
 | paint the computed name after `{...rest}` | alert 4 (caller's label lost) |
 | remove the summary's `aria-label` | form 5, multi-step 6 |
 | remove the banner's `aria-label` | chat 7 |
-| remove `"alert"` from `ANNOUNCED_ROLES` | the contract passed at `HEAD` while four regions were unnamed — the recorded hole |
 
-Run each mutation once, record the failures in the commit message, then restore.
+The contract itself is the seventh proof: with `"alert"` in `ANNOUNCED_ROLES`
+and the source at `HEAD`, it reports the `alert` example's four unnamed regions;
+with the role list at its old value it passes while those regions are still
+unnamed. All six mutations were restored before the gate runs.
 
 ## 5. Docs, inventory and `COMPONENTS.md`
 
@@ -409,6 +416,12 @@ nub run check
 nub run lint
 nub run test
 ```
+
+Measured on 2026-10-20: Alert 18/18, Form 14/14, Multi-step 18/18, Chat 14/14,
+accessibility 2/2; Dialog 21/21 and Drawer 17/18 (the recorded plan-540
+`400` vs `398` measured width, present before this change); unit 506 in 48 files;
+full native suite 1004 passed / 20 failed of 1024 — the same 20 recorded plan-540
+classes and no new failure; `check`, `lint` and `test` exit 0.
 
 The dialog and drawer runs are the regression check for the registry move.
 

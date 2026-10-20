@@ -114,6 +114,10 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 
 - The root is `role="alert"` — a live region, announced when it appears. An alert
   that appears out of nowhere mid-sentence should be used sparingly.
+- The region is named by its `AlertTitle`, falling back to an `AlertDescription`
+  when there is no title, because 0.10.0 does not lift a `div`'s contents into
+  its accessible name. A caller `aria-label` wins, and a renamed or removed title
+  updates the name in place (plan 788).
 - The dismiss control is a focusable `role="button"` with `label` as its
   accessible name, activated by Enter or Space as well as a click. Its `testId`
   defaults to `alert-dismiss`; pass your own when more than one alert can be on
@@ -144,15 +148,16 @@ this is a code guarantee rather than a behaviour-suite assertion.)
 
 ## Verification
 
-`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (14 tests): the
+`src/behaviour/alert.test.tsx` runs in the real GPUix renderer (18 tests): the
 parts render in order inside one alert region, every tone paints its root surface
 and title colour, the description keeps the page foreground, the icon takes the
 tone colour and is optional, the theme is read rather than a constant, there is no
 dismiss control unless `AlertDismiss` is composed, a click and an Enter fire it
 once, its accessible name is the default or `label`, a caller `testId` is the
 handle (and two alerts' controls stay distinct), an action in the description
-receives its click, a consumer `style` wins, and a caller `onClick` composes with
-`onDismiss`.
+receives its click, a consumer `style` wins, a caller `onClick` composes with
+`onDismiss`, and the region is named by its title, by its description when
+untitled, follows a rename or a removed title, and keeps a caller's `aria-label`.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
