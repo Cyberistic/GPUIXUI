@@ -2577,6 +2577,30 @@ describe("contract prose counts", () => {
     });
   });
 
+  it("states the index catalogues' sizes from the indexes", () => {
+    // §*For documentation sites* teaches the ordered indexes and states how big
+    // each catalogue is. All four were hand-typed: incrementing any one word
+    // left the whole suite green (plan 774). Every occurrence is captured, not
+    // the first, so a stale second copy elsewhere in the page fails too.
+    const catalogues: ReadonlyArray<readonly [string, number]> = [
+      ["typographic roles", textRoles.length],
+      ["status families", statusTones.length],
+      ["platform variants", platformNames.length],
+      ["filled control families", filledControlFamilies.length],
+    ];
+
+    catalogues.forEach(([phrase, size]) => {
+      const stated = [
+        ...markdownProse.matchAll(
+          new RegExp(`\\b(${numbers})\\s+${phrase}\\b`, "g"),
+        ),
+      ].map(([, count]) => count);
+
+      expect(stated.length, phrase).toBeGreaterThan(0);
+      stated.forEach((count) => expect(count, phrase).toBe(countWord(size)));
+    });
+  });
+
   it("the counts' guards can fail", () => {
     expect(checkCount.test("while all six checks returned")).toBe(true);
     expect(checkCount.test("while every check returned")).toBe(false);

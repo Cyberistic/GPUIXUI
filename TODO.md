@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 349/426
+`[x]` `[████████░░]` 350/427
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -167,6 +167,14 @@ ledger and the JSDoc, `inset-focus-ring.test.ts` holds the ledger's count word
 and the JSDoc's "most", and `figures.test.ts` now rejects a spelled-out
 `<word> shipped sets` — the count form its digit-only case could not see, while
 `styles.ts` shipped one (plan 772)
+`[x]` Give the index paragraph's four catalogue sizes an owner — §*For
+documentation sites* states "the ten typographic roles", "the four status
+families", "the four platform variants" and "the four filled control families",
+and incrementing each in turn left the suite green at 7029 tests while the
+`Typography` row and the README already derive the same numbers; the four phrases
+join `describe("contract prose counts")`, which captures every occurrence and
+holds it to `countWord(textRoles.length)`, `statusTones.length`,
+`platformNames.length` and `filledControlFamilies.length` (plan 774)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
