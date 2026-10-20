@@ -2422,6 +2422,12 @@ through a different wash — `selectionPairs` beside `contrastPairs`, for exampl
 — are separate checks, not duplicates, so uniqueness is asserted inside each
 list and never across them.
 
+Enforcement is checked beside uniqueness: `pair-enforcement.test.ts` plants
+every published pair on the shipped light theme — the two roles set to the same
+colour, and for the dialog face the face set to the scrimmed surface — and
+fails unless a public check reports that pair, so a list that is listed and
+unique but never walked cannot pass for part of the contract.
+
 An invalid field is an error state, not a decoration: `FieldInput` paints a
 `destructive` border over its `input` fill and the ColorPicker hex field over
 the `background` canvas, so both are `boundary` pairs.

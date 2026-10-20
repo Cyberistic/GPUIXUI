@@ -479,6 +479,9 @@ describe("docs/tokens.md contract counts", () => {
     expect(prose).toContain(
       "The suite derives its inventory from the package's exports, so a list added later cannot ship without the check.",
     );
+    expect(prose).toContain(
+      "Enforcement is checked beside uniqueness: `pair-enforcement.test.ts` plants every published pair on the shipped light theme",
+    );
   });
 
   it("states the pressed row's text-role count from the published pair", () => {
