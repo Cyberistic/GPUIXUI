@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 161/161
+`[x]` `[████████████]` 162/162
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2175,6 +2175,17 @@ retired once both branches are one
       before the fix and on `Button`/`Input`/`TextArea` when their forwarding is
       removed. Offline 63 files / 890 tests, scoped live `layout` +
       `scroll-area-trigger` 38/38 (plan `694`).
+`[x]` `packages/primitives`: **`InfoTip` was the last interactive part with no
+      caller-style seam** — every other part takes `style` and merges it last
+      (`docs/component-api.md` §3, plan `097`), and `style-order.test.tsx` listed
+      `InfoTip` as out of scope with a reason that was false for it. It could not
+      be nudged onto a baseline without a `Box` wrapper, and its one state
+      (focus) was tracked for the ring but never published. It now takes
+      `StateStyle<InfoTipState>` (`focused`) on the trigger, merged last through
+      `resolvePartStyle`; the last hole in the state-aware-style slices is
+      closed. 3 element cases + 1 state-style case + 2 style-order cases + 2
+      scoped runtime cases, the focused state and the merge order each failing
+      when reverted (offline 896, scoped live 10/10; plan `695`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
