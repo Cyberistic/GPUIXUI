@@ -471,7 +471,25 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 199/199
+`[x]` `[██████████]` 200/200
+
+`[x]` **Auto-update has a page, and Deployment stops denying it (plan 633)** —
+      `@gpuix/native@0.10.0` implements a signed update client
+      (`checkUpdate`, `AvailableUpdate`, `CheckUpdateOptions`, `UpdaterHeader`)
+      while the site had no page and `deployment.mdx` said auto-update was "not
+      implemented or documented"; measured 2026-10-21, `updater` reached
+      Testing, `auto update` a text-area limitation, and `checkUpdate`,
+      `AvailableUpdate`, `relaunch`, `nsis`, `appimage` and `wix` returned
+      nothing. `/docs/updates` renders the 7 result members, 6 options, 2 header
+      fields, the 4 packager formats and 9 absences from `src/lib/updater.ts`,
+      includes the feed contract and a compiled `checkUpdate` +
+      `ConfirmDialog`/`Toast` workflow, and states that no packaged app, feed or
+      signature run exists. `updater.test.ts` re-derives every row from the
+      installed declarations, the React declarations, the browser entry and all
+      package sources in both directions; 32 exact aliases route the vocabulary;
+      Deployment now links the page. 151 files / 1 729 docs tests, 114-page
+      `smoke:build`, a11y (114 × 2) and 390 px green; five forced directions in
+      plan 633 §10.
 
 `[x]` **Async data and effects have a page (plan 632)** — the library is built
       on Effect and the site never answered how a consumer loads data: measured

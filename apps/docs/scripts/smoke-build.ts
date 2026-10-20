@@ -1492,6 +1492,18 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the loading-model absence the async page states, which returned nothing before",
     },
+    {
+      query: "auto update",
+      expected: "/docs/updates",
+      first: true,
+      what: "the updater page, which returned a text-area limitation before plan 633",
+    },
+    {
+      query: "checkUpdate",
+      expected: "/docs/updates",
+      first: true,
+      what: "the update API name, which returned nothing before plan 633",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

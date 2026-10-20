@@ -40,6 +40,7 @@ import { selectionSearchEntry } from "./selection-search";
 import { testingSearchEntry } from "./testing-search";
 import { tokenSearchEntries } from "./token-search";
 import { tokensApiSearchEntry } from "./tokens-api-search";
+import { updaterSearchEntry } from "./updater-search";
 import { stem, typoMatch, type TypoName } from "./typo";
 import {
   DEFAULT_SEARCH_LIMIT,
@@ -170,6 +171,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   troubleshootingErrorSearchEntry,
   selectionSearchEntry,
   testingSearchEntry,
+  updaterSearchEntry,
 ];
 
 const generatedByUrl = new Map(

@@ -186,4 +186,9 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     url: "/docs/troubleshooting",
     what: "the render-error path: boundary, overlay and `onUncaughtError`",
   },
+  {
+    title: "Auto-update",
+    url: "/docs/updates",
+    what: "every updater member, the feed contract and the unverified install path",
+  },
 ];

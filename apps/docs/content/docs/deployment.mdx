@@ -134,8 +134,11 @@ native window through `@gpuix/native`, and the binding is platform-specific:
 [Installation](/docs/installation#native-bindings) lists the published targets
 and the one unpublished platform, and
 [Troubleshooting](/docs/troubleshooting#the-native-binding-is-missing-for-this-platform)
-names the failure when a host has no binding. Signing, notarisation,
-installers and auto-update are not implemented or documented in this repository.
+names the failure when a host has no binding. Signing, notarisation and
+installers are not implemented in this repository, so there is no packaging
+pipeline here. **Auto-update is implemented in the runtime**:
+[Auto-update](/docs/updates) documents `checkUpdate`, the signed feed contract
+and `downloadAndInstall`, and states what remains unverified.
 
 ## Related
 

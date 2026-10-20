@@ -1,0 +1,157 @@
+---
+title: Auto-update
+description: Ship updates to a packaged GPUIXUI app — the runtime's signed update feed, checkUpdate, AvailableUpdate, download and install, and what this repository has not verified.
+---
+
+`@gpuix/native` implements a **signed update client** in its Node entry. It is
+not a component and not part of `@gpuix/react`: an application calls it beside
+the window, decides what UI to show, and owns the quit that finishes the
+install. This page is that contract, and the boundary of what exists.
+
+The library supplies the surfaces around it — [Confirmation
+dialogs](/docs/components/confirm-dialog) for the decision, [Progress](/docs/components/progress)
+while it downloads, [Toasts](/docs/components/toast) for the outcome.
+
+## What the runtime ships
+
+`checkUpdate(currentVersion, options)` asks the feed; `downloadAndInstall()`
+replaces the app. Every member below is rendered from the installed
+declarations, so a dependency upgrade fails the docs suite by name rather than
+leaving this page guessing.
+
+<UpdaterTables />
+
+`checkUpdate` resolves `null` — not an error — when the feed answers `204`, when
+the announced version is not newer, or when no endpoint answers with an update
+the signature can be trusted for. The app decides whether a failed check is
+worth telling the reader about; the runtime does not distinguish "offline" from
+"up to date".
+
+## Check, confirm, install
+
+A real workflow: check once at startup, ask before replacing anything, then
+toast the outcome. The dialog is the library's own; the update call is the
+runtime's.
+
+```tsx
+import { useEffect, useState } from "react";
+import { checkUpdate, type AvailableUpdate } from "@gpuix/native";
+import {
+  ToastProvider,
+  ToastViewport,
+  useToast,
+} from "@gpuixui/components/toast";
+import { ConfirmDialog } from "@gpuixui/components/confirm-dialog";
+
+const FEED = "https://updates.example.com/{{target}}/{{arch}}/{{current_version}}";
+
+export function UpdatePrompt({
+  currentVersion,
+  pubkey,
+}: {
+  readonly currentVersion: string;
+  readonly pubkey: string;
+}) {
+  const toast = useToast();
+  const [update, setUpdate] = useState<AvailableUpdate | null>(null);
+  const [installing, setInstalling] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    checkUpdate(currentVersion, { endpoints: [FEED], pubkey }).then(
+      (available) => {
+        if (live) setUpdate(available);
+      },
+      () => {
+        if (live) setUpdate(null);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [currentVersion, pubkey]);
+
+  const install = async () => {
+    if (update === null) return;
+    setInstalling(true);
+    await update.downloadAndInstall();
+    setInstalling(false);
+    setUpdate(null);
+    toast.push({
+      title: "Update installed",
+      description: "Quit and reopen to run the new version.",
+      tone: "success",
+    });
+  };
+
+  return (
+    <ConfirmDialog
+      open={update !== null}
+      onOpenChange={(open) => {
+        if (!open) setUpdate(null);
+      }}
+      title={`Install ${update?.version ?? "the update"}?`}
+      description="The download is signature-checked before it replaces the app. It does not relaunch."
+      confirmLabel="Download and install"
+      loading={installing}
+      onConfirm={() => {
+        void install();
+      }}
+    />
+  );
+}
+
+export const App = () => (
+  <ToastProvider>
+    <UpdatePrompt currentVersion="1.4.0" pubkey="untrusted-ed25519…" />
+    <ToastViewport />
+  </ToastProvider>
+);
+```
+
+The endpoint is a **feed template**: `{{target}}`, `{{arch}}` and
+`{{current_version}}` are filled in before the request. `pubkey` is the public
+half of the signing key the bundles are signed with — the same key
+`cargo packager signer generate` produces. A bundle whose signature does not
+verify is not installed.
+
+`downloadAndInstall()` writes the new files over the running app and returns. It
+does **not** relaunch, and the example deliberately does not quit for the reader:
+an application that wants the new version to run immediately quits after the
+promise resolves.
+
+## What the library does not provide
+
+<UpdaterAbsences />
+
+The runtime owns the protocol; everything above the protocol is ordinary
+application code. A component that shipped its own updater would have to own a
+feed URL, a signing key and a quit policy, which are decisions no library can
+make for its consumer.
+
+## What is not verified
+
+**No packaged application is built, signed or run in this repository.** There is
+no `.app` bundle, installer project or hosted feed, so:
+
+- the four packager formats and `installMode` are **declared, never executed**;
+- signature verification has **no measured evidence** on this site;
+- the interaction between a replaced bundle and a running window is
+  **untested**;
+- the check has never run against a real feed.
+
+The page is derived from `@gpuix/native@0.10.0`'s installed declarations, and
+`src/updater.test.ts` re-reads them on every run. A reader who packages an
+application with these APIs is the first to exercise them — if that produces a
+contradiction, the page is wrong and should be corrected with the evidence.
+
+## Related
+
+- [Deployment](/docs/deployment) — how *this documentation site* is built and
+  served; a desktop app is a different deliverable.
+- [Installation](/docs/installation#native-bindings) — the published native
+  targets an updatable app has to build for.
+- [Troubleshooting](/docs/troubleshooting#the-native-binding-is-missing-for-this-platform) —
+  what a missing binding looks like.
+- [Confirmation dialogs](/docs/components/confirm-dialog) and
+  [Toasts](/docs/components/toast) — the two surfaces the example composes.

@@ -60,6 +60,7 @@ import {
   WindowOptionsTable,
 } from "./window-tables";
 import { PlatformTypes, TypeScale } from "./type-scale";
+import { UpdaterAbsences, UpdaterTables } from "./updater-tables";
 import {
   PortingComponents,
   PortingConcepts,
@@ -124,6 +125,8 @@ export function getMDXComponents(components?: MDXComponents) {
     LayerShellTable,
     PathPromptTable,
     WindowAbsences,
+    UpdaterTables,
+    UpdaterAbsences,
     PlatformTypes,
     TokenScales,
     ValueIndex,

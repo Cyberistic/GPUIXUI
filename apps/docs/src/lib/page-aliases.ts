@@ -150,6 +150,17 @@
  * `state management` keeps Component API, `managed runtime` and `effect` keep
  * Architecture, `fetch` and `network` keep Security, and `debounce` keeps
  * Testing's clock section — the async page links each rather than claiming it.
+ *
+ * Plan 633 adds the updater vocabulary, the last implemented runtime surface
+ * without an owner: `updater`, `auto update`, `check for updates`, `update
+ * feed`, `app update`, `relaunch`, `code signing`, `signing key`, `pubkey`,
+ * `nsis`, `appimage`, `wix`, `installer args`, `install mode`, `delta update`
+ * and `rollback` name Auto-update. The title is `Auto-update`, so a term equal
+ * to it would trip the shadow guard; `upgrade`, `changelog` and `versioning`
+ * stay on Installation (a library upgrade is not an app update), `installer`
+ * stays on Deployment's shipping section, and `update`/`updates` are
+ * deliberately absent — the plain word also means "a component updates its
+ * state", and the page title already answers the hyphenated spelling.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -308,6 +319,43 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "env var",
       "env vars",
       "site url",
+    ],
+  ],
+  [
+    "/docs/updates",
+    [
+      "auto update",
+      "auto updater",
+      "autoupdate",
+      "updater",
+      "updaters",
+      "update feed",
+      "release feed",
+      "update server",
+      "check for updates",
+      "check for update",
+      "update check",
+      "update checker",
+      "app update",
+      "application update",
+      "ship updates",
+      "shipping updates",
+      "download and install",
+      "install an update",
+      "relaunch",
+      "relaunch the app",
+      "code signing",
+      "signature verification",
+      "update signature",
+      "signing key",
+      "pubkey",
+      "nsis",
+      "appimage",
+      "wix",
+      "installer args",
+      "install mode",
+      "delta update",
+      "rollback",
     ],
   ],
   [

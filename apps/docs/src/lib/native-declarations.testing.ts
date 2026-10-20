@@ -34,8 +34,31 @@ export const installedJsxRuntimeDeclarations = (): string => {
   return readFileSync(resolved.replace(/\.js$/u, ".d.ts"), "utf8");
 };
 
+/** The installed `@gpuix/react` root declarations (plan 633). */
+export const installedReactDeclarations = (): string => {
+  const resolved = createRequire(import.meta.url).resolve("@gpuix/react");
+  return readFileSync(resolved.replace(/\.js$/u, ".d.ts"), "utf8");
+};
+
+/** The installed `@gpuix/native` package directory (plan 633). */
+export const installedNativeRoot = (): string =>
+  dirname(createRequire(import.meta.url).resolve("@gpuix/native"));
+
 /** Every `.tsx` file in a package's `src` tree, excluding tests. */
-export const packageElementSources = (): ReadonlyArray<string> => {
+export const packageElementSources = (): ReadonlyArray<string> =>
+  packageSourceFiles([".tsx"]);
+
+/**
+ * Every `.ts`/`.tsx` file in the workspace packages' `src` trees, excluding
+ * tests and build output. The absence guards read it: a package that calls a
+ * runtime API falsifies a page that says no component ships it (plan 633).
+ */
+export const packageSources = (): ReadonlyArray<string> =>
+  packageSourceFiles([".ts", ".tsx"]);
+
+const packageSourceFiles = (
+  extensions: ReadonlyArray<string>,
+): ReadonlyArray<string> => {
   const root = new URL("../../../../packages/", import.meta.url);
   const read = (directory: URL): ReadonlyArray<string> =>
     readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -45,7 +68,8 @@ export const packageElementSources = (): ReadonlyArray<string> => {
         directory,
       );
       if (entry.isDirectory()) return read(path);
-      return entry.name.endsWith(".tsx") && !entry.name.endsWith(".test.tsx")
+      return extensions.some((extension) => entry.name.endsWith(extension)) &&
+        !/\.test\.tsx?$/u.test(entry.name)
         ? [readFileSync(path, "utf8")]
         : [];
     });

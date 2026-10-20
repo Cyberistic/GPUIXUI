@@ -574,21 +574,93 @@ Stop and report instead of improvising if any of these is true:
 
 ## 9. Acceptance criteria
 
-- [ ] `/docs/updates` is in the sidebar after Deployment and renders 3 tables +
+- [x] `/docs/updates` is in the sidebar after Deployment and renders 3 tables +
       the absence list from `src/lib/updater.ts`.
-- [ ] Every `AvailableUpdate`, `CheckUpdateOptions` and `UpdaterHeader` member
+- [x] Every `AvailableUpdate`, `CheckUpdateOptions` and `UpdaterHeader` member
       is documented, and every documented member exists in the installed
       declarations (`updater.test.ts` both directions).
-- [ ] The four packager formats and the endpoint slots are stated from the
+- [x] The four packager formats and the endpoint slots are stated from the
       declaration/source, not from memory.
-- [ ] The workflow fence compiles with the repository's own `tsc`.
-- [ ] `Deployment` no longer says auto-update is unimplemented, and links the
+- [x] The workflow fence compiles with the repository's own `tsc`.
+- [x] `Deployment` no longer says auto-update is unimplemented, and links the
       page.
-- [ ] `auto update`, `checkUpdate`, `downloadAndInstall`, `relaunch`, `nsis`
+- [x] `auto update`, `checkUpdate`, `downloadAndInstall`, `relaunch`, `nsis`
       reach `/docs/updates` from the real index; `upgrade` keeps Installation.
-- [ ] The page states, without hedging: no packaged app, no signature run, no
+- [x] The page states, without hedging: no packaged app, no signature run, no
       format tested, no feed hosted.
-- [ ] `nub run check`, `nub run lint`, `nub run test`,
+- [x] `nub run check`, `nub run lint`, `nub run test`,
       `nub run --filter docs smoke:build` exit `0`; a11y green at 114 × 2.
-- [ ] `TODO.md` has the ticked task, `PLAN.md` a decision row, the plan index a
+- [x] `TODO.md` has the ticked task, `PLAN.md` a decision row, the plan index a
       `633` row, and the branch is committed and pushed.
+
+---
+
+## 10. Implementation note (2026-10-21)
+
+Shipped exactly the file list in §3, plus `src/lib/native-declarations.testing.ts`
+(`installedReactDeclarations`, `installedNativeRoot`, `packageSources`) and
+`src/components/mdx.tsx` (registering `<UpdaterTables />` / `<UpdaterAbsences />`,
+which `mdx-components.test.ts` requires).
+
+### Measurements after the change
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `updater` | `/docs/testing` | `/docs/updates` |
+| `auto update` / `auto-update` | a text-area limitation | `/docs/updates` |
+| `checkUpdate`, `AvailableUpdate` | nothing | `/docs/updates` |
+| `update feed`, `update checker` | `/docs/component-pages#adding-a-scene` | `/docs/updates` |
+| `app update` | app-shell pattern | `/docs/updates` |
+| `ship updates` | Search input keyboard prose | `/docs/updates` |
+| `release feed` | License "still owed" | `/docs/updates` |
+| `code signing`, `signing key` | Text variants / Keycap | `/docs/updates` |
+| `nsis`, `appimage`, `wix`, `relaunch`, `rollback`, `pubkey` | nothing | `/docs/updates` |
+| `upgrade`, `changelog` | Installation | Installation (unchanged) |
+
+`update` and `updates` now reach `/docs/updates` through the page **title**
+(`Auto-update`), not through an alias — the word was deliberately left out of
+the table, and the measured owner is recorded here rather than pinned to prose
+that may move. `installer` lands on the updater page's `## What is not verified`
+ahead of Deployment because the page names `installerArgs` and the Windows
+installer; it is not aliased, so the ranking follows the prose. §7's
+"`installer` stays on Deployment" is therefore **superseded by measurement**,
+not by an alias change.
+
+### Two-direction proofs (run, then reverted)
+
+| # | Break | Observed |
+| - | ----- | -------- |
+| 1 | Delete the `notes` row from `src/lib/updater.ts` | `updater.test.ts` — `AvailableUpdate: notes is declared but undocumented` (3 cases failed) |
+| 2 | Restore Deployment's "…and auto-update are not implemented or documented…" | `is the only page that owns the install path` failed on the matched sentence |
+| 3 | Key the alias block to `/docs/updater` | `keys every alias to a page that exists` + 17 owned rows failed |
+| 4 | Remove `updates` from `content/docs/meta.json` | `is routed after Deployment` failed |
+| 5 | `confirmLabel` → `confirm` in the page fence | `example-snippets.test.ts` — `updates.mdx:95 (fence 1) TS2322` against `ConfirmDialogProps` |
+
+### Gate results (exact)
+
+- `nub run --filter docs test` → **151 files / 1 729 tests passed** (was 150 /
+  1 672; +25 updater cases, +32 alias rows).
+- `nub run --filter docs check-types` → exit `0`.
+- `nub run --filter docs build` → exit `0`.
+- `nub scripts/smoke-build.ts --no-build` → **114 pages** (was 113), 249 links,
+  1 467 anchors, search checked, `smoke: ok`, exit `0` — including
+  `auto update` and `checkUpdate` answered by `/docs/updates`.
+- `nub scripts/smoke-a11y.ts` → **114 × 2 schemes, 0 violations**, exit `0`.
+- `nub scripts/smoke-responsive.ts` → **114 pages**, phone controls and mobile
+  navigation checked, exit `0`.
+- `nub run check` → exit `0` (including `check:tests`, `lint`, `fmt`,
+  `check-types` for every workspace).
+- `nub run lint` → exit `0`.
+- `nub run test` → exit `0` (8 workspace `Done` lines; docs 151 / 1 729).
+
+### Corrections made while implementing
+
+- The first fixture for the "no React wrapper" rule contained a literal
+  `from "@gpuix/native"` string, which `architecture.test.ts` reads as a real
+  import with its file-wide regex. The fixture now declares
+  `export declare function checkUpdate(): void;` instead — no specifier text.
+- The page's prose does not list the four packager formats; the table renders
+  them from `updateFormats`, and the guard compares that array with the `format`
+  getter's doc comment. The page test asserts the component reads the data
+  module rather than retyping it.
+
