@@ -369,6 +369,7 @@ references without buying correctness.
 | [723](./723-pressed-row-selection-wash.md) | The pressed selected row's text selection | F | 081, 524, 651, 689, 700 | done |
 | [725](./725-scale-ladder-indexes.md) | The scale ladders the tests still retype | F | 068, 096, 305, 372, 552, 668 | done |
 | [727](./727-stored-theme-edit-base.md) | A stored edit records the base it was made against | F | 063, 311, 380, 529, 685, 713 | done |
+| [729](./729-soft-panel-caption-tier.md) | The soft status panel's caption is not a tier below its ink | F | 320, 346, 362, 392, 500, 623, 703 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3725,6 +3726,17 @@ mode: `ThemeEdit` is the artifact (`{ base: ThemeChoice, overrides }`),
 `themeEdit(choice, edited)` resolves the choice before it diffs so a mismatched
 base is not representable, `applyThemeEdit(edit)` is the replay, and the test
 walks every shipped platform and recipe in both modes and both contrast levels.
+
+729 closes the last text tier the hierarchy check never compared: a tone-tinted
+status panel paints its title with the panel's own `xSoftForeground` and its
+caption with `mutedForeground`, but `textTiers` named only the four plain body
+roles, so at AAA — where both floors are 7:1 — a caption and the panel ink
+measured **1.003–1.042:1** on all six high-contrast light sets and an edited
+theme could paint them with one colour while `themeFailures` returned `[]`. The
+four pairs derive from `statusTones`, the four AAA light inks take one step
+below the ramp's 950 stop (`#081226`, `#03170E`, `#1E1300`, `#2A0607`), and every
+shipped set clears the step (1.068:1 at the tightest, AAA dark destructive). The
+README's selected-row sentence also gains the fifth fill plan 651 added.
 
 ## How to use a plan
 
