@@ -1058,7 +1058,9 @@ by size, motion timing by timing and easing by easing; elevation levels are
 replaced as whole arrays; the mode is immutable. An explicit `undefined` is
 treated as omitted in every group, so a partial config spread cannot erase a
 role, a metric or a shadow level. Nothing mutates the base, so a theme can be
-created once at startup and shared.
+created once at startup and shared
+([`theme-immutability.test.ts`](../packages/tokens/src/theme-immutability.test.ts)
+holds every builder and resolver to a frozen theme).
 
 Verify an edited theme with `themeFailures(theme)`: it composes every check in
 `themeChecks`, checks contrast at the level the theme declares, and tags every

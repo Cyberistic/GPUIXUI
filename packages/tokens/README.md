@@ -140,7 +140,8 @@ A runnable example lives in
 `createTheme({ mode, contrast })` starts from the built-in variant: `contrast`
 selects the palette (`"high"` builds on the AAA set) and defaults to
 `"default"`. `extendTheme` derives from any theme, including a high-contrast
-one. Neither mutates its base. Typography merges field by field, density metrics
+one. Neither mutates its base (`theme-immutability.test.ts`). Typography merges
+field by field, density metrics
 merge size by size over the preset an override names or the base's, component
 dimensions field by field, elevation levels replace whole arrays, and the mode is
 not overridable. An explicitly `undefined`

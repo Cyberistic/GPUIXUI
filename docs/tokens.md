@@ -677,8 +677,9 @@ washes, not a fixed grey, and they also name their dark `destructiveSoft` — th
 identity tint they already paint — so applying one style over another platform's
 theme cannot keep the previous canvas's tint (plan `374`).
 
-`getPlatformTheme` never mutates its base, keeps the requested mode and returns
-a normal `Theme`:
+`getPlatformTheme` never mutates its base (held by
+`theme-immutability.test.ts`), keeps the requested mode and returns a normal
+`Theme`:
 
 ```tsx
 import { getPlatformTheme } from "@gpuixui/tokens";
@@ -2252,7 +2253,8 @@ Merge rules:
   claim the extension mechanism does not check, and `createTheme` has no claim
   path at all — its `contrast` picks the built-in variant;
 - nothing is mutated. The returned theme may share untouched token objects. The
-  contract is no mutation, not deep cloning.
+  contract is no mutation, not deep cloning. `theme-immutability.test.ts` holds
+  every builder and resolver to a deep-frozen base.
 
 ### Deriving a theme back to overrides
 

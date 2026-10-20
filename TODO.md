@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 322/399
+`[x]` `[████████░░]` 323/400
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2721,6 +2721,15 @@ compositions, same product), a completeness case pins the 384 so a refactor
 cannot shrink it, and `vitest.config.ts` states the current size and the split.
 No token value, pair, floor, metric, platform style, recipe or theme moves
 (plan 711)
+`[x]` Hold the extension mechanism to its no-mutation guarantee — three
+documents promise a builder never writes into its base ("Nothing mutates the
+base, so a theme can be created once at startup and shared"), but only one
+`extendTheme` path was guarded and no test froze a theme, so an
+`Object.assign(base, …)` merge would silently corrupt every screen sharing it.
+`theme-immutability.test.ts` deep-freezes every shipped theme and every
+platform style/recipe and runs every public builder, resolver and read helper;
+the docs name the guard. No token value, pair, floor, metric or shipped theme
+moves, and the implementation already passes (plan 713)
 `[ ]` Cross-team, repo tooling: plan numbers collide across worktrees and
 nothing checks them — `688` found our recipe plan at `433` beside docs-site's,
 and the executed `685`/`686` beside components' `685`; the executed `689` now

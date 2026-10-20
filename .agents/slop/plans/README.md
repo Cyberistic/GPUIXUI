@@ -361,6 +361,7 @@ references without buying correctness.
 | [709](./709-primary-text-cell-washes.md) | The brand-toned text cells' washes | F | 082, 314, 528, 651, 672 | done |
 | [710](./710-row-press-rejected-fill.md) | The row press's rejected fill | F | 332, 502, 619, 622, 651, 698, 705, 706 | done |
 | [711](./711-composition-matrix-budget.md) | The composition matrix's own budget | F | 333, 374, 398, 618 | done |
+| [713](./713-no-mutation-contract.md) | The extension mechanism's no-mutation contract | F | 011, 016, 063, 311, 321, 389, 685 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
