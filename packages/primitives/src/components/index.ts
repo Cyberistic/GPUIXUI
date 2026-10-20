@@ -10,6 +10,9 @@ export type { ThemeProviderProps } from "./ThemeProvider.js";
 export { Box } from "./Box.js";
 export type { BoxProps } from "./Box.js";
 
+export { Surface } from "./Surface.js";
+export type { SurfaceProps } from "./Surface.js";
+
 export { Grid, Stack } from "./Stack.js";
 export type { GridProps, StackProps } from "./Stack.js";
 

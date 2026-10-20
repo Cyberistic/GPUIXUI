@@ -64,6 +64,7 @@ const SCREENS = [
     headline: "Document toolbar",
   },
   { id: "tooltip", root: "tooltip-example", headline: "Release 0.10.0" },
+  { id: "surface", root: "surface-example", headline: "Raster surface" },
 ] as const;
 
 const renderExample = (

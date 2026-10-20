@@ -939,9 +939,9 @@ retired once both branches are one
       the resting elevation (plan `585`).
 `[ ]` `packages/primitives`: docs pages for every Tier 1 component (docs-site
       workstream). **Audited 2026-10-19:** the docs site has 68 component pages
-      and the package's parts table has 31 parts; **six have no page** —
-      `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip` and
-      `ThemeProvider`. The docs-site `TODO.md` says "all 20 pages landed", which
+      and the package's parts table has 32 parts; **seven have no page** —
+      `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`,
+      `ThemeProvider` and `Surface`. The docs-site `TODO.md` says "all 20 pages landed", which
       is true of the 20 it counted, not of the public surface. Listed in the
       cross-workstream section below; do not edit their paths.
 `[x]` `packages/primitives`: **a slider answered a hover with nothing** — measured
@@ -2190,6 +2190,18 @@ retired once both branches are one
       routing each failing when reverted (offline 899, scoped live 10/10; plan
       `695`).
 
+`[x]` `packages/primitives`: **`Surface`** — plan `437` §1 proves the published
+      runtime has no foreign-view seam, but its `<img>` host + `setImagePixels`
+      is a real raster leaf and nothing in the package exposed it. Plan `696`
+      ships the typed `SurfaceAdapter` contract, `rasterSurface`, the `Surface`
+      component with a create/resize/theme/destroy lifecycle, a native 2×2 paint
+      proof, a page, a mounted example and an inventory row. A 1×1 transparent
+      host source is required (a source-less `<img>` took the fallback and not
+      its authored box, measured); the mount path applies the first bounds/mode
+      once. No native child view, scale factor or input routing is claimed.
+      Offline 65 files / 910 tests, scoped runtime 4/4; seven mutations fail by
+      name.
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the
@@ -2292,16 +2304,17 @@ retired once both branches are one
       inside — so a row component should follow that contract rather than
       inventing a second one.
 
-`[ ]` **docs-site workstream**: `apps/docs` is missing **six** component pages
+`[ ]` **docs-site workstream**: `apps/docs` is missing **seven** component pages
       that the primitives parts table declares. Audited 2026-10-19 against
-      `packages/primitives/src/contract.test.ts`'s 31 parts and the 68 pages
+      `packages/primitives/src/contract.test.ts`'s 32 parts and the 68 pages
       under `apps/docs/content/docs/components/`: **`IconButton`,
-      `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`, `ThemeProvider`**.
+      `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`, `ThemeProvider`,
+      `Surface`**.
       Every one already has a complete in-package page
-      (`packages/primitives/docs/{icon-button,toggle-group,checkbox-group,grid,info-tip,theme-provider}.mdx`)
+      (`packages/primitives/docs/{icon-button,toggle-group,checkbox-group,grid,info-tip,theme-provider,surface}.mdx`)
       to adapt, so this is a routing/linking job, not new writing. The existing
       `checkbox.mdx` predates `CheckboxGroup` (plan 065). Their `TODO.md` counts
-      "all 20 pages" — those 20 landed; the public surface is 31.
+      "all 20 pages" — those 20 landed; the public surface is 32.
 
 `[x]` **examples/basic-app** (owner: primitives workstream, outside
       `packages/primitives`): the info-icon tooltip trigger is now `InfoTip`,
@@ -2323,6 +2336,10 @@ retired once both branches are one
       therefore shows as untracked, and a `git add -A` at the root would commit a
       symlink to an absolute path outside the repo. Ignore `references` without
       the trailing slash.
+`[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` is
+      unformatted on `origin/master` (`b8fbf153`), so the root `nub run fmt` gate
+      fails on a file outside the primitives paths. Run `oxfmt --write` on it and
+      keep the root format gate green (found while verifying plan `696`).
 `[ ]` **root**: `README.md` still says "Phase A (audit and feasibility). The
       first deliverable is the plan set" while plans `020`-`059`, tokens,
       primitives, icons, `packages/testing` and `apps/playground` have landed.

@@ -19,6 +19,7 @@ import * as Primitives from "./index.js";
 /** Every public component, and the page that documents it. */
 const PAGES: Readonly<Record<string, string>> = {
   Box: "box",
+  Surface: "surface",
   Button: "button",
   ButtonGroup: "button-group",
   Checkbox: "checkbox",
@@ -53,7 +54,10 @@ const PAGES: Readonly<Record<string, string>> = {
 };
 
 /** Public PascalCase exports that are not components and own no page. */
-const NOT_COMPONENTS: ReadonlyArray<string> = ["MissingThemeProviderError"];
+const NOT_COMPONENTS: ReadonlyArray<string> = [
+  "MissingThemeProviderError",
+  "SurfaceError",
+];
 
 const isPascalCase = (name: string): boolean =>
   /^[A-Z][A-Za-z0-9]*$/.test(name);

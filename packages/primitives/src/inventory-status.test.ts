@@ -20,7 +20,7 @@ import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
 import * as Str from "effect/String";
 
-/** The six parts with no page on the Fumadocs site, per this workstream's TODO. */
+/** The seven parts with no page on the Fumadocs site, per this workstream's TODO. */
 const DOCS_SITE_GAPS = [
   "IconButton",
   "ToggleGroup",
@@ -28,6 +28,7 @@ const DOCS_SITE_GAPS = [
   "Grid",
   "InfoTip",
   "ThemeProvider",
+  "Surface",
 ] as const;
 
 /** The lines after `start`, up to the next line beginning with `end`. */
@@ -99,7 +100,7 @@ describe("the Tier 1 inventory's wip reason", () => {
     ).toBe(true);
     expect(
       contains(preamble, "in-package and on the docs site"),
-      "COMPONENTS.md: six parts have no docs-site page; do not claim they all do",
+      "COMPONENTS.md: seven parts have no docs-site page; do not claim they all do",
     ).toBe(false);
     expect(
       Arr.filter(DOCS_SITE_GAPS, (part) => !Str.includes(part)(preamble)),

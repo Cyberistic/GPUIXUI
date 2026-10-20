@@ -14,6 +14,7 @@
  * both) or a theme that never reached the component fails by case name.
  */
 
+import { Effect } from "effect";
 import type { ReactElement } from "react";
 import { describe, expect, it } from "vitest";
 import { darkTheme, lightTheme } from "@gpuixui/tokens";
@@ -46,6 +47,7 @@ import {
   Spacer,
   Spinner,
   Stack,
+  Surface,
   Switch,
   Text,
   TextArea,
@@ -53,6 +55,7 @@ import {
   Toggle,
   ToggleGroup,
   Tooltip,
+  type SurfaceAdapter,
 } from "../src/index.js";
 import type { PrimitiveTheme } from "../src/core/theme.js";
 import * as Primitives from "../src/index.js";
@@ -69,7 +72,24 @@ interface Case {
   readonly render: () => ReactElement;
 }
 
+const NO_PIXELS: SurfaceAdapter = {
+  kind: "test",
+  create: () => Effect.void,
+  resize: () => Effect.void,
+  focus: () => Effect.void,
+  setVisible: () => Effect.void,
+  setTheme: () => Effect.void,
+  destroy: () => Effect.void,
+};
+
 const CASES: ReadonlyArray<Case> = [
+  {
+    name: "Surface",
+    paints: false,
+    render: () => (
+      <Surface adapter={NO_PIXELS} width={40} height={30} label="Surface" />
+    ),
+  },
   { name: "Box", render: () => <Box tone="background" padding="md" /> },
   {
     name: "Grid",
@@ -215,7 +235,10 @@ const CASES: ReadonlyArray<Case> = [
 ];
 
 /** The public component names, read from the package's real exports. */
-const PUBLIC_COMPONENTS: ReadonlyArray<string> = ["ThemeProvider"];
+const PUBLIC_COMPONENTS: ReadonlyArray<string> = [
+  "SurfaceError",
+  "ThemeProvider",
+];
 
 const componentExports = (
   namespace: typeof Primitives,

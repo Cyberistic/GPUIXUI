@@ -57,6 +57,7 @@ const FOCUSABLE_PAGES: ReadonlyArray<string> = [
   "scroll-area",
   "info-tip",
   "tooltip",
+  "surface",
 ];
 
 const pagesDir = ["packages", "primitives", "docs"] as const;

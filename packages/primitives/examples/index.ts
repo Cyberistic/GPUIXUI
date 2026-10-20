@@ -19,6 +19,7 @@ import { OtpExample } from "./otp.example.js";
 import { RatingExample } from "./rating.example.js";
 import { ScrollTriggerExample } from "./scroll-trigger.example.js";
 import { SelectionExample } from "./selection.example.js";
+import { SurfaceExample } from "./surface.example.js";
 import { ToggleExample } from "./toggle.example.js";
 import { ToggleGroupExample } from "./toggle-group.example.js";
 import { TooltipExample } from "./tooltip.example.js";
@@ -38,6 +39,7 @@ export const examples: Readonly<Record<string, ComponentType>> = {
   rating: RatingExample,
   scrollTrigger: ScrollTriggerExample,
   selection: SelectionExample,
+  surface: SurfaceExample,
   toggle: ToggleExample,
   toggleGroup: ToggleGroupExample,
   tooltip: TooltipExample,

@@ -13,3 +13,4 @@
 
 export * from "./core/index.js";
 export * from "./components/index.js";
+export * from "./surface/index.js";

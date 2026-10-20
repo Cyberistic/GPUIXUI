@@ -39,7 +39,7 @@ runtime-internal focus behaviour: the headless `Tooltip`'s open-on-focus still
 depends on the missing events.
 The Tier 1 rows below stay `wip` until their suite passes on a runtime a
 consumer installs. It has now been run on the release-tag build: the focus
-rings are green after plan `590`, and the whole runtime suite — **60 files** —
+rings are green after plan `590`, and the whole runtime suite — **61 files** —
 passes after plan `597` corrected the published box model (a
 plain `div` reports from its content origin, a `Button` from its border box;
 `paintBounds` is the opt-in correction), plan `598` corrected a scroller's
@@ -198,6 +198,12 @@ carries an evidenced limitation. The capability evidence lives in
 
 ---
 
+## Foundations
+
+| Component | Status | GPUix support | Docs / example | Notes / limitations |
+| --------- | ------ | ------------- | -------------- | ------------------- |
+| Surface | wip | partial (raster only) | [surface](packages/primitives/docs/surface.mdx) · [surface](packages/primitives/examples/surface.example.tsx) | **Runtime (696):** a leaf `<img>` host driven by a typed `SurfaceAdapter`; `rasterSurface` paints an RGBA frame through `setImagePixels`. Mount order `create → resize → setVisible(true) → setTheme`; unmount `setVisible(false) → destroy`; a bounds or mode change repaints a live session. Measured: a 2×2 frame reaches the host as 16 bytes, a 120×80 host reports that box, and a failing paint calls `onError` without unmounting the host. **Limits:** no native child view in published `0.10.0` (plan `437` §1), no `onLayout` so bounds are authored, no scale factor, and the raster interior is not interactive or in the accessibility tree. The component is presentational: a static surface is one named `Image` node; `tabIndex` makes a named `group` tab stop with a focus ring and routes focus to the adapter, with the inner image decorative. No invented interior keyboard contract. |
+
 ## Tier 1 — foundational
 
 **Why every row below is `wip`:** each one has code, a behaviour test, a mounted
@@ -210,9 +216,9 @@ reasons, and neither is a failing suite:
   (ADR `0003`). The gold-standard CI run on a published binary is the playground
   workstream's task. The runtime suite passes on that build (see §"How the two
   evidence columns are decided" above).
-- **Docs site.** Six public parts still have no page on the Fumadocs site —
-  `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip` and
-  `ThemeProvider` — because that site is a separate deliverable with its own
+- **Docs site.** Seven public parts still have no page on the Fumadocs site —
+  `IconButton`, `ToggleGroup`, `CheckboxGroup`, `Grid`, `InfoTip`,
+  `ThemeProvider` and `Surface` — because that site is a separate deliverable with its own
   workstream (`TODO.md` records the list). Every part has an in-package page
   today.
 
@@ -263,7 +269,7 @@ a filled, borderless variant is unaffected. Measured in `fields.runtime`
 
 `Runtime (041)` = observed by
 `nub run --filter @gpuixui/primitives test:runtime` on 2026-10-19
-(**60 files, all passing on the store's release-tag build**; two
+(**61 files, all passing on the store's release-tag build**; two
 consecutive runs are identical by name). Plan `597` corrected the published box
 model, plan `598` a scroller's own report, plan `599` `Select`'s off-by-one
 scroll reveal, plan `606` the focus reveal a scroll region owes its controls,

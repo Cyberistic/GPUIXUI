@@ -35,6 +35,7 @@ interface Part {
 const PARTS: ReadonlyArray<Part> = [
   { name: "ThemeProvider", page: "theme-provider", states: [] },
   { name: "Box", page: "box", states: [] },
+  { name: "Surface", page: "surface", states: [] },
   { name: "Grid", page: "grid", states: [] },
   { name: "Stack", page: "stack", states: [] },
   { name: "Separator", page: "separator", states: [] },
@@ -100,7 +101,10 @@ const PARTS: ReadonlyArray<Part> = [
 ];
 
 /** Public PascalCase exports that are not components (plan 074's own allowlist). */
-const NON_PARTS: ReadonlyArray<string> = ["MissingThemeProviderError"];
+const NON_PARTS: ReadonlyArray<string> = [
+  "MissingThemeProviderError",
+  "SurfaceError",
+];
 
 /** The API props `@gpuix/native` 0.10.0 maps (plan 020 §1.4, plan 203). */
 const SUPPORTED_ARIA: ReadonlyArray<string> = [

@@ -148,7 +148,7 @@ Deviations, kept deliberate:
 
 ## Components
 
-**Layout** `Box` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
+**Layout** `Box` `Surface` `Stack` `Grid` `Separator` `Spacer` `ScrollArea`
 **Text** `Text` `Label`
 **Actions** `Button` `IconButton` `ButtonGroup` `Toggle` `ToggleGroup`
 **Fields** `Input` `TextArea` `NumberField` `OTPField` `Select`
@@ -233,7 +233,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-20: the offline suite is
-**63 test files**, all passing, including a package-wide guard that a caller's
+**65 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one
@@ -259,7 +259,7 @@ bounds, hit-tested clicks, dispatched keys, focus, the a11y dump, a scroll
 offset, PNG captures. One of them (`examples.runtime.test.tsx`) mounts every
 example registered in `examples/index.ts` — and a parity test fails if the list
 and the registry drift (plan 092) — so the documentation's compositions are
-runtime-proven too. The runtime suite is **60 test files**. The latest run's
+runtime-proven too. The runtime suite is **61 test files**. The latest run's
 totals live in `TODO.md`'s live-suite row and plan `597`, not here: a prose
 count cannot be held true by a test.
 The store artifact is the **release-tag** build (plan `529`;
@@ -291,7 +291,7 @@ using the shipped `lightTheme` /
 `darkTheme` from `@gpuixui/tokens`, a check that no painted colour is outside
 the active palette, the high-contrast palettes in both modes, a density override
 measured against the preset's metrics, a platform theme's mono family reaching
-the paint (plan 055), a both-theme matrix over all 31 public components — each mounted
+the paint (plan 055), a both-theme matrix over all 32 public components — each mounted
 under `lightTheme` and `darkTheme`, required to paint only palette colours and a
 different colour set in each, so a literal fails by case name (plan 352) — a
 tooltip measured against its trigger in a column and a

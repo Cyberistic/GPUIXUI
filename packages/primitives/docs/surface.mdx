@@ -1,0 +1,152 @@
+---
+title: Surface
+description: A leaf box whose pixels are owned by an adapter — the honest raster path in GPUix 0.10.0.
+---
+
+`Surface` reserves one box and hands its pixels to a `SurfaceAdapter`. It is the
+library half of the foreign-surface seam plan `437` specifies. It is **not** a
+native child view: published GPUix `0.10.0` has no webview, AVPlayer or PTY
+seam, so the only adapter that can ship today is `rasterSurface`, which paints
+RGBA bytes onto the runtime's `<img>` host inside a small root. A chart, a
+sparkline, a video frame or a generated image belongs here; a form, a table or
+a menu does not.
+
+## Usage
+
+```tsx
+import { Effect } from "effect";
+import { Surface, rasterSurface } from "@gpuixui/primitives";
+
+const adapter = rasterSurface({
+  paint: ({ width, height }, { mode }) =>
+    Effect.succeed({
+      width,
+      height,
+      pixels: new Uint8Array(width * height * 4).fill(
+        mode === "dark" ? 32 : 240,
+      ),
+    }),
+});
+
+<Surface
+  adapter={adapter}
+  width={320}
+  height={180}
+  label="Revenue, last 30 days"
+  testId="revenue-chart"
+/>;
+```
+
+A repaint is caller-driven: change a prop your `paint` closure reads and render
+again. There is no hidden animation loop; a timer belongs to the consumer.
+
+## The adapter contract
+
+An adapter is six effectful methods. Every failure is a typed `SurfaceError`
+naming the operation that failed.
+
+| Member | Purpose |
+| ------ | ------- |
+| `kind` | A short name (`"raster"`, `"webview"`, …) |
+| `create(host)` | Take the leaf once; `host.setPixels` is the raster path |
+| `resize(bounds)` | Repaint or reflow for a new logical box |
+| `focus()` | Route host focus into the surface |
+| `setVisible(visible)` | Occlusion, not unmount |
+| `setTheme(mode)` | Hand over the named mode; never a token colour |
+| `destroy()` | Idempotent; safe after a failed `create` |
+
+The component drives `create → resize → setVisible(true) → setTheme` on mount,
+`resize` on a bounds change, `setTheme` on a mode change, and
+`setVisible(false) → destroy` on unmount. A new adapter destroys the old session
+first.
+
+`rasterSurface` calls `paint(bounds, { mode })` on every resize and on a real
+mode change. A frame whose dimensions or byte count do not match the box fails
+with `SurfaceError`; it never reaches `setImagePixels` malformed.
+
+## API
+
+| Prop | Type | Default | Consequence |
+| ---- | ---- | ------- | ----------- |
+| `adapter` | `SurfaceAdapter` | — (required) | owns the pixels and the lifecycle |
+| `width` | `number` | — (required) | authored logical width, also the adapter's bounds |
+| `height` | `number` | — (required) | authored logical height |
+| `label` | `string` | — (required) | the one accessibility name; a blank label is absent |
+| `style` | `StyleDesc` | none | merged last over the host's box |
+| `tabIndex` | `number` | none | makes the leaf a focus stop and routes focus |
+| `testId` | `string` | none | the runtime locator id |
+| `onError` | `(error: SurfaceError) => void` | logs | receives a typed lifecycle failure |
+
+`width` and `height` are **authored**, not read back: GPUix `0.10.0` has no
+`onLayout`. A caller that overrides them through `style` owns the mismatch
+between the painted box and the adapter's bounds.
+
+## Keyboard
+
+Not focusable by default. `tabIndex` makes the root a named `group` tab stop
+(the image inside becomes decorative), routes native focus to `adapter.focus()`,
+and paints the theme's focus ring — the release runtime dispatches no focus
+events, so the tracker drives it too. There is no interior keyboard contract:
+the raster surface is a picture, and a future native view owns its own input
+routing.
+
+## Accessibility
+
+- **Release-runtime focus:** the pinned 0.10.0 runtime moves native focus but
+  delivers no `onFocus`/`onBlur` to a component
+  ([measured](../../../docs/gpuix-capabilities.md#focus-events)). The ring still
+  paints: `ThemeProvider`'s native-focus tracker samples
+  `getFocusedElementId()` every 50 ms, so focus reaches the paint up to one tick
+  late (plan `590`).
+- A static surface is exactly one named `Image` node from `label`; a focusable
+surface (`tabIndex`) is one named `group` whose inner image is decorative, so
+the tab stop always has a name. A blank `label` leaves either shape unnamed
+rather than inventing a name. The interior is invisible to `getAutomationTree()`:
+a raster chart needs a text summary or a table elsewhere, and a native view's
+contents are the adapter's responsibility, not this component's.
+
+## Theming
+
+Only `theme.mode` crosses the boundary. No token colour is serialised into an
+adapter, because a native view or an offline raster buffer cannot resolve one.
+A `paint` callback that wants token values reads them from `useTheme()` in the
+consumer and closes over them.
+
+## Limitations
+
+- **No native child view.** Published `0.10.0` has no foreign-view seam; a
+  WebKit, AVPlayer or PTY adapter is a runtime ask (plan `437` §1).
+- **No layout read-back.** Bounds are the `width`/`height` props; there is no
+  `onLayout` to measure a flex-sized box.
+- **No scale factor.** `getWindowSize()` reports logical size only, so the
+  adapter works in logical pixels and there is no device-pixel contract yet.
+- **The raster path is not interactive.** Clicks and keys do not reach the
+  painted pixels, and the interior is not in the accessibility tree.
+- **No paint loop.** Repaint is consumer-driven; the component does not own a
+  frame scheduler.
+
+## Verification
+
+The lifecycle and the real raster path are proven in
+`runtime/surface.runtime.test.tsx` (5 cases):
+
+- `creates, sizes, shows and themes one session, then destroys it`
+- `resizes and re-themes a live session`
+- `paints a real RGBA frame through setImagePixels`
+- `routes native focus into the adapter when the host is a tab stop`
+- `reports a typed failure without unmounting the host`
+
+The frame-shape rules are unit-tested in `src/surface/raster.test.ts`; the error
+boundary in `src/surface/adapter.test.ts`.
+
+```sh
+nub run --filter @gpuixui/primitives test
+nub run --filter @gpuixui/primitives test:runtime -- --run runtime/surface.runtime.test.tsx
+```
+
+## Related
+
+- [Box](box.mdx) — a themed surface with no pixels of its own.
+- [Text](text.mdx) — the text summary a raster chart needs for assistive
+  technology.
+- [Meter](meter.mdx) — a value bar built from boxes, not a raster frame.

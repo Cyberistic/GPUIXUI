@@ -18,6 +18,7 @@ never as a promise.
 | ---- | --------- | ------- |
 | [theme-provider](theme-provider.mdx) | `ThemeProvider`, `useTheme` | every example (host-supplied) |
 | [box](box.mdx) | `Box` | [layout](../examples/layout.example.tsx) |
+| [surface](surface.mdx) | `Surface` | [surface](../examples/surface.example.tsx) |
 | [stack](stack.mdx) | `Stack` | [layout](../examples/layout.example.tsx) |
 | [grid](grid.mdx) | `Grid` | [layout](../examples/layout.example.tsx) |
 | [separator](separator.mdx) | `Separator` | [layout](../examples/layout.example.tsx) |

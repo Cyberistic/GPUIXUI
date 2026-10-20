@@ -25,6 +25,7 @@ import * as Schema from "effect/Schema";
 import { initValueState } from "../core/state.js";
 import { testTheme } from "../core/testing/theme.fixture.js";
 import { renderBox } from "./Box.js";
+import { renderSurface } from "./Surface.js";
 import { renderButton } from "./Button.js";
 import { renderButtonGroup } from "./ButtonGroup.js";
 import { renderCheckbox } from "./Checkbox.js";
@@ -177,6 +178,18 @@ const GUARDS: ReadonlyArray<Guard> = [
   {
     name: "Box",
     render: (style) => renderBox({ tone: "none", style }, testTheme),
+  },
+  {
+    name: "Surface",
+    render: (style) =>
+      renderSurface({
+        width: 120,
+        height: 80,
+        label: "Surface",
+        style,
+        elementRef: { current: null },
+        imageRef: { current: null },
+      }),
   },
   {
     name: "Stack",
