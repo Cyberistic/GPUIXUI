@@ -367,6 +367,8 @@ it.each(["sm", "md", "lg"] as const)(
   async (size) => {
     // The bug guarded (plan 644): the three fixed 14 px dots made a 46 px row,
     // so the spinner painted 5 px outside a 36 px square on each side.
+    // The locator (plan 798): the spinner is decorative since plan 785, so the
+    // case reads the button's `${testId}-spinner` seam, not a status node.
     const runtime = await openWindow();
     runtime.render(
       <Surface>
@@ -382,15 +384,11 @@ it.each(["sm", "md", "lg"] as const)(
       </Surface>,
     );
     const button = boundsOf(runtime, "ib");
-    const status = Option.getOrElse(
-      Arr.findFirst(
-        runtime.all(),
-        (element) => element.customProps?.["role"] === "status",
-      ),
-      () => expect.fail("the loading button painted no status node"),
+    const node = Option.getOrElse(runtime.element("ib-spinner"), () =>
+      expect.fail(`the ${size} icon button retained no ib-spinner`),
     );
-    const spinner = Option.getOrElse(runtime.boundsOfId(status.id), () =>
-      expect.fail("the status node painted no box"),
+    const spinner = Option.getOrElse(runtime.bounds("ib-spinner"), () =>
+      expect.fail(`the ${size} icon button painted no ib-spinner`),
     );
     expect(spinner.x).toBeGreaterThanOrEqual(button.x);
     expect(spinner.x + spinner.width).toBeLessThanOrEqual(
@@ -400,7 +398,7 @@ it.each(["sm", "md", "lg"] as const)(
     expect(spinner.y + spinner.height).toBeLessThanOrEqual(
       button.y + button.height,
     );
-    expect(status.children).toHaveLength(3);
+    expect(node.children).toHaveLength(3);
   },
 );
 

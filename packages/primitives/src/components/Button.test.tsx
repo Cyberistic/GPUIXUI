@@ -295,6 +295,22 @@ describe("Button", () => {
     );
   });
 
+  it("publishes the busy spinner as `<testId>-spinner`", () => {
+    // The locator the runtime suites read (plan 798): plan 644's fit cases found
+    // the spinner by `role="status"`, which plan 785 replaced with a decorative
+    // spinner, so the seam is the stable way to name it.
+    const spinnerOf = (testId?: string): ReactElement =>
+      expectSome(
+        Option.fromNullishOr(
+          elementChildren(resting({ loading: true, testId }))[0],
+        ),
+      );
+    expect(elementProp(spinnerOf("save"), "testId")).toStrictEqual(
+      Option.some("save-spinner"),
+    );
+    expect(elementProp(spinnerOf(), "testId")).toStrictEqual(Option.none());
+  });
+
   it("fits a square button's loading spinner inside the square", () => {
     // The bug guarded (plan 644): the three 14 px dots plus their gaps made a
     // 46 px row inside a 36 px icon button, so the spinner painted five pixels

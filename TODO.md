@@ -1727,6 +1727,21 @@ retired once both branches are one
       cases, both directions proven (offline 73 files / 1014 tests, scoped live
       1 file / 9); plan `797`
 
+`[x]` `packages/primitives`: **the full runtime suite was red, because two plans
+      disagreed about how to find a busy button's spinner** — measured
+      2026-10-20: `test:runtime` reported 939 tests, 3 failed in one file
+      (`runtime/controls.runtime.test.tsx`: 53 passed / 3 failed), all
+      `the loading button painted no status node`. Plan `644`'s three
+      "fits inside the square" cases located the spinner by `role="status"`,
+      and plan `785` had made it decorative (`role="presentation"`) so the
+      button would not announce `Loading` twice; the fit contract still holds,
+      its locator did not. A busy `Button`/`IconButton` now publishes
+      `${testId}-spinner` (absent without a `testId`), the three fit cases and
+      `runtime/button-loading` read it instead of inferring the first child, and
+      the seam is documented on both pages. 1 offline + 4 runtime cases, the
+      seam removed failing all 5 by name; offline 73 files / 1015 tests, scoped
+      live 2 files / 58; plan `798`
+
 `[ ]` **packages/testing** (playground workstream): hoist `runtime/harness.ts`
       into the shared smoke framework once the package lands — plan 041 §2.2
       records why it is duplicated for now

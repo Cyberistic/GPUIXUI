@@ -64,10 +64,13 @@ describe("IconButton", () => {
   });
 
   it("replaces the icon with the spinner while loading", () => {
-    const button = render({ loading: true });
+    const button = render({ loading: true, testId: "ib" });
     expect(elementChildren(button)).toStrictEqual([]);
     expect(elementProp(button, "loading")).toStrictEqual(Option.some(true));
     expect(elementProp(button, "label")).toStrictEqual(Option.some("Close"));
+    // The busy spinner's runtime seam is the composed button's `testId` plus
+    // `-spinner` (plan 798), so the locator must reach `Button`.
+    expect(elementProp(button, "testId")).toStrictEqual(Option.some("ib"));
   });
 
   it("forwards the button props it accepts", () => {

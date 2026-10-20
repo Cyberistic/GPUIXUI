@@ -55,10 +55,7 @@ it("paints a busy Button's spinner in the variant foreground", async () => {
   );
   const button = styleOf(runtime, idOf(runtime, "busy"));
   expect(button["backgroundColor"]).toBe(testTheme.colors.primary);
-  const spinnerId = Option.getOrElse(
-    Arr.head(childrenOf(runtime, idOf(runtime, "busy"))),
-    () => expect.fail("the Button painted no spinner"),
-  );
+  const spinnerId = idOf(runtime, "busy-spinner");
   const dots = childrenOf(runtime, spinnerId);
   expect(Arr.length(dots)).toBe(3);
   Arr.forEach(dots, (id) => {

@@ -218,6 +218,9 @@ export const renderButton = (
           // `Status` node inside it would announce the same state twice
           // (measured, plan 785).
           decorative
+          testId={
+            props.testId === undefined ? undefined : `${props.testId}-spinner`
+          }
         />
       ) : (
         props.leading

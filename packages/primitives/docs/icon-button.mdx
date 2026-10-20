@@ -66,7 +66,7 @@ it leaves a text button at `h-8`/`h-9`/`h-10` (plan `370`; measured 375).
 | `loading` | `boolean` | `false` | paints a decorative spinner **instead of** the icon, sized to the square (9/10/12 px dots at `sm`/`md`/`lg`), announces `Loading` in the button's description, refuses activation |
 | `onActivate` / `onClick` | — | none | the shared `Button` activation path; `onClick` receives the click or the key event |
 | `style` | `StateStyle<ButtonState>` | — | merged last over the button's own rules |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | stable locator; the busy spinner becomes `${testId}-spinner` (plan `798`) |
 
 `children`, `leading`, `trailing` and `fullWidth` are deliberately absent: an
 icon button has one content slot and a square box.

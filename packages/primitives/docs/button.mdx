@@ -84,7 +84,7 @@ sm / md / lg.
 | `onFocus`, `onBlur`, `onKeyDown`, `onKeyUp` | host handlers | none | composed with the button's own focus ring and activation rule, never replacing them |
 | `aria-description` | `string` | none | announced after the name; trimmed, and a blank value is absent; a `Tooltip` trigger's text arrives here, joined after `"Loading"` while busy |
 | `style` | `StateStyle<ButtonState>` | — | merged last; an object or a state callback |
-| `testId` | `string` | — | stable locator |
+| `testId` | `string` | — | stable locator; the busy spinner becomes `${testId}-spinner` (plan `798`) |
 | `children` | `ReactNode` | — | the visible label |
 
 ## Keyboard
