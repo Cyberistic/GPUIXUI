@@ -233,7 +233,7 @@ these examples as live previews: they are GPUix host trees, not DOM.
 (keyboard, controlled state, variant registry, style resolution, progress
 clamping) and the components' element trees (props, ARIA, handlers) via
 `src/components/testing/element.ts`. Measured 2026-10-20: the offline suite is
-**67 test files**, all passing, including a package-wide guard that a caller's
+**68 test files**, all passing, including a package-wide guard that a caller's
 `style` wins last on every part (plan `097`), the axis-aware floating alignment
 rule (plan `098`), a guard that every documented `theme.…` path and
 `@gpuixui/tokens` import resolves on the shipped package (plan `333`), one

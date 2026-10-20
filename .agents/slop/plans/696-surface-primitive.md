@@ -238,7 +238,7 @@ export interface SurfaceProps {
 4. Write `Surface.tsx` + `renderSurface`; add `style-order` guard and the
    theme-matrix row.
 5. Write the native suite; run
-   `nub run --filter @gpuixui/primitives test:runtime -- --run runtime/surface.runtime.test.tsx`
+   `nub run --filter @gpuixui/primitives test:runtime runtime/surface.runtime.test.tsx`
    (expect the file green). Then run the scoped suites named in §8.
 6. Write the page, the example, the inventory row and the registration.
    Run `nub run --filter @gpuixui/primitives test` again (contract/exports/
@@ -370,10 +370,10 @@ Run from `packages/primitives` unless stated.
 | ------- | -------- |
 | `nub run check-types` | exit 0 |
 | `nub run test` | offline suite green; new `surface` cases included |
-| `nub run test:runtime -- --run runtime/surface.runtime.test.tsx` | the suite green |
-| `nub run test:runtime -- --run runtime/theme-matrix.runtime.test.tsx` | green, `Surface` case included |
-| `nub run test:runtime -- --run runtime/name.runtime.test.tsx` | green (no new unnamed interactive node) |
-| `nub run test:runtime -- --run runtime/examples.runtime.test.tsx` | green; the registry parity case accepts `surface` |
+| `nub run test:runtime runtime/surface.runtime.test.tsx` | the suite green |
+| `nub run test:runtime runtime/theme-matrix.runtime.test.tsx` | green, `Surface` case included |
+| `nub run test:runtime runtime/name.runtime.test.tsx` | green (no new unnamed interactive node) |
+| `nub run test:runtime runtime/examples.runtime.test.tsx` | green; the registry parity case accepts `surface` |
 | `nub run lint` | exit 0 |
 | `nub run fmt` | exit 0 |
 | `nub run check` (repo root) | exit 0 |

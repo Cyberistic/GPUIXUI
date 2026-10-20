@@ -323,6 +323,7 @@ component side is no longer waiting on primitives:
 | [697](./697-surface-bounds.md) | A `Surface` box is whole logical pixels, and a zero-area surface paints nothing | E | 020, 371, 597, 637, 696 | **done** — measured: `width={320.5}` painted a 320.5 box while `rasterSurface` refused the bounds and painted **no** frame; `width={NaN}` dropped the width style and stretched the host to 1256 px; `width={0}` reported a lifecycle error. One `surfaceBounds` rule (floor a finite positive value, collapse zero/negative/non-finite) now feeds the host box, the resize compare and every adapter call; a zero-area raster records its bounds, paints nothing and reports nothing. 8 core + 4 raster + 2 element + 2 scoped runtime cases, both directions proven (§6) |
 | [698](./698-surface-revision-repaint.md) | `Surface` repaints on a `revision`, without rebuilding its session | E | 371, 696, 697 | **done** — plan `696` §2 promised "the caller repaints by changing a `revision` prop", but the shipped component had none: measured, a parent re-render with a stable adapter kept `paints: 1`, while rebuilding the adapter tore the session down (`create → paint → destroy → create → paint`). `Surface` now takes `revision` (default 0) and repaints a live session through `adapter.resize` at its current box with one `create`; the value is seeded at mount so a rebuilt adapter is not resized twice. The page states all three repaint paths. 1 scoped runtime case (3 assertions); both directions proven (plan `698` §6) |
 | [699](./699-surface-adapter-handoff.md) | A `Surface` adapter swap can create the next session before the old teardown finishes | E | 020, 597, 696, 697, 698 | **done** — measured with a slow teardown (destroy 200 ms, create 0 ms): `a:visible:false, b:create, b:resize, b:visible:true, b:theme, a:destroy`, so the old `destroy` landed inside the new session while both target the same host element — contradicting the order the page and docstring state. One `Deferred` per session gates the next `create` on the previous `destroy`; a scoped runtime case fails on the old order (`expected 4 to be less than 2`), the file is 9/9, offline 67 files / 921 tests, `check-types` clean (§6) |
+| [700](./700-scoped-verification-command.md) | The package's "scoped" runtime command runs the whole live suite | F | 047, 588, 691, 696, 699 | **done** — measured on `nub v0.9.6`: `nub run … test:runtime -- --run <file>` reaches the runner verbatim and ran **62 files / 839 tests**, while `nub run … test:runtime <file>` ran **1 file / 9 tests**. `docs/surface.mdx` and plan `696` now teach the working form, and `src/docs-commands.test.ts` fails by page:line on the double-dash hand-off and on a missing scoped example (both directions measured; offline 68 files / 923 tests, `check-types` clean) |
 | — | `packages/tokens` (tokens-theme) | B | — | not written here |
 | — | `packages/components` (components) | C/D | 030 | not written here |
 | — | `apps/playground` + `packages/testing` + the native smoke test (playground) | B | 020 | not written here |
@@ -445,3 +446,16 @@ B1, so it is planned, not done.
    workaround that the plan did not authorise.
 5. When done, update this table's status column and tick the matching task in
    `TODO.md`.
+
+## Scoped verification commands
+
+Measured on `nub v0.9.6` / vitest 5.0.5 (plan `700`): the filter goes straight
+after the script name. An extra `--` hands the rest to the runner verbatim, so
+the file is ignored and the whole suite runs.
+
+```sh
+# one primitives runtime file
+nub run --filter @gpuixui/primitives test:runtime runtime/surface.runtime.test.tsx
+# one playground scenario
+nub apps/playground/dist/smoke/run.js --only <id>
+```

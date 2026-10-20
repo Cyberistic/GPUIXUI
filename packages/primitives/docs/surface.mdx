@@ -202,8 +202,10 @@ zero-area rules in `src/surface/raster.test.ts`; the element seam in
 `src/surface/adapter.test.ts`.
 
 ```sh
+# the offline suite (the surface cases among them)
 nub run --filter @gpuixui/primitives test
-nub run --filter @gpuixui/primitives test:runtime -- --run runtime/surface.runtime.test.tsx
+# this file only: 1 file, 9 tests — do not add a second `--` before the path
+nub run --filter @gpuixui/primitives test:runtime runtime/surface.runtime.test.tsx
 ```
 
 ## Related

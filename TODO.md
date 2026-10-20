@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 163/163
+`[x]` `[████████████]` 164/164
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2238,6 +2238,17 @@ retired once both branches are one
       scoped runtime case fails on the old order (`expected 4 to be less than
       2`), the file is 9/9, offline 67 files / 921 tests, `check-types` clean
       (plan `699`).
+
+`[x]` `packages/primitives`: **the package taught a "scoped" command that ran
+      the whole live suite** — `docs/surface.mdx` ended with
+      `nub run … test:runtime -- --run <file>`, and measured on `nub v0.9.6`
+      everything after the extra `--` reaches the runner verbatim: it ran
+      **62 files / 839 tests** instead of the one file. The working form puts
+      the path straight after the script (`test:runtime <file>` → 1 file /
+      9 tests); the page and plan `696` teach it, the plans index records it
+      once, and `src/docs-commands.test.ts` fails by page:line on the
+      double-dash hand-off plus a vacuity check for the scoped example
+      (plan `700`; offline 68 files / 923 tests).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
