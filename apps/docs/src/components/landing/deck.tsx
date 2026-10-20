@@ -6,8 +6,9 @@ const SHUFFLE_MS = 1600;
 
 /**
  * The hero: a centered headline with actions, then the platform switch as the
- * control for the deck, and the deck presented as a product window below. Owns
- * the shuffle state so the switch and the deck stay in sync.
+ * control for the deck, and the deck as a single dialog window that shuffles
+ * between the three platform looks. Owns the shuffle state so the switch and
+ * the deck stay in sync.
  */
 export function Hero() {
   const [top, setTop] = useState(0);
@@ -71,50 +72,39 @@ export function Hero() {
       </div>
 
       <div
-        className="landing-window"
+        className="landing-deck"
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        <div aria-hidden="true" className="landing-window-bar">
-          <span className="landing-window-dots">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className="landing-window-name">GPUIxUI</span>
-          <span className="landing-window-spacer" />
-        </div>
-        <div aria-hidden="true" className="landing-deck">
-          {platforms.map((platform, index) => (
-            <DialogCard
-              key={platform.id}
-              platform={platform}
-              position={(index - top + platforms.length) % platforms.length}
-            />
-          ))}
-        </div>
+        {platforms.map((platform, index) => (
+          <PlatformWindow
+            key={platform.id}
+            platform={platform}
+            position={(index - top + platforms.length) % platforms.length}
+          />
+        ))}
       </div>
-
-      <p className="landing-deck-note">
-        Illustrative — the same Dialog component on each platform. Native
-        captures land with the playground gallery.
-      </p>
     </header>
   );
 }
 
-function DialogCard({
+/**
+ * One dialog window in a platform's chrome. The dialog itself is the window —
+ * no outer shell. Used by the hero deck (shuffled) and the defaults section
+ * (side by side).
+ */
+export function PlatformWindow({
   platform,
   position,
 }: {
   platform: Platform;
-  position: number;
+  position?: number;
 }) {
   return (
     <div
-      className={`landing-card landing-card-${platform.chrome}`}
+      className={`landing-window landing-window-${platform.chrome}`}
       data-pos={position}
     >
       <Bar platform={platform} />

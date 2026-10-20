@@ -58,6 +58,7 @@ the licence is noted and attributed in `LICENSES/`.
 | ------ | ------------ | ------- |
 | [shadcn/ui](https://ui.shadcn.com) | component API and composition, plus the docs experience (Preview/Code, install, theming) | — |
 | [Base UI](https://base-ui.com) | behaviour and parts model — compound parts, controlled state, focus | — |
+| [PanelUI](https://panelui.dev) | resizable panels, split layouts, panel groups, tabbed workspaces and workspace composition — behaviour/decomposition reference | — |
 | [Tailwind](https://tailwindcss.com) | utility syntax and recipe model, mapped to `StyleDesc` (not the CSS engine) | — |
 | [React](https://react.dev) | the runtime surface (JSX, hooks) on GPUix | — |
 | [GPUix](https://gpuix.dev) | the native renderer — GPU, no DOM | — |

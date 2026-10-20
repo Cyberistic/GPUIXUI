@@ -372,30 +372,14 @@
   border-color: var(--fg);
 }
 
-/* ---- product window + deck ---- */
-.landing-window {
+/* ---- deck: the shuffled dialog window ---- */
+.landing-deck {
   position: relative;
   width: min(880px, 100%);
+  height: 320px;
   margin: 12px auto 0;
-  border: 1px solid var(--line-strong);
-  border-radius: 24px;
-  background:
-    radial-gradient(
-      720px 320px at 50% -10%,
-      var(--accent-wash),
-      transparent 60%
-    ),
-    var(--bg-soft);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.4) inset,
-    0 24px 70px -24px rgba(23, 27, 33, 0.28);
+  overflow: hidden;
   animation: landing-float 9s ease-in-out infinite;
-}
-
-.dark .landing-window {
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 30px 80px -28px rgba(0, 0, 0, 0.7);
 }
 
 @keyframes landing-float {
@@ -409,57 +393,24 @@
   }
 }
 
-.landing-window-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 42px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--line);
-}
-
-.landing-window-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.landing-window-dots i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--line-strong);
-}
-
-.landing-window-name {
-  margin: 0 auto;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  color: var(--dim);
-}
-
-.landing-window-spacer {
-  width: 33px;
-}
-
-.landing-deck {
+/* the platform window — the dialog itself is the window */
+.landing-window {
   position: relative;
-  height: 320px;
-  overflow: hidden;
-  border-radius: 0 0 24px 24px;
-}
-
-.landing-card {
-  position: absolute;
-  left: 50%;
-  top: 28px;
-  width: min(460px, calc(100% - 64px));
+  width: 100%;
   height: 240px;
   overflow: hidden;
   border-radius: 14px;
   background: var(--card);
   border: 1px solid var(--line-strong);
   box-shadow: var(--shadow);
+}
+
+/* in the deck the three windows stack and shuffle */
+.landing-deck .landing-window {
+  position: absolute;
+  left: 50%;
+  top: 28px;
+  width: min(460px, calc(100% - 64px));
   transition:
     transform 0.65s cubic-bezier(0.22, 1, 0.36, 1),
     opacity 0.65s,
@@ -467,23 +418,23 @@
   transform-origin: 50% 100%;
 }
 
-.landing-card[data-pos="0"] {
+.landing-deck .landing-window[data-pos="0"] {
   transform: translateX(-50%) translateY(0) rotate(0deg) scale(1);
   z-index: 3;
   box-shadow: 0 26px 60px -20px rgba(23, 27, 33, 0.3);
 }
 
-.dark .landing-card[data-pos="0"] {
+.dark .landing-deck .landing-window[data-pos="0"] {
   box-shadow: 0 26px 60px -20px rgba(0, 0, 0, 0.7);
 }
 
-.landing-card[data-pos="1"] {
+.landing-deck .landing-window[data-pos="1"] {
   transform: translateX(-50%) translateY(24px) rotate(-1.6deg) scale(0.93);
   z-index: 2;
   opacity: 0.82;
 }
 
-.landing-card[data-pos="2"] {
+.landing-deck .landing-window[data-pos="2"] {
   transform: translateX(-50%) translateY(44px) rotate(1.6deg) scale(0.86);
   z-index: 1;
   opacity: 0.55;
@@ -565,15 +516,15 @@
   border: 1px solid var(--field-line);
 }
 
-.landing-card-win .landing-chrome-glyphs i {
+.landing-window-win .landing-chrome-glyphs i {
   border-radius: 2px;
 }
 
-.landing-card-lnx .landing-chrome-glyphs i {
+.landing-window-lnx .landing-chrome-glyphs i {
   border-radius: 50%;
 }
 
-/* dialog body — the same component on every card */
+/* dialog body — the same component on every window */
 .landing-dialog {
   padding: 22px 20px;
 }
@@ -630,16 +581,16 @@
   font-weight: 600;
 }
 
-.landing-card-win .landing-dialog-btn,
-.landing-card-win .landing-field {
+.landing-window-win .landing-dialog-btn,
+.landing-window-win .landing-field {
   border-radius: 4px;
 }
 
-.landing-card-lnx .landing-dialog-btn {
+.landing-window-lnx .landing-dialog-btn {
   border-radius: 10px;
 }
 
-.landing-card-lnx .landing-field {
+.landing-window-lnx .landing-field {
   border-radius: 8px;
 }
 
@@ -651,15 +602,6 @@
   font-size: 9px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--dim);
-}
-
-.landing-deck-note {
-  margin: 14px auto 0;
-  max-width: 44ch;
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.5;
   color: var(--dim);
 }
 
@@ -686,19 +628,18 @@
   line-height: 1.04;
 }
 
-.landing-h3 {
-  margin: 40px 0 16px;
-  font-size: 14px;
-  font-weight: 650;
-  color: var(--fg);
-}
-
 .landing-lead {
   margin: 0;
   max-width: 62ch;
   color: var(--muted);
   line-height: 1.6;
   font-size: 16px;
+}
+
+.landing-lead a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .landing-grid3 {
@@ -805,60 +746,84 @@
   font-weight: 600;
 }
 
-/* ---- library ---- */
-.landing-panel-ai {
-  border-color: var(--line-strong);
+/* ---- defaults: platform windows + recipes ---- */
+.landing-default {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.landing-chip {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 4px 10px;
-  border-radius: 999px;
+.landing-default-link {
+  align-self: flex-start;
   font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.landing-chip-done {
-  border: 1px solid rgba(198, 255, 61, 0.45);
+  font-size: 11px;
+  letter-spacing: 0.02em;
   color: var(--accent-text);
 }
 
-.landing-chip-planned {
+.landing-default:hover .landing-default-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.landing-recipes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.landing-recipe {
+  display: block;
+}
+
+.landing-recipe:hover {
+  border-color: var(--accent);
+}
+
+/* ---- code vs component ---- */
+.landing-code {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  margin-top: 32px;
   border: 1px solid var(--line-strong);
-  color: var(--muted);
-}
-
-.landing-tiles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 18px;
-}
-
-.landing-tile {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 13px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  font-size: 12.5px;
-  color: var(--muted);
+  border-radius: 16px;
+  overflow: hidden;
   background: var(--bg-soft);
 }
 
-.landing-tile-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
+.landing-code > figure {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
 }
 
-.landing-tile-planned {
+.landing-code > figure [role="region"] {
+  max-height: 340px;
+}
+
+.landing-code-preview {
+  display: flex;
+  border-left: 1px solid var(--line-strong);
+}
+
+.landing-code-preview .gx-demo {
+  flex: 1;
+  min-height: 340px;
+  border-radius: 0;
+}
+
+.landing-code-caption {
+  margin: 14px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--dim);
+}
+
+.landing-code-caption a {
+  color: var(--accent-text);
 }
 
 /* ---- lineage graph ---- */
@@ -1003,11 +968,11 @@
     height: 340px;
   }
 
-  .landing-card {
+  .landing-deck .landing-window {
     display: none;
   }
 
-  .landing-card[data-pos="0"] {
+  .landing-deck .landing-window[data-pos="0"] {
     display: block;
     position: static;
     transform: none;
@@ -1020,6 +985,19 @@
 @media (max-width: 900px) {
   .landing-grid3 {
     grid-template-columns: 1fr;
+  }
+
+  .landing-recipes {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-code {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-code-preview {
+    border-left: 0;
+    border-top: 1px solid var(--line-strong);
   }
 }
 
@@ -1063,11 +1041,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .landing-window {
+  .landing-deck {
     animation: none;
   }
 
-  .landing-card {
+  .landing-deck .landing-window {
     transition: none;
   }
 

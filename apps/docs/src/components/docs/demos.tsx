@@ -254,13 +254,16 @@ const TabsDemo = () => {
   const [selected, setSelected] = useState("profile");
   const id = useId();
   const triggers = useRef<Array<HTMLButtonElement | null>>([]);
-  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(null);
+  const [indicator, setIndicator] = useState<{ x: number; w: number } | null>(
+    null,
+  );
 
   useLayoutEffect(() => {
     const index = tabRows.findIndex((tab) => tab.value === selected);
     const element = triggers.current[index];
     if (element === null || element === undefined) return;
-    const update = () => setIndicator({ x: element.offsetLeft, w: element.offsetWidth });
+    const update = () =>
+      setIndicator({ x: element.offsetLeft, w: element.offsetWidth });
     update();
     const observer = new ResizeObserver(update);
     observer.observe(element);
@@ -293,7 +296,10 @@ const TabsDemo = () => {
           <span
             aria-hidden="true"
             className="gx-tabs-indicator"
-            style={{ transform: `translateX(${indicator.x}px)`, width: indicator.w }}
+            style={{
+              transform: `translateX(${indicator.x}px)`,
+              width: indicator.w,
+            }}
           />
         )}
         {tabRows.map((tab, index) => (
