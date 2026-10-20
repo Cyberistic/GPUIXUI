@@ -1007,6 +1007,30 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       what: "a misspelling the lexical index never retrieves",
     },
     {
+      query: "theem editr",
+      expected: "/docs/theme-editor",
+      first: true,
+      what: "a misspelling of a whole two-word title",
+    },
+    {
+      query: "buton group",
+      expected: "/docs/components/button-group",
+      first: true,
+      what: "a phrase typo that a token match used to steal",
+    },
+    {
+      query: "tag input",
+      expected: "/docs/components/tag-input",
+      first: true,
+      what: "a component whose title is not the reader's phrase",
+    },
+    {
+      query: "transparency",
+      expected: "/docs/styling",
+      first: true,
+      what: "a style field named by the page that renders it",
+    },
+    {
       query: "theme",
       expected: "/docs/theming",
       first: true,

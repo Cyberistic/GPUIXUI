@@ -19,6 +19,13 @@ import { source } from "./source";
  * keyed without terms, stores a term the ranker cannot compare, shares a term
  * between pages, shadows a page or component name (the misroute class), matches
  * a prefix instead of the whole query, or loses its wiring in `search()`.
+ *
+ * Plan 608 adds the eighth block: the exact phrase a page already owns but the
+ * index loses to a component token (`state management`, `transparency`,
+ * `rendering`, `panel`, `speed`, `credits`, `vitest`, the colour-vision words).
+ * Every new term is an `owned` row, and the queries that must keep their owner
+ * stay in `regressions` — including the measured limits `tabel`, `read only`
+ * and `search index`, so a future fix has to change the row deliberately.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -212,6 +219,43 @@ const owned = [
   ["right to left", "/docs/layouts"],
   ["text direction", "/docs/layouts"],
   ["mirroring", "/docs/layouts"],
+  ["credits", "/docs/license"],
+  ["acknowledgements", "/docs/license"],
+  ["acknowledgments", "/docs/license"],
+  ["vitest", "/docs/contributing"],
+  ["panel", "/docs/workspace"],
+  ["panels", "/docs/workspace"],
+  ["pane", "/docs/workspace"],
+  ["panes", "/docs/workspace"],
+  ["state management", "/docs/component-api"],
+  ["state ownership", "/docs/component-api"],
+  ["controlled state", "/docs/component-api"],
+  ["controlled component", "/docs/component-api"],
+  ["uncontrolled state", "/docs/component-api"],
+  ["transparency", "/docs/styling"],
+  ["rounded", "/docs/styling"],
+  ["corner radius", "/docs/styling"],
+  ["width", "/docs/styling"],
+  ["height", "/docs/styling"],
+  ["responsive", "/docs/styling"],
+  ["responsive layout", "/docs/styling"],
+  ["responsive design", "/docs/styling"],
+  ["breakpoint", "/docs/styling"],
+  ["breakpoints", "/docs/styling"],
+  ["letter spacing", "/docs/styling"],
+  ["letter-spacing", "/docs/styling"],
+  ["tracking", "/docs/styling"],
+  ["character spacing", "/docs/styling"],
+  ["speed", "/docs/performance"],
+  ["rendering", "/docs/architecture"],
+  ["server", "/docs/architecture"],
+  ["server side", "/docs/architecture"],
+  ["server side rendering", "/docs/architecture"],
+  ["client side", "/docs/architecture"],
+  ["colourblind", "/docs/theming"],
+  ["colorblind", "/docs/theming"],
+  ["colour blindness", "/docs/theming"],
+  ["color blindness", "/docs/theming"],
 ] as const;
 
 const regressions = [
@@ -254,6 +298,14 @@ const regressions = [
   ["font size", "/docs/typography"],
   ["platform support", "/docs/installation#native-bindings"],
   ["native binding", "/docs/installation#native-bindings"],
+  ["border radius", "/docs/styling"],
+  ["media queries", "/docs/styling"],
+  ["table", "/docs/data-display"],
+  ["tables", "/docs/data-display"],
+  ["search index", "/docs/components/search-input"],
+  ["read only", "/docs/troubleshooting"],
+  ["tabel", "/docs/components/label"],
+  ["keyboard navigation", "/docs/roadmap"],
 ] as const;
 
 describe(

@@ -105,20 +105,30 @@ both directions and fails by name when a field is unclassified, a family anchor
 disappears, a concept is claimed absent after the runtime gained it, or the table
 stops resolving.
 
-A misspelling has a tier of its own (plan 607). The lexical index tolerates most
-typos by returning *some* page, so `botton` returned Toggle and `theem` the
+A misspelling has a tier of its own (plans 607, 608). The lexical index tolerates
+most typos by returning *some* page, so `botton` returned Toggle and `theem` the
 Values API, while `acordian` and `dropdwon` returned nothing at all.
 `src/lib/typo.ts` compares a single-word query with every component name, page
 title and guarded alias after collapsing repeated letters and applying the same
-stem the real matcher uses. One edit lands the page at `TYPO_MATCH_RANK` (8), one
-above the highest real rank, and the winning page is synthesized when the index
-omitted it. A whole title beats a word of a longer title, a name beats an alias,
-and two names tied at the winning tier are never promoted — the tier does not
-guess. `src/lib/typo.test.ts` pins each rule, `search.test.ts` runs the seven
-measured misspellings against the real index, and `smoke:build` checks `botton`
-in the production build. The same pass gives Typography `line height`,
-`line spacing` and `leading`, Installation the platform question, and Layouts'
-`## Localization and direction` the i18n, locale and direction vocabulary.
+stem the real matcher uses; it also compares the raw spelling, so `themnig` sees
+`theming`'s suffix rather than only its stem. A whole phrase is matched word by
+word against one whole title or alias, positionally, with every word exact or one
+edit and at least one changed (`theem editr`, `buton group`, `seach input`).
+A single misspelled word lands at `TYPO_MATCH_RANK` (8), below every real match;
+a whole-phrase typo is name evidence and sits at `PHRASE_TYPO_MATCH_RANK` (2), so
+a one-token result (`Radio group` for `buton group`) cannot steal it. A whole
+title beats a word of a longer title, a name beats an alias, two names tied at
+the winning tier are never promoted, and a four-letter word inside a longer title
+is not a typo (`code` is not `mode`). The winning page is synthesized when the
+index omitted it. `src/lib/typo.test.ts` pins each rule, `search.test.ts` runs
+the measured misspellings against the real index, and `smoke:build` checks
+`botton`, `acordian` and `theem editr` in the production build. The same passes
+give Typography `line height`, `line spacing` and `leading`, Installation the
+platform question, Layouts the i18n, locale and direction vocabulary, and the
+eighth page-alias block the exact phrase a page already owns — `state
+management` → Component API, `transparency`, `width` and `letter spacing` →
+Styling, `rendering` and `server side rendering` → Architecture, `speed`,
+`credits`, `vitest`, `panel` and the colour-vision words.
 
 The extension half is `/docs/extending` (plan 488): the `core/` layer, the real
 `Toggle` source and the theme example. `src/extending.test.ts` reads

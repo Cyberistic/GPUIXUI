@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formsWithinOneEdit,
   splitWords,
+  typoForms,
   typoKey,
   typoMatch,
   typoWords,
@@ -9,16 +11,20 @@ import {
 } from "./typo";
 
 /**
- * Guards plan 607's one-edit typo tier. The bug being prevented: the lexical
- * index tolerates a misspelling by returning *some* page, and nothing could say
- * the query was one edit from a name, so `botton` returned Toggle, `theem`
- * returned the Values API and `acordian` returned nothing.
+ * Guards plans 607 and 608: a misspelling has a tier of its own. The bug being
+ * prevented: the lexical index tolerates a misspelling by returning *some*
+ * page, and nothing could say the query was one edit from a name, so `botton`
+ * returned Toggle, `theem` returned the Values API and `acordian` returned
+ * nothing.
  *
- * These tests fail if a transposition counts as two edits, if a doubled letter
- * is not collapsed (the typo itself), if the tier order stops preferring a
- * whole title over a word of a longer one or a name over an alias, if an
- * ambiguous pair of names is guessed, or if a phrase, a short word or a
- * two-edit word is promoted.
+ * Plan 608 adds the phrase arm: `theem editr`, `buton group` and `seach input`
+ * are one edit per word from a real two-word name, and `themnig` is one
+ * transposition from `theming` although the shared stem hides the suffix. These
+ * tests fail if a transposition counts as two edits, if a doubled letter is not
+ * collapsed (the typo itself), if the raw spelling is no longer compared beside
+ * the stem, if a phrase ignores word order or word count, if an all-exact phrase
+ * is promoted, if the tier order stops preferring a whole title over a word of
+ * a longer one or a name over an alias, or if an ambiguous pair is guessed.
  */
 const name = (value: string, url: string): TypoName => ({
   name: value,
@@ -77,6 +83,25 @@ describe("typoKey", () => {
   });
 });
 
+describe("typoForms", () => {
+  it("keeps the raw spelling beside the stem", () => {
+    expect(typoForms("Theming")).toEqual(["them", "theming"]);
+    expect(typoForms("themnig")).toEqual(["themnig"]);
+    expect(typoForms("button")).toEqual(["buton"]);
+  });
+
+  it("compares the raw spelling, so a suffix transposition is one edit", () => {
+    expect(formsWithinOneEdit("themnig", "theming")).toBe(true);
+    expect(formsWithinOneEdit("theem", "theming")).toBe(true);
+    expect(formsWithinOneEdit("theme", "theming")).toBe(true);
+    expect(formsWithinOneEdit("butxy", "button")).toBe(false);
+  });
+
+  it("does not compare a form shorter than four characters", () => {
+    expect(formsWithinOneEdit("the", "theming")).toBe(false);
+  });
+});
+
 describe("typoMatch", () => {
   it("prefers a whole title over a word of a longer one", () => {
     const names = [
@@ -124,11 +149,75 @@ describe("typoMatch", () => {
     expect(typoMatch("botter", names)).toBeUndefined();
   });
 
-  it("never promotes an exact spelling, a phrase, a short word or two edits", () => {
+  it("never promotes an exact spelling, a short word or two edits", () => {
     const names = [name("Buttons", "/docs/components/button")];
     expect(typoMatch("buttons", names)).toBeUndefined();
     expect(typoMatch("botton page", names)).toBeUndefined();
     expect(typoMatch("bot", names)).toBeUndefined();
     expect(typoMatch("butxy", names)).toBeUndefined();
+  });
+
+  it("does not name a word of a longer title from four letters", () => {
+    const names = [name("Dark mode", "/docs/dark-mode")];
+    expect(typoMatch("code", names)).toBeUndefined();
+    expect(
+      typoMatch("hosting", [
+        alias("unsupported host", "/docs/troubleshooting"),
+      ]),
+    ).toBeUndefined();
+  });
+
+  it("matches a transposition the shared stem hid", () => {
+    const names = [name("Theming", "/docs/theming")];
+    expect(typoMatch("themnig", names)?.url).toBe("/docs/theming");
+  });
+});
+
+describe("typoMatch phrases", () => {
+  it("aligns every word with the whole name", () => {
+    const names = [
+      name("Theme editor", "/docs/theme-editor"),
+      name("Button groups", "/docs/components/button-group"),
+      name("Search inputs", "/docs/components/search-input"),
+      name("Dropdown menus", "/docs/components/dropdown-menu"),
+    ];
+    expect(typoMatch("theem editr", names)?.url).toBe("/docs/theme-editor");
+    expect(typoMatch("buton group", names)?.url).toBe(
+      "/docs/components/button-group",
+    );
+    expect(typoMatch("seach input", names)?.url).toBe(
+      "/docs/components/search-input",
+    );
+    expect(typoMatch("dropdwon menu", names)?.url).toBe(
+      "/docs/components/dropdown-menu",
+    );
+  });
+
+  it("keeps a name ahead of an alias in the phrase arm", () => {
+    const names = [
+      name("Button groups", "/docs/components/button-group"),
+      alias("button group", "/docs/components/other"),
+    ];
+    expect(typoMatch("buton group", names)?.url).toBe(
+      "/docs/components/button-group",
+    );
+  });
+
+  it("refuses a phrase with an extra or missing word", () => {
+    const names = [name("Accordions", "/docs/components/accordion")];
+    expect(typoMatch("acordian panel", names)).toBeUndefined();
+    expect(typoMatch("acordian", names)?.url).toBe(
+      "/docs/components/accordion",
+    );
+  });
+
+  it("refuses a phrase whose words are all exactly the name", () => {
+    const names = [name("Button groups", "/docs/components/button-group")];
+    expect(typoMatch("button groups", names)).toBeUndefined();
+  });
+
+  it("refuses to guess between two equally plausible phrases", () => {
+    const names = [name("Batter up", "/a"), name("Better up", "/b")];
+    expect(typoMatch("botter up", names)).toBeUndefined();
   });
 });

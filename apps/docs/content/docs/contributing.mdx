@@ -37,6 +37,9 @@ A test must be able to fail. `nub run check` rejects a test that asserts nothing
 compares a value with itself, or asserts back what the test itself stubbed. A
 regression fix lands with a test that fails without it and passes with it.
 
+The suites are vitest files beside the code (`src/**/*.test.ts`); `nub run test`
+runs them.
+
 ## Components
 
 Every component needs code, a test appropriate to its behaviour, a working

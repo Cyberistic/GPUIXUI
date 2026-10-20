@@ -255,6 +255,12 @@ export const absentStylingConcepts: ReadonlyArray<AbsentConcept> = [
     wouldBeFields: ["mediaQuery", "mediaQueries", "breakpoint"],
   },
   {
+    concept: "Letter spacing and tracking",
+    replacement:
+      "There is no letterSpacing field; a family's own spacing is what the runtime paints.",
+    wouldBeFields: ["letterSpacing", "tracking"],
+  },
+  {
     concept: "!important",
     replacement:
       "The caller's object is spread after the component's, so a field you pass wins.",

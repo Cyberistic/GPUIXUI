@@ -20,7 +20,11 @@
  * `large list` stay with Data display and List. A seventh covers the typographic
  * measure (`line height`, `line spacing`, `leading`), the platform question
  * (`does it work on windows`) and the localization vocabulary (`i18n`, `rtl`,
- * `text direction`) — plan 607. `page-aliases.test.ts`
+ * `text direction`) — plan 607. An eighth names the phrase a page already owns
+ * but the index loses to a component token — `state management` on Component
+ * API, `transparency`, `width` and `letter spacing` on Styling, `rendering` and
+ * `server side rendering` on Architecture, `speed`, `credits`, `vitest`,
+ * `panel` and the colour-vision words — plan 608. `page-aliases.test.ts`
  * proves every key is a page `source.getPages()` serves, no key is a component
  * page (that is plan 566's table), no term is shared, and no term shadows a page
  * or component name — an alias that names something else misroutes the query.
@@ -55,6 +59,9 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
     ],
   ],
   ["/docs/accessibility", ["keyboard focus"]],
+  ["/docs/license", ["credits", "acknowledgements", "acknowledgments"]],
+  ["/docs/contributing", ["vitest"]],
+  ["/docs/workspace", ["panel", "panels", "pane", "panes"]],
   [
     "/docs/styling",
     [
@@ -74,6 +81,20 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "pseudo element",
       "custom styles",
       "override styles",
+      "transparency",
+      "rounded",
+      "corner radius",
+      "width",
+      "height",
+      "responsive",
+      "responsive layout",
+      "responsive design",
+      "breakpoint",
+      "breakpoints",
+      "letter spacing",
+      "letter-spacing",
+      "tracking",
+      "character spacing",
     ],
   ],
   [
@@ -90,6 +111,7 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "memory usage",
       "slow list",
       "slow table",
+      "speed",
     ],
   ],
   [
@@ -106,6 +128,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "space key",
       "arrow keys",
       "tab order",
+      "state management",
+      "state ownership",
+      "controlled state",
+      "controlled component",
+      "uncontrolled state",
     ],
   ],
   ["/docs/data-display", ["select row", "selectable rows"]],
@@ -179,6 +206,10 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "easing",
       "reduced motion",
       "prefers reduced motion",
+      "colourblind",
+      "colorblind",
+      "colour blindness",
+      "color blindness",
     ],
   ],
   [
@@ -209,6 +240,11 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "webassembly",
       "ssr",
       "server rendering",
+      "server side",
+      "server side rendering",
+      "client side",
+      "rendering",
+      "server",
       "hydration",
     ],
   ],

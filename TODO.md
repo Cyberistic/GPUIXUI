@@ -471,7 +471,7 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–607)
 
-`[x]` `[██████████]` 174/174
+`[x]` `[██████████]` 175/175
 
 `[x]` **Styling has a page (plan 606)** — a React reader's first move is
       `className`, and the site never said there is no CSS: `className` and
@@ -496,13 +496,20 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
       119 files / 1 026 docs tests, 102-page `smoke:build`, six two-direction
       proofs, four measured limits recorded in plan 607 §8.5.
 
-`[ ]` **Reader vocabulary, tenth pass — the boundaries plan 607 measured** —
-      the typo tier compares one word only, so a phrase with a misspelling
-      (`theem editr`) gets no help, and a word more than one edit away (`btton`
-      collapses to `bton`) is deliberately not promoted. Sweep the remaining
-      reader phrases for a subject still owned by nothing (the plan-607 pass
-      exhausted its measured list), and record any further boundary in the plan
-      rather than widening the tier silently.
+`[x]` **Reader vocabulary, tenth pass (plan 608)** — the boundaries plan 607
+      measured are closed where the rule can stay honest: a phrase is matched
+      word by word against one whole title or alias (`theem editr`, `buton
+      group`, `seach input`, `dropdwon menu`, `theem toggle`), the raw spelling
+      is compared beside the stem (`themnig`), and a phrase typo ranks with a
+      real name word because a single token used to steal it. `tag input`
+      reaches Tag / token input; `state management`, `transparency`, `width`,
+      `letter spacing`, `rendering`, `server side rendering`, `speed`,
+      `credits`, `vitest`, `panel` and the colour-vision words reach the page
+      that owns them; the letter-spacing absence is a sourced row. 119 files /
+      1 085 docs tests, 102-page `smoke:build`, eight two-direction proofs and
+      six measured limits recorded in plan 608 §8.5 (`acordian panel`, `tabel`,
+      `state`, `keyboard navigation`, four-letter words inside a longer name,
+      deployment/hosting).
 
 `[x]` **Performance has an answer (plan 605)** — measured 2026-10-20:
       `performance`, `benchmark`, `fps` and `10k rows` returned nothing or the

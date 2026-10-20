@@ -362,6 +362,69 @@ describe("search", { timeout: 120_000 }, () => {
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
 
+  it("finds the page a reader misspelled as a whole phrase (plan 608)", async () => {
+    const expected = [
+      ["theem editr", "/docs/theme-editor"],
+      ["buton group", "/docs/components/button-group"],
+      ["dropdwon menu", "/docs/components/dropdown-menu"],
+      ["seach input", "/docs/components/search-input"],
+      ["theem toggle", "/docs/dark-mode"],
+      ["themnig", "/docs/theming"],
+      ["tag input", "/docs/components/tag-input"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query);
+        return first?.url === url
+          ? null
+          : `${query} -> ${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("finds the phrase a page already owns (plan 608)", async () => {
+    const expected = [
+      ["state management", "/docs/component-api"],
+      ["state ownership", "/docs/component-api"],
+      ["controlled state", "/docs/component-api"],
+      ["controlled component", "/docs/component-api"],
+      ["transparency", "/docs/styling"],
+      ["rounded", "/docs/styling"],
+      ["corner radius", "/docs/styling"],
+      ["width", "/docs/styling"],
+      ["height", "/docs/styling"],
+      ["responsive design", "/docs/styling"],
+      ["breakpoints", "/docs/styling"],
+      ["letter spacing", "/docs/styling"],
+      ["tracking", "/docs/styling"],
+      ["rendering", "/docs/architecture"],
+      ["server", "/docs/architecture"],
+      ["server side rendering", "/docs/architecture"],
+      ["speed", "/docs/performance"],
+      ["credits", "/docs/license"],
+      ["acknowledgements", "/docs/license"],
+      ["vitest", "/docs/contributing"],
+      ["panel", "/docs/workspace"],
+      ["panle", "/docs/workspace"],
+      ["colorblind", "/docs/theming"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query);
+        return first?.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
+
+  it("keeps a four-letter word off a longer title (plan 608)", async () => {
+    const [first] = await search("code");
+    expect(first?.url).not.toBe("/docs/dark-mode");
+  });
+
   it("keeps a real name ahead of its one-edit neighbours", async () => {
     const [button] = await search("button");
     expect(button?.url).toBe("/docs/components/button");

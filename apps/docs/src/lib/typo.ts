@@ -40,18 +40,35 @@ export const splitWords = (value: string): ReadonlyArray<string> =>
     .filter((word) => word.length > 0);
 
 /**
- * A word's typo identity: lower-case, repeated letters collapsed, then the
- * shared stem. Collapsing first is what makes a doubled letter — itself the
- * typo — count once (`botton` → `boton`, `accordions` → `acordion`), so
- * `acordian` is one substitution from Accordions rather than two.
+ * A word with repeated letters collapsed. Collapsing is what makes a doubled
+ * letter — itself the typo — count once (`botton` → `boton`, `accordions` →
+ * `acordion`), so `acordian` is one substitution from Accordions rather than
+ * two.
  */
-export const typoKey = (value: string): string =>
-  stem(
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/(.)\1+/g, "$1"),
-  );
+const collapse = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/(.)\1+/g, "$1");
+
+/**
+ * A word's typo identity: lower-case, repeated letters collapsed, then the
+ * shared stem.
+ */
+export const typoKey = (value: string): string => stem(collapse(value));
+
+/**
+ * Every spelling a word is compared by: the stemmed key the real matcher uses,
+ * then the raw collapsed word. The stem alone hides a suffix typo — `theming`
+ * keys to `them` while `themnig` keys to itself, three edits apart, although
+ * the spellings are one adjacent transposition apart — and the raw spelling
+ * alone would make every inflection look like an error.
+ */
+export const typoForms = (value: string): ReadonlyArray<string> => {
+  const collapsed = collapse(value);
+  const key = typoKey(value);
+  return key === collapsed ? [collapsed] : [key, collapsed];
+};
 
 /** The `typoKey` of every word in a name. */
 export const typoWords = (name: string): ReadonlyArray<string> =>
@@ -97,6 +114,29 @@ export const withinOneEdit = (left: string, right: string): boolean => {
   return leftChars.length - leftIndex + (rightChars.length - rightIndex) <= 1;
 };
 
+/** Four characters are the shortest word that can name a page (plan 431). */
+const MIN_TYPO_LENGTH = 4;
+
+/** A word *inside* a longer name needs five, or `code` names `Dark mode`. */
+const MIN_WORD_TYPO_LENGTH = 5;
+
+/**
+ * `true` when any spelling of `left` is one edit from any spelling of `right`
+ * (`typoForms`). A form shorter than four characters is not compared: three
+ * letters are too weak to name a page.
+ */
+export const formsWithinOneEdit = (left: string, right: string): boolean => {
+  const leftForms = typoForms(left).filter(
+    (form) => form.length >= MIN_TYPO_LENGTH,
+  );
+  const rightForms = typoForms(right).filter(
+    (form) => form.length >= MIN_TYPO_LENGTH,
+  );
+  return leftForms.some((leftForm) =>
+    rightForms.some((rightForm) => withinOneEdit(leftForm, rightForm)),
+  );
+};
+
 /** A name a query can misspell; `alias` is editorial vocabulary. */
 export interface TypoName {
   readonly name: string;
@@ -110,33 +150,32 @@ export interface TypoTarget {
   readonly name: string;
   /** `0` whole name, `1` whole alias, `2` a name word, `3` an alias word. */
   readonly tier: number;
+  /** `true` when every word of the query named a word of the whole target. */
+  readonly phrase: boolean;
 }
 
 /**
- * The tier this target earns. A whole name beats a whole alias, which beats a
+ * The tier a single word earns. A whole name beats a whole alias, which beats a
  * word of a name, which beats a word of an alias: a title outranks editorial
  * vocabulary, and a name that is the query outranks a word inside a longer one
  * (`botton` reaches Buttons, not Button groups). An exact spelling is not a
  * typo — the real ranker already owns it.
  */
-const targetTier = (
-  query: string,
-  needle: string,
-  target: TypoName,
-): number | undefined => {
+const targetTier = (query: string, target: TypoName): number | undefined => {
   const name = target.name.trim().toLowerCase();
   const whole =
-    name !== query &&
-    typoKey(name).length >= 4 &&
-    withinOneEdit(needle, typoKey(name))
+    name !== query && formsWithinOneEdit(query, name)
       ? target.kind === "name"
         ? 0
         : 1
       : undefined;
-  const word = splitWords(name).some((part) => {
-    const key = typoKey(part);
-    return part !== query && key.length >= 4 && withinOneEdit(needle, key);
-  })
+  const word = splitWords(name).some(
+    (part) =>
+      query.length >= MIN_WORD_TYPO_LENGTH &&
+      part.length >= MIN_WORD_TYPO_LENGTH &&
+      part !== query &&
+      formsWithinOneEdit(query, part),
+  )
     ? target.kind === "name"
       ? 2
       : 3
@@ -148,29 +187,70 @@ const targetTier = (
 };
 
 /**
+ * The tier a phrase earns (plan 608). Word *i* of the query is compared with
+ * word *i* of the whole name or alias: a typo does not reorder a name
+ * (`group button` is not `button group`), and a query with an invented extra
+ * noun (`acordian panel`) is not a typo of a one-word title. Every word must
+ * match exactly or within one edit, and at least one word must differ, because
+ * an all-exact phrase is a real match the ranker already scores.
+ */
+const phraseTier = (
+  words: ReadonlyArray<string>,
+  target: TypoName,
+): number | undefined => {
+  const nameWords = splitWords(target.name);
+  if (words.length < 2 || nameWords.length !== words.length) return undefined;
+  const matches = words.map((word, index) => {
+    const nameWord = nameWords[index];
+    return nameWord !== undefined &&
+      (word === nameWord || formsWithinOneEdit(word, nameWord))
+      ? nameWord === word
+        ? "exact"
+        : "typo"
+      : undefined;
+  });
+  if (matches.some((match) => match === undefined)) return undefined;
+  return matches.includes("typo")
+    ? target.kind === "name"
+      ? 0
+      : 1
+    : undefined;
+};
+
+/**
  * The page a one-edit query names, or `undefined`.
  *
- * Only a single word is matched: a phrase keeps the token rules, and a typo
- * tier over every word of a sentence would guess. Two URLs tied at the winning
- * tier mean the query is ambiguous and is not promoted at all — never guess
- * between two plausible names.
+ * A single word is matched against the whole name, then each word of it. A
+ * phrase is matched word by word against the whole name or alias (plan 608): a
+ * typo tier over an arbitrary sentence would guess, but a phrase whose every
+ * word lines up with the same name is the same evidence a single word is. Two
+ * URLs tied at the winning tier mean the query is ambiguous and is not promoted
+ * at all — never guess between two plausible names.
  */
 export const typoMatch = (
   query: string,
   names: ReadonlyArray<TypoName>,
 ): TypoTarget | undefined => {
   const raw = query.trim().toLowerCase();
-  if (raw.length < 4 || /\s/.test(raw)) return undefined;
-  const needle = typoKey(raw);
-  if (needle.length < 4) return undefined;
+  if (raw.length < MIN_TYPO_LENGTH) return undefined;
+  const words = splitWords(raw);
+  if (words.length === 0) return undefined;
+
+  const tierOf = (target: TypoName): number | undefined =>
+    words.length === 1 ? targetTier(raw, target) : phraseTier(words, target);
 
   const best = new Map<string, TypoTarget>();
   names.forEach((target) => {
-    const tier = targetTier(raw, needle, target);
+    const tier = tierOf(target);
     if (tier === undefined) return;
     const current = best.get(target.url);
     if (current === undefined || tier < current.tier) {
-      best.set(target.url, { url: target.url, name: target.name, tier });
+      best.set(target.url, {
+        url: target.url,
+        name: target.name,
+        tier,
+        phrase: words.length > 1,
+      });
     }
   });
 

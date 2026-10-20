@@ -106,10 +106,24 @@ Rules, each forced by the measured table:
   compared with the whole target, never with one word of it, so the tier is
   `0` (a name) or `1` (an alias) — the same name-before-alias order as the
   single-word tier.
+- **A phrase typo ranks with a real name word, not with prose** (measured
+  correction to the first draft, §8.4 proof 3). A single misspelled word keeps
+  `TYPO_MATCH_RANK = 8`, below every real rank. A phrase whose every word names
+  a word of one whole title is name evidence, so `mergeResults` scores it at
+  `PHRASE_TYPO_MATCH_RANK = 2`: below an exact or prefix name (`0`–`1`), level
+  with a real word match (`2`), above a suffix coincidence (`3`), a single
+  token (`4`–`6`) and a summary phrase (`4`–`7`). At `8`, Radio group's `group`
+  token, Text inputs' `input` token and Toggle's whole `toggle` token each beat
+  the phrase that nearly spelled their neighbour.
+- **A word *inside* a longer name needs five characters on both sides**
+  (`MIN_WORD_TYPO_LENGTH`). Four is enough for a whole name, so `tabel` can
+  reach Label, but `code` must not reach `Dark mode` through `mode`, and
+  `hosting` must not reach Troubleshooting through the alias `unsupported host`.
+  The phrase arm keeps four, because every word lining up is the evidence.
 - **The same ambiguity rule.** Two URLs tied at the winning tier are not
   promoted; the tier never guesses.
-- **Single-word behaviour is unchanged**, including the exact-spelling,
-  four-character, one-edit and ambiguity guards.
+- **Single-word behaviour is otherwise unchanged**, including the
+  exact-spelling, four-character, one-edit and ambiguity guards.
 
 `targetTier` switches from `typoKey` to `formsWithinOneEdit`; `typoMatch` routes
 a multi-word query to a new `phraseTarget`. No other module changes shape.
@@ -128,7 +142,7 @@ Whole-query aliases only, and each one names a subject the page already proves:
 | Page | Terms added | What the page already shows |
 | ---- | ----------- | --------------------------- |
 | `/docs/styling` | `transparency`, `rounded`, `corner radius`, `width`, `height`, `responsive`, `responsive layout`, `responsive design`, `breakpoint`, `breakpoints`, `letter spacing`, `letter-spacing`, `tracking`, `character spacing` | the `opacity`, `borderRadius` and size fields, the absent media-query row and (new) the absent letter-spacing row |
-| `/docs/component-api` | `state management`, `state ownership`, `controlled state`, `controlled component`, `uncontrolled state`, `keyboard navigation` | `## Controlled and uncontrolled`, `## State ownership`, `## Keyboard` |
+| `/docs/component-api` | `state management`, `state ownership`, `controlled state`, `controlled component`, `uncontrolled state` | `## Controlled and uncontrolled`, `## State ownership`, `## Keyboard` |
 | `/docs/architecture` | `rendering`, `server`, `server side`, `server side rendering`, `client side` | `## What runs where` |
 | `/docs/performance` | `speed` | the measured probes and the cost model |
 | `/docs/license` | `credits`, `acknowledgements`, `acknowledgments` | `## Recorded today` and `## Identity` |
@@ -242,6 +256,7 @@ different result is a STOP condition.
 | a phrase whose words are all exact returns `undefined` | the typo tier duplicates a real match |
 | a phrase name beats a phrase alias | the phrase arm loses plan 607's tier order |
 | two phrase URLs tied at the winning tier return `undefined` | the phrase arm guesses |
+| a four-letter word is not a typo of a word inside a longer name (`code`/`mode`, `hosting`/`host`) | the word tier over-reaches and names Dark mode or Troubleshooting |
 | every measured phrase in §1 resolves to the page named there, except §8.5 | a name, its URL or the rule drifts |
 
 `src/lib/search.test.ts` — integration, against the real index:
@@ -255,7 +270,7 @@ different result is a STOP condition.
 | `theem toggle` | `/docs/dark-mode` |
 | `themnig` | `/docs/theming` |
 | `tag input` | `/docs/components/tag-input` |
-| `state management`, `controlled state`, `controlled component`, `keyboard navigation` | `/docs/component-api` |
+| `state management`, `controlled state`, `controlled component` | `/docs/component-api` |
 | `transparency`, `rounded`, `width`, `letter spacing`, `responsive design` | `/docs/styling` |
 | `rendering`, `server side rendering` | `/docs/architecture` |
 | `speed` | `/docs/performance` |
@@ -263,30 +278,33 @@ different result is a STOP condition.
 | `vitest` | `/docs/contributing` |
 | `panel`, `panle` | `/docs/workspace` |
 | `colorblind` | `/docs/theming` |
+| `code` | **not** `/docs/dark-mode` |
 
 Regressions (first result unchanged): `button`, `theme`, `theming`, `search`,
 `table`, `tables`, `panel`, `spacing`, `font size`, `font family`,
 `platform support`, `native binding`, `styling`, `className`, `state`,
 `border radius`, `media queries`, `split panes`, `acordian`, `dropdwon`,
-`botton`, `acordian panel`, `tabel`.
+`botton`, `acordian panel`, `tabel`, `code`, `keyboard navigation`.
 
 `page-aliases.test.ts`: every new term joins `owned`; the moved phrases join
 `regressions` only where the owner is deliberately unchanged.
 
 **Two-direction proofs (run each, record the command and the failure):**
 
-1. Delete the phrase arm from `typoMatch` → `theem editr`, `buton group`,
-   `dropdwon menu`, `seach input` and `theem toggle` fail by query.
-2. Remove the raw collapsed form from `typoForms` → `themnig` returns nothing.
-3. Compare phrase words by set instead of position → a test with
-   `group buton` (or the existing alignment test) fails, proving order matters.
-4. Remove the `at least one word changed` guard → an all-exact phrase is
-   promoted as a typo and the unit test fails.
-5. Delete the Styling alias block → `transparency` returns nothing and
-   `width` returns Theming.
+1. Delete the phrase arm from `typoMatch` → `aligns every word` and
+   `keeps a name ahead of an alias` fail, and five integration rows fall back
+   (`theem editr` → Roadmap, `buton group` → Radio group, `dropdwon menu` →
+   Context menu, `seach input` → Text inputs, `theem toggle` → Toggle).
+2. Remove the raw collapsed form from `typoForms` → three unit tests fail and
+   `themnig -> nothing`.
+3. Set `PHRASE_TYPO_MATCH_RANK = 8` → four integration rows fail with the token
+   match that stole the phrase.
+4. Remove the five-character word guard → the four-letter unit test and the
+   `code` integration test fail (`/docs/dark-mode`).
+5. Delete the Styling alias block → `transparency` returns nothing.
 6. Delete the `tag input` component alias → it returns Text inputs again.
-7. Delete the letter-spacing absence row → the styling guard fails (the row is
-   catalogued but not rendered) and `letter spacing` still reaches OTP field.
+7. Delete the letter-spacing absence row → `states the letter-spacing absence`
+   fails.
 8. Delete the Component API alias block → `state management` returns Empty
    state.
 
@@ -312,17 +330,126 @@ Implemented 2026-10-20.
 ### 8.1 What shipped
 
 - `src/lib/typo.ts` — `typoForms` (the stemmed key and the raw collapsed word),
-  `formsWithinOneEdit`, and a positional phrase arm that aligns every query
-  word with a word of the *whole* name or alias, requires at least one changed
-  word, and keeps the name-before-alias order and the ambiguity rule.
-- `src/lib/page-aliases.ts` — the eight measured page blocks: Styling (14
-  terms), Component API (6), Architecture (5), Performance (1), License (3),
+  `formsWithinOneEdit`, a positional phrase arm that aligns every query word with
+  a word of the *whole* name or alias, requires at least one changed word, and
+  keeps the name-before-alias order and the ambiguity rule. `TypoTarget` gains
+  `phrase`. `MIN_WORD_TYPO_LENGTH = 5` stops a four-letter word naming a word of
+  a longer title; the phrase arm keeps four.
+- `src/lib/search.ts` — `PHRASE_TYPO_MATCH_RANK = 2`; `mergeResults` uses it for
+  a phrase target and keeps `TYPO_MATCH_RANK = 8` for a single word.
+- `src/lib/page-aliases.ts` — eight measured blocks: Styling (14 terms),
+  Component API (5), Architecture (5), Performance (1), License (3),
   Contributing (1), Workspace (4), Theming (4).
 - `src/lib/component-aliases.ts` — `tag input` for `tag-input`.
 - `src/lib/styling.ts` — the "Letter spacing and tracking" absence row, guarded
   against the installed `StyleDesc`; `<AbsentStylingConcepts />` renders it.
 - `content/docs/contributing.mdx` — `## Tests` names vitest and the file
   location.
-- `src/lib/typo.test.ts` (21 tests), `src/lib/search.test.ts` (two new tables),
-  `src/lib/page-aliases.test.ts` (new owned/regression rows),
-  `src/lib/styling.test.ts` (the new row), and four `smoke:build` queries.
+- `src/lib/typo.test.ts` (24 tests), `src/lib/search.test.ts` (three new tests),
+  `src/lib/page-aliases.test.ts` (193 tests), `src/lib/styling.test.ts` (13
+  tests), and four `smoke:build` queries.
+
+### 8.2 Measured before / after
+
+Same queries, same `search()`, before at `0418831d` and after this change:
+
+| Query | Before | After |
+| ----- | ------ | ----- |
+| `theem editr` | `/docs/roadmap` | `/docs/theme-editor` |
+| `buton group` | `/docs/components/radio-group` | `/docs/components/button-group` |
+| `dropdwon menu` | `/docs/components/context-menu` | `/docs/components/dropdown-menu` |
+| `seach input` | `/docs/components/text-input` | `/docs/components/search-input` |
+| `theem toggle` | `/docs/components/toggle` | `/docs/dark-mode` |
+| `themnig` | nothing | `/docs/theming` |
+| `tag input` | `/docs/components/text-input` | `/docs/components/tag-input` |
+| `state management`, `controlled state` | `/docs/components/empty-state` | `/docs/component-api` |
+| `controlled component` | `/docs/components` | `/docs/component-api` |
+| `transparency` | nothing | `/docs/styling` |
+| `rounded` | Button group limitations | `/docs/styling` |
+| `corner radius` | Tokens API | `/docs/styling` |
+| `width` | `/docs/theming` | `/docs/styling` |
+| `height` | `/docs/typography` | `/docs/styling` |
+| `responsive design`, `breakpoints` | Text / Stack limitations | `/docs/styling` |
+| `letter spacing` | OTP field limitations | `/docs/styling` |
+| `tracking` | Accessibility | `/docs/styling` |
+| `rendering` | `/docs/typography` | `/docs/architecture` |
+| `server`, `server side rendering` | Date picker limitations | `/docs/architecture` |
+| `speed` | nothing | `/docs/performance` |
+| `credits`, `acknowledgements` | nothing | `/docs/license` |
+| `vitest` | nothing | `/docs/contributing` |
+| `panle` | `/docs/components/drawer` | `/docs/workspace` |
+| `colorblind`, `color blindness` | nothing / Color picker | `/docs/theming` |
+| `code` | `/docs/components/text#variants` | unchanged (the word guard rejected Dark mode) |
+| `button`, `theme`, `table`, `panel`, `spacing`, `font size`, `platform support`, `native binding`, `styling`, `className` | — | unchanged |
+
+Suite: 119 files / 1 026 tests → **119 files / 1 085 tests**. Pages: 102
+unchanged (no new page).
+
+### 8.3 Commands run
+
+| Command | Result |
+| ------- | ------ |
+| `nub exec vitest run src/lib/typo.test.ts` | 24 passed |
+| `nub exec vitest run src/lib/search.test.ts` | 93 passed |
+| `nub exec vitest run src/lib/page-aliases.test.ts` | 193 passed |
+| `nub exec vitest run src/lib/styling.test.ts` | 13 passed |
+| `nub run --filter docs test` | 119 files / 1 085 tests passed |
+| `nub run --filter docs check-types` | exit `0` |
+| `nub run --filter docs smoke:build` | `smoke: ok` — 102 pages, 225 links, 1 328 anchors, search checked, exit `0` |
+
+### 8.4 Two-direction proofs (each run, then reverted)
+
+1. Removed the phrase arm → `aligns every word with the whole name` and
+   `keeps a name ahead of an alias in the phrase arm` failed; the integration
+   table reported `theem editr -> /docs/roadmap`,
+   `buton group -> /docs/components/radio-group`,
+   `dropdwon menu -> /docs/components/context-menu`,
+   `seach input -> /docs/components/text-input` and
+   `theem toggle -> /docs/components/toggle`.
+2. Made `typoForms` return only the stem → three unit tests failed and the
+   integration table reported `themnig -> nothing`.
+3. Set `PHRASE_TYPO_MATCH_RANK = 8` → four integration rows failed with Radio
+   group, Context menu, Text inputs and Toggle.
+4. Removed the five-character word guard → the four-letter unit test failed and
+   `code` returned `/docs/dark-mode`.
+5. Removed `transparency` from the Styling block → the owned row failed with
+   `expected undefined to be '/docs/styling'`.
+6. Removed `tag input` from `tag-input` → the integration row reported
+   `tag input -> /docs/components/text-input`.
+7. Removed the letter-spacing absence row → `states the letter-spacing absence
+   its search phrase promises` failed (the guard added for this proof; the
+   catalogue alone could not notice its own removal).
+8. Removed `state management` from Component API → the owned row failed with
+   `expected '/docs/components/empty-state' to be '/docs/component-api'`.
+
+### 8.5 Measured limits, deliberately not fixed
+
+- **A phrase with an extra noun is not a typo.** `acordian panel` still returns
+  Tabs' composition section; `acordian` alone reaches Accordions. The phrase arm
+  requires the same word count as the name, and inventing a generic noun is the
+  guess the tier refuses.
+- **`tabel` reaches Label.** It is one substitution from two candidates; Label
+  is a page title (tier `0`) and no page is titled Table, so Data display can
+  only be an alias (tier `1`). The measured `table`/`tables` queries already
+  reach Data display through its summary.
+- **`state` stays on Empty state.** The bare word is owned by a title suffix; the
+  page-level phrases (`state management`, `state ownership`, `controlled state`)
+  reach Component API. Aliasing `state` would shadow the component's own title
+  word for every reader.
+- **`keyboard navigation` stays on the Roadmap.** It is the exact name of a
+  tracked Tier 4 target; adding the page alias made the roadmap's promoted name
+  win on the shorter title anyway, which is the same rule plan 564 applied to
+  `split panes`. The keyboard *conventions* (`keyboard`, `enter key`, …) already
+  reach Component API.
+- **`code` is not a typo of `mode`.** Four letters inside a longer title are not
+  evidence; the five-character word guard keeps the previous result.
+- **No owner for deployment or hosting.** `deployment`, `cloudflare` and
+  `workers` return nothing, and `hosting` returns Component API prose. The
+  Alchemy deploy path is still unverified (`TODO.md`), so no page claims it;
+  inventing an alias would send a reader to a promise the site cannot keep.
+- `imperative`, `schema`, `read only`, `paste`, `search index` and `cmd k` stay
+  as measured: each is either a generic word with several plausible owners or a
+  subject no page states. They are recorded rather than forced.
+- `btton` remains two edits away; the lexical index still returns Buttons, so
+  the tier stops at one and does not widen.
+

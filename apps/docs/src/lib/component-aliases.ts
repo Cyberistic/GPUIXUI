@@ -59,7 +59,7 @@ export const componentAliases: ReadonlyMap<string, readonly string[]> = new Map<
   ["search-input", ["searchbox", "search box", "search bar", "search field"]],
   ["number-field", ["number input", "numeric input"]],
   ["meter", ["gauge", "gauges"]],
-  ["tag-input", ["chips", "chips input", "tags input"]],
+  ["tag-input", ["chips", "chips input", "tags input", "tag input"]],
   ["hotkey-input", ["shortcut recorder", "hotkey input", "hotkey recorder"]],
   ["drawer", ["side sheet", "side panel", "sidepanel", "sheet"]],
   ["fieldset", ["field group"]],

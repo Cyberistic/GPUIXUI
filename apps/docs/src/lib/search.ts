@@ -411,12 +411,22 @@ const descriptionMatchRank = (
 export const DESCRIPTION_MATCH_RANK = 4;
 
 /**
- * A one-edit typo is a candidate, never a winner over a real match (plan 607):
- * one above the highest real rank (`3` for a summary phrase, offset by
- * `DESCRIPTION_MATCH_RANK`). A genuine match therefore always outranks a
- * misspelling, however close the name is.
+ * A one-edit typo of a single word is a candidate, never a winner over a real
+ * match (plan 607): one above the highest real rank (`3` for a summary phrase,
+ * offset by `DESCRIPTION_MATCH_RANK`). A genuine match therefore always
+ * outranks a misspelling, however close the name is.
  */
 export const TYPO_MATCH_RANK = 8;
+
+/**
+ * A phrase whose every word names a word of one whole title or alias is name
+ * evidence, not prose (plan 608): it sits with a real word-level name match
+ * (`2`), below an exact or prefix name (`0`–`1`) and above a suffix coincidence
+ * (`3`), a single token (`4`–`6`) and a summary phrase (`4`–`7`). A token match
+ * is what stole `buton group` (Radio group), `seach input` (Text inputs) and
+ * `theem toggle` (Toggle) from the name the phrase nearly spelled.
+ */
+export const PHRASE_TYPO_MATCH_RANK = 2;
 
 /**
  * A page whose summary names the query is a candidate even when the page index
@@ -602,11 +612,15 @@ export const mergeResults = (
         result.type === "page" ? pageAliasRank(result.url, query) : undefined;
       /**
        * Only the page itself earns a typo hit; a text chunk at the same URL is
-       * prose, the rule plan 569 set for generated documents (plan 607).
+       * prose, the rule plan 569 set for generated documents (plan 607). A
+       * whole-phrase typo is name evidence and scores with a real word match;
+       * a single misspelled word stays below every real rank (plan 608).
        */
       const typoRank =
         typo !== undefined && result.type === "page" && typo.url === result.url
-          ? TYPO_MATCH_RANK
+          ? typo.phrase
+            ? PHRASE_TYPO_MATCH_RANK
+            : TYPO_MATCH_RANK
           : undefined;
       const ranks = [
         aliasRank,

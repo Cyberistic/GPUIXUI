@@ -249,6 +249,15 @@ describe("the style fields in search", () => {
     ).toEqual([]);
   }, 120_000);
 
+  it("states the letter-spacing absence its search phrase promises", async () => {
+    const row = absentStylingConcepts.find((concept) =>
+      concept.wouldBeFields.includes("letterSpacing"),
+    );
+    expect(row?.concept).toBe("Letter spacing and tracking");
+    const [first] = await search("letter spacing");
+    expect(first?.url).toBe("/docs/styling");
+  }, 120_000);
+
   it("does not take a word another page owns", async () => {
     const queries: ReadonlyArray<[string, string]> = [
       ["spacing", "/docs/theming"],
