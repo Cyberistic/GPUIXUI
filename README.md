@@ -27,7 +27,10 @@ Tabs are the pattern pages; their previews are labelled browser renderings of
 the native components, and the Code tab plus **Component source** show the real
 implementation. The remaining shadcn surfaces — **Blocks** (`/docs/blocks`) and
 the **Theme Editor** (`/docs/themes`) — landed too: recipe pages composed from
-the library and a live token editor backed by `@gpuixui/tokens`.
+the library and a live token editor backed by `@gpuixui/tokens`. The **Dashboard**
+block (`/docs/blocks/dashboard`) is the landing's product window: a six-card
+activity dashboard composed from the library with a labelled-gap SVG chart
+primitive (bars, donut, stacked bars).
 
 ## Layout
 

@@ -1,4 +1,4 @@
 {
   "title": "Blocks",
-  "pages": ["index", "login", "settings"]
+  "pages": ["index", "dashboard", "login", "settings"]
 }

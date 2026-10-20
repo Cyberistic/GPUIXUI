@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import {
+  DashboardRender,
+  dashboardPackages,
+  dashboardSource,
+} from "./dashboard";
 
 /**
  * Block recipes for the docs. A block is a page-level composition of real
@@ -229,6 +234,16 @@ export function SettingsPage() {
 }`;
 
 export const blocks: Readonly<Record<string, Block>> = {
+  "dashboard-01": {
+    name: "dashboard-01",
+    slug: "dashboard",
+    title: "Dashboard",
+    description:
+      "An activity dashboard: sidebar nav, a day's time and token stats, and charts — bars, a donut and stacked bars.",
+    packages: [...dashboardPackages],
+    render: DashboardRender,
+    source: dashboardSource,
+  },
   "login-01": {
     name: "login-01",
     slug: "login",

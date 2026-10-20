@@ -3,6 +3,7 @@ import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { Hero, PlatformWindow } from "./deck";
 import { Lineage } from "./lineage";
 import { demos } from "../docs/demos";
+import { DashboardRender } from "../docs/dashboard";
 import { attribution, navLinks, platforms, repo } from "./data";
 
 export function Landing() {
@@ -11,6 +12,7 @@ export function Landing() {
       <div className="landing-wrap">
         <Nav />
         <Hero />
+        <Dashboard />
         <Lineage />
         <Licence />
         <Defaults />
@@ -97,6 +99,31 @@ function MoonIcon() {
     >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
+  );
+}
+
+function Dashboard() {
+  return (
+    <section
+      className="landing-section landing-dashboard-section"
+      id="dashboard"
+    >
+      <p className="landing-kicker">The product</p>
+      <h2 className="landing-h2">One window, every stat.</h2>
+      <p className="landing-lead">
+        A dashboard composed from the library's parts — cards, badges, progress,
+        search and charts. This is a browser rendering of the same{" "}
+        <code>@gpuixui/*</code> tree the native runtime draws; the recipe lives
+        on the <a href="/docs/blocks/dashboard">blocks page</a>.
+      </p>
+      <div className="landing-dashboard">
+        <DashboardRender />
+      </div>
+      <p className="landing-dashboard-caption">
+        Browser preview of the native composition · the shipped window renders
+        through GPUix, not the DOM.
+      </p>
+    </section>
   );
 }
 
