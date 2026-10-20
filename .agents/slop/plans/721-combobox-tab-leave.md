@@ -199,6 +199,16 @@ nub exec vitest run --config vitest.behaviour.config.ts \
 # after: 62 passed (62) — this suite has no recorded plan-540 failure
 #   (measured 2026-10-20; the three new cases are among the passes)
 
+Measured after the change (2026-10-20): `Combobox 62/62`, so the three-file run
+with popover and dialog is `3 failed | 106 passed (109)` — the three failures are
+the popover's recorded plan-540 placement cases.
+
+The playground smoke registry is GPUix-primitives only (no Tier 2 scenario for
+this component), so the native `TestRenderer` suite is the interaction evidence.
+The modal path this change touches does have two scenarios, both re-run on
+2026-10-20: `nub apps/playground/dist/smoke/run.js --only modal-focus-trap`
+(1/1, `modal=verified`) and `--only overlay-dialog` (1/1, `overlay=verified`).
+
 nub run check-types
 nub run test        # unit suite, no native binding needed
 ```
