@@ -18,6 +18,14 @@
  * the whole file, because both documents legitimately quote the old reason
  * while refuting it.
  *
+ * Plan `750` reaches the last two current-state passages plan `747`'s guard did
+ * not read: the `lightColors` doc block said "the fill stays near the panel and
+ * the control's `border` edge carries its shape", and the catalogue's
+ * inactive-floor paragraph said the fill "stays near the panel by design, so a
+ * disabled control's shape is carried by its `border` edge" — while the fill is
+ * a measured step off the five surfaces `disabledFillPairs` names (plan 737).
+ * The two cases anchor on that block and that paragraph.
+ *
  * `node:fs` is deliberate, as in the other tree-local documentation guards.
  */
 import { readFileSync } from "node:fs";
@@ -103,6 +111,25 @@ describe("the disabled fill's exemption reason", () => {
     });
     expect(paragraph).not.toContain("allowed to sit within");
     expect(paragraph).not.toContain("no neutral clears");
+  });
+
+  it("states the measured fill in the light palette's rationale", () => {
+    const block = docBlockAbove("export const lightColors = {");
+
+    expect(block).toContain("disabledFillPairs");
+    expect(block).not.toContain("stays near the panel");
+    expect(block).not.toContain("edge carries its shape");
+  });
+
+  it("states the measured fill in the catalogue's inactive-floor paragraph", () => {
+    const anchor = "The inactive floor is new in plan";
+    const at = catalogue.indexOf(anchor);
+
+    expect(at).toBeGreaterThan(-1);
+    const paragraph = catalogue.slice(at, at + 800);
+    expect(paragraph).toContain("disabledFillPairs");
+    expect(paragraph).not.toContain("stays near the panel by design");
+    expect(paragraph).not.toContain("shape is carried by its");
   });
 
   it("keeps the narrative that refutes the exemption", () => {
