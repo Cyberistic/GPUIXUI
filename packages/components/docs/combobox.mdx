@@ -343,6 +343,10 @@ same shape for a row composed by hand.
   when snapping would cover the trigger; `align="center"` is measured from the
   trigger rather than using the runtime's containing-block centre.
 - `align="center"` is clamped by the snap margin near a window edge.
+- The runtime coerces a non-finite host offset to `0`, so `sideOffset`,
+  `alignOffset` and `collisionPadding` keep their documented defaults (4, 0, 8)
+  when malformed; an explicit `0` or a negative value is passed through
+  (plan 813).
 - The trigger is a `div` with button semantics (the `@gpuixui/primitives`
   stand-in), not a native button element.
 - The trigger's accessible name is `label` when authored, otherwise its visible
@@ -361,9 +365,10 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (69 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (70 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
-reopen), opening from `Enter` and from the release of `Space` (with `Space`
+reopen), a non-finite `sideOffset` keeping the documented gap (plan 813),
+opening from `Enter` and from the release of `Space` (with `Space`
 inert on its press, a disabled trigger inert to both, and the caller's key
 handlers still running), `defaultOpen` with its one empty-query report, a disabled combobox
 staying hidden, unfocused and out of the tab order even when open or

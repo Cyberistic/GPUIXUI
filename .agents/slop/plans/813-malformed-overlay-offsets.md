@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 112, 116, 119, 317, 320, 323, 398, 565, 568, 583, 602, 649, 650, 651, 652, 677, 706, 718, 732, 763 |
-| Status | planned — measured 2026-10-20 on this host; see §1 |
+| Status | done — measured 2026-10-20/21: at `HEAD` all six new native cases were red (Popover 3, Preview card 1, Notification centre 1, Combobox 1) alongside the files' 10 recorded plan-540 cases, 16 failed / 138 passed of 154; after the fix the same four files are 10 failed / 144 passed (only the recorded plan-540 classes) and the full native suite is **1041 passed / 20 failed of 1061**, exactly the baseline's 20 recorded plan-540 failures (1035/20 of 1055 before). Unit 514 in 48 files (512 + the 2 pure cases); `nub run check`, `nub run lint` and `nub run test` exit 0 |
 | Claimed number | `813` — `811` and `812` are claimed by the binding workstream; `813` is the first free number across the shared checkout and every `workspaces/*` tree at claim time |
 
 ## 1. The bug

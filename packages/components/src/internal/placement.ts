@@ -139,6 +139,14 @@ const alignOffsetOn = (
   );
 
 /**
+ * A pixel offset. A caller's explicit `0` or negative value is kept; a
+ * non-finite one falls back to the surface's documented default, so a malformed
+ * value cannot silently drop a gap, a centre correction or a window margin.
+ */
+export const offsetOf = (value: number, fallback: number): number =>
+  Number.isFinite(value) ? value : fallback;
+
+/**
  * The placement to render, resolved once per open. `center` becomes `start` plus
  * an offset because the host's `center` centres on the containing block.
  */

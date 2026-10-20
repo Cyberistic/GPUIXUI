@@ -170,6 +170,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
 - **No `aria-live` in 0.10.0**, so an arrival while the panel is closed is not
   announced. The trigger's accessible name carries the count.
 - **Non-modal**: no focus trap and no `aria-modal`; `Tab` leaves the panel.
+- **Offsets normalise themselves.** The runtime coerces a non-finite host offset
+  to `0`, so `sideOffset`, `alignOffset` and `collisionPadding` keep their
+  documented defaults (8, 0, 8) when malformed; an explicit `0` or a negative
+  value is passed through (plan 813).
 - **No `aria-activedescendant`**, so the active row is a painted accent fill and
   ring; native focus follows it through `focusElement` on a best-effort basis,
   and the feed scrolls it into view (plan 644). The row the reader is on is
@@ -190,9 +194,10 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (32 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (33 tests):
 closed by default with the derived count in the trigger's name, open and named
-by a press, a caller-authored trigger name winning whole (trimmed, with a blank
+by a press, a non-finite `sideOffset` keeping the documented gap (plan 813), a
+caller-authored trigger name winning whole (trimmed, with a blank
 one falling back to the derived name and the panel keeping the root label), opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
 the panel staying open and the dot clearing on the next data update, mark-all

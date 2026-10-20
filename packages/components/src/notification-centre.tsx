@@ -77,6 +77,7 @@ import {
   isUp,
 } from "./internal/key.js";
 import { pressedOn } from "./internal/pointer.js";
+import { offsetOf } from "./internal/placement.js";
 import { useMergedRef } from "./internal/ref.js";
 import {
   elevationShadow,
@@ -476,13 +477,16 @@ export const NotificationCentreContent = ({
     readActive,
   } = useNotificationCentre();
   const depth = useOverlayHost().depth;
+  const gap = offsetOf(sideOffset, 8);
+  const extra = offsetOf(alignOffset, 0);
+  const margin = offsetOf(collisionPadding, 8);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
     open,
     side,
     align,
-    margin: collisionPadding,
+    margin,
     trigger,
     surface,
   });
@@ -552,9 +556,9 @@ export const NotificationCentreContent = ({
       {...rest}
       side={placement.side}
       align={placement.align}
-      sideOffset={sideOffset}
-      alignOffset={placement.alignOffset + alignOffset}
-      collisionPadding={collisionPadding}
+      sideOffset={gap}
+      alignOffset={placement.alignOffset + extra}
+      collisionPadding={margin}
       role="region"
       aria-label={label ?? rootLabel}
       tabIndex={0}

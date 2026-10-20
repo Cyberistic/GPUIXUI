@@ -62,6 +62,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { offsetOf } from "./internal/placement.js";
 import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { elevationShadow, textStyle, useTheme } from "./internal/theme.js";
@@ -264,6 +265,9 @@ const PopoverSurface = ({
   const { open, requestClose, trigger } = usePopoverContext();
   const depth = useOverlayHost().depth;
   const renderer = useGpuix().renderer;
+  const gap = offsetOf(sideOffset, 6);
+  const extra = offsetOf(alignOffset, 0);
+  const margin = offsetOf(collisionPadding, 8);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   /** The first tab stop measured when the surface opened. */
@@ -285,7 +289,7 @@ const PopoverSurface = ({
     open: true,
     side,
     align,
-    margin: collisionPadding,
+    margin,
     trigger,
     surface,
   });
@@ -475,9 +479,9 @@ const PopoverSurface = ({
     <FloatingLayer
       side={placement.side}
       align={placement.align}
-      sideOffset={sideOffset}
-      alignOffset={placement.alignOffset + alignOffset}
-      collisionPadding={collisionPadding}
+      sideOffset={gap}
+      alignOffset={placement.alignOffset + extra}
+      collisionPadding={margin}
       tabIndex={-1}
       autoFocus={false}
       style={{ backgroundColor: "transparent" }}

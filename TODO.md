@@ -1501,14 +1501,20 @@ retired once both branches are one
       on this host with the recorded plan-540 focus case the only failure; docs,
       `COMPONENTS.md`, `TODO.md`, the index and `PLAN.md` D30 synced
       (owner: components)
-    - [~] A malformed overlay offset keeps the documented default — plan 813;
-      measured 2026-10-20: a non-finite `sideOffset` collapses the gap
+    - [x] A malformed overlay offset keeps the documented default — plan 813;
+      measured 2026-10-20: a non-finite `sideOffset` collapsed the gap
       (Popover 91 → 85, Preview card 91 → 85, Notification centre 81 → 73,
-      Combobox 81 → 77), a non-finite `alignOffset` drops the measured centre
-      correction (21 → 53) and a non-finite `collisionPadding` skips the flip
-      and leaves a low panel off-window (709 → 759), because 0.10.0 coerces the
+      Combobox 81 → 77), a non-finite `alignOffset` dropped the measured centre
+      correction (21 → 53) and a non-finite `collisionPadding` skipped the flip
+      and left a low panel off-window (709 → 759), because 0.10.0 coerces the
       value to `0`. One `offsetOf` rule restores each surface's default
-      (owner: components)
+      (6/0/8, 8/0/8, 4/0/8); 2 pure + 6 native cases (Popover 27 → 30,
+      Preview card 20 → 21, Notification centre 32 → 33, Combobox 69 → 70), all
+      six native cases red at `HEAD` and the same four files 10 failed / 144
+      passed after (the recorded plan-540 classes); unit 514 in 48 files, full
+      native suite 1041 passed / 20 failed of 1061 with the same 20 baseline
+      failures; docs, `COMPONENTS.md`, `TODO.md`, `PLAN.md` D30 and the index
+      synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

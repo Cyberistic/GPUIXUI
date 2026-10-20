@@ -43,6 +43,8 @@
  * role-bearing div gets no activation click from the runtime — so `Enter` and
  * `Space` did nothing and only the undocumented `ArrowDown` opened the picker
  * for a keyboard-only user. The trigger now follows the shared button contract.
+ * A non-finite `sideOffset` was coerced to 0, dropping the documented gap
+ * (plan 813).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -114,6 +116,7 @@ const Picker = ({
   loading,
   optionList,
   triggerRef,
+  sideOffset,
 }: {
   readonly onValueChange?: (
     value: string | null | ReadonlyArray<string>,
@@ -137,6 +140,7 @@ const Picker = ({
   readonly loading?: boolean;
   readonly optionList?: ReadonlyArray<ComboboxOption>;
   readonly triggerRef?: Ref<PublicInstance>;
+  readonly sideOffset?: number;
 }) => (
   <div style={{ width: 360, padding: 40 }}>
     <Combobox
@@ -171,7 +175,7 @@ const Picker = ({
           ? {}
           : { placeholder: triggerPlaceholder })}
       />
-      <ComboboxContent>
+      <ComboboxContent sideOffset={sideOffset}>
         <ComboboxInput label="Search reviewers" />
         <ComboboxList label="Reviewers" />
         <ComboboxEmpty>{empty}</ComboboxEmpty>
@@ -507,6 +511,24 @@ describe("Combobox", () => {
     expect(onQueryChange).toHaveBeenCalledTimes(1);
 
     picker.unmount();
+  });
+
+  it("keeps the default gap when sideOffset is malformed", () => {
+    const byDefault = renderComponent(<Picker defaultOpen />);
+    const defaultY = requireBounds(byDefault, "combobox-content").y;
+    byDefault.unmount();
+
+    const malformed = renderComponent(
+      <Picker defaultOpen sideOffset={Number.NaN} />,
+    );
+    const popup = requireBounds(malformed, "combobox-content");
+
+    // 0.10.0 coerces a non-finite offset to 0, so the old code dropped the
+    // documented 4px gap (measured 81 -> 77). The default is the fallback.
+    expect(Number.isFinite(popup.y)).toBe(true);
+    expect(popup.y).toBe(defaultY);
+
+    malformed.unmount();
   });
 
   it("reports an open request without opening while controlled closed", async () => {

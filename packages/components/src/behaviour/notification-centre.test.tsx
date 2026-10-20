@@ -14,7 +14,9 @@
  * release now does too (plan 741), because GPUix synthesizes no activation
  * click for a role-bearing div. A header action still owns its own keys. A
  * caller's authored trigger name was overwritten by the derived unread count,
- * although the package's naming rule lets the caller win (plan 794).
+ * although the package's naming rule lets the caller win (plan 794). A
+ * non-finite `sideOffset` was coerced to 0, dropping the documented gap
+ * (plan 813).
  */
 
 import * as Arr from "effect/Array";
@@ -92,6 +94,7 @@ const Centre = ({
   open,
   defaultOpen = false,
   triggerLabel,
+  sideOffset,
 }: {
   readonly notifications: ReadonlyArray<NotificationItem>;
   readonly onRead?: (id: string) => void;
@@ -101,6 +104,7 @@ const Centre = ({
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly triggerLabel?: string;
+  readonly sideOffset?: number;
 }) => (
   <NotificationCentre
     notifications={notifications}
@@ -112,7 +116,7 @@ const Centre = ({
     defaultOpen={defaultOpen}
   >
     <NotificationCentreTrigger testId="bell" aria-label={triggerLabel} />
-    <NotificationCentreContent testId="panel">
+    <NotificationCentreContent testId="panel" sideOffset={sideOffset}>
       <NotificationCentreHeader>
         <NotificationCentreTitle />
         <NotificationCentreMarkAll testId="mark-all">
@@ -262,6 +266,26 @@ describe("NotificationCentre", () => {
     expect(root.renderer.getAllText()).toContain("Deploy finished");
 
     root.unmount();
+  });
+
+  it("keeps the default gap when sideOffset is malformed", () => {
+    const byDefault = renderComponent(
+      <Centre notifications={seed} defaultOpen />,
+    );
+    const defaultY = requireBounds(byDefault, "panel").y;
+    byDefault.unmount();
+
+    const malformed = renderComponent(
+      <Centre notifications={seed} defaultOpen sideOffset={Number.NaN} />,
+    );
+    const panel = requireBounds(malformed, "panel");
+
+    // 0.10.0 coerces a non-finite offset to 0, so the old code dropped the
+    // documented 8px gap (measured 81 -> 73). The default is the fallback.
+    expect(Number.isFinite(panel.y)).toBe(true);
+    expect(panel.y).toBe(defaultY);
+
+    malformed.unmount();
   });
 
   it("does not mark anything read on open", () => {

@@ -12,7 +12,9 @@
  * re-opened the card (plan 515). A held trigger press closed on the press and
  * re-opened through the hover delay on the release (plan 583). A malformed
  * `openDelay`/`closeDelay` ran its `setTimeout` at once, so the card opened on
- * hover and closed before the pointer could travel into it (plan 763).
+ * hover and closed before the pointer could travel into it (plan 763). A
+ * non-finite `sideOffset` was coerced to 0, dropping the documented gap
+ * (plan 813).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -52,12 +54,14 @@ const Workspace = ({
   disabled,
   openDelay = 20,
   closeDelay = 20,
+  sideOffset,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly disabled?: boolean;
   readonly openDelay?: number;
   readonly closeDelay?: number;
+  readonly sideOffset?: number;
 }) => (
   <div
     style={{
@@ -77,7 +81,11 @@ const Workspace = ({
       <PreviewCardTrigger testId="trigger" disabled={disabled}>
         design-system.md
       </PreviewCardTrigger>
-      <PreviewCardContent label="Design system" testId="preview">
+      <PreviewCardContent
+        label="Design system"
+        testId="preview"
+        sideOffset={sideOffset}
+      >
         <text>Tokens, roles and themes.</text>
         <Button testId="inside">Open file</Button>
       </PreviewCardContent>
@@ -158,6 +166,26 @@ describe("PreviewCard", () => {
     expect(card.renderer.findByTestId("preview")).toBeUndefined();
 
     card.unmount();
+  });
+
+  it("keeps the default gap when sideOffset is malformed", async () => {
+    const byDefault = renderComponent(<Workspace />);
+    hoverCentreOf(byDefault, "trigger");
+    await until(() => isShown(byDefault, "preview"));
+    const defaultY = requireBounds(byDefault, "preview").y;
+    byDefault.unmount();
+
+    const malformed = renderComponent(<Workspace sideOffset={Number.NaN} />);
+    hoverCentreOf(malformed, "trigger");
+    await until(() => isShown(malformed, "preview"));
+    const preview = requireBounds(malformed, "preview");
+
+    // 0.10.0 coerces a non-finite offset to 0, so the old code dropped the
+    // documented 6px gap (measured 91 -> 85). The default is the fallback.
+    expect(Number.isFinite(preview.y)).toBe(true);
+    expect(preview.y).toBe(defaultY);
+
+    malformed.unmount();
   });
 
   it("stays closed after a held trigger press, and a new press opens it", async () => {

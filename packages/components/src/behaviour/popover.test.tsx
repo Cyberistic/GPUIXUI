@@ -15,7 +15,9 @@
  * twice — the walk then the modal's trap — so a control was skipped and the
  * backward exit stranded focus (plan 719). A popover mounted open together with
  * its dialog pushed its layer before the dialog's, so one Escape closed both
- * (plan 732).
+ * (plan 732). A non-finite `sideOffset`, `alignOffset` or `collisionPadding` was
+ * coerced to 0 by the runtime, dropping the documented gap, the measured centre
+ * correction and the collision flip (plan 813).
  */
 
 import * as Option from "effect/Option";
@@ -43,18 +45,25 @@ const Filters = ({
   onOpenChange,
   side,
   align,
+  sideOffset,
 }: {
   readonly open?: boolean;
   readonly onOpenChange?: (open: boolean) => void;
   readonly side?: "top" | "right" | "bottom" | "left";
   readonly align?: "start" | "center" | "end";
+  readonly sideOffset?: number;
 }) => (
   <div
     style={{ display: "flex", flexDirection: "column", gap: 24, padding: 40 }}
   >
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
-      <PopoverContent testId="panel" side={side} align={align}>
+      <PopoverContent
+        testId="panel"
+        side={side}
+        align={align}
+        sideOffset={sideOffset}
+      >
         <text testId="panel-text">Visible columns</text>
       </PopoverContent>
     </Popover>
@@ -153,11 +162,11 @@ const Removable = () => {
 };
 
 /** A trigger near the window centre, where a centred panel has room to sit. */
-const CentredPopover = () => (
+const CentredPopover = ({ alignOffset }: { readonly alignOffset?: number }) => (
   <div style={{ paddingLeft: 540, paddingTop: 100 }}>
     <Popover>
       <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
-      <PopoverContent testId="panel" align="center">
+      <PopoverContent testId="panel" align="center" alignOffset={alignOffset}>
         <text>Visible columns</text>
       </PopoverContent>
     </Popover>
@@ -165,12 +174,16 @@ const CentredPopover = () => (
 );
 
 /** A trigger at the bottom of the window, where a downside panel cannot fit. */
-const LowPopover = () => (
+const LowPopover = ({
+  collisionPadding,
+}: {
+  readonly collisionPadding?: number;
+}) => (
   <div style={{ display: "flex", flexDirection: "column", height: 780 }}>
     <div style={{ flexGrow: 1 }} />
     <Popover>
       <PopoverTrigger testId="trigger">Filters</PopoverTrigger>
-      <PopoverContent testId="panel">
+      <PopoverContent testId="panel" collisionPadding={collisionPadding}>
         <text>Visible columns</text>
       </PopoverContent>
     </Popover>
@@ -274,6 +287,73 @@ describe("Popover", () => {
     expect(panel.y + panel.height).toBeLessThanOrEqual(trigger.y);
 
     popover.unmount();
+  });
+
+  it("keeps the default gap when sideOffset is malformed", () => {
+    const byDefault = renderComponent(<Filters />);
+    clickCentreOf(byDefault, "trigger");
+    finishMotion(byDefault);
+    const defaultPanel = requireBounds(byDefault, "panel");
+    byDefault.unmount();
+
+    const malformed = renderComponent(<Filters sideOffset={Number.NaN} />);
+    clickCentreOf(malformed, "trigger");
+    finishMotion(malformed);
+    const malformedPanel = requireBounds(malformed, "panel");
+
+    // 0.10.0 coerces a non-finite offset to 0, so the old code dropped the
+    // documented 6px gap (measured 91 -> 85). The default is the fallback.
+    expect(Number.isFinite(malformedPanel.y)).toBe(true);
+    expect(malformedPanel.y).toBe(defaultPanel.y);
+
+    malformed.unmount();
+  });
+
+  it("keeps the measured centre when alignOffset is malformed", () => {
+    const byDefault = renderComponent(<CentredPopover />);
+    clickCentreOf(byDefault, "trigger");
+    finishMotion(byDefault);
+    const defaultPanel = requireBounds(byDefault, "panel");
+    byDefault.unmount();
+
+    const malformed = renderComponent(
+      <CentredPopover alignOffset={Number.NaN} />,
+    );
+    clickCentreOf(malformed, "trigger");
+    finishMotion(malformed);
+    const malformedPanel = requireBounds(malformed, "panel");
+
+    // The centre correction is the alignOffset; a NaN used to be coerced to 0,
+    // so `center` rendered as `start` (measured 21 -> 53).
+    expect(Number.isFinite(malformedPanel.x)).toBe(true);
+    expect(malformedPanel.x).toBe(defaultPanel.x);
+
+    malformed.unmount();
+  });
+
+  it("keeps a low panel above its trigger when collisionPadding is malformed", () => {
+    const byDefault = renderComponent(<LowPopover />);
+    clickCentreOf(byDefault, "trigger");
+    finishMotion(byDefault);
+    const defaultPanel = requireBounds(byDefault, "panel");
+    byDefault.unmount();
+
+    const malformed = renderComponent(
+      <LowPopover collisionPadding={Number.NaN} />,
+    );
+    clickCentreOf(malformed, "trigger");
+    finishMotion(malformed);
+
+    const trigger = requireBounds(malformed, "trigger");
+    const panel = requireBounds(malformed, "panel");
+
+    // A NaN margin made every room comparison false, so the panel kept the
+    // bottom side and the runtime's zero-padding clamp left it off-window
+    // (measured 709 -> 759). The documented 8px margin must still flip.
+    expect(panel.y).toBe(defaultPanel.y);
+    expect(panel.y).toBeLessThan(trigger.y);
+
+    malformed.unmount();
   });
 
   it("closes on Escape and gives focus back to the trigger", () => {

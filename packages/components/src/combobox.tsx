@@ -92,6 +92,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { offsetOf } from "./internal/placement.js";
 import { pressedOn } from "./internal/pointer.js";
 import { useMergedRef } from "./internal/ref.js";
 import { scrollRowIntoView } from "./internal/scroll.js";
@@ -737,13 +738,16 @@ export const ComboboxContent = ({
 }: ComboboxContentProps) => {
   const theme = useTheme();
   const { noteOutsidePress, open, trigger } = useCombobox();
+  const gap = offsetOf(sideOffset, 4);
+  const extra = offsetOf(alignOffset, 0);
+  const margin = offsetOf(collisionPadding, 8);
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
     open,
     side,
     align,
-    margin: collisionPadding,
+    margin,
     trigger,
     surface,
   });
@@ -754,9 +758,9 @@ export const ComboboxContent = ({
       testId="combobox-content"
       side={placement.side}
       align={placement.align}
-      sideOffset={sideOffset}
-      alignOffset={placement.alignOffset + alignOffset}
-      collisionPadding={collisionPadding}
+      sideOffset={gap}
+      alignOffset={placement.alignOffset + extra}
+      collisionPadding={margin}
       ref={setSurface}
       {...rest}
       onMouseDownOutside={(event) => {

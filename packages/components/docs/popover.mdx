@@ -41,6 +41,9 @@ surface snaps). When the snapped surface would cover its trigger, the component
 opens it on the opposite side if that side has room, otherwise on the roomier
 side. `align="center"` is exact: the runtime's `center` is not used.
 `alignOffset` is still added on top if the caller needs its own adjustment.
+A non-finite `sideOffset`, `alignOffset` or `collisionPadding` keeps its
+documented default, so a malformed number cannot drop the gap, the measured
+centre correction or the window margin (plan 813).
 
 ## Dismissal
 
@@ -140,13 +143,18 @@ transform, so no scale is faked.
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
   (plans 390/603/605).
+- The runtime coerces a non-finite host offset to `0`, so the component
+  normalises `sideOffset`, `alignOffset` and `collisionPadding` itself; an
+  explicit `0` or negative offset is passed through unchanged (plan 813).
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (27 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (30 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
-instead of covering it, Escape closing and restoring focus, an outside press
+instead of covering it, keeps the default gap, the measured centre and the
+window-margin flip when `sideOffset`/`alignOffset`/`collisionPadding` is
+non-finite (plan 813), Escape closing and restoring focus, an outside press
 closing without the following click re-opening it, a **held** press on the
 trigger closing it on release and staying closed, a press inside keeping it
 open, Tab closing a control-less panel while handing focus to the next app

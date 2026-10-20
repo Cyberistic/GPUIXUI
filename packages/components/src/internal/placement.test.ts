@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  offsetOf,
   resolvePlacement,
   resolveSide,
   type PlacementInput,
@@ -114,5 +115,19 @@ describe("resolvePlacement", () => {
       align: "start",
       alignOffset: -20,
     });
+  });
+});
+
+describe("offsetOf", () => {
+  it("keeps a caller's finite offset, including zero and a negative one", () => {
+    expect(offsetOf(0, 6)).toBe(0);
+    expect(offsetOf(-4, 6)).toBe(-4);
+    expect(offsetOf(2.5, 6)).toBe(2.5);
+  });
+
+  it("falls back to each surface's documented default for a non-finite offset", () => {
+    expect(offsetOf(Number.NaN, 6)).toBe(6);
+    expect(offsetOf(Number.POSITIVE_INFINITY, 0)).toBe(0);
+    expect(offsetOf(Number.NEGATIVE_INFINITY, 8)).toBe(8);
   });
 });

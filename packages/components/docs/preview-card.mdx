@@ -68,7 +68,9 @@ Dropdown menu and Combobox:
 - `0.10.0` snaps a surface inside the window instead of flipping it. When a
   snapped card would cover its trigger, the component flips it to the opposite
   side (above a bottom card) once per open.
-- `alignOffset` adds to the measured centre correction.
+- `alignOffset` adds to the measured centre correction. A non-finite
+  `sideOffset`, `alignOffset` or `collisionPadding` keeps its documented default
+  instead of collapsing the gap or the margin (plan 813).
 - If centring would leave the window, the snap margin wins and the card sits at
   the window edge rather than overflowing.
 
@@ -113,9 +115,10 @@ glance. A custom theme changes it with no code change — see
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (21 tests):
 closed by default, delayed hover open and immediate focus open, staying open
-while the pointer is inside, closing after leaving both, Escape with focus
+while the pointer is inside, closing after leaving both, a non-finite offset
+keeping its documented default (plan 813), Escape with focus
 return, an Escape that leaves its dialog open, outside-press dismissal, a
 **held** trigger press closing it on release, surface
 naming and `aria-expanded`, a controlled card that stays closed, a disabled
