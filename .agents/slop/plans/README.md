@@ -386,6 +386,7 @@ references without buying correctness.
 | [760](./760-native-text-figures.md) | The native-text figures have one owner | F | 071, 544, 569–592, 717 | done |
 | [766](./766-status-row-surface-claims.md) | The status row counts a list of eight and names seven surfaces | F | 399, 548, 549, 651, 683 | done |
 | [767](./767-status-fill-chip-count.md) | The package front door counts eight solid chip surfaces | F | 399, 651, 683, 766 | done |
+| [770](./770-washed-inactive-figure.md) | The washed unavailable label's AAA figure is stale, and three more washed figures have no owner | F | 510, 512, 520, 714, 717, 745, 760 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3926,6 +3927,24 @@ solid fills. The sentence now says nine, and the new case derives the count word
 from `statusFillPairs`, requires the floor and the `destructive` filter note, and
 rejects the old phrase, so a future surface moves the prose with the list. No
 token value, pair, floor, metric, role or shipped theme moves.
+
+Plan `760` gave the native-text section's figures an owner. Plan `770` closes the
+next four. The washed unavailable-label sentence quotes **4.722:1** "at AAA" —
+the pre-`520` AAA **dark** value — while `selectionInactivePairs` measures
+**4.8444:1** in the AAA light palette (the dark palette is now 7.9325:1), so the
+catalogue, the design system, the README and the ledger all quoted a ratio the
+package no longer produces and one of them named the wrong palette. Falsifying
+that figure, the panel action's 8.667:1 and the light brand's 6.941:1 / 7.957:1
+in place left all 7013 tests green: `figures.ts` is the owner of present-tense
+figures and none of the four compositions was in it. The table gains the washed
+inactive tightest entry over `selectionInactivePairs`, the AAA light entry, and
+the panel action's entry over the `softActionForeground` rows of
+`selectionSoftPairs`; the brand's two figures are derived in `theme.test.ts`,
+where the executed example already lives, and both brand places now name the
+canvas — the tightest of the four document tones. The plan-510 history sentence
+also loses the unguarded "thirteen", which the list has not held since plan
+`650`. No token value, pair, floor, metric, role or shipped theme moves;
+`contrastPairs` stays 470.
 
 ## How to use a plan
 
