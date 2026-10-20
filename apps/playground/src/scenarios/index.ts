@@ -37,6 +37,7 @@ import { windowLayoutScenario } from "./window-layout.js";
 import { rootSingleChildScenario, rootWrapperScenario } from "./root.js";
 import { textScenario } from "./text.js";
 import { typographyScenario } from "./typography.js";
+import { fontFamilyScenario } from "./font-family.js";
 import { inputScenario } from "./input.js";
 import { inputPayloadScenario } from "./input-payload.js";
 import { clickRoutingScenario } from "./click-routing.js";
@@ -206,6 +207,7 @@ export const scenarios: ReadonlyArray<PlaygroundScenario> = [
   rootWrapperScenario,
   textScenario,
   typographyScenario,
+  fontFamilyScenario,
   inputScenario,
   inputPayloadScenario,
   clickRoutingScenario,

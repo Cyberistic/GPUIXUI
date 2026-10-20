@@ -331,12 +331,52 @@ same views in the 1100×720 window and read `bounds()` and `highlights()`:
 | `live-layout-flex` | `640/200/320` widths, the `8` px gap, absolute insets `24/16`, and one shared row |
 | `live-layout-grid` | `93.33` tracks with `10` px gaps, `145×95` explicit cells, all four `gridColumnMin` modes, nested/overflow/`flexGrow`, and the wrapping-line stretch (`104` vs `38`) |
 | `live-typography` | `30/60` line heights, the `19.5/26/39` default line boxes, the bold run's extra width, `alignSelf` at `100/200`, `justifyContent` at `70`, and **`textAlign` still a no-op** |
+| `live-font-family` | the shaped run follows `fontFamily`: the default face is proportional (`iiiiiiii` `29.125` vs `WWWWWWWW` `121.375`), the platform mono is uniform (`77.0625` each), the same phrase advances `100.2656` → `115.5938`, and a family no host has paints at `102.2656` (the default's metrics), so the fallback is silent — 13 checks (plan `771`) |
 
 The grid view is 992 px tall, so `live-layout-grid` mounts it in one scroller
 and reads it in two batches: the first four wrapped rows at rest, the rest after
 a real wheel reaches the clamp. Every assertion compares a box with its own
 container, so the scroll offset never enters a number. The window reproduces
 every offscreen value exactly — no font or device-scale correction was needed.
+
+## Typefaces in the frame (plan `771`)
+
+The platform type styles (macOS / Linux / Windows) name a monospace family, and
+until plan `771` the suite proved that only from the runtime's **authored**
+style report (`paintedStyle(...).fontFamily`). A runtime that accepted
+`fontFamily` and shaped every run with the default face would have passed every
+check while the three platform styles typed identically.
+
+`font-family` / `live-font-family` vary nothing but `fontFamily` on runs of the
+same text and read the **highlight wash** — the quad the runtime paints for that
+run, and the only glyph-advance signal both hosts expose (plan `342` used it for
+weight). The relations are pure in `font-metrics.ts`; the widths below are
+recorded, not asserted:
+
+| Run at 16 px | Default face | Platform mono (`Menlo` here) |
+| ------------ | ------------ | --------------------------- |
+| `iiiiiiii` | `29.125` | `77.0625` |
+| `WWWWWWWW` | `121.375` | `77.0625` |
+| `GPUixUI 0123` | `100.2656` | `115.5938` |
+| `GPUixUI 0123` in `GPUIXUI Missing Face` | `102.2656` — the default's metrics | — |
+
+The checks are the four relations: the default face is proportional (the wide
+run is over 16 px wider), the platform mono is uniform to **1 px**, the same
+phrase advances differently in the two faces, and a family no host has paints at
+the default's advance (within **4 px**) and is not the mono face. A missing
+family is a **silent fallback**, not an error, so a consumer cannot detect a
+typo'd family from the runtime. The live and headless widths are **identical to
+the last digit**, so the window's shaping path needs no correction.
+
+**A brand typeface cannot ship on the pinned runtime.**
+`@gpuix/native@0.10.0` has **no font-registration API**: `registerFont` is
+absent from its typings and JS, and both renderers expose no font method
+(`GpuixRenderer` and `TestGpuixRenderer`, 55 and 57 methods, none matching
+`/font/i`). It exists in the reference clone's `main`
+(`packages/native/src/renderer.rs:2339`), so it is post-0.10.0. A consumer can
+only use **OS-installed** families; the library cannot ship its own face, and
+`packages/tokens`' `registerFonts` plan (`052`) is blocked by the pin, not by
+the host. Re-run the two probes above if the pin moves.
 
 ## The collapsible height recipe in a real window (plan `592`)
 

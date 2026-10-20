@@ -108,7 +108,47 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
-`[x]` `[██████████]` 137/137 plans-and-harness
+`[x]` `[██████████]` 138/138 plans-and-harness
+
+`[x]` **Prove the typeface reaches the shaped glyphs, and record the missing
+      registration API** per plan `771`: the platform type styles were proven
+      only from the **authored** style report, so a runtime that shaped every
+      run with the default face passed every check. `font-family` /
+      `live-font-family` (**13 checks each**) vary only `fontFamily` on runs of
+      the same text and read the highlight wash: the default face is
+      proportional (`iiiiiiii` **29.125** vs `WWWWWWWW` **121.375**), the
+      platform mono (`Menlo` here) is uniform to **1 px** (**77.0625** each),
+      the same phrase advances `100.2656` → `115.5938`, and
+      `GPUIXUI Missing Face` paints `102.2656` — the default's metrics within the
+      4 px tolerance and 13 px from the mono face — so the fallback is silent
+      (`same`'s tolerance was widened from the predicted 2 px after the measured
+      2.0 px boundary; the 15 px gap to mono keeps it load-bearing). The widths
+      are **identical to the last digit** in both hosts. A pure
+      `font-metrics.ts` carries the relations (7 tests; playground **520 →
+      527**). **Measured absence:** `@gpuix/native@0.10.0` has no
+      `registerFont` (typings, JS and both renderer prototypes: 55 and 57
+      methods, none `/font/i`; present in the reference clone's `main`), so a
+      bundled brand face cannot ship and `tokens` plan `052` is blocked by the
+      pin — recorded in `apps/playground/README.md`, `COMPONENTS.md` and the
+      cross-team row below. Four mutation proofs observed and reverted (M1
+      no mono family → `the platform mono face is monospaced`, M2 the system
+      phrase given the mono face → `the same phrase advances differently`, M3 a
+      real missing family → the guard, M5 swapped narrow indices → the mono
+      check); M4 (an ignored margin) failed the unit test. Full headless
+      **113/113** (**4165** checks, 65 capabilities, **237.6 s**), exit `0`;
+      live registry **101 → 102** (`live-font-family` green twice focused); no
+      full live gate (merge gate). Focused ids run: `font-family` (×2 + three
+      mutations and the debug read), `live-font-family` (×2 + one debug read).
+
+`[ ]` **Cross-team:** `@gpuixui/tokens` plan `052` (`registerFonts`) must be
+      re-scoped — its native half assumes `renderer.registerFont`, which the
+      pinned `@gpuix/native@0.10.0` does **not** have (absent from the typings,
+      the JS and both renderer prototypes; it exists only in the reference
+      clone's `main`). On the pin a consumer can use OS-installed families only,
+      and a missing family falls back silently. Decide: upgrade the GPUix pin
+      (then re-run the two probes plan `771` records) or ship the limitation and
+      drop the native acceptance line. Owner: `tokens`; evidence: plan `771`
+      §1/§11.
 
 `[x]` **Run the promotion gate on the head that includes the editing actions**
       per plan `768`: plan `762` gated headless 111/111 and live 100/100, then

@@ -35,6 +35,10 @@ import { collapsibleHeightScenario } from "../scenarios/collapsible.js";
 import { layoutScenario } from "../scenarios/layout.js";
 import { layoutGridScenario } from "../scenarios/layout-grid.js";
 import { typographyScenario } from "../scenarios/typography.js";
+import {
+  fontFamilyLiveScenario,
+  fontFamilyView,
+} from "../scenarios/font-family.js";
 import { chartScenario } from "../scenarios/chart.js";
 import { qrScenario } from "../scenarios/qr-code.js";
 import { QR_V1 } from "../scenarios/qr-fixtures.js";
@@ -10580,6 +10584,27 @@ const liveLayoutGrid: LiveScenario = {
     }),
 };
 
+/**
+ * The typeface in a real window (plan `771`).
+ *
+ * The headless pass proves the relation between authored families and shaped
+ * advances; this twin proves the window's paint path uses the same faces. The
+ * view is static, so one mount and one settle are the whole interaction.
+ */
+const liveFontFamily: LiveScenario = {
+  ...fontFamilyLiveScenario,
+  view: fontFamilyView,
+  ready: "font-root",
+  steps: (ctx) =>
+    fontFamilyLiveScenario
+      .steps(ctx)
+      .pipe(
+        Effect.tap(() =>
+          ctx.host.screenshot(`${LIVE_ARTIFACTS}/live-font-family.png`),
+        ),
+      ),
+};
+
 const liveTypography: LiveScenario = {
   id: "live-typography",
   title: "Live typography: line height, weight and horizontal alignment",
@@ -14181,6 +14206,7 @@ export const liveScenarios: ReadonlyArray<LiveScenario> = [
   liveLayoutFlex,
   liveLayoutGrid,
   liveTypography,
+  liveFontFamily,
   liveCollapsible,
   liveChart,
   liveQr,
