@@ -13,6 +13,7 @@ export const platforms = [
 export const repo = "https://github.com/Cyberistic/GPUIXUI";
 
 export const navLinks = [
+  { label: "Lineage", href: "#lineage" },
   { label: "Platforms", href: "#platforms" },
   { label: "Library", href: "#library" },
   { label: "Proof", href: "#proof" },

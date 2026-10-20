@@ -1,5 +1,6 @@
 import { useTheme } from "fumadocs-ui/provider/base";
 import { Hero } from "./deck";
+import { Lineage } from "./lineage";
 import {
   aiSurfaces,
   attribution,
@@ -15,6 +16,7 @@ export function Landing() {
       <div className="landing-wrap">
         <Nav />
         <Hero />
+        <Lineage />
         <Licence />
         <Platforms />
         <MakeItYours />

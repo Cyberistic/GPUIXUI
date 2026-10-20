@@ -49,6 +49,21 @@ scripts/           Repo tooling, including the swarm supervisor
 .agents/           ADRs, plans, agent state
 ```
 
+## Built on
+
+What the library stands on, and what we take from each. Where we adapt code,
+the licence is noted and attributed in `LICENSES/`.
+
+| Source | What we take | Licence |
+| ------ | ------------ | ------- |
+| [shadcn/ui](https://ui.shadcn.com) | component API and composition, plus the docs experience (Preview/Code, install, theming) | — |
+| [Base UI](https://base-ui.com) | behaviour and parts model — compound parts, controlled state, focus | — |
+| [Tailwind](https://tailwindcss.com) | utility syntax and recipe model, mapped to `StyleDesc` (not the CSS engine) | — |
+| [React](https://react.dev) | the runtime surface (JSX, hooks) on GPUix | — |
+| [GPUix](https://gpuix.dev) | the native renderer — GPU, no DOM | — |
+| [open-gpui](https://github.com/Latias94/open-gpui) (`crates/motion`) | spring/sequence physics, ported to TS | Apache-2.0 |
+| [gpui-motion](https://github.com/1bye/gpui-motion) | broader motion API surface — easing variants and inertia — borrowed as spec | MIT |
+
 ## References
 
 Cloned read-only into `references/` (gitignored) and used as references, never
