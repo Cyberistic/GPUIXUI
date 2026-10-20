@@ -58,6 +58,7 @@ import {
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   controlHeight,
   focusRing,
@@ -188,8 +189,26 @@ export const Tabs = ({
     [active, rows],
   );
 
-  /** The native id of the tab the tabs last focused (plan 511). */
-  const focusedTab = useRef<Option.Option<number>>(Option.none());
+  /**
+   * The tab that held focus when it was last observable. A native focus change
+   * runs no React `onFocus` and a removed host can no longer be read, so the
+   * holder is remembered while the element still exists (plans 511/712).
+   */
+  const heldTab = useRef<Option.Option<string>>(Option.none());
+
+  /** The tab a host id belongs to; the sampled and live reads share it. */
+  const heldOf = useCallback(
+    (id: number | null): Option.Option<string> =>
+      id === null
+        ? Option.none()
+        : Option.map(
+            Arr.findFirst(rows, (row) => row.id === id),
+            (row) => row.value,
+          ),
+    [rows],
+  );
+
+  const nativeFocus = useNativeFocusId(rows.length > 0);
 
   const register = useCallback((row: TabRow) => {
     setRows((current) => upsert(current, row));
@@ -211,8 +230,8 @@ export const Tabs = ({
         Arr.findFirst(rows, (row) => row.value === value),
         {
           onNone: () => undefined,
-          onSome: (row) => {
-            focusedTab.current = Option.some(row.id);
+          onSome: () => {
+            heldTab.current = Option.some(value);
           },
         },
       );
@@ -223,7 +242,7 @@ export const Tabs = ({
   const focusRow = useCallback(
     (row: TabRow, select: boolean): void => {
       setActive(Option.some(row.value));
-      focusedTab.current = Option.some(row.id);
+      heldTab.current = Option.some(row.value);
       renderer?.focusElement?.(row.id);
       if (select) setSelected(row.value);
     },
@@ -327,22 +346,23 @@ export const Tabs = ({
    * in the same update (plans 511/646).
    */
   useLayoutEffect(() => {
-    const nativeRow = Option.flatMap(
-      Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
-      (id) => Arr.findFirst(rows, (row) => row.id === id),
+    const live = Option.fromNullishOr(
+      renderer?.getFocusedElementId?.() ?? null,
     );
-    const remembered = Option.orElse(
-      Option.map(nativeRow, (row) => row.id),
-      () => focusedTab.current,
+    const liveTab = Option.flatMap(live, heldOf);
+    const holder = Option.orElse(liveTab, () => heldTab.current);
+    const target = Option.flatMap(holder, (value) =>
+      Arr.findFirst(rows, (row) => row.value === value),
     );
-    if (Option.isNone(remembered)) return;
-
-    const target = Arr.findFirst(rows, (row) => row.id === remembered.value);
-    if (Option.exists(target, (row) => !row.disabled)) return;
-
-    focusedTab.current = Option.none();
-    const focused = Option.fromNullishOr(renderer?.getFocusedElementId?.());
-    if (Option.exists(focused, (id) => id !== remembered.value)) return;
+    const lost = Option.exists(holder, () =>
+      Option.match(target, {
+        onNone: () => true,
+        onSome: (row) => row.disabled,
+      }),
+    );
+    // A control outside the tabs that the consumer focused in this update wins.
+    const claimed = Option.isSome(live) && Option.isNone(liveTab);
+    if (!lost || claimed) return;
 
     Option.match(tabbable, {
       onNone: () => undefined,
@@ -355,7 +375,23 @@ export const Tabs = ({
           },
         ),
     });
-  }, [focusRow, renderer, rows, tabbable]);
+  }, [focusRow, heldOf, renderer, rows, tabbable]);
+
+  /**
+   * Remember the tab the focus belongs to, so the next tabs change can tell a
+   * vanished host from a set that never held focus. Runs after the handover: the
+   * handover must read the holder from before this commit. The live read wins
+   * over the sample, which is up to one interval old (plan 712).
+   */
+  useLayoutEffect(() => {
+    heldTab.current = Option.orElse(
+      Option.flatMap(
+        Option.fromNullishOr(renderer?.getFocusedElementId?.() ?? null),
+        heldOf,
+      ),
+      () => heldOf(nativeFocus),
+    );
+  }, [heldOf, nativeFocus, renderer]);
 
   const context = useMemo<TabsContextValue>(
     () => ({

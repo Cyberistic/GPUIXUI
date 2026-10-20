@@ -192,17 +192,17 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 - Vertical tab sets put the rail in a column beside the panel; the axis is a
   layout and keyboard choice, not an ARIA attribute (unavailable, below).
 
-- A focused tab that is **removed** in the same update cannot be recognised
-  after the commit: the host is gone and 0.10.0 dispatches no `focus`/`blur`, so
-  the handover has no origin. The tab stop moves; focus is left to the app
-  (plan 646).
+- A focused tab that is **removed** hands the tab stop and focus to the selected
+  tab. Because 0.10.0 dispatches no `focus`/`blur` and a removed host cannot be
+  read, the holder is sampled every 50 ms while the tab exists; a removal inside
+  that window is still a lost focus (plans 646/712).
 - Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
   React `focus`/`blur`, so a ring may not paint when focus moves by code
   (plans 390/603/605).
 
 ## Verification
 
-`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (31 tests): click
+`src/behaviour/tabs.test.tsx` runs in the real GPUix renderer (33 tests): click
 switching, the active theme role in both themes, an arrow move starting from a
 natively focused tab that never ran `onFocus`, arrow wrap with a disabled tab,
 manual activation waiting for Enter, Space selecting on release, Home/End, the
@@ -214,9 +214,10 @@ activation. Dynamic tabs: a tab that becomes disabled hands the tab stop and
 focus to a live tab through the renderer's focused host (a native focus move
 never runs `onFocus`), a disabled tab stops reporting itself as highlighted, the
 handover never changes the selection, a consumer's same-update focus is never
-stolen, and a disable/enable round trip keeps the authored tab order; a focused
-tab removed in the same update moves the tab stop but leaves focus to the app,
-because its host is gone before it can be read (plan 646). A panel needs a live
+stolen, and a disable/enable round trip keeps the authored tab order; the focused
+tab is sampled while it exists, so removing it hands the tab stop **and** focus
+to the selected tab, removing another tab leaves focus alone, and a consumer's
+same-update focus still wins (plans 646/712). A panel needs a live
 trigger: removing a trigger unmounts its panel
 (and restoring it brings the panel back without changing the selection), a
 controlled value with no trigger paints nothing, and a disabled selected tab

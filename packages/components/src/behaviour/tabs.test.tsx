@@ -25,6 +25,7 @@ import { createRef, useCallback, useLayoutEffect, useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { nodesWithRole } from "../internal/a11y.js";
 import { clickCentreOf, focusedTestId } from "../internal/interaction.js";
+import { FOCUS_SAMPLE_MS } from "../internal/native-focus.js";
 import { darkTheme, lightTheme } from "../internal/theme.js";
 import {
   renderComponent,
@@ -102,6 +103,14 @@ const NamedTabs = ({ label }: { readonly label: string }) => (
 const focusTab = (root: ComponentTestRoot, testId: string): void => {
   root.renderer.focusElement(root.renderer.findByTestId(testId)?.id ?? -1);
 };
+
+/**
+ * Wait for the tabs' focus sample (50 ms) to observe a native focus move. The
+ * binding delivers no React `onFocus`, so the holder is read on a timer
+ * (plans 613/659/708/712).
+ */
+const sampleFocus = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, FOCUS_SAMPLE_MS + 30));
 
 /**
  * Tabs built from data, so a test can rerender a different set (plan 511).
@@ -833,11 +842,12 @@ describe("Tabs", () => {
     tabs.unmount();
   });
 
-  it("hands focus to the selected tab when the focused tab is removed", () => {
+  it("hands focus to the selected tab when the focused tab is removed", async () => {
     const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
 
     clickCentreOf(tabs, "tab-c");
     focusTab(tabs, "tab-b");
+    await sampleFocus();
     tabs.rerender(dynamicTabs(["a", "c"]));
 
     expect(tabs.renderer.findByTestId("tab-c")?.customProps?.tabIndex).toBe(0);
@@ -845,6 +855,30 @@ describe("Tabs", () => {
     expect(tabs.renderer.findByTestId("tab-c")?.customProps).toMatchObject({
       "aria-selected": true,
     });
+
+    tabs.unmount();
+  });
+
+  it("keeps focus on a surviving tab when another tab is removed", async () => {
+    const tabs = renderComponent(dynamicTabs(["a", "b", "c"]));
+
+    focusTab(tabs, "tab-a");
+    await sampleFocus();
+    tabs.rerender(dynamicTabs(["a", "c"]));
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("tab-a"));
+
+    tabs.unmount();
+  });
+
+  it("leaves a consumer's focus alone when the focused tab is removed", async () => {
+    const tabs = renderComponent(claimingTabs(["a", "b", "c"], false));
+
+    focusTab(tabs, "tab-b");
+    await sampleFocus();
+    tabs.rerender(claimingTabs(["a", "c"], true));
+
+    expect(focusedTestId(tabs)).toEqual(Option.some("claim"));
 
     tabs.unmount();
   });

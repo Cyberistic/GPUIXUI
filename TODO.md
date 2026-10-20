@@ -205,9 +205,16 @@ retired once both branches are one
       only turned disabled. 4 native cases (2 flipped + 4 new, List 65/65), three
       mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
-    - [ ] Tabs: the same per-commit focus recording for its removed-host case
-      (the List measurement in plan 708 is the evidence; the rule is identical,
-      one plan of its own) (owner: components)
+    - [x] Tabs: focus continuity across a tab removal — plan 712 (the plan-708
+      follow-up). "hands focus to the selected tab when the focused tab is
+      removed" was red (`focused = None`) for the same reason: the handover read
+      the renderer after the host was gone and the fallback only came from React
+      `onFocus`. The tab holder is sampled through `useNativeFocusId` while it
+      exists, and the live read wins while the host is there, so the disabled-tab
+      handover is unchanged; 1 flipped + 2 new native cases (Tabs 33, 32 passing —
+      the `onBlur` case is the remaining plan-540 focus-signal failure), two
+      mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
     - [x] A controlled close the caller refuses leaves focus alone — plan 704; Popover, Preview card, Navigation menu, Notification centre and the keyboard-opened Context menu moved focus to the trigger on the close **request**, so a refused close left an open surface with the user stranded behind it. One shared `useCloseFocus` hook records the intent and restores it only on the observed `open -> false` transition; an outside press overwrites the intent. 7 native cases (Popover 22, Preview card 18, Navigation menu 24, Notification centre 20, Context menu 23), each failing at `HEAD`, and the full suite is 862/31 of 893 with the same plan-540 binding failures; docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
     - [x] A disabled combobox is inert even when it is open — plan 706; the root passed the raw `open` to the popup, so `<Combobox disabled defaultOpen>` painted its content, reported the opening query and let the runtime's hard-coded field `autoFocus` take native focus (measured). One `visibleOpen = open && !disabled` now feeds the dismiss layer, the query report, focus restoration, the context and the headless root; disabling clears the search session without a close request, and re-enabling repaints with a fresh empty query. 4 native cases (Combobox 59), all failing at `HEAD`, both-direction proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and the inventory synced
     - [x] Combobox `debounce`: one query per burst, never one the user abandoned — plan 541; the optional window collapses a burst of edits into its last query while opening stays immediate and a close drops a pending report; 2 native tests (Combobox 41, behaviour 658), both-direction proof; example, docs and `COMPONENTS.md` synced
@@ -1367,7 +1374,10 @@ the docs-site workstream; the `packages/components` half is plan 337)
       the full native suite is **872 passed / 29 failed of 901** — List's two
       removed-host cases now pass (List 65/65), the four new slot-focus cases
       pass, and the remaining failures are the same recorded plan-540 binding
-      defects plus Tabs' removed-host case (the plan-708 follow-up).
+      defects plus Tabs' removed-host case (the plan-708 follow-up). Plan 712
+      then flipped that case too: 1 disabled-tab-cleanup case added, 2 pins
+      added, and the full native suite is **875 passed / 28 failed of 903** —
+      every remaining failure is a recorded plan-540 binding defect.
 
 ## Swarm-owned blockers (fix these)
 
