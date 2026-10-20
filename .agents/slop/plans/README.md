@@ -371,6 +371,7 @@ references without buying correctness.
 | [727](./727-stored-theme-edit-base.md) | A stored edit records the base it was made against | F | 063, 311, 380, 529, 685, 713 | done |
 | [729](./729-soft-panel-caption-tier.md) | The soft status panel's caption is not a tier below its ink | F | 320, 346, 362, 392, 500, 623, 703 | done |
 | [733](./733-unchecked-selection-control.md) | The unchecked selection control's off switch and its unmeasured knob | F | 084, 332, 347, 503, 601, 651 | done |
+| [737](./737-disabled-fill-surface.md) | The disabled fill is a fill: measured on the panel it paints on | F | 306, 309, 595, 610, 733 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3757,6 +3758,23 @@ exported `textTierSurfaces`: the new mark made `track` a shared surface of the
 class rule now has one implementation (the hierarchy check, the figure table and
 the suite that counts tier surfaces all read it) and the documented thirteen
 surfaces stay thirteen.
+
+737 overturns plan 306's one exemption. `disabledControl(theme)` returns three
+roles and `opacity: 1`, and the fill was the only one no pair measured: an edited
+theme whose `disabled` equalled its panel returned `[]` from all ten checks while
+an unavailable control painted no fill at all. Seven shipped pairs in six sets
+were under the 1.05:1 surface floor — the identity dark fill **was** its `muted`
+panel and its `popover` (`1.000:1`), the identity light fill **was** its `hover`
+wash, and the four light platform variants painted a fill *lighter* than their
+window (`1.015`–`1.040:1`). The exemption's stated reason — "no neutral can clear
+both a white card and the quiet panel" — is false: the shipped light value clears
+both at 1.133:1 and 1.103:1 because the floor is 1.05:1. `disabledFillPairs`
+measures the fill on the five surfaces `stateFillSurfaces` names (465 → **470**),
+and five values move one designed step inside their own neutral families
+(identity light `#EEF1F5` → `#E6EAF0`, identity dark `#222730` → `#2A303B`,
+macOS dark `#353537`, Linux dark `#383838`, Aero light `#EAF0F7` → `#E2EBF5`),
+so every shipped set clears 1.065:1 at the tightest while its label keeps the
+inactive floor and its edge the divider floor.
 
 ## How to use a plan
 
