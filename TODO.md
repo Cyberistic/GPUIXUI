@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 359/436
+`[x]` `[████████░░]` 360/437
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -66,6 +66,12 @@ colours", the native-text paragraph's "24-capture" and the ledger's copy) had no
 owner either. The case parses each group, compares the whole `capture → role`
 map with `nativeSyntaxRoles` both ways, rejects a duplicate and derives the
 three counts from the palette's keys; no palette value moves (plan 792)
+`[x]` Own the native field table — it is the only field-to-role mapping for a
+hand-built native document, and the policy case checked names, not assignments,
+so changing `bg` from `card` to `foreground` left 264 tests green; the case now
+parses the table rows, order included, and compares them with `nativeTextRoles`
+plus the three non-role rows; a swapped, moved, deleted or duplicated row, or a
+bridge edit, fails it; no bridge field moves (plan 793)
 `[x]` Implement `packages/tokens`: semantic colour roles, typography, spacing,
 radii, density, elevation, light + dark themes
 `[x]` Implement the theme extension mechanism (`createTheme`/`extendTheme`) and

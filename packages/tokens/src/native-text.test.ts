@@ -41,6 +41,12 @@
  * now parses each group, compares the whole `capture → role` map with the
  * palette both ways, rejects a duplicate, and derives the three counts from the
  * palette's keys.
+ *
+ * Plan 793: the field table above that paragraph is the only field-to-role
+ * mapping for a hand-built native document, and the policy case checked its
+ * names the same way — changing `bg` from `card` to `foreground` left 264 tests
+ * green. One case now parses the table rows, order included, and compares them
+ * with `nativeTextRoles` plus the three non-role rows.
  */
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
@@ -520,5 +526,32 @@ describe("native text theme", () => {
     expect(readDoc("../../../COMPONENTS.md")).toContain(
       `the ${captures}-capture syntax palette`,
     );
+  });
+
+  it("maps every documented native field to the role the bridge reads", () => {
+    const page = readDoc("../../../docs/tokens.md");
+    const start = page.indexOf("| Native field | Role |");
+    const end = page.indexOf("`nativeTextRoles` owns that table", start);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+
+    const rows = page
+      .slice(start, end)
+      .split("\n")
+      .filter((line) => line.startsWith("|"))
+      .slice(2)
+      .map((line) =>
+        line
+          .split("|")
+          .map((cell) => cell.trim().replaceAll("`", ""))
+          .filter((cell) => cell.length > 0),
+      );
+
+    expect(rows).toEqual<string[][]>([
+      ["appearance", "theme.mode"],
+      ...Object.entries(nativeTextRoles),
+      ["fontSans", "typography.sans"],
+      ["fontMono", "typography.mono"],
+    ]);
   });
 });
