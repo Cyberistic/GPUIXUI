@@ -1,11 +1,15 @@
 /**
- * The toast viewport: a paint-order stack in one corner of the app root.
+ * The toast viewport: the notification stack in one corner of the app root.
  *
- * GPUix has no `zIndex`; stacking is paint order, so the viewport must be the
- * **last child of the app root**. The container is `pointerEvents: "none"` so the
- * page underneath stays usable; each card turns pointer events back on. A card's
- * controls dismiss their own card, so the viewport first hands focus to the next
- * live card's dismiss control — the control unmounts with its card (plan 770).
+ * The stack is its own deferred anchored layer above every modal (plan 820), so
+ * paint order no longer follows the tree. Its filler box and the column are
+ * `pointerEvents: "none"` so the page underneath stays usable; each card turns
+ * pointer events back on. A card's controls dismiss their own card, so the
+ * viewport first hands focus to the next live card's dismiss control — the
+ * control unmounts with its card (plan 770). The stack owns the presses on
+ * everything it paints: each card registers its box (plan 820) and the viewport's
+ * `children` slot registers its own (plan 823), so a control above a dialog runs
+ * without dismissing it.
  */
 
 import type { Props, PublicInstance } from "@gpuix/react";
@@ -374,8 +378,10 @@ export interface ToastViewportProps extends Props {
 }
 
 /**
- * The stack in `position`'s corner. Render it **last** in the app root: the
- * runtime paints in order, so anything after it would cover the toasts.
+ * The stack in `position`'s corner. Render it once in the app root, before the
+ * app's dialogs: it is its own anchored layer above every modal, so tree order
+ * no longer decides paint order, and this binding can drop a viewport mounted
+ * after a dialog (plan 820 §7).
  */
 export const ToastViewport = ({
   position = "bottom-right",
@@ -404,6 +410,19 @@ export const ToastViewport = ({
     const host = dismissHosts.current.get(neighbour.id);
     if (host !== undefined) renderer?.focusElement?.(host);
   };
+  const slot = useRef<PublicInstance | null>(null);
+  const hasSlot = children !== undefined && children !== null;
+  // The stack paints its own controls in the same anchored layer as its cards, so
+  // they own their presses too (plan 823). The host is read at event time: the
+  // wrapper mounts after this effect.
+  useEffect(() => {
+    if (!hasSlot) return;
+    return registerPressSurface(ownsSurface(renderer, () => slot.current?.id));
+  }, [hasSlot, renderer]);
+  const crossAlign =
+    position === "top-left" || position === "bottom-left"
+      ? "flex-start"
+      : "flex-end";
 
   return (
     // A deferred anchored layer above every modal (priority 2): a dialog's veil
@@ -433,10 +452,7 @@ export const ToastViewport = ({
               ...corner(theme, position),
               display: "flex",
               flexDirection: "column",
-              alignItems:
-                position === "top-left" || position === "bottom-left"
-                  ? "flex-start"
-                  : "flex-end",
+              alignItems: crossAlign,
               gap: theme.spacing.md,
               maxWidth: CARD_WIDTH,
               pointerEvents: "none",
@@ -444,7 +460,20 @@ export const ToastViewport = ({
             style,
           )}
         >
-          {children}
+          {hasSlot ? (
+            <div
+              ref={slot}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: theme.spacing.md,
+                alignItems: crossAlign,
+                pointerEvents: "none",
+              }}
+            >
+              {children}
+            </div>
+          ) : null}
           <AnimatePresence initial={false}>
             {Arr.map(toasts, (toast, index) => (
               <MotionSurface
@@ -474,7 +503,7 @@ export const toastMeta = {
   gpuixSupport: "yes",
   focusable: true,
   limitations: [
-    "the stack is a deferred anchored layer at priority 2 so it paints above a modal veil, and a card owns its presses (plan 820)",
+    "the stack is a deferred anchored layer at priority 2 so it paints above a modal veil, and a card or the viewport's own control owns its presses (plans 820/823)",
     "no reduced-motion preference in 0.10.0: the 500 ms toast recipe is not switchable",
     "the keyboard hold samples the renderer's focused host every 50 ms, because 0.10.0 delivers no React focus/blur for a native focus change",
     "dismissing the last card leaves focus alone: a toast is pushed programmatically and has no trigger to return to",

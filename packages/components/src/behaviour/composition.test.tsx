@@ -270,6 +270,55 @@ const ToastOverDialogPage = ({
   </ToastProvider>
 );
 
+/** A dialog behind a stack that carries its own "dismiss all" control. */
+const SlotOverDialog = ({
+  onDismissAll,
+}: {
+  readonly onDismissAll: () => void;
+}) => {
+  const toast = useToast();
+  const [open, setOpen] = useState(true);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        width: 1200,
+        height: 760,
+      }}
+    >
+      <Button testId="outside">Outside</Button>
+      <ToastViewport>
+        <Button
+          testId="dismiss-all"
+          onClick={() => {
+            onDismissAll();
+            toast.dismissAll();
+          }}
+        >
+          Dismiss all
+        </Button>
+      </ToastViewport>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent label="Editor" testId="slot-editor" size="sm">
+          <DialogTitle>Editor</DialogTitle>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const SlotOverDialogPage = ({
+  onDismissAll,
+}: {
+  readonly onDismissAll: () => void;
+}) => (
+  <ToastProvider>
+    <SlotOverDialog onDismissAll={onDismissAll} />
+  </ToastProvider>
+);
+
 /** The toast store updates through its runtime: let the microtasks drain. */
 const settle = async (): Promise<void> => {
   await Promise.resolve();
@@ -474,6 +523,39 @@ describe("composition", () => {
 
     expect(isShown(scene, "editor")).toBe(false);
     expect(isShown(scene, "toast-1")).toBe(true);
+
+    scene.unmount();
+  });
+
+  it("runs the stack's own control without dismissing the dialog beneath", () => {
+    const onDismissAll = vi.fn();
+    const scene = renderComponent(
+      <SlotOverDialogPage onDismissAll={onDismissAll} />,
+    );
+    finishMotion(scene);
+    expect(isShown(scene, "slot-editor")).toBe(true);
+
+    clickCentreOf(scene, "dismiss-all");
+    finishMotion(scene, 500);
+
+    expect(onDismissAll).toHaveBeenCalledTimes(1);
+    expect(isShown(scene, "slot-editor")).toBe(true);
+
+    scene.unmount();
+  });
+
+  it("still closes the dialog on a press outside the stack with a slot control up", () => {
+    const onDismissAll = vi.fn();
+    const scene = renderComponent(
+      <SlotOverDialogPage onDismissAll={onDismissAll} />,
+    );
+    finishMotion(scene);
+
+    clickCentreOf(scene, "outside");
+    finishMotion(scene, 500);
+
+    expect(isShown(scene, "slot-editor")).toBe(false);
+    expect(onDismissAll).not.toHaveBeenCalled();
 
     scene.unmount();
   });

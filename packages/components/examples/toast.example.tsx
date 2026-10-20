@@ -1,9 +1,10 @@
 /**
  * Toast example: three outcomes from one Save button.
  *
- * The provider owns one store and one runtime; the viewport is the last child so
- * it paints above the card, in the top-right corner so it misses the card. A
- * caller only sees `useToast()`.
+ * The provider owns one store and one runtime; the viewport is its own anchored
+ * layer above the page (plan 820) and its `children` slot carries a "Dismiss all"
+ * control, which owns its press like a card does (plan 823). A caller only sees
+ * `useToast()`.
  */
 
 import { Duration } from "effect";
@@ -95,12 +96,24 @@ const SavePanel = () => {
   );
 };
 
+/** The stack's own control, rendered through the viewport's `children` slot. */
+const DismissAll = () => {
+  const toast = useToast();
+  return (
+    <Button variant="secondary" size="sm" onClick={toast.dismissAll}>
+      Dismiss all
+    </Button>
+  );
+};
+
 /** The toast demo, with its own provider and viewport. */
 export const ToastExample = () => (
   <div style={{ width: 900, height: 520 }}>
     <ToastProvider>
       <SavePanel />
-      <ToastViewport position="top-right" />
+      <ToastViewport position="top-right">
+        <DismissAll />
+      </ToastViewport>
     </ToastProvider>
   </div>
 );
