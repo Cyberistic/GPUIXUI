@@ -47,6 +47,10 @@
  * accessible name, so assistive technology heard an anonymous group. `MenuGroup`
  * now takes `label` and falls back to its first label child, with a caller
  * `aria-label` winning (plan 689).
+ *
+ * Same-commit regression: a menu mounted open inside a dialog that is open at
+ * the same commit pushed its layer first, so one Escape closed the dialog too
+ * (plan 732).
  */
 
 import * as Option from "effect/Option";
@@ -529,6 +533,24 @@ const Framed = ({
     </div>
   );
 };
+
+/** A menu restored open inside a dialog that is open at the same commit. */
+const OpenInOpenDialog = () => (
+  <Dialog open onOpenChange={() => undefined}>
+    <DialogContent label="File actions" testId="dialog">
+      <DialogTitle>File actions</DialogTitle>
+      <Button testId="before">Before</Button>
+      <DropdownMenu defaultOpen>
+        <DropdownMenuTrigger testId="trigger">Actions</DropdownMenuTrigger>
+        <DropdownMenuContent testId="menu" label="File actions">
+          <DropdownMenuItem testId="rename" onSelect={() => undefined}>
+            Rename
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </DialogContent>
+  </Dialog>
+);
 
 describe("DropdownMenu", () => {
   it("opens on the first enabled row from ArrowDown", () => {
@@ -1621,6 +1643,19 @@ describe("Tab leaves the menu", () => {
 
     expect(scene.renderer.findByTestId("menu")).toBeDefined();
     expect(focusedTestId(scene)).toEqual(Option.some("rename"));
+
+    scene.unmount();
+  });
+  it("keeps a menu mounted with its dialog on top", async () => {
+    const scene = renderComponent(<OpenInOpenDialog />);
+
+    expect(isShown(scene, "menu")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+
+    expect(isShown(scene, "menu")).toBe(false);
+    expect(isShown(scene, "before")).toBe(true);
 
     scene.unmount();
   });

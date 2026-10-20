@@ -13,7 +13,9 @@
  * on the press and re-opened on the release, because the one-gesture mark was
  * cleared before the click (plan 583). Inside a dialog, one `Tab` moved focus
  * twice — the walk then the modal's trap — so a control was skipped and the
- * backward exit stranded focus (plan 719).
+ * backward exit stranded focus (plan 719). A popover mounted open together with
+ * its dialog pushed its layer before the dialog's, so one Escape closed both
+ * (plan 732).
  */
 
 import * as Option from "effect/Option";
@@ -27,6 +29,8 @@ import {
   clickCentreOf,
   finishMotion,
   focusedTestId,
+  isShown,
+  nextTask,
   requireBounds,
 } from "../internal/interaction.js";
 import { renderComponent, type TestTheme } from "../internal/test-root.js";
@@ -103,6 +107,25 @@ const ColumnsInDialog = ({
           </PopoverContent>
         </Popover>
         <Button testId="after">After</Button>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+/** A popover restored open inside a dialog that is open at the same commit. */
+const OpenInOpenDialog = () => {
+  const [dialogOpen, setDialogOpen] = useState(true);
+  return (
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogContent label="Settings" testId="dialog">
+        <DialogTitle>Settings</DialogTitle>
+        <Button testId="before">Before</Button>
+        <Popover defaultOpen>
+          <PopoverTrigger testId="trigger">Columns</PopoverTrigger>
+          <PopoverContent testId="panel">
+            <Button testId="first">First</Button>
+          </PopoverContent>
+        </Popover>
       </DialogContent>
     </Dialog>
   );
@@ -661,6 +684,22 @@ describe("Popover", () => {
 
     expect(scene.renderer.findByTestId("panel")).toBeUndefined();
     expect(focusedTestId(scene)).toEqual(Option.some("before"));
+
+    scene.unmount();
+  });
+  it("keeps a popover mounted with its dialog on top", async () => {
+    const scene = renderComponent(<OpenInOpenDialog />);
+
+    expect(isShown(scene, "panel")).toBe(true);
+
+    await nextTask();
+    scene.renderer.simulateKeystrokes("escape");
+    finishMotion(scene);
+
+    // The panel is painted inside the dialog, so it is the layer Escape reaches.
+    expect(isShown(scene, "panel")).toBe(false);
+    expect(isShown(scene, "before")).toBe(true);
+    expect(focusedTestId(scene)).toEqual(Option.some("trigger"));
 
     scene.unmount();
   });

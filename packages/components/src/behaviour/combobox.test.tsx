@@ -33,6 +33,10 @@
  * Trigger name (plan 666): `label` is optional, and 0.10.0 does not name a
  * role-bearing div from its text child, so a trigger with no label and no caller
  * `aria-label` was an unnamed button even though it painted "Select…".
+ *
+ * Same-commit regression: a picker mounted open inside a dialog that is open at
+ * the same commit pushed its layer first, so one Escape closed the dialog too
+ * (plan 732).
  */
 
 import { describe, expect, it, vi } from "vitest";
@@ -46,6 +50,8 @@ import {
   finishMotion,
   clickCentreOf,
   focusedTestId,
+  isShown,
+  nextTask,
   requireBounds,
   until,
 } from "../internal/interaction.js";
@@ -226,6 +232,23 @@ const Framed = ({ inDialog = false }: { readonly inDialog?: boolean }) => {
     </div>
   );
 };
+
+/** A picker restored open inside a dialog that is open at the same commit. */
+const OpenInOpenDialog = () => (
+  <Dialog open onOpenChange={() => undefined}>
+    <DialogContent label="Assign reviewer" testId="dialog">
+      <DialogTitle>Assign reviewer</DialogTitle>
+      <Button testId="before">Before</Button>
+      <Combobox options={options} defaultOpen>
+        <ComboboxTrigger testId="dialog-combo" label="Assign reviewer" />
+        <ComboboxContent>
+          <ComboboxInput label="Search reviewers" />
+          <ComboboxList label="Reviewers" />
+        </ComboboxContent>
+      </Combobox>
+    </DialogContent>
+  </Dialog>
+);
 
 /** A trigger near the window centre, where a centred popup has room to sit. */
 const CentredPicker = ({
@@ -1573,6 +1596,23 @@ describe("Combobox", () => {
     expect(
       picker.renderer.findByTestId("combobox-trigger")?.style.boxShadow,
     ).toBeUndefined();
+
+    picker.unmount();
+  });
+
+  it("keeps a combobox mounted with its dialog on top", async () => {
+    const picker = renderComponent(<OpenInOpenDialog />);
+
+    expect(isShown(picker, "combobox-content")).toBe(true);
+
+    await nextTask();
+    picker.renderer.simulateKeystrokes("escape");
+    finishMotion(picker);
+
+    // The popup is painted inside the dialog, so it is the layer Escape reaches.
+    expect(isShown(picker, "combobox-content")).toBe(false);
+    expect(isShown(picker, "before")).toBe(true);
+    expect(focusedTestId(picker)).toEqual(Option.some("dialog-combo"));
 
     picker.unmount();
   });
