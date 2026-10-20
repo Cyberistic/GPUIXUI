@@ -254,6 +254,8 @@ filters a local array in `onQueryChange`, which is where a request would go.
 | `ArrowDown` / `ArrowUp` | moves the highlight, wrapping and skipping disabled rows |
 | `Enter` | selects the highlighted row |
 | `Escape` | closes and returns focus to the trigger |
+| `Tab` | closes and continues with the control after the trigger |
+| `Shift+Tab` | closes and continues with the control before the trigger |
 | outside press | closes without stealing focus back |
 
 The popup closes one layer per event: inside a dialog, the first Escape or
@@ -348,7 +350,7 @@ same shape for a row composed by hand.
 
 ## Verification
 
-`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (59 tests):
+`src/behaviour/combobox.test.tsx` runs in the real GPUix renderer (62 tests):
 open + input focus and its focus ring (seeded on open and ringed again after a
 reopen), `defaultOpen` with its one empty-query report, a disabled combobox
 staying hidden, unfocused and out of the tab order even when open or
@@ -365,7 +367,9 @@ wins and is trimmed), a centred popup and a near-bottom popup that opens above
 its trigger, the trigger exposed as a button with its expanded state, filtering,
 ArrowDown + Enter selecting the **value**, the empty state,
 single replacement (including the selected row's `aria-selected`), multi
-add/remove with order, the disabled row, Escape restoring focus, a second trigger
+add/remove with order, the disabled row, Escape restoring focus, Tab and
+Shift+Tab closing the popup and continuing after/before the picker (also inside
+a dialog, where the modal trap yields to the claimed press — plan 721), a second trigger
 press closing the popup (and the next press opening it), a **held** trigger press
 closing it on release, one surface per Escape
 and per backdrop press inside a dialog,

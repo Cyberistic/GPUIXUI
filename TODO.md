@@ -227,6 +227,13 @@ retired once both branches are one
       failures, Dialog 21/21) and both halves proven necessary; docs,
       `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
       synced (owner: components)
+    - [x] Tab leaves an open combobox — plan 721. Measured: the popup stayed
+      painted on `Tab`, and inside a dialog the modal trap wrapped focus back to
+      the trigger; the input now closes through the dismiss stack with a leave
+      intent and the root focuses the trigger then steps once, so focus
+      continues after/before the picker. 3 new cases (Combobox 59 → 62, 62/62 on
+      this host), three mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and
+      the inventory synced (owner: components)
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because
