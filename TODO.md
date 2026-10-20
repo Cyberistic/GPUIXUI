@@ -106,6 +106,19 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
        the head. No code was lost. The `scripts/` fix is still the only durable
        remedy.
 
+       **Update 2026-10-20 ~17:00–17:10:** recurred while plan `773` was being
+       verified. A second live `swarm:playground` session documented `773`, then
+       claimed `775` (text decoration) and registered its headless scenario and
+       live twin in the same `index.ts` / `live/scenarios.tsx` while this
+       session's full headless run was in flight; its `text-decoration.tsx` was
+       mid-write and did not compile. The `773` unit was committed from a
+       **temporary index** built from `HEAD` plus only its own hunks, so the
+       broken in-progress file was not swept into a broken commit (unlike the
+       earlier incidents). The three gates were then verified on that exact
+       commit in a disposable worktree: `check` green, `test` green (playground
+       **538**). The second session's files were left untouched. The `scripts/`
+       fix is still the only durable remedy.
+
 ### Playground workstream (`apps/playground`, `packages/testing`)
 
 `[x]` `[██████████]` 138/138 plans-and-harness
