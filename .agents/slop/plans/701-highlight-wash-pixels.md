@@ -1,6 +1,6 @@
 # 701 — The highlight wash colour contract, in pixels
 
-**Status:** planned · **Phase:** F · **Workstream:** playground
+**Status:** landed · **Phase:** F · **Workstream:** playground
 **Depends on:** `171` (the highlight geometry report), `674`/`676` (the frame
 sampler and the palette pixels), `197` (the live renderer is the observation
 surface), `587` (the live search twin).

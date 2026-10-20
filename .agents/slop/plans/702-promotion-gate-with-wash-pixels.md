@@ -1,6 +1,6 @@
 # 702 — The promotion gate on the head that includes the wash pixels
 
-**Status:** planned · **Phase:** F · **Workstream:** playground
+**Status:** landed · **Phase:** F · **Workstream:** playground
 **Depends on:** `639`, `653`, `656`, `699`, `701`.
 **Owns:** verification only — no source change.
 
