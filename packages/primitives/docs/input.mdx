@@ -117,11 +117,14 @@ the field is focused; an invalid or disabled field keeps the elevation.
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | read-only, out of the tab order, guarded |
+| `readOnly` | `boolean` | refuses edits but stays focusable (plan `786`) |
 | `focused` | `boolean` | the native input holds focus |
 | `invalid` | `boolean` | paints the destructive border |
 
 The callback's result merges after the field chrome, so it wins per property;
 `FieldState` is exported and shared by `Input`, `TextArea` and `NumberField`.
+A read-only field paints the normal surface (the recipe has no read-only
+bucket); a disabled field uses the disabled bucket.
 
 ## Limitations
 
@@ -146,6 +149,11 @@ The callback's result merges after the field chrome, so it wins per property;
 
 - `src/components/state-style.test.tsx` — the state payload and the callback
   winning over the component's own rules (plan 079).
+- `src/components/read-only.test.tsx` — `readOnly` reaches the host, keeps the
+  tab stop and appears in `FieldState` (plan `786`).
+- `runtime/readonly.runtime.test.tsx` — a focused read-only field reports no
+  edit, while a writable twin reports typing, an arrow and a stepper press
+  (plan `786`).
 - `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
   invalid) reaching the painted style.
 

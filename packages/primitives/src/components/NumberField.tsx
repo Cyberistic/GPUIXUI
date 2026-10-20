@@ -50,7 +50,7 @@ import {
 } from "../core/style.js";
 import type { ValueState } from "../core/state.js";
 import type { ControlSize, PrimitiveTheme } from "../core/theme.js";
-import type { FieldState } from "./Input.js";
+import { fieldInert, type FieldState } from "./Input.js";
 import {
   ariaName,
   composeHandler,
@@ -88,6 +88,12 @@ export interface NumberFieldProps extends TriggerHandlers {
   /** Defaults to `md`. */
   readonly size?: ControlSize;
   readonly disabled?: boolean;
+  /**
+   * Visible and focusable, but refuses every edit: typing, the arrows and both
+   * steppers. `disabled` is the stronger state — it also leaves the tab order
+   * (plan `786`).
+   */
+  readonly readOnly?: boolean;
   readonly invalid?: boolean;
   /** Accessible name. The visible name goes in a `Label` beside it. */
   readonly label?: string;
@@ -149,6 +155,7 @@ export const renderNumberField = (
 ): ReactElement => {
   const range = numberRange(props);
   const disabled = props.disabled === true;
+  const inert = fieldInert(props);
   /**
    * The value the field *acts* on is the bounded one, whether it was typed or
    * supplied: a controlled `value={150}` under `max={100}` must step from
@@ -175,6 +182,7 @@ export const renderNumberField = (
     props.style,
     {
       disabled,
+      readOnly: props.readOnly === true,
       focused: focus.focused,
       invalid: props.invalid === true,
     },
@@ -191,16 +199,16 @@ export const renderNumberField = (
     <div
       role="presentation"
       onClick={() => {
-        if (disabled || blocked) return;
+        if (inert || blocked) return;
         handlers.onValue(stepNumber(current, range, direction));
       }}
-      style={numberStepperStyle({ disabled: disabled || blocked }, theme)}
+      style={numberStepperStyle({ disabled: inert || blocked }, theme)}
     >
       <Icon
         name={name}
         size="xs"
         color={
-          disabled || blocked
+          inert || blocked
             ? theme.colors.placeholder
             : theme.colors.mutedForeground
         }
@@ -217,7 +225,7 @@ export const renderNumberField = (
         }
         value={text}
         placeholder={props.placeholder}
-        readOnly={disabled}
+        readOnly={inert}
         autoFocus={disabled ? undefined : props.autoFocus}
         tabIndex={disabled ? -1 : undefined}
         theme={nativeTextTheme(theme)}
@@ -225,11 +233,11 @@ export const renderNumberField = (
         aria-description={ariaName(props["aria-description"])}
         style={numberInputStyle()}
         onChange={(event: EventPayload) => {
-          if (disabled) return;
+          if (inert) return;
           handlers.onTextChange(event.value ?? "");
         }}
         onKeyDown={(event: EventPayload) => {
-          if (disabled) {
+          if (inert) {
             props.onKeyDown?.(event);
             return;
           }
@@ -241,18 +249,18 @@ export const renderNumberField = (
         }}
         onKeyUp={props.onKeyUp}
         onSubmit={(event: EventPayload) => {
-          if (disabled) return;
-          handlers.onCommit();
-          props.onSubmit?.(event);
+          if (!inert) handlers.onCommit();
+          // A read-only field may still submit its form; only a disabled one is
+          // inert on every path (plan `339`).
+          if (!disabled) props.onSubmit?.(event);
         }}
         onClick={props.onClick}
         onFocus={composeHandler(focus.onFocus, props.onFocus)}
         onBlur={(event: EventPayload) => {
           focus.onBlur();
-          // A disabled field is inert on every path (plan 362): the draft is
-          // committed by a commit, not by losing a caret a disabled field no
-          // longer owns.
-          if (!disabled) handlers.onBlurCommit();
+          // A field that cannot be edited is inert on every path (plan 362): the
+          // draft is committed by a commit, not by losing a caret it never owned.
+          if (!inert) handlers.onBlurCommit();
           props.onBlur?.(event);
         }}
       />
@@ -269,6 +277,7 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   const theme = useTheme();
   const { renderer } = useGpuix();
   const inputId = useRef<number | null>(null);
+  const inert = fieldInert(props);
   const focus = useFocus(
     props.autoFocus === true && props.disabled !== true,
     () => inputId.current ?? undefined,
@@ -296,14 +305,19 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
   // a number it would refuse to accept (plan `362`).
   const current = clampNumeric(state.value.current, range);
   const showValue = touched || state.value.mode === "controlled";
-  const text = Option.match(
-    Option.filter(draft, (candidate) => draftApplies(candidate, current)),
-    {
-      onNone: () => (showValue ? display(current) : ""),
-      onSome: (candidate) => candidate.text,
-    },
-  );
-  const commitDraft = (): void =>
+  const text = inert
+    ? showValue
+      ? display(current)
+      : ""
+    : Option.match(
+        Option.filter(draft, (candidate) => draftApplies(candidate, current)),
+        {
+          onNone: () => (showValue ? display(current) : ""),
+          onSome: (candidate) => candidate.text,
+        },
+      );
+  const commitDraft = (): void => {
+    if (inert) return;
     Option.match(parseNumericText(text), {
       onNone: () => setDraft(Option.none()),
       onSome: (parsed) => {
@@ -315,12 +329,18 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
         setDraft(Option.none());
       },
     });
+  };
+  /* A pre-read-only draft must not survive the state change and re-appear when
+     the field becomes editable again (plan `786`). */
+  useEffect(() => {
+    if (inert) setDraft(Option.none());
+  }, [inert]);
   /**
    * Published 0.10.0 never dispatches `onBlur` (plan `583`), so the documented
    * commit-on-blur had no trigger on a consumer install (plan `591`). The native
    * focus tracker knows the loss; commit on its transition, but let the host
-   * event win when the runtime does send one, and never touch a disabled field
-   * (plan `362`).
+   * event win when the runtime does send one, and never touch a field the user
+   * cannot edit (plan `362`, plan `786`).
    */
   const blurHandledByEvent = useRef(false);
   const wasFocused = useRef(focus.focused);
@@ -336,11 +356,11 @@ export const NumberField = (props: NumberFieldProps): ReactElement => {
       wasFocused: previous,
       focused: focus.focused,
       handledByEvent: blurHandledByEvent.current,
-      disabled: props.disabled === true,
+      disabled: inert,
     });
     blurHandledByEvent.current = false;
     if (tracked) commitDraft();
-  }, [focus.focused, props.disabled]);
+  }, [focus.focused, inert]);
   const focusInput = (): void =>
     Option.match(Option.fromNullishOr(inputId.current), {
       onNone: () => {},

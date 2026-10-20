@@ -140,7 +140,8 @@ The star size is `theme.iconSize[size]` and the focus ring is the shared
 
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
-| `disabled` | `boolean` | refuses pointer and keys |
+| `disabled` | `boolean` | refuses pointer and keys, and leaves the tab order |
+| `readOnly` | `boolean` | shows the value, refuses pointer and keys, and is not a tab stop (plan `786`) |
 | `invalid` | `boolean` | paints the empty stars destructive |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -183,7 +184,7 @@ each star:
 
 - `src/components/state-style.test.tsx` — the container state payload, each
   per-item payload, and the callback winning over the component's own rules
-  (plans 080, 081).
+  (plans 080, 081). The group payload now includes `readOnly` (plan `786`).
 - `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
   select's open state, and the per-item states reaching the paint (plans 080,
   081).

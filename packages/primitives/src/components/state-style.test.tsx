@@ -264,6 +264,7 @@ describe("fields", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: false,
+      readOnly: false,
       focused: true,
       invalid: true,
     });
@@ -282,6 +283,7 @@ describe("fields", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       focused: true,
       invalid: true,
     });
@@ -487,6 +489,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
@@ -509,6 +512,7 @@ describe("group roots and overlays", () => {
     );
     expect(lastState(record.seen)).toStrictEqual({
       disabled: true,
+      readOnly: false,
       invalid: true,
     });
     expect(background(element)).toBe(PAINT);
@@ -825,6 +829,7 @@ describe("per-item style", () => {
         filled: true,
         focused: false,
         disabled: false,
+        readOnly: false,
         invalid: false,
       },
       {
@@ -832,6 +837,7 @@ describe("per-item style", () => {
         filled: true,
         focused: false,
         disabled: false,
+        readOnly: false,
         invalid: false,
       },
       {
@@ -839,6 +845,7 @@ describe("per-item style", () => {
         filled: false,
         focused: false,
         disabled: false,
+        readOnly: false,
         invalid: false,
       },
     ]);

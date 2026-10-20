@@ -30,9 +30,21 @@ import { useTheme } from "./ThemeProvider.js";
 /** The public state a field's style callback receives. */
 export interface FieldState {
   readonly disabled: boolean;
+  /**
+   * The field refuses edits but stays focusable, so its value can be read,
+   * selected and copied (plan `786`). `disabled` is the stronger state: it also
+   * leaves the tab order.
+   */
+  readonly readOnly: boolean;
   readonly focused: boolean;
   readonly invalid: boolean;
 }
+
+/** A field the user cannot edit: read-only or disabled. */
+export const fieldInert = (props: {
+  readonly readOnly?: boolean;
+  readonly disabled?: boolean;
+}): boolean => props.disabled === true || props.readOnly === true;
 
 /** Props shared by `Input` and `TextArea`. */
 export interface FieldProps extends TriggerHandlers {
@@ -90,7 +102,7 @@ export interface FieldProps extends TriggerHandlers {
  * `focusVisible` style property (plan `524`).
  */
 export const fieldChrome = (
-  { invalid, disabled, style }: FieldProps,
+  { invalid, disabled, readOnly, style }: FieldProps,
   theme: PrimitiveTheme,
   focused: boolean,
 ): StyleDesc =>
@@ -106,6 +118,7 @@ export const fieldChrome = (
     style,
     {
       disabled: disabled === true,
+      readOnly: readOnly === true,
       focused,
       invalid: invalid === true,
     },
@@ -129,7 +142,7 @@ export const fieldHostProps = (
   ref: composeRef(props.ref, focus.ref),
   value: state.current,
   placeholder: props.placeholder,
-  readOnly: props.readOnly === true || props.disabled === true,
+  readOnly: fieldInert(props),
   autoFocus: props.disabled === true ? undefined : props.autoFocus,
   tabIndex: props.disabled === true ? -1 : undefined,
   theme: nativeTextTheme(theme),
@@ -137,7 +150,7 @@ export const fieldHostProps = (
   "aria-label": ariaName(props.label),
   "aria-description": ariaName(props["aria-description"]),
   onChange: (event: EventPayload) => {
-    if (props.disabled !== true) onValueChange(event.value ?? "");
+    if (!fieldInert(props)) onValueChange(event.value ?? "");
   },
   onSubmit: props.disabled === true ? undefined : props.onSubmit,
   onClick: props.onClick,

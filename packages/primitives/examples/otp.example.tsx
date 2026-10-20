@@ -37,19 +37,34 @@ export const OtpExample = (): ReactElement => {
           accepts 123456.
         </Text>
 
-        <OTPField
-          testId="otp-example-code"
-          label="Verification code"
-          value={code}
-          onValueChange={(next) => {
-            setCode(next);
-            if (status === "rejected") setStatus("idle");
-          }}
-          onComplete={() => setStatus("idle")}
-          invalid={status === "rejected"}
-          size="lg"
-          autoFocus
-        />
+        {status === "verified" ? (
+          <Stack direction="column" gap="sm">
+            <Text role="caption" tone="muted">
+              Verified code
+            </Text>
+            <OTPField
+              testId="otp-example-verified"
+              label="Verified code"
+              value={code}
+              size="lg"
+              readOnly
+            />
+          </Stack>
+        ) : (
+          <OTPField
+            testId="otp-example-code"
+            label="Verification code"
+            value={code}
+            onValueChange={(next) => {
+              setCode(next);
+              if (status === "rejected") setStatus("idle");
+            }}
+            onComplete={() => setStatus("idle")}
+            invalid={status === "rejected"}
+            size="lg"
+            autoFocus
+          />
+        )}
 
         <Stack direction="row" gap="sm">
           <Button

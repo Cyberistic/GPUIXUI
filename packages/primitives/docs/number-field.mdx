@@ -62,6 +62,19 @@ the down button is blocked, and at `100` the reverse. Before that rule both
 buttons compared the raw props, which every painted value satisfies, so an
 inverted pair blocked the pointer while the arrow keys kept stepping.
 
+## Read-only
+
+`readOnly` shows the value without accepting an edit. The field keeps its tab
+stop, its focus ring and its announcement, so a computed total can be read,
+selected and copied; `disabled` is the stronger state and also leaves the tab
+order. Typing, both arrows and both steppers are refused, a draft left from
+before the prop appeared is discarded, and `onSubmit` still reaches the caller —
+a read-only field is part of its form (plan `786`).
+
+```tsx
+<NumberField label="Total" value={copies * 3} readOnly />
+```
+
 ## Draft and precision
 
 While the user types, the **draft text** is kept verbatim (`1.` stays `1.`), so
@@ -90,6 +103,7 @@ remains a display rule — it never rounds the value a caller receives.
 | `precision` | `number` | `0` | decimals shown on commit; a non-finite precision is `0` |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: a field is one height (`h-9`, 36 px) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert; a pending draft is not committed on blur |
+| `readOnly` | `boolean` | `false` | visible, focusable and copyable, but every edit path is refused: typing, the arrows and both steppers (plan `786`); a read-only field may still submit its form |
 | `invalid` | `boolean` | `false` | destructive border |
 | `label` | `string` | none | accessible name |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
@@ -147,7 +161,9 @@ the caller's handler.
   There is no `aria-valuenow`/`min`/`max` in GPUix 0.10.0.
 - A disabled field is `readOnly`, out of the tab order and paints the disabled
   chrome; it commits no pending draft on blur; assistive technology hears
-  read-only, which is the honest state (the host has no `disabled` prop).
+  read-only, which is the honest state (the host has no `disabled` prop). A
+  **read-only** field is a different state: it keeps its tab stop and the normal
+  chrome and refuses edits at the component as well as the host (plan `786`).
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description` to
   its inner input, so the tip opens on keyboard focus. A text host receives no
   `onMouseEnter`, so hover cannot open it (measured, plan `345`).
@@ -166,8 +182,8 @@ the resting elevation, which the focus ring replaces (plan `585`).
 
 ## Style by state
 
-The same `FieldState` as `Input` — `disabled`, `focused`, `invalid` — resolved
-after the wrapper's chrome:
+The same `FieldState` as `Input` — `disabled`, `readOnly`, `focused`, `invalid`
+— resolved after the wrapper's chrome:
 
 ```tsx
 <NumberField
@@ -194,6 +210,11 @@ after the wrapper's chrome:
 
 - `src/components/state-style.test.tsx` — the state payload and the callback
   winning over the component's own rules (plan 079).
+- `src/components/read-only.test.tsx` — the read-only host and its chrome state
+  (plan `786`).
+- `runtime/readonly.runtime.test.tsx` — typing, `ArrowUp`, `PageUp` and a
+  hit-tested stepper press report nothing while read-only; the writable twin
+  reports all three (plan `786`).
 - `runtime/state-style.runtime.test.tsx` — the live state (focus, checked,
   invalid) reaching the painted style.
 

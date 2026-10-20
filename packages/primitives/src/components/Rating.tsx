@@ -41,6 +41,8 @@ import { useTheme } from "./ThemeProvider.js";
 /** The public state a `Rating` style callback receives. */
 export interface RatingState {
   readonly disabled: boolean;
+  /** Shows the value but takes no input and is not a tab stop (plan `786`). */
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -228,6 +230,7 @@ export const renderRating = (
         props.style,
         {
           disabled: props.disabled === true,
+          readOnly: props.readOnly === true,
           invalid: props.invalid === true,
         },
       )}

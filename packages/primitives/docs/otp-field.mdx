@@ -58,6 +58,19 @@ reports the new code, including a correction made inside a code that was already
 full. That is what lets the usual `onComplete={(code) => verify(code)}` verify a
 mistyped digit again without the user clearing a cell first (plan `360`).
 
+## Read-only
+
+`readOnly` shows a code without allowing an edit: every cell is visible, the
+field keeps **one** tab stop — the first cell, because there is no editing
+cursor — and the normal chrome. Typing, paste, Backspace and the arrow keys
+change nothing, and neither `onValueChange` nor `onComplete` fires. Use it for a
+verified code or a receipt; use `disabled` when the field should leave the tab
+order entirely (plan `786`).
+
+```tsx
+<OTPField label="Verified code" value={code} readOnly />
+```
+
 ## API
 
 | Prop | Type | Default | Consequence |
@@ -69,6 +82,7 @@ mistyped digit again without the user clearing a cell first (plan `360`).
 | `onComplete` | `(value: string) => void` | — | fires after an edit that leaves the code full, with the new code |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | no effect since plan `372`: every cell is the field's square (`h-9`, 36 × 36) |
 | `disabled` | `boolean` | `false` | read-only, out of the tab order, inert |
+| `readOnly` | `boolean` | `false` | visible and focusable, but no cell accepts typing, paste, Backspace or an arrow; one tab stop remains on the first cell (plan `786`) |
 | `invalid` | `boolean` | `false` | destructive border on every cell |
 | `label` | `string` | none | group name; each cell is named `<label> digit N` (`"Code digit N"` when blank) |
 | `autoFocus` | `boolean` | `false` | focuses the first cell on every mount, including a field added after a loading state (plan `584`); its ring paints from mount |
@@ -80,7 +94,7 @@ mistyped digit again without the user clearing a cell first (plan `360`).
 
 | Key | Effect |
 | --- | ------ |
-| `Tab` | enters the field at the first empty cell (the last when the code is full) and leaves it from the focused cell |
+| `Tab` | enters the field at the first empty cell (the last when the code is full; the first cell when read-only) and leaves it from the focused cell |
 | any letter or digit | replaces the cell, then focus advances |
 | a separator (`-`, space, …) | kept out of the code; the cell and the caret stay put |
 | `ArrowLeft` / `ArrowRight` | previous / next cell |
@@ -116,7 +130,9 @@ and does not delete a second character.
 - There is no `aria-labelledby` in 0.10.0, so each cell carries its own
   `aria-label` written from the group's `label`; a `Label` beside the field is
   the visible name.
-- A disabled field is `readOnly` and every cell is out of the tab order.
+- A disabled field is `readOnly` and every cell is out of the tab order. A
+  **read-only** field keeps one tab stop (cell 1) and the normal chrome, and
+  refuses every edit at the component as well as the host (plan `786`).
 - The code is one tab stop, so assistive technology and the Tab order see one
   control with `length` named inputs inside it.
 - The code itself is the native input text; there is no `aria-valuetext` on a
@@ -145,6 +161,7 @@ on the focused cell only. The theme supplies the paint (`colors.input`,
 | Field | Type | Meaning |
 | ----- | ---- | ------- |
 | `disabled` | `boolean` | the field refuses input and leaves the tab order |
+| `readOnly` | `boolean` | the field refuses edits but stays focusable (plan `786`) |
 | `invalid` | `boolean` | every cell paints the destructive border |
 
 The callback's result merges after the component's own rules, so it wins per
@@ -165,6 +182,7 @@ native `<input>` cell:
 | `filled` | `boolean` | the cell holds a character |
 | `focused` | `boolean` | the cell holds native focus |
 | `disabled` | `boolean` | the field is disabled |
+| `readOnly` | `boolean` | the field is read-only (plan `786`) |
 | `invalid` | `boolean` | every cell paints the destructive border |
 
 `OTPCellState` is exported. One callback receives every cell; branch on `index`
@@ -185,6 +203,11 @@ or `filled`.
 - `src/components/state-style.test.tsx` — the container state payload, each
   per-item payload, and the callback winning over the component's own rules
   (plans 080, 081).
+- `src/components/read-only.test.tsx` — every cell read-only and one tab stop on
+  cell 1, with `readOnly` in both payloads (plan `786`).
+- `runtime/readonly.runtime.test.tsx` — a focused read-only code refuses typing
+  and Backspace and leaves on the next Tab; the writable twin reports its first
+  digit (plan `786`).
 - `runtime/state-style.runtime.test.tsx` — a labelled scroll region's focus, a
   select's open state, and the per-item states reaching the paint (plans 080,
   081).

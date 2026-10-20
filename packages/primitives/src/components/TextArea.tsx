@@ -58,6 +58,7 @@ export const renderTextArea = (
   const base: StyleDesc = { ...chrome, height: undefined };
   const fieldState: FieldState = {
     disabled: props.disabled === true,
+    readOnly: props.readOnly === true,
     focused: focus.focused,
     invalid: props.invalid === true,
   };

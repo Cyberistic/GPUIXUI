@@ -90,6 +90,23 @@ export const NumberFieldExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
+        <Row
+          title="Sheet count"
+          description="Computed from copies; read-only"
+          value={`${copies * 3} sheets`}
+        >
+          <div style={{ width: 110 }}>
+            <NumberField
+              testId="number-field-example-sheets"
+              label="Sheet count"
+              value={copies * 3}
+              readOnly
+            />
+          </div>
+        </Row>
+
+        <Separator orientation="horizontal" />
+
         <Text role="caption" tone="muted">
           {`${copies} ${copies === 1 ? "print" : "prints"} at ${dpi} DPI. Type a value, or use ↑ ↓ and PageUp/PageDown.`}
         </Text>

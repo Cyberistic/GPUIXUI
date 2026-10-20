@@ -318,13 +318,21 @@ suite is the merge gate, not this plan (AGENTS §3).
 
 | Direction | Command | Observed |
 | --------- | ------- | -------- |
-| new file green | `test:runtime runtime/readonly.runtime.test.tsx` | pending |
-| old A (host `readOnly` removed) | same | pending |
-| old B (NumberField guard removed) | same | pending |
-| old C (OTP `readOnly={disabled}`) | same | pending |
-| offline state removed | `test src/components/read-only.test.tsx` | pending |
-| final offline | `test` | pending |
-| final scoped runtime | the two files above | pending |
+| new file green | `test:runtime runtime/readonly.runtime.test.tsx` | **7/7 passed** |
+| old A (host `readOnly` + `Input` guard removed) | same | **2 failed**: `expected [ 'keepx', 'keepxy', 'keepxyz' ] to strictly equal []` for `Input` and `TextArea` |
+| old B (`NumberField` host `readOnly` + guard removed) | same | **1 failed**: `expected [ 57 ] to strictly equal []` |
+| old C (OTP `readOnly={disabled}` + `disabled` guard) | same | **1 failed**: `expected [ '923' ] to strictly equal []` |
+| offline state removed (`fieldChrome`) | `test src/components/read-only.test.tsx` | **2 failed**: the payloads were missing `"readOnly": true` / `"readOnly": false` |
+| final offline | `test` | **73 files / 1011 tests passed** |
+| final scoped runtime | `runtime/{readonly,examples,state-style,rating}.runtime.test.tsx` | **4 files / 52 tests passed** |
+| gates | `check-types` (root), `lint`, `check:tests` | clean; `nub run check` stops only on `apps/docs/src/components/docs/demos.tsx`, the docs-site formatting task already in `TODO.md` (path outside this workstream) |
+
+The measured read-only contract: a focused `Input`/`TextArea` reports no edit for
+`x y z`; a read-only `NumberField` reports nothing for typed text, `ArrowUp`,
+`PageUp` or a hit-tested press on its up stepper, while the writable twin reports
+`[57, 58, 59]` for the same three gestures; a read-only three-cell `OTPField`
+reports nothing for `9` and Backspace and leaves on the next Tab from cell 1,
+while the writable twin reports `["9"]`.
 
 ## 7. Acceptance
 

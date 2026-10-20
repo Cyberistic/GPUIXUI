@@ -2604,14 +2604,18 @@ retired once both branches are one
       `IconButton` + standalone: exactly one `Status`), both directions
       measured (old: 3 statuses) (plan `785`).
 
-`[~]` `packages/primitives`: **the field family's read-only state** — `Input`
-      and `TextArea` accept `readOnly` (and the native runtime enforces it), but
-      `NumberField` and `OTPField` have no such state, `FieldState`/
-      `OTPFieldState`/`OTPCellState`/`RatingState` cannot paint it, and no
-      runtime suite drives a read-only field at all. Plan `786`: one
-      `fieldInert` rule, the two missing props, `readOnly` in every state
-      payload, a read-only OTP tab stop on cell 1, offline + scoped runtime
-      matrices and both examples.
+`[x]` `packages/primitives`: **the field family's read-only state** — `Input`
+      and `TextArea` accepted `readOnly`, but `NumberField`/`OTPField` had no
+      such state, `FieldState`/`OTPFieldState`/`OTPCellState`/`RatingState` could
+      not paint it, and no runtime suite drove a read-only field at all. One
+      `fieldInert` rule, the two props, `readOnly` in all four payloads, and the
+      read-only OTP's single tab stop on cell 1; measured: a focused read-only
+      `Input`/`TextArea` reports no edit, a read-only `NumberField` reports
+      nothing for typing/arrows/stepper while its writable twin reports
+      `[57, 58, 59]`, and a read-only code refuses typing/Backspace and leaves on
+      the next Tab. 6 offline + 7 scoped runtime cases, all four mutation
+      directions proven; offline 73 files / 1011 tests, scoped live 4 files / 52
+      (plan `786`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 

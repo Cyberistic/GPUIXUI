@@ -66,6 +66,8 @@ import { useTheme } from "./ThemeProvider.js";
 /** The public state an `OTPField` style callback receives. */
 export interface OTPFieldState {
   readonly disabled: boolean;
+  /** Visible and focusable, but no cell accepts an edit (plan `786`). */
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -75,6 +77,8 @@ export interface OTPCellState {
   readonly filled: boolean;
   readonly focused: boolean;
   readonly disabled: boolean;
+  /** The cell refuses edits but stays visible and focusable (plan `786`). */
+  readonly readOnly: boolean;
   readonly invalid: boolean;
 }
 
@@ -96,6 +100,12 @@ export interface OTPFieldProps {
   readonly size?: ControlSize;
   /** Read-only, out of the tab order and inert. */
   readonly disabled?: boolean;
+  /**
+   * Visible and focusable, but refuses every edit: typing, paste, Backspace and
+   * the arrow keys. One tab stop remains, on the first cell. `disabled` is the
+   * stronger state — it also leaves the tab order (plan `786`).
+   */
+  readonly readOnly?: boolean;
   /** Validation failed: every cell takes the destructive border. */
   readonly invalid?: boolean;
   /** The group's name; each cell is announced as "<label> digit N". */
@@ -148,17 +158,20 @@ export const renderOtpField = (
 ): ReactElement => {
   const limit = otpLength(props.length ?? 6);
   const disabled = props.disabled === true;
+  const inert = disabled || props.readOnly === true;
   const cells = otpCells(state.current, limit);
   /**
    * One tab stop for the whole field (plan `076`): the cell that holds focus,
-   * or — when the field is unfocused — the first empty cell. Both are clamped,
-   * because a `length` change must never leave every cell at `-1`.
+   * or — when the field is unfocused — the first empty cell. A read-only code
+   * has no editing cursor, so its resting stop is the first cell (plan `786`).
+   * Both are clamped, because a `length` change must never leave every cell at
+   * `-1`.
    */
   const tabStop = Option.getOrElse(
     Option.map(focus.focusedIndex, (index) =>
       Math.min(Math.max(index, 0), limit - 1),
     ),
-    () => otpTabStop(state.current, limit),
+    () => (props.readOnly === true ? 0 : otpTabStop(state.current, limit)),
   );
   return (
     <div
@@ -167,6 +180,7 @@ export const renderOtpField = (
       testId={props.testId}
       style={resolvePartStyle(otpGroupStyle(theme), props.style, {
         disabled,
+        readOnly: props.readOnly === true,
         invalid: props.invalid === true,
       })}
     >
@@ -180,7 +194,7 @@ export const renderOtpField = (
               : `${props.testId}-cell-${index + 1}`
           }
           value={cell}
-          readOnly={disabled}
+          readOnly={inert}
           autoFocus={!disabled && index === 0 ? props.autoFocus : undefined}
           tabIndex={disabled || index !== tabStop ? -1 : 0}
           theme={nativeTextTheme(theme)}
@@ -206,19 +220,20 @@ export const renderOtpField = (
                 (focused) => focused === index,
               ),
               disabled,
+              readOnly: props.readOnly === true,
               invalid: props.invalid === true,
             },
           )}
           onChange={(event: EventPayload) => {
-            if (disabled) return;
+            if (inert) return;
             handlers.onEdit(index, event.value ?? "");
           }}
           onKeyUp={(event: EventPayload) => {
-            if (disabled) return;
+            if (inert) return;
             handlers.onKey(index, event.key ?? "");
           }}
           onClick={() => {
-            if (disabled) return;
+            if (inert) return;
             handlers.onPick(index);
           }}
           onFocus={() => focus.onFocus(index)}
