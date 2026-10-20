@@ -1,17 +1,21 @@
 /**
- * `autoFocus` must take focus whenever the field mounts, not only in the
- * window's first render.
+ * `autoFocus` must take focus whenever the control mounts, not only in the
+ * window's first render — and it must work for a control whose host is not a
+ * native text input.
  *
- * The bug this guards: the runtime applies a host element's `autoFocus` only
- * while the window is created. A field behind a loading skeleton (`show ? form
- * : skeleton`) is mounted later, so the prop was silently ignored — measured
- * in `examples/basic-app` (plan `327` §7.1), where the email field never took
- * focus after the skeleton was replaced and the app removed the prop.
+ * The bug this guards: the field contract of plan `584`. A form behind a loading
+ * skeleton (`show ? form : skeleton`) is mounted later, and the app had recorded
+ * that a later mount never focused (`examples/basic-app`, plan `327` §7.1) —
+ * measured, it does: the field's own host takes it, so the app's `autoFocus` was
+ * correct all along. These cases mount each control in a second render and read
+ * the renderer's own focused id; the control cases prove the rule is tied to the
+ * prop, and the disabled cases prove an inert control is not focused.
  *
- * A component owns its mount, so a field can ask the renderer for focus once
- * its host exists. These cases mount the field in a second render and read the
- * renderer's own focused id; the control case proves the rule is tied to the
- * prop, and the disabled case proves an inert field is not focused.
+ * Plans `806` and `807` extended the same rule past the four text fields: first
+ * `Select`, whose host is a `div` rather than an `<input>`, then the single-root
+ * pressable controls (`Checkbox`, `Switch`, `Toggle`). The roving composites
+ * (`RadioGroup`, `CheckboxGroup`, `ToggleGroup`, `Rating`, the sliders) are a
+ * separate decision — which item receives the focus — recorded in `TODO.md`.
  */
 
 import type { ReactElement } from "react";
