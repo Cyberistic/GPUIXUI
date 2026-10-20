@@ -13,6 +13,7 @@ import type { EventPayload } from "@gpuix/react";
 import { Icon } from "@gpuixui/icons";
 import { decideActivation } from "../core/keyboard.js";
 import {
+  nextChecked,
   selectionBoxStyle,
   selectionMarkColor,
   selectionMarkSize,
@@ -58,7 +59,11 @@ export interface CheckboxProps extends TriggerHandlers {
   readonly checked?: boolean;
   readonly defaultChecked?: boolean;
   readonly onValueChange?: (next: boolean) => void;
-  /** A third state, drawn as a dash. Overrides `checked` when true. */
+  /**
+   * A third state, drawn as a dash. Overrides `checked` when true, and
+   * activation reads that painted state: a press on a mixed box asks for
+   * `true`, so it never clears itself (plan 750).
+   */
   readonly indeterminate?: boolean;
   readonly disabled?: boolean;
   readonly invalid?: boolean;
@@ -142,7 +147,7 @@ export const renderCheckbox = (
   };
   const toggle = (): void => {
     if (props.disabled === true) return;
-    onValueChange(!state.current);
+    onValueChange(nextChecked(current));
   };
   const onKey =
     (phase: "down" | "up", handler?: (event: EventPayload) => void) =>

@@ -78,9 +78,26 @@ there is no row to paint into, so the hint is announced but not painted.
 | `style` | `StateStyle<CheckboxState>` | — | merged last on the control surface — the box without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
-`indeterminate` is a **paint override**: activation still toggles the underlying
-boolean, so an indeterminate parent becomes checked on the next click rather than
-clearing.
+`indeterminate` is a **paint override**, and activation reads the state the box
+paints: a `mixed` box asks to be `true`, a `checked` one to be `false`, an empty
+one to be `true`. A mixed box therefore never clears itself (plan `750`) — the
+rule `CheckboxGroup`'s select-all row follows. The reported boolean still follows
+the shared controlled rule (it only fires when the value changes), so write the
+parent the supported way:
+
+```tsx
+// all selected -> checked; some -> mixed; none -> empty
+<Checkbox
+  checked={all}
+  indeterminate={some && !all}
+  onValueChange={(next) => setAll(next)}
+/>
+```
+
+Passing `checked` **true** together with `indeterminate` says the value is
+already all-selected while painting mixed; the press asks for the value it
+already has, so nothing is reported and the box keeps painting mixed until the
+caller drops `indeterminate`.
 
 ## Keyboard
 

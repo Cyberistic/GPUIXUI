@@ -146,6 +146,24 @@ describe("Checkbox", () => {
     expect(onValueChange).toHaveBeenCalledWith(true);
   });
 
+  it("checks from a mixed box that also carries checked", () => {
+    // Plan 750: a caller may pass both props (a tree checkbox whose parent is
+    // partly selected). The box paints and announces "mixed", so activation
+    // must report true; reading the underlying boolean reported false and
+    // cleared a box the user saw as partially filled.
+    const onValueChange = vi.fn();
+    const element = renderCheckbox(
+      { indeterminate: true, checked: true },
+      testTheme,
+      checked(true),
+      idle,
+      onValueChange,
+    );
+    expect(expectSome(hostProp(element, "aria-valuetext"))).toBe("mixed");
+    expectSome(hostHandler(element, "onClick"))(keyEvent("space"));
+    expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+
   it("keeps the destructive border on hover and press while invalid", () => {
     // Plan 356: on an unfilled box the border is the only error cue, and the
     // healthy interaction rule replaced it for the whole gesture.

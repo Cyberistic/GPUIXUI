@@ -2426,6 +2426,19 @@ retired once both branches are one
       files / 975 tests, runtime 69 files / 892 tests, examples 19/19; plan
       `749`).
 
+`[x]` `packages/primitives`: **a mixed `Checkbox` cleared itself when its caller
+      also passed `checked`** — measured (2026-10-20): `indeterminate` overrides
+      the paint, so `<Checkbox indeterminate checked>` announced `mixed` while a
+      press reported `false`, although the page promised "becomes checked on the
+      next click" and `CheckboxGroup`'s select-all treats `mixed` as "select
+      everything". Activation read the boolean, not the painted state. One
+      `nextChecked` rule now reads the paint (mixed asks for `true`); 3 core +
+      1 element + 2 scoped runtime cases, the element and anti-pattern runtime
+      cases failing in the old direction. The page now states the supported
+      `checked={all}` + `indeterminate={some && !all}` shape and that the shared
+      value rule reports only a real change (offline 71 files / 979 tests,
+      scoped live 1 file / 2; plan `750`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
 `[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails

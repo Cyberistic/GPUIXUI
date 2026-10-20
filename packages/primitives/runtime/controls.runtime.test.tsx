@@ -17,6 +17,7 @@
 import { expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { useState, type ReactElement } from "react";
 import type { EventPayload } from "@gpuix/react";
 import { buttonRecipeRing } from "../src/core/recipes.js";
 import { Button } from "../src/components/Button.js";
@@ -800,6 +801,68 @@ it("announces an indeterminate Checkbox as mixed", async () => {
     </Surface>,
   );
   expect(announced(runtime, "Enable")).toBe("mixed");
+});
+
+/** A tree checkbox over two options: checked when all, mixed when some. */
+const TreeCheckbox = ({
+  both,
+  onReport,
+}: {
+  readonly both: boolean;
+  readonly onReport: (next: boolean) => void;
+}): ReactElement => {
+  const [values, setValues] = useState<ReadonlyArray<string>>(["a"]);
+  return (
+    <Checkbox
+      testId="cb"
+      label="Select all"
+      checked={both ? true : values.length === 2}
+      indeterminate={both ? true : values.length === 1}
+      onValueChange={(next) => {
+        onReport(next);
+        setValues(next ? ["a", "b"] : []);
+      }}
+    />
+  );
+};
+
+it("does not clear a mixed Checkbox whose parent also passes checked", async () => {
+  // Plan 750's measured bug: activation read the boolean, so `checked` and
+  // `indeterminate` together painted "mixed" and a press reported `false`,
+  // clearing the box. Activation now reads the painted state and asks for
+  // `true`; because the caller's boolean already is `true`, the shared value
+  // rule reports nothing (nothing changed). The supported shape keeps
+  // `checked={all}` so the press is a real change — the next case.
+  const runtime = await openWindow();
+  const reports: Array<boolean> = [];
+  runtime.render(
+    <Surface>
+      <TreeCheckbox both onReport={(next) => reports.push(next)} />
+    </Surface>,
+  );
+  expect(announced(runtime, "Select all")).toBe("mixed");
+  runtime.click("cb");
+  expect(reports).toEqual([]);
+  // The caller keeps `indeterminate`, so its own state still overrides the
+  // paint until it drops the prop.
+  expect(announced(runtime, "Select all")).toBe("mixed");
+});
+
+it("checks a mixed Checkbox over some selected rows", async () => {
+  // The supported tree-checkbox shape (`checked={all}`, `indeterminate={some}`):
+  // the press asks for `true`, the boolean really changes, and the rows all
+  // select — the rule `CheckboxGroup`'s select-all row follows.
+  const runtime = await openWindow();
+  const reports: Array<boolean> = [];
+  runtime.render(
+    <Surface>
+      <TreeCheckbox both={false} onReport={(next) => reports.push(next)} />
+    </Surface>,
+  );
+  expect(announced(runtime, "Select all")).toBe("mixed");
+  runtime.click("cb");
+  expect(reports).toEqual([true]);
+  expect(announced(runtime, "Select all")).toBe("checked");
 });
 
 it("toggles a Switch on a click and reports the role the runtime maps it to", async () => {

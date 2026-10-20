@@ -168,6 +168,7 @@ export type {
 export {
   groupDisabled,
   initialActiveIndex,
+  nextChecked,
   radioDotStyle,
   SELECTION_ACCENTS,
   SELECTION_STATES,

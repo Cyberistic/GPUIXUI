@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as Arr from "effect/Array";
 import {
   groupDisabled,
+  nextChecked,
   SELECTION_STATES,
   selectionBoxStyle,
   selectionMarkColor,
@@ -345,5 +346,22 @@ describe("selectionMarkSize", () => {
     expect(lg).toBeLessThan(testTheme.iconSize.lg);
     expect(sm).toBeLessThan(md);
     expect(md).toBeLessThan(lg);
+  });
+});
+
+describe("nextChecked", () => {
+  // Plan 750: a mixed box that also carries `checked` painted "mixed" while a
+  // press reported `false`, because activation read the boolean instead of the
+  // painted state. A mixed box fills, like the platform and select-all do.
+  it("fills an empty box", () => {
+    expect(nextChecked("unchecked")).toBe(true);
+  });
+
+  it("clears a checked box", () => {
+    expect(nextChecked("checked")).toBe(false);
+  });
+
+  it("fills a mixed box", () => {
+    expect(nextChecked("indeterminate")).toBe(true);
   });
 });

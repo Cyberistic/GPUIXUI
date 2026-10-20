@@ -23,6 +23,17 @@ export const SELECTION_STATES = [
 ] as const;
 export type SelectionState = (typeof SELECTION_STATES)[number];
 
+/**
+ * The boolean activation reports from the state the control paints.
+ *
+ * A checked box clears; an empty or mixed one fills. A mixed box turns **on**,
+ * the platform convention and `CheckboxGroup`'s select-all rule, so a caller
+ * that also passes `checked` cannot make the paint and the activation disagree
+ * (plan `750`).
+ */
+export const nextChecked = (state: SelectionState): boolean =>
+  state !== "checked";
+
 /** Which accent paints a filled selection: the brand, or a destructive action. */
 export const SELECTION_ACCENTS = ["primary", "destructive"] as const;
 export type SelectionAccent = (typeof SELECTION_ACCENTS)[number];
