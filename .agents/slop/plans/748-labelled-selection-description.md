@@ -292,3 +292,14 @@ Both directions measured: with the caption removed, element cases 1–2 and
 runtime cases 1–2 fail; with the caption gated on `!== undefined` and the
 announcement reverted to the slot value, all five element cases and both runtime
 cases fail. Restored, every count above is the green one.
+
+### Containment probe (not shipped as a test)
+
+A 220 px row holding a 58-character label and a 62-character hint was mounted
+in the real runtime and every retained element's right edge was compared with
+the row's: **9 elements, none past it** (`right 232`, the theme's `lg` padding
+included). The new text column therefore does not need its own containment
+fix. The probe is deliberately **not** a test: removing the label's
+`minWidth: 0` did not make it fail (the column still wraps), so it could not be
+shown to fail in a realistic regression — the package's rule is that a test
+must be able to fail.
