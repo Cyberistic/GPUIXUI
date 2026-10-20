@@ -1417,10 +1417,12 @@ export interface ColorFailure {
  *
  * The theme's maths — {@link contrastRatio}, `compositeOver` and `alpha` — parse
  * only that form. A role in another CSS form is painted by the runtime but
- * invisible to the helpers; for a measured role the contrast check then reports
- * `NaN`, but the tint roles have no pair: a `shadow` of `"black"` makes every
- * elevation level fully opaque because `alpha` returns an unparseable tint
- * unchanged, and no other check sees it.
+ * invisible to the helpers, so the contrast check reports `NaN` for it — the
+ * tint included, because the elevation walk composites `shadow` at each defined
+ * level's own alpha over `elevationSurfaces`. A `shadow` of `"black"` therefore
+ * makes every elevation level fully opaque (`alpha` returns an unparseable tint
+ * unchanged) and reaches the contrast check as `NaN`; this check is the one
+ * that names the role, its value and the form.
  *
  * @example
  * ```ts

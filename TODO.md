@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 342/419
+`[x]` `[████████░░]` 343/420
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -147,6 +147,7 @@ and fails unless a public check reports it, and a planted composition no walk
 measures proves the predicate can fail. No colour, pair, floor, metric, role or
 shipped theme moves; `contrastPairs` stays 470 (plan 754)
 `[x]` Make the canonical theme link carry the density it resolves — `themeChoiceParams` documented density as the one axis always written (the fallback belongs to the platform: `platform=darwin` is compact, the same link on `win32` is comfortable) but encoded one only when the row named it, so the canonical link for `{ platform: "darwin" }` was `platform=darwin` alone and lost its compact on a platform edit; the writer now resolves the choice and always emits `density`, the JSDoc, catalogue, design system and README state the total rule, and `canonicalLink` is executed (plan 755)
+`[x]` Hold the tint's measurement claim — plan `505` made `shadow` a measured composition (the contrast check composites each defined elevation level at its own alpha over `elevationSurfaces`, plus `elevationContentSurfaces` for `md`), but three present-tense passages still said the tint has no pair: the public `themeColorFailures` JSDoc ("no other check sees it"), the catalogue's *Colour format* section ("The tint roles have no pair … while both other checks returned `[]`") and the ledger's Theme colour check row, while the catalogue's own completeness paragraph says `scrollbar` is the one role that is not a pair; the three now state the walk and its plan, the ledger keeps its plan-371 history in the past tense, and `tint-claims.test.ts` derives the 33 painted pairs (6 `sm` + 21 `md` + 6 `lg`) from the shipped levels and rejects the old sentences. No colour, pair, floor, metric or shipped theme moves (plan 757)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan

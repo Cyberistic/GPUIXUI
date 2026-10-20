@@ -2768,18 +2768,21 @@ themeColorFailures(tinted); // [{ role: "shadow", value: "black" }]
 ```
 
 This is the format half of the editable-theme guarantee; the opacity half
-follows below. A measured role in a
-non-hex form also fails the contrast check, because `contrastRatio` returns
-`NaN`, which never passes a floor; a fully opaque eight-digit spelling
+follows below. A role in a non-hex form also fails the contrast check, because
+`contrastRatio` returns `NaN`, which never passes a floor — the tint included:
+`shadow` is a measured composition, composited at each defined elevation level's
+own alpha over `elevationSurfaces` (and over `elevationContentSurfaces` for
+`md`, the level a menu opens across), so an edited tint is not an exemption
+(plan `505`). A fully opaque eight-digit spelling
 (`#RRGGBBFF`) is the same paint, so the maths reads it and measures the colour.
-The tint roles have no pair. `shadow` is
-applied to every elevation level through `alpha()` (plan `085`), and an
-unparseable tint is returned unchanged, so `shadow: "black"` painted a **fully
+`shadow` is applied to every elevation level through `alpha()` (plan `085`), and
+an unparseable tint is returned unchanged, so `shadow: "black"` paints a **fully
 opaque** shadow at every level — the shipped 0.08, 0.12 and 0.16 alphas gone —
-while both other checks returned `[]`. `#000` and `rgb(0 0 0)` behave the same
-way. Every shipped identity theme, platform variant and recipe is hex, so the
-check moves no value; it guards the next edit. `isHexColor` is the predicate for
-one value, for a boundary that receives a role from storage, a URL or a payload:
+and the contrast check reports each composited level as `NaN`. `#000` and
+`rgb(0 0 0)` behave the same way. Every shipped identity theme, platform variant
+and recipe is hex, so the check moves no value; it guards the next edit.
+`isHexColor` is the predicate for one value, for a boundary that receives a role
+from storage, a URL or a payload:
 
 ```ts
 import { isHexColor } from "@gpuixui/tokens";
