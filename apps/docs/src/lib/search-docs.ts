@@ -87,6 +87,11 @@ export const indexedSurfaces: ReadonlyArray<IndexedSurface> = [
     what: "the overlay paint order and the dismiss rule",
   },
   {
+    title: "Component API",
+    url: "/docs/component-api#refs-and-element-handles",
+    what: "the element instance a ref receives and the focus recipe",
+  },
+  {
     title: "Part states",
     url: "/docs/component-api#every-state-type",
     what: "every exported state type and the fields it declares",

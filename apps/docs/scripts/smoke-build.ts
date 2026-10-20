@@ -1396,6 +1396,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "the coverage question the Roadmap page now answers",
     },
+    {
+      query: "imperative handle",
+      expected: "/docs/component-api",
+      first: true,
+      what: "the ref contract, which returned nothing before plan 624",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

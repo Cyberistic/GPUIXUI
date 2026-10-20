@@ -1627,6 +1627,36 @@ describe("generated name candidates (plan 569)", () => {
     );
     expect(misses.filter((miss) => miss !== null)).toEqual([]);
   });
+  /**
+   * Plan 624: every host part's table repeated a `ref?` row and no page owned
+   * it, so `ref` reached the API reference page, `forwardRef` and
+   * `imperative handle` returned nothing, and `element handle` reached a
+   * Separator limitation. The ref vocabulary names Component API's
+   * `## Refs and element handles`; `reference` and `scrollbar` keep their
+   * owners, proving the alias table matches the whole query only.
+   */
+  it("finds the ref contract by the words readers use (plan 624)", async () => {
+    const expected = [
+      ["ref", "/docs/component-api"],
+      ["refs", "/docs/component-api"],
+      ["forwardRef", "/docs/component-api"],
+      ["element handle", "/docs/component-api"],
+      ["imperative handle", "/docs/component-api"],
+      ["public instance", "/docs/component-api"],
+      ["scroll into view", "/docs/component-api"],
+      ["reference", "/docs/api-reference"],
+      ["scrollbar", "/docs/components/scroll-area"],
+    ] as const;
+    const misses = await Promise.all(
+      expected.map(async ([query, url]) => {
+        const [first] = await search(query, 5);
+        return first?.type === "page" && first.url.split("#")[0] === url
+          ? null
+          : `${query} -> ${first?.type ?? "nothing"}:${first?.url ?? "nothing"}`;
+      }),
+    );
+    expect(misses.filter((miss) => miss !== null)).toEqual([]);
+  });
 });
 
 describe("withoutTypeTableRows", () => {

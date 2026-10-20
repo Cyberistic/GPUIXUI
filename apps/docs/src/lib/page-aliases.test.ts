@@ -56,6 +56,12 @@ import { source } from "./source";
  * Plan 621 adds the input surface: touch, stylus, pointer and mouse phrases and
  * the site's `skip link` name Accessibility, and the three platform style
  * phrases name Theming. `platform style` stays pinned to Theming's section.
+ *
+ * Plan 624 adds the ref vocabulary: `ref`, `refs`, `forwardRef`, `element
+ * handle`, `imperative handle`, `scroll into view` and the instance phrases name
+ * Component API's `## Refs and element handles`. The regression rows keep
+ * `reference` on the API reference page and `scrollbar` on Scrollable
+ * containers, proving the table matches the whole query only.
  */
 const normalize = (value: string): string => value.trim().toLowerCase();
 
@@ -453,6 +459,20 @@ const owned = [
   ["windows theme", "/docs/theming"],
   ["linux style", "/docs/theming"],
   ["linux theme", "/docs/theming"],
+  ["ref", "/docs/component-api"],
+  ["refs", "/docs/component-api"],
+  ["forwardref", "/docs/component-api"],
+  ["forward ref", "/docs/component-api"],
+  ["element handle", "/docs/component-api"],
+  ["element handles", "/docs/component-api"],
+  ["element instance", "/docs/component-api"],
+  ["public instance", "/docs/component-api"],
+  ["instance handle", "/docs/component-api"],
+  ["instance handles", "/docs/component-api"],
+  ["imperative handle", "/docs/component-api"],
+  ["imperative handles", "/docs/component-api"],
+  ["scroll into view", "/docs/component-api"],
+  ["scrollintoview", "/docs/component-api"],
 ] as const;
 
 const regressions = [
@@ -511,6 +531,8 @@ const regressions = [
   ["bundle size", "/docs/performance"],
   ["version", "/docs/installation"],
   ["platform style", "/docs/theming#platform-styles"],
+  ["reference", "/docs/api-reference"],
+  ["scrollbar", "/docs/components/scroll-area"],
 ] as const;
 
 describe(

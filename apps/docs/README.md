@@ -68,6 +68,19 @@ data, its renderer and the `Part states` search document are guarded by
 `src/lib/part-states-generated.test.ts` and
 `src/components/part-states-table.test.tsx`.
 
+## Refs and element handles
+
+`/docs/component-api#refs-and-element-handles` explains the `ref?` row every
+host part's generated table repeats: React 19 receives `ref` as a prop (no
+`forwardRef`), and it receives the runtime's element instance. The member table
+comes from `src/lib/element-instance.ts`, which guards its names, types and
+optionality against the installed `@gpuix/react` declarations; the page also
+includes the merged-ref helper and gives the `renderer?.focusElement?.(id)`
+recipe, because an instance has no `focus()`. `src/lib/ref-search.ts` makes
+`scrollIntoView` and `PublicInstance` findable, and the ref phrase forms are
+page aliases. `@gpuixui/primitives` exposes no `ref`; the test proves that scope
+through the app's own props-table generator.
+
 ## Brand and document head
 
 The site's identity is generated, not retyped. `src/lib/site-head.ts` owns the

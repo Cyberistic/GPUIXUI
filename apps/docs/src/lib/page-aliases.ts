@@ -73,6 +73,11 @@
  * `breaking changes`) on Installation, the conduct, command-line and offline
  * words on Contributing, the self-hosting variable on Deployment, and `faq` on
  * the Introduction.
+ *
+ * Plan 624 adds the ref vocabulary to Component API: `ref`, `forwardRef`,
+ * `element handle`, `imperative handle`, `scroll into view` and the instance
+ * phrases name the section that explains the element a ref receives. `reference`
+ * keeps the API reference page, because an alias matches the whole query only.
  */
 export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
   string,
@@ -342,6 +347,20 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "host props",
       "host properties",
       "shared host props",
+      "ref",
+      "refs",
+      "forwardref",
+      "forward ref",
+      "element handle",
+      "element handles",
+      "element instance",
+      "imperative handle",
+      "imperative handles",
+      "public instance",
+      "instance handle",
+      "instance handles",
+      "scroll into view",
+      "scrollintoview",
       "callback",
       "callbacks",
     ],

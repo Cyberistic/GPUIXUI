@@ -27,6 +27,7 @@ const sections = [
   "Controlled and uncontrolled",
   "State-aware styles",
   "Shared host props",
+  "Refs and element handles",
   "Keyboard",
   "Accessibility",
   "Layering",

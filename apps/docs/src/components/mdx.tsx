@@ -11,6 +11,7 @@ import { ComponentDependencies } from "./component-dependencies";
 import { ComponentState } from "./component-state";
 import { ContrastColors } from "./contrast-colors";
 import { HostPropsTable } from "./host-props-table";
+import { ElementInstanceTable } from "./element-instance-table";
 import { IllustrativeApproximation } from "./preview/approximation-banner";
 import { ComponentPreview } from "./preview/component-preview";
 import { LiveSurface } from "./preview/live-surface";
@@ -52,6 +53,7 @@ export function getMDXComponents(components?: MDXComponents) {
     AccessibilityIndex,
     AbsentStylingConcepts,
     HostPropsTable,
+    ElementInstanceTable,
     PartIndex,
     PartStates,
     PageTemplateSections,

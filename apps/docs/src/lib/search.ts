@@ -22,6 +22,7 @@ import { layeringSearchEntry } from "./layering-search";
 import { pageAliasRank, pageAliases } from "./page-aliases";
 import { partStatesSearchEntry } from "./part-states-search";
 import { platformSearchEntry } from "./platform-search";
+import { refSearchEntry } from "./ref-search";
 import { roadmapSearchEntry } from "./roadmap-search";
 import {
   sceneInstructionByUrl,
@@ -149,6 +150,7 @@ export const generatedSearchEntries: ReadonlyArray<GeneratedSearchEntry> = [
   hostPropsSearchEntry,
   layeringSearchEntry,
   partStatesSearchEntry,
+  refSearchEntry,
   ...tokenSearchEntries,
   tokensApiSearchEntry,
   capabilitySearchEntry,

@@ -471,7 +471,21 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500+)
 
-`[x]` `[██████████]` 190/190
+`[x]` `[██████████]` 191/191
+
+`[x]` **Refs and element handles have an answer (plan 624)** — every host
+      part's generated props table carried a bare `ref?` row with no owner
+      (147 tables over 66 pages), and measured 2026-10-20 at `d78ca3de`, `ref`
+      reached `/docs/api-reference`, `forwardRef` and `imperative handle`
+      returned nothing, and `element handle` reached a Separator limitation.
+      `/docs/component-api#refs-and-element-handles` states the React-19
+      ref-as-prop contract, renders the `PublicInstance` members parsed from the
+      installed declarations, gives the real `renderer?.focusElement?.(id)`
+      recipe, and includes `internal/ref.ts`; the scope claim (components takes
+      a ref, primitives does not) is proved with the app's own generator in both
+      directions. 136 files / 1 409 docs tests, 107-page `smoke:build` with
+      `imperative handle`, scoped axe green; four two-direction proofs and one
+      measured limit in plan 624 §10.
 
 `[x]` **The part-state contract stops claiming a fixed vocabulary (plan 622)** —
       measured 2026-10-20 by parsing `packages/components/src`: the page claimed

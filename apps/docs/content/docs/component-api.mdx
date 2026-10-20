@@ -1,6 +1,6 @@
 ---
 title: Component API
-description: The conventions every component follows — parts, compounds, controlled state, state-aware styles, overlay layering, shared host props, keyboard and accessibility.
+description: The conventions every component follows — parts, compounds, controlled state, state-aware styles, overlay layering, shared host props, refs and element handles, keyboard and accessibility.
 ---
 
 Most GPUIXUI components are **compounds**: one exported component and one props
@@ -132,6 +132,58 @@ belongs to the runtime's tree and has its own table on
 Rows come from the installed `@gpuix/native` declarations, and the docs suite
 fails when the package gains, renames or drops a host prop this table has not
 classified.
+
+## Refs and element handles
+
+In React 19 a function component receives `ref` as an ordinary prop, so there
+is no `forwardRef` wrapper to remember. A part accepts one when its props type
+extends the runtime's `Props` — the runtime's input and textarea variants add it
+too — and the `ref?` row in its generated table is that contract. A table
+without the row belongs to a part that declares its own props:
+`@gpuixui/primitives` exposes no `ref`, and focus inside those components
+belongs to their own keyboard contract.
+
+The ref receives the runtime's **element instance**, not a DOM node:
+
+<ElementInstanceTable />
+
+It has no `focus()` and no event listeners: focus is an action on the renderer,
+which takes the instance id. This is the call the shipped components make when
+they move focus themselves:
+
+```tsx
+import { useGpuix } from "@gpuix/react";
+import type { PublicInstance } from "@gpuix/react";
+import { useRef } from "react";
+import { SearchInput } from "@gpuixui/components/search-input";
+import { Button, Stack } from "@gpuixui/primitives";
+
+export function ProjectFilter() {
+  const field = useRef<PublicInstance | null>(null);
+  const { renderer } = useGpuix();
+
+  const focusField = () => {
+    const instance = field.current;
+    if (instance !== null) renderer?.focusElement?.(instance.id);
+  };
+
+  return (
+    <Stack direction="column" gap="sm">
+      <SearchInput ref={field} placeholder="Search projects" />
+      <Button onActivate={focusField}>Focus the filter</Button>
+    </Stack>
+  );
+}
+```
+
+A part that needs the instance itself — for focus, keyboard or scroll
+bookkeeping — still hands yours the same value. Passing two separate `ref`s to
+one host would let the last one win, so those parts compose them through one
+callback:
+
+<include lang="ts" meta='title="packages/components/src/internal/ref.ts"'>
+  ../../../../packages/components/src/internal/ref.ts
+</include>
 
 ## Keyboard
 
