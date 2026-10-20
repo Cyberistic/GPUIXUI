@@ -19,7 +19,7 @@ promotion fast-forward now would put an ungated live scenario on `main`.
 
 This plan is **verification only**: no source change. It re-runs both full
 suites on the head that includes plan `761`, reconciles the totals against the
-predicted `4077 + 29 = 4106` headless and `2830 + 29 = 2859` live, and updates
+predicted `4077 + 29 = 4106` headless and `2831 + 29 = 2860` live, and updates
 the three ledgers plus the plan index.
 
 ## 2. Preconditions
@@ -87,7 +87,7 @@ Expected:
 
 - headless `111 4106 65`, host
   `gpuix TestRenderer darwin-x64 @gpuix/native 0.10.0 (gpuix 9fcd6288, zed 81c99f81, runtime shaders)`;
-- live `100 2859±N 61`, host `gpuix live window darwin-x64 …` with the same
+- live `100 2860±N 61`, host `gpuix live window darwin-x64 …` with the same
   pins;
 - `opacity-pixels` and `live-opacity-pixels` each report **29** checks;
 - `state-pixels` and `live-state-pixels` each report **50**;
@@ -123,7 +123,7 @@ nub run test
 - **The headless total is not `4106`**, or `opacity-pixels` is not **29**:
   reconcile which scenario changed and by how much before editing a ledger.
   Never overwrite a total that was not read back from the artifact.
-- **The live total differs from `2859` by more than the `live-tier2-editing`
+- **The live total differs from `2860` by more than the `live-tier2-editing`
   branch (±1)** — for example a whole scenario missing: the registry and the
   report disagree; stop and report the id list, not a number.
 - **`--list` reports 111/100 but the run reports fewer scenarios**: a scenario
@@ -144,7 +144,7 @@ directions this gate can prove are already in place:
   runs measured, so a scenario that only passes alone (a state leak, a timing
   assumption) fails here.
 - **Reverse:** the totals must equal the previous gate plus the new scenario's
-  checks exactly (`4077 + 29`, `2830 + 29` ±1). A mismatch means a scenario was
+  checks exactly (`4077 + 29`, `2831 + 29` ±1). A mismatch means a scenario was
   skipped, double-counted or changed silently.
 
 Mutation proofs are not part of a gate: plan `761` already recorded five.
