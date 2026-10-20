@@ -31,6 +31,10 @@ import {
 import { Button, type ButtonProps } from "./internal/button.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { isEventClaimed } from "./internal/event-claim.js";
 import { isDown, isEnter, isSpaceRelease, isUp } from "./internal/key.js";
 import {
@@ -107,6 +111,7 @@ export const DropdownMenu = ({
   onOpenChange,
   children,
 }: DropdownMenuProps) => {
+  const depth = useOverlayHost().depth + 1;
   const [open, setOpen] = useControllableState({
     value: openProp,
     defaultValue: defaultOpen,
@@ -154,8 +159,8 @@ export const DropdownMenu = ({
         return;
       }
       close(event.eventType === "keyDown" ? "dismiss" : "outside");
-    });
-  }, [close, open, renderer]);
+    }, depth);
+  }, [close, depth, open, renderer]);
 
   useLayoutEffect(() => {
     if (open) {
@@ -191,7 +196,9 @@ export const DropdownMenu = ({
   return (
     <DropdownContext.Provider value={context}>
       <MenuContext.Provider value={menu}>
-        <div style={floatingRootStyle()}>{children}</div>
+        <OverlayHostProvider depth={depth} contentId={undefined}>
+          <div style={floatingRootStyle()}>{children}</div>
+        </OverlayHostProvider>
       </MenuContext.Provider>
     </DropdownContext.Provider>
   );

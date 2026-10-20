@@ -39,6 +39,10 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
 import {
   isDismiss,
@@ -158,6 +162,7 @@ export const NavigationMenu = ({
   onKeyDown,
   ...rest
 }: NavigationMenuProps) => {
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: valueProp,
@@ -312,8 +317,8 @@ export const NavigationMenu = ({
         return;
       }
       requestClose(null);
-    });
-  }, [open, renderer, requestClose, triggerFor]);
+    }, depth);
+  }, [depth, open, renderer, requestClose, triggerFor]);
 
   const context = useMemo<NavigationMenuContextValue>(
     () => ({
@@ -354,27 +359,29 @@ export const NavigationMenu = ({
 
   return (
     <NavigationMenuContext.Provider value={context}>
-      <div style={floatingRootStyle()}>
-        <div
-          role="navigation"
-          aria-label={label}
-          {...rest}
-          onKeyDown={(event: EventPayload) => {
-            onKeyDown?.(event);
-            if (isDismiss(event)) dismissTopLayer(event);
-          }}
-          style={mergeStyles(
-            {
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            },
-            style,
-          )}
-        >
-          {children}
+      <OverlayHostProvider depth={depth} contentId={undefined}>
+        <div style={floatingRootStyle()}>
+          <div
+            role="navigation"
+            aria-label={label}
+            {...rest}
+            onKeyDown={(event: EventPayload) => {
+              onKeyDown?.(event);
+              if (isDismiss(event)) dismissTopLayer(event);
+            }}
+            style={mergeStyles(
+              {
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              },
+              style,
+            )}
+          >
+            {children}
+          </div>
         </div>
-      </div>
+      </OverlayHostProvider>
     </NavigationMenuContext.Provider>
   );
 };

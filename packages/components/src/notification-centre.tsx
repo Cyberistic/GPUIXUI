@@ -57,6 +57,10 @@ import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
 import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
+import {
   assertParts,
   type PartChildren,
   type PartComponent,
@@ -160,6 +164,7 @@ export const NotificationCentre = ({
   empty = "You're all caught up",
   children,
 }: NotificationCentreProps) => {
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -297,7 +302,9 @@ export const NotificationCentre = ({
 
   return (
     <NotificationCentreContext.Provider value={context}>
-      <div style={floatingRootStyle()}>{children}</div>
+      <OverlayHostProvider depth={depth} contentId={undefined}>
+        <div style={floatingRootStyle()}>{children}</div>
+      </OverlayHostProvider>
     </NotificationCentreContext.Provider>
   );
 };
@@ -412,6 +419,7 @@ export const NotificationCentreContent = ({
     moveActive,
     readActive,
   } = useNotificationCentre();
+  const depth = useOverlayHost().depth;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
   const placement = usePlacement({
@@ -436,8 +444,8 @@ export const NotificationCentreContent = ({
         return;
       }
       requestClose(event.eventType === "keyDown" ? "trigger" : "none");
-    });
-  }, [open, renderer, trigger]);
+    }, depth);
+  }, [depth, open, renderer, trigger]);
 
   /**
    * Whether the panel itself or one of its rows holds focus. A key that bubbles

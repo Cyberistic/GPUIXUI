@@ -38,7 +38,10 @@ import {
   useModalState,
 } from "./internal/modal.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
-import { ModalHostProvider, useModalHost } from "./internal/modal-host.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   assertParts,
@@ -118,7 +121,7 @@ export const Drawer = ({
     onOpenChange,
     dismissible,
   });
-  const host = useModalHost();
+  const host = useOverlayHost();
   const { description, register: registerDescription } =
     useDescriptionRegistry();
 
@@ -131,9 +134,9 @@ export const Drawer = ({
 
   return (
     <DrawerContext.Provider value={context}>
-      <ModalHostProvider depth={depth} contentId={host.contentId}>
+      <OverlayHostProvider depth={depth} contentId={host.contentId}>
         {children}
-      </ModalHostProvider>
+      </OverlayHostProvider>
     </DrawerContext.Provider>
   );
 };
@@ -269,7 +272,7 @@ const DrawerSurface = ({
   );
 
   const contentId = content?.id;
-  const host = useModalHost();
+  const host = useOverlayHost();
   useModalFocus(open ? contentId : undefined, initialFocus);
 
   const box = surfaceSize(side, size, window);
@@ -321,9 +324,9 @@ const DrawerSurface = ({
               onKeyDown={handleKeyDown}
               style={mergeStyles(surfaceStyle(theme, box), style)}
             >
-              <ModalHostProvider depth={host.depth} contentId={contentId}>
+              <OverlayHostProvider depth={host.depth} contentId={contentId}>
                 {children}
-              </ModalHostProvider>
+              </OverlayHostProvider>
               {showClose ? (
                 <IconButton
                   label="Close drawer"

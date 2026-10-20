@@ -39,7 +39,10 @@ import { useDescriptionRegistry } from "./internal/description.js";
 import { controlName } from "./internal/name.js";
 import { dismissTopLayer } from "./internal/dismiss-layer.js";
 import { headingLevel, type HeadingLevel } from "./internal/heading.js";
-import { ModalHostProvider, useModalHost } from "./internal/modal-host.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { motionProps, MotionSurface } from "./internal/motion.js";
 import {
   handleModalKeyDown,
@@ -121,7 +124,7 @@ export const Dialog = ({
     onOpenChange,
     dismissible,
   });
-  const host = useModalHost();
+  const host = useOverlayHost();
   const { description, register: registerDescription } =
     useDescriptionRegistry();
 
@@ -134,9 +137,9 @@ export const Dialog = ({
 
   return (
     <DialogContext.Provider value={context}>
-      <ModalHostProvider depth={depth} contentId={host.contentId}>
+      <OverlayHostProvider depth={depth} contentId={host.contentId}>
         {children}
-      </ModalHostProvider>
+      </OverlayHostProvider>
     </DialogContext.Provider>
   );
 };
@@ -253,7 +256,7 @@ const DialogSurface = ({
     ref,
   );
   const contentId = content?.id;
-  const host = useModalHost();
+  const host = useOverlayHost();
   useModalFocus(open ? contentId : undefined, initialFocus);
 
   const close = () => setOpen(false);
@@ -311,9 +314,9 @@ const DialogSurface = ({
               style,
             )}
           >
-            <ModalHostProvider depth={host.depth} contentId={contentId}>
+            <OverlayHostProvider depth={host.depth} contentId={contentId}>
               {children}
-            </ModalHostProvider>
+            </OverlayHostProvider>
             {showClose ? (
               <IconButton
                 label="Close"

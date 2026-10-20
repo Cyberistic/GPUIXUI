@@ -78,6 +78,10 @@ import {
 } from "./combobox/logic.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import { controlName } from "./internal/name.js";
 import { useNativeFocusId } from "./internal/native-focus.js";
@@ -263,6 +267,7 @@ export const Combobox = ({
   createLabel = defaultCreateLabel,
   children,
 }: ComboboxProps) => {
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState<boolean>({
     value: openProp,
@@ -432,8 +437,8 @@ export const Combobox = ({
       if (dismissedOnTrigger.current) return;
       close.current();
       if (event.eventType === "keyDown") restoreFocus.current = true;
-    });
-  }, [visibleOpen]);
+    }, depth);
+  }, [depth, visibleOpen]);
 
   return (
     <ComboboxContext.Provider
@@ -541,7 +546,9 @@ export const Combobox = ({
         itemToStringValue={(value) => labelFor(value)}
         style={{ display: "flex", flexDirection: "column", width: "100%" }}
       >
-        {children}
+        <OverlayHostProvider depth={depth} contentId={undefined}>
+          {children}
+        </OverlayHostProvider>
       </HeadlessCombobox>
     </ComboboxContext.Provider>
   );

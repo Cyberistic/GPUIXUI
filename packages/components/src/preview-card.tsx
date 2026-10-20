@@ -33,6 +33,10 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { useHoverTravel, type HoverTravel } from "./internal/hover.js";
 import { isDismiss } from "./internal/key.js";
 import {
@@ -101,6 +105,7 @@ export const PreviewCard = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  const depth = useOverlayHost().depth + 1;
   const trigger = useRef<PublicInstance | null>(null);
   const suppressFocusOpen = useRef(false);
   const renderer = useGpuix().renderer;
@@ -141,7 +146,9 @@ export const PreviewCard = ({
 
   return (
     <PreviewCardContext.Provider value={context}>
-      <div style={floatingRootStyle()}>{children}</div>
+      <OverlayHostProvider depth={depth} contentId={undefined}>
+        <div style={floatingRootStyle()}>{children}</div>
+      </OverlayHostProvider>
     </PreviewCardContext.Provider>
   );
 };
@@ -223,6 +230,7 @@ export const PreviewCardContent = ({
 }: PreviewCardContentProps) => {
   const theme = useTheme();
   const { open, requestClose, trigger, hover } = usePreviewCard();
+  const depth = useOverlayHost().depth;
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -251,8 +259,8 @@ export const PreviewCardContent = ({
         return;
       }
       requestClose(event.eventType === "keyDown" ? "trigger" : "none");
-    });
-  }, [open, renderer, requestClose, trigger]);
+    }, depth);
+  }, [depth, open, renderer, requestClose, trigger]);
 
   if (!open) return null;
 

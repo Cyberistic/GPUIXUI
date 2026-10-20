@@ -31,6 +31,10 @@ import {
   type RefObject,
 } from "react";
 import { pushDismissLayer } from "../internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "../internal/overlay-host.js";
 import { claimEvent } from "../internal/event-claim.js";
 import { useHoverTravel, type HoverTravel } from "../internal/hover.js";
 import { isDown, isLeft, isRight, isUp } from "../internal/key.js";
@@ -245,6 +249,7 @@ export const MenuSubContent = ({
   ref,
   ...rest
 }: MenuSubContentProps) => {
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const { open, setOpen, trigger, focusEdge, hover, hoverClose } =
     useSubContext();
@@ -355,12 +360,12 @@ export const MenuSubContent = ({
       if (event.eventType === "mouseDownOutside" && insideSurface(event))
         return;
       closeRef.current(event.eventType === "keyDown" ? "dismiss" : "outside");
-    });
+    }, depth);
     return () => {
       pop();
       release();
     };
-  }, [insideSurface, open, parentClaim, setOpen]);
+  }, [depth, insideSurface, open, parentClaim, setOpen]);
 
   useLayoutEffect(() => {
     if (open || !restoreFocus.current) return;
@@ -472,7 +477,9 @@ export const MenuSubContent = ({
             }}
             style={mergeStyles({ maxHeight: 320, overflowY: "scroll" }, style)}
           >
-            {children}
+            <OverlayHostProvider depth={depth} contentId={undefined}>
+              {children}
+            </OverlayHostProvider>
           </MenuSurface>
         </anchored>
       </MenuSurfaceStack.Provider>

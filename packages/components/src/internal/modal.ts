@@ -24,7 +24,7 @@ import {
 } from "./dismiss-layer.js";
 import { claimEvent, isEventClaimed } from "./event-claim.js";
 import { isDismiss, isTab } from "./key.js";
-import { useModalHost, type ModalHost } from "./modal-host.js";
+import { useOverlayHost, type OverlayHost } from "./overlay-host.js";
 
 /** The open state a modal exposes to its parts. */
 export interface ModalState {
@@ -51,7 +51,7 @@ export const useModalState = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
-  const depth = useModalHost().depth + 1;
+  const depth = useOverlayHost().depth + 1;
 
   // The layer handler must see the latest props without being re-pushed: a
   // re-push would move this surface above an overlay that opened after it.
@@ -90,8 +90,8 @@ export const useModalFocus = (
   const [previousFocus] = useState<number | null>(
     () => renderer?.getFocusedElementId?.() ?? null,
   );
-  const host = useModalHost();
-  const hostRef = useRef<ModalHost>(host);
+  const host = useOverlayHost();
+  const hostRef = useRef<OverlayHost>(host);
   useLayoutEffect(() => {
     hostRef.current = host;
   });

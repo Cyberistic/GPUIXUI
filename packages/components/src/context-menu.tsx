@@ -28,6 +28,10 @@ import {
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { isMenuKey } from "./internal/key.js";
 import {
   assertParts,
@@ -108,6 +112,7 @@ export const ContextMenu = ({
   onOpenChange,
   children,
 }: ContextMenuProps) => {
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -158,10 +163,11 @@ export const ContextMenu = ({
 
   useLayoutEffect(() => {
     if (!open) return;
-    return pushDismissLayer((event) =>
-      close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+    return pushDismissLayer(
+      (event) => close(event.eventType === "keyDown" ? "dismiss" : "outside"),
+      depth,
     );
-  }, [close, open]);
+  }, [close, depth, open]);
 
   const openAt = useCallback((next: Point) => {
     restoreFocus.current = false;
@@ -192,9 +198,11 @@ export const ContextMenu = ({
   return (
     <ContextMenuContext.Provider value={context}>
       <MenuContext.Provider value={menu}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {children}
-        </div>
+        <OverlayHostProvider depth={depth} contentId={undefined}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {children}
+          </div>
+        </OverlayHostProvider>
       </MenuContext.Provider>
     </ContextMenuContext.Provider>
   );

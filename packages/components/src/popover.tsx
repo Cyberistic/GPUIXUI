@@ -49,6 +49,10 @@ import { Button, type ButtonProps } from "./internal/button.js";
 import { useCloseFocus } from "./internal/close-focus.js";
 import { useControllableState } from "./internal/controllable.js";
 import { dismissTopLayer, pushDismissLayer } from "./internal/dismiss-layer.js";
+import {
+  OverlayHostProvider,
+  useOverlayHost,
+} from "./internal/overlay-host.js";
 import { claimEvent } from "./internal/event-claim.js";
 import { isDismiss, isTab } from "./internal/key.js";
 import { MotionSurface, motionProps } from "./internal/motion.js";
@@ -113,6 +117,7 @@ export const Popover = ({
     defaultValue: defaultOpen,
     onChange: onOpenChange,
   });
+  const depth = useOverlayHost().depth + 1;
   const renderer = useGpuix().renderer;
   const trigger = useRef<PublicInstance | null>(null);
   // A close the caller refuses must leave the surface and the user's focus
@@ -139,7 +144,9 @@ export const Popover = ({
 
   return (
     <PopoverContext.Provider value={context}>
-      <div style={floatingRootStyle()}>{children}</div>
+      <OverlayHostProvider depth={depth} contentId={undefined}>
+        <div style={floatingRootStyle()}>{children}</div>
+      </OverlayHostProvider>
     </PopoverContext.Provider>
   );
 };
@@ -255,6 +262,7 @@ const PopoverSurface = ({
 }: PopoverContentProps) => {
   const theme = useTheme();
   const { open, requestClose, trigger } = usePopoverContext();
+  const depth = useOverlayHost().depth;
   const renderer = useGpuix().renderer;
   const surface = useRef<PublicInstance | null>(null);
   const setSurface = useMergedRef<PublicInstance | null>(surface, ref);
@@ -314,8 +322,8 @@ const PopoverSurface = ({
         return;
       }
       requestClose(event.eventType === "keyDown" ? "trigger" : "none");
-    });
-  }, [open, renderer, requestClose, trigger]);
+    }, depth);
+  }, [depth, open, renderer, requestClose, trigger]);
 
   /** Close and, once accepted, hand focus to the app control after (or before) the trigger. */
   const leave = (backwards: boolean): void => {
