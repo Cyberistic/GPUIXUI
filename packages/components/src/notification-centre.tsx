@@ -217,7 +217,10 @@ export const NotificationCentre = ({
   );
 
   useLayoutEffect(() => {
-    if (!open) setActiveId(Option.none());
+    if (!open) {
+      setActiveId(Option.none());
+      heldRow.current = Option.none();
+    }
   }, [open]);
 
   // A vanished selection is forgotten on the next data update, so a refill can
