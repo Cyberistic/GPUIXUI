@@ -1075,6 +1075,23 @@ retired once both branches are one
       spread onto the root; 3 native cases (6 → 9) all failing at `HEAD`, three
       mutation proofs; example, docs, `COMPONENTS.md` and the inventory count
       synced
+    - [x] A field's focus ring follows native focus — plan 748; measured
+      2026-10-20: `focusElement(email)` reported `email` as the focused host
+      while the input painted `boxShadow: undefined`, and a seeded `autoFocus`
+      ring stayed after `focusNext()` moved focus to the next field, because
+      `FieldInput` derived `focused` from React `onFocus`/`onBlur` only (0.10.0
+      delivers neither for a native move). The input now samples the renderer's
+      focused host while enabled (the `SearchInput` rule), keeps the
+      `autoFocus` seed only until a host is reported, reports the same truth
+      through `StateStyle`, merges a caller `ref`, and paints no ring while
+      disabled; 2 new cases + 1 pin (Field 9 → 12), both-direction proof (both
+      cases red at `HEAD`) and two mutation proofs; `docs/component-api.md` and
+      `COMPONENTS.md` also lose the false "never a poll" sentence; fieldset,
+      Form, MultiStepForm and accessibility suites are 50/50; `check`, `lint`
+      and `test` exit 0 (unit 488 in 46 files) and the full native suite is
+      931 passed / 28 failed of 959 (the same plan-540 binding classes, no new
+      failure); docs, `COMPONENTS.md` and the inventory synced (owner:
+      components)
     - [x] A nested modal owns its Tab — plan 728: measured 2026-10-20 that a
       confirmation opened from a dialog lost the keyboard on the first Tab
       (Cancel → the outer dialog's first control, while the confirmation stayed

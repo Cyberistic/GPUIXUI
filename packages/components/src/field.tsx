@@ -10,21 +10,23 @@
  * id reference). The input itself is the `@gpuixui/primitives` stand-in.
  */
 
-import type { InputProps, Props } from "@gpuix/react";
+import type { InputProps, Props, PublicInstance } from "@gpuix/react";
 import {
   mergeStyles,
   resolveStyle,
   type StateStyle,
 } from "@gpuix/react/floating";
 import * as Option from "effect/Option";
-import { createContext, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useRef } from "react";
 import { useFieldsetDisabled } from "./fieldset.js";
+import { useNativeFocusId } from "./internal/native-focus.js";
 import {
   assertParts,
   type PartChildren,
   type PartComponent,
   type PartsContract,
 } from "./internal/parts.js";
+import { useMergedRef } from "./internal/ref.js";
 import {
   controlHeight,
   focusRing,
@@ -202,9 +204,8 @@ export const FieldInput = ({
   invalid,
   disabled = false,
   autoFocus = false,
-  onFocus,
-  onBlur,
   style,
+  ref,
   ...rest
 }: FieldInputProps) => {
   const theme = useTheme();
@@ -212,7 +213,20 @@ export const FieldInput = ({
   const fieldsetDisabled = useFieldsetDisabled();
   const isInvalid = invalid ?? field?.error !== undefined;
   const isDisabled = disabled || fieldsetDisabled;
-  const [focused, setFocused] = useState(autoFocus && !isDisabled);
+  const input = useRef<PublicInstance | null>(null);
+  const attach = useCallback((next: PublicInstance | null) => {
+    input.current = next;
+  }, []);
+  const setInput = useMergedRef<PublicInstance | null>(attach, ref);
+  // The sample is the only focus signal: 0.10.0 delivers no React focus/blur
+  // for a native move (plans 536/540). The `autoFocus` seed stands until it
+  // reports a host, because the runtime applies that focus after React's
+  // effects (plan 388).
+  const focusedId = useNativeFocusId(!isDisabled);
+  const hostId = input.current?.id ?? null;
+  const focused =
+    !isDisabled &&
+    (focusedId === null ? autoFocus : hostId !== null && focusedId === hostId);
   const state: FieldInputState = {
     disabled: isDisabled,
     focused,
@@ -228,18 +242,11 @@ export const FieldInput = ({
   return (
     <input
       {...rest}
+      ref={setInput}
       autoFocus={autoFocus && !isDisabled}
       {...(isDisabled ? { readOnly: true, tabIndex: -1 } : {})}
       {...(field === undefined ? {} : { "aria-label": field.label })}
       {...stateDescription(isDisabled, description, rest["aria-description"])}
-      onFocus={(event) => {
-        setFocused(true);
-        onFocus?.(event);
-      }}
-      onBlur={(event) => {
-        setFocused(false);
-        onBlur?.(event);
-      }}
       style={mergeStyles(
         {
           ...textStyle(theme, "body"),
@@ -260,7 +267,7 @@ export const FieldInput = ({
               : theme.colors.border,
           borderRadius: theme.radius.md,
           ...(isDisabled ? { cursor: "not-allowed" } : {}),
-          ...(focused && !isDisabled ? focusRing(theme) : {}),
+          ...(focused ? focusRing(theme) : {}),
         },
         resolveStyle(style, state),
       )}
@@ -295,6 +302,7 @@ export const fieldMeta = {
     "no aria-describedby in 0.10.0: the message is an aria-description, not an id reference",
     "the control is the GPUix <input> host element: primitives' Input reads a second theme context, so adoption waits on one provider",
     "not a form library: the caller owns the value and when validation runs",
+    "the focus ring follows a 50 ms sample of the renderer's focused host until a shared native-focus tracker exists",
   ],
   docs: "docs/field.mdx",
   example: "examples/field.example.tsx",

@@ -70,7 +70,9 @@ requirement is still announced. The marker itself carries `aria-label="Required"
 
 `autoFocus` sets the initial `focused` state, so the focus ring is painted on
 the first commit — the runtime applies native focus after React's effects and
-never dispatches `onFocus`.
+never dispatches `onFocus`. After that, the ring follows the renderer's focused
+host (see the limitation below), so it appears when focus lands on the field and
+clears when focus leaves it.
 
 ## API
 
@@ -127,19 +129,24 @@ press shows the ring too; that is the runtime's limit, not a heuristic of ours.
 - `Field` is not a form library: it owns no value, no submit, no cross-field
   rules and no async validation.
 
-- Focus cues are seeded by `autoFocus`; the runtime does not reliably deliver
-  React `focus`/`blur`, so a ring may not paint when focus moves by code
-  (plans 390/603/605).
+- Focus cues are seeded by `autoFocus`; 0.10.0 delivers no React `focus`/`blur`
+  for a native focus move, so while the field is enabled it samples the
+  renderer's focused host every 50 ms. The ring follows native focus and clears
+  when focus leaves, and a disabled field rings for nothing (plan 748). The
+  sample is per mounted field until `@gpuixui/primitives` exports one shared
+  native-focus tracker (`TODO.md` → Interlocks).
 
 ## Verification
 
-`src/behaviour/field.test.tsx` runs in the real GPUix renderer (9 tests): label,
+`src/behaviour/field.test.tsx` runs in the real GPUix renderer (12 tests): label,
 description and control rendering; the error replacing the description with
 `role="alert"`; the required marker and clean accessible name; the destructive
 border in both themes; an invalid focused input keeping both the destructive
 border and the token ring in both themes, and an unfocused invalid input painting
-no ring; typed text reaching `onChange`; and the disabled input leaving the tab
-order and accepting no typing.
+no ring; typed text reaching `onChange`; the disabled input leaving the tab
+order and accepting no typing; a field focused by code painting the token ring; a
+seeded ring clearing (and `state.focused` turning false) when native focus
+leaves; and a disabled auto-focused field painting no ring.
 
 `src/validation/logic.test.ts` covers the message walk, `errors: "all"`,
 deduplication and the valid case.
