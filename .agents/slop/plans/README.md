@@ -399,6 +399,7 @@ references without buying correctness.
 | [789](./789-selection-press-veil.md) | The pressed selected row's veil: the mode's extreme, not the canvas | F | 081, 651, 723, 742 | done |
 | [792](./792-native-syntax-capture-table.md) | The native syntax capture paragraph: its roles and its three counts | F | 569, 574, 583, 592, 717, 760 | done |
 | [793](./793-native-field-table.md) | The native field table's role assignments | F | 569, 574, 583, 592, 792 | done |
+| [794](./794-edit-artifact-defined-overlay.md) | The edit artifact refuses a defined `overlay` level it can carry | F | 685, 758 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
