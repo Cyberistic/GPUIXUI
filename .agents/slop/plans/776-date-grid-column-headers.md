@@ -5,7 +5,7 @@
 | Workstream | components (Tier 2 composition and feedback) |
 | Phase | F — integration and polish |
 | Depends on | 110, 119, 368, 375, 396, 546, 608, 773 |
-| Status | pending |
+| Status | done — measured 2026-10-20: the weekday headings were seven `label` nodes in a row with no cells; they are now `columnheader`s named in week-start order. 2 native cases (41 → 43), both red at `HEAD` |
 | Claimed number | `776` — `774` and `775` are the tokens-theme plans (`774-index-paragraph-counts`, `775-readme-index-counts`, `775-text-decoration-pixels`); `776` is the first number free across every worktree (checked in the shared checkout and every `workspaces/*` tree) |
 
 ## 1. The bug

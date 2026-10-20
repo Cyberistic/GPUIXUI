@@ -1330,6 +1330,14 @@ retired once both branches are one
       4 native cases (37 → 41 native, 29 → 33 calendar), three native cases red
       at `HEAD` and the open-range pin green both ways; docs, `COMPONENTS.md` and
       the inventory synced (owner: components)
+    - [x] The date grid names its columns — plan 776; measured 2026-10-20: the
+      seven weekday headings were loose `label` nodes inside a grid row, so the
+      grid exposed no `columnheader` and a reader could not map a day to its
+      column. Each heading is now `role="columnheader"` named by the caller's
+      weekday string in week-start order, with the 42 cells unchanged; 2 native
+      cases (41 → 43), both red at `HEAD` (zero headers; a `weekStartsOn={0}`
+      grid starting on the wrong column); docs, `COMPONENTS.md` and the
+      inventory synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

@@ -858,6 +858,7 @@ export const DatePickerCalendar = ({
             {Arr.map(weekdayLabels(weekStartsOn, labels), (name, index) => (
               <text
                 key={index}
+                role="columnheader"
                 aria-label={name}
                 style={{
                   ...textStyle(theme, "caption"),

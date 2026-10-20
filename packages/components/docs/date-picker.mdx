@@ -289,9 +289,11 @@ its focused cell paints the same ring.
 Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has no
 `aria-disabled` semantics (plan 516).
 
-- The grid is `role="grid"` with `role="row"` and `role="gridcell"`; a cell's
-  `aria-label` is the full day (`"17 October 2026"`) and the chosen cell carries
-  `aria-selected`. An unavailable day's name ends in `, unavailable`.
+- The grid is `role="grid"` with `role="row"`, `role="columnheader"` and
+  `role="gridcell"`: the seven weekday headings name the columns in week-start
+  order. A cell's `aria-label` is the full day (`"17 October 2026"`) and the
+  chosen cell carries `aria-selected`. An unavailable day's name ends in
+  `, unavailable`.
 - The month chooser is a second `role="grid"` named `Choose month`; a cell's
   `aria-label` is `"October 2026"`, the viewed month carries `aria-selected`, and
   the same unavailable suffix applies. The year chevrons are ordinary buttons
@@ -341,7 +343,7 @@ while it is available (unbounded, clamped and inverted), keeping the
 day-of-month when a shorter month is chosen, and keyboard month stepping without
 a year wrap.
 
-`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (41 tests):
+`src/behaviour/date-picker.test.tsx` runs in the real GPUix renderer (43 tests):
 open + day focus, `defaultOpen`, the controlled open/close contract (a refused
 close leaves the surface painted and focus in place), a no-value open on today, a
 no-value open clamped to `min`, selection
@@ -365,7 +367,10 @@ Four of those cases cover the empty range (plan 773): the grid paints all 42
 cells with **no** tab stop and says `No available dates`, each cell is still named
 `, unavailable`, opening leaves focus on the trigger and `Enter`/arrows report
 nothing, the month label is disabled and cannot render the chooser, and an open
-range keeps its one grid tab stop and its chooser tab stop.
+range keeps its one grid tab stop and its chooser tab stop. Two more cover the
+column headers (plan 776): the seven weekday headings are named
+`columnheader`s in week-start order, and a `weekStartsOn={0}` grid starts its
+headers and its first day cell on a Sunday.
 
 ```sh
 nub run --filter @gpuixui/components test

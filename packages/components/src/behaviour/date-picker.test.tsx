@@ -28,11 +28,15 @@
  * open a month chooser over unavailable months. The last four cases guard that
  * the grid has no tab stop, says `No available dates`, takes no focus on open
  * and cannot enter the chooser — while an open range keeps all three.
+ *
+ * Plan 776 adds the column headers: the weekday headings were loose `label`
+ * nodes inside a grid row, so a reader could not tell which column a day was in.
  */
 
 import { describe, expect, it, vi } from "vitest";
 import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { nodesWithRole } from "../internal/a11y.js";
 import {
   clickCentreOf,
   finishMotion,
@@ -62,6 +66,7 @@ const Picker = ({
   clearable,
   triggerPlaceholder,
   labels,
+  weekStartsOn,
   showCalendar = true,
 }: {
   readonly value?: string | null;
@@ -76,6 +81,7 @@ const Picker = ({
   readonly clearable?: boolean;
   readonly triggerPlaceholder?: string;
   readonly labels?: Partial<CalendarLabels>;
+  readonly weekStartsOn?: 0 | 1;
   readonly showCalendar?: boolean;
 }) => (
   <div style={{ width: 420, padding: 40 }}>
@@ -92,6 +98,7 @@ const Picker = ({
       max={max}
       clearable={clearable}
       labels={labels}
+      weekStartsOn={weekStartsOn}
     >
       <DatePickerTrigger
         label="Due date"
@@ -131,6 +138,48 @@ const calendarGrid = (picker: ReturnType<typeof renderComponent>) =>
     );
 
 describe("DatePicker", () => {
+  /**
+   * Plan 776: the weekday headings were loose `label` nodes inside a grid row,
+   * so the grid never named its columns.
+   */
+  it("exposes the weekday headings as column headers", () => {
+    const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
+    open(picker);
+
+    expect(
+      Arr.map(
+        nodesWithRole(picker.renderer, "columnheader"),
+        (node) => node.name,
+      ),
+    ).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+    expect(nodesWithRole(picker.renderer, "gridcell")).toHaveLength(42);
+
+    picker.unmount();
+  });
+
+  it("rotates the column headers with the week start", () => {
+    const picker = renderComponent(
+      <Picker defaultValue="2026-10-17" weekStartsOn={0} />,
+    );
+    open(picker);
+
+    expect(
+      Arr.map(
+        nodesWithRole(picker.renderer, "columnheader"),
+        (node) => node.name,
+      ),
+    ).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+    // The first column is a Sunday: 27 September 2026.
+    expect(
+      Option.map(
+        Arr.head(nodesWithRole(picker.renderer, "gridcell")),
+        (node) => node.name,
+      ),
+    ).toEqual(Option.some("27 September 2026"));
+
+    picker.unmount();
+  });
+
   it("opens on the selected month and focuses a day", () => {
     const picker = renderComponent(<Picker defaultValue="2026-10-17" />);
 
