@@ -216,6 +216,8 @@ the row that owns the hit area, the tab stop and the accessible name:
   carries its own option label.
 - A long option label or description **wraps** and grows the row; the text is
   never painted outside the group (plan `368`).
+- The group root shrinks to a bounded row, so a horizontal group ends at the row
+  it shares; a group with room still hugs its options (plan `747`).
 
 ## Verification
 
@@ -249,6 +251,9 @@ the row that owns the hit area, the tab stop and the accessible name:
 - `runtime/option-description.runtime.test.tsx` — both selection groups'
   descriptions in the real accessibility tree, with an absent and a blank
   description staying absent (plan 500).
+- `runtime/group-containment.runtime.test.tsx` — a horizontal group in a 220 px
+  row keeps its rows inside the row; the group root's shrink seam is the liveness
+  half of plan `747`.
 - `runtime/disabled.runtime.test.tsx` — the cross-control "disabled after focus"
   matrix: every control acts while enabled, focus survives the disable, nothing
   acts afterwards, and no disabled control paints a ring (plan 332).

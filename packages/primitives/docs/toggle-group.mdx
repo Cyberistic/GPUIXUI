@@ -205,7 +205,12 @@ the item — after its own paint and focus ring:
   also scroll on Space.
 - An item shares the group's width and clips its label to one line with an
   ellipsis, so a long option in a constrained group never paints outside it
-  (plan `368`). A group with room still hugs its options.
+  (plan `368`). A group with room still hugs its options. The **group root**
+  carries the same floor removal: a bounded row shrinks the whole group to the
+  row instead of letting it paint past it — measured, a group in a 220 px row
+  painted 254 px before the rule and 220 px after, with its items shrinking to
+  match (plan `747`). A caller's `style` still wins, so `minWidth` can pin a
+  wider group.
 
 ## Verification
 
@@ -233,6 +238,10 @@ the item — after its own paint and focus ring:
   applies the reported value, three arrows in `single` move the ring on to
   Centre, Right and back, and `multiple` keeps moving focus without reporting a
   press (plan `359`).
+- `runtime/group-containment.runtime.test.tsx` — the group root shrinks to a
+  220 px row it shares (measured 254 → 220), its items shrink inside it, a group
+  in a 600 px row still hugs its options, the stretched-column paint is unchanged
+  and a caller's `minWidth` wins (plan `747`).
 - `src/docs-keyboard.test.ts` — the arrow rows on this page name their
   orientation and match `core/keyboard.ts`: every documented key is delivered for
   that axis, and the cross-axis pair is `None` (plan `394`).

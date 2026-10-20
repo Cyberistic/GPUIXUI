@@ -352,6 +352,7 @@ export const renderCheckboxGroup = (
       testId={props.testId}
       style={resolvePartStyle(
         {
+          ...shrinkLayoutStyle,
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
           gap: theme.spacing.sm,

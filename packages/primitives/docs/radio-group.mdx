@@ -147,7 +147,11 @@ and key handlers — takes its layout and pointer feedback from
 `selectionRowStyle`: a `colors.hover` wash on hover and `colors.active` on press,
 and neither while disabled (plan 355). The row also carries `minWidth: 0`, so a
 **horizontal** group shares its width between the options and a long label wraps
-inside its row instead of painting past the group (plan 380). The circle keeps
+inside its row instead of painting past the group (plan 380). The **group root**
+carries the same floor removal, so a horizontal group in a bounded row shrinks to
+that row rather than painting past it — measured, 255 px inside a 220 px row
+before the rule, 220 px after (plan `747`); a group with room still hugs its
+options. The circle keeps
 its own border feedback, so the row and the control both answer the pointer. An
 invalid **empty** circle keeps the destructive border on hover and press; the
 healthy interaction colours never paint over the error cue, while a chosen
@@ -201,6 +205,8 @@ the option row:
 - Options are data: no compound `RadioGroupItem`, no rich child content.
 - A long option label **wraps** inside the row rather than widening it, so the
   text stays inside the group in **both** orientations (plans `368`, `380`).
+- A horizontal group shrinks to a bounded row rather than painting past it; a
+  group with room still hugs its options (plan `747`).
 
 ## Verification
 
@@ -233,6 +239,9 @@ the option row:
 - `runtime/row-feedback.runtime.test.tsx` — the same row contract in the real
   renderer, plus a vertical row painting at the group's width so the wash covers
   the hit area (plan 355).
+- `runtime/group-containment.runtime.test.tsx` — a horizontal group in a 220 px
+  row shrinks to the row (measured 255 → 220) with its rows inside, and a group
+  with room still hugs its options (plan `747`).
 - `runtime/controls.runtime.test.tsx` — arrows move, wrap and skip disabled
   options (plan 044); Home/End jump to the enabled ends (plan 048); the focused
   option paints the ring and no other does; arrows move native focus with the

@@ -217,13 +217,16 @@ export const controlLabelStyle: StyleDesc = {
 };
 
 /**
- * A flex item that may shrink: a text run in a row, or a group item whose width
- * is imposed.
+ * A flex item that may shrink: a text run in a row, a group item or a group
+ * root whose width is imposed.
  *
  * A `Label` and a group row may grow taller, so their text takes the row's width
  * and wraps; truncating a form label or an option description would hide the
  * words the user needs. The same two facts let a `ToggleGroup` item share a
- * constrained group's width instead of overflowing it (plan `368`).
+ * constrained group's width instead of overflowing it (plan `368`), and let the
+ * group **root** shrink to a bounded row instead of painting past it — the
+ * runtime's automatic content floor applies to every flex item (plans `380`,
+ * `747`).
  */
 export const shrinkLayoutStyle: StyleDesc = {
   flexShrink: 1,

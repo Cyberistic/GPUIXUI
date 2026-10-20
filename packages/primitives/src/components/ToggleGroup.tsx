@@ -179,6 +179,7 @@ export const renderToggleGroup = (
       }}
       style={resolvePartStyle(
         {
+          ...shrinkLayoutStyle,
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
           alignItems: "center",

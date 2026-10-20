@@ -240,6 +240,7 @@ export const renderRadioGroup = (
       }}
       style={resolvePartStyle(
         {
+          ...shrinkLayoutStyle,
           display: "flex",
           flexDirection: orientation === "horizontal" ? "row" : "column",
           gap: theme.spacing.sm,

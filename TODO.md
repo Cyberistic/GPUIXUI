@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 169/169
+`[x]` `[████████████]` 170/170
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2382,7 +2382,28 @@ retired once both branches are one
       case, both directions and an over-broad direction proven (offline 90 in the
       two touched files, scoped live 34/34; plan `746`).
 
+`[x]` `packages/primitives`: **a group root kept the runtime's automatic content
+      floor** — measured (2026-10-20, 220 px parent): a horizontal `ToggleGroup`
+      in a `row` painted `x 12…266` (254, **34 px outside**) and a horizontal
+      `RadioGroup` `x 12…267` (255, 35 px outside), while `CheckboxGroup` and
+      `ButtonGroup` fit at 220 and the same `ToggleGroup` in a `column` fit at
+      220 — the constraint was identical, the paint was not, and two pages
+      promised containment. The three data-driven group roots now carry
+      `shrinkLayoutStyle`, so a bounded row shrinks the group and its
+      items/rows shrink inside it while a group with room still hugs its
+      options. 6 scoped runtime cases; the old roots fail the two named cases at
+      266/267 px, a `width: "100%"` seam fails the hug case, `flexShrink: 0`
+      fails the row case and dropping the caller's style fails the `minWidth`
+      case (offline 70 files / 961 tests, full runtime 68 files / 884 tests;
+      plan `747`).
+
 ### Cross-workstream dependencies (do not edit their paths — record only)
+
+`[ ]` **docs-site workstream**: `apps/docs/src/components/docs/demos.tsx` fails
+      `nub run fmt` (`oxfmt --check`, measured 2026-10-20 on a clean tree: the
+      file is committed at `b8fbf153` and unmodified). That single file makes the
+      repo-wide `nub run check` gate red for every workstream; run
+      `nub run fmt:fix` there and commit it. Owner: docs-site.
 
 `[ ]` **components + docs-site workstreams**: plan `583` measured that the
       published 0.10.0 runtime delivers **no `onFocus`/`onBlur`**, so every Tier 2
