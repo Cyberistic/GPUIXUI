@@ -411,6 +411,7 @@ references without buying correctness.
 | [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | done |
 | [814](./814-track-surface-enumerations.md) | The value groove's surface list: three pages count twelve of thirteen | F | 347, 503, 651, 674, 683, 684, 706, 754 | done |
 | [815](./815-border-role-figures.md) | The border role's two floors and its fill list have no owner | F | 080, 084, 318, 327, 335, 352, 501, 550, 555, 683, 754, 814 | done |
+| [817](./817-state-floor-figures.md) | The state table's floor figures and the inactive floor have no owner | F | 306, 309, 347, 354, 381, 393, 501, 510, 543, 674, 737, 815 | ready |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4225,6 +4226,19 @@ enumerations from `controlFillRoles`, so the next floor or list edit has to take
 the documents with it; the catalogue names all eight fills and §7 states the
 boundary's high-contrast floor beside its default. No colour, pair, floor, metric
 or shipped theme moves.
+
+817 closes the same class of gap for the state table plan `815` stopped short
+of: `docs/design-system.md` §8 quotes the class floor for seven states (`hover`
+and `loading` at the surface floor, `selected` at the step floor, `unchecked` and
+`status` at the surface floor, `disabled` at the `inactive` pair and `invalid` at
+the boundary pair) and three passages state the library's one non-WCAG floor, the
+`inactive` pair — and mutating any of the ten figures, or moving the
+corresponding `contrastFloors` entry, left 219 files / 7127 tests green, because
+§9's table is derived while the §8 vocabulary beside it is prose.
+`state-floor-claims.test.ts` derives every figure from `contrastFloors`, slices
+the seven rows and the three paragraphs, and fails when the contract or the page
+moves; no prose value changes, because every figure is correct and none was
+owned.
 
 ## How to use a plan
 
