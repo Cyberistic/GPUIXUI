@@ -168,8 +168,17 @@ from its two pinned edges.
   moving from the card body onto `Undo` or the dismiss control keeps the hold
   instead of resuming the clock under the pointer. A consumer that needs a
   custom hold can call `pause`/`resume` from `useToast()`.
-- No portal: the viewport is an absolutely positioned element in its parent, so
-  put it at the app root.
+- The viewport is its own **deferred anchored layer above every modal**
+  (`priority: 2`, `occlude: false`, window-sized), because a dialog's veil is an
+  anchored layer at the runtime's default priority `1` and would otherwise paint
+  over the stack and swallow its presses. A press on a card therefore belongs to
+  the toast: its action or dismiss control runs and an overlay beneath stays
+  open, while a press anywhere else still closes that overlay (plan 820). Render
+  the viewport once, last in the app root; tree order alone does not lift it over
+  a dialog.
+- No portal beyond that anchored layer: the stack is sized from
+  `useWindowSize`, so a window resize re-renders it rather than a native resize
+  observer following it.
 - The animated card wrapper carries `toast-<id>-surface`, while the card itself
   is `toast-<id>`; the wrapper is how a native suite addresses the exit ghost
   (plan 597).

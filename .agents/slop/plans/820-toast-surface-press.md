@@ -5,7 +5,7 @@
 | Phase | F (Tier 2 hardening / composite integration) |
 | Owner | `components` (`packages/components`) |
 | Depends on | 110, 115, 117, 123, 124, 370, 548, 592, 669, 704, 738, 743, 770, 816 |
-| Status | **planned** |
+| Status | **done** — the stack is an anchored layer above the veil; a card owns its presses |
 | Claimed number | `820` — `816` is this workstream's last; `817`–`819` are `tokens-theme`'s and the playground's, checked across every worktree on 2026-10-21 |
 
 ## 0. Why this plan exists — the measured defect
@@ -39,29 +39,55 @@ The same fixture without a dialog runs the action once and dismisses the card
 (`toast.test.tsx`, "runs an action once and dismisses its toast"). The defect is
 the composition, not the toast itself.
 
-### 0.1 The rule
+### 0.1 The mechanism — measured in two layers
 
-**A painted overlay surface may register itself as owning presses, whether or not
-it is a dismiss layer.** The dismiss stack refuses a press that lands inside any
-registered surface, without claiming the event, so the release still reaches the
-control under the pointer and the enclosing overlay stays open.
+The card was also **painted and hit-tested under the modal veil**, so the press
+never reached the action at all:
+
+```text
+card bounds            { x: 885, y: -29, width: 378, height: 52 }   // in a root-height probe
+card bounds (760 root) { x: 885, y: 709, width: 378, height: 52 }
+action bounds          { x: 1161, y: 716, width: 49, height: 26 }
+press action centre    → the card's onClick never ran; the dialog's backdrop
+                         received the press and reported mouseDownOutside
+```
+
+A dialog's veil is an `<anchored>` element, and `@gpuix/native@0.10.0` makes an
+anchored layer **deferred** by default (`priority: 1`): `retained_tree.rs`
+paints deferred layers after the tree and puts their hits first. The toast
+viewport was a plain tree child, so the veil painted over it and took its
+presses. Render order in the app root cannot fix that — the veil is not in the
+tree's paint order at all.
+
+### 0.2 The rule
+
+Two parts, because the defect has two causes:
+
+1. **The toast stack is its own deferred anchored layer above every modal**
+   (`priority: 2`, `occlude: false`), so its cards paint above the veil and are
+   hit first. `occlude` must stay off: the layer covers the window, and an
+   occluding layer would block the whole app behind it. Its filler box and the
+   viewport stay `pointerEvents: "none"`; only a card restores `auto`.
+2. **A painted overlay surface may register itself as owning presses**, whether
+   or not it is a dismiss layer. The dismiss stack refuses a press inside a
+   registered surface without claiming it, so the release reaches the control
+   and the enclosing overlay stays open.
 
 The toast card is such a surface. A press on the card — its action or its dismiss
 control — belongs to the toast: the control runs and the dialog under it is
 untouched. A press anywhere else still closes the topmost dismiss layer exactly
 as before, and Escape is untouched (a toast registers no layer, so it never
-consumes a key).
-
-This is plan 816's rule with the nesting requirement removed: ownership is a
-property of the *surface*, not of the stack position.
+consumes a key). Part 2 is plan 816's rule with the nesting requirement removed:
+ownership is a property of the *surface*, not of the stack position.
 
 ## 1. Exact files to change
 
 1. `packages/components/src/internal/dismiss-layer.ts` — `registerPressSurface`
    and the registry check in `dismissTopLayer`.
 2. `packages/components/src/internal/dismiss-layer.test.ts` — three unit cases.
-3. `packages/components/src/toast/viewport.tsx` — each `ToastCard` registers its
-   own box.
+3. `packages/components/src/toast/viewport.tsx` — the stack becomes a deferred
+   anchored layer at `priority: 2` (window-sized, `occlude={false}`,
+   `pointerEvents: "none"`), and each `ToastCard` registers its own box.
 4. `packages/components/src/behaviour/composition.test.tsx` — the regression case
    (a toast action over an open dialog) and the pin (a press elsewhere still
    closes the dialog with a toast up).
@@ -117,10 +143,23 @@ In `ToastCard`: `const renderer = useGpuix().renderer;`, a
 	useEffect(() => registerPressSurface(ownsSurface(renderer, () => surface.current?.id)), [renderer]);
 ```
 
-and `ref={surface}` on the outer card `div` (`role="status"`). `useGpuix` is
-already imported; `ownsSurface` comes from `../internal/pointer.js`; the
-registration reads the id at event time, because the card's host id is assigned
-after the effect has run.
+and `ref={surface}` on the outer card `div` (`role="status"`). `useGpuix` and
+`useWindowSize` are already imported by `viewport.tsx`; `ownsSurface` comes from
+`../internal/pointer.js`; the registration reads the id at event time, because
+the card's host id is assigned after the effect has run.
+
+`ToastViewport` returns the stack inside
+
+```tsx
+<anchored position={{ x: 0, y: 0 }} priority={2} occlude={false} style={{ position: "absolute" }}>
+  <div style={{ width: window.width, height: window.height, pointerEvents: "none" }}>
+    <div role="group" aria-label="Notifications" testId="toast-viewport" ...>
+```
+
+The `priority` is the whole point: a dialog's veil is an anchored layer at the
+default `1`, so the stack must be higher to paint and hit above it. `occlude`
+must be `false` — the layer spans the window and an occluding layer would block
+the app behind it.
 
 `ToastCard` is per card, so two cards register two boxes and a press on either
 is owned by that card only.
@@ -178,8 +217,9 @@ nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/compositio
 nub exec vitest run --config vitest.behaviour.config.ts src/behaviour/composition.test.tsx
 # EXPECT: 8 passed.
 
-# 2. The stack's own suite.
-nub exec vitest run --config vitest.behaviour.config.ts src/internal/dismiss-layer.test.ts
+# 2. The stack's own suite (unit tests; the behaviour config only collects
+#    src/behaviour).
+nub run --filter @gpuixui/components test
 # EXPECT: the existing cases plus 3 new ones pass.
 
 # 3. Toast, because the card's host now carries a ref and a registration.
@@ -198,7 +238,7 @@ nub exec vitest run --config vitest.behaviour.config.ts \
 # EXPECT: the recorded plan-540 failures stay exactly the same classes and no
 # other case changes verdict.
 
-# 5. Unit suite (the new registry cases).
+# 5. Unit suite again (the registry cases are in it).
 nub run --filter @gpuixui/components test
 # EXPECT: exit 0, unit count measured this turn + 3.
 
@@ -234,6 +274,12 @@ reverting only the toast registration also restores it. Record all three runs.
 - The card's host id is not readable at event time (no `ref`/`id` on a
   `role="status"` div). Stop and record it; do not key ownership on the painted
   content bounds of a child.
+- `priority: 2` does not move the stack above a dialog's veil on this binding
+  (the press still reaches the backdrop). Stop and record the measurement: the
+  alternative is a documented limitation, not a workaround in the tree.
+- Wrapping the stack in an anchored layer changes a position or corner case in
+  `toast.test.tsx` that was green before. Stop and name it: the filler box must
+  be window-sized so every corner lands where it did.
 - A fix needs a new dependency or a change outside `packages/components`,
   `docs/component-api.md`, `COMPONENTS.md`, `TODO.md`, `PLAN.md` and the plan
   index. Stop.
@@ -242,10 +288,12 @@ reverting only the toast registration also restores it. Record all three runs.
 
 ## 5. Docs and inventory
 
-- `docs/toast.mdx`: in "Accessibility and limitations", state that a card is a
-  painted surface: a press on its action or dismiss control belongs to the toast
-  and never dismisses an overlay beneath it (plan 820), while a press elsewhere
-  still closes that overlay.
+- `docs/toast.mdx`: in "Accessibility and limitations", state both halves — the
+  stack is its own deferred anchored layer above modals (priority 2,
+  `occlude: false`), and a press on a card belongs to the toast rather than the
+  overlay beneath it, while a press elsewhere still closes that overlay
+  (plan 820). Correct the old "render it last in the app root" claim: tree order
+  alone does not lift it above a dialog's veil.
 - `docs/component-api.md`: in the dismiss-stack section, add the surface
   registry: a non-dismiss overlay (a toast card) registers its box, and a press
   inside it is never an outside press.
@@ -271,4 +319,43 @@ reverting only the toast registration also restores it. Record all three runs.
 
 ## 7. Results
 
-<!-- Filled in when the plan lands. -->
+- `internal/dismiss-layer.ts`: `registerPressSurface(owns)` keeps a module-level
+  list of non-dismiss surfaces; `dismissTopLayer` returns `false` **without
+  claiming** when the press is inside one, so the click still reaches the
+  control and no enclosing layer reads the event as consumed.
+- `toast/viewport.tsx`: each `ToastCard` holds a host ref and registers
+  `ownsSurface(renderer, () => surface.current?.id)` (id read at event time).
+  `ToastViewport` is wrapped in
+  `<anchored position={{x:0,y:0}} priority={2} occlude={false}>` over a
+  window-sized `pointerEvents: "none"` filler, because a dialog's veil is itself
+  a deferred anchored layer at the default `priority: 1`; `occlude` stays off so
+  the window-spanning layer does not block the app behind it.
+- Both-direction proof on this host, from `src/behaviour/composition.test.tsx`:
+  **1 failed / 7 passed at `HEAD`** (0 action calls, the dialog closed) and
+  **7 passed / 1 failed after** — the one failure is the pre-existing
+  `composition > saves the workflow` case, which also fails at `HEAD` alone
+  (`expected [] to deeply equal [ "Settings saved" ]`; plan 816 recorded it green,
+  so it is environment drift on this host, not this plan).
+  Two further proofs: with the registry only (anchored wrapper stashed) the action
+  still never runs, so part 1 is necessary; with the anchored wrapper only (the
+  registry check disabled) the case fails on `isShown(editor)` because the dialog
+  closes, so part 2 is necessary.
+- `internal/dismiss-layer.test.ts`: 3 new cases (an owned press is not a
+  dismissal and claims nothing, an unowned point still dismisses, the removal
+  function unregisters). Unit suite: **520 in 48 files** (was 517).
+- No regression: the 14 affected suites' failure list is identical before and
+  after (17 → 16; the difference is exactly the new toast case). `toast.test.tsx`
+  is 28/28. The full native suite is **1048 passed / 21 failed of 1069**: the
+  recorded plan-540 classes plus the pre-existing `saves` failure; button,
+  inline-edit and mention-input failures reproduce identically at `HEAD`.
+- Headless smoke: **17/20**, the same three playground-owned failures as the
+  recorded baseline; `overlay-dialog` and `modal-focus-trap` are green.
+- Gates: `nub run check`, `nub run lint` and `nub run test` exit `0`
+  (`fmt:fix` reformatted the two touched sources).
+- Docs: the two-part rule in `docs/toast.mdx` (with the corrected "render last"
+  claim) and `docs/component-api.md` §5, the Toasts `COMPONENTS.md` row, the
+  inventory's `toastMeta` limitation, `TODO.md`, this index and `PLAN.md` D30.
+- A live window was not opened for this plan: the defect and the fix are in the
+  native `retained_tree` paint/hit order, which the real `TestRenderer` suite
+  exercises (`nativeSimulateClick` hit-tests through GPUI); the worktree has no
+  live scenario that mounts a toast over a modal.

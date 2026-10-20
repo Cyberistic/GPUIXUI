@@ -1517,6 +1517,24 @@ retired once both branches are one
       the baseline (20 → 16 = exactly those four flipped); docs,
       `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the index
       synced (owner: components)
+    - [x] A press on a toast belongs to the toast — plan 820; measured
+      2026-10-21: a toast raised from inside an open dialog was painted **under**
+      the dialog's veil and its own action never ran (0 calls) while the press
+      closed the dialog on mouse down (`onOpenChange [false]`, focus `None`).
+      Two causes: the veil is a deferred `<anchored>` layer at the runtime's
+      default priority `1` (painted after the tree, hits first), and a toast
+      card is not a dismiss layer. The stack is now its own deferred anchored
+      layer at `priority: 2` (`occlude` off, window-sized), each card registers
+      its box as a **press surface** owned by the toast, and `dismissTopLayer`
+      refuses a press inside one without claiming it, so the action runs and the
+      dialog stays open while a press elsewhere still closes it. 3 unit + 2
+      composite cases, the action case red at `HEAD`; unit 517 → 520 in 48
+      files, affected suites 17 → 16 failures (the one flipped is the new case),
+      full native suite 1048 passed / 21 failed of 1069 with the same recorded
+      plan-540 classes plus the pre-existing `composition > saves` failure that
+      also fails at `HEAD`; `overlay-dialog` and `modal-focus-trap` smoke green;
+      docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the index
+      synced (owner: components)
     - [x] A malformed overlay offset keeps the documented default — plan 813;
       measured 2026-10-20: a non-finite `sideOffset` collapsed the gap
       (Popover 91 → 85, Preview card 91 → 85, Notification centre 81 → 73,
