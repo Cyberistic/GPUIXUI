@@ -170,8 +170,7 @@ const stateChecks = <Host, E>(
     );
 
     const sampled =
-      (frame: Pixels.Pixels) =>
-      (testId: string, hex: string, label: string) =>
+      (frame: Pixels.Pixels) => (testId: string, hex: string, label: string) =>
         Effect.gen(function* () {
           const actual = yield* pixelAtId(ctx, driver.reader, frame, testId);
           const expected = yield* parseColour(`${label} parses`, hex);
