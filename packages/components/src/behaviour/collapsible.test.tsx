@@ -16,7 +16,9 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { useState } from "react";
+import * as Arr from "effect/Array";
 import * as Option from "effect/Option";
+import { a11yNodes } from "../internal/a11y.js";
 import {
   clickCentreOf,
   focusedTestId,
@@ -543,6 +545,30 @@ describe("Collapsible", () => {
       section.renderer.findByTestId("second")?.style.boxShadow,
     ).toBeUndefined();
 
+    section.unmount();
+  });
+
+  /**
+   * The documented accessibility limit (plans 372, 779). Measured: `visibility:
+   * hidden` removes the body from the tab order, but the headless accessibility
+   * dump still lists it, so the page states that accessible-tree removal is
+   * unverified. This case fails if the binding starts filtering hidden nodes —
+   * the signal to tighten the page.
+   */
+  it("records that the accessibility dump still lists a hidden body", () => {
+    const section = renderComponent(<Advanced />);
+    section.renderer.clockPause();
+    settle(section);
+
+    expect(isHidden(section, "content")).toBe(true);
+    expect(
+      Arr.some(
+        a11yNodes(section.renderer),
+        (node) => node.name === "Retry budget",
+      ),
+    ).toBe(true);
+
+    section.renderer.clockResume();
     section.unmount();
   });
 });

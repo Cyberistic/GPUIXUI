@@ -33,9 +33,12 @@ import {
 
 The body is not unmounted while closed. That keeps the state inside it — a
 draft, a scroll position, a running sub-view — but the content is hidden with
-`visibility: hidden`, so it leaves the tab order and the accessible tree. The
-clip alone is not enough: the runtime refuses the pointer but leaves a clipped
-subtree in the keyboard order (measured in plan 372).
+`visibility: hidden`, so it leaves the tab order. The clip alone is not enough:
+the runtime refuses the pointer but leaves a clipped subtree in the keyboard
+order (measured in plan 372). The headless accessibility dump still lists a
+visibility-hidden node, so its removal from the accessible tree cannot be
+verified here (measured with plan 779's accordion probe); the tab-order removal
+is measured.
 
 The height is measured from the content's own bounds after commit. GPUix 0.10.0
 has no layout callback, so the first measurement happens while the body is
@@ -134,14 +137,15 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (17 tests):
+`src/behaviour/collapsible.test.tsx` runs in the real GPUix renderer (18 tests):
 click toggling with the body kept mounted, `aria-expanded` following the body,
 Enter on press and Space on release, the controlled contract in both directions,
 the closed and open tab order, state surviving a close and a re-open, the
 measured-height tween (plus the `animate={false}` snap), a disabled trigger that
-stays inert by pointer and key and paints no ring from `autoFocus`, and a close
+stays inert by pointer and key and paints no ring from `autoFocus`, a close
 that began inside the body returning focus to the trigger (tween and snap) while
-a close that began outside does not steal focus.
+a close that began outside does not steal focus, and the recorded limit that the
+headless accessibility dump still lists the hidden body.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

@@ -1347,10 +1347,16 @@ retired once both branches are one
       was corrected. `AccordionContent` now carries `role="region"` named by its
       header's plain-text name while open, a caller `aria-label` wins, a
       composed/unnamed header yields no region, and a rename updates the name in
-      place. 4 native cases (26 → 30), three red at `HEAD`; unit 504 in 47
-      files, full native suite 984/20 of 1004 with the baseline's same 20
-      plan-540 classes; `docs/accordion.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and
-      the inventory synced (owner: components)
+      place. `Collapsible`'s page had the same "leaves the accessible tree"
+      overclaim (corrected), with 1 characterisation case recording that the dump
+      still lists a hidden body (17 → 18). Accordion 4 native cases (26 → 30),
+      three red at `HEAD`; unit 504 in 47 files, full native suite 983 passed /
+      22 failed of 1005 — the baseline's 20 plan-540 classes plus two known 50 ms
+      sampler flakes (`Accordion > paints a header's ring from native focus` and
+      `InlineEdit > commits when native focus leaves without a blur event`), both
+      green when their own suite is rerun. `docs/accordion.mdx`,
+      `docs/collapsible.mdx`, `COMPONENTS.md`, `PLAN.md` D30 and the inventory
+      synced (owner: components)
 `[x]` Verify every component in both themes
 
 ## Blockers (project-level, with evidence)

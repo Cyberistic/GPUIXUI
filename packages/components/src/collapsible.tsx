@@ -286,6 +286,7 @@ export const collapsibleMeta = {
   focusable: true,
   limitations: [
     "hidden by `visibility` while closed, so it leaves the tab order; a rewrap while closed is not re-measured until the next open",
+    "a closed body is out of the tab order, but the headless accessibility dump still lists a visibility-hidden node, so its removal from the accessible tree is unverified",
     "no `aria-controls` in 0.10.0, so the trigger→body relationship is positional",
     "a close that began with focus inside the body returns focus to the trigger by box containment; a control clipped out of the visible body is not recognised",
   ],

@@ -1,7 +1,9 @@
 # 779 — An accordion section's body is a named region
 
-**Status:** done 2026-10-20 — 4 native cases (3 red at `HEAD`), unit 504 in 47
-files, full native suite 984/20 of 1004 (the baseline's same plan-540 classes),
+**Status:** done 2026-10-20 — 4 accordion native cases (3 red at `HEAD`) + 1
+collapsible characterisation case, unit 504 in 47 files, full native suite 983
+passed / 22 failed of 1005 (the baseline's 20 plan-540 classes plus two known
+50 ms sampler flakes, both green in their own suites on rerun),
 `check`/`lint`/`test` exit 0. **Workstream:** components. **Number claim:** `779`
 is the first free number across every worktree (components last took `776`,
 playground `777`, tokens-theme `777`/`778`); recorded in `PLAN.md` D30.
@@ -64,8 +66,11 @@ accordion panel, from the trigger **name** the header already computes
 | ---- | ------ |
 | `packages/components/src/accordion.tsx` | carry the header's plain-text name on the item context; name the open body `role="region"` |
 | `packages/components/src/behaviour/accordion.test.tsx` | 4 native cases (below) |
+| `packages/components/src/collapsible.tsx` | the same measured limit in `collapsibleMeta.limitations` |
+| `packages/components/src/behaviour/collapsible.test.tsx` | 1 characterisation case for the documented hidden-dump limit |
 | `packages/components/docs/accordion.mdx` | anatomy/API/accessibility truth + verification count |
-| `COMPONENTS.md` | Accordions row: the region, and no accessible-tree overclaim |
+| `packages/components/docs/collapsible.mdx` | the corrected hidden-body claim + verification count |
+| `COMPONENTS.md` | Accordions and Collapsible sections rows: the region, and no accessible-tree overclaim |
 | `TODO.md` | tick the task with the measured totals |
 | `PLAN.md` | D30 number-claim note |
 | `.agents/slop/plans/README.md` | index row |
@@ -162,13 +167,39 @@ cd packages/components
 nub x vitest run --config vitest.behaviour.config.ts src/behaviour/accordion.test.tsx
 ```
 
-Expected: `31` tests (27 existing + 4) and `Test Files 1 passed`. Current HEAD is
-26 tests for this file in the index; adjust the documented count to the number
-the run prints, and update `docs/accordion.mdx`'s "26 tests" sentence to match.
+Expected: `30` tests and `Test Files 1 passed`. Current HEAD is 26 tests for this
+file in the index; adjust the documented count to the number the run prints, and
+update `docs/accordion.mdx`'s "26 tests" sentence to match.
 
 Before the fix, run the four cases alone (`-t` filter or temporarily) and record
 that cases 1–3 fail and case 4 passes. Do not claim both-direction proof
 otherwise.
+
+### 4b. Collapsible: the same limit, recorded
+
+`docs/collapsible.mdx` repeats the accordion page's old "leaves the accessible
+tree" claim. Correct it to the measured statement (out of the tab order; the
+headless dump still lists the hidden node) and add one characterisation case to
+`src/behaviour/collapsible.test.tsx`:
+
+```tsx
+it("records that the accessibility dump still lists a hidden body", () => {
+  const section = renderComponent(<Advanced />);
+  section.renderer.clockPause();
+  settle(section);
+  expect(isHidden(section, "content")).toBe(true);
+  expect(
+    Arr.some(a11yNodes(section.renderer), (node) => node.name === "Retry budget"),
+  ).toBe(true);
+  section.renderer.clockResume();
+  section.unmount();
+});
+```
+
+`Advanced` is the existing closed-by-default fixture (`Retry budget` is its
+body). The case fails if the binding starts filtering hidden nodes — the signal
+to tighten the page again. Add the same sentence to `collapsibleMeta`, update the
+page's `18 tests` line and the `COMPONENTS.md` Collapsible count.
 
 ## 5. Docs, inventory and bookkeeping
 
