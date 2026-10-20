@@ -332,17 +332,36 @@
 }
 
 .gx-tabs-list {
+  position: relative;
   display: flex;
   gap: 2px;
   padding: 10px 12px 0;
   border-bottom: 1px solid #2a303b;
 }
 
+.gx-tabs-indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #a7a9ff;
+  pointer-events: none;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gx-tabs-indicator {
+    transition: none;
+  }
+}
+
 .gx-tab {
   height: 34px;
   padding: 0 12px;
   border: 0;
-  border-bottom: 2px solid transparent;
   background: transparent;
   color: #a1a9b7;
   font-family: inherit;
@@ -356,7 +375,6 @@
 }
 
 .gx-tab[aria-selected="true"] {
-  border-bottom-color: #a7a9ff;
   color: #eef1f5;
 }
 
