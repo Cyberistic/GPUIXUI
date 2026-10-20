@@ -110,6 +110,15 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 136/136 plans-and-harness
 
+`[~]` **Run the promotion gate on the head that includes the editing actions**
+      per plan `768`: plan `762` gated headless 111/111 and live 100/100, then
+      plan `764` added `editing-actions` (46 checks) and `live-editing-actions`
+      (73), so a promotion would carry an ungated live scenario. Verification
+      only on the code head that includes `764` (0 behind `origin/master`):
+      re-run both full suites, reconcile `4106 + 46 = 4152` headless and
+      `2860 + 73 = 2933` live (± the `live-tier2-editing` branch), then update
+      the ledgers and the plan index.
+
 `[x]` **Prove the editor's clipboard and history, and the OTP paste path** per
       plan `764`: the native `<input>`/`<textarea>` binds `cmd-c`/`cmd-x`/`cmd-v`/
       `cmd-z`/`shift-cmd-z` and no scenario had ever pressed one, so a runtime
