@@ -238,10 +238,11 @@ its aliases fails the built site, not only the unit suite.
    `swr`, `axios`, `ky`, `urql`, `@apollo/client`, `jotai`, `zustand`, `redux`,
    `@reduxjs/toolkit`, `valtio` or `mobx`. This is the evidence for
    `## The library does not fetch` and `## What is not provided`.
-5. **No Suspense** — scan `packages/*/src` and every file under the resolved
-   installed `@gpuix/react` directory; zero `Suspense` occurrences. The page's
-   `Suspense` sentence is a claim about the installed version, so a dependency
-   upgrade that adds it fails here.
+5. **No Suspense and no worker** — scan `packages/*/src` and every file under
+   the resolved installed `@gpuix/react` directory; zero `Suspense` occurrences,
+   and zero `new Worker(`/`node:worker_threads` occurrences in the packages. The
+   page's two absence sentences are claims about the installed version and the
+   shipped sources, so a dependency upgrade that adds either fails here.
 6. **Search** — the owned rows live in `page-aliases.test.ts`, the table's own
    suite: every owned query returns `/docs/async-data` first, and the five
    regression rows keep `loading`, `state management`, `managed runtime`,

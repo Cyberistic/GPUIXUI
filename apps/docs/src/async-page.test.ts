@@ -148,7 +148,7 @@ describe("async data page", () => {
     expect(found).toEqual([]);
   });
 
-  it("keeps the Suspense absence true for the installed integration and the packages", () => {
+  it("keeps the Suspense and worker absences true for the packages and the installed integration", () => {
     const reactRoot = dirname(
       createRequire(import.meta.url).resolve("@gpuix/react"),
     );
@@ -156,7 +156,12 @@ describe("async data page", () => {
       readFileSync(path, "utf8").includes("Suspense"),
     );
     const packages = filesContaining(/Suspense/);
-    expect({ installed, packages }).toEqual({ installed: [], packages: [] });
+    const workers = filesContaining(/new Worker\s*\(|node:worker_threads/);
+    expect({ installed, packages, workers }).toEqual({
+      installed: [],
+      packages: [],
+      workers: [],
+    });
     expect(page).toContain("`Suspense`");
   });
 

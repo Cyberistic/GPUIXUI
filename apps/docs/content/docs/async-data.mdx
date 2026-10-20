@@ -17,10 +17,10 @@ it; the renderer never initiates network work. [Security and
 privacy](/docs/security#the-library) proves that scan for the shipped sources.
 
 No workspace installs a data or state library either — there is no React Query,
-SWR, Axios, Jotai, Zustand or Redux. The only runtime dependency on Effect is
-`@gpuixui/components`, whose toast store needs one. That means the choice of
-transport and cache is yours, and nothing in this library has an opinion about
-it.
+SWR, Axios, Jotai, Zustand or Redux. `@gpuixui/components` declares `effect` as
+a runtime dependency, and `@gpuixui/tokens` declares none. That means the choice
+of transport and cache is yours, and nothing in this library has an opinion
+about it.
 
 ## Where an effect may run
 
