@@ -12,12 +12,19 @@ three-state paint (`unchecked`, `checked`, `indeterminate`) with `Switch` and
 ```tsx
 import { Checkbox } from "@gpuixui/primitives";
 
+<Checkbox defaultChecked>Email me product updates</Checkbox>;
+
 <Checkbox
   checked={email}
   onValueChange={setEmail}
   label="Email notifications"
 />;
 ```
+
+A text child is the control's **visible label**: the row becomes the hit area,
+the tab stop and the accessible name, so a press anywhere toggles it and a
+screen reader hears the text. Without children the box renders on its own and
+takes its name from `label`.
 
 An indeterminate **parent** over a set of options is `CheckboxGroup`'s job — it
 derives the tri-state and never clears a disabled option:
@@ -42,9 +49,10 @@ import { CheckboxGroup } from "@gpuixui/primitives";
 | `invalid` | `boolean` | `false` | the empty box takes the destructive border |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | box side from `iconSize`; the tick is the box's content square, so it scales too (12 / 14 / 18 px) |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the fill and mark colour |
-| `label` | `string` | none | accessible name |
+| `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name, and a blank label is absent |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
-| `style` | `StateStyle<CheckboxState>` | — | merged last; an object or a state callback |
+| `style` | `StateStyle<CheckboxState>` | — | merged last on the control surface — the box without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 `indeterminate` is a **paint override**: activation still toggles the underlying
@@ -58,7 +66,7 @@ clearing.
 | Space | toggles on key **up** |
 | Enter | toggles on key **down** |
 | held key | repeat events do nothing |
-| Tab | reaches the box when it is not disabled |
+| Tab | reaches the control when it is not disabled (one stop, label included) |
 
 ## Accessibility
 
@@ -73,11 +81,11 @@ clearing.
 - State is announced through **`aria-valuetext`** (`checked`, `unchecked`,
   `mixed`), because GPUix 0.10.0 has no `aria-checked` (plan 020 §1.4).
 - `disabled` removes the tab stop; there is no `aria-disabled`.
-- The visible name is a separate `Label`: the text is painted and the box
-  carries its own `label`, but the `Label` is **not clickable and not
-  associated** — GPUix has no `aria-labelledby` and a sibling `<text>` is not
-  part of the interactive element. Use `CheckboxGroup` when a clickable labelled
-  row is needed.
+- With children, the row is **one** node: role `checkbox`, the text as its name,
+  one tab stop and one hit area; the box inside is decoration. A **sibling**
+  `Label` beside a standalone box is still inert — GPUix has no
+  `aria-labelledby`, so association only works by putting the text inside the
+  control. Use `label` when there is no visible text.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus.
 
@@ -94,6 +102,11 @@ not scripted. An invalid **empty** box keeps the destructive border through both
 it — while a chosen box keeps its accent feedback (plan 356). Disabled adds half
 opacity and removes pointer feedback. Focus paints the selection ring
 (`colors.ring`, spread by `borderWidth.strong`).
+
+With children, the box keeps this paint and the **row** takes
+`selectionRowStyle`'s hover/press wash, so the label column responds to the
+pointer; the ring still paints on the box, exactly as in `CheckboxGroup`'s rows.
+The caller's `style` merges on the row in that shape.
 
 ## Style by state
 
@@ -121,10 +134,9 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 ## Limitations
 
 - No `aria-checked` (above).
-- No label-inside-the-control composition for a standalone box: a `Label` beside
-  it is cosmetic (not clickable, not associated). `Checkbox` still names itself
-  through `label`; for one clickable labelled row use `CheckboxGroup` (or a
-  Tier 2 field row for other controls).
+- A **sibling** label is still not associated: only a child label can be inside
+  the interactive row. A child label is one run of text — no description line;
+  use `CheckboxGroup` when an option needs a label **and** a description.
 - No partial-state animation and no custom mark.
 
 ## Verification
@@ -137,15 +149,22 @@ property; returning `{}` keeps the default look. `CheckboxState` is exported.
 - `src/core/selection.test.ts` — the three-state paint, mark colour and the
   mark's content square at every control size (plan `640`).
 - `src/components/selection.test.tsx` — toggle, indeterminate and disabled
-  wiring at the render seam; the tick `Icon` carries the size rule (plan `640`).
+  wiring at the render seam; the tick `Icon` carries the size rule (plan `640`);
+  the labelled row's name, explicit-label precedence, blank fallback and the
+  caller's `style` landing on the row (plan `740`).
 - `runtime/selection-mark.runtime.test.tsx` — the painted tick is 12 / 14 / 18 px
   at `sm`/`md`/`lg` and stays inside the box (plan `640`).
 - `runtime/controls.runtime.test.tsx` — click and Space-up toggle; the announced
   value flips `unchecked → checked`; indeterminate reads `mixed`; the AccessKit
   role is `CheckBox`; focus paints the ring and moves it with focus.
+- `runtime/labelled-selection.runtime.test.tsx` — a press on the visible text
+  toggles, the row is one tab stop, Space toggles it, the ring paints on the box
+  rather than the row, `disabled` refuses the press and the tab stop, and the
+  labelled row is still a `Tooltip` trigger (plan `740`; all six fail against the
+  unlabelled tree).
 - `runtime/examples.runtime.test.tsx` — the **checkbox example** (plan `374`)
-  mounts the standalone box in its real role: a tri-state header over a column
-  of row boxes. The header announces `mixed`, a row click repaints the caller's
+  mounts the labelled boxes in their real role: a tri-state header over a column
+  of rows. The header announces `mixed`, a row click repaints the caller's
   count, and selecting all announces `checked`.
 
 ```sh

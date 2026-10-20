@@ -13,12 +13,21 @@ choice submitted with a form, a switch is applied immediately.
 ```tsx
 import { Switch } from "@gpuixui/primitives";
 
+<Switch checked={paused} onValueChange={setPaused}>
+  Pause all notifications
+</Switch>;
+
 <Switch
-  checked={paused}
-  onValueChange={setPaused}
-  label="Pause all notifications"
+  checked={wifi}
+  onValueChange={setWifi}
+  label="Wi-Fi"
 />;
 ```
+
+A text child is the switch's **visible label**: the row becomes the hit area,
+the tab stop and the accessible name, so a press anywhere toggles it and a
+screen reader hears the text. Without children the track renders on its own and
+takes its name from `label`.
 
 ## API
 
@@ -31,9 +40,10 @@ import { Switch } from "@gpuixui/primitives";
 | `invalid` | `boolean` | `false` | the track takes the destructive role |
 | `size` | `"sm" \| "md" \| "lg"` | `"md"` | track height from `iconSize` |
 | `accent` | `"primary" \| "destructive"` | `"primary"` | the on-track fill |
-| `label` | `string` | none | accessible name |
+| `label` | `string` | none | accessible name; wins over `children`, and a blank value falls back to them |
+| `children` | `ReactNode` | none | a visible label **inside** the control: the row becomes the hit area, the tab stop and the name, and a blank label is absent |
 | `aria-description` | `string` | none | description announced after the name; trimmed, and a blank value is absent (a `Tooltip` writes its text here) |
-| `style` | `StateStyle<SwitchState>` | — | merged last; an object or a state callback |
+| `style` | `StateStyle<SwitchState>` | — | merged last on the control surface — the track without text, the row with it; an object or a state callback |
 | `testId` | `string` | — | stable locator |
 
 ## Keyboard
@@ -58,10 +68,12 @@ import { Switch } from "@gpuixui/primitives";
 - State is announced through **`aria-valuetext`** (`checked` / `unchecked`);
   there is no `aria-checked` in 0.10.0.
 - `disabled` removes the tab stop; no `aria-disabled`.
-- The name comes from `label`; there is no `aria-labelledby`.
-- A visible `Label` beside the switch is painted text: it is **not clickable
-  and not associated** with the control. The switch is still named through
-  `label`, but the pair is two accessibility nodes, not one row.
+- The name comes from the text child, else `label`; there is no
+  `aria-labelledby`.
+- With children, the row is **one** node: role `switch`, the text as its name,
+  one tab stop and one hit area; the track inside is decoration. A **sibling**
+  `Label` beside a standalone switch is still inert — association only works by
+  putting the text inside the control.
 - **Slot trigger:** forwards a `Tooltip`'s handlers and `aria-description`, so a
   tip opens on hover and on keyboard focus.
 
@@ -78,6 +90,11 @@ removes feedback. `invalid` gives an off-switch the destructive border, the
 same role a checkbox uses, and that border survives hover and press — the
 healthy interaction rule never repaints the error cue (plan 356). Focus paints
 the shared selection ring.
+
+With children, the track keeps this paint and the **row** takes
+`selectionRowStyle`'s hover/press wash, so the label column responds to the
+pointer; the ring still paints on the track. The caller's `style` merges on the
+row in that shape.
 
 
 ## Style by state
@@ -103,9 +120,9 @@ exported.
 
 ## Limitations
 
-- No `aria-checked` and no on/off text inside the control; a visible `Label`
-  beside it is cosmetic (not clickable, not associated) — the switch names
-  itself through `label`.
+- No `aria-checked` and no on/off text inside the control; the switch names
+  itself through its text child, else `label`. A **sibling** label is still not
+  associated, and a child label is one run of text with no description line.
 - The thumb's slide is a `left` inset because GPUix has no `transform`; there is
   no separate reduced-motion switch (0.10.0 exposes no OS preference), so an app
   that needs one should render a static indicator instead.
@@ -126,10 +143,14 @@ exported.
   states; `switchThumbOffset` at both ends; the destructive border when
   `invalid`; the focus ring.
 - `src/components/selection.test.tsx` — controlled/uncontrolled wiring, and the
-  element tree's absolute thumb with the offset as its motion target.
+  element tree's absolute thumb with the offset as its motion target; the
+  labelled row's name, explicit-label precedence and the track/thumb staying
+  inside it (plan `740`).
 - `runtime/controls.runtime.test.tsx` — a click toggles; the role is `Switch`;
   the announced value flips; Space and Enter both toggle; the thumb slides
   through an intermediate position and rests at dx 3/13, dy 2 (plan 329).
+- `runtime/labelled-selection.runtime.test.tsx` — a press on the visible text
+  toggles the labelled switch and announces the new state (plan `740`).
 
 ```sh
 nub run --filter @gpuixui/primitives test

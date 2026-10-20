@@ -1,15 +1,15 @@
 /**
  * Checkbox example: selecting release assets.
  *
- * The standalone `Checkbox` in its real role — a column of boxes whose names
- * are context, not labels. Each box carries its own accessible name
- * (`Select report.pdf`), and the header box is the tri-state parent: `checked`
+ * The standalone `Checkbox` in its real role — a column of labelled boxes. Each
+ * box owns its visible text as the accessible name (`report.pdf`) and the whole
+ * row as the hit area, and the header box is the tri-state parent: `checked`
  * when every asset is chosen, `indeterminate` when some are.
  *
- * A form row whose visible label should be clickable is not this component: a
- * `Label`/`Text` beside a standalone box is painted text, not a hit area. Use
- * `CheckboxGroup`, whose rows own the hit area and the tab stop (its page says
- * why).
+ * A label **beside** a standalone box is still inert (GPUix has no
+ * `aria-labelledby`); a label **inside** the control is the supported shape,
+ * which is what every row here uses. `CheckboxGroup` remains the shape for a
+ * value list with a select-all parent plus descriptions.
  */
 
 import { useState, type ReactElement } from "react";
@@ -41,20 +41,16 @@ export const CheckboxExample = (): ReactElement => {
       <Stack direction="column" gap="sm">
         <Text role="h3">Release assets</Text>
 
-        <Stack direction="row" align="center" gap="sm">
-          <Checkbox
-            testId="checkbox-example-all"
-            label="Select all assets"
-            checked={all}
-            indeterminate={!all && !none}
-            onValueChange={(next) =>
-              setSelected(next ? Arr.map(ASSETS, (asset) => asset.name) : [])
-            }
-          />
-          <Text role="caption" tone="muted">
-            Select all
-          </Text>
-        </Stack>
+        <Checkbox
+          testId="checkbox-example-all"
+          checked={all}
+          indeterminate={!all && !none}
+          onValueChange={(next) =>
+            setSelected(next ? Arr.map(ASSETS, (asset) => asset.name) : [])
+          }
+        >
+          Select all assets
+        </Checkbox>
 
         <Separator orientation="horizontal" />
 
@@ -62,7 +58,6 @@ export const CheckboxExample = (): ReactElement => {
           <Stack key={asset.name} direction="row" align="center" gap="sm">
             <Checkbox
               testId={`checkbox-example-asset-${index}`}
-              label={`Select ${asset.name}`}
               checked={Arr.contains(selected, asset.name)}
               onValueChange={() =>
                 setSelected((current) =>
@@ -71,8 +66,9 @@ export const CheckboxExample = (): ReactElement => {
                     : Arr.append(current, asset.name),
                 )
               }
-            />
-            <Text role="body">{asset.name}</Text>
+            >
+              {asset.name}
+            </Checkbox>
             <Spacer />
             <Text role="caption" tone="muted">
               {asset.detail}

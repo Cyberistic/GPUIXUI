@@ -18,27 +18,6 @@ import {
   Text,
 } from "../src/index.js";
 
-/** A labelled row: the control and the sentence that explains it. */
-const Row = ({
-  title,
-  description,
-  children,
-}: {
-  readonly title: string;
-  readonly description: string;
-  readonly children: ReactElement;
-}): ReactElement => (
-  <Stack direction="row" align="center" justify="between" gap="md">
-    <Stack direction="column" gap="2xs" grow>
-      <Text role="label">{title}</Text>
-      <Text role="caption" tone="muted">
-        {description}
-      </Text>
-    </Stack>
-    {children}
-  </Stack>
-);
-
 /** Notification preferences: a channel set, a radio group and a switch. */
 export const SelectionExample = (): ReactElement => {
   const [channels, setChannels] = useState<readonly string[]>(["email"]);
@@ -98,17 +77,18 @@ export const SelectionExample = (): ReactElement => {
 
         <Separator orientation="horizontal" />
 
-        <Row
-          title="Pause everything"
-          description="Keeps your preferences; sends nothing until paused off."
-        >
+        <Stack direction="column" gap="2xs">
           <Switch
             checked={paused}
             onValueChange={setPaused}
-            label="Pause all notifications"
             testId="selection-example-pause"
-          />
-        </Row>
+          >
+            Pause all notifications
+          </Switch>
+          <Text role="caption" tone="muted">
+            Keeps your preferences; sends nothing until paused off.
+          </Text>
+        </Stack>
       </Stack>
     </Box>
   );

@@ -186,7 +186,7 @@ retired once both branches are one
 
 ### Primitives workstream (owner: primitives)
 
-`[x]` `[████████████]` 164/164
+`[x]` `[████████████]` 165/165
 
 `[x]` Write and index the primitives, icons and Tier 1 plans
 `[x]` `packages/icons`: registry, sizing, accessibility rule, invariant tests
@@ -2289,6 +2289,19 @@ retired once both branches are one
       limit did not exist. 2 element + 3 scoped runtime cases, three mutations
       failing by name; offline 69 files / 941 tests, scoped live 3 files / 35
       (plan `733`).
+
+`[x]` `packages/primitives`: **a standalone `Checkbox`/`Switch` could not carry
+      a visible label** — both pages said a `Label` beside them is cosmetic (not
+      clickable, not associated), because 0.10.0 has no `aria-labelledby`; the
+      workaround (`CheckboxGroup`) is wrong for one boolean. A text child now
+      makes the control a labelled row — the shape the groups already use: one
+      role, one name, one tab stop and one hit area, with the box/track as
+      decoration and the ring still on the box. `label` wins over the text and a
+      blank one falls back; without children the old tree is unchanged. 5
+      element cases + a 6-case runtime file, **all six runtime cases failing
+      against the unlabelled tree**; the checkbox and selection examples use the
+      composition; offline 69 files / 947 tests, scoped live 5 files / 104 (plan
+      `740`).
 
 ### Cross-workstream dependencies (do not edit their paths — record only)
 
