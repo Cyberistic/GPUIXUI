@@ -15,17 +15,17 @@ while it downloads, [Toasts](/docs/components/toast) for the outcome.
 ## What the runtime ships
 
 `checkUpdate(currentVersion, options)` asks the feed; `downloadAndInstall()`
-replaces the app. Every member below is rendered from the installed
+replaces the app. Every member below is checked against the installed
 declarations, so a dependency upgrade fails the docs suite by name rather than
 leaving this page guessing.
 
 <UpdaterTables />
 
-`checkUpdate` resolves `null` — not an error — when the feed answers `204`, when
-the announced version is not newer, or when no endpoint answers with an update
-the signature can be trusted for. The app decides whether a failed check is
-worth telling the reader about; the runtime does not distinguish "offline" from
-"up to date".
+`checkUpdate` resolves `null` — not an error — when the feed answers `204` or
+when the version it announces is not newer. A request that fails rejects; the
+app decides whether that is worth telling the reader about, because the runtime
+does not distinguish "offline" from "up to date". The signature is checked when
+the bundle is downloaded and installed, not when the check runs.
 
 ## Check, confirm, install
 
@@ -71,17 +71,29 @@ export function UpdatePrompt({
     };
   }, [currentVersion, pubkey]);
 
-  const install = async () => {
+  const install = () => {
     if (update === null) return;
     setInstalling(true);
-    await update.downloadAndInstall();
-    setInstalling(false);
-    setUpdate(null);
-    toast.push({
-      title: "Update installed",
-      description: "Quit and reopen to run the new version.",
-      tone: "success",
-    });
+    update.downloadAndInstall().then(
+      () => {
+        setInstalling(false);
+        setUpdate(null);
+        toast.push({
+          title: "Update installed",
+          description: "Quit and reopen to run the new version.",
+          tone: "success",
+        });
+      },
+      () => {
+        // The download or its signature failed; nothing was replaced.
+        setInstalling(false);
+        toast.push({
+          title: "Update failed",
+          description: "The download was refused. The running app is unchanged.",
+          tone: "danger",
+        });
+      },
+    );
   };
 
   return (
@@ -94,16 +106,14 @@ export function UpdatePrompt({
       description="The download is signature-checked before it replaces the app. It does not relaunch."
       confirmLabel="Download and install"
       loading={installing}
-      onConfirm={() => {
-        void install();
-      }}
+      onConfirm={install}
     />
   );
 }
 
 export const App = () => (
   <ToastProvider>
-    <UpdatePrompt currentVersion="1.4.0" pubkey="untrusted-ed25519…" />
+    <UpdatePrompt currentVersion="1.4.0" pubkey="<public key>" />
     <ToastViewport />
   </ToastProvider>
 );
@@ -118,7 +128,8 @@ verify is not installed.
 `downloadAndInstall()` writes the new files over the running app and returns. It
 does **not** relaunch, and the example deliberately does not quit for the reader:
 an application that wants the new version to run immediately quits after the
-promise resolves.
+promise resolves. The two callbacks are the two real outcomes — a verified bundle
+that replaced the files, or a rejected download that changed nothing.
 
 ## What the library does not provide
 
