@@ -391,6 +391,7 @@ references without buying correctness.
 | [774](./774-index-paragraph-counts.md) | The index paragraph states four catalogue sizes, and none has an owner | F | 059, 064, 066, 327, 398, 611 | done |
 | [775](./775-readme-index-counts.md) | The front door's index paragraph states four catalogue sizes, and none has an owner | F | 064, 519, 774 | done |
 | [777](./777-readme-elevation-paragraph.md) | The front door's elevation paragraph, and the twelve fills it states of fifteen | F | 347, 584, 610, 619, 665, 737, 749, 775 | done |
+| [778](./778-aaa-elevation-tint.md) | The AAA elevation tint and its three alphas, in three unguarded passages | F | 085, 099, 376, 505, 777 | in progress |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4007,6 +4008,16 @@ that composes `elevationShadow(theme, level)` the way the contrast checker does,
 and the front door's two figures become table entries. The table grows 68 → 70.
 No token value, pair, floor, metric, role or shipped theme moves; `contrastPairs`
 stays **470**.
+
+Plan `778` closes the figures in that same paragraph: the AAA tint (`#FFFFFF`)
+and its three alphas (`10%, 14% and 18%`) are stated in the front door, the
+catalogue and the design system, and replacing both in all three passages left
+**263 tests** green. The percentages now derive from `highContrastDarkElevation`
+at `sm`/`md`/`lg`, the tint from the resolved AAA theme, and the justifying
+counterfactual — "a black tint measured **1.000:1** at every level" — from the
+default dark tint painted over the AAA canvas. No token value, pair, floor,
+metric, role or shipped theme moves; `contrastPairs` stays **470** and the figure
+table stays **70**.
 
 ## How to use a plan
 
