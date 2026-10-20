@@ -42,10 +42,12 @@ export const EmptyStateExample = () => {
         <CardHeader>
           <CardTitle>Runs</CardTitle>
         </CardHeader>
+        {/* The card's "Runs" heading is level 3, so these panels sit below it. */}
         {filtered ? (
           <EmptyState
             testId="no-matches"
             title="No runs match “failed”"
+            level={4}
             description="Try a different status, or clear the filter."
             action={
               <Button onClick={() => setFiltered(false)}>Clear filter</Button>
@@ -55,6 +57,7 @@ export const EmptyStateExample = () => {
           <EmptyState
             testId="no-runs"
             title="No runs yet"
+            level={4}
             description="Runs appear here once a workflow completes."
           />
         )}

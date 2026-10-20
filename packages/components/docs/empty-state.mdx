@@ -51,6 +51,7 @@ pointer and key handlers) and **merges `style` last**.
 | Prop | Type | Default |
 | ---- | ---- | ------- |
 | `title` | `string` (required) | — |
+| `level` | `1 \| 2 \| 3 \| 4 \| 5 \| 6` | `3` |
 | `description` | `string` | — |
 | `action` | `ReactNode` | — |
 | `icon` | `ReactNode` | — |
@@ -59,7 +60,12 @@ pointer and key handlers) and **merges `style` last**.
 
 - No role of its own: an empty state is ordinary content, and a `role="status"` on
   it would announce whenever a filter changes, including when a parent re-renders.
-- The `title` carries the meaning. The `icon` is decorative and is not announced.
+- The `title` is a heading (`role="heading"`, default level 3), so a
+  screen-reader user can reach the panel with heading navigation. The level
+  belongs to the surrounding outline: an empty state under a level-3 card title
+  passes `level={4}`. A raw `aria-level` is honoured when no typed `level` is
+  supplied, and the typed prop wins when both are given.
+- The `icon` is decorative and is not announced.
 - The action is a real control and keeps its own focus and keyboard behaviour —
   the panel does not trap or intercept anything.
 
@@ -84,11 +90,12 @@ literal colours. See `docs/tokens.md`.
 
 ## Verification
 
-`src/behaviour/empty-state.test.tsx` runs in the real GPUix renderer (6 tests):
+`src/behaviour/empty-state.test.tsx` runs in the real GPUix renderer (9 tests):
 title/description/action render in order, omitted parts render nothing at all, the
 panel is centred with the theme's padding, the title and description take their
-own colour roles, a click on the action still arrives, and a consumer `style`
-wins.
+own colour roles, a click on the action still arrives, a consumer `style` wins,
+the title is a level-3 heading, the caller's `level` places it in the outline,
+and a raw `aria-level` still works.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

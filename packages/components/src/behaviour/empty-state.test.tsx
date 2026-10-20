@@ -3,12 +3,15 @@
  *
  * The bugs these guard: a panel that renders placeholders for parts it was not
  * given; an action whose click never arrives because the panel sits over it; a
- * description painted as loudly as the title; and a panel that is not actually
- * centred.
+ * description painted as loudly as the title; a panel that is not actually
+ * centred; and a title that was a plain text node, so the panel had no heading a
+ * screen-reader user could jump to.
  */
 
 import * as Arr from "effect/Array";
+import * as Option from "effect/Option";
 import { describe, expect, it, vi } from "vitest";
+import { nodesWithRole } from "../internal/a11y.js";
 import { Button } from "../internal/button.js";
 import { clickCentreOf } from "../internal/interaction.js";
 import { darkTheme } from "../internal/theme.js";
@@ -117,6 +120,48 @@ describe("EmptyState", () => {
     );
 
     expect(panel.renderer.findByTestId("empty")?.style.padding).toBe(0);
+
+    panel.unmount();
+  });
+
+  it("announces its title as a level-3 heading by default", () => {
+    const panel = renderComponent(
+      <EmptyState testId="empty" title="No projects yet" />,
+    );
+
+    const headings = nodesWithRole(panel.renderer, "heading");
+    expect(
+      Arr.map(headings, (node) => [
+        node.name,
+        Option.getOrUndefined(node.level),
+      ]),
+    ).toEqual([["No projects yet", 3]]);
+
+    panel.unmount();
+  });
+
+  it("lets the caller place the title in the document outline", () => {
+    const panel = renderComponent(
+      <EmptyState testId="empty" title="No runs yet" level={4} />,
+    );
+
+    const headings = nodesWithRole(panel.renderer, "heading");
+    expect(
+      Arr.map(headings, (node) => Option.getOrUndefined(node.level)),
+    ).toEqual([4]);
+
+    panel.unmount();
+  });
+
+  it("honours a raw aria-level when no typed level is supplied", () => {
+    const panel = renderComponent(
+      <EmptyState testId="empty" title="No matches" aria-level={2} />,
+    );
+
+    const headings = nodesWithRole(panel.renderer, "heading");
+    expect(
+      Arr.map(headings, (node) => Option.getOrUndefined(node.level)),
+    ).toEqual([2]);
 
     panel.unmount();
   });

@@ -10,6 +10,7 @@
 import type { Props } from "@gpuix/react";
 import { mergeStyles } from "@gpuix/react/floating";
 import type { ReactNode } from "react";
+import { headingLevel, type HeadingLevel } from "./internal/heading.js";
 import { textStyle, useTheme } from "./internal/theme.js";
 
 /** The widest a description is allowed to run before it wraps. */
@@ -21,6 +22,8 @@ export interface EmptyStateProps extends Props {
   readonly icon?: ReactNode;
   /** What is missing, in a few words. */
   readonly title: string;
+  /** The title's heading level in the document outline. Default `3`. */
+  readonly level?: HeadingLevel;
   /** Why it is missing, or what to do about it. */
   readonly description?: string;
   /** The way out: usually a `Button`. */
@@ -31,6 +34,8 @@ export interface EmptyStateProps extends Props {
 export const EmptyState = ({
   icon,
   title,
+  level,
+  "aria-level": authoredLevel,
   description,
   action,
   style,
@@ -66,6 +71,8 @@ export const EmptyState = ({
         </div>
       )}
       <text
+        role="heading"
+        aria-level={headingLevel(level, authoredLevel, 3)}
         style={{
           ...textStyle(theme, "bodyStrong"),
           color: theme.colors.foreground,
