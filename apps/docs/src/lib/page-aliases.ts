@@ -8,8 +8,8 @@
  * This is editorial search vocabulary, not page content: it stays out of the
  * frontmatter and is read only by the ranker. A second measured pass covers the
  * integration vocabulary (plan 599) — `react`, `provider`, `mono`, `escape`,
- * `disabled` and `how to install`, each a word for a section or a convention
- * rather than a title. `page-aliases.test.ts` proves
+ * `disabled` and `how to install` — and a third the keyboard conventions
+ * (plan 601), each a word for a section or a convention rather than a title. `page-aliases.test.ts` proves
  * every key is a page `source.getPages()` serves, no key is a component page
  * (that is plan 566's table), no term is shared, and no term shadows a page or
  * component name — an alias that names something else misroutes the query.
@@ -43,14 +43,36 @@ export const pageAliases: ReadonlyMap<string, readonly string[]> = new Map<
       "providers",
     ],
   ],
+  ["/docs/accessibility", ["keyboard focus"]],
   [
     "/docs/component-api",
-    ["escape", "escape key", "disabled", "disabled state"],
+    [
+      "escape",
+      "escape key",
+      "disabled",
+      "disabled state",
+      "keyboard",
+      "keyboard shortcuts",
+      "keyboard support",
+      "enter key",
+      "space key",
+      "arrow keys",
+      "tab order",
+    ],
   ],
   ["/docs/data-display", ["select row", "selectable rows"]],
   ["/docs/examples", ["demo", "sample"]],
   ["/docs/installation", ["version", "versions", "how to install"]],
-  ["/docs/theming", ["motion", "animation", "easing"]],
+  [
+    "/docs/theming",
+    [
+      "motion",
+      "animation",
+      "easing",
+      "reduced motion",
+      "prefers reduced motion",
+    ],
+  ],
   ["/docs/typography", ["mono", "mono font", "monospace"]],
 ]);
 

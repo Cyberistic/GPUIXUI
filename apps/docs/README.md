@@ -545,11 +545,15 @@ owning subject is a **section** rather than a title: `react`, `react provider`,
 `provider` and `providers` → Getting started, `escape`, `escape key`, `disabled`
 and `disabled state` → Component API, `select row` and `selectable rows` → Data
 display, `mono`, `mono font` and `monospace` → Typography, and `how to install` →
-Installation. All five are entries in the same table; no ranker changed.
+Installation. A third pass (plan 601) added the keyboard conventions —
+`keyboard`, `keyboard shortcuts`, `keyboard support`, `enter key`, `space key`,
+`arrow keys` and `tab order` → Component API, `keyboard focus` → Accessibility,
+`reduced motion` → Theming — and the component table learned `hotkey input`.
+Every term is an entry in the same table; no ranker changed.
 `row selection` deliberately stays on the Roadmap (it promotes a target of that
 exact name), `motion`/`animation` have no owner until `packages/tokens` ships
-motion tokens, and `disabled button` keeps Button. `smoke:build` asserts `react`
-and `how to install`.
+motion tokens, and `disabled button` keeps Button. `smoke:build` asserts `react`,
+`how to install`, `easing` and `keyboard`.
 
 The table got a second measured pass (plan 579). `typeahead`, `passcode`,
 `wizard`, `pin code`, `segmented control`, `hover card`, `menubar` and

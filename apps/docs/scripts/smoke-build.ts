@@ -1096,6 +1096,12 @@ const audit = async (baseUrl: string): Promise<ReadonlyArray<Problem>> => {
       first: true,
       what: "a timing word the motion section answers, which returned nothing before",
     },
+    {
+      query: "keyboard",
+      expected: "/docs/component-api",
+      first: true,
+      what: "the keyboard contract a keycap's picture outranked",
+    },
   ] as const;
 
   const searchProblems = await Promise.all(

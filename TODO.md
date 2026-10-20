@@ -471,7 +471,15 @@ Both are specified in `BLOCKERS.md`; each fix starts with a plan under `.agents/
 
 ## Docs site workstream (plans 410–499, plus 500–596)
 
-`[x]` `[██████████]` 167/167
+`[x]` `[██████████]` 168/168
+
+`[x]` **Keyboard and input conventions have one home (plan 601)** — `keyboard`,
+      `keyboard shortcuts`, `enter key`, `space key`, `arrow keys` and
+      `tab order` returned Keycap, Spacer or Tabs; `keyboard focus` returned
+      Keycap and `reduced motion` Skeleton. The third page-alias pass sends them
+      to Component API, Accessibility and Theming, and the component table
+      learned `hotkey input`. 113 files / 898 docs tests, 99-page `smoke:build`,
+      root gates green; six forced defects (plan 601 §6.3).
 
 `[x]` **Motion has an answer (plan 600)** — a reader's `motion`, `animation`
       and `easing` landed on Card, an Accordion limitation or nothing, because no

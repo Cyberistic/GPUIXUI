@@ -143,6 +143,16 @@ const owned = [
   ["motion", "/docs/theming"],
   ["animation", "/docs/theming"],
   ["easing", "/docs/theming"],
+  ["keyboard", "/docs/component-api"],
+  ["keyboard shortcuts", "/docs/component-api"],
+  ["keyboard support", "/docs/component-api"],
+  ["enter key", "/docs/component-api"],
+  ["space key", "/docs/component-api"],
+  ["arrow keys", "/docs/component-api"],
+  ["tab order", "/docs/component-api"],
+  ["keyboard focus", "/docs/accessibility"],
+  ["reduced motion", "/docs/theming"],
+  ["prefers reduced motion", "/docs/theming"],
 ] as const;
 
 const regressions = [
@@ -166,6 +176,15 @@ const regressions = [
   ["theming", "/docs/theming"],
   ["duration", "/docs/components/countdown#composition"],
   ["transition", "/docs/theming#motion"],
+  ["keycap", "/docs/components/keycap"],
+  ["kbd", "/docs/components/keycap"],
+  ["keybinding", "/docs/components/keycap"],
+  ["hotkey input", "/docs/components/hotkey-input"],
+  ["spacer", "/docs/components/spacer"],
+  ["tabs", "/docs/components/tabs"],
+  ["list", "/docs/components/list"],
+  ["skeleton", "/docs/components/skeleton"],
+  ["accessibility", "/docs/accessibility"],
 ] as const;
 
 describe(
