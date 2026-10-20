@@ -97,6 +97,22 @@ planned in `primitives` plan 022, `022-swarm-single-writer.md`)
 
 `[x]` `[██████████]` 121/121 plans-and-harness
 
+`[x]` **Run the promotion gate on the head that includes the QR and crop
+      pixels** per plan `714`: verification only on code head `f91537b0`
+      (0 behind `origin/master`) — headless **106/106** (**3887** checks, 65
+      capabilities, 196.4 s) and live **95/95** (**2638** checks, 61
+      capabilities, 1104.9 s), both exit `0`. The live total is the previous
+      gate's `2616` + `live-diff` 7 + `live-qr` 7 + `live-crop-area` 8 exactly,
+      so every check added since plan `702` ran in the full registry:
+      `crop-area` **82**, `live-crop-area` **18**, `live-diff` **31**,
+      `live-qr` **52**, `live-tier2-editing` **32** (its measured branch). A
+      plain `--all` wrote no `provenance.json`, both `host` lines carry the
+      release-tag pins, and the totals were read back from
+      `.artifacts/smoke-report.json` / `live-report.json`.
+      `nub run check`/`lint`/`test` green (playground **466**, testing 68).
+      Exact ids: the whole headless registry and the whole live registry
+      (`--all`). This is the gate for the promotion fast-forward.
+
 `[x]` **Prove the crop masks in pixels** per plan `713`: the four masks were
       asserted by geometry only, so a mask with no background passed every
       check. A pure `crop-pixels.ts` derives the sRGB blend of the dark
@@ -1857,6 +1873,18 @@ focused id is `live-frames`.
       one docs-only plan (`bc433838`, plan `438`), merged cleanly; the merged
       head re-ran the whole headless registry (106/106, 3865) and the gates, so
       the live gate still describes the code.
+      **Addendum (plan `714`, 2026-10-20):** three check-adding plans landed
+      after that gate (`707` +7 to `live-diff`, `708` +7 to `live-qr`, `713` +8
+      to `live-crop-area`), so both full registries ran again on code head
+      `f91537b0` (0 behind `origin/master`): headless **106/106** (**3887**
+      checks, 65 capabilities, 196.4 s) and live **95/95** (**2638** checks, 61
+      capabilities, **1104.9 s**), both exit `0`, with no `provenance.json`;
+      `crop-area` reports **82**, `live-crop-area` **18**, `live-diff` **31**,
+      `live-qr` **52** and `live-tier2-editing` **32** (its measured branch).
+      The live total is `2616 + 7 + 7 + 8` exactly, so every new check ran in
+      the full sequence. `nub run check`/`lint`/`test` green (playground **466**,
+      testing 68, components 308, primitives 282, tokens 196, tw 103, icons 19,
+      docs 7). **This is the current gate for the promotion fast-forward.**
 `[ ]` Cross-team: `@gpuixui/components` plan `117` §5a still reports the native renderer as **unavailable** on this host, so its 21 Tier 2 behaviour suites are not collected. ADR 0003 fixed that: point the behaviour config at the locally built `darwin-x64` 0.10.0 binding (or run on CI) and record the measured verdicts (owner: `components`; evidence: plan `140` §4, ADR 0003)
 `[ ]` Cross-team: **charts and the colour picker must not build on `<canvas>`** — it is retained but renders `gpui::Empty` on 0.10.0 (no bounds, children dropped). Use `<svg>` for static drawing and `<img>` + `setImagePixels` for live bitmaps (owner: `components`; evidence: plan `161` §8, `COMPONENTS.md` Charts / Color picker)
 `[ ]` Cross-team: `@gpuixui/components` **ToastViewport** — `createPortal` is **not exported by `@gpuix/react` 0.10.0**, so the absolute, last-child viewport is the only path (it is measured working); and the AccessKit dump has **no live-region concept**, so a static `role="status"` label does not announce a toast's message — label each card (or expose its text as the accessible name) rather than relying on the viewport label. Owner: `components`; evidence: plan `183` §7

@@ -2091,9 +2091,9 @@ resize, so a mask that paints nothing or stops following the crop fails.
 ## Evidence on this host
 
 The suite is **106/106 green** here (`exit 0`, 3887 checks, 65 capabilities,
-**236.7 s**, 2026-10-20; plan `713` added 8 crop-mask pixel checks; plan `708`
-added 7 QR pixel checks; plan `701` added 41 wash checks to
-`search-highlights`):
+**196.4 s**, 2026-10-20, the plan-`714` gate run; plan `713` added 8 crop-mask
+pixel checks; plan `708` added 7 QR pixel checks; plan `701` added 41 wash
+checks to `search-highlights`):
 
 ```
 106/106 scenarios passed · capabilities: layout=verified root=verified text=verified
@@ -2113,23 +2113,22 @@ crop=verified wizard=verified cell-editing=verified upload=verified qr=verified
 media=verified window=verified frames=verified
 ```
 
-The last full merge/release gate ran **95/95** (`exit 0`, **2616** checks, 61
-capabilities; **1073.1 s**; `.artifacts/live-report.json`, 2026-10-20) on head
-`1cb4d302` (plan `702`),
-including every scenario this branch added through `live-theme-platform` (plan
-`654`, the platform type styles in a window), `live-shell` through plan `656`'s
-capture-capable runner, plan `658`'s Tier 1 additions — `live-primitives-display`
-is 34 checks — `live-theme`'s 39 frame-pixel checks (plan `676`), plan
-`674`'s `live-pixel-colour` (22 checks), plan `690`'s `live-content` image
-pixels (44 → 68), plan `697`'s `live-chart` colour pixels (40 → 71) and plan
-`701`'s six wash-colour fixtures in `live-highlights` (12 → 53). The total is
-plan `699`'s 2576 plus the 41 wash checks less one branch-variance check in the
-existing `live-tier2-editing` (31–33). A plain
-`--all` wrote no frame and no
-`provenance.json`; plan `656` holds the focused capture evidence. This gate
-supersedes plan `699`'s 2576 on `4101684e`, plan `691`'s 2545 on `47068722`, plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
-plan `659`'s 94/94 on `d9346a9d`,
-plan `657`'s 94/94 on `034d78df`,
+The last full merge/release gate ran **95/95** (`exit 0`, **2638** checks, 61
+capabilities; **1104.9 s**; `.artifacts/live-report.json`, 2026-10-20) on code
+head `f91537b0` (plan `714`, 0 behind `origin/master`), with the whole headless
+registry at **106/106** (`3887` checks, 65 capabilities) on the same head. It
+includes every scenario this branch added: `live-theme-platform` (plan `654`),
+`live-shell` through plan `656`'s capture-capable runner, plan `658`'s Tier 1
+additions (`live-primitives-display` 34 checks), `live-theme`'s 39 frame-pixel
+checks (plan `676`), `live-pixel-colour` (22), `live-content`'s image pixels
+(68), `live-chart`'s colour pixels (71), `live-highlights`' wash fixtures (53),
+`live-diff`'s word wash (31), `live-qr`'s module pixels (52) and
+`live-crop-area`'s mask pixels (18). The total is the previous gate's 2616 plus
+plan `707`'s 7, plan `708`'s 7 and plan `713`'s 8 exactly. A plain `--all` wrote
+no frame and no `provenance.json`. This gate supersedes plan `702`'s 2616 on
+`1cb4d302`, plan `699`'s 2576 on `4101684e`, plan `691`'s 2545 on `47068722`,
+plan `677`'s 2521 on `86057653`, plan `675`'s 2491 on `d206df18`,
+plan `659`'s 94/94 on `d9346a9d`, plan `657`'s 94/94 on `034d78df`,
 plan `655`'s 94/94 run on `651e2419` and plan `648`'s 93/93 run, and is the
 gate for the promotion merge; the owner/supervisor performs that merge. The
 full live suite is a merge/release gate rather than a per-task check.
