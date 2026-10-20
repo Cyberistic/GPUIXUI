@@ -110,7 +110,7 @@ glance. A custom theme changes it with no code change — see
 
 ## Verification
 
-`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (16 tests):
+`src/behaviour/preview-card.test.tsx` runs in the real GPUix renderer (18 tests):
 closed by default, delayed hover open and immediate focus open, staying open
 while the pointer is inside, closing after leaving both, Escape with focus
 return, an Escape that leaves its dialog open, outside-press dismissal, a
@@ -119,7 +119,9 @@ naming and `aria-expanded`, a controlled card that stays closed, a disabled
 trigger that opens by neither hover nor focus, a centre-aligned card landing on
 its trigger's centre, a bottom card flipping above a trigger at the window's
 bottom edge, and two dismissals that restore focus without re-opening the card.
-Timers are real but sized to 20 ms by the props. One measured fact
+Timers are real but sized to 20 ms by the props. A controlled close the caller
+refuses leaves the card and focus where they are; the same card restores focus
+when a later close is accepted. One measured fact
 shaped both the tests and the component: the runtime delivers the new element's
 `mouseEnter` **before** the previous element's `mouseLeave`, so the close policy
 tracks whether either surface still holds the pointer.

@@ -138,7 +138,7 @@ sit `spacing["2xs"]` apart. A custom theme changes it with no code change — se
 
 ## Verification
 
-`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (23 tests):
+`src/behaviour/navigation-menu.test.tsx` runs in the real GPUix renderer (24 tests):
 declaration order, press-to-open with `aria-expanded`, one panel at a
 time, Enter/ArrowDown with panel focus, Left/Right/Home/End between triggers,
 Escape with focus return, outside-press dismissal, a **held** trigger press
@@ -150,8 +150,9 @@ a key-opened panel surviving the previous close timer, and one reported hover
 intent on a controlled nav — a disabled trigger whose arrow keys neither open
 its panel nor move focus while the caller's `onKeyDown` still runs, a disabled
 link that paints no hover and runs nothing while an enabled link does both, a
-bottom panel flipping above a trigger at the window's bottom edge, and the
-caller's `ref` receiving the panel instance.
+bottom panel flipping above a trigger at the window's bottom edge, the
+caller's `ref` receiving the panel instance, and a controlled close the caller
+refuses leaving the panel and focus where they are.
 
 One measured implementation fact: the trigger registry updates its ordered key
 list only when the key sequence changes. An always-new array (or a ref callback

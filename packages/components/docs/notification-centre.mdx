@@ -162,7 +162,7 @@ medium elevation. The badge is the theme's `primary`; the active row is
 
 ## Verification
 
-`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (19 tests):
+`src/behaviour/notification-centre.test.tsx` runs in the real GPUix renderer (20 tests):
 closed by default with the derived count in the trigger's name, open and named
 by a press, opening that marks nothing read, contiguous grouping in the
 caller's order, unread dots and row names, one read request from a press with
@@ -173,5 +173,6 @@ Enter reading the reached row, the arrow revealing an off-screen row in both
 directions, a header action that runs without reading a row,
 a header action that keeps the reading cursor and focus in place, arrows and
 Enter still reaching the row that holds focus, a prepend that leaves the reader's
-row where it was, and the light theme's roles. The pure grouping
+row where it was, the light theme's roles, and a controlled close the caller
+refuses leaving the panel and focus where they are. The pure grouping
 and count rules live in `src/notification-centre/model.test.ts` (5 tests).

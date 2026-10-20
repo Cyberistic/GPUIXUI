@@ -196,7 +196,7 @@ Disabled controls announce **Disabled** through `aria-description`; 0.10.0 has n
 
 ## Verification
 
-`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (22 tests):
+`src/behaviour/context-menu.test.tsx` runs in the real GPUix renderer (23 tests):
 a left click doing nothing, a right click opening a `menu` surface, the surface
 landing within 12px of the pointer, a selected action running once and closing,
 a second right click moving the surface, Escape closing, a disabled trigger not
@@ -213,7 +213,9 @@ submenus and proven by `src/behaviour/dropdown-menu.test.tsx`; this suite does n
 repeat them. The shared row parts also paint the highlight bar and the
 checkbox/radio marks with the row's `popoverForeground` ink, because `accent` is
 a wash and measures about 1.1:1 on the menu surface. A caller `ref` on
-`ContextMenuContent` is composed with the surface's internal ref (plan 696).
+`ContextMenuContent` is composed with the surface's internal ref (plan 696). A
+controlled close the caller refuses keeps focus in a keyboard-opened menu; the
+trigger is focused only once the close is accepted.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour

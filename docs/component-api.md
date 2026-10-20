@@ -68,6 +68,11 @@ history. No landed component currently deviates.
   example `onOpenChange`, `onQueryChange`, `onPageChange`, `onStepChange` — and
   the same no-op rule applies. A component may guard a no-op earlier for its own
   logic; the hook is still the one place that enforces the rule.
+- A refused state request has no side effects. When a caller keeps a non-modal
+  overlay open after `onOpenChange(false)` — an unsaved draft, a running job —
+  the surface stays painted **and** keeps the user's focus; focus restoration
+  belongs to the accepted `open -> false` transition, never to the request
+  (plan `704`, `internal/close-focus.ts`).
 - The resolution lives in exactly one hook — `useControllableState` from
   `@gpuix/react/floating` (published in 0.10.0) or this package's
   `internal/controllable.ts` wrapper. Do not write a second implementation.

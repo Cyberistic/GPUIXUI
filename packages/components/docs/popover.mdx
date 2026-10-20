@@ -134,7 +134,7 @@ transform, so no scale is faked.
 
 ## Verification
 
-`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (20 tests):
+`src/behaviour/popover.test.tsx` runs in the real GPUix renderer (22 tests):
 opens below the trigger by measured bounds, honours `side="right"`, centres a
 requested panel on its trigger, opens above a trigger near the window bottom
 instead of covering it, Escape closing and restoring focus, an outside press
@@ -147,8 +147,10 @@ after the trigger, Shift+Tab walking backwards and leaving before the first
 control, closing rather than trapping when the first tab stop is removed, a
 controlled popover reporting `onOpenChange` while staying as the consumer says
 (including an inline consumer that keeps it closed), both themes, a caller
-trigger `ref`, the 100 ms fade + side slide, and the panel remaining through its
-exit before it unmounts.
+trigger `ref`, the 100 ms fade + side slide, the panel remaining through its
+exit before it unmounts, and a controlled close the caller refuses leaving the
+panel and focus where they are (Escape and Tab), with focus moving only when the
+close is accepted.
 
 ```sh
 nub run --filter @gpuixui/components test:behaviour
