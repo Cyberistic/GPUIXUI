@@ -905,6 +905,12 @@
   background: var(--bg-soft);
 }
 
+/* Grid items must be allowed to shrink below their content: the code pane's
+   pre has long lines, and the figure has a wide code block. */
+.landing-terminal > * {
+  min-width: 0;
+}
+
 .landing-terminal > figure {
   margin: 0;
   border: 0;
@@ -980,6 +986,7 @@
 
 .landing-term-content {
   flex: 1;
+  min-width: 0;
   margin: 0;
   padding: 10px 14px;
   overflow: hidden;
