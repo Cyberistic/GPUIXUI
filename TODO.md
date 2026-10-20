@@ -1506,7 +1506,12 @@ the docs-site workstream; the `packages/components` half is plan 337)
       re-ran all three gates on 2026-10-20: `check`, `lint` and `test` exit 0
       (unit 485 in 46 files), and the full native suite is
       **908 passed / 28 failed of 936** — the same plan-540 binding classes and
-      no new failure; Confirmation dialog is 10/10.
+      no new failure; Confirmation dialog is 10/10. Plan 732 then moved it to
+      **915 passed / 28 failed of 943**. Plan 736 re-ran all three gates on
+      2026-10-20: `check`, `lint` and `test` exit 0 (unit 488 in 46 files), and
+      the full native suite is **919 passed / 28 failed of 947** — the four new
+      combobox keyboard cases all pass and the remaining failures are the same
+      plan-540 binding classes.
 
 ## Swarm-owned blockers (fix these)
 
