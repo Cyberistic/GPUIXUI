@@ -163,8 +163,6 @@ export const offsetForTrackPress = (
 export const edgePairs = (
   box: Smoke.Bounds,
   axis: "x" | "y",
-  inset: number,
-  neighbour: number,
 ): ReadonlyArray<EdgePair>;
 
 /** The index of the first pair whose two samples disagree, or -1. */
@@ -175,7 +173,9 @@ export const firstMismatch = (
 ): number;
 ```
 
-`thumbGeometry` mirrors the runtime's own rule where a rule exists
+`edgePairs` reads `EDGE_INSET` (3 px inside the edge) and `NEIGHBOUR_GAP`
+(20 px inside) as module constants, so a caller cannot sample a thumb's own
+pixel. `thumbGeometry` mirrors the runtime's own rule where a rule exists
 (`track² / content`, floored at 24, clamped to the track) and otherwise maps
 the scroll progress onto `track - length`. `offsetForTrackPress` inverts it:
 `fraction = clamp(y / track, 0, 1)`, `offset = -fraction * (content - track)`.
