@@ -344,10 +344,10 @@ reverting only the toast registration also restores it. Record all three runs.
   dismissal and claims nothing, an unowned point still dismisses, the removal
   function unregisters). Unit suite: **520 in 48 files** (was 517).
 - No regression: the 14 affected suites' failure list is identical before and
-  after (17 → 16; the difference is exactly the new toast case). `toast.test.tsx`
-  is 28/28. The full native suite is **1048 passed / 21 failed of 1069**: the
-  recorded plan-540 classes plus the pre-existing `saves` failure; button,
-  inline-edit and mention-input failures reproduce identically at `HEAD`.
+  after (17 → 16 with the old fixture ordering; the difference is exactly the new
+  toast case). `toast.test.tsx` is 28/28 and `composition.test.tsx` is **8/8**.
+  The full native suite is **1049 passed / 20 failed of 1069** — exactly the
+  recorded plan-540 classes and no other case.
 - Headless smoke: **17/20**, the same three playground-owned failures as the
   recorded baseline; `overlay-dialog` and `modal-focus-trap` are green.
 - Gates: `nub run check`, `nub run lint` and `nub run test` exit `0`
@@ -359,3 +359,12 @@ reverting only the toast registration also restores it. Record all three runs.
   native `retained_tree` paint/hit order, which the real `TestRenderer` suite
   exercises (`nativeSimulateClick` hit-tests through GPUI); the worktree has no
   live scenario that mounts a toast over a modal.
+- Found while measuring: the composite's `saves` case was red **at `HEAD`** with
+  the viewport mounted after the dialog (`expected [] to deeply equal
+  ["Settings saved"]`), and the store held a toast while the viewport subtree was
+  absent from the native tree. Moving `<ToastViewport />` before the `<Dialog>`
+  makes it green, and a plain `<text>` after an anchored sibling was likewise
+  missing in a smaller probe. That is a binding defect, not this plan's: it is
+  recorded as a TODO interlock for binding-gaps, the fixture carries the ordering
+  with a comment, and `docs/toast.mdx` tells consumers to render the stack before
+  their dialogs. After that, `composition.test.tsx` is **8/8**.

@@ -174,8 +174,10 @@ from its two pinned edges.
   over the stack and swallow its presses. A press on a card therefore belongs to
   the toast: its action or dismiss control runs and an overlay beneath stays
   open, while a press anywhere else still closes that overlay (plan 820). Render
-  the viewport once, last in the app root; tree order alone does not lift it over
-  a dialog.
+  the viewport once in the app root; paint order no longer follows tree order.
+  A viewport mounted **after** a dialog can be dropped from the native tree by
+  this binding when that dialog closes with a picker inside (TODO.md interlock,
+  plan 820 §7), so render it before the app's dialogs.
 - No portal beyond that anchored layer: the stack is sized from
   `useWindowSize`, so a window resize re-renders it rather than a native resize
   observer following it.

@@ -90,6 +90,11 @@ const SettingsWorkflow = ({
       <Button testId="open-settings" onClick={() => setOpen(true)}>
         Settings
       </Button>
+      {/* Before the dialog on purpose: the stack is its own anchored layer, so
+          paint order no longer follows tree order, and this binding can drop a
+          viewport mounted after a dialog that closes with a picker inside
+          (TODO.md "a toast mounted after a dialog can be dropped"). */}
+      <ToastViewport />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent label="Settings" testId="settings">
           <DialogHeader>
@@ -226,6 +231,10 @@ const ToastOverDialog = ({ onAction }: { readonly onAction: () => void }) => {
       }}
     >
       <Button testId="outside">Outside</Button>
+      {/* Before the dialog on purpose: the stack is its own anchored layer, so
+          paint order no longer follows tree order, and this binding can drop a
+          viewport mounted after a dialog that closes with a picker inside
+          (TODO.md "a toast mounted after a dialog can be dropped"). */}
       <ToastViewport />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent label="Editor" testId="editor" size="sm">

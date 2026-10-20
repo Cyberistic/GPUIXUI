@@ -1529,12 +1529,13 @@ retired once both branches are one
       refuses a press inside one without claiming it, so the action runs and the
       dialog stays open while a press elsewhere still closes it. 3 unit + 2
       composite cases, the action case red at `HEAD`; unit 517 → 520 in 48
-      files, affected suites 17 → 16 failures (the one flipped is the new case),
-      full native suite 1048 passed / 21 failed of 1069 with the same recorded
-      plan-540 classes plus the pre-existing `composition > saves` failure that
-      also fails at `HEAD`; `overlay-dialog` and `modal-focus-trap` smoke green;
-      docs, `docs/component-api.md`, `COMPONENTS.md`, `PLAN.md` D30 and the index
-      synced (owner: components)
+      files, the composite suite 8/8, and the full native suite 1049 passed / 20
+      failed of 1069 — the 20 recorded plan-540 classes and no other case. The
+      composite's `saves` case was red at `HEAD` because the binding can drop a
+      sibling mounted after an anchored layer (recorded as a TODO interlock;
+      the viewport is now mounted before the dialog). `overlay-dialog` and
+      `modal-focus-trap` smoke green; docs, `docs/component-api.md`,
+      `COMPONENTS.md`, `PLAN.md` D30 and the index synced (owner: components)
     - [x] A malformed overlay offset keeps the documented default — plan 813;
       measured 2026-10-20: a non-finite `sideOffset` collapsed the gap
       (Popover 91 → 85, Preview card 91 → 85, Notification centre 81 → 73,
@@ -1698,6 +1699,7 @@ Work that this workstream needs but does not own. Another agent owns each row.
 | `scripts/verify-two-directions.sh` uses `jj`, which is not installed (D1) | tooling | pending |
 | The shared store's `@gpuix/native` binding was **rebuilt in place by another worktree while suites were running** (2026-10-18 21:47 and 22:00, `workspaces/gpuix-zindex`; md5 `c0e554b…`). The new build changes bounds/anchoring — the combobox trigger measures `{x:549,width:738}` instead of `{x:540,width:740}` — so "centres a requested popup on its trigger" is off by 4 px and "paints the focus ring on the search field" keeps the ring after focus moves. **Both fail at `HEAD` with that binding and passed on the 21:47 build**, so no component change is at fault; every native verdict taken across the swap is suspect until one build is pinned | gpuix-zindex / playground | **wider than first measured** — plan 540 proved `getElementBounds` mixes **three** conventions inside one build (block/`flex-start`: content-box origin; centred flex: border-box origin; padding-box size in all three) and that a release-tag build (`9fcd628`, zed `81c99f81`, md5 `e7a3c64…`) reproduces it, so no harness normalisation is sound. The 59 red cases are classified: 34 position, 24 focus/blur (no `onFocus`/`onBlur` for a native focus change), 1 scroll. Fix required: one box convention for every element (border box) plus focus events; then the suite's 34 position cases pass unchanged. Artifact + build log kept in `workspaces/components/.agents/slop/scratch/gpuix-release/` |
 | The native renderer keeps **one** child at the root: a two-`div` fragment renders only the second (measured while writing plan 510's test fixture, both children identical in every other respect) | playground / `docs/gpuix-capabilities.md` (plan 203) | pending — behaviour fixtures wrap sibling roots in a container; no production example is affected |
+| A sibling mounted **after an anchored layer** can be missing from the native tree after that layer's parent unmounts: the plan-820 composite's `ToastViewport` (now an anchored layer) rendered after a dialog that contained a picker was absent from the tree while the toast store held one toast, and a plain `<text>` after an anchored sibling was likewise missing. Mounting the viewport before the dialog makes the case pass (plan 820 §7 records both measurements) | `@gpuix/react` binding (binding-gaps) | pending — plan 820 mitigates in its fixture and documents the anchored stack; a binding fix should make a following sibling survive |
 | A **scroll container's own `getElementBounds`** is reported in scrolled content space (measured: `viewport { y: -1080, height: 200 }` at offset `-1080`, while its rows are in window space: row 39 at `y: 168`). `MessageScroller` measures its pin against the unscrolled root instead (plan 582); a binding fix should make a scrolled element's own box the visible box | binding-gaps | pending — plan 582 records the component-side adaptation and its two-way proof |
 | The playground's `tier2-command` / `live-tier2-command` assert the measured close-focus defect (`focused=none`), and `tier2-scroller` asserts the measured no-re-pin. Plans 589 and 582 fix both, so those checks must flip to assert the fixed behaviour (focus back on the opener; re-pin at the end) and the §9 notes updated | playground | pending — the component side is landed; no playground file was edited from this workstream |
 | Decide whether `nub.lock` is committed: it is currently untracked and regenerated per worktree, so every workstream's copy would conflict | tooling | **resolved** — master tracks `nub.lock`; the merge took master's committed copy |
