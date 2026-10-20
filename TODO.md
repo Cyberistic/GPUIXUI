@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 338/416
+`[x]` `[████████░░]` 339/416
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2905,6 +2905,16 @@ held to; the JSDoc and both catalogue role rows now name all fourteen (the
 AAA row said only "placeholder text"), and `placeholder-claims.test.ts` derives
 the list from the pairs and fails on a missing surface or owner
 (plan 749)
+`[x]` Hold the disabled fill's last two reason passages — plan `747` covered the
+role JSDoc, the design system's inactive rule and the AAA role row, but the
+`lightColors` rationale still said "the fill stays near the panel and the
+control's `border` edge carries its shape" and the catalogue's inactive-floor
+paragraph said the fill "stays near the panel by design", so a consumer writing
+a light palette was told the fill may sit on its panel while `themeFailures`
+rejects exactly that (plan `737` moved five values because eight shipped pairs
+sat under the floor); both now name the measured step and `disabledFillPairs`,
+`disabled-fill-claims.test.ts` reads the two passages, and no colour, pair,
+floor, metric or role moves (plan 750)
 `[x]` Hold the documented light brand to the one-call guarantee — the catalogue
 holds the dark brand to `themeFailures`, but `theme.test.ts` held the light one to
 `themeContrastFailures` only, so its `primaryText: "#5330C8"` measured **6.941:1**
