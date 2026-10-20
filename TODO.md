@@ -234,6 +234,13 @@ retired once both branches are one
       continues after/before the picker. 3 new cases (Combobox 59 → 62, 62/62 on
       this host), three mutation proofs; docs, `COMPONENTS.md`, `PLAN.md` D30 and
       the inventory synced (owner: components)
+    - [ ] A menu that closes on `Tab` inside a dialog leaves focus on its trigger
+      — measured 2026-10-20 while probing plan 719: with a dropdown menu open in
+      a dialog, `Tab` closes the menu and the dialog's trap lands on the menu
+      trigger (one press backwards; the next continues). A menu does not claim
+      `Tab` and moves no focus on that close, so the trap resolves the
+      disappearing row. Needs its own plan and a decision on whether the close
+      owns the hand-off; not claimed (owner: components)
     - [x] List: focus continuity across a row removal — plan 708; two recorded
       "removed-host" cases were red (`focused = None`) and a row removed while a
       `Button` in its `trailing` slot held focus dropped focus entirely, because
