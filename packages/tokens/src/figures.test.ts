@@ -47,14 +47,24 @@ import {
 import {
   caretPairs,
   contrastPairs,
+  contrastRatio,
+  compositeOver,
+  alpha,
   extendTheme,
+  getPlatformRecipeTheme,
+  getPlatformTheme,
   getTheme,
+  nativeSyntaxRoles,
+  nativeTextSurfaces,
   selectionSurfaces,
+  shippedThemes,
   statusTones,
   textTiers,
   themeTextTierFailures,
 } from "./index.js";
+import { nativeInk, nativeInkOpacity } from "./native-ink.js";
 import type { ThemeColors } from "./color.js";
+import type { ContrastPair } from "./contrast.js";
 
 const documents: Readonly<Record<FigureDocument, string>> = {
   "docs/tokens.md": readFileSync(
@@ -252,7 +262,8 @@ describe("tier figures the documents state in the present tense", () => {
  */
 describe("the figures the package's own JSDoc states", () => {
   it("composes the paints each kind needs", () => {
-    const composed = (kind: string) => kind === "fade" || kind === "over-wash";
+    const composed = (kind: string) =>
+      kind === "fade" || kind === "over-wash" || kind === "ink";
     const inUnit = (value: number | undefined) =>
       value !== undefined && value > 0 && value <= 1;
 
@@ -352,6 +363,177 @@ describe("the figures the package's own JSDoc states", () => {
           `${entry.name} must not accept ${figure}`,
         ).toBe(false);
       });
+    });
+  });
+
+  /**
+   * Plan 760: the native text section's five present-tense figures and the
+   * ledger's two minima had no owner. The word-wash value was also one
+   * rounding step behind (5.813 for a composition that measures 5.813 852…),
+   * and the ledger quoted plan 574's 7.562/7.008 after later palette plans
+   * moved both. These cases hold the two things the entry loop cannot: that
+   * the `"ink"` kind measures the runtime bridge's paint, and that each page
+   * sentence names the pair and the tint that actually produce its figure.
+   */
+  const nativeFigure = (name: string) => {
+    const entry = documentedFigures.find((figure) => figure.name === name);
+    assert(entry !== undefined, `${name} is in the table`);
+    return entry;
+  };
+
+  it("measures the ink wash with the runtime bridge's own paint", () => {
+    const entry = nativeFigure("the native syntax ink wash's tightest pair");
+    const theme = getPlatformTheme("darwin", "light");
+    const derived = deriveFigure(entry);
+    assert(derived.kind === "derived", entry.name);
+
+    expect(
+      Number.isNaN(derived.ratio),
+      "the ink entry composes its opacity",
+    ).toBe(false);
+    expect(derived.ratio).toBeCloseTo(
+      contrastRatio(
+        theme.colors.successText,
+        nativeInk(theme, "background", nativeInkOpacity),
+      ),
+      10,
+    );
+    // The runtime picks the ink from the tone, so the composition is not a role.
+    expect(derived.ratio).not.toBeCloseTo(
+      contrastRatio(
+        theme.colors.successText,
+        compositeOver(
+          alpha(theme.colors.foreground, nativeInkOpacity),
+          theme.colors.background,
+        ),
+      ),
+      3,
+    );
+  });
+
+  it("names the pair each native sentence measures", () => {
+    const themeOf = (
+      provenance: (typeof documentedFigures)[number]["provenance"],
+    ) =>
+      provenance.source === "recipe"
+        ? getPlatformRecipeTheme(
+            provenance.recipe,
+            provenance.mode,
+            provenance.contrast,
+          )
+        : provenance.source === "platform"
+          ? getPlatformTheme(
+              provenance.platform,
+              provenance.mode,
+              provenance.contrast,
+            )
+          : getTheme(provenance.mode, provenance.contrast);
+
+    const measureIn = (
+      entry: (typeof documentedFigures)[number],
+      theme: ReturnType<typeof themeOf>,
+      [foreground, background]: ContrastPair,
+    ): number => {
+      const composition = entry.composition;
+      if (entry.kind === "ink" && composition !== undefined) {
+        return contrastRatio(
+          theme.colors[foreground],
+          nativeInk(theme, background, composition.opacity),
+        );
+      }
+      if (entry.kind === "over-wash" && composition?.wash !== undefined) {
+        const washed = compositeOver(
+          alpha(theme.colors[composition.wash.role], composition.wash.opacity),
+          theme.colors[background],
+        );
+        return contrastRatio(theme.colors[foreground], washed);
+      }
+      return contrastRatio(theme.colors[foreground], theme.colors[background]);
+    };
+
+    const cases: ReadonlyArray<
+      readonly [string, keyof ThemeColors, keyof ThemeColors]
+    > = [
+      [
+        "the native syntax palette's tightest opaque pair",
+        "primaryText",
+        "background",
+      ],
+      [
+        "the native syntax ink wash's tightest pair",
+        "successText",
+        "background",
+      ],
+      ["the native inline code's tightest pair", "primaryText", "accent"],
+      [
+        "the native syntax on the destructive diff tint",
+        "primaryText",
+        "background",
+      ],
+    ];
+
+    cases.forEach(([name, foreground, background]) => {
+      const entry = nativeFigure(name);
+      const theme = themeOf(entry.provenance);
+      const tightest = entry.pairs
+        .map((pair) => ({ pair, ratio: measureIn(entry, theme, pair) }))
+        .toSorted((left, right) => left.ratio - right.ratio)[0];
+      assert(tightest !== undefined, `${name} measures a pair`);
+
+      // The sentence names the role and the fill that produce the minimum, not
+      // `tightest`'s ceiling: if a later palette edit moves an `infoText` or
+      // `successText` capture below it, the figure still derives and the
+      // sentence would be wrong.
+      expect(tightest.pair[0], `${name}: the sentence's role`).toBe(foreground);
+      expect(tightest.pair[1], `${name}: the sentence's fill`).toBe(background);
+    });
+  });
+
+  it("names the tighter of the two diff tints", () => {
+    // The sentence says "the tightest tinted pair" and names the destructive
+    // tint, so the success tint's own minimum must be higher — or a later
+    // palette edit makes the sentence wrong while its figure still derives.
+    const entry = nativeFigure(
+      "the native syntax on the destructive diff tint",
+    );
+    const derived = deriveFigure(entry);
+    assert(derived.kind === "derived", entry.name);
+
+    const roles = [...new Set(Object.values(nativeSyntaxRoles))];
+    const successMinimum = Math.min(
+      ...shippedThemes.map(({ theme }) =>
+        Math.min(
+          ...roles.flatMap((role) =>
+            nativeTextSurfaces.map((surface) =>
+              contrastRatio(
+                theme.colors[role],
+                compositeOver(
+                  alpha(theme.colors.successText, 0.055),
+                  theme.colors[surface],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(derived.ratio).toBeLessThan(successMinimum);
+  });
+
+  it("rejects the pre-760 figures per entry", () => {
+    const stale: ReadonlyArray<readonly [string, string]> = [
+      ["the word-level diff wash on successText", "5.813"],
+      ["the ledger's native syntax tightest opaque pair", "7.562"],
+      ["the ledger's native syntax ink wash", "7.008"],
+    ];
+
+    stale.forEach(([name, figure]) => {
+      const entry = nativeFigure(name);
+      expect(
+        quotesFigure(documents[entry.document], entry, figure),
+        `${name} must not accept ${figure}`,
+      ).toBe(false);
     });
   });
 });

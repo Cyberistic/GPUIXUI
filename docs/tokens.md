@@ -1942,7 +1942,7 @@ wash, and a `foreground` of `"#bebebe"` measures the same ratio on the `card`,
 One composition is deliberately out: the runtime's **28% word-level diff wash**
 paints a changed token's own syntax colour over a wash of the add/delete family.
 `destructiveText` on its own 28% wash measures **4.389:1** (`Dark · Linux`) and
-`successText`'s string token 5.813:1 in identity dark, so no perceivable
+`successText`'s string token 5.814:1 in identity dark, so no perceivable
 same-family wash can keep a syntax token at text strength. It is transient
 emphasis on a line whose body is held at 92% over the 5.5% row tint; a consumer
 that enables word-level diffs keeps the line readable and accepts the emphasis
@@ -4250,7 +4250,7 @@ checker reports a solid fill that matches its panel, and the mark class stays
 `xText`.
 
 `packages/tokens/src/figures.ts` holds the ratios the current-figure sentences
-state — `documentedFigures` and `documentedTierFigures`, **49** entries across
+state — `documentedFigures` and `documentedTierFigures`, **56** entries across
 this page, the design system, the README, the ledger and the package's own JSDoc
 modules — and `packages/tokens/src/figures.test.ts` derives each one from
 `shippedThemes` with the checker's own measurement and asserts both the figure

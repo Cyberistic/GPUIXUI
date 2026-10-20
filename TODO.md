@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 343/420
+`[x]` `[████████░░]` 345/422
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -2958,6 +2958,19 @@ literals, the cross-team migrations in `TODO.md` and the `style` prop a brand
 passes today; `dimension-consumer-reach.test.ts` derives the literals from
 `dimensions` and fails on the restored promise, and no token value, pair, floor,
 metric or role moves (plan 753)
+`[x]` Give the native-text section's figures an owner — five present-tense
+figures in `docs/tokens.md` (the opaque syntax minimum, the 3.5% ink wash, the
+inline-code pair, the pressed diff tint and the 28% word wash) and the ledger's
+plan-574 pair had no derivation, so falsifying any one left every suite green;
+the word-wash figure was also a rounding step behind (**5.813** for a
+composition that measures 5.813 852…, now **5.814**) and the ledger quoted
+7.562/7.008 after later palette plans moved both to **7.706/7.110**.
+`figures.ts` gains an `"ink"` kind — the runtime's wash is black on a light tone
+and white on a dark one, so the kind calls `nativeInk` rather than compositing a
+role — and seven entries, the catalogue states 5.814, the ledger names each
+figure's set and pair, and `figures.test.ts` rejects the old digits per entry
+and fails when a sentence's role, fill or tint stops being the one that measures
+(plan 760)
 
 ## Phase C — Tier 1–2 components
 

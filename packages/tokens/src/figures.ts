@@ -4,17 +4,20 @@ import {
   contrastPairs,
   contrastRatio,
   inactivePanelActionPairs,
+  nativeSyntaxPairs,
   selectionSurfaces,
   toastTonePairs,
   trackSurfacePairs,
   textTierSurfaces,
   type ContrastPair,
 } from "./contrast.js";
+import { nativeInk, nativeInkOpacity } from "./native-ink.js";
+import { nativeSyntaxRoles, nativeTextSurfaces } from "./native-text.js";
 import type { PlatformRecipeName } from "./platform-recipes.js";
 import type { PlatformVariant } from "./platform-types.js";
 import { shippedThemes, type ShippedTheme } from "./shipped-themes.js";
 import { statusTones, type StatusTone } from "./styles.js";
-import type { ThemeContrast, ThemeMode } from "./theme.js";
+import type { Theme, ThemeContrast, ThemeMode } from "./theme.js";
 
 /**
  * A figure a document states in the present tense about the shipped package,
@@ -71,7 +74,12 @@ export type FigureKind =
    * on the add/delete tint: the text is held to the washed tone, not the plain
    * one.
    */
-  | "over-wash";
+  | "over-wash"
+  /**
+   * A role painted whole on the runtime's fixed black-or-white ink wash: the
+   * tone decides the ink and the composition, so no theme role carries it.
+   */
+  | "ink";
 
 /** The opacity the shipped consumers dim a disabled control with. */
 export const disabledDimOpacity = 0.5;
@@ -195,8 +203,9 @@ export const sameProvenance = (
 const measure = (
   entry: DocumentedFigure,
   [foreground, background]: ContrastPair,
-  colors: ThemeColors,
+  theme: Theme,
 ): number => {
+  const colors = theme.colors;
   const composition = entry.composition;
   switch (entry.kind) {
     case "plain":
@@ -258,13 +267,22 @@ const measure = (
       );
       return contrastRatio(painted, washed);
     }
+    case "ink": {
+      if (composition === undefined) {
+        return Number.NaN;
+      }
+      return contrastRatio(
+        colors[foreground],
+        nativeInk(theme, background, composition.opacity),
+      );
+    }
   }
 };
 
 /** The lowest ratio one set measures across the entry's pairs. */
-const within = (entry: DocumentedFigure, colors: ThemeColors): number =>
+const within = (entry: DocumentedFigure, theme: Theme): number =>
   entry.pairs
-    .map((pair) => measure(entry, pair, colors))
+    .map((pair) => measure(entry, pair, theme))
     .reduce((best, current) => (current < best ? current : best));
 
 /** The result of deriving a documented figure. */
@@ -281,7 +299,7 @@ const derivedAt = (
   entry: DocumentedFigure,
   shipped: ShippedTheme,
 ): FigureDerivation => {
-  const ratio = within(entry, shipped.theme.colors);
+  const ratio = within(entry, shipped.theme);
   return {
     kind: "derived",
     ratio,
@@ -314,7 +332,7 @@ export function tightestProvenance(
 ): ShippedThemeProvenance {
   return shippedThemes
     .map((shipped: ShippedTheme) => ({
-      ratio: within(entry, shipped.theme.colors),
+      ratio: within(entry, shipped.theme),
       provenance: provenanceOf(shipped),
     }))
     .reduce((best, current) => (current.ratio < best.ratio ? current : best))
@@ -897,24 +915,142 @@ const unchangedMarkerFigure = (
   sentence,
 });
 
-/** The 28% word-level diff wash: the token's own ink on a wash of itself. */
+/**
+ * A word-level diff wash: a syntax token's own colour on a 28% wash of itself.
+ * `text` names the role and the set the sentence measures — the runtime paints
+ * the wash under a changed token of the same family, so `destructiveText` sits
+ * on its own wash in `Dark · Linux` and the `string` capture, `successText`, in
+ * identity dark.
+ */
 const wordLevelWashFigure = (
+  text: keyof ThemeColors,
+  provenance: ShippedThemeProvenance,
   document: FigureDocument,
   sentence: string,
 ): DocumentedFigure => ({
   document,
-  name: "the word-level diff wash",
-  pairs: [["destructiveText", "card", "body"]],
+  name: `the word-level diff wash on ${text}`,
+  pairs: [[text, "card", "body"]],
   kind: "over-wash",
   claim: "value",
-  provenance: platformTheme("linux", "dark", "default"),
+  provenance,
   composition: {
     opacity: 1,
-    wash: { role: "destructiveText", opacity: 0.28 },
+    wash: { role: text, opacity: 0.28 },
   },
   decimals: 3,
   sentence,
 });
+
+/**
+ * A syntax capture's role on every tone a native document may paint on. The
+ * same derivation `themeNativeTextFailures` walks, so a fifth capture joins
+ * both from `nativeSyntaxRoles`.
+ */
+const syntaxPairs: ReadonlyArray<ContrastPair> = [
+  ...new Set(Object.values(nativeSyntaxRoles)),
+].flatMap((role) =>
+  nativeTextSurfaces.map((surface): ContrastPair => [role, surface, "body"]),
+);
+
+/**
+ * The tightest opaque syntax pair. The capture palette is body copy held on
+ * every tone a document may paint on; identity light's `primaryText` on its
+ * canvas is the shipped minimum.
+ */
+const nativeOpaqueFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the native syntax palette's tightest opaque pair",
+  pairs: nativeSyntaxPairs,
+  kind: "plain",
+  claim: "tightest",
+  provenance: identityTheme("light", "default"),
+  decimals: 3,
+  sentence: "the tightest is `primaryText` at **{figure}:1** (`Light`)",
+};
+
+/**
+ * The tightest syntax pair through the runtime's 3.5% ink wash. The ink is
+ * black on a light tone and white on a dark one, chosen by the runtime, so the
+ * entry measures it with `nativeInk` rather than a role.
+ */
+const nativeInkFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the native syntax ink wash's tightest pair",
+  pairs: syntaxPairs,
+  kind: "ink",
+  claim: "tightest",
+  provenance: platformTheme("darwin", "light", "default"),
+  composition: { opacity: nativeInkOpacity },
+  decimals: 3,
+  sentence: "the tightest is `successText` at **{figure}:1** (`Light · macOS`)",
+};
+
+/**
+ * The tightest native inline-code pair: `primaryText` on the opaque `accent`
+ * quad the runtime paints under a run, so it is body copy on a real surface.
+ */
+const nativeInlineCodeFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the native inline code's tightest pair",
+  pairs: [["primaryText", "accent", "body"]],
+  kind: "plain",
+  claim: "tightest",
+  provenance: recipeTheme("xp", "light", "default"),
+  decimals: 3,
+  sentence:
+    "the tightest shipped pair is **{figure}:1** (`Light · Windows XP`)",
+};
+
+/**
+ * The tightest syntax pair on a changed diff row: each capture is painted whole
+ * over the 5.5% `destructiveText` tint. This is the tighter of the row's two
+ * tints in every shipped set; the success tint's own minimum is higher.
+ */
+const nativeDiffTintFigure: DocumentedFigure = {
+  document: "docs/tokens.md",
+  name: "the native syntax on the destructive diff tint",
+  pairs: syntaxPairs,
+  kind: "over-wash",
+  claim: "tightest",
+  provenance: identityTheme("light", "default"),
+  composition: {
+    opacity: 1,
+    wash: { role: "destructiveText", opacity: 0.055 },
+  },
+  decimals: 3,
+  sentence:
+    "The tightest tinted pair is **{figure}:1** (`Light`, `primaryText` on the `destructiveText` tint)",
+};
+
+/**
+ * The ledger's two current native figures, stated with the set and the pair
+ * each was measured on. Plan `574` wrote plan-time values; later palette plans
+ * moved both minima, and no test read the row.
+ */
+const nativeLedgerOpaqueFigure: DocumentedFigure = {
+  document: "COMPONENTS.md",
+  name: "the ledger's native syntax tightest opaque pair",
+  pairs: nativeSyntaxPairs,
+  kind: "plain",
+  claim: "tightest",
+  provenance: identityTheme("light", "default"),
+  decimals: 3,
+  sentence: "opaque **{figure}:1** (`Light`, `primaryText` on `background`)",
+};
+
+const nativeLedgerInkFigure: DocumentedFigure = {
+  document: "COMPONENTS.md",
+  name: "the ledger's native syntax ink wash",
+  pairs: syntaxPairs,
+  kind: "ink",
+  claim: "tightest",
+  provenance: platformTheme("darwin", "light", "default"),
+  composition: { opacity: nativeInkOpacity },
+  decimals: 3,
+  sentence:
+    "and inked **{figure}:1** (`Light · macOS`, `successText` on `background`)",
+};
 
 /** The Toast's designed groove on its floating card, tightest shipped set. */
 const countdownGrooveFigure: DocumentedFigure = {
@@ -944,13 +1080,29 @@ const nativePaintFigures: ReadonlyArray<DocumentedFigure> = [
     "and {figure}:1 at 50% on Aero light's quiet panel",
   ),
   wordLevelWashFigure(
+    "destructiveText",
+    platformTheme("linux", "dark", "default"),
     "packages/tokens/src/native-text-check.ts",
     "28% wash measures **{figure}:1** in `Dark · Linux`",
   ),
   wordLevelWashFigure(
+    "destructiveText",
+    platformTheme("linux", "dark", "default"),
     "docs/tokens.md",
     "on its own 28% wash measures **{figure}:1** (`Dark · Linux`)",
   ),
+  wordLevelWashFigure(
+    "successText",
+    identityTheme("dark", "default"),
+    "docs/tokens.md",
+    "`successText`'s string token {figure}:1 in identity dark",
+  ),
+  nativeOpaqueFigure,
+  nativeInkFigure,
+  nativeInlineCodeFigure,
+  nativeDiffTintFigure,
+  nativeLedgerOpaqueFigure,
+  nativeLedgerInkFigure,
   countdownGrooveFigure,
 ];
 
