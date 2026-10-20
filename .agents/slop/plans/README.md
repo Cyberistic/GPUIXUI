@@ -377,6 +377,7 @@ references without buying correctness.
 | [745](./745-light-brand-total-check.md) | The documented light brand fails the one-call guarantee | F | 098, 553, 574, 611–617, 742, 744 | done |
 | [747](./747-disabled-fill-exemption-claims.md) | The disabled fill's exemption, in the three passages plan 737 missed | F | 306, 737, 742 | done |
 | [749](./749-placeholder-surface-claims.md) | The placeholder role's surface claims | F | 317, 527, 651, 659, 747 | done |
+| [750](./750-disabled-fill-palette-and-status-claims.md) | The disabled fill's reason in the palette doc and the status paragraph | F | 306, 737, 747, 749 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
