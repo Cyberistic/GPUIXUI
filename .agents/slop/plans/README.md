@@ -409,6 +409,7 @@ references without buying correctness.
 | [806](./806-primary-mark-claims.md) | `primary` is measured as a fill, and as nine marks | F | 082, 332, 341, 347, 516, 557, 563, 698, 749 | done |
 | [807](./807-elevation-rationale.md) | The AAA dark elevation rationale has no owner | F | 085, 099, 345, 390, 505, 509, 778 | done |
 | [810](./810-solid-status-marks.md) | The solid status roles are described as fills, and three of them are marks | F | 014, 057, 083, 332, 340, 394, 399, 733, 749, 806 | done |
+| [814](./814-track-surface-enumerations.md) | The value groove's surface list: three pages count twelve of thirteen | F | 347, 503, 651, 674, 683, 684, 706, 754 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -4192,6 +4193,20 @@ solid status role is a surface, `primary`/`success`/`destructive` are marks,
 twelve-rings-plus-two-edges split from the published lists, holding the role
 rows in both directions so a mark claim on `warning` fails as loudly as a missing
 one on `success`. No colour, pair, floor, metric, role or shipped theme moves.
+
+814 closes the same class of gap for the value groove: `trackSurfacePairs` grew
+to thirteen surfaces when plan `651` added the pressed `selectedActive` a chosen
+row keeps under the pointer, but the three present-tense enumerations of that
+list — the catalogue's groove paragraph, the design system's §8 narrative and
+the package README — still name twelve, and the §8 `unchecked` row's track
+clause defers to "the row washes" without naming the pressed fill. The existing
+`docs.test.ts` cases could not see it: the role table row is guarded, and the
+`unchecked` row is guarded as a whole, so a neighbouring clause that names
+`selectedActive` satisfied the guard while the groove clause omitted it. A new
+`track-surface-claims.test.ts` derives the surfaces, the four/five/four split and
+the count word from `trackSurfacePairs` and `statusTones`, reads the four
+clauses, and fails on the pre-plan sentences; no colour, pair, floor, metric or
+shipped theme moves.
 
 ## How to use a plan
 
