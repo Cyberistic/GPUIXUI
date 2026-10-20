@@ -379,6 +379,7 @@ references without buying correctness.
 | [749](./749-placeholder-surface-claims.md) | The placeholder role's surface claims | F | 317, 527, 651, 659, 747 | done |
 | [750](./750-disabled-fill-palette-and-status-claims.md) | The disabled fill's reason in the palette doc and the status paragraph | F | 306, 737, 747, 749 | done |
 | [753](./753-dimensions-consumer-reach.md) | The dimensions promise the shipped components do not keep | F | 353, 556, 720 | done |
+| [754](./754-pair-enforcement.md) | A published pair list is enforced, not only unique | F | 071, 349, 546, 651, 737 | done |
 
 Plans 010–019 are the `tokens-theme` workstream. They own `packages/tokens`,
 `docs/tokens.md` and `docs/design-system.md`; every other plan belongs to the
@@ -3850,6 +3851,18 @@ the promise. The sentence now names the three shipped literals, the cross-team
 migrations already in `TODO.md` and the `style` prop a brand passes today, and
 `dimension-consumer-reach.test.ts` derives those literals from `dimensions` and
 fails if the unconditional promise returns.
+
+Plan `754` closes the gap one step past plans 349 and 546: the 44 published pair
+lists were held to uniqueness and to a compile-checked inventory, but not to
+being **measured**, so a list added to the record and never added to one of
+`themeContrastFailures`'s walks would pass every gate while its pairs were exempt
+from the contract. The inventory now lives in `published-pair-lists.ts` for both
+suites, `pair-enforcement.test.ts` plants every published pair on the shipped
+light theme — the two roles set to one colour, the dialog face set to the
+scrimmed surface and the scrim to the face for the face-on-itself composition —
+and fails unless a public check names the pair, and a planted composition no walk
+measures proves the predicate can fail. No colour, pair, floor, metric, role or
+shipped theme moves, and `contrastPairs` stays 470.
 
 ## How to use a plan
 

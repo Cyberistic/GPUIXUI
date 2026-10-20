@@ -54,7 +54,7 @@ implementation (owner: repo tooling; found while landing plan 550)
 
 ### Design tokens and theming (`tokens-theme`)
 
-`[x]` `[████████░░]` 340/417
+`[x]` `[████████░░]` 341/418
 
 `[x]` Write and index the tokens/theme plan set (every row the plan index
 assigns to this workstream)
@@ -133,6 +133,19 @@ derives the chip count from `statusFillPairs`, and a new `readme.test.ts` case
 derives the skeleton count from `skeletonPulsePairs` and holds the enumeration;
 the two historical "eight" mentions in `COMPONENTS.md` stay. No colour, pair,
 floor, metric or shipped theme moves (plan 684)
+`[x]` Hold every published pair list to **enforcement**, not only uniqueness —
+`contrast.test.ts` proves each `*Pairs` export is listed and has no repeated
+composition, and `check-types` proves a new export joins the record, but nothing
+said a listed pair is *measured*: a list added to `publishedPairLists` and never
+added to one of `themeContrastFailures`'s walks passed every gate while its pairs
+were exempt from the whole contract. The inventory now lives in
+`published-pair-lists.ts` for its two consumers,
+`pair-enforcement.test.ts` plants every published pair on the
+shipped light theme (the two roles set to one colour; the dialog face set to the
+scrimmed surface, and the scrim to the face for the face-on-itself composition)
+and fails unless a public check reports it, and a planted composition no walk
+measures proves the predicate can fail. No colour, pair, floor, metric, role or
+shipped theme moves; `contrastPairs` stays 470 (plan 754)
 `[ ]` Cross-team: `primitives` calls `invalidFocusRing(theme)` in
 `controlFocusStyle` instead of spreading `focusRing` and replacing
 `boxShadow.color`, so the invalid ring has one owner (owner: `primitives`; plan
